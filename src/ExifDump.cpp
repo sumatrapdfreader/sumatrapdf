@@ -1001,8 +1001,8 @@ static bool ExtractWebpExif(Str d, Str& out) {
     return false;
 }
 
-static bool LooksLikeTiffExif(const u8* p, size_t len) {
-    if (len < 12) {
+static bool LooksLikeTiffExif(const u8* p, size_t n) {
+    if (n < 12) {
         return false;
     }
     bool le = p[0] == 'I' && p[1] == 'I' && p[2] == 42 && p[3] == 0;
@@ -1012,15 +1012,15 @@ static bool LooksLikeTiffExif(const u8* p, size_t len) {
     }
     u32 ifdOff = le ? (u32)(p[4] | (p[5] << 8) | (p[6] << 16) | (p[7] << 24))
                     : (u32)((p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7]);
-    if (ifdOff < 8 || ifdOff + 2 >= len) {
+    if (ifdOff < 8 || ifdOff + 2 >= n) {
         return false;
     }
     u16 nTags = le ? (u16)(p[ifdOff] | (p[ifdOff + 1] << 8)) : (u16)((p[ifdOff] << 8) | p[ifdOff + 1]);
     return nTags > 0 && nTags < 512;
 }
 
-static bool CopyTiffBlob(const u8* data, size_t len, size_t tiffOff, Str& out, u8** ownedOut) {
-    size_t blobLen = len - tiffOff;
+static bool CopyTiffBlob(const u8* data, size_t n, size_t tiffOff, Str& out, u8** ownedOut) {
+    size_t blobLen = n - tiffOff;
     constexpr size_t kMaxExifBytes = 256 * 1024;
     if (blobLen > kMaxExifBytes) {
         blobLen = kMaxExifBytes;
@@ -1039,27 +1039,27 @@ static bool CopyTiffBlob(const u8* data, size_t len, size_t tiffOff, Str& out, u
 static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
     *ownedOut = nullptr;
     const u8* data = (u8*)d.s;
-    size_t len = (size_t)d.len;
-    if (!data || len < 16) {
+    size_t n = (size_t)d.len;
+    if (!data || n < 16) {
         return false;
     }
-    for (size_t i = 0; i + 12 < len; i++) {
+    for (size_t i = 0; i + 12 < n; i++) {
         if (data[i] != 'E' || data[i + 1] != 'x' || data[i + 2] != 'i' || data[i + 3] != 'f') {
             continue;
         }
         size_t tiffOff = i + 4;
-        if (tiffOff + 6 >= len || data[tiffOff] != 0 || data[tiffOff + 1] != 0) {
+        if (tiffOff + 6 >= n || data[tiffOff] != 0 || data[tiffOff + 1] != 0) {
             continue;
         }
         tiffOff += 4;
-        if (!LooksLikeTiffExif(data + tiffOff, len - tiffOff)) {
+        if (!LooksLikeTiffExif(data + tiffOff, n - tiffOff)) {
             continue;
         }
-        size_t blobLen = len - tiffOff;
+        size_t blobLen = n - tiffOff;
         if (i >= 4) {
             u32 boxSize =
                 ((u32)data[i - 4] << 24) | ((u32)data[i - 3] << 16) | ((u32)data[i - 2] << 8) | (u32)data[i - 1];
-            if (boxSize >= 8 && (size_t)(i - 4) + boxSize <= len) {
+            if (boxSize >= 8 && (size_t)(i - 4) + boxSize <= n) {
                 size_t boxEnd = (i - 4) + boxSize;
                 if (boxEnd > tiffOff) {
                     blobLen = boxEnd - tiffOff;
@@ -1075,11 +1075,11 @@ static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
         out = Str((char*)(copy), (int)(blobLen));
         return true;
     }
-    for (size_t i = 0; i + 8 < len; i++) {
-        if (!LooksLikeTiffExif(data + i, len - i)) {
+    for (size_t i = 0; i + 8 < n; i++) {
+        if (!LooksLikeTiffExif(data + i, n - i)) {
             continue;
         }
-        return CopyTiffBlob(data, len, i, out, ownedOut);
+        return CopyTiffBlob(data, n, i, out, ownedOut);
     }
     return false;
 }

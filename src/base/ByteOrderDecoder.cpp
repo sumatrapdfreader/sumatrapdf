@@ -20,8 +20,8 @@ u32 UInt32LE(const u8* d) {
     return d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
 }
 
-ByteOrderDecoder::ByteOrderDecoder(const u8* d, size_t len, ByteOrder order)
-    : ok(true), byteOrder(order), data(d), curr(data), left(len) {}
+ByteOrderDecoder::ByteOrderDecoder(const u8* d, size_t n, ByteOrder order)
+    : ok(true), byteOrder(order), data(d), curr(data), left(n) {}
 
 ByteOrderDecoder::ByteOrderDecoder(Str bs, ByteOrder order) : ByteOrderDecoder((u8*)bs.s, (size_t)bs.len, order) {}
 
@@ -94,38 +94,38 @@ u64 ByteOrderDecoder::UInt64() {
     return (v << 32) | v2;
 }
 
-void ByteOrderDecoder::Bytes(void* dst, size_t len) {
-    if (left < len) {
+void ByteOrderDecoder::Bytes(void* dst, size_t n) {
+    if (left < n) {
         ok = false;
     }
     if (!ok) {
         return;
     }
 
-    memcpy(dst, curr, len);
-    left -= len;
-    curr += len;
+    memcpy(dst, curr, n);
+    left -= n;
+    curr += n;
 }
 
-void ByteOrderDecoder::Skip(size_t len) {
-    if (left < len) {
+void ByteOrderDecoder::Skip(size_t n) {
+    if (left < n) {
         ok = false;
     }
     if (!ok) {
         return;
     }
 
-    left -= len;
-    curr += len;
+    left -= n;
+    curr += n;
 }
 
-void ByteOrderDecoder::Unskip(size_t len) {
-    if (curr < data + len) {
+void ByteOrderDecoder::Unskip(size_t n) {
+    if (curr < data + n) {
         ok = false;
     }
     if (!ok) {
         return;
     }
-    left += len;
-    curr -= len;
+    left += n;
+    curr -= n;
 }

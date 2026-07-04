@@ -46,8 +46,8 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
 RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
-    int len = s.len;
-    if (0 == len) {
+    int n = s.len;
+    if (0 == n) {
         return RectF(0, 0, 0, 0); // TODO: should set height to font's height
     }
     // note: frankly, I don't see a difference between those StringFormat variations
@@ -56,22 +56,22 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
     // StringFormat sf(StringFormat::GenericDefault());
     // StringFormat sf;
     Gdiplus::RectF layoutRect;
-    CharacterRange cr(0, len);
+    CharacterRange cr(0, n);
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
-    Status status = g->MeasureCharacterRanges(s.s, len, f, layoutRect, &sf, 1, &r);
+    Status status = g->MeasureCharacterRanges(s.s, n, f, layoutRect, &sf, 1, &r);
     if (status != Ok) {
         // TODO: remove whem we figure out why we crash
         WStr logW = s ? s : WStr(L"<null>");
         TempStr s2 = ToUtf8Temp(logW);
         Str logStr = s2.len > 256 ? Str(s2.s, 256) : s2;
-        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, logStr);
+        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, n, logStr);
         // ReportIf(status != Ok);
     }
     Gdiplus::RectF bbox;
     r.GetBounds(&bbox, g);
     if (bbox.Width != 0) {
-        bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)len);
+        bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)n);
     }
     return RectF{bbox};
 }
@@ -85,14 +85,14 @@ RectF MeasureTextStandard(Graphics* g, Font* f, WStr s) {
 }
 
 RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
-    int len = s.len;
-    ReportIf(0 >= len);
+    int n = s.len;
+    ReportIf(0 >= n);
 
     static Vec<Font*> fontCache;
     static Vec<bool> fixCache;
 
     Gdiplus::RectF bbox;
-    g->MeasureString(s.s, len, f, Gdiplus::PointF(0, 0), &bbox);
+    g->MeasureString(s.s, n, f, Gdiplus::PointF(0, 0), &bbox);
     int idx = fontCache.Find(f);
     if (-1 == idx) {
         LOGFONTW lfw;
@@ -108,7 +108,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
     // most documents look good enough with these adjustments
     if (!fixCache.at(idx)) {
         float correct = 0;
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < n; i++) {
             switch (s.s[i]) {
                 case 'i':
                 case 'l':
@@ -126,7 +126,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                     break;
             }
         }
-        bbox.Width *= (1.0f - correct / len) * 0.99f;
+        bbox.Width *= (1.0f - correct / n) * 0.99f;
     }
     bbox.Height *= 0.95f;
     return RectF{bbox};
@@ -150,14 +150,14 @@ RectF MeasureText(Graphics* g, Font* f, WStr s, TextMeasureAlgorithm algo) {
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
 size_t StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgorithm algo) {
-    size_t len = (size_t)s.len;
+    size_t sLen = (size_t)s.len;
     auto r = MeasureText(g, f, s, algo);
     if (r.dx <= dx) {
-        return len;
+        return sLen;
     }
     // make the best guess of the length that fits
-    size_t n = (size_t)((dx / r.dx) * (float)len);
-    ReportIf(n > len);
+    size_t n = (size_t)((dx / r.dx) * (float)sLen);
+    ReportIf(n > sLen);
     if (n == 0) {
         // nothing fits in the remaining space; caller flushes the line and
         // re-lays the run at full width. Don't Measure an empty string.
@@ -561,8 +561,8 @@ static bool BmpSizeFromData(ByteReader r, Size& result) {
 
 static bool GifSizeFromData(ByteReader r, Size& result) {
     const u8* data = r.d;
-    size_t len = r.len;
-    if (len < 13) {
+    size_t n = r.len;
+    if (n < 13) {
         return false;
     }
     // find the first image's actual size instead of using the
@@ -581,13 +581,13 @@ static bool GifSizeFromData(ByteReader r, Size& result) {
             idx += 8;
         } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFE) {
             const u8* commentEnd = r.Find(idx + 2, 0x00);
-            idx = commentEnd ? commentEnd - data + 1 : len;
-        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < len) {
+            idx = commentEnd ? commentEnd - data + 1 : n;
+        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < n) {
             const u8* textDataEnd = r.Find(idx + 15, 0x00);
-            idx = textDataEnd ? textDataEnd - data + 1 : len;
-        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < len) {
+            idx = textDataEnd ? textDataEnd - data + 1 : n;
+        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < n) {
             const u8* applicationDataEnd = r.Find(idx + 14, 0x00);
-            idx = applicationDataEnd ? applicationDataEnd - data + 1 : len;
+            idx = applicationDataEnd ? applicationDataEnd - data + 1 : n;
         } else {
             return false;
         }
@@ -852,12 +852,12 @@ static bool WebpSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool Jp2SizeFromData(ByteReader r, Size& result) {
-    size_t len = r.len;
-    if (len < 32) {
+    size_t n = r.len;
+    if (n < 32) {
         return false;
     }
     size_t idx = 0;
-    while (idx < len - 32) {
+    while (idx < n - 32) {
         u32 boxLen = r.DWordBE(idx);
         u32 boxType = r.DWordBE(idx + 4);
         if (JP2_JP2H == boxType) {

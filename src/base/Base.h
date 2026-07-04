@@ -127,9 +127,9 @@
 
 // C/C++ standard headers  we use often
 #include <time.h>
-#include <new>     // for placement new
+#include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
-#include <utility> // for std::forward
+#include <utility>   // for std::forward
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -395,11 +395,11 @@ inline bool mulSafe(T* valInOut, T n) {
     return true;
 }
 
-void* memdup(const void* data, int len, int extraBytes = 0);
-bool memeq(const void* s1, const void* s2, int len);
+void* memdup(const void* data, int n, int extraBytes = 0);
+bool memeq(const void* s1, const void* s2, int n);
 
 int RoundToPowerOf2(int size);
-u32 MurmurHash2(const void* key, int len);
+u32 MurmurHash2(const void* key, int n);
 u32 MurmurHash2(Str s);
 u32 MurmurHash2(WStr s);
 u32 MurmurHashWStrI(WStr str);

@@ -62,8 +62,8 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3 = {});
 bool Eq(Str s1, Str s2);
 bool EqI(Str s1, Str s2);
 bool EqIS(Str s1, Str s2);
-bool EqN(Str s1, Str s2, int len);
-bool EqNI(Str s1, Str s2, int len);
+bool EqN(Str s1, Str s2, int n);
+bool EqNI(Str s1, Str s2, int n);
 bool IsNull(const Str& s);
 bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
@@ -71,7 +71,7 @@ bool StartsWith(Str str, Str prefix);
 bool StartsWithI(Str str, Str prefix);
 bool EndsWith(Str txt, Str end);
 bool EndsWithI(Str txt, Str end);
-bool EqNIx(Str s, int len, Str s2);
+bool EqNIx(Str s, int n, Str s2);
 
 Str ToLowerInPlace(Str s);
 
@@ -147,7 +147,7 @@ WStr Join(WStr, WStr, WStr s3 = {});
 WStr Join(Arena*, WStr, WStr, WStr s3);
 bool Eq(WStr s1, WStr s2);
 bool EqI(WStr s1, WStr s2);
-bool EqN(WStr s1, WStr s2, int len);
+bool EqN(WStr s1, WStr s2, int n);
 bool IsNull(const WStr& s);
 bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);

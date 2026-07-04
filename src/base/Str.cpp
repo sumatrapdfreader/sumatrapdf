@@ -171,30 +171,30 @@ bool EqIS(Str s1, Str s2) {
     return i1 >= s1.len && i2 >= s2.len;
 }
 
-bool EqN(Str s1, Str s2, int len) {
+bool EqN(Str s1, Str s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2 || len == 0) {
-        return len == 0;
+    if (!s1 || !s2 || n == 0) {
+        return n == 0;
     }
-    if (s1.len < len || s2.len < len) {
+    if (s1.len < n || s2.len < n) {
         return false;
     }
-    return memeq(s1.s, s2.s, len);
+    return memeq(s1.s, s2.s, n);
 }
 
-bool EqNI(Str s1, Str s2, int len) {
+bool EqNI(Str s1, Str s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2 || len == 0) {
-        return len == 0;
+    if (!s1 || !s2 || n == 0) {
+        return n == 0;
     }
-    if (s1.len < len || s2.len < len) {
+    if (s1.len < n || s2.len < n) {
         return false;
     }
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < n; i++) {
         if (tolower(s1.s[i]) != tolower(s2.s[i])) {
             return false;
         }
@@ -257,8 +257,8 @@ bool EndsWithI(Str txt, Str end) {
     return str::EqI(Str(txt.s + txtLen - endLen, endLen), end);
 }
 
-bool EqNIx(Str s, int len, Str s2) {
-    return ::len(s2) == len && str::StartsWithI(s, s2);
+bool EqNIx(Str s, int n, Str s2) {
+    return len(s2) == n && str::StartsWithI(s, s2);
 }
 
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
@@ -367,8 +367,8 @@ Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     int s3Len = len(s3);
     int s4Len = len(s4);
     int s5Len = len(s5);
-    int len = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
-    char* res = (char*)Alloc(allocator, len);
+    int n = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
+    char* res = (char*)Alloc(allocator, n);
 
     char* s = res;
     memcpy(s, s1.s, s1Len);
@@ -383,7 +383,7 @@ Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     s += s5Len;
     *s = 0;
 
-    return Str(res, len - 1);
+    return Str(res, n - 1);
 }
 
 Str Join(Arena* allocator, Str s1, Str s2, Str s3) {
@@ -434,8 +434,8 @@ namespace wstr {
    Caller needs to free() memory. */
 WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
     size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
-    size_t len = s1Len + s2Len + s3Len + 1;
-    WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR));
+    size_t n = s1Len + s2Len + s3Len + 1;
+    WCHAR* res = (WCHAR*)Alloc(allocator, n * sizeof(WCHAR));
     memcpy(res, s1.s, s1Len * sizeof(WCHAR));
     memcpy(res + s1Len, s2.s, s2Len * sizeof(WCHAR));
     memcpy(res + s1Len + s2Len, s3.s, s3Len * sizeof(WCHAR));
@@ -779,15 +779,15 @@ namespace str {
 
 /* Convert binary data in <buf> to a hex-encoded string */
 TempStr MemToHexTemp(Str buf) {
-    size_t len = (size_t)buf.len;
+    size_t n = (size_t)buf.len;
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char* ret = AllocArrayTemp<char>(2 * len + 1);
+    char* ret = AllocArrayTemp<char>(2 * n + 1);
     if (!ret) {
         return {};
     }
     static const char hex[] = "0123456789abcdef";
     int dst = 0;
-    for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < n; i++) {
         u8 b = (u8)buf.s[i];
         ret[dst++] = hex[b >> 4];
         ret[dst++] = hex[b & 0x0f];
@@ -1784,14 +1784,14 @@ bool EqI(WStr s1, WStr s2) {
     return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
 }
 
-bool EqN(WStr s1, WStr s2, int len) {
+bool EqN(WStr s1, WStr s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == wcsncmp(s1.s, s2.s, (size_t)len);
+    return 0 == wcsncmp(s1.s, s2.s, (size_t)n);
 }
 
 bool IsNull(const WStr& s) {
@@ -2191,14 +2191,14 @@ bool IsTextRtl(WStr s) {
     if (!s) {
         return false;
     }
-    int len = s.len > 40 ? 40 : s.len;
+    int n = s.len > 40 ? 40 : s.len;
     int nRtl = 0;
     int nLtr = 0;
-    WORD* charTypes = AllocArray<WORD>(GetTempArena(), len + 1);
-    if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s.s, len, charTypes)) {
+    WORD* charTypes = AllocArray<WORD>(GetTempArena(), n + 1);
+    if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s.s, n, charTypes)) {
         return false; // API failure
     }
-    for (int i = 0; i < len; ++i) {
+    for (int i = 0; i < n; ++i) {
         WORD type = charTypes[i];
         if (type == C2_LEFTTORIGHT) {
             nLtr++;
@@ -2480,8 +2480,8 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
         divisor = KB;
     } else {
         // Bytes - just format as integer
-        int len = snprintf(buf.s, buf.len, "%llu B", size);
-        return len < buf.len ? len : buf.len - 1;
+        int n = snprintf(buf.s, buf.len, "%llu B", size);
+        return n < buf.len ? n : buf.len - 1;
     }
 
     // Calculate with 2 decimal precision
@@ -2489,26 +2489,26 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
     u64 remainder = size % divisor;
     int frac = (int)((remainder * 100) / divisor);
 
-    int len;
+    int n;
     if (frac == 0) {
-        len = snprintf(buf.s, buf.len, "%llu%s", whole, suffix.s);
+        n = snprintf(buf.s, buf.len, "%llu%s", whole, suffix.s);
     } else if (frac % 10 == 0) {
-        len = snprintf(buf.s, buf.len, "%llu.%d%s", whole, frac / 10, suffix.s);
+        n = snprintf(buf.s, buf.len, "%llu.%d%s", whole, frac / 10, suffix.s);
     } else {
-        len = snprintf(buf.s, buf.len, "%llu.%02d%s", whole, frac, suffix.s);
+        n = snprintf(buf.s, buf.len, "%llu.%02d%s", whole, frac, suffix.s);
     }
-    return len < buf.len ? len : buf.len - 1;
+    return n < buf.len ? n : buf.len - 1;
 }
 
 // Wrapper that formats into wide string buffer
 void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf) {
     char temp[32];
-    int len = FormatSizeHumanIntoBuf(size, Str(temp, 32));
+    int n = FormatSizeHumanIntoBuf(size, Str(temp, 32));
 
     // Copy to wide buffer
     int maxLen = wbuf.len - 1;
     int i = 0;
-    while (i < len && i < maxLen) {
+    while (i < n && i < maxLen) {
         wbuf.s[i] = (wchar_t)temp[i];
         i++;
     }

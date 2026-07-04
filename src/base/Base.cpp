@@ -28,20 +28,20 @@ void* AllocZero(int count, int size) {
 }
 
 // extraBytes will be filled with 0. Useful for copying zero-terminated strings
-void* memdup(const void* data, int len, int extraBytes) {
+void* memdup(const void* data, int n, int extraBytes) {
     // to simplify callers, if data is nullptr, ignore the sizes
     if (!data) {
         return nullptr;
     }
-    void* dup = AllocZero(len + extraBytes, 1);
+    void* dup = AllocZero(n + extraBytes, 1);
     if (dup) {
-        memcpy(dup, data, len);
+        memcpy(dup, data, n);
     }
     return dup;
 }
 
-bool memeq(const void* s1, const void* s2, int len) {
-    return 0 == memcmp(s1, s2, len);
+bool memeq(const void* s1, const void* s2, int n) {
+    return 0 == memcmp(s1, s2, n);
 }
 
 int RoundUp(int n, int rounding) {
@@ -84,8 +84,8 @@ int RoundToPowerOf2(int size) {
  */
 static u32 hash_function_seed = 5381;
 
-u32 MurmurHash2(const void* key, int len) {
-    if (len <= 0) {
+u32 MurmurHash2(const void* key, int n) {
+    if (n <= 0) {
         return 0;
     }
     /* 'm' and 'r' are mixing constants generated offline.
@@ -94,12 +94,12 @@ u32 MurmurHash2(const void* key, int len) {
     const int r = 24;
 
     /* Initialize the hash to a 'random' value */
-    u32 h = hash_function_seed ^ (u32)len;
+    u32 h = hash_function_seed ^ (u32)n;
 
     /* Mix 4 bytes at a time into the hash */
     const u8* data = (const u8*)key;
 
-    while (len >= 4) {
+    while (n >= 4) {
         u32 k = *(u32*)data;
 
         k *= m;
@@ -110,11 +110,11 @@ u32 MurmurHash2(const void* key, int len) {
         h ^= k;
 
         data += 4;
-        len -= 4;
+        n -= 4;
     }
 
     /* Handle the last few bytes of the input array  */
-    switch (len) {
+    switch (n) {
         case 3:
             h ^= data[2] << 16;
         case 2:

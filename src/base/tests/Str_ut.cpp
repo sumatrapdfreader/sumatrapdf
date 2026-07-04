@@ -342,10 +342,10 @@ void StrTest() {
     utassert(str::IndexOfChar(str, 'g') == 7);
     utassert(!str::ContainsChar(str, 'x'));
     utassert(!str::ContainsChar(Str{}, 'a'));
-    int len = str::BufSet(Str(buf, dimof(buf)), str);
-    utassert(len == ::len(buf) && str::Eq(buf, str));
-    len = str::BufSet(Str(buf, 6), str);
-    utassert(len == 5 && str::Eq(buf, "a str"));
+    int n = str::BufSet(Str(buf, dimof(buf)), str);
+    utassert(n == len(buf) && str::Eq(buf, str));
+    n = str::BufSet(Str(buf, 6), str);
+    utassert(n == 5 && str::Eq(buf, "a str"));
 
     str = str::Dup(buf);
     utassert(str::Eq(str, buf));
@@ -375,7 +375,7 @@ void StrTest() {
     utassert(str::Eq(str, nullptr));
 #endif
     str = str::Join(buf, buf);
-    utassert(::len(str) == 2 * ::len(buf));
+    utassert(len(str) == 2 * len(buf));
     str::Free(str);
     str = str::Join(nullptr, "ab");
     utassert(str::Eq(str, "ab"));
@@ -706,7 +706,7 @@ void StrTest() {
     }
     {
         TempWStr tmp = strconv::StrCPToWStrTemp("abc", 12345);
-        utassert(::len(tmp) == 0);
+        utassert(len(tmp) == 0);
     }
     {
         Str tmp = strconv::WStrToCodePage(987654, L"abc");

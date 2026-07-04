@@ -291,9 +291,9 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
             while (p && *p.s != ' ') {
                 p = Str(p.s + 1, p.len - 1);
             }
-            int len = (int)(p.s - start.s);
-            if (len >= 2) {
-                parts[nParts].s = Str(start.s, len);
+            int n = (int)(p.s - start.s);
+            if (n >= 2) {
+                parts[nParts].s = Str(start.s, n);
                 nParts++;
             }
         }

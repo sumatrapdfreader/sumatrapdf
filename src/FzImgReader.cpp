@@ -54,7 +54,7 @@ void fz_drop_context_windows(fz_context* ctx) {
     delete c;
 }
 
-static Pixmap* PixmapFromJpegData(fz_context* ctx, const u8* data, int len) {
+static Pixmap* PixmapFromJpegData(fz_context* ctx, const u8* data, int n) {
     int w = 0, h = 0, xres = 0, yres = 0;
     fz_colorspace* cs = nullptr;
     fz_stream* stm = nullptr;
@@ -65,8 +65,8 @@ static Pixmap* PixmapFromJpegData(fz_context* ctx, const u8* data, int len) {
     fz_var(orient);
 
     fz_try(ctx) {
-        fz_load_jpeg_info(ctx, data, len, &w, &h, &xres, &yres, &cs, &orient);
-        stm = fz_open_memory(ctx, data, len);
+        fz_load_jpeg_info(ctx, data, n, &w, &h, &xres, &yres, &cs, &orient);
+        stm = fz_open_memory(ctx, data, n);
         stm = fz_open_dctd(ctx, stm, -1, 1, 0, nullptr);
     }
     fz_catch(ctx) {
@@ -143,13 +143,13 @@ static Pixmap* PixmapFromJpegData(fz_context* ctx, const u8* data, int len) {
     return PixmapFromGdiplus(&bmp);
 }
 
-static Pixmap* PixmapFromJp2Data(fz_context* ctx, const u8* data, int len) {
+static Pixmap* PixmapFromJp2Data(fz_context* ctx, const u8* data, int n) {
     fz_pixmap* pix = nullptr;
 
     fz_var(pix);
 
     fz_try(ctx) {
-        pix = fz_load_jpx(ctx, data, len, nullptr);
+        pix = fz_load_jpx(ctx, data, n, nullptr);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -196,8 +196,8 @@ static Pixmap* PixmapFromJp2Data(fz_context* ctx, const u8* data, int len) {
 
 static Pixmap* FzImageFromData(Str d) {
     const u8* data = (const u8*)d.s;
-    size_t len = (size_t)d.len;
-    if (len > INT_MAX || len < 12) {
+    size_t n = (size_t)d.len;
+    if (n > INT_MAX || n < 12) {
         return nullptr;
     }
 
@@ -208,9 +208,9 @@ static Pixmap* FzImageFromData(Str d) {
 
     Pixmap* result = nullptr;
     if (str::StartsWith(d, "\xFF\xD8")) {
-        result = PixmapFromJpegData(ctx, data, (int)len);
+        result = PixmapFromJpegData(ctx, data, (int)n);
     } else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
-        result = PixmapFromJp2Data(ctx, data, (int)len);
+        result = PixmapFromJp2Data(ctx, data, (int)n);
     }
 
     fz_drop_context_windows(ctx);

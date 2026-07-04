@@ -501,9 +501,9 @@ size_t StringLenForWidth(ITextRender* textMeasure, WStr s, float dx) {
         return (size_t)s.len;
     }
     // make the best guess of the length that fits
-    size_t len = (size_t)s.len;
-    size_t n = (size_t)((dx / r.dx) * (float)len);
-    ReportIf(n > len);
+    size_t sLen = (size_t)s.len;
+    size_t n = (size_t)((dx / r.dx) * (float)sLen);
+    ReportIf(n > sLen);
     if (n == 0) {
         // nothing fits in the remaining space; caller flushes the line and
         // re-lays the run at full width. Don't Measure an empty string.

@@ -5,7 +5,7 @@ class BitReader {
     u8 GetByte(size_t pos) const;
 
   public:
-    BitReader(u8* data, size_t len);
+    BitReader(u8* data, size_t n);
     ~BitReader();
     u32 Peek(size_t bitsCount);
     size_t BitsLeft() const;

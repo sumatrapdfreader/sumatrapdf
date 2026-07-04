@@ -45,18 +45,18 @@ static void PrintStdout(Str s) {
 
 static WStr GetExeDir() {
     static WCHAR buf[MAX_PATH];
-    DWORD len = GetModuleFileNameW(nullptr, buf, dimof(buf));
-    if (len == 0 || len >= dimof(buf)) {
+    DWORD n = GetModuleFileNameW(nullptr, buf, dimof(buf));
+    if (n == 0 || n >= dimof(buf)) {
         return {};
     }
-    while (len > 0 && buf[len - 1] != L'\\' && buf[len - 1] != L'/') {
-        --len;
+    while (n > 0 && buf[n - 1] != L'\\' && buf[n - 1] != L'/') {
+        --n;
     }
-    if (len > 0) {
-        --len;
+    if (n > 0) {
+        --n;
     }
-    buf[len] = 0;
-    return WStr(buf, (int)len);
+    buf[n] = 0;
+    return WStr(buf, (int)n);
 }
 
 static bool InitSymbolsForAi() {

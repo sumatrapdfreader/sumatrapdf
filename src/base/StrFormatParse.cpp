@@ -71,15 +71,15 @@ struct Fmt {
     char buf[256] = {};
 };
 
-static void addRawStr(Fmt& fmt, int off, size_t len) {
-    if (len == 0) {
+static void addRawStr(Fmt& fmt, int off, size_t n) {
+    if (n == 0) {
         return;
     }
     ReportIf(fmt.nInst >= dimof(fmt.instructions));
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = FmtArg::Kind::RawStr;
     i.rawOff = off;
-    i.sLen = (int)len;
+    i.sLen = (int)n;
     i.argNo = -1;
 }
 

@@ -1022,14 +1022,14 @@ static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int fi
         }
         int firstPos = len(positions);
         AppendMatchPageRects(engine, fm, positions);
-        int len = positions.len - firstPos;
-        if (len == 0) {
+        int n = positions.len - firstPos;
+        if (n == 0) {
             continue;
         }
         FindMatchPaintRects entry;
         entry.key = MatchKey(fm.startPage, fm.startGlyph);
         entry.firstPos = firstPos;
-        entry.len = len;
+        entry.len = n;
         gFindMatchPaintCache.entries.Append(entry);
     }
 }

@@ -1114,8 +1114,8 @@ void AbortPrinting(MainWindow* win) {
     win->printCanceled = false;
 }
 
-static HGLOBAL GlobalMemDup(const void* data, size_t len) {
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, len);
+static HGLOBAL GlobalMemDup(const void* data, size_t n) {
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, n);
     if (!hGlobal) {
         return nullptr;
     }
@@ -1126,7 +1126,7 @@ static HGLOBAL GlobalMemDup(const void* data, size_t len) {
         return nullptr;
     }
 
-    memcpy(globalData, data, len);
+    memcpy(globalData, data, n);
     GlobalUnlock(hGlobal);
     return hGlobal;
 }

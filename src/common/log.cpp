@@ -88,16 +88,16 @@ void logConsole(const char* fmt, ...) {
     char buf[4096];
     va_list args;
     va_start(args, fmt);
-    int len = wvsprintfA(buf, fmt, args);
+    int n = wvsprintfA(buf, fmt, args);
     va_end(args);
 
-    if (len <= 0) return;
+    if (n <= 0) return;
 
     DWORD written;
     if (gStdoutRedirected && gOriginalStdout != INVALID_HANDLE_VALUE) {
         // Redirected to file (cmd.exe style) - WriteFile works directly
-        WriteFile(gOriginalStdout, buf, len, &written, nullptr);
-        BOOL ok = WriteFile(gOriginalStdout, buf, len, &written, nullptr);
+        WriteFile(gOriginalStdout, buf, n, &written, nullptr);
+        BOOL ok = WriteFile(gOriginalStdout, buf, n, &written, nullptr);
         if (!ok) {
             logStr(fmt("error: %s\n", GetLastErrorAsStr(GetTempArena())));
         }
@@ -105,7 +105,7 @@ void logConsole(const char* fmt, ...) {
         // Writing to console
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         if (hConsole != INVALID_HANDLE_VALUE) {
-            WriteConsoleA(hConsole, buf, len, &written, nullptr);
+            WriteConsoleA(hConsole, buf, n, &written, nullptr);
             gLoggedToConsole = true;
         }
     }

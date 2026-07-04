@@ -96,21 +96,21 @@ static u32 convLE(u32 x) {
     return readLE32(data);
 }
 
-static bool HasVersion2Footer(const u8* data, size_t len) {
-    if (len < sizeof(TgaHeader) + sizeof(TgaFooter)) {
+static bool HasVersion2Footer(const u8* data, size_t n) {
+    if (n < sizeof(TgaHeader) + sizeof(TgaFooter)) {
         return false;
     }
-    const TgaFooter* footerLE = (const TgaFooter*)(data + len - sizeof(TgaFooter));
+    const TgaFooter* footerLE = (const TgaFooter*)(data + n - sizeof(TgaFooter));
     return str::EqN(footerLE->signature, TGA_FOOTER_SIGNATURE, sizeof(footerLE->signature));
 }
 
-static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t len) {
-    if (!HasVersion2Footer(data, len)) {
+static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t n) {
+    if (!HasVersion2Footer(data, n)) {
         return nullptr;
     }
-    const TgaFooter* footerLE = (const TgaFooter*)(data + len - sizeof(TgaFooter));
+    const TgaFooter* footerLE = (const TgaFooter*)(data + n - sizeof(TgaFooter));
     if (convLE(footerLE->extAreaOffset) < sizeof(TgaHeader) ||
-        convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > len) {
+        convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > n) {
         return nullptr;
     }
     const TgaExtArea* extAreaLE = (const TgaExtArea*)(data + convLE(footerLE->extAreaOffset));
@@ -166,8 +166,8 @@ static Gdiplus::PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha
     return 0;
 }
 
-static ImageAlpha GetAlphaType(const u8* data, size_t len) {
-    const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
+static ImageAlpha GetAlphaType(const u8* data, size_t n) {
+    const TgaExtArea* extAreaLE = GetExtAreaPtr(data, n);
     if (!extAreaLE) {
         return Alpha_Normal;
     }
@@ -184,13 +184,13 @@ static ImageAlpha GetAlphaType(const u8* data, size_t len) {
 
 // checks whether this could be data for a TGA image
 bool HasSignature(Str d) {
-    size_t len = (size_t)d.len;
+    size_t n = (size_t)d.len;
     const u8* data = (const u8*)d.s;
-    if (HasVersion2Footer(data, len)) {
+    if (HasVersion2Footer(data, n)) {
         return true;
     }
     // fall back to checking for values that would be valid for a TGA image
-    if (len < sizeof(TgaHeader)) {
+    if (n < sizeof(TgaHeader)) {
         return false;
     }
     const TgaHeader* headerLE = (const TgaHeader*)data;
@@ -274,17 +274,17 @@ static void ReadPixel(ReadState& s, u8* dst) {
 }
 
 Pixmap* PixmapFromData(Str d) {
-    size_t len = (size_t)d.len;
+    size_t dataLen = (size_t)d.len;
     const u8* data = (const u8*)d.s;
 
-    if (len < sizeof(TgaHeader)) {
+    if (dataLen < sizeof(TgaHeader)) {
         return nullptr;
     }
 
     ReadState s = {nullptr};
     const TgaHeader* headerLE = (const TgaHeader*)d.s;
     s.data = data + sizeof(TgaHeader) + headerLE->idLength;
-    s.end = data + len;
+    s.end = data + dataLen;
     if (1 == headerLE->cmapType) {
         s.cmap.data = s.data;
         s.cmap.n = (headerLE->cmapBitDepth + 7) / 8;
@@ -296,7 +296,7 @@ Pixmap* PixmapFromData(Str d) {
     s.n = (headerLE->bitDepth + 7) / 8;
     s.isRLE = headerLE->imageType >= 8;
 
-    Gdiplus::PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, len));
+    Gdiplus::PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, dataLen));
     if (!format) {
         return nullptr;
     }

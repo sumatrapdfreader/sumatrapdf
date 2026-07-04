@@ -1123,9 +1123,9 @@ Str FindFirstValidParentDir(Str path) {
 
 static Str GetHomeDir() {
     wchar_t buf[MAX_PATH];
-    DWORD len = GetEnvironmentVariableW(L"USERPROFILE", buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, len));
+    DWORD n = GetEnvironmentVariableW(L"USERPROFILE", buf, MAX_PATH);
+    if (n > 0 && n < MAX_PATH) {
+        return ToUtf8Temp(WStr(buf, n));
     }
     // Fallback to HOMEDRIVE + HOMEPATH
     wchar_t drive[MAX_PATH];
@@ -1150,9 +1150,9 @@ static Str GetHomeDir() {
 static Str ExpandEnvVar(Str varName) {
     WCHAR* wideVar = CWStrTemp(varName);
     wchar_t buf[MAX_PATH];
-    DWORD len = GetEnvironmentVariableW(wideVar, buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, len));
+    DWORD n = GetEnvironmentVariableW(wideVar, buf, MAX_PATH);
+    if (n > 0 && n < MAX_PATH) {
+        return ToUtf8Temp(WStr(buf, n));
     }
     return Str();
 }
@@ -1160,9 +1160,9 @@ static Str ExpandEnvVar(Str varName) {
 static Str ToAbsolutePath(Str path) {
     WCHAR* widePath = CWStrTemp(path);
     wchar_t buf[MAX_PATH];
-    DWORD len = GetFullPathNameW(widePath, MAX_PATH, buf, nullptr);
-    if (len > 0 && len < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, len));
+    DWORD n = GetFullPathNameW(widePath, MAX_PATH, buf, nullptr);
+    if (n > 0 && n < MAX_PATH) {
+        return ToUtf8Temp(WStr(buf, n));
     }
     return path;
 }
@@ -1173,8 +1173,8 @@ Str PathGetDirTemp(Str path) {
     int idx = str::LastIndexOfChar(path, '\\');
     if (idx < 0) return Str();
     // Keep trailing backslash for root (e.g., "C:\")
-    int len = (idx <= 2) ? idx + 1 : idx;
-    return str::DupTemp(Str(path.s, len));
+    int n = (idx <= 2) ? idx + 1 : idx;
+    return str::DupTemp(Str(path.s, n));
 }
 
 Str PathGetNameTemp(Str path) {

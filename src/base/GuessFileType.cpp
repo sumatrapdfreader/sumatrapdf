@@ -309,7 +309,7 @@ static Kind DetectHicAndAvif(Str d) {
 Kind GuessFileTypeFromContent(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
-    size_t len = (size_t)d.len;
+    size_t dataLen = (size_t)d.len;
     int n = (int)dimof(gFileSigs);
 
     for (int i = 0; i < n; i++) {
@@ -318,7 +318,7 @@ Kind GuessFileTypeFromContent(Str d) {
         size_t sigLen = gFileSigs[i].sigLen;
         size_t sigMaxLen = off + sigLen;
         u8* dat = data + off;
-        if ((len > sigMaxLen) && memeq(dat, sig.s, (int)sigLen)) {
+        if ((dataLen > sigMaxLen) && memeq(dat, sig.s, (int)sigLen)) {
             return gFileSigs[i].kind;
         }
     }

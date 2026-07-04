@@ -8,8 +8,8 @@
 constexpr u32 kNullOffset = (u32)-2;
 
 static int StrCmp(Str s1, Str s2) {
-    size_t len = std::min((size_t)s1.len, (size_t)s2.len);
-    int cmp = len > 0 ? memcmp(s1.s, s2.s, len) : 0;
+    size_t n = std::min((size_t)s1.len, (size_t)s2.len);
+    int cmp = n > 0 ? memcmp(s1.s, s2.s, n) : 0;
     if (cmp != 0) {
         return cmp;
     }
@@ -17,8 +17,8 @@ static int StrCmp(Str s1, Str s2) {
 }
 
 static int StrCmpI(Str s1, Str s2) {
-    size_t len = std::min((size_t)s1.len, (size_t)s2.len);
-    int cmp = len > 0 ? _strnicmp(s1.s, s2.s, len) : 0;
+    size_t n = std::min((size_t)s1.len, (size_t)s2.len);
+    int cmp = n > 0 ? _strnicmp(s1.s, s2.s, n) : 0;
     if (cmp != 0) {
         return cmp;
     }

@@ -3332,19 +3332,19 @@ static bool IsImageUrl(Str url) {
     // strip query string / fragment for extension check
     int qIdx = str::IndexOfChar(url, '?');
     int hIdx = str::IndexOfChar(url, '#');
-    int len = url.len;
-    if (qIdx >= 0 && qIdx < len) {
-        len = qIdx;
+    int n = url.len;
+    if (qIdx >= 0 && qIdx < n) {
+        n = qIdx;
     }
-    if (hIdx >= 0 && hIdx < len) {
-        len = hIdx;
+    if (hIdx >= 0 && hIdx < n) {
+        n = hIdx;
     }
     // check for common image extensions
     Str exts[] = {".png",  ".jpg",  ".jpeg", ".gif", ".bmp", ".tiff", ".tif",
                   ".webp", ".avif", ".heic", ".jxr", ".jp2", ".tga"};
     for (Str ext : exts) {
-        if (len >= ext.len) {
-            Str ending(url.s + len - ext.len, ext.len);
+        if (n >= ext.len) {
+            Str ending(url.s + n - ext.len, ext.len);
             if (str::EqI(ending, ext)) {
                 return true;
             }

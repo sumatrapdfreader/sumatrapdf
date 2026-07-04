@@ -220,11 +220,11 @@ static EngineBase* psgz2pdf(Str fileName) {
 
     char buffer[12 * 1024];
     for (;;) {
-        int len = gzread(inFile, buffer, sizeof(buffer));
-        if (len <= 0) {
+        int n = gzread(inFile, buffer, sizeof(buffer));
+        if (n <= 0) {
             break;
         }
-        fwrite(buffer, 1, len, outFile);
+        fwrite(buffer, 1, n, outFile);
     }
     fclose(outFile);
     gzclose(inFile);

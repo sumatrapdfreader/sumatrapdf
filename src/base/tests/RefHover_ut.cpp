@@ -20,11 +20,11 @@ constexpr int kLineH = 12;
 
 // Helper: append the WCHARs of `s` starting at (x, y) with fixed-width glyphs.
 // Caller passes pre-allocated text/coords buffers and the current length.
-static void AddText(WCHAR* text, Rect* coords, int& len, int cap, WStr s, int x, int y) {
-    for (int i = 0; i < s.len && len < cap; i++) {
-        text[len] = s.s[i];
-        coords[len] = Rect{x + i * kCharW, y, kCharW, kLineH};
-        len++;
+static void AddText(WCHAR* text, Rect* coords, int& n, int cap, WStr s, int x, int y) {
+    for (int i = 0; i < s.len && n < cap; i++) {
+        text[n] = s.s[i];
+        coords[n] = Rect{x + i * kCharW, y, kCharW, kLineH};
+        n++;
     }
 }
 
@@ -41,9 +41,9 @@ static bool IsEmpty(RectF r) {
 static void SparseTextReturnsWholePage() {
     WCHAR text[64];
     Rect coords[64];
-    int len = 0;
-    AddText(text, coords, len, 64, L"Heading only", 100, 100);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 100.f, 100.f);
+    int n = 0;
+    AddText(text, coords, n, 64, L"Heading only", 100, 100);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 100.f, 100.f);
     utassert(box.x == 0.f);
     utassert(box.y == 0.f);
     utassert(box.dx == kPageW);
@@ -55,11 +55,11 @@ static void SparseTextReturnsWholePage() {
 static void NegativeDestYFallsToLandscape() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     for (int i = 0; i < 10; i++) {
-        AddText(text, coords, len, 512, L"Body text line content here.", 72, 100 + i * 14);
+        AddText(text, coords, n, 512, L"Body text line content here.", 72, 100 + i * 14);
     }
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, -1.f);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, -1.f);
     utassert(box.x == 0.f);
     utassert(box.y == 0.f);
     utassert(box.dx == kPageW);
@@ -72,14 +72,14 @@ static void NegativeDestYFallsToLandscape() {
 static void BracketEntryFitsToOneEntry() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // Entry 1 at y=200, two lines (line 2 indented).
-    AddText(text, coords, len, 512, L"[Foo10] Smith J., 2010, Some title.", 72, 200);
-    AddText(text, coords, len, 512, L"continuation line of the entry.", 92, 215);
+    AddText(text, coords, n, 512, L"[Foo10] Smith J., 2010, Some title.", 72, 200);
+    AddText(text, coords, n, 512, L"continuation line of the entry.", 92, 215);
     // Entry 2 at y=240, sibling start back at x=72.
-    AddText(text, coords, len, 512, L"[Bar11] Doe J., 2011, Another title.", 72, 240);
-    AddText(text, coords, len, 512, L"continuation line of the entry.", 92, 255);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    AddText(text, coords, n, 512, L"[Bar11] Doe J., 2011, Another title.", 72, 240);
+    AddText(text, coords, n, 512, L"continuation line of the entry.", 92, 255);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // Box should end before entry 2 starts at y=240.
     utassert(box.y + box.dy < 240.f);
@@ -94,12 +94,12 @@ static void BracketEntryFitsToOneEntry() {
 static void AuthorYearEntryFitsToOneEntry() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"Smith, J. (2010). Some title here.", 72, 200);
-    AddText(text, coords, len, 1024, L"Journal of Things, 12(3), 45-67.", 92, 215);
-    AddText(text, coords, len, 1024, L"Doe, A. (2011). Another work title.", 72, 240);
-    AddText(text, coords, len, 1024, L"Other Journal, 4(2), 89-101.", 92, 255);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"Smith, J. (2010). Some title here.", 72, 200);
+    AddText(text, coords, n, 1024, L"Journal of Things, 12(3), 45-67.", 92, 215);
+    AddText(text, coords, n, 1024, L"Doe, A. (2011). Another work title.", 72, 240);
+    AddText(text, coords, n, 1024, L"Other Journal, 4(2), 89-101.", 92, 255);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // both lines of entry 1, nothing of entry 2
     utassert(box.y <= 200.f && box.y >= 188.f);
@@ -114,11 +114,11 @@ static void AuthorYearEntryFitsToOneEntry() {
 static void SingleLineEntryList() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"JVM Java Virtual Machine. 19, 36", 72, 200);
-    AddText(text, coords, len, 1024, L"LLM Large Language Model. 45", 72, 215);
-    AddText(text, coords, len, 1024, L"PDF Portable Document Format. 7", 72, 230);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"JVM Java Virtual Machine. 19, 36", 72, 200);
+    AddText(text, coords, n, 1024, L"LLM Large Language Model. 45", 72, 215);
+    AddText(text, coords, n, 1024, L"PDF Portable Document Format. 7", 72, 230);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // first entry only: the second line's glyphs (bottom 227) are excluded
     utassert(box.y + box.dy < 227.f);
@@ -130,10 +130,10 @@ static void SingleLineEntryList() {
 static void GapSeparatedEntryList() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"First footnote text goes here.", 72, 200);
-    AddText(text, coords, len, 1024, L"Second footnote starts here.", 72, 240);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"First footnote text goes here.", 72, 200);
+    AddText(text, coords, n, 1024, L"Second footnote starts here.", 72, 240);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     utassert(box.y + box.dy < 240.f);
     utassert(box.dx < kPageW);
@@ -145,16 +145,16 @@ static void GapSeparatedEntryList() {
 static void TwoColumnRightEntryStaysInColumn() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column body text at x=72 (right edge ≈ 72+29*6=246), same y range.
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, len, 1024, L"left column body text line...", 72, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"left column body text line...", 72, 200 + i * 15);
     }
     // Right column starts at x=320 (gutter ≈ 246..320).
-    AddText(text, coords, len, 1024, L"[Foo10] Smith J., 2010, Title.", 320, 200);
-    AddText(text, coords, len, 1024, L"continuation of the entry.", 340, 215);
-    AddText(text, coords, len, 1024, L"[Bar11] Doe J., 2011, Other.", 320, 240);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 320.f, 200.f);
+    AddText(text, coords, n, 1024, L"[Foo10] Smith J., 2010, Title.", 320, 200);
+    AddText(text, coords, n, 1024, L"continuation of the entry.", 340, 215);
+    AddText(text, coords, n, 1024, L"[Bar11] Doe J., 2011, Other.", 320, 240);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 320.f, 200.f);
     utassert(!IsEmpty(box));
     // Box must stay right of the gutter (not include the left column).
     utassert(box.x > 246.f);
@@ -167,16 +167,16 @@ static void TwoColumnRightEntryStaysInColumn() {
 static void TwoColumnLeftEntryStaysInColumn() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column entry at x=72 (line right edge ≈ 72+29*6=246).
-    AddText(text, coords, len, 1024, L"[Foo10] Smith J., 2010, Title", 72, 200);
-    AddText(text, coords, len, 1024, L"continuation of the entry.", 92, 215);
-    AddText(text, coords, len, 1024, L"[Bar11] Doe J., 2011, Other.", 72, 240);
+    AddText(text, coords, n, 1024, L"[Foo10] Smith J., 2010, Title", 72, 200);
+    AddText(text, coords, n, 1024, L"continuation of the entry.", 92, 215);
+    AddText(text, coords, n, 1024, L"[Bar11] Doe J., 2011, Other.", 72, 240);
     // Right column body text at x=340, same y range.
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + i * 15);
     }
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // Box must not reach into the right column at x=340.
     utassert(box.x + box.dx < 340.f);
@@ -191,15 +191,15 @@ static void TwoColumnLeftEntryStaysInColumn() {
 static void ColumnWrapContinuationDetected() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column's last entry: single line near the page bottom (kPageH=792).
-    AddText(text, coords, len, 1024, L"[63] Voelter M: DSL Engineering des", 72, 762);
+    AddText(text, coords, n, 1024, L"[63] Voelter M: DSL Engineering des", 72, 762);
     // Right column (gutter ~252..340): continuation of [63] at the top (no
     // bracket label), then the next real entry [64] further down.
-    AddText(text, coords, len, 1024, L"Languages dslbook org Germany 2013", 340, 40);
-    AddText(text, coords, len, 1024, L"[64] Moretti N Xie X et al Title", 340, 65);
+    AddText(text, coords, n, 1024, L"Languages dslbook org Germany 2013", 340, 40);
+    AddText(text, coords, n, 1024, L"[64] Moretti N Xie X et al Title", 340, 65);
     RectF continuation{};
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 762.f, &continuation);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 762.f, &continuation);
     utassert(!IsEmpty(box));
     // Primary box unaffected: stays in the left column, at the entry's line.
     utassert(box.x < 246.f);
@@ -219,16 +219,16 @@ static void ColumnWrapContinuationDetected() {
 static void ColumnWrapContinuationRejectsUnrelatedBodyText() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"[47] Zhang X Wang Y Wang J Title A", 72, 750);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"[47] Zhang X Wang Y Wang J Title A", 72, 750);
     // Right column: several lines of unrelated running text, then a sibling
     // entry far past the short continuation cap.
     for (int i = 0; i < 6; i++) {
-        AddText(text, coords, len, 1024, L"unrelated running body text here.", 340, 40 + i * 14);
+        AddText(text, coords, n, 1024, L"unrelated running body text here.", 340, 40 + i * 14);
     }
-    AddText(text, coords, len, 1024, L"[48] Li H Hou L Wang X Guo H Title", 340, 130);
+    AddText(text, coords, n, 1024, L"[48] Li H Hou L Wang X Guo H Title", 340, 130);
     RectF continuation{};
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 750.f, &continuation);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 750.f, &continuation);
     utassert(!IsEmpty(box));
     utassert(IsEmpty(continuation));
 }
@@ -241,15 +241,15 @@ static void ColumnWrapContinuationRejectsUnrelatedBodyText() {
 static void AccentedAllCapsHeadingDetected() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"SECCIÓN 2 RESULTADOS", 72, 200);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"SECCIÓN 2 RESULTADOS", 72, 200);
     // body paragraph: first line indented, second back at the margin
-    AddText(text, coords, len, 1024, L"texto del cuerpo del documento.", 92, 215);
-    AddText(text, coords, len, 1024, L"continua en el margen izquierdo.", 72, 230);
+    AddText(text, coords, n, 1024, L"texto del cuerpo del documento.", 92, 215);
+    AddText(text, coords, n, 1024, L"continua en el margen izquierdo.", 72, 230);
     for (int i = 0; i < 3; i++) {
-        AddText(text, coords, len, 1024, L"mas lineas de texto del cuerpo.", 72, 245 + i * 15);
+        AddText(text, coords, n, 1024, L"mas lineas de texto del cuerpo.", 72, 245 + i * 15);
     }
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // heading destination => landscape view spanning the full page width
     utassert(box.x == 0.f);
@@ -261,15 +261,15 @@ static void AccentedAllCapsHeadingDetected() {
 static void EquationLabelDetected() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // Equation row at y=300, label "(14)" at x≈540 (right of mediabox.dx*0.5).
-    AddText(text, coords, len, 512, L"dH/dt = -sum( ... )", 200, 300);
-    AddText(text, coords, len, 512, L"(14)", 540, 300);
+    AddText(text, coords, n, 512, L"dH/dt = -sum( ... )", 200, 300);
+    AddText(text, coords, n, 512, L"(14)", 540, 300);
     // A paragraph below.
     for (int i = 0; i < 3; i++) {
-        AddText(text, coords, len, 512, L"Paragraph text below the equation here.", 72, 330 + i * 14);
+        AddText(text, coords, n, 512, L"Paragraph text below the equation here.", 72, 330 + i * 14);
     }
-    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 72.f, 300.f);
+    RectF box = DetectEquationBox(WStr(text, n), coords, Mediabox(), 72.f, 300.f);
     utassert(!IsEmpty(box));
     utassert(box.x == 0.f);
     utassert(box.dx == kPageW);
@@ -285,11 +285,11 @@ static void EquationLabelDetected() {
 static void BodyTextParenRejected() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
-    AddText(text, coords, len, 512, L"some body text on another line.", 72, 280);
+    int n = 0;
+    AddText(text, coords, n, 512, L"some body text on another line.", 72, 280);
     // line-trailing "(14)" at x=80 — left half of the 612-wide page
-    AddText(text, coords, len, 512, L"(14)", 80, 300);
-    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 80.f, 300.f);
+    AddText(text, coords, n, 512, L"(14)", 80, 300);
+    RectF box = DetectEquationBox(WStr(text, n), coords, Mediabox(), 80.f, 300.f);
     utassert(IsEmpty(box));
 }
 
@@ -298,12 +298,12 @@ static void BodyTextParenRejected() {
 static void NonTrailingParenRejected() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // Label "(14)" at x=540 followed by text at x=560 (further right).
-    AddText(text, coords, len, 512, L"dH/dt = ...", 200, 300);
-    AddText(text, coords, len, 512, L"(14)", 540, 300);
-    AddText(text, coords, len, 512, L"trail", 560, 300);
-    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 200.f, 300.f);
+    AddText(text, coords, n, 512, L"dH/dt = ...", 200, 300);
+    AddText(text, coords, n, 512, L"(14)", 540, 300);
+    AddText(text, coords, n, 512, L"trail", 560, 300);
+    RectF box = DetectEquationBox(WStr(text, n), coords, Mediabox(), 200.f, 300.f);
     utassert(IsEmpty(box));
 }
 
@@ -314,16 +314,16 @@ static void NonTrailingParenRejected() {
 static void BibYearParenNotEquationLabel() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // Reference line ending in "(2013)" at the right column (right half).
-    AddText(text, coords, len, 512, L"O. Zimmermann Decisions IGI Global (2013)", 320, 300);
-    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 320.f, 300.f);
+    AddText(text, coords, n, 512, L"O. Zimmermann Decisions IGI Global (2013)", 320, 300);
+    RectF box = DetectEquationBox(WStr(text, n), coords, Mediabox(), 320.f, 300.f);
     utassert(IsEmpty(box));
     // sanity: a genuine 2-digit equation label is still detected
-    len = 0;
-    AddText(text, coords, len, 512, L"some eq body", 200, 300);
-    AddText(text, coords, len, 512, L"(14)", 540, 300);
-    box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 200.f, 300.f);
+    n = 0;
+    AddText(text, coords, n, 512, L"some eq body", 200, 300);
+    AddText(text, coords, n, 512, L"(14)", 540, 300);
+    box = DetectEquationBox(WStr(text, n), coords, Mediabox(), 200.f, 300.f);
     utassert(!IsEmpty(box));
 }
 
@@ -346,14 +346,14 @@ static void EmptyInputsHandled() {
 static void FrenchCaptionDetected() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // Caption line "Tableau 2: Données" at y=300 — this is the destY.
-    AddText(text, coords, len, 512, L"Tableau 2: Donnees", 72, 300);
+    AddText(text, coords, n, 512, L"Tableau 2: Donnees", 72, 300);
     // Body paragraph below.
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, len, 512, L"Paragraphe de texte courant.", 72, 320 + i * 14);
+        AddText(text, coords, n, 512, L"Paragraphe de texte courant.", 72, 320 + i * 14);
     }
-    RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, len), coords);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, n), coords);
     // destAtCaption pulls region top above destY (figure body extension).
     utassert(box.y < 300.f - 50.f);
     utassert(box.dx == kPageW);
@@ -366,12 +366,12 @@ static void ItalianPortugueseCaptionDetected() {
     for (WStr caption : captions) {
         WCHAR text[512];
         Rect coords[512];
-        int len = 0;
-        AddText(text, coords, len, 512, caption, 72, 300);
+        int n = 0;
+        AddText(text, coords, n, 512, caption, 72, 300);
         for (int i = 0; i < 5; i++) {
-            AddText(text, coords, len, 512, L"testo del corpo del documento.", 72, 320 + i * 14);
+            AddText(text, coords, n, 512, L"testo del corpo del documento.", 72, 320 + i * 14);
         }
-        RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, len), coords);
+        RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, n), coords);
         // destAtCaption pulls region top above destY (figure body extension)
         utassert(box.y < 300.f - 50.f);
     }
@@ -383,11 +383,11 @@ static void ItalianPortugueseCaptionDetected() {
 static void PluralHeadingWordNotMatched() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"Sections of papers, J. Smith.", 72, 200);
-    AddText(text, coords, len, 1024, L"continuation line of the entry.", 92, 215);
-    AddText(text, coords, len, 1024, L"Another entry begins here now.", 72, 240);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"Sections of papers, J. Smith.", 72, 200);
+    AddText(text, coords, n, 1024, L"continuation line of the entry.", 92, 215);
+    AddText(text, coords, n, 1024, L"Another entry begins here now.", 72, 240);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // fitted entry box, not the full-width landscape heading view
     utassert(box.dx < kPageW);
@@ -399,16 +399,16 @@ static void PluralHeadingWordNotMatched() {
 static void CaptionExtensionPicksTopmost() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     for (int i = 0; i < 3; i++) {
-        AddText(text, coords, len, 1024, L"body paragraph at the dest.", 72, 100 + i * 14);
+        AddText(text, coords, n, 1024, L"body paragraph at the dest.", 72, 100 + i * 14);
     }
     // a far caption drawn EARLY in the content stream ... (the leading
     // space stands in for the inter-block separator of real extraction)
-    AddText(text, coords, len, 1024, L" Figure 9: far away caption", 72, 700);
+    AddText(text, coords, n, 1024, L" Figure 9: far away caption", 72, 700);
     // ... and a nearer caption drawn later
-    AddText(text, coords, len, 1024, L" Figure 2: near caption", 72, 420);
-    RectF box = LandscapeBox(Mediabox(), 72.f, 100.f, WStr(text, len), coords);
+    AddText(text, coords, n, 1024, L" Figure 2: near caption", 72, 420);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 100.f, WStr(text, n), coords);
     // region must extend to the near caption only, not down to y=700
     utassert(box.y + box.dy > 420.f);
     utassert(box.y + box.dy < 600.f);
@@ -419,11 +419,11 @@ static void CaptionExtensionPicksTopmost() {
 static void LandscapeBoxBasicShape() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
+    int n = 0;
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, len, 256, L"some body content.", 72, 400 + i * 14);
+        AddText(text, coords, n, 256, L"some body content.", 72, 400 + i * 14);
     }
-    RectF box = LandscapeBox(Mediabox(), 72.f, 400.f, WStr(text, len), coords);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 400.f, WStr(text, n), coords);
     utassert(box.x == 0.f);
     utassert(box.dx == kPageW);
     utassert(box.y >= 0.f);
@@ -437,12 +437,12 @@ static void LandscapeBoxBasicShape() {
 static void PlainTextCitationDetected() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
-    AddText(text, coords, len, 256, L"as shown in (Smith et al., 2020) earlier", 72, 200);
+    int n = 0;
+    AddText(text, coords, n, 256, L"as shown in (Smith et al., 2020) earlier", 72, 200);
     Str surname{};
     int year = 0;
     // Cursor on the 'S' of "Smith" (glyph 13 → x = 72 + 13*6 = 150).
-    bool ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{152, 206}, &surname, &year);
+    bool ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{152, 206}, &surname, &year);
     utassert(ok);
     utassert(surname && str::Eq(surname, "Smith"));
     utassert(year == 2020);
@@ -453,11 +453,11 @@ static void PlainTextCitationDetected() {
 static void PlainTextCitationNoYear() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
-    AddText(text, coords, len, 256, L"plain body text without any citation", 72, 200);
+    int n = 0;
+    AddText(text, coords, n, 256, L"plain body text without any citation", 72, 200);
     Str surname{};
     int year = 0;
-    bool ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{100, 206}, &surname, &year);
+    bool ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{100, 206}, &surname, &year);
     utassert(!ok);
     utassert(!surname);
 }
@@ -468,16 +468,16 @@ static void PlainTextCitationNoYear() {
 static void SurnameFoundOnBibPage() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
-    AddText(text, coords, len, 512, L"References", 72, 100);
-    AddText(text, coords, len, 512, L"Smith, J. (2020). Some title.", 72, 130);
-    AddText(text, coords, len, 512, L"continuation of the entry.", 90, 145);
+    int n = 0;
+    AddText(text, coords, n, 512, L"References", 72, 100);
+    AddText(text, coords, n, 512, L"Smith, J. (2020). Some title.", 72, 130);
+    AddText(text, coords, n, 512, L"continuation of the entry.", 90, 145);
     float x = 0.f, y = 0.f;
-    bool ok = FindSurnameInPageText(WStr(text, len), coords, len, WStrL(L"Smith"), 2020, &x, &y);
+    bool ok = FindSurnameInPageText(WStr(text, n), coords, n, WStrL(L"Smith"), 2020, &x, &y);
     utassert(ok);
     utassert(x == 72.f);
     utassert(y == 130.f);
-    ok = FindSurnameInPageText(WStr(text, len), coords, len, WStrL(L"Jones"), 2021, &x, &y);
+    ok = FindSurnameInPageText(WStr(text, n), coords, n, WStrL(L"Jones"), 2021, &x, &y);
     utassert(!ok);
 }
 
@@ -486,26 +486,26 @@ static void SurnameFoundOnBibPage() {
 static void NumericCitationDetected() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
-    AddText(text, coords, len, 256, L"see [1] for details", 72, 200);
+    int n = 0;
+    AddText(text, coords, n, 256, L"see [1] for details", 72, 200);
     int num = 0;
     // Cursor on the '1' (glyph 5 → x = 72 + 5*6 = 102).
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{105, 206}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{105, 206}, &num);
     utassert(ok);
     utassert(num == 1);
 
-    len = 0;
-    AddText(text, coords, len, 256, L"prior work [1, 2] showed", 72, 200);
+    n = 0;
+    AddText(text, coords, n, 256, L"prior work [1, 2] showed", 72, 200);
     num = 0;
     // Cursor on the '2' (glyph 15 → x = 72 + 15*6 = 162).
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{165, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{165, 206}, &num);
     utassert(ok);
     utassert(num == 2);
 
-    len = 0;
-    AddText(text, coords, len, 256, L"no brackets here at all", 72, 200);
+    n = 0;
+    AddText(text, coords, n, 256, L"no brackets here at all", 72, 200);
     num = 0;
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{100, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{100, 206}, &num);
     utassert(!ok);
 }
 
@@ -513,15 +513,15 @@ static void NumericCitationDetected() {
 static void NumericCitationSrcRectDistinctOnLine() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
-    AddText(text, coords, len, 256, L"see [1] and again [1] end", 72, 200);
+    int n = 0;
+    AddText(text, coords, n, 256, L"see [1] and again [1] end", 72, 200);
     Rect first{}, second{};
     int num = 0;
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{105, 206}, &num, &first);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{105, 206}, &num, &first);
     utassert(ok);
     utassert(num == 1);
     utassert(first.dx > 0);
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{189, 206}, &num, &second);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{189, 206}, &num, &second);
     utassert(ok);
     utassert(num == 1);
     utassert(second.dx > 0);
@@ -535,21 +535,21 @@ static void NumericCitationSrcRectDistinctOnLine() {
 static void NumericCitationRangeEnDash() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
+    int n = 0;
     // "deploy [2, 9–14]." — en-dash split from "14" so the \x2013 escape does
     // not swallow the following hex digits.
-    AddText(text, coords, len, 256,
+    AddText(text, coords, n, 256,
             L"deploy [2, 9\x2013"
             L"14].",
             72, 200);
     int num = 0;
     // Cursor on the '9' (idx 11 → x = 72 + 11*6 = 138).
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{141, 206}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{141, 206}, &num);
     utassert(ok);
     utassert(num == 9);
     // Cursor on the '4' of "14" (idx 14 → x = 72 + 14*6 = 156).
     num = 0;
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{159, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{159, 206}, &num);
     utassert(ok);
     utassert(num == 14);
 }
@@ -562,22 +562,22 @@ static void NumericCitationRangeEnDash() {
 static void NumericCitationLineBreakList() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
-    AddText(text, coords, len, 256, L"in AECO [8, 17,", 72, 200); // '[' at idx 8 (x=120)
-    AddText(text, coords, len, 256, L"18]. These", 72, 220);      // '1' at idx 15 (x=72,y=220)
+    int n = 0;
+    AddText(text, coords, n, 256, L"in AECO [8, 17,", 72, 200); // '[' at idx 8 (x=120)
+    AddText(text, coords, n, 256, L"18]. These", 72, 220);      // '1' at idx 15 (x=72,y=220)
     int num = 0;
     // Cursor on the '8' on line 1 (idx 9 → x = 72 + 9*6 = 126).
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{129, 206}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{129, 206}, &num);
     utassert(ok);
     utassert(num == 8);
     // Cursor on the wrapped "18" on line 2 (idx 15 → x = 72, y = 220).
     num = 0;
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 224}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{75, 224}, &num);
     utassert(ok);
     utassert(num == 18);
     // Cursor on "17" on line 1 (idx 12 → x = 144).
     num = 0;
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{147, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{147, 206}, &num);
     utassert(ok);
     utassert(num == 17);
 }
@@ -590,15 +590,15 @@ static void NumericCitationLineBreakList() {
 static void NumericCitationWrapEndOfLine() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
+    int n = 0;
     // Line 1 is a full column line ending in "[42," (the citation wrapped at
     // the right margin); line 2 begins with "43]" at the left margin. The two
     // share the column's x-range even though the citation halves do not.
-    AddText(text, coords, len, 256, L"a first line of text ending in [42,", 72, 200);
-    AddText(text, coords, len, 256, L"43] maintain live text here", 72, 224);
+    AddText(text, coords, n, 256, L"a first line of text ending in [42,", 72, 200);
+    AddText(text, coords, n, 256, L"43] maintain live text here", 72, 224);
     // '4' of the wrapped "43" is the first glyph of the 2nd line.
     int idx43 = 0;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < n; i++) {
         if (text[i] == L'4' && coords[i].y == 224 && coords[i].x == 72) {
             idx43 = i;
             break;
@@ -607,12 +607,12 @@ static void NumericCitationWrapEndOfLine() {
     utassert(idx43 > 0);
     int num = 0;
     // Cursor on the wrapped "43" (x=72, y=224).
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 230}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{75, 230}, &num);
     utassert(ok);
     utassert(num == 43);
     // Cursor on "42" at the end of line 1.
     int idx42 = 0;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < n; i++) {
         if (text[i] == L'4' && coords[i].y == 200 && text[i + 1] == L'2') {
             idx42 = i;
             break;
@@ -620,7 +620,7 @@ static void NumericCitationWrapEndOfLine() {
     }
     utassert(idx42 > 0);
     num = 0;
-    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{coords[idx42].x + 3, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{coords[idx42].x + 3, 206}, &num);
     utassert(ok);
     utassert(num == 42);
 }
@@ -633,17 +633,17 @@ static void NumericCitationWrapEndOfLine() {
 static void NumericCitationWrapOutOfOrder() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // line 1 (y=200): "...) [42," — the '[' sits near the right end.
-    AddText(text, coords, len, 512, L"runtime models [42,", 72, 200);
+    AddText(text, coords, n, 512, L"runtime models [42,", 72, 200);
     // Unrelated text ~200pt above, inserted BEFORE line 2 in array order so it
     // becomes "43]"'s stream neighbour (as in the real doc).
-    AddText(text, coords, len, 512, L"unrelated heading text far above", 72, 4);
+    AddText(text, coords, n, 512, L"unrelated heading text far above", 72, 4);
     // line 2 (y=220): "43] maintain ..." — visually one line below line 1.
-    AddText(text, coords, len, 512, L"43] maintain live", 72, 220);
+    AddText(text, coords, n, 512, L"43] maintain live", 72, 220);
     // '4' of "43" is the first glyph of the 3rd AddText run.
     int idx43 = 0;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < n; i++) {
         if (text[i] == L'4' && coords[i].y == 220 && coords[i].x == 72) {
             idx43 = i;
             break;
@@ -652,7 +652,7 @@ static void NumericCitationWrapOutOfOrder() {
     utassert(idx43 > 0);
     int num = 0;
     // Cursor on the wrapped "43" (x=72, y=220).
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 226}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{75, 226}, &num);
     utassert(ok);
     utassert(num == 43);
 }
@@ -663,16 +663,16 @@ static void NumericCitationWrapOutOfOrder() {
 static void NumericCitationWrapTwoColumn() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
+    int n = 0;
     // Left column (x=72, ends ~x=270). Line 1 ends "[42,", line 2 starts "43]".
-    AddText(text, coords, len, 512, L"left column line one ending [42,", 72, 200);
-    AddText(text, coords, len, 512, L"43] left column line two here", 72, 220);
+    AddText(text, coords, n, 512, L"left column line one ending [42,", 72, 200);
+    AddText(text, coords, n, 512, L"43] left column line two here", 72, 220);
     // Right column (x=340) at the same two y's — must be ignored (gutter ~70pt).
-    AddText(text, coords, len, 512, L"right column first line text", 340, 200);
-    AddText(text, coords, len, 512, L"right column second line text", 340, 220);
+    AddText(text, coords, n, 512, L"right column first line text", 340, 200);
+    AddText(text, coords, n, 512, L"right column second line text", 340, 220);
     // '4' of the wrapped "43" (left column, x=72, y=220).
     int idx43 = 0;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < n; i++) {
         if (text[i] == L'4' && coords[i].x == 72 && coords[i].y == 220) {
             idx43 = i;
             break;
@@ -680,7 +680,7 @@ static void NumericCitationWrapTwoColumn() {
     }
     utassert(idx43 > 0);
     int num = 0;
-    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 226}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{75, 226}, &num);
     utassert(ok);
     utassert(num == 43);
 }
@@ -689,20 +689,20 @@ static void NumericCitationWrapTwoColumn() {
 static void PlainTextCitationSrcRectDistinctOnLine() {
     WCHAR text[256];
     Rect coords[256];
-    int len = 0;
-    AddText(text, coords, len, 256, L"per (Smith, 2020) and (Jones, 2021) here", 72, 200);
+    int n = 0;
+    AddText(text, coords, n, 256, L"per (Smith, 2020) and (Jones, 2021) here", 72, 200);
     Str surname{};
     int year = 0;
     Rect first{}, second{};
     // Cursor on 'S' of Smith (glyph 6 → x = 72 + 6*6 = 108).
-    bool ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{110, 206}, &surname, &year, &first);
+    bool ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{110, 206}, &surname, &year, &first);
     utassert(ok);
     utassert(surname && str::Eq(surname, "Smith"));
     utassert(year == 2020);
     utassert(first.dx > 0);
     str::Free(surname);
     // Cursor on 'J' of Jones (glyph 25 → x = 72 + 25*6 = 222).
-    ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{224, 206}, &surname, &year, &second);
+    ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{224, 206}, &surname, &year, &second);
     utassert(ok);
     utassert(surname && str::Eq(surname, "Jones"));
     utassert(year == 2021);
@@ -717,19 +717,19 @@ static void PlainTextCitationSrcRectDistinctOnLine() {
 static void NumericReferenceFoundOnBibPage() {
     WCHAR text[512];
     Rect coords[512];
-    int len = 0;
-    AddText(text, coords, len, 512, L"References", 72, 100);
-    AddText(text, coords, len, 512, L"[1] A. Trentin, Some title 2025.", 72, 130);
-    AddText(text, coords, len, 512, L"[2] B. Other, Another title 2024.", 72, 150);
+    int n = 0;
+    AddText(text, coords, n, 512, L"References", 72, 100);
+    AddText(text, coords, n, 512, L"[1] A. Trentin, Some title 2025.", 72, 130);
+    AddText(text, coords, n, 512, L"[2] B. Other, Another title 2024.", 72, 150);
     float x = 0.f, y = 0.f;
-    bool ok = FindNumericReferenceInPageText(WStr(text, len), coords, len, 1, &x, &y);
+    bool ok = FindNumericReferenceInPageText(WStr(text, n), coords, n, 1, &x, &y);
     utassert(ok);
     utassert(x == 72.f);
     utassert(y == 130.f);
-    ok = FindNumericReferenceInPageText(WStr(text, len), coords, len, 2, &x, &y);
+    ok = FindNumericReferenceInPageText(WStr(text, n), coords, n, 2, &x, &y);
     utassert(ok);
     utassert(y == 150.f);
-    ok = FindNumericReferenceInPageText(WStr(text, len), coords, len, 3, &x, &y);
+    ok = FindNumericReferenceInPageText(WStr(text, n), coords, n, 3, &x, &y);
     utassert(!ok);
 }
 
@@ -741,15 +741,15 @@ static void NumericReferenceFoundOnBibPage() {
 static void HangingIndentNarrowLabelFullWidth() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Narrow label "[TA05]" ends at x=72+6*6=108; body starts at x=130 — a
     // 22pt labelsep gap, wider than LineRunExtent's 20pt within-line gap.
-    AddText(text, coords, len, 1024, L"[TA05]", 72, 200);
-    AddText(text, coords, len, 1024, L"J. Tyree and A. Akerman. Architecture decisions.", 130, 200);
-    AddText(text, coords, len, 1024, L"continuation line two of the same entry.", 130, 215);
-    AddText(text, coords, len, 1024, L"[Vai20]", 72, 240);
-    AddText(text, coords, len, 1024, L"Thomas Vaillant. Log4brains. 2020.", 130, 240);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    AddText(text, coords, n, 1024, L"[TA05]", 72, 200);
+    AddText(text, coords, n, 1024, L"J. Tyree and A. Akerman. Architecture decisions.", 130, 200);
+    AddText(text, coords, n, 1024, L"continuation line two of the same entry.", 130, 215);
+    AddText(text, coords, n, 1024, L"[Vai20]", 72, 240);
+    AddText(text, coords, n, 1024, L"Thomas Vaillant. Log4brains. 2020.", 130, 240);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // box must reach across the body (without the labelsep bridge it would
     // collapse to ~the label width, near x=150)
@@ -765,20 +765,20 @@ static void HangingIndentNarrowLabelFullWidth() {
 static void TwoColumnHangingIndentStaysInColumn() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column: narrow label at x=72 (ends ~108), body at x=130 (22pt
     // labelsep), body line ends ~246.
-    AddText(text, coords, len, 1024, L"[TA05]", 72, 200);
-    AddText(text, coords, len, 1024, L"Smith J. 2010. Some title.", 130, 200);
-    AddText(text, coords, len, 1024, L"continuation of the entry.", 130, 215);
-    AddText(text, coords, len, 1024, L"[Vai20]", 72, 240);
+    AddText(text, coords, n, 1024, L"[TA05]", 72, 200);
+    AddText(text, coords, n, 1024, L"Smith J. 2010. Some title.", 130, 200);
+    AddText(text, coords, n, 1024, L"continuation of the entry.", 130, 215);
+    AddText(text, coords, n, 1024, L"[Vai20]", 72, 240);
     // Right column body at x=340 (gutter ~286..340), same y range. The body
     // bridge (capped at 50pt) cannot reach x=340 from the label run, and the
     // dense left-column body run stops at the gutter.
     for (int i = 0; i < 4; i++) {
-        AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + i * 15);
     }
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // box must not reach into the right column at x=340
     utassert(box.x + box.dx < 340.f);
@@ -791,13 +791,13 @@ static void TwoColumnHangingIndentStaysInColumn() {
 static void LastEntryTrailingFooterTrimmed() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
-    AddText(text, coords, len, 1024, L"[Zim25]", 72, 600);
-    AddText(text, coords, len, 1024, L"Olaf Zimmermann. ADG: A Light Tool.", 130, 600);
-    AddText(text, coords, len, 1024, L"continuation of the last entry.", 130, 615);
+    int n = 0;
+    AddText(text, coords, n, 1024, L"[Zim25]", 72, 600);
+    AddText(text, coords, n, 1024, L"Olaf Zimmermann. ADG: A Light Tool.", 130, 600);
+    AddText(text, coords, n, 1024, L"continuation of the last entry.", 130, 615);
     // page-number footer far below (73pt gap), centered in the text column
-    AddText(text, coords, len, 1024, L"13", 300, 700);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 600.f);
+    AddText(text, coords, n, 1024, L"13", 300, 700);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 600.f);
     utassert(!IsEmpty(box));
     // footer at y=700 must be excluded (box ends just below the 2nd line)
     utassert(box.y + box.dy < 650.f);
@@ -827,41 +827,41 @@ static void NormalizeGlyphLinesFlattensLine() {
 static void VariableGlyphTopsEntryNotHijacked() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Previous entry's trailing line "1622292." at baseline 313: digits top
     // 305 (h 8), final period top 310 (h 3) — same baseline, body column x.
     WStr tail = L"1622292";
     for (int i = 0; i < tail.len; i++) {
-        text[len] = tail.s[i];
-        coords[len] = Rect{130 + i * 6, 305, 6, 8};
-        len++;
+        text[n] = tail.s[i];
+        coords[n] = Rect{130 + i * 6, 305, 6, 8};
+        n++;
     }
-    text[len] = L'.';
-    coords[len] = Rect{130 + 7 * 6, 310, 4, 3};
-    len++;
+    text[n] = L'.';
+    coords[n] = Rect{130 + 7 * 6, 310, 4, 3};
+    n++;
     // Entry "[Buc+23]" label (x=72) + body (x=130) at baseline ~327 (top 316).
     WStr label = L"[Buc+23]";
     for (int i = 0; i < label.len; i++) {
-        text[len] = label.s[i];
-        coords[len] = Rect{72 + i * 6, 316, 6, 11};
-        len++;
+        text[n] = label.s[i];
+        coords[n] = Rect{72 + i * 6, 316, 6, 11};
+        n++;
     }
     WStr body = L"Georg Buchgeher et al. Using ADRs in Open Source.";
     for (int i = 0; i < body.len; i++) {
-        text[len] = body.s[i];
-        coords[len] = Rect{130 + i * 6, 316, 6, 9};
-        len++;
+        text[n] = body.s[i];
+        coords[n] = Rect{130 + i * 6, 316, 6, 9};
+        n++;
     }
     // Next entry "[JB05]" below at top 352.
     WStr nb = L"[JB05] A. Jansen and J. Bosch.";
     for (int i = 0; i < nb.len; i++) {
-        text[len] = nb.s[i];
-        coords[len] = Rect{72 + i * 6, 352, 6, 10};
-        len++;
+        text[n] = nb.s[i];
+        coords[n] = Rect{72 + i * 6, 352, 6, 10};
+        n++;
     }
     Rect norm[1024];
-    NormalizeGlyphLines(coords, norm, len);
-    RectF box = DetectEntryBox(WStr(text, len), norm, Mediabox(), 72.f, 312.f);
+    NormalizeGlyphLines(coords, norm, n);
+    RectF box = DetectEntryBox(WStr(text, n), norm, Mediabox(), 72.f, 312.f);
     utassert(!IsEmpty(box));
     // entry start, not the previous line (normalized top 305)
     utassert(box.y > 305.f);
@@ -883,18 +883,18 @@ static void VariableGlyphTopsEntryNotHijacked() {
 static void TwoColumnNumericLeftEntryNotHijacked() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column (x=72). The "[2]" entry spans one full line (~ends x=198).
-    AddText(text, coords, len, 1024, L"[1] First left column entry.", 72, 600);
-    AddText(text, coords, len, 1024, L"[2] Anvaari Zimmerman", 72, 628);
-    AddText(text, coords, len, 1024, L"second line of entry two", 72, 642);
+    AddText(text, coords, n, 1024, L"[1] First left column entry.", 72, 600);
+    AddText(text, coords, n, 1024, L"[2] Anvaari Zimmerman", 72, 628);
+    AddText(text, coords, n, 1024, L"second line of entry two", 72, 642);
     // Right column (x=244 — a 46pt gutter from the left column's ~198 edge,
     // narrower than the labelsep bridge's 50pt reach). Its first line at y=624
     // sits 4pt above the [2] destination top (628).
-    AddText(text, coords, len, 1024, L"[26] Zimmermann Miksovic Decisions", 244, 624);
-    AddText(text, coords, len, 1024, L"connecting enterprise architects", 244, 638);
-    AddText(text, coords, len, 1024, L"[27] Zimmermann Zdun Combining", 244, 660);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 628.f);
+    AddText(text, coords, n, 1024, L"[26] Zimmermann Miksovic Decisions", 244, 624);
+    AddText(text, coords, n, 1024, L"connecting enterprise architects", 244, 638);
+    AddText(text, coords, n, 1024, L"[27] Zimmermann Zdun Combining", 244, 660);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 628.f);
     utassert(!IsEmpty(box));
     // anchored at the left-column entry, not the higher right-column line
     utassert(box.x <= 72.f + 6.f);
@@ -915,28 +915,28 @@ static void TwoColumnNumericLeftEntryNotHijacked() {
 static void TwoColumnNumericReferenceFound() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column refs at x=72, right column refs at x=320 (a wide gutter from
     // the left column's text which ends near x=150).
-    AddText(text, coords, len, 1024, L"[1] Left column one.", 72, 100);
-    AddText(text, coords, len, 1024, L"[2] Left column two.", 72, 120);
-    AddText(text, coords, len, 1024, L"[3] Right column three.", 320, 100);
-    AddText(text, coords, len, 1024, L"[4] Right column four.", 320, 120);
+    AddText(text, coords, n, 1024, L"[1] Left column one.", 72, 100);
+    AddText(text, coords, n, 1024, L"[2] Left column two.", 72, 120);
+    AddText(text, coords, n, 1024, L"[3] Right column three.", 320, 100);
+    AddText(text, coords, n, 1024, L"[4] Right column four.", 320, 120);
     float x = 0, y = 0;
     // right-column entries must resolve
-    utassert(FindNumericReferenceInPageText(WStr(text, len), coords, len, 4, &x, &y));
+    utassert(FindNumericReferenceInPageText(WStr(text, n), coords, n, 4, &x, &y));
     utassert(x == 320.f && y == 120.f);
-    utassert(FindNumericReferenceInPageText(WStr(text, len), coords, len, 3, &x, &y));
+    utassert(FindNumericReferenceInPageText(WStr(text, n), coords, n, 3, &x, &y));
     utassert(x == 320.f && y == 100.f);
     // left-column entries still resolve
-    utassert(FindNumericReferenceInPageText(WStr(text, len), coords, len, 1, &x, &y));
+    utassert(FindNumericReferenceInPageText(WStr(text, n), coords, n, 1, &x, &y));
     utassert(x == 72.f && y == 100.f);
     // absent number fails
-    utassert(!FindNumericReferenceInPageText(WStr(text, len), coords, len, 9, &x, &y));
+    utassert(!FindNumericReferenceInPageText(WStr(text, n), coords, n, 9, &x, &y));
     // a mid-line body citation "[2]" (text to its left) is not an entry start
-    len = 0;
-    AddText(text, coords, len, 1024, L"as reported in [2] by others", 72, 200);
-    utassert(!FindNumericReferenceInPageText(WStr(text, len), coords, len, 2, &x, &y));
+    n = 0;
+    AddText(text, coords, n, 1024, L"as reported in [2] by others", 72, 200);
+    utassert(!FindNumericReferenceInPageText(WStr(text, n), coords, n, 2, &x, &y));
 }
 
 // (16) 2-column entry whose second line is much wider than its first (e.g. a
@@ -948,14 +948,14 @@ static void TwoColumnNumericReferenceFound() {
 static void TwoColumnWideSecondLineStaysInColumn() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column entry at x=72: short first line (~ends x=168), long 2nd line
     // (~ends x=276). Right column at x=300 — a ~24pt gutter.
-    AddText(text, coords, len, 1024, L"[5] Short label.", 72, 200);
-    AddText(text, coords, len, 1024, L"http://example.com/a/very/long/url", 72, 214);
-    AddText(text, coords, len, 1024, L"[9] Right one.", 300, 200);
-    AddText(text, coords, len, 1024, L"right two.", 300, 214);
-    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
+    AddText(text, coords, n, 1024, L"[5] Short label.", 72, 200);
+    AddText(text, coords, n, 1024, L"http://example.com/a/very/long/url", 72, 214);
+    AddText(text, coords, n, 1024, L"[9] Right one.", 300, 200);
+    AddText(text, coords, n, 1024, L"right two.", 300, 214);
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     utassert(box.x <= 72.f + 6.f);
     // covers the long 2nd line (well past the short first line's ~x=168)
@@ -970,21 +970,21 @@ static void TwoColumnWideSecondLineStaysInColumn() {
 static void StripWatermarkRemovesDiagonalStamp() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Body: 3 lines of normal (dy=12) glyphs.
-    AddText(text, coords, len, 1024, L"normal body text line one here", 72, 200);
-    AddText(text, coords, len, 1024, L"normal body text line two here", 72, 214);
-    AddText(text, coords, len, 1024, L"normal body text line three xx", 72, 228);
-    int bodyGlyphs = len;
+    AddText(text, coords, n, 1024, L"normal body text line one here", 72, 200);
+    AddText(text, coords, n, 1024, L"normal body text line two here", 72, 214);
+    AddText(text, coords, n, 1024, L"normal body text line three xx", 72, 228);
+    int bodyGlyphs = n;
     // Diagonal watermark: oversized (dy=40), each glyph on its own baseline.
-    for (int i = 0; i < 10 && len < 1024; i++) {
-        text[len] = L"UNDERREVIEW"[i];
-        coords[len] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
-        len++;
+    for (int i = 0; i < 10 && n < 1024; i++) {
+        text[n] = L"UNDERREVIEW"[i];
+        coords[n] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
+        n++;
     }
     WCHAR outText[1024];
     Rect outCoords[1024];
-    int kept = StripWatermarkGlyphs(WStr(text, len), coords, outText, outCoords);
+    int kept = StripWatermarkGlyphs(WStr(text, n), coords, outText, outCoords);
     // All body glyphs survive; all 10 watermark glyphs are dropped.
     utassert(kept == bodyGlyphs);
     for (int i = 0; i < kept; i++) {
@@ -993,16 +993,16 @@ static void StripWatermarkRemovesDiagonalStamp() {
 
     // A horizontal heading of tall glyphs (same baseline, many on the row) is
     // NOT mistaken for a watermark — tall + dense row ⇒ kept.
-    len = 0;
-    AddText(text, coords, len, 1024, L"normal body text line one here", 72, 200);
-    int headStart = len;
-    for (int i = 0; i < 8 && len < 1024; i++) {
-        text[len] = L"HEADING!"[i];
-        coords[len] = Rect{72 + i * 14, 150, 12, 30}; // tall, but all share baseline 180
-        len++;
+    n = 0;
+    AddText(text, coords, n, 1024, L"normal body text line one here", 72, 200);
+    int headStart = n;
+    for (int i = 0; i < 8 && n < 1024; i++) {
+        text[n] = L"HEADING!"[i];
+        coords[n] = Rect{72 + i * 14, 150, 12, 30}; // tall, but all share baseline 180
+        n++;
     }
-    kept = StripWatermarkGlyphs(WStr(text, len), coords, outText, outCoords);
-    utassert(kept == len); // nothing stripped
+    kept = StripWatermarkGlyphs(WStr(text, n), coords, outText, outCoords);
+    utassert(kept == n); // nothing stripped
     (void)headStart;
 }
 
@@ -1015,25 +1015,25 @@ static void StripWatermarkRemovesDiagonalStamp() {
 static void TwoColumnWatermarkStaysInColumn() {
     WCHAR text[1024];
     Rect coords[1024];
-    int len = 0;
+    int n = 0;
     // Left column entry at x=72 (label+body share line 1, ends ~x=246), 2nd
     // line at y=215. Right column body at x=340 (gutter ~246..340).
-    AddText(text, coords, len, 1024, L"[12] Sample left column entry", 72, 200);
-    AddText(text, coords, len, 1024, L"more left column entry text..", 72, 215);
+    AddText(text, coords, n, 1024, L"[12] Sample left column entry", 72, 200);
+    AddText(text, coords, n, 1024, L"more left column entry text..", 72, 215);
     for (int i = 0; i < 4; i++) {
-        AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + i * 15);
     }
     // Diagonal watermark: oversized (dy=40), wide (dx=20) glyphs stepping right
     // by 14pt and down by 6pt, sweeping x≈190..360 across the gutter.
-    for (int i = 0; i < 12 && len < 1024; i++) {
-        text[len] = L"UNDERREVIEW.."[i];
-        coords[len] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
-        len++;
+    for (int i = 0; i < 12 && n < 1024; i++) {
+        text[n] = L"UNDERREVIEW.."[i];
+        coords[n] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
+        n++;
     }
     // Caller pipeline: strip the watermark, then detect on the survivors.
     WCHAR cleanText[1024];
     Rect cleanCoords[1024];
-    int cleanLen = StripWatermarkGlyphs(WStr(text, len), coords, cleanText, cleanCoords);
+    int cleanLen = StripWatermarkGlyphs(WStr(text, n), coords, cleanText, cleanCoords);
     RectF box = DetectEntryBox(WStr(cleanText, cleanLen), cleanCoords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     utassert(box.x <= 72.f + 6.f);

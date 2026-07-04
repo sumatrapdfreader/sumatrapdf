@@ -10,7 +10,7 @@ struct ByteReader {
     bool Unpack(void* strct, size_t size, Str format, size_t off, bool isBE) const;
 
     explicit ByteReader(Str data);
-    ByteReader(const u8* data, size_t len);
+    ByteReader(const u8* data, size_t n);
 
     u8 Byte(size_t off) const;
     u16 WordLE(size_t off) const;

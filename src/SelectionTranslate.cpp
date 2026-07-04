@@ -250,12 +250,12 @@ static bool IsSrcLangAutoTemp(Str srcLang) {
 }
 
 static TempStr GetWindowTextUtf8Temp(HWND hwnd) {
-    int len = GetWindowTextLengthW(hwnd);
-    if (len <= 0) {
+    int n = GetWindowTextLengthW(hwnd);
+    if (n <= 0) {
         return nullptr;
     }
-    WCHAR* ws = AllocArrayTemp<WCHAR>(len + 1);
-    GetWindowTextW(hwnd, ws, len + 1);
+    WCHAR* ws = AllocArrayTemp<WCHAR>(n + 1);
+    GetWindowTextW(hwnd, ws, n + 1);
     return ToUtf8Temp(WStr(ws));
 }
 

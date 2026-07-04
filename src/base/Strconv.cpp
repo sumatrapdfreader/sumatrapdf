@@ -5,18 +5,18 @@
 
 namespace strconv {
 
-static WStr WrapAllocatedWStr(WCHAR* s, int len) {
+static WStr WrapAllocatedWStr(WCHAR* s, int n) {
     if (!s) {
         return {};
     }
-    return WStr(s, len);
+    return WStr(s, n);
 }
 
-static Str WrapAllocatedStr(char* s, int len) {
+static Str WrapAllocatedStr(char* s, int n) {
     if (!s) {
         return {};
     }
-    return Str(s, len);
+    return Str(s, n);
 }
 
 WStr Utf8ToWStr(Str s, Arena* a) {

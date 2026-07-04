@@ -15,13 +15,13 @@ static inline char GenRandChar() {
 
 static Str GenRandomString() {
     static char buf[256];
-    int len = 1 + (rand() % (dimof(buf) - 4)); // 4 just in case, 2 should be precise value
+    int n = 1 + (rand() % (dimof(buf) - 4)); // 4 just in case, 2 should be precise value
 
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < n; i++) {
         buf[i] = GenRandChar();
     }
-    buf[len] = 0;
-    return Str(buf, len);
+    buf[n] = 0;
+    return Str(buf, n);
 }
 
 void DictTestMapStrToInt() {

@@ -9,10 +9,10 @@ class ByteOrderDecoder {
         BigEndian
     };
 
-    ByteOrderDecoder(const u8* d, size_t len, ByteOrder order);
+    ByteOrderDecoder(const u8* d, size_t n, ByteOrder order);
     ByteOrderDecoder(Str bs, ByteOrder order);
 
-    void Bytes(void* dst, size_t len);
+    void Bytes(void* dst, size_t n);
 
     u8 UInt8();
     char Char() { return (char)UInt8(); }
@@ -26,8 +26,8 @@ class ByteOrderDecoder {
     u64 UInt64();
     i64 Int64() { return (i64)UInt64(); }
 
-    void Skip(size_t len);
-    void Unskip(size_t len);
+    void Skip(size_t n);
+    void Unskip(size_t n);
 
     size_t Offset() const { return curr - data; }
 

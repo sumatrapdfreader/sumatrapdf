@@ -1032,8 +1032,8 @@ DWORD GetFileVersion(const WCHAR* path) {
 
     if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
         VS_FIXEDFILEINFO* fileInfo;
-        uint len;
-        if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &len)) {
+        uint n;
+        if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &n)) {
             fileVersion = fileInfo->dwFileVersionMS;
         }
     }
@@ -1091,8 +1091,8 @@ void OpenPathInDefaultFileManager(Str path) {
 
     // fallback to using explorer.exe
     WCHAR winDir[MAX_PATH]{};
-    UINT len = GetWindowsDirectoryW(winDir, MAX_PATH);
-    if (len == 0 || len >= MAX_PATH) return;
+    UINT n = GetWindowsDirectoryW(winDir, MAX_PATH);
+    if (n == 0 || n >= MAX_PATH) return;
     TempStr explorer = ToUtf8Temp(winDir);
     explorer = path::JoinTemp(explorer, StrL("explorer.exe"));
     if (file::Exists(explorer)) return;
@@ -2083,14 +2083,14 @@ IStream* CreateStreamFromData(const Str& d) {
     }
 
     const void* data = (u8*)d.s;
-    size_t len = (size_t)d.len;
+    size_t dataLen = (size_t)d.len;
     ScopedComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
         return nullptr;
     }
 
     ULONG n;
-    if (FAILED(stream->Write(data, (ULONG)len, &n)) || n != len) {
+    if (FAILED(stream->Write(data, (ULONG)dataLen, &n)) || n != dataLen) {
         return nullptr;
     }
 
@@ -2101,7 +2101,7 @@ IStream* CreateStreamFromData(const Str& d) {
     return stream;
 }
 
-static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
+static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* dataLen) {
     if (!stream) {
         return E_INVALIDARG;
     }
@@ -2132,7 +2132,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
         return res;
     }
 
-    *len = n;
+    *dataLen = n;
     *data = d;
     return S_OK;
 }
@@ -2161,7 +2161,7 @@ Str GetStreamOrFileData(IStream* stream, Str filePath) {
     return file::ReadFile(filePath);
 }
 
-bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset) {
+bool ReadDataFromStream(IStream* stream, void* buffer, size_t n, size_t offset) {
     LARGE_INTEGER off;
     off.QuadPart = offset;
     HRESULT res = stream->Seek(off, STREAM_SEEK_SET, nullptr);
@@ -2170,17 +2170,17 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
     }
     ULONG read;
 #ifdef _WIN64
-    for (; len > ULONG_MAX; len -= ULONG_MAX) {
+    for (; n > ULONG_MAX; n -= ULONG_MAX) {
         res = stream->Read(buffer, ULONG_MAX, &read);
         if (FAILED(res) || read != ULONG_MAX) {
             return false;
         }
-        len -= ULONG_MAX;
+        n -= ULONG_MAX;
         buffer = (char*)buffer + ULONG_MAX;
     }
 #endif
-    res = stream->Read(buffer, (ULONG)len, &read);
-    return SUCCEEDED(res) && read == len;
+    res = stream->Read(buffer, (ULONG)n, &read);
+    return SUCCEEDED(res) && read == n;
 }
 
 uint GuessTextCodepage(Str data, uint defVal) {

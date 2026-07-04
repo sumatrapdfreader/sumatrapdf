@@ -56,22 +56,22 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
     if (!ChmResolveObject(chmHandle, fileName, &info)) {
         return {};
     }
-    size_t len = (size_t)info.length;
-    if (len > 128 * 1024 * 1024) {
+    size_t n = (size_t)info.length;
+    if (n > 128 * 1024 * 1024) {
         // limit to 128 MB
         return {};
     }
 
     // +1 for 0 terminator for C string compatibility
-    u8* d = AllocArrayTemp<u8>((int)(len + 1));
+    u8* d = AllocArrayTemp<u8>((int)(n + 1));
     if (!d) {
         return {};
     }
-    if (!chm_retrieve_object(chmHandle, &info, d, 0, len)) {
+    if (!chm_retrieve_object(chmHandle, &info, d, 0, n)) {
         return {};
     }
 
-    return Str((char*)(d), (int)(len));
+    return Str((char*)(d), (int)(n));
 }
 
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
@@ -86,11 +86,11 @@ TempStr SmartToUtf8Temp(Str s, uint codepage) {
 
 static Str GetCharZ(Str d, size_t off) {
     u8* data = (u8*)d.s;
-    size_t len = (size_t)d.len;
-    if (off >= len) {
+    size_t n = (size_t)d.len;
+    if (off >= n) {
         return {};
     }
-    ReportIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
+    ReportIf(!memchr(data + off, '\0', n - off + 1)); // data is zero-terminated
     u8* str = data + off;
     Str s = Str((char*)str);
     if (str::IsEmpty(s)) {
@@ -219,13 +219,13 @@ bool ChmFile::ParseSystemData() {
     }
 
     ByteReader r(d);
-    DWORD len = 0;
+    DWORD n = 0;
     // Note: skipping DWORD version at offset 0. It's supposed to be 2 or 3.
-    for (size_t off = 4; off + 4 < (size_t)d.len; off += len + (size_t)4) {
+    for (size_t off = 4; off + 4 < (size_t)d.len; off += n + (size_t)4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
-        // many entries with type == 0 and len == 0. Seems harmless.
-        len = r.WordLE(off + 2);
-        if (len == 0) {
+        // many entries with type == 0 and length == 0. Seems harmless.
+        n = r.WordLE(off + 2);
+        if (n == 0) {
             continue;
         }
         WORD type = r.WordLE(off);
@@ -251,7 +251,7 @@ bool ChmFile::ParseSystemData() {
                 }
                 break;
             case 4:
-                if (!codepage && len >= 4) {
+                if (!codepage && n >= 4) {
                     codepage = LcidToCodepage(r.DWordLE(off + 4));
                 }
                 break;
@@ -720,10 +720,10 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (!utf8) {
         return false;
     }
-    int len = ::len(utf8);
+    int n = ::len(utf8);
 
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, len);
+    GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, n);
     if (!output) {
         return false;
     }

@@ -988,8 +988,8 @@ static void LayoutControls(ImageEditWindow* ew) {
 static void OnBrowse(ImageEditWindow* ew) {
     WCHAR dstFileName[MAX_PATH + 1]{};
     // pre-populate with current dest path
-    int len = GetWindowTextW(ew->hwndDestEdit, dstFileName, MAX_PATH);
-    (void)len;
+    int n = GetWindowTextW(ew->hwndDestEdit, dstFileName, MAX_PATH);
+    (void)n;
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);

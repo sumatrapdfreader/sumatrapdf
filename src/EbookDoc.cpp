@@ -1247,8 +1247,8 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, size_t len, uint) {
-    if (len < 9) {
+static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, size_t n, uint) {
+    if (n < 9) {
     Fallback:
         builder.Append("&lt;");
         return text;
@@ -1258,7 +1258,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         !str::StartsWithI(text, "<TEALPAINT")) {
         goto Fallback;
     }
-    GumboHtmlParser parser(Str(text.s, (int)len));
+    GumboHtmlParser parser(Str(text.s, (int)n));
     HtmlToken* tok = parser.Next();
     if (!tok || !tok->IsStartTag()) {
         goto Fallback;

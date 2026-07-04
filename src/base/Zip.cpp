@@ -276,18 +276,18 @@ IStream* OpenDirAsZipStream(Str dirPath, bool recursive) {
 // a 0-terminated char* or WCHA* string
 // those 2 bytes are not reported as
 Str Ungzip(const Str& d) {
-    size_t len = (size_t)d.len;
+    size_t n = (size_t)d.len;
     u8* dataCompr = (u8*)d.s;
     // aggressive growth for uncompressed buffer because I use this
     // for .syntex files and they compress really well
-    size_t lenUncr = len * 2;
+    size_t lenUncr = n * 2;
 
     bool done = false;
     int res;
 
     z_stream strm;
     strm.next_in = (Bytef*)dataCompr;
-    strm.avail_in = (uInt)len;
+    strm.avail_in = (uInt)n;
     strm.total_out = 0;
     strm.zalloc = Z_NULL;
     strm.zfree = Z_NULL;

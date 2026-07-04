@@ -10226,8 +10226,8 @@ static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
     }
 
     WCHAR localeName[LOCALE_NAME_MAX_LENGTH] = {};
-    int len = LCIDToLocaleName((LCID)langId, localeName, dimof(localeName), 0);
-    if (len <= 0) {
+    int n = LCIDToLocaleName((LCID)langId, localeName, dimof(localeName), 0);
+    if (n <= 0) {
         return str::DupTemp(lang);
     }
 

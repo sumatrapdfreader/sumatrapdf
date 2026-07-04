@@ -118,12 +118,12 @@ struct PacketReader {
         return true;
     }
 
-    bool ReadBytes(u8* dst, size_t len) {
-        if (pos + len > size) {
+    bool ReadBytes(u8* dst, size_t n) {
+        if (pos + n > size) {
             return false;
         }
-        memcpy(dst, data + pos, len);
-        pos += len;
+        memcpy(dst, data + pos, n);
+        pos += n;
         return true;
     }
 };
@@ -151,9 +151,9 @@ static void AppendArgString(str::Builder& s, Str str) {
     if (!str) {
         str = StrL("");
     }
-    size_t len = (size_t)str.len;
+    size_t n = (size_t)str.len;
     AppendU16(s, (u16)ControlArgType::String);
-    AppendU32(s, (u32)len);
+    AppendU32(s, (u32)n);
     s.Append(str);
     s.AppendChar(0);
 }
@@ -195,29 +195,29 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
         }
         arg->intVal = (i32)v;
     } else if (type == ControlArgType::Bytes) {
-        u32 len = 0;
-        if (!r.ReadU32(len)) {
+        u32 n = 0;
+        if (!r.ReadU32(n)) {
             DeleteControlArg(arg);
             return false;
         }
-        arg->bytes = AllocArray<u8>(len + 1);
-        arg->bytesLen = len;
-        if (!r.ReadBytes(arg->bytes, len)) {
+        arg->bytes = AllocArray<u8>(n + 1);
+        arg->bytesLen = n;
+        if (!r.ReadBytes(arg->bytes, n)) {
             DeleteControlArg(arg);
             return false;
         }
     } else if (type == ControlArgType::String) {
-        u32 len = 0;
-        if (!r.ReadU32(len)) {
+        u32 n = 0;
+        if (!r.ReadU32(n)) {
             DeleteControlArg(arg);
             return false;
         }
-        char* strBuf = AllocArray<char>((size_t)len + 1);
-        if (!r.ReadBytes((u8*)strBuf, len)) {
+        char* strBuf = AllocArray<char>((size_t)n + 1);
+        if (!r.ReadBytes((u8*)strBuf, n)) {
             DeleteControlArg(arg);
             return false;
         }
-        arg->str = Str(strBuf, (int)len);
+        arg->str = Str(strBuf, (int)n);
         u8 zero = 1;
         if (!r.ReadBytes(&zero, 1) || zero != 0) {
             DeleteControlArg(arg);
@@ -515,12 +515,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
     SetEvent(req->done);
 }
 
-static bool ReadExact(HANDLE h, void* data, DWORD len) {
+static bool ReadExact(HANDLE h, void* data, DWORD n) {
     u8* d = (u8*)data;
     DWORD total = 0;
-    while (total < len) {
+    while (total < n) {
         DWORD nRead = 0;
-        if (!ReadFile(h, d + total, len - total, &nRead, nullptr) || nRead == 0) {
+        if (!ReadFile(h, d + total, n - total, &nRead, nullptr) || nRead == 0) {
             return false;
         }
         total += nRead;

@@ -169,16 +169,16 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
 }
 
 int utf8StrLen(const u8* s) {
-    int len = 0;
+    int cch = 0;
     while (*s) {
         int n = utf8RuneLen(s);
         if (!isLegalUTF8(s, n)) {
             return -1;
         }
         s += n;
-        len++;
+        cch++;
     }
-    return len;
+    return cch;
 }
 
 // --- end of Unicode, Inc. utf8 code
@@ -427,11 +427,11 @@ Str ToUtf8(Arena* arena, WStr wide) {
     if (IsEmpty(wide)) {
         return Str();
     }
-    int len = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
-    char* utf8 = (char*)Alloc(arena, len + 1);
-    WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, utf8, len, nullptr, nullptr);
-    utf8[len] = 0;
-    return Str(utf8, len);
+    int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
+    char* utf8 = (char*)Alloc(arena, n + 1);
+    WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, utf8, n, nullptr, nullptr);
+    utf8[n] = 0;
+    return Str(utf8, n);
 }
 
 Str ToUtf8Temp(WStr wide) {
