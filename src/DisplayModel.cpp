@@ -496,6 +496,11 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
 // Call this before the first Relayout
 void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, Size viewPort, int screenDPI) {
     totalViewPortSize = viewPort;
+    if (screenDPI <= 0) {
+        // a non-positive DPI (e.g. from bogus CustomScreenDPI in settings)
+        // would make dpiFactor and therefore zoomReal negative
+        screenDPI = 96;
+    }
     dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
     if (ValidPageNo(newStartPage)) {
         startPage = newStartPage;

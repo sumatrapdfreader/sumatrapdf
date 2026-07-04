@@ -1640,7 +1640,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         DisplayModel* dm = win->AsFixed();
         if (dm) {
             int dpi = gGlobalPrefs->customScreenDPI;
-            if (dpi == 0) {
+            // <= 0 means "not set" (users have been seen setting it to -1)
+            if (dpi <= 0) {
                 dpi = DpiGetForHwnd(win->hwndFrame);
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);

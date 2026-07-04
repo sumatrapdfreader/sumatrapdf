@@ -308,6 +308,9 @@ bool LoadSettings() {
         setMin(s.dx, 0);
         setMin(s.dy, 0);
     }
+    // 0 means "not set, use system DPI"; users have been seen setting -1,
+    // which would propagate as a negative DPI and break zoom calculations
+    setMin(gprefs->customScreenDPI, 0);
     setMin(gprefs->tabWidth, 60);
     setMin(gprefs->sidebarDx, 0);
     setMin(gprefs->tocDy, 0);
