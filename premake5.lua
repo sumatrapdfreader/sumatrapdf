@@ -971,8 +971,10 @@ workspace "SumatraPDF"
     includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
-    -- so suppressions can only come from the environment
-    debugenvs { "ASAN_OPTIONS=suppressions=$(SolutionDir)..\\asan.supp" }
+    -- so suppressions can only come from the environment.
+    -- the path must be quoted: asan parses ':' as flag separator, so an
+    -- unquoted "C:\..." drive letter breaks parsing
+    debugenvs { 'ASAN_OPTIONS=suppressions="$(SolutionDir)..\\asan.supp"' }
 
     includedirs { "ext/darkmodelib/include" }
     defines { "_DARKMODELIB_NO_INI_CONFIG" }
@@ -1055,8 +1057,10 @@ workspace "SumatraPDF"
     includedirs { "ext/darkmodelib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
-    -- so suppressions can only come from the environment
-    debugenvs { "ASAN_OPTIONS=suppressions=$(SolutionDir)..\\asan.supp" }
+    -- so suppressions can only come from the environment.
+    -- the path must be quoted: asan parses ':' as flag separator, so an
+    -- unquoted "C:\..." drive letter breaks parsing
+    debugenvs { 'ASAN_OPTIONS=suppressions="$(SolutionDir)..\\asan.supp"' }
 
     includedirs { "ext/darkmodelib/include" }
     defines { "_DARKMODELIB_NO_INI_CONFIG" }
