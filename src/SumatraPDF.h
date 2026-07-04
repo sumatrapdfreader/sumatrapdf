@@ -136,6 +136,8 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 // true if read aloud was paused and can be resumed in this tab
 bool CanContinueReadAloud(WindowTab* tab);
+// false if the user canceled (don't proceed with closing/replacing the doc)
+bool MaybeSaveAnnotations(WindowTab* tab);
 WindowTab* GetReadAloudSourceTab();
 
 constexpr UINT CmdTtsVoiceDefault = 0x7100;

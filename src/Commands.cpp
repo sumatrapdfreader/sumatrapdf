@@ -266,6 +266,7 @@ static SeqStrings gCommandNames =
     "CmdSetInverseSearch\0"
     "CmdToggleToolbarPosition\0"
     "CmdCommandPaletteFavorites\0"
+    "CmdNavigateFilesInFolder\0"
     "CmdNone\0"
     "\0";
 
@@ -523,6 +524,7 @@ static i32 gCommandIds[] = {
     CmdSetInverseSearch,
     CmdToggleToolbarPosition,
     CmdCommandPaletteFavorites,
+    CmdNavigateFilesInFolder,
     CmdNone,
 };
 
@@ -780,6 +782,7 @@ SeqStrings gCommandDescriptions =
     "Set Inverse Search Command Line\0"
     "Toggle Toolbar Position\0"
     "Command Palette: Favorites\0"
+    "Navigate Files in Folder\0"
     "Do nothing\0"
     "\0";
 // clang-format on

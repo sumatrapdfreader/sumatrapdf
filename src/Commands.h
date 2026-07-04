@@ -262,7 +262,8 @@ enum {
     CmdSetInverseSearch = 451,
     CmdToggleToolbarPosition = 452,
     CmdCommandPaletteFavorites = 453,
-    CmdNone = 454,
+    CmdNavigateFilesInFolder = 454,
+    CmdNone = 455,
 
     /* range for file history */
     CmdFileHistoryFirst,

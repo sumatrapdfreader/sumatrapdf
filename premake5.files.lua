@@ -850,6 +850,7 @@ function sumatrapdf_files()
     "InstallerCommon.cpp",
     "MainWindow.*",
     "Menu.*",
+    "NavFilesInFolder.*",
     "Notifications.*",
     "PdfSync.*",
     "PdfTools.*",

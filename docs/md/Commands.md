@@ -25,6 +25,7 @@ CmdMoveFrameFocus,F6,Move Frame Focus,
 CmdNewWindow,Ctrl + N,Open New SumatraPDF Window,
 CmdOpenFile,Ctrl + O,Open File...,
 CmdOpenNextFileInFolder,Shift + Ctrl + Right,Open Next File In Folder,
+CmdNavigateFilesInFolder,,Navigate Files in Folder,"floating window listing openable files and directories in the current file's folder, ver 3.7+"
 CmdOpenPrevFileInFolder,Shift + Ctrl + Left,Open Previous File In Folder,
 CmdOpenSelectedDocument,,Open Selected Document,
 CmdPinSelectedDocument,,Pin Selected Document,

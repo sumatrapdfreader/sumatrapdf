@@ -109,6 +109,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdContinueReadAloud` : "Continue Reading"
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"
+- `CmdNavigateFilesInFolder` : "Navigate Files in Folder" — floating directory browser for openable files (Enter/double-click opens a file or enters a directory, `..` goes up, Esc closes)
 - `CmdGoToPrevFavorite` : "Go to Previous Favorite"
 - `CmdCreateAnnotImageFromClipboard` : "Create Image Annotation From Clipboard"
 - `CmdStopReadAloud` : "Stop Reading"

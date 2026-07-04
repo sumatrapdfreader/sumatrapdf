@@ -257,6 +257,7 @@ export const commands = [
     "CmdSetInverseSearch", "Set Inverse Search Command Line",
     "CmdToggleToolbarPosition", "Toggle Toolbar Position",
     "CmdCommandPaletteFavorites", "Command Palette: Favorites",
+    "CmdNavigateFilesInFolder", "Navigate Files in Folder",
     "CmdNone", "Do nothing",
 ];
 

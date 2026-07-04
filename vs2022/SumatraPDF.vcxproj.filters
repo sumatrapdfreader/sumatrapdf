@@ -231,6 +231,9 @@
     <ClInclude Include="..\src\MobiDoc.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\NavFilesInFolder.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Notifications.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -633,6 +636,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MobiDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NavFilesInFolder.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Notifications.cpp">

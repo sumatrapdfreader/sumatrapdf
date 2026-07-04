@@ -92,6 +92,7 @@
 #include "SelectionTranslate.h"
 #include "CodexBuild.h"
 #include "CommandPalette.h"
+#include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
@@ -3566,7 +3567,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
 
 // if returns true, can proceed with closing
 // if returns false, should cancel closing
-static bool MaybeSaveAnnotations(WindowTab* tab) {
+bool MaybeSaveAnnotations(WindowTab* tab) {
     if (!tab) {
         return true;
     }
@@ -7328,6 +7329,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // so special-case it before the win->IsDocLoaded() check
                 bool forward = cmdId == CmdOpenNextFileInFolder;
                 OpenNextPrevFileInFolder(win, forward);
+            }
+            break;
+
+        case CmdNavigateFilesInFolder:
+            if (!win->IsCurrentTabAbout()) {
+                ShowNavFilesInFolder(win);
             }
             break;
 
