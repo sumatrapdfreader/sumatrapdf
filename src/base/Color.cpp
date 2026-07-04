@@ -107,7 +107,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
         off = 1;
     }
     Str p = Str(s.s + off, s.len - off);
-    size_t n = (size_t)p.len;
+    int n = p.len;
     unsigned int r = 0;
     unsigned int g = 0;
     unsigned int b = 0;

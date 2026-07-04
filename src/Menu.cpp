@@ -1160,7 +1160,7 @@ static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
 
     TempStr menuString = path::GetBaseNameTemp(filePath);
     // shorten very long file names so that menu isn't too wide
-    const size_t kMaxRunes = 70;
+    const int kMaxRunes = 70;
     menuString = ShortenStringUtf8InTheMiddleTemp(menuString, kMaxRunes);
 
     TempStr fileName = MenuToSafeStringTemp(menuString);

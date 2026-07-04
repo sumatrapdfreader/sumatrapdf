@@ -17,7 +17,7 @@
 // Takes ownership of d
 bool PdbReader::Parse(Str d) {
     data = (u8*)d.s;
-    dataSize = (size_t)d.len;
+    dataSize = d.len;
     return ParseHeader();
 }
 
@@ -59,16 +59,16 @@ bool PdbReader::ParseHeader() {
         return false;
     }
 
-    size_t nRecs = hdr.numRecords;
-    size_t minOffset = kPdbHeaderLen + (nRecs * kPdbRecordHeaderLen);
-    size_t maxOffset = dataSize;
+    int nRecs = hdr.numRecords;
+    int minOffset = kPdbHeaderLen + (nRecs * kPdbRecordHeaderLen);
+    int maxOffset = dataSize;
 
-    for (size_t i = 0; i < nRecs; i++) {
+    for (int i = 0; i < nRecs; i++) {
         PdbRecordHeader recHdr;
         recHdr.offset = dec.UInt32();
         recHdr.flags = dec.UInt8();
         dec.Bytes(recHdr.uniqueID, dimof(recHdr.uniqueID));
-        u32 off = recHdr.offset;
+        int off = (int)recHdr.offset;
         if ((off < minOffset) || (off > maxOffset)) {
             return false;
         }
@@ -79,7 +79,7 @@ bool PdbReader::ParseHeader() {
     }
 
     // validate offsets
-    for (size_t i = 0; i < nRecs - 1; i++) {
+    for (int i = 0; i < nRecs - 1; i++) {
         if (recInfos[i].offset > recInfos[i + 1].offset) {
             return false;
         }
@@ -95,27 +95,27 @@ Str PdbReader::GetDbType() {
     return Str(hdr.typeCreator, 8);
 }
 
-size_t PdbReader::GetRecordCount() {
+int PdbReader::GetRecordCount() {
     return len(recInfos);
 }
 
 // don't free, memory is owned by us
-Str PdbReader::GetRecord(size_t recNo) {
-    size_t nRecs = (size_t)len(recInfos);
+Str PdbReader::GetRecord(int recNo) {
+    int nRecs = len(recInfos);
     ReportIf(recNo >= nRecs);
     if (recNo >= nRecs) {
         return {};
     }
-    size_t off = recInfos[recNo].offset;
-    size_t nextOff = dataSize;
+    int off = (int)recInfos[recNo].offset;
+    int nextOff = dataSize;
     if (recNo != nRecs - 1) {
-        nextOff = recInfos[recNo + 1].offset;
+        nextOff = (int)recInfos[recNo + 1].offset;
     }
     if (off > nextOff) {
         return {};
     }
-    size_t size = nextOff - off;
-    return Str((char*)((u8*)data + off), (int)size);
+    int size = nextOff - off;
+    return Str((char*)((u8*)data + off), size);
 }
 
 PdbReader* PdbReader::CreateFromData(Str d) {

@@ -30,7 +30,7 @@ struct PdbRecordHeader {
 struct PdbReader {
     // content of pdb file
     const u8* data = nullptr;
-    size_t dataSize = 0;
+    int dataSize = 0;
 
     // offset of each pdb record within the file + a sentinel
     // value equal to file size to simplify use
@@ -46,8 +46,8 @@ struct PdbReader {
     bool Parse(Str);
 
     Str GetDbType();
-    size_t GetRecordCount();
-    Str GetRecord(size_t recNo);
+    int GetRecordCount();
+    Str GetRecord(int recNo);
 
     static PdbReader* CreateFromData(Str);
     static PdbReader* CreateFromFile(Str path);
