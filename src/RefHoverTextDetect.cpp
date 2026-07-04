@@ -79,7 +79,7 @@ static bool IsNamePrefix(WStr word) {
         return false;
     }
     for (WStr prefix : kNamePrefixes) {
-        if (word.len == prefix.len && _wcsnicmp(word.s, prefix.s, (size_t)prefix.len) == 0) {
+        if (wstr::EqI(word, prefix)) {
             return true;
         }
     }
@@ -429,7 +429,7 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
         }
         int matchAt = -1;
         // Tier 1: strict line-start prefix.
-        if (i + surnameLen <= textLen && _wcsnicmp(text.s + i, surnameW.s, (size_t)surnameLen) == 0) {
+        if (i + surnameLen <= textLen && wstr::StartsWithI(WStr(text.s + i, textLen - i), surnameW)) {
             matchAt = i;
         }
         // Tier 2: fragment match within the first ~30 chars of the line.
@@ -437,7 +437,7 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
         if (matchAt < 0 && surnameLen >= 3) {
             int lineEnd = (i + 30 < textLen) ? i + 30 : textLen;
             for (int k = i + 1; k + surnameLen <= lineEnd; k++) {
-                if (_wcsnicmp(text.s + k, surnameW.s, (size_t)surnameLen) == 0) {
+                if (wstr::StartsWithI(WStr(text.s + k, textLen - k), surnameW)) {
                     // Require token boundary (not preceded by another letter).
                     if (iswalpha(text.s[k - 1])) {
                         continue;

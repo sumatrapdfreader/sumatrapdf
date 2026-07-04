@@ -1530,8 +1530,7 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
             memcpy(newEls, s->buf, wstr::Builder::kElSize * (s->len + 1));
         }
     } else {
-        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize,
-                                 wstr::Builder::kElSize * (s->len + kPadding));
+        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize, wstr::Builder::kElSize * (s->len + kPadding));
     }
 
     if (!newEls) {
@@ -1768,6 +1767,45 @@ bool Eq(WStr s1, WStr s2) {
     return true;
 }
 
+static void FoldCaseWInPlace(WStr s) {
+    if (!s) {
+        return;
+    }
+    CharLowerBuffW(s.s, (DWORD)s.len);
+    for (int i = 0; i < s.len; i++) {
+        if (s.s[i] == 0x0130) {
+            s.s[i] = L'i';
+        }
+    }
+}
+
+bool EqNI(WStr s1, WStr s2, int n) {
+    if (s1.s == s2.s) {
+        return true;
+    }
+    if (!s1 || !s2) {
+        return n == 0;
+    }
+    if (n == 0) {
+        return true;
+    }
+    if (s1.len < n || s2.len < n) {
+        return false;
+    }
+    WCHAR* a = AllocArrayTemp<WCHAR>(n);
+    WCHAR* b = AllocArrayTemp<WCHAR>(n);
+    if (!a || !b) {
+        return false;
+    }
+    memcpy(a, s1.s, (size_t)n * sizeof(WCHAR));
+    memcpy(b, s2.s, (size_t)n * sizeof(WCHAR));
+    WStr wa(a, n);
+    WStr wb(b, n);
+    FoldCaseWInPlace(wa);
+    FoldCaseWInPlace(wb);
+    return EqN(wa, wb, n);
+}
+
 // return true if s1 == s2, case insensitive
 bool EqI(WStr s1, WStr s2) {
     if (s1.s == s2.s) {
@@ -1782,7 +1820,7 @@ bool EqI(WStr s1, WStr s2) {
     if (wstr::IsNull(s1) || wstr::IsNull(s2)) {
         return false;
     }
-    return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
+    return EqNI(s1, s2, s1.len);
 }
 
 bool EqN(WStr s1, WStr s2, int n) {
@@ -1820,7 +1858,7 @@ bool StartsWithI(WStr str, WStr prefix) {
     if (!str || prefix.len > str.len) {
         return false;
     }
-    return 0 == _wcsnicmp(str.s, prefix.s, (size_t)prefix.len);
+    return EqNI(str, prefix, prefix.len);
 }
 
 bool EndsWith(WStr txt, WStr end) {
