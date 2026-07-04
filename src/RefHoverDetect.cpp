@@ -345,7 +345,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     // includes the figure body, not just the caption + the paragraph
     // following it.
     bool destAtCaption = false;
-    if (!wstr::IsEmpty(text) && coords && destY > 0.f) {
+    if (len(text) > 0 && coords && destY > 0.f) {
         int dY = (int)destY;
         for (int i = 0; i < text.len; i++) {
             int gy = coords[i].y;
@@ -387,7 +387,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     // where the figure body has no extractable text at destY — the caller
     // falls to LandscapeBox without ever running the caption-aware
     // DetectEntryBox path.
-    if (!wstr::IsEmpty(text) && coords) {
+    if (len(text) > 0 && coords) {
         // Search to end of page so tall figures with captions far below the
         // initial 200pt cap still match. The topmost (smallest y) "Figure
         // N.M" below the cap wins — PDFs draw text in arbitrary order, so
@@ -495,7 +495,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     // Trim trailing blank margin: find the bottom of the last text glyph
     // inside the candidate region and end the region just below it so the
     // popup doesn't render an empty trailing margin.
-    if (!wstr::IsEmpty(text) && coords) {
+    if (len(text) > 0 && coords) {
         int boxTop = (int)ty;
         int boxBottom = (int)(ty + h);
         int lastTextBottom = boxTop;
@@ -530,7 +530,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     (void)destX;
     RectF empty{};
-    if (destY <= 0.f || wstr::IsEmpty(text) || !coords) {
+    if (destY <= 0.f || len(text) == 0 || !coords) {
         return empty;
     }
     int dY = (int)destY;

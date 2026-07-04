@@ -195,7 +195,7 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
         fileName = WStr(fileName.s + 1, fileName.len - 1);
     }
     WStr sepStr;
-    if (!wstr::IsEmpty(path)) {
+    if (len(path) > 0) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = L"\\";
         }

@@ -149,7 +149,6 @@ bool Eq(WStr s1, WStr s2);
 bool EqI(WStr s1, WStr s2);
 bool EqN(WStr s1, WStr s2, int len);
 bool IsNull(const WStr& s);
-bool IsEmpty(WStr s);
 bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);
 bool EndsWith(WStr txt, WStr end);

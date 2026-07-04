@@ -42,7 +42,7 @@ TempStr GetWebView2VersionTemp() {
 bool HasWebView() {
     WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
-    if (FAILED(hr) || wstr::IsEmpty(ver)) {
+    if (FAILED(hr) || len(ver) == 0) {
         logf("WebView2 is not available\n");
         return false;
     }

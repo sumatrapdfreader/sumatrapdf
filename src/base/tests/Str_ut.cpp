@@ -706,7 +706,7 @@ void StrTest() {
     }
     {
         TempWStr tmp = strconv::StrCPToWStrTemp("abc", 12345);
-        utassert(wstr::IsEmpty(tmp));
+        utassert(::len(tmp) == 0);
     }
     {
         Str tmp = strconv::WStrToCodePage(987654, L"abc");

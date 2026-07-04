@@ -222,7 +222,7 @@ void HtmlFormatter::SetFont(WStr fontName, FontStyle fs, float fontSize) {
 
 void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fontSize) {
     WStr fontName = font->GetName();
-    if (wstr::IsEmpty(fontName)) {
+    if (len(fontName) == 0) {
         fontName = defaultFontName;
     }
     SetFont(fontName, fs, fontSize);
@@ -726,7 +726,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         TempWStr buf = ToWStrTemp(run);
         // soft hyphens should not be displayed
         buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
-        if (wstr::IsEmpty(buf)) {
+        if (len(buf) == 0) {
             break;
         }
         textMeasure->SetFont(CurrFont());
@@ -789,7 +789,7 @@ void HtmlFormatter::EmitTextMarker(Str s) {
         return;
     }
     TempWStr buf = ToWStrTemp(s);
-    if (wstr::IsEmpty(buf)) {
+    if (len(buf) == 0) {
         return;
     }
     textMeasure->SetFont(CurrFont());

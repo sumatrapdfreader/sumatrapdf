@@ -65,7 +65,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         WCHAR* cleanText = nullptr;
         Rect* cleanCoords = nullptr;
         Rect* normCoords = coords;
-        if (coords && !wstr::IsEmpty(text)) {
+        if (coords && len(text) > 0) {
             // Strip the page watermark on the raw glyphs first (its true height
             // is only visible pre-normalization), then normalize the survivors
             // so the detectors below see clean, baseline-flattened text.

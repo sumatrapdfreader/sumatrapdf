@@ -635,11 +635,13 @@ static void OnButtonOptions(InstallerWnd* wnd) {
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
     switch (msg) {
-        case BFFM_INITIALIZED:
-            if (!wstr::IsEmpty(WStr((wchar_t*)lpData))) {
+        case BFFM_INITIALIZED: {
+            WCHAR* dir = (WCHAR*)lpData;
+            if (dir && *dir) {
                 SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, lpData);
             }
             break;
+        }
 
         // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
         case BFFM_SELCHANGED: {

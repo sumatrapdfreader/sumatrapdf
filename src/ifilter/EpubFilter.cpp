@@ -197,7 +197,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case STATE_EPUB_CONTENT:
             m_state = STATE_EPUB_END;
             ws = ExtractHtmlText(m_epubDoc);
-            if (!wstr::IsEmpty(ws)) {
+            if (len(ws) > 0) {
                 chunkValue.SetTextValue(PKEY_Search_Contents, ws.s, CHUNK_TEXT);
                 wstr::Free(ws);
                 return S_OK;

@@ -1798,10 +1798,6 @@ bool IsNull(const WStr& s) {
     return !s.s;
 }
 
-bool IsEmpty(WStr s) {
-    return wstr::IsNull(s) || s.len == 0;
-}
-
 bool StartsWith(WStr str, WStr prefix) {
     if (!prefix) {
         return true;
@@ -1931,7 +1927,7 @@ int TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
 
 // free() the result via str::Free(s) or str::FreePtr(&s)
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
-    if (!s || wstr::IsEmpty(toReplace) || !replaceWith) {
+    if (!s || len(toReplace) == 0 || !replaceWith) {
         return {};
     }
 
