@@ -104,7 +104,7 @@ void ChmFile::ParseWindowsData() {
     TempStr windowsData = GetDataTemp("/#WINDOWS");
     TempStr stringsData = GetDataTemp("/#STRINGS");
 
-    if (str::IsEmpty(windowsData) || str::IsEmpty(stringsData)) {
+    if (len(windowsData) == 0 || len(stringsData) == 0) {
         return;
     }
     size_t windowsLen = (size_t)windowsData.len;
