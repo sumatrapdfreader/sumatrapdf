@@ -911,7 +911,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
         TempStr path = GetSettingsPathTemp();
         // can be empty on first run but that's fine because then we know it has default values
         Str prefsData = file::ReadFile(path);
-        if (!str::IsEmpty(prefsData)) {
+        if (len(prefsData) > 0) {
             // serialize without FileStates info because it's the largest
             GlobalPrefs* gp = NewGlobalPrefs(prefsData);
             DeleteFileStates(gp->fileStates);

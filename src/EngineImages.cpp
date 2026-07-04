@@ -267,8 +267,7 @@ EngineImages::~EngineImages() {
 // The actual JPEG/PNG decode happens later in RenderPage at near-target
 // scale, much cheaper than decoding at full resolution up front.
 fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
-    // don't use str::IsEmpty(): these are binary bytes and formats like JP2
-    // legitimately start with a 0 byte
+    // these are binary bytes and formats like JP2 legitimately start with a 0 byte
     Str data = GetImageData(pageNo);
     if (len(data) == 0) {
         return nullptr;

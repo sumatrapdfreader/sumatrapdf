@@ -71,7 +71,7 @@ bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
         return false;
     }
     Str data = view->cb->GetDataForUrl(path);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return false;
     }
     res->data = (u8*)data.s;

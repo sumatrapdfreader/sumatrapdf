@@ -42,7 +42,7 @@ HRESULT PdfFilter::OnInit() {
     // load content of PDF document into a seekable stream
     HRESULT res;
     Str data = GetDataFromStream(m_pStream, &res);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return res;
     }
 

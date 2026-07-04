@@ -252,7 +252,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
         }
 
         Str utf8(text.s + charStart, byteIdx - charStart);
-        if (str::IsEmpty(utf8)) {
+        if (len(utf8) == 0) {
             continue;
         }
         for (int i = 0; i < utf8.len; i++) {

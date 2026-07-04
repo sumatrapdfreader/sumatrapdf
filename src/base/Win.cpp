@@ -2076,8 +2076,7 @@ TempStr MenuToSafeStringTemp(Str s) {
 }
 
 IStream* CreateStreamFromData(const Str& d) {
-    // don't use str::IsEmpty(): d is binary bytes and formats like JP2/JXL/TGA
-    // legitimately start with a 0 byte
+    // d is binary bytes; formats like JP2/JXL/TGA legitimately start with a 0 byte
     if (len(d) == 0) {
         return nullptr;
     }

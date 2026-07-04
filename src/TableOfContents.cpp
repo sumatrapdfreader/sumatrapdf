@@ -513,7 +513,7 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
 static void SaveAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     Str data = EngineMupdfLoadAttachment(engine, attachmentNo);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
     TempStr dir = path::GetDirTemp(tab->filePath);
@@ -526,7 +526,7 @@ static void SaveAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
 static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     Str data = EngineMupdfLoadAttachment(engine, attachmentNo);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
     MainWindow* win = tab->win;
@@ -559,7 +559,7 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
 
 static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
     Str data = LoadEmbeddedPDFFile(srcPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         // TODO: show an error message
         return;
     }

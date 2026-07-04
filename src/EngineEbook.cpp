@@ -823,7 +823,7 @@ Str EngineEpub::GetFileData() {
 bool EngineEpub::SaveFileAs(Str dstPath) {
     if (stream) {
         Str d = GetDataFromStream(stream, nullptr);
-        bool ok = !str::IsEmpty(d) && file::WriteFile(dstPath, d);
+        bool ok = len(d) > 0 && file::WriteFile(dstPath, d);
         str::Free(d);
         if (ok) {
             return true;
@@ -1281,7 +1281,7 @@ class ChmDataCache {
         }
 
         TempStr tmp = doc->GetDataTemp(url);
-        if (str::IsEmpty(tmp)) {
+        if (len(tmp) == 0) {
             return {};
         }
 
@@ -1733,7 +1733,7 @@ static IPageDestination* newRemoteHtmlDest(Str relativeURL) {
 }
 
 IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
-    if (str::IsEmpty(link->str)) {
+    if (len(link->str) == 0) {
         return nullptr;
     }
 

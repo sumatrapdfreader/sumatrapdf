@@ -85,11 +85,11 @@ static bool IsoDateParse(Str isoDate, SYSTEMTIME* timeOut) {
 }
 
 static void TrimHtmlTextToken(Str& tokText) {
-    while (!str::IsEmpty(tokText) && str::IsWs(tokText.s[0])) {
+    while (len(tokText) > 0 && str::IsWs(tokText.s[0])) {
         tokText.s++;
         tokText.len--;
     }
-    while (!str::IsEmpty(tokText) && str::IsWs(tokText.s[tokText.len - 1])) {
+    while (len(tokText) > 0 && str::IsWs(tokText.s[tokText.len - 1])) {
         tokText.len--;
     }
 }
@@ -110,7 +110,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
             // trim whitespace (TODO: also normalize within text?)
             Str tokText = t->s;
             TrimHtmlTextToken(tokText);
-            if (!str::IsEmpty(tokText)) {
+            if (len(tokText) > 0) {
                 TempStr s = ResolveHtmlEntitiesTemp(tokText);
                 text.Append(s);
                 text.AppendChar(' ');

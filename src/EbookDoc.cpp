@@ -172,12 +172,14 @@ TempStr NormalizeURLTemp(Str url, Str base) {
     if (url.s[0] == '#') {
         basePathLen = hash ? (int)(hash.s - base.s) : base.len;
     } else if (baseEnd && hash && hash.s < baseEnd.s) {
-        Str scan = Str(hash.s - 1, (int)(base.s + base.len - (hash.s - 1)));
-        while (!str::IsEmpty(scan) && scan.s[0] != '/') {
-            scan.s--;
-            scan.len++;
+        // find the last '/' before the '#'
+        basePathLen = 0;
+        for (char* p = hash.s - 1; p >= base.s; p--) {
+            if (*p == '/') {
+                basePathLen = (int)(p - base.s + 1);
+                break;
+            }
         }
-        basePathLen = !str::IsEmpty(scan) ? (int)(scan.s - base.s + 1) : 0;
     } else if (baseEnd) {
         basePathLen = (int)(baseEnd.s - base.s + 1);
     } else {
@@ -660,14 +662,14 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
         // in every HtmlPage, but this should work well enough for now
         for (ImageData& img : images) {
             if (str::EndsWithI(img.fileName, fileName)) {
-                if (str::IsEmpty(img.base)) {
+                if (len(img.base) == 0) {
                     auto* fi = archive->GetFileDataById(img.fileId);
                     if (fi && fi->data) {
                         img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
                         fi->data = nullptr;
                     }
                 }
-                if (!str::IsEmpty(img.base)) {
+                if (len(img.base) > 0) {
                     return img.base;
                 }
             }
@@ -682,14 +684,14 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     }
     for (ImageData& img : images) {
         if (str::Eq(img.fileName, url)) {
-            if (str::IsEmpty(img.base)) {
+            if (len(img.base) == 0) {
                 auto* fi = archive->GetFileDataById(img.fileId);
                 if (fi && fi->data) {
                     img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
                     fi->data = nullptr;
                 }
             }
-            if (!str::IsEmpty(img.base)) {
+            if (len(img.base) > 0) {
                 return img.base;
             }
         }
@@ -963,7 +965,7 @@ static Str loadFromFile(Fb2Doc* doc) {
     // .url files in addition (TODO: anything else?)
     for (auto&& fileInfo : fileInfos) {
         auto path = fileInfo->name;
-        if (str::EndsWithI(path, ".fb2") && str::IsEmpty(data)) {
+        if (str::EndsWithI(path, ".fb2") && len(data) == 0) {
             data = takeFileData(archive, fileInfo->fileId);
         } else if (!str::EndsWithI(path, ".url")) {
             return {};
@@ -997,7 +999,7 @@ bool Fb2Doc::Load() {
     } else if (stream) {
         data = loadFromStream(this);
     }
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return false;
     }
     TempStr tmp = DecodeTextToUtf8Temp(data, true);
@@ -1123,7 +1125,7 @@ void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     }
 
     TempStr decoded = Base64DecodeTemp(tok->s);
-    if (str::IsEmpty(decoded)) {
+    if (len(decoded) == 0) {
         return;
     }
     ImageData data;
@@ -1482,7 +1484,7 @@ Str HtmlDoc::GetImageData(Str fileName) {
 
     ImageData data;
     data.base = LoadURL(url);
-    if (str::IsEmpty(data.base)) {
+    if (len(data.base) == 0) {
         return {};
     }
     data.fileName = str::Dup(url);

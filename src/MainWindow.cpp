@@ -468,7 +468,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         PageDestination* pd = (PageDestination*)dest;
         if (pd->embedObjNum > 0) {
             EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
-            // attachments are arbitrary binary, don't use str::IsEmpty()
+            // attachments are arbitrary binary
             Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
             if (len(data) > 0) {
                 Str fileName = pd->GetValue2();

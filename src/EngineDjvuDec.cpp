@@ -213,7 +213,7 @@ bool EngineDjvuDec::Load(Str fileName) {
 
 bool EngineDjvuDec::Load(IStream* stm) {
     fileData = GetDataFromStream(stm, nullptr);
-    if (!str::IsEmpty(fileData)) {
+    if (len(fileData) > 0) {
         stream = stm;
         stream->AddRef();
     }
@@ -249,7 +249,7 @@ static void DjvuDecInitOnce() {
 }
 
 bool EngineDjvuDec::FinishLoading() {
-    if (str::IsEmpty(fileData)) {
+    if (len(fileData) == 0) {
         return false;
     }
     DjvuDecInitOnce();
@@ -662,7 +662,7 @@ Str EngineDjvuDec::GetFileData() {
 bool EngineDjvuDec::SaveFileAs(Str dstPath) {
     if (stream) {
         Str d = GetDataFromStream(stream, nullptr);
-        bool ok = !str::IsEmpty(d) && file::WriteFile(dstPath, d);
+        bool ok = len(d) > 0 && file::WriteFile(dstPath, d);
         str::Free(d);
         if (ok) {
             return true;

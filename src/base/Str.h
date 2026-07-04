@@ -65,7 +65,6 @@ bool EqIS(Str s1, Str s2);
 bool EqN(Str s1, Str s2, int n);
 bool EqNI(Str s1, Str s2, int n);
 bool IsNull(const Str& s);
-bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
 
 bool StartsWithI(Str str, Str prefix);

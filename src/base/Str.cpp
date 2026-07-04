@@ -206,10 +206,6 @@ bool IsNull(const Str& s) {
     return !s.s;
 }
 
-bool IsEmpty(Str s) {
-    return str::IsNull(s) || s.len == 0 || (0 == *s.s);
-}
-
 bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, len(prefix));
 }
@@ -586,7 +582,7 @@ bool CutCharLast(Str s, char c, Str* before, Str* after) {
 // terminator. Returns false when s is empty. Safe to alias s and rest, e.g.
 // while (str::NextLine(rest, line, rest)) { ... }
 bool NextLine(Str s, Str& line, Str& rest) {
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         return false;
     }
     int idx = -1;

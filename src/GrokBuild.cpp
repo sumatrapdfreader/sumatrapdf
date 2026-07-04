@@ -376,7 +376,7 @@ static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
 static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     TempStr historyPath = fmt("%s\\prompt_history.jsonl", projectDir);
     Str data = file::ReadFile(historyPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return StrL("(no description)");
     }
     Str content = data;
@@ -385,7 +385,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     Str line;
 
     while (!result && str::NextLine(rest, line, rest)) {
-        if (str::IsEmpty(line)) {
+        if (len(line) == 0) {
             continue;
         }
         TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
@@ -581,7 +581,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     }
 
     Str data = file::ReadFile(sessionPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
 
@@ -590,7 +590,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
-        if (!str::IsEmpty(lineRaw)) {
+        if (len(lineRaw) > 0) {
             TempStr line = str::DupTemp(lineRaw);
             TempStr userText = ExtractGrokChatUserTextTemp(line);
             if (userText) {

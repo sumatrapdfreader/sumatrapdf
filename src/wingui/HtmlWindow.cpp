@@ -401,7 +401,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
         return INET_E_OBJECT_NOT_FOUND;
     }
     data = win->htmlWinCb->GetDataForUrl(urlRest);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
@@ -420,7 +420,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
 }
 
 STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return S_FALSE;
     }
     size_t dataAvail = (size_t)data.len - dataCurrPos;
@@ -929,7 +929,7 @@ class HW_IDownloadManager : public IDownloadManager {
             return INET_E_OBJECT_NOT_FOUND;
         }
         auto data = win->htmlWinCb->GetDataForUrl(urlRest);
-        if (str::IsEmpty(data)) {
+        if (len(data) == 0) {
             return INET_E_DATA_NOT_AVAILABLE;
         }
         // ask the UI to let the user save the file

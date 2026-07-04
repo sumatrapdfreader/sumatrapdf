@@ -613,7 +613,7 @@ Str ChmModel::GetDataForUrl(Str url) {
         Str s = str::Dup(poolAlloc, plainUrl);
         e = new ChmCacheEntry(s);
         e->data = str::Dup(doc->GetDataTemp(plainUrl));
-        if (str::IsEmpty(e->data)) {
+        if (len(e->data) == 0) {
             delete e;
             return {};
         }

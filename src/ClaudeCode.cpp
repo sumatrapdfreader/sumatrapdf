@@ -375,7 +375,7 @@ static TempStr ExtractUserTextTemp(Str line) {
 // Read the first user message from a session JSONL as description
 static Str GetSessionDescription(Str sessionPath) {
     Str data = file::ReadFile(sessionPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return StrL("(empty)");
     }
     Str content = data;
@@ -384,7 +384,7 @@ static Str GetSessionDescription(Str sessionPath) {
     Str line;
 
     while (!result && str::NextLine(rest, line, rest)) {
-        if (str::IsEmpty(line)) {
+        if (len(line) == 0) {
             continue;
         }
         TempStr userText = ExtractUserTextTemp(str::DupTemp(line));
@@ -516,7 +516,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     }
 
     Str data = file::ReadFile(sessionPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
 
@@ -525,7 +525,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
-        if (!str::IsEmpty(lineRaw)) {
+        if (len(lineRaw) > 0) {
             TempStr line = str::DupTemp(lineRaw);
 
             // Session JSONL format:

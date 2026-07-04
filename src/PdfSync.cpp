@@ -581,7 +581,7 @@ TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
     }
     // use file::ReadFile which uses CreateFileW (handles Unicode)
     Str data = file::ReadFile(pathSync);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         logfa("CopyPlainSyncToTempFile: source file '.synctex' '%s' is empty.\n", pathSync);
         // return {};
     }
@@ -615,7 +615,7 @@ TempStr DealPlainSync(TempStr pathSync) {
         return {};
     }
     Str src = file::ReadFile(pathSync);
-    if (str::IsEmpty(src)) {
+    if (len(src) == 0) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
@@ -633,7 +633,7 @@ TempStr DealPlainSync(TempStr pathSync) {
         }
         Str dst = converted;
 
-        if (str::IsEmpty(dst)) {
+        if (len(dst) == 0) {
             logfa("DealPlainSync: decoded content is empty.\n", pathSync);
             return {};
         }
@@ -676,13 +676,13 @@ TempStr ungzipToTempSync(Str gzPath) {
         return {};
     }
     Str compr = file::ReadFile(gzPath);
-    if (str::IsEmpty(compr)) {
+    if (len(compr) == 0) {
         logf("ungzipToTempSync: file::ReadFile() '%s' failed\n", gzPath);
         return {};
     }
     logf("ungzipToTempSync: file::ReadFile() did read '%s'\n", gzPath);
     Str uncompr = Ungzip(compr);
-    if (str::IsEmpty(uncompr)) {
+    if (len(uncompr) == 0) {
         str::Free(compr);
         return {};
     }

@@ -666,7 +666,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
                 continue;
         }
         TempStr value = str::DupTemp(Str((char*)(data + d.Offset() - length + 8), (int)length - 8));
-        if (!str::IsEmpty(value)) {
+        if (len(value) > 0) {
             AddProp(props, prop, value);
         }
     }

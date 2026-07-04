@@ -438,7 +438,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
                 str::Free(imgData);
             }
         } else { // render as TGA for all other file extensions
-            // a serialized TGA starts with a 0 byte, don't use str::IsEmpty()
+            // a serialized TGA starts with a 0 byte
             Str imgData = tga::SerializeBitmap(bmp->hbmp);
             if (len(imgData) > 0) {
                 file::WriteFile(pageBmpPath, imgData);

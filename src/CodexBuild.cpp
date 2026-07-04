@@ -366,7 +366,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
         return StrL("(no description)");
     }
     Str data = file::ReadFile(historyPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return StrL("(no description)");
     }
     Str content = data;
@@ -375,7 +375,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
     Str line;
 
     while (!result && str::NextLine(rest, line, rest)) {
-        if (str::IsEmpty(line)) {
+        if (len(line) == 0) {
             continue;
         }
         TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
@@ -404,12 +404,12 @@ static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut)
 
 static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir, Vec<AIChatSessionInfo>& sessions) {
     Str data = file::ReadFile(rolloutPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
     Str content = data;
     Str firstLine, rest;
-    if (!str::NextLine(content, firstLine, rest) || str::IsEmpty(firstLine)) {
+    if (!str::NextLine(content, firstLine, rest) || len(firstLine) == 0) {
         str::Free(data);
         return;
     }
@@ -696,7 +696,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     }
 
     Str data = file::ReadFile(sessionPath);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
 
@@ -705,7 +705,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
-        if (!str::IsEmpty(lineRaw)) {
+        if (len(lineRaw) > 0) {
             TempStr line = str::DupTemp(lineRaw);
             TempStr userText = ExtractCodexRolloutUserTextTemp(line);
             if (userText) {

@@ -336,7 +336,6 @@ void StrTest() {
     utassert(!str::StartsWith(str, "Astr"));
     utassert(str::EndsWith(str, "ing") && str::EndsWithI(str, "ING"));
     utassert(!str::EndsWith(str, "ung"));
-    utassert(str::IsEmpty(Str{}) && str::IsEmpty("") && !str::IsEmpty(str));
     utassert(str::ContainsChar(str, 's') && !str::ContainsChar(str, 'S'));
     utassert(str::IndexOfChar(str, 's') == 2);
     utassert(str::IndexOfChar(str, 'g') == 7);

@@ -580,7 +580,7 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
     }
 
     Str d = file::ReadFile(path);
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         // failed to read
         return nullptr;
     }
@@ -611,7 +611,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
     }
 
     Str d = file::ReadFile(path);
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         // failed to read
         return nullptr;
     }
@@ -2255,7 +2255,7 @@ Str LoadEmbeddedPDFFile(Str filePath) {
 
 static Str TxtFileToHTML(Str path) {
     Str fd = file::ReadFileWithArena(path, GetTempArena());
-    if (str::IsEmpty(fd)) {
+    if (len(fd) == 0) {
         return {};
     }
 
@@ -2351,7 +2351,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     if (str::EqI(ext, ".pdb")) {
         // synthesize a .html file from pdb file
         Str d = PalmDocToHTML(path);
-        if (str::IsEmpty(d)) {
+        if (len(d) == 0) {
             return false;
         }
         fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.s, d.len);
@@ -4515,7 +4515,7 @@ Str EngineMupdf::GetFileData() {
         res = {};
     }
 
-    if (!str::IsEmpty(res)) {
+    if (len(res) > 0) {
         return res;
     }
 
@@ -4528,7 +4528,7 @@ Str EngineMupdf::GetFileData() {
 
 bool EngineMupdf::SaveFileAs(Str dstPath) {
     Str d = GetFileData();
-    if (!str::IsEmpty(d)) {
+    if (len(d) > 0) {
         bool ok = file::WriteFile(dstPath, d);
         str::Free(d);
         return ok;

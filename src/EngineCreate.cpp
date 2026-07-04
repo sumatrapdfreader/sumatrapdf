@@ -247,7 +247,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         Str fileData = file::ReadFile(path);
         Str extracted = ExtractP7m(fileData);
         str::Free(fileData);
-        if (!str::IsEmpty(extracted)) {
+        if (len(extracted) > 0) {
             Kind kind = GuessFileTypeFromContent(extracted);
             if (kind == kindFilePDF) {
                 EngineBase* engine = CreateEngineMupdfFromData(extracted, "file.pdf", pwdUI);
