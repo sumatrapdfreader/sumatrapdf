@@ -307,6 +307,10 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         }
 
         logf("NewPageDestinationMupdf: path='%s', dest='%s'\n", path, destStr);
+        if (len(path) == 0) {
+            // degenerate bare "file:" uri (seen in broken PDFs)
+            return nullptr;
+        }
         auto res = new PageDestinationFile(path, destStr);
         res->rect = FzGetRectF(link, outline);
         return res;
@@ -351,6 +355,9 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
 static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx, fz_document* doc, fz_link* link,
                                                   fz_outline* outline) {
     auto dest = NewPageDestinationMupdf(ctx, doc, link, outline);
+    if (!dest) {
+        return nullptr;
+    }
     auto res = new PageElementDestination(dest);
     res->pageNo = srcPageNo;
     res->rect = dest->rect;
@@ -3479,7 +3486,9 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     pageInfo->retainedLinks = link;
     while (link) {
         auto pel = NewLinkDestination(pageNo, ctx, _doc, link, nullptr);
-        pageInfo->links.Append(pel);
+        if (pel) {
+            pageInfo->links.Append(pel);
+        }
         link = link->next;
     }
 
