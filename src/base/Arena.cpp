@@ -439,21 +439,24 @@ void* AllocZero(Arena* arena, size_t size) {
     return arena->Push((u64)size, 8, true);
 }
 
-void* Realloc(Arena* arena, void* mem, size_t size) {
+void* Realloc(Arena* arena, void* mem, size_t newSize, size_t copySize) {
     if (!arena) {
-        return realloc(mem, size);
+        return realloc(mem, newSize);
     }
     // Arena has no realloc: allocate fresh and copy. Old memory is not freed
     // (arena lifetime handles it).
-    if (size == 0) {
+    if (newSize == 0) {
         return nullptr;
     }
-    void* newMem = arena->Push((u64)size, 8, false);
-    if (newMem && mem) {
-        // we don't know the old size; callers that end up here (Vec/str::Builder)
-        // only ever grow, and we can't overread because the arena block is
-        // contiguous. Callers requiring exact copy must track old size.
-        memcpy(newMem, mem, size);
+    void* newMem = arena->Push((u64)newSize, 8, false);
+    if (newMem && mem && copySize > 0) {
+        // Arena bump allocations can end up adjacent to (and overlapping) the
+        // old block; memmove handles that. copySize is the caller's used bytes.
+        size_t n = copySize;
+        if (n > newSize) {
+            n = newSize;
+        }
+        memmove(newMem, mem, n);
     }
     return newMem;
 }

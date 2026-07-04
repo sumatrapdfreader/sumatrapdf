@@ -52,7 +52,7 @@ class Vec {
         if (buf == els) {
             newEls = (T*)MemDup(allocator, buf, (size_t)len * kElSize, newPadding);
         } else {
-            newEls = (T*)Realloc(allocator, els, allocSize);
+            newEls = (T*)Realloc(allocator, els, allocSize, (size_t)len * kElSize);
         }
         if (!newEls) {
             ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);

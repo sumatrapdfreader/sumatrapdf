@@ -126,7 +126,7 @@ void Free(struct Arena* arena, void* mem);
 // and fall back to malloc/free when arena is nullptr.
 void* Alloc(struct Arena* arena, size_t size);
 void* AllocZero(struct Arena* arena, size_t size);
-void* Realloc(struct Arena* arena, void* mem, size_t size);
+void* Realloc(struct Arena* arena, void* mem, size_t newSize, size_t copySize);
 void* MemDup(struct Arena* arena, const void* mem, size_t size, size_t extraBytes = 0);
 
 template <typename T>

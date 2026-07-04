@@ -1328,7 +1328,7 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
             memcpy(newEls, s->buf, s->len + 1);
         }
     } else {
-        newEls = (char*)Realloc(s->allocator, s->els, allocSize);
+        newEls = (char*)Realloc(s->allocator, s->els, allocSize, s->len + kPadding);
     }
     if (!newEls) {
         ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
@@ -1530,7 +1530,8 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
             memcpy(newEls, s->buf, wstr::Builder::kElSize * (s->len + 1));
         }
     } else {
-        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize);
+        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize,
+                                 wstr::Builder::kElSize * (s->len + kPadding));
     }
 
     if (!newEls) {
