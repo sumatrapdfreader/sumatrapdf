@@ -76,7 +76,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
         return true;
     }
     logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%p (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
-          (int)IsWindow(hwndParent), IsEmpty(gPluginURL) ? "<nulL>" : gPluginURL);
+          (int)IsWindow(hwndParent), len(gPluginURL) == 0 ? "<nulL>" : gPluginURL);
     ReportIf(!gPluginMode);
 
     if (!IsWindow(hwndParent)) {

@@ -2378,7 +2378,7 @@ wchar_t ToLowerW(wchar_t c) {
 }
 
 int WStrFindSubstr(WStr str, WStr substr) {
-    if (IsEmpty(substr)) return -1; // Empty search - no highlight
+    if (len(substr) == 0) return -1; // Empty search - no highlight
     if (substr.len > str.len) return -1;
 
     for (int i = 0; i <= str.len - substr.len; i++) {

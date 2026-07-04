@@ -1070,7 +1070,7 @@ bool LaunchBrowser(Str url) {
 }
 
 void OpenPathInDefaultFileManager(Str path) {
-    if (IsEmpty(path)) {
+    if (len(path) == 0) {
         return;
     }
 
@@ -1132,7 +1132,7 @@ HANDLE LaunchProcessInDir(Str cmdLine, Str currDir, DWORD flags) {
     // lpCurrentDirectory must be nullptr (inherit caller's dir) when no dir is
     // given. CWStrTemp() of an empty Str returns a non-null L"" which
     // CreateProcessW rejects (ERROR_DIRECTORY), so map empty -> nullptr.
-    WCHAR* dirW = IsEmpty(currDir) ? nullptr : CWStrTemp(currDir);
+    WCHAR* dirW = len(currDir) == 0 ? nullptr : CWStrTemp(currDir);
     if (!CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, FALSE, flags, nullptr, dirW, &si, &pi)) {
         return nullptr;
     }
@@ -1890,7 +1890,7 @@ HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    if (!IsEmpty(fontName)) {
+    if (len(fontName) > 0) {
         WCHAR* dest = ncm.lfMessageFont.lfFaceName;
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
         TempWStr nameW = ToWStrTemp(fontName);
@@ -2055,7 +2055,7 @@ void MenuSetText(HMENU m, int id, WStr s) {
     if (!ok) {
         // setting text on a menu item that isn't present is benign (e.g. the
         // item was filtered out by command visibility): log it, don't assert
-        TempStr tmp = IsEmpty(s) ? StrL("(null)") : ToUtf8Temp(s);
+        TempStr tmp = len(s) == 0 ? StrL("(null)") : ToUtf8Temp(s);
         logf("MenuSetText(): id=%d, s='%s'\n", id, tmp);
         LogLastError();
     }
@@ -2835,7 +2835,7 @@ void RunNonElevated(Str exePath) {
     }
     cmd = fmt("\"%s\" \"%s\"", explorerPath, exePath);
 Run:
-    HANDLE h = LaunchProcessInDir(IsEmpty(cmd) ? exePath : cmd);
+    HANDLE h = LaunchProcessInDir(len(cmd) == 0 ? exePath : cmd);
     SafeCloseHandle(&h);
 }
 
@@ -2876,7 +2876,7 @@ void ResizeWindow(HWND hwnd, int dx, int dy) {
 
 void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title) {
     uint type = MB_OK | MB_ICONEXCLAMATION;
-    if (IsEmpty(title)) {
+    if (len(title) == 0) {
         title = WStrL(L"Warning");
     }
     MessageBoxW(hwnd, msg.s, title.s, type);
@@ -3142,7 +3142,7 @@ void HwndSetText(HWND hwnd, Str sv) {
     if (!hwnd) {
         return;
     }
-    if (IsEmpty(sv)) {
+    if (len(sv) == 0) {
         sv = Str();
     }
     // WM_SETTEXT unconditionally invalidates and repaints the control (and, for
@@ -3359,11 +3359,11 @@ bool DestroyIconSafe(HICON* h) {
 }
 
 int HdcDrawText(HDC hdc, Str s, RECT* r, uint fmt, HFONT font) {
-    if (IsEmpty(s)) {
+    if (len(s) == 0) {
         return 0;
     }
     TempWStr ws = ToWStrTemp(s);
-    if (IsEmpty(ws)) {
+    if (len(ws) == 0) {
         return 0;
     }
     int cch = ws.len;
@@ -3387,7 +3387,7 @@ int HdcDrawText(HDC hdc, Str s, const Point& pos, uint fmt, HFONT font) {
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
     fmt |= DT_CALCRECT;
     TempWStr ws = ToWStrTemp(s);
-    if (IsEmpty(ws)) {
+    if (len(ws) == 0) {
         return {};
     }
 
@@ -3436,7 +3436,7 @@ void DrawCenteredText(HDC hdc, const Rect r, Str txt, bool isRTL) {
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 Size HwndMeasureText(HWND hwnd, Str txt, HFONT font) {
-    if (IsEmpty(txt)) {
+    if (len(txt) == 0) {
         return Size{};
     }
     TempWStr sw = ToWStrTemp(txt);

@@ -7,20 +7,6 @@
 #define UTF16_BOM "\xFF\xFE"
 #define UTF16BE_BOM "\xFE\xFF"
 
-// specialized for Str and WStr
-inline bool IsEmpty(const Str& v) {
-    return v.len == 0 || !v.s;
-}
-inline bool IsEmpty(const Str* v) {
-    return !v || v->len == 0 || !v->s;
-}
-inline bool IsEmpty(const WStr& v) {
-    return v.len == 0 || !v.s;
-}
-inline bool IsEmpty(const WStr* v) {
-    return !v || v->len == 0 || !v->s;
-}
-
 namespace str {
 
 enum class TrimOpt {

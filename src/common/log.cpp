@@ -160,7 +160,7 @@ void LogDestroy() {
 }
 
 void logStr(Str s) {
-    if (IsEmpty(s)) return;
+    if (len(s) == 0) return;
     if (!gLogFilePath) return;
 
     // Append to log file

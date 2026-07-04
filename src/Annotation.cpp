@@ -457,7 +457,7 @@ bool SetWidgetTextValue(Annotation* annot, Str value) {
         auto ctx = e->BaseCtx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            ok = pdf_set_text_field_value(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s) != 0;
+            ok = pdf_set_text_field_value(ctx, a, len(valueZ) == 0 ? "" : valueZ.s) != 0;
             pdf_update_annot(ctx, a);
             UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
         }
@@ -511,7 +511,7 @@ bool SetWidgetChoiceValue(Annotation* annot, Str value) {
         auto ctx = e->BaseCtx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            pdf_set_choice_field_value(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s);
+            pdf_set_choice_field_value(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
             pdf_update_annot(ctx, a);
             UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
             ok = true;
@@ -586,7 +586,7 @@ bool SetContents(Annotation* annot, Str sv) {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            pdf_set_annot_contents(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s);
+            pdf_set_annot_contents(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -729,7 +729,7 @@ void SetIconName(Annotation* annot, Str iconName) {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            pdf_set_annot_icon_name(ctx, a, IsEmpty(nameZ) ? "" : nameZ.s);
+            pdf_set_annot_icon_name(ctx, a, len(nameZ) == 0 ? "" : nameZ.s);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -995,7 +995,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
         float textColor[4]{};
         fz_try(ctx) {
             pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
-            pdf_set_annot_default_appearance(ctx, a, IsEmpty(fontZ) ? "" : fontZ.s, sizeF, n, textColor);
+            pdf_set_annot_default_appearance(ctx, a, len(fontZ) == 0 ? "" : fontZ.s, sizeF, n, textColor);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {

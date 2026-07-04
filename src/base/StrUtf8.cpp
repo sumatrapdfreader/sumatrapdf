@@ -424,7 +424,7 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
 static wchar_t emptyWideStr[1] = {0};
 
 Str ToUtf8(Arena* arena, WStr wide) {
-    if (IsEmpty(wide)) {
+    if (len(wide) == 0) {
         return Str();
     }
     int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
@@ -439,7 +439,7 @@ Str ToUtf8Temp(WStr wide) {
 }
 
 WStr ToWStrTemp(Str s) {
-    if (IsEmpty(s)) {
+    if (len(s) == 0) {
         return WStr(&emptyWideStr[0], 0);
     }
     int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);

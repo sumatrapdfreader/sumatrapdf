@@ -222,16 +222,6 @@ struct VecStr {
     Str* els;
 };
 
-// Works for any struct with int len member (Str, WStr, *Vec, etc.)
-template <typename T>
-inline bool IsEmpty(const T& v) {
-    return v.len == 0;
-}
-template <typename T>
-inline bool IsEmpty(const T* v) {
-    return !v || v->len == 0;
-}
-
 #if COMPILER_MSVC
 #define NO_INLINE __declspec(noinline)
 #else

@@ -1102,7 +1102,7 @@ bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
 // --- begin: merged from former src/common/file_util.cpp ---
 
 bool FileSystemEntryExists(Str s) {
-    if (IsEmpty(s)) return false;
+    if (len(s) == 0) return false;
     WCHAR* wide = CWStrTemp(s);
     DWORD attrs = GetFileAttributesW(wide);
     return attrs != INVALID_FILE_ATTRIBUTES;
@@ -1110,7 +1110,7 @@ bool FileSystemEntryExists(Str s) {
 
 Str FindFirstValidParentDir(Str path) {
     Str current = path;
-    while (!IsEmpty(current)) {
+    while (len(current) > 0) {
         if (dir::Exists(current)) {
             return current;
         }
@@ -1170,7 +1170,7 @@ static Str ToAbsolutePath(Str path) {
 }
 
 Str PathGetDirTemp(Str path) {
-    if (IsEmpty(path)) return Str();
+    if (len(path) == 0) return Str();
     path = str::TrimSuffix(path, StrL("\\"));
     int idx = str::LastIndexOfChar(path, '\\');
     if (idx < 0) return Str();
@@ -1180,7 +1180,7 @@ Str PathGetDirTemp(Str path) {
 }
 
 Str PathGetNameTemp(Str path) {
-    if (IsEmpty(path)) return Str();
+    if (len(path) == 0) return Str();
     path = str::TrimSuffix(path, StrL("\\"));
     int idx = str::LastIndexOfChar(path, '\\');
     if (idx < 0) return str::DupTemp(path);
@@ -1188,7 +1188,7 @@ Str PathGetNameTemp(Str path) {
 }
 
 Str SmartResolveDirectory(Str dir) {
-    if (IsEmpty(dir)) return dir;
+    if (len(dir) == 0) return dir;
 
     auto* ta = GetTempArena();
 
@@ -1206,9 +1206,9 @@ Str SmartResolveDirectory(Str dir) {
     }
 
     // Try expanding ~ to home directory
-    if (!IsEmpty(result) && result.s[0] == '~') {
+    if (len(result) > 0 && result.s[0] == '~') {
         Str home = GetHomeDir();
-        if (!IsEmpty(home)) {
+        if (len(home) > 0) {
             int newLen = home.len + result.len - 1;
             char* expanded = (char*)Alloc(ta, newLen + 1);
             int pos = 0;
@@ -1248,7 +1248,7 @@ Str SmartResolveDirectory(Str dir) {
             if (varEnd > varStart) {
                 Str varName = Str(result.s + varStart, varEnd - varStart);
                 Str value = ExpandEnvVar(varName);
-                if (!IsEmpty(value)) {
+                if (len(value) > 0) {
                     for (int j = 0; j < value.len && outPos < MAX_PATH - 1; j++) {
                         expanded[outPos++] = value.s[j];
                     }
@@ -1267,7 +1267,7 @@ Str SmartResolveDirectory(Str dir) {
             if (varEnd < result.len && varEnd > varStart) {
                 Str varName = Str(result.s + varStart, varEnd - varStart);
                 Str value = ExpandEnvVar(varName);
-                if (!IsEmpty(value)) {
+                if (len(value) > 0) {
                     for (int j = 0; j < value.len && outPos < MAX_PATH - 1; j++) {
                         expanded[outPos++] = value.s[j];
                     }

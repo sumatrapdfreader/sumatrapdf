@@ -566,7 +566,7 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
     Str author = Author(annot);
-    bool isVisible = !IsEmpty(author);
+    bool isVisible = len(author) > 0;
     if (!isVisible) {
         return;
     }
@@ -813,7 +813,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
             // no-op
             break;
     }
-    if (!items || IsEmpty(itemName)) {
+    if (!items || len(itemName) == 0) {
         return;
     }
     ew->dropDownIcon->SetItemsSeqStrings(items);
