@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include <locale.h>
+
 #include "base/ScopedWin.h"
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"

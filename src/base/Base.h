@@ -125,24 +125,10 @@
 #define PropertyTagExifWhiteBalance ((PROPID)0xA403)
 #endif
 
-// Most common C includes
-#include <io.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <float.h>
-#include <stddef.h>
-#include <stdarg.h>
-#include <stdio.h>
+// C/C++ standard headers  we use often
 #include <time.h>
-#include <locale.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <cstdint>
-#include <memory>
-#include <array>
-#include <limits>
 #include <new>     // for placement new
+#include <algorithm> // for std::min, std::max
 #include <utility> // for std::forward
 
 #define _USE_MATH_DEFINES
@@ -245,15 +231,6 @@ template <typename T>
 inline bool IsEmpty(const T* v) {
     return !v || v->len == 0;
 }
-
-// TODO: don't use INT_MAX and UINT_MAX
-#ifndef INT_MAX
-#define INT_MAX std::numeric_limits<int>::max()
-#endif
-
-#ifndef UINT_MAX
-#define UINT_MAX std::numeric_limits<unsigned int>::max()
-#endif
 
 #if COMPILER_MSVC
 #define NO_INLINE __declspec(noinline)

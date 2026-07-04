@@ -20,8 +20,7 @@ enum {
 
 class EngineBase;
 
-class Synchronizer {
-  public:
+struct Synchronizer {
     explicit Synchronizer(Str syncfilepath, Str pdffilename);
     virtual ~Synchronizer();
 
@@ -38,15 +37,13 @@ class Synchronizer {
     // The result is returned in page and rects (list of rectangles to highlight).
     virtual int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
 
-  private:
     // true if the index needs to be recomputed (needs to be set to true when a change to the
     // pdfsync file is detected)
     bool needsToRebuildIndex = true;
-    // time stamp of sync file when index was last built
-    struct _stat syncfileTimestamp;
+    // modification time (as FILETIME converted to a number) of sync file when index was last built
+    i64 syncfileTimestamp = 0;
 
-  protected:
-    bool NeedsToRebuildIndex() const;
+    bool NeedsToRebuildIndex();
     int MarkIndexWasRebuilt();
     Str PrependDir(Str filename) const;
     TempStr PrependDirTemp(Str filename) const;
@@ -54,6 +51,5 @@ class Synchronizer {
     Str syncFilePath; // path to the synchronization file
     Str pdfPath;
 
-  public:
     static int Create(Str pdffilename, EngineBase* engine, Synchronizer** sync);
 };

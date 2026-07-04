@@ -41,8 +41,7 @@ struct PdfsyncPoint {
 };
 
 // Synchronizer based on .pdfsync file generated with the pdfsync tex package
-class Pdfsync : public Synchronizer {
-  public:
+struct Pdfsync : Synchronizer {
     Pdfsync(Str syncfilename, Str pdffilename, EngineBase* engine)
         : Synchronizer(syncfilename, pdffilename), engine(engine) {
         ReportIf(!str::EndsWithI(syncfilename, ".pdfsync"));
@@ -51,7 +50,6 @@ class Pdfsync : public Synchronizer {
     int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) override;
     int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
-  private:
     int RebuildIndexIfNeeded();
     UINT SourceToRecord(Str srcfilename, int line, int col, Vec<size_t>& records);
 
@@ -64,8 +62,7 @@ class Pdfsync : public Synchronizer {
 };
 
 // Synchronizer based on .synctex file generated with SyncTex
-class SyncTex : public Synchronizer {
-  public:
+struct SyncTex : Synchronizer {
     SyncTex(Str syncfilename, Str pdffilename, EngineBase* engineIn) : Synchronizer(syncfilename, pdffilename) {
         engine = engineIn;
         scanner = nullptr;
@@ -77,18 +74,24 @@ class SyncTex : public Synchronizer {
     int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) override;
     int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
-  private:
     int RebuildIndexIfNeeded();
 
     EngineBase* engine; // needed for converting between coordinate systems
     synctex_scanner_p scanner;
 };
 
+static i64 GetSyncFileTimestamp(Str path) {
+    FILETIME ft = file::GetModificationTime(path);
+    ULARGE_INTEGER uli;
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+    return (i64)uli.QuadPart;
+}
+
 Synchronizer::Synchronizer(Str syncFilePathIn, Str pdfPathIn) {
     syncFilePath = str::Dup(syncFilePathIn);
     pdfPath = str::Dup(pdfPathIn);
-    WCHAR* path = CWStrTemp(syncFilePathIn);
-    _wstat(path, &syncfileTimestamp);
+    syncfileTimestamp = GetSyncFileTimestamp(syncFilePath);
 }
 
 Synchronizer::~Synchronizer() {
@@ -96,18 +99,17 @@ Synchronizer::~Synchronizer() {
     str::Free(pdfPath);
 }
 
-bool Synchronizer::NeedsToRebuildIndex() const {
+bool Synchronizer::NeedsToRebuildIndex() {
     // was the index manually discarded?
     if (needsToRebuildIndex) {
         return true;
     }
 
     // has the synchronization file been changed on disk?
-    struct _stat newstamp;
-    WCHAR* path = CWStrTemp(syncFilePath);
-    if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
+    i64 newstamp = GetSyncFileTimestamp(syncFilePath);
+    if (newstamp > syncfileTimestamp) {
         // update time stamp
-        memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
+        syncfileTimestamp = newstamp;
         return true; // the file has changed!
     }
 
@@ -116,8 +118,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    WCHAR* path = CWStrTemp(syncFilePath);
-    _wstat(path, &syncfileTimestamp);
+    syncfileTimestamp = GetSyncFileTimestamp(syncFilePath);
     return PDFSYNCERR_SUCCESS;
 }
 

@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Base.h"
+#include <locale.h>
 
 #if defined(_MSC_VER)
 static _locale_t GetUtf8FormatLocale() {

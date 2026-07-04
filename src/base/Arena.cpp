@@ -13,7 +13,7 @@ static u64 ArenaAlignPow2(u64 value, u64 align) {
     if (align <= 1) {
         return value;
     }
-    assert((align & (align - 1)) == 0);
+    ReportIf((align & (align - 1)) != 0);
     return (value + align - 1) & ~(align - 1);
 }
 
@@ -315,7 +315,7 @@ void Arena::PopTo(u64 pos) {
 
     arena->current = current;
     u64 newPos = bigPos - current->base_pos;
-    assert(newPos <= current->pos);
+    ReportIf(newPos > current->pos);
     current->pos = newPos;
     ReleaseSRWLockExclusive(&lock);
 }

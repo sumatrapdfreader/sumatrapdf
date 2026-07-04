@@ -3,7 +3,7 @@
 
 // port of https://gitlab.com/stone.code/goey
 
-const int Inf = std::numeric_limits<int>::max();
+const int Inf = INT_MAX;
 
 void PositionRB(const Rect& container, Rect& r);
 void MoveXY(Rect& r, int x, int y);

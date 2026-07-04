@@ -5,6 +5,7 @@
 
 #pragma warning(disable : 4668)
 #include <signal.h>
+#include <memory>
 
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"

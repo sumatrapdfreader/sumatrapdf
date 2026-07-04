@@ -56,7 +56,7 @@ struct ScrollState {
 struct TextSelection;
 struct TextSearch;
 struct TextSel;
-class Synchronizer;
+struct Synchronizer;
 
 // TODO: in hindsight, zoomVirtual is not a good name since it's either
 // virtual zoom level OR physical zoom level. Would be good to find

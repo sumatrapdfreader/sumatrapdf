@@ -3,8 +3,8 @@
 
 // Note: they must be in this numeric order for ::Paint() logic to detect
 // page that couldn't be rendered
-constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 1;
-constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
+constexpr int RENDER_DELAY_UNDEFINED = INT_MAX - 1;
+constexpr int RENDER_DELAY_FAILED = INT_MAX - 2;
 
 #define INVALID_TILE_RES ((USHORT) - 1)
 
