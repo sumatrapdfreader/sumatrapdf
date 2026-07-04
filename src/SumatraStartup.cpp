@@ -1836,6 +1836,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     LogCommandLine();
 
+    if (gIsAsanBuild) {
+        TempStr asanOpts = GetEnvVariableTemp("ASAN_OPTIONS");
+        logf("ASAN_OPTIONS: '%s'\n", asanOpts ? asanOpts : StrL("<not set>"));
+    }
+
     Flags flags;
     if (ExeHasNameOfStoreInstaller()) {
         InstallSumatraCrashHandler(false);

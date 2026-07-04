@@ -10,3 +10,4 @@ interceptor_via_fun:o__register_onexit_function
 interceptor_via_fun:RegenerateUserEnvironment
 interceptor_via_fun:wctomb_s_l
 interceptor_via_fun:realloc
+interceptor_via_lib:ntshrui.dll
