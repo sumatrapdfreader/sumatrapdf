@@ -25,12 +25,12 @@
 #define PDFSYNC_EPSILON_Y 20
 
 struct PdfsyncFileIndex {
-    size_t start, end; // first and one-after-last index of lines associated with a file
+    int start, end; // first and one-after-last index of lines associated with a file
 };
 
 struct PdfsyncLine {
     UINT record = 0; // index for mapping line(s) to point(s)
-    size_t file = 0; // index into srcfiles
+    int file = 0;    // index into srcfiles
     UINT line = 0;
     UINT column = 0;
 };
@@ -51,14 +51,14 @@ struct Pdfsync : Synchronizer {
     int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
     int RebuildIndexIfNeeded();
-    UINT SourceToRecord(Str srcfilename, int line, int col, Vec<size_t>& records);
+    UINT SourceToRecord(Str srcfilename, int line, int col, Vec<int>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
     StrVec srcfiles;                 // source file names
     Vec<PdfsyncLine> lines;          // record-to-line mapping
     Vec<PdfsyncPoint> points;        // record-to-point mapping
     Vec<PdfsyncFileIndex> fileIndex; // start and end of entries for a file in <lines>
-    Vec<size_t> sheetIndex;          // start of entries for a sheet in <points>
+    Vec<int> sheetIndex;             // start of entries for a sheet in <points>
 };
 
 // Synchronizer based on .synctex file generated with SyncTex
@@ -228,12 +228,12 @@ int Pdfsync::RebuildIndexIfNeeded() {
     fileIndex.Reset();
     sheetIndex.Reset();
 
-    Vec<size_t> filestack;
+    Vec<int> filestack;
     int page = 1;
     sheetIndex.Append(0);
 
     // add the initial tex file to the source file stack
-    filestack.Append((size_t)len(srcfiles));
+    filestack.Append(len(srcfiles));
     srcfiles.Append(jobName);
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
@@ -301,7 +301,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     filename = PrependDirTemp(filename);
                 }
 
-                filestack.Append((size_t)len(srcfiles));
+                filestack.Append(len(srcfiles));
                 srcfiles.Append(filename);
                 findex.start = findex.end = len(lines);
                 fileIndex.Append(findex);
@@ -309,7 +309,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
             case ')':
                 if (len(filestack) > 1) {
-                    fileIndex[(int)filestack.Pop()].end = len(lines);
+                    fileIndex[filestack.Pop()].end = len(lines);
                 }
                 // else dbg("Unbalanced ')' line in the pdfsync file");
                 break;
@@ -373,7 +373,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (int i = (int)sheetIndex[pageNo]; i < len(points) && points[i].page == (uint)pageNo; i++) {
+    for (int i = sheetIndex[pageNo]; i < len(points) && points[i].page == (uint)pageNo; i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points[i].x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points[i].y));
@@ -405,7 +405,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    Str path = srcfiles[(int)found->file];
+    Str path = srcfiles[found->file];
     str::ReplaceWithCopy(&filename, path::NormalizeTemp(path));
     TryRecoverMovedSourceFile(filename, pdfPath);
 
@@ -428,7 +428,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
-UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& records) {
+UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<int>& records) {
     if (!srcfilename) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -458,15 +458,15 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
     UINT min_distance = EPSILON_LINE; // distance to the closest record
-    size_t lineIx = (size_t)-1;       // closest record-line index
+    int lineIx = -1;                  // closest record-line index
 
-    for (size_t isec = fileIndex[isrc].start; isec < fileIndex[isrc].end; isec++) {
+    for (int isec = fileIndex[isrc].start; isec < fileIndex[isrc].end; isec++) {
         // does this section belong to the desired file?
-        if (lines[(int)isec].file != (size_t)isrc) {
+        if (lines[isec].file != isrc) {
             continue;
         }
 
-        UINT d = abs((int)lines[(int)isec].line - (int)line);
+        UINT d = abs((int)lines[isec].line - line);
         if (d < min_distance) {
             min_distance = d;
             lineIx = isec;
@@ -475,13 +475,13 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
             }
         }
     }
-    if (lineIx == (size_t)-1) {
+    if (lineIx < 0) {
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
     }
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < (size_t)len(lines) && lines[(int)i].line == lines[(int)lineIx].line; i++) {
-        records.Append(lines[(int)i].record);
+    for (int i = lineIx; i < len(lines) && lines[i].line == lines[lineIx].line; i++) {
+        records.Append((int)lines[i].record);
     }
 
     return PDFSYNCERR_SUCCESS;
@@ -493,7 +493,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
         return res;
     }
 
-    Vec<size_t> found_records;
+    Vec<int> found_records;
     UINT ret = SourceToRecord(srcfilename, line, col, found_records);
     if (ret != PDFSYNCERR_SUCCESS || len(found_records) == 0) {
         return ret;
@@ -505,7 +505,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     // we now find the page and positions in the PDF corresponding to these found records
     int firstPage = UINT_MAX;
     for (PdfsyncPoint& p : points) {
-        if (!found_records.Contains(p.record)) {
+        if (!found_records.Contains((int)p.record)) {
             continue;
         }
         if (firstPage != UINT_MAX && firstPage != (int)p.page) {
