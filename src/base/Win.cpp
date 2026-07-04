@@ -421,37 +421,37 @@ bool IsProcessAndOsArchSame() {
     return IsProcess64() == IsOs64();
 }
 
-TempStr GetLastErrorStrTemp(DWORD err) {
+TempStr GetLastErrorStrTemp(DWORD& err) {
     if (err == 0) {
         err = GetLastError();
     }
     if (err == 0) {
-        return str::DupTemp("");
+        return StrL("");
     }
     if (err == ERROR_INTERNET_EXTENDED_ERROR) {
-        char buf[4096]{};
+        WCHAR buf[4096]{};
         DWORD bufSize = dimof(buf) - 1;
-        // TODO: ignoring a case where buffer is too small. 4 kB should be enough for everybody
-        InternetGetLastResponseInfoA(&err, buf, &bufSize);
-        buf[4095] = 0;
-        return str::DupTemp(buf);
+        // ignoring a case where buffer is too small. 4 kB should be enough for everybody
+        InternetGetLastResponseInfoW(&err, buf, &bufSize);
+        buf[dimof(buf) - 1] = 0;
+        return ToUtf8Temp(buf);
     }
-    char* msgBuf = nullptr;
+    WCHAR* msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
-    DWORD ferr = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
+    DWORD ferr = FormatMessageW(flags, nullptr, err, lang, (LPWSTR)&msgBuf, 0, nullptr);
     if (!ferr || !msgBuf) {
-        return str::DupTemp("");
+        return StrL("");
     }
-    auto res = str::DupTemp(msgBuf);
+    TempStr res = ToUtf8Temp(msgBuf);
     LocalFree(msgBuf);
     return res;
 }
 
 void LogLastError(DWORD err) {
     TempStr msg = GetLastErrorStrTemp(err);
-    if (str::IsEmpty(msg)) {
-        msg = "";
+    if (str::IsNull(msg)) {
+        msg = StrL("");
     }
     str::TrimWSInPlace(msg, str::TrimOpt::Both);
     logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);

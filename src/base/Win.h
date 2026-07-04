@@ -49,7 +49,7 @@ TempStr GetWindowsVerTemp();
 
 TempStr GetEnvVariableTemp(Str name);
 
-TempStr GetLastErrorStrTemp(DWORD err = 0);
+TempStr GetLastErrorStrTemp(DWORD& err);
 void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);
 

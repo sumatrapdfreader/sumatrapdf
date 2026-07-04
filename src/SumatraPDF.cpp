@@ -4056,7 +4056,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
                 file::SetAttributes(realDstFileName, attributes & ~attributesToDrop);
             }
         } else {
-            TempStr s = GetLastErrorStrTemp();
+            DWORD err = 0;
+            TempStr s = GetLastErrorStrTemp(err);
             if (len(s) > 0) {
                 errorMsg = fmt("%s\n\n%s", _TRA("Failed to save a file"), s);
             }
