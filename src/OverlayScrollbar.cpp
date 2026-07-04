@@ -108,7 +108,7 @@ static Rect GetThumbRect(OverlayScrollbar* sb) {
     if (scrollableRange > 0) {
         thumbOffset = MulDiv(pos - sb->nMin, scrollableTrack, scrollableRange);
     }
-    thumbOffset = std::clamp(thumbOffset, 0, scrollableTrack);
+    thumbOffset = setMinMax(thumbOffset, 0, scrollableTrack);
 
     if (IsVert(sb)) {
         return Rect(track.x, track.y + thumbOffset, track.dx, thumbLen);
@@ -616,7 +616,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 if (scrollableTrack > 0 && scrollableRange > 0) {
                     newPos = sb->dragStartPos + MulDiv(dragDelta, scrollableRange, scrollableTrack);
                 }
-                newPos = std::clamp(newPos, sb->nMin, sb->nMax - (int)sb->nPage + 1);
+                newPos = setMinMax(newPos, sb->nMin, sb->nMax - (int)sb->nPage + 1);
                 sb->nTrackPos = newPos;
                 PaintScrollbar(sb);
                 SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(SB_THUMBTRACK, newPos));
@@ -684,7 +684,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int scrollableRange = range - (int)sb->nPage;
                 int clickInTrack = (IsVert(sb) ? my : mx) - (IsVert(sb) ? track.y : track.x);
                 int thumbOffset = clickInTrack - thumbLen / 2;
-                thumbOffset = std::clamp(thumbOffset, 0, scrollableTrack);
+                thumbOffset = setMinMax(thumbOffset, 0, scrollableTrack);
                 int newPos = sb->nMin;
                 if (scrollableTrack > 0 && scrollableRange > 0) {
                     newPos = sb->nMin + MulDiv(thumbOffset, scrollableRange, scrollableTrack);

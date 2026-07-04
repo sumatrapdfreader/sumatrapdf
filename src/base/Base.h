@@ -139,7 +139,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <cstdint>
-#include <algorithm>
 #include <memory>
 #include <array>
 #include <limits>

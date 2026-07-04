@@ -1168,7 +1168,7 @@ void SetOpacity(Annotation* annot, int newOpacity) {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         ReportIf(newOpacity < 0 || newOpacity > 255);
-        newOpacity = std::clamp(newOpacity, 0, 255);
+        newOpacity = setMinMax(newOpacity, 0, 255);
         float fopacity = (float)newOpacity / 255.f;
 
         fz_try(ctx) {

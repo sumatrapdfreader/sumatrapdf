@@ -727,7 +727,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int borderWidth = BorderWidth(annot);
-    borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
+    borderWidth = setMinMax(borderWidth, borderWidthMin, borderWidthMax);
     TempStr s = fmt(_TRA("Border: %d").s, borderWidth);
     ew->staticBorder->SetText(s);
     ew->trackbarBorder->SetValue(borderWidth);

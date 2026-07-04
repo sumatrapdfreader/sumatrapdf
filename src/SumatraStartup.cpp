@@ -912,9 +912,10 @@ static TempStr ExtractLibmupdfDllToBuildDir() {
         return path;
     }
     if (realSize >= 0) {
-        logf("ExtractLibmupdfDllToBuildDir: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize, expectedSize);
+        logf("ExtractLibmupdfDllToBuildDir: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize,
+             expectedSize);
     }
-    bool ok= ExtractLibmupdfDll(buildDir);
+    bool ok = ExtractLibmupdfDll(buildDir);
     if (!ok) {
         return {};
     }

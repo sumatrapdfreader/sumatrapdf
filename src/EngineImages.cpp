@@ -16,6 +16,8 @@
 
 #include "wingui/UIModels.h"
 
+#include <algorithm>
+
 extern "C" {
 #include <mupdf/fitz.h>
 }

@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Base.h"
+#include <algorithm>
 
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;

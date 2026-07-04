@@ -374,7 +374,7 @@ static int DisplayToImageX(ImageEditWindow* ew, int dx) {
         return 0;
     }
     int v = (int)((float)(dx - ew->imgDisplayX) * ew->imgW / ew->imgDisplayW);
-    return std::clamp(v, 0, ew->imgW);
+    return setMinMax(v, 0, ew->imgW);
 }
 
 static int DisplayToImageY(ImageEditWindow* ew, int dy) {
@@ -382,7 +382,7 @@ static int DisplayToImageY(ImageEditWindow* ew, int dy) {
         return 0;
     }
     int v = (int)((float)(dy - ew->imgDisplayY) * ew->imgH / ew->imgDisplayH);
-    return std::clamp(v, 0, ew->imgH);
+    return setMinMax(v, 0, ew->imgH);
 }
 
 // Convert image coordinates to display coordinates (crop mode)
