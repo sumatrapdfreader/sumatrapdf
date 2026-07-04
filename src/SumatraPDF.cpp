@@ -4673,7 +4673,13 @@ again:
         goto again;
     }
 
-    // TODO: check for unsaved modifications
+    if (!MaybeSaveAnnotations(tab)) {
+        return;
+    }
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+    tab->askedToSaveAnnotations = false;
     UpdateTabFileDisplayStateForTab(tab);
     // load on a background thread; if the file fails to load, the
     // callback marks it as failed and advances to the next/prev file
