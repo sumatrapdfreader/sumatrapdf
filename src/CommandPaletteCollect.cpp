@@ -250,7 +250,7 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
     Vec<WindowTab*>* history = mainWin->tabSelectionHistory;
     if (history) {
         for (int i = len(*history) - 1; i >= 0; i--) {
-            WindowTab* tab = history->At(i);
+            WindowTab* tab = (*history)[i];
             if (tab == currTab) {
                 continue;
             }

@@ -101,7 +101,7 @@ static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
         if (i > 0) {
             serialized.AppendChar(' ');
         }
-        Str str = strArray->at(i);
+        Str str = (*strArray)[i];
         bool needsQuotes = !str;
         for (int j = 0; str && !needsQuotes && j < str.len; j++) {
             char c = str.s[j];
@@ -176,7 +176,7 @@ static void FreeUtf8StringArray(Vec<Str>* strArray) {
         return;
     }
     for (int i = 0; i < len(*strArray); i++) {
-        str::Free(strArray->at(i));
+        str::Free((*strArray)[i]);
     }
     delete strArray;
 }
@@ -267,7 +267,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
                 if (i > 0) {
                     out.AppendChar(' ');
                 }
-                SerializeField(out, (const u8*)&(*(Vec<int>**)fieldPtr)->at(i), info);
+                SerializeField(out, (const u8*)&(*(*(Vec<int>**)fieldPtr))[i], info);
             }
             // prevent empty arrays from being replaced with the defaults
             return len(**(Vec<int>**)fieldPtr) > 0 || field.value != 0;
@@ -423,7 +423,7 @@ static inline void Indent(str::Builder& out, int indent) {
 
 // removes the item from node->data, freeing what ~SquareTreeNode would
 static void RemoveDataItemAt(SquareTreeNode* node, size_t idx) {
-    SquareTreeNode::DataItem& item = node->data.at(idx);
+    SquareTreeNode::DataItem& item = node->data[(int)idx];
     str::Free(item.key);
     str::Free(item.str);
     delete item.child;
@@ -457,7 +457,7 @@ static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int 
         return;
     }
     for (int i = 0; i < len(node->data); i++) {
-        SquareTreeNode::DataItem& item = node->data.at(i);
+        SquareTreeNode::DataItem& item = node->data[i];
         Indent(out, indent);
         out.Append(item.key);
         if (item.child) {
@@ -505,7 +505,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                 for (int j = 0; j < len(*array); j++) {
                     Indent(out, indent + 1);
                     out.Append("[\r\n");
-                    SerializeStructRec(out, GetSubstruct(field), array->at(j), nullptr, indent + 2);
+                    SerializeStructRec(out, GetSubstruct(field), (*array)[j], nullptr, indent + 2);
                     Indent(out, indent + 1);
                     out.Append("]\r\n");
                 }

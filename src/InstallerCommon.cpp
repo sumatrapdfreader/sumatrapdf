@@ -528,9 +528,9 @@ static Str ReadableProcName(Str procPath) {
 
 static void SetCloseProcessMsg() {
     int n = len(gProcessesToClose);
-    Str procNames = ReadableProcName(gProcessesToClose.At(0));
+    Str procNames = ReadableProcName(gProcessesToClose[0]);
     for (int i = 1; i < n; i++) {
-        Str name = ReadableProcName(gProcessesToClose.At(i));
+        Str name = ReadableProcName(gProcessesToClose[i]);
         if (i < n - 1) {
             procNames = str::JoinTemp(procNames, StrL(", "), name);
         } else {

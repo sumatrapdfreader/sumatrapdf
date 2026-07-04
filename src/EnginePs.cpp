@@ -60,7 +60,7 @@ TryAgain64Bit:
     int nVers = len(versions);
     for (int i = nVers; i > 0; i--) {
         for (Str gsProd : gsProducts) {
-            Str ver = versions.At(i - 1);
+            Str ver = versions[i - 1];
             TempStr keyName = fmt("Software\\%s\\%s", gsProd, ver);
             TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!gsDLL) {

@@ -48,10 +48,10 @@ struct TabGroupsListBoxModel : ListBoxModel {
 
     int ItemsCount() override { return len(groups); }
 
-    Str Item(int i) override { return groups.At(i)->name; }
+    Str Item(int i) override { return groups[i]->name; }
 
     int TabCount(int i) {
-        auto* tf = groups.At(i)->tabFiles;
+        auto* tf = groups[i]->tabFiles;
         return tf ? len(*tf) : 0;
     }
 };
@@ -187,7 +187,7 @@ static void OpenTabGroup(TabGroupsDialog* d) {
     if (!groups || sel >= len(*groups)) {
         return;
     }
-    TabGroup* group = groups->At(sel);
+    TabGroup* group = (*groups)[sel];
     if (!group->tabFiles || len(*group->tabFiles) == 0) {
         return;
     }
@@ -254,7 +254,7 @@ static void DeleteTabGroup(TabGroupsDialog* d) {
     if (!groups || sel >= len(*groups)) {
         return;
     }
-    TabGroup* group = groups->At(sel);
+    TabGroup* group = (*groups)[sel];
     groups->Remove(group);
     FreeTabGroup(group);
     SaveSettings();
@@ -326,7 +326,7 @@ static void OnListDoubleClick(TabGroupsDialog* d) {
         if (sel >= 0 && d->hwndEdit) {
             auto* groups = gGlobalPrefs->tabGroups;
             if (groups && sel < len(*groups)) {
-                HwndSetText(d->hwndEdit, groups->At(sel)->name);
+                HwndSetText(d->hwndEdit, (*groups)[sel]->name);
                 SendMessageW(d->hwndEdit, EM_SETSEL, 0, -1);
                 SetFocus(d->hwndEdit);
             }

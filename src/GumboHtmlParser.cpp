@@ -552,7 +552,7 @@ void GumboHtmlParser::SetCurrPosOff(ptrdiff_t off) {
     textStartOff = -1;
     eventIdx = (size_t)len(events);
     for (int i = 0; i < len(events); i++) {
-        Event& ev = events.at(i);
+        Event& ev = events[i];
         if (ev.type == HtmlToken::Text && off >= ev.off && off < ev.off + ev.s.len) {
             eventIdx = (size_t)i;
             textStartOff = off;
@@ -573,6 +573,6 @@ HtmlToken* GumboHtmlParser::Next() {
     if (eventIdx >= (size_t)len(events)) {
         return nullptr;
     }
-    Event& ev = events.at((int)eventIdx++);
+    Event& ev = events[(int)eventIdx++];
     return TokenFromEvent(ev);
 }

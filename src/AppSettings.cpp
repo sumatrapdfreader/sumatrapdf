@@ -188,7 +188,7 @@ static void CreateZoomCommands() {
     Vec<int>* cmdIds = new Vec<int>(n);
     prefs->zoomLevelsCmdIds = cmdIds;
     for (int i = 0; i < n; i++) {
-        float zoomLevel = prefs->zoomLevels->At(i);
+        float zoomLevel = (*prefs->zoomLevels)[i];
         CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
         auto cmd = CreateCustomCommand("CmdZoomCustom", CmdZoomCustom, arg);
         cmdIds->InsertAt(i, cmd->id);
@@ -275,7 +275,7 @@ bool LoadSettings() {
 
     // make sure that zoom levels are in the order expected by DisplayModel
     gprefs->zoomLevels->Sort(cmpFloat);
-    while (len(*gprefs->zoomLevels) > 0 && gprefs->zoomLevels->at(0) < kZoomMin) {
+    while (len(*gprefs->zoomLevels) > 0 && (*gprefs->zoomLevels)[0] < kZoomMin) {
         gprefs->zoomLevels->PopAt(0);
     }
     while (len(*gprefs->zoomLevels) > 0 && gprefs->zoomLevels->Last() > kZoomMax) {
@@ -348,7 +348,7 @@ bool LoadSettings() {
     {
         Vec<FileState*>* fileStates = gprefs->fileStates;
         for (int i = len(*fileStates) - 1; i >= 0; i--) {
-            FileState* fs = fileStates->at(i);
+            FileState* fs = (*fileStates)[i];
             if (len(fs->filePath) == 0) {
                 fileStates->RemoveAt(i);
                 DeleteFileState(fs);
@@ -458,7 +458,7 @@ static void RefreshLazyTabStatePointers() {
         if (sdIdx >= len(*gInitialSessionData)) {
             break;
         }
-        SessionData* sd = gInitialSessionData->At(sdIdx++);
+        SessionData* sd = (*gInitialSessionData)[sdIdx++];
         int tsIdx = 0;
         for (WindowTab* tab : win->Tabs()) {
             if (!tab->filePath) {
@@ -468,7 +468,7 @@ static void RefreshLazyTabStatePointers() {
                 break;
             }
             if (!tab->ctrl && tab->tabState) {
-                tab->tabState = sd->tabStates->At(tsIdx);
+                tab->tabState = (*sd->tabStates)[tsIdx];
             }
             tsIdx++;
         }
@@ -659,8 +659,8 @@ static void ReloadSettings() {
     ReportIf(!ok || !gGlobalPrefs);
 
     // TODO: about window doesn't have to be at position 0
-    if (len(gWindows) > 0 && gWindows.at(0)->IsCurrentTabAbout()) {
-        MainWindow* win = gWindows.at(0);
+    if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
+        MainWindow* win = gWindows[0];
         win->DeleteToolTip();
         DeleteVecMembers(win->staticLinks);
         win->RedrawAll(true);

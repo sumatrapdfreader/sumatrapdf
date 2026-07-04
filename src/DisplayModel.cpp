@@ -1862,8 +1862,8 @@ float* GetDefaultZoomLevels(int* nZoomLevelsOut) {
 
     int nCustomZooms = len(*gGlobalPrefs->zoomLevels);
     if (nCustomZooms > 0) {
-        // ReportIf((defaultZooms->at(0) < kZoomMin || defaultZooms->Last() > kZoomMax));
-        // ReportIf(defaultZooms->at(0) > defaultZooms->Last());
+        // ReportIf(((*defaultZooms)[0] < kZoomMin || defaultZooms->Last() > kZoomMax));
+        // ReportIf((*defaultZooms)[0] > defaultZooms->Last());
         zoomLevels = gGlobalPrefs->zoomLevels->LendData();
         nZoomLevels = nCustomZooms;
     }
@@ -2132,7 +2132,7 @@ void DisplayModel::AddNavPoint() {
         navHistory.RemoveAt(navHistoryIdx, len(navHistory) - navHistoryIdx);
     }
     // don't add another entry for the exact same position
-    if (navHistoryIdx > 0 && ss == navHistory.at(navHistoryIdx - 1)) {
+    if (navHistoryIdx > 0 && ss == navHistory[navHistoryIdx - 1]) {
         return;
     }
     // make sure that the history doesn't grow overly large
@@ -2162,12 +2162,12 @@ void DisplayModel::Navigate(int dir) {
     // update the current history entry
     ScrollState ss = GetScrollState();
     if (navHistoryIdx < len(navHistory)) {
-        navHistory.at(navHistoryIdx) = ss;
+        navHistory[navHistoryIdx] = ss;
     } else {
         navHistory.Append(ss);
     }
     navHistoryIdx += dir;
-    SetScrollState(navHistory.at(navHistoryIdx));
+    SetScrollState(navHistory[navHistoryIdx]);
 }
 
 void DisplayModel::CopyNavHistory(DisplayModel& orig) {
@@ -2175,7 +2175,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     navHistoryIdx = orig.navHistoryIdx;
     // remove navigation history entries for all no longer valid pages
     for (int i = len(navHistory); i > 0; i--) {
-        if (!ValidPageNo(navHistory.at(i - 1).page)) {
+        if (!ValidPageNo(navHistory[i - 1].page)) {
             navHistory.RemoveAt(i - 1);
             if (i - 1 < navHistoryIdx) {
                 navHistoryIdx--;

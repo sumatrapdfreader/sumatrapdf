@@ -794,7 +794,7 @@ IPageElement* EngineDjvuDec::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
     int n = len(els);
     for (int i = n - 1; i >= 0; i--) {
-        auto el = els.at(i);
+        auto el = els[i];
         if (el->GetRect().Contains(pt)) {
             return el;
         }

@@ -982,7 +982,7 @@ static int LinkifyFindEndOff(int startOff, int prevChar, Utf8PageText pageText) 
 
 static int LinkifyMultilineText(LinkRectList* list, Utf8PageText pageText, int startOff, int nextOff, Rect* coords) {
     int lastIx = len(list->coords) - 1;
-    TempStr uri = list->links.At(lastIx);
+    TempStr uri = list->links[lastIx];
     int endOff = nextOff;
     bool multiline = false;
 
@@ -1528,7 +1528,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     str::Free(pageTextUtf8);
 
     for (int i = 0; i < len(list->links); i++) {
-        fz_rect bbox = list->coords.at(i);
+        fz_rect bbox = list->coords[i];
         bool overlaps = false;
         for (auto pel : pageInfo->links) {
             overlaps = FzRectOverlap(bbox, pel->GetRect()) >= 0.25f;
@@ -1537,7 +1537,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
             continue;
         }
 
-        TempStr uri = list->links.At(i);
+        TempStr uri = list->links[i];
         if (!uri) {
             continue;
         }
@@ -1853,7 +1853,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         return nullptr;
     }
 
-    PageLabelInfo& pli = data.at(0);
+    PageLabelInfo& pli = data[0];
     if (n == 1 && pli.startAt == 1 && pli.countFrom == 1 && !pli.prefix && str::Eq(pli.type, "D")) {
         // this is the default case, no need for special treatment
         return nullptr;
@@ -1865,15 +1865,15 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
     }
 
     for (int i = 0; i < n; i++) {
-        pli = data.at(i);
+        pli = data[i];
         if (pli.startAt > pageCount) {
             break;
         }
         int secLen = pageCount + 1 - pli.startAt;
-        if (i < n - 1 && data.at(i + 1).startAt <= pageCount) {
-            secLen = data.at(i + 1).startAt - pli.startAt;
+        if (i < n - 1 && data[i + 1].startAt <= pageCount) {
+            secLen = data[i + 1].startAt - pli.startAt;
         }
-        TempStr prefix = PdfToUtf8Temp(ctx, data.at(i).prefix);
+        TempStr prefix = PdfToUtf8Temp(ctx, data[i].prefix);
         for (int j = 0; j < secLen; j++) {
             int idx = pli.startAt + j - 1;
             TempStr label = FormatPageLabelTemp(pli.type, pli.countFrom + j, prefix);
@@ -2004,7 +2004,7 @@ void ReleasePerThreadContext(EngineMupdf* engine) {
         ScopedCritSec cs(&gPerThreadContextsCs);
         auto n = len(*gPerThreadContexts);
         for (int i = 0; i < n; i++) {
-            auto& el = gPerThreadContexts->at(i);
+            auto& el = (*gPerThreadContexts)[i];
             if (el.engine == engine && el.threadID == threadID) {
                 ctxToDrop = el.ctx;
                 gPerThreadContexts->RemoveAtFast(i);
@@ -2023,7 +2023,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
     {
         ScopedCritSec cs(&gPerThreadContextsCs);
         for (int i = len(*gPerThreadContexts) - 1; i >= 0; i--) {
-            auto& el = gPerThreadContexts->at(i);
+            auto& el = (*gPerThreadContexts)[i];
             if (el.engine == engine) {
                 ctxsToDrop.Append(el.ctx);
                 gPerThreadContexts->RemoveAtFast(i);
@@ -2792,7 +2792,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-        FzPageInfo* pageInfo = e->pages.at(i);
+        FzPageInfo* pageInfo = e->pages[i];
         pageInfo->mediabox = ToRectF(mbox);
         pageInfo->pageNo = i + 1;
     }
@@ -3894,7 +3894,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     }
     const auto& images = pageInfo->images;
     bool outOfBounds = imageIdx >= len(images);
-    fz_rect imgRect = images.at(imageIdx)->rect;
+    fz_rect imgRect = images[imageIdx]->rect;
     bool badRect = ToRectF(imgRect) != rect;
     ReportIf(outOfBounds);
     ReportIf(badRect);
@@ -4090,7 +4090,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         Str name, type, encoding;
         bool embedded = false;
         fz_try(ctx) {
-            pdf_obj* font = fontList.at(i);
+            pdf_obj* font = fontList[i];
             pdf_obj* font2 = pdf_array_get(ctx, pdf_dict_gets(ctx, font, "DescendantFonts"), 0);
             if (!font2) {
                 font2 = font;
@@ -4666,7 +4666,7 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    return pageLabels->At(pageNo - 1);
+    return (*pageLabels)[pageNo - 1];
 }
 
 int EngineMupdf::GetPageByLabel(Str label) const {

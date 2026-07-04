@@ -831,7 +831,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     if (gWindows.IsEmpty()) {
         return fail("NOTREADY no-window");
     }
-    MainWindow* win = gWindows.at(0);
+    MainWindow* win = gWindows[0];
     if (!win || !win->ctrl) {
         return fail("NOTREADY no-doc");
     }

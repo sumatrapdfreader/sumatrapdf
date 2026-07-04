@@ -246,7 +246,7 @@ static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
     if (idx >= (size_t)len(req->args)) {
         return nullptr;
     }
-    ControlArg* arg = req->args.at(idx);
+    ControlArg* arg = req->args[(int)idx];
     if (arg->type != type) {
         return nullptr;
     }

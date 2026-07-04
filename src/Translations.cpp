@@ -95,14 +95,14 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
     Str trans;
     int i = 2; // skip first 2 header lines
     while (i < nLines) {
-        Str origLine = lines.At(i);
+        Str origLine = lines[i];
         ReportDebugIf(!origLine || origLine.s[0] != ':');
         orig = Str(origLine.s + 1, origLine.len - 1);
         i++;
         trans = {};
-        while (i < nLines && lines.At(i) && lines.At(i).s[0] != ':') {
+        while (i < nLines && lines[i] && lines[i].s[0] != ':') {
             if (!trans) {
-                Str line = lines.At(i);
+                Str line = lines[i];
                 if (str::StartsWith(line, langCodePref)) {
                     trans = Str(line.s + nLangCode, line.len - nLangCode);
                 }

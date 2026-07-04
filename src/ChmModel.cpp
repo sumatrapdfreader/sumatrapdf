@@ -122,7 +122,7 @@ void ChmModel::GoToPage(int pageNo, bool) {
         DisplayPage(currentPageUrl);
         return;
     }
-    DisplayPage(pages.At(pageNo - 1));
+    DisplayPage(pages[pageNo - 1]);
 }
 
 bool ChmModel::SetParentHwnd(HWND hwnd) {
@@ -263,7 +263,7 @@ void ChmModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         htmlScrollPos = PointF(rect.x, rect.y);
         restoreHtmlScrollPos = true;
         if (ValidPageNo(pageNo)) {
-            SaveHtmlScrollPosForUrl(pages.At(pageNo - 1), htmlScrollPos);
+            SaveHtmlScrollPosForUrl(pages[pageNo - 1], htmlScrollPos);
         }
     }
     GoToPage(pageNo, false);
@@ -363,7 +363,7 @@ void ChmModel::SaveHtmlScrollPosForPage(int pageNo) {
     if (!ValidPageNo(pageNo)) {
         return;
     }
-    SaveHtmlScrollPosForUrl(pages.At(pageNo - 1), htmlScrollPos);
+    SaveHtmlScrollPosForUrl(pages[pageNo - 1], htmlScrollPos);
 }
 
 void ChmModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
@@ -374,7 +374,7 @@ void ChmModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
     TempStr plainUrl = url::GetFullPathTemp(url);
     int idx = htmlScrollUrls.Find(plainUrl);
     if (idx >= 0) {
-        htmlScrollPositions.At(idx) = pos;
+        htmlScrollPositions[idx] = pos;
         return;
     }
 
@@ -386,7 +386,7 @@ bool ChmModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
     if (!pos || !ValidPageNo(pageNo)) {
         return false;
     }
-    return GetSavedHtmlScrollPosForUrl(pages.At(pageNo - 1), pos);
+    return GetSavedHtmlScrollPosForUrl(pages[pageNo - 1], pos);
 }
 
 bool ChmModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
@@ -400,7 +400,7 @@ bool ChmModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
         return false;
     }
 
-    *pos = htmlScrollPositions.At(idx);
+    *pos = htmlScrollPositions[idx];
     return pos->x >= 0 || pos->y >= 0;
 }
 
@@ -523,7 +523,7 @@ ChmCacheEntry::ChmCacheEntry(Str url) {
 ChmCacheEntry* ChmModel::FindDataForUrl(Str url) const {
     int n = len(urlDataCache);
     for (int i = 0; i < n; i++) {
-        ChmCacheEntry* e = urlDataCache.at(i);
+        ChmCacheEntry* e = urlDataCache[i];
         if (str::Eq(url, e->url)) {
             return e;
         }

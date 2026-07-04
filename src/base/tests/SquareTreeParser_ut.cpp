@@ -19,7 +19,7 @@ void SquareTreeTest() {
         Str data = keyValueData[i];
         SquareTreeNode* root = ParseSquareTree(data);
         utassert(root && 1 == len(root->data));
-        SquareTreeNode::DataItem& item = root->data.at(0);
+        SquareTreeNode::DataItem& item = root->data[0];
         utassert(!item.child && str::Eq(item.key, "key") && str::Eq(item.str, "value"));
         utassert(!root->GetChild(StrL("key")));
         utassert(str::Eq(root->GetValue(StrL("KEY")), "value"));
@@ -40,7 +40,7 @@ void SquareTreeTest() {
         Str s = nodeData[i];
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 1 == len(root->data));
-        SquareTreeNode::DataItem& item = root->data.at(0);
+        SquareTreeNode::DataItem& item = root->data[0];
         utassert(item.child && str::Eq(item.key, "node"));
         utassert(item.child == root->GetChild(StrL("NODE")));
         size_t off = 0;
@@ -140,7 +140,7 @@ void SquareTreeTest() {
     for (Str s : halfBrokenData) {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == len(root->data));
-        utassert(root->GetChild(StrL("node")) == root->data.at(0).child);
+        utassert(root->GetChild(StrL("node")) == root->data[0].child);
         SquareTreeNode* node = root->GetChild(StrL("Node"));
         utassert(node && 1 == len(node->data) && str::Eq(node->GetValue(StrL("child")), ""));
         utassert(str::Eq(root->GetValue(StrL("key")), "value"));

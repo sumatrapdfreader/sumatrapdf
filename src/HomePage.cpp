@@ -389,7 +389,7 @@ static int ParseTipsFromString(Str src, Str prefix, ParsedTip* buffer, int buffe
     Split(&lines, src, "\n");
     int n = 0;
     for (int i = 0; i < len(lines); i++) {
-        Str line = lines.At(i);
+        Str line = lines[i];
         if (!str::IsEmptyOrWhiteSpace(line)) {
             n++;
         }
@@ -400,7 +400,7 @@ static int ParseTipsFromString(Str src, Str prefix, ParsedTip* buffer, int buffe
     ReportIf(n > bufferCap);
     int count = 0;
     for (int i = 0; i < len(lines); i++) {
-        Str line = lines.At(i);
+        Str line = lines[i];
         if (str::IsEmptyOrWhiteSpace(line)) {
             continue;
         }
@@ -847,8 +847,8 @@ TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticL
 
     Point pt(x, y);
     for (int i = 0; i < len(staticLinks); i++) {
-        if (staticLinks.at(i)->rect.Contains(pt)) {
-            auto link = staticLinks.At(i);
+        if (staticLinks[i]->rect.Contains(pt)) {
+            auto link = staticLinks[i];
             if (linkOut) {
                 *linkOut = link;
             }
@@ -1189,7 +1189,7 @@ void LayoutHomePage(HomePageLayout& l) {
     }
     Vec<FileState*> fileStates;
     for (int i = 0; i < len(allFileStates); i++) {
-        FileState* fs = allFileStates.at(i);
+        FileState* fs = allFileStates[i];
         // a state without a path can't be opened or thumbnailed - don't show it
         if (str::IsEmpty(fs->filePath)) {
             continue;
@@ -1392,7 +1392,7 @@ void LayoutHomePage(HomePageLayout& l) {
         int listSizeDx = DpiScale(hdc, 64);
         for (int row = 0; row < nFiles; row++) {
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
-            FileState* fs = fileStates.at(row);
+            FileState* fs = fileStates[row];
             thumb.fs = fs;
             Rect rcRow(listX, ptOff.y + row * kHomeListRowDy, thumbsContentWidth, kHomeListRowDy);
             thumb.rcListRow = rcRow;
@@ -1444,7 +1444,7 @@ void LayoutHomePage(HomePageLayout& l) {
                     break;
                 }
                 ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
-                FileState* fs = fileStates.at(row * thumbsColsForLayout + col);
+                FileState* fs = fileStates[row * thumbsColsForLayout + col];
                 thumb.fs = fs;
 
                 Rect rcPage(ptOff.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),

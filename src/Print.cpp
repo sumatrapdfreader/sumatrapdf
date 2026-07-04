@@ -565,8 +565,8 @@ static void MessageBoxWarningCond(bool show, Str msg, Str title) {
 static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     RectF bounds;
     for (int i = 0; i < len(sel); i++) {
-        if (sel.at(i).pageNo == pageNo) {
-            bounds = bounds.Union(sel.at(i).rect);
+        if (sel[i].pageNo == pageNo) {
+            bounds = bounds.Union(sel[i].rect);
         }
     }
     return bounds;
@@ -698,10 +698,10 @@ static bool PrintToDevice(const PrintData& pd) {
     int current = 1, total = 0;
     if (len(pd.sel) == 0) {
         for (int i = 0; i < len(pd.ranges); i++) {
-            if (pd.ranges.at(i).nToPage < pd.ranges.at(i).nFromPage) {
-                total += pd.ranges.at(i).nFromPage - pd.ranges.at(i).nToPage + 1;
+            if (pd.ranges[i].nToPage < pd.ranges[i].nFromPage) {
+                total += pd.ranges[i].nFromPage - pd.ranges[i].nToPage + 1;
             } else {
-                total += pd.ranges.at(i).nToPage - pd.ranges.at(i).nFromPage + 1;
+                total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
             }
         }
     } else {
@@ -800,11 +800,11 @@ static bool PrintToDevice(const PrintData& pd) {
             }
 
             for (int i = 0; i < len(pd.sel); i++) {
-                if (pd.sel.at(i).pageNo != pageNo) {
+                if (pd.sel[i].pageNo != pageNo) {
                     continue;
                 }
 
-                RectF* clipRegion = &pd.sel.at(i).rect;
+                RectF* clipRegion = &pd.sel[i].rect;
                 Point offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
@@ -812,7 +812,7 @@ static bool PrintToDevice(const PrintData& pd) {
                     offset.y += (int)(printable.dy - bSize.dy * zoom) / 2;
                 }
 
-                PrintPageInBands(engine, hdc, pd.sel.at(i).pageNo, zoom, pd.rotation, *clipRegion, offset, nullptr,
+                PrintPageInBands(engine, hdc, pd.sel[i].pageNo, zoom, pd.rotation, *clipRegion, offset, nullptr,
                                  RenderTarget::Print, abortCookie, progressCb);
             }
             // TODO: abort if !ok?
@@ -837,8 +837,8 @@ static bool PrintToDevice(const PrintData& pd) {
 
     // print all the pages the user requested
     for (int i = 0; i < len(pd.ranges); i++) {
-        int dir = pd.ranges.at(i).nFromPage > pd.ranges.at(i).nToPage ? -1 : 1;
-        for (DWORD pageNo = pd.ranges.at(i).nFromPage; pageNo != pd.ranges.at(i).nToPage + dir; pageNo += dir) {
+        int dir = pd.ranges[i].nFromPage > pd.ranges[i].nToPage ? -1 : 1;
+        for (DWORD pageNo = pd.ranges[i].nFromPage; pageNo != pd.ranges[i].nToPage + dir; pageNo += dir) {
             if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
                 (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
                 continue;

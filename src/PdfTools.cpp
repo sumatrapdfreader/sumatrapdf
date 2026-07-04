@@ -1017,7 +1017,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         return false;
     }
     for (int pi = 0; pi < len(parts); pi++) {
-        Str part = parts.At(pi);
+        Str part = parts[pi];
         str::TrimWSInPlace(part, str::TrimOpt::Both);
         if (!part) {
             return false;

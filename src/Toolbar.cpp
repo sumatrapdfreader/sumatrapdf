@@ -346,7 +346,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     if (gCustomToolbarButtons) {
         int n = gCustomToolbarButtons->Size();
         for (int i = 0; i < n; i++) {
-            const ToolbarButtonInfo& bi = gCustomToolbarButtons->At(i);
+            const ToolbarButtonInfo& bi = (*gCustomToolbarButtons)[i];
             TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
             TempStr s = bi.toolTip;
             if (accelStr) {

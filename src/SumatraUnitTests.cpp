@@ -31,29 +31,29 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(len(i.pathsToBenchmark.At(1)) == 0);
+        utassert(str::Eq("foo.pdf", i.pathsToBenchmark[0]));
+        utassert(len(i.pathsToBenchmark[1]) == 0);
     }
 
     {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(len(i.globalPrefArgs) == 2);
-        Str s = i.globalPrefArgs.At(0);
+        Str s = i.globalPrefArgs[0];
         utassert(str::Eq(s, "-fwdsearch-width"));
-        s = i.globalPrefArgs.At(1);
+        s = i.globalPrefArgs[1];
         utassert(str::Eq(s, "5"));
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(len(i.pathsToBenchmark.At(1)) == 0);
+        utassert(str::Eq("foo.pdf", i.pathsToBenchmark[0]));
+        utassert(len(i.pathsToBenchmark[1]) == 0);
     }
 
     {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench bar.pdf loadonly", i);
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::Eq("loadonly", i.pathsToBenchmark.At(1)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark[0]));
+        utassert(str::Eq("loadonly", i.pathsToBenchmark[1]));
     }
 
     {
@@ -61,18 +61,18 @@ static void ParseCommandLineTest() {
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
         utassert(len(i.globalPrefArgs) == 3);
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::Eq("1", i.pathsToBenchmark.At(1)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark[0]));
+        utassert(str::Eq("1", i.pathsToBenchmark[1]));
     }
 
     {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
         utassert(4 == len(i.pathsToBenchmark));
-        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::Eq("1-5,3", i.pathsToBenchmark.At(1)));
-        utassert(str::Eq("some.pdf", i.pathsToBenchmark.At(2)));
-        utassert(str::Eq("1,3,8-34", i.pathsToBenchmark.At(3)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark[0]));
+        utassert(str::Eq("1-5,3", i.pathsToBenchmark[1]));
+        utassert(str::Eq("some.pdf", i.pathsToBenchmark[2]));
+        utassert(str::Eq("1,3,8-34", i.pathsToBenchmark[3]));
     }
 
     {

@@ -1081,7 +1081,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
             renderDelayMin = std::min(renderDelay, renderDelayMin);
         }
         // paint tiles from left to right from top to bottom
-        if (tile.res > 0 && len(queue) > 0 && tile.res < queue.at(0).res) {
+        if (tile.res > 0 && len(queue) > 0 && tile.res < queue[0].res) {
             queue.Sort(cmpTilePosition);
         }
     }

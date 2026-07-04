@@ -106,7 +106,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
         idx = fontCache.len - 1;
     }
     // most documents look good enough with these adjustments
-    if (!fixCache.at(idx)) {
+    if (!fixCache[idx]) {
         float correct = 0;
         for (int i = 0; i < n; i++) {
             switch (s.s[i]) {

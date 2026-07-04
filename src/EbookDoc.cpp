@@ -536,7 +536,7 @@ bool EpubDoc::Load() {
     TempStr tocId = GumboAttributeValueTemp(node, "toc");
     int tocIdx = (tocId && len(tocPath) == 0) ? idList.Find(tocId) : -1;
     if (tocIdx >= 0) {
-        Str s = pathList.At(tocIdx);
+        Str s = pathList[tocIdx];
         str::Free(tocPath);
         tocPath = str::Join(contentPath, s);
         isNcxToc = true;
@@ -561,7 +561,7 @@ bool EpubDoc::Load() {
         if (idx < 0) {
             continue;
         }
-        Str fname = pathList.At(idx);
+        Str fname = pathList[idx];
         TempStr fullPath = str::JoinTemp(contentPath, fname);
         auto* htmlFi = archive->GetFileDataByName(fullPath);
         if (!htmlFi || !htmlFi->data) {
@@ -1140,8 +1140,8 @@ Str Fb2Doc::GetXmlData() const {
 
 Str Fb2Doc::GetImageData(Str fileName) const {
     for (int i = 0; i < len(images); i++) {
-        if (str::Eq(images.at(i).fileName, fileName)) {
-            return images.at(i).base;
+        if (str::Eq(images[i].fileName, fileName)) {
+            return images[i].base;
         }
     }
     return {};
@@ -1384,7 +1384,7 @@ bool PalmDoc::HasToc() const {
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < len(tocEntries); i++) {
         TempStr url = fmt(PDB_TOC_ENTRY_MARK "%d", i + 1);
-        Str name = tocEntries.At(i);
+        Str name = tocEntries[i];
         visitor->Visit(name, url, 1);
     }
     return true;
@@ -1475,8 +1475,8 @@ Str HtmlDoc::GetImageData(Str fileName) {
 
     TempStr url = NormalizeURLTemp(fileName, pagePath);
     for (int i = 0; i < len(images); i++) {
-        if (str::Eq(images.at(i).fileName, url)) {
-            return images.at(i).base;
+        if (str::Eq(images[i].fileName, url)) {
+            return images[i].base;
         }
     }
 

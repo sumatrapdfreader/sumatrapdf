@@ -489,7 +489,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
     }
 
     if (len(references) == 2) {
-        visitor->Visit(keyword, references.At(1), level);
+        visitor->Visit(keyword, references[1], level);
         return true;
     }
     visitor->Visit(keyword, {}, level);

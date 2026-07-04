@@ -92,12 +92,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     ParseCmdLine(GetCommandLineW(), argList);
 
     if (argList.Size() == 1) {
-        TempStr name = path::GetBaseNameTemp(argList.At(0));
+        TempStr name = path::GetBaseNameTemp(argList[0]);
         TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
         MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (argList.Size() == 2 || !str::EndsWithI(argList.At(1), ".exe")) {
+    if (argList.Size() == 2 || !str::EndsWithI(argList[1], ".exe")) {
         argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
     if (argList.Size() == 3) {
@@ -111,7 +111,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     RegisterClass(&wc);
 
-    PluginStartData data = {argList.At(1), argList.At(3), argList.At(2)};
+    PluginStartData data = {argList[1], argList[3], argList[2]};
     HWND hwnd = CreateWindowExW(0, PLUGIN_TEST_NAME, PLUGIN_TEST_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
                                 CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &data);
     ShowWindow(hwnd, nCmdShow);

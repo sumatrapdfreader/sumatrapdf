@@ -62,7 +62,7 @@ TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
             int ret = sync->SourceToDoc(srcPath, line, 0, &page, rects);
             out.Append(fmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, len(rects), srcPath, line));
             if (len(rects) > 0) {
-                Rect r = rects.at(0);
+                Rect r = rects[0];
                 out.Append(fmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d", r.x, r.y, r.dx, r.dy));
             }
             out.Append("\n");
@@ -278,7 +278,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
             chm_enumerate(h, CHM_ENUMERATE_ALL, ChmTestEnumerate, &paths);
 
             for (int i = 0; i < len(paths); i++) {
-                Str path = paths.At(i);
+                Str path = paths[i];
                 struct chmUnitInfo ui{};
                 if (chm_resolve_object(h, path.s, &ui) != CHM_RESOLVE_SUCCESS) {
                     continue;

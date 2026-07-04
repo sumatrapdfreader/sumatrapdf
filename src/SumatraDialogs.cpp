@@ -512,7 +512,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 ReportIf(langList != (HWND)lp);
                 int idx = (int)ListBox_GetCurSel(langList);
                 if (gLangListMap && idx >= 0 && idx < len(*gLangListMap)) {
-                    int langIdx = gLangListMap->At(idx);
+                    int langIdx = (*gLangListMap)[idx];
                     data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
                     EndDialog(hDlg, IDOK);
                 }
@@ -523,7 +523,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                     int idx = ListBox_GetCurSel(langList);
                     if (gLangListMap && idx >= 0 && idx < len(*gLangListMap)) {
-                        int langIdx = gLangListMap->At(idx);
+                        int langIdx = (*gLangListMap)[idx];
                         data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
                     }
                     EndDialog(hDlg, IDOK);
@@ -636,7 +636,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
         float maxZoom = forChm ? 800 : kZoomMax;
         float minZoom = forChm ? 16 : kZoomMin;
         for (int i = 0; i < n; i++) {
-            float zl = customZoomLevels->At(n - i - 1); // largest first
+            float zl = (*customZoomLevels)[n - i - 1]; // largest first
             if (zl >= minZoom && zl <= maxZoom) {
                 AddZoomLevel(zl, hwnd, currZoomLevels);
             }
@@ -651,7 +651,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
 
     n = len(*currZoomLevels);
     for (int i = 0; i < n; i++) {
-        float zl = currZoomLevels->At(i);
+        float zl = (*currZoomLevels)[i];
         if (zl == currZoom) {
             CbSetCurrentSelection(hwnd, i);
         }
@@ -674,7 +674,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
         newZoom = limitValue(zoom, kZoomMin, kZoomMax);
         return newZoom;
     }
-    newZoom = gCurrZoomLevels->At(idx);
+    newZoom = (*gCurrZoomLevels)[idx];
     if (newZoom == 0) {
         newZoom = defaultZoom;
     }
@@ -801,7 +801,7 @@ static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     if (cmdLine) {
         AppendIfNotExists(&detected, cmdLine);
     } else if (len(detected) > 0) {
-        cmdLine = detected.At(0);
+        cmdLine = detected[0];
     }
     for (Str s : detected) {
         CbAddString(hwndComboBox, s);

@@ -111,7 +111,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     screenRc.Inflate(pad, pad);
     for (int i = 0; i < len(rects); i++) {
-        Rect rc = rects.at(i);
+        Rect rc = rects[i];
         if (pad > 0) {
             rc.Inflate(pad, pad);
         }
@@ -301,7 +301,7 @@ void CopySelectionToClipboard(MainWindow* win) {
         return;
     }
     /* also copy a screenshot of the current selection to the clipboard */
-    SelectionOnPage* selOnPage = &tab->selectionOnPage->at(0);
+    SelectionOnPage* selOnPage = &(*tab->selectionOnPage)[0];
     if (!dm->ValidPageNo(selOnPage->pageNo)) {
         return;
     }

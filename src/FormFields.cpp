@@ -232,7 +232,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     Str cur = GetWidgetValue(widget);
     int curIdx = -1;
     for (int i = 0; i < n; i++) {
-        Str o = opts.At(i);
+        Str o = opts[i];
         SendMessageW(hLb, LB_ADDSTRING, 0, (LPARAM)CWStrTemp(o));
         if (curIdx < 0 && str::Eq(o, cur)) {
             curIdx = i;

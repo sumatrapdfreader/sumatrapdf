@@ -1223,7 +1223,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
 
     StrVec parts;
     Split(&parts, definition, " ", true, 2);
-    Str cmd = parts.At(0);
+    Str cmd = parts[0];
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         MaybeDelayedWarningNotification(
@@ -1291,7 +1291,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return nullptr;
     }
 
-    Str currArg = str::DupTemp(parts.At(1));
+    Str currArg = str::DupTemp(parts[1]);
 
     CommandArg* firstArg = nullptr;
     CommandArg* arg;

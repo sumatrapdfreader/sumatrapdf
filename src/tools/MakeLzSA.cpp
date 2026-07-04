@@ -154,7 +154,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     data.Append(lzsaHeader.AsByteSlice());
 
     for (int i = skipFiles; i < files.Size(); i++) {
-        TempStr filePath = str::DupTemp(files.At(i));
+        TempStr filePath = str::DupTemp(files[i]);
         Str sep = str::SliceFromCharLast(filePath, ':');
         TempStr utf8Name;
         if (sep) {
@@ -271,7 +271,7 @@ int main(__unused int argc, __unused char** argv) {
     MyParseCmdLine(GetCommandLine(), args);
     int errorStep = 1;
 
-    auto exeName = path::GetBaseNameTemp(args.At(0));
+    auto exeName = path::GetBaseNameTemp(args[0]);
 
     int nArgs = args.Size();
     // first arg is exe path, the rest is
@@ -279,13 +279,13 @@ int main(__unused int argc, __unused char** argv) {
         return printUsage(exeName);
     }
 
-    Str archiveName = args.At(1);
+    Str archiveName = args[1];
     if (nArgs == 2 && file::Exists(archiveName)) {
         return mainVerify(archiveName);
     }
 
     if (nArgs == 3) {
-        auto dir = args.At(2);
+        auto dir = args[2];
         if (dir::Exists(dir)) {
             bool ok = lzsa::CreateArchiveFromDir(archiveName, dir);
             if (!ok) {
@@ -301,7 +301,7 @@ int main(__unused int argc, __unused char** argv) {
     errorStep++;
 
     bool ok = lzsa::CreateArchive(archiveName, args, 2);
-    FailIf(!ok, "Failed to create \"%s\"", args.At(1).s);
+    FailIf(!ok, "Failed to create \"%s\"", args[1].s);
 
     return 0;
 }

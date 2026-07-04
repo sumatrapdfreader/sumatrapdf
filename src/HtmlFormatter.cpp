@@ -500,7 +500,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         currLineTopPadding = 0;
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (int k = len(currLineInstr); k > 0; k--) {
-            DrawInstr& i = currLineInstr.at(k - 1);
+            DrawInstr& i = currLineInstr[k - 1];
             if (DrawInstrType::FixedSpace == i.type || DrawInstrType::ElasticSpace == i.type) {
                 currLineInstr.RemoveAt(k - 1);
             }
@@ -534,7 +534,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
 
     DrawInstr link;
     if (currLinkIdx) {
-        link = currLineInstr.at(currLinkIdx - 1);
+        link = currLineInstr[(int)currLinkIdx - 1];
         // TODO: this occasionally leads to empty links
         AppendInstr(DrawInstr(DrawInstrType::LinkEnd));
     }
@@ -565,7 +565,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy) {
         currX = NewLineX();
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (int k = len(currLineInstr); k > 0; k--) {
-            DrawInstr& i = currLineInstr.at(k - 1);
+            DrawInstr& i = currLineInstr[k - 1];
             if (DrawInstrType::FixedSpace == i.type || DrawInstrType::ElasticSpace == i.type) {
                 currLineInstr.RemoveAt(k - 1);
             }
@@ -578,7 +578,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy) {
 static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
     float imageY = -1;
     for (int idx = len(instrs); idx > 0; idx--) {
-        DrawInstr& i = instrs.at(idx - 1);
+        DrawInstr& i = instrs[idx - 1];
         if (!IsVisibleDrawInstr(i)) {
             continue;
         }
@@ -681,7 +681,7 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     DrawInstr& di = currLineInstr.Last();
     // don't add a space if only an anchor would be in between them
     if (DrawInstrType::Anchor == di.type && len(currLineInstr) > 1) {
-        di = currLineInstr.at(len(currLineInstr) - 2);
+        di = currLineInstr[len(currLineInstr) - 2];
     }
     return (DrawInstrType::ElasticSpace != di.type) && (DrawInstrType::FixedSpace != di.type);
 }
@@ -998,7 +998,7 @@ void HtmlFormatter::HandleTagPre(HtmlToken* t) {
 StyleRule* HtmlFormatter::FindStyleRule(HtmlTag tag, Str clazz) {
     u32 classHash = MurmurHash2(clazz);
     for (int i = 0; i < len(styleRules); i++) {
-        StyleRule& rule = styleRules.at(i);
+        StyleRule& rule = styleRules[i];
         if (tag == rule.tag && classHash == rule.classHash) {
             return &rule;
         }
@@ -1150,17 +1150,16 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken* t) {
             return;
         }
         // close all tags that can't contain this new block-level tag
-        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting.at(idx - 1)); idx--) {
+        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting[idx - 1]); idx--) {
             // no-op
         }
     } else {
         // close all tags that were contained within the current tag
         // (for inline tags just up to the next block-level tag)
-        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting.at(idx - 1))) && t->tag != tagNesting.at(idx - 1);
-             idx--) {
+        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting[idx - 1])) && t->tag != tagNesting[idx - 1]; idx--) {
             // no-op
         }
-        if (0 == idx || tagNesting.at(idx - 1) != t->tag) {
+        if (0 == idx || tagNesting[idx - 1] != t->tag) {
             return;
         }
     }

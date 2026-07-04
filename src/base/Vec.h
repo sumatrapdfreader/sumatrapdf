@@ -177,40 +177,7 @@ class Vec {
         Reset();
     }
 
-    T& operator[](size_t idx) const {
-        ReportIf(idx >= (size_t)len);
-        return els[idx];
-    }
-
-    T& operator[](long idx) const {
-        ReportIf(idx < 0);
-        ReportIf(idx >= len);
-        return els[idx];
-    }
-
-    T& operator[](ULONG idx) const {
-        ReportIf(idx >= (ULONG)len);
-        return els[idx];
-    }
-
     T& operator[](int idx) const {
-        ReportIf(idx < 0);
-        ReportIf(idx >= len);
-        return els[idx];
-    }
-
-    T& at(size_t idx) const {
-        ReportIf(idx >= (size_t)len);
-        return els[idx];
-    }
-
-    T& at(int idx) const {
-        ReportIf(idx < 0);
-        ReportIf(idx >= len);
-        return els[idx];
-    }
-
-    T& At(int idx) const {
         ReportIf(idx < 0);
         ReportIf(idx >= len);
         return els[idx];
@@ -288,21 +255,21 @@ class Vec {
 
     T Pop() {
         ReportIf(0 == len);
-        T el = at(len - 1);
+        T el = els[len - 1];
         RemoveAtFast(len - 1);
         return el;
     }
 
     T PopAt(int idx) {
         ReportIf(idx >= len);
-        T el = at(idx);
+        T el = els[idx];
         RemoveAt(idx);
         return el;
     }
 
     T& Last() const {
         ReportIf(0 == len);
-        return at(len - 1);
+        return els[len - 1];
     }
 
     // perf hack for using as a buffer: client can get accumulated data

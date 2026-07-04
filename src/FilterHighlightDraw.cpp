@@ -32,7 +32,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     u8* hl = highlighted.EnsureCap(textLen);
     memset(hl, 0, textLen);
     for (int w = 0; w < nWords; w++) {
-        Str word = filterWords.At(w);
+        Str word = filterWords[w];
         int wordLen = word.len;
         if (len(word) == 0) {
             continue;
@@ -143,7 +143,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
 bool FilterMatches(Str str, const StrVec& words) {
     int nWords = len(words);
     for (int i = 0; i < nWords; i++) {
-        Str word = words.At(i);
+        Str word = words[i];
         if (len(word) == 0) {
             continue;
         }

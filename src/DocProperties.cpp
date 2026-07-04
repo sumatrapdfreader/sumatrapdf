@@ -87,7 +87,7 @@ int GetPropIdx(const Props& props, Str name) {
     int n = PropsCount(props);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
-        if (str::Eq(props.At(idx), name)) {
+        if (str::Eq(props[idx], name)) {
             return idx;
         }
     }
@@ -99,7 +99,7 @@ Str GetPropValueTemp(const Props& props, Str name) {
     if (idx < 0) {
         return {};
     }
-    return props.At(idx + 1);
+    return props[idx + 1];
 }
 
 void AddProp(Props& props, Str name, Str val, bool replaceIfExists) {

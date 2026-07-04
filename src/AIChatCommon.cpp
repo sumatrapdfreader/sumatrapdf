@@ -253,10 +253,10 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
 TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt) {
 #ifdef _MSC_VER
     for (int i = 0; i < len(fullPathCandidates); i++) {
-        if (file::Exists(fullPathCandidates.At(i))) {
+        if (file::Exists(fullPathCandidates[i])) {
             // copy into the temp arena: callers pass a local StrVec that is
             // destroyed on return, so returning a view into it would dangle
-            return str::DupTemp(fullPathCandidates.At(i));
+            return str::DupTemp(fullPathCandidates[i]);
         }
     }
     WCHAR pathW[MAX_PATH];
@@ -285,7 +285,7 @@ void AIChatAppendModelUnique(StrVec& models, Str model) {
     norm = Str(norm.s + start, norm.len - start);
     str::ToLowerInPlace(norm);
     for (int i = 0; i < len(models); i++) {
-        if (str::EqI(models.At(i), norm)) {
+        if (str::EqI(models[i], norm)) {
             return;
         }
     }
@@ -299,7 +299,7 @@ int AIChatFindModelInList(const StrVec& models, Str model) {
     TempStr norm = str::DupTemp(model);
     str::ToLowerInPlace(norm);
     for (int i = 0; i < len(models); i++) {
-        if (str::EqI(models.At(i), norm)) {
+        if (str::EqI(models[i], norm)) {
             return i;
         }
     }

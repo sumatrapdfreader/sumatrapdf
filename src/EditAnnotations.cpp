@@ -163,7 +163,7 @@ static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prev
     if (prevIdx >= nAnnots) {
         prevIdx = nAnnots - 1;
     }
-    return ew->annotations.at(prevIdx);
+    return ew->annotations[prevIdx];
 }
 #endif
 
@@ -225,7 +225,7 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
         ew->tab->selectedAnnotation = nullptr;
         return;
     }
-    Annotation* annot = ew->annotations.at(idx);
+    Annotation* annot = ew->annotations[idx];
     if (ew->tab->selectedAnnotation != annot) {
         // can get out of sync if e.g. keyboard navigation in listbox
         // hasn't triggered ListBoxSelectionChanged yet
@@ -375,7 +375,7 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
 
     str::Builder s;
     for (int i = 0; i < n; i++) {
-        auto annot = ew->annotations.at(i);
+        auto annot = ew->annotations[i];
         s.Reset();
         s.Append(fmt(_TRA("page %d,").s, annot->pageNo));
         Str name = AnnotationReadableNameTemp(annot->type);
@@ -715,7 +715,7 @@ static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownTextColor->GetCurrentSelection();
-    Str item = ew->dropDownTextColor->items.At(idx);
+    Str item = ew->dropDownTextColor->items[idx];
     auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -829,7 +829,7 @@ static void IconSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownIcon->GetCurrentSelection();
-    auto item = ew->dropDownIcon->items.At(idx);
+    auto item = ew->dropDownIcon->items[idx];
     SetIconName(annot, item);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
@@ -858,7 +858,7 @@ static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownColor->GetCurrentSelection();
-    auto item = ew->dropDownColor->items.At(idx);
+    auto item = ew->dropDownColor->items[idx];
     auto col = GetDropDownColor(item);
     SetColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -881,7 +881,7 @@ static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownInteriorColor->GetCurrentSelection();
-    auto item = ew->dropDownInteriorColor->items.At(idx);
+    auto item = ew->dropDownInteriorColor->items[idx];
     auto col = GetDropDownColor(item);
     SetInteriorColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -1111,7 +1111,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
         ReportDebugIf(true);
         return;
     }
-    Annotation* annot = annotations.at(itemNo);
+    Annotation* annot = annotations[itemNo];
     SetSelectedAnnotation(tab, annot);
 }
 

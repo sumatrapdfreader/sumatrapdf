@@ -70,7 +70,7 @@ void DictTestMapStrToInt() {
         ReportIf(i != val);
     }
     for (int i = 0; i < len(toRemove); i++) {
-        Str k = toRemove.At(i);
+        Str k = toRemove[i];
         ok = d.Remove(k, nullptr);
         utassert(ok);
     }

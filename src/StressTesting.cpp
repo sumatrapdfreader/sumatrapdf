@@ -167,7 +167,7 @@ static void BenchFile(Str path, Str pagesSpec) {
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
         for (int i = 0; i < len(ranges); i++) {
-            for (int j = ranges.at(i).start; j <= ranges.at(i).end; j++) {
+            for (int j = ranges[i].start; j <= ranges[i].end; j++) {
                 if (1 <= j && j <= pages) {
                     BenchLoadRender(engine, j);
                 }
@@ -206,16 +206,16 @@ static void BenchDir(Str dir) {
     StrVec files;
     CollectFilesToBench(dir, files);
     for (int i = 0; i < len(files); i++) {
-        BenchFile(files.At(i), nullptr);
+        BenchFile(files[i], nullptr);
     }
 }
 
 void BenchFileOrDir(StrVec& pathsToBench) {
     int n = len(pathsToBench) / 2;
     for (int i = 0; i < n; i++) {
-        Str path = pathsToBench.At(2 * i);
+        Str path = pathsToBench[2 * i];
         if (file::Exists(path)) {
-            BenchFile(path, pathsToBench.At(2 * i + 1));
+            BenchFile(path, pathsToBench[2 * i + 1]);
         } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {
@@ -359,7 +359,7 @@ struct FilesProvider : TestFileProvider {
     FilesProvider(StrVec& filesIn, int n, int offset) {
         // get every n-th file starting at offset
         for (int i = offset; i < len(filesIn); i += n) {
-            Str f = filesIn.At(i);
+            Str f = filesIn[i];
             files.Append(f);
         }
         provided = 0;
@@ -373,7 +373,7 @@ struct FilesProvider : TestFileProvider {
         if (provided >= len(files)) {
             return {};
         }
-        TempStr res = files.At(provided++);
+        TempStr res = files[provided++];
         return res;
     }
 
@@ -899,7 +899,7 @@ void GetStressTestInfo(str::Builder* s) {
     }
 
     for (int i = 0; i < len(gWindows); i++) {
-        MainWindow* w = gWindows.at(i);
+        MainWindow* w = gWindows[i];
         if (!w || !w->CurrentTab() || !w->CurrentTab()->filePath) {
             continue;
         }

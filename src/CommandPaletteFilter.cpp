@@ -14,7 +14,7 @@
 static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matchedOut) {
     int n = len(strs);
     for (int i = 0; i < n; i++) {
-        Str s = strs.At(i);
+        Str s = strs[i];
         if (len(s) == 0) {
             continue;
         }

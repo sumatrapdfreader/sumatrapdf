@@ -66,11 +66,11 @@ void FileHistory::Clear(bool keepFavorites) const {
     }
     Vec<FileState*> keep;
     for (int i = 0; i < len(*states); i++) {
-        if (keepFavorites && len(*states->at(i)->favorites) > 0) {
-            states->at(i)->openCount = 0;
-            keep.Append(states->at(i));
+        if (keepFavorites && len(*(*states)[i]->favorites) > 0) {
+            (*states)[i]->openCount = 0;
+            keep.Append((*states)[i]);
         } else {
-            DeleteFileState(states->at(i));
+            DeleteFileState((*states)[i]);
         }
     }
     *states = keep;
@@ -80,14 +80,14 @@ FileState* FileHistory::Get(int index) const {
     if (index < 0 || index >= len(*states)) {
         return nullptr;
     }
-    return states->at(index);
+    return (*states)[index];
 }
 
 FileState* FileHistory::FindByPath(Str filePath) const {
     int idxExact = -1;
     int n = len(*states);
     for (int i = 0; i < n; i++) {
-        FileState* fs = states->at(i);
+        FileState* fs = (*states)[i];
         if (str::EqI(fs->filePath, filePath)) {
             idxExact = i;
         }
@@ -95,7 +95,7 @@ FileState* FileHistory::FindByPath(Str filePath) const {
     if (idxExact == -1) {
         return nullptr;
     }
-    return states->at(idxExact);
+    return (*states)[idxExact];
 }
 
 // returns an exact match by path or match by just file name
@@ -106,7 +106,7 @@ FileState* FileHistory::FindByName(Str filePath, int* idxOut) const {
     TempStr fileName = path::GetBaseNameTemp(filePath);
     int n = len(*states);
     for (int i = 0; i < n; i++) {
-        FileState* fs = states->at(i);
+        FileState* fs = (*states)[i];
         if (str::EqI(fs->filePath, filePath)) {
             idxExact = i;
         } else if (str::EqI(path::GetBaseNameTemp(fs->filePath), fileName)) {
@@ -123,7 +123,7 @@ FileState* FileHistory::FindByName(Str filePath, int* idxOut) const {
     if (idxOut) {
         *idxOut = idFound;
     }
-    return states->at(idFound);
+    return (*states)[idFound];
 }
 
 FileState* FileHistory::MarkFileLoaded(Str filePath) const {
@@ -252,13 +252,13 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
         if (len(frequencyList) > kFileHistoryMaxFrequent) {
-            auto el = frequencyList.at(kFileHistoryMaxFrequent);
+            auto el = frequencyList[kFileHistoryMaxFrequent];
             minOpenCount = el->openCount / 2;
         }
     }
 
     for (int j = len(*states); j > 0; j--) {
-        FileState* state = states->at(j - 1);
+        FileState* state = (*states)[j - 1];
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
         if (state->isPinned || len(state->decryptionKey) > 0 || len(*state->favorites) > 0) {
@@ -402,7 +402,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
     // be marked as inexistent in gFileHistory)
     int n = len(toCheck);
     for (int i = 0; i < n; i++) {
-        Str path = toCheck.At(i);
+        Str path = toCheck[i];
         if (!path) {
             continue;
         }
@@ -433,7 +433,7 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
     gFileHistory.GetFrequencyOrder(frequencyList);
     int iMax = std::min(2 * kFileHistoryMaxFrequent, len(frequencyList));
     for (int i = 0; i < iMax; i++) {
-        fs = frequencyList.at(i);
+        fs = frequencyList[i];
         AppendIfNotExists(&toCheck, fs->filePath);
     }
 }

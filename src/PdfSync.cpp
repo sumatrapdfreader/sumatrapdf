@@ -309,7 +309,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
             case ')':
                 if (len(filestack) > 1) {
-                    fileIndex.at(filestack.Pop()).end = len(lines);
+                    fileIndex[(int)filestack.Pop()].end = len(lines);
                 }
                 // else dbg("Unbalanced ')' line in the pdfsync file");
                 break;
@@ -320,7 +320,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
         }
     }
 
-    fileIndex.at(0).end = len(lines);
+    fileIndex[0].end = len(lines);
     ReportIf(len(filestack) != 1);
 
     return MarkIndexWasRebuilt();
@@ -373,17 +373,17 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheetIndex.at((size_t)pageNo); i < (size_t)len(points) && points.at(i).page == (uint)pageNo; i++) {
+    for (int i = (int)sheetIndex[pageNo]; i < len(points) && points[i].page == (uint)pageNo; i++) {
         // check whether it is closer than the closest point found so far
-        UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.at(i).x));
-        UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.at(i).y));
+        UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points[i].x));
+        UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points[i].y));
         UINT dist = dx * dx + dy * dy;
         if (dist < PDFSYNC_EPSILON_SQUARE && dist < closest_xydist) {
-            selected_record = points.at(i).record;
+            selected_record = points[i].record;
             closest_xydist = dist;
         } else if ((closest_xydist == UINT_MAX) && dy < PDFSYNC_EPSILON_Y &&
                    (dy < closest_ydist || (dy == closest_ydist && dx < closest_xdist))) {
-            closest_ydist_record = points.at(i).record;
+            closest_ydist_record = points[i].record;
             closest_ydist = dy;
             closest_xdist = dx;
         }
@@ -405,7 +405,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    Str path = srcfiles.At((int)found->file);
+    Str path = srcfiles[(int)found->file];
     str::ReplaceWithCopy(&filename, path::NormalizeTemp(path));
     TryRecoverMovedSourceFile(filename, pdfPath);
 
@@ -442,7 +442,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     // find the source file entry
     int isrc;
     for (isrc = 0; isrc < len(srcfiles); isrc++) {
-        Str path = srcfiles.At(isrc);
+        Str path = srcfiles[isrc];
         if (path::IsSame(srcfilepath, path)) {
             break;
         }
@@ -451,7 +451,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    if (fileIndex.at(isrc).start == fileIndex.at(isrc).end) {
+    if (fileIndex[isrc].start == fileIndex[isrc].end) {
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
     }
 
@@ -460,13 +460,13 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     UINT min_distance = EPSILON_LINE; // distance to the closest record
     size_t lineIx = (size_t)-1;       // closest record-line index
 
-    for (size_t isec = fileIndex.at(isrc).start; isec < fileIndex.at(isrc).end; isec++) {
+    for (size_t isec = fileIndex[isrc].start; isec < fileIndex[isrc].end; isec++) {
         // does this section belong to the desired file?
-        if (lines.at(isec).file != (size_t)isrc) {
+        if (lines[(int)isec].file != (size_t)isrc) {
             continue;
         }
 
-        UINT d = abs((int)lines.at(isec).line - (int)line);
+        UINT d = abs((int)lines[(int)isec].line - (int)line);
         if (d < min_distance) {
             min_distance = d;
             lineIx = isec;
@@ -480,8 +480,8 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     }
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < (size_t)len(lines) && lines.at(i).line == lines.at(lineIx).line; i++) {
-        records.Append(lines.at(i).record);
+    for (size_t i = lineIx; i < (size_t)len(lines) && lines[(int)i].line == lines[(int)lineIx].line; i++) {
+        records.Append(lines[(int)i].record);
     }
 
     return PDFSYNCERR_SUCCESS;

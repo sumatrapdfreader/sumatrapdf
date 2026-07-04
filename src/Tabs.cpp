@@ -638,7 +638,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     if (-1 == current) {
         return;
     }
-    if (win->CurrentTab() != win->Tabs().at(current)) {
+    if (win->CurrentTab() != win->Tabs()[current]) {
         return; // TODO: restore ReportIf() ?
     }
 

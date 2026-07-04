@@ -421,7 +421,7 @@ Size VBox::Layout(const Constraints bc) {
     ILayout* previous = nullptr;
 
     for (int i = 0; i < n; i++) {
-        auto& v = children.at(i);
+        auto& v = children[i];
         if (IsCollapsed(v.layout)) {
             continue;
         }

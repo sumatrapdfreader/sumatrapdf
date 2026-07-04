@@ -459,7 +459,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
     }
 
     auto&& tabs = tabsCtrl->tabs;
-    TabInfo* moved = tabs.At(tabIdxFrom);
+    TabInfo* moved = tabs[tabIdxFrom];
     tabs.RemoveAt(tabIdxFrom);
     if (tabIdxFrom < tabIdxTo) {
         // we moved from left to right e.g. from 1 to 3

@@ -219,7 +219,7 @@ static void StrVecTest1() {
 
     int n = dimofi(strs);
     for (int i = 0; i < n; i++) {
-        Str got = sortedView.At(i);
+        Str got = sortedView[i];
         auto exp = strs[sortedOrder[i]];
         strEq(got, exp);
     }
@@ -230,7 +230,7 @@ static void StrVecTest1() {
     SortNoCase(&sortedView);
 
     for (int i = 0; i < n; i++) {
-        auto got = sortedView.At(i);
+        auto got = sortedView[i];
         auto exp = strs[sortedNoCaseOrder[i]];
         strEq(got, exp);
     }
@@ -238,14 +238,14 @@ static void StrVecTest1() {
 
     Sort(&v);
     for (int i = 0; i < n; i++) {
-        Str got = v.At(i);
+        Str got = v[i];
         auto exp = strs[sortedOrder[i]];
         strEq(got, exp);
     }
     StrVecCheckIter(&v, nullptr);
     SortNoCase(&v);
     for (int i = 0; i < n; i++) {
-        Str got = v.At(i);
+        Str got = v[i];
         auto exp = strs[sortedNoCaseOrder[i]];
         strEq(got, exp);
     }
@@ -350,15 +350,15 @@ static void StrVecTest2() {
 
     {
         StrVec v2(v);
-        utassert(str::Eq(v2.At(2), "foo"));
+        utassert(str::Eq(v2[2], "foo"));
         v2.Append("nobar");
-        utassert(str::Eq(v2.At(4), "nobar"));
+        utassert(str::Eq(v2[4], "nobar"));
         v2 = v;
         utassert(len(v2) == 4);
         // copies should be same values but at different addresses
-        utassert(v2.At(1).s != v.At(1).s);
-        utassert(str::Eq(v2.At(1), v.At(1)));
-        s = v2.At(2);
+        utassert(v2[1].s != v[1].s);
+        utassert(str::Eq(v2[1], v[1]));
+        s = v2[2];
         utassert(str::Eq(s, "foo"));
         TestRemoveAt(&v2);
     }

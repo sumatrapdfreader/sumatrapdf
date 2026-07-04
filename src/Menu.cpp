@@ -1492,8 +1492,8 @@ static void BuildMenuZoom(HMENU m) {
     BuildMenuFromDef(menuDefZoomShort, m, nullptr);
     for (int i = 0; i < n; i++) {
         int idx = n - i - 1; // largest first
-        float zl = customZoomLevels->At(idx);
-        cmdId = prefs->zoomLevelsCmdIds->At(idx);
+        float zl = (*customZoomLevels)[idx];
+        cmdId = (*prefs->zoomLevelsCmdIds)[idx];
         title = ZoomLevelStr(zl);
         title = AppendAccelKeyToMenuStringTemp(title, cmdId);
         UINT flags = MF_STRING | MF_ENABLED;
@@ -1583,7 +1583,7 @@ static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
 
 static bool IsFileCloseMenuEnabled() {
     for (int i = 0; i < len(gWindows); i++) {
-        if (gWindows.at(i)->IsDocLoaded()) {
+        if (gWindows[i]->IsDocLoaded()) {
             return true;
         }
     }

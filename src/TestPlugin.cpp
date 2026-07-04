@@ -111,7 +111,7 @@ void TestPlugin(WStr cmdLine) {
     // find the position of -test-plugin and take args after it
     int pluginIdx = -1;
     for (int i = 0; i < len(argList); i++) {
-        if (str::EqI(argList.At(i), "-test-plugin")) {
+        if (str::EqI(argList[i], "-test-plugin")) {
             pluginIdx = i;
             break;
         }
@@ -120,7 +120,7 @@ void TestPlugin(WStr cmdLine) {
     StrVec args;
     if (pluginIdx >= 0) {
         for (int i = pluginIdx + 1; i < len(argList); i++) {
-            args.Append(argList.At(i));
+            args.Append(argList[i]);
         }
     }
 
@@ -131,7 +131,7 @@ void TestPlugin(WStr cmdLine) {
     }
 
     // if no exe path given or first arg doesn't end with .exe, use our own exe
-    if (len(args) == 1 || !str::EndsWithI(args.At(0), ".exe")) {
+    if (len(args) == 1 || !str::EndsWithI(args[0], ".exe")) {
         TempStr selfPath = GetSelfExePathTemp();
         args.InsertAt(0, selfPath);
     }
@@ -155,7 +155,7 @@ void TestPlugin(WStr cmdLine) {
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     RegisterClass(&wc);
 
-    PluginStartData data = {args.At(0), args.At(2), args.At(1)};
+    PluginStartData data = {args[0], args[2], args[1]};
     HWND hwnd = CreateWindowExW(0, PLUGIN_TEST_NAME, PLUGIN_TEST_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
                                 CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &data);
     ShowWindow(hwnd, SW_SHOW);

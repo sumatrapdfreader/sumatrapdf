@@ -686,7 +686,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
         win = data->win;
     } else {
         if (len(gWindows) > 0) {
-            win = gWindows.At(0);
+            win = gWindows[0];
         }
     }
     if (!win) {

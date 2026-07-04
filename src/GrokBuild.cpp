@@ -107,7 +107,7 @@ static void BuildGrokModelsList(StrVec& models) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < len(parts); i++) {
-            AIChatAppendModelUnique(models, parts.At(i));
+            AIChatAppendModelUnique(models, parts[i]);
         }
     }
 }
@@ -115,11 +115,11 @@ static void BuildGrokModelsList(StrVec& models) {
 static Str ResolveGrokModel(const StrVec& models, Str model) {
     int idx = AIChatFindModelInList(models, model);
     if (idx >= 0) {
-        return models.At(idx);
+        return models[idx];
     }
     idx = AIChatFindModelInList(models, "grok-composer-2.5-fast");
     if (idx >= 0) {
-        return models.At(idx);
+        return models[idx];
     }
     return StrL("grok-composer-2.5-fast");
 }
@@ -132,7 +132,7 @@ static void PopulateModelCombo(HWND combo) {
     StrVec models;
     BuildGrokModelsList(models);
     for (int i = 0; i < len(models); i++) {
-        TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Grok-composer-2.5-fast");
+        TempStr display = AIChatModelDisplayNameTemp(models[i], "Grok-composer-2.5-fast");
         WCHAR* displayW = CWStrTemp(display);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
@@ -171,7 +171,7 @@ static void SyncGrokSettingsFromUI(MainWindow* win) {
         StrVec models;
         BuildGrokModelsList(models);
         if (sel >= 0 && sel < len(models)) {
-            str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, models.At(sel));
+            str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, models[sel]);
         }
     }
     if (win->hwndGrokEffortCombo) {

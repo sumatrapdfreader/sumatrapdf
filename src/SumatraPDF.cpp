@@ -370,7 +370,7 @@ bool SumatraLaunchBrowser(Str url) {
         if (gWindows.empty()) {
             return false;
         }
-        HWND plugin = gWindows.at(0)->hwndFrame;
+        HWND plugin = gWindows[0]->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
         int urlLen = len(url);
         if (!parent || !url || (urlLen > 4096)) {
@@ -584,7 +584,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
 
     // try the list of default passwords before asking the user
     if (pwdIdx < len(*gGlobalPrefs->defaultPasswords)) {
-        Str pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
+        Str pwd = (*gGlobalPrefs->defaultPasswords)[pwdIdx++];
         return str::Dup(pwd);
     }
 
@@ -2388,8 +2388,8 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
         SaveSettings();
     }
     // update the Frequently Read list
-    if (1 == len(gWindows) && gWindows.at(0)->IsCurrentTabAbout()) {
-        gWindows.at(0)->RedrawAll(true);
+    if (1 == len(gWindows) && gWindows[0]->IsCurrentTabAbout()) {
+        gWindows[0]->RedrawAll(true);
     }
 }
 
@@ -2592,8 +2592,8 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         }
     }
 
-    if (!win && 1 == len(gWindows) && gWindows.at(0)->IsCurrentTabAbout()) {
-        win = gWindows.at(0);
+    if (!win && 1 == len(gWindows) && gWindows[0]->IsCurrentTabAbout()) {
+        win = gWindows[0];
         args->win = win;
         args->isNewWindow = false;
     } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
@@ -5286,8 +5286,8 @@ static void ShowOptionsDialog(HWND hwnd) {
 // TODO: should use currently active window, but most of the time
 // there's only one window
 void MaybeRedrawHomePage() {
-    if (!gWindows.empty() && gWindows.at(0)->IsCurrentTabAbout()) {
-        gWindows.at(0)->RedrawAll(true);
+    if (!gWindows.empty() && gWindows[0]->IsCurrentTabAbout()) {
+        gWindows[0]->RedrawAll(true);
     }
 }
 
@@ -6523,7 +6523,7 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
 
     // the last window survives as an empty/about window
     if (len(gWindows) > 0) {
-        return gWindows.at(0);
+        return gWindows[0];
     }
     return nullptr;
 }
@@ -6563,7 +6563,7 @@ static void TransitionToNoTabs() {
 
     // re-open each file in its own window, reuse the surviving window for the first file
     for (int i = 0; i < len(paths); i++) {
-        Str path = paths.At(i);
+        Str path = paths[i];
         MainWindow* win;
         if (i == 0 && surviving) {
             win = surviving;
@@ -6619,7 +6619,7 @@ static void TransitionToTabs() {
     }
     SetTabsInTitlebar(win, true);
     for (int i = 0; i < len(paths); i++) {
-        Str path = paths.At(i);
+        Str path = paths[i];
         LoadArgs args(path, win);
         args.showWin = true;
         args.forceReuse = (i == 0);
@@ -6746,7 +6746,7 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
     Vec<FileState*>* states = gFileHistory.states;
     // iterate from the end because removing changes indices
     for (int i = len(*states) - 1; i >= 0; i--) {
-        FileState* fs = states->at(i);
+        FileState* fs = (*states)[i];
         Str path = fs->filePath;
         if (!path) {
             continue;

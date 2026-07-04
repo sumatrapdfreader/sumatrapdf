@@ -175,12 +175,12 @@ void CreateThemeCommands() {
     if (gCurrThemeIndex >= gThemeCount) {
         gCurrThemeIndex = 0;
     }
-    gCurrentTheme = gThemes->At(gCurrThemeIndex);
-    gThemeLight = gThemes->At(0);
+    gCurrentTheme = (*gThemes)[gCurrThemeIndex];
+    gThemeLight = (*gThemes)[0];
 
     CustomCommand* cmd;
     for (int i = 0; i < gThemeCount; i++) {
-        Theme* theme = gThemes->At(i);
+        Theme* theme = (*gThemes)[i];
         Str themeName = theme->name;
         auto args = NewStringArg(kCmdArgTheme, themeName);
         cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
@@ -202,7 +202,7 @@ void SetThemeByIndex(int themeIdx) {
     bool themeChanged = (gCurrThemeIndex != themeIdx);
     gCurrThemeIndex = themeIdx;
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
-    gCurrentTheme = gThemes->At(gCurrThemeIndex);
+    gCurrentTheme = (*gThemes)[gCurrThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     if (UseDarkModeLib()) {
         // TODO: we should apply themes to every theme other than 0
@@ -252,7 +252,7 @@ void SelectNextTheme() {
 // not case sensitive
 static int GetThemeByName(Str name) {
     for (int i = 0; i < gThemeCount; i++) {
-        Theme* theme = gThemes->At(i);
+        Theme* theme = (*gThemes)[i];
         if (str::EqI(theme->name, name)) {
             return i;
         }

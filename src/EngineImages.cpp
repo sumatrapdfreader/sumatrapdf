@@ -658,8 +658,8 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
         ScopedCritSec scope(&cacheLock);
 
         for (int i = 0; i < len(pageCache); i++) {
-            if (pageCache.at(i)->pageNo == pageNo) {
-                result = pageCache.at(i);
+            if (pageCache[i]->pageNo == pageNo) {
+                result = pageCache[i];
                 break;
             }
         }
@@ -679,7 +679,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             result->loading = true;
             pageCache.InsertAt(0, result);
             isLoader = true;
-        } else if (result != pageCache.at(0)) {
+        } else if (result != pageCache[0]) {
             // keep the list Most Recently Used first
             pageCache.Remove(result);
             pageCache.InsertAt(0, result);
@@ -1715,7 +1715,7 @@ class EngineImageDir : public EngineImages {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
-    TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(pageFileNames.At(pageNo - 1)); }
+    TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(pageFileNames[pageNo - 1]); }
 
     StrVec pageFileNames;
     TocTree* tocTree = nullptr;
@@ -1763,7 +1763,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    Str path = pageFileNames.At(pageNo - 1);
+    Str path = pageFileNames[pageNo - 1];
     TempStr fileName = path::GetBaseNameTemp(path);
     TempStr ext = path::GetExtTemp(fileName);
     if (!ext) {
@@ -1832,7 +1832,7 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
 }
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    Str path = pageFileNames.At(pageNo - 1);
+    Str path = pageFileNames[pageNo - 1];
     Str bmpData = file::ReadFile(path);
     if (!bmpData) {
         return nullptr;
@@ -1847,14 +1847,14 @@ Str EngineImageDir::GetImageData(int pageNo) {
     ScopedCritSec scope(&cacheLock);
     auto pi = pageInfos[pageNo - 1];
     if (len(pi->rawData) == 0) {
-        Str path = pageFileNames.At(pageNo - 1);
+        Str path = pageFileNames[pageNo - 1];
         pi->rawData = file::ReadFile(path);
     }
     return pi->rawData;
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
-    Str path = pageFileNames.At(pageNo - 1);
+    Str path = pageFileNames[pageNo - 1];
     Str bmpData = file::ReadFile(path);
     if (bmpData) {
         Size size = ImageSizeFromData(bmpData);

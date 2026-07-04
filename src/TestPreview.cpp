@@ -25,7 +25,7 @@ void TestPreview(WStr cmdLine) {
     // find args after -test-preview
     int idx = -1;
     for (int i = 0; i < len(argList); i++) {
-        if (str::EqI(argList.At(i), "-test-preview")) {
+        if (str::EqI(argList[i], "-test-preview")) {
             idx = i;
             break;
         }
@@ -36,7 +36,7 @@ void TestPreview(WStr cmdLine) {
         return;
     }
 
-    Str filePathA = argList.At(idx + 1);
+    Str filePathA = argList[idx + 1];
     WCHAR* filePath = CWStrTemp(filePathA);
 
     // use kPdfPreviewClsid by default

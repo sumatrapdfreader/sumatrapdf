@@ -159,25 +159,25 @@ Key = Value";
     utassert(str::Eq(data->color, "#abcdef"));
     utassert(str::Eq(data->escapedString.s, "\t\r\n$ "));
     utassert(str::Eq(data->escapedUtf8String.s, "\r\n[]\t"));
-    utassert(2 == len(*data->intArray) && 3 == data->intArray->at(0));
+    utassert(2 == len(*data->intArray) && 3 == (*data->intArray)[0]);
     utassert(3 == len(*data->strArray) && 0 == len(*data->emptyStrArray));
-    utassert(str::Eq(data->strArray->at(0), "with space") && str::Eq(data->strArray->at(1), "plain") &&
-             str::Eq(data->strArray->at(2), "quote:\""));
+    utassert(str::Eq((*data->strArray)[0], "with space") && str::Eq((*data->strArray)[1], "plain") &&
+             str::Eq((*data->strArray)[2], "quote:\""));
     utassert(2 == len(*data->sutStructItems));
-    utassert(Point(-1, 5) == data->sutStructItems->at(0)->compactPoint);
-    utassert(2 == len(*data->sutStructItems->at(0)->floatArray));
-    utassert(0 == len(*data->sutStructItems->at(0)->nested.colorArray));
-    utassert(0 == len(*data->sutStructItems->at(1)->floatArray));
-    utassert(2 == len(*data->sutStructItems->at(1)->nested.colorArray));
-    utassert(str::Eq("#12345678", data->sutStructItems->at(1)->nested.colorArray->at(0)));
-    utassert(str::Eq("#987654", data->sutStructItems->at(1)->nested.colorArray->at(1)));
+    utassert(Point(-1, 5) == (*data->sutStructItems)[0]->compactPoint);
+    utassert(2 == len(*(*data->sutStructItems)[0]->floatArray));
+    utassert(0 == len(*(*data->sutStructItems)[0]->nested.colorArray));
+    utassert(0 == len(*(*data->sutStructItems)[1]->floatArray));
+    utassert(2 == len(*(*data->sutStructItems)[1]->nested.colorArray));
+    utassert(str::Eq("#12345678", (*(*data->sutStructItems)[1]->nested.colorArray)[0]));
+    utassert(str::Eq("#987654", (*(*data->sutStructItems)[1]->nested.colorArray)[1]));
     utassert(!data->internalString);
     {
         Str res = SerializeStruct(&gSutStructInfo, data);
         utassert(!str::Eq(serialized, res));
         str::Free(res);
     }
-    data->sutStructItems->at(0)->nested.point.x++;
+    (*data->sutStructItems)[0]->nested.point.x++;
     {
         Str res = SerializeStruct(&gSutStructInfo, data, unknownOnly);
         utassert(!str::Eq(serialized, res));
@@ -197,16 +197,16 @@ Key = Value";
     utassert(str::Eq(data->utf8String, "Utf-8 String") && str::IsNull(data->nullUtf8String) &&
              str::Eq(data->escapedUtf8String, "$\nstring "));
     utassert(data->intArray);
-    utassert(3 == len(*data->intArray) && 1 == data->intArray->at(0));
-    utassert(2 == data->intArray->at(1) && -3 == data->intArray->at(2));
+    utassert(3 == len(*data->intArray) && 1 == (*data->intArray)[0]);
+    utassert(2 == (*data->intArray)[1] && -3 == (*data->intArray)[2]);
     utassert(data->strArray);
     utassert(data->emptyStrArray);
     utassert(3 == len(*data->strArray));
     utassert(0 == len(*data->emptyStrArray));
     Vec<Str>* sa = data->strArray;
-    utassert(str::Eq(sa->at(0), "one"));
-    utassert(str::Eq(sa->at(1), "two three"));
-    utassert(str::Eq(sa->at(2), ""));
+    utassert(str::Eq((*sa)[0], "one"));
+    utassert(str::Eq((*sa)[1], "two three"));
+    utassert(str::Eq((*sa)[2], ""));
 
     utassert(Point(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == len(*data->sutStructItems));

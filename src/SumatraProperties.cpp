@@ -445,8 +445,8 @@ static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out
     out.Append(header);
     out.AppendChar('\n');
     for (int i = 0; i < nImageProps; i++) {
-        Str propName = imageProps.At(i * 2);
-        Str propVal = imageProps.At(i * 2 + 1);
+        Str propName = imageProps[i * 2];
+        Str propVal = imageProps[i * 2 + 1];
         AppendPropTranslated(out, propName, propVal);
     }
 }
@@ -531,8 +531,8 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     // append any remaining properties not already shown
     int nProps = PropsCount(props);
     for (int i = 0; i < nProps; i++) {
-        Str propName = props.At(i * 2);
-        Str propVal = props.At(i * 2 + 1);
+        Str propName = props[i * 2];
+        Str propVal = props[i * 2 + 1];
         if (!propVal) {
             continue;
         }

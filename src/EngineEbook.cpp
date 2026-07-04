@@ -256,7 +256,7 @@ Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
     if (pageNo < 1 || PageCount() < pageNo) {
         return nullptr;
     }
-    return &pages->at(pageNo - 1)->instructions;
+    return &(*pages)[pageNo - 1]->instructions;
 }
 
 HtmlPage* EngineEbook::GetHtmlPage2(int pageNo) {
@@ -264,7 +264,7 @@ HtmlPage* EngineEbook::GetHtmlPage2(int pageNo) {
     if (pageNo < 1 || PageCount() < pageNo) {
         return nullptr;
     }
-    return pages->at(pageNo - 1);
+    return (*pages)[pageNo - 1];
 }
 
 bool EngineEbook::ExtractPageAnchors() {
@@ -278,7 +278,7 @@ bool EngineEbook::ExtractPageAnchors() {
         }
 
         for (int k = 0; k < len(*pageInstrs); k++) {
-            DrawInstr* i = &pageInstrs->at(k);
+            DrawInstr* i = &(*pageInstrs)[k];
             if (DrawInstrType::Anchor != i->type && DrawInstrType::PageMarkerAnchor != i->type) {
                 continue;
             }
@@ -464,7 +464,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
         return NewEbookLink(link, rect, nullptr, pageNo);
     }
 
-    DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
+    DrawInstr* baseAnchor = baseAnchors[pageNo - 1];
     if (baseAnchor) {
         TempStr basePath = str::DupTemp(baseAnchor->str);
         TempStr relPath = ResolveHtmlEntitiesTemp(linkStr);
@@ -489,7 +489,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     Vec<DrawInstr>* pageInstrs = &pi->instructions;
     int n = len(*pageInstrs);
     for (int idx = 0; idx < n; idx++) {
-        DrawInstr& i = pageInstrs->at(idx);
+        DrawInstr& i = (*pageInstrs)[idx];
         if (DrawInstrType::Image == i.type) {
             auto box = GetInstrBbox(i, pageBorder);
             auto el = NewImageDataElement(pageNo, box, idx);
@@ -523,7 +523,7 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-    auto&& i = pageInstrs->at(idx);
+    auto&& i = (*pageInstrs)[idx];
     ReportIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.GetImage());
 }
@@ -556,7 +556,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     if (hash && hash.s > name.s) {
         int base_len = (int)(hash.s - name.s - 1);
         for (int i = 0; i < len(baseAnchors); i++) {
-            DrawInstr* anchor = baseAnchors.at(i);
+            DrawInstr* anchor = baseAnchors[i];
             if (anchor && base_len == anchor->str.len && str::EqNI(name, anchor->str, base_len)) {
                 baseAnchor = anchor;
                 basePageNo = (int)i + 1;
@@ -567,7 +567,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
 
     int id_len = id.len;
     for (int i = 0; i < len(anchors); i++) {
-        PageAnchor* anchor = &anchors.at(i);
+        PageAnchor* anchor = &anchors[i];
         if (baseAnchor) {
             if (anchor->instr == baseAnchor) {
                 baseAnchor = nullptr;
@@ -1084,7 +1084,7 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
     }
     int pageNo;
     for (pageNo = 1; pageNo < PageCount(); pageNo++) {
-        if (pages->at(pageNo)->reparseIdx > filePos) {
+        if ((*pages)[pageNo]->reparseIdx > filePos) {
             break;
         }
     }
@@ -1275,8 +1275,8 @@ class ChmDataCache {
     Str GetImageData(Str id, Str pagePath) {
         TempStr url = NormalizeURLTemp(id, pagePath);
         for (int i = 0; i < len(images); i++) {
-            if (str::Eq(images.at(i).fileName, url)) {
-                return images.at(i).base;
+            if (str::Eq(images[i].fileName, url)) {
+                return images[i].base;
             }
         }
 
@@ -1633,7 +1633,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
         return linkEl;
     }
 
-    DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
+    DrawInstr* baseAnchor = baseAnchors[pageNo - 1];
     TempStr url = NormalizeURLTemp(link->str, baseAnchor->str);
     if (!doc->HasData(url)) {
         return nullptr;

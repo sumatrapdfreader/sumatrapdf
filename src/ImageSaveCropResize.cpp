@@ -440,7 +440,7 @@ static int GetSelectedFormatIdx(ImageEditWindow* ew) {
     if (ddIdx < 0 || ddIdx >= len(ew->formatIndices)) {
         return kDefaultFormatIdx;
     }
-    return ew->formatIndices.at(ddIdx);
+    return ew->formatIndices[ddIdx];
 }
 
 static void OnFormatChanged(ImageEditWindow* ew) {
@@ -1246,7 +1246,7 @@ static void OnSave(ImageEditWindow* ew) {
 
     MainWindow* win = FindMainWindowByHwnd(hwndParent);
     if (!win && !gWindows.IsEmpty()) {
-        win = gWindows.at(0);
+        win = gWindows[0];
     }
     if (win) {
         LoadArgs args(savedPath, win);
@@ -2082,7 +2082,7 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     if (gWindows.IsEmpty()) {
         return fail(StrL("NOTREADY no-window"));
     }
-    MainWindow* win = gWindows.at(0);
+    MainWindow* win = gWindows[0];
     if (!win) {
         return fail(StrL("NOTREADY no-window"));
     }
@@ -2092,7 +2092,7 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     if (len(gImageEditWindows) != beforeCount + 1) {
         return fail(StrL("ERROR dialog-not-opened"));
     }
-    ImageEditWindow* ew = gImageEditWindows.at(len(gImageEditWindows) - 1);
+    ImageEditWindow* ew = gImageEditWindows[len(gImageEditWindows) - 1];
     int wBefore = ew->newW;
     SetFocus(ew->hwndDestEdit);
     SendMessageW(ew->hwndDestEdit, WM_KEYDOWN, VK_RIGHT, 0);

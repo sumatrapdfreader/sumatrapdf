@@ -27,24 +27,24 @@ void VecTest() {
     ints.Append(2);
     ints.InsertAt(0, -1);
     utassert(len(ints) == 3);
-    utassert(ints.at(0) == -1 && ints.at(1) == 1 && ints.at(2) == 2);
-    utassert(ints.at(0) == -1 && ints.Last() == 2);
+    utassert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
+    utassert(ints[0] == -1 && ints.Last() == 2);
     int last = ints.Pop();
     utassert(last == 2);
     utassert(len(ints) == 2);
     ints.Append(3);
     ints.RemoveAt(0);
     utassert(len(ints) == 2);
-    utassert(ints.at(0) == 1 && ints.at(1) == 3);
+    utassert(ints[0] == 1 && ints[1] == 3);
     ints.Reset();
     utassert(len(ints) == 0);
 
     for (int i = 0; i < 1000; i++) {
         ints.Append(i);
     }
-    utassert(len(ints) == 1000 && ints.at(500) == 500);
+    utassert(len(ints) == 1000 && ints[500] == 500);
     ints.Remove(500);
-    utassert(len(ints) == 999 && ints.at(500) == 501);
+    utassert(len(ints) == 999 && ints[500] == 501);
     last = ints.Pop();
     utassert(last == 999);
     ints.Append(last);
@@ -144,7 +144,7 @@ void VecTest() {
 
         while (len(v) > 64) {
             size_t pos = rand() % len(v);
-            Point* f = v.at(pos);
+            Point* f = v[(int)pos];
             v.Remove(f);
             delete f;
         }
@@ -155,12 +155,12 @@ void VecTest() {
         Vec<int> v;
         v.Append(2);
         for (int i = 0; i < 500; i++) v.Append(4);
-        v.at(250) = 5;
+        v[250] = 5;
         v.Reverse();
-        utassert(len(v) == 501 && v.at(0) == 4 && v.at(249) == v.at(251) && v.at(250) == 5 && v.at(500) == 2);
+        utassert(len(v) == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);
         v.Remove(4);
         v.Reverse();
-        utassert(len(v) == 500 && v.at(0) == 2 && v.at(249) == v.at(251) && v.at(250) == 5 && v.at(499) == 4);
+        utassert(len(v) == 500 && v[0] == 2 && v[249] == v[251] && v[250] == 5 && v[499] == 4);
     }
 
     {
@@ -168,9 +168,9 @@ void VecTest() {
         v.InsertAt(2, 2);
         auto size = len(v);
         utassert(size == 3);
-        auto el0 = v.at(0);
+        auto el0 = v[0];
         utassert(el0 == 0);
-        auto el2 = v.at(2);
+        auto el2 = v[2];
         utassert(el2 == 2);
     }
 

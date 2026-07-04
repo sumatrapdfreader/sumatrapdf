@@ -458,7 +458,7 @@ static bool SetupPluginMode(Flags& i) {
         StrVec parts;
         Split(&parts, args, "&", true);
         for (int k = 0; k < len(parts); k++) {
-            Str part = parts.At(k);
+            Str part = parts[k];
             int pageNo;
             if (str::StartsWithI(part, "page=") &&
                 !str::IsNull(str::Parse(Str(part.s + 4, part.len - 4), "=%d%$", &pageNo))) {
@@ -778,37 +778,37 @@ static void UpdateGlobalPrefs(const Flags& i) {
     Str arg;
     Str param;
     for (int n = 0; n < len(i.globalPrefArgs); n++) {
-        arg = i.globalPrefArgs.At(n);
+        arg = i.globalPrefArgs[n];
         if (str::EqI(arg, "-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
         } else if (str::EqI(arg, "-bgcolor") || str::EqI(arg, "-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->mainWindowBackground, param);
         } else if (str::EqI(arg, "-set-color-range")) {
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->fixedPageUI.textColor, param);
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
         } else if (str::EqI(arg, "-fwdsearch-offset")) {
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightOffset = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-width")) {
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightWidth = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-color")) {
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->forwardSearch.highlightColor, param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-permanent")) {
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightPermanent = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-manga-mode")) {
-            param = i.globalPrefArgs.At(++n);
+            param = i.globalPrefArgs[++n];
             gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI("true", param) || str::Eq("1", param);
         }
     }
@@ -2475,7 +2475,7 @@ Exit:
     }
     FreeExternalViewers();
     while (len(gWindows) > 0) {
-        DeleteMainWindow(gWindows.at(0));
+        DeleteMainWindow(gWindows[0]);
     }
 
     DeleteCachedCursors();

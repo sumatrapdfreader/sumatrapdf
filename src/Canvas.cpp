@@ -1986,17 +1986,17 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         FillRect(hdc, rcArea, brush);
     } else {
         COLORREF colors[3];
-        colors[0] = ParseColor(gcols->at(0), WIN_COL_WHITE);
+        colors[0] = ParseColor((*gcols)[0], WIN_COL_WHITE);
         if (nGCols == 1) {
             colors[1] = colors[2] = colors[0];
         } else if (nGCols == 2) {
-            colors[2] = ParseColor(gcols->at(1), WIN_COL_WHITE);
+            colors[2] = ParseColor((*gcols)[1], WIN_COL_WHITE);
             colors[1] =
                 RGB((GetRed(colors[0]) + GetRed(colors[2])) / 2, (GetGreen(colors[0]) + GetGreen(colors[2])) / 2,
                     (GetBlue(colors[0]) + GetBlue(colors[2])) / 2);
         } else {
-            colors[1] = ParseColor(gcols->at(1), WIN_COL_WHITE);
-            colors[2] = ParseColor(gcols->at(2), WIN_COL_WHITE);
+            colors[1] = ParseColor((*gcols)[1], WIN_COL_WHITE);
+            colors[2] = ParseColor((*gcols)[2], WIN_COL_WHITE);
         }
         Size size = dm->GetCanvasSize();
         float percTop = 1.0F * dm->GetViewPort().y / size.dy;
@@ -3410,7 +3410,7 @@ struct DownloadAndOpenUrlData {
 static void OpenDownloadedPath(Str* path) {
     MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow());
     if (!win && !gWindows.IsEmpty()) {
-        win = gWindows.at(0);
+        win = gWindows[0];
     }
     if (win) {
         LoadArgs args(*path, win);
