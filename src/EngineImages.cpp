@@ -1474,14 +1474,14 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
                 // check if it's ASCII
                 if (memcmp(item->value, "ASCII\0\0\0", 8) == 0) {
                     val = str::DupTemp(commentData);
-                    if (val && !str::IsEmpty(val)) {
+                    if (len(val) > 0) {
                         AddProp(keyValOut, kPropUserComment, val);
                     }
                 }
                 // Unicode
                 else if (memcmp(item->value, "UNICODE\0", 8) == 0) {
                     val = ToUtf8Temp(WStr((WCHAR*)commentData.s, commentData.len / 2));
-                    if (val && !str::IsEmpty(val)) {
+                    if (len(val) > 0) {
                         AddProp(keyValOut, kPropUserComment, val);
                     }
                 }
