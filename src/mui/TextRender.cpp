@@ -495,21 +495,21 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
 // this shouldn't happen often, so that's fine. It's also possible that
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
-size_t StringLenForWidth(ITextRender* textMeasure, WStr s, float dx) {
+int StringLenForWidth(ITextRender* textMeasure, WStr s, float dx) {
     RectF r = textMeasure->Measure(s);
     if (r.dx <= dx) {
-        return (size_t)s.len;
+        return s.len;
     }
     // make the best guess of the length that fits
-    size_t sLen = (size_t)s.len;
-    size_t n = (size_t)((dx / r.dx) * (float)sLen);
+    int sLen = s.len;
+    int n = (int)((dx / r.dx) * (float)sLen);
     ReportIf(n > sLen);
     if (n == 0) {
         // nothing fits in the remaining space; caller flushes the line and
         // re-lays the run at full width. Don't Measure an empty string.
         return 0;
     }
-    r = textMeasure->Measure(WStr(s.s, (int)n));
+    r = textMeasure->Measure(WStr(s.s, n));
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
     if (r.dx > dx) {
@@ -517,7 +517,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, WStr s, float dx) {
     }
     while (n > 1) {
         n += dir;
-        r = textMeasure->Measure(WStr(s.s, (int)n));
+        r = textMeasure->Measure(WStr(s.s, n));
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one

@@ -18,7 +18,7 @@ RectF MeasureTextStandard(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
 RectF MeasureTextQuick(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
 RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s, TextMeasureAlgorithm algo = nullptr);
 // float     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
-// size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
+// int   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
 // algo=nullptr);
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);

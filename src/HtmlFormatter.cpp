@@ -737,11 +737,11 @@ void HtmlFormatter::EmitTextRun(Str s) {
             break;
         }
         // get len That Fits the remaining space in the line
-        size_t lenThatFits = StringLenForWidth(textMeasure, buf, pageDx - currX);
+        int lenThatFits = StringLenForWidth(textMeasure, buf, pageDx - currX);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
             if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
-                size_t lenTmp;
+                int lenTmp;
                 for (lenTmp = lenThatFits; lenTmp > 0; lenTmp--) {
                     if (CanBreakWordOnChar(buf.s[lenTmp - 1])) {
                         break;
@@ -766,17 +766,17 @@ void HtmlFormatter::EmitTextRun(Str s) {
         }
 
         textMeasure->SetFont(CurrFont());
-        bbox = ToGdipRectF(textMeasure->Measure(WStr(buf.s, (int)lenThatFits)));
+        bbox = ToGdipRectF(textMeasure->Measure(WStr(buf.s, lenThatFits)));
         ReportIf(bbox.dx > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
         // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
-        for (size_t i = lenThatFits; i > 0; i--) {
+        for (int i = lenThatFits; i > 0; i--) {
             lenThatFits += buf.s[i - 1] < 0x80 ? 0 : buf.s[i - 1] < 0x800 ? 1 : 2;
         }
-        AppendInstr(DrawInstr::Text(Str(run.s, (int)lenThatFits), bbox, dirRtl));
+        AppendInstr(DrawInstr::Text(Str(run.s, lenThatFits), bbox, dirRtl));
         currX += bbox.dx;
-        run = Str(run.s + lenThatFits, run.len - (int)lenThatFits);
+        run = Str(run.s + lenThatFits, run.len - lenThatFits);
     }
 }
 

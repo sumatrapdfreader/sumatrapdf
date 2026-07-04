@@ -149,21 +149,21 @@ RectF MeasureText(Graphics* g, Font* f, WStr s, TextMeasureAlgorithm algo) {
 // this shouldn't happen often, so that's fine. It's also possible that
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
-size_t StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgorithm algo) {
-    size_t sLen = (size_t)s.len;
+int StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgorithm algo) {
+    int sLen = s.len;
     auto r = MeasureText(g, f, s, algo);
     if (r.dx <= dx) {
         return sLen;
     }
     // make the best guess of the length that fits
-    size_t n = (size_t)((dx / r.dx) * (float)sLen);
+    int n = (int)((dx / r.dx) * (float)sLen);
     ReportIf(n > sLen);
     if (n == 0) {
         // nothing fits in the remaining space; caller flushes the line and
         // re-lays the run at full width. Don't Measure an empty string.
         return 0;
     }
-    r = MeasureText(g, f, WStr(s.s, (int)n), algo);
+    r = MeasureText(g, f, WStr(s.s, n), algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
     if (r.dx > dx) {
@@ -171,7 +171,7 @@ size_t StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgo
     }
     for (;;) {
         n += dir;
-        r = MeasureText(g, f, WStr(s.s, (int)n), algo);
+        r = MeasureText(g, f, WStr(s.s, n), algo);
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
