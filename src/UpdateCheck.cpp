@@ -636,7 +636,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
 }
 
 static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
-    url = baseURL;
+    url.Reset(baseURL);
     url.Append("?v=");
     url.Append(UPDATE_CHECK_VERA);
     TempStr osVerTemp = GetWindowsVerTemp();

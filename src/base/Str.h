@@ -225,6 +225,9 @@ struct Builder {
 
     explicit Builder(int capHint = 0, Arena* allocator = nullptr);
     Builder(Str s);
+    // the implicit memberwise copy would alias els and double-free it
+    Builder(const Builder&) = delete;
+    Builder& operator=(const Builder&) = delete;
 
     ~Builder();
 

@@ -6,7 +6,7 @@ struct ByteWriter {
     str::Builder d;
 
     ByteWriter(size_t sizeHint = 0);
-    ByteWriter(const ByteWriter& o);
+    ByteWriter(const ByteWriter&) = delete;
     ByteWriter& operator=(const ByteWriter&) = delete;
 
     void Write8(u8 b);

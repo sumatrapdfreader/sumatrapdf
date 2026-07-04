@@ -8,14 +8,6 @@ ByteWriter::ByteWriter(size_t sizeHint) {
     d.cap = (u32)sizeHint;
 }
 
-ByteWriter::ByteWriter(const ByteWriter& o) {
-    if (this == &o) {
-        return;
-    }
-    d = o.d;
-    isLE = o.isLE;
-}
-
 void ByteWriter::Write8(u8 b) {
     d.AppendChar((char)b);
 }
