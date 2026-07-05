@@ -489,27 +489,27 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
     return res;
 }
 
-// returns number of characters of string s that fits in a given width dx
-// note: could be speed up a bit because in our use case we already know
-// the width of the whole string so we could supply it to the function, but
-// this shouldn't happen often, so that's fine. It's also possible that
-// a smarter approach is possible, but this usually only does 3 MeasureText
-// calls, so it's not that bad
-int StringLenForWidth(ITextRender* textMeasure, WStr s, float dx) {
-    RectF r = textMeasure->Measure(s);
-    if (r.dx <= dx) {
+// returns number of characters of string s that fits in a given width dx.
+// The caller usually already measured the whole string (that's how it knows
+// it needs to wrap); pass that width as sWidth to skip re-measuring it here.
+// This matters for text without break opportunities (e.g. CJK, no spaces):
+// a single long run is wrapped one line at a time, so the whole run would
+// otherwise be re-measured once per line.
+int StringLenForWidth(ITextRender* textMeasure, WStr s, float dx, float sWidth) {
+    float fullWidth = sWidth >= 0 ? sWidth : textMeasure->Measure(s).dx;
+    if (fullWidth <= dx) {
         return s.len;
     }
     // make the best guess of the length that fits
     int sLen = s.len;
-    int n = (int)((dx / r.dx) * (float)sLen);
+    int n = (int)((dx / fullWidth) * (float)sLen);
     ReportIf(n > sLen);
     if (n == 0) {
         // nothing fits in the remaining space; caller flushes the line and
         // re-lays the run at full width. Don't Measure an empty string.
         return 0;
     }
-    r = textMeasure->Measure(WStr(s.s, n));
+    RectF r = textMeasure->Measure(WStr(s.s, n));
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
     if (r.dx > dx) {

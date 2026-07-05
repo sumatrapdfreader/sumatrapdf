@@ -167,5 +167,5 @@ class TextRenderHdc : public ITextRender {
 
 ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, int dy);
 
-int StringLenForWidth(ITextRender* textMeasure, WStr s, float dx);
+int StringLenForWidth(ITextRender* textMeasure, WStr s, float dx, float sWidth = -1);
 float GetSpaceDx(ITextRender* textMeasure);

@@ -790,8 +790,9 @@ void HtmlFormatter::EmitTextRun(Str s) {
             currX += bbox.dx;
             break;
         }
-        // get len That Fits the remaining space in the line
-        int lenThatFits = StringLenForWidth(textMeasure, buf, pageDx - currX);
+        // get len That Fits the remaining space in the line (pass the width we
+        // just measured so it isn't measured again)
+        int lenThatFits = StringLenForWidth(textMeasure, buf, pageDx - currX, bbox.dx);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
             if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
