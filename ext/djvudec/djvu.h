@@ -46,15 +46,27 @@ typedef struct djvu_doc djvu_doc;
 void djvu_init(void);
 
 /* Pass NULL for alloc/free to use the default malloc/free.
-   Pass NULL for lock/unlock when per-page caching is off.
+   lock/unlock are optional serialization hooks (required for per-page
+   caching). When supplied, shared JB2 dictionaries are decoded lazily on
+   first use (serialized via the hooks) instead of eagerly at djvu_doc_open,
+   and concurrent renders on the same djvu_doc are safe.
    Pass NULL for error to silently ignore diagnostics. */
 djvu_ctx *djvu_ctx_new(djvu_alloc_cb alloc, djvu_free_cb free_cb,
                        djvu_lock_cb lock, djvu_unlock_cb unlock,
                        djvu_error_cb error, void *user);
 void djvu_ctx_free(djvu_ctx *ctx);
 
-/* Per-context decode options (defaults off/zero). Set before djvu_doc_open. */
-void djvu_ctx_set_cache_precache_shared(djvu_ctx *ctx, int enable);
+/* Per-context decode options (defaults off/zero). Set before djvu_doc_open.
+   Shared JB2 dicts are pre-decoded at open only when no lock/unlock hooks
+   were supplied (see djvu_ctx_new); with hooks they decode lazily. */
+/* Retain decoded page-local layers on the document after each render:
+   IW44 background/foreground, JB2 mask (Sjbz), and composited background.
+   Default off: layers are decoded per use and freed when the render completes.
+   When enabled, later renders of the same page reuse the cached layers.
+   Requires non-NULL lock and unlock callbacks passed to djvu_ctx_new; the
+   decoder serializes first-time decode of a page's layers via those hooks so
+   concurrent renders on the same djvu_doc are safe. djvu_doc_open fails if
+   caching is enabled but lock/unlock were not supplied. */
 void djvu_ctx_set_cache_per_page(djvu_ctx *ctx, int enable);
 /* Legacy alias: enable=1 turns on per-page caching. */
 void djvu_ctx_set_lazy_iw44(djvu_ctx *ctx, int enable);

@@ -93,7 +93,6 @@ EXPORTS
 	djvu_init
 	djvu_ctx_new
 	djvu_ctx_free
-	djvu_ctx_set_cache_precache_shared
 	djvu_ctx_set_cache_per_page
 	djvu_ctx_set_lazy_iw44
 	djvu_ctx_set_no_compose

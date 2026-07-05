@@ -20,7 +20,6 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-
 Kind kindEngineDjVu = "engineDjVu";
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
@@ -256,7 +255,6 @@ bool EngineDjvuDec::FinishLoading() {
     if (!ctx) {
         return false;
     }
-    djvu_ctx_set_cache_precache_shared(ctx, 1);
     djvu_ctx_set_cache_per_page(ctx, 1);
     // ask the decoder to emit color output in B,G,R order so it lands in a
     // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
