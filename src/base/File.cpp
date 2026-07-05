@@ -712,7 +712,7 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
     }
 
     nRead = fread((void*)d, 1, size, fp);
-    if (nRead != size) {
+    if (nRead != (size_t)size) {
         int err = ferror(fp);
         int isEof = feof(fp);
         logf("ReadFileWithArena: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath,
