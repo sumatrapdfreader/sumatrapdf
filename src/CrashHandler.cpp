@@ -25,8 +25,8 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "AppSettings.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 // logf()/logfa() are now macros that format with fmt() and route through
 // log()/loga(), so they keep logging (to at least the debugger) even when

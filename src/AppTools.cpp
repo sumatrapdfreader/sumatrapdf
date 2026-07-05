@@ -19,7 +19,6 @@
 
 bool NeedsWindowEmbeddingHacks();
 
-#include "base/Log.h"
 
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */

@@ -35,7 +35,6 @@
 #include "Translations.h"
 #include "Version.h"
 
-#include "base/Log.h"
 
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;

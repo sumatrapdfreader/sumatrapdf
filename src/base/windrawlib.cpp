@@ -16,7 +16,6 @@
 #include <objidl.h> /* IStream */
 
 #include "base/GdiPlus.h"
-#include "base/Log.h"
 
 #include "windrawlib.h"
 

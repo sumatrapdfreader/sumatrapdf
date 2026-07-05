@@ -28,10 +28,8 @@
     <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
+    <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Log.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
@@ -65,10 +63,8 @@
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
+    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Log.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">

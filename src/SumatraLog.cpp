@@ -6,7 +6,8 @@
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "base/File.h"
-#include "base/Log.h"
+#include "base/FileWatcher.h"
+#include "SumatraLog.h"
 
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
 
@@ -42,26 +43,6 @@ Str gLogFilePath;
 
 // 1 MB - 128 to stay under 1 MB even after appending (an estimate)
 constexpr int kMaxLogBuf = 1024 * 1024 - 128;
-
-#if 0
-// TODO: add more codes
-static const char* getWinError(DWORD errCode) {
-#define V(err) \
-    case err:  \
-        return #err
-    switch (errCode) {
-        V(ERROR_PIPE_LOCAL);
-        V(ERROR_BAD_PIPE);
-        V(ERROR_PIPE_BUSY);
-        V(ERROR_NO_DATA);
-        V(ERROR_PIPE_NOT_CONNECTED);
-        V(ERROR_MORE_DATA);
-        V(ERROR_NO_WORK_DONE);
-    }
-    return "error code unknown";
-#undef V
-}
-#endif
 
 static LARGE_INTEGER lastPipeOpenTryTime = {};
 
@@ -198,6 +179,7 @@ void loga(Str s) {
 void StartLogToFile(Str path, bool removeIfExists) {
     ReportIf(gLogFilePath);
     gLogFilePath = str::Dup(path);
+    FileWatcherSetSkipPath(gLogFilePath);
     if (removeIfExists) {
         file::Delete(path);
     }
@@ -230,4 +212,5 @@ void DestroyLogging() {
     gLogAllocator = nullptr;
     gLogMutex.Unlock();
     str::FreePtr(&gLogFilePath);
+    FileWatcherSetSkipPath(Str());
 }

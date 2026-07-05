@@ -8,7 +8,6 @@
 #include "base/Win.h"
 #include "base/Http.h"
 
-#include "base/Log.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";

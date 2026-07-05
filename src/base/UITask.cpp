@@ -6,7 +6,6 @@
 #include "base/Win.h"
 #include "base/UITask.h"
 
-#include "base/Log.h"
 
 namespace uitask {
 

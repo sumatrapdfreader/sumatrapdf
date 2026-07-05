@@ -15,7 +15,6 @@
 #include "base/GuessFileType.h"
 #include "FindWindow.h"
 
-#include "base/Log.h"
 
 extern Flags* gCli;
 

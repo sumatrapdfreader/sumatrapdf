@@ -318,6 +318,9 @@
     <ClInclude Include="..\src\SumatraDialogs.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SumatraLog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SumatraPDF.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -740,6 +743,9 @@
     <ClCompile Include="..\src\SumatraDialogs.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SumatraLog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SumatraPDF.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -837,9 +843,6 @@
       <Filter>src\base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\SettingsUtil_ut.cpp">
-      <Filter>src\base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\tests\SimpleLog_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\SquareTreeParser_ut.cpp">

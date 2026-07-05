@@ -9,11 +9,11 @@
 #include "DisplayMode.h"
 #include "Flags.h"
 #include "Print.h"
+#include "SumatraLog.h"
 #ifndef SUMATRA_TEST_UTIL
 #include "Translations.h"
 #endif
 
-#include "base/Log.h"
 
 // @gen-start flags
 // clang-format off

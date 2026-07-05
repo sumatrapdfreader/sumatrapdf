@@ -20,7 +20,6 @@
 #endif
 #include <wincodec.h>
 
-#include "base/Log.h"
 
 using Gdiplus::Bitmap;
 using Gdiplus::BitmapData;

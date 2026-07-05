@@ -7,7 +7,6 @@
 #include "base/Win.h"
 #include "base/WinDynCalls.h"
 
-#include "base/Log.h"
 
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.

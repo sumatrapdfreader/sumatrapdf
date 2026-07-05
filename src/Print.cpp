@@ -29,7 +29,6 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 
-#include "base/Log.h"
 
 class AbortCookieManager {
     CRITICAL_SECTION cookieAccess;

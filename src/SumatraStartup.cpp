@@ -67,8 +67,8 @@
 #include "DarkModeSubclass.h"
 #include "CommandPalette.h"
 #include "SumatraControl.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 // return false if failed in a way that should abort the app
 static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {

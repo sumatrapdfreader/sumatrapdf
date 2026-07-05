@@ -31,7 +31,6 @@
 #include "Flags.h"
 #include "SearchAndDDE.h"
 
-#include "base/Log.h"
 
 #define FIRST_STRESS_TIMER_ID 101
 

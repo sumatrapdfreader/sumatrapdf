@@ -9,7 +9,6 @@
 
 #include <TextToSpeech.h>
 
-#include "base/Log.h"
 
 #pragma comment(lib, "sapi.lib")
 #pragma comment(lib, "winmm.lib")

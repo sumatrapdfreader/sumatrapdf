@@ -56,7 +56,6 @@
 
 #include "RefHover.h"
 
-#include "base/Log.h"
 
 // if set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates

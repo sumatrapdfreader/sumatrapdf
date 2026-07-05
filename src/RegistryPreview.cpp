@@ -7,8 +7,8 @@
 #include "base/Crypto.h"
 
 #include "RegistryPreview.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 #define kThumbnailProviderClsid "{e357fccd-a995-4576-b01f-234630154e96}"
 #define kExtractImageClsid "{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"

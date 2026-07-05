@@ -8,8 +8,6 @@
 #include "base/Thread.h"
 #include "base/Win.h"
 
-#include "base/Log.h"
-
 /*
 This code is tricky, so here's a high-level overview. More info at:
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
@@ -475,7 +473,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
         return nullptr;
     }
 
-    if (path::IsSame(gLogFilePath, path)) {
+    if (path::IsSame(FileWatcherGetSkipPath(), path)) {
         logf("FileWatcherSubscribe: '%s' is our own log file\n", path);
         return nullptr;
     }

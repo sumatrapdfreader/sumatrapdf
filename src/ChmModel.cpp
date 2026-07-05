@@ -20,7 +20,6 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 
-#include "base/Log.h"
 
 static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
     if (!url) {

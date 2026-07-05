@@ -1,0 +1,11 @@
+extern Arena* gLogAllocator;
+extern str::Builder* gLogBuf;
+extern bool gLogToConsole;
+extern bool gLogToDebugger;
+extern bool gReducedLogging;
+extern bool gLogToPipe;
+extern Str gLogAppName;
+extern Str gLogFilePath;
+void StartLogToFile(Str path, bool removeIfExists);
+bool WriteCurrentLogToFile(Str path);
+void DestroyLogging();

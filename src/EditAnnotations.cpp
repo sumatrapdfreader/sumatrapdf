@@ -30,7 +30,6 @@ extern "C" {
 #include "SumatraPDF.h"
 #include "DarkModeSubclass.h"
 
-#include "base/Log.h"
 
 #include "theme.h"
 

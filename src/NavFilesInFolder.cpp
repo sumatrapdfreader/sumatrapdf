@@ -28,7 +28,6 @@
 #include "DarkModeSubclass.h"
 #include "NavFilesInFolder.h"
 
-#include "base/Log.h"
 
 // A floating window with a directory listing of all sub-directories and
 // files SumatraPDF can open (judged by extension). Enter / double-click

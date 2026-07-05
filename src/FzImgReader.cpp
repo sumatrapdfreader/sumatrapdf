@@ -16,7 +16,6 @@ extern "C" {
 
 #include "FzImgReader.h"
 
-#include "base/Log.h"
 
 struct MupdfContext {
     fz_locks_context fz_locks_ctx{};

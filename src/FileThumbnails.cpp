@@ -13,7 +13,6 @@
 #include "AppTools.h"
 #include "FileThumbnails.h"
 
-#include "base/Log.h"
 
 TempStr GetThumbnailPathTemp(Str filePath) {
     // create a fingerprint of a (normalized) path for the file name

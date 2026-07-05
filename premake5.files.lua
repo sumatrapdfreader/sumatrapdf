@@ -20,7 +20,8 @@ function makelzsa_files()
     "Dpi.*",
     "File.*",
     "Geom.*",
-    "Log.*",
+    "Log.h",
+    "LogNoOp.cpp",
     "LzmaSimpleArchive.*",
     "Strconv.*",
     "StrFormatParse.*",
@@ -889,6 +890,7 @@ function sumatrapdf_files()
     "SumatraPDF.h",
     "SumatraPDF.rc",
     "SumatraProperties.*",
+    "SumatraLog.*",
     "SumatraStartup.cpp",
     "SumatraTest.*",
     "SvgIcons.*",
@@ -992,7 +994,7 @@ function base_files()
     "HtmlTags.*",
     "Http.*",
     "JsonParser.*",
-    "Log.*",
+    "Log.h",
     "LzmaSimpleArchive.*",
     "RegistryPaths.*",
     "Scoped.h",
@@ -1421,7 +1423,7 @@ function test_util_files()
     "Geom.*",
     "HtmlTags.*",
     "JsonParser.*",
-    "Log.*",
+    "Log.h",
     "Scoped.*",
     "SettingsUtil.*",
     "SquareTreeParser.*",
@@ -1448,7 +1450,9 @@ function test_util_files()
     "SettingsStructs.*",
     --"StressTesting.*",
     "SumatraConfig.*",
+    "SumatraLog.*",
     "SumatraUnitTests.cpp",
+    "SimpleLog_ut.cpp",
     "tools/test_util.cpp"
   })
 end
@@ -1486,7 +1490,7 @@ function pdf_preview_files()
     "PdfCreator.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
-    "base/Log.*",
+    "SumatraLog.*",
   })
 end
 
@@ -1514,7 +1518,7 @@ function search_filter_files()
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",
     "RegistrySearchFilter.*",
-    "base/Log.*",
+    "SumatraLog.*",
   })
 
   filter { "configurations:Debug or DebugFull" }
@@ -1546,7 +1550,8 @@ function pdf_preview2_files()
     "base/Dpi.*",
     "base/File.*",
     "base/Geom.*",
-    "base/Log.*",
+    "base/Log.h",
+    "base/LogNoOp.cpp",
     "base/Strconv.*",
     "base/StrFormatParse.*",
     "base/Str.*",
@@ -1573,7 +1578,8 @@ function search_filter2_files()
     "base/Dpi.*",
     "base/File.*",
     "base/Geom.*",
-    "base/Log.*",
+    "base/Log.h",
+    "base/LogNoOp.cpp",
     "base/Strconv.*",
     "base/StrFormatParse.*",
     "base/Str.*",

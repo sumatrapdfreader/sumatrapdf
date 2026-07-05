@@ -66,7 +66,6 @@
 #include "WindowTab.h"
 #include "MainWindow.h"
 
-#include "base/Log.h"
 
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;

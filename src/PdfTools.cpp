@@ -5,7 +5,6 @@
 #include "base/Dpi.h"
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/Log.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

@@ -16,7 +16,6 @@
 #endif
 #include "wingui/WebView.h"
 
-#include "base/Log.h"
 
 Kind kindWebView = "webView";
 

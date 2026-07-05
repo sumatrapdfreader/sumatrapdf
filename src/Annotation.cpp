@@ -18,7 +18,6 @@ extern "C" {
 #include "GlobalPrefs.h"
 #include "Commands.h"
 
-#include "base/Log.h"
 
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);

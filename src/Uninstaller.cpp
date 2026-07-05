@@ -24,8 +24,8 @@
 
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;

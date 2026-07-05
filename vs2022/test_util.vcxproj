@@ -884,6 +884,7 @@
     <ClInclude Include="..\src\RefHoverDetect.h" />
     <ClInclude Include="..\src\RefHoverTextDetect.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
+    <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Arena.h" />
     <ClInclude Include="..\src\base\Base.h" />
     <ClInclude Include="..\src\base\BitManip.h" />
@@ -922,7 +923,9 @@
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\RefHoverTextDetect.cpp" />
+    <ClCompile Include="..\src\SimpleLog_ut.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
+    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
@@ -939,7 +942,6 @@
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\HtmlTags.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
-    <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
     <ClCompile Include="..\src\base\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\base\Str.cpp" />
@@ -960,7 +962,6 @@
     <ClCompile Include="..\src\base\tests\JsonParser_ut.cpp" />
     <ClCompile Include="..\src\base\tests\RefHover_ut.cpp" />
     <ClCompile Include="..\src\base\tests\SettingsUtil_ut.cpp" />
-    <ClCompile Include="..\src\base\tests\SimpleLog_ut.cpp" />
     <ClCompile Include="..\src\base\tests\SquareTreeParser_ut.cpp" />
     <ClCompile Include="..\src\base\tests\StrFormat_ut.cpp" />
     <ClCompile Include="..\src\base\tests\StrVec_ut.cpp" />

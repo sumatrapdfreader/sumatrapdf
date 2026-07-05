@@ -8,7 +8,6 @@
 #include "DisplayMode.h"
 #include "Notifications.h"
 
-#include "base/Log.h"
 
 // @gen-start cmd-c
 // clang-format off

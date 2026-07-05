@@ -12,7 +12,6 @@
 #include "DocController.h"
 #include "EngineBase.h"
 
-#include "base/Log.h"
 
 Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";

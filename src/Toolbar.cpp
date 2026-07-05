@@ -44,7 +44,6 @@ extern "C" {
 #include "wingui/WinGui.h"
 #include "TextToSpeech.h"
 
-#include "base/Log.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 

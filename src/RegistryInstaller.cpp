@@ -10,7 +10,6 @@
 #include "Version.h"
 #include "Installer.h"
 
-#include "base/Log.h"
 
 // All registry manipulation needed for installer / uninstaller
 

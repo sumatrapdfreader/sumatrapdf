@@ -31,7 +31,6 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
-#include "base/Log.h"
 
 Kind kindEngineEpub = "engineEpub";
 Kind kindEngineFb2 = "engineFb2";

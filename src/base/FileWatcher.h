@@ -3,6 +3,8 @@
 
 struct WatchedFile;
 
+void FileWatcherSetSkipPath(Str path);
+Str FileWatcherGetSkipPath();
 void FileWatcherInit(void);
 WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool enableManualCheck = false);
 void FileWatcherUnsubscribe(WatchedFile* wf);

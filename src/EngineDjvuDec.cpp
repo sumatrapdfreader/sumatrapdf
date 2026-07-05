@@ -20,7 +20,6 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-#include "base/Log.h"
 
 Kind kindEngineDjVu = "engineDjVu";
 

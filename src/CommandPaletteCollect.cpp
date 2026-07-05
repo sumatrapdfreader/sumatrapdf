@@ -32,7 +32,6 @@
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
 
-#include "base/Log.h"
 
 static bool AllowCommand(const AppCommandCtx& ctx, i32 cmdId) {
     return CommandShouldShow(GetCommandVisibility(cmdId, ctx, CommandSurface::Palette));

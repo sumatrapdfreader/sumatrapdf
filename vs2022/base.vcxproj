@@ -922,7 +922,6 @@
     <ClCompile Include="..\src\base\Http.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\JxlReader.cpp" />
-    <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
     <ClCompile Include="..\src\base\SquareTreeParser.cpp" />

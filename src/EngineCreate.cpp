@@ -6,7 +6,6 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Dpi.h"
-#include "base/Log.h"
 #include "base/Timer.h"
 
 #include "wingui/UIModels.h"

@@ -974,8 +974,8 @@
     <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
+    <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h" />
-    <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
@@ -1001,8 +1001,8 @@
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
+    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
-    <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />

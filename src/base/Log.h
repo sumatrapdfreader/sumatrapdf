@@ -1,17 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern Arena* gLogAllocator;
-extern str::Builder* gLogBuf;
-extern bool gLogToConsole;
-extern bool gLogToDebugger;
-extern bool gReducedLogging;
-extern bool gLogToPipe;
-extern Str gLogAppName;
-extern Str gLogFilePath;
-void StartLogToFile(Str path, bool removeIfExists);
-bool WriteCurrentLogToFile(Str path);
-
 void log(Str s);
 void loga(Str s); // log always
 
@@ -30,5 +19,3 @@ void loga(Str s); // log always
         Str s__ = ::fmt(__VA_ARGS__); \
         ::loga(s__);                  \
     } while (0)
-
-void DestroyLogging();

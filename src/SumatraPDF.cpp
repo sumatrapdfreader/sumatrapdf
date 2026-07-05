@@ -101,8 +101,8 @@
 #include "TextToSpeech.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 using Gdiplus::Color;
 using Gdiplus::Graphics;

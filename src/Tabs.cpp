@@ -33,7 +33,6 @@
 #include "Theme.h"
 #include "Translations.h"
 
-#include "base/Log.h"
 
 static void UpdateTabTitle(WindowTab* tab) {
     if (!tab) {

@@ -13,7 +13,6 @@
 #include "DisplayModel.h"
 #include "TextSelection.h"
 
-#include "base/Log.h"
 #include "TextToSpeech.h"
 #include "WindowTab.h"
 #include "MainWindow.h"

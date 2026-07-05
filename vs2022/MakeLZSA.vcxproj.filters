@@ -173,7 +173,7 @@
     <ClCompile Include="..\src\base\Geom.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Log.cpp">
+    <ClCompile Include="..\src\base\LogNoOp.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp">

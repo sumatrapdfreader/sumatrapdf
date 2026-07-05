@@ -19,7 +19,6 @@
 #include "TipText.h"
 #include "Theme.h"
 
-#include "base/Log.h"
 
 using Gdiplus::Graphics;
 using Gdiplus::Pen;

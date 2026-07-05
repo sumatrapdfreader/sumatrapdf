@@ -9,7 +9,6 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "base/Log.h"
 
 //--- Tooltip
 

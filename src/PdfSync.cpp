@@ -13,7 +13,6 @@
 #include "EngineBase.h"
 #include "PdfSync.h"
 
-#include "base/Log.h"
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE 10

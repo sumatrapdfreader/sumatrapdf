@@ -7,7 +7,6 @@
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "base/Dpi.h"
-#include "base/Log.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"

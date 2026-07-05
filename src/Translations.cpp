@@ -10,7 +10,6 @@
 #include "Translations.h"
 #include "resource.h"
 
-#include "base/Log.h"
 
 namespace trans {
 

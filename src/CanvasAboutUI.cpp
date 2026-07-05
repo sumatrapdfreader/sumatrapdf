@@ -19,7 +19,6 @@
 #include "FileHistory.h"
 #include "AppSettings.h"
 
-#include "base/Log.h"
 
 static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();

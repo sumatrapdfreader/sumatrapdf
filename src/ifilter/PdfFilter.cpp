@@ -16,7 +16,6 @@
 #include "RegistrySearchFilter.h"
 #include "PdfFilter.h"
 
-#include "base/Log.h"
 
 struct EBookUI;
 EBookUI* GetEBookUI() {

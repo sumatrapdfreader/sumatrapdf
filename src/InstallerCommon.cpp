@@ -20,7 +20,6 @@
 #include "Version.h"
 #include "Installer.h"
 
-#include "base/Log.h"
 
 // set to true to enable shadow effect
 constexpr bool kDrawTextShadow = true;

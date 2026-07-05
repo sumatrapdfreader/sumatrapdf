@@ -487,7 +487,7 @@
     <ClCompile Include="..\src\base\Dpi.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
-    <ClCompile Include="..\src\base\Log.cpp" />
+    <ClCompile Include="..\src\base\LogNoOp.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\base\Str.cpp" />
     <ClCompile Include="..\src\base\StrFormatParse.cpp" />

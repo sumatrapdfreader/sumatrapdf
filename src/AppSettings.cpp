@@ -31,7 +31,6 @@
 #include "Theme.h"
 #include "TextToSpeech.h"
 
-#include "base/Log.h"
 #include <Notifications.h>
 
 // workaround for OnMenuExit

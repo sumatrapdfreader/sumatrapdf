@@ -17,7 +17,6 @@
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
 
-#include "base/Log.h"
 
 constexpr int kInvalidSize = -1;
 

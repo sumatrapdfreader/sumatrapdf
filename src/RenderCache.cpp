@@ -17,7 +17,6 @@
 #include "DisplayModel.h"
 #include "RenderCache.h"
 
-#include "base/Log.h"
 
 #pragma warning(disable : 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
 

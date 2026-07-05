@@ -6,7 +6,6 @@
 
 #include "RegistrySearchFilter.h"
 
-#include "base/Log.h"
 
 bool InstallSearchFilter(Str dllPath, bool allUsers) {
     struct {

@@ -40,7 +40,6 @@
 #include "StressTesting.h"
 #include "uia/Provider.h"
 
-#include "base/Log.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);

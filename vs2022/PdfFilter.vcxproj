@@ -968,8 +968,8 @@
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
+    <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h" />
-    <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\ifilter\EpubFilter.h" />
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
@@ -987,8 +987,8 @@
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
+    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
-    <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\ifilter\EpubFilter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

@@ -12,7 +12,6 @@
 
 #include "Theme.h"
 
-#include "base/Log.h"
 
 // Forward declaration - defined in MainWindow.cpp
 struct MainWindow;

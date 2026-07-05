@@ -12,8 +12,8 @@
 #include "EngineBase.h"
 #include "RegistryPreview.h"
 #include "PdfPreview.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 long g_lRefCount = 0;
 

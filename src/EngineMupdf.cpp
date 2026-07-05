@@ -27,7 +27,6 @@ extern "C" {
 #include "EbookDoc.h"
 #include "Settings.h"
 
-#include "base/Log.h"
 
 // A5
 static float layoutA5DxPt = 420.F;

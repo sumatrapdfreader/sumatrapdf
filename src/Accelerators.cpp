@@ -6,7 +6,6 @@
 #include "Translations.h"
 #include "Commands.h"
 
-#include "base/Log.h"
 
 // http://www.kbdedit.com/manual/low_level_vk_list.html
 // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes

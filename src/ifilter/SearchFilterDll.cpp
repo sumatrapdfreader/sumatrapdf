@@ -15,8 +15,8 @@
 #ifdef BUILD_EPUB_IFILTER
 #include "EpubFilter.h"
 #endif
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 long g_lRefCount = 0;
 

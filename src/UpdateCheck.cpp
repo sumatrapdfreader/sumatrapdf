@@ -29,7 +29,6 @@
 #include "Installer.h"
 #include "UpdateCheck.h"
 
-#include "base/Log.h"
 
 static Kind kNotifUpdateCheckInProgress = StrL("notifUpdateCheckInProgress").s;
 

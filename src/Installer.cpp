@@ -26,8 +26,8 @@
 #include "Installer.h"
 #include "SumatraConfig.h"
 #include "Translations.h"
+#include "SumatraLog.h"
 
-#include "base/Log.h"
 
 constexpr int kInstallerWinMargin = 8;
 

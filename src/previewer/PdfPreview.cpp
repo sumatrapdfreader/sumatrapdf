@@ -19,7 +19,6 @@
 
 #include "PdfPreview.h"
 
-#include "base/Log.h"
 
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;

@@ -7,7 +7,6 @@
 #include "base/Win.h"
 #include "base/Thread.h"
 #include "base/UITask.h"
-#include "base/Log.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

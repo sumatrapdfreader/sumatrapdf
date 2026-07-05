@@ -21,7 +21,6 @@
 #include "RegistrySearchFilter.h"
 #include "EpubFilter.h"
 
-#include "base/Log.h"
 
 VOID EpubFilter::CleanUp() {
     log("EpubFilter::Cleanup()\n");

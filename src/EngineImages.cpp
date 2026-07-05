@@ -27,7 +27,6 @@ extern "C" {
 #include "DocController.h"
 #include "EngineBase.h"
 
-#include "base/Log.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;

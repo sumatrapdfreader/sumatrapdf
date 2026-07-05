@@ -3,8 +3,17 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
+#include "base/FileWatcher.h"
 
-#include "base/Log.h"
+static Str gFileWatcherSkipPath;
+
+void FileWatcherSetSkipPath(Str path) {
+    gFileWatcherSkipPath = path;
+}
+
+Str FileWatcherGetSkipPath() {
+    return gFileWatcherSkipPath;
+}
 
 Kind kindNone = "none";
 

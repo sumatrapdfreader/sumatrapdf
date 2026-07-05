@@ -18,7 +18,6 @@ extern "C" {
 #include "FzImgReader.h"
 #include "PdfCreator.h"
 
-#include "base/Log.h"
 
 static Str gPdfProducer;
 

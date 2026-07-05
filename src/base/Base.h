@@ -718,4 +718,6 @@ defer { instance->Release(); };
 #define lstrcpy dont_use_lstrcpy
 #endif
 
+#include "Log.h"
+
 #endif

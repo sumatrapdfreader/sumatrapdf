@@ -13,7 +13,6 @@ License: GPLv3 */
 #include "FileThumbnails.h"
 #include "FileHistory.h"
 
-#include "base/Log.h"
 
 /* Handling of file history list.
 
