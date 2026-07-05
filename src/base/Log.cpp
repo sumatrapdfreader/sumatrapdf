@@ -122,21 +122,6 @@ static void logToPipe(Str s) {
     gPipeMutex.Unlock();
 }
 
-// verbose log, only to pipe
-// used to log to debugger but 10x shows it and is really slow
-void logv(Str s) {
-    // if (gLogToDebugger || IsDebuggerPresent()) {
-    //     OutputDebugStringA(s);
-    // }
-    logToPipe(s);
-}
-
-// logs value that is byte size to pipe
-void logValueSize(Str name, i64 v) {
-    TempStr s = fmt(":v %s size %lld\n", name, v);
-    logToPipe(s);
-}
-
 static void log2(Str s, bool always) {
     bool skipLog = !always && gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
 

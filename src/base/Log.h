@@ -31,8 +31,4 @@ void loga(Str s); // log always
         ::loga(s__);                  \
     } while (0)
 
-void logv(Str s);
-
-void logValueSize(Str name, i64 v);
-
 void DestroyLogging();

@@ -1112,7 +1112,6 @@ void RenderCache::LogCacheSize() {
             size += bs;
         }
     }
-    logValueSize("bitmapCache", size);
 }
 
 // --------- render queue debug window (CmdDebugToggleRenderInfo) ---------
