@@ -2922,6 +2922,8 @@ int mudraw_main(int argc, char **argv)
 // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
 // TODO: see if https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go would improve things
 
+#ifdef _WIN32
+
 static DWORD fz_file_type(HANDLE h)
 {
 	return (h != INVALID_HANDLE_VALUE) ? GetFileType(h) : FILE_TYPE_UNKNOWN;
@@ -3006,6 +3008,15 @@ int fz_redirect_io_to_existing_console() {
     }
     return 1;
 }
+
+#else /* !_WIN32 */
+
+int fz_redirect_io_to_existing_console(void)
+{
+	return 0;
+}
+
+#endif /* _WIN32 */
 
 /* SumatraPDF: read one line for `mutool run` REPL / readline().
  * On Windows console input, fgets(stdin) returns EOF spuriously (issue #5681);

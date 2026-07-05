@@ -956,6 +956,7 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
 }
 #endif
 
+#ifdef _WIN32
 /*
 Segoe UI Emoji Regular
 Cambria Math Regular - math symbols
@@ -1118,6 +1119,7 @@ void install_load_windows_font_funcs(fz_context* ctx) {
     init_system_font_list();
     fz_install_load_system_font_funcs(ctx, load_windows_font, load_windows_cjk_font, load_windows_fallback_font);
 }
+#endif /* _WIN32 */
 
 // Wrappers around harfbuzz allocators that use standard C malloc/free.
 // With HAVE_ATEXIT defined, harfbuzz registers atexit handlers to free
