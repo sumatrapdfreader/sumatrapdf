@@ -748,22 +748,54 @@ void DisableDataExecution() {
     }
 }
 
-enum class ConsoleRedirectStatus {
-    NotRedirected,
-    RedirectedToExistingConsole,
-    RedirectedToAllocatedConsole,
+enum class ConsoleState {
+    Uninitialized,
+    NoConsole,
+    StdoutRedirected,
+    AttachedToParent,
+    AllocatedNew,
 };
 
-static ConsoleRedirectStatus gConsoleRedirectStatus{ConsoleRedirectStatus::NotRedirected};
+static ConsoleState gConsoleState = ConsoleState::Uninitialized;
+static HANDLE gOriginalStdout = INVALID_HANDLE_VALUE;
+static HWND gStartupForegroundWindow = nullptr;
+static bool gLoggedToConsole = false;
+
+static void InitConsoleState() {
+    if (gConsoleState != ConsoleState::Uninitialized) {
+        return;
+    }
+
+    gStartupForegroundWindow = GetForegroundWindow();
+    gOriginalStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (gOriginalStdout != INVALID_HANDLE_VALUE && gOriginalStdout != nullptr) {
+        DWORD fileType = GetFileType(gOriginalStdout);
+        if (fileType == FILE_TYPE_DISK) {
+            gConsoleState = ConsoleState::StdoutRedirected;
+            return;
+        }
+        // PowerShell pipe redirection breaks WriteFile from GUI apps; attach to console instead.
+        if (fileType == FILE_TYPE_PIPE && !WasLaunchedByPowershellWithPipeRedirect()) {
+            gConsoleState = ConsoleState::StdoutRedirected;
+            return;
+        }
+    }
+
+    gConsoleState = ConsoleState::NoConsole;
+}
+
+static bool StdoutRedirected() {
+    InitConsoleState();
+    return gConsoleState == ConsoleState::StdoutRedirected;
+}
 
 // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
 // TODO: see if https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go would improve things
-static void redirectIOToConsole() {
+static void RedirectStdioToConsole(bool redirectStdin = false) {
     FILE* con{nullptr};
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h != INVALID_HANDLE_VALUE) {
         freopen_s(&con, "CONOUT$", "w", stdout);
-        // make them unbuffered
         setvbuf(stdout, nullptr, _IONBF, 0);
     }
     h = GetStdHandle(STD_ERROR_HANDLE);
@@ -771,162 +803,155 @@ static void redirectIOToConsole() {
         freopen_s(&con, "CONOUT$", "w", stderr);
         setvbuf(stderr, nullptr, _IONBF, 0);
     }
-#if 0 // probably don't need stdin
-    freopen_s(&con, "CONIN$", "r", stdin);
-    setvbuf(stdin, nullptr, _IONBF, 0);
-#endif
+    if (redirectStdin) {
+        freopen_s(&con, "CONIN$", "r", stdin);
+        setvbuf(stdin, nullptr, _IONBF, 0);
+    }
 }
 
-bool RedirectIOToExistingConsole() {
-    if (gConsoleRedirectStatus != ConsoleRedirectStatus::NotRedirected) {
+static bool AttachToParentConsole() {
+    InitConsoleState();
+    if (gConsoleState == ConsoleState::AttachedToParent || gConsoleState == ConsoleState::AllocatedNew) {
         return true;
     }
-    BOOL ok = AttachConsole(ATTACH_PARENT_PROCESS);
-    if (!ok) {
+    if (StdoutRedirected()) {
+        return true;
+    }
+    if (gConsoleState != ConsoleState::NoConsole) {
         return false;
     }
-    gConsoleRedirectStatus = ConsoleRedirectStatus::RedirectedToExistingConsole;
-    redirectIOToConsole();
+
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
+        return false;
+    }
+    gConsoleState = ConsoleState::AttachedToParent;
+    RedirectStdioToConsole(true);
     return true;
 }
-// returns true if had to allocate new console (i.e. show console window)
-// false if redirected to existing console, which means it was launched from a shell
-// TODO: also detect redirected i/o as described in
-// https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go
-bool RedirectIOToConsole() {
-    if (gConsoleRedirectStatus != ConsoleRedirectStatus::NotRedirected) {
-        return gConsoleRedirectStatus == ConsoleRedirectStatus::RedirectedToAllocatedConsole;
+
+// returns true if a new console window was allocated
+static bool AttachOrAllocateConsole() {
+    InitConsoleState();
+    if (gConsoleState == ConsoleState::AllocatedNew) {
+        return true;
     }
-
-    // first we try to attach to the console of the parent process
-    // which could be a cmd shell. If that succeeds, we'll print to
-    // shell's console like non-gui program
-    // if that fails, assume we were not launched from a shell and
-    // will allocate a console of our own
-    // TODO: this is not perfect because after Sumatra finishes,
-    // the cursor is not at end of text. Could be unsolvable
-    gConsoleRedirectStatus = ConsoleRedirectStatus::RedirectedToExistingConsole;
-    BOOL ok = AttachConsole(ATTACH_PARENT_PROCESS);
-    if (!ok) {
-        AllocConsole();
-        gConsoleRedirectStatus = ConsoleRedirectStatus::RedirectedToAllocatedConsole;
-        // make buffer big enough to allow scrolling
-        CONSOLE_SCREEN_BUFFER_INFO coninfo;
-        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
-        coninfo.dwSize.Y = 500;
-        SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+    if (gConsoleState == ConsoleState::AttachedToParent) {
+        return false;
     }
-    redirectIOToConsole();
-    return gConsoleRedirectStatus == ConsoleRedirectStatus::RedirectedToAllocatedConsole;
-}
-
-static void SendEnterKeyToConsole() {
-    INPUT ip;
-    // Set up a generic keyboard event.
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.wScan = 0; // hardware scan code for key
-    ip.ki.time = 0;
-    ip.ki.dwExtraInfo = 0;
-
-    // Send the "Enter" key
-    ip.ki.wVk = 0x0D;  // virtual-key code for the "Enter" key
-    ip.ki.dwFlags = 0; // 0 for key press
-    SendInput(1, &ip, sizeof(INPUT));
-
-    // Release the "Enter" key
-    ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
-    SendInput(1, &ip, sizeof(INPUT));
-}
-
-void HandleRedirectedConsoleOnShutdown() {
-    switch (gConsoleRedirectStatus) {
-        case ConsoleRedirectStatus::NotRedirected:
-            return;
-        case ConsoleRedirectStatus::RedirectedToAllocatedConsole:
-            // wait for user to press any key to close the console window
-            system("pause");
-            break;
-        case ConsoleRedirectStatus::RedirectedToExistingConsole:
-            // simulate releasing console. the cursor still doesn't show up
-            // at the end of output, but it's better than nothing
-            SendEnterKeyToConsole();
-            break;
+    if (StdoutRedirected()) {
+        return false;
     }
-}
-
-static bool gAllocatedConsole = false;
-static bool gConsoleInitialized = false;
-static bool gLoggedToConsole = false;
-static bool gStdoutRedirected = false;
-static HANDLE gOriginalStdout = INVALID_HANDLE_VALUE;
-static HWND gStartupForegroundWindow = nullptr;
-
-void InitConsoleOutput() {
-    gStartupForegroundWindow = GetForegroundWindow();
-
-    if (WasLaunchedByPowershellWithPipeRedirect()) {
-        return;
-    }
-
-    gOriginalStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (gOriginalStdout != INVALID_HANDLE_VALUE && gOriginalStdout != nullptr) {
-        DWORD fileType = GetFileType(gOriginalStdout);
-        if (fileType == FILE_TYPE_DISK || fileType == FILE_TYPE_PIPE) {
-            gStdoutRedirected = true;
-        }
-    }
-}
-
-static void EnsureConsole() {
-    if (gConsoleInitialized) {
-        return;
-    }
-    gConsoleInitialized = true;
-
-    if (gStdoutRedirected) {
-        return;
+    if (gConsoleState != ConsoleState::NoConsole) {
+        return false;
     }
 
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-        FILE* fp;
-        freopen_s(&fp, "CONOUT$", "w", stdout);
-        freopen_s(&fp, "CONIN$", "r", stdin);
-        return;
+        gConsoleState = ConsoleState::AttachedToParent;
+        RedirectStdioToConsole(true);
+        return false;
     }
 
-    if (AllocConsole()) {
-        gAllocatedConsole = true;
-        FILE* fp;
-        freopen_s(&fp, "CONOUT$", "w", stdout);
-        freopen_s(&fp, "CONIN$", "r", stdin);
+    AllocConsole();
+    gConsoleState = ConsoleState::AllocatedNew;
+    CONSOLE_SCREEN_BUFFER_INFO coninfo;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+    coninfo.dwSize.Y = 500;
+    SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+    RedirectStdioToConsole(true);
+    return true;
+}
+
+bool RedirectIOToExistingConsole() {
+    return AttachToParentConsole();
+}
+
+// returns true if had to allocate new console (i.e. show console window)
+// false if redirected to existing console, which means it was launched from a shell
+bool RedirectIOToConsole() {
+    return AttachOrAllocateConsole();
+}
+
+static void SendEnterToParentConsole(HWND foregroundWnd) {
+    if (foregroundWnd && IsWindow(foregroundWnd)) {
+        SetForegroundWindow(foregroundWnd);
+    }
+    INPUT inputs[2] = {};
+    inputs[0].type = INPUT_KEYBOARD;
+    inputs[0].ki.wVk = VK_RETURN;
+    inputs[1].type = INPUT_KEYBOARD;
+    inputs[1].ki.wVk = VK_RETURN;
+    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(2, inputs, sizeof(INPUT));
+}
+
+void HandleRedirectedConsoleOnShutdown() {
+    InitConsoleState();
+    switch (gConsoleState) {
+        case ConsoleState::AllocatedNew:
+            system("pause");
+            break;
+        case ConsoleState::AttachedToParent:
+            SendEnterToParentConsole(nullptr);
+            break;
+        default:
+            break;
     }
 }
 
-void LogConsole(Str s) {
-    EnsureConsole();
+void InitConsoleOutput() {
+    InitConsoleState();
+}
 
+void LogConsole(Str s) {
     if (s.len <= 0) {
         return;
     }
 
-    DWORD written;
-    if (gStdoutRedirected && gOriginalStdout != INVALID_HANDLE_VALUE) {
-        BOOL ok = WriteFile(gOriginalStdout, s.s, s.len, &written, nullptr);
-        if (!ok) {
-            logf("error: %s\n", GetLastErrorAsStr(GetTempArena()));
+    InitConsoleState();
+    if (StdoutRedirected()) {
+        if (gOriginalStdout != INVALID_HANDLE_VALUE) {
+            DWORD written;
+            BOOL ok = WriteFile(gOriginalStdout, s.s, s.len, &written, nullptr);
+            if (!ok) {
+                logf("error: %s\n", GetLastErrorAsStr(GetTempArena()));
+            }
         }
-    } else {
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (hConsole != INVALID_HANDLE_VALUE) {
-            WriteConsoleA(hConsole, s.s, s.len, &written, nullptr);
-            gLoggedToConsole = true;
+        return;
+    }
+
+    if (gConsoleState == ConsoleState::NoConsole) {
+        AttachToParentConsole();
+        if (gConsoleState == ConsoleState::NoConsole) {
+            AttachOrAllocateConsole();
         }
     }
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteConsoleA(hConsole, s.s, s.len, &written, nullptr);
+        gLoggedToConsole = true;
+    }
+}
+
+void SendEnterIfLoggedToConsole() {
+    InitConsoleState();
+    if (!gLoggedToConsole) {
+        return;
+    }
+    if (gConsoleState != ConsoleState::AttachedToParent) {
+        return;
+    }
+    if (!gStartupForegroundWindow) {
+        return;
+    }
+    SendEnterToParentConsole(gStartupForegroundWindow);
 }
 
 void WaitForConsoleClose() {
     SendEnterIfLoggedToConsole();
-    if (!gAllocatedConsole) {
+    InitConsoleState();
+    if (gConsoleState != ConsoleState::AllocatedNew) {
         return;
     }
 
@@ -944,30 +969,6 @@ void WaitForConsoleClose() {
         DWORD read;
         ReadConsoleA(hInput, &c, 1, &read, nullptr);
     }
-}
-
-void SendEnterIfLoggedToConsole() {
-    if (!gLoggedToConsole) {
-        return;
-    }
-    if (gAllocatedConsole) {
-        return;
-    }
-    if (!gStartupForegroundWindow) {
-        return;
-    }
-    if (!IsWindow(gStartupForegroundWindow)) {
-        return;
-    }
-
-    SetForegroundWindow(gStartupForegroundWindow);
-    INPUT inputs[2] = {};
-    inputs[0].type = INPUT_KEYBOARD;
-    inputs[0].ki.wVk = VK_RETURN;
-    inputs[1].type = INPUT_KEYBOARD;
-    inputs[1].ki.wVk = VK_RETURN;
-    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-    SendInput(2, inputs, sizeof(INPUT));
 }
 
 TempWStr GetSelfExePathW() {

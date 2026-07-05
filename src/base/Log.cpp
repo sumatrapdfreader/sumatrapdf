@@ -184,8 +184,7 @@ static void log2(Str s, bool always) {
     }
 
     if (!skipLog && gLogToConsole) {
-        fwrite(s.s, 1, n, stdout);
-        fflush(stdout);
+        LogConsole(s);
     }
 
     if (gLogFilePath) {
