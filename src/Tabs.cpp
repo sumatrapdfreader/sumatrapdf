@@ -48,6 +48,13 @@ static void UpdateTabTitle(WindowTab* tab) {
     if (tooltip && !gGlobalPrefs->fullPathInTitle) {
         tooltip = path::GetBaseNameTemp(tooltip);
     }
+    // append a human-readable file size, like the home page thumbnail tooltips
+    if (tooltip) {
+        i64 size = file::GetSize(tab->filePath);
+        if (size >= 0) {
+            tooltip = fmt("%s  %s", tooltip, str::FormatSizeShortTemp(size, nullptr));
+        }
+    }
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
 }
 
