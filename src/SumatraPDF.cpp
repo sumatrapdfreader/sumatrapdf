@@ -103,7 +103,6 @@
 #include "ReadAloudPlaybackBar.h"
 #include "SumatraLog.h"
 
-
 using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Pen;
@@ -3244,6 +3243,17 @@ static void OnMenuExit() {
     for (MainWindow* win : toClose) {
         CloseWindow(win, true, false);
     }
+}
+
+// quit by going through the same path as CmdExit so that windows close
+// their tabs before ~MainWindow (a raw PostQuitMessage leaves tabs open
+// and trips TabCount() > 0 in the WinMain cleanup loop)
+void PostAppExit() {
+    if (len(gWindows) == 0) {
+        PostQuitMessage(0);
+        return;
+    }
+    PostMessageW(gWindows[0]->hwndFrame, WM_COMMAND, CmdExit, 0);
 }
 
 // closes a document inside a MainWindow and optionally turns it into

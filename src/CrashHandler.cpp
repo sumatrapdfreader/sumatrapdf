@@ -27,7 +27,6 @@
 #include "AppSettings.h"
 #include "SumatraLog.h"
 
-
 // logf()/logfa() are now macros that format with fmt() and route through
 // log()/loga(), so they keep logging (to at least the debugger) even when
 // gReducedLogging is set.
@@ -63,6 +62,10 @@ that CRT creates its own heap for malloc()/free() etc. so that while a deadlock
 is still possible, the probability should be greatly reduced. */
 
 static Arena* gCrashHandlerArena = nullptr;
+
+// exit code for a debug report (ReportIf) in a -for-testing run; test runners
+// (cmd/control.ts) treat it as "assertion fired", so keep the value in sync
+constexpr UINT kDebugReportTestExitCode = 105;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
@@ -486,6 +489,12 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         WriteCrashInfoToStdErr(d);
         loga(s);
         loga("_uploadDebugReport() finished local-only\n");
+        if (gForTesting && !isCrash && !IsDebuggerPresent()) {
+            // automated tests must fail on debug reports (crashes already
+            // kill the process with a non-zero code on their own)
+            loga("_uploadDebugReport(): -for-testing, terminating with exit code 105\n");
+            ::TerminateProcess(GetCurrentProcess(), kDebugReportTestExitCode);
+        }
         return;
     }
 

@@ -15,7 +15,6 @@
 #include "base/GuessFileType.h"
 #include "FindWindow.h"
 
-
 extern Flags* gCli;
 
 enum class ControlCmd : u16 {
@@ -289,7 +288,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::Quit:
             AppendArgInt(req->results, 0);
             AppendArgEnd(req->results);
-            PostQuitMessage(0);
+            PostAppExit();
             break;
 
         case ControlCmd::TestSynctex: {

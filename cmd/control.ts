@@ -176,6 +176,12 @@ async function readExactly(socket: Socket, len: number): Promise<Buffer> {
 }
 
 function waitForReadable(socket: Socket): Promise<void> {
+  // if the pipe already closed (e.g. the app died on a debug report), the
+  // close/end events fired in the past and will never fire again -- reject
+  // instead of waiting forever
+  if (socket.destroyed || socket.readableEnded) {
+    return Promise.reject(new Error("control pipe closed while reading"));
+  }
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       socket.off("readable", onReadable);
@@ -262,6 +268,9 @@ export class ControlClient {
   }
 
   async request(cmd: ControlCommand, args: ControlArg[] = []): Promise<ControlArg[]> {
+    if (this.socket.destroyed) {
+      throw new Error("control pipe closed");
+    }
     const id = this.nextId++ & 0xffff;
     this.socket.write(encodeRequest(cmd, id, args));
 
@@ -297,6 +306,10 @@ export function uniquePipeName(prefix = "sumatra-control"): string {
   return `${prefix}-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 0x100000000).toString(16)}`;
 }
 
+// exit code SumatraPDF uses when a debug report (ReportIf) fires in a
+// -for-testing run; must match kDebugReportTestExitCode in src/CrashHandler.cpp
+export const DEBUG_REPORT_EXIT_CODE = 105;
+
 export async function withControlledSumatra<T>(
   exe: string,
   fn: (client: ControlClient) => Promise<T>,
@@ -304,29 +317,68 @@ export async function withControlledSumatra<T>(
   options: { cwd?: string; env?: Record<string, string | undefined>; connectTimeoutMs?: number } = {},
 ): Promise<T> {
   const pipeName = uniquePipeName();
+  // stderr is piped: on a debug report the app writes the report text there
+  // before terminating, and we surface it in the failure below
   const proc = Bun.spawn([exe, "-for-testing", "-dbg-control", pipeName, ...extraArgs], {
     stdout: "ignore",
-    stderr: "ignore",
+    stderr: "pipe",
     cwd: options.cwd,
     env: cleanEnv(options.env),
   });
   let client: ControlClient | undefined;
+  let killed = false;
+  let result: T | undefined;
+  let fnErr: unknown;
+  let fnOk = false;
   try {
     client = await ControlClient.connect(pipeName, options.connectTimeoutMs ?? 10000);
-    return await fn(client);
+    result = await fn(client);
+    fnOk = true;
+  } catch (e) {
+    fnErr = e;
   } finally {
     if (client) {
       try {
         await client.quit();
       } catch {
         proc.kill();
+        killed = true;
       }
       client.close();
     } else {
       proc.kill();
+      killed = true;
     }
-    await proc.exited;
   }
+  // quit is graceful (CmdExit) and could in theory be blocked by a dialog;
+  // don't let a test hang forever waiting for the process to go away
+  let exitTimer: ReturnType<typeof setTimeout> | undefined;
+  const exitCode = await Promise.race([
+    proc.exited,
+    new Promise<"timeout">((resolve) => {
+      exitTimer = setTimeout(() => resolve("timeout"), 30_000);
+    }),
+  ]);
+  clearTimeout(exitTimer);
+  if (exitCode === "timeout") {
+    proc.kill();
+    await proc.exited;
+    throw new Error("SumatraPDF did not exit within 30s of Quit");
+  }
+  const stderrText = proc.stderr ? (await new Response(proc.stderr).text()).trim() : "";
+  if (!fnOk) {
+    if (stderrText) {
+      console.error(stderrText);
+    }
+    throw fnErr;
+  }
+  // a debug report (ReportIf) or crash during the run / shutdown must fail the test
+  if (!killed && exitCode !== 0) {
+    const what = exitCode === DEBUG_REPORT_EXIT_CODE ? "debug report (ReportIf) fired" : `exit code ${exitCode}`;
+    const details = stderrText ? `\n${stderrText}` : "";
+    throw new Error(`SumatraPDF: ${what}${details}`);
+  }
+  return result as T;
 }
 
 export async function runControlCommand(
