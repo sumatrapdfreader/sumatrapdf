@@ -967,9 +967,6 @@
     <ClCompile Include="..\src\base\tests\Str_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Win_ut.cpp" />
-    <ClCompile Include="..\src\common\log.cpp">
-      <ObjectFileName>$(IntDir)\log1.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\src\tools\test_util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

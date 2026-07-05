@@ -854,6 +854,122 @@ void HandleRedirectedConsoleOnShutdown() {
     }
 }
 
+static bool gAllocatedConsole = false;
+static bool gConsoleInitialized = false;
+static bool gLoggedToConsole = false;
+static bool gStdoutRedirected = false;
+static HANDLE gOriginalStdout = INVALID_HANDLE_VALUE;
+static HWND gStartupForegroundWindow = nullptr;
+
+void InitConsoleOutput() {
+    gStartupForegroundWindow = GetForegroundWindow();
+
+    if (WasLaunchedByPowershellWithPipeRedirect()) {
+        return;
+    }
+
+    gOriginalStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (gOriginalStdout != INVALID_HANDLE_VALUE && gOriginalStdout != nullptr) {
+        DWORD fileType = GetFileType(gOriginalStdout);
+        if (fileType == FILE_TYPE_DISK || fileType == FILE_TYPE_PIPE) {
+            gStdoutRedirected = true;
+        }
+    }
+}
+
+static void EnsureConsole() {
+    if (gConsoleInitialized) {
+        return;
+    }
+    gConsoleInitialized = true;
+
+    if (gStdoutRedirected) {
+        return;
+    }
+
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        FILE* fp;
+        freopen_s(&fp, "CONOUT$", "w", stdout);
+        freopen_s(&fp, "CONIN$", "r", stdin);
+        return;
+    }
+
+    if (AllocConsole()) {
+        gAllocatedConsole = true;
+        FILE* fp;
+        freopen_s(&fp, "CONOUT$", "w", stdout);
+        freopen_s(&fp, "CONIN$", "r", stdin);
+    }
+}
+
+void LogConsole(Str s) {
+    EnsureConsole();
+
+    if (s.len <= 0) {
+        return;
+    }
+
+    DWORD written;
+    if (gStdoutRedirected && gOriginalStdout != INVALID_HANDLE_VALUE) {
+        BOOL ok = WriteFile(gOriginalStdout, s.s, s.len, &written, nullptr);
+        if (!ok) {
+            logf("error: %s\n", GetLastErrorAsStr(GetTempArena()));
+        }
+    } else {
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hConsole != INVALID_HANDLE_VALUE) {
+            WriteConsoleA(hConsole, s.s, s.len, &written, nullptr);
+            gLoggedToConsole = true;
+        }
+    }
+}
+
+void WaitForConsoleClose() {
+    SendEnterIfLoggedToConsole();
+    if (!gAllocatedConsole) {
+        return;
+    }
+
+    const char* msg = "press Enter to exit";
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteConsoleA(hConsole, msg, (DWORD)strlen(msg), &written, nullptr);
+    }
+
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    if (hInput != INVALID_HANDLE_VALUE) {
+        FlushConsoleInputBuffer(hInput);
+        char c;
+        DWORD read;
+        ReadConsoleA(hInput, &c, 1, &read, nullptr);
+    }
+}
+
+void SendEnterIfLoggedToConsole() {
+    if (!gLoggedToConsole) {
+        return;
+    }
+    if (gAllocatedConsole) {
+        return;
+    }
+    if (!gStartupForegroundWindow) {
+        return;
+    }
+    if (!IsWindow(gStartupForegroundWindow)) {
+        return;
+    }
+
+    SetForegroundWindow(gStartupForegroundWindow);
+    INPUT inputs[2] = {};
+    inputs[0].type = INPUT_KEYBOARD;
+    inputs[0].ki.wVk = VK_RETURN;
+    inputs[1].type = INPUT_KEYBOARD;
+    inputs[1].ki.wVk = VK_RETURN;
+    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(2, inputs, sizeof(INPUT));
+}
+
 TempWStr GetSelfExePathW() {
     WCHAR buf[MAX_PATH + 2]{};
     DWORD nChars = dimof(buf) - 1;

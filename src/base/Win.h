@@ -105,6 +105,10 @@ void DisableDataExecution();
 bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
+void InitConsoleOutput();
+void LogConsole(Str s);
+void WaitForConsoleClose();
+void SendEnterIfLoggedToConsole();
 
 bool IsKeyPressed(int key);
 bool IsShiftPressed();

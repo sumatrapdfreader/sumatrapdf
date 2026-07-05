@@ -1404,9 +1404,6 @@ function efi_files()
 end
 
 function test_util_files()
-  files_in_dir("src/common", {
-    "log.cpp",
-  })
   files_in_dir("src/base", {
     "Arena.*",
     "Base.*",
