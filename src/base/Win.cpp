@@ -757,6 +757,7 @@ enum class ConsoleState {
 
 static ConsoleState gConsoleState = ConsoleState::Uninitialized;
 static HANDLE gOriginalStdout = INVALID_HANDLE_VALUE;
+static HANDLE gOriginalStderr = INVALID_HANDLE_VALUE;
 static HWND gStartupForegroundWindow = nullptr;
 static bool gLoggedToConsole = false;
 
@@ -767,6 +768,7 @@ static void InitConsoleState() {
 
     gStartupForegroundWindow = GetForegroundWindow();
     gOriginalStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    gOriginalStderr = GetStdHandle(STD_ERROR_HANDLE);
     if (gOriginalStdout != INVALID_HANDLE_VALUE && gOriginalStdout != nullptr) {
         DWORD fileType = GetFileType(gOriginalStdout);
         if (fileType == FILE_TYPE_DISK) {
@@ -790,15 +792,24 @@ static bool StdoutRedirected() {
 
 // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
 // TODO: see if https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go would improve things
+// a stream whose parent-provided handle is a file or pipe was redirected by the
+// parent (`> out.txt`, `| more`) and must keep receiving CRT output even after
+// we attach to a console for logging
+static bool IsFileOrPipe(HANDLE h) {
+    if (h == nullptr || h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    DWORD fileType = GetFileType(h);
+    return fileType == FILE_TYPE_DISK || fileType == FILE_TYPE_PIPE;
+}
+
 static void RedirectStdioToConsole(bool redirectStdin = false) {
     FILE* con{nullptr};
-    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (h != INVALID_HANDLE_VALUE) {
+    if (!IsFileOrPipe(gOriginalStdout)) {
         freopen_s(&con, "CONOUT$", "w", stdout);
         setvbuf(stdout, nullptr, _IONBF, 0);
     }
-    h = GetStdHandle(STD_ERROR_HANDLE);
-    if (h != INVALID_HANDLE_VALUE) {
+    if (!IsFileOrPipe(gOriginalStderr)) {
         freopen_s(&con, "CONOUT$", "w", stderr);
         setvbuf(stderr, nullptr, _IONBF, 0);
     }
