@@ -16,6 +16,8 @@ extern "C" {
 
 #include "FzImgReader.h"
 
+#include "base/Log.h"
+
 struct MupdfContext {
     fz_locks_context fz_locks_ctx{};
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
@@ -32,6 +34,13 @@ static void fz_unlock_context_cs(void* user, int lock) {
     LeaveCriticalSection(&ctx->mutexes[lock]);
 }
 
+// route mupdf's warnings/errors through our log() instead of the default
+// callback, which does fputs() to stderr; that first fputs makes the CRT
+// allocate a stdio buffer it never frees, which shows up as a leak
+static void fz_log_cb(void*, const char* msg) {
+    log(Str(msg));
+}
+
 fz_context* fz_new_context_windows(size_t maxStore) {
     auto c = new MupdfContext();
     for (int i = 0; i < FZ_LOCK_MAX; i++) {
@@ -41,6 +50,10 @@ fz_context* fz_new_context_windows(size_t maxStore) {
     c->fz_locks_ctx.lock = fz_lock_context_cs;
     c->fz_locks_ctx.unlock = fz_unlock_context_cs;
     c->ctx = fz_new_context(nullptr, &c->fz_locks_ctx, maxStore);
+    if (c->ctx) {
+        fz_set_warning_callback(c->ctx, fz_log_cb, nullptr);
+        fz_set_error_callback(c->ctx, fz_log_cb, nullptr);
+    }
     return c->ctx;
 }
 
