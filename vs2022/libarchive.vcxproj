@@ -914,6 +914,7 @@
     <ClInclude Include="..\ext\libarchive\libarchive\archive_write_set_format_private.h" />
     <ClInclude Include="..\ext\libarchive\libarchive\archive_xxhash.h" />
     <ClInclude Include="..\ext\libarchive\libarchive\config_freebsd.h" />
+    <ClInclude Include="..\ext\libarchive\libarchive\config_macos.h" />
     <ClInclude Include="..\ext\libarchive\libarchive\config_windows.h" />
     <ClInclude Include="..\ext\libarchive\libarchive\filter_fork.h" />
   </ItemGroup>

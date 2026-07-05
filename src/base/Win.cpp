@@ -928,17 +928,18 @@ void LogConsole(Str s) {
         return;
     }
 
-    if (gConsoleState == ConsoleState::NoConsole) {
-        AttachToParentConsole();
-        if (gConsoleState == ConsoleState::NoConsole) {
-            AttachOrAllocateConsole();
-        }
-    }
-
+    // passive by design: write only to a console that already exists (inherited
+    // or explicitly set up via RedirectIOToConsole / RedirectIOToExistingConsole).
+    // never attach to the parent console or allocate one here: logging from a GUI
+    // process launched by a script would spray log lines over the terminal of
+    // whatever shell happens to be the ancestor
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hConsole != INVALID_HANDLE_VALUE) {
-        DWORD written;
-        WriteConsoleA(hConsole, s.s, s.len, &written, nullptr);
+    if (hConsole == nullptr || hConsole == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    DWORD written;
+    // fails harmlessly if the handle is not a console (e.g. a pipe we chose not to write to)
+    if (WriteConsoleA(hConsole, s.s, s.len, &written, nullptr)) {
         gLoggedToConsole = true;
     }
 }

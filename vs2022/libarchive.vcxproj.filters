@@ -162,6 +162,9 @@
     <ClInclude Include="..\ext\libarchive\libarchive\config_freebsd.h">
       <Filter>libarchive\libarchive</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libarchive\libarchive\config_macos.h">
+      <Filter>libarchive\libarchive</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libarchive\libarchive\config_windows.h">
       <Filter>libarchive\libarchive</Filter>
     </ClInclude>
