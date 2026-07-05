@@ -22,7 +22,6 @@
 __CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0xC0, 0x4F, 0x8F, 0x5D, 0x9A)
 #endif
 
-
 static LONG gSubclassId = 0;
 
 UINT_PTR NextSubclassId() {
@@ -1676,28 +1675,7 @@ TempStr GetDefaultPrinterNameTemp() {
     return nullptr;
 }
 
-static HGLOBAL gClipboardUnicodeText = nullptr;
-static HBITMAP gClipboardBitmap = nullptr;
 static HWND gClipboardOwnerWnd = nullptr;
-
-static void FreeClipboardOwnedResources() {
-    if (gClipboardUnicodeText) {
-        GlobalFree(gClipboardUnicodeText);
-        gClipboardUnicodeText = nullptr;
-    }
-    if (gClipboardBitmap) {
-        DeleteObject(gClipboardBitmap);
-        gClipboardBitmap = nullptr;
-    }
-}
-
-static LRESULT CALLBACK ClipboardOwnerWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_DESTROYCLIPBOARD) {
-        FreeClipboardOwnedResources();
-        return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
 
 static HWND GetClipboardOwnerWnd() {
     if (gClipboardOwnerWnd && IsWindow(gClipboardOwnerWnd)) {
@@ -1708,7 +1686,7 @@ static HWND GetClipboardOwnerWnd() {
     if (!registered) {
         WNDCLASSEX wcex{};
         wcex.cbSize = sizeof(WNDCLASSEX);
-        wcex.lpfnWndProc = ClipboardOwnerWndProc;
+        wcex.lpfnWndProc = DefWindowProcW;
         wcex.hInstance = GetModuleHandle(nullptr);
         wcex.lpszClassName = className;
         RegisterClassExW(&wcex);
@@ -1720,13 +1698,14 @@ static HWND GetClipboardOwnerWnd() {
 }
 
 bool OpenClipboardForUpdate() {
-    if (!OpenClipboard(GetClipboardOwnerWnd())) {
+    HWND owner = GetClipboardOwnerWnd();
+    if (!owner || !OpenClipboard(owner)) {
         return false;
     }
-    EmptyClipboard();
-    // EmptyClipboard should post WM_DESTROYCLIPBOARD to the previous owner, but
-    // our HWND_MESSAGE owner can miss it; free any handles we still track.
-    FreeClipboardOwnedResources();
+    if (!EmptyClipboard()) {
+        CloseClipboard();
+        return false;
+    }
     return true;
 }
 
@@ -1772,7 +1751,7 @@ static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
         }
         return false;
     }
-    gClipboardUnicodeText = handle;
+    // SetClipboardData owns the handle now.
 
     if (!appendOnly) {
         CloseClipboardAfterUpdate();
@@ -1794,26 +1773,18 @@ static bool SetClipboardImage(HBITMAP hbmp) {
         return false;
     }
     BITMAP bmpInfo;
-    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    HBITMAP clipBmp = hbmp;
-    HBITMAP clonedBmp = nullptr;
-    if (bmpInfo.bmBits != nullptr) {
-        // GDI+ produced HBITMAPs are DIBs instead of DDBs which
-        // aren't correctly handled by the clipboard, so create a
-        // clipboard-safe clone
-        clonedBmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0);
-        if (!clonedBmp) {
-            return false;
-        }
-        clipBmp = clonedBmp;
-    }
-    if (!SetClipboardData(CF_BITMAP, clipBmp)) {
-        if (clonedBmp) {
-            DeleteObject(clonedBmp);
-        }
+    if (!GetObject(hbmp, sizeof(BITMAP), &bmpInfo)) {
         return false;
     }
-    gClipboardBitmap = clipBmp;
+    // Give the clipboard its own bitmap. SetClipboardData owns clipBmp on success.
+    HBITMAP clipBmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0);
+    if (!clipBmp) {
+        return false;
+    }
+    if (!SetClipboardData(CF_BITMAP, clipBmp)) {
+        DeleteObject(clipBmp);
+        return false;
+    }
     return true;
 }
 
