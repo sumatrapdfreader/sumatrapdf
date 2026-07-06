@@ -593,6 +593,7 @@ const DEP_LIBS_BASE = [
           "Base_posix.cpp",
           "Arena.cpp",
           "Arena_posix.cpp",
+          "ByteOrderDecoder.cpp",
           "CmdLineArgsIter.cpp",
           "Color.cpp",
           "File.cpp",
