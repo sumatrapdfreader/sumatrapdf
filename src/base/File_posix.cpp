@@ -381,6 +381,11 @@ bool Rename(Str newPath, Str oldPath) {
 
 } // namespace file
 
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
+    i64 diff = (i64)FileTimeToNs(ft1) - (i64)FileTimeToNs(ft2);
+    return (int)(diff / 1000000000LL);
+}
+
 namespace dir {
 
 bool Exists(WStr dir) {

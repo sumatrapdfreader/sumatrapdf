@@ -492,6 +492,21 @@ bool Rename(Str newPath, Str oldPath) {
 
 } // namespace file
 
+static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
+    ULARGE_INTEGER res;
+    res.LowPart = ft.dwLowDateTime;
+    res.HighPart = ft.dwHighDateTime;
+    return res;
+}
+
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
+    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
+    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
+    LONGLONG diff = t1.QuadPart - t2.QuadPart;
+    diff = diff / (LONGLONG)10000000L;
+    return (int)diff;
+}
+
 namespace dir {
 
 bool Exists(WStr dir) {

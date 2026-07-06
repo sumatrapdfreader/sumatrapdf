@@ -146,3 +146,4 @@ Str PathGetNameTemp(Str path);
 Str SmartResolveDirectory(Str dir);
 
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
