@@ -10,7 +10,7 @@ To build run: bun ./cmd/build.ts
 
 This creates ./out/dbg64/SumatraPDF-dll.exe executable. Note: ./out/dbg64/SumatraPDF.exe is a different (static) build target that build.ts does NOT update, so it can be stale — always use SumatraPDF-dll.exe for testing.
 
-To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, and runs `cmd/build-mac.ts` in that checkout. For macOS/Linux portability changes, use the temporary-branch workflow below so the remote Mac builds the exact changes being tested.
+To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -branch <temporary-branch> -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build-mac.ts`, and restores the original remote checkout on success or failure.
 
 To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
@@ -75,17 +75,7 @@ When doing macOS/Linux portability changes from a Windows machine, test them on 
 
 1. Create a temporary branch locally, e.g. `git switch -c tmp/mac-port-<topic>`.
 2. Commit the portability changes on that temporary branch and push it to origin, e.g. `git push -u origin tmp/mac-port-<topic>`. This temporary commit is for remote build verification; still do not make the final feature commit unless the user explicitly asks.
-3. On the remote Mac, SSH to `kjk@100.120.113.17` and `cd src/sumatrapdf`.
-4. Before changing branches or building on the Mac, abort if the remote checkout is not clean: `git status --porcelain` must print nothing.
-5. Fetch and switch the Mac checkout to the pushed temporary branch, then make it match origin:
-
-   ```sh
-   git fetch origin tmp/mac-port-<topic>
-   git switch tmp/mac-port-<topic> || git switch -c tmp/mac-port-<topic> --track origin/tmp/mac-port-<topic>
-   git reset --hard origin/tmp/mac-port-<topic>
-   ```
-
-6. Run the remote build with `bun cmd/build-mac.ts -debug` or from Windows with `bun cmd/build-mac-remote.ts -debug` after the Mac checkout has been switched to the temporary branch.
+3. Run the remote build from Windows with `bun cmd/build-mac-remote.ts -branch tmp/mac-port-<topic> -debug`. The script aborts if the remote checkout is dirty, fetches and switches to the temporary branch, runs the build, and restores the original remote branch or detached checkout on success or failure.
 
 ## C/C++ #include conventions
 

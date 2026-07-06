@@ -41,9 +41,9 @@
 #error "unsupported arch"
 #endif
 
-/* OS_UNIX - Any Unix-like system */
+/* OS_POSIX - Any POSIX-like system */
 #if OS_DARWIN || OS_LINUX || defined(unix) || defined(__unix) || defined(__unix__)
-#define OS_UNIX 1
+#define OS_POSIX 1
 #endif
 
 #if defined(_MSC_VER)
