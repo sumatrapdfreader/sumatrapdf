@@ -151,7 +151,7 @@
     <ClCompile Include="..\src\base\CssParser.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\DbgHelpDyn.cpp">
+    <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Dict.cpp">

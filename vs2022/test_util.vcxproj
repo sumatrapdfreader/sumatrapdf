@@ -937,7 +937,7 @@
     <ClCompile Include="..\src\base\Color.cpp" />
     <ClCompile Include="..\src\base\Crypto_win.cpp" />
     <ClCompile Include="..\src\base\CssParser.cpp" />
-    <ClCompile Include="..\src\base\DbgHelpDyn.cpp" />
+    <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp" />
     <ClCompile Include="..\src\base\Dict.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
     <ClCompile Include="..\src\base\Dpi_win.cpp" />

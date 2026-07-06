@@ -152,6 +152,7 @@
 using BYTE = uint8_t;
 using WORD = uint16_t;
 using DWORD = uint32_t;
+using DWORD64 = uint64_t;
 using UINT = unsigned int;
 using LONG = int32_t;
 using BOOL = int;
@@ -160,6 +161,9 @@ using COLORREF = uint32_t;
 using LCID = uint32_t;
 using HWND = void*;
 using HDC = void*;
+
+struct EXCEPTION_POINTERS;
+struct MINIDUMP_EXCEPTION_INFORMATION;
 
 struct FILETIME {
     DWORD dwLowDateTime;

@@ -599,6 +599,7 @@ const DEP_LIBS_BASE = [
           "Crypto_posix.cpp",
           "CssParser.cpp",
           "Dict.cpp",
+          "DbgHelpDyn_posix.cpp",
           "Dpi_posix.cpp",
           "File.cpp",
           "File_posix.cpp",
