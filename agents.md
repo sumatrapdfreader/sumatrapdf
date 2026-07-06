@@ -1,4 +1,4 @@
-This is a C++ program for Windows, using mostly win32 windows API functions
+This is a C++ program for Windows, using mostly win32 windows API functions. The full GUI app remains Windows-only for now; we are porting **non-UI** code so it also compiles on macOS and Linux, starting with `src/base/`.
 
 We don't use STL but our own string / helper / container functions implemented in src\base directory
 
@@ -23,6 +23,49 @@ Never commit changes automatically. Always wait for explicit command to commit c
 When committing a fix for a GitHub issue, include `(fixes #<issue-no>)` at the end of the commit message.
 
 When committing work done with AI assistance, append the user prompt(s) that produced the change at the very end of the commit message as a single line: `prompt: ...`. If there were multiple prompts, squash them into one concise line. Record the substantive request only — omit meta-instructions such as "commit", "push", "check work", or "verify".
+
+## Cross-platform porting (macOS / Linux)
+
+We are making non-UI library code compile on macOS and Linux while keeping the Windows build working. **Start with `src/base/`**; other `src/` areas follow once base is portable.
+
+### Scope
+
+- **In scope:** platform-neutral logic and OS abstractions (files, paths, time, threading, memory, strings, etc.) under `src/base/` and later other non-UI `src/` trees.
+- **Out of scope for now:** UI, Win32 windowing, menus, printing UI, installer, and anything that depends on those.
+
+### Platform subdirectories
+
+When a source file needs platform-specific code, split it into subdirectories under the same module (e.g. `src/base/`):
+
+| Subdir   | Used on              | Purpose                                      |
+|----------|----------------------|----------------------------------------------|
+| `win/`   | Windows              | Win32 and other Windows-only implementations |
+| `posix/` | macOS **and** Linux  | Code shared by both Unix-like targets        |
+| `mac/`   | macOS only           | Darwin-specific code not shared with Linux   |
+| `linux/` | Linux only           | Linux-specific code not shared with macOS    |
+
+**`posix/` is for code common to Linux and macOS** — prefer it over duplicating the same logic in `mac/` and `linux/`. Use `mac/` or `linux/` only when the two Unix platforms genuinely diverge.
+
+Example layout:
+
+```
+src/base/File.h          # shared declaration (platform-neutral API)
+src/base/File.cpp        # shared implementation, if any
+src/base/win/File.cpp    # Windows implementation
+src/base/posix/File.cpp  # macOS + Linux implementation
+src/base/mac/File.cpp    # macOS-only pieces (when posix isn't enough)
+src/base/linux/File.cpp  # Linux-only pieces (when posix isn't enough)
+```
+
+Not every file needs all four subdirs — only split when the implementation is platform-dependent. Keep portable code in the parent directory (`src/base/Foo.cpp`) and move **only** the non-portable parts into the appropriate `win/` / `posix/` / `mac/` / `linux/` file.
+
+### Guidelines
+
+- **Preserve the public API.** Headers at the module root (`src/base/Foo.h`) should expose the same functions/types on every platform; platform differences stay in `.cpp` files under the subdirs.
+- **No `#ifdef` sprawl in shared headers** when a subdirectory split is clearer. Small include-guarded typedefs or macros in a shared header are fine.
+- **Prefer POSIX APIs in `posix/`** (`open`, `read`, `stat`, `pthread`, etc.) and native APIs in `win/` (Win32). Use `mac/` / `linux/` for OS-specific extensions (e.g. FSEvents vs inotify).
+- **Keep Windows green.** Every change must still build and pass tests on Windows (`bun ./cmd/build.ts`). Do not break the existing Windows target while adding macOS/Linux support.
+- **Build system:** macOS/Linux build wiring will be added incrementally; until then, focus on making `src/base/` sources compile cleanly with a Unix toolchain (clang, `-std=c++20` or whatever the module uses).
 
 ## C/C++ #include conventions
 
