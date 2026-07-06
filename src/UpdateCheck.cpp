@@ -420,8 +420,8 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     if (!win || !updateInfo) {
         return;
     }
-    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update"));
-    TempStr msg = fmt(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer,
+    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and install latest version"));
+    TempStr msg = fmt(_TRA("Version %s available (you have %s). %s").s, updateInfo->latestVer,
                       StrL(CURR_VERSION_STRA), link);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
