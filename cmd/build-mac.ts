@@ -431,6 +431,7 @@ const DEP_LIBS_BASE = [
           "Dict.cpp",
           "File.cpp",
           "File_posix.cpp",
+          "Geom.cpp",
           "HtmlTags.cpp",
           "JsonParser.cpp",
           "SettingsUtil.cpp",
