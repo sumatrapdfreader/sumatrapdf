@@ -615,7 +615,9 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     // make sure that the password dialog is visible
     HwndToForeground(hwnd);
 
-    bool* rememberPwd = SettingsRememberOpenedFiles() ? saveKey : nullptr;
+    // remembering the password requires saving per-document state
+    bool canRememberPwd = SettingsRememberOpenedFiles() && gGlobalPrefs->rememberStatePerDocument;
+    bool* rememberPwd = canRememberPwd ? saveKey : nullptr;
     return Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword);
 }
 

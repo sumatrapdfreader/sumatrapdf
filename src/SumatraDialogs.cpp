@@ -186,7 +186,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         if (UseDarkModeLib()) {
             DarkMode::setDarkWndSafe(hDlg);
         }
-        EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
+        HwndSetVisibility(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
         TempStr txt = fmt(_TRA("Enter password for %s").s, data->fileName);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
