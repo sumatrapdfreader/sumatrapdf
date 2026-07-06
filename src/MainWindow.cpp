@@ -40,7 +40,6 @@
 #include "StressTesting.h"
 #include "uia/Provider.h"
 
-
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
     delete tabsCtrl;
@@ -111,6 +110,7 @@ MainWindow::~MainWindow() {
     // ReportIf(ctrl); // TODO: seen in crash report
     ReportIf(linkOnLastButtonDown);
     str::Free(urlOnLastButtonDown);
+    str::Free(homeSearchQuery);
 
     UnsubclassToc(this);
 

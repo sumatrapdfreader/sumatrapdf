@@ -297,6 +297,9 @@ struct MainWindow {
 
     // home page search filter
     HWND hwndHomeSearch = nullptr;
+    // remembers the search query while the edit control is destroyed
+    // (e.g. when a document tab is active)
+    Str homeSearchQuery;
 
     bool isToolbarVisible = false;
     // overlay toolbar mode: the toolbar floats over the page (doesn't reserve

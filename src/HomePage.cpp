@@ -1136,10 +1136,17 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     // add left/right padding so text doesn't overlap the border
     int margin = DpiScale(win->hwndCanvas, 6);
     SendMessage(win->hwndHomeSearch, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
+    // restore the query from before the edit control was destroyed
+    // (e.g. by switching to a document tab and back)
+    if (len(win->homeSearchQuery) > 0) {
+        HwndSetText(win->hwndHomeSearch, win->homeSearchQuery);
+    }
 }
 
 void HomePageDestroySearch(MainWindow* win) {
     if (win->hwndHomeSearch) {
+        TempStr query = HwndGetTextTemp(win->hwndHomeSearch);
+        str::ReplaceWithCopy(&win->homeSearchQuery, query);
         DestroyWindow(win->hwndHomeSearch);
         win->hwndHomeSearch = nullptr;
     }
