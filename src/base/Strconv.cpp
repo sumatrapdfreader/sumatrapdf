@@ -5,6 +5,12 @@
 
 namespace strconv {
 
+#if !OS_WIN
+static bool IsSupportedCodePage(uint codePage) {
+    return codePage == CP_UTF8 || codePage == CP_ACP || codePage == 20127;
+}
+#endif
+
 #if OS_WIN
 static WStr WrapAllocatedWStr(WCHAR* s, int n) {
     if (!s) {
@@ -72,7 +78,9 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     ReportIf(cbConverted != cbNeeded);
     return WrapAllocatedStr(res, cbConverted);
 #else
-    ReportIf(codePage != CP_UTF8 && codePage != CP_ACP && codePage != 20127);
+    if (!IsSupportedCodePage(codePage)) {
+        return {};
+    }
     TempStr res = ToUtf8Temp(s);
     return str::Dup(a, res);
 #endif
@@ -101,7 +109,9 @@ WStr StrCPToWStr(Str src, uint codePage) {
     MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
     return WrapAllocatedWStr(res, requiredBufSize);
 #else
-    ReportIf(codePage != CP_UTF8 && codePage != CP_ACP && codePage != 20127);
+    if (!IsSupportedCodePage(codePage)) {
+        return {};
+    }
     TempWStr res = ToWStrTemp(src);
     return wstr::Dup(nullptr, res);
 #endif
@@ -125,7 +135,9 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage) {
     MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
     return WrapAllocatedWStr(res, requiredBufSize);
 #else
-    ReportIf(codePage != CP_UTF8 && codePage != CP_ACP && codePage != 20127);
+    if (!IsSupportedCodePage(codePage)) {
+        return {};
+    }
     return ToWStrTemp(src);
 #endif
 }

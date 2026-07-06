@@ -22,8 +22,10 @@ import {
   DEFAULT_JOBS,
   FONT_FILES,
   buildLibrary,
+  compileAll,
   embedBinaryFile,
   objPath,
+  spawnCmd,
 } from "./build-deps-common";
 import {
   zlib,
@@ -470,6 +472,34 @@ const DEP_LIBS_BASE = [
   makeMupdf,
 ] as const;
 
+const TEST_UTIL_SOURCES = [
+  "src/Commands.cpp",
+  "src/CrashHandlerNoOp.cpp",
+  "src/DisplayMode.cpp",
+  "src/Flags.cpp",
+  "src/RefHoverDetect.cpp",
+  "src/RefHoverTextDetect.cpp",
+  "src/SimpleLog_ut.cpp",
+  "src/SumatraConfig.cpp",
+  "src/SumatraLog_posix.cpp",
+  "src/SumatraUnitTests.cpp",
+  "src/base/tests/Base_ut.cpp",
+  "src/base/tests/ByteOrderDecoder_ut.cpp",
+  "src/base/tests/Crypto_ut.cpp",
+  "src/base/tests/CssParser_ut.cpp",
+  "src/base/tests/Dict_ut.cpp",
+  "src/base/tests/File_ut.cpp",
+  "src/base/tests/JsonParser_ut.cpp",
+  "src/base/tests/RefHover_ut.cpp",
+  "src/base/tests/SettingsUtil_ut.cpp",
+  "src/base/tests/SquareTreeParser_ut.cpp",
+  "src/base/tests/StrFormat_ut.cpp",
+  "src/base/tests/StrVec_ut.cpp",
+  "src/base/tests/Str_ut.cpp",
+  "src/base/tests/Vec_ut.cpp",
+  "src/tools/test_util.cpp",
+];
+
 export interface MacBuildOptions {
   outDir: string;
   isRelease?: boolean;
@@ -538,9 +568,74 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
     });
   }
 
+  await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, cxxFlags);
+
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+async function buildTestUtil(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Building test_util...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines, "SUMATRA_TEST_UTIL=1"].map((d) => `-D${d}`);
+  const includeFlags = ["-Isrc"];
+
+  const units = TEST_UTIL_SOURCES.map((src) => {
+    const obj = objPath(outDir, "test_util", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        ...includeFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+
+  await compileAll(units, jobs);
+
+  const exePath = join(outDir, "test_util");
+  const linkArgs = [
+    tools.cxx,
+    "-o",
+    exePath,
+    ...units.map((u) => u.obj),
+    join(outDir, "lib", "libbase.a"),
+  ];
+  const res = await spawnCmd(linkArgs);
+  if (!res.ok) {
+    throw new Error(`link test_util failed: ${res.stderr}`);
+  }
+  console.log(`  -> ${exePath}`);
+
+  const run = Bun.spawn([exePath, "-for-ai"], {
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const code = await run.exited;
+  if (code !== 0) {
+    throw new Error(`test_util failed with exit code ${code}`);
+  }
 }
 
 if (import.meta.main) {

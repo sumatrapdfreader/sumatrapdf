@@ -8,6 +8,7 @@
 
 #include "base/Base.h"
 
+#include <cstdlib>
 #include <wctype.h>
 
 static constexpr float kAnchorTopMarginPt = 6.f;
@@ -23,7 +24,17 @@ static bool IsAsciiAlnum(WCHAR c) {
 // accented dictionary words ("sección", "capítulo") would never match
 // all-caps headings ("SECCIÓN 2").
 static WCHAR FoldCaseW(WCHAR c) {
+#if OS_WIN
     return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
+#else
+    if (c >= L'A' && c <= L'Z') {
+        return c + 32;
+    }
+    if (c >= 0x00C0 && c <= 0x00DE && c != 0x00D7) {
+        return c + 32;
+    }
+    return (WCHAR)towlower(c);
+#endif
 }
 
 // Caption / heading keyword tables, \0-separated utf8 strings. Each entry
@@ -611,7 +622,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
         if (labelLeftX < (int)(mediabox.dx * 0.5f)) {
             continue;
         }
-        int dist = std::abs(ly - dY);
+        int dist = abs(ly - dY);
         if (dist < bestDist) {
             bestDist = dist;
             bestLabelY = ly;

@@ -24,6 +24,7 @@
 
 #define utassert_fequal(a, b) utassert(fabs(a - b) < FLT_EPSILON);
 
+#if OS_WIN
 static void ParseCommandLineTest() {
     {
         Flags i;
@@ -135,6 +136,7 @@ static void ParseCommandLineTest() {
         utassert(0 == len(i.fileNames));
     }
 }
+#endif
 
 static void BenchRangeTest() {
     utassert(IsBenchPagesInfo("1"));
@@ -294,7 +296,9 @@ void SumatraPDF_UnitTests() {
     parseCommandsTest();
     colorTest();
     BenchRangeTest();
+#if OS_WIN
     ParseCommandLineTest();
+#endif
     versioncheck_test();
     hexstrTest();
 }
