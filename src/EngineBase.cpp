@@ -4,14 +4,12 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/Thread.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"
-
 
 Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
@@ -361,7 +359,6 @@ bool EngineBase::Release() {
 }
 
 EngineBase::EngineBase() {
-    InitializeCriticalSection(&textCacheLock);
     arena = ArenaNew();
 }
 
@@ -375,7 +372,6 @@ EngineBase::~EngineBase() {
         free(pagesText);
     }
     free(pagesTextState);
-    DeleteCriticalSection(&textCacheLock);
     str::Free(defaultExt);
     ArenaDelete(arena);
 }
@@ -398,7 +394,7 @@ bool EngineBase::HasTextForPage(int pageNo) {
     if (pageNo < 1 || pageNo > pageCount) {
         return false;
     }
-    ScopedCritSec scope(&textCacheLock);
+    ScopedMutex scope(&textCacheLock);
     if (!pagesText) {
         return false;
     }
@@ -411,7 +407,7 @@ TextExtractionState EngineBase::GetTextExtractionState(int pageNo) {
     if (pageNo < 1 || pageNo > pageCount) {
         return TextExtractionState::Finished;
     }
-    ScopedCritSec scope(&textCacheLock);
+    ScopedMutex scope(&textCacheLock);
     if (!pagesTextState) {
         return TextExtractionState::NotExtracted;
     }
@@ -425,7 +421,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     }
 
     {
-        ScopedCritSec scope(&textCacheLock);
+        ScopedMutex scope(&textCacheLock);
         if (!pagesText) {
             pagesText = AllocArray<PageText>(pageCount);
         }
@@ -452,7 +448,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     }
 
     {
-        ScopedCritSec scope(&textCacheLock);
+        ScopedMutex scope(&textCacheLock);
         if (pagesTextState && !pagesText[pageNo - 1].text) {
             pagesTextState[pageNo - 1] = TextExtractionState::NotExtracted;
         }
@@ -476,7 +472,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
 
     bool extract = false;
     {
-        ScopedCritSec scope(&textCacheLock);
+        ScopedMutex scope(&textCacheLock);
         if (!pagesText) {
             pagesText = AllocArray<PageText>(pageCount);
         }
@@ -497,7 +493,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
         PageText extracted = ExtractPageText(pageNo);
         EnsurePageText(&extracted);
 
-        ScopedCritSec scope(&textCacheLock);
+        ScopedMutex scope(&textCacheLock);
         PageText* pt = &pagesText[pageNo - 1];
         if (pagesTextState[pageNo - 1] != TextExtractionState::Finished) {
             FreePageText(pt);
@@ -508,7 +504,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
         FreePageText(&extracted);
     }
 
-    ScopedCritSec scope(&textCacheLock);
+    ScopedMutex scope(&textCacheLock);
     PageText* pt = &pagesText[pageNo - 1];
     if (lenOut) {
         *lenOut = pt->nCodepoints;

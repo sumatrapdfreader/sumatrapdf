@@ -149,6 +149,9 @@
     <ClCompile Include="..\src\base\Base.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Base_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

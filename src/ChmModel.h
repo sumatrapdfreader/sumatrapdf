@@ -72,7 +72,7 @@ struct ChmModel : DocController {
     Str fileName;
     ChmFile* doc = nullptr;
     TocTree* tocTree = nullptr;
-    CRITICAL_SECTION docAccess;
+    Mutex docAccess;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
 
     StrVec pages;

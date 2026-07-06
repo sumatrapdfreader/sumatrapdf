@@ -18,7 +18,7 @@ struct StrQueue {
     StrVec strings;
 
     volatile bool isFinished = false;
-    CRITICAL_SECTION cs;
+    Mutex cs;
     HANDLE hEvent = nullptr;
 };
 

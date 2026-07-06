@@ -153,8 +153,8 @@ class EngineDjvuDec : public EngineBase {
     // cacheLock guards lazy one-time caches (page links, TOC).
     djvu_ctx* ctx = nullptr;
     djvu_doc* doc = nullptr;
-    CRITICAL_SECTION djvuCacheLock;
-    CRITICAL_SECTION cacheLock;
+    Mutex djvuCacheLock;
+    Mutex cacheLock;
 
     Vec<DjvuDecPageInfo*> pages;
     TocTree* tocTree = nullptr;
@@ -171,8 +171,6 @@ EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
     SetDefaultExt(defaultExt, ".djvu");
     fileDPI = 300.0f;
-    InitializeCriticalSection(&djvuCacheLock);
-    InitializeCriticalSection(&cacheLock);
 }
 
 EngineDjvuDec::~EngineDjvuDec() {
@@ -188,8 +186,6 @@ EngineDjvuDec::~EngineDjvuDec() {
     if (stream) {
         stream->Release();
     }
-    DeleteCriticalSection(&djvuCacheLock);
-    DeleteCriticalSection(&cacheLock);
 }
 
 EngineBase* EngineDjvuDec::Clone() {
@@ -225,25 +221,25 @@ static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
 }
 
 void EngineDjvuDec::CacheLockCb(void* user, void*) {
-    EnterCriticalSection(&((EngineDjvuDec*)user)->djvuCacheLock);
+    ((EngineDjvuDec*)user)->djvuCacheLock.Lock();
 }
 
 void EngineDjvuDec::CacheUnlockCb(void* user, void*) {
-    LeaveCriticalSection(&((EngineDjvuDec*)user)->djvuCacheLock);
+    ((EngineDjvuDec*)user)->djvuCacheLock.Unlock();
 }
 
 // djvu_init() must run once before concurrent decode (bilinear scaler table).
 // Engines can be created on multiple threads (async document loads).
-static SRWLOCK gDjvuDecInitLock = SRWLOCK_INIT;
+static Mutex gDjvuDecInitLock;
 static bool gDjvuDecInitialized = false;
 
 static void DjvuDecInitOnce() {
-    AcquireSRWLockExclusive(&gDjvuDecInitLock);
+    gDjvuDecInitLock.Lock();
     if (!gDjvuDecInitialized) {
         djvu_init();
         gDjvuDecInitialized = true;
     }
-    ReleaseSRWLockExclusive(&gDjvuDecInitLock);
+    gDjvuDecInitLock.Unlock();
 }
 
 bool EngineDjvuDec::FinishLoading() {
@@ -755,7 +751,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     if (pi->gotElements) {
         return pi->allElements;
     }
-    ScopedCritSec scope(&cacheLock);
+    ScopedMutex scope(&cacheLock);
     if (pi->gotElements) {
         return pi->allElements;
     }
@@ -874,7 +870,7 @@ TocTree* EngineDjvuDec::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    ScopedCritSec scope(&cacheLock);
+    ScopedMutex scope(&cacheLock);
     if (tocTree) {
         return tocTree;
     }

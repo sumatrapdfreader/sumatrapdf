@@ -1,13 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct ScopedCritSec {
-    CRITICAL_SECTION* cs = nullptr;
-
-    explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) { EnterCriticalSection(cs); }
-    ~ScopedCritSec() { LeaveCriticalSection(cs); }
-};
-
 class AutoCloseHandle {
     HANDLE handle = nullptr;
 

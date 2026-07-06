@@ -8,7 +8,6 @@
 #include "base/Win.h"
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
-#include "base/Thread.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -27,7 +26,6 @@
 #include "SumatraConfig.h"
 #include "Translations.h"
 #include "SumatraLog.h"
-
 
 constexpr int kInstallerWinMargin = 8;
 

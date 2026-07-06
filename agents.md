@@ -10,6 +10,8 @@ To build run: bun ./cmd/build.ts
 
 This creates ./out/dbg64/SumatraPDF-dll.exe executable. Note: ./out/dbg64/SumatraPDF.exe is a different (static) build target that build.ts does NOT update, so it can be stale — always use SumatraPDF-dll.exe for testing.
 
+To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -branch <temporary-branch> -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build-mac.ts`, and restores the original remote checkout on success or failure.
+
 To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
 To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF-dll.exe`
@@ -33,39 +35,47 @@ We are making non-UI library code compile on macOS and Linux while keeping the W
 - **In scope:** platform-neutral logic and OS abstractions (files, paths, time, threading, memory, strings, etc.) under `src/base/` and later other non-UI `src/` trees.
 - **Out of scope for now:** UI, Win32 windowing, menus, printing UI, installer, and anything that depends on those.
 
-### Platform subdirectories
+### Platform-specific source files
 
-When a source file needs platform-specific code, split it into subdirectories under the same module (e.g. `src/base/`):
+When a source file needs platform-specific code, keep the files in the same module directory and use a platform suffix:
 
-| Subdir   | Used on              | Purpose                                      |
-|----------|----------------------|----------------------------------------------|
-| `win/`   | Windows              | Win32 and other Windows-only implementations |
-| `posix/` | macOS **and** Linux  | Code shared by both Unix-like targets        |
-| `mac/`   | macOS only           | Darwin-specific code not shared with Linux   |
-| `linux/` | Linux only           | Linux-specific code not shared with macOS    |
+| Suffix     | Used on              | Purpose                                      |
+|------------|----------------------|----------------------------------------------|
+| `_win`     | Windows              | Win32 and other Windows-only implementations |
+| `_posix`   | macOS **and** Linux  | Code shared by both Unix-like targets        |
+| `_mac`     | macOS only           | Darwin-specific code not shared with Linux   |
+| `_linux`   | Linux only           | Linux-specific code not shared with macOS    |
 
-**`posix/` is for code common to Linux and macOS** — prefer it over duplicating the same logic in `mac/` and `linux/`. Use `mac/` or `linux/` only when the two Unix platforms genuinely diverge.
+**`_posix` is for code common to Linux and macOS** — prefer it over duplicating the same logic in `_mac` and `_linux`. Use `_mac` or `_linux` only when the two Unix platforms genuinely diverge.
 
 Example layout:
 
 ```
 src/base/File.h          # shared declaration (platform-neutral API)
 src/base/File.cpp        # shared implementation, if any
-src/base/win/File.cpp    # Windows implementation
-src/base/posix/File.cpp  # macOS + Linux implementation
-src/base/mac/File.cpp    # macOS-only pieces (when posix isn't enough)
-src/base/linux/File.cpp  # Linux-only pieces (when posix isn't enough)
+src/base/File_win.cpp    # Windows implementation
+src/base/File_posix.cpp  # macOS + Linux implementation
+src/base/File_mac.cpp    # macOS-only pieces (when posix isn't enough)
+src/base/File_linux.cpp  # Linux-only pieces (when posix isn't enough)
 ```
 
-Not every file needs all four subdirs — only split when the implementation is platform-dependent. Keep portable code in the parent directory (`src/base/Foo.cpp`) and move **only** the non-portable parts into the appropriate `win/` / `posix/` / `mac/` / `linux/` file.
+Not every file needs all four platform variants — only split when the implementation is platform-dependent. Keep portable code in the unsuffixed file (`src/base/Foo.cpp`) and move **only** the non-portable parts into the appropriate `_win` / `_posix` / `_mac` / `_linux` file.
 
 ### Guidelines
 
-- **Preserve the public API.** Headers at the module root (`src/base/Foo.h`) should expose the same functions/types on every platform; platform differences stay in `.cpp` files under the subdirs.
-- **No `#ifdef` sprawl in shared headers** when a subdirectory split is clearer. Small include-guarded typedefs or macros in a shared header are fine.
-- **Prefer POSIX APIs in `posix/`** (`open`, `read`, `stat`, `pthread`, etc.) and native APIs in `win/` (Win32). Use `mac/` / `linux/` for OS-specific extensions (e.g. FSEvents vs inotify).
+- **Preserve the public API.** Headers at the module root (`src/base/Foo.h`) should expose the same functions/types on every platform; platform differences stay in suffixed `.cpp` files.
+- **No `#ifdef` sprawl in shared headers** when a platform-specific `.cpp` split is clearer. Small include-guarded typedefs or macros in a shared header are fine.
+- **Prefer POSIX APIs in `_posix` files** (`open`, `read`, `stat`, `pthread`, etc.) and native APIs in `_win` files (Win32). Use `_mac` / `_linux` files for OS-specific extensions (e.g. FSEvents vs inotify).
 - **Keep Windows green.** Every change must still build and pass tests on Windows (`bun ./cmd/build.ts`). Do not break the existing Windows target while adding macOS/Linux support.
 - **Build system:** macOS/Linux build wiring will be added incrementally; until then, focus on making `src/base/` sources compile cleanly with a Unix toolchain (clang, `-std=c++20` or whatever the module uses).
+
+### Remote macOS verification from Windows
+
+When doing macOS/Linux portability changes from a Windows machine, test them on the remote Mac by building from a temporary branch:
+
+1. Create a temporary branch locally, e.g. `git switch -c tmp/mac-port-<topic>`.
+2. Commit the portability changes on that temporary branch and push it to origin, e.g. `git push -u origin tmp/mac-port-<topic>`. This temporary commit is for remote build verification; still do not make the final feature commit unless the user explicitly asks.
+3. Run the remote build from Windows with `bun cmd/build-mac-remote.ts -branch tmp/mac-port-<topic> -debug`. The script aborts if the remote checkout is dirty, fetches and switches to the temporary branch, runs the build, and restores the original remote branch or detached checkout on success or failure.
 
 ## C/C++ #include conventions
 

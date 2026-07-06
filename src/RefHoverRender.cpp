@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 

@@ -20,7 +20,6 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 
-
 static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
     if (!url) {
         return nullptr;
@@ -68,12 +67,11 @@ struct ChmTocTraceItem {
 };
 
 ChmModel::ChmModel(DocControllerCallback* cb) : DocController(cb) {
-    InitializeCriticalSection(&docAccess);
     poolAlloc = ArenaNew();
 }
 
 ChmModel::~ChmModel() {
-    EnterCriticalSection(&docAccess);
+    docAccess.Lock();
     // TODO: deleting htmlWindow seems to spin a modal loop which
     //       can lead to WM_PAINT being dispatched for the parent
     //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
@@ -83,8 +81,7 @@ ChmModel::~ChmModel() {
     delete tocTrace;
     delete tocTree;
     DeleteVecMembers(urlDataCache);
-    LeaveCriticalSection(&docAccess);
-    DeleteCriticalSection(&docAccess);
+    docAccess.Unlock();
     ArenaDelete(poolAlloc);
     str::Free(fileName);
     str::Free(currentPageUrl);
@@ -605,7 +602,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
 
 // Load and cache data for a given url inside CHM file.
 Str ChmModel::GetDataForUrl(Str url) {
-    ScopedCritSec scope(&docAccess);
+    ScopedMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
@@ -774,7 +771,7 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     const OnBitmapRendered* saveThumbnail = nullptr;
     Str homeUrl;
     Vec<Str> data;
-    CRITICAL_SECTION docAccess;
+    Mutex docAccess;
 
     ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnBitmapRendered* saveThumbnail);
     ~ChmThumbnailTask() override;
@@ -797,19 +794,17 @@ ChmThumbnailTask::ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnB
     this->size = size;
     this->saveThumbnail = saveThumbnail;
     this->didSave = false;
-    InitializeCriticalSection(&docAccess);
 }
 
 ChmThumbnailTask::~ChmThumbnailTask() {
-    EnterCriticalSection(&docAccess);
+    docAccess.Lock();
     delete hw;
     DestroyWindow(hwnd);
     delete doc;
     for (auto&& d : data) {
         str::Free(d);
     }
-    LeaveCriticalSection(&docAccess);
-    DeleteCriticalSection(&docAccess);
+    docAccess.Unlock();
     delete saveThumbnail;
     str::Free(homeUrl);
 }
@@ -828,7 +823,7 @@ void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
 }
 
 Str ChmThumbnailTask::GetDataForUrl(Str url) {
-    ScopedCritSec scope(&docAccess);
+    ScopedMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     Str d = str::Dup(doc->GetDataTemp(plainUrl));
     data.Append(d);

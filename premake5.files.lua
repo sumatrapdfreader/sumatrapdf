@@ -11,7 +11,9 @@ end
 function makelzsa_files()
   files_in_dir("src/base", {
     "Arena.*",
-    "Base.*",
+    "Base.h",
+    "Base.cpp",
+    "Base_win.cpp",
     "ByteOrderDecoder.*",
     "ByteWriter.*",
     "CmdLineArgsIter.*",
@@ -970,7 +972,9 @@ function base_files()
     "Archive.*",
     "Arena.*",
     "AvifReader.*",
-    "Base.*",
+    "Base.h",
+    "Base.cpp",
+    "Base_win.cpp",
     "BitReader.*",
     "BuildConfig.h",
     "ByteOrderDecoder.*",
@@ -1395,7 +1399,9 @@ end
 function efi_files()
   files {
     "CrashHandlerNoOp.cpp",
-    "src/base/Base*",
+    "src/base/Base.h",
+    "src/base/Base.cpp",
+    "src/base/Base_win.cpp",
     "src/base/BitManip.h",
     "src/base/Dict*",
     "src/base/Str.*",
@@ -1408,7 +1414,9 @@ end
 function test_util_files()
   files_in_dir("src/base", {
     "Arena.*",
-    "Base.*",
+    "Base.h",
+    "Base.cpp",
+    "Base_win.cpp",
     "BitManip.*",
     "ByteOrderDecoder.*",
     "CmdLineArgsIter.*",

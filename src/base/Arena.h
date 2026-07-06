@@ -49,7 +49,7 @@ struct Arena {
     int allocation_site_line;
     const char* name;
     bool uses_external_buffer;
-    SRWLOCK lock;
+    Mutex lock;
 
     // allocation statistics, updated after every successful allocation
     // (see ArenaPushLocked). "peak bytes" is the high-water mark of total

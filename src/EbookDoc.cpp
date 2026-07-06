@@ -92,7 +92,10 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
+        {"UTF", CP_UTF8},
+        {"utf", CP_UTF8},
+        {"1252", 1252},
+        {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
     for (int i = 0; i < dimof(encodings); i++) {
@@ -345,25 +348,22 @@ static Str EPUB_ENC_NS() {
 
 EpubDoc::EpubDoc(Str fileName) {
     str::ReplaceWithCopy(&this->fileName, fileName);
-    InitializeCriticalSection(&zipAccess);
     archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
 }
 
 EpubDoc::EpubDoc(IStream* stream) {
-    InitializeCriticalSection(&zipAccess);
     archive = OpenArchiveFromStream(stream);
 }
 
 EpubDoc::~EpubDoc() {
-    EnterCriticalSection(&zipAccess);
+    zipAccess.Lock();
 
     for (auto&& img : images) {
         str::Free(img.base);
         str::Free(img.fileName);
     }
 
-    LeaveCriticalSection(&zipAccess);
-    DeleteCriticalSection(&zipAccess);
+    zipAccess.Unlock();
     delete archive;
     str::Free(tocPath);
     str::Free(fileName);
@@ -649,7 +649,7 @@ Str EpubDoc::GetHtmlData() const {
 }
 
 Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
-    ScopedCritSec scope(&zipAccess);
+    ScopedMutex scope(&zipAccess);
 
     if (!pagePath) {
         ReportIf(true);
@@ -720,7 +720,7 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
         return {};
     }
 
-    ScopedCritSec scope(&zipAccess);
+    ScopedMutex scope(&zipAccess);
 
     TempStr url = NormalizeURLTemp(relPath, pagePath);
     auto* fi = archive->GetFileDataByName(url);
@@ -860,7 +860,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     }
     Str tocDataStr;
     {
-        ScopedCritSec scope(&zipAccess);
+        ScopedMutex scope(&zipAccess);
         auto* fi = archive->GetFileDataByName(tocPath);
         if (fi && fi->data) {
             tocDataStr = Str(fi->data, fi->fileSizeUncompressed);

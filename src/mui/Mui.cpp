@@ -47,23 +47,23 @@ using Gdiplus::UnitPixel;
 
 namespace mui {
 
-// a critical section for everything that needs protecting in mui
+// a single lock for everything that needs protecting in mui
 // we use only one for simplicity as long as contention is not a problem
-static CRITICAL_SECTION gMuiCs;
+static Mutex gMuiCs;
 
-static void EnterMuiCriticalSection() {
-    EnterCriticalSection(&gMuiCs);
+static void EnterMuiLock() {
+    gMuiCs.Lock();
 }
 
-static void LeaveMuiCriticalSection() {
-    LeaveCriticalSection(&gMuiCs);
+static void LeaveMuiLock() {
+    gMuiCs.Unlock();
 }
 
 class ScopedMuiCritSec {
   public:
-    ScopedMuiCritSec() { EnterMuiCriticalSection(); }
+    ScopedMuiCritSec() { EnterMuiLock(); }
 
-    ~ScopedMuiCritSec() { LeaveMuiCriticalSection(); }
+    ~ScopedMuiCritSec() { LeaveMuiLock(); }
 };
 
 class FontListItem {
@@ -147,7 +147,6 @@ void GraphicsCacheEntry::Free() const {
 }
 
 void Initialize() {
-    InitializeCriticalSection(&gMuiCs);
     gGraphicsCache = new Vec<GraphicsCacheEntry>();
     // allocate the first entry in gGraphicsCache for UI thread, ref count
     // ensures it stays alive forever
@@ -163,7 +162,6 @@ void Destroy() {
     gGraphicsCache = nullptr;
     delete gFontsCache;
     gFontsCache = nullptr;
-    DeleteCriticalSection(&gMuiCs);
 }
 
 bool CachedFont::SameAs(WStr otherName, float otherSizePt, FontStyle otherStyle) const {
@@ -178,7 +176,7 @@ bool CachedFont::SameAs(WStr otherName, float otherSizePt, FontStyle otherStyle)
 
 HFONT CachedFont::GetHFont() {
     LOGFONTW lf;
-    EnterMuiCriticalSection();
+    EnterMuiLock();
     if (!hFont) {
         // TODO: Graphics is probably only used for metrics,
         // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
@@ -190,7 +188,7 @@ HFONT CachedFont::GetHFont() {
         hFont = CreateFontIndirectW(&lf);
         ReportIf(!hFont);
     }
-    LeaveMuiCriticalSection();
+    LeaveMuiLock();
     return hFont;
 }
 

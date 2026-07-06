@@ -6,8 +6,6 @@
 #include "WinDynCalls.h"
 #include "Win.h"
 
-#include "Thread.h"
-
 #if COMPILER_MSVC
 
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx

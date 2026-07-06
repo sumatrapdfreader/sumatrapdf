@@ -41,9 +41,9 @@
 #error "unsupported arch"
 #endif
 
-/* OS_UNIX - Any Unix-like system */
+/* OS_POSIX - Any POSIX-like system */
 #if OS_DARWIN || OS_LINUX || defined(unix) || defined(__unix) || defined(__unix__)
-#define OS_UNIX 1
+#define OS_POSIX 1
 #endif
 
 #if defined(_MSC_VER)
@@ -130,6 +130,9 @@
 #include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
+#if OS_DARWIN || OS_LINUX
+#include <pthread.h>
+#endif
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -144,17 +147,25 @@ using i64 = int64_t;
 using u64 = uint64_t;
 using uint = unsigned int;
 
+#if OS_WIN
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
+using AtomicRefCount = volatile LONG;
+#else
+using AtomicBool = volatile int;
+using AtomicInt = volatile int;
+using AtomicRefCount = volatile int;
+#endif
 
 bool AtomicBoolGet(AtomicBool* p);
 void AtomicBoolSet(AtomicBool* p, bool v);
-
 int AtomicIntGet(AtomicInt* p);
 void AtomicIntSet(AtomicInt* p, int v);
 int AtomicIntAdd(AtomicInt* p, int v);
 int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
+int AtomicRefCountAdd(AtomicRefCount* v);
+int AtomicRefCountDec(AtomicRefCount* v);
 
 struct Arena;
 
@@ -477,10 +488,6 @@ int ListLen(T* root) {
     return n;
 }
 
-using AtomicRefCount = volatile LONG;
-int AtomicRefCountAdd(AtomicRefCount* v);
-int AtomicRefCountDec(AtomicRefCount* v);
-
 /*
 Poor-man's manual dynamic typing.
 Identity of an object is an address of a unique, global string.
@@ -701,7 +708,6 @@ defer { fclose(f); };
 defer { instance->Release(); };
 */
 
-#include "Arena.h"
 #include "Geom.h"
 #include "Vec.h"
 #include "Str.h"
@@ -709,6 +715,8 @@ defer { instance->Release(); };
 #include "StrFormatParse.h"
 #include "StrVec.h"
 #include "Strconv.h"
+#include "Thread.h"
+#include "Arena.h"
 #include "Scoped.h"
 #include "Color.h"
 

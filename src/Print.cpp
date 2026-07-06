@@ -6,7 +6,6 @@
 #include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/UITask.h"
-#include "base/Thread.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -29,21 +28,17 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 
-
 class AbortCookieManager {
-    CRITICAL_SECTION cookieAccess;
+    Mutex cookieAccess;
 
   public:
     AbortCookie* cookie = nullptr;
 
-    AbortCookieManager() { InitializeCriticalSection(&cookieAccess); }
-    ~AbortCookieManager() {
-        Clear();
-        DeleteCriticalSection(&cookieAccess);
-    }
+    AbortCookieManager() = default;
+    ~AbortCookieManager() { Clear(); }
 
     void Abort() {
-        ScopedCritSec scope(&cookieAccess);
+        ScopedMutex scope(&cookieAccess);
         if (cookie) {
             cookie->Abort();
         }
@@ -51,7 +46,7 @@ class AbortCookieManager {
     }
 
     void Clear() {
-        ScopedCritSec scope(&cookieAccess);
+        ScopedMutex scope(&cookieAccess);
         if (cookie) {
             delete cookie;
             cookie = nullptr;

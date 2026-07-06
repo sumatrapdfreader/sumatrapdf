@@ -44,7 +44,7 @@ struct DirScanCtx {
     Arena* a; // Permanent data arena
     OnScannedDirCallback onScannedDir;
     void* userData;
-    CRITICAL_SECTION cs;         // Protect queue access
+    Mutex cs;                    // Protect queue access
     HANDLE hSemaphore;           // Counting semaphore for work items
     HANDLE hQueueEmptyEvent;     // Signaled when all work is done (queue empty + no in-flight)
     HANDLE hThreadExitedEvent;   // Signaled when thread has exited

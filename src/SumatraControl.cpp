@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 

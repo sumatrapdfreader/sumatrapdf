@@ -900,6 +900,7 @@
     <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\AvifReader.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
+    <ClCompile Include="..\src\base\Base_win.cpp" />
     <ClCompile Include="..\src\base\BitReader.cpp" />
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp" />
     <ClCompile Include="..\src\base\ByteReader.cpp" />

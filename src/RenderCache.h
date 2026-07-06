@@ -137,7 +137,7 @@ struct RenderCache {
     int cacheCount = 0;
     // make sure to never ask for requestAccess in a cacheAccess
     // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION cacheAccess;
+    RecursiveMutex cacheAccess;
 
     PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
     int requestCount = 0;
@@ -149,7 +149,7 @@ struct RenderCache {
     int finishedHistoryNext = 0;  // next slot to write
     // per-thread current request tracking (index matches thread index)
     PageRenderRequest* curReqs[kMaxRenderThreads]{};
-    CRITICAL_SECTION requestAccess;
+    RecursiveMutex requestAccess;
     HANDLE renderThreads[kMaxRenderThreads]{};
     // Render threads are spawned lazily: nRenderThreads is the count actually
     // running so far, maxRenderThreads is the cap. Threads track idleThreads

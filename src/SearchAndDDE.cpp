@@ -6,7 +6,6 @@
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Win.h"
-#include "base/Thread.h"
 
 #include "wingui/UIModels.h"
 
@@ -34,7 +33,6 @@
 #include "FindWindow.h"
 #include "Translations.h"
 #include "Version.h"
-
 
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;

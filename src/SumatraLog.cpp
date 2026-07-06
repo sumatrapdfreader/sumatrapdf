@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Thread.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "base/File.h"

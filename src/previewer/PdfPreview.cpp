@@ -19,7 +19,6 @@
 
 #include "PdfPreview.h"
 
-
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;
 constexpr UINT kUwmPaintAgain = (WM_USER + 101);
@@ -98,7 +97,7 @@ class PageRenderer {
     bool reqAbort = false;
     AbortCookie* abortCookie = nullptr;
 
-    CRITICAL_SECTION currAccess;
+    Mutex currAccess;
     HANDLE thread = nullptr;
 
     // seeking inside an IStream spins an inner event loop
@@ -112,14 +111,12 @@ class PageRenderer {
     PageRenderer(EngineBase* engine, HWND hwnd) {
         this->engine = engine;
         this->hwnd = hwnd;
-        InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
         if (thread) {
             WaitForSingleObject(thread, INFINITE);
         }
         FreePixmap(currBmp);
-        DeleteCriticalSection(&currAccess);
     }
 
     RectF GetPageRect(int pageNo) {
@@ -138,7 +135,7 @@ class PageRenderer {
     void Render(HDC hdc, Rect target, int pageNo, float zoom) {
         log("PageRenderer::Render()\n");
 
-        ScopedCritSec scope(&currAccess);
+        ScopedMutex scope(&currAccess);
         if (currBmp && currPage == pageNo && currSize == target.Size()) {
             BlitPixmap(currBmp, hdc, target);
         } else if (!thread) {
@@ -167,7 +164,7 @@ class PageRenderer {
             return 0;
         }
 
-        ScopedCritSec scope(&pr->currAccess);
+        ScopedMutex scope(&pr->currAccess);
 
         if (!pr->reqAbort) {
             FreePixmap(pr->currBmp);

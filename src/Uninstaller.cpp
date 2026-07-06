@@ -7,7 +7,6 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/FrameTimeoutCalculator.h"
-#include "base/Thread.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -25,7 +24,6 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "SumatraLog.h"
-
 
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;

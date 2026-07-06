@@ -10,7 +10,6 @@
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "base/ScopedWin.h"
-#include "base/Thread.h"
 #include "base/Http.h"
 #include "base/GdiPlus.h"
 #include "base/GuessFileType.h"

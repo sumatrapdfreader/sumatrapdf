@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/Thread.h"
 #include "base/Win.h"
 #include "base/StrQueue.h"
 #include "base/DirIter.h"
