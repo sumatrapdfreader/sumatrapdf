@@ -15,6 +15,17 @@ struct Mutex {
     void Unlock() { ReleaseSRWLockExclusive(&lock); }
 };
 
+struct ConditionVariable {
+    CONDITION_VARIABLE cond = CONDITION_VARIABLE_INIT;
+
+    ConditionVariable() = default;
+    ~ConditionVariable() = default;
+
+    void Wait(Mutex* mutex) { SleepConditionVariableSRW(&cond, &mutex->lock, INFINITE, 0); }
+    void Wake() { WakeConditionVariable(&cond); }
+    void WakeAll() { WakeAllConditionVariable(&cond); }
+};
+
 struct RecursiveMutex {
     CRITICAL_SECTION lock;
 
@@ -39,6 +50,17 @@ struct Mutex {
 
     void Lock() { pthread_mutex_lock(&lock); }
     void Unlock() { pthread_mutex_unlock(&lock); }
+};
+
+struct ConditionVariable {
+    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+    ConditionVariable() = default;
+    ~ConditionVariable() { pthread_cond_destroy(&cond); }
+
+    void Wait(Mutex* mutex) { pthread_cond_wait(&cond, &mutex->lock); }
+    void Wake() { pthread_cond_signal(&cond); }
+    void WakeAll() { pthread_cond_broadcast(&cond); }
 };
 
 struct RecursiveMutex {

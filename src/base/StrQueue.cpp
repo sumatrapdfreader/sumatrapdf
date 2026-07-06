@@ -4,15 +4,9 @@
 #include "Base.h"
 #include "StrQueue.h"
 
-StrQueue::StrQueue() {
-    BOOL manualReset = FALSE;
-    BOOL initialState = FALSE;
-    hEvent = CreateEventW(nullptr /* SECURITY_ATTRIBUTES* */, manualReset, initialState, nullptr /* name */);
-}
+StrQueue::StrQueue() = default;
 
-StrQueue::~StrQueue() {
-    CloseHandle(hEvent);
-}
+StrQueue::~StrQueue() = default;
 
 void StrQueue::Lock() {
     cs.Lock();
@@ -27,7 +21,7 @@ void StrQueue::MarkFinished() {
     ReportIf(isFinished);
     isFinished = true;
     Unlock();
-    SetEvent(hEvent);
+    nonEmpty.WakeAll();
 }
 
 bool StrQueue::IsFinished() {
@@ -48,7 +42,7 @@ Str StrQueue::append(Str s) {
     Lock();
     auto res = strings.Append(s);
     Unlock();
-    SetEvent(hEvent);
+    nonEmpty.Wake();
     return res;
 }
 
@@ -66,16 +60,13 @@ bool StrQueue::IsSentinel(Str s) {
 // retuns sentinel value if no more strings
 // use IsSentinel() to check if returned value is a sentinel
 Str StrQueue::PopFront() {
-again:
     Lock();
+    while (len(strings) == 0 && !isFinished) {
+        nonEmpty.Wait(&cs);
+    }
     if (len(strings) == 0) {
-        bool end = isFinished;
         Unlock();
-        if (end) {
-            return StrQueueSentinel();
-        }
-        WaitForSingleObject(hEvent, INFINITE);
-        goto again;
+        return StrQueueSentinel();
     }
     Str s = strings.RemoveAt(0);
     Unlock();
@@ -87,16 +78,13 @@ again:
 // and we finished adding. In that case fn was called
 // calls fn() and returns false if there are strings available
 bool StrQueue::Access(const Func1<StrQueue*>& fn) {
-again:
     Lock();
+    while (len(strings) == 0 && !isFinished) {
+        nonEmpty.Wait(&cs);
+    }
     if (len(strings) == 0) {
-        bool end = isFinished;
         Unlock();
-        if (end) {
-            return false;
-        }
-        WaitForSingleObject(hEvent, INFINITE);
-        goto again;
+        return false;
     }
     fn.Call(this);
     Unlock();

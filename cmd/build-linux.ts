@@ -605,6 +605,7 @@ const DEP_LIBS_BASE = [
           "JsonParser.cpp",
           "SettingsUtil.cpp",
           "SquareTreeParser.cpp",
+          "StrQueue.cpp",
           "Thread.cpp",
           "Str.cpp",
           "StrUtf8.cpp",
