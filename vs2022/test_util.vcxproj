@@ -911,6 +911,7 @@
     <ClInclude Include="..\src\base\StrUtf8.h" />
     <ClInclude Include="..\src\base\StrVec.h" />
     <ClInclude Include="..\src\base\Strconv.h" />
+    <ClInclude Include="..\src\base\Thread.h" />
     <ClInclude Include="..\src\base\UtAssert.h" />
     <ClInclude Include="..\src\base\Vec.h" />
     <ClInclude Include="..\src\base\Win.h" />
@@ -940,6 +941,7 @@
     <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp" />
     <ClCompile Include="..\src\base\Dict.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
+    <ClCompile Include="..\src\base\DirScan_win.cpp" />
     <ClCompile Include="..\src\base\Dpi_win.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\File_win.cpp" />
@@ -954,6 +956,7 @@
     <ClCompile Include="..\src\base\StrUtf8.cpp" />
     <ClCompile Include="..\src\base\StrVec.cpp" />
     <ClCompile Include="..\src\base\Strconv.cpp" />
+    <ClCompile Include="..\src\base\Thread.cpp" />
     <ClCompile Include="..\src\base\UtAssert.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
     <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />

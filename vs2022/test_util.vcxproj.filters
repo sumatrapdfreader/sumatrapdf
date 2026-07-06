@@ -97,6 +97,9 @@
     <ClInclude Include="..\src\base\Strconv.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\Thread.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -160,6 +163,9 @@
     <ClCompile Include="..\src\base\DirScan.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\DirScan_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Dpi_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -200,6 +206,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Strconv.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\Thread.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\UtAssert.cpp">
