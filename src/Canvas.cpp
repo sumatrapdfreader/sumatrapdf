@@ -56,7 +56,6 @@
 
 #include "RefHover.h"
 
-
 // if set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates
 // impression of lag
@@ -265,6 +264,30 @@ static bool IsPointInSelection(MainWindow* win, Point pt) {
     return false;
 }
 
+// data object of the most recent drag-out, kept connected because cross-process
+// drop targets can still extract data after DoDragDrop returns (e.g. Explorer
+// fetches CFSTR_FILECONTENTS after IDropTarget::Drop returns)
+static IDataObject* gLastDragDataObj = nullptr;
+
+// DoDragDrop marshals the data object (CoMarshalInterface) for cross-process
+// targets and never releases the stub's references, not even in
+// OleUninitialize, which would leak the object. Disconnecting right after
+// DoDragDrop returns breaks targets that extract data after Drop() returns,
+// so we keep the object connected until the next drag-out or app exit.
+void DisconnectLastDragDataObject() {
+    if (!gLastDragDataObj) {
+        return;
+    }
+    CoDisconnectObject(gLastDragDataObj, 0);
+    gLastDragDataObj->Release();
+    gLastDragDataObj = nullptr;
+}
+
+static void FinishDragDrop(IDataObject* dataObj) {
+    DisconnectLastDragDataObject();
+    gLastDragDataObj = dataObj; // transfers our reference
+}
+
 static void StartTextDragDrop(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     bool isTextOnly = false;
@@ -278,12 +301,7 @@ static void StartTextDragDrop(MainWindow* win) {
     DWORD dwEffect = 0;
     DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
     dropSrc->Release();
-    // DoDragDrop marshals the data object (CoMarshalInterface) for cross-process
-    // targets and never releases the stub's references, which would leak the
-    // object (even past OleUninitialize). The drag is over and we don't support
-    // async data extraction, so no external client can legitimately need it.
-    CoDisconnectObject(dataObj, 0);
-    dataObj->Release();
+    FinishDragDrop(dataObj);
 }
 
 // encode HBITMAP to PNG in memory using GDI+ IStream
@@ -500,9 +518,7 @@ static void StartImageDragDrop(MainWindow* win) {
     DWORD dwEffect = 0;
     DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
     dropSrc->Release();
-    // see StartTextDragDrop for why this is needed to not leak dataObj
-    CoDisconnectObject(dataObj, 0);
-    dataObj->Release();
+    FinishDragDrop(dataObj);
 }
 
 // Resize handle positions that used in resizing annotations

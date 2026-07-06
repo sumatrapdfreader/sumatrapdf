@@ -13,6 +13,7 @@ extern Kind kNotifAnnotation;
 
 void RegisterCanvasDropTarget(HWND hwndCanvas);
 void RevokeCanvasDropTarget(HWND hwndCanvas);
+void DisconnectLastDragDataObject();
 
 // Timer for mouse wheel smooth scrolling
 constexpr UINT_PTR kSmoothScrollTimerID = 6;
