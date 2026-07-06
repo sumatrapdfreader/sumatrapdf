@@ -10,7 +10,7 @@ To build run: bun ./cmd/build.ts
 
 This creates ./out/dbg64/SumatraPDF-dll.exe executable. Note: ./out/dbg64/SumatraPDF.exe is a different (static) build target that build.ts does NOT update, so it can be stale — always use SumatraPDF-dll.exe for testing.
 
-To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -branch <temporary-branch> -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build-mac.ts`, and restores the original remote checkout on success or failure.
+To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -branch <temporary-branch> -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build-mac.ts`, and restores the original remote checkout on success or failure. The macOS build compiles the dependency/base libraries, builds `out/mac-<config>64/test_util`, and runs it with `-for-ai`.
 
 To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
@@ -66,8 +66,9 @@ Not every file needs all four platform variants — only split when the implemen
 - **Preserve the public API.** Headers at the module root (`src/base/Foo.h`) should expose the same functions/types on every platform; platform differences stay in suffixed `.cpp` files.
 - **No `#ifdef` sprawl in shared headers** when a platform-specific `.cpp` split is clearer. Small include-guarded typedefs or macros in a shared header are fine.
 - **Prefer POSIX APIs in `_posix` files** (`open`, `read`, `stat`, `pthread`, etc.) and native APIs in `_win` files (Win32). Use `_mac` / `_linux` files for OS-specific extensions (e.g. FSEvents vs inotify).
-- **Keep Windows green.** Every change must still build and pass tests on Windows (`bun ./cmd/build.ts`). Do not break the existing Windows target while adding macOS/Linux support.
-- **Build system:** macOS/Linux build wiring will be added incrementally; until then, focus on making `src/base/` sources compile cleanly with a Unix toolchain (clang, `-std=c++20` or whatever the module uses).
+- **Keep Windows green.** Every change must still build and pass tests on Windows (`bun ./cmd/build.ts`; use `bun cmd/run-unit-tests.ts -dbg` for base/test_util work). Do not break the existing Windows target while adding macOS/Linux support.
+- **Keep macOS green.** `cmd/build-mac.ts` builds the macOS dependency/base libraries, builds `test_util`, and runs it with `-for-ai`. From Windows, use the remote wrapper on a temporary branch for portability changes.
+- **Make tests platform-aware.** Preserve shared behavior tests on every platform where possible. Guard Windows-only expectations (drive letters, backslash-only paths, Win32 command-line parsing, UI/printing behavior, and similar platform specifics) with `#if OS_WIN`, and add POSIX expectations when the behavior is meant to be portable.
 
 ### Remote macOS verification from Windows
 
@@ -75,7 +76,7 @@ When doing macOS/Linux portability changes from a Windows machine, test them on 
 
 1. Create a temporary branch locally, e.g. `git switch -c tmp/mac-port-<topic>`.
 2. Commit the portability changes on that temporary branch and push it to origin, e.g. `git push -u origin tmp/mac-port-<topic>`. This temporary commit is for remote build verification; still do not make the final feature commit unless the user explicitly asks.
-3. Run the remote build from Windows with `bun cmd/build-mac-remote.ts -branch tmp/mac-port-<topic> -debug`. The script aborts if the remote checkout is dirty, fetches and switches to the temporary branch, runs the build, and restores the original remote branch or detached checkout on success or failure.
+3. Run the remote build from Windows with `bun cmd/build-mac-remote.ts -branch tmp/mac-port-<topic> -debug`. The script aborts if the remote checkout is dirty, fetches and switches to the temporary branch, builds, runs macOS `test_util`, and restores the original remote branch or detached checkout on success or failure.
 
 ## C/C++ #include conventions
 
