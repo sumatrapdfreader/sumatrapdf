@@ -5,3 +5,4 @@ readthedocs-sphinx-search==0.3.2
 sphinx==8.2.3
 sphinxcontrib-googleanalytics
 sphinxcontrib-imagesvg
+urllib3>=1.26.19 # not directly required, pinned by Snyk to avoid a vulnerability
