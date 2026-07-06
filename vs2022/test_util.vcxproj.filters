@@ -145,7 +145,7 @@
     <ClCompile Include="..\src\base\Color.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Crypto.cpp">
+    <ClCompile Include="..\src\base\Crypto_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\CssParser.cpp">

@@ -596,6 +596,7 @@ const DEP_LIBS_BASE = [
           "ByteOrderDecoder.cpp",
           "CmdLineArgsIter.cpp",
           "Color.cpp",
+          "Crypto_posix.cpp",
           "CssParser.cpp",
           "Dict.cpp",
           "File.cpp",
