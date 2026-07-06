@@ -217,6 +217,11 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
     WCHAR* pathW = CWStrTemp(path);
     return archive_read_open_filename_w(a, pathW, 10240);
 }
+#else
+static int ArchiveReadOpenFilename(struct archive* a, Str path) {
+    return archive_read_open_filename(a, CStrTemp(path), 10240);
+}
+#endif
 
 bool MultiFormatArchive::Open(IStream* stream) {
     // for IStream, read all data into memory and open from there
@@ -260,15 +265,6 @@ bool MultiFormatArchive::Open(IStream* stream) {
     free(data);
     return ok;
 }
-#else
-static int ArchiveReadOpenFilename(struct archive* a, Str path) {
-    return archive_read_open_filename(a, CStrTemp(path), 10240);
-}
-
-bool MultiFormatArchive::Open(IStream*) {
-    return false;
-}
-#endif
 
 bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive* a = archive_read_new();
@@ -482,7 +478,6 @@ MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveE
     return archive;
 }
 
-#if OS_WIN
 // Open from an IStream. libarchive auto-detects the container (zip/rar/
 // 7z/tar/etc.). Always eager-loads (can't re-open a stream); no progress
 // reporting.
@@ -494,11 +489,6 @@ MultiFormatArchive* OpenArchiveFromStream(IStream* stream) {
     }
     return archive;
 }
-#else
-MultiFormatArchive* OpenArchiveFromStream(IStream*) {
-    return nullptr;
-}
-#endif
 
 #if OS_WIN
 struct UnrarData {
