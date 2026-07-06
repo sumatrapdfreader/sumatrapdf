@@ -3,6 +3,7 @@
 
 struct archive;
 struct archive_entry;
+struct IStream;
 
 // forward-declared so ArchiveExtractProgress below can reference
 // MultiFormatArchive::FileInfo, which is defined inside the class body.

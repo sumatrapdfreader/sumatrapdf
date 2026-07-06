@@ -417,13 +417,14 @@ const DEP_LIBS_BASE = [
     name: "base",
     alwaysOptimize: false,
     defines: [],
-    includes: ["src"],
+    includes: ["src", "ext/libarchive"],
     files: [
       {
         dir: "src/base",
         patterns: [
           "Base.cpp",
           "Base_posix.cpp",
+          "Archive.cpp",
           "Arena.cpp",
           "Arena_posix.cpp",
           "ByteOrderDecoder.cpp",
@@ -440,6 +441,7 @@ const DEP_LIBS_BASE = [
           "File.cpp",
           "File_posix.cpp",
           "Geom.cpp",
+          "GuessFileType.cpp",
           "HtmlTags.cpp",
           "JsonParser.cpp",
           "SettingsUtil.cpp",
@@ -502,8 +504,6 @@ const TEST_UTIL_SOURCES = [
 ];
 
 const TEST_ENGINES_SOURCES = [
-  "src/base/GuessFileType.cpp",
-  "src/base/GuessFileType_posix.cpp",
   "src/DocProperties.cpp",
   "src/EngineBase.cpp",
   "src/EngineDjvuDec.cpp",
@@ -698,6 +698,8 @@ async function buildTestEngines(
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "liblibarchive.a"),
+    join(outDir, "lib", "libzlib.a"),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {

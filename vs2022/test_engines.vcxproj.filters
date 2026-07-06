@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="base">
-      <UniqueIdentifier>{8078947C-6CAF-950D-159C-7B1001B2110F}</UniqueIdentifier>
-    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -20,9 +17,6 @@
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec_win.cpp" />
     <ClCompile Include="..\src\TreeModel.cpp" />
-    <ClCompile Include="..\src\base\GuessFileType.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\tools\test_engines.cpp">
       <Filter>tools</Filter>
     </ClCompile>

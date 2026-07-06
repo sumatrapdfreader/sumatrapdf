@@ -884,7 +884,8 @@ workspace "SumatraPDF"
     disablewarnings { "4838" }
     includedirs { "src", "ext/djvudec" }
     test_engines_files()
-    links { "base", "djvudec" }
+    links_zlib()
+    links { "base", "djvudec", "libarchive", "unrar" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon"
