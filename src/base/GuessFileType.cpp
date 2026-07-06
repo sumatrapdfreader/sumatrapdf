@@ -5,10 +5,6 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/ByteReader.h"
-#include "base/Archive.h"
-#include "base/TgaReader.h"
-#include "base/WebpReader.h"
-#include "base/JxlReader.h"
 #include "base/GuessFileType.h"
 
 Kind kindFilePDF = "filePDF";
@@ -305,6 +301,100 @@ static Kind DetectHicAndAvif(Str d) {
     return nullptr;
 }
 
+static bool HasWebpSignature(Str d) {
+    return d.len > 12 && str::StartsWith(d, "RIFF") && str::StartsWith(Str(d.s + 8, d.len - 8), "WEBP");
+}
+
+static bool HasJxlSignature(Str d) {
+    static const u8 jxlCodestream[] = {0xff, 0x0a};
+    static const u8 jxlContainer[] = {0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a};
+
+    const u8* data = (const u8*)d.s;
+    return (d.len >= (int)sizeof(jxlCodestream) && memeq(data, jxlCodestream, (int)sizeof(jxlCodestream))) ||
+           (d.len >= (int)sizeof(jxlContainer) && memeq(data, jxlContainer, (int)sizeof(jxlContainer)));
+}
+
+#pragma pack(push, 1)
+struct TgaHeader {
+    u8 idLength;
+    u8 cmapType;
+    u8 imageType;
+    u16 cmapFirstEntry;
+    u16 cmapLength;
+    u8 cmapBitDepth;
+    u16 offsetX;
+    u16 offsetY;
+    u16 width;
+    u16 height;
+    u8 bitDepth;
+    u8 flags;
+};
+
+struct TgaFooter {
+    u32 extAreaOffset;
+    u32 devAreaOffset;
+    char signature[18];
+};
+#pragma pack(pop)
+
+static_assert(sizeof(TgaHeader) == 18);
+static_assert(sizeof(TgaFooter) == 26);
+
+static bool HasTgaVersion2Footer(const u8* data, size_t n) {
+    if (n < sizeof(TgaHeader) + sizeof(TgaFooter)) {
+        return false;
+    }
+    const TgaFooter* footer = (const TgaFooter*)(data + n - sizeof(TgaFooter));
+    return str::EqN(footer->signature, "TRUEVISION-XFILE.", sizeof(footer->signature));
+}
+
+static bool IsSupportedTgaPixelFormat(const TgaHeader* header) {
+    const u8 typePalette = 1;
+    const u8 typeTruecolor = 2;
+    const u8 typeGrayscale = 3;
+    const u8 typePaletteRle = 9;
+    const u8 typeTruecolorRle = 10;
+    const u8 typeGrayscaleRle = 11;
+    const u8 alphaMask = 0x0f;
+
+    int bits;
+    if (header->imageType == typePalette || header->imageType == typePaletteRle) {
+        if (header->cmapType != 1 || (header->bitDepth != 8 && header->bitDepth != 16)) {
+            return false;
+        }
+        bits = header->cmapBitDepth;
+    } else if (header->imageType == typeTruecolor || header->imageType == typeTruecolorRle) {
+        bits = header->bitDepth;
+    } else if (header->imageType == typeGrayscale || header->imageType == typeGrayscaleRle) {
+        return header->bitDepth == 8 && (header->flags & alphaMask) == 0;
+    } else {
+        return false;
+    }
+
+    int alphaBits = header->flags & alphaMask;
+    return (bits == 15 && alphaBits == 0) || (bits == 16 && (alphaBits == 0 || alphaBits == 1)) ||
+           (bits == 24 && alphaBits == 0) || (bits == 32 && (alphaBits == 0 || alphaBits == 8));
+}
+
+static bool HasTgaSignature(Str d) {
+    size_t n = (size_t)d.len;
+    const u8* data = (const u8*)d.s;
+    if (HasTgaVersion2Footer(data, n)) {
+        return true;
+    }
+    if (n < sizeof(TgaHeader)) {
+        return false;
+    }
+    const TgaHeader* header = (const TgaHeader*)data;
+    if (header->cmapType != 0 && header->cmapType != 1) {
+        return false;
+    }
+    if (header->flags & 0xc0) {
+        return false;
+    }
+    return IsSupportedTgaPixelFormat(header);
+}
+
 // detect file type based on file content
 Kind GuessFileTypeFromContent(Str d) {
     // TODO: sniff .fb2 content
@@ -333,119 +423,16 @@ Kind GuessFileTypeFromContent(Str d) {
     if (IsPSFileContent(d)) {
         return kindFilePS;
     }
-    if (tga::HasSignature(d)) {
+    if (HasTgaSignature(d)) {
         return kindFileTga;
     }
-    if (webp::HasSignature(d)) {
+    if (HasWebpSignature(d)) {
         return kindFileWebp;
     }
-    if (jxl::HasSignature(d)) {
+    if (HasJxlSignature(d)) {
         return kindFileJxl;
     }
     return nullptr;
-}
-
-static bool IsEpubArchive(MultiFormatArchive* archive) {
-    // assume that if this file exists, this is a epub file
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1801
-    auto* container = archive->GetFileDataByName("META-INF/container.xml");
-    if (container && container->data) {
-        return true;
-    }
-
-    auto* mimeType = archive->GetFileDataByName("mimetype");
-    if (!mimeType || !mimeType->data) {
-        return false;
-    }
-
-    char* mt = mimeType->data;
-    // trailing whitespace is allowed for the mimetype file
-    int n = mimeType->fileSizeUncompressed;
-    for (int i = n; i > 0; i--) {
-        if (!str::IsWs(mt[i - 1])) {
-            n = i;
-            break;
-        }
-        mt[i - 1] = '\0';
-        if (i == 1) {
-            n = 0;
-        }
-    }
-
-#if 0
-    // a proper EPUB document has a "mimetype" file with content
-    // "application/epub+zip" as the first entry in its ZIP structure
-    // https://web.archive.org/web/20140201013228/http://forums.fofou.org:80/sumatrapdf/topic?id=2599331&comments=6
-    if (!str::Eq(archive.GetFileName(0), L"mimetype")) {
-        return false; 
-    }
-#endif
-    Str mtStr = Str(mt, n);
-    if (str::Eq(mtStr, "application/epub+zip")) {
-        return true;
-    }
-    // also open renamed .ibooks files
-    // http://en.wikipedia.org/wiki/IBooks#Formats
-    return str::Eq(mtStr, "application/x-ibooks+zip");
-}
-
-// check if a given file is a likely a .zip archive containing XPS
-// document
-static bool IsXpsArchive(MultiFormatArchive* archive) {
-    bool res = archive->GetFileId("_rels/.rels") >= 0 || archive->GetFileId("_rels/.rels/[0].piece") >= 0 ||
-               archive->GetFileId("_rels/.rels/[0].last.piece") >= 0;
-    return res;
-}
-
-// we expect 1 file ending with .fb2
-static bool IsFb2Archive(MultiFormatArchive* archive) {
-    auto files = archive->GetFileInfos();
-    if (len(files) != 1) {
-        return false;
-    }
-    auto fi = files[0];
-    auto name = fi->name;
-    return str::EndsWithI(name, ".fb2");
-}
-
-// detect file type based on file content
-Kind GuessFileTypeFromFile(Str path) {
-    ReportIf(!path);
-    if (path::IsDirectory(path)) {
-        TempStr mimetypePath = path::JoinTemp(path, StrL("mimetype"));
-        if (file::StartsWith(mimetypePath, "application/epub+zip")) {
-            return kindFileEpub;
-        }
-        // TODO: check the content of directory for more types?
-        return nullptr;
-    }
-
-    // +1 for zero-termination
-    char buf[2048 + 1]{};
-    int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
-    if (n <= 0) {
-        return nullptr;
-    }
-
-    Str d = Str((char*)(buf), n);
-    auto res = GuessFileTypeFromContent(d);
-    if (res == kindFileZip) {
-        ArchiveExtractProgressCb emptyCb;
-        MultiFormatArchive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
-        if (archive) {
-            if (IsXpsArchive(archive)) {
-                res = kindFileXps;
-            }
-            if (IsEpubArchive(archive)) {
-                res = kindFileEpub;
-            }
-            if (IsFb2Archive(archive)) {
-                res = kindFileFb2z;
-            }
-            delete archive;
-        }
-    }
-    return res;
 }
 
 // parse an embedded-PDF path of the form "c:/foo.pdf:${pdfStreamNo}"
@@ -526,19 +513,6 @@ Kind GuessFileTypeFromName(Str path) {
     }
 
     return nullptr;
-}
-
-Kind GuessFileType(Str path, bool sniff) {
-    if (sniff) {
-        Kind kind = GuessFileTypeFromFile(path);
-        if (kind) {
-            return kind;
-        }
-        // for some file types we don't have sniffing so fall back to
-        // guess from file name
-        return GuessFileTypeFromName(path);
-    }
-    return GuessFileTypeFromName(path);
 }
 
 // clang-format off
