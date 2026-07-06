@@ -25,8 +25,10 @@ extern void SquareTreeTest();
 extern void StrFormatTest();
 extern void StrTest();
 extern void VecTest();
-extern void WinUtilTest();
 extern void StrVecTest();
+#if OS_WIN
+extern void WinUtilTest();
+#endif
 
 void GetPrintersInfo(struct str::Builder&) {
     /* stub: do nothing */
@@ -43,6 +45,7 @@ static void PrintStdout(Str s) {
     printf("%.*s", s.len, s.s);
 }
 
+#if OS_WIN
 static WStr GetExeDir() {
     static WCHAR buf[MAX_PATH];
     DWORD n = GetModuleFileNameW(nullptr, buf, dimof(buf));
@@ -77,6 +80,7 @@ static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     ExitProcess(7);
     return EXCEPTION_EXECUTE_HANDLER;
 }
+#endif
 
 int main(int argc, char** argv) {
     bool forAi = false;
@@ -94,8 +98,10 @@ int main(int argc, char** argv) {
     InitDynCalls();
     if (forAi) {
         utassert_set_for_ai(true);
+#if OS_WIN
         InitSymbolsForAi();
         SetUnhandledExceptionFilter(ForAiCrashHandler);
+#endif
     }
     BaseUtilTest();
     ByteOrderTests();
@@ -112,7 +118,9 @@ int main(int argc, char** argv) {
     StrTest();
     StrVecTest();
     VecTest();
+#if OS_WIN
     WinUtilTest();
+#endif
     SumatraPDF_UnitTests();
 
     int res = utassert_print_results();
