@@ -159,8 +159,11 @@ using BOOL = int;
 using WCHAR = wchar_t;
 using COLORREF = uint32_t;
 using LCID = uint32_t;
-using HWND = void*;
-using HDC = void*;
+
+struct HWND__;
+using HWND = HWND__*;
+struct HDC__;
+using HDC = HDC__*;
 
 struct EXCEPTION_POINTERS;
 struct MINIDUMP_EXCEPTION_INFORMATION;
