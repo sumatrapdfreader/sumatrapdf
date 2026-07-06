@@ -1,30 +1,5 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
-
-/*
-Data models for UI controls.
-Don't depend on UI subsystem because they are used in non-gui code e.g. engines.
-*/
-
-struct ListBoxModel {
-    virtual ~ListBoxModel() = default;
-    virtual int ItemsCount() = 0;
-    virtual Str Item(int) = 0;
-};
-
-using DropDownModel = ListBoxModel;
-
-struct ListBoxModelStrings : ListBoxModel {
-    StrVec strings;
-
-    ~ListBoxModelStrings() override = default;
-    int ItemsCount() override;
-    Str Item(int) override;
-};
-
-using DropDownModelStrings = ListBoxModelStrings;
-
-void FillWithItems(HWND hwnd, ListBoxModel* model);
 
 #ifndef TreeModel_h
 #define TreeModel_h

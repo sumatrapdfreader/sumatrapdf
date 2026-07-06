@@ -9,7 +9,7 @@
  * Output: out/mac-dbg64/lib/*.a (or out/mac-rel64 for -release)
  *
  * Mirrors the dependency projects in premake5.lua / premake5.files.lua.
- * Does not build src/ (SumatraPDF UI) — only third-party and mupdf libs.
+ * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
  */
 
 import { existsSync, mkdirSync, rmSync } from "node:fs";
@@ -500,6 +500,15 @@ const TEST_UTIL_SOURCES = [
   "src/tools/test_util.cpp",
 ];
 
+const TEST_ENGINES_SOURCES = [
+  "src/DocProperties.cpp",
+  "src/EngineBase.cpp",
+  "src/EngineDjvuDec.cpp",
+  "src/EngineDjvuDec_posix.cpp",
+  "src/TreeModel.cpp",
+  "src/tools/test_engines.cpp",
+];
+
 export interface MacBuildOptions {
   outDir: string;
   isRelease?: boolean;
@@ -569,6 +578,7 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   }
 
   await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, cxxFlags);
+  await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
@@ -636,6 +646,61 @@ async function buildTestUtil(
   if (code !== 0) {
     throw new Error(`test_util failed with exit code ${code}`);
   }
+}
+
+async function buildTestEngines(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Building test_engines...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
+  const includeFlags = ["-Isrc", "-Iext/djvudec"];
+
+  const units = TEST_ENGINES_SOURCES.map((src) => {
+    const obj = objPath(outDir, "test_engines", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        ...includeFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+
+  await compileAll(units, jobs);
+
+  const exePath = join(outDir, "test_engines");
+  const linkArgs = [
+    tools.cxx,
+    "-o",
+    exePath,
+    ...units.map((u) => u.obj),
+    join(outDir, "lib", "libbase.a"),
+    join(outDir, "lib", "libdjvudec.a"),
+  ];
+  const res = await spawnCmd(linkArgs);
+  if (!res.ok) {
+    throw new Error(`link test_engines failed: ${res.stderr}`);
+  }
+  console.log(`  -> ${exePath}`);
 }
 
 if (import.meta.main) {

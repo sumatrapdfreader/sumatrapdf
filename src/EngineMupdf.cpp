@@ -19,7 +19,6 @@ extern "C" {
 
 #include "Annotation.h"
 #include "DocProperties.h"
-#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
 #include "EngineAll.h"
@@ -3817,8 +3816,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     float h = isnan(ldest.h) ? DEST_USE_DEFAULT : ldest.h;
 
     RectF r(x, y, w, h);
-    auto ctrl = linkHandler->GetDocController();
-    ctrl->ScrollTo(pageNo + 1, r, zoom);
+    linkHandler->ScrollTo(pageNo + 1, r, zoom);
 }
 
 bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {

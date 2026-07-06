@@ -3,12 +3,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
-#include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "TreeModel.h"
 
-#include "DocController.h"
 #include "EngineBase.h"
 
 Kind kindPageElementDest = "dest";

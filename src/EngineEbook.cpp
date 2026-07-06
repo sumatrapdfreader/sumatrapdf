@@ -22,7 +22,6 @@
 #include "GumboHelpers.h"
 
 #include "DocProperties.h"
-#include "DocController.h"
 #include "FzImgReader.h"
 #include "EngineBase.h"
 #include "EbookBase.h"

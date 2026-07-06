@@ -9,18 +9,15 @@ extern "C" {
 }
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
 #include "base/File.h"
-#include "base/GuessFileType.h"
-#include "base/Win.h"
+#include "base/Pixmap.h"
 
-#include "wingui/UIModels.h"
-
-#include "DocController.h"
+#include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 
 Kind kindEngineDjVu = "engineDjVu";
+extern Kind kindFileDjVu;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
@@ -167,6 +164,12 @@ class EngineDjvuDec : public EngineBase {
     static void CacheUnlockCb(void* user, void* ctx);
 };
 
+void SafeReleaseDjvuDecStream(IStream*);
+EngineBase* CloneDjvuDecStream(IStream*);
+bool LoadDjvuDecStreamData(IStream*, IStream**, Str& fileData);
+Str GetDjvuDecFileData(IStream*, Str filePath);
+bool SaveDjvuDecStreamAs(IStream*, Str dstPath);
+
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
     SetDefaultExt(defaultExt, ".djvu");
@@ -183,14 +186,13 @@ EngineDjvuDec::~EngineDjvuDec() {
         djvu_ctx_free(ctx);
     }
     str::Free(fileData);
-    if (stream) {
-        stream->Release();
-    }
+    SafeReleaseDjvuDecStream(stream);
 }
 
 EngineBase* EngineDjvuDec::Clone() {
-    if (stream != nullptr) {
-        return CreateEngineDjvuDecFromStream(stream);
+    EngineBase* clone = CloneDjvuDecStream(stream);
+    if (clone) {
+        return clone;
     }
     Str path = FilePath();
     if (path) {
@@ -206,10 +208,8 @@ bool EngineDjvuDec::Load(Str fileName) {
 }
 
 bool EngineDjvuDec::Load(IStream* stm) {
-    fileData = GetDataFromStream(stm, nullptr);
-    if (len(fileData) > 0) {
-        stream = stm;
-        stream->AddRef();
+    if (!LoadDjvuDecStreamData(stm, &stream, fileData)) {
+        return false;
     }
     return FinishLoading();
 }
@@ -441,13 +441,10 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
 }
 
 // Pick the largest subsample whose decoded bitmap still covers the target pixel
-// size, so StretchBlt only shrinks (never upscales) and HALFTONE gives
-// anti-aliased edges like libdjvu. The coverage test is ceil(dim/(s+1)) >=
-// target; plain floor division (dim/target) is off by one when target doesn't
-// divide dim -- e.g. 3597/1799 == 1 even though ceil(3597/2) == 1799 still
-// covers 1799, which made high-dpi pages decode at full resolution (4x the
-// pixels) at 100% zoom. Compound pages stay at subsample=1 so the color
-// composite runs.
+// size, so final scaling only shrinks (never upscales). The coverage test is
+// ceil(dim/(s+1)) >= target; plain floor division (dim/target) is off by one
+// when target doesn't divide dim. Compound pages stay at subsample=1 so the
+// color composite runs.
 static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprightH, int targetDx, int targetDy) {
     if (pageType == DJVU_PAGE_COMPOUND) {
         return 1;
@@ -469,113 +466,36 @@ static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprig
     return subsample;
 }
 
-// create a top-down 24bpp DIB section and copy bgr into it (row-aligned)
-static HBITMAP CreateBgrDib(const u8* bgr, int dx, int dy, HANDLE* hMapOut) {
-    int stride = ((dx * 3 + 3) / 4) * 4;
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = dx;
-    bmi.bmiHeader.biHeight = -dy; // top-down
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage = stride * dy;
-
-    void* data = nullptr;
-    HANDLE hMap =
-        CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, nullptr);
-    HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hMap, 0);
-    if (hbmp && data && bgr) {
-        for (int y = 0; y < dy; y++) {
-            memcpy((u8*)data + (size_t)y * stride, bgr + (size_t)y * dx * 3, (size_t)dx * 3);
-        }
-    }
-    if (hMapOut) {
-        *hMapOut = hMap;
-    }
-    return hbmp;
+static inline int ClampInt(int v, int minVal, int maxVal) {
+    return std::min(std::max(v, minVal), maxVal);
 }
 
-// create a top-down 8bpp grayscale DIB (like EngineDjVu for bitonal pages)
-static HBITMAP CreateGray8Dib(const u8* gray, int dx, int dy, HANDLE* hMapOut) {
-    int stride = ((dx + 3) / 4) * 4;
-    BITMAPINFO* bmi = (BITMAPINFO*)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    if (!bmi) {
+static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int comp, const Rect& screen,
+                                       const Rect& full) {
+    Pixmap* res = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGR8);
+    if (!res) {
         return nullptr;
     }
-    for (int i = 0; i < 256; i++) {
-        bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = (BYTE)i;
-    }
-    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = dx;
-    bmi->bmiHeader.biHeight = -dy;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biBitCount = 8;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    bmi->bmiHeader.biClrUsed = 256;
-    bmi->bmiHeader.biSizeImage = stride * dy;
 
-    void* data = nullptr;
-    HANDLE hMap =
-        CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi->bmiHeader.biSizeImage, nullptr);
-    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &data, hMap, 0);
-    if (hbmp && data && gray) {
-        for (int y = 0; y < dy; y++) {
-            memcpy((u8*)data + (size_t)y * stride, gray + (size_t)y * dx, (size_t)dx);
+    double sx = (double)srcDx / (double)full.dx;
+    double sy = (double)srcDy / (double)full.dy;
+    for (int y = 0; y < screen.dy; y++) {
+        int srcY = ClampInt((int)(((screen.y - full.y) + y + 0.5) * sy), 0, srcDy - 1);
+        u8* dst = res->data + (size_t)y * res->stride;
+        for (int x = 0; x < screen.dx; x++) {
+            int srcX = ClampInt((int)(((screen.x - full.x) + x + 0.5) * sx), 0, srcDx - 1);
+            const u8* sp = src + ((size_t)srcY * srcDx + srcX) * comp;
+            if (comp == 1) {
+                dst[0] = sp[0];
+                dst[1] = sp[0];
+                dst[2] = sp[0];
+            } else {
+                dst[0] = sp[0];
+                dst[1] = sp[1];
+                dst[2] = sp[2];
+            }
+            dst += 3;
         }
-    }
-    free(bmi);
-    if (hMapOut) {
-        *hMapOut = hMap;
-    }
-    return hbmp;
-}
-
-static RenderedBitmap* StretchDibToScreen(HBITMAP srcBmp, HANDLE srcMap, int rdx, int rdy, const Rect& screen,
-                                          const Rect& full, bool isBitonal) {
-    HANDLE dstMap = nullptr;
-    int ddx = screen.dx;
-    int ddy = screen.dy;
-    HBITMAP dstBmp = isBitonal ? CreateGray8Dib(nullptr, ddx, ddy, &dstMap) : CreateBgrDib(nullptr, ddx, ddy, &dstMap);
-    RenderedBitmap* res = nullptr;
-    if (dstBmp) {
-        HDC hdc = GetDC(nullptr);
-        HDC srcDC = CreateCompatibleDC(hdc);
-        HDC dstDC = CreateCompatibleDC(hdc);
-        HGDIOBJ oldSrc = SelectObject(srcDC, srcBmp);
-        HGDIOBJ oldDst = SelectObject(dstDC, dstBmp);
-        double sx = (double)rdx / full.dx;
-        double sy = (double)rdy / full.dy;
-        int srcX = (int)(screen.x * sx);
-        int srcY = (int)(screen.y * sy);
-        int srcW = (int)(screen.dx * sx + 0.5);
-        int srcH = (int)(screen.dy * sy + 0.5);
-        if (srcW < 1) {
-            srcW = 1;
-        }
-        if (srcH < 1) {
-            srcH = 1;
-        }
-        bool sameSize = (srcW == ddx && srcH == ddy);
-        if (sameSize && screen.x == 0 && screen.y == 0) {
-            BitBlt(dstDC, 0, 0, ddx, ddy, srcDC, srcX, srcY, SRCCOPY);
-        } else {
-            SetStretchBltMode(dstDC, HALFTONE);
-            SetBrushOrgEx(dstDC, 0, 0, nullptr);
-            StretchBlt(dstDC, 0, 0, ddx, ddy, srcDC, srcX, srcY, srcW, srcH, SRCCOPY);
-        }
-        SelectObject(srcDC, oldSrc);
-        SelectObject(dstDC, oldDst);
-        DeleteDC(srcDC);
-        DeleteDC(dstDC);
-        ReleaseDC(nullptr, hdc);
-        res = new RenderedBitmap(dstBmp, screen.Size(), dstMap);
-    } else if (dstMap) {
-        CloseHandle(dstMap);
-    }
-    DeleteObject(srcBmp);
-    if (srcMap) {
-        CloseHandle(srcMap);
     }
     return res;
 }
@@ -602,9 +522,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
 
     // Query the output geometry, then render straight into our own buffer (BGR
     // for color, since djvu_ctx_set_bgr is on) -- no intermediate djvu_image and
-    // no separate RGB->BGR/copy pass. (A further optimization would render_into
-    // the DIB bits directly to also drop the CreateBgrDib copy; kept as a plain
-    // buffer here to preserve the user-rotate path below.)
+    // no separate RGB->BGR/copy pass.
     djvu_render_info ri{};
     if (djvu_page_render_info(doc, pageNo - 1, subsample, &ri) != 0) {
         return nullptr;
@@ -635,31 +553,18 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         }
     }
 
-    HANDLE srcMap = nullptr;
-    HBITMAP srcBmp = isBitonal ? CreateGray8Dib(rotated, rdx, rdy, &srcMap) : CreateBgrDib(rotated, rdx, rdy, &srcMap);
+    Pixmap* res = ScaleDjvuPixelsToPixmap(rotated, rdx, rdy, comp, screen, full);
     free(rotated);
-    if (!srcBmp) {
-        if (srcMap) {
-            CloseHandle(srcMap);
-        }
-        return nullptr;
-    }
-
-    return PixmapFromRenderedBitmap(StretchDibToScreen(srcBmp, srcMap, rdx, rdy, screen, full, isBitonal));
+    return res;
 }
 
 Str EngineDjvuDec::GetFileData() {
-    return GetStreamOrFileData(stream, FilePath());
+    return GetDjvuDecFileData(stream, FilePath());
 }
 
 bool EngineDjvuDec::SaveFileAs(Str dstPath) {
-    if (stream) {
-        Str d = GetDataFromStream(stream, nullptr);
-        bool ok = len(d) > 0 && file::WriteFile(dstPath, d);
-        str::Free(d);
-        if (ok) {
-            return true;
-        }
+    if (SaveDjvuDecStreamAs(stream, dstPath)) {
+        return true;
     }
     Str srcPath = FilePath();
     if (!srcPath) {
@@ -801,13 +706,12 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
     }
     auto ddest = (PageDestinationDjvuDec*)dest;
     Str link = ddest->link;
-    auto ctrl = linkHandler->GetDocController();
     if (str::Eq(link, "#+1")) {
-        ctrl->GoToNextPage();
+        linkHandler->GoToNextPage();
         return true;
     }
     if (str::Eq(link, "#-1")) {
-        ctrl->GoToPrevPage();
+        linkHandler->GoToPrevPage();
         return true;
     }
     if (DjvuDecCouldBeURL(link)) {
@@ -825,7 +729,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
         logf("EngineDjvuDec::HandleLink: invalid link '%s'\n", link);
         return false;
     }
-    ctrl->GoToPage(pageNo, true);
+    linkHandler->GoToPage(pageNo, true);
     return true;
 }
 

@@ -4,6 +4,23 @@
 struct fz_outline;
 struct fz_link;
 struct Pixmap;
+struct RenderedBitmap;
+struct IPageDestination;
+struct TocItem;
+
+struct ILinkHandler {
+    virtual ~ILinkHandler() {};
+    virtual void GotoLink(IPageDestination*) = 0;
+    virtual void GotoNamedDest(Str) = 0;
+    virtual void GoToPage(int pageNo, bool addNavPoint) = 0;
+    virtual bool GoToNextPage() = 0;
+    virtual bool GoToPrevPage(bool toBottom = false) = 0;
+    virtual void ScrollTo(IPageDestination*) = 0;
+    virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
+    virtual void LaunchURL(Str) = 0;
+    virtual void LaunchFile(Str path, IPageDestination*) = 0;
+    virtual IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) = 0;
+};
 
 enum class PageInfoState {
     Unknown,
@@ -446,7 +463,7 @@ class EngineBase {
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
     virtual RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View);
 
-    // renders a page into a cacheable RenderedBitmap
+    // renders a page into a cacheable Pixmap
     // (*cookie_out must be deleted after the call returns)
     virtual Pixmap* RenderPage(RenderPageArgs& args) = 0;
 

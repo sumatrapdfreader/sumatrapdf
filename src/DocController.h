@@ -6,6 +6,7 @@ struct ChmModel;
 struct DisplayModel;
 struct IPageElement;
 struct IPageDestination;
+struct ILinkHandler;
 struct TocTree;
 struct TocItem;
 struct MainWindow;
@@ -14,17 +15,6 @@ struct RenderedBitmap;
 enum class DisplayMode;
 
 using OnBitmapRendered = Func1<RenderedBitmap*>;
-
-struct ILinkHandler {
-    virtual ~ILinkHandler() {};
-    virtual DocController* GetDocController() = 0;
-    virtual void GotoLink(IPageDestination*) = 0;
-    virtual void GotoNamedDest(Str) = 0;
-    virtual void ScrollTo(IPageDestination*) = 0;
-    virtual void LaunchURL(Str) = 0;
-    virtual void LaunchFile(Str path, IPageDestination*) = 0;
-    virtual IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) = 0;
-};
 
 struct DocControllerCallback {
     virtual ~DocControllerCallback() = default;

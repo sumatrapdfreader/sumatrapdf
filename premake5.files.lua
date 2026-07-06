@@ -189,6 +189,7 @@ end
 
 function libarchive_files()
   files { "ext/libarchive/libarchive/*.h" }
+  removefiles { "ext/libarchive/libarchive/config_linux.h" }
   files_in_dir("ext/libarchive/libarchive", {
     -- core
     "archive_acl.c",
@@ -915,6 +916,7 @@ function sumatrapdf_files()
     "Toolbar.*",
     "TranslationLangs.cpp",
     "Translations.*",
+    "TreeModel.*",
     "Uninstaller.cpp",
     "UpdateCheck.*",
     "Version.h",
@@ -1072,6 +1074,7 @@ function engines_files()
     "EngineBase.*",
     "EngineCreate.*",
     "EngineDjvuDec.*",
+    "EngineDjvuDec_win.cpp",
     "EngineEbook.*",
     "EngineImages.*",
     "EngineMupdf.*",
@@ -1495,6 +1498,21 @@ function test_util_files()
   })
 end
 
+function test_engines_files()
+  files {
+    "src/DocProperties.cpp",
+    "src/DocProperties.h",
+    "src/EngineAll.h",
+    "src/EngineBase.cpp",
+    "src/EngineBase.h",
+    "src/EngineDjvuDec.cpp",
+    "src/EngineDjvuDec_win.cpp",
+    "src/TreeModel.cpp",
+    "src/TreeModel.h",
+    "src/tools/test_engines.cpp",
+  }
+end
+
 function pdf_preview_files()
   files_in_dir("src/previewer", {
     "PdfPreview.*",
@@ -1512,6 +1530,7 @@ function pdf_preview_files()
     "EngineAll.h",
     "EngineBase.*",
     "EngineDjvuDec.*",
+    "EngineDjvuDec_win.cpp",
     "EngineEbook.*",
     "EngineImages.*",
     "EngineMupdf.*",
