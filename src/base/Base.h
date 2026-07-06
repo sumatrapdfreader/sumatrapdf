@@ -147,17 +147,25 @@ using i64 = int64_t;
 using u64 = uint64_t;
 using uint = unsigned int;
 
+#if OS_WIN
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
+using AtomicRefCount = volatile LONG;
+#else
+using AtomicBool = volatile int;
+using AtomicInt = volatile int;
+using AtomicRefCount = volatile int;
+#endif
 
 bool AtomicBoolGet(AtomicBool* p);
 void AtomicBoolSet(AtomicBool* p, bool v);
-
 int AtomicIntGet(AtomicInt* p);
 void AtomicIntSet(AtomicInt* p, int v);
 int AtomicIntAdd(AtomicInt* p, int v);
 int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
+int AtomicRefCountAdd(AtomicRefCount* v);
+int AtomicRefCountDec(AtomicRefCount* v);
 
 struct Arena;
 
@@ -479,10 +487,6 @@ int ListLen(T* root) {
     }
     return n;
 }
-
-using AtomicRefCount = volatile LONG;
-int AtomicRefCountAdd(AtomicRefCount* v);
-int AtomicRefCountDec(AtomicRefCount* v);
 
 /*
 Poor-man's manual dynamic typing.
