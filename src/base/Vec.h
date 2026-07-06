@@ -55,7 +55,7 @@ class Vec {
             newEls = (T*)Realloc(allocator, els, allocSize, (size_t)len * kElSize);
         }
         if (!newEls) {
-            ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
+            ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
             return false;
         }
         els = newEls;

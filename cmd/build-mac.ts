@@ -411,6 +411,18 @@ function makeUnrar(): LibDef {
 }
 
 const DEP_LIBS_BASE = [
+  {
+    name: "base",
+    alwaysOptimize: false,
+    defines: [],
+    includes: ["src"],
+    files: [
+      {
+        dir: "src/base",
+        patterns: ["Base.cpp", "Base_posix.cpp", "Str.cpp"],
+      },
+    ],
+  },
   zlib,
   makeUnrar,
   makeLibdjvu,

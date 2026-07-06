@@ -2242,9 +2242,9 @@ static Str TxtFileToHTML(Str path) {
         return {};
     }
 
-    InterlockedIncrement(&gAllowAllocFailure);
+    AtomicIntInc(&gAllowAllocFailure);
     defer {
-        InterlockedDecrement(&gAllowAllocFailure);
+        AtomicIntDec(&gAllowAllocFailure);
     };
 
     TempStr data = fd;

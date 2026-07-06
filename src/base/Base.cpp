@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
 #include "base/FileWatcher.h"
 
 static Str gFileWatcherSkipPath;
@@ -18,7 +17,7 @@ Str FileWatcherGetSkipPath() {
 Kind kindNone = "none";
 
 // if > 1 we won't crash when memory allocation fails
-LONG gAllowAllocFailure = 0;
+AtomicInt gAllowAllocFailure = 0;
 
 // This exits so that I can add temporary instrumentation
 // to catch allocations of a given size and it won't cause

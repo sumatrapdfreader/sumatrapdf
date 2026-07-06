@@ -1560,9 +1560,9 @@ static TempStr DecompressTcrTextTemp(Str data) {
     }
 
     str::Builder text(data.len * 2);
-    InterlockedIncrement(&gAllowAllocFailure);
+    AtomicIntInc(&gAllowAllocFailure);
     defer {
-        InterlockedDecrement(&gAllowAllocFailure);
+        AtomicIntDec(&gAllowAllocFailure);
     };
 
     Str rest = curr;

@@ -73,9 +73,9 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
         if (0 == dwRead) {
             break;
         }
-        InterlockedIncrement(&gAllowAllocFailure);
+        AtomicIntInc(&gAllowAllocFailure);
         bool ok = rspOut->data.Append(Str(buf, (int)dwRead));
-        InterlockedDecrement(&gAllowAllocFailure);
+        AtomicIntDec(&gAllowAllocFailure);
         if (!ok) {
             logf("HttpGet: data.Append failed\n");
             goto Error;

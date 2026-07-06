@@ -33,7 +33,7 @@
 #define IS_INTEL_64 1
 #define IS_INTEL_32 0
 #define IS_ARM_64 0
-#elif defined(_M_ARM64)
+#elif defined(_M_ARM64) || defined(__aarch64__) || defined(__arm64__)
 #define IS_INTEL_64 0
 #define IS_INTEL_32 0
 #define IS_ARM_64 1
@@ -44,6 +44,8 @@
 /* OS_POSIX - Any POSIX-like system */
 #if OS_DARWIN || OS_LINUX || defined(unix) || defined(__unix) || defined(__unix__)
 #define OS_POSIX 1
+#else
+#define OS_POSIX 0
 #endif
 
 #if defined(_MSC_VER)
@@ -61,7 +63,7 @@
 #if defined(__clang__)
 #define COMPILER_CLANG 1
 #else
-#define COMPILER_CLAGN 0
+#define COMPILER_CLANG 0
 #endif
 
 #if defined(__MINGW32__)
@@ -83,6 +85,27 @@
 
 #include "BuildConfig.h"
 
+// C/C++ standard headers  we use often
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <new>       // for placement new
+#include <algorithm> // for std::min, std::max
+#include <utility>   // for std::forward
+#if OS_POSIX
+#include <pthread.h>
+#include <strings.h>
+#endif
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+#if OS_WIN
 #define NOMINMAX
 #include <winsock2.h> // must include before <windows.h>
 #include <windows.h>
@@ -124,18 +147,57 @@
 #ifndef PropertyTagExifWhiteBalance
 #define PropertyTagExifWhiteBalance ((PROPID)0xA403)
 #endif
+#else
+using BYTE = uint8_t;
+using WORD = uint16_t;
+using DWORD = uint32_t;
+using UINT = unsigned int;
+using LONG = int32_t;
+using BOOL = int;
+using WCHAR = wchar_t;
+using COLORREF = uint32_t;
+using LCID = uint32_t;
 
-// C/C++ standard headers  we use often
-#include <time.h>
-#include <new>       // for placement new
-#include <algorithm> // for std::min, std::max
-#include <utility>   // for std::forward
-#if OS_DARWIN || OS_LINUX
-#include <pthread.h>
+#define LOCALE_USER_DEFAULT 0
+
+struct POINT {
+    LONG x;
+    LONG y;
+};
+
+struct RECT {
+    LONG left;
+    LONG top;
+    LONG right;
+    LONG bottom;
+};
+
+struct SIZE {
+    LONG cx;
+    LONG cy;
+};
+
+namespace Gdiplus {
+struct Point {
+    int X;
+    int Y;
+};
+struct PointF {
+    float X;
+    float Y;
+};
+struct Rect {
+    int X;
+    int Y;
+    int Width;
+    int Height;
+};
+struct RectF;
+struct Color;
+} // namespace Gdiplus
+
+#define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
 #endif
-
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 using i8 = int8_t;
 using u8 = uint8_t;
@@ -235,9 +297,11 @@ struct VecStr {
 
 #if COMPILER_MSVC
 #define NO_INLINE __declspec(noinline)
+#define FORCEINLINE __forceinline
 #else
 // assuming gcc or similar
 #define NO_INLINE __attribute__((noinline))
+#define FORCEINLINE inline __attribute__((always_inline))
 #endif
 
 #define NoOp() ((void)0)
@@ -700,7 +764,7 @@ int setMinMax(int& v, int minVal, int maxVal);
 
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
-extern LONG gAllowAllocFailure;
+extern AtomicInt gAllowAllocFailure;
 
 /* How to use:
 defer { free(tools_filename); };
