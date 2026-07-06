@@ -2,8 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/File.h"
-#include "base/Win.h"
 
 #include "base/CmdLineArgsIter.h"
 
@@ -43,52 +41,6 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
     return ToStrTemp(res);
 }
 
-#if defined(REMOVE_FIRST_ARG)
-void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
-    int nArgs;
-    // CommandLineToArgvW reads a NUL-terminated string; cmdLine (a WStr) may be
-    // a non-terminated view, so use a terminated copy
-    WCHAR** argsArr = CommandLineToArgvW(CWStrTemp(cmdLine), &nArgs);
-    for (int i = 0; i < nArgs; i++) {
-        TempStr arg = ToUtf8Temp(argsArr[i]);
-        // ignore empty quoted strings ("")
-        if (len(arg) == 0) {
-            continue;
-        }
-        argsOut.Append(arg);
-    }
-    LocalFree(argsArr);
-}
-#else
-void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
-    int nArgs;
-    // CommandLineToArgvW reads a NUL-terminated string; cmdLine (a WStr) may be
-    // a non-terminated view, so use a terminated copy
-    WCHAR** argsArr = CommandLineToArgvW(CWStrTemp(cmdLine), &nArgs);
-    TempStr exePath = GetSelfExePathTemp();
-    for (int i = 0; i < nArgs; i++) {
-        TempStr arg = ToUtf8Temp(argsArr[i]);
-        // sometimes cmd-line args have exe as first argument, sometimes not
-        // to handle both possibilities we filter out first arg if it is path
-        // of our executable, case-insensitive because not all filesystems
-        if (i == 0 && path::IsSame(arg, exePath)) {
-            continue;
-        }
-        // ignore empty quoted strings ("")
-        if (len(arg) == 0) {
-            continue;
-        }
-        argsOut.Append(arg);
-    }
-    LocalFree(argsArr);
-}
-#endif
-
-void ParseCmdLine(Str cmdLine, StrVec& argsOut) {
-    TempWStr s = ToWStrTemp(cmdLine);
-    ParseCmdLine(s, argsOut);
-}
-
 bool CouldBeArg(Str s) {
     if (!s) {
         return false;
@@ -97,8 +49,18 @@ bool CouldBeArg(Str s) {
     return (c == '-') || (c == '/');
 }
 
-CmdLineArgsIter::CmdLineArgsIter(WStr cmdLine) {
-    ParseCmdLine(cmdLine, args);
+void BuildCmdLineArgs(int argc, char** argv, StrVec& argsOut) {
+    for (int i = 0; i < argc; i++) {
+        Str arg(argv[i]);
+        if (len(arg) == 0) {
+            continue;
+        }
+        argsOut.Append(arg);
+    }
+}
+
+CmdLineArgsIter::CmdLineArgsIter(int argc, char** argv) {
+    BuildCmdLineArgs(argc, argv, args);
     nArgs = len(args);
 #if defined(REMOVE_FIRST_ARG)
     curr = 1;

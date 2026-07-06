@@ -484,6 +484,7 @@
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp" />
     <ClCompile Include="..\src\base\ByteWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />
     <ClCompile Include="..\src\base\Color.cpp" />
     <ClCompile Include="..\src\base\DirIter.cpp" />
     <ClCompile Include="..\src\base\Dpi.cpp" />

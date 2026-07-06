@@ -164,6 +164,9 @@
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Color.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

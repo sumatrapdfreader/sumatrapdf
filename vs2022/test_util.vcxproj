@@ -933,6 +933,7 @@
     <ClCompile Include="..\src\base\Base_win.cpp" />
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />
     <ClCompile Include="..\src\base\Color.cpp" />
     <ClCompile Include="..\src\base\Crypto.cpp" />
     <ClCompile Include="..\src\base\CssParser.cpp" />

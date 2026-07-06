@@ -139,6 +139,9 @@
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Color.cpp">
       <Filter>base</Filter>
     </ClCompile>
