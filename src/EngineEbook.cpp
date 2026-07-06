@@ -367,9 +367,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     ScopedMutex scope(&pagesAccess);
 
     AtomicIntInc(&gAllowAllocFailure);
-    defer {
-        AtomicIntDec(&gAllowAllocFailure);
-    };
+    AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 
     str::Builder content;
     Vec<Rect> coords;
@@ -1530,9 +1528,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
             return;
         }
         AtomicIntInc(&gAllowAllocFailure);
-        defer {
-            AtomicIntDec(&gAllowAllocFailure);
-        };
+        AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
         TempStr pageHtml = doc->GetDataTemp(plainUrl);
         if (!pageHtml) {
             return;

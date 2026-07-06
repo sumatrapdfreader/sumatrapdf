@@ -817,9 +817,7 @@ static void FindThread(FindThreadData* ftd) {
 
     auto engine = dm->GetEngine();
     engine->AddRef();
-    defer {
-        SafeEngineRelease(&engine);
-    };
+    AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engine);
 
     TextSel* rect;
     textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);

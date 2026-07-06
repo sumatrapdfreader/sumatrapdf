@@ -2342,9 +2342,7 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
     if (!lib) {
         return false;
     }
-    defer {
-        FreeLibrary(lib);
-    };
+    AutoCall freeLibrary(FreeLibrary, lib);
 
     bool ok = false;
     typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);

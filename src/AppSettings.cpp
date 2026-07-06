@@ -598,9 +598,7 @@ bool SaveSettings() {
     }
     TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
     Str prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefs);
-    defer {
-        str::Free(prefs);
-    };
+    AutoCall freePrefs((void (*)(Str))str::Free, prefs);
     ReportIf(len(prefs) == 0);
     if (len(prefs) == 0) {
         return false;

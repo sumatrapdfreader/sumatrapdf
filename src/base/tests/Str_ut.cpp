@@ -539,9 +539,7 @@ void StrTest() {
 // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
         char* strA = strconv::WStrToAnsi(TEXT(TEST_STRING)).s;
-        defer {
-            free(strA);
-        };
+        AutoCall freeStrA(free, (void*)strA);
         utassert(str::Eq(strA, TEST_STRING));
         auto res = strconv::AnsiToWStrTemp(Str(strA));
         utassert(wstr::Eq(res, TEXT(TEST_STRING)));

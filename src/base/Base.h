@@ -770,8 +770,8 @@ int setMinMax(int& v, int minVal, int maxVal);
 extern AtomicInt gAllowAllocFailure;
 
 /* How to use:
-defer { free(tools_filename); };
-defer { fclose(f); };
+AutoCall freeToolsFileName(free, (void*)tools_filename);
+AutoCall closeFile(fclose, f);
 defer { instance->Release(); };
 */
 

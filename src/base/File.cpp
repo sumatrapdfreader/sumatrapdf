@@ -7,7 +7,6 @@
 #include "base/Win.h"
 #include "base/WinDynCalls.h"
 
-
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
@@ -689,9 +688,7 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
     if (!fp) {
         return {};
     }
-    defer {
-        fclose(fp);
-    };
+    AutoCall closeFile(fclose, fp);
     res = fseek(fp, 0, SEEK_END);
     if (res != 0) {
         return {};

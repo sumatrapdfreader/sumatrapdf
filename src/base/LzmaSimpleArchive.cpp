@@ -285,9 +285,7 @@ bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
         return false;
     }
 
-    defer {
-        Free(allocator, (void*)d.s);
-    };
+    AutoCall freeData(Free, allocator, (void*)d.s);
 
     SimpleArchive archive;
     bool ok = ParseSimpleArchive((u8*)d.s, d.len, &archive);

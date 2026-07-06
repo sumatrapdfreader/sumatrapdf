@@ -2243,9 +2243,7 @@ static Str TxtFileToHTML(Str path) {
     }
 
     AtomicIntInc(&gAllowAllocFailure);
-    defer {
-        AtomicIntDec(&gAllowAllocFailure);
-    };
+    AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 
     TempStr data = fd;
     data = str::ReplaceTemp(data, StrL("&"), StrL("&amp;"));
