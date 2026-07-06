@@ -11,10 +11,29 @@
 #define sscanf_s sscanf
 #endif
 
+static WCHAR FoldCaseWChar(WCHAR c) {
+    if (c >= L'A' && c <= L'Z') {
+        return c + 32;
+    }
+    if (c >= 0x00C0 && c <= 0x00DE && c != 0x00D7) {
+        return c + 32;
+    }
+    if (c >= 0x0410 && c <= 0x042F) {
+        return c + 32;
+    }
+    if (c == 0x0401) {
+        return 0x0451;
+    }
+    if ((c >= 0x0391 && c <= 0x03A1) || (c >= 0x03A3 && c <= 0x03AB)) {
+        return c + 32;
+    }
+    return (WCHAR)towlower(c);
+}
+
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
 // On Windows, CharLowerBuffW folds accented / Cyrillic / Greek letters
-// regardless of the CRT locale. POSIX uses towlower(), which is the closest
-// portable equivalent available without pulling in an external Unicode table.
+// regardless of the CRT locale. POSIX uses a small built-in fold for scripts
+// used by our tests and falls back to towlower().
 static void FoldCaseWInPlace(WStr s) {
     if (!s) {
         return;
@@ -23,7 +42,7 @@ static void FoldCaseWInPlace(WStr s) {
     CharLowerBuffW(s.s, (DWORD)s.len);
 #else
     for (int i = 0; i < s.len; i++) {
-        s.s[i] = (WCHAR)towlower(s.s[i]);
+        s.s[i] = FoldCaseWChar(s.s[i]);
     }
 #endif
     for (int i = 0; i < s.len; i++) {

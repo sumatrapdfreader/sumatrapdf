@@ -336,6 +336,7 @@ FileArgs* ParseFileArgs(Str path) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
+#if OS_WIN
 void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
@@ -783,3 +784,4 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
     }
 }
+#endif

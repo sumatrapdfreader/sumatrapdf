@@ -154,9 +154,12 @@ using WORD = uint16_t;
 using DWORD = uint32_t;
 using DWORD64 = uint64_t;
 using UINT = unsigned int;
+using UINT_PTR = uintptr_t;
 using LONG = int32_t;
 using BOOL = int;
 using WCHAR = wchar_t;
+using WPARAM = uintptr_t;
+using LPARAM = intptr_t;
 using COLORREF = uint32_t;
 using LCID = uint32_t;
 
@@ -164,6 +167,11 @@ struct HWND__;
 using HWND = HWND__*;
 struct HDC__;
 using HDC = HDC__*;
+struct HIMAGELIST__;
+using HIMAGELIST = HIMAGELIST__*;
+struct HTREEITEM__;
+using HTREEITEM = HTREEITEM__*;
+using LPWSTR = WCHAR*;
 
 struct EXCEPTION_POINTERS;
 struct MINIDUMP_EXCEPTION_INFORMATION;
@@ -176,6 +184,9 @@ struct FILETIME {
 #define CP_ACP 0
 #define CP_UTF8 65001
 #define LOCALE_USER_DEFAULT 0
+#define LOCALE_INVARIANT 0
+#define __TEXT(s) L##s
+#define TEXT(s) __TEXT(s)
 constexpr int MAX_PATH = 4096;
 constexpr int URLZONE_INVALID = -1;
 constexpr int URLZONE_INTERNET = 3;
