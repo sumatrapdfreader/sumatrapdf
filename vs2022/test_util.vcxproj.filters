@@ -160,7 +160,7 @@
     <ClCompile Include="..\src\base\DirScan.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Dpi.cpp">
+    <ClCompile Include="..\src\base\Dpi_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">

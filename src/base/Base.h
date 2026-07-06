@@ -158,6 +158,8 @@ using BOOL = int;
 using WCHAR = wchar_t;
 using COLORREF = uint32_t;
 using LCID = uint32_t;
+using HWND = void*;
+using HDC = void*;
 
 struct FILETIME {
     DWORD dwLowDateTime;
