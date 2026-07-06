@@ -3,17 +3,20 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgsIter.h"
+#if OS_WIN
 #include "base/Win.h"
+#endif
 
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Flags.h"
+#if OS_WIN
 #include "Print.h"
+#endif
 #include "SumatraLog.h"
-#ifndef SUMATRA_TEST_UTIL
+#if OS_WIN && !defined(SUMATRA_TEST_UTIL)
 #include "Translations.h"
 #endif
-
 
 // @gen-start flags
 // clang-format off
@@ -69,6 +72,7 @@ static SeqStrings gArgNames =
 // clang-format on
 // @gen-end flags
 
+#if OS_WIN
 void ShowPrintersDialog() {
     str::Builder out;
 
@@ -85,6 +89,17 @@ void ShowPrintersDialog() {
     ShowTextInWindowDialog("SumatraPDF - Show Printers", ToStr(out));
 #endif
 }
+#else
+static TempStr GetDefaultPrinterNameTemp() {
+    return {};
+}
+
+static TempStr ResolveLnkTemp(Str path) {
+    return str::DupTemp(path);
+}
+
+void ShowPrintersDialog() {}
+#endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
@@ -610,9 +625,9 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(param.s[0])) {
                 i.pluginURL = str::Dup(a, param);
-                i.hwndPluginParent = (HWND)(INT_PTR)ParseInt64(args.EatParam());
+                i.hwndPluginParent = (HWND)(intptr_t)ParseInt64(args.EatParam());
             } else {
-                i.hwndPluginParent = (HWND)(INT_PTR)ParseInt64(param);
+                i.hwndPluginParent = (HWND)(intptr_t)ParseInt64(param);
             }
             continue;
         }
