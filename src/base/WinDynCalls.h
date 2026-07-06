@@ -11,6 +11,10 @@ You can test if a function is available with if (DynSetProcessDEPPolicy).
 The intent is to standardize how we do it.
 */
 
+void InitDynCalls();
+
+#if OS_WIN
+
 // as an exception, we include system headers needed for the calls that we dynamically load
 #include <windows.h>
 #include <dwmapi.h>
@@ -149,8 +153,6 @@ DBGHELP_API_LIST(API_DECLARATION2)
 #undef API_DECLARATION
 #undef API_DECLARATION2
 
-void InitDynCalls();
-
 // convenience wrappers
 namespace theme {
 
@@ -185,3 +187,5 @@ BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGe
 
 void NoDllHijacking();
 void PrioritizeSystemDirectoriesForDllLoad();
+
+#endif

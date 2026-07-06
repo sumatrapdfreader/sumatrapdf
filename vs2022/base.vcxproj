@@ -940,7 +940,7 @@
     <ClCompile Include="..\src\base\UITask.cpp" />
     <ClCompile Include="..\src\base\WebpReader.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
-    <ClCompile Include="..\src\base\WinDynCalls.cpp" />
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />
     <ClCompile Include="..\src\base\Zip.cpp" />
     <ClCompile Include="..\src\base\windrawlib.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

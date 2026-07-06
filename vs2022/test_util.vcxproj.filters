@@ -208,7 +208,7 @@
     <ClCompile Include="..\src\base\Win.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\WinDynCalls.cpp">
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Base_ut.cpp">

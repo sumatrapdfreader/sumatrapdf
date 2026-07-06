@@ -215,7 +215,7 @@
     <ClCompile Include="..\src\base\Win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\WinDynCalls.cpp">
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">

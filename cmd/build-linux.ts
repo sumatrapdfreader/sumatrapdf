@@ -611,6 +611,7 @@ const DEP_LIBS_BASE = [
           "StrQueue.cpp",
           "Thread.cpp",
           "UtAssert.cpp",
+          "WinDynCalls_posix.cpp",
           "Str.cpp",
           "StrUtf8.cpp",
           "StrFormatParse.cpp",

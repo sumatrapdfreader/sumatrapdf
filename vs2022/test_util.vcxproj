@@ -956,7 +956,7 @@
     <ClCompile Include="..\src\base\Strconv.cpp" />
     <ClCompile Include="..\src\base\UtAssert.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
-    <ClCompile Include="..\src\base\WinDynCalls.cpp" />
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />
     <ClCompile Include="..\src\base\tests\Base_ut.cpp" />
     <ClCompile Include="..\src\base\tests\ByteOrderDecoder_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Crypto_ut.cpp" />

@@ -501,7 +501,7 @@
     <ClCompile Include="..\src\base\Strconv.cpp" />
     <ClCompile Include="..\src\base\Thread.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
-    <ClCompile Include="..\src\base\WinDynCalls.cpp" />
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

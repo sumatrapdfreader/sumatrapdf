@@ -38,7 +38,8 @@ function makelzsa_files()
     "StrUtf8.*",
     "StrVec.*",
     "Thread.*",
-    "WinDynCalls.*",
+    "WinDynCalls.h",
+    "WinDynCalls_win.cpp",
     "Win.*",
   })
 
@@ -1032,7 +1033,8 @@ function base_files()
     "Vec.h",
     "WebpReader.*",
     "JxlReader.*",
-    "WinDynCalls.*",
+    "WinDynCalls.h",
+    "WinDynCalls_win.cpp",
     "Win.*",
     "Zip.*",
   })
@@ -1466,7 +1468,8 @@ function test_util_files()
     "tests/*",
     "UtAssert.*",
     "Vec.*",
-    "WinDynCalls.*",
+    "WinDynCalls.h",
+    "WinDynCalls_win.cpp",
     "Win.*",
   })
   files_in_dir("src", {
@@ -1589,7 +1592,8 @@ function pdf_preview2_files()
     "base/StrFormatParse.*",
     "base/Str.*",
     "base/StrVec.*",
-    "base/WinDynCalls.*",
+    "base/WinDynCalls.h",
+    "base/WinDynCalls_win.cpp",
     "base/Win.*",
   })
 end
@@ -1620,7 +1624,8 @@ function search_filter2_files()
     "base/StrFormatParse.*",
     "base/Str.*",
     "base/StrVec.*",
-    "base/WinDynCalls.*",
+    "base/WinDynCalls.h",
+    "base/WinDynCalls_win.cpp",
     "base/Win.*",
   })
 end
