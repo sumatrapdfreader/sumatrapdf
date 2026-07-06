@@ -5,6 +5,7 @@
  *   bun cmd/build-mac-remote.ts -branch tmp/mac-port-foo
  *   bun cmd/build-mac-remote.ts -branch tmp/mac-port-foo -debug
  *   bun cmd/build-mac-remote.ts -branch tmp/mac-port-foo -release
+ *   bun cmd/build-mac-remote.ts -branch tmp/mac-port-foo -asan
  *   bun cmd/build-mac-remote.ts -branch tmp/mac-port-foo -debug -clean
  */
 
@@ -16,7 +17,7 @@ function shellQuote(s: string): string {
 }
 
 function printUsageAndExit(): never {
-  console.error("Usage: bun cmd/build-mac-remote.ts -branch <temporary-branch> [-debug|-release] [-clean]");
+  console.error("Usage: bun cmd/build-mac-remote.ts -branch <temporary-branch> [-debug|-release|-asan] [-clean]");
   process.exit(1);
 }
 

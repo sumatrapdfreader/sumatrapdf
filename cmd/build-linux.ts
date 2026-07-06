@@ -4,9 +4,10 @@
  * Usage:
  *   bun cmd/build-linux.ts -debug
  *   bun cmd/build-linux.ts -release
+ *   bun cmd/build-linux.ts -asan
  *   bun cmd/build-linux.ts -debug -clean
  *
- * Output: out/linux-dbg64/lib/*.a (or out/linux-rel64 for -release)
+ * Output: out/linux-dbg64/lib/*.a (or out/linux-rel64 / out/linux-asan64)
  *
  * Mirrors the dependency projects in premake5.lua / premake5.files.lua.
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
@@ -645,6 +646,34 @@ const DEP_LIBS_BASE = [
   makeMupdf,
 ] as const;
 
+const TEST_UTIL_SOURCES = [
+  "src/Commands.cpp",
+  "src/CrashHandlerNoOp.cpp",
+  "src/DisplayMode.cpp",
+  "src/Flags.cpp",
+  "src/RefHoverDetect.cpp",
+  "src/RefHoverTextDetect.cpp",
+  "src/SimpleLog_ut.cpp",
+  "src/SumatraConfig.cpp",
+  "src/SumatraLog_posix.cpp",
+  "src/SumatraUnitTests.cpp",
+  "src/base/tests/Base_ut.cpp",
+  "src/base/tests/ByteOrderDecoder_ut.cpp",
+  "src/base/tests/Crypto_ut.cpp",
+  "src/base/tests/CssParser_ut.cpp",
+  "src/base/tests/Dict_ut.cpp",
+  "src/base/tests/File_ut.cpp",
+  "src/base/tests/JsonParser_ut.cpp",
+  "src/base/tests/RefHover_ut.cpp",
+  "src/base/tests/SettingsUtil_ut.cpp",
+  "src/base/tests/SquareTreeParser_ut.cpp",
+  "src/base/tests/StrFormat_ut.cpp",
+  "src/base/tests/StrVec_ut.cpp",
+  "src/base/tests/Str_ut.cpp",
+  "src/base/tests/Vec_ut.cpp",
+  "src/tools/test_util.cpp",
+];
+
 const TEST_ENGINES_SOURCES = [
   "src/DocProperties.cpp",
   "src/EngineBase.cpp",
@@ -657,6 +686,7 @@ const TEST_ENGINES_SOURCES = [
 export interface LinuxBuildOptions {
   outDir: string;
   isRelease?: boolean;
+  asan?: boolean;
   clean?: boolean;
   tools?: Partial<BuildTools>;
   jobs?: number;
@@ -668,6 +698,7 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   const tools: BuildTools = { ...resolveLinuxTools(arch), ...opts.tools };
   const jobs = opts.jobs ?? DEFAULT_JOBS;
   const isRelease = opts.isRelease ?? false;
+  const isAsan = opts.asan ?? false;
   const outDir = opts.outDir;
   const generatedDir = join(outDir, "generated", "dav1d");
 
@@ -677,7 +708,7 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   }
 
   const startTime = performance.now();
-  const config = isRelease ? "release" : "debug";
+  const config = isAsan ? "asan" : isRelease ? "release" : "debug";
   console.log(`\n=== Building SumatraPDF dependencies (${config}, Linux ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);
@@ -688,7 +719,8 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   await writeDav1dConfig(generatedDir, arch);
   await writeLiblzmaConfig(outDir);
 
-  const commonDefines: string[] = [];
+  const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
+  const commonFlags = isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [];
   const cxxFlags: string[] = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
 
   const fontObjs = await embedFonts(tools, outDir, arch);
@@ -716,17 +748,89 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
     await buildLibrary(lib, outDir, isRelease, {
       tools,
       commonDefines,
+      commonFlags,
       cxxFlags,
       jobs,
       extraObjs,
     });
   }
 
-  await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, cxxFlags);
+  await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+async function buildTestUtil(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  commonFlags: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Building test_util...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines, "SUMATRA_TEST_UTIL=1"].map((d) => `-D${d}`);
+  const includeFlags = ["-Isrc"];
+
+  const units = TEST_UTIL_SOURCES.map((src) => {
+    const obj = objPath(outDir, "test_util", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        ...includeFlags,
+        ...commonFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+
+  await compileAll(units, jobs);
+
+  const exePath = join(outDir, "test_util");
+  const linkArgs = [
+    tools.cxx,
+    "-o",
+    exePath,
+    ...commonFlags,
+    ...units.map((u) => u.obj),
+    join(outDir, "lib", "libbase.a"),
+  ];
+  const res = await spawnCmd(linkArgs);
+  if (!res.ok) {
+    throw new Error(`link test_util failed: ${res.stderr}`);
+  }
+  console.log(`  -> ${exePath}`);
+
+  const env = commonFlags.includes("-fsanitize=address")
+    ? { ...process.env, ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0" }
+    : process.env;
+  const run = Bun.spawn([exePath, "-for-ai"], {
+    env,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const code = await run.exited;
+  if (code !== 0) {
+    throw new Error(`test_util failed with exit code ${code}`);
+  }
 }
 
 async function buildTestEngines(
@@ -735,6 +839,7 @@ async function buildTestEngines(
   tools: BuildTools,
   jobs: number,
   commonDefines: string[],
+  commonFlags: string[],
   cxxFlags: string[],
 ): Promise<void> {
   console.log("Building test_engines...");
@@ -753,6 +858,7 @@ async function buildTestEngines(
         ...optFlags,
         ...defineFlags,
         ...includeFlags,
+        ...commonFlags,
         "-w",
         "-std=c++23",
         ...cxxFlags,
@@ -773,6 +879,7 @@ async function buildTestEngines(
     tools.cxx,
     "-o",
     exePath,
+    ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libdjvudec.a"),
@@ -790,32 +897,34 @@ if (import.meta.main) {
   const args = Bun.argv.slice(2);
   let doDebug = false;
   let doRelease = false;
+  let doAsan = false;
   let doClean = false;
 
   for (const arg of args) {
     if (arg === "-debug") doDebug = true;
     else if (arg === "-release") doRelease = true;
+    else if (arg === "-asan") doAsan = true;
     else if (arg === "-clean") doClean = true;
     else {
       console.error(`Unknown argument: ${arg}`);
-      console.error("Usage: bun cmd/build-linux.ts [-debug] [-release] [-clean]");
+      console.error("Usage: bun cmd/build-linux.ts [-debug] [-release] [-asan] [-clean]");
       process.exit(1);
     }
   }
 
-  if (!doDebug && !doRelease) {
-    console.error("Usage: bun cmd/build-linux.ts [-debug] [-release] [-clean]");
+  if (!doDebug && !doRelease && !doAsan) {
+    console.error("Usage: bun cmd/build-linux.ts [-debug] [-release] [-asan] [-clean]");
     process.exit(1);
   }
 
-  const configs: boolean[] = [];
-  if (doDebug) configs.push(false);
-  if (doRelease) configs.push(true);
+  const configs: { outDir: string; isRelease?: boolean; asan?: boolean }[] = [];
+  if (doDebug) configs.push({ outDir: "out/linux-dbg64" });
+  if (doRelease) configs.push({ outDir: "out/linux-rel64", isRelease: true });
+  if (doAsan) configs.push({ outDir: "out/linux-asan64", asan: true });
 
-  for (const isRelease of configs) {
+  for (const config of configs) {
     await buildLinux({
-      outDir: isRelease ? "out/linux-rel64" : "out/linux-dbg64",
-      isRelease,
+      ...config,
       clean: doClean,
       jobs: Math.max(1, Math.min(4, cpus().length)),
     });

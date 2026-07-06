@@ -4,9 +4,10 @@
  * Usage:
  *   bun cmd/build-mac.ts -debug
  *   bun cmd/build-mac.ts -release
+ *   bun cmd/build-mac.ts -asan
  *   bun cmd/build-mac.ts -debug -clean
  *
- * Output: out/mac-dbg64/lib/*.a (or out/mac-rel64 for -release)
+ * Output: out/mac-dbg64/lib/*.a (or out/mac-rel64 / out/mac-asan64)
  *
  * Mirrors the dependency projects in premake5.lua / premake5.files.lua.
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
@@ -515,6 +516,7 @@ const TEST_ENGINES_SOURCES = [
 export interface MacBuildOptions {
   outDir: string;
   isRelease?: boolean;
+  asan?: boolean;
   clean?: boolean;
   tools?: Partial<BuildTools>;
   jobs?: number;
@@ -526,6 +528,7 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   const tools: BuildTools = { ...resolveMacTools(), ...opts.tools };
   const jobs = opts.jobs ?? DEFAULT_JOBS;
   const isRelease = opts.isRelease ?? false;
+  const isAsan = opts.asan ?? false;
   const outDir = opts.outDir;
   const generatedDir = join(outDir, "generated", "dav1d");
 
@@ -535,7 +538,7 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   }
 
   const startTime = performance.now();
-  const config = isRelease ? "release" : "debug";
+  const config = isAsan ? "asan" : isRelease ? "release" : "debug";
   console.log(`\n=== Building SumatraPDF dependencies (${config}, macOS ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);
@@ -546,7 +549,8 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   await writeDav1dConfig(generatedDir, arch);
   await writeLiblzmaConfig(outDir);
 
-  const commonDefines: string[] = [];
+  const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
+  const commonFlags = isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [];
   const cxxFlags: string[] = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
 
   const fontObjs = await embedFonts(tools, outDir);
@@ -574,14 +578,15 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
     await buildLibrary(lib, outDir, isRelease, {
       tools,
       commonDefines,
+      commonFlags,
       cxxFlags,
       jobs,
       extraObjs,
     });
   }
 
-  await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, cxxFlags);
-  await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, cxxFlags);
+  await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
@@ -594,6 +599,7 @@ async function buildTestUtil(
   tools: BuildTools,
   jobs: number,
   commonDefines: string[],
+  commonFlags: string[],
   cxxFlags: string[],
 ): Promise<void> {
   console.log("Building test_util...");
@@ -612,6 +618,7 @@ async function buildTestUtil(
         ...optFlags,
         ...defineFlags,
         ...includeFlags,
+        ...commonFlags,
         "-w",
         "-std=c++23",
         ...cxxFlags,
@@ -632,6 +639,7 @@ async function buildTestUtil(
     tools.cxx,
     "-o",
     exePath,
+    ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
   ];
@@ -641,7 +649,11 @@ async function buildTestUtil(
   }
   console.log(`  -> ${exePath}`);
 
+  const env = commonFlags.includes("-fsanitize=address")
+    ? { ...process.env, ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0" }
+    : process.env;
   const run = Bun.spawn([exePath, "-for-ai"], {
+    env,
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -657,6 +669,7 @@ async function buildTestEngines(
   tools: BuildTools,
   jobs: number,
   commonDefines: string[],
+  commonFlags: string[],
   cxxFlags: string[],
 ): Promise<void> {
   console.log("Building test_engines...");
@@ -675,6 +688,7 @@ async function buildTestEngines(
         ...optFlags,
         ...defineFlags,
         ...includeFlags,
+        ...commonFlags,
         "-w",
         "-std=c++23",
         ...cxxFlags,
@@ -695,6 +709,7 @@ async function buildTestEngines(
     tools.cxx,
     "-o",
     exePath,
+    ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libdjvudec.a"),
@@ -712,32 +727,34 @@ if (import.meta.main) {
   const args = Bun.argv.slice(2);
   let doDebug = false;
   let doRelease = false;
+  let doAsan = false;
   let doClean = false;
 
   for (const arg of args) {
     if (arg === "-debug") doDebug = true;
     else if (arg === "-release") doRelease = true;
+    else if (arg === "-asan") doAsan = true;
     else if (arg === "-clean") doClean = true;
     else {
       console.error(`Unknown argument: ${arg}`);
-      console.error("Usage: bun cmd/build-mac.ts [-debug] [-release] [-clean]");
+      console.error("Usage: bun cmd/build-mac.ts [-debug] [-release] [-asan] [-clean]");
       process.exit(1);
     }
   }
 
-  if (!doDebug && !doRelease) {
-    console.error("Usage: bun cmd/build-mac.ts [-debug] [-release] [-clean]");
+  if (!doDebug && !doRelease && !doAsan) {
+    console.error("Usage: bun cmd/build-mac.ts [-debug] [-release] [-asan] [-clean]");
     process.exit(1);
   }
 
-  const configs: boolean[] = [];
-  if (doDebug) configs.push(false);
-  if (doRelease) configs.push(true);
+  const configs: { outDir: string; isRelease?: boolean; asan?: boolean }[] = [];
+  if (doDebug) configs.push({ outDir: "out/mac-dbg64" });
+  if (doRelease) configs.push({ outDir: "out/mac-rel64", isRelease: true });
+  if (doAsan) configs.push({ outDir: "out/mac-asan64", asan: true });
 
-  for (const isRelease of configs) {
+  for (const config of configs) {
     await buildMac({
-      outDir: isRelease ? "out/mac-rel64" : "out/mac-dbg64",
-      isRelease,
+      ...config,
       clean: doClean,
       jobs: Math.max(1, Math.min(4, cpus().length)),
     });
