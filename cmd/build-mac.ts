@@ -428,6 +428,7 @@ const DEP_LIBS_BASE = [
           "CmdLineArgsIter.cpp",
           "Color.cpp",
           "CssParser.cpp",
+          "Dict.cpp",
           "File.cpp",
           "File_posix.cpp",
           "HtmlTags.cpp",
