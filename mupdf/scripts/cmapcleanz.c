@@ -89,7 +89,7 @@ main(int argc, char **argv)
 	{
 		printf("begincidrange\n");
 		for (k = 0; k < cmap->rlen; k++) {
-			if (cmap->ranges[k].high - cmap->ranges[k].low > 0) {
+			if (cmap->ranges[k].high > cmap->ranges[k].low) {
 				pc(cmap->ranges[k].low);
 				putchar(' ');
 				pc(cmap->ranges[k].high);
@@ -103,7 +103,7 @@ main(int argc, char **argv)
 
 	ns = nr = 0;
 	for (k = 0; k < cmap->xlen; k++)
-		if (cmap->xranges[k].high - cmap->xranges[k].low > 0)
+		if (cmap->xranges[k].high > cmap->xranges[k].low)
 			++nr;
 		else
 			++ns;
@@ -112,7 +112,7 @@ main(int argc, char **argv)
 	{
 		printf("begincidchar\n");
 		for (k = 0; k < cmap->xlen; k++) {
-			if (cmap->xranges[k].high - cmap->xranges[k].low == 0) {
+			if (cmap->xranges[k].high == cmap->xranges[k].low) {
 				pc(cmap->xranges[k].low);
 				printf("%u\n", cmap->xranges[k].out);
 			}
@@ -124,7 +124,7 @@ main(int argc, char **argv)
 	{
 		printf("begincidrange\n");
 		for (k = 0; k < cmap->xlen; k++) {
-			if (cmap->xranges[k].high - cmap->xranges[k].low > 0) {
+			if (cmap->xranges[k].high > cmap->xranges[k].low) {
 				pc(cmap->xranges[k].low);
 				pc(cmap->xranges[k].high);
 				printf("%u\n", cmap->xranges[k].out);
