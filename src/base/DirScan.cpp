@@ -173,10 +173,10 @@ DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* 
     ctx->shouldExit = 0;
     ctx->inFlightCount = 0;
 
-    HANDLE hThread = CreateThread(nullptr, 0, DirScanThread, ctx, 0, nullptr);
+    ThreadHandle hThread = CreateThread(nullptr, 0, DirScanThread, ctx, 0, nullptr);
     if (hThread) {
         SetThreadDescription(hThread, L"DirScanThread");
-        CloseHandle(hThread);
+        SafeCloseThreadHandle(&hThread);
     }
 
     return ctx;

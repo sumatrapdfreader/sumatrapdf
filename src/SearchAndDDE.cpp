@@ -341,7 +341,7 @@ struct FindThreadData {
     bool wasModified = false;
     bool showProgress = false;
     Str text;
-    HANDLE thread = nullptr;
+    ThreadHandle thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified) {
         this->win = win;
@@ -508,7 +508,7 @@ struct CountThreadData {
     bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
     bool wantSnippets = false;  // build per-match snippet strings for the results list
     LONG epoch = 0;
-    HANDLE thread = nullptr;
+    ThreadHandle thread = nullptr;
 
     CountThreadData(MainWindow* win, EngineBase* engine, Str text, bool matchCase, bool matchWholeWord,
                     bool wantMatchList, bool wantSnippets, LONG epoch) {
@@ -523,7 +523,7 @@ struct CountThreadData {
     }
     ~CountThreadData() {
         str::Free(text);
-        CloseHandle(thread);
+        SafeCloseThreadHandle(&thread);
     }
 };
 
@@ -659,7 +659,7 @@ static void CountThread(CountThreadData* d) {
 static void AbortCount(MainWindow* win) {
     InterlockedIncrement(&win->findCountEpoch);
     str::FreePtr(&win->findCountPendingText);
-    HANDLE th = win->findCountThread;
+    ThreadHandle th = win->findCountThread;
     if (th) {
         WaitForSingleObject(th, INFINITE);
         win->findCountThread = nullptr;

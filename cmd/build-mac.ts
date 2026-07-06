@@ -419,7 +419,16 @@ const DEP_LIBS_BASE = [
     files: [
       {
         dir: "src/base",
-        patterns: ["Base.cpp", "Base_posix.cpp", "Str.cpp", "StrUtf8.cpp", "StrFormatParse.cpp", "StrVec.cpp", "Strconv.cpp"],
+        patterns: [
+          "Base.cpp",
+          "Base_posix.cpp",
+          "Thread.cpp",
+          "Str.cpp",
+          "StrUtf8.cpp",
+          "StrFormatParse.cpp",
+          "StrVec.cpp",
+          "Strconv.cpp",
+        ],
       },
     ],
   },

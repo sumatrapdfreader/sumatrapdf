@@ -98,7 +98,7 @@ class PageRenderer {
     AbortCookie* abortCookie = nullptr;
 
     Mutex currAccess;
-    HANDLE thread = nullptr;
+    ThreadHandle thread = nullptr;
 
     // seeking inside an IStream spins an inner event loop
     // which can cause reentrance in OnPaint and leave an
@@ -177,11 +177,11 @@ class PageRenderer {
         delete pr->abortCookie;
         pr->abortCookie = nullptr;
 
-        HANDLE th = pr->thread;
+        ThreadHandle th = pr->thread;
         pr->thread = nullptr;
         PostMessageW(pr->hwnd, kUwmPaintAgain, 0, 0);
 
-        CloseHandle(th);
+        SafeCloseThreadHandle(&th);
         DestroyTempArena();
         return 0;
     }

@@ -92,7 +92,7 @@ void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
     }
 }
 
-static HANDLE gThreadHandle = nullptr;
+static ThreadHandle gThreadHandle = nullptr;
 
 static HANDLE gThreadControlHandle = nullptr;
 static AtomicBool gShouldExit = 0;
@@ -549,7 +549,7 @@ void FileWatcherWaitForShutdown(void) {
         logf("FileWatcherWaitForShutdown: thread didn't exit in 5 seconds\n");
         return;
     }
-    SafeCloseHandle(&gThreadHandle);
+    SafeCloseThreadHandle(&gThreadHandle);
     SafeCloseHandle(&gThreadControlHandle);
 }
 

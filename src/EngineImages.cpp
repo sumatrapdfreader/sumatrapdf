@@ -163,7 +163,7 @@ class EngineImages : public EngineBase {
     // contexts share the underlying allocator/store/etc via refcounts.
     fz_context* fz_ctx = nullptr;
     struct ThreadCtx {
-        DWORD threadID;
+        ThreadId threadID;
         fz_context* ctx;
     };
     Vec<ThreadCtx> threadCtxs;
@@ -206,7 +206,7 @@ EngineImages::EngineImages() {
 }
 
 fz_context* EngineImages::Ctx() {
-    DWORD tid = GetCurrentThreadId();
+    ThreadId tid = GetCurrentThreadId();
     {
         ScopedMutex scope(&threadCtxsLock);
         for (auto& tc : threadCtxs) {

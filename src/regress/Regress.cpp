@@ -84,7 +84,7 @@ static void VerifyFileExists(Str filePath) {
 }
 
 static HANDLE gDumpEvent = nullptr;
-static HANDLE gDumpThread = nullptr;
+static ThreadHandle gDumpThread = nullptr;
 static bool gCrashed = false;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
@@ -156,7 +156,7 @@ static void UninstallCrashHandler() {
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec
 
-    SafeCloseHandle(&gDumpThread);
+    SafeCloseThreadHandle(&gDumpThread);
     SafeCloseHandle(&gDumpEvent);
 }
 

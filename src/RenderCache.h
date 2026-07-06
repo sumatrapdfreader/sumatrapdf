@@ -150,7 +150,7 @@ struct RenderCache {
     // per-thread current request tracking (index matches thread index)
     PageRenderRequest* curReqs[kMaxRenderThreads]{};
     RecursiveMutex requestAccess;
-    HANDLE renderThreads[kMaxRenderThreads]{};
+    ThreadHandle renderThreads[kMaxRenderThreads]{};
     // Render threads are spawned lazily: nRenderThreads is the count actually
     // running so far, maxRenderThreads is the cap. Threads track idleThreads
     // (incremented when they're about to wait on startRendering); Render()

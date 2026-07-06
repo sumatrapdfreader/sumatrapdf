@@ -2,11 +2,19 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Base.h"
+
+#if OS_WIN
 #include "ScopedWin.h"
 #include "WinDynCalls.h"
 #include "Win.h"
+#else
+#if OS_LINUX
+#include <sys/syscall.h>
+#include <unistd.h>
+#endif
+#endif
 
-#if COMPILER_MSVC
+#if OS_WIN && COMPILER_MSVC
 
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
@@ -27,7 +35,7 @@ typedef struct tagTHREADNAME_INFO {
                                 // EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were
                                 // not intended to be handled
 #pragma warning(disable : 6322) // silence /analyze: Empty _except block
-void SetThreadName(Str threadName, DWORD threadId) {
+void SetThreadName(Str threadName, ThreadId threadId) {
     if (!threadName) {
         return;
     }
@@ -51,12 +59,51 @@ void SetThreadName(Str threadName, DWORD threadId) {
     } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
 }
-#pragma warning(push)
+#pragma warning(pop)
+
+#elif OS_WIN
+
+void SetThreadName(Str, ThreadId) {}
+
 #else
-void SetThreadName(Str, DWORD) {
-    // nothing
+
+ThreadId GetCurrentThreadId() {
+#if OS_DARWIN
+    u64 tid = 0;
+    pthread_threadid_np(nullptr, &tid);
+    return tid;
+#elif OS_LINUX
+    return (ThreadId)syscall(SYS_gettid);
+#else
+    return (ThreadId)pthread_self();
+#endif
 }
-#endif // COMPILER_MSVC
+
+void SetThreadName(Str threadName, ThreadId threadId) {
+    if (!threadName) {
+        return;
+    }
+    if (threadId != 0 && threadId != GetCurrentThreadId()) {
+        return;
+    }
+#if OS_DARWIN
+    char buf[64];
+    size_t n = (size_t)std::min(threadName.len, (int)sizeof(buf) - 1);
+    memcpy(buf, threadName.s, n);
+    buf[n] = 0;
+    pthread_setname_np(buf);
+#elif OS_LINUX
+    char buf[16];
+    size_t n = (size_t)std::min(threadName.len, (int)sizeof(buf) - 1);
+    memcpy(buf, threadName.s, n);
+    buf[n] = 0;
+    pthread_setname_np(pthread_self(), buf);
+#endif
+}
+
+#endif
+
+#if OS_WIN
 
 static DWORD WINAPI ThreadFunc0(void* data) {
     auto* fn = (Func0*)(data);
@@ -66,11 +113,12 @@ static DWORD WINAPI ThreadFunc0(void* data) {
     return 0;
 }
 
-HANDLE StartThread(const Func0& fn, Str threadName) {
+ThreadHandle StartThread(const Func0& fn, Str threadName) {
     auto fp = new Func0(fn);
-    DWORD threadId = 0;
-    HANDLE hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
+    ThreadId threadId = 0;
+    ThreadHandle hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
     if (!hThread) {
+        delete fp;
         return nullptr;
     }
     if (threadName) {
@@ -79,9 +127,59 @@ HANDLE StartThread(const Func0& fn, Str threadName) {
     return hThread;
 }
 
+#else
+
+struct ThreadHandlePosix {
+    pthread_t thread;
+};
+
+struct ThreadFuncData {
+    Func0 fn;
+    Str threadName;
+
+    ThreadFuncData(const Func0& fn, Str threadName) : fn(fn) { this->threadName = str::Dup(threadName); }
+    ~ThreadFuncData() { str::Free(threadName); }
+};
+
+static void* ThreadFunc0(void* data) {
+    auto* threadData = (ThreadFuncData*)data;
+    if (threadData->threadName) {
+        SetThreadName(threadData->threadName);
+    }
+    threadData->fn.Call();
+    delete threadData;
+    DestroyTempArena();
+    return nullptr;
+}
+
+ThreadHandle StartThread(const Func0& fn, Str threadName) {
+    auto threadData = new ThreadFuncData(fn, threadName);
+    auto hThread = new ThreadHandlePosix();
+    int err = pthread_create(&hThread->thread, nullptr, ThreadFunc0, threadData);
+    if (err != 0) {
+        delete hThread;
+        delete threadData;
+        return nullptr;
+    }
+    return hThread;
+}
+
+bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
+    ThreadHandle h = *hPtr;
+    if (!h) {
+        return false;
+    }
+    int err = pthread_detach(h->thread);
+    delete h;
+    *hPtr = nullptr;
+    return err == 0;
+}
+
+#endif
+
 void RunAsync(const Func0& fn, Str threadName) {
-    HANDLE hThread = StartThread(fn, threadName);
-    SafeCloseHandle(&hThread);
+    ThreadHandle hThread = StartThread(fn, threadName);
+    SafeCloseThreadHandle(&hThread);
 }
 
 AtomicInt gDangerousThreadCount = 0;

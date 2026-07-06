@@ -1944,7 +1944,7 @@ static void InstallFitzErrorCallbacks(EngineMupdf* engine, fz_context* ctx) {
 struct ContextThreadID {
     EngineMupdf* engine = nullptr;
     fz_context* ctx = nullptr;
-    DWORD threadID = 0;
+    ThreadId threadID = 0;
 };
 
 static Vec<ContextThreadID>* gPerThreadContexts;
@@ -1967,7 +1967,7 @@ static void DeInitializeEngineMupdf() {
 }
 
 fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
-    DWORD threadID = GetCurrentThreadId();
+    ThreadId threadID = GetCurrentThreadId();
     {
         ScopedMutex cs(&gPerThreadContextsCs);
         for (auto& el : *gPerThreadContexts) {
@@ -1994,7 +1994,7 @@ fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
 }
 
 void ReleasePerThreadContext(EngineMupdf* engine) {
-    DWORD threadID = GetCurrentThreadId();
+    ThreadId threadID = GetCurrentThreadId();
     fz_context* ctxToDrop = nullptr;
     {
         ScopedMutex cs(&gPerThreadContextsCs);

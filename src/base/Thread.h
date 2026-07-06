@@ -2,6 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #if OS_WIN
+using ThreadId = DWORD;
+using ThreadHandle = HANDLE;
+
 struct Mutex {
     SRWLOCK lock = SRWLOCK_INIT;
 
@@ -22,15 +25,12 @@ struct RecursiveMutex {
     void Unlock() { LeaveCriticalSection(&lock); }
     bool TryLock() { return TryEnterCriticalSection(&lock); }
 };
-
-void SetThreadName(Str threadName, DWORD threadId = 0);
-
-void RunAsync(const Func0&, Str threadName = {});
-HANDLE StartThread(const Func0&, Str threadName = {});
-
-extern AtomicInt gDangerousThreadCount;
-bool AreDangerousThreadsPending();
 #else
+using ThreadId = u64;
+
+struct ThreadHandlePosix;
+using ThreadHandle = ThreadHandlePosix*;
+
 struct Mutex {
     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -57,6 +57,8 @@ struct RecursiveMutex {
     void Unlock() { pthread_mutex_unlock(&lock); }
     bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
 };
+
+ThreadId GetCurrentThreadId();
 #endif
 
 struct ScopedMutex {
@@ -72,3 +74,25 @@ struct ScopedRecursiveMutex {
     explicit ScopedRecursiveMutex(RecursiveMutex* mutex) : mutex(mutex) { mutex->Lock(); }
     ~ScopedRecursiveMutex() { mutex->Unlock(); }
 };
+
+void SetThreadName(Str threadName, ThreadId threadId = 0);
+
+void RunAsync(const Func0&, Str threadName = {});
+ThreadHandle StartThread(const Func0&, Str threadName = {});
+#if OS_WIN
+inline bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
+    ThreadHandle h = *hPtr;
+    if (!h || h == INVALID_HANDLE_VALUE) {
+        *hPtr = nullptr;
+        return false;
+    }
+    BOOL ok = CloseHandle(h);
+    *hPtr = nullptr;
+    return !!ok;
+}
+#else
+bool SafeCloseThreadHandle(ThreadHandle*);
+#endif
+
+extern AtomicInt gDangerousThreadCount;
+bool AreDangerousThreadsPending();

@@ -78,13 +78,13 @@ static Str gSystemInfo;
 static Str gSettingsFile;
 static Str gModulesInfo;
 static HANDLE gDumpEvent = nullptr;
-static HANDLE gDumpThread = nullptr;
+static ThreadHandle gDumpThread = nullptr;
 static bool isDllBuild = false;
 static bool gLocalOnlyCrashHandler = false;
 static bool gCrashed = false;
 static volatile LONG gCrashHandlerStarted = 0;
-static DWORD gCrashThreadId = 0;
-static DWORD gDumpThreadId = 0;
+static ThreadId gCrashThreadId = 0;
+static ThreadId gDumpThreadId = 0;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
@@ -99,7 +99,7 @@ static bool TryStartCrashHandling(Str handlerName) {
     OutputDebugStringA(CStrTemp(handlerName));
     OutputDebugStringA(": ignoring nested crash\n");
 
-    DWORD threadId = GetCurrentThreadId();
+    ThreadId threadId = GetCurrentThreadId();
     if (threadId == gCrashThreadId || threadId == gDumpThreadId) {
         TerminateProcess(GetCurrentProcess(), 1);
     }
@@ -213,7 +213,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         s.Append("\n");
     }
 
-    DWORD crashedThreadId = gMei.ThreadId;
+    ThreadId crashedThreadId = gMei.ThreadId;
     if (gMei.ExceptionPointers) {
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     } else if (captureCallstack) {
@@ -968,7 +968,7 @@ void UninstallCrashHandler() {
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec
 
-    CloseHandle(gDumpThread);
+    SafeCloseThreadHandle(&gDumpThread);
     CloseHandle(gDumpEvent);
 
     // those are allocated from gCrashHandlerArena so are freed by ArenaDelete()

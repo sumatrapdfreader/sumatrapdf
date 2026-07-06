@@ -441,9 +441,9 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     data->engine = this;
     data->pageNo = pageNo;
     auto fn = MkFunc0<TextExtractionThreadData>(ExtractTextThread, data);
-    HANDLE thread = StartThread(fn, "ExtractPageText");
+    ThreadHandle thread = StartThread(fn, "ExtractPageText");
     if (thread) {
-        SafeCloseHandle(&thread);
+        SafeCloseThreadHandle(&thread);
         return;
     }
 

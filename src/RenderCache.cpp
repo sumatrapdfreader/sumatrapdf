@@ -93,7 +93,7 @@ RenderCache::~RenderCache() {
         }
 
         for (int i = 0; i < nRenderThreads; i++) {
-            CloseHandle(renderThreads[i]);
+            SafeCloseThreadHandle(&renderThreads[i]);
         }
     }
     CloseHandle(startRendering);
