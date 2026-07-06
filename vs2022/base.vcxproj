@@ -898,6 +898,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
+    <ClCompile Include="..\src\base\Arena_win.cpp" />
     <ClCompile Include="..\src\base\AvifReader.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\Base_win.cpp" />

@@ -104,6 +104,7 @@ const utils: LibDef = {
         "ApiHook.*",
         "Archive.*",
         "Arena.*",
+        "Arena_win.cpp",
         "Base.h",
         "Base.cpp",
         "Base_win.cpp",

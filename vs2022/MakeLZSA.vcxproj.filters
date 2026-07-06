@@ -146,6 +146,9 @@
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Arena_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Base.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

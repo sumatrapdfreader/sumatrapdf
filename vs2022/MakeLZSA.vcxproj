@@ -478,6 +478,7 @@
     <ClCompile Include="..\ext\zlib\zutil.c" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
+    <ClCompile Include="..\src\base\Arena_win.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\Base_win.cpp" />
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp" />

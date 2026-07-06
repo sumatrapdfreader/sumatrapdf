@@ -104,7 +104,7 @@ struct GraphicsCacheEntry {
 
     Graphics* gfx;
     Bitmap* bmp;
-    BYTE data[bmpDx * bmpDy * 4];
+    u8 data[bmpDx * bmpDy * 4];
 
     bool Create();
     void Free() const;

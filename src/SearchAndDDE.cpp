@@ -1149,7 +1149,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
         rects.Append(rect);
     }
 
-    BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
+    u8 alpha = (u8)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->forwardSearch.highlightColor);
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
 }

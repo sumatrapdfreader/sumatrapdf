@@ -2,8 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
-#include "base/Win.h"
 
 bool IsSpecialColor(COLORREF col) {
     return col == kColorUnset || col == kColorNoChange;
@@ -41,27 +39,15 @@ void UnpackColor(COLORREF c, u8& r, u8& g, u8& b) {
     b = (u8)(c & 0xff);
 }
 
-#if 0
-static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha) {
-    alpha = (BYTE)(alpha * c.a / 255.f);
-    BYTE R = (BYTE)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE G = (BYTE)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE B = (BYTE)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    return Gdiplus::Color(alpha, R, G, B);
-}
-#endif
-
-// TODO: use AdjustLightness instead to compensate for the alpha?
-// TODO: not sure if that's the exact translation of the original (above)
 Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
-    u8 ralpha = (BYTE)(alpha * a / 255.f);
+    u8 ralpha = (u8)(alpha * a / 255.f);
     float falpha = ((float)alpha * (float)a / 255.f);
     float tmp = 255.0f / (falpha + 0.5f);
-    BYTE R = (BYTE)floorf(std::max(r - (255 - ralpha), 0) * tmp);
-    BYTE G = (BYTE)floorf(std::max(g - (255 - ralpha), 0) * tmp);
-    BYTE B = (BYTE)floorf(std::max(b - (255 - ralpha), 0) * tmp);
+    u8 R = (u8)floorf(std::max(r - (255 - ralpha), 0) * tmp);
+    u8 G = (u8)floorf(std::max(g - (255 - ralpha), 0) * tmp);
+    u8 B = (u8)floorf(std::max(b - (255 - ralpha), 0) * tmp);
     return Gdiplus::Color(alpha, R, G, B);
 }
 
@@ -75,6 +61,18 @@ Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
     return Gdiplus::Color(c);
 }
 
+#if 0
+static Gdiplus::Color Unblend(PageAnnotation::Color c, u8 alpha) {
+    alpha = (u8)(alpha * c.a / 255.f);
+    u8 R = (u8)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    u8 G = (u8)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    u8 B = (u8)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    return Gdiplus::Color(alpha, R, G, B);
+}
+#endif
+
+// TODO: use AdjustLightness instead to compensate for the alpha?
+// TODO: not sure if that's the exact translation of the original (above)
 TempStr SerializeColorTemp(COLORREF c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
@@ -176,14 +174,14 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
     u8 R, G, B;
     UnpackColor(c, R, G, B);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
-    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
+    u8 M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     if (M == m) {
         // for grayscale values, lightness is proportional to the color value
-        BYTE X = (BYTE)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
-        return RGB(X, X, X);
+        u8 X = (u8)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
+        return MkColor(X, X, X);
     }
-    BYTE C = M - m;
-    BYTE Ha = (BYTE)abs(M == R ? G - B : M == G ? B - R : R - G);
+    u8 C = M - m;
+    u8 Ha = (u8)abs(M == R ? G - B : M == G ? B - R : R - G);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
     float L2 = (float)(M + m);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Saturation
@@ -194,10 +192,10 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
     float C1 = (L2 > 255.0f ? 510.0f - L2 : L2) * S;
     float X1 = C1 * Ha / C;
     float m1 = (L2 - C1) / 2;
-    R = (BYTE)floorf((M == R ? C1 : m != R ? X1 : 0) + m1 + 0.5f);
-    G = (BYTE)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
-    B = (BYTE)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
-    return RGB(R, G, B);
+    R = (u8)floorf((M == R ? C1 : m != R ? X1 : 0) + m1 + 0.5f);
+    G = (u8)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
+    B = (u8)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
+    return MkColor(R, G, B);
 }
 
 // Adjusts lightness by 1/255 units.
@@ -205,7 +203,8 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
     float lightness = GetLightness(c);
     units = limitValue(units, -lightness, 255.0f - lightness);
     if (0.0f == lightness) {
-        return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
+        u8 x = u8(units + 0.5f);
+        return MkColor(x, x, x);
     }
     return AdjustLightness(c, 1.0f + units / lightness);
 }
@@ -226,6 +225,21 @@ bool IsLightColor(COLORREF c) {
     UnpackColor(c, r, g, b);
     float y = 0.2126f * float(r) + 0.7152f * float(g) + 0.0722f * float(b);
     return y > 127.5f; // mid 256
+}
+
+bool IsNearBlack(COLORREF c) {
+    u8 r, g, b;
+    UnpackColor(c, r, g, b);
+    return r < 10 && g < 10 && b < 10;
+}
+
+DWORD PremultiplyPixel(COLORREF c, u8 alpha) {
+    u8 r, g, b;
+    UnpackColor(c, r, g, b);
+    r = (u8)((r * alpha) / 255);
+    g = (u8)((g * alpha) / 255);
+    b = (u8)((b * alpha) / 255);
+    return (alpha << 24) | (r << 16) | (g << 8) | b;
 }
 
 u8 GetRed(COLORREF rgb) {

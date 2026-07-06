@@ -422,6 +422,9 @@ const DEP_LIBS_BASE = [
         patterns: [
           "Base.cpp",
           "Base_posix.cpp",
+          "Arena.cpp",
+          "Arena_posix.cpp",
+          "Color.cpp",
           "Thread.cpp",
           "Str.cpp",
           "StrUtf8.cpp",

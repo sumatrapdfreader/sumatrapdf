@@ -44,8 +44,8 @@ static COLORREF ThemeArrowColor() {
     return ThemeThumbHoverColor();
 }
 static constexpr int kMinThumbSize = 20;
-static constexpr BYTE kAlphaThin = 180;
-static constexpr BYTE kAlphaThick = 220;
+static constexpr u8 kAlphaThin = 180;
+static constexpr u8 kAlphaThick = 220;
 
 using State = OverlayScrollbar::State;
 
@@ -225,17 +225,10 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
 
     bool thick = IsThick(sb);
     // non-default themes define exact colors, so draw thick scrollbar fully opaque
-    BYTE alpha = thick ? (IsCurrentThemeDefault() ? kAlphaThick : 255) : kAlphaThin;
-
-    auto premultiply = [](COLORREF c, BYTE a) -> DWORD {
-        BYTE r = (BYTE)MulDiv(GetRValue(c), a, 255);
-        BYTE g = (BYTE)MulDiv(GetGValue(c), a, 255);
-        BYTE b = (BYTE)MulDiv(GetBValue(c), a, 255);
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    };
+    u8 alpha = thick ? (IsCurrentThemeDefault() ? kAlphaThick : 255) : kAlphaThin;
 
     auto fillRect = [&](Rect r, COLORREF color) {
-        DWORD pixel = premultiply(color, alpha);
+        DWORD pixel = PremultiplyPixel(color, alpha);
         DWORD* pixels = (DWORD*)bits;
         int x0 = std::max(r.x, 0);
         int y0 = std::max(r.y, 0);
@@ -272,9 +265,9 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
         gfx.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
         COLORREF arrowCol = ThemeArrowColor();
-        BYTE ar = (BYTE)MulDiv(GetRValue(arrowCol), alpha, 255);
-        BYTE ag = (BYTE)MulDiv(GetGValue(arrowCol), alpha, 255);
-        BYTE ab = (BYTE)MulDiv(GetBValue(arrowCol), alpha, 255);
+        u8 ar = (u8)MulDiv(GetRValue(arrowCol), alpha, 255);
+        u8 ag = (u8)MulDiv(GetGValue(arrowCol), alpha, 255);
+        u8 ab = (u8)MulDiv(GetBValue(arrowCol), alpha, 255);
         Gdiplus::Color gdipArrowCol(alpha, ar, ag, ab);
 
         Rect arrowTop = GetArrowTopRect(sb);

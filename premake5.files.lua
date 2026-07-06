@@ -11,6 +11,7 @@ end
 function makelzsa_files()
   files_in_dir("src/base", {
     "Arena.*",
+    "Arena_win.cpp",
     "Base.h",
     "Base.cpp",
     "Base_win.cpp",
@@ -971,6 +972,7 @@ function base_files()
     "ApiHook.*",
     "Archive.*",
     "Arena.*",
+    "Arena_win.cpp",
     "AvifReader.*",
     "Base.h",
     "Base.cpp",
@@ -1414,6 +1416,7 @@ end
 function test_util_files()
   files_in_dir("src/base", {
     "Arena.*",
+    "Arena_win.cpp",
     "Base.h",
     "Base.cpp",
     "Base_win.cpp",
