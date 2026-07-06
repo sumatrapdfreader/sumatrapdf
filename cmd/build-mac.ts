@@ -432,6 +432,7 @@ const DEP_LIBS_BASE = [
           "File.cpp",
           "File_posix.cpp",
           "HtmlTags.cpp",
+          "JsonParser.cpp",
           "Thread.cpp",
           "Str.cpp",
           "StrUtf8.cpp",
