@@ -231,8 +231,9 @@ static void PopulateLanguageCombo(HWND hwnd, Str initial, bool includeAuto) {
         CbAddString(hwnd, lang);
     }
     if (!str::IsEmptyOrWhiteSpace(initial)) {
-        SetWindowTextA(hwnd, initial.s);
-        LRESULT idx = SendMessageW(hwnd, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)initial.s);
+        HwndSetText(hwnd, initial);
+        WCHAR* initialW = CWStrTemp(initial);
+        LRESULT idx = SendMessageW(hwnd, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)initialW);
         if (idx != CB_ERR) {
             SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)idx, 0);
         }
@@ -724,9 +725,9 @@ static void ShowTranslationResult(SelectionTranslateDialog* dlg, Str text, bool 
         dlg->resultVisible = true;
     }
     if (dlg->hwndResultLabel) {
-        SetWindowTextA(dlg->hwndResultLabel, label.s);
+        HwndSetText(dlg->hwndResultLabel, label);
     }
-    SetWindowTextA(dlg->hwndResultText, text.s);
+    HwndSetText(dlg->hwndResultText, text);
     ShowWindow(dlg->hwndResultLabel, SW_SHOW);
     ShowWindow(dlg->hwndResultText, SW_SHOW);
 }
@@ -754,7 +755,7 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
     EnableWindow(dlg->hwndSrcText, TRUE);
     EnableWindow(dlg->hwndSrcLang, TRUE);
     EnableWindow(dlg->hwndDstLang, TRUE);
-    SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate").s);
+    HwndSetText(dlg->hwndTranslateBtn, _TRA("Translate"));
     TempStr display = data->ok ? data->msg : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg);
     ShowTranslationResult(dlg, display, !data->ok);
     if (data->ok) {
@@ -794,7 +795,7 @@ static void StartTranslation(SelectionTranslateDialog* dlg) {
     EnableWindow(dlg->hwndSrcLang, FALSE);
     EnableWindow(dlg->hwndDstLang, FALSE);
     EnableWindow(dlg->hwndTranslateBtn, FALSE);
-    SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translating...").s);
+    HwndSetText(dlg->hwndTranslateBtn, _TRA("Translating..."));
     if (dlg->resultVisible) {
         ShowWindow(dlg->hwndResultLabel, SW_HIDE);
         ShowWindow(dlg->hwndResultText, SW_HIDE);

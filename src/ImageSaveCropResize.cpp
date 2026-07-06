@@ -489,7 +489,7 @@ static void UpdateInfoLabel(ImageEditWindow* ew) {
     } else {
         s = FormatResizeInfoTemp(ew->imgW, ew->imgH, ew->newW, ew->newH);
     }
-    SetWindowTextA(ew->hwndInfoLabel, s.s);
+    HwndSetText(ew->hwndInfoLabel, s);
 }
 
 // invalidate only the image area, not the control area below

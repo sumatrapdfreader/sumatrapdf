@@ -1253,7 +1253,7 @@ struct SetHotkeyDialog {
 
 static void SetHotkeyUpdateUI(SetHotkeyDialog* dlg) {
     Str display = dlg->newHotkey ? dlg->newHotkey : (dlg->currentHotkey ? dlg->currentHotkey : StrL("None"));
-    SetWindowTextA(dlg->hwndHotkeyLabel, display.s);
+    HwndSetText(dlg->hwndHotkeyLabel, display);
     EnableWindow(dlg->hwndSetBtn, len(dlg->newHotkey) > 0);
     EnableWindow(dlg->hwndRemoveBtn, len(dlg->currentHotkey) > 0 || len(dlg->newHotkey) > 0);
 }
