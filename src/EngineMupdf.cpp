@@ -27,7 +27,6 @@ extern "C" {
 #include "EbookDoc.h"
 #include "Settings.h"
 
-
 // A5
 static float layoutA5DxPt = 420.F;
 static float layoutA5DyPt = 595.F;
@@ -2589,9 +2588,10 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
             // TODO: this is only part of SASLprep
-            Str normalized = NormalizeString(pwd, 5 /* NormalizationKC */);
+            // NormalizeString() returns a TempStr; dup because pwd is owned and freed below
+            TempStr normalized = NormalizeString(pwd, 5 /* NormalizationKC */);
             str::Free(pwd);
-            pwd = normalized;
+            pwd = str::Dup(normalized);
             if (pwd) {
                 pwdA = pwd;
                 ok = fz_authenticate_password(ctx, _doc, pwdA.s);
