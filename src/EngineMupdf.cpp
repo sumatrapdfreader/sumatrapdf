@@ -2041,9 +2041,6 @@ EngineMupdf::EngineMupdf() {
     // engine, so bump-allocate them out of EngineBase::arena
     pages.allocator = arena;
 
-    InitializeCriticalSection(&pagesLock);
-    InitializeCriticalSection(&docLock);
-
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
@@ -2068,7 +2065,7 @@ fz_context* EngineMupdf::Ctx() const {
 }
 
 EngineMupdf::~EngineMupdf() {
-    EnterCriticalSection(&pagesLock);
+    pagesLock.Lock();
 
     auto ctx = _ctx;
     for (FzPageInfo* pi : pages) {
@@ -2116,9 +2113,7 @@ EngineMupdf::~EngineMupdf() {
     delete pageLabels;
     delete tocTree;
 
-    LeaveCriticalSection(&pagesLock);
-    DeleteCriticalSection(&pagesLock);
-    DeleteCriticalSection(&docLock);
+    pagesLock.Unlock();
 
     DeInitializeEngineMupdf();
 }
@@ -2137,7 +2132,7 @@ class PasswordCloner : public PasswordUI {
 };
 
 EngineBase* EngineMupdf::Clone() {
-    ScopedMutex scope(&docLock);
+    ScopedRecursiveMutex scope(&docLock);
     if (!FilePath()) {
         // before port we could clone streams but it's no longer possible
         logf("EngineMupdf::Clone() failed: no file path\n");
@@ -2673,7 +2668,7 @@ bool GetPdfViewerPrintPrefs(EngineBase* engineBase, PdfViewerPrintPrefs& prefs) 
     }
     pdf_document* pdfdoc = engine->pdfdoc;
 
-    ScopedMutex cs(&engine->docLock);
+    ScopedRecursiveMutex cs(&engine->docLock);
 
     pdf_obj* vprefs = nullptr;
     fz_var(vprefs);
@@ -2740,7 +2735,7 @@ static bool IsLinearizedFile(EngineMupdf* e) {
     }
     auto ctx = e->Ctx();
 
-    ScopedMutex scope(&e->docLock);
+    ScopedRecursiveMutex scope(&e->docLock);
     int isLinear = 0;
     fz_try(ctx) {
         isLinear = pdf_doc_was_linearized(ctx, e->pdfdoc);
@@ -2753,7 +2748,7 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 }
 
 static void FinishNonPDFLoading(EngineMupdf* e) {
-    ScopedMutex scope(&e->docLock);
+    ScopedRecursiveMutex scope(&e->docLock);
 
     auto ctx = e->Ctx();
     for (int i = 0; i < e->pageCount; i++) {
@@ -2873,7 +2868,7 @@ bool EngineMupdf::FinishLoading() {
         return true;
     }
 
-    ScopedMutex scope(&docLock);
+    ScopedRecursiveMutex scope(&docLock);
 
     for (int pageNo = 0; pageNo < pageCount; pageNo++) {
         pdf_obj* pageref = nullptr;
@@ -3085,7 +3080,7 @@ TocTree* EngineMupdf::GetToc() {
 
     int idCounter = 0;
 
-    ScopedMutex cs(&docLock);
+    ScopedRecursiveMutex cs(&docLock);
 
     TocItem* root = nullptr;
     TocItem* att = nullptr;
@@ -3117,7 +3112,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     }
     auto ctx = Ctx();
     IPageDestination* pageDest = nullptr;
-    ScopedMutex scope2(&docLock);
+    ScopedRecursiveMutex scope2(&docLock);
     TempStr uri = str::JoinTemp(StrL("#nameddest="), name);
     float x, y, zoom = 0;
     int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
@@ -3136,8 +3131,8 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
         return nullptr;
     }
 
-    ScopedMutex scope1(&pagesLock);
-    ScopedMutex scope2(&docLock);
+    ScopedRecursiveMutex scope1(&pagesLock);
+    ScopedRecursiveMutex scope2(&docLock);
 
     int nameLen = len(name);
     pdf_obj* dest = nullptr;
@@ -3187,7 +3182,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
 
 // return a page but only if is fully loaded
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
-    ScopedMutex scope(&pagesLock);
+    ScopedRecursiveMutex scope(&pagesLock);
     ReportIf(pageNo < 1 || pageNo > pageCount);
     FzPageInfo* pageInfo = pages[pageNo - 1];
     if (!pageInfo->page || !pageInfo->fullyLoaded) {
@@ -3317,15 +3312,15 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
     return GetFzPageInfo(pageNo, true);
 #else
     FzPageInfo* res = nullptr;
-    if (!TryEnterCriticalSection(&pagesLock)) {
+    if (!pagesLock.TryLock()) {
         return nullptr;
     }
-    if (TryEnterCriticalSection(&docLock)) {
-        // CRITICAL_SECTION locking is recursive
+    if (docLock.TryLock()) {
+        // RecursiveMutex locking is recursive
         res = GetFzPageInfo(pageNo, true);
-        LeaveCriticalSection(&docLock);
+        docLock.Unlock();
     }
-    LeaveCriticalSection(&pagesLock);
+    pagesLock.Unlock();
     return res;
 #endif
 }
@@ -3392,7 +3387,7 @@ static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page
 FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie) {
     auto ctx = Ctx();
     // TODO: minimize time spent under pagesLock when fully loading
-    ScopedMutex scope(&pagesLock);
+    ScopedRecursiveMutex scope(&pagesLock);
 
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
@@ -3790,8 +3785,8 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     // those locks must be taken in this order
     // we need to lock pagesLock because it might
     // be taken below
-    ScopedMutex csPages(&e->pagesLock);
-    ScopedMutex cs(&e->docLock);
+    ScopedRecursiveMutex csPages(&e->pagesLock);
+    ScopedRecursiveMutex cs(&e->docLock);
 
     int pageNo = -1;
     fz_link_dest ldest{};
@@ -3891,7 +3886,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
 
-    ScopedMutex scope(&docLock);
+    ScopedRecursiveMutex scope(&docLock);
 
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
     // can happen when the file becomes unreadable (e.g. network drive read errors)
@@ -4039,7 +4034,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     int nPages = PageCount();
     for (int i = 0; i < nPages; i++) {
         ScopedMutex renderScope(&renderLock);
-        ScopedMutex perPageScope(&docLock);
+        ScopedRecursiveMutex perPageScope(&docLock);
         fz_try(ctx) {
             pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, i);
             pdf_obj* resources = pdf_dict_gets(ctx, pageObj, "Resources");
@@ -4072,7 +4067,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     // font dicts are also read by the renderer when loading fonts, so
     // serialize with renders here as well
     ScopedMutex renderScope(&renderLock);
-    ScopedMutex scope(&docLock);
+    ScopedRecursiveMutex scope(&docLock);
 
     StrVec fonts;
     for (int i = 0; i < len(fontList); i++) {
@@ -4183,7 +4178,7 @@ static const Str mupdfPropsMap[] = {
 
 TempStr EngineMupdf::GetPropertyTemp(Str name) {
     auto ctx = Ctx();
-    ScopedMutex ctxScope(&docLock);
+    ScopedRecursiveMutex ctxScope(&docLock);
 
     Str key = GetMatchingString(mupdfPropsMap, name);
     if (key) {
@@ -4412,7 +4407,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
     EngineBase::GetProperties(keyValOut);
 
     auto ctx = Ctx();
-    ScopedMutex ctxScope(&docLock);
+    ScopedRecursiveMutex ctxScope(&docLock);
 
     TempStr val = LookupMetadataTemp(ctx, _doc, "info:Keywords");
     if (val) {
@@ -4493,7 +4488,7 @@ Str EngineMupdf::GetFileData() {
     }
 
     Str res;
-    ScopedMutex scope(&docLock);
+    ScopedRecursiveMutex scope(&docLock);
 
     fz_var(res);
     fz_try(ctx) {
@@ -4590,7 +4585,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
         path = currPath;
     }
     auto ctx = epdf->Ctx();
-    ScopedMutex scope(&epdf->docLock);
+    ScopedRecursiveMutex scope(&epdf->docLock);
 
     pdf_write_options save_opts{};
     save_opts = pdf_default_write_options2;
@@ -4787,7 +4782,7 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
     if (!e->pdfdoc) {
         return;
     }
-    ScopedMutex scope(&e->pagesLock);
+    ScopedRecursiveMutex scope(&e->pagesLock);
     for (int i = 1; i <= e->pageCount; i++) {
         FzPageInfo* pi = e->GetFzPageInfo(i, false);
         if (!pi) {
@@ -4829,7 +4824,7 @@ Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
     if (!epdf->pdfdoc) {
         return {};
     }
-    ScopedMutex scope(&epdf->docLock);
+    ScopedRecursiveMutex scope(&epdf->docLock);
     return PdfLoadAnnotationAttachment(epdf->Ctx(), epdf->pdfdoc, objNum);
 }
 
@@ -4844,7 +4839,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         return nullptr;
     }
 
-    ScopedMutex cs(&epdf->docLock);
+    ScopedRecursiveMutex cs(&epdf->docLock);
     Vec<Annotation*> els;
     for (auto& annot : pi->annotations) {
         auto& atp = annot->type;
@@ -4891,7 +4886,7 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos
     if (!pi) {
         return nullptr;
     }
-    ScopedMutex cs(&epdf->docLock);
+    ScopedRecursiveMutex cs(&epdf->docLock);
     Annotation* best = nullptr;
     float bestArea = 0;
     for (auto& w : pi->widgets) {
@@ -4930,7 +4925,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
     // read type/flags via mupdf directly (this file is also compiled into
     // PdfPreview/PdfFilter, which don't link Annotation.cpp's GetWidget*)
     auto ctx = epdf->Ctx();
-    ScopedMutex cs(&epdf->docLock);
+    ScopedRecursiveMutex cs(&epdf->docLock);
     for (int step = 1; step <= n; step++) {
         int j = forward ? (idx + step) % n : (idx - step + n) % n;
         Annotation* w = ws[j];
@@ -4986,7 +4981,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     // to annotations inside mupdf but we don't want loose the identity
     // so on add /remove we update the list manually
     // on change we assume Annotation* lives inside EngineMupdf
-    ScopedMutex scope(&e->pagesLock);
+    ScopedRecursiveMutex scope(&e->pagesLock);
     FzPageInfo* pageInfo = e->pages[pageIdx];
 
     if (change == AnnotationChange::Remove) {
@@ -5009,7 +5004,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     }
     {
         auto ctx = e->Ctx();
-        ScopedMutex ctxScope(&e->docLock);
+        ScopedRecursiveMutex ctxScope(&e->docLock);
         RebuildCommentsFromAnnotations(ctx, pageInfo);
     }
     pageInfo->elementsNeedRebuilding = true;
@@ -5030,7 +5025,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
     ReportIf(pageNo < 1);
     ReportIf(!engine->pdfdoc);
-    ScopedMutex cs(&engine->docLock);
+    ScopedRecursiveMutex cs(&engine->docLock);
 
     AnnotationType typ = AnnotationType::Unknown;
     fz_rect bounds;

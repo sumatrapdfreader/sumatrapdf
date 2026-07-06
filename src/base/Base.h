@@ -130,6 +130,9 @@
 #include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
+#if OS_DARWIN || OS_LINUX
+#include <pthread.h>
+#endif
 
 #define _USE_MATH_DEFINES
 #include <math.h>

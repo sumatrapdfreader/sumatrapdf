@@ -152,7 +152,7 @@ class EngineImages : public EngineBase {
 
     ScopedComPtr<IStream> fileStream;
 
-    CRITICAL_SECTION cacheLock;
+    RecursiveMutex cacheLock;
     Vec<ImagePage*> pageCache;
     Vec<ImagePageInfo*> pageInfos;
 
@@ -202,7 +202,6 @@ EngineImages::EngineImages() {
     preferredLayout.nonContinuous = true;
     isImageCollection = true;
 
-    InitializeCriticalSection(&cacheLock);
     fz_ctx = fz_new_context_windows();
 }
 
@@ -233,14 +232,14 @@ EngineImages::~EngineImages() {
     // logged so a leaked engine can be identified: its creation is logged by
     // CreateEngineImageFromFile et al. but this line will be missing
     logf("~EngineImages: '%s'\n", FilePath());
-    EnterCriticalSection(&cacheLock);
+    cacheLock.Lock();
     while (len(pageCache) > 0) {
         ImagePage* lastPage = pageCache.Last();
         ReportIf(lastPage->refs != 1);
         DropPage(lastPage, true);
     }
     DeleteVecMembers(pageInfos);
-    LeaveCriticalSection(&cacheLock);
+    cacheLock.Unlock();
 
     // Drop pages before per-thread contexts: DropPage() may need Ctx() to
     // release a page's fz_image, and dropping clones first can make it create
@@ -254,7 +253,6 @@ EngineImages::~EngineImages() {
     if (fz_ctx) {
         fz_drop_context_windows(fz_ctx);
     }
-    DeleteCriticalSection(&cacheLock);
 }
 
 // Wrap the page's raw image bytes in an fz_image for lazy mupdf decoding.
@@ -648,7 +646,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     bool waitForLoad = false;
 
     {
-        ScopedMutex scope(&cacheLock);
+        ScopedRecursiveMutex scope(&cacheLock);
 
         for (int i = 0; i < len(pageCache); i++) {
             if (pageCache[i]->pageNo == pageNo) {
@@ -700,7 +698,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             bmp = LoadBitmapForPage(pageNo, ownBmp);
         }
         {
-            ScopedMutex scope(&cacheLock);
+            ScopedRecursiveMutex scope(&cacheLock);
             result->img = img;
             result->bmp = bmp;
             result->ownBmp = ownBmp;
@@ -729,7 +727,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     }
 
     {
-        ScopedMutex scope(&cacheLock);
+        ScopedRecursiveMutex scope(&cacheLock);
         // pageCache.Remove is a no-op if the page was already evicted earlier
         pageCache.Remove(page);
     }
@@ -1591,7 +1589,7 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImage::GetImageData(int) {
-    ScopedMutex scope(&cacheLock);
+    ScopedRecursiveMutex scope(&cacheLock);
     auto pi = pageInfos[0];
     if (len(pi->rawData) == 0) {
         pi->rawData = file::ReadFile(FilePath());
@@ -1837,7 +1835,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImageDir::GetImageData(int pageNo) {
-    ScopedMutex scope(&cacheLock);
+    ScopedRecursiveMutex scope(&cacheLock);
     auto pi = pageInfos[pageNo - 1];
     if (len(pi->rawData) == 0) {
         Str path = pageFileNames[pageNo - 1];

@@ -59,9 +59,6 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     textColor = WIN_COL_BLACK;
     backgroundColor = WIN_COL_WHITE;
 
-    InitializeCriticalSection(&cacheAccess);
-    InitializeCriticalSection(&requestAccess);
-
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     int numCores = (int)si.dwNumberOfProcessors;
@@ -81,8 +78,8 @@ RenderCache::~RenderCache() {
     // Signal threads to exit FIRST, then wait for them WITHOUT holding the
     // critical sections. Workers take requestAccess for their idle bookkeeping,
     // so holding it here would deadlock until the WaitForMultipleObjects
-    // timeout fires -- after which DeleteCriticalSection on a still-in-use
-    // CS would access-violate.
+    // timeout fires -- after which destroying a still-in-use lock would
+    // access-violate.
     AtomicBoolSet(&shouldExit, true);
 
     if (nRenderThreads > 0) {
@@ -113,9 +110,6 @@ RenderCache::~RenderCache() {
                requestCount, cacheCount);
         ReportIf(true);
     }
-
-    DeleteCriticalSection(&cacheAccess);
-    DeleteCriticalSection(&requestAccess);
 }
 
 /* Find a bitmap for a page defined by <dm> and <pageNo> and optionally also
@@ -127,7 +121,7 @@ BitmapCacheEntry::~BitmapCacheEntry() {
 }
 
 BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     rotation = NormalizeRotation(rotation);
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
@@ -150,7 +144,7 @@ bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom,
 }
 
 bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     ReportIf(!entry);
     if (!entry) {
         return false;
@@ -189,7 +183,7 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
 }
 
 bool RenderCache::DropCacheEntryIfNotUsed(BitmapCacheEntry* entry) {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     if (!entry || entry->refs > 1) {
         return false;
     }
@@ -233,7 +227,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
 }
 
 void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     ReportIf(!req.dm);
 
     req.rotation = NormalizeRotation(req.rotation);
@@ -317,7 +311,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     if (!dm || (pageNo == kInvalidPageNo)) {
         return;
     }
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
 
     // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
@@ -338,7 +332,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
 
 void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
     rcLogf("RenderCache::FreeForDisplayModel: dm: 0x%p\n", dm);
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
@@ -350,7 +344,7 @@ void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
 
 void RenderCache::FreeNotVisible() {
     // rcLogf("RenderCache::FreeNotVisible\n");
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
@@ -368,7 +362,7 @@ void RenderCache::FreeNotVisible() {
 // keep the cached bitmaps for visible pages to avoid flickering during a reload.
 // mark invisible pages as out-of-date to prevent inconsistencies
 void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* entry = cache[i];
         if (entry->dm != oldDm) {
@@ -385,7 +379,7 @@ void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) 
 
 // marks all tiles containing rect of pageNo as out of date
 void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
-    ScopedMutex scopeReq(&requestAccess);
+    ScopedRecursiveMutex scopeReq(&requestAccess);
 
     ClearQueueForDisplayModel(dm, pageNo);
     for (int i = 0; i < nRenderThreads; i++) {
@@ -394,7 +388,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
         }
     }
 
-    ScopedMutex scopeCache(&cacheAccess);
+    ScopedRecursiveMutex scopeCache(&cacheAccess);
 
     RectF mediabox = dm->GetEngine()->PageMediabox(pageNo);
     for (int i = 0; i < cacheCount; i++) {
@@ -441,7 +435,7 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
 
 // get the maximum resolution available for the given page
 USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     USHORT maxRes = 0;
     for (int i = 0; i < cacheCount; i++) {
         auto e = cache[i];
@@ -459,8 +453,8 @@ bool RenderCache::ReduceTileSize() {
         return false;
     }
 
-    ScopedMutex scope1(&requestAccess);
-    ScopedMutex scope2(&cacheAccess);
+    ScopedRecursiveMutex scope1(&requestAccess);
+    ScopedRecursiveMutex scope2(&cacheAccess);
 
     if (maxTileSize.dx > maxTileSize.dy) {
         maxTileSize.dx /= 2;
@@ -507,7 +501,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage,
                                    const PredictiveChain* chain) {
     // rcLogf("RenderCache::RequestRendering: pageNo %d\n", pageNo);
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
         return;
@@ -650,7 +644,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
         return false;
     }
 
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
     PageRenderRequest* newRequest;
 
     /* add request to the queue */
@@ -719,7 +713,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 }
 
 int RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile) {
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
 
     for (int i = 0; i < nRenderThreads; i++) {
         auto* cr = curReqs[i];
@@ -738,7 +732,7 @@ int RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile)
 }
 
 bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
 
     if (requestCount == 0) {
         return false;
@@ -757,7 +751,7 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
 }
 
 bool RenderCache::ClearCurrentRequest(int threadIdx) {
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
     if (curReqs[threadIdx]) {
         RecordFinishedRequest(curReqs[threadIdx]);
         delete curReqs[threadIdx]->abortCookie;
@@ -776,7 +770,7 @@ void RenderCache::CancelRendering(DisplayModel* dm) {
     ClearQueueForDisplayModel(dm);
 
     for (;;) {
-        EnterCriticalSection(&requestAccess);
+        requestAccess.Lock();
         bool found = false;
         for (int i = 0; i < nRenderThreads; i++) {
             if (curReqs[i] && curReqs[i]->dm == dm) {
@@ -787,10 +781,10 @@ void RenderCache::CancelRendering(DisplayModel* dm) {
         if (!found) {
             // to be on the safe side
             ClearQueueForDisplayModel(dm);
-            LeaveCriticalSection(&requestAccess);
+            requestAccess.Unlock();
             return;
         }
-        LeaveCriticalSection(&requestAccess);
+        requestAccess.Unlock();
 
         /* TODO: busy loop is not good, but I don't have a better idea */
         Sleep(50);
@@ -798,7 +792,7 @@ void RenderCache::CancelRendering(DisplayModel* dm) {
 }
 
 void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePosition* tile) {
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
     int reqCount = requestCount;
     int curPos = 0;
     for (int i = 0; i < reqCount; i++) {
@@ -819,7 +813,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
 }
 
 void RenderCache::AbortCurrentRequest(int threadIdx) {
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
     auto* cr = curReqs[threadIdx];
     if (!cr) {
         return;
@@ -849,12 +843,12 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             // thread when work appears. Increment before waiting, decrement
             // after waking (whether due to new work or shutdown).
             {
-                ScopedMutex scope(&cache->requestAccess);
+                ScopedRecursiveMutex scope(&cache->requestAccess);
                 cache->idleThreads++;
             }
             DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
             {
-                ScopedMutex scope(&cache->requestAccess);
+                ScopedRecursiveMutex scope(&cache->requestAccess);
                 cache->idleThreads--;
             }
             if (AtomicBoolGet(&cache->shouldExit)) {
@@ -1101,7 +1095,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
 }
 
 void RenderCache::LogCacheSize() {
-    ScopedMutex scope(&cacheAccess);
+    ScopedRecursiveMutex scope(&cacheAccess);
     i64 size = 0;
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
@@ -1190,7 +1184,7 @@ void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
 }
 
 void RenderCache::SerializeQueueState(str::Builder& s) {
-    ScopedMutex scope(&requestAccess);
+    ScopedRecursiveMutex scope(&requestAccess);
     DWORD now = GetTickCount();
     int nInProgress = 0;
     for (int i = 0; i < nRenderThreads; i++) {
