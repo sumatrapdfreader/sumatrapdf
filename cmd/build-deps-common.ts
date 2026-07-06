@@ -1,6 +1,6 @@
 /**
  * Shared helpers for building SumatraPDF dependency static libraries
- * (used by cmd/build-mac.ts and cmd/build-with-mingw.ts).
+ * (used by cmd/build-mac.ts, cmd/build-linux.ts, and cmd/build-with-mingw.ts).
  */
 
 import { Glob } from "bun";
@@ -188,7 +188,7 @@ export async function createArchive(
   }
 }
 
-export type EmbedFormat = "pe" | "macho";
+export type EmbedFormat = "pe" | "macho" | "elf";
 
 /** Embed a binary file as a linkable .o (font data for mupdf noto.c). */
 export async function embedBinaryFile(
@@ -227,12 +227,31 @@ export async function embedBinaryFile(
       ],
       { cwd: tmpDir },
     );
+  } else if (format === "elf") {
+    res = await spawnCmd(
+      [
+        tools.embed,
+        "-I",
+        "binary",
+        "-O",
+        "elf64-x86-64",
+        "-B",
+        "i386:x86-64",
+        "--rename-section",
+        ".data=.rodata,alloc,load,readonly,data",
+        "--redefine-sym",
+        `_binary_${cleanFileName}_start=${symbolPrefix}`,
+        cleanFileName,
+        outAbsolute,
+      ],
+      { cwd: tmpDir },
+    );
   } else {
     // Mach-O: Apple's ld lacks GNU objcopy/ld -b binary. Use xxd + clang.
     const cSrc = join(dirname(outputObj), `${cleanFileName}.c`);
     const xxd = Bun.which("xxd");
     if (!xxd) {
-      throw new Error("xxd not found (needed to embed fonts on macOS)");
+      throw new Error("xxd not found (needed to embed fonts on macOS / Linux arm64)");
     }
     const xxdRes = await spawnCmd([xxd, "-i", cleanFileName], { cwd: tmpDir, captureStdout: true });
     if (!xxdRes.ok) {

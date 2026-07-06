@@ -128,7 +128,12 @@
 /* opening multiple epub files will crash because different threads will clobber
 * fz_hb_secret. Locking is not good enough
 */
-__declspec(thread) static fz_context *fz_hb_secret = NULL;
+#if defined(_MSC_VER)
+#define FZ_THREAD_LOCAL __declspec(thread)
+#else
+#define FZ_THREAD_LOCAL __thread
+#endif
+static FZ_THREAD_LOCAL fz_context *fz_hb_secret = NULL;
 
 /* fz_hb_lock can nest on a thread: an allocation made under
 * fz_hb_lock can fail and trigger store scavenging, which can drop the last
@@ -137,7 +142,7 @@ __declspec(thread) static fz_context *fz_hb_secret = NULL;
 * but the inner fz_hb_unlock must not clear fz_hb_secret while the outer
 * harfbuzz call still needs it, so only clear it when the outermost
 * fz_hb_unlock is called. */
-__declspec(thread) static int fz_hb_lock_depth = 0;
+static FZ_THREAD_LOCAL int fz_hb_lock_depth = 0;
 
 static void set_hb_context(fz_context *ctx)
 {
