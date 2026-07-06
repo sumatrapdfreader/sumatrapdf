@@ -125,9 +125,9 @@ static void log2(Str s, bool always) {
     }
     gLogMutex.Lock();
 
-    InterlockedIncrement(&gAllowAllocFailure);
+    AtomicIntInc(&gAllowAllocFailure);
     defer {
-        InterlockedDecrement(&gAllowAllocFailure);
+        AtomicIntDec(&gAllowAllocFailure);
     };
 
     if (!gLogBuf) {

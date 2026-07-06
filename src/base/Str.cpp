@@ -11,6 +11,58 @@
 #define sscanf_s sscanf
 #endif
 
+// Locale-independent Unicode lowercase folding for case-insensitive matching.
+// On Windows, CharLowerBuffW folds accented / Cyrillic / Greek letters
+// regardless of the CRT locale. POSIX uses towlower(), which is the closest
+// portable equivalent available without pulling in an external Unicode table.
+static void FoldCaseWInPlace(WStr s) {
+    if (!s) {
+        return;
+    }
+#if OS_WIN
+    CharLowerBuffW(s.s, (DWORD)s.len);
+#else
+    for (int i = 0; i < s.len; i++) {
+        s.s[i] = (WCHAR)towlower(s.s[i]);
+    }
+#endif
+    for (int i = 0; i < s.len; i++) {
+        if (s.s[i] == 0x0130) {
+            s.s[i] = L'i';
+        }
+    }
+}
+
+static int Utf8ByteOffsetForWCharOffset(Str s, int wcharOff) {
+    if (wcharOff <= 0) {
+        return 0;
+    }
+    int byteOff = 0;
+    int nWide = 0;
+    while (byteOff < s.len && nWide < wcharOff) {
+        int prevByteOff = byteOff;
+        int codepoint = Utf8CodepointNext(s, byteOff);
+        int wcharUnits = sizeof(wchar_t) == 2 && codepoint > 0xffff ? 2 : 1;
+        if (nWide + wcharUnits > wcharOff) {
+            return prevByteOff;
+        }
+        nWide += wcharUnits;
+    }
+    return byteOff;
+}
+
+#if !OS_WIN
+static bool IsRtlCodepoint(wchar_t c) {
+    return (c >= 0x0590 && c <= 0x08ff) || (c >= 0xfb1d && c <= 0xfdff) || (c >= 0xfe70 && c <= 0xfeff) ||
+           (c >= 0x10800 && c <= 0x10fff) || (c >= 0x1e800 && c <= 0x1edff);
+}
+
+static bool IsLtrCodepoint(wchar_t c) {
+    return (c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || (c >= 0x00c0 && c <= 0x02af) ||
+           (c >= 0x0370 && c <= 0x052f) || (c >= 0x1e00 && c <= 0x1fff);
+}
+#endif
+
 namespace str {
 
 void Free(Str s) {
@@ -257,24 +309,6 @@ bool EqNIx(Str s, int n, Str s2) {
     return len(s2) == n && str::StartsWithI(s, s2);
 }
 
-// Locale-independent Unicode lowercase folding for case-insensitive matching.
-// CharLowerBuffW folds accented / Cyrillic / Greek letters regardless of the
-// CRT locale (unlike towlower()), and U+0130 is special-cased to 'i' the same
-// way as our full-text search (see TextSearch.cpp's FoldCaseForSearch), so the
-// two stay consistent. Folding is 1:1 in WCHAR count, so it doesn't change
-// character offsets.
-static void FoldCaseForFindW(WStr s) {
-    if (!s) {
-        return;
-    }
-    CharLowerBuffW(s.s, (DWORD)s.len);
-    for (int i = 0; i < s.len; i++) {
-        if (s.s[i] == 0x0130) {
-            s.s[i] = L'i';
-        }
-    }
-}
-
 // case-insensitive variant of IndexOf: returns the byte offset of the first
 // match of toFind in s, or -1 if not found
 int IndexOfI(Str s, Str toFind) {
@@ -326,17 +360,13 @@ int IndexOfI(Str s, Str toFind) {
     TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
     TempWStr wsLo = str::DupTemp(ws);
     TempWStr wfLo = ToWStrTemp(toFind);
-    FoldCaseForFindW(wsLo);
-    FoldCaseForFindW(wfLo);
+    FoldCaseWInPlace(wsLo);
+    FoldCaseWInPlace(wfLo);
 
     int res = -1;
     int idx = WStrFindSubstr(wsLo, wfLo); // common/str_util.cpp
     if (idx >= 0) {
-        int nbytes = 0;
-        if (idx > 0) {
-            nbytes = WideCharToMultiByte(CP_UTF8, 0, ws.s, idx, nullptr, 0, nullptr, nullptr);
-        }
-        res = nbytes;
+        res = Utf8ByteOffsetForWCharOffset(s, idx);
     }
     ArenaRestoreSavepoint(sp);
     return res;
@@ -1327,7 +1357,7 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
         newEls = (char*)Realloc(s->allocator, s->els, allocSize, s->len + kPadding);
     }
     if (!newEls) {
-        ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
+        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
         return nullptr;
     }
     s->els = newEls;
@@ -1530,7 +1560,7 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
     }
 
     if (!newEls) {
-        ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
+        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
         return nullptr;
     }
     s->els = newEls;
@@ -1761,18 +1791,6 @@ bool Eq(WStr s1, WStr s2) {
         }
     }
     return true;
-}
-
-static void FoldCaseWInPlace(WStr s) {
-    if (!s) {
-        return;
-    }
-    CharLowerBuffW(s.s, (DWORD)s.len);
-    for (int i = 0; i < s.len; i++) {
-        if (s.s[i] == 0x0130) {
-            s.s[i] = L'i';
-        }
-    }
 }
 
 bool EqNI(WStr s1, WStr s2, int n) {
@@ -2030,8 +2048,8 @@ int BufSet(Str dst, Str src) {
 
     int toCopy = std::min(cchDst - 1, src.len);
 
-    errno_t err = strncpy_s(dst.s, (size_t)cchDst, src.s, (size_t)toCopy);
-    ReportIf(err || dst.s[toCopy] != '\0');
+    memcpy(dst.s, src.s, (size_t)toCopy);
+    dst.s[toCopy] = '\0';
 
     return toCopy;
 }
@@ -2074,8 +2092,8 @@ int BufAppend(Str dst, Str s) {
     int left = dstCch - currDstCchLen - 1;
     int toCopy = std::min(left, s.len);
 
-    errno_t err = strncat_s(dst.s, dstCch, s.s, toCopy);
-    ReportIf(err || dst.s[currDstCchLen + toCopy] != '\0');
+    memcpy(dst.s + currDstCchLen, s.s, (size_t)toCopy);
+    dst.s[currDstCchLen + toCopy] = '\0';
 
     return toCopy;
 }
@@ -2229,6 +2247,7 @@ bool IsTextRtl(WStr s) {
     int n = s.len > 40 ? 40 : s.len;
     int nRtl = 0;
     int nLtr = 0;
+#if OS_WIN
     WORD* charTypes = AllocArray<WORD>(GetTempArena(), n + 1);
     if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s.s, n, charTypes)) {
         return false; // API failure
@@ -2241,6 +2260,16 @@ bool IsTextRtl(WStr s) {
             nRtl++;
         }
     }
+#else
+    for (int i = 0; i < n; i++) {
+        wchar_t c = s.s[i];
+        if (IsRtlCodepoint(c)) {
+            nRtl++;
+        } else if (IsLtrCodepoint(c)) {
+            nLtr++;
+        }
+    }
+#endif
     return nRtl > nLtr;
 }
 
