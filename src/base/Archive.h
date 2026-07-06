@@ -83,7 +83,7 @@ struct MultiFormatArchive {
     bool isEncrypted = false;
 
     // used for allocating strings that are referenced by ArchFileInfo::name
-    Arena* allocator_ = nullptr;
+    Arena* a = nullptr;
     Vec<FileInfo*> fileInfos_;
 
     Str archivePath_;

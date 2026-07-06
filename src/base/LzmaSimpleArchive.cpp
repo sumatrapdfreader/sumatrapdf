@@ -21,21 +21,21 @@ there's a tool for creating them in ../MakeLzSA.cpp
 namespace lzma {
 
 struct ISzAllocatorAlloc : ISzAlloc {
-    Arena* allocator;
+    Arena* a;
 
     static void* _Alloc(void* p, size_t size) {
-        ISzAllocatorAlloc* a = (ISzAllocatorAlloc*)p;
-        return ::Alloc(a->allocator, size);
+        ISzAllocatorAlloc* alloc = (ISzAllocatorAlloc*)p;
+        return ::Alloc(alloc->a, size);
     }
     static void _Free(void* p, void* address) {
-        ISzAllocatorAlloc* a = (ISzAllocatorAlloc*)p;
-        ::Free(a->allocator, address);
+        ISzAllocatorAlloc* alloc = (ISzAllocatorAlloc*)p;
+        ::Free(alloc->a, address);
     }
 
-    explicit ISzAllocatorAlloc(Arena* allocator) {
+    explicit ISzAllocatorAlloc(Arena* a) {
         this->Alloc = _Alloc;
         this->Free = _Free;
-        this->allocator = allocator;
+        this->a = a;
     }
 };
 
@@ -71,7 +71,7 @@ u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
 
 // the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
 static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompressed, size_t uncompressedSize,
-                       Arena* allocator) {
+                       Arena* a) {
     if (compressedSize < 1) {
         return false;
     }
@@ -93,7 +93,7 @@ static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompre
     SizeT uncompressedSizeCmp = uncompressedSize;
     SizeT compressedSizeTmp = compressedSize - LZMA_HEADER_SIZE;
 
-    ISzAllocatorAlloc lzmaAlloc(allocator);
+    ISzAllocatorAlloc lzmaAlloc(a);
     ELzmaStatus status;
     u8* dest = (u8*)uncompressed;
     u8* src = (u8*)(compressed + LZMA_HEADER_SIZE);
@@ -220,7 +220,7 @@ int GetIdxFromName(SimpleArchive* archive, Str fileName) {
     return -1;
 }
 
-u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator) {
+u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a) {
     if (idx >= archive->filesCount) {
         return nullptr;
     }
@@ -228,64 +228,64 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator) {
     FileInfo* fi = &archive->files[idx];
 
     // over-allocate by 2 bytes and zero them so the result is always null-terminated
-    u8* uncompressed = (u8*)Alloc(allocator, (size_t)(fi->uncompressedSize + 2));
+    u8* uncompressed = (u8*)Alloc(a, (size_t)(fi->uncompressedSize + 2));
     if (!uncompressed) {
         return nullptr;
     }
     uncompressed[fi->uncompressedSize] = 0;
     uncompressed[fi->uncompressedSize + 1] = 0;
 
-    bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, fi->uncompressedSize, allocator);
+    bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, fi->uncompressedSize, a);
     if (!ok) {
-        Free(allocator, uncompressed);
+        Free(a, uncompressed);
         return nullptr;
     }
 
     u32 realCrc = lzma_crc32(0, (const u8*)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
-        Free(allocator, uncompressed);
+        Free(a, uncompressed);
         return nullptr;
     }
 
     return uncompressed;
 }
 
-u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* allocator) {
+u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* a) {
     int idx = GetIdxFromName(archive, fileName);
     if (-1 != idx) {
-        return GetFileDataByIdx(archive, idx, allocator);
+        return GetFileDataByIdx(archive, idx, a);
     }
     return nullptr;
 }
 
-static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena* allocator) {
+static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena* a) {
     FileInfo* fi = &archive->files[idx];
 
-    u8* uncompressed = GetFileDataByIdx(archive, idx, allocator);
+    u8* uncompressed = GetFileDataByIdx(archive, idx, a);
     if (!uncompressed) {
         return false;
     }
 
     bool ok = false;
-    Str filePath = path::Join(allocator, dstDir, fi->name);
+    Str filePath = path::Join(a, dstDir, fi->name);
     if (filePath) {
         Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
         ok = file::WriteFile(filePath, d);
     }
 
-    Free(allocator, filePath.s);
-    Free(allocator, uncompressed);
+    Free(a, filePath.s);
+    Free(a, uncompressed);
 
     return ok;
 }
 
-bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
-    auto d = file::ReadFileWithArena(archivePath, allocator);
+bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* a) {
+    auto d = file::ReadFileWithArena(archivePath, a);
     if (len(d) == 0) {
         return false;
     }
 
-    AutoCall freeData(Free, allocator, (void*)d.s);
+    AutoCall freeData(Free, a, (void*)d.s);
 
     SimpleArchive archive;
     bool ok = ParseSimpleArchive((u8*)d.s, d.len, &archive);
@@ -295,7 +295,7 @@ bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
     for (; files->s; files++) {
         int idx = GetIdxFromName(&archive, *files);
         if (-1 != idx) {
-            ok &= ExtractFileByIdx(&archive, idx, dstDir, allocator);
+            ok &= ExtractFileByIdx(&archive, idx, dstDir, a);
         }
     }
     return ok;

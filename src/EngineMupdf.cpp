@@ -2038,7 +2038,7 @@ EngineMupdf::EngineMupdf() {
 
     // pages Vec + its FzPageInfo elements live for the lifetime of the
     // engine, so bump-allocate them out of EngineBase::arena
-    pages.allocator = arena;
+    pages.a = arena;
 
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;

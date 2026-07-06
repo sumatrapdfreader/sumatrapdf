@@ -39,7 +39,7 @@ FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
 #endif
 
 MultiFormatArchive::MultiFormatArchive() {
-    allocator_ = ArenaNew();
+    a = ArenaNew();
 }
 
 static MultiFormatArchive::Format FormatFromArchive(struct archive* a) {
@@ -66,7 +66,7 @@ MultiFormatArchive::~MultiFormatArchive() {
     }
     str::Free(archivePath_);
     str::Free(password);
-    ArenaDelete(allocator_);
+    ArenaDelete(a);
 }
 
 bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
@@ -83,12 +83,12 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
             nameZ = archive_entry_pathname(entry);
             entryName = nameZ ? Str(nameZ) : Str{};
         }
-        FileInfo* i = AllocArray<FileInfo>(allocator_);
+        FileInfo* i = AllocArray<FileInfo>(this->a);
         i->fileId = fileId;
         i->fileSizeUncompressed = (int)archive_entry_size(entry);
         i->filePos = (i64)fileId; // use fileId as position identifier
         i->fileTime = (i64)archive_entry_mtime(entry);
-        i->name = str::Dup(allocator_, entryName);
+        i->name = str::Dup(this->a, entryName);
         i->isDir = (archive_entry_filetype(entry) == AE_IFDIR);
         i->data = nullptr;
         fileInfos_.Append(i);
@@ -739,12 +739,12 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
         wstr::TransCharsInPlace(WStr(rarHeader.FileNameW), WStrL(L"\\"), WStrL(L"/"));
         auto name = ToUtf8Temp(rarHeader.FileNameW);
 
-        FileInfo* i = AllocArray<FileInfo>(allocator_);
+        FileInfo* i = AllocArray<FileInfo>(a);
         i->fileId = fileId;
         i->fileSizeUncompressed = (int)rarHeader.UnpSize;
         i->filePos = 0;
         i->fileTime = (i64)rarHeader.FileTime;
-        i->name = str::Dup(allocator_, name);
+        i->name = str::Dup(a, name);
         i->isDir = (rarHeader.Flags & RHDF_DIRECTORY) != 0;
         i->data = nullptr;
         if (eagerLoad) {
@@ -791,7 +791,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
 
     RARCloseArchive(hArc);
 
-    rarFilePath_ = str::Dup(allocator_, rarPath);
+    rarFilePath_ = str::Dup(a, rarPath);
     return true;
 }
 #else

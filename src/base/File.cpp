@@ -100,13 +100,13 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
     return res;
 }
 
-Str Join(Arena* allocator, Str path, Str fileName) {
+Str Join(Arena* a, Str path, Str fileName) {
     SkipLeadingPathSep(fileName);
     Str sepStr = {};
     if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
         sepStr = StrL(PATH_SEP);
     }
-    return str::Join(allocator, path, sepStr, fileName);
+    return str::Join(a, path, sepStr, fileName);
 }
 
 Str Join(Str path, Str fileName) {
@@ -288,7 +288,7 @@ namespace file {
 
 thread_local CopyProgressCb gFileCopyProgressCb;
 
-Str ReadFileWithArena(Str filePath, Arena* allocator) {
+Str ReadFileWithArena(Str filePath, Arena* a) {
     char* d = nullptr;
     int res;
     int size = 0;
@@ -307,7 +307,7 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
         goto Error;
     }
     size = (int)fileSize;
-    d = AllocArray<char>(allocator, size + ZERO_PADDING_COUNT);
+    d = AllocArray<char>(a, size + ZERO_PADDING_COUNT);
     if (!d) {
         goto Error;
     }
@@ -328,7 +328,7 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
 
     return Str(d, size);
 Error:
-    Free(allocator, (void*)d);
+    Free(a, (void*)d);
     return {};
 }
 

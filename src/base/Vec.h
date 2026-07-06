@@ -11,7 +11,7 @@ store pointer types or POD types
 template <typename T>
 class Vec {
   public:
-    Arena* allocator = nullptr;
+    Arena* a = nullptr;
     int len = 0;
     int cap = 0;
     int capacityHint = 0;
@@ -50,9 +50,9 @@ class Vec {
         size_t newPadding = allocSize - (size_t)len * kElSize;
         T* newEls;
         if (buf == els) {
-            newEls = (T*)MemDup(allocator, buf, (size_t)len * kElSize, newPadding);
+            newEls = (T*)MemDup(a, buf, (size_t)len * kElSize, newPadding);
         } else {
-            newEls = (T*)Realloc(allocator, els, allocSize, (size_t)len * kElSize);
+            newEls = (T*)Realloc(a, els, allocSize, (size_t)len * kElSize);
         }
         if (!newEls) {
             ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
@@ -95,7 +95,7 @@ class Vec {
 
     void FreeEls() {
         if (els != buf) {
-            Free(allocator, els);
+            Free(a, els);
             els = nullptr;
         }
     }
@@ -127,9 +127,9 @@ class Vec {
         return res != nullptr;
     }
 
-    // allocator is not owned by Vec and must outlive it
+    // arena is not owned by Vec and must outlive it
     explicit Vec(int capHint = 0, Arena* a = nullptr) {
-        allocator = a;
+        this->a = a;
         capacityHint = capHint;
         els = buf;
         Reset();
@@ -279,7 +279,7 @@ class Vec {
     T* Take() {
         T* res = els;
         if (els == buf) {
-            res = (T*)MemDup(allocator, buf, (len + kPadding) * kElSize);
+            res = (T*)MemDup(a, buf, (len + kPadding) * kElSize);
         }
         els = buf;
         Reset();

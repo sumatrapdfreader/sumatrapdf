@@ -408,14 +408,14 @@ void ReplaceWithCopy(Str* s, Str snew) {
     *s = dup;
 }
 
-Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
+Str Join(Arena* a, Str s1, Str s2, Str s3, Str s4, Str s5) {
     int s1Len = len(s1);
     int s2Len = len(s2);
     int s3Len = len(s3);
     int s4Len = len(s4);
     int s5Len = len(s5);
     int n = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
-    char* res = (char*)Alloc(allocator, n);
+    char* res = (char*)Alloc(a, n);
 
     char* s = res;
     memcpy(s, s1.s, s1Len);
@@ -433,8 +433,8 @@ Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     return Str(res, n - 1);
 }
 
-Str Join(Arena* allocator, Str s1, Str s2, Str s3) {
-    return Join(allocator, s1, s2, s3, Str{}, Str{});
+Str Join(Arena* a, Str s1, Str s2, Str s3) {
+    return Join(a, s1, s2, s3, Str{}, Str{});
 }
 
 /* Concatenate 2 strings. Any string can be nullptr.
@@ -479,10 +479,10 @@ namespace wstr {
 
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
-WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
+WStr Join(Arena* a, WStr s1, WStr s2, WStr s3) {
     size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
     size_t n = s1Len + s2Len + s3Len + 1;
-    WCHAR* res = (WCHAR*)Alloc(allocator, n * sizeof(WCHAR));
+    WCHAR* res = (WCHAR*)Alloc(a, n * sizeof(WCHAR));
     memcpy(res, s1.s, s1Len * sizeof(WCHAR));
     memcpy(res + s1Len, s2.s, s2Len * sizeof(WCHAR));
     memcpy(res + s1Len + s2Len, s3.s, s3Len * sizeof(WCHAR));
@@ -1370,12 +1370,12 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
     size_t allocSize = newElCount;
     char* newEls;
     if (s->buf == s->els) {
-        newEls = (char*)Alloc(s->allocator, allocSize);
+        newEls = (char*)Alloc(s->a, allocSize);
         if (newEls) {
             memcpy(newEls, s->buf, s->len + 1);
         }
     } else {
-        newEls = (char*)Realloc(s->allocator, s->els, allocSize, s->len + kPadding);
+        newEls = (char*)Realloc(s->a, s->els, allocSize, s->len + kPadding);
     }
     if (!newEls) {
         ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
@@ -1410,7 +1410,7 @@ static void StrBuilderFree(str::Builder* s) {
     if (!s->els || (s->els == s->buf)) {
         return;
     }
-    Free(s->allocator, s->els);
+    Free(s->a, s->els);
     s->els = nullptr;
 }
 
@@ -1432,9 +1432,9 @@ void str::Builder::Reset(Str s) {
     Append(s); // no-op if s is empty
 }
 
-// allocator is not owned by Vec and must outlive it
+// arena is not owned by Builder and must outlive it
 str::Builder::Builder(int capHint, Arena* a) {
-    allocator = a;
+    this->a = a;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
@@ -1516,7 +1516,7 @@ Str str::Builder::TakeStr() {
     char* res = els;
     if (els == buf) {
         // data is in the inline buffer, so we have to duplicate it
-        res = (char*)MemDup(this->allocator, els, len + kPadding);
+        res = (char*)MemDup(this->a, els, len + kPadding);
     } else {
         // we're returning els, so reset to small buf
         els = buf;
@@ -1572,12 +1572,12 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
     size_t allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
     if (s->buf == s->els) {
-        newEls = (WCHAR*)Alloc(s->allocator, allocSize);
+        newEls = (WCHAR*)Alloc(s->a, allocSize);
         if (newEls) {
             memcpy(newEls, s->buf, wstr::Builder::kElSize * (s->len + 1));
         }
     } else {
-        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize, wstr::Builder::kElSize * (s->len + kPadding));
+        newEls = (WCHAR*)Realloc(s->a, s->els, allocSize, wstr::Builder::kElSize * (s->len + kPadding));
     }
 
     if (!newEls) {
@@ -1611,7 +1611,7 @@ static void WStrBuilderFree(wstr::Builder* s) {
     if (!s->els || (s->els == s->buf)) {
         return;
     }
-    Free(s->allocator, s->els);
+    Free(s->a, s->els);
     s->els = nullptr;
 }
 
@@ -1633,9 +1633,9 @@ void wstr::Builder::Reset(WStr s) {
     Append(s); // no-op if s is empty
 }
 
-// allocator is not owned by Vec and must outlive it
+// arena is not owned by Builder and must outlive it
 wstr::Builder::Builder(int capHint, Arena* a) {
-    allocator = a;
+    this->a = a;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
@@ -1734,7 +1734,7 @@ WStr wstr::Builder::TakeWStr() {
     int n = (int)len;
     WCHAR* res = els;
     if (els == buf) {
-        res = (WCHAR*)MemDup(allocator, buf, (len + kPadding) * kElSize);
+        res = (WCHAR*)MemDup(a, buf, (len + kPadding) * kElSize);
     }
     els = buf;
     Reset();

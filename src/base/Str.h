@@ -196,8 +196,8 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
 namespace str {
 struct Builder {
-    // allocator is not owned by Vec and must outlive it
-    Arena* allocator = nullptr;
+    // arena is not owned by Builder and must outlive it
+    Arena* a = nullptr;
     // TODO: to save space (8 bytes), combine els and buf?
     char* els = nullptr;
     u32 len = 0;
@@ -208,7 +208,7 @@ struct Builder {
 
     static constexpr size_t kBufChars = dimof(buf);
 
-    explicit Builder(int capHint = 0, Arena* allocator = nullptr);
+    explicit Builder(int capHint = 0, Arena* a = nullptr);
     Builder(Str s);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
@@ -244,8 +244,8 @@ void SeqStrNumFinish(str::Builder* b);
 
 namespace wstr {
 struct Builder {
-    // allocator is not owned by Vec and must outlive it
-    Arena* allocator = nullptr;
+    // arena is not owned by Builder and must outlive it
+    Arena* a = nullptr;
     WCHAR* els = nullptr;
     u32 len = 0;
     u32 cap = 0;
@@ -254,7 +254,7 @@ struct Builder {
     static constexpr size_t kBufChars = dimof(buf);
     static constexpr size_t kElSize = sizeof(WCHAR);
 
-    explicit Builder(int capHint = 0, Arena* allocator = nullptr);
+    explicit Builder(int capHint = 0, Arena* a = nullptr);
     Builder(const Builder&);
     Builder(WStr s);
     Builder& operator=(const Builder& that);

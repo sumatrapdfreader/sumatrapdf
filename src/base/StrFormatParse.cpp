@@ -559,7 +559,7 @@ Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
     // format directly into the caller's arena so there are no temp-allocator /
     // heap allocations at all (matters for the crash handler's pre-allocated
     // arena). TakeStr() then returns that arena buffer without a second copy.
-    f.res.allocator = a;
+    f.res.a = a;
     bool ok = ParseFormat(f, fmt);
     if (!ok) {
         return {};

@@ -26,7 +26,7 @@ TempWStr GetDirTemp(WStr path);
 
 TempStr GetNonVirtualTemp(Str virtualPath);
 
-Str Join(Arena* allocator, Str path, Str fileName);
+Str Join(Arena* a, Str path, Str fileName);
 Str Join(Str path, Str fileName);
 WStr Join(WStr path, WStr fileName, WStr fileName2 = WStr());
 TempStr JoinTemp(Str path, Str fileName, Str fileName2 = Str());
