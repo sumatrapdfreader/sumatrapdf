@@ -5,6 +5,7 @@
 
 namespace strconv {
 
+#if OS_WIN
 static WStr WrapAllocatedWStr(WCHAR* s, int n) {
     if (!s) {
         return {};
@@ -18,12 +19,14 @@ static Str WrapAllocatedStr(char* s, int n) {
     }
     return Str(s, n);
 }
+#endif
 
 WStr Utf8ToWStr(Str s, Arena* a) {
     // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
     if (str::IsNull(s)) {
         return {};
     }
+#if OS_WIN
     if (s.len == 0) {
         WCHAR* res = AllocArray<WCHAR>(a, 1);
         return WrapAllocatedWStr(res, 0);
@@ -40,6 +43,10 @@ WStr Utf8ToWStr(Str s, Arena* a) {
     // triggers in Dune.epub
     // ReportIf(cchConverted != s.len);
     return WrapAllocatedWStr(res, cchConverted);
+#else
+    TempWStr res = ToWStrTemp(s);
+    return wstr::Dup(a, res);
+#endif
 }
 
 Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
@@ -47,6 +54,7 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     if (wstr::IsNull(s)) {
         return {};
     }
+#if OS_WIN
     if (s.len == 0) {
         char* res = AllocArray<char>(a, 1);
         return WrapAllocatedStr(res, 0);
@@ -63,6 +71,11 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     int cbConverted = WideCharToMultiByte(codePage, 0, s.s, s.len, res, cbNeeded, nullptr, nullptr);
     ReportIf(cbConverted != cbNeeded);
     return WrapAllocatedStr(res, cbConverted);
+#else
+    ReportIf(codePage != CP_UTF8 && codePage != CP_ACP && codePage != 20127);
+    TempStr res = ToUtf8Temp(s);
+    return str::Dup(a, res);
+#endif
 }
 
 Str WStrToUtf8(WStr s, Arena* a) {
@@ -76,6 +89,7 @@ WStr StrCPToWStr(Str src, uint codePage) {
         return {};
     }
 
+#if OS_WIN
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src.s, src.len, nullptr, 0);
     if (0 == requiredBufSize) {
         return {};
@@ -86,6 +100,11 @@ WStr StrCPToWStr(Str src, uint codePage) {
     }
     MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
     return WrapAllocatedWStr(res, requiredBufSize);
+#else
+    ReportIf(codePage != CP_UTF8 && codePage != CP_ACP && codePage != 20127);
+    TempWStr res = ToWStrTemp(src);
+    return wstr::Dup(nullptr, res);
+#endif
 }
 
 TempWStr StrCPToWStrTemp(Str src, uint codePage) {
@@ -94,6 +113,7 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage) {
         return {};
     }
 
+#if OS_WIN
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src.s, src.len, nullptr, 0);
     if (0 == requiredBufSize) {
         return {};
@@ -104,6 +124,10 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage) {
     }
     MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
     return WrapAllocatedWStr(res, requiredBufSize);
+#else
+    ReportIf(codePage != CP_UTF8 && codePage != CP_ACP && codePage != 20127);
+    return ToWStrTemp(src);
+#endif
 }
 
 TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest) {

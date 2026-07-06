@@ -93,13 +93,13 @@ static bool isLegalUTF8(const u8* src, int length) {
             if (a < 0x80 || a > 0xBF) {
                 return false;
             }
-            __fallthrough;
+            [[fallthrough]];
         case 3:
             a = (*--end);
             if (a < 0x80 || a > 0xBF) {
                 return false;
             }
-            __fallthrough;
+            [[fallthrough]];
         case 2:
             a = (*--end);
             if (a > 0xBF) {
@@ -132,7 +132,7 @@ static bool isLegalUTF8(const u8* src, int length) {
                         return false;
                     }
             }
-            __fallthrough;
+            [[fallthrough]];
         case 1:
             if (*src >= 0x80 && *src < 0xC2) {
                 return false;
@@ -357,13 +357,13 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
                 break;
             case 4:
                 ret[tmp++] = s.s[src++];
-                __fallthrough;
+                [[fallthrough]];
             case 3:
                 ret[tmp++] = s.s[src++];
-                __fallthrough;
+                [[fallthrough]];
             case 2:
                 ret[tmp++] = s.s[src++];
-                __fallthrough;
+                [[fallthrough]];
             case 1:
                 ret[tmp++] = s.s[src++];
         }
@@ -399,13 +399,13 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
                     break;
                 case 4:
                     ret[tmp++] = s.s[src++];
-                    __fallthrough;
+                    [[fallthrough]];
                 case 3:
                     ret[tmp++] = s.s[src++];
-                    __fallthrough;
+                    [[fallthrough]];
                 case 2:
                     ret[tmp++] = s.s[src++];
-                    __fallthrough;
+                    [[fallthrough]];
                 case 1:
                     ret[tmp++] = s.s[src++];
             }
@@ -423,13 +423,60 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
 
 static wchar_t emptyWideStr[1] = {0};
 
+#if !OS_WIN
+static int Utf8BytesForCodepoint(int c) {
+    if (c < 0x80) {
+        return 1;
+    }
+    if (c < 0x800) {
+        return 2;
+    }
+    if (c < 0x10000) {
+        return 3;
+    }
+    return 4;
+}
+
+static int WStrCodepointAt(WStr s, int& idx) {
+    int c = s.s[idx++];
+    if constexpr (sizeof(WCHAR) == 2) {
+        if (c >= 0xd800 && c <= 0xdbff && idx < s.len) {
+            int lo = s.s[idx];
+            if (lo >= 0xdc00 && lo <= 0xdfff) {
+                idx++;
+                return 0x10000 + ((c - 0xd800) << 10) + (lo - 0xdc00);
+            }
+            return 0xfffd;
+        }
+        if (c >= 0xdc00 && c <= 0xdfff) {
+            return 0xfffd;
+        }
+    }
+    return c;
+}
+#endif
+
 Str ToUtf8(Arena* arena, WStr wide) {
     if (len(wide) == 0) {
         return Str();
     }
+#if OS_WIN
     int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
     char* utf8 = (char*)Alloc(arena, n + 1);
     WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, utf8, n, nullptr, nullptr);
+#else
+    int n = 0;
+    for (int i = 0; i < wide.len;) {
+        int c = WStrCodepointAt(wide, i);
+        n += Utf8BytesForCodepoint(c);
+    }
+    char* utf8 = (char*)Alloc(arena, n + 1);
+    int off = 0;
+    for (int i = 0; i < wide.len;) {
+        int c = WStrCodepointAt(wide, i);
+        str::Utf8Encode(utf8, off, c);
+    }
+#endif
     utf8[n] = 0;
     return Str(utf8, n);
 }
@@ -442,9 +489,33 @@ WStr ToWStrTemp(Str s) {
     if (len(s) == 0) {
         return WStr(&emptyWideStr[0], 0);
     }
+#if OS_WIN
     int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
     wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
     MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, wide, wideLen);
+#else
+    int wideLen = 0;
+    for (int byteIdx = 0; byteIdx < s.len;) {
+        int c = Utf8CodepointNext(s, byteIdx);
+        wideLen += c >= 0x10000 && sizeof(WCHAR) == 2 ? 2 : 1;
+    }
+    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
+    int dst = 0;
+    for (int byteIdx = 0; byteIdx < s.len;) {
+        int c = Utf8CodepointNext(s, byteIdx);
+        if constexpr (sizeof(WCHAR) == 2) {
+            if (c >= 0x10000) {
+                c -= 0x10000;
+                wide[dst++] = (WCHAR)(0xd800 + (c >> 10));
+                wide[dst++] = (WCHAR)(0xdc00 + (c & 0x3ff));
+            } else {
+                wide[dst++] = (WCHAR)c;
+            }
+        } else {
+            wide[dst++] = (WCHAR)c;
+        }
+    }
+#endif
     wide[wideLen] = 0;
     return WStr(wide, wideLen);
 }

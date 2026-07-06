@@ -3,6 +3,10 @@
 
 #include "Base.h"
 
+#if OS_POSIX
+#include <locale.h>
+#endif
+
 /*
 str::Fmt is type-safe printf()-like system with support for both %-style formatting
 directives and C#-like positional directives ({0}, {1} etc.).
@@ -845,11 +849,17 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
+#if OS_WIN
     WCHAR thousandSepW[4]{};
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
+#else
+    (void)locale;
+    const lconv* lc = localeconv();
+    TempStr thousandSep = Str(lc && lc->thousands_sep && lc->thousands_sep[0] ? lc->thousands_sep : ",");
+#endif
     TempStr buf = str::FormatTemp("%d", num);
 
     str::Builder res;
@@ -871,6 +881,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     i64 num = (i64)(number * 100 + 0.5);
 
     TempStr tmp = FormatNumWithThousandSepTemp(num / 100, locale);
+#if OS_WIN
     WCHAR decimalW[4] = {};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
@@ -881,6 +892,10 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     for (WCHAR c : decimalW) {
         decimal[i++] = (char)c;
     }
+#else
+    const lconv* lc = localeconv();
+    const char* decimal = lc && lc->decimal_point && lc->decimal_point[0] ? lc->decimal_point : ".";
+#endif
 
     // add between one and two decimals after the point
     TempStr buf = str::FormatTemp("%s%s%02d", tmp, Str(decimal), num % 100);

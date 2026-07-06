@@ -17,10 +17,13 @@ static int StrCmp(Str s1, Str s2) {
 }
 
 static int StrCmpI(Str s1, Str s2) {
-    size_t n = std::min((size_t)s1.len, (size_t)s2.len);
-    int cmp = n > 0 ? _strnicmp(s1.s, s2.s, n) : 0;
-    if (cmp != 0) {
-        return cmp;
+    int n = std::min(s1.len, s2.len);
+    for (int i = 0; i < n; i++) {
+        int c1 = tolower((u8)s1.s[i]);
+        int c2 = tolower((u8)s2.s[i]);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
     }
     return s1.len - s2.len;
 }

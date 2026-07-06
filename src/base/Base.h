@@ -86,6 +86,7 @@
 #include "BuildConfig.h"
 
 // C/C++ standard headers  we use often
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -158,6 +159,8 @@ using WCHAR = wchar_t;
 using COLORREF = uint32_t;
 using LCID = uint32_t;
 
+#define CP_ACP 0
+#define CP_UTF8 65001
 #define LOCALE_USER_DEFAULT 0
 
 struct POINT {
