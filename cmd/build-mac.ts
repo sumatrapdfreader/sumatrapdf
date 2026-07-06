@@ -438,6 +438,7 @@ const DEP_LIBS_BASE = [
           "SquareTreeParser.cpp",
           "StrQueue.cpp",
           "Thread.cpp",
+          "UtAssert.cpp",
           "Str.cpp",
           "StrUtf8.cpp",
           "StrFormatParse.cpp",
