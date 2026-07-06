@@ -36,6 +36,8 @@ struct AppCommandCtx {
 
     Point cursorPos = {};
     bool hasSelection = false;
+    // selection is text (as opposed to rectangular block selection)
+    bool hasTextSelection = false;
     bool isCursorOnPage = false;
     Annotation* annotationUnderCursor = nullptr;
     bool cursorOnLinkTarget = false;

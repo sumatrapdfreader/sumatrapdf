@@ -1123,6 +1123,19 @@ static int disableIfDirectoryOrBrokenPDF[] = {
     CmdShowInFolder, // TODO: why?
 };
 
+// translate / search selection commands need selected text to operate on
+static UINT_PTR selectionTextCmds[] = {
+    CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithDeepL,
+    CmdTranslateSelectionWithGrokBuild,
+    CmdTranslateSelectionWithClaudeCode,
+    CmdTranslateSelectionWithOpenAICodex,
+    CmdSearchSelectionWithGoogle,
+    CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithWikipedia,
+    CmdSearchSelectionWithGoogleScholar,
+};
+
 static UINT_PTR menusNoTranslate[] = {
     CmdZoom6400,
     CmdZoom3200,
@@ -1408,7 +1421,14 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
         if (ctx) {
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
-            removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);
+            // these annotations need text to mark up, so a rectangular
+            // selection doesn't count
+            removeMenu |=
+                (!ctx->hasTextSelection || !ctx->supportsAnnots) && (subMenuDef == menuDefCreateAnnotFromSelection);
+            // in the context menu only show translate / search items for a text
+            // selection (the menubar variant is live-updated via
+            // SetMenuStateForSelection instead)
+            removeMenu |= (menuDef == menuDefSelection) && !ctx->hasTextSelection && cmdIdInList(selectionTextCmds);
         }
         removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
         if (removeMenu) {

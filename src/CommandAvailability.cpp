@@ -13,6 +13,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
+#include "TextSelection.h"
 #include "GlobalPrefs.h"
 #include "Annotation.h"
 #include "SumatraConfig.h"
@@ -105,6 +106,12 @@ UINT_PTR disableIfNoSelection[] = {
     CmdSearchSelectionWithGoogleScholar,
     CmdSearchSelectionWithBing,
     CmdSearchSelectionWithGoogle,
+    0,
+};
+
+// annotations created from a text selection; a rectangular selection has no
+// text to mark up. checked after !supportsAnnots already hid them for non-PDF
+static UINT_PTR createAnnotFromSelection[] = {
     CmdCreateAnnotHighlight,
     CmdCreateAnnotSquiggly,
     CmdCreateAnnotStrikeOut,
@@ -200,6 +207,9 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdShowAnnotations,
     CmdHideAnnotations,
     CmdToggleShowAnnotations,
+    // added past the CmdCreateAnnotFirst..CmdCreateAnnotLast range, so the
+    // range check doesn't catch it
+    CmdCreateAnnotImageFromClipboard,
     0,
 };
 
@@ -365,6 +375,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     DisplayModel* dm = win->AsFixed();
     if (dm) {
         auto engine = dm->GetEngine();
+        ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
         ctx.supportsAnnots = EngineSupportsAnnotations(engine) && !win->isFullScreen;
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
@@ -543,6 +554,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (CmdIdInList(cmdId, removeIfAnnotsNotSupported)) {
             return CommandVisibility::Hide;
         }
+    }
+
+    if (!ctx.hasTextSelection && CmdIdInList(cmdId, createAnnotFromSelection)) {
+        return MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if (ctx.isChm && CmdIdInList(cmdId, removeIfChm)) {
