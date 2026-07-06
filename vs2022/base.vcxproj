@@ -917,6 +917,7 @@
     <ClCompile Include="..\src\base\Dpi.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\FileWatcher.cpp" />
+    <ClCompile Include="..\src\base\File_win.cpp" />
     <ClCompile Include="..\src\base\GdiPlus.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />

@@ -425,6 +425,8 @@ const DEP_LIBS_BASE = [
           "Arena.cpp",
           "Arena_posix.cpp",
           "Color.cpp",
+          "File.cpp",
+          "File_posix.cpp",
           "Thread.cpp",
           "Str.cpp",
           "StrUtf8.cpp",

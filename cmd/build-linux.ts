@@ -9,7 +9,7 @@
  * Output: out/linux-dbg64/lib/*.a (or out/linux-rel64 for -release)
  *
  * Mirrors the dependency projects in premake5.lua / premake5.files.lua.
- * Does not build src/ (SumatraPDF UI) — only third-party and mupdf libs.
+ * Also builds portable src/base code, but not the Windows-only SumatraPDF UI.
  */
 
 import { existsSync, mkdirSync, rmSync } from "node:fs";
@@ -580,6 +580,32 @@ function makeUnrar(): LibDef {
 }
 
 const DEP_LIBS_BASE = [
+  {
+    name: "base",
+    alwaysOptimize: false,
+    defines: [],
+    includes: ["src"],
+    files: [
+      {
+        dir: "src/base",
+        patterns: [
+          "Base.cpp",
+          "Base_posix.cpp",
+          "Arena.cpp",
+          "Arena_posix.cpp",
+          "Color.cpp",
+          "File.cpp",
+          "File_posix.cpp",
+          "Thread.cpp",
+          "Str.cpp",
+          "StrUtf8.cpp",
+          "StrFormatParse.cpp",
+          "StrVec.cpp",
+          "Strconv.cpp",
+        ],
+      },
+    ],
+  },
   zlib,
   makeUnrar,
   makeLibdjvu,

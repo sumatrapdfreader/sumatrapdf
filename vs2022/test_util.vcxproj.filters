@@ -163,6 +163,9 @@
     <ClCompile Include="..\src\base\File.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\File_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">
       <Filter>base</Filter>
     </ClCompile>

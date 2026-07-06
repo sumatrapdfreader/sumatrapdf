@@ -159,9 +159,17 @@ using WCHAR = wchar_t;
 using COLORREF = uint32_t;
 using LCID = uint32_t;
 
+struct FILETIME {
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+};
+
 #define CP_ACP 0
 #define CP_UTF8 65001
 #define LOCALE_USER_DEFAULT 0
+constexpr int MAX_PATH = 4096;
+constexpr int URLZONE_INVALID = -1;
+constexpr int URLZONE_INTERNET = 3;
 
 struct POINT {
     LONG x;

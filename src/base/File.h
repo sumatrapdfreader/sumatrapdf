@@ -1,6 +1,18 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#if OS_WIN
+#define PATH_SEP "\\"
+#define PATH_SEP_CHAR '\\'
+#define PATH_SEP_WSTR L"\\"
+#define PATH_SEP_WCHAR L'\\'
+#else
+#define PATH_SEP "/"
+#define PATH_SEP_CHAR '/'
+#define PATH_SEP_WSTR L"/"
+#define PATH_SEP_WCHAR L'/'
+#endif
+
 namespace path {
 
 bool IsSep(char c);
@@ -55,16 +67,24 @@ TempStr MakeUniqueFilePathTemp(Str path);
 
 namespace file {
 
+#if OS_WIN
+using FileHandle = HANDLE;
+inline const FileHandle kInvalidFileHandle = INVALID_HANDLE_VALUE;
+#else
+using FileHandle = int;
+constexpr FileHandle kInvalidFileHandle = -1;
+#endif
+
 bool Exists(Str path);
 
 FILE* OpenFILE(Str path);
-HANDLE OpenReadOnly(Str path);
+FileHandle OpenReadOnly(Str path);
 Str ReadFileWithArena(Str path, Arena*);
 Str ReadFile(Str path);
 int ReadN(Str path, u8* buf, size_t toRead);
 bool WriteFile(Str path, Str);
 
-i64 GetSize(HANDLE h);
+i64 GetSize(FileHandle h);
 i64 GetSize(Str path);
 bool Delete(Str path);
 bool DeleteFileToTrash(Str path);
