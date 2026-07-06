@@ -167,6 +167,8 @@ struct HWND__;
 using HWND = HWND__*;
 struct HDC__;
 using HDC = HDC__*;
+struct HFONT__;
+using HFONT = HFONT__*;
 struct HIMAGELIST__;
 using HIMAGELIST = HIMAGELIST__*;
 struct HTREEITEM__;

@@ -7,8 +7,6 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-Kind kindFileDjVu = "fileDjVu";
-
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
 void log(Str s) {

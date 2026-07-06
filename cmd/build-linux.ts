@@ -597,6 +597,7 @@ const DEP_LIBS_BASE = [
           "Arena.cpp",
           "Arena_posix.cpp",
           "ByteOrderDecoder.cpp",
+          "ByteReader.cpp",
           "CmdLineArgsIter.cpp",
           "Color.cpp",
           "Crypto_posix.cpp",
@@ -643,6 +644,8 @@ const DEP_LIBS_BASE = [
 ] as const;
 
 const TEST_ENGINES_SOURCES = [
+  "src/base/GuessFileType.cpp",
+  "src/base/GuessFileType_posix.cpp",
   "src/DocProperties.cpp",
   "src/EngineBase.cpp",
   "src/EngineDjvuDec.cpp",
