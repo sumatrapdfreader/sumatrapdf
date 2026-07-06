@@ -16,21 +16,20 @@ extern "C" {
 
 #include "FzImgReader.h"
 
-
 struct MupdfContext {
     fz_locks_context fz_locks_ctx{};
-    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
+    Mutex mutexes[FZ_LOCK_MAX];
     fz_context* ctx = nullptr;
 };
 
 static void fz_lock_context_cs(void* user, int lock) {
     MupdfContext* ctx = (MupdfContext*)user;
-    EnterCriticalSection(&ctx->mutexes[lock]);
+    ctx->mutexes[lock].Lock();
 }
 
 static void fz_unlock_context_cs(void* user, int lock) {
     MupdfContext* ctx = (MupdfContext*)user;
-    LeaveCriticalSection(&ctx->mutexes[lock]);
+    ctx->mutexes[lock].Unlock();
 }
 
 // route mupdf's warnings/errors through our log() instead of the default
@@ -42,9 +41,6 @@ static void fz_log_cb(void*, const char* msg) {
 
 fz_context* fz_new_context_windows(size_t maxStore) {
     auto c = new MupdfContext();
-    for (int i = 0; i < FZ_LOCK_MAX; i++) {
-        InitializeCriticalSection(&c->mutexes[i]);
-    }
     c->fz_locks_ctx.user = c;
     c->fz_locks_ctx.lock = fz_lock_context_cs;
     c->fz_locks_ctx.unlock = fz_unlock_context_cs;
@@ -60,9 +56,6 @@ void fz_drop_context_windows(fz_context* ctx) {
     auto c = (MupdfContext*)ctx->locks.user;
     ReportIf(ctx != c->ctx);
     fz_drop_context(ctx);
-    for (int i = 0; i < FZ_LOCK_MAX; i++) {
-        DeleteCriticalSection(&c->mutexes[i]);
-    }
     delete c;
 }
 

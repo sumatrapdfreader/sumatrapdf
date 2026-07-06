@@ -2,13 +2,29 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct Mutex {
-    CRITICAL_SECTION cs;
+    SRWLOCK lock = SRWLOCK_INIT;
 
-    Mutex() { InitializeCriticalSection(&cs); }
-    ~Mutex() { DeleteCriticalSection(&cs); }
+    Mutex() = default;
+    ~Mutex() = default;
 
-    void Lock() { EnterCriticalSection(&cs); }
-    void Unlock() { LeaveCriticalSection(&cs); }
+    void Lock() { AcquireSRWLockExclusive(&lock); }
+    void Unlock() { ReleaseSRWLockExclusive(&lock); }
+};
+
+struct ScopedMutex {
+    Mutex* mutex = nullptr;
+    CRITICAL_SECTION* cs = nullptr;
+
+    explicit ScopedMutex(Mutex* mutex) : mutex(mutex) { mutex->Lock(); }
+    explicit ScopedMutex(CRITICAL_SECTION* cs) : cs(cs) { EnterCriticalSection(cs); }
+    ~ScopedMutex() {
+        if (mutex) {
+            mutex->Unlock();
+        }
+        if (cs) {
+            LeaveCriticalSection(cs);
+        }
+    }
 };
 
 void SetThreadName(Str threadName, DWORD threadId = 0);

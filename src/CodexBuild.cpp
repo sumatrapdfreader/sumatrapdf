@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 
 #include "wingui/UIModels.h"

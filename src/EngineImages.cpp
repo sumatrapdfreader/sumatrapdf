@@ -27,7 +27,6 @@ extern "C" {
 #include "DocController.h"
 #include "EngineBase.h"
 
-
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::Color;
@@ -91,16 +90,14 @@ struct ImagePage {
     // have different drawLocks so they render in parallel.
     // Not needed for the pix path: fz_pixmap is immutable after load and
     // fz_scale_pixmap is safe to call concurrently.
-    CRITICAL_SECTION drawLock;
+    Mutex drawLock;
 
     ImagePage(int pageNo, Bitmap* bmp) {
         this->pageNo = pageNo;
         this->bmp = bmp;
-        InitializeCriticalSection(&drawLock);
         loadedEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
     }
     ~ImagePage() {
-        DeleteCriticalSection(&drawLock);
         if (loadedEvent) {
             CloseHandle(loadedEvent);
         }
@@ -170,7 +167,7 @@ class EngineImages : public EngineBase {
         fz_context* ctx;
     };
     Vec<ThreadCtx> threadCtxs;
-    CRITICAL_SECTION threadCtxsLock;
+    Mutex threadCtxsLock;
 
     fz_context* Ctx();
 
@@ -206,14 +203,13 @@ EngineImages::EngineImages() {
     isImageCollection = true;
 
     InitializeCriticalSection(&cacheLock);
-    InitializeCriticalSection(&threadCtxsLock);
     fz_ctx = fz_new_context_windows();
 }
 
 fz_context* EngineImages::Ctx() {
     DWORD tid = GetCurrentThreadId();
     {
-        ScopedCritSec scope(&threadCtxsLock);
+        ScopedMutex scope(&threadCtxsLock);
         for (auto& tc : threadCtxs) {
             if (tc.threadID == tid) {
                 return tc.ctx;
@@ -227,7 +223,7 @@ fz_context* EngineImages::Ctx() {
         return fz_ctx; // last-resort fallback; caller will serialize on the root
     }
     {
-        ScopedCritSec scope(&threadCtxsLock);
+        ScopedMutex scope(&threadCtxsLock);
         threadCtxs.Append({tid, newCtx});
     }
     return newCtx;
@@ -245,7 +241,6 @@ EngineImages::~EngineImages() {
     }
     DeleteVecMembers(pageInfos);
     LeaveCriticalSection(&cacheLock);
-    DeleteCriticalSection(&cacheLock);
 
     // Drop pages before per-thread contexts: DropPage() may need Ctx() to
     // release a page's fz_image, and dropping clones first can make it create
@@ -259,7 +254,7 @@ EngineImages::~EngineImages() {
     if (fz_ctx) {
         fz_drop_context_windows(fz_ctx);
     }
-    DeleteCriticalSection(&threadCtxsLock);
+    DeleteCriticalSection(&cacheLock);
 }
 
 // Wrap the page's raw image bytes in an fz_image for lazy mupdf decoding.
@@ -449,7 +444,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     // mupdf), lazy-load the GDI+ Bitmap on demand for this rare path
     // (rotation, sub-rect tile, or mupdf decode/scale failure).
     if (!page->bmp && !page->failedToLoad) {
-        ScopedCritSec scope(&page->drawLock);
+        ScopedMutex scope(&page->drawLock);
         if (!page->bmp) {
             bool ownBmp = true;
             page->bmp = LoadBitmapForPage(pageNo, ownBmp);
@@ -520,7 +515,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         // from multiple threads causes InsufficientBuffer (status 4) errors.
         // Per-page lock: different pages render in parallel, only repeated draws
         // of the same page serialize.
-        ScopedCritSec scope(&page->drawLock);
+        ScopedMutex scope(&page->drawLock);
         ok = g.DrawImage(page->bmp, ToGdipRect(pageRcI), pageRcI.x, pageRcI.y, pageRcI.dx, pageRcI.dy, UnitPixel,
                          &imgAttrs);
     }
@@ -603,7 +598,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
 
     // mupdf fz_image path leaves page->bmp null; lazy-load the GDI+ Bitmap
     if (!page->bmp && !page->failedToLoad) {
-        ScopedCritSec scope(&page->drawLock);
+        ScopedMutex scope(&page->drawLock);
         if (!page->bmp) {
             bool ownBmp = true;
             page->bmp = LoadBitmapForPage(pageNo, ownBmp);
@@ -653,7 +648,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     bool waitForLoad = false;
 
     {
-        ScopedCritSec scope(&cacheLock);
+        ScopedMutex scope(&cacheLock);
 
         for (int i = 0; i < len(pageCache); i++) {
             if (pageCache[i]->pageNo == pageNo) {
@@ -705,7 +700,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             bmp = LoadBitmapForPage(pageNo, ownBmp);
         }
         {
-            ScopedCritSec scope(&cacheLock);
+            ScopedMutex scope(&cacheLock);
             result->img = img;
             result->bmp = bmp;
             result->ownBmp = ownBmp;
@@ -734,7 +729,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     }
 
     {
-        ScopedCritSec scope(&cacheLock);
+        ScopedMutex scope(&cacheLock);
         // pageCache.Remove is a no-op if the page was already evicted earlier
         pageCache.Remove(page);
     }
@@ -1596,7 +1591,7 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImage::GetImageData(int) {
-    ScopedCritSec scope(&cacheLock);
+    ScopedMutex scope(&cacheLock);
     auto pi = pageInfos[0];
     if (len(pi->rawData) == 0) {
         pi->rawData = file::ReadFile(FilePath());
@@ -1842,7 +1837,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImageDir::GetImageData(int pageNo) {
-    ScopedCritSec scope(&cacheLock);
+    ScopedMutex scope(&cacheLock);
     auto pi = pageInfos[pageNo - 1];
     if (len(pi->rawData) == 0) {
         Str path = pageFileNames[pageNo - 1];

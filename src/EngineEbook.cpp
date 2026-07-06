@@ -31,7 +31,6 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
-
 Kind kindEngineEpub = "engineEpub";
 Kind kindEngineFb2 = "engineFb2";
 Kind kindEngineMobi = "engineMobi";
@@ -134,7 +133,7 @@ class EngineEbook : public EngineBase {
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     Arena* allocator = nullptr;
     // TODO: still needed?
-    CRITICAL_SECTION pagesAccess;
+    Mutex pagesAccess;
     // page dimensions can vary between filetypes
     RectF pageRect;
     float pageBorder;
@@ -190,12 +189,11 @@ EngineEbook::EngineEbook() {
     pageRect = RectF(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
     preferredLayout = preferredLayout = PageLayout(PageLayout::Type::Single);
-    InitializeCriticalSection(&pagesAccess);
     allocator = ArenaNew();
 }
 
 EngineEbook::~EngineEbook() {
-    EnterCriticalSection(&pagesAccess);
+    pagesAccess.Lock();
 
     if (pages) {
         for (HtmlPage* page : *pages) {
@@ -205,8 +203,7 @@ EngineEbook::~EngineEbook() {
     }
     delete pages;
 
-    LeaveCriticalSection(&pagesAccess);
-    DeleteCriticalSection(&pagesAccess);
+    pagesAccess.Unlock();
     ArenaDelete(allocator);
 }
 
@@ -267,7 +264,7 @@ HtmlPage* EngineEbook::GetHtmlPage2(int pageNo) {
 }
 
 bool EngineEbook::ExtractPageAnchors() {
-    ScopedCritSec scope(&pagesAccess);
+    ScopedMutex scope(&pagesAccess);
 
     DrawInstr* baseAnchor = nullptr;
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
@@ -342,7 +339,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
         *args.cookie_out = cookie;
     }
 
-    ScopedCritSec scope(&pagesAccess);
+    ScopedMutex scope(&pagesAccess);
 
     mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black),
@@ -367,7 +364,7 @@ static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
 
 PageText EngineEbook::ExtractPageText(int pageNo) {
     const Str lineSep = StrL("\n");
-    ScopedCritSec scope(&pagesAccess);
+    ScopedMutex scope(&pagesAccess);
 
     InterlockedIncrement(&gAllowAllocFailure);
     defer {
@@ -592,7 +589,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
 }
 
 TempStr EngineEbook::ExtractFontListTemp() {
-    ScopedCritSec scope(&pagesAccess);
+    ScopedMutex scope(&pagesAccess);
 
     Vec<mui::CachedFont*> seenFonts;
     StrVec fonts;
@@ -1096,7 +1093,7 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
         return nullptr;
     }
 
-    ScopedCritSec scope(&pagesAccess);
+    ScopedMutex scope(&pagesAccess);
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     // link to the bottom of the page, if filePos points
     // beyond the last visible DrawInstr of a page

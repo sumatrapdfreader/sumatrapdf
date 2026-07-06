@@ -5,23 +5,21 @@
 #include "StrQueue.h"
 
 StrQueue::StrQueue() {
-    InitializeCriticalSection(&cs);
     BOOL manualReset = FALSE;
     BOOL initialState = FALSE;
     hEvent = CreateEventW(nullptr /* SECURITY_ATTRIBUTES* */, manualReset, initialState, nullptr /* name */);
 }
 
 StrQueue::~StrQueue() {
-    DeleteCriticalSection(&cs);
     CloseHandle(hEvent);
 }
 
 void StrQueue::Lock() {
-    EnterCriticalSection(&cs);
+    cs.Lock();
 }
 
 void StrQueue::Unlock() {
-    LeaveCriticalSection(&cs);
+    cs.Unlock();
 }
 
 void StrQueue::MarkFinished() {

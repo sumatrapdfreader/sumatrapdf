@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 #include "base/SquareTreeParser.h"
 #include "base/Http.h"
@@ -28,7 +27,6 @@
 #include "HomePage.h"
 #include "Installer.h"
 #include "UpdateCheck.h"
-
 
 static Kind kNotifUpdateCheckInProgress = StrL("notifUpdateCheckInProgress").s;
 
@@ -421,8 +419,8 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         return;
     }
     TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and install latest version"));
-    TempStr msg = fmt(_TRA("Version %s available (you have %s). %s").s, updateInfo->latestVer,
-                      StrL(CURR_VERSION_STRA), link);
+    TempStr msg =
+        fmt(_TRA("Version %s available (you have %s). %s").s, updateInfo->latestVer, StrL(CURR_VERSION_STRA), link);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;

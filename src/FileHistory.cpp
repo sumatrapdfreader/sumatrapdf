@@ -4,7 +4,6 @@ License: GPLv3 */
 #include "base/Base.h"
 #include "base/DirIter.h"
 #include "base/File.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 
@@ -12,7 +11,6 @@ License: GPLv3 */
 #include "GlobalPrefs.h"
 #include "FileThumbnails.h"
 #include "FileHistory.h"
-
 
 /* Handling of file history list.
 

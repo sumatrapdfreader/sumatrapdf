@@ -120,13 +120,13 @@ class EngineMupdf : public EngineBase {
     // for its own internal coordination, and reusing one as a long-held outer
     // lock would serialize every cloned-context allocation across all threads.
     CRITICAL_SECTION pagesLock;
-    CRITICAL_SECTION renderLock;
+    Mutex renderLock;
     CRITICAL_SECTION docLock;
 
-    // per-FZ_LOCK-index critical sections used by mupdf via fz_locks_ctx
+    // per-FZ_LOCK-index SRW locks used by mupdf via fz_locks_ctx
     // callbacks. Mupdf holds these only momentarily; do not hold them across
     // your own code.
-    CRITICAL_SECTION fz_locks[FZ_LOCK_MAX];
+    Mutex fz_locks[FZ_LOCK_MAX];
 
     fz_context* _ctx = nullptr;
     fz_locks_context fz_locks_ctx;

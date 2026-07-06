@@ -10,7 +10,6 @@
 #include "base/FileWatcher.h"
 #include "base/GuessFileType.h"
 #include "base/SquareTreeParser.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "base/GdiPlus.h"

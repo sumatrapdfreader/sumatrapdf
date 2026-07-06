@@ -5,7 +5,6 @@
 #include "base/FileWatcher.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
-#include "base/Thread.h"
 #include "base/Win.h"
 
 /*
@@ -100,7 +99,7 @@ static AtomicBool gShouldExit = 0;
 
 // protects data structures shared between ui thread and file
 // watcher thread i.e. gWatchedDirs, gWatchedFiles
-static CRITICAL_SECTION gFileWatcherMutex;
+static Mutex gFileWatcherMutex;
 
 static WatchedDir* gWatchedDirs = nullptr;
 static WatchedFile* gWatchedFiles = nullptr;
@@ -210,7 +209,7 @@ TempStr GetFileActionNameTemp(int actionId) {
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
-    ScopedCritSec cs(&gFileWatcherMutex);
+    ScopedMutex cs(&gFileWatcherMutex);
 
     OverlappedEx* over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
@@ -294,7 +293,7 @@ static void StartMonitoringDirForChanges(WatchedDir* wd) {
 }
 
 static DWORD GetTimeoutInMs() {
-    ScopedCritSec cs(&gFileWatcherMutex);
+    ScopedMutex cs(&gFileWatcherMutex);
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->isManualCheck) {
             return FILEWATCH_DELAY_IN_MS;
@@ -304,7 +303,7 @@ static DWORD GetTimeoutInMs() {
 }
 
 static void RunManualChecks() {
-    ScopedCritSec cs(&gFileWatcherMutex);
+    ScopedMutex cs(&gFileWatcherMutex);
 
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (!wf->isManualCheck) {
@@ -453,9 +452,7 @@ static void DeleteWatchedFile(WatchedFile* wf) {
     free(wf);
 }
 
-void FileWatcherInit(void) {
-    InitializeCriticalSection(&gFileWatcherMutex);
-}
+void FileWatcherInit(void) {}
 
 /* Subscribe for notifications about file changes. When a file changes, we'll
 call observer->OnFileChanged().
@@ -484,7 +481,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
         return nullptr;
     }
 #endif
-    ScopedCritSec cs(&gFileWatcherMutex);
+    ScopedMutex cs(&gFileWatcherMutex);
     if (!gThreadHandle) {
         logf("FileWatcherSubscribe: starting a thread\n");
         AtomicBoolSet(&gShouldExit, false);
@@ -554,7 +551,6 @@ void FileWatcherWaitForShutdown(void) {
     }
     SafeCloseHandle(&gThreadHandle);
     SafeCloseHandle(&gThreadControlHandle);
-    DeleteCriticalSection(&gFileWatcherMutex);
 }
 
 static void RemoveWatchedFile(WatchedFile* wf) {
@@ -577,7 +573,7 @@ void FileWatcherUnsubscribe(WatchedFile* wf) {
     }
     ReportIf(!gThreadHandle);
 
-    ScopedCritSec cs(&gFileWatcherMutex);
+    ScopedMutex cs(&gFileWatcherMutex);
 
     RemoveWatchedFile(wf);
 }

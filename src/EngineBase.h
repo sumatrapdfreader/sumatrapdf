@@ -557,7 +557,7 @@ class EngineBase {
     // cached text, one entry per page (lazily allocated)
     PageText* pagesText = nullptr;
     TextExtractionState* pagesTextState = nullptr;
-    CRITICAL_SECTION textCacheLock;
+    Mutex textCacheLock;
 };
 
 struct PasswordUI {

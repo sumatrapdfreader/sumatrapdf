@@ -13,7 +13,6 @@
 #include "base/FileWatcher.h"
 #include "base/GdiPlus.h"
 #include "mui/Mui.h"
-#include "base/Thread.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 
@@ -68,7 +67,6 @@
 #include "CommandPalette.h"
 #include "SumatraControl.h"
 #include "SumatraLog.h"
-
 
 // return false if failed in a way that should abort the app
 static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {

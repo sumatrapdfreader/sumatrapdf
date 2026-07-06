@@ -166,7 +166,6 @@ DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* 
     ctx->a = arena;
     ctx->onScannedDir = callback;
     ctx->userData = userData;
-    InitializeCriticalSection(&ctx->cs);
     ctx->hSemaphore = CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr);
     ctx->hQueueEmptyEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
     ctx->hThreadExitedEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
@@ -192,7 +191,6 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
 
     WaitForSingleObject(ctx->hThreadExitedEvent, 5000);
 
-    DeleteCriticalSection(&ctx->cs);
     CloseHandle(ctx->hSemaphore);
     CloseHandle(ctx->hQueueEmptyEvent);
     CloseHandle(ctx->hThreadExitedEvent);
@@ -202,12 +200,12 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
 // Request a directory scan - adds to FRONT of list (priority for user requests)
 // Returns DirEntries* (either existing from queue or newly allocated)
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
-    EnterCriticalSection(&ctx->cs);
+    ctx->cs.Lock();
 
     // Check if already in list
     DirEntries* dv = FindDirInList(ctx->dirsToVisit, dir);
     if (dv) {
-        LeaveCriticalSection(&ctx->cs);
+        ctx->cs.Unlock();
         return dv;
     }
 
@@ -218,7 +216,7 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
     node->next = ctx->dirsToVisit;
     ctx->dirsToVisit = node;
 
-    LeaveCriticalSection(&ctx->cs);
+    ctx->cs.Unlock();
     ReleaseSemaphore(ctx->hSemaphore, 1, nullptr); // Signal one worker
     return dv;
 }
@@ -226,11 +224,11 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
 // Queue a directory scan - adds to end of list (breadth-first scanning)
 // If nonRecursive is true, subdirectories won't be queued for scanning
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
-    EnterCriticalSection(&ctx->cs);
+    ctx->cs.Lock();
 
     // Skip if already in list
     if (IsDirInList(ctx->dirsToVisit, dv)) {
-        LeaveCriticalSection(&ctx->cs);
+        ctx->cs.Unlock();
         return;
     }
 
@@ -248,7 +246,7 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
         last->next = node;
     }
 
-    LeaveCriticalSection(&ctx->cs);
+    ctx->cs.Unlock();
     ReleaseSemaphore(ctx->hSemaphore, 1, nullptr); // Signal one worker
 }
 
@@ -271,11 +269,11 @@ DWORD WINAPI DirScanThread(LPVOID param) {
             break;
         }
 
-        EnterCriticalSection(&ctx->cs);
+        ctx->cs.Lock();
         DirEntriesNode* node = ctx->dirsToVisit;
         if (!node) {
             bool allDone = (ctx->inFlightCount == 0);
-            LeaveCriticalSection(&ctx->cs);
+            ctx->cs.Unlock();
             if (allDone) {
                 SetEvent(ctx->hQueueEmptyEvent);
             }
@@ -286,7 +284,7 @@ DWORD WINAPI DirScanThread(LPVOID param) {
         ctx->inFlightCount++;
         DirEntries* dv = node->dv;
         bool nonRecursive = node->nonRecursive;
-        LeaveCriticalSection(&ctx->cs);
+        ctx->cs.Unlock();
 
         ReadDirectory(ctx->a, dv, &ctx->shouldExit);
 
@@ -317,10 +315,10 @@ DWORD WINAPI DirScanThread(LPVOID param) {
             ctx->onScannedDir(dv, ctx->userData);
         }
 
-        EnterCriticalSection(&ctx->cs);
+        ctx->cs.Lock();
         ctx->inFlightCount--;
         bool allDone = (ctx->dirsToVisit == nullptr && ctx->inFlightCount == 0);
-        LeaveCriticalSection(&ctx->cs);
+        ctx->cs.Unlock();
         if (allDone) {
             SetEvent(ctx->hQueueEmptyEvent);
         }

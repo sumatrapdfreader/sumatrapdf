@@ -246,7 +246,6 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
     arena->allocation_site_line = params.allocation_site_line;
     arena->name = params.name;
     arena->uses_external_buffer = usesExternalBuffer;
-    arena->lock = SRWLOCK_INIT;
     arena->nAllocsLifetime = 0;
     arena->peakBytesLifetime = 0;
     arena->nAllocsSinceReset = 0;
@@ -273,9 +272,9 @@ void* Arena::Push(u64 size, u64 align, bool zero) {
     if (!this) {
         return nullptr;
     }
-    AcquireSRWLockExclusive(&lock);
+    lock.Lock();
     void* mem = ArenaPushLocked(this, size, align, zero);
-    ReleaseSRWLockExclusive(&lock);
+    lock.Unlock();
     return mem;
 }
 
@@ -294,7 +293,7 @@ void Arena::PopTo(u64 pos) {
         return;
     }
 
-    AcquireSRWLockExclusive(&lock);
+    lock.Lock();
 
     u64 bigPos = ArenaClampBot(ARENA_HEADER_SIZE, pos);
     Arena* current = arena->current;
@@ -309,7 +308,7 @@ void Arena::PopTo(u64 pos) {
     }
 
     if (!current) {
-        ReleaseSRWLockExclusive(&lock);
+        lock.Unlock();
         return;
     }
 
@@ -317,7 +316,7 @@ void Arena::PopTo(u64 pos) {
     u64 newPos = bigPos - current->base_pos;
     ReportIf(newPos > current->pos);
     current->pos = newPos;
-    ReleaseSRWLockExclusive(&lock);
+    lock.Unlock();
 }
 
 void Arena::Pop(u64 amt) {
@@ -362,9 +361,9 @@ void* Arena::GetAvailableSpace(int* bufSizeOut) {
         return nullptr;
     }
 
-    AcquireSRWLockExclusive(&lock);
+    lock.Lock();
     void* mem = ArenaGetAvailableSpaceLocked(this, bufSizeOut);
-    ReleaseSRWLockExclusive(&lock);
+    lock.Unlock();
     return mem;
 }
 
@@ -373,18 +372,18 @@ void* Arena::CommitReserved(void* mem, int size) {
         return nullptr;
     }
 
-    AcquireSRWLockExclusive(&lock);
+    lock.Lock();
 
     int availSize = 0;
     void* availMem = ArenaGetAvailableSpaceLocked(this, &availSize);
     if (mem == availMem && size <= availSize) {
         void* committed = ArenaPushLocked(this, (u64)size, 8, false);
-        ReleaseSRWLockExclusive(&lock);
+        lock.Unlock();
         return committed;
     }
 
     void* dst = ArenaPushLocked(this, (u64)size, 8, false);
-    ReleaseSRWLockExclusive(&lock);
+    lock.Unlock();
     if (!dst) {
         return nullptr;
     }

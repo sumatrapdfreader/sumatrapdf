@@ -701,7 +701,6 @@ defer { fclose(f); };
 defer { instance->Release(); };
 */
 
-#include "Arena.h"
 #include "Geom.h"
 #include "Vec.h"
 #include "Str.h"
@@ -709,6 +708,8 @@ defer { instance->Release(); };
 #include "StrFormatParse.h"
 #include "StrVec.h"
 #include "Strconv.h"
+#include "Thread.h"
+#include "Arena.h"
 #include "Scoped.h"
 #include "Color.h"
 

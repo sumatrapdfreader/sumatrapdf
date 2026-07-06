@@ -20,7 +20,7 @@ struct EpubDoc {
     MultiFormatArchive* archive = nullptr;
     // zip and images are the only mutable members of EpubDoc after initialization;
     // access to them must be serialized for multi-threaded users
-    CRITICAL_SECTION zipAccess;
+    Mutex zipAccess;
 
     str::Builder htmlData;
     Vec<ImageData> images;
