@@ -878,6 +878,9 @@
     <ClCompile Include="..\src\base\tests\File_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\tests\GuessFileType_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\tests\JsonParser_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>

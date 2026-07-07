@@ -668,6 +668,7 @@ const TEST_UTIL_SOURCES = [
   "src/base/tests/CssParser_ut.cpp",
   "src/base/tests/Dict_ut.cpp",
   "src/base/tests/File_ut.cpp",
+  "src/base/tests/GuessFileType_ut.cpp",
   "src/base/tests/JsonParser_ut.cpp",
   "src/base/tests/RefHover_ut.cpp",
   "src/base/tests/SettingsUtil_ut.cpp",
@@ -877,6 +878,8 @@ async function buildTestUtil(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
+    join(outDir, "lib", "liblibarchive.a"),
+    join(outDir, "lib", "libzlib.a"),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {

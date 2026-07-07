@@ -357,7 +357,7 @@ static bool HasTgaSignature(Str d) {
 }
 
 // detect file type based on file content
-FileType GuessFileTypeFromContent(Str d) {
+static FileType DetectFileTypeFromContent(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
     int dataLen = d.len;
@@ -394,6 +394,396 @@ FileType GuessFileTypeFromContent(Str d) {
         return FileType::Jxl;
     }
     return FileType::Unknown;
+}
+
+// PNG: dimensions from the IHDR chunk; for APNG the acTL chunk gives the frame count
+static void PngInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    if (r.len < 24 || !memeq(r.d + 12, "IHDR", 4)) {
+        return;
+    }
+    res.imageDx = (int)r.DWordBE(16);
+    res.imageDy = (int)r.DWordBE(20);
+    // look for an APNG acTL chunk, which must appear before IDAT
+    int idx = 8;
+    for (;;) {
+        if (idx + 8 > r.len) {
+            return;
+        }
+        u32 chunkLen = r.DWordBE(idx);
+        const u8* type = r.d + idx + 4;
+        if (memeq(type, "IDAT", 4)) {
+            return;
+        }
+        if (memeq(type, "acTL", 4)) {
+            int nFrames = (int)r.DWordBE(idx + 8);
+            if (nFrames > 1) {
+                res.nImages = nFrames;
+            }
+            return;
+        }
+        if (chunkLen > (u32)r.len) {
+            return;
+        }
+        idx += 12 + (int)chunkLen; // length + type + data + crc
+    }
+}
+
+// try to get image dimensions from EXIF sub-IFD (tags 0xA002/0xA003)
+// tiffBase is the offset into r where the TIFF header starts
+static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
+    int n = r.len;
+    if (tiffBase + 8 > n) {
+        return false;
+    }
+    bool isBE = r.Byte(tiffBase) == 'M';
+    // read IFD0 offset
+    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
+    int ifdAbs = tiffBase + ifdOff;
+    if (ifdAbs + 2 > n) {
+        return false;
+    }
+    u16 count = r.Word(ifdAbs, isBE);
+    int exifIfdOff = 0;
+    // scan IFD0 for ExifIFD pointer (tag 0x8769)
+    for (u16 i = 0; i < count; i++) {
+        int entryOff = ifdAbs + 2 + i * 12;
+        if (entryOff + 12 > n) {
+            break;
+        }
+        u16 tag = r.Word(entryOff, isBE);
+        if (tag == 0x8769) {
+            exifIfdOff = (int)r.DWord(entryOff + 8, isBE);
+            break;
+        }
+    }
+    if (exifIfdOff == 0) {
+        return false;
+    }
+    // read EXIF sub-IFD
+    int exifAbs = tiffBase + exifIfdOff;
+    if (exifAbs + 2 > n) {
+        return false;
+    }
+    count = r.Word(exifAbs, isBE);
+    for (u16 i = 0; i < count; i++) {
+        int entryOff = exifAbs + 2 + i * 12;
+        if (entryOff + 12 > n) {
+            break;
+        }
+        u16 tag = r.Word(entryOff, isBE);
+        u16 type = r.Word(entryOff + 2, isBE);
+        if (tag == 0xA002) {
+            // PixelXDimension
+            if (type == 4) {
+                res.imageDx = (int)r.DWord(entryOff + 8, isBE);
+            } else if (type == 3) {
+                res.imageDx = r.Word(entryOff + 8, isBE);
+            }
+        } else if (tag == 0xA003) {
+            // PixelYDimension
+            if (type == 4) {
+                res.imageDy = (int)r.DWord(entryOff + 8, isBE);
+            } else if (type == 3) {
+                res.imageDy = r.Word(entryOff + 8, isBE);
+            }
+        }
+    }
+    return res.imageDx > 0 && res.imageDy > 0;
+}
+
+static void JpegInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    // find the last start of frame marker for non-differential Huffman/arithmetic coding
+    int n = r.len;
+    int idx = 2;
+    for (;;) {
+        if (idx + 9 >= n) {
+            return;
+        }
+        u8 b = r.Byte(idx);
+        if (b != 0xff) {
+            return;
+        }
+        b = r.Byte(idx + 1);
+        if (0xC0 <= b && b <= 0xC3 || 0xC9 <= b && b <= 0xCB) {
+            res.imageDx = r.WordBE(idx + 7);
+            res.imageDy = r.WordBE(idx + 5);
+            return;
+        }
+        int segLen = r.WordBE(idx + 2);
+        int nextIdx = idx + segLen + 2;
+        if (nextIdx + 9 >= n) {
+            // can't read past this segment; if it's APP1/EXIF, try parsing dimensions from EXIF
+            if (b == 0xE1 && idx + 10 < n) {
+                // check for "Exif\0\0" signature
+                if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' &&
+                    r.Byte(idx + 7) == 'f' && r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
+                    int tiffBase = idx + 10; // TIFF header starts after "Exif\0\0"
+                    JpegSizeFromExif(r, tiffBase, res);
+                }
+            }
+            return;
+        }
+        idx = nextIdx;
+    }
+}
+
+// GIF: walk the blocks counting image descriptors; the first image's size is
+// preferred over the "logical screen" size which is sometimes too large.
+// If the data is truncated the frame count is a lower bound.
+static void GifInfoFromData(ByteReader r, FileTypeInfo& res) {
+    int n = r.len;
+    if (n < 13) {
+        res.nImages = 1;
+        return;
+    }
+    int idx = 13;
+    // skip the global color table
+    if (r.Byte(10) & 0x80) {
+        idx += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
+    }
+    int nFrames = 0;
+    while (idx < n) {
+        u8 b = r.Byte(idx);
+        if (b == 0x2C) { // image descriptor
+            if (idx + 10 > n) {
+                break;
+            }
+            nFrames++;
+            if (nFrames == 1) {
+                res.imageDx = r.WordLE(idx + 5);
+                res.imageDy = r.WordLE(idx + 7);
+            }
+            u8 flags = r.Byte(idx + 9);
+            idx += 10;
+            // skip the local color table
+            if (flags & 0x80) {
+                idx += 3 * (1 << ((flags & 0x07) + 1));
+            }
+            idx += 1; // LZW minimum code size
+            // skip image data sub-blocks
+            while (idx < n && r.Byte(idx) != 0) {
+                idx += r.Byte(idx) + 1;
+            }
+            idx++;              // block terminator
+        } else if (b == 0x21) { // extension: introducer, label, then sub-blocks
+            idx += 2;
+            while (idx < n && r.Byte(idx) != 0) {
+                idx += r.Byte(idx) + 1;
+            }
+            idx++; // block terminator
+        } else {
+            break; // 0x3B trailer or corrupt data
+        }
+    }
+    res.nImages = nFrames > 0 ? nFrames : 1;
+    if (res.imageDx == 0 && res.imageDy == 0) {
+        // no image descriptor seen: fall back to the logical screen size
+        res.imageDx = r.WordLE(6);
+        res.imageDy = r.WordLE(8);
+    }
+}
+
+// TIFF and JXR: dimensions from the first IFD; number of images is the
+// length of the next-IFD chain
+static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
+    if (r.len < 10) {
+        res.nImages = 1;
+        return;
+    }
+    bool isBE = r.Byte(0) == 'M';
+    const u16 wTag = isJxr ? 0xBC80 : 0x0100;
+    const u16 hTag = isJxr ? 0xBC81 : 0x0101;
+    int idx = (int)r.DWord(4, isBE);
+    u16 count = idx <= r.len - 2 ? r.Word(idx, isBE) : 0;
+    for (idx += 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
+        u16 tag = r.Word(idx, isBE);
+        u16 type = r.Word(idx + 2, isBE);
+        if (r.DWord(idx + 4, isBE) != 1) {
+            continue;
+        } else if (wTag == tag && 4 == type) {
+            res.imageDx = (int)r.DWord(idx + 8, isBE);
+        } else if (wTag == tag && 3 == type) {
+            res.imageDx = r.Word(idx + 8, isBE);
+        } else if (wTag == tag && 1 == type) {
+            res.imageDx = r.Byte(idx + 8);
+        } else if (hTag == tag && 4 == type) {
+            res.imageDy = (int)r.DWord(idx + 8, isBE);
+        } else if (hTag == tag && 3 == type) {
+            res.imageDy = r.Word(idx + 8, isBE);
+        } else if (hTag == tag && 1 == type) {
+            res.imageDy = r.Byte(idx + 8);
+        }
+    }
+    int nIfds = 0;
+    u32 off = r.DWord(4, isBE);
+    // 4096 iterations bound protects against cycles in corrupt data
+    while (off > 0 && (int)off + 2 <= r.len && nIfds < 4096) {
+        nIfds++;
+        u16 nEntries = r.Word((int)off, isBE);
+        int nextOff = (int)off + 2 + nEntries * 12;
+        if (nextOff + 4 > r.len) {
+            break;
+        }
+        off = r.DWord(nextOff, isBE);
+    }
+    res.nImages = nIfds > 0 ? nIfds : 1;
+}
+
+static void BmpInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    // 14-byte file header followed by BITMAPINFOHEADER
+    if (r.len < 26) {
+        return;
+    }
+    res.imageDx = (int)r.DWordLE(18);
+    int dy = (int)r.DWordLE(22);
+    res.imageDy = dy >= 0 ? dy : -dy; // negative height means a top-down bitmap
+}
+
+static void TgaInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    if (r.len >= 16) {
+        res.imageDx = r.WordLE(12);
+        res.imageDy = r.WordLE(14);
+    }
+}
+
+#define JP2_JP2H 0x6a703268 /**< JP2 header box (super-box) */
+#define JP2_IHDR 0x69686472 /**< Image header box */
+
+static void Jp2InfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    int n = r.len;
+    if (n < 32) {
+        return;
+    }
+    int idx = 0;
+    while (idx < n - 32) {
+        u32 boxLen = r.DWordBE(idx);
+        u32 boxType = r.DWordBE(idx + 4);
+        if (JP2_JP2H == boxType) {
+            idx += 8;
+            u32 boxLen2 = r.DWordBE(idx);
+            u32 boxType2 = r.DWordBE(idx + 4);
+            bool isIhdr = boxType2 == JP2_IHDR;
+            idx += 8;
+            if (isIhdr && boxLen2 <= (boxLen - 8)) {
+                int dy = (int)r.DWordBE(idx);
+                int dx = (int)r.DWordBE(idx + 4);
+                if (dx > 64 * 1024 || dy > 64 * 1024) {
+                    // sanity check, assuming that images that big can't
+                    // possibly be valid
+                    return;
+                }
+                res.imageDx = dx;
+                res.imageDy = dy;
+                return;
+            }
+            break;
+        } else if (boxLen != 0 && (u32)idx < UINT32_MAX - boxLen) {
+            idx += boxLen;
+        } else {
+            break;
+        }
+    }
+}
+
+// WebP: walk the RIFF chunks; canvas size from VP8X, frame size from
+// VP8 (lossy) / VP8L (lossless), animation frame count from ANMF chunks
+static void WebpInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    int nFrames = 0;
+    int idx = 12;
+    while (idx + 8 <= r.len) {
+        const u8* fourcc = r.d + idx;
+        u32 size = r.DWordLE(idx + 4);
+        int payload = idx + 8;
+        if (memeq(fourcc, "VP8X", 4) && size >= 10) {
+            // 4 flag bytes, then 24-bit little-endian width-1 and height-1
+            res.imageDx = 1 + (r.Byte(payload + 4) | (r.Byte(payload + 5) << 8) | (r.Byte(payload + 6) << 16));
+            res.imageDy = 1 + (r.Byte(payload + 7) | (r.Byte(payload + 8) << 8) | (r.Byte(payload + 9) << 16));
+        } else if (memeq(fourcc, "VP8 ", 4) && res.imageDx == 0 && size >= 10) {
+            res.imageDx = r.WordLE(payload + 6) & 0x3fff;
+            res.imageDy = r.WordLE(payload + 8) & 0x3fff;
+        } else if (memeq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.Byte(payload) == 0x2f) {
+            u32 bits = r.DWordLE(payload + 1);
+            res.imageDx = (int)(bits & 0x3FFF) + 1;
+            res.imageDy = (int)((bits >> 14) & 0x3FFF) + 1;
+        } else if (memeq(fourcc, "ANMF", 4)) {
+            nFrames++;
+        }
+        u32 advance = size + (size & 1); // chunks are padded to even size
+        if (advance >= (u32)r.len) {
+            break;
+        }
+        idx = payload + (int)advance;
+    }
+    if (nFrames > 0) {
+        res.nImages = nFrames;
+    }
+}
+
+// Like GuessFileTypeFromContent() but for image files also reports the number
+// of images and, for single-image files, width/height parsed from the header
+// (hasImageSize tells if they were found; if not, callers can fall back to a
+// more expensive method like decoding the image). Dimensions are as encoded
+// i.e. EXIF orientation is not applied; use ImageSizeFromData() for display
+// dimensions. Counts reflect the provided buffer: they can under-report if d
+// is a truncated prefix of the file.
+FileTypeInfo GuessFileInfoFromContent(Str d) {
+    FileTypeInfo res;
+    res.ft = DetectFileTypeFromContent(d);
+    ByteReader r(d);
+    switch (res.ft) {
+        case FileType::Png:
+            PngInfoFromData(r, res);
+            break;
+        case FileType::Jpeg:
+            JpegInfoFromData(r, res);
+            break;
+        case FileType::Gif:
+            GifInfoFromData(r, res);
+            break;
+        case FileType::Bmp:
+            BmpInfoFromData(r, res);
+            break;
+        case FileType::Tiff:
+            TiffInfoFromData(r, res, false);
+            break;
+        case FileType::Jxr:
+            TiffInfoFromData(r, res, true);
+            break;
+        case FileType::Tga:
+            TgaInfoFromData(r, res);
+            break;
+        case FileType::Jp2:
+            Jp2InfoFromData(r, res);
+            break;
+        case FileType::Webp:
+            WebpInfoFromData(r, res);
+            break;
+        case FileType::Jxl:
+        case FileType::Heic:
+        case FileType::Avif:
+            // TODO: dimensions require full container/bitstream parsing
+            res.nImages = 1;
+            break;
+        default:
+            break;
+    }
+    if (res.nImages != 1) {
+        // imageDx/imageDy are only reported for single-image files
+        res.imageDx = 0;
+        res.imageDy = 0;
+    }
+    res.hasImageSize = res.imageDx > 0 && res.imageDy > 0;
+    return res;
+}
+
+FileType GuessFileTypeFromContent(Str d) {
+    return GuessFileInfoFromContent(d).ft;
 }
 
 // parse an embedded-PDF path of the form "c:/foo.pdf:${pdfStreamNo}"

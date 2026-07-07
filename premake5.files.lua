@@ -1447,6 +1447,7 @@ end
 
 function test_util_files()
   files_in_dir("src/base", {
+    "Archive.*",
     "Arena.*",
     "Arena_win.cpp",
     "Base.h",
@@ -1454,6 +1455,7 @@ function test_util_files()
     "Base_win.cpp",
     "BitManip.*",
     "ByteOrderDecoder.*",
+    "ByteReader.*",
     "CmdLineArgsIter.h",
     "CmdLineArgsIter.cpp",
     "CmdLineArgsIter_win.cpp",
@@ -1473,6 +1475,7 @@ function test_util_files()
     "File.cpp",
     "File_win.cpp",
     "Geom.*",
+    "GuessFileType.*",
     "HtmlTags.*",
     "JsonParser.*",
     "Log.h",

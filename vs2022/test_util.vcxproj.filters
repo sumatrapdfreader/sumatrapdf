@@ -19,6 +19,9 @@
     <ClInclude Include="..\src\RefHoverTextDetect.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
+    <ClInclude Include="..\src\base\Archive.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Arena.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -29,6 +32,9 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\ByteOrderDecoder.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\ByteReader.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\CmdLineArgsIter.h">
@@ -59,6 +65,9 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Geom.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\GuessFileType.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\HtmlTags.h">
@@ -127,6 +136,9 @@
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
+    <ClCompile Include="..\src\base\Archive.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -140,6 +152,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\ByteReader.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">
@@ -179,6 +194,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\GuessFileType.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\HtmlTags.cpp">
@@ -242,6 +260,9 @@
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\File_ut.cpp">
+      <Filter>base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\GuessFileType_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\JsonParser_ut.cpp">

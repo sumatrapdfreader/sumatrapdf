@@ -56,6 +56,16 @@ struct EmbeddedPdfName {
 };
 EmbeddedPdfName ParseEmbeddedPdfName(Str path);
 
+struct FileTypeInfo {
+    FileType ft = FileType::Unknown;
+    // if false, callers can fall back to a more expensive way of getting the size
+    bool hasImageSize = false;
+    int imageDx = 0; // only for single-image files: image width
+    int imageDy = 0; // only for single-image files: image height
+    int nImages = 0; // only for image files: number of images
+};
+
+FileTypeInfo GuessFileInfoFromContent(Str d);
 FileType GuessFileTypeFromFile(Str path);
 FileType GuessFileTypeFromContent(Str d);
 FileType GuessFileTypeFromName(Str path);

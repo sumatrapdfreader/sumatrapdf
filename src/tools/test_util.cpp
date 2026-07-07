@@ -17,6 +17,7 @@ extern void CryptoUtilTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
 extern void FileUtilTest();
+extern void GuessFileTypeTest();
 extern void JsonTest();
 extern void RefHoverTest();
 extern void SettingsUtilTest();
@@ -109,6 +110,7 @@ int main(int argc, char** argv) {
     CssParser_UnitTests();
     DictTest();
     FileUtilTest();
+    GuessFileTypeTest();
     JsonTest();
     RefHoverTest();
     SettingsUtilTest();
