@@ -1021,6 +1021,7 @@ function base_files()
     "GdiPlus.*",
     "Geom.*",
     "GuessFileType.*",
+    "GuessFileType_win.cpp",
     "HtmlTags.*",
     "Http.h",
     "Http.cpp",
@@ -1512,6 +1513,7 @@ end
 
 function test_engines_files()
   files {
+    "src/base/GuessFileType.cpp",
     "src/DocProperties.cpp",
     "src/DocProperties.h",
     "src/EngineAll.h",

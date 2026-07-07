@@ -889,6 +889,7 @@
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec_win.cpp" />
     <ClCompile Include="..\src\TreeModel.cpp" />
+    <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\tools\test_engines.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -133,6 +133,7 @@ const utils: LibDef = {
         "Exif.*",
         "Geom.*",
         "GuessFileType.*",
+        "GuessFileType_win.cpp",
         "File.h",
         "File.cpp",
         "File_win.cpp",
