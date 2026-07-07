@@ -4374,7 +4374,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
     Str path = FilePath();
     if (path && str::EndsWithI(path, ".epub")) {
         ArchiveExtractProgressCb emptyCb;
-        MultiFormatArchive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
+        Archive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (zip) {
             str::Builder filesStr;
             auto& fileInfos = zip->GetFileInfos();

@@ -269,7 +269,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     Kind kind = GuessFileTypeFromName(path);
 
     // For archive-backed engines (cbx), pre-sniff the content upfront so
-    // MultiFormatArchive::Open can skip its own 2 KiB read. For all other
+    // Archive::Open can skip its own 2 KiB read. For all other
     // engines the hint is unused.
     Kind contentHint = nullptr;
     if (IsEngineCbxSupportedFileType(kind)) {

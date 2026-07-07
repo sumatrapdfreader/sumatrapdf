@@ -6,7 +6,7 @@
 #include "base/Archive.h"
 #include "base/GuessFileType.h"
 
-static bool IsEpubArchive(MultiFormatArchive* archive) {
+static bool IsEpubArchive(Archive* archive) {
     auto* container = archive->GetFileDataByName("META-INF/container.xml");
     if (container && container->data) {
         return true;
@@ -37,13 +37,13 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
     return str::Eq(mtStr, "application/x-ibooks+zip");
 }
 
-static bool IsXpsArchive(MultiFormatArchive* archive) {
+static bool IsXpsArchive(Archive* archive) {
     bool res = archive->GetFileId("_rels/.rels") >= 0 || archive->GetFileId("_rels/.rels/[0].piece") >= 0 ||
                archive->GetFileId("_rels/.rels/[0].last.piece") >= 0;
     return res;
 }
 
-static bool IsFb2Archive(MultiFormatArchive* archive) {
+static bool IsFb2Archive(Archive* archive) {
     auto files = archive->GetFileInfos();
     if (len(files) != 1) {
         return false;
@@ -73,7 +73,7 @@ Kind GuessFileTypeFromFile(Str path) {
     auto res = GuessFileTypeFromContent(d);
     if (res == kindFileZip) {
         ArchiveExtractProgressCb emptyCb;
-        MultiFormatArchive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
+        Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (archive) {
             if (IsXpsArchive(archive)) {
                 res = kindFileXps;

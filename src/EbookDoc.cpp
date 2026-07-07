@@ -922,7 +922,7 @@ Fb2Doc::~Fb2Doc() {
     str::Free(fileName);
 }
 
-static Str takeFileData(MultiFormatArchive* archive, int fileId) {
+static Str takeFileData(Archive* archive, int fileId) {
     auto* fi = archive->GetFileDataById(fileId);
     if (!fi || !fi->data) {
         return {};
@@ -933,7 +933,7 @@ static Str takeFileData(MultiFormatArchive* archive, int fileId) {
 }
 
 static Str loadFromFile(Fb2Doc* doc) {
-    MultiFormatArchive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
+    Archive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
     if (!archive) {
         return file::ReadFile(doc->fileName);
     }
@@ -971,7 +971,7 @@ static Str loadFromFile(Fb2Doc* doc) {
 }
 
 static Str loadFromData(Fb2Doc* doc, Str srcData) {
-    MultiFormatArchive* archive = OpenArchiveFromData(srcData);
+    Archive* archive = OpenArchiveFromData(srcData);
     if (!archive) {
         return str::Dup(srcData);
     }

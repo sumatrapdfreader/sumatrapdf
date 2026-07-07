@@ -23,13 +23,13 @@
 thread_local ArchiveExtractProgressCb gArchiveProgressCb{};
 
 #if OS_WIN
-FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
+FILETIME Archive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
     return ft;
 }
 #else
-FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
+FILETIME Archive::FileInfo::GetWinFileTime() const {
     if (fileTime < 0) {
         return {(DWORD)-1, (DWORD)-1};
     }
@@ -38,29 +38,29 @@ FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
 }
 #endif
 
-MultiFormatArchive::MultiFormatArchive() {
+Archive::Archive() {
     a = ArenaNew();
 }
 
-static MultiFormatArchive::Format FormatFromArchive(struct archive* a) {
+static Archive::Format FormatFromArchive(struct archive* a) {
     int fmt = archive_format(a);
     // archive_format returns a bitmask; the high bits identify the family
     if ((fmt & ARCHIVE_FORMAT_ZIP) == ARCHIVE_FORMAT_ZIP) {
-        return MultiFormatArchive::Format::Zip;
+        return Archive::Format::Zip;
     }
     if ((fmt & ARCHIVE_FORMAT_RAR) == ARCHIVE_FORMAT_RAR || (fmt & ARCHIVE_FORMAT_RAR_V5) == ARCHIVE_FORMAT_RAR_V5) {
-        return MultiFormatArchive::Format::Rar;
+        return Archive::Format::Rar;
     }
     if ((fmt & ARCHIVE_FORMAT_7ZIP) == ARCHIVE_FORMAT_7ZIP) {
-        return MultiFormatArchive::Format::SevenZip;
+        return Archive::Format::SevenZip;
     }
     if ((fmt & ARCHIVE_FORMAT_TAR) == ARCHIVE_FORMAT_TAR) {
-        return MultiFormatArchive::Format::Tar;
+        return Archive::Format::Tar;
     }
-    return MultiFormatArchive::Format::Unknown;
+    return Archive::Format::Unknown;
 }
 
-MultiFormatArchive::~MultiFormatArchive() {
+Archive::~Archive() {
     for (auto& fi : fileInfos_) {
         free((void*)fi->data);
     }
@@ -69,7 +69,7 @@ MultiFormatArchive::~MultiFormatArchive() {
     ArenaDelete(a);
 }
 
-bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive_entry* entry;
     int fileId = 0;
     ArchiveExtractProgress prog{};
@@ -130,19 +130,19 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
 static bool gUnrarFirst = true;
 
 #if OS_WIN
-static bool TryOpenUnrarFallback(MultiFormatArchive* archive, Str path, bool eagerLoad,
-                                 const ArchiveExtractProgressCb& cbProgress, bool isRar) {
+static bool TryOpenUnrarFallback(Archive* archive, Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress,
+                                 bool isRar) {
     if (!isRar) {
         return false;
     }
     bool ok = archive->OpenUnrarFallback(path, eagerLoad, cbProgress);
     if (ok) {
-        archive->format = MultiFormatArchive::Format::Rar;
+        archive->format = Archive::Format::Rar;
     }
     return ok;
 }
 #else
-static bool TryOpenUnrarFallback(MultiFormatArchive*, Str, bool, const ArchiveExtractProgressCb&, bool) {
+static bool TryOpenUnrarFallback(Archive*, Str, bool, const ArchiveExtractProgressCb&, bool) {
     return false;
 }
 #endif
@@ -155,7 +155,7 @@ static bool TryOpenUnrarFallback(MultiFormatArchive*, Str, bool, const ArchiveEx
 // cbProgress fires after each entry is processed (see
 // ArchiveExtractProgress). Pass a default-constructed Func1 to skip
 // notifications.
-bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress) {
     if (!path) {
         return false;
     }
@@ -223,7 +223,7 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
 }
 #endif
 
-bool MultiFormatArchive::OpenFromData(Str data) {
+bool Archive::OpenFromData(Str data) {
     if (len(data) == 0) {
         return false;
     }
@@ -250,7 +250,7 @@ bool MultiFormatArchive::OpenFromData(Str data) {
     return ok;
 }
 
-bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive* a = archive_read_new();
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
@@ -272,11 +272,11 @@ bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtr
     return ok;
 }
 
-Vec<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
+Vec<Archive::FileInfo*> const& Archive::GetFileInfos() {
     return fileInfos_;
 }
 
-int getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, Str name) {
+int getFileIdByName(Vec<Archive::FileInfo*>& fileInfos, Str name) {
     for (auto fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
@@ -285,11 +285,11 @@ int getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, Str name) {
     return -1;
 }
 
-int MultiFormatArchive::GetFileId(Str fileName) {
+int Archive::GetFileId(Str fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
-MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataByName(Str fileName) {
+Archive::FileInfo* Archive::GetFileDataByName(Str fileName) {
     int fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
@@ -298,7 +298,7 @@ MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataByName(Str fileName
 // nullptr / ->failed if extraction failed). The buffer stays owned by
 // this archive; callers that want to keep the data past the archive's
 // lifetime should set ->data = nullptr to transfer ownership.
-MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(int fileId) {
+Archive::FileInfo* Archive::GetFileDataById(int fileId) {
     if (fileId < 0) {
         return nullptr;
     }
@@ -322,7 +322,7 @@ MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(int fileId) {
     return fileInfo;
 }
 
-void MultiFormatArchive::LoadFileDataByIdLibarchive(int fileId) {
+void Archive::LoadFileDataByIdLibarchive(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
     if (!archivePath_) {
         fileInfo->failed = true;
@@ -374,7 +374,7 @@ void MultiFormatArchive::LoadFileDataByIdLibarchive(int fileId) {
     fileInfo->failed = true;
 }
 
-Str MultiFormatArchive::GetFileDataPartById(int fileId, int sizeHint) {
+Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
     if (fileId < 0) {
         return {};
     }
@@ -436,14 +436,14 @@ Str MultiFormatArchive::GetFileDataPartById(int fileId, int sizeHint) {
     return {};
 }
 
-Str MultiFormatArchive::GetComment() {
+Str Archive::GetComment() {
     // libarchive doesn't support zip global comments
     return {};
 }
 
 ///// format specific handling /////
 
-// Open a file on disk. MultiFormatArchive::Open(path) detects RAR via a
+// Open a file on disk. Archive::Open(path) detects RAR via a
 // content sniff and routes it through unrar.dll; everything else goes
 // through libarchive.
 //
@@ -453,8 +453,8 @@ Str MultiFormatArchive::GetComment() {
 // file; use FileInfo::failed to tell "not yet loaded" from "failed".
 // cbProgress fires once per entry (see ArchiveExtractProgress); pass a
 // default-constructed Func1 to skip notifications.
-MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
-    auto* archive = new MultiFormatArchive();
+Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+    auto* archive = new Archive();
     if (!archive->Open(path, eagerLoad, nullptr, cbProgress)) {
         delete archive;
         return nullptr;
@@ -464,8 +464,8 @@ MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveE
 
 // Open from in-memory data. libarchive auto-detects the container (zip/rar/
 // 7z/tar/etc.). Always eager-loads (can't re-open data); no progress reporting.
-MultiFormatArchive* OpenArchiveFromData(Str data) {
-    auto* archive = new MultiFormatArchive();
+Archive* OpenArchiveFromData(Str data) {
+    auto* archive = new Archive();
     if (!archive->OpenFromData(data)) {
         delete archive;
         return nullptr;
@@ -536,7 +536,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
     }
 }
 
-void MultiFormatArchive::LoadFileDataByIdUnrarDll(int fileId) {
+void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
     if (fileInfo->data != nullptr) {
@@ -602,7 +602,7 @@ Exit:
     fileInfo->data = data;
 }
 
-Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
+Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
     ReportIf(!rarFilePath_);
 
     auto* fileInfo = fileInfos_[fileId];
@@ -674,7 +674,7 @@ Exit:
 
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
-bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     if (!rarPath) {
         return false;
     }
@@ -768,15 +768,15 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
     return true;
 }
 #else
-void MultiFormatArchive::LoadFileDataByIdUnrarDll(int fileId) {
+void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     fileInfos_[fileId]->failed = true;
 }
 
-Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(int, int) {
+Str Archive::GetFileDataPartByIdUnrarDll(int, int) {
     return {};
 }
 
-bool MultiFormatArchive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
+bool Archive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
     return false;
 }
 #endif

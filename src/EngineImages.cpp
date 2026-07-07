@@ -1788,7 +1788,7 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
 
 class EngineCbx : public EngineImages {
   public:
-    explicit EngineCbx(MultiFormatArchive* arch);
+    explicit EngineCbx(Archive* arch);
     ~EngineCbx() override;
 
     EngineBase* Clone() override;
@@ -1801,7 +1801,7 @@ class EngineCbx : public EngineImages {
     // realPath: when non-null we actually open the archive from this
     // (local) path but still report `path` via FilePath() so callers
     // (file history, bookmarks, etc.) see the user's original file.
-    static EngineBase* CreateFromFile(Str path, Str password = {}, MultiFormatArchive::Format* formatOut = nullptr,
+    static EngineBase* CreateFromFile(Str path, Str password = {}, Archive::Format* formatOut = nullptr,
                                       bool* isEncryptedOut = nullptr, Kind hintKind = nullptr, Str realPath = {});
     static EngineBase* CreateFromData(Str data);
 
@@ -1816,8 +1816,8 @@ class EngineCbx : public EngineImages {
     bool FinishLoading();
 
     // access to cbxFile must be protected after initialization (with cacheLock)
-    MultiFormatArchive* cbxArchive = nullptr;
-    Vec<MultiFormatArchive::FileInfo*> files;
+    Archive* cbxArchive = nullptr;
+    Vec<Archive::FileInfo*> files;
     TocTree* tocTree = nullptr;
 
     // When set, the archive was actually opened from this local path (e.g.
@@ -1830,7 +1830,7 @@ class EngineCbx : public EngineImages {
 };
 
 // TODO: refactor so that doesn't have to keep <arch>
-EngineCbx::EngineCbx(MultiFormatArchive* archive) {
+EngineCbx::EngineCbx(Archive* archive) {
     cbxArchive = archive;
     kind = kindEngineComicBooks;
 }
@@ -1879,21 +1879,21 @@ bool EngineCbx::LoadFromData(Str data) {
     return FinishLoading();
 }
 
-static bool cmpArchFileInfoByName(MultiFormatArchive::FileInfo* f1, MultiFormatArchive::FileInfo* f2) {
+static bool cmpArchFileInfoByName(Archive::FileInfo* f1, Archive::FileInfo* f2) {
     return str::CmpNatural(f1->name, f2->name) < 0;
 }
 
-static Str GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
+static Str GetExtFromArchiveType(Archive* cbxFile) {
     switch (cbxFile->format) {
-        case MultiFormatArchive::Format::Zip:
+        case Archive::Format::Zip:
             return ".cbz";
-        case MultiFormatArchive::Format::Rar:
+        case Archive::Format::Rar:
             return ".cbr";
-        case MultiFormatArchive::Format::SevenZip:
+        case Archive::Format::SevenZip:
             return ".cb7";
-        case MultiFormatArchive::Format::Tar:
+        case Archive::Format::Tar:
             return ".cbt";
-        case MultiFormatArchive::Format::Unknown:
+        case Archive::Format::Unknown:
             break;
     }
     ReportIf(true);
@@ -1921,7 +1921,7 @@ bool EngineCbx::FinishLoading() {
     Str ext = GetExtFromArchiveType(cbxArchive);
     SetDefaultExt(defaultExt, ext);
 
-    Vec<MultiFormatArchive::FileInfo*> pageFiles;
+    Vec<Archive::FileInfo*> pageFiles;
 
     auto& fileInfos = cbxArchive->GetFileInfos();
     int n = len(fileInfos);
@@ -1931,7 +1931,7 @@ bool EngineCbx::FinishLoading() {
         if (!fileName) {
             continue;
         }
-        if (MultiFormatArchive::Format::Zip == cbxArchive->format && str::StartsWithI(fileName, "_rels/.rels")) {
+        if (Archive::Format::Zip == cbxArchive->format && str::StartsWithI(fileName, "_rels/.rels")) {
             // bail, if we accidentally try to load an XPS file
             return false;
         }
@@ -1970,7 +1970,7 @@ bool EngineCbx::FinishLoading() {
 
     // verify password by trying to extract the smallest file
     if (cbxArchive->isEncrypted && cbxArchive->password) {
-        MultiFormatArchive::FileInfo* smallest = pageFiles[0];
+        Archive::FileInfo* smallest = pageFiles[0];
         for (int i = 1; i < nFiles; i++) {
             if (pageFiles[i]->fileSizeUncompressed < smallest->fileSizeUncompressed) {
                 smallest = pageFiles[i];
@@ -2172,15 +2172,15 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     return RectF(0, 0, 595, 842);
 }
 
-EngineBase* EngineCbx::CreateFromFile(Str path, Str password, MultiFormatArchive::Format* formatOut,
-                                      bool* isEncryptedOut, Kind hintKind, Str realPath) {
+EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* formatOut, bool* isEncryptedOut,
+                                      Kind hintKind, Str realPath) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
     // we only need the archive format (zip/rar/7z), not the sub-type
     // (epub/xps/fb2z), so use the Str overload to avoid
     // opening a full archive just for type detection
-    MultiFormatArchive* archive = new MultiFormatArchive();
+    Archive* archive = new Archive();
     archive->password = str::Dup(password);
 
     // realPath is a local copy of a file that lives on a slow drive (see
@@ -2221,7 +2221,7 @@ EngineBase* EngineCbx::CreateFromData(Str data) {
     // libarchive inside OpenArchiveFromData tries every container it
     // knows (zip/rar/7z/tar/...) in one pass, so a single call replaces
     // the old try-each-format cascade.
-    MultiFormatArchive* archive = OpenArchiveFromData(data);
+    Archive* archive = OpenArchiveFromData(data);
     if (!archive) {
         return nullptr;
     }
@@ -2243,7 +2243,7 @@ bool IsEngineCbxSupportedFileType(Kind kind) {
 }
 
 EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, Str realPath) {
-    MultiFormatArchive::Format fmt = MultiFormatArchive::Format::Unknown;
+    Archive::Format fmt = Archive::Format::Unknown;
     bool isEncrypted = false;
     EngineBase* engine = EngineCbx::CreateFromFile(path, {}, &fmt, &isEncrypted, hintKind, realPath);
     if (engine || !pwdUI) {
@@ -2253,7 +2253,7 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, 
         return nullptr;
     }
     // libarchive can't decrypt 7z archives, so don't prompt for password
-    if (fmt == MultiFormatArchive::Format::SevenZip || fmt == MultiFormatArchive::Format::Unknown) {
+    if (fmt == Archive::Format::SevenZip || fmt == Archive::Format::Unknown) {
         logf("CreateEngineCbxFromFile: encrypted 7z/unknown not supported\n");
         return nullptr;
     }

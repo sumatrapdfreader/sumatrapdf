@@ -5,8 +5,8 @@ struct archive;
 struct archive_entry;
 
 // forward-declared so ArchiveExtractProgress below can reference
-// MultiFormatArchive::FileInfo, which is defined inside the class body.
-struct MultiFormatArchive;
+// Archive::FileInfo, which is defined inside the class body.
+struct Archive;
 
 struct ArchiveExtractProgress;
 using ArchiveExtractProgressCb = Func1<ArchiveExtractProgress*>;
@@ -14,10 +14,10 @@ using ArchiveExtractProgressCb = Func1<ArchiveExtractProgress*>;
 // Thread-local progress callback honored by archive opens. Callers set
 // it before triggering a load that may open archives (e.g. cbx / epub /
 // fb2z); cleared afterwards. Archive openers pass it straight through to
-// MultiFormatArchive::Open without further indirection.
+// Archive::Open without further indirection.
 extern thread_local ArchiveExtractProgressCb gArchiveProgressCb;
 
-struct MultiFormatArchive {
+struct Archive {
     enum class Format {
         Unknown,
         Zip,
@@ -43,8 +43,8 @@ struct MultiFormatArchive {
         FILETIME GetWinFileTime() const;
     };
 
-    MultiFormatArchive();
-    ~MultiFormatArchive();
+    Archive();
+    ~Archive();
 
     Format format = Format::Unknown;
 
@@ -109,11 +109,11 @@ struct MultiFormatArchive {
 // knows the total at the end, so most callbacks carry -1 and a final
 // callback carries nDecoded == nTotal).
 struct ArchiveExtractProgress {
-    MultiFormatArchive::FileInfo* fileInfo;
+    Archive::FileInfo* fileInfo;
     int nDecoded;
     int nTotal;
 };
 
-MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
 
-MultiFormatArchive* OpenArchiveFromData(Str data);
+Archive* OpenArchiveFromData(Str data);
