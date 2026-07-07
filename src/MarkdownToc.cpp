@@ -11,6 +11,7 @@
 extern "C" {
 #include "cmark-gfm.h"
 #include "cmark-gfm-core-extensions.h"
+#include "node.h"
 }
 
 static bool IsMarkdownExt(Str path) {
@@ -79,13 +80,18 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut) {
     Sort(&filesOut);
 }
 
+// cmark_gfm_core_extensions_ensure_registered() must run exactly once process-wide;
+// concurrent calls from TOC worker threads race and abort in cmark_register_node_flag.
+static Mutex gCmarkInitLock;
+static bool gCmarkInitialized = false;
+
 static void EnsureCmarkPluginsRegistered() {
-    static bool didRegister = false;
-    if (didRegister) {
+    ScopedMutex scope(&gCmarkInitLock);
+    if (gCmarkInitialized) {
         return;
     }
     cmark_gfm_core_extensions_ensure_registered();
-    didRegister = true;
+    gCmarkInitialized = true;
 }
 
 static void AttachGfmExtensions(cmark_parser* parser) {
@@ -185,12 +191,39 @@ Str MarkdownHeadingSlug(Arena* a, Str title) {
     return res;
 }
 
-static Str ExtractHeadingTitle(cmark_node* node) {
-    const char* s = cmark_node_get_string_content(node);
-    if (!s) {
+// cmark chunks are length-prefixed; alloc=1 buffers are not always NUL-terminated.
+static Str DupCmarkChunk(cmark_chunk* chunk) {
+    if (!chunk || !chunk->data || chunk->len <= 0) {
         return {};
     }
-    return str::Dup(Str(s));
+    return str::Dup(Str((char*)chunk->data, (int)chunk->len));
+}
+
+static void AppendHeadingText(cmark_node* node, str::Builder* out) {
+    cmark_node_type type = cmark_node_get_type(node);
+    if (type == CMARK_NODE_TEXT || type == CMARK_NODE_CODE) {
+        Str s = DupCmarkChunk(&node->as.literal);
+        if (s) {
+            out->Append(s);
+            str::Free(s);
+        }
+        return;
+    }
+    for (cmark_node* child = cmark_node_first_child(node); child; child = cmark_node_next(child)) {
+        AppendHeadingText(child, out);
+    }
+}
+
+static Str ExtractHeadingTitle(cmark_node* heading) {
+    str::Builder out;
+    for (cmark_node* child = cmark_node_first_child(heading); child; child = cmark_node_next(child)) {
+        AppendHeadingText(child, &out);
+    }
+    Str title = out.TakeStr();
+    if (!title) {
+        return {};
+    }
+    return str::Dup(title);
 }
 
 static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
@@ -257,24 +290,29 @@ static void MdTocParseWorker(MdTocParseCtx* ctx) {
     }
 }
 
+static void InitMarkdownFileToc(MarkdownFileToc* ft) {
+    ft->filePath = {};
+    ft->relPath = {};
+    // MarkdownFileToc contains a nested Vec; Reset() from a zeroed slot is safe.
+    ft->headings.Reset();
+}
+
 void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
     int n = len(files);
     tocsOut.Reset();
     if (n == 0) {
         return;
     }
-    // Vec is not safe to memcpy: initialize each slot in place so nested headings
-    // Vec owns its inline buffer instead of aliasing a stack temporary.
-    for (int i = 0; i < n; i++) {
-        MarkdownFileToc* ft = tocsOut.AppendBlanks(1);
-        if (!ft) {
-            tocsOut.Reset();
-            return;
-        }
-        ft->filePath = {};
-        ft->relPath = {};
-        ft->headings = Vec<MarkdownHeadingItem>();
+    // Allocate all slots before initializing nested Vec members. AppendBlanks would
+    // memmove MarkdownFileToc values and leave headings.els pointing at stale addrs.
+    if (!tocsOut.SetSize(n)) {
+        return;
     }
+    for (int i = 0; i < n; i++) {
+        InitMarkdownFileToc(&tocsOut[i]);
+    }
+
+    EnsureCmarkPluginsRegistered();
 
     MdTocParseCtx ctx;
     ctx.files = &files;
@@ -334,13 +372,15 @@ Str MarkdownToHtmlPage(Str markdown) {
     AttachGfmExtensions(parser);
     cmark_parser_feed(parser, markdown.s, (size_t)markdown.len);
     cmark_node* doc = cmark_parser_finish(parser);
-    cmark_llist* extensions = cmark_parser_get_syntax_extensions(parser);
-    cmark_parser_free(parser);
     if (!doc) {
+        cmark_parser_free(parser);
         return {};
     }
 
+    // Render before cmark_parser_free(); the extensions list is owned by the parser.
+    cmark_llist* extensions = cmark_parser_get_syntax_extensions(parser);
     char* body = cmark_render_html(doc, options, extensions);
+    cmark_parser_free(parser);
     cmark_node_free(doc);
     if (!body) {
         return {};

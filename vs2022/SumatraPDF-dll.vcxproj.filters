@@ -225,6 +225,12 @@
     <ClInclude Include="..\src\MainWindow.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\MarkdownModel.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MarkdownToc.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Menu.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -639,6 +645,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MarkdownModel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MarkdownToc.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Menu.cpp">

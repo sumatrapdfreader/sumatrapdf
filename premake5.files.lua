@@ -828,6 +828,8 @@ function sumatrapdf_files()
     "CanvasAboutUI.*",
     "ChmDump.*",
     "ChmModel.*",
+    "MarkdownModel.*",
+    "MarkdownToc.*",
     "AIChatCommon.*",
     "ClaudeCode.*",
     "CodexBuild.*",

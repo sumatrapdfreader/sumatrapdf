@@ -26,6 +26,25 @@
 constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
 constexpr int kMdVirtualHostLen = sizeof("https://sumatrapdf.markdown/") - 1;
 
+static bool IsMarkdownVirtualHostUrl(Str url) {
+    if (!url) {
+        return false;
+    }
+    if (str::StartsWith(url, kMdVirtualHost)) {
+        return true;
+    }
+    TempStr plain = url::GetFullPathTemp(url);
+    return plain && str::StartsWith(plain, kMdVirtualHost);
+}
+
+// Virtual-host pages use an https:// scheme but are served in-app via WebView2.
+static bool IsMarkdownExternalUrl(Str url) {
+    if (!url || IsMarkdownVirtualHostUrl(url)) {
+        return false;
+    }
+    return IsExternalUrl(url);
+}
+
 static TempStr NormalizeMarkdownUrlTemp(Str url) {
     TempStr plainUrl = url::GetFullPathTemp(url);
     if (!plainUrl) {
@@ -71,7 +90,7 @@ static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
         return nullptr;
     }
     IPageDestination* dest = nullptr;
-    if (IsExternalUrl(url)) {
+    if (IsMarkdownExternalUrl(url)) {
         dest = new PageDestinationURL(url);
     } else {
         auto pdest = new PageDestination();
@@ -252,7 +271,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
         return false;
     }
     pageUrl = str::DupTemp(pageUrl);
-    if (IsExternalUrl(pageUrl)) {
+    if (IsMarkdownExternalUrl(pageUrl)) {
         if (cb) {
             auto item = NewMarkdownTocItem(nullptr, nullptr, 1, pageUrl);
             cb->GotoLink(item->dest);
@@ -513,6 +532,11 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     }
     if (!newWindow) {
         return true;
+    }
+    TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
+    if (plainUrl && !IsMarkdownExternalUrl(plainUrl)) {
+        DisplayPage(plainUrl);
+        return false;
     }
     if (url && cb) {
         auto item = NewMarkdownTocItem(nullptr, nullptr, 1, url);

@@ -520,6 +520,11 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
         chm->HandleLink(dest, nullptr);
         return;
     }
+    MarkdownModel* md = win->ctrl->AsMarkdown();
+    if (md) {
+        md->HandleLink(dest, nullptr);
+        return;
+    }
     int pageNo = PageDestGetPageNo(dest);
     if (!win->ctrl->ValidPageNo(pageNo)) {
         return;

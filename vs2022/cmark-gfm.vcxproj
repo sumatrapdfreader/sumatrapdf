@@ -99,7 +99,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3F8A9B2C-1D4E-5F60-A7B8-C9D0E1F2A3B4}</ProjectGuid>
+    <ProjectGuid>{5AADABD2-C617-6049-0F56-11EF7BFF3D9E}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>cmark-gfm</RootNamespace>
@@ -367,9 +367,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -380,7 +381,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -398,9 +398,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -411,7 +412,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -429,9 +429,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -442,7 +443,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -460,9 +460,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -473,7 +474,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -491,8 +491,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -503,7 +504,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -521,8 +521,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -533,7 +534,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -551,8 +551,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -563,7 +564,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -581,8 +581,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -593,7 +594,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -611,9 +611,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -624,7 +625,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -642,9 +642,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -655,7 +656,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -673,9 +673,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -686,7 +687,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -704,9 +704,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -717,7 +718,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -734,9 +734,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -747,7 +748,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -766,9 +766,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -779,7 +780,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -798,9 +798,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -811,7 +812,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -830,9 +830,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4459;4505;4090;4310;4018;4132;4204;4305;4306;4389;4005;4201;4130;4100;4127;4232;4244;4245;4267;4456;4457;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4800;6319;4013;4018;4090;4100;4101;4127;4130;4132;4146;4201;4204;4232;4244;4245;4267;4305;4306;4310;4312;4389;4456;4457;4459;4505;4701;4702;4706;4805;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;CMARK_GFM_STATIC_DEFINE;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -843,7 +844,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -857,14 +857,6 @@
     <ProjectReference>
     </ProjectReference>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\ext\cmark-gfm\extensions\cmark-gfm-core-extensions.h" />
-    <ClInclude Include="..\ext\cmark-gfm\src\cmark-gfm.h" />
-    <ClInclude Include="..\ext\cmark-gfm\src\cmark-gfm-extension_api.h" />
-    <ClInclude Include="..\ext\cmark-gfm\src\cmark-gfm_export.h" />
-    <ClInclude Include="..\ext\cmark-gfm\src\cmark-gfm_version.h" />
-    <ClInclude Include="..\ext\cmark-gfm\src\cmark_ctype.h" />
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\cmark-gfm\extensions\autoheaderid.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\autolink.c" />
