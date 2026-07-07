@@ -906,6 +906,98 @@ static void HeifInfoFromData(ByteReader r, FileTypeInfo& res) {
     res.imageDy = dy;
 }
 
+// LSB-first bit reader for the JPEG XL codestream header
+struct JxlBitReader {
+    ByteReader r;
+    int pos; // in bits
+
+    JxlBitReader(ByteReader r, int startByte) : r(r), pos(startByte * 8) {}
+    u32 Bits(int n) {
+        u32 res = 0;
+        for (int i = 0; i < n; i++) {
+            u32 bit = (r.Byte(pos >> 3) >> (pos & 7)) & 1;
+            res |= bit << i;
+            pos++;
+        }
+        return res;
+    }
+};
+
+// variable-length u32: 2-bit selector, then 9/13/18/30 bits, value + 1
+static u32 JxlU32(JxlBitReader& br) {
+    static const int nBits[] = {9, 13, 18, 30};
+    u32 sel = br.Bits(2);
+    return br.Bits(nBits[sel]) + 1;
+}
+
+// dimensions from the SizeHeader and orientation from the ImageMetadata of
+// a JPEG XL codestream, per ISO/IEC 18181-1 (see also jxl-rs
+// jxl/src/headers/size.rs). Reads past the end of a truncated buffer as 0
+// bits, which yields 0-sized dimensions.
+static void JxlSizeFromCodestream(ByteReader r, FileTypeInfo& res) {
+    if (r.len < 4 || r.Byte(0) != 0xff || r.Byte(1) != 0x0a) {
+        return;
+    }
+    JxlBitReader br(r, 2);
+    bool isSmall = br.Bits(1) != 0;
+    u32 ysize;
+    if (isSmall) {
+        ysize = (br.Bits(5) + 1) * 8;
+    } else {
+        ysize = JxlU32(br);
+    }
+    u32 xsize;
+    u32 ratio = br.Bits(3);
+    if (ratio != 0) {
+        // xsize is derived from ysize via a fixed aspect-ratio table
+        static const u32 num[] = {0, 1, 12, 4, 3, 16, 5, 2};
+        static const u32 den[] = {0, 1, 10, 3, 2, 9, 4, 1};
+        xsize = (u32)(((u64)ysize * num[ratio]) / den[ratio]);
+    } else if (isSmall) {
+        xsize = (br.Bits(5) + 1) * 8;
+    } else {
+        xsize = JxlU32(br);
+    }
+    // ImageMetadata: orientation lives in the optional extra_fields
+    int orientation = 1;
+    bool allDefault = br.Bits(1) != 0;
+    if (!allDefault) {
+        bool extraFields = br.Bits(1) != 0;
+        if (extraFields) {
+            orientation = (int)br.Bits(3) + 1;
+        }
+    }
+    if (xsize > (u32)INT_MAX || ysize > (u32)INT_MAX) {
+        return;
+    }
+    res.imageDx = (int)xsize;
+    res.imageDy = (int)ysize;
+    res.orientation = orientation;
+}
+
+static void JxlInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    if (r.Byte(0) == 0xff && r.Byte(1) == 0x0a) {
+        JxlSizeFromCodestream(r, res);
+        return;
+    }
+    // ISO BMFF container: the codestream is in a jxlc box or split across
+    // jxlp boxes, whose payload starts with a 4-byte part index
+    int boxEnd;
+    int idx = FindIsoBmffBox(r, 0, r.len, "jxlc", &boxEnd);
+    if (idx < 0) {
+        idx = FindIsoBmffBox(r, 0, r.len, "jxlp", &boxEnd);
+        if (idx < 0) {
+            return;
+        }
+        idx += 4;
+    }
+    if (boxEnd <= idx) {
+        return;
+    }
+    JxlSizeFromCodestream(ByteReader(r.d + idx, boxEnd - idx), res);
+}
+
 // Like GuessFileTypeFromData() but for image files also reports the number
 // of images and, for single-image files, width/height parsed from the header
 // (hasImageSize tells if they were found; if not, callers can fall back to a
@@ -949,8 +1041,7 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
             HeifInfoFromData(r, res);
             break;
         case FileType::Jxl:
-            // TODO: dimensions require parsing the codestream SIZE header
-            res.nImages = 1;
+            JxlInfoFromData(r, res);
             break;
         default:
             break;

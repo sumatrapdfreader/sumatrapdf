@@ -63,7 +63,7 @@ struct FileTypeInfo {
     int imageDx = 0;     // only for single-image files: image width, after applying orientation
     int imageDy = 0;     // only for single-image files: image height, after applying orientation
     int nImages = 0;     // only for image files: number of images
-    int orientation = 0; // EXIF orientation (1-8) for jpeg/webp, 0 if not present
+    int orientation = 0; // EXIF orientation (1-8) for jpeg/webp/jxl, 0 if not present
 };
 
 FileTypeInfo GuessFileInfoFromData(Str d);

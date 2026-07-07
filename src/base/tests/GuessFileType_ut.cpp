@@ -237,6 +237,41 @@ static void heifTest() {
     utassert(fti.nImages == 1);
 }
 
+static void jxlTest() {
+    // raw codestream, small size header: ysize = (7+1)*8 = 64, ratio 1:1
+    static const u8 jxl1[] = {0xFF, 0x0A, 0x4F, 0x02};
+    FileTypeInfo fti = infoFromBytes(jxl1, dimofi(jxl1));
+    utassert(fti.ft == FileType::Jxl);
+    utassert(fti.imageDx == 64);
+    utassert(fti.imageDy == 64);
+    utassert(fti.hasImageSize);
+    utassert(fti.nImages == 1);
+    utassert(fti.orientation == 1);
+
+    // ratio 2:1 (xsize 128, ysize 64) with orientation 6, which swaps
+    // the reported width/height
+    static const u8 jxl2[] = {0xFF, 0x0A, 0xCF, 0x2D};
+    fti = infoFromBytes(jxl2, dimofi(jxl2));
+    utassert(fti.ft == FileType::Jxl);
+    utassert(fti.orientation == 6);
+    utassert(fti.imageDx == 64);
+    utassert(fti.imageDy == 128);
+    utassert(fti.hasImageSize);
+
+    // same 64x64 codestream in the ISO BMFF container (jxlc box)
+    static const u8 jxlBmff[] = {
+        0,   0,   0,   12,  'J', 'X', 'L', ' ', 0x0D, 0x0A, 0x87, 0x0A,             // signature box
+        0,   0,   0,   20,  'f', 't', 'y', 'p', 'j',  'x',  'l',  ' ',  0, 0, 0, 0, // ftyp
+        'j', 'x', 'l', ' ',                                                         //
+        0,   0,   0,   12,  'j', 'x', 'l', 'c', 0xFF, 0x0A, 0x4F, 0x02,             // jxlc + codestream
+    };
+    fti = infoFromBytes(jxlBmff, dimofi(jxlBmff));
+    utassert(fti.ft == FileType::Jxl);
+    utassert(fti.imageDx == 64);
+    utassert(fti.imageDy == 64);
+    utassert(fti.hasImageSize);
+}
+
 static void nonImageTest() {
     static const char pdf[] = "%PDF-1.4\nhello";
     FileTypeInfo fti = GuessFileInfoFromData(StrL(pdf));
@@ -258,5 +293,6 @@ void GuessFileTypeTest() {
     webpTest();
     tiffTest();
     heifTest();
+    jxlTest();
     nonImageTest();
 }
