@@ -167,7 +167,7 @@ static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
 
 // which documents support rotation
 static bool NeedsRotateUI(MainWindow* win) {
-    if (win->AsChm()) {
+    if (IsBrowserDocController(win->ctrl)) {
         return false;
     }
     return true;
@@ -179,14 +179,14 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
     switch (cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
-            return !win->AsChm();
+            return !IsBrowserDocController(win->ctrl);
         case CmdRotateLeft:
         case CmdRotateRight:
             return NeedsRotateUI(win);
         case CmdFindFirst:
             // CHM has its own (WebView2/IE) find bar even though NeedsFindUI()
             // is false for it; show the Search button so it's reachable
-            return NeedsFindUI(win) || (win->AsChm() != nullptr);
+            return NeedsFindUI(win) || IsBrowserDocController(win->ctrl);
         case CmdFindNext:
         case CmdFindPrev:
         case CmdFindToggleMatchCase:
@@ -263,7 +263,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
 #endif
 
         case CmdFindFirst:
-            return NeedsFindUI(win) || (win->AsChm() != nullptr);
+            return NeedsFindUI(win) || IsBrowserDocController(win->ctrl);
 
         case CmdFindNext:
         case CmdFindPrev:

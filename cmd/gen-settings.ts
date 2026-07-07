@@ -372,6 +372,15 @@ const chmUI: Field[] = [
   ),
 ];
 
+const markdownUI: Field[] = [
+  mkField(
+    "UseFixedPageUI",
+    Bool,
+    false,
+    "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available",
+  ),
+];
+
 const codexBuild: Field[] = [
   mkField("Model", Str, "gpt-5.5", "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)"),
   mkField(
@@ -1031,6 +1040,14 @@ const globalPrefs: Field[] = [
       "ChmUI",
       chmUI,
       "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
+    ),
+  ),
+  mkEmptyLine(),
+  setExpert(
+    mkStruct(
+      "MarkdownUI",
+      markdownUI,
+      "customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
     ),
   ),
   mkEmptyLine(),

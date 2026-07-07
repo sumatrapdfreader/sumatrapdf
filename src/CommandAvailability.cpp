@@ -70,6 +70,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdToggleTips,
     CmdToggleFrequentlyRead,
     CmdToggleChmUI,
+    CmdToggleMarkdownUI,
     CmdToggleReuseInstance,
     CmdToggleHoverPreview,
     CmdToggleInverseSearch,
@@ -347,7 +348,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     ctx.allowToggleMenuBar = true;
 
     if (ctx.tab) {
-        ctx.isChm = ctx.tab->AsChm();
+        ctx.isChm = ctx.tab->AsChm() || ctx.tab->AsMarkdown();
         EngineBase* engine = ctx.tab->GetEngine();
         if (engine && engine->kind == kindEngineComicBooks) {
             ctx.isCbx = true;

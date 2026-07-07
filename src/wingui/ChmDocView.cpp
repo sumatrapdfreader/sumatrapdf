@@ -180,7 +180,7 @@ bool ChmDocView::CreateWebView2() {
     chmWv->owner = this;
     wv = chmWv;
     wv->dataDir = str::Dup(GetWebViewDataDirTemp());
-    wv->resourceUriPrefix = wstr::Dup(kChmVirtualHostW);
+    wv->resourceUriPrefix = wstr::Dup(virtualHostW);
     wv->resourceProvider.ctx = this;
     wv->resourceProvider.getResource = ResourceGet;
     wv->events.ctx = this;
@@ -215,7 +215,7 @@ bool ChmDocView::CreateWebView2() {
     return true;
 }
 
-ChmDocView* ChmDocView::Create(HWND hwndParent, HtmlWindowCallback* cb) {
+ChmDocView* ChmDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix) {
     if (!hwndParent || !cb) {
         return nullptr;
     }
@@ -223,6 +223,13 @@ ChmDocView* ChmDocView::Create(HWND hwndParent, HtmlWindowCallback* cb) {
     auto* view = new ChmDocView();
     view->hwndParent = hwndParent;
     view->cb = cb;
+    if (virtualHostPrefix) {
+        view->virtualHost = str::Dup(virtualHostPrefix);
+        view->virtualHostW = wstr::Dup(ToWStrTemp(virtualHostPrefix));
+    } else {
+        view->virtualHost = str::Dup(kChmVirtualHost);
+        view->virtualHostW = wstr::Dup(kChmVirtualHostW);
+    }
 
 #ifdef _MSC_VER
     if (HasWebView() && view->CreateWebView2()) {
@@ -244,6 +251,8 @@ ChmDocView::~ChmDocView() {
     UnsubclassParent();
     delete wv;
     delete ie;
+    str::Free(virtualHost);
+    wstr::Free(virtualHostW);
 }
 
 void ChmDocView::NavigateToDataUrl(Str url) {
@@ -251,7 +260,10 @@ void ChmDocView::NavigateToDataUrl(Str url) {
         return;
     }
     if (backend == Backend::WebView2 && wv) {
-        TempStr fullUrl = str::JoinTemp(kChmVirtualHost, url);
+        TempStr fullUrl = url;
+        if (!str::StartsWith(url, virtualHost)) {
+            fullUrl = str::JoinTemp(virtualHost, url);
+        }
         wv->Navigate(fullUrl);
         return;
     }

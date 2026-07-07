@@ -3818,7 +3818,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return WndProcCanvasFixedPageUI(win, hwnd, msg, wp, lp);
             }
 
-            if (win->AsChm()) {
+            if (IsBrowserDocController(win->ctrl)) {
                 HomePageDestroySearch(win);
                 return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
             }

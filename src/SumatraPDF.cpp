@@ -38,6 +38,7 @@
 #include "PdfTools.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
+#include "MarkdownModel.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
@@ -1385,6 +1386,28 @@ static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
     ReportIf(true);
 }
 
+static DocController* CreateControllerForMarkdown(Str path, MainWindow* win) {
+    Kind kind = GuessFileType(path, true);
+    if (!MarkdownModel::IsSupportedFileType(kind)) {
+        return nullptr;
+    }
+    MarkdownModel* mdModel = MarkdownModel::Create(path, win->cbHandler);
+    if (!mdModel) {
+        return nullptr;
+    }
+    DocController* ctrl = nullptr;
+    if (!mdModel->SetParentHwnd(win->hwndCanvas)) {
+        log("CreateControllerForMarkdown: WebView2 unavailable, falling back to MuPDF markdown view\n");
+        delete mdModel;
+        return nullptr;
+    }
+    mdModel->RemoveParentHwnd();
+    ctrl = mdModel;
+    ReportIf(!ctrl || !ctrl->AsMarkdown() || ctrl->AsFixed());
+    VerifyController(ctrl, path);
+    return ctrl;
+}
+
 static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWindow* win) {
     Kind kind = GuessFileType(path, true);
 
@@ -1437,6 +1460,17 @@ DocController* gMostRecentlyOpenedDoc = nullptr;
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win) {
     auto timeStart = TimeGet();
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
+    bool mdInFixedUI = gGlobalPrefs->markdownUI.useFixedPageUI;
+    if (!mdInFixedUI && !engine) {
+        Kind kind = GuessFileTypeFromName(path);
+        if (MarkdownModel::IsSupportedFileType(kind)) {
+            auto mdCtrl = CreateControllerForMarkdown(path, win);
+            if (mdCtrl) {
+                gMostRecentlyOpenedDoc = mdCtrl;
+                return mdCtrl;
+            }
+        }
+    }
     // TODO: sniff file content only once
     if (!engine) {
         engine = CreateEngineFromFile(path, pwdUI, chmInFixedUI);
@@ -1663,15 +1697,21 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 win->uiaProvider->OnDocumentUnload();
                 win->uiaProvider->OnDocumentLoad(dm);
             }
-        } else if (win->AsChm()) {
-            win->AsChm()->SetParentHwnd(win->hwndCanvas);
+        } else if (IsBrowserDocController(win->ctrl)) {
+            if (win->AsChm()) {
+                win->AsChm()->SetParentHwnd(win->hwndCanvas);
+            } else {
+                win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
+            }
             win->ctrl->SetDisplayMode(displayMode);
             ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
             if (fs) {
-                // restore the scroll position saved from a previous session;
-                // ScrollTo() seeds it and navigates to the page
                 RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
-                win->AsChm()->ScrollTo(ss.page, r, kInvalidZoom);
+                if (win->AsChm()) {
+                    win->AsChm()->ScrollTo(ss.page, r, kInvalidZoom);
+                } else {
+                    win->AsMarkdown()->ScrollTo(ss.page, r, kInvalidZoom);
+                }
             } else {
                 win->ctrl->GoToPage(ss.page, false);
             }
@@ -2883,10 +2923,11 @@ void StartLoadDocument(LoadArgs* argsIn) {
     // TODO: that's because we create web control on a thread which
     // violates threading rules and that happens as part of CreateControllerForEngineOrFile()
     // we could probably delay creating web control but that's more complicated
-    if (!gGlobalPrefs->chmUI.useFixedPageUI) {
+    if (!gGlobalPrefs->chmUI.useFixedPageUI || !gGlobalPrefs->markdownUI.useFixedPageUI) {
         Kind kind = GuessFileTypeFromName(path);
-        bool isChm = ChmModel::IsSupportedFileType(kind);
-        if (isChm) {
+        bool isChm = !gGlobalPrefs->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind);
+        bool isMd = !gGlobalPrefs->markdownUI.useFixedPageUI && MarkdownModel::IsSupportedFileType(kind);
+        if (isChm || isMd) {
             // TODO: repeating the code below
             auto wndNotif = ShowLoadingNotif(win, path, args->loadingNotifCorner);
             DocController* ctrl = nullptr;
@@ -3014,6 +3055,8 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     if (win->AsChm()) {
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
+    } else if (win->AsMarkdown()) {
+        win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
     } else if (win->AsFixed() && win->uiaProvider) {
         // tell UI Automation about content change
         win->uiaProvider->OnDocumentLoad(win->AsFixed());
@@ -3040,7 +3083,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         if (dm->InPresentation() != win->InPresentation()) {
             dm->SetInPresentation(win->InPresentation());
         }
-    } else if (win->AsChm()) {
+    } else if (IsBrowserDocController(win->ctrl)) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
     }
     tab->canvasRc = win->canvasRc;
@@ -3269,6 +3312,8 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();
+    } else if (win->AsMarkdown()) {
+        win->AsMarkdown()->RemoveParentHwnd();
     }
     ClearTocBox(win);
     AbortFinding(win, true);
@@ -3893,6 +3938,8 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
         type = ctrl->AsFixed()->engineType;
     } else if (ctrl->AsChm()) {
         type = kindEngineChm;
+    } else if (ctrl->AsMarkdown()) {
+        type = kindFileMarkdown;
     }
 
     auto ext = ctrl->GetDefaultFileExt();
@@ -5865,6 +5912,13 @@ static bool IsChmTab(WindowTab* tab) {
     return dm && dm->GetEngineType() == kindEngineChm;
 }
 
+static bool IsMarkdownTab(WindowTab* tab) {
+    if (!tab || !tab->IsDocLoaded()) {
+        return false;
+    }
+    return tab->AsMarkdown() != nullptr;
+}
+
 static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot, LPARAM lp = 0) {
     DisplayModel* dm = tab->AsFixed();
     if (!dm) return nullptr;
@@ -5906,7 +5960,7 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
 
     // some of the chm key bindings are different than the rest and we
     // need to make sure we don't break them
-    bool isChm = win->AsChm();
+    bool isChm = IsBrowserDocController(win->ctrl);
     // TODO: not sure how this interacts with accelerators
 #if 0
     bool isPageUp = (isCtrl && (VK_UP == key));
@@ -5921,7 +5975,11 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
 #endif
     if (isChm) {
         if (ChmForwardKey(key)) {
-            win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lp);
+            if (win->AsChm()) {
+                win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lp);
+            } else {
+                win->AsMarkdown()->PassUIMsg(WM_KEYDOWN, key, lp);
+            }
             return true;
         }
     }
@@ -6402,6 +6460,8 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
 #if 0 // TODO: get selection from Chm
     if (tab->AsChm()) {
         tab->AsChm()->CopySelection();
+    } else if (tab->AsMarkdown()) {
+        tab->AsMarkdown()->CopySelection();
         return;
     }
 #endif
@@ -6440,6 +6500,8 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     }
     if (tab->AsChm()) {
         tab->AsChm()->CopySelection();
+    } else if (tab->AsMarkdown()) {
+        tab->AsMarkdown()->CopySelection();
         return;
     }
     if (tab->selectionOnPage) {
@@ -6461,7 +6523,7 @@ static void OnMenuCustomZoom(MainWindow* win) {
     }
 
     float virtZoom = win->ctrl->GetZoomVirtual();
-    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm() != nullptr, &virtZoom)) {
+    if (!Dialog_CustomZoom(win->hwndFrame, IsBrowserDocController(win->ctrl), &virtZoom)) {
         return;
     }
     SmartZoom(win, virtZoom, nullptr, true);
@@ -8416,6 +8478,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
             SaveSettings();
             if (IsChmTab(tab)) {
+                ReloadDocument(win, false);
+            }
+            return 0;
+        }
+
+        case CmdToggleMarkdownUI: {
+            gGlobalPrefs->markdownUI.useFixedPageUI = !gGlobalPrefs->markdownUI.useFixedPageUI;
+            SaveSettings();
+            if (IsMarkdownTab(tab)) {
                 ReloadDocument(win, false);
             }
             return 0;
@@ -10750,6 +10821,9 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             if (win->AsChm()) {
                 return win->AsChm()->PassUIMsg(msg, wp, lp);
+            }
+            if (win->AsMarkdown()) {
+                return win->AsMarkdown()->PassUIMsg(msg, wp, lp);
             }
             ReportIf(!win->AsFixed());
             // Pass the message to the canvas' window procedure

@@ -362,6 +362,18 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4996" }
     files { "ext/CHMLib/*.c", "ext/CHMLib/*.h" }
 
+  -- cmark-gfm for SumatraPDF-dll markdown browser (MarkdownToc/MarkdownModel).
+  -- mupdf-libs also builds cmark for md.c inside libmupdf; the static SumatraPDF
+  -- exe reuses that copy, only the dll build links this separate lib.
+  project "cmark-gfm"
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    defines { "CMARK_GFM_STATIC_DEFINE", "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4013", "4018", "4090", "4100", "4101", "4127", "4130", "4132", "4146", "4201", "4204", "4232", "4244", "4245", "4267", "4305", "4306", "4310", "4312", "4389", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4805", "4819", "4996" }
+    cmark_gfm_files()
+
   project "djvudec"
     kind "StaticLib"
     language "C"
@@ -984,6 +996,7 @@ workspace "SumatraPDF"
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
     -- so suppressions can only come from the environment.
@@ -1011,6 +1024,7 @@ workspace "SumatraPDF"
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
+    defines { "CMARK_GFM_STATIC_DEFINE" }
 
     filter "configurations:ReleaseAnalyze"
     -- TODO: somehow /analyze- is default which creates warning about
@@ -1124,8 +1138,11 @@ workspace "SumatraPDF"
 
     files { "src/MuPDF_Exports.cpp" }
 
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    defines { "CMARK_GFM_STATIC_DEFINE" }
+
     links {
-      "libmupdf", "unrar", "libarchive", "base", "chm"
+      "libmupdf", "unrar", "libarchive", "base", "chm", "cmark-gfm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

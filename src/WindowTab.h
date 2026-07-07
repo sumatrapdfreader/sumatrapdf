@@ -126,6 +126,7 @@ struct WindowTab {
     Kind GetEngineType() const;
 
     ChmModel* AsChm() const;
+    MarkdownModel* AsMarkdown() const;
 
     Str GetTabTitle() const;
     bool IsDocLoaded() const;

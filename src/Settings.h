@@ -129,6 +129,14 @@ struct ChmUI {
     bool useFixedPageUI;
 };
 
+// customization options for Markdown UI. If UseFixedPageUI is true,
+// MuPDF is used; otherwise WebView2 browser view is used when available
+struct MarkdownUI {
+    // if true, use MuPDF (cmark-gfm) to render markdown; if false, use
+    // WebView2 browser view when available
+    bool useFixedPageUI;
+};
+
 // settings for the Claude Code chat sidebar
 struct ClaudeCode {
     // Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus
@@ -635,6 +643,10 @@ struct GlobalPrefs {
     // customization options for CHM UI. If UseFixedPageUI is true,
     // FixedPageUI settings apply instead
     ChmUI chmUI;
+    // customization options for Markdown UI. If UseFixedPageUI is true,
+    // MuPDF is used; otherwise WebView2 browser view is used when
+    // available
+    MarkdownUI markdownUI;
     // settings for the Claude Code chat sidebar
     ClaudeCode claudeCode;
     // settings for the Grok Build chat sidebar
@@ -785,6 +797,11 @@ static const FieldInfo gChmUIFields[] = {
     {offsetof(ChmUI, useFixedPageUI), SettingType::Bool, false},
 };
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
+
+static const FieldInfo gMarkdownUIFields[] = {
+    {offsetof(MarkdownUI, useFixedPageUI), SettingType::Bool, false},
+};
+static const StructInfo gMarkdownUIInfo = {sizeof(MarkdownUI), 1, gMarkdownUIFields, "UseFixedPageUI"};
 
 static const FieldInfo gClaudeCodeFields[] = {
     {offsetof(ClaudeCode, model), SettingType::String, (intptr_t)"sonnet"},
@@ -1093,6 +1110,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, markdownUI), SettingType::Struct, (intptr_t)&gMarkdownUIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, claudeCode), SettingType::Struct, (intptr_t)&gClaudeCodeInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, grokBuild), SettingType::Struct, (intptr_t)&gGrokBuildInfo},
@@ -1138,7 +1157,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 111, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 113, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0Ena"
     "bleTeXEnhancements\0EscToExit\0FullPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab"
     "\0HomePageSortByFrequentlyRead\0HomePageShowList\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDo"
@@ -1147,10 +1166,10 @@ static const StructInfo gGlobalPrefsInfo = {
     "crollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar"
     "\0PreventSleepInFullscreen\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAn"
     "tiAlias\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0"
-    "ComicBookUI\0\0ImageUI\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0"
-    "Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts"
-    "\0\0Themes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPo"
-    "s\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
+    "ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0Trans"
+    "lateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandler"
+    "s\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0Se"
+    "archUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

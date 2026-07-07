@@ -16,6 +16,7 @@
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
+#include "MarkdownModel.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "ProgressUpdateUI.h"
@@ -1203,6 +1204,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     if (win->AsChm()) {
         win->AsChm()->PrintCurrentPage(true);
+    } else if (win->AsMarkdown()) {
+        win->AsMarkdown()->PrintCurrentPage(true);
         return;
     }
     DisplayModel* dm = win->AsFixed();

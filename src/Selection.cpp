@@ -14,6 +14,7 @@
 #include "EngineBase.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
+#include "MarkdownModel.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "Notifications.h"
@@ -325,6 +326,8 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
 
     if (win->AsChm()) {
         win->AsChm()->SelectAll();
+    } else if (win->AsMarkdown()) {
+        win->AsMarkdown()->SelectAll();
         return;
     }
     if (!win->AsFixed()) {

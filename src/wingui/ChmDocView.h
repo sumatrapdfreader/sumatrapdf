@@ -13,7 +13,7 @@ class ChmDocView {
     bool canGoBack = false;
     bool canGoForward = false;
 
-    static ChmDocView* Create(HWND hwndParent, HtmlWindowCallback* cb);
+    static ChmDocView* Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix = {});
     ~ChmDocView();
 
     void NavigateToDataUrl(Str url);
@@ -49,6 +49,8 @@ class ChmDocView {
     // (-1, -1) means "not known yet". The IE backend reads scroll state
     // synchronously instead and doesn't use this.
     Point webviewScrollPos = Point(-1, -1);
+    Str virtualHost;
+    WStr virtualHostW;
 
     bool CreateWebView2();
     void UnsubclassParent();

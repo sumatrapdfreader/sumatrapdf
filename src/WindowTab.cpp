@@ -14,6 +14,7 @@
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
+#include "MarkdownModel.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
@@ -22,7 +23,6 @@
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
 #include "EditAnnotations.h"
-
 
 WindowTab::WindowTab(MainWindow* win) {
     this->win = win;
@@ -56,6 +56,8 @@ WindowTab::~WindowTab() {
     FileWatcherUnsubscribe(watcher);
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
+    } else if (AsMarkdown()) {
+        AsMarkdown()->RemoveParentHwnd();
     }
     delete selectionOnPage;
     // technically we only need to clear ctrl == gMostRecentlyOpenedDoc
@@ -105,6 +107,10 @@ DisplayModel* WindowTab::AsFixed() const {
 
 ChmModel* WindowTab::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
+}
+
+MarkdownModel* WindowTab::AsMarkdown() const {
+    return ctrl ? ctrl->AsMarkdown() : nullptr;
 }
 
 Kind WindowTab::GetEngineType() const {

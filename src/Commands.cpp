@@ -238,6 +238,7 @@ static SeqStrings gCommandNames =
     "CmdSetScreenshotHotkey\0"
     "CmdToggleReuseInstance\0"
     "CmdToggleChmUI\0"
+    "CmdToggleMarkdownUI\0"
     "CmdReadAloud\0"
     "CmdPauseReadAloud\0"
     "CmdContinueReadAloud\0"
@@ -496,6 +497,7 @@ static i32 gCommandIds[] = {
     CmdSetScreenshotHotkey,
     CmdToggleReuseInstance,
     CmdToggleChmUI,
+    CmdToggleMarkdownUI,
     CmdReadAloud,
     CmdPauseReadAloud,
     CmdContinueReadAloud,
@@ -754,6 +756,7 @@ SeqStrings gCommandDescriptions =
     "Set Screenshot Hotkey\0"
     "Toggle Reuse Instance\0"
     "Toggle CHM UI\0"
+    "Toggle Markdown UI\0"
     "Read Aloud\0"
     "Pause Reading\0"
     "Continue Reading\0"

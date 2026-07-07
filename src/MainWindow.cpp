@@ -20,6 +20,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "ChmModel.h"
+#include "MarkdownModel.h"
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
@@ -295,6 +296,10 @@ DisplayModel* MainWindow::AsFixed() const {
 
 ChmModel* MainWindow::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
+}
+
+MarkdownModel* MainWindow::AsMarkdown() const {
+    return ctrl ? ctrl->AsMarkdown() : nullptr;
 }
 
 // Notify both display model and double-buffer (if they exist)

@@ -32,7 +32,6 @@
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
 
-
 static bool AllowCommand(const AppCommandCtx& ctx, i32 cmdId) {
     return CommandShouldShow(GetCommandVisibility(cmdId, ctx, CommandSurface::Palette));
 }
@@ -178,6 +177,13 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             return str::JoinTemp(s, StrL(": browser"));
         }
         return str::JoinTemp(s, StrL(": fixed"));
+    }
+
+    if (cmdId == CmdToggleMarkdownUI) {
+        if (gGlobalPrefs->markdownUI.useFixedPageUI) {
+            return str::JoinTemp(s, StrL(": browser"));
+        }
+        return str::JoinTemp(s, StrL(": mupdf"));
     }
 
     if (cmdId == CmdToggleToolbarPosition) {

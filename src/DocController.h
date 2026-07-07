@@ -3,6 +3,7 @@
 
 struct DocController;
 struct ChmModel;
+struct MarkdownModel;
 struct DisplayModel;
 struct IPageElement;
 struct IPageDestination;
@@ -129,4 +130,9 @@ struct DocController {
     // for quick type determination and type-safe casting
     virtual DisplayModel* AsFixed() { return nullptr; }
     virtual ChmModel* AsChm() { return nullptr; }
+    virtual MarkdownModel* AsMarkdown() { return nullptr; }
 };
+
+inline bool IsBrowserDocController(DocController* ctrl) {
+    return ctrl && (ctrl->AsChm() || ctrl->AsMarkdown());
+}

@@ -338,6 +338,14 @@ ChmUI [
     UseFixedPageUI = false
 ]
 
+; customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is
+; used; otherwise WebView2 browser view is used when available
+MarkdownUI [
+    ; if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2
+    ; browser view when available
+    UseFixedPageUI = false
+]
+
 ; settings for the Claude Code chat sidebar (introduced in version 3.7)
 ClaudeCode [
     ; Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if

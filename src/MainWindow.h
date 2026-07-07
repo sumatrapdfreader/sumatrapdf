@@ -61,6 +61,7 @@ struct TocItem;
 struct DocController;
 struct DocControllerCallback;
 struct ChmModel;
+struct MarkdownModel;
 struct DisplayModel;
 struct WindowTab;
 
@@ -120,6 +121,7 @@ struct MainWindow {
 
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;
+    MarkdownModel* AsMarkdown() const;
 
     // TODO: use CurrentTab()->ctrl instead
     DocController* ctrl = nullptr; // owned by CurrentTab()

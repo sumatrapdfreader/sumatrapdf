@@ -15,6 +15,7 @@
 #include "EngineBase.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
+#include "MarkdownModel.h"
 #include "DisplayModel.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"
@@ -103,6 +104,8 @@ bool NeedsFindUI(MainWindow* win) {
 void FindFirst(MainWindow* win) {
     if (win->AsChm()) {
         win->AsChm()->FindInCurrentPage();
+    } else if (win->AsMarkdown()) {
+        win->AsMarkdown()->FindInCurrentPage();
         return;
     }
 
