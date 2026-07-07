@@ -339,6 +339,7 @@ CmdDebugStartStressTest,,Debug: Start Stress Test,
 CmdDebugTestApp,,Debug: Test App,
 CmdDebugTogglePredictiveRender,,Debug: Toggle Predictive Rendering,
 CmdDebugToggleRenderInfo,,Debug: Toggle Render Queue Info,
+CmdDebugToggleCacheInfo,,Debug: Toggle Cache Info,
 CmdDebugToggleRtl,,Debug: Toggle Rtl,
 CmdNone,,Do nothing,
 ```

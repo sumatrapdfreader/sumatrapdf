@@ -8291,6 +8291,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleRenderInfoWindow();
             break;
 
+        case CmdDebugToggleCacheInfo:
+            ToggleCacheInfoWindow();
+            break;
+
         case CmdToggleLinks:
             gGlobalPrefs->showLinks = !gGlobalPrefs->showLinks;
             for (auto& w : gWindows) {

@@ -266,6 +266,7 @@ static SeqStrings gCommandNames =
     "CmdToggleToolbarPosition\0"
     "CmdCommandPaletteFavorites\0"
     "CmdNavigateFilesInFolder\0"
+    "CmdDebugToggleCacheInfo\0"
     "CmdNone\0"
     "\0";
 
@@ -525,6 +526,7 @@ static i32 gCommandIds[] = {
     CmdToggleToolbarPosition,
     CmdCommandPaletteFavorites,
     CmdNavigateFilesInFolder,
+    CmdDebugToggleCacheInfo,
     CmdNone,
 };
 
@@ -784,6 +786,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Toolbar Position\0"
     "Command Palette: Favorites\0"
     "Navigate Files in Folder\0"
+    "Debug: Toggle Cache Info\0"
     "Do nothing\0"
     "\0";
 // clang-format on

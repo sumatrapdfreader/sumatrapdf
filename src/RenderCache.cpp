@@ -165,6 +165,8 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     rcLogf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo,
            entry->rotation, entry->zoom);
 
+    RecordCacheChange(false, entry);
+
     delete entry;
 
     // fast removal by replacing freed item with the item at the end
@@ -246,7 +248,7 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     cache[cacheCount] = entry;
     cacheCount++;
 
-    // LogCacheSize();
+    RecordCacheChange(true, entry);
 }
 
 static RectF GetTileRect(RectF pagerect, TilePosition tile) {
@@ -1287,5 +1289,170 @@ void ToggleRenderInfoWindow() {
     CreateRenderInfoWindow();
     if (gRenderCache) {
         gRenderCache->UpdateRenderInfo();
+    }
+}
+
+// --------- bitmap cache debug window (CmdDebugToggleCacheInfo) ---------
+
+constexpr const WCHAR* kCacheInfoWinClass = L"SUMATRA_CACHE_INFO";
+
+static HWND gCacheInfoHwnd = nullptr;
+static HWND gCacheInfoEdit = nullptr;
+
+bool IsCacheInfoWindowVisible() {
+    return gCacheInfoHwnd != nullptr;
+}
+
+static TempStr FormatCacheBytesTemp(i64 bytes) {
+    if (bytes < 1024) {
+        return fmt("%d B", (int)bytes);
+    }
+    if (bytes < 1024 * 1024) {
+        return fmt("%.1f KB", bytes / 1024.0);
+    }
+    return fmt("%.2f MB", bytes / (1024.0 * 1024.0));
+}
+
+static void SetDmFileName(DisplayModel* dm, char* buf, int bufLen) {
+    buf[0] = 0;
+    if (dm && dm->GetEngine()) {
+        TempStr name = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
+        str::BufSet(Str(buf, bufLen), name);
+    }
+}
+
+void RenderCache::RecordCacheChange(bool isAdd, BitmapCacheEntry* entry) {
+    ReportIf(!entry);
+    if (!entry) {
+        return;
+    }
+    CacheChangeInfo& ci = cacheHistory[cacheHistoryNext];
+    ci.isAdd = isAdd;
+    ci.pageNo = entry->pageNo;
+    ci.zoom = entry->zoom;
+    ci.rotation = entry->rotation;
+    ci.tile = entry->tile;
+    ci.bytes = entry->bitmap ? PixmapByteSize(entry->bitmap) : 0;
+    ci.timestamp = GetTickCount();
+    SetDmFileName(entry->dm, ci.fileName, dimof(ci.fileName));
+    cacheHistoryNext = (cacheHistoryNext + 1) % kCacheHistorySize;
+    if (cacheHistoryCount < kCacheHistorySize) {
+        cacheHistoryCount++;
+    }
+    UpdateCacheInfo();
+}
+
+static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, DWORD now) {
+    Str label = c->isAdd ? StrL("ADD") : StrL("REMOVE");
+    int agoMs = (int)(now - c->timestamp);
+    s.Append(fmt("%-7s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  %8s  %6dms ago", label, c->pageNo,
+                 c->zoom, c->rotation, c->tile.res, c->tile.row, c->tile.col, FormatCacheBytesTemp(c->bytes), agoMs));
+    if (c->fileName[0]) {
+        s.Append(fmt("  %s", Str(c->fileName)));
+    }
+    s.Append("\r\n");
+}
+
+void RenderCache::SerializeCacheState(str::Builder& s) {
+    ScopedRecursiveMutex scope(&cacheAccess);
+    DWORD now = GetTickCount();
+    i64 totalBytes = 0;
+    for (int i = 0; i < cacheCount; i++) {
+        BitmapCacheEntry* e = cache[i];
+        if (e->bitmap) {
+            totalBytes += PixmapByteSize(e->bitmap);
+        }
+    }
+    s.Append(fmt("Cache: %d / %d entries, %s total\r\n\r\n", cacheCount, MAX_BITMAPS_CACHED,
+                 FormatCacheBytesTemp(totalBytes)));
+
+    if (cacheHistoryCount > 0) {
+        s.Append(fmt("Recent %d changes:\r\n", cacheHistoryCount));
+        int idx = cacheHistoryNext - 1;
+        for (int n = 0; n < cacheHistoryCount; n++) {
+            if (idx < 0) {
+                idx += kCacheHistorySize;
+            }
+            SerializeCacheChange(s, &cacheHistory[idx], now);
+            idx--;
+        }
+    }
+}
+
+static void SetCacheInfoTextOnUI(Str* s) {
+    if (gCacheInfoEdit) {
+        HwndSetText(gCacheInfoEdit, *s);
+    }
+    str::Free(*s);
+    delete s;
+}
+
+void RenderCache::UpdateCacheInfo() {
+    if (!IsCacheInfoWindowVisible()) {
+        return;
+    }
+    str::Builder s;
+    SerializeCacheState(s);
+    auto dup = new Str(str::Dup(ToStr(s)));
+    auto fn = MkFunc0<Str>(SetCacheInfoTextOnUI, dup);
+    uitask::Post(fn, "CacheInfo");
+}
+
+static LRESULT CALLBACK WndProcCacheInfo(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+        case WM_SIZE:
+            if (gCacheInfoEdit) {
+                MoveWindow(gCacheInfoEdit, 0, 0, LOWORD(lp), HIWORD(lp), TRUE);
+            }
+            return 0;
+        case WM_CLOSE:
+            DestroyWindow(hwnd);
+            return 0;
+        case WM_DESTROY:
+            gCacheInfoHwnd = nullptr;
+            gCacheInfoEdit = nullptr;
+            return 0;
+    }
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static void CreateCacheInfoWindow() {
+    HMODULE h = GetModuleHandleW(nullptr);
+    WNDCLASSEX wcex = {};
+    FillWndClassEx(wcex, kCacheInfoWinClass, WndProcCacheInfo);
+    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx(&wcex);
+
+    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+    HWND hwnd = CreateWindowExW(0, kCacheInfoWinClass, L"Cache Info", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, 700, 500,
+                                nullptr, nullptr, h, nullptr);
+    if (!hwnd) {
+        return;
+    }
+    gCacheInfoHwnd = hwnd;
+
+    Rect cRc = ClientRect(hwnd);
+    DWORD editStyle =
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
+    HWND hwndEdit = CreateWindowExW(0, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, cRc.dy, hwnd, nullptr, h, nullptr);
+    gCacheInfoEdit = hwndEdit;
+
+    HDC hdc = GetDC(hwnd);
+    HFONT font = CreateSimpleFont(hdc, "Consolas", 12);
+    ReleaseDC(hwnd, hdc);
+    if (font) {
+        SendMessageW(hwndEdit, WM_SETFONT, (WPARAM)font, TRUE);
+    }
+    ShowWindow(hwnd, SW_SHOW);
+}
+
+void ToggleCacheInfoWindow() {
+    if (gCacheInfoHwnd) {
+        DestroyWindow(gCacheInfoHwnd);
+        return;
+    }
+    CreateCacheInfoWindow();
+    if (gRenderCache) {
+        gRenderCache->UpdateCacheInfo();
     }
 }

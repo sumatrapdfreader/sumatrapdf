@@ -54,6 +54,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdDebugTestApp,
     CmdDebugTogglePredictiveRender,
     CmdDebugToggleRenderInfo,
+    CmdDebugToggleCacheInfo,
     CmdDebugToggleRtl,
     CmdChangeScrollbar,
     CmdToggleAntiAlias,

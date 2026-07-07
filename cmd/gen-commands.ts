@@ -259,6 +259,7 @@ export const commands = [
     "CmdToggleToolbarPosition", "Toggle Toolbar Position",
     "CmdCommandPaletteFavorites", "Command Palette: Favorites",
     "CmdNavigateFilesInFolder", "Navigate Files in Folder",
+    "CmdDebugToggleCacheInfo", "Debug: Toggle Cache Info",
     "CmdNone", "Do nothing",
 ];
 

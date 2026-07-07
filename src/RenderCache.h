@@ -115,9 +115,22 @@ extern int gMaxRenderThreads;
 // keep a small history of recently finished render requests for the
 // render-info debug window
 constexpr int kFinishedHistorySize = 32;
+constexpr int kCacheHistorySize = 32;
 
 // snapshot of a finished render request (kept after the request is gone, so it
 // copies the file name instead of holding on to a DisplayModel pointer)
+// snapshot of a cache add/remove for the cache-info debug window
+struct CacheChangeInfo {
+    bool isAdd = false;
+    int pageNo = 0;
+    float zoom = 0;
+    int rotation = 0;
+    TilePosition tile;
+    i64 bytes = 0;
+    DWORD timestamp = 0;
+    char fileName[128]{};
+};
+
 struct FinishedRequestInfo {
     int pageNo = 0;
     float zoom = 0;
@@ -147,6 +160,12 @@ struct RenderCache {
     FinishedRequestInfo finishedHistory[kFinishedHistorySize]{};
     int finishedHistoryCount = 0; // number of valid entries (capped at size)
     int finishedHistoryNext = 0;  // next slot to write
+
+    // ring buffer of recent cache adds/removals (for the cache-info window),
+    // protected by cacheAccess
+    CacheChangeInfo cacheHistory[kCacheHistorySize]{};
+    int cacheHistoryCount = 0;
+    int cacheHistoryNext = 0;
     // per-thread current request tracking (index matches thread index)
     PageRenderRequest* curReqs[kMaxRenderThreads]{};
     RecursiveMutex requestAccess;
@@ -226,8 +245,21 @@ struct RenderCache {
     // queue state. Cheap no-op when the window is hidden. Safe to call from
     // any thread (and while holding requestAccess).
     void UpdateRenderInfo();
+
+    // record a cache add/remove in cacheHistory (call holding cacheAccess)
+    void RecordCacheChange(bool isAdd, BitmapCacheEntry* entry);
+    // serialize cache stats and recent changes as plain text for the cache-info
+    // debug window
+    void SerializeCacheState(str::Builder& s);
+    // if the cache-info debug window is shown, refresh it. Cheap no-op when
+    // hidden. Safe to call from any thread (and while holding cacheAccess).
+    void UpdateCacheInfo();
 };
 
 // render queue debug window (CmdDebugToggleRenderInfo)
 void ToggleRenderInfoWindow();
 bool IsRenderInfoWindowVisible();
+
+// bitmap cache debug window (CmdDebugToggleCacheInfo)
+void ToggleCacheInfoWindow();
+bool IsCacheInfoWindowVisible();

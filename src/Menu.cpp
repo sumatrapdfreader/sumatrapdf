@@ -575,6 +575,10 @@ static MenuDef menuDefHelp[] = {
         CmdDebugToggleRenderInfo,
     },
     {
+        _TRN("Toggle Cache Info"),
+        CmdDebugToggleCacheInfo,
+    },
+    {
         kMenuSeparator,
         0,
     },

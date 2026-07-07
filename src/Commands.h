@@ -264,7 +264,8 @@ enum {
     CmdToggleToolbarPosition = 453,
     CmdCommandPaletteFavorites = 454,
     CmdNavigateFilesInFolder = 455,
-    CmdNone = 456,
+    CmdDebugToggleCacheInfo = 456,
+    CmdNone = 457,
 
     /* range for file history */
     CmdFileHistoryFirst,
