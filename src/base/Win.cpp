@@ -2774,6 +2774,46 @@ void FreePixmapNativeBitmap(Pixmap* p) {
     p->data = nullptr; // was owned by the DIB section
 }
 
+// Blit a sub-rectangle of a Pixmap into the target rect (stretching if sizes differ).
+// Works for both DIB-section-backed and malloc-backed Pixmaps.
+bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
+    if (!p || !p->data || target.IsEmpty() || source.IsEmpty()) {
+        return false;
+    }
+    SetStretchBltMode(hdc, HALFTONE);
+    if (p->hbmp) {
+        HDC bmpDC = CreateCompatibleDC(hdc);
+        if (!bmpDC) {
+            return false;
+        }
+        HGDIOBJ oldBmp = SelectObject(bmpDC, p->hbmp);
+        if (!oldBmp) {
+            DeleteDC(bmpDC);
+            return false;
+        }
+        bool ok;
+        if (target.dx == source.dx && target.dy == source.dy) {
+            ok = BitBlt(hdc, target.x, target.y, target.dx, target.dy, bmpDC, source.x, source.y, SRCCOPY) != 0;
+        } else {
+            ok = StretchBlt(hdc, target.x, target.y, target.dx, target.dy, bmpDC, source.x, source.y, source.dx,
+                            source.dy, SRCCOPY) != 0;
+        }
+        SelectObject(bmpDC, oldBmp);
+        DeleteDC(bmpDC);
+        return ok;
+    }
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = p->width;
+    bmi.bmiHeader.biHeight = -p->height; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = (p->format == PixmapFormat::BGR8) ? 24 : 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    int r = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, source.y, source.dx, source.dy,
+                          p->data, &bmi, DIB_RGB_COLORS, SRCCOPY);
+    return r != GDI_ERROR && r != 0;
+}
+
 // Blit a Pixmap into the target rect (stretching if sizes differ). DIB-section-backed
 // Pixmaps go through the GDI HBITMAP fast path; malloc-backed ones blit straight from
 // memory via StretchDIBits (no intermediate object).

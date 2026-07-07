@@ -936,9 +936,8 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
         }
     }
     Pixmap* renderedBmp = entry ? entry->bitmap : nullptr;
-    HBITMAP hbmp = renderedBmp ? renderedBmp->hbmp : nullptr;
 
-    if (!hbmp) {
+    if (!renderedBmp || !renderedBmp->data) {
         bool didReduce = entry && ReduceTileSize();
         if (entry && !didReduce) {
             renderDelay = RENDER_DELAY_FAILED;
@@ -953,37 +952,26 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
         return renderDelay;
     }
 
-    HDC bmpDC = CreateCompatibleDC(hdc);
-    if (bmpDC) {
-        Size bmpSize = Size(renderedBmp->width, renderedBmp->height);
-        int xSrc = -std::min(tileOnScreen.x, 0);
-        int ySrc = -std::min(tileOnScreen.y, 0);
-        float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
+    Size bmpSize = Size(renderedBmp->width, renderedBmp->height);
+    int xSrc = -std::min(tileOnScreen.x, 0);
+    int ySrc = -std::min(tileOnScreen.y, 0);
+    float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
 
-        HGDIOBJ prevBmp = SelectObject(bmpDC, hbmp);
-        int xDst = bounds.x;
-        int yDst = bounds.y;
-        int dxDst = bounds.dx;
-        int dyDst = bounds.dy;
-        if (factor != 1.0f) {
-            xSrc = (int)(xSrc * factor);
-            ySrc = (int)(ySrc * factor);
-            int dxSrc = (int)(bounds.dx * factor);
-            int dySrc = (int)(bounds.dy * factor);
-            StretchBlt(hdc, xDst, yDst, dxDst, dyDst, bmpDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY);
-        } else {
-            BitBlt(hdc, xDst, yDst, dxDst, dyDst, bmpDC, xSrc, ySrc, SRCCOPY);
-        }
+    Rect target = bounds;
+    Rect source(xSrc, ySrc, bounds.dx, bounds.dy);
+    if (factor != 1.0f) {
+        source.x = (int)(xSrc * factor);
+        source.y = (int)(ySrc * factor);
+        source.dx = (int)(bounds.dx * factor);
+        source.dy = (int)(bounds.dy * factor);
+    }
+    BlitPixmapRegion(renderedBmp, hdc, target, source);
 
-        SelectObject(bmpDC, prevBmp);
-        DeleteDC(bmpDC);
-
-        if (gShowTileLayout) {
-            HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
-            HGDIOBJ oldPen = SelectObject(hdc, pen);
-            DrawRect(hdc, bounds);
-            DeletePen(SelectObject(hdc, oldPen));
-        }
+    if (gShowTileLayout) {
+        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
+        HGDIOBJ oldPen = SelectObject(hdc, pen);
+        DrawRect(hdc, bounds);
+        DeletePen(SelectObject(hdc, oldPen));
     }
 
     if (entry->outOfDate) {
@@ -1025,7 +1013,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
         Pixmap* bmp = dm->GetEngine()->RenderPage(args);
-        bool success = bmp && bmp->hbmp && BlitPixmap(bmp, hdc, bounds);
+        bool success = bmp && BlitPixmap(bmp, hdc, bounds);
         FreePixmap(bmp);
 
         return success ? 0 : RENDER_DELAY_FAILED;
