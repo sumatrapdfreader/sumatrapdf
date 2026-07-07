@@ -2,13 +2,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/GdiPlus.h"
 #include "base/Archive.h"
 #include "base/HtmlTags.h"
 #include "GumboHtmlParser.h"
-#include "mui/Mui.h"
-
-#include "wingui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"
@@ -163,7 +159,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
         ForceNewPage();
     }
     if (attr) {
-        Gdiplus::RectF bbox(0, currY, pageDx, 0);
+        RectF bbox(0, currY, pageDx, 0);
         // attr->val is owned by the gumbo parse tree which doesn't outlive
         // the formatter, so copy it into textAllocator
         currPage->instructions.Append(DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
@@ -301,7 +297,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         if (!isSubtitle && t->IsStartTag()) {
             // the anchor must outlive the formatter, so not a TempStr
             Str link = str::Dup(textAllocator, fmt(FB2_TOC_ENTRY_MARK "%d", ++titleCount));
-            currPage->instructions.Append(DrawInstr::Anchor(link, Gdiplus::RectF(0, currY, pageDx, 0)));
+            currPage->instructions.Append(DrawInstr::Anchor(link, RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
         if (t->IsStartTag()) {

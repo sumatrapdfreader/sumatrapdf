@@ -5,23 +5,65 @@ namespace dict {
 class MapStrToInt;
 }
 
-using Gdiplus::ARGB;
-using Gdiplus::Bitmap;
-using Gdiplus::Color;
-using Gdiplus::FontFamily;
-using Gdiplus::FontStyleBold;
-using Gdiplus::FontStyleItalic;
-using Gdiplus::FontStyleRegular;
-using Gdiplus::FontStyleStrikeout;
-using Gdiplus::FontStyleUnderline;
-using Gdiplus::Matrix;
-using Gdiplus::MatrixOrderAppend;
-using Gdiplus::Ok;
-using Gdiplus::Pen;
-using Gdiplus::SolidBrush;
-using Gdiplus::Status;
-using Gdiplus::UnitPixel;
-using Gdiplus::Win32Error;
+#if OS_WIN
+namespace Gdiplus {
+class Color;
+class Graphics;
+} // namespace Gdiplus
+
+namespace mui {
+struct CachedFont;
+class ITextRender;
+} // namespace mui
+#endif
+
+enum class PlatformFontStyle {
+    Regular = 0,
+    Bold = 1,
+    Italic = 2,
+    Underline = 4,
+    Strikeout = 8,
+};
+
+inline PlatformFontStyle operator|(PlatformFontStyle a, PlatformFontStyle b) {
+    return (PlatformFontStyle)((int)a | (int)b);
+}
+
+struct PlatformFont {
+    WStr name;
+    float sizePt = 0;
+    PlatformFontStyle style = PlatformFontStyle::Regular;
+#if OS_WIN
+    mui::CachedFont* cachedFont = nullptr;
+#endif
+
+    WStr GetName() const { return name; }
+    float GetSize() const { return sizePt; }
+    PlatformFontStyle GetStyle() const { return style; }
+#if OS_WIN
+    mui::CachedFont* GetCachedFont() const { return cachedFont; }
+#endif
+};
+
+enum class PlatformTextMeasureMethod {
+    Gdiplus,
+    GdiplusQuick,
+    Gdi,
+    Hdc,
+    Stub,
+};
+
+struct PlatformTextMeasurer {
+    virtual void SetFont(PlatformFont* font) = 0;
+    virtual float GetCurrFontLineSpacing() = 0;
+    virtual float GetSpaceDx() = 0;
+    virtual RectF Measure(WStr s) = 0;
+    virtual int StringLenForWidth(WStr s, float dx, float sWidth = -1) = 0;
+    virtual ~PlatformTextMeasurer() = default;
+};
+
+PlatformFont* GetPlatformFont(WStr name, float sizePt, PlatformFontStyle style);
+PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method);
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
@@ -59,8 +101,8 @@ struct DrawInstr {
     // info specific to a given instruction
     // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString, InstrImage
     ::Str str;
-    mui::CachedFont* font = nullptr; // InstrSetFont
-    RectF bbox{};                    // common to most instructions
+    PlatformFont* font = nullptr; // InstrSetFont
+    RectF bbox{};                 // common to most instructions
 
     DrawInstr() = default;
 
@@ -73,7 +115,7 @@ struct DrawInstr {
     // helper constructors for instructions that need additional arguments
     static DrawInstr Text(::Str s, RectF bbox, bool rtl = false);
     static DrawInstr Image(Str, RectF bbox);
-    static DrawInstr SetFont(mui::CachedFont* font);
+    static DrawInstr SetFont(PlatformFont* font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(::Str s);
     static DrawInstr Anchor(::Str s, RectF bbox);
@@ -106,7 +148,7 @@ struct StyleRule {
 };
 
 struct DrawStyle {
-    mui::CachedFont* font = nullptr;
+    PlatformFont* font = nullptr;
     AlignAttr align{AlignAttr::NotFound};
     bool dirRtl = false;
 };
@@ -152,7 +194,7 @@ struct HtmlFormatterArgs {
        formatter) are copied into this allocator. */
     Arena* textAllocator = nullptr;
 
-    mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;
+    PlatformTextMeasureMethod textRenderMethod = PlatformTextMeasureMethod::Gdiplus;
 
     Str htmlStr;
 
@@ -212,10 +254,10 @@ struct HtmlFormatter {
     bool EnsureDx(float dx);
 
     DrawStyle* CurrStyle() { return &styleStack.Last(); }
-    mui::CachedFont* CurrFont() { return CurrStyle()->font; }
-    void SetFont(WStr fontName, FontStyle fs, float fontSize = -1);
-    void SetFontBasedOn(mui::CachedFont* origFont, FontStyle fs, float fontSize = -1);
-    void ChangeFontStyle(FontStyle fs, bool addStyle);
+    PlatformFont* CurrFont() { return CurrStyle()->font; }
+    void SetFont(WStr fontName, PlatformFontStyle fs, float fontSize = -1);
+    void SetFontBasedOn(PlatformFont* origFont, PlatformFontStyle fs, float fontSize = -1);
+    void ChangeFontStyle(PlatformFontStyle fs, bool addStyle);
     void SetAlignment(AlignAttr align);
     void RevertStyleChange();
 
@@ -236,11 +278,10 @@ struct HtmlFormatter {
     float pageDy = 0;
     float lineSpacing = 0;
     float spaceDx = 0;
-    Graphics* gfx = nullptr; // for measuring text
     WStr defaultFontName;
     float defaultFontSize = 0;
     Arena* textAllocator = nullptr;
-    mui::ITextRender* textMeasure = nullptr;
+    PlatformTextMeasurer* textMeasure = nullptr;
 
     // Cache of measured text. We assume few distinct fonts, so each font gets
     // its own hash table (keyed by text only). If we ever see more than
@@ -249,7 +290,7 @@ struct HtmlFormatter {
     // to skip the per-font table lookup.
     static constexpr int kMaxMeasureCacheFonts = 6;
     struct MeasureCache {
-        mui::CachedFont* font = nullptr;
+        PlatformFont* font = nullptr;
         dict::MapStrToInt* keys = nullptr; // text -> index into vals
         Vec<RectF> vals;
     };
@@ -321,9 +362,11 @@ struct HtmlFormatter {
     Vec<HtmlPage*>* FormatAllPages(bool skipEmptyPages = true);
 };
 
-void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
-                  bool showBbox, Color textColor, bool* abortCookie = nullptr);
+#if OS_WIN
+void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+                  float offY, bool showBbox, Gdiplus::Color textColor, bool* abortCookie = nullptr);
+#endif
 
-mui::TextRenderMethod GetTextRenderMethod();
-void SetTextRenderMethod(mui::TextRenderMethod method);
+PlatformTextMeasureMethod GetTextRenderMethod();
+void SetTextRenderMethod(PlatformTextMeasureMethod method);
 HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator = nullptr);

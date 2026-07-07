@@ -524,6 +524,12 @@ const TEST_ENGINES_SOURCES = [
   "src/tools/test_engines.cpp",
 ];
 
+const PORTABLE_COMPILE_SOURCES = [
+  "src/GumboHtmlParser.cpp",
+  "src/HtmlFormatter.cpp",
+  "src/EbookFormatter.cpp",
+];
+
 export interface MacBuildOptions {
   outDir: string;
   isRelease?: boolean;
@@ -597,11 +603,54 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   }
 
   await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+async function compilePortableSources(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  commonFlags: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Compiling portable source checks...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
+  const includeFlags = ["-Isrc", "-Imupdf/include", "-Imupdf/generated"];
+
+  const units = PORTABLE_COMPILE_SOURCES.map((src) => {
+    const obj = objPath(outDir, "portable", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        ...includeFlags,
+        ...commonFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+
+  await compileAll(units, jobs);
 }
 
 async function buildTestUtil(

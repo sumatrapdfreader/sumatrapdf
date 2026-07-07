@@ -30,6 +30,17 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
+using Gdiplus::ARGB;
+using Gdiplus::Bitmap;
+using Gdiplus::Color;
+using Gdiplus::FontFamily;
+using Gdiplus::Graphics;
+using Gdiplus::Matrix;
+using Gdiplus::MatrixOrderAppend;
+using Gdiplus::Ok;
+using Gdiplus::SolidBrush;
+using Gdiplus::Status;
+
 Kind kindEngineEpub = "engineEpub";
 Kind kindEngineFb2 = "engineFb2";
 Kind kindEngineMobi = "engineMobi";
@@ -588,7 +599,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
 TempStr EngineEbook::ExtractFontListTemp() {
     ScopedMutex scope(&pagesAccess);
 
-    Vec<mui::CachedFont*> seenFonts;
+    Vec<PlatformFont*> seenFonts;
     StrVec fonts;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
@@ -603,13 +614,14 @@ TempStr EngineEbook::ExtractFontListTemp() {
             }
             seenFonts.Append(i.font);
 
+            mui::CachedFont* font = i.font->GetCachedFont();
             FontFamily family;
-            if (!i.font->font) {
+            if (!font || !font->font) {
                 // TODO: handle gdi
-                ReportIf(!i.font->GetHFont());
+                ReportIf(font && !font->GetHFont());
                 continue;
             }
-            Status ok = i.font->font->GetFamily(&family);
+            Status ok = font->font->GetFamily(&family);
             if (ok != Ok) {
                 continue;
             }
@@ -790,7 +802,7 @@ bool EngineEpub::FinishLoading() {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
+    args.textRenderMethod = PlatformTextMeasureMethod::GdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
 
@@ -935,7 +947,7 @@ bool EngineFb2::FinishLoading() {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
+    args.textRenderMethod = PlatformTextMeasureMethod::GdiplusQuick;
 
     if (doc->IsZipped()) {
         SetDefaultExt(defaultExt, ".fb2z");
@@ -1059,7 +1071,7 @@ bool EngineMobi::FinishLoading() {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
+    args.textRenderMethod = PlatformTextMeasureMethod::GdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     // must set pageCount before ExtractPageAnchors
@@ -1202,7 +1214,7 @@ bool EnginePdb::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
+    args.textRenderMethod = PlatformTextMeasureMethod::GdiplusQuick;
 
     pages = HtmlFormatter(&args).FormatAllPages();
     // must set pageCount before ExtractPageAnchors
@@ -1560,7 +1572,7 @@ bool EngineChm::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
+    args.textRenderMethod = PlatformTextMeasureMethod::GdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
@@ -1698,7 +1710,7 @@ bool EngineHtml::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::Gdiplus;
+    args.textRenderMethod = PlatformTextMeasureMethod::Gdiplus;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
@@ -1816,7 +1828,7 @@ bool EngineTxt::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = mui::TextRenderMethod::Gdiplus;
+    args.textRenderMethod = PlatformTextMeasureMethod::Gdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors

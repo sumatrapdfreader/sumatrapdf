@@ -3,15 +3,18 @@
 
 #include "base/Base.h"
 #include "base/Dict.h"
-#include "base/GdiPlus.h"
 #include "base/HtmlTags.h"
+#include "base/Pixmap.h"
 #include "base/CssParser.h"
 #include "GumboHtmlParser.h"
-#include "mui/Mui.h"
-
 #include "FzImgReader.h"
 
 #include "HtmlFormatter.h"
+
+#if OS_WIN
+#include "base/GdiPlus.h"
+#include "mui/Mui.h"
+#endif
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small
@@ -71,7 +74,7 @@ DrawInstr DrawInstr::Text(::Str s, RectF bbox, bool rtl) {
     return di;
 }
 
-DrawInstr DrawInstr::SetFont(mui::CachedFont* font) {
+DrawInstr DrawInstr::SetFont(PlatformFont* font) {
     DrawInstr di(DrawInstrType::SetFont);
     di.font = font;
     return di;
@@ -158,6 +161,124 @@ void StyleRule::Merge(StyleRule& source) {
     }
 }
 
+static Vec<PlatformFont*> gPlatformFonts;
+
+#if OS_WIN
+static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
+    return (Gdiplus::FontStyle)(int)style;
+}
+
+static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod method) {
+    switch (method) {
+        case PlatformTextMeasureMethod::Gdiplus:
+            return mui::TextRenderMethod::Gdiplus;
+        case PlatformTextMeasureMethod::GdiplusQuick:
+            return mui::TextRenderMethod::GdiplusQuick;
+        case PlatformTextMeasureMethod::Gdi:
+            return mui::TextRenderMethod::Gdi;
+        case PlatformTextMeasureMethod::Hdc:
+            return mui::TextRenderMethod::Hdc;
+        case PlatformTextMeasureMethod::Stub:
+            break;
+    }
+    return mui::TextRenderMethod::Gdiplus;
+}
+#endif
+
+PlatformFont* GetPlatformFont(WStr name, float sizePt, PlatformFontStyle style) {
+    for (PlatformFont* font : gPlatformFonts) {
+        if (font->sizePt == sizePt && font->style == style && wstr::Eq(font->name, name)) {
+            return font;
+        }
+    }
+
+    PlatformFont* font = new PlatformFont();
+    font->name = wstr::Dup(name);
+    font->sizePt = sizePt;
+    font->style = style;
+#if OS_WIN
+    font->cachedFont = mui::GetCachedFont(name, sizePt, ToGdiPlusFontStyle(style));
+#endif
+    gPlatformFonts.Append(font);
+    return font;
+}
+
+struct StubTextMeasurer : PlatformTextMeasurer {
+    PlatformFont* currFont = nullptr;
+
+    float CurrFontSize() const {
+        if (currFont && currFont->GetSize() > 0) {
+            return currFont->GetSize();
+        }
+        return 12.5f;
+    }
+
+    float AverageCharDx() const { return CurrFontSize() * 0.55f; }
+
+    void SetFont(PlatformFont* font) override { currFont = font; }
+
+    float GetCurrFontLineSpacing() override { return CurrFontSize() * 1.25f; }
+
+    float GetSpaceDx() override { return AverageCharDx(); }
+
+    RectF Measure(WStr s) override { return RectF(0, 0, (float)len(s) * AverageCharDx(), GetCurrFontLineSpacing()); }
+
+    int StringLenForWidth(WStr s, float dx, float sWidth) override {
+        int n = len(s);
+        if (n == 0 || dx <= 0) {
+            return 0;
+        }
+        if (sWidth < 0) {
+            sWidth = Measure(s).dx;
+        }
+        if (sWidth <= dx) {
+            return n;
+        }
+        int res = (int)floorf((float)n * dx / sWidth);
+        return limitValue(res, 0, n);
+    }
+};
+
+#if OS_WIN
+struct WinTextMeasurer : PlatformTextMeasurer {
+    Gdiplus::Graphics* gfx = nullptr;
+    mui::ITextRender* textMeasure = nullptr;
+
+    explicit WinTextMeasurer(PlatformTextMeasureMethod method) {
+        gfx = mui::AllocGraphicsForMeasureText();
+        textMeasure = mui::CreateTextRender(ToMuiTextRenderMethod(method), gfx, 10, 10);
+    }
+
+    ~WinTextMeasurer() override {
+        delete textMeasure;
+        mui::FreeGraphicsForMeasureText(gfx);
+    }
+
+    void SetFont(PlatformFont* font) override { textMeasure->SetFont(font->GetCachedFont()); }
+
+    float GetCurrFontLineSpacing() override { return textMeasure->GetCurrFontLineSpacing(); }
+
+    float GetSpaceDx() override { return mui::GetSpaceDx(textMeasure); }
+
+    RectF Measure(WStr s) override { return textMeasure->Measure(s); }
+
+    int StringLenForWidth(WStr s, float dx, float sWidth) override {
+        return mui::StringLenForWidth(textMeasure, s, dx, sWidth);
+    }
+};
+#endif
+
+PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method) {
+#if OS_WIN
+    if (method != PlatformTextMeasureMethod::Stub) {
+        return new WinTextMeasurer(method);
+    }
+#else
+    (void)method;
+#endif
+    return new StubTextMeasurer();
+}
+
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx), pageDy(args->pageDy), textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
@@ -165,8 +286,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
-    gfx = mui::AllocGraphicsForMeasureText();
-    textMeasure = CreateTextRender(args->textRenderMethod, gfx, 10, 10);
+    textMeasure = CreatePlatformTextMeasurer(args->textRenderMethod);
     defaultFontName = wstr::Dup(args->GetFontName());
     defaultFontSize = args->fontSize;
 
@@ -176,7 +296,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     measureCacheInitialSize = limitValue(len(args->htmlStr) / 16, 1024, 64 * 1024);
 
     DrawStyle style;
-    style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
+    style.font = GetPlatformFont(defaultFontName, defaultFontSize, PlatformFontStyle::Regular);
     style.align = AlignAttr::Justify;
     style.dirRtl = false;
     styleStack.Append(style);
@@ -186,7 +306,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
 
     lineSpacing = textMeasure->GetCurrFontLineSpacing();
     spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
-    float spaceDx2 = GetSpaceDx(textMeasure);
+    float spaceDx2 = textMeasure->GetSpaceDx();
     if (spaceDx2 < spaceDx) {
         spaceDx = spaceDx2;
     }
@@ -199,7 +319,6 @@ HtmlFormatter::~HtmlFormatter() {
     DeleteVecMembers(pagesToSend);
     delete currPage;
     delete textMeasure;
-    mui::FreeGraphicsForMeasureText(gfx);
     delete htmlParser;
     for (int i = 0; i < nMeasureCaches; i++) {
         delete measureCaches[i].keys;
@@ -211,7 +330,7 @@ HtmlFormatter::~HtmlFormatter() {
 // font. Returns null once we've seen more than kMaxMeasureCacheFonts fonts,
 // in which case the caller measures uncached.
 HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
-    mui::CachedFont* font = CurrFont();
+    PlatformFont* font = CurrFont();
     // fast path: same font as last measurement (the common case)
     if (lastMeasureCache && lastMeasureCache->font == font) {
         return lastMeasureCache;
@@ -260,11 +379,11 @@ void HtmlFormatter::AppendInstr(const DrawInstr& di) {
     }
 }
 
-void HtmlFormatter::SetFont(WStr fontName, FontStyle fs, float fontSize) {
+void HtmlFormatter::SetFont(WStr fontName, PlatformFontStyle fs, float fontSize) {
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
-    mui::CachedFont* newFont = mui::GetCachedFont(fontName, fontSize, fs);
+    PlatformFont* newFont = GetPlatformFont(fontName, fontSize, fs);
     if (CurrFont() != newFont) {
         AppendInstr(DrawInstr::SetFont(newFont));
     }
@@ -274,7 +393,7 @@ void HtmlFormatter::SetFont(WStr fontName, FontStyle fs, float fontSize) {
     styleStack.Append(style);
 }
 
-void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fontSize) {
+void HtmlFormatter::SetFontBasedOn(PlatformFont* font, PlatformFontStyle fs, float fontSize) {
     WStr fontName = font->GetName();
     if (len(fontName) == 0) {
         fontName = defaultFontName;
@@ -282,18 +401,19 @@ void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fo
     SetFont(fontName, fs, fontSize);
 }
 
-bool ValidStyleForChangeFontStyle(FontStyle fs) {
-    return (FontStyleBold == fs) || (FontStyleItalic == fs) || (FontStyleUnderline == fs) || (FontStyleStrikeout == fs);
+bool ValidStyleForChangeFontStyle(PlatformFontStyle fs) {
+    return (PlatformFontStyle::Bold == fs) || (PlatformFontStyle::Italic == fs) ||
+           (PlatformFontStyle::Underline == fs) || (PlatformFontStyle::Strikeout == fs);
 }
 
 // change the current font by adding (if addStyle is true) or removing
 // a given font style from current font style
 // TODO: it doesn't corrctly support the case where a style is wrongly nested
 // like "<b>fo<i>oo</b>bar</i>" - "bar" should be italic but will be bold
-void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle) {
+void HtmlFormatter::ChangeFontStyle(PlatformFontStyle fs, bool addStyle) {
     ReportIf(!ValidStyleForChangeFontStyle(fs));
     if (addStyle) {
-        SetFontBasedOn(CurrFont(), (FontStyle)(fs | CurrFont()->GetStyle()));
+        SetFontBasedOn(CurrFont(), fs | CurrFont()->GetStyle());
     } else {
         RevertStyleChange();
     }
@@ -651,7 +771,12 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
 
 bool HtmlFormatter::EmitImage(Str img) {
     ReportIf(len(img) == 0);
-    Size imgSize = ImageSizeFromData(img);
+    Pixmap* pixmap = PixmapFromData(img);
+    if (!pixmap) {
+        return false;
+    }
+    Size imgSize(pixmap->width, pixmap->height);
+    FreePixmap(pixmap);
     if (imgSize.IsEmpty()) {
         return false;
     }
@@ -792,7 +917,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         }
         // get len That Fits the remaining space in the line (pass the width we
         // just measured so it isn't measured again)
-        int lenThatFits = StringLenForWidth(textMeasure, buf, pageDx - currX, bbox.dx);
+        int lenThatFits = textMeasure->StringLenForWidth(buf, pageDx - currX, bbox.dx);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
             if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
@@ -821,7 +946,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         }
 
         textMeasure->SetFont(CurrFont());
-        bbox = ToGdipRectF(MeasureTextCached(WStr(buf.s, lenThatFits)));
+        bbox = MeasureTextCached(WStr(buf.s, lenThatFits));
         ReportIf(bbox.dx > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
@@ -973,7 +1098,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         fontSize = defaultFontSize * scale;
     }
 
-    SetFont(faceName, (FontStyle)CurrFont()->GetStyle(), fontSize);
+    SetFont(faceName, CurrFont()->GetStyle(), fontSize);
 }
 
 bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, Str attrNS) {
@@ -1018,7 +1143,7 @@ void HtmlFormatter::HandleTagHx(HtmlToken* t) {
         if (currY > 0) {
             currY += fontSize / 2;
         }
-        SetFontBasedOn(CurrFont(), FontStyleBold, fontSize);
+        SetFontBasedOn(CurrFont(), PlatformFontStyle::Bold, fontSize);
 
         StyleRule rule = ComputeStyleRule(t);
         if (AlignAttr::NotFound == rule.textAlign) {
@@ -1041,7 +1166,7 @@ void HtmlFormatter::HandleTagList(HtmlToken* t) {
 void HtmlFormatter::HandleTagPre(HtmlToken* t) {
     FlushCurrLine(true);
     if (t->IsStartTag()) {
-        SetFont(L"Courier New", (FontStyle)CurrFont()->GetStyle());
+        SetFont(WStrL(L"Courier New"), CurrFont()->GetStyle());
         CurrStyle()->align = AlignAttr::Left;
         preFormatted = true;
     } else if (t->IsEndTag()) {
@@ -1240,15 +1365,15 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
     } else if (Tag_Hr == tag) {
         EmitHr();
     } else if ((Tag_B == tag) || (Tag_Strong == tag)) {
-        ChangeFontStyle(FontStyleBold, t->IsStartTag());
+        ChangeFontStyle(PlatformFontStyle::Bold, t->IsStartTag());
     } else if ((Tag_I == tag) || (Tag_Em == tag)) {
-        ChangeFontStyle(FontStyleItalic, t->IsStartTag());
+        ChangeFontStyle(PlatformFontStyle::Italic, t->IsStartTag());
     } else if (Tag_U == tag) {
         if (!currLinkIdx) {
-            ChangeFontStyle(FontStyleUnderline, t->IsStartTag());
+            ChangeFontStyle(PlatformFontStyle::Underline, t->IsStartTag());
         }
     } else if (Tag_Strike == tag) {
-        ChangeFontStyle(FontStyleStrikeout, t->IsStartTag());
+        ChangeFontStyle(PlatformFontStyle::Strikeout, t->IsStartTag());
     } else if (Tag_Br == tag) {
         HandleTagBr();
     } else if (Tag_Font == tag) {
@@ -1304,7 +1429,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         }
     } else if (Tag_Dt == tag) {
         FlushCurrLine(true);
-        ChangeFontStyle(FontStyleBold, t->IsStartTag());
+        ChangeFontStyle(PlatformFontStyle::Bold, t->IsStartTag());
         if (t->IsStartTag()) {
             CurrStyle()->align = AlignAttr::Left;
         }
@@ -1324,7 +1449,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         }
     } else if (Tag_Code == tag || Tag_Tt == tag) {
         if (t->IsStartTag()) {
-            SetFont(L"Courier New", (FontStyle)CurrFont()->GetStyle());
+            SetFont(WStrL(L"Courier New"), CurrFont()->GetStyle());
         } else if (t->IsEndTag()) {
             RevertStyleChange();
         }
@@ -1494,8 +1619,19 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
-                  bool showBbox, Color textColor, bool* abortCookie) {
+#if OS_WIN
+using Gdiplus::ARGB;
+using Gdiplus::Bitmap;
+using Gdiplus::Color;
+using Gdiplus::Graphics;
+using Gdiplus::Ok;
+using Gdiplus::Pen;
+using Gdiplus::Status;
+using Gdiplus::UnitPixel;
+using Gdiplus::Win32Error;
+
+void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+                  float offY, bool showBbox, Gdiplus::Color textColor, bool* abortCookie) {
     Pen debugPen(Color(255, 0, 0), 1);
     // Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
@@ -1515,9 +1651,9 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             TempWStr buf = ToWStrTemp(i.str);
             // soft hyphens should not be displayed
             buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
-            textDraw->Draw(buf, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);
+            textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
-            textDraw->SetFont(i.font);
+            textDraw->SetFont(i.font->GetCachedFont());
         }
         if (abortCookie && *abortCookie) {
             break;
@@ -1582,15 +1718,16 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         }
     }
 }
+#endif
 
-static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethod::Gdi;
+static PlatformTextMeasureMethod gTextRenderMethod = PlatformTextMeasureMethod::Gdi;
 // static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdiplus;
 
-mui::TextRenderMethod GetTextRenderMethod() {
+PlatformTextMeasureMethod GetTextRenderMethod() {
     return gTextRenderMethod;
 }
 
-void SetTextRenderMethod(mui::TextRenderMethod method) {
+void SetTextRenderMethod(PlatformTextMeasureMethod method) {
     gTextRenderMethod = method;
 }
 
