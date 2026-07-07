@@ -672,10 +672,12 @@ bool MarkdownModel::Load(Str fileName) {
         int pageNo = i + 1;
         TempStr pageUrl = FileToVirtualUrlTemp(ft.filePath);
         Str fileTitle = str::Dup(poolAlloc, path::GetBaseNameTemp(ft.filePath));
-        if (str::EndsWithI(fileTitle, StrL(".markdown"))) {
-            fileTitle.len -= 9;
-        } else if (str::EndsWithI(fileTitle, StrL(".md"))) {
-            fileTitle.len -= 3;
+        if (i != 0) {
+            if (str::EndsWithI(fileTitle, StrL(".markdown"))) {
+                fileTitle.len -= 9;
+            } else if (str::EndsWithI(fileTitle, StrL(".md"))) {
+                fileTitle.len -= 3;
+            }
         }
 
         MarkdownTocTraceItem fileItem;

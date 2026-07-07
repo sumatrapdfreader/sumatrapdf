@@ -209,6 +209,7 @@ static Str gNextPrevDir = {};
 static StrVec gNextPrevDirCache; // cached files in gNextPrevDir
 
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
+static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
 static void OnSidebarSplitterMove(Splitter::MoveEvent*);
 static void OnFavSplitterMove(Splitter::MoveEvent*);
 
@@ -1354,6 +1355,21 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
         }
     }
+
+    MarkdownModel* md = ctrl->AsMarkdown();
+    if (md && kInvalidPageNo != pageNo && md->ValidPageNo(pageNo)) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab) {
+            TempStr name = path::GetBaseNameTemp(md->pages[pageNo - 1]);
+            if (name && !str::Eq(tab->displayName, name)) {
+                tab->SetDisplayName(name);
+                TabsOnChangedDoc(win);
+                SetFrameTitleForTab(tab, true);
+                HwndSetText(win->hwndFrame, tab->frameTitle);
+            }
+        }
+    }
+
     NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (pageNo == win->currPageNo) {
         if (wnd) {
