@@ -2611,36 +2611,32 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
-Str SerializeBitmap(HBITMAP hbmp) {
+Str HBITMAPToBmpFormat(HBITMAP hbmp) {
     Size size = GetBitmapSize(hbmp);
-    DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
-    DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
-    u8* bmpData = AllocArray<u8>(bmpBytes);
-    if (!bmpData) {
+    Pixmap* pixmap = AllocPixmap(size.dx, size.dy, PixmapFormat::BGR8);
+    if (!pixmap) {
         return {};
     }
 
-    BITMAPINFO* bmi = (BITMAPINFO*)(bmpData + sizeof(BITMAPFILEHEADER));
-    bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
-    bmi->bmiHeader.biWidth = size.dx;
-    bmi->bmiHeader.biHeight = size.dy;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biBitCount = 24;
-    bmi->bmiHeader.biCompression = BI_RGB;
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = size.dx;
+    bmi.bmiHeader.biHeight = -size.dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+    bmi.bmiHeader.biCompression = BI_RGB;
 
     HDC hDC = GetDC(nullptr);
-    if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
-        BITMAPFILEHEADER* bmpfh = (BITMAPFILEHEADER*)bmpData;
-        bmpfh->bfType = MAKEWORD('B', 'M');
-        bmpfh->bfOffBits = bmpHeaderLen;
-        bmpfh->bfSize = bmpBytes;
-    } else {
-        free(bmpData);
-        bmpData = nullptr;
+    if (!GetDIBits(hDC, hbmp, 0, size.dy, pixmap->data, &bmi, DIB_RGB_COLORS)) {
+        ReleaseDC(nullptr, hDC);
+        FreePixmap(pixmap);
+        return {};
     }
     ReleaseDC(nullptr, hDC);
 
-    return Str((char*)bmpData, (int)bmpBytes);
+    Str res = PixmapToBmpFormat(pixmap);
+    FreePixmap(pixmap);
+    return res;
 }
 
 // returns the clipboard image (if any) serialized as BMP file bytes, or empty
@@ -2657,7 +2653,7 @@ Str GetClipboardImageBmp() {
     // owned by the clipboard - don't delete it.
     HBITMAP hbmp = (HBITMAP)GetClipboardData(CF_BITMAP);
     if (hbmp) {
-        res = SerializeBitmap(hbmp);
+        res = HBITMAPToBmpFormat(hbmp);
     }
     CloseClipboard();
     return res;

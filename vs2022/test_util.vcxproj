@@ -902,6 +902,7 @@
     <ClInclude Include="..\src\base\HtmlTags.h" />
     <ClInclude Include="..\src\base\JsonParser.h" />
     <ClInclude Include="..\src\base\Log.h" />
+    <ClInclude Include="..\src\base\Pixmap.h" />
     <ClInclude Include="..\src\base\Scoped.h" />
     <ClInclude Include="..\src\base\SettingsUtil.h" />
     <ClInclude Include="..\src\base\SquareTreeParser.h" />
@@ -948,6 +949,7 @@
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\HtmlTags.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
+    <ClCompile Include="..\src\base\Pixmap.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
     <ClCompile Include="..\src\base\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\base\Str.cpp" />

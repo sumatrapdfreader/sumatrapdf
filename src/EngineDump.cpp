@@ -329,7 +329,7 @@ void DumpThumbnail(EngineBase* engine) {
         return;
     }
 
-    Str imgData = tga::SerializeBitmap(bmp->hbmp);
+    Str imgData = tga::PixmapToTgaFormat(bmp);
     TempStr hexData = imgData.s ? str::MemToHexTemp(imgData) : Str{};
     if (hexData) {
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.s);
@@ -337,7 +337,7 @@ void DumpThumbnail(EngineBase* engine) {
         Out1("\t<Thumbnail />\n");
     }
     str::Free(imgData);
-    delete bmp;
+    FreePixmap(bmp);
 }
 
 void DumpData(EngineBase* engine, bool fullDump) {
@@ -432,14 +432,14 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             WCHAR* pageBmpPathW = CWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
-            Str imgData = SerializeBitmap(bmp->hbmp);
+            Str imgData = PixmapToBmpFormat(bmp);
             if (len(imgData) > 0) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData);
             }
         } else { // render as TGA for all other file extensions
             // a serialized TGA starts with a 0 byte
-            Str imgData = tga::SerializeBitmap(bmp->hbmp);
+            Str imgData = tga::PixmapToTgaFormat(bmp);
             if (len(imgData) > 0) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData);

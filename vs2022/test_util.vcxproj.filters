@@ -70,6 +70,9 @@
     <ClInclude Include="..\src\base\Log.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\Pixmap.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Scoped.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -182,6 +185,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\JsonParser.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\Pixmap.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\SettingsUtil.cpp">

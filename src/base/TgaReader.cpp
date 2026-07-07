@@ -3,7 +3,6 @@
 
 #include "Base.h"
 #include "Pixmap.h"
-#include "GdiPlus.h"
 #include "TgaReader.h"
 
 namespace tga {
@@ -32,7 +31,7 @@ enum ImageAlpha {
     Alpha_Premultiplied = 4,
 };
 
-#include <pshpack1.h>
+#pragma pack(push, 1)
 
 struct TgaHeader {
     u8 idLength;
@@ -66,7 +65,7 @@ struct TgaExtArea {
     u8 alphaType;
 };
 
-#include <poppack.h>
+#pragma pack(pop)
 
 static_assert(sizeof(TgaHeader) == 18, "wrong size of TgaHeader structure");
 static_assert(sizeof(TgaFooter) == 26, "wrong size of TgaFooter structure");
@@ -122,7 +121,7 @@ static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t n) {
 
 // note: we only support the more common bit depths:
 // http://www.ryanjuckett.com/programming/graphics/26-parsing-colors-in-a-tga-file
-static Gdiplus::PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha aType = Alpha_Normal) {
+static int GetPixelBits(const TgaHeader* headerLE, ImageAlpha aType = Alpha_Normal) {
     int bits;
     if (Type_Palette == headerLE->imageType || Type_Palette_RLE == headerLE->imageType) {
         if (1 != headerLE->cmapType || 8 != headerLE->bitDepth && 16 != headerLE->bitDepth) {
@@ -135,33 +134,32 @@ static Gdiplus::PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha
         if (8 != headerLE->bitDepth || (headerLE->flags & Flag_Alpha)) {
             return 0;
         }
-        // using a non-indexed format so that we don't have to bother with a palette
-        return PixelFormat24bppRGB;
+        return 8;
     } else {
         return 0;
     }
 
     int alphaBits = (headerLE->flags & Flag_Alpha);
     if (15 == bits && 0 == alphaBits) {
-        return PixelFormat16bppRGB555;
+        return bits;
     }
     if (16 == bits && (0 == alphaBits || Alpha_Ignore == aType)) {
-        return PixelFormat16bppRGB555;
+        return bits;
     }
     if (16 == bits && 1 == alphaBits) {
-        return PixelFormat16bppARGB1555;
+        return bits;
     }
     if (24 == bits && 0 == alphaBits) {
-        return PixelFormat24bppRGB;
+        return bits;
     }
     if (32 == bits && (0 == alphaBits || Alpha_Ignore == aType)) {
-        return PixelFormat32bppRGB;
+        return bits;
     }
     if (32 == bits && 8 == alphaBits && Alpha_Normal == aType) {
-        return PixelFormat32bppARGB;
+        return bits;
     }
     if (32 == bits && 8 == alphaBits && Alpha_Premultiplied == aType) {
-        return PixelFormat32bppPARGB;
+        return bits;
     }
     return 0;
 }
@@ -200,7 +198,7 @@ bool HasSignature(Str d) {
     if ((headerLE->flags & Flag_Reserved)) {
         return false;
     }
-    if (!GetPixelFormat(headerLE)) {
+    if (!GetPixelBits(headerLE)) {
         return false;
     }
     return true;
@@ -223,22 +221,40 @@ struct ReadState {
     bool failed;
 };
 
-static inline void CopyPixel(u8* dst, const u8* src, int n) {
-    switch (n) {
-        case 3:
-            dst[2] = src[2]; // fall through
-        case 2:
-            *(u16*)dst = *(u16*)src;
+static u8 Scale5To8(u32 v) {
+    return (u8)((v << 3) | (v >> 2));
+}
+
+static void CopyPixelToBGRA(u8* dst, const u8* src, int bits, int alphaBits, ImageAlpha alphaType) {
+    switch (bits) {
+        case 15:
+        case 16: {
+            u16 v = readLE16((u8*)src);
+            dst[0] = Scale5To8(v & 0x1f);
+            dst[1] = Scale5To8((v >> 5) & 0x1f);
+            dst[2] = Scale5To8((v >> 10) & 0x1f);
+            dst[3] = (bits == 16 && alphaBits == 1 && alphaType != Alpha_Ignore) ? ((v & 0x8000) ? 255 : 0) : 255;
             break;
-        case 4:
-            *(u32*)dst = *(u32*)src;
+        }
+        case 24:
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = 255;
+            break;
+        case 32:
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = alphaType == Alpha_Ignore ? 255 : src[3];
             break;
         default:
             ReportIf(true);
+            break;
     }
 }
 
-static void ReadPixel(ReadState& s, u8* dst) {
+static void ReadPixel(ReadState& s, u8* dst, int bits, int alphaBits, ImageAlpha alphaType) {
     if (s.isRLE && 0 == s.repeat && s.data < s.end) {
         s.repeat = (*s.data & 0x7F) + 1;
         s.repeatSame = (*s.data & 0x80);
@@ -250,22 +266,29 @@ static void ReadPixel(ReadState& s, u8* dst) {
     }
 
     int idx;
+    const u8* src = nullptr;
     switch (s.type) {
         case Type_Palette:
         case Type_Palette_RLE:
             idx = ((u8)s.data[0] | (2 == s.n ? ((u8)s.data[1] << 8) : 0)) - s.cmap.firstEntry;
             if (0 <= idx && idx < s.cmap.length) {
-                CopyPixel(dst, s.cmap.data + idx * s.cmap.n, s.cmap.n);
+                src = s.cmap.data + idx * s.cmap.n;
+            } else {
+                s.failed = true;
             }
             break;
         case Type_Truecolor:
         case Type_Truecolor_RLE:
-            CopyPixel(dst, s.data, s.n);
+            src = s.data;
             break;
         case Type_Grayscale:
         case Type_Grayscale_RLE:
             dst[0] = dst[1] = dst[2] = s.data[0];
+            dst[3] = 255;
             break;
+    }
+    if (src) {
+        CopyPixelToBGRA(dst, src, bits, alphaBits, alphaType);
     }
 
     if (!s.isRLE || 0 == --s.repeat || !s.repeatSame) {
@@ -277,7 +300,7 @@ Pixmap* PixmapFromData(Str d) {
     size_t dataLen = (size_t)d.len;
     const u8* data = (const u8*)d.s;
 
-    if (dataLen < sizeof(TgaHeader)) {
+    if (dataLen > INT_MAX || dataLen < sizeof(TgaHeader)) {
         return nullptr;
     }
 
@@ -285,85 +308,90 @@ Pixmap* PixmapFromData(Str d) {
     const TgaHeader* headerLE = (const TgaHeader*)d.s;
     s.data = data + sizeof(TgaHeader) + headerLE->idLength;
     s.end = data + dataLen;
+    if (s.data > s.end) {
+        return nullptr;
+    }
     if (1 == headerLE->cmapType) {
         s.cmap.data = s.data;
         s.cmap.n = (headerLE->cmapBitDepth + 7) / 8;
         s.cmap.length = convLE(headerLE->cmapLength);
         s.cmap.firstEntry = convLE(headerLE->cmapFirstEntry);
         s.data += s.cmap.length * s.cmap.n;
+        if (s.data > s.end) {
+            return nullptr;
+        }
     }
     s.type = (ImageType)headerLE->imageType;
     s.n = (headerLE->bitDepth + 7) / 8;
     s.isRLE = headerLE->imageType >= 8;
 
-    Gdiplus::PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, dataLen));
-    if (!format) {
+    ImageAlpha alphaType = GetAlphaType(data, dataLen);
+    int bits = GetPixelBits(headerLE, alphaType);
+    if (!bits) {
         return nullptr;
     }
 
     int w = convLE(headerLE->width);
     int h = convLE(headerLE->height);
-    int n = ((format >> 8) & 0x3F) / 8;
+    if (w <= 0 || h <= 0) {
+        return nullptr;
+    }
+    int alphaBits = (headerLE->flags & Flag_Alpha);
     bool invertX = (headerLE->flags & Flag_InvertX);
     bool invertY = (headerLE->flags & Flag_InvertY);
 
-    Gdiplus::Bitmap bmp(w, h, format);
-    Gdiplus::Rect bmpRect(0, 0, w, h);
-    Gdiplus::BitmapData bmpData;
-    Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, format, &bmpData);
-    if (ok != Gdiplus::Ok) {
+    Pixmap* pixmap = AllocPixmap(w, h, PixmapFormat::BGRA8, alphaType == Alpha_Premultiplied);
+    if (!pixmap) {
         return nullptr;
     }
     for (int y = 0; y < h; y++) {
-        u8* rowOut = (u8*)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - 1 - y);
+        u8* rowOut = pixmap->data + pixmap->stride * (invertY ? y : h - 1 - y);
         for (int x = 0; x < w; x++) {
-            ReadPixel(s, rowOut + n * (invertX ? w - 1 - x : x));
+            ReadPixel(s, rowOut + 4 * (invertX ? w - 1 - x : x), bits, alphaBits, alphaType);
         }
     }
-    bmp.UnlockBits(&bmpData);
     if (s.failed) {
+        FreePixmap(pixmap);
         return nullptr;
     }
-    // copy out into a uniform BGRA8 Pixmap; GDI+ handles the source format (incl. 16bpp).
-    // NOTE: TGA author/date/software metadata (formerly set as GDI+ property items) is not
-    // carried over - Pixmap has no metadata and it was not consumed downstream.
-    return PixmapFromGdiplus(&bmp);
+    return pixmap;
 }
 
 inline bool memeq3(const char* pix1, const char* pix2) {
-    return *(WORD*)pix1 == *(WORD*)pix2 && pix1[2] == pix2[2];
+    return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
 }
 
-Str SerializeBitmap(HBITMAP hbmp) {
-    BITMAP bmpInfo;
-    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX) {
+static void GetPixmapPixelBGR(Pixmap* pixmap, int x, int y, char bgr[3]) {
+    const u8* src = pixmap->data + (size_t)y * pixmap->stride + (size_t)x * PixmapBytesPerPixel(pixmap->format);
+    if (pixmap->format == PixmapFormat::RGBA8) {
+        bgr[0] = (char)src[2];
+        bgr[1] = (char)src[1];
+        bgr[2] = (char)src[0];
+        return;
+    }
+    bgr[0] = (char)src[0];
+    bgr[1] = (char)src[1];
+    bgr[2] = (char)src[2];
+}
+
+static bool PixmapPixelEq3(Pixmap* pixmap, int x1, int x2, int y) {
+    char p1[3], p2[3];
+    GetPixmapPixelBGR(pixmap, x1, y, p1);
+    GetPixmapPixelBGR(pixmap, x2, y, p2);
+    return memeq3(p1, p2);
+}
+
+Str PixmapToTgaFormat(Pixmap* pixmap) {
+    if (!pixmap || !pixmap->data || (u32)pixmap->width > USHRT_MAX || (u32)pixmap->height > USHRT_MAX) {
+        return {};
+    }
+    if (pixmap->format != PixmapFormat::BGRA8 && pixmap->format != PixmapFormat::BGR8 &&
+        pixmap->format != PixmapFormat::RGBA8) {
         return {};
     }
 
-    WORD w = (WORD)bmpInfo.bmWidth;
-    WORD h = (WORD)bmpInfo.bmHeight;
-    int stride = ((w * 3 + 3) / 4) * 4;
-    char* bmpData = AllocArrayTemp<char>(stride * h);
-    if (!bmpData) {
-        return {};
-    }
-
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = w;
-    bmi.bmiHeader.biHeight = h;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    HDC hDC = GetDC(nullptr);
-    if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS)) {
-        ReleaseDC(nullptr, hDC);
-        return {};
-    }
-    ReleaseDC(nullptr, hDC);
-
+    u16 w = (u16)pixmap->width;
+    u16 h = (u16)pixmap->height;
     TgaHeader headerLE{};
     headerLE.imageType = Type_Truecolor_RLE;
     headerLE.width = convLE(w);
@@ -374,25 +402,31 @@ Str SerializeBitmap(HBITMAP hbmp) {
     str::Builder tgaData;
     tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
     for (int k = 0; k < h; k++) {
-        const char* line = bmpData + k * stride;
+        int y = h - 1 - k;
         for (int i = 0, j = 1; i < w; i += j, j = 1) {
             // determine the length of a run of identical pixels
-            while (i + j < w && j < 128 && memeq3(line + i * 3, line + (i + j) * 3)) {
+            while (i + j < w && j < 128 && PixmapPixelEq3(pixmap, i, i + j, y)) {
                 j++;
             }
             if (j > 1) {
                 tgaData.AppendChar((char)(j - 1 + 128));
-                tgaData.Append(Str(line + i * 3, 3));
+                char pixel[3];
+                GetPixmapPixelBGR(pixmap, i, y, pixel);
+                tgaData.Append(Str(pixel, 3));
             } else {
                 // determine the length of a run of different pixels
-                while (i + j < w && j <= 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
+                while (i + j < w && j <= 128 && !PixmapPixelEq3(pixmap, i + j - 1, i + j, y)) {
                     j++;
                 }
                 if (i + j < w || j > 128) {
                     j--;
                 }
                 tgaData.AppendChar((char)(j - 1));
-                tgaData.Append(Str(line + i * 3, (int)(j * 3)));
+                for (int x = i; x < i + j; x++) {
+                    char pixel[3];
+                    GetPixmapPixelBGR(pixmap, x, y, pixel);
+                    tgaData.Append(Str(pixel, 3));
+                }
             }
         }
     }
@@ -404,7 +438,12 @@ Str SerializeBitmap(HBITMAP hbmp) {
         headerLE.imageType = Type_Truecolor;
         tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
         for (int k = 0; k < h; k++) {
-            tgaData.Append(Str(bmpData + k * stride, w * 3));
+            int y = h - 1 - k;
+            for (int x = 0; x < w; x++) {
+                char pixel[3];
+                GetPixmapPixelBGR(pixmap, x, y, pixel);
+                tgaData.Append(Str(pixel, 3));
+            }
         }
         tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
     }

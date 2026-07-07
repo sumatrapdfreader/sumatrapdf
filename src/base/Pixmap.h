@@ -48,6 +48,8 @@ struct Pixmap {
 #endif
 };
 
+Str PixmapToBmpFormat(const Pixmap* pixmap);
+
 #if defined(_WIN32)
 // frees a DIB-section-backed Pixmap's native handles (and its pixels). implemented in
 // Win.cpp where <windows.h> is available. Does nothing if not DIB-backed.

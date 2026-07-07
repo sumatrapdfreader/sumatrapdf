@@ -875,6 +875,7 @@
     <ClInclude Include="..\src\base\JxlReader.h" />
     <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h" />
+    <ClInclude Include="..\src\base\Pixmap.h" />
     <ClInclude Include="..\src\base\Scoped.h" />
     <ClInclude Include="..\src\base\ScopedWin.h" />
     <ClInclude Include="..\src\base\SettingsUtil.h" />
@@ -930,6 +931,7 @@
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\JxlReader.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
+    <ClCompile Include="..\src\base\Pixmap.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
     <ClCompile Include="..\src\base\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\base\Str.cpp" />
@@ -939,6 +941,7 @@
     <ClCompile Include="..\src\base\StrVec.cpp" />
     <ClCompile Include="..\src\base\Strconv.cpp" />
     <ClCompile Include="..\src\base\TgaReader.cpp" />
+    <ClCompile Include="..\src\base\TgaReader_win.cpp" />
     <ClCompile Include="..\src\base\Thread.cpp" />
     <ClCompile Include="..\src\base\UITask.cpp" />
     <ClCompile Include="..\src\base\WebpReader.cpp" />
