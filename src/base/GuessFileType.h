@@ -56,6 +56,8 @@ struct EmbeddedPdfName {
 };
 EmbeddedPdfName ParseEmbeddedPdfName(Str path);
 
+struct Size;
+
 struct FileTypeInfo {
     FileType ft = FileType::Unknown;
     // if false, callers can fall back to a more expensive way of getting the size
@@ -64,9 +66,13 @@ struct FileTypeInfo {
     int imageDy = 0;     // only for single-image files: image height, after applying orientation
     int nImages = 0;     // only for image files: number of images
     int orientation = 0; // EXIF orientation (1-8) for jpeg/webp/jxl, 0 if not present
+    // per-image sizes, only allocated for multi-image files (nImages > 1,
+    // nImages entries); free with FreeFileTypeInfo()
+    Size* imageSizes = nullptr;
 };
 
 FileTypeInfo GuessFileInfoFromData(Str d);
+void FreeFileTypeInfo(FileTypeInfo*);
 int WebpExifOrientation(Str d);
 bool ExifOrientationSwapsDimensions(int orientation);
 FileType GuessFileTypeFromFile(Str path);

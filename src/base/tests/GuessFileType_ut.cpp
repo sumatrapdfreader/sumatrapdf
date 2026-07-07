@@ -47,6 +47,41 @@ static void pngTest() {
     utassert(fti.nImages == 3);
     utassert(fti.imageDx == 0 && fti.imageDy == 0);
     utassert(!fti.hasImageSize);
+    // acTL declares 3 frames but there are no fcTL chunks, so no per-image sizes
+    utassert(!fti.imageSizes);
+
+    // APNG with 2 declared frames and an fcTL chunk (1x2 and 3x4) for each
+    static const u8 apng2[] = {
+        0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, // signature
+        0,    0,   0,   13,  'I',  'H',  'D',  'R',  // IHDR chunk header
+        0,    0,   0,   1,                           // width 1
+        0,    0,   0,   2,                           // height 2
+        8,    6,   0,   0,   0,                      // bit depth etc.
+        0,    0,   0,   0,                           // crc
+        0,    0,   0,   8,   'a',  'c',  'T',  'L',  // acTL chunk header
+        0,    0,   0,   2,                           // num_frames 2
+        0,    0,   0,   0,                           // num_plays
+        0,    0,   0,   0,                           // crc
+        0,    0,   0,   12,  'f',  'c',  'T',  'L',  // first fcTL chunk
+        0,    0,   0,   0,                           // sequence number
+        0,    0,   0,   1,                           // width 1
+        0,    0,   0,   2,                           // height 2
+        0,    0,   0,   0,                           // crc
+        0,    0,   0,   12,  'f',  'c',  'T',  'L',  // second fcTL chunk
+        0,    0,   0,   1,                           // sequence number
+        0,    0,   0,   3,                           // width 3
+        0,    0,   0,   4,                           // height 4
+        0,    0,   0,   0,                           // crc
+    };
+    FreeFileTypeInfo(&fti);
+    fti = infoFromBytes(apng2, dimofi(apng2));
+    utassert(fti.ft == FileType::Png);
+    utassert(fti.nImages == 2);
+    utassert(!fti.hasImageSize);
+    utassert(fti.imageSizes);
+    utassert(fti.imageSizes[0] == Size(1, 2));
+    utassert(fti.imageSizes[1] == Size(3, 4));
+    FreeFileTypeInfo(&fti);
 }
 
 static void gifTest() {
@@ -64,14 +99,15 @@ static void gifTest() {
     utassert(fti.imageDy == 2);
     utassert(fti.hasImageSize);
     utassert(fti.nImages == 1);
+    utassert(!fti.imageSizes);
 
-    // same with two frames
+    // same with two frames, the second 1x2
     static const u8 gif2[] = {
         'G',  'I', 'F',  '8', '9', 'a',             // signature
         3,    0,   2,    0,   0,   0,   0,          // logical screen descriptor
         0x2C, 0,   0,    0,   0,   3,   0, 2, 0, 0, // image descriptor 3x2
         0x02, 1,   0xAA, 0,                         // frame data
-        0x2C, 0,   0,    0,   0,   3,   0, 2, 0, 0, // second image descriptor
+        0x2C, 0,   0,    0,   0,   1,   0, 2, 0, 0, // second image descriptor 1x2
         0x02, 1,   0xBB, 0,                         // frame data
         0x3B,                                       // trailer
     };
@@ -80,6 +116,10 @@ static void gifTest() {
     utassert(fti.nImages == 2);
     utassert(fti.imageDx == 0 && fti.imageDy == 0);
     utassert(!fti.hasImageSize);
+    utassert(fti.imageSizes);
+    utassert(fti.imageSizes[0] == Size(3, 2));
+    utassert(fti.imageSizes[1] == Size(1, 2));
+    FreeFileTypeInfo(&fti);
 }
 
 static void bmpTest() {
@@ -159,6 +199,35 @@ static void webpTest() {
     utassert(fti.imageDy == 3);
     utassert(fti.hasImageSize);
     utassert(fti.nImages == 1);
+
+    // animated WebP: VP8X with a 4x3 canvas and two ANMF frames (2x1 and 4x3)
+    static const u8 webpAnim[] = {
+        'R',  'I', 'F', 'F', 70, 0, 0, 0, // RIFF header
+        'W',  'E', 'B', 'P',              //
+        'V',  'P', '8', 'X', 10, 0, 0, 0, // VP8X chunk, size 10
+        0x02, 0,   0,   0,                // flags (animation)
+        3,    0,   0,                     // canvas width - 1
+        2,    0,   0,                     // canvas height - 1
+        'A',  'N', 'M', 'F', 16, 0, 0, 0, // first ANMF chunk, size 16
+        0,    0,   0,   0,   0,  0,       // frame x, y
+        1,    0,   0,                     // frame width - 1
+        0,    0,   0,                     // frame height - 1
+        0,    0,   0,   0,                // duration, flags
+        'A',  'N', 'M', 'F', 16, 0, 0, 0, // second ANMF chunk, size 16
+        0,    0,   0,   0,   0,  0,       // frame x, y
+        3,    0,   0,                     // frame width - 1
+        2,    0,   0,                     // frame height - 1
+        0,    0,   0,   0,                // duration, flags
+    };
+    fti = infoFromBytes(webpAnim, dimofi(webpAnim));
+    utassert(fti.ft == FileType::Webp);
+    utassert(fti.nImages == 2);
+    utassert(fti.imageDx == 0 && fti.imageDy == 0);
+    utassert(!fti.hasImageSize);
+    utassert(fti.imageSizes);
+    utassert(fti.imageSizes[0] == Size(2, 1));
+    utassert(fti.imageSizes[1] == Size(4, 3));
+    FreeFileTypeInfo(&fti);
 }
 
 static void tiffTest() {
@@ -194,6 +263,10 @@ static void tiffTest() {
     utassert(fti.nImages == 2);
     utassert(fti.imageDx == 0 && fti.imageDy == 0);
     utassert(!fti.hasImageSize);
+    utassert(fti.imageSizes);
+    utassert(fti.imageSizes[0] == Size(5, 6));
+    utassert(fti.imageSizes[1] == Size(0, 0)); // second IFD has no dimension tags
+    FreeFileTypeInfo(&fti);
 }
 
 static void heifTest() {

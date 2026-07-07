@@ -527,26 +527,30 @@ Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
 }
 
 // size from headers via GuessFileInfoFromData() (orientation already
-// applied); falls back to library-assisted parsing for formats it can't size
-// (avif/heic and non-trivial webp). Returns an empty Size if only a full
-// decode can tell (e.g. animated GIF, multi-page TIFF, jxl).
+// applied); for multi-image files reports the first image's size. Falls
+// back to library-assisted parsing for formats it can't size (avif/heic
+// and non-trivial webp). Returns an empty Size if only a full decode can
+// tell (e.g. corrupt headers).
 static Size ImageSizeNoDecode(Str d) {
     Size result;
     FileTypeInfo fti = GuessFileInfoFromData(d);
-    if (fti.hasImageSize) {
-        return Size(fti.imageDx, fti.imageDy);
-    }
     ByteReader r(d);
-    if (fti.ft == FileType::Webp && WebpImageSizeFromData(r, result)) {
+    if (fti.hasImageSize) {
+        result = Size(fti.imageDx, fti.imageDy);
+    } else if (fti.imageSizes) {
+        // multi-image file (animated GIF, multi-page TIFF, ...)
+        result = fti.imageSizes[0];
+    } else if (fti.ft == FileType::Webp && WebpImageSizeFromData(r, result)) {
         if (ExifOrientationSwapsDimensions(fti.orientation)) {
             std::swap(result.dx, result.dy);
         }
-        return result;
+    } else if ((fti.ft == FileType::Avif || fti.ft == FileType::Heic) && AvifImageSizeFromData(r, result)) {
+        // sized by libheif
+    } else {
+        result = {};
     }
-    if ((fti.ft == FileType::Avif || fti.ft == FileType::Heic) && AvifImageSizeFromData(r, result)) {
-        return result;
-    }
-    return {};
+    FreeFileTypeInfo(&fti);
+    return result;
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
@@ -556,7 +560,6 @@ Size ImageSizeFromData(Str d) {
         return result;
     }
     // try expensive way of getting the info by decoding the image
-    // (e.g. for animated GIF and multi-page TIFF)
     Pixmap* px = PixmapFromDataWin(d);
     if (px) {
         result = Size(px->width, px->height);

@@ -263,10 +263,19 @@ static Size ImageSizeFromDataPortable(Str data) {
         return {};
     }
 
-    // cheap: size parsed from image headers (orientation already applied)
+    // cheap: size parsed from image headers (orientation already applied);
+    // for multi-image files (animated GIF, multi-page TIFF) use the first
+    // image's size
     FileTypeInfo fti = GuessFileInfoFromData(data);
+    Size headerSize;
     if (fti.hasImageSize) {
-        return Size(fti.imageDx, fti.imageDy);
+        headerSize = Size(fti.imageDx, fti.imageDy);
+    } else if (fti.imageSizes) {
+        headerSize = fti.imageSizes[0];
+    }
+    FreeFileTypeInfo(&fti);
+    if (!headerSize.IsEmpty()) {
+        return headerSize;
     }
 
     Size res;

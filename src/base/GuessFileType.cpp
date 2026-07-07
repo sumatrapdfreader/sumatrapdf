@@ -399,7 +399,18 @@ static FileType DetectFileTypeFromData(Str d) {
     return FileType::Unknown;
 }
 
-// PNG: dimensions from the IHDR chunk; for APNG the acTL chunk gives the frame count
+// append an image size to res.imageSizes, growing it geometrically.
+// n is the number of sizes appended so far, cap the current capacity
+static void AppendImageSize(FileTypeInfo& res, int n, int& cap, int dx, int dy) {
+    if (n >= cap) {
+        cap = cap ? cap * 2 : 4;
+        res.imageSizes = (Size*)realloc(res.imageSizes, (size_t)cap * sizeof(Size));
+    }
+    res.imageSizes[n] = Size(dx, dy);
+}
+
+// PNG: dimensions from the IHDR chunk; for APNG the acTL chunk gives the
+// frame count and each fcTL chunk a frame's size
 static void PngInfoFromData(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     if (r.len < 24 || !memeq(r.d + 12, "IHDR", 4)) {
@@ -407,28 +418,37 @@ static void PngInfoFromData(ByteReader r, FileTypeInfo& res) {
     }
     res.imageDx = (int)r.DWordBE(16);
     res.imageDy = (int)r.DWordBE(20);
-    // look for an APNG acTL chunk, which must appear before IDAT
+    int nDeclared = 0; // frame count from acTL
+    int nFcTL = 0;
+    int cap = 0;
     int idx = 8;
     for (;;) {
         if (idx + 8 > r.len) {
-            return;
+            break;
         }
         u32 chunkLen = r.DWordBE(idx);
         const u8* type = r.d + idx + 4;
-        if (memeq(type, "IDAT", 4)) {
-            return;
-        }
         if (memeq(type, "acTL", 4)) {
-            int nFrames = (int)r.DWordBE(idx + 8);
-            if (nFrames > 1) {
-                res.nImages = nFrames;
-            }
-            return;
+            nDeclared = (int)r.DWordBE(idx + 8);
+        } else if (memeq(type, "fcTL", 4) && chunkLen >= 12) {
+            // sequence number, then u32 width and height
+            AppendImageSize(res, nFcTL, cap, (int)r.DWordBE(idx + 12), (int)r.DWordBE(idx + 16));
+            nFcTL++;
+        } else if (memeq(type, "IEND", 4)) {
+            break;
         }
         if (chunkLen > (u32)r.len) {
-            return;
+            break;
         }
         idx += 12 + (int)chunkLen; // length + type + data + crc
+    }
+    if (nDeclared > 1) {
+        res.nImages = nDeclared;
+    }
+    if (nFcTL != res.nImages) {
+        // e.g. truncated data with fewer fcTL chunks than acTL declares
+        free(res.imageSizes);
+        res.imageSizes = nullptr;
     }
 }
 
@@ -547,17 +567,21 @@ static void GifInfoFromData(ByteReader r, FileTypeInfo& res) {
         idx += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
     }
     int nFrames = 0;
+    int cap = 0;
     while (idx < n) {
         u8 b = r.Byte(idx);
         if (b == 0x2C) { // image descriptor
             if (idx + 10 > n) {
                 break;
             }
-            nFrames++;
-            if (nFrames == 1) {
-                res.imageDx = r.WordLE(idx + 5);
-                res.imageDy = r.WordLE(idx + 7);
+            int w = r.WordLE(idx + 5);
+            int h = r.WordLE(idx + 7);
+            if (nFrames == 0) {
+                res.imageDx = w;
+                res.imageDy = h;
             }
+            AppendImageSize(res, nFrames, cap, w, h);
+            nFrames++;
             u8 flags = r.Byte(idx + 9);
             idx += 10;
             // skip the local color table
@@ -588,41 +612,53 @@ static void GifInfoFromData(ByteReader r, FileTypeInfo& res) {
     }
 }
 
-// TIFF and JXR: dimensions from the first IFD; number of images is the
-// length of the next-IFD chain
-static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
-    if (r.len < 10) {
-        res.nImages = 1;
-        return;
-    }
-    bool isBE = r.Byte(0) == 'M';
+// dimensions from the width/height tags of the IFD at off
+static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
     const u16 wTag = isJxr ? 0xBC80 : 0x0100;
     const u16 hTag = isJxr ? 0xBC81 : 0x0101;
-    int idx = (int)r.DWord(4, isBE);
-    u16 count = idx <= r.len - 2 ? r.Word(idx, isBE) : 0;
-    for (idx += 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
+    Size res;
+    u16 count = off <= r.len - 2 ? r.Word(off, isBE) : 0;
+    for (int idx = off + 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
         u16 tag = r.Word(idx, isBE);
         u16 type = r.Word(idx + 2, isBE);
         if (r.DWord(idx + 4, isBE) != 1) {
             continue;
         } else if (wTag == tag && 4 == type) {
-            res.imageDx = (int)r.DWord(idx + 8, isBE);
+            res.dx = (int)r.DWord(idx + 8, isBE);
         } else if (wTag == tag && 3 == type) {
-            res.imageDx = r.Word(idx + 8, isBE);
+            res.dx = r.Word(idx + 8, isBE);
         } else if (wTag == tag && 1 == type) {
-            res.imageDx = r.Byte(idx + 8);
+            res.dx = r.Byte(idx + 8);
         } else if (hTag == tag && 4 == type) {
-            res.imageDy = (int)r.DWord(idx + 8, isBE);
+            res.dy = (int)r.DWord(idx + 8, isBE);
         } else if (hTag == tag && 3 == type) {
-            res.imageDy = r.Word(idx + 8, isBE);
+            res.dy = r.Word(idx + 8, isBE);
         } else if (hTag == tag && 1 == type) {
-            res.imageDy = r.Byte(idx + 8);
+            res.dy = r.Byte(idx + 8);
         }
     }
+    return res;
+}
+
+// TIFF and JXR: one image per IFD in the next-IFD chain, with dimensions
+// from each IFD's width/height tags
+static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
+    res.nImages = 1;
+    if (r.len < 10) {
+        return;
+    }
+    bool isBE = r.Byte(0) == 'M';
     int nIfds = 0;
+    int cap = 0;
     u32 off = r.DWord(4, isBE);
     // 4096 iterations bound protects against cycles in corrupt data
     while (off > 0 && (int)off + 2 <= r.len && nIfds < 4096) {
+        Size size = TiffIfdSize(r, (int)off, isBE, isJxr);
+        if (nIfds == 0) {
+            res.imageDx = size.dx;
+            res.imageDy = size.dy;
+        }
+        AppendImageSize(res, nIfds, cap, size.dx, size.dy);
         nIfds++;
         u16 nEntries = r.Word((int)off, isBE);
         int nextOff = (int)off + 2 + nEntries * 12;
@@ -631,7 +667,9 @@ static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
         }
         off = r.DWord(nextOff, isBE);
     }
-    res.nImages = nIfds > 0 ? nIfds : 1;
+    if (nIfds > 0) {
+        res.nImages = nIfds;
+    }
 }
 
 static void BmpInfoFromData(ByteReader r, FileTypeInfo& res) {
@@ -698,6 +736,7 @@ static void Jp2InfoFromData(ByteReader r, FileTypeInfo& res) {
 static void WebpInfoFromData(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     int nFrames = 0;
+    int cap = 0;
     int idx = 12;
     while (idx + 8 <= r.len) {
         const u8* fourcc = r.d + idx;
@@ -714,7 +753,11 @@ static void WebpInfoFromData(ByteReader r, FileTypeInfo& res) {
             u32 bits = r.DWordLE(payload + 1);
             res.imageDx = (int)(bits & 0x3FFF) + 1;
             res.imageDy = (int)((bits >> 14) & 0x3FFF) + 1;
-        } else if (memeq(fourcc, "ANMF", 4)) {
+        } else if (memeq(fourcc, "ANMF", 4) && size >= 12) {
+            // 24-bit little-endian frame x, y, then width-1 and height-1
+            int w = 1 + (r.Byte(payload + 6) | (r.Byte(payload + 7) << 8) | (r.Byte(payload + 8) << 16));
+            int h = 1 + (r.Byte(payload + 9) | (r.Byte(payload + 10) << 8) | (r.Byte(payload + 11) << 16));
+            AppendImageSize(res, nFrames, cap, w, h);
             nFrames++;
         }
         u32 advance = size + (size & 1); // chunks are padded to even size
@@ -1001,9 +1044,11 @@ static void JxlInfoFromData(ByteReader r, FileTypeInfo& res) {
 // Like GuessFileTypeFromData() but for image files also reports the number
 // of images and, for single-image files, width/height parsed from the header
 // (hasImageSize tells if they were found; if not, callers can fall back to a
-// more expensive method like decoding the image). Dimensions are after
-// applying the EXIF orientation, if any. Counts reflect the provided buffer:
-// they can under-report if d is a truncated prefix of the file.
+// more expensive method like decoding the image). For multi-image files the
+// per-image sizes are in imageSizes; the caller must FreeFileTypeInfo() the
+// result. Dimensions are after applying the EXIF orientation, if any. Counts
+// reflect the provided buffer: they can under-report if d is a truncated
+// prefix of the file.
 FileTypeInfo GuessFileInfoFromData(Str d) {
     FileTypeInfo res;
     res.ft = DetectFileTypeFromData(d);
@@ -1056,17 +1101,37 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
         res.imageDx = 0;
         res.imageDy = 0;
     }
+    if (res.nImages <= 1) {
+        // imageSizes is only reported for multi-image files
+        free(res.imageSizes);
+        res.imageSizes = nullptr;
+    }
     if (ExifOrientationSwapsDimensions(res.orientation)) {
         int tmp = res.imageDx;
         res.imageDx = res.imageDy;
         res.imageDy = tmp;
+        for (int i = 0; i < res.nImages && res.imageSizes; i++) {
+            tmp = res.imageSizes[i].dx;
+            res.imageSizes[i].dx = res.imageSizes[i].dy;
+            res.imageSizes[i].dy = tmp;
+        }
     }
     res.hasImageSize = res.imageDx > 0 && res.imageDy > 0;
     return res;
 }
 
+void FreeFileTypeInfo(FileTypeInfo* fti) {
+    if (!fti) {
+        return;
+    }
+    free(fti->imageSizes);
+    fti->imageSizes = nullptr;
+}
+
 FileType GuessFileTypeFromData(Str d) {
-    return GuessFileInfoFromData(d).ft;
+    FileTypeInfo fti = GuessFileInfoFromData(d);
+    FreeFileTypeInfo(&fti);
+    return fti.ft;
 }
 
 // parse an embedded-PDF path of the form "c:/foo.pdf:${pdfStreamNo}"
