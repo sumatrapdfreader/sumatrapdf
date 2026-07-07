@@ -689,7 +689,7 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
     }
     HBITMAP hbmpCopy = (HBITMAP)CopyImage(cs.bmp, IMAGE_BITMAP, cs.origW, cs.origH, 0);
     RenderedBitmap* rbmp = new RenderedBitmap(hbmpCopy, Size(cs.origW, cs.origH));
-    ShowImageEditWindow(win, ImageEditMode::Save, filePath, rbmp);
+    ShowImageEditWindow(win, ImageEditMode::Crop, filePath, rbmp);
     delete rbmp;
 }
 

@@ -113,7 +113,8 @@ enum class DragEdge {
     TopRight,
     BottomLeft,
     BottomRight,
-    Move // only used in crop mode
+    Move,   // only used in crop mode
+    NewCrop // only used in crop mode
 };
 
 struct ImageEditWindow {
@@ -167,6 +168,7 @@ struct ImageEditWindow {
     int dragCropY = 0;
     int dragCropW = 0;
     int dragCropH = 0;
+    bool dragMoved = false;
     // resize mode drag state
     int dragNewW = 0;
     int dragNewH = 0;
@@ -733,6 +735,52 @@ static DragEdge HitTestResizeEdge(ImageEditWindow* ew, int mx, int my) {
     return DragEdge::None;
 }
 
+static bool IsPointInDisplayedImage(ImageEditWindow* ew, int mx, int my) {
+    return mx >= ew->imgDisplayX && mx <= ew->imgDisplayX + ew->imgDisplayW && my >= ew->imgDisplayY &&
+           my <= ew->imgDisplayY + ew->imgDisplayH;
+}
+
+static bool IsImageEditDragDistance(POINT start, int mx, int my) {
+    int dragDx = GetSystemMetrics(SM_CXDRAG);
+    int dragDy = GetSystemMetrics(SM_CYDRAG);
+    return abs(mx - start.x) > dragDx || abs(my - start.y) > dragDy;
+}
+
+static void SetCropFromDisplaySelection(ImageEditWindow* ew, POINT start, int mx, int my) {
+    int x0 = DisplayToImageX(ew, start.x);
+    int y0 = DisplayToImageY(ew, start.y);
+    int x1 = DisplayToImageX(ew, mx);
+    int y1 = DisplayToImageY(ew, my);
+
+    int x = x0 < x1 ? x0 : x1;
+    int y = y0 < y1 ? y0 : y1;
+    int w = abs(x1 - x0);
+    int h = abs(y1 - y0);
+    if (w < 1) {
+        w = 1;
+        if (x >= ew->imgW) {
+            x = ew->imgW - 1;
+        }
+    }
+    if (h < 1) {
+        h = 1;
+        if (y >= ew->imgH) {
+            y = ew->imgH - 1;
+        }
+    }
+    if (x + w > ew->imgW) {
+        w = ew->imgW - x;
+    }
+    if (y + h > ew->imgH) {
+        h = ew->imgH - y;
+    }
+
+    ew->cropX = x;
+    ew->cropY = y;
+    ew->cropW = w;
+    ew->cropH = h;
+}
+
 static HCURSOR GetCursorForEdge(DragEdge edge) {
     switch (edge) {
         case DragEdge::Left:
@@ -749,6 +797,8 @@ static HCURSOR GetCursorForEdge(DragEdge edge) {
             return LoadCursor(nullptr, IDC_SIZENESW);
         case DragEdge::Move:
             return LoadCursor(nullptr, IDC_SIZEALL);
+        case DragEdge::NewCrop:
+            return LoadCursor(nullptr, IDC_CROSS);
         default:
             return LoadCursor(nullptr, IDC_ARROW);
     }
@@ -1528,75 +1578,84 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int my = GET_Y_LPARAM(lp);
             if (ew->isDragging) {
                 if (ew->mode == ImageEditMode::Crop) {
-                    int imgDx = DisplayToImageX(ew, mx) - DisplayToImageX(ew, ew->dragStart.x);
-                    int imgDy = DisplayToImageY(ew, my) - DisplayToImageY(ew, ew->dragStart.y);
-
                     auto edge = ew->dragEdge;
-                    int nx = ew->dragCropX;
-                    int ny = ew->dragCropY;
-                    int nw = ew->dragCropW;
-                    int nh = ew->dragCropH;
+                    if (edge == DragEdge::NewCrop) {
+                        if (!ew->dragMoved && !IsImageEditDragDistance(ew->dragStart, mx, my)) {
+                            return 0;
+                        }
+                        ew->dragMoved = true;
+                        SetCropFromDisplaySelection(ew, ew->dragStart, mx, my);
+                    } else {
+                        ew->dragMoved = true;
+                        int imgDx = DisplayToImageX(ew, mx) - DisplayToImageX(ew, ew->dragStart.x);
+                        int imgDy = DisplayToImageY(ew, my) - DisplayToImageY(ew, ew->dragStart.y);
 
-                    if (edge == DragEdge::Left || edge == DragEdge::TopLeft || edge == DragEdge::BottomLeft) {
-                        nx = ew->dragCropX + imgDx;
-                        nw = ew->dragCropW - imgDx;
-                    }
-                    if (edge == DragEdge::Right || edge == DragEdge::TopRight || edge == DragEdge::BottomRight) {
-                        nw = ew->dragCropW + imgDx;
-                    }
-                    if (edge == DragEdge::Top || edge == DragEdge::TopLeft || edge == DragEdge::TopRight) {
-                        ny = ew->dragCropY + imgDy;
-                        nh = ew->dragCropH - imgDy;
-                    }
-                    if (edge == DragEdge::Bottom || edge == DragEdge::BottomLeft || edge == DragEdge::BottomRight) {
-                        nh = ew->dragCropH + imgDy;
-                    }
-                    if (edge == DragEdge::Move) {
-                        nx = ew->dragCropX + imgDx;
-                        ny = ew->dragCropY + imgDy;
-                        // clamp to image bounds
+                        int nx = ew->dragCropX;
+                        int ny = ew->dragCropY;
+                        int nw = ew->dragCropW;
+                        int nh = ew->dragCropH;
+
+                        if (edge == DragEdge::Left || edge == DragEdge::TopLeft || edge == DragEdge::BottomLeft) {
+                            nx = ew->dragCropX + imgDx;
+                            nw = ew->dragCropW - imgDx;
+                        }
+                        if (edge == DragEdge::Right || edge == DragEdge::TopRight || edge == DragEdge::BottomRight) {
+                            nw = ew->dragCropW + imgDx;
+                        }
+                        if (edge == DragEdge::Top || edge == DragEdge::TopLeft || edge == DragEdge::TopRight) {
+                            ny = ew->dragCropY + imgDy;
+                            nh = ew->dragCropH - imgDy;
+                        }
+                        if (edge == DragEdge::Bottom || edge == DragEdge::BottomLeft || edge == DragEdge::BottomRight) {
+                            nh = ew->dragCropH + imgDy;
+                        }
+                        if (edge == DragEdge::Move) {
+                            nx = ew->dragCropX + imgDx;
+                            ny = ew->dragCropY + imgDy;
+                            // clamp to image bounds
+                            if (nx < 0) {
+                                nx = 0;
+                            }
+                            if (ny < 0) {
+                                ny = 0;
+                            }
+                            if (nx + nw > ew->imgW) {
+                                nx = ew->imgW - nw;
+                            }
+                            if (ny + nh > ew->imgH) {
+                                ny = ew->imgH - nh;
+                            }
+                        }
+
+                        // enforce minimum size and bounds
+                        if (nw < 1) {
+                            nw = 1;
+                            nx = ew->cropX;
+                        }
+                        if (nh < 1) {
+                            nh = 1;
+                            ny = ew->cropY;
+                        }
                         if (nx < 0) {
+                            nw += nx;
                             nx = 0;
                         }
                         if (ny < 0) {
+                            nh += ny;
                             ny = 0;
                         }
                         if (nx + nw > ew->imgW) {
-                            nx = ew->imgW - nw;
+                            nw = ew->imgW - nx;
                         }
                         if (ny + nh > ew->imgH) {
-                            ny = ew->imgH - nh;
+                            nh = ew->imgH - ny;
                         }
-                    }
 
-                    // enforce minimum size and bounds
-                    if (nw < 1) {
-                        nw = 1;
-                        nx = ew->cropX;
+                        ew->cropX = nx;
+                        ew->cropY = ny;
+                        ew->cropW = nw;
+                        ew->cropH = nh;
                     }
-                    if (nh < 1) {
-                        nh = 1;
-                        ny = ew->cropY;
-                    }
-                    if (nx < 0) {
-                        nw += nx;
-                        nx = 0;
-                    }
-                    if (ny < 0) {
-                        nh += ny;
-                        ny = 0;
-                    }
-                    if (nx + nw > ew->imgW) {
-                        nw = ew->imgW - nx;
-                    }
-                    if (ny + nh > ew->imgH) {
-                        nh = ew->imgH - ny;
-                    }
-
-                    ew->cropX = nx;
-                    ew->cropY = ny;
-                    ew->cropW = nw;
-                    ew->cropH = nh;
                     UpdateInfoLabel(ew);
                     InvalidateImageArea(ew);
                 } else {
@@ -1643,6 +1702,11 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 DragEdge edge;
                 if (ew->mode == ImageEditMode::Crop) {
                     edge = HitTestCropEdge(ew, mx, my);
+                    if (edge == DragEdge::Move && !IsCropChanged(ew)) {
+                        edge = DragEdge::NewCrop;
+                    } else if (edge == DragEdge::None && IsPointInDisplayedImage(ew, mx, my)) {
+                        edge = DragEdge::NewCrop;
+                    }
                 } else {
                     edge = HitTestResizeEdge(ew, mx, my);
                 }
@@ -1659,16 +1723,31 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             int mx = GET_X_LPARAM(lp);
             int my = GET_Y_LPARAM(lp);
-            DragEdge edge;
+            DragEdge edge = DragEdge::None;
             if (ew->mode == ImageEditMode::Crop) {
                 edge = HitTestCropEdge(ew, mx, my);
+                if (edge == DragEdge::Move && !IsCropChanged(ew)) {
+                    edge = DragEdge::NewCrop;
+                } else if (edge == DragEdge::None && IsPointInDisplayedImage(ew, mx, my)) {
+                    edge = DragEdge::NewCrop;
+                }
+            } else if (ew->mode == ImageEditMode::Save) {
+                if (IsPointInDisplayedImage(ew, mx, my)) {
+                    SwitchToCropMode(ew);
+                    edge = DragEdge::NewCrop;
+                }
             } else {
                 edge = HitTestResizeEdge(ew, mx, my);
+                if (edge == DragEdge::None && IsPointInDisplayedImage(ew, mx, my)) {
+                    SwitchToCropMode(ew);
+                    edge = DragEdge::NewCrop;
+                }
             }
             if (edge != DragEdge::None) {
                 ew->isDragging = true;
                 ew->dragEdge = edge;
                 ew->dragStart = {mx, my};
+                ew->dragMoved = false;
                 if (ew->mode == ImageEditMode::Crop) {
                     ew->dragCropX = ew->cropX;
                     ew->dragCropY = ew->cropY;
@@ -1686,6 +1765,14 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_LBUTTONUP: {
             ew = FindImageEditWindowByHwnd(hwnd);
             if (ew && ew->isDragging) {
+                if (ew->mode == ImageEditMode::Crop && ew->dragEdge == DragEdge::NewCrop && !ew->dragMoved) {
+                    ew->cropX = ew->dragCropX;
+                    ew->cropY = ew->dragCropY;
+                    ew->cropW = ew->dragCropW;
+                    ew->cropH = ew->dragCropH;
+                    UpdateInfoLabel(ew);
+                    InvalidateImageArea(ew);
+                }
                 ew->isDragging = false;
                 ReleaseCapture();
                 UpdateModeButtons(ew);
@@ -1702,6 +1789,11 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 DragEdge edge;
                 if (ew->mode == ImageEditMode::Crop) {
                     edge = HitTestCropEdge(ew, pt.x, pt.y);
+                    if (edge == DragEdge::Move && !IsCropChanged(ew)) {
+                        edge = DragEdge::NewCrop;
+                    } else if (edge == DragEdge::None && IsPointInDisplayedImage(ew, pt.x, pt.y)) {
+                        edge = DragEdge::NewCrop;
+                    }
                 } else {
                     edge = HitTestResizeEdge(ew, pt.x, pt.y);
                 }
