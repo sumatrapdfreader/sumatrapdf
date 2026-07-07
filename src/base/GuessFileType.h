@@ -60,12 +60,15 @@ struct FileTypeInfo {
     FileType ft = FileType::Unknown;
     // if false, callers can fall back to a more expensive way of getting the size
     bool hasImageSize = false;
-    int imageDx = 0; // only for single-image files: image width
-    int imageDy = 0; // only for single-image files: image height
-    int nImages = 0; // only for image files: number of images
+    int imageDx = 0;     // only for single-image files: image width, after applying orientation
+    int imageDy = 0;     // only for single-image files: image height, after applying orientation
+    int nImages = 0;     // only for image files: number of images
+    int orientation = 0; // EXIF orientation (1-8) for jpeg/webp, 0 if not present
 };
 
 FileTypeInfo GuessFileInfoFromData(Str d);
+int WebpExifOrientation(Str d);
+bool ExifOrientationSwapsDimensions(int orientation);
 FileType GuessFileTypeFromFile(Str path);
 FileType GuessFileTypeFromData(Str d);
 FileType GuessFileTypeFromName(Str path);

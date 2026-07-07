@@ -263,6 +263,12 @@ static Size ImageSizeFromDataPortable(Str data) {
         return {};
     }
 
+    // cheap: size parsed from image headers (orientation already applied)
+    FileTypeInfo fti = GuessFileInfoFromData(data);
+    if (fti.hasImageSize) {
+        return Size(fti.imageDx, fti.imageDy);
+    }
+
     Size res;
     fz_context* ctx = fz_new_context_windows();
     if (!ctx) {

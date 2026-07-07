@@ -12,6 +12,5 @@ enum class FileType : u8;
 Pixmap* PixmapFromExtFormatsData(Str bmpData, FileType kind);
 bool WebpImageSizeFromData(ByteReader r, Size& result);
 bool AvifImageSizeFromData(ByteReader r, Size& result);
-int JpegExifOrientationFromTiff(ByteReader r, int tiffBase);
 
 #endif

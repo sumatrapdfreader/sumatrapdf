@@ -728,13 +728,106 @@ static void WebpInfoFromData(ByteReader r, FileTypeInfo& res) {
     }
 }
 
+// EXIF orientations 5-8 swap width and height
+bool ExifOrientationSwapsDimensions(int orientation) {
+    return orientation >= 5 && orientation <= 8;
+}
+
+// Read EXIF orientation from IFD0 (tag 0x0112). Returns 1-8 or 0 if not found.
+// tiffBase is the offset into r where the TIFF header starts
+static int ExifOrientationFromTiff(ByteReader r, int tiffBase) {
+    int n = r.len;
+    if (tiffBase + 8 > n) {
+        return 0;
+    }
+    bool isBE = r.Byte(tiffBase) == 'M';
+    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
+    int ifdAbs = tiffBase + ifdOff;
+    if (ifdAbs + 2 > n) {
+        return 0;
+    }
+    u16 count = r.Word(ifdAbs, isBE);
+    for (u16 i = 0; i < count; i++) {
+        int entryOff = ifdAbs + 2 + i * 12;
+        if (entryOff + 12 > n) {
+            break;
+        }
+        u16 tag = r.Word(entryOff, isBE);
+        if (tag == 0x0112) { // Orientation tag
+            return r.Word(entryOff + 8, isBE);
+        }
+    }
+    return 0;
+}
+
+// Read EXIF orientation from JPEG data. Returns 1-8 or 0 if not found.
+static int JpegExifOrientation(ByteReader r) {
+    int n = r.len;
+    int idx = 2;
+    for (;;) {
+        if (idx + 4 > n) {
+            return 0;
+        }
+        if (r.Byte(idx) != 0xff) {
+            return 0;
+        }
+        u8 marker = r.Byte(idx + 1);
+        if (marker == 0xDA) { // start of scan, stop
+            return 0;
+        }
+        int segLen = r.WordBE(idx + 2);
+        if (marker == 0xE1 && idx + 10 <= n) {
+            // APP1 - check for EXIF
+            if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' && r.Byte(idx + 7) == 'f' &&
+                r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
+                return ExifOrientationFromTiff(r, idx + 10);
+            }
+        }
+        int nextIdx = idx + segLen + 2;
+        if (nextIdx <= idx) {
+            return 0; // overflow protection
+        }
+        idx = nextIdx;
+    }
+}
+
+// Read EXIF orientation from a WebP EXIF chunk. Returns 1-8 or 0 if not found.
+int WebpExifOrientation(Str d) {
+    if (!HasWebpSignature(d)) {
+        return 0;
+    }
+    ByteReader r(d);
+    int idx = 12;
+    while (idx + 8 <= r.len) {
+        if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
+            int size = (int)r.DWordLE(idx + 4);
+            int payload = idx + 8;
+            if (payload + size <= r.len && size >= 8) {
+                int orient = ExifOrientationFromTiff(r, payload);
+                if (orient != 0) {
+                    return orient;
+                }
+            }
+        }
+        int size = (int)r.DWordLE(idx + 4);
+        int chunkSize = size + (size & 1);
+        if (chunkSize < size) {
+            return 0;
+        }
+        idx += 8 + chunkSize;
+        if (idx < 8) {
+            return 0;
+        }
+    }
+    return 0;
+}
+
 // Like GuessFileTypeFromData() but for image files also reports the number
 // of images and, for single-image files, width/height parsed from the header
 // (hasImageSize tells if they were found; if not, callers can fall back to a
-// more expensive method like decoding the image). Dimensions are as encoded
-// i.e. EXIF orientation is not applied; use ImageSizeFromData() for display
-// dimensions. Counts reflect the provided buffer: they can under-report if d
-// is a truncated prefix of the file.
+// more expensive method like decoding the image). Dimensions are after
+// applying the EXIF orientation, if any. Counts reflect the provided buffer:
+// they can under-report if d is a truncated prefix of the file.
 FileTypeInfo GuessFileInfoFromData(Str d) {
     FileTypeInfo res;
     res.ft = DetectFileTypeFromData(d);
@@ -776,10 +869,20 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
         default:
             break;
     }
+    if (res.ft == FileType::Jpeg) {
+        res.orientation = JpegExifOrientation(r);
+    } else if (res.ft == FileType::Webp) {
+        res.orientation = WebpExifOrientation(d);
+    }
     if (res.nImages != 1) {
         // imageDx/imageDy are only reported for single-image files
         res.imageDx = 0;
         res.imageDy = 0;
+    }
+    if (ExifOrientationSwapsDimensions(res.orientation)) {
+        int tmp = res.imageDx;
+        res.imageDx = res.imageDy;
+        res.imageDy = tmp;
     }
     res.hasImageSize = res.imageDx > 0 && res.imageDy > 0;
     return res;

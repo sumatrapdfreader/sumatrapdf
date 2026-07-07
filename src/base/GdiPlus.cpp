@@ -526,62 +526,21 @@ Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
     return res;
 }
 
-// Read EXIF orientation from JPEG data. Returns 1-8 or 0 if not found.
-static int JpegExifOrientation(ByteReader r) {
-    int n = r.len;
-    int idx = 2;
-    for (;;) {
-        if (idx + 4 > n) {
-            return 0;
-        }
-        if (r.Byte(idx) != 0xff) {
-            return 0;
-        }
-        u8 marker = r.Byte(idx + 1);
-        if (marker == 0xDA) { // start of scan, stop
-            return 0;
-        }
-        int segLen = r.WordBE(idx + 2);
-        if (marker == 0xE1 && idx + 10 <= n) {
-            // APP1 - check for EXIF
-            if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' && r.Byte(idx + 7) == 'f' &&
-                r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
-                return JpegExifOrientationFromTiff(r, idx + 10);
-            }
-        }
-        int nextIdx = idx + segLen + 2;
-        if (nextIdx <= idx) {
-            return 0; // overflow protection
-        }
-        idx = nextIdx;
-    }
-}
-
-// EXIF orientations 5-8 swap width and height
-bool ExifOrientationSwapsDimensions(int orientation) {
-    return orientation >= 5 && orientation <= 8;
-}
-
-// size from headers via GuessFileInfoFromData(), with EXIF orientation
-// applied; falls back to library-assisted parsing for formats it can't size
+// size from headers via GuessFileInfoFromData() (orientation already
+// applied); falls back to library-assisted parsing for formats it can't size
 // (avif/heic and non-trivial webp). Returns an empty Size if only a full
 // decode can tell (e.g. animated GIF, multi-page TIFF, jxl).
 static Size ImageSizeNoDecode(Str d) {
     Size result;
     FileTypeInfo fti = GuessFileInfoFromData(d);
     if (fti.hasImageSize) {
-        result.dx = fti.imageDx;
-        result.dy = fti.imageDy;
-        if (fti.ft == FileType::Jpeg && ExifOrientationSwapsDimensions(JpegExifOrientation(ByteReader(d)))) {
-            std::swap(result.dx, result.dy);
-        }
-        if (fti.ft == FileType::Webp && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
-            std::swap(result.dx, result.dy);
-        }
-        return result;
+        return Size(fti.imageDx, fti.imageDy);
     }
     ByteReader r(d);
     if (fti.ft == FileType::Webp && WebpImageSizeFromData(r, result)) {
+        if (ExifOrientationSwapsDimensions(fti.orientation)) {
+            std::swap(result.dx, result.dy);
+        }
         return result;
     }
     if ((fti.ft == FileType::Avif || fti.ft == FileType::Heic) && AvifImageSizeFromData(r, result)) {

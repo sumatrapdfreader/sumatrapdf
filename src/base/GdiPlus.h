@@ -27,8 +27,6 @@ Pixmap* PixmapFromDataWin(Str bmpData);
 Vec<Pixmap*> PixmapsFromDataWin(Str bmpData);
 Size ImageSizeFromData(Str);
 Size ImageSizeFromHeader(Str);
-bool ExifOrientationSwapsDimensions(int orientation);
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
-int WebpExifOrientation(Str d);
 CLSID GetGdiPlusEncoderClsid(WStr format);
 RenderedBitmap* LoadRenderedBitmapWin(Str path);

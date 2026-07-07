@@ -116,6 +116,31 @@ static void jpegTest() {
     utassert(fti.imageDy == 2);
     utassert(fti.hasImageSize);
     utassert(fti.nImages == 1);
+    utassert(fti.orientation == 0);
+
+    // same but with an EXIF APP1 segment carrying orientation 6,
+    // which swaps the reported width/height
+    static const u8 jpgExif[] = {
+        0xFF, 0xD8,                                     // SOI
+        0xFF, 0xE1, 0x00, 0x22,                         // APP1, segment length 34
+        'E',  'x',  'i',  'f',  0, 0,                   // Exif header
+        'I',  'I',  0x2A, 0,                            // TIFF header, little-endian
+        8,    0,    0,    0,                            // IFD0 offset
+        1,    0,                                        // 1 entry
+        0x12, 0x01, 3,    0,    1, 0, 0, 0, 6, 0, 0, 0, // Orientation (short) 6
+        0,    0,    0,    0,                            // no next IFD
+        0xFF, 0xC0, 0x00, 0x11,                         // SOF0, segment length
+        0x08,                                           // precision
+        0x00, 0x02,                                     // height 2
+        0x00, 0x03,                                     // width 3
+        0x00, 0x00, 0x00, 0x00,                         // padding
+    };
+    fti = infoFromBytes(jpgExif, dimofi(jpgExif));
+    utassert(fti.ft == FileType::Jpeg);
+    utassert(fti.orientation == 6);
+    utassert(fti.imageDx == 2);
+    utassert(fti.imageDy == 3);
+    utassert(fti.hasImageSize);
 }
 
 static void webpTest() {
