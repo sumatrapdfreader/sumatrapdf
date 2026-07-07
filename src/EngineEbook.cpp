@@ -145,7 +145,7 @@ class EngineEbook : public EngineBase {
     Vec<DrawInstr*> baseAnchors;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     Arena* a = nullptr;
-    // TODO: still needed?
+    // Protects pages and HtmlPage data shared by rendering, text extraction, and link lookup.
     Mutex pagesAccess;
     Str sourceData;
     // page dimensions can vary between filetypes
