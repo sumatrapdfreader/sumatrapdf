@@ -6,10 +6,8 @@
 #include "base/Zip.h"
 
 #include "base/ByteWriter.h"
-#include "base/ScopedWin.h"
 #include "base/DirIter.h"
 #include "base/File.h"
-#include "base/Win.h"
 
 extern "C" {
 #include <zlib.h>
@@ -17,58 +15,30 @@ extern "C" {
 
 /***** ZipCreator *****/
 
-class FileWriteStream : public ISequentialStream {
-    HANDLE hFile;
-    LONG refCount;
-
-  public:
-    explicit FileWriteStream(Str filePath) : refCount(1) {
-        WCHAR* path = CWStrTemp(filePath);
-        hFile =
-            CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    }
-    virtual ~FileWriteStream() { CloseHandle(hFile); }
-    // IUnknown
-    IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
-        static const QITAB qit[] = {QITABENT(FileWriteStream, ISequentialStream), {nullptr}};
-        return QISearch(this, qit, riid, ppv);
-    }
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
-    IFACEMETHODIMP_(ULONG) Release() {
-        LONG newCount = InterlockedDecrement(&refCount);
-        if (newCount == 0) {
-            delete this;
-        }
-        return newCount;
-    }
-    // ISequentialStream
-    IFACEMETHODIMP Read(void*, ULONG, ULONG*) { return E_NOTIMPL; }
-    IFACEMETHODIMP Write(const void* data, ULONG size, ULONG* written) {
-        bool ok = WriteFile(hFile, data, size, written, nullptr);
-        return ok && *written == size ? S_OK : E_FAIL;
-    }
-};
-
 ZipCreator::ZipCreator(Str zipFilePath) : bytesWritten(0), fileCount(0) {
-    stream = new FileWriteStream(zipFilePath);
+    this->zipFilePath = str::Dup(zipFilePath);
+    zipOut = &zipData;
 }
 
-ZipCreator::ZipCreator(ISequentialStream* stream) : bytesWritten(0), fileCount(0) {
-    stream->AddRef();
-    this->stream = stream;
+ZipCreator::ZipCreator(str::Builder& zipOut) : bytesWritten(0), fileCount(0) {
+    zipOut.Reset();
+    this->zipOut = &zipOut;
 }
 
 ZipCreator::~ZipCreator() {
-    stream->Release();
+    str::Free(zipFilePath);
 }
 
 bool ZipCreator::WriteData(const void* data, size_t size) {
-    ULONG written = 0;
-    HRESULT res = stream->Write(data, (ULONG)size, &written);
-    if (FAILED(res) || written != size) {
+    ReportIf(size > INT_MAX);
+    if (size > INT_MAX) {
         return false;
     }
-    bytesWritten += written;
+    bool ok = zipOut->Append(Str((char*)data, (int)size));
+    if (!ok) {
+        return false;
+    }
+    bytesWritten += size;
     return true;
 }
 
@@ -245,6 +215,9 @@ bool ZipCreator::Finish() {
 
     bool ok = WriteData(ToStr(centraldir).s, len(centraldir));
     ok = ok && WriteData(ToStr(eocd.d).s, kDirSize);
+    if (ok && zipFilePath) {
+        ok = file::WriteFile(zipFilePath, ToStr(*zipOut));
+    }
     return ok;
 }
 
@@ -253,12 +226,8 @@ Str ZipDirToData(Str dirPath, bool recursive) {
         return {};
     }
 
-    ScopedComPtr<IStream> stream;
-    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
-        return {};
-    }
-
-    ZipCreator zc(stream);
+    str::Builder zipData;
+    ZipCreator zc(zipData);
     if (!zc.AddDir(dirPath, recursive)) {
         return {};
     }
@@ -266,7 +235,7 @@ Str ZipDirToData(Str dirPath, bool recursive) {
         return {};
     }
 
-    return ReadIStream(stream);
+    return zipData.TakeStr();
 }
 
 // adapted from https://www.cocoanetics.com/2012/02/decompressing-files-into-memory/

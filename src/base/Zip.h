@@ -2,8 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class ZipCreator {
-    ISequentialStream* stream;
     str::Builder centraldir;
+    str::Builder zipData;
+    str::Builder* zipOut;
+    Str zipFilePath;
     size_t bytesWritten;
     size_t fileCount;
 
@@ -12,7 +14,7 @@ class ZipCreator {
 
   public:
     explicit ZipCreator(Str zipFilePath);
-    explicit ZipCreator(ISequentialStream* stream);
+    explicit ZipCreator(str::Builder& zipOut);
     ~ZipCreator();
 
     ZipCreator(ZipCreator const&) = delete;
