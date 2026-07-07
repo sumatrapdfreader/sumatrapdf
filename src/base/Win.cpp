@@ -2741,14 +2741,56 @@ Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {
 
 // Reverse of PixmapFromRenderedBitmap: move a DIB-section Pixmap's HBITMAP into a
 // RenderedBitmap (the long-lived present-layer handle, e.g. a saved thumbnail) and free
-// the Pixmap shell. Returns nullptr (freeing px) if px isn't blittable.
+// the Pixmap shell. A malloc-backed Pixmap (e.g. a djvu render) is first copied into a
+// DIB section so the result is always blittable; without this, thumbnails for such
+// engines silently produced nothing.
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
     if (!px) {
         return nullptr;
     }
     if (!px->hbmp) {
+        if (!px->data) {
+            FreePixmap(px);
+            return nullptr;
+        }
+        Pixmap* dib = AllocPixmapDIB(px->width, px->height);
+        if (!dib) {
+            FreePixmap(px);
+            return nullptr;
+        }
+        int w = px->width;
+        int h = px->height;
+        for (int y = 0; y < h; y++) {
+            const u8* s = px->data + (size_t)y * px->stride;
+            u8* d = dib->data + (size_t)y * dib->stride;
+            switch (px->format) {
+                case PixmapFormat::BGR8:
+                    for (int x = 0; x < w; x++) {
+                        d[0] = s[0];
+                        d[1] = s[1];
+                        d[2] = s[2];
+                        d[3] = 0xff;
+                        d += 4;
+                        s += 3;
+                    }
+                    break;
+                case PixmapFormat::RGBA8:
+                    for (int x = 0; x < w; x++) {
+                        d[0] = s[2];
+                        d[1] = s[1];
+                        d[2] = s[0];
+                        d[3] = s[3];
+                        d += 4;
+                        s += 4;
+                    }
+                    break;
+                default: // BGRA8
+                    memcpy(d, s, (size_t)w * 4);
+                    break;
+            }
+        }
         FreePixmap(px);
-        return nullptr;
+        px = dib;
     }
     auto* rb = new RenderedBitmap(px->hbmp, Size(px->width, px->height), px->hMap);
     px->hbmp = nullptr; // ownership moved to rb
