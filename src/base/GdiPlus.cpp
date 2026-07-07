@@ -9,10 +9,8 @@
 #include "base/GuessFileType.h"
 #include "base/ByteReader.h"
 #include "base/TgaReader.h"
-#include "base/WebpReader.h"
-#include "base/AvifReader.h"
-#include "base/JxlReader.h"
 #include "base/Win.h"
+#include "GdiPlusExtFormats.h"
 #include "base/GdiPlus.h"
 
 #if COMPILER_MSVC
@@ -464,23 +462,9 @@ Pixmap* PixmapFromDataWin(Str bmpData) {
             return px;
         }
     }
-    if (kindFileWebp == kind) {
-        Pixmap* px = webp::PixmapFromData(bmpData);
-        if (px) {
-            return px;
-        }
-    }
-    if (kindFileJxl == kind) {
-        Pixmap* px = jxl::PixmapFromData(bmpData);
-        if (px) {
-            return px;
-        }
-    }
-    if (kindFileHeic == kind || kindFileAvif == kind) {
-        Pixmap* px = PixmapFromAvifData(bmpData);
-        if (px) {
-            return px;
-        }
+    Pixmap* px = PixmapFromExtFormatsData(bmpData, kind);
+    if (px) {
+        return px;
     }
 
     // remaining formats (png, bmp, jxr, tiff, gif, ...) decode via GDI+/WIC. tryGdiplusFirst
@@ -500,7 +484,7 @@ Pixmap* PixmapFromDataWin(Str bmpData) {
     if (!bmp) {
         return nullptr;
     }
-    Pixmap* px = PixmapFromGdiplus(bmp);
+    px = PixmapFromGdiplus(bmp);
     delete bmp;
     return px;
 }
@@ -656,33 +640,6 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, Size& result) {
     return !result.IsEmpty();
 }
 
-// Read EXIF orientation from IFD0 (tag 0x0112).
-// Returns 1-8 (EXIF orientation value) or 0 if not found.
-static int JpegExifOrientationFromTiff(ByteReader r, int tiffBase) {
-    int n = r.len;
-    if (tiffBase + 8 > n) {
-        return 0;
-    }
-    bool isBE = r.Byte(tiffBase) == 'M';
-    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
-    int ifdAbs = tiffBase + ifdOff;
-    if (ifdAbs + 2 > n) {
-        return 0;
-    }
-    WORD count = r.Word(ifdAbs, isBE);
-    for (WORD i = 0; i < count; i++) {
-        int entryOff = ifdAbs + 2 + i * 12;
-        if (entryOff + 12 > n) {
-            break;
-        }
-        WORD tag = r.Word(entryOff, isBE);
-        if (tag == 0x0112) { // Orientation tag
-            return r.Word(entryOff + 8, isBE);
-        }
-    }
-    return 0;
-}
-
 // Read EXIF orientation from JPEG data. Returns 1-8 or 0 if not found.
 static int JpegExifOrientation(ByteReader r) {
     int n = r.len;
@@ -717,36 +674,6 @@ static int JpegExifOrientation(ByteReader r) {
 // EXIF orientations 5-8 swap width and height
 bool ExifOrientationSwapsDimensions(int orientation) {
     return orientation >= 5 && orientation <= 8;
-}
-
-int WebpExifOrientation(Str d) {
-    if (!webp::HasSignature(d)) {
-        return 0;
-    }
-    ByteReader r(d);
-    int idx = 12;
-    while (idx + 8 <= r.len) {
-        if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
-            int size = (int)r.DWordLE(idx + 4);
-            int payload = idx + 8;
-            if (payload + size <= r.len && size >= 8) {
-                int orient = JpegExifOrientationFromTiff(r, payload);
-                if (orient != 0) {
-                    return orient;
-                }
-            }
-        }
-        int size = (int)r.DWordLE(idx + 4);
-        int chunkSize = size + (size & 1);
-        if (chunkSize < size) {
-            return 0;
-        }
-        idx += 8 + chunkSize;
-        if (idx < 8) {
-            return 0;
-        }
-    }
-    return 0;
 }
 
 static bool JpegSizeFromData(ByteReader r, Size& result) {
@@ -836,19 +763,6 @@ static bool TgaSizeFromData(ByteReader r, Size& result) {
     return false;
 }
 
-static bool WebpSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 30 && str::StartsWith(Str((char*)(r.d + 12), r.len - 12), "VP8 ")) {
-        result.dx = r.WordLE(26) & 0x3fff;
-        result.dy = r.WordLE(28) & 0x3fff;
-        return true;
-    } else {
-        Str bs((char*)(r.d), r.len);
-        result = webp::SizeFromData(bs);
-        return !result.IsEmpty();
-    }
-    return false;
-}
-
 static bool Jp2SizeFromData(ByteReader r, Size& result) {
     int n = r.len;
     if (n < 32) {
@@ -884,12 +798,6 @@ static bool Jp2SizeFromData(ByteReader r, Size& result) {
     return false;
 }
 
-static bool AvifSizeFromData(ByteReader r, Size& result) {
-    Str bs((char*)(r.d), r.len);
-    result = AvifSizeFromData(bs);
-    return !result.IsEmpty();
-}
-
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 Size ImageSizeFromData(Str d) {
     Size result;
@@ -913,14 +821,14 @@ Size ImageSizeFromData(Str d) {
     } else if (kind == kindFileTga) {
         ok = TgaSizeFromData(r, result);
     } else if (kind == kindFileWebp) {
-        ok = WebpSizeFromData(r, result);
+        ok = WebpImageSizeFromData(r, result);
         if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
             std::swap(result.dx, result.dy);
         }
     } else if (kind == kindFileJp2) {
         ok = Jp2SizeFromData(r, result);
     } else if (kind == kindFileAvif || kind == kindFileHeic) {
-        ok = AvifSizeFromData(r, result);
+        ok = AvifImageSizeFromData(r, result);
     }
     if (ok && !result.IsEmpty()) {
         return result;
@@ -959,14 +867,14 @@ Size ImageSizeFromHeader(Str d) {
     } else if (kind == kindFileTga) {
         ok = TgaSizeFromData(r, result);
     } else if (kind == kindFileWebp) {
-        ok = WebpSizeFromData(r, result);
+        ok = WebpImageSizeFromData(r, result);
         if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
             std::swap(result.dx, result.dy);
         }
     } else if (kind == kindFileJp2) {
         ok = Jp2SizeFromData(r, result);
     } else if (kind == kindFileAvif || kind == kindFileHeic) {
-        ok = AvifSizeFromData(r, result);
+        ok = AvifImageSizeFromData(r, result);
     }
     if (ok && !result.IsEmpty()) {
         return result;

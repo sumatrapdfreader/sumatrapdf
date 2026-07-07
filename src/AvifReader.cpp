@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/AvifReader.h"
+#include "AvifReader.h"
 
 #ifndef NO_AVIF
 

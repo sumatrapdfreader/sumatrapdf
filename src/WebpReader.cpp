@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include "base/GdiPlus.h"
-#include "base/WebpReader.h"
+#include "WebpReader.h"
 
 #ifndef NO_LIBWEBP
 

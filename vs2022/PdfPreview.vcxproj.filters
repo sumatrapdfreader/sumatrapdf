@@ -1,89 +1,515 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="base">
-      <UniqueIdentifier>{8078947C-6CAF-950D-159C-7B1001B2110F}</UniqueIdentifier>
+    <Filter Include="ext">
+      <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mui">
-      <UniqueIdentifier>{1092880B-7C9B-887C-0517-9F7C711F947C}</UniqueIdentifier>
+    <Filter Include="ext\brotli">
+      <UniqueIdentifier>{1108DB84-FDBF-1CD2-66C7-F52D529EB7C2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="previewer">
-      <UniqueIdentifier>{7EF07E97-EA5A-330E-3399-E4B39F421163}</UniqueIdentifier>
+    <Filter Include="ext\brotli\c">
+      <UniqueIdentifier>{C356BD27-AFB9-4CCC-583F-85824481184F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\brotli\c\common">
+      <UniqueIdentifier>{BBDEBB95-2740-99A3-B0AD-DF551C0ED062}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\brotli\c\dec">
+      <UniqueIdentifier>{DE7C5CE0-CA75-7B32-F3A7-60B7DFFF5A3E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\brotli\c\enc">
+      <UniqueIdentifier>{48825CE0-347B-7B32-5DAD-60B749055B3E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base">
+      <UniqueIdentifier>{F7972DCF-E364-88DA-0C7E-7682F8A9BD68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mui">
+      <UniqueIdentifier>{A71E30A9-13FE-AE44-1C16-3A1B887415A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\previewer">
+      <UniqueIdentifier>{555239D7-C112-B50D-8A4D-FE8AF6CCF9E9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ChmFile.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
-    <ClInclude Include="..\src\EbookFormatter.h" />
-    <ClInclude Include="..\src\EngineAll.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\FzImgReader.h" />
-    <ClInclude Include="..\src\GumboHelpers.h" />
-    <ClInclude Include="..\src\GumboHtmlParser.h" />
-    <ClInclude Include="..\src\HtmlFormatter.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\PalmDbReader.h" />
-    <ClInclude Include="..\src\PdfCreator.h" />
-    <ClInclude Include="..\src\RegistryPreview.h" />
-    <ClInclude Include="..\src\SumatraConfig.h" />
-    <ClInclude Include="..\src\SumatraLog.h" />
+    <ClInclude Include="..\ext\brotli\c\common\constants.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\context.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\dictionary.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\dictionary_inc.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\platform.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\shared_dictionary_internal.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\static_init.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\transform.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\version.h">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\bit_reader.h">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\huffman.h">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\prefix.h">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\prefix_inc.h">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\state.h">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\static_init.h">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\backward_references.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\backward_references_hq.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\backward_references_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\bit_cost.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\bit_cost_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\block_encoder_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\block_splitter.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\block_splitter_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\brotli_bit_stream.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\cluster.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\cluster_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\command.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\compound_dictionary.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\compress_fragment.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\compress_fragment_two_pass.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\dictionary_hash.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\dictionary_hash_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\encoder_dict.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\entropy_encode.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\entropy_encode_static.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\fast_log.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\find_match_length.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_base.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_composite_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_forgetful_chain_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_longest_match64_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_longest_match64_simd_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_longest_match_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_longest_match_quickly_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_longest_match_simd_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_rolling_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_to_binary_tree_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\histogram.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\histogram_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\literal_cost.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\matching_tag_mask.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\memory.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\metablock.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\metablock_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\params.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\prefix.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\quality.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\ringbuffer.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\state.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\static_dict.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\static_dict_lut.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\static_dict_lut_inc.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\static_init.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\utf8_util.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\write_bits.h">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\AvifReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ChmFile.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DocProperties.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EbookDoc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EbookFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineAll.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineBase.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineMupdf.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\FzImgReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GdiPlusExtFormats.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GumboHelpers.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GumboHtmlParser.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\HtmlFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\JxlReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MobiDoc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PalmDbReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PdfCreator.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\RegistryPreview.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SumatraConfig.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SumatraLog.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\WebpReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Archive.h">
-      <Filter>base</Filter>
+      <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\TextRender.h">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\previewer\PdfPreview.h">
-      <Filter>previewer</Filter>
+      <Filter>src\previewer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ChmFile.cpp" />
-    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
-    <ClCompile Include="..\src\EbookDoc.cpp" />
-    <ClCompile Include="..\src\EbookFormatter.cpp" />
-    <ClCompile Include="..\src\EngineBase.cpp" />
-    <ClCompile Include="..\src\EngineDjvuDec.cpp" />
-    <ClCompile Include="..\src\EngineEbook.cpp" />
-    <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\FzImgReader.cpp" />
-    <ClCompile Include="..\src\FzImgReader_win.cpp" />
-    <ClCompile Include="..\src\GumboHelpers.cpp" />
-    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
-    <ClCompile Include="..\src\HtmlFormatter.cpp" />
-    <ClCompile Include="..\src\MUPDF_Exports.cpp" />
-    <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
-    <ClCompile Include="..\src\PdfCreator.cpp" />
-    <ClCompile Include="..\src\RegistryPreview.cpp" />
-    <ClCompile Include="..\src\SumatraConfig.cpp" />
-    <ClCompile Include="..\src\SumatraLog.cpp" />
+    <ClCompile Include="..\ext\brotli\c\common\constants.c">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\common\context.c">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\common\dictionary.c">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\common\platform.c">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\common\shared_dictionary.c">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\common\transform.c">
+      <Filter>ext\brotli\c\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\bit_reader.c">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\decode.c">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\huffman.c">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\prefix.c">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\state.c">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\static_init.c">
+      <Filter>ext\brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\backward_references.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\backward_references_hq.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\bit_cost.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\block_splitter.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\brotli_bit_stream.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\cluster.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\command.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\compound_dictionary.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\compress_fragment.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\compress_fragment_two_pass.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\dictionary_hash.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\encode.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\encoder_dict.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\entropy_encode.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\fast_log.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\histogram.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\literal_cost.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\memory.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\metablock.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\static_dict.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\static_dict_lut.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\static_init.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\utf8_util.c">
+      <Filter>ext\brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AvifReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChmFile.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DocProperties.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EbookDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EbookFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineBase.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDjvuDec.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineEbook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineImages.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineMupdf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FzImgReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FzImgReader_win.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GdiPlusExtFormats.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GumboHelpers.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GumboHtmlParser.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\HtmlFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JxlReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MUPDF_Exports.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MobiDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PalmDbReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PdfCreator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RegistryPreview.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SumatraConfig.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SumatraLog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\WebpReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Archive.cpp">
-      <Filter>base</Filter>
+      <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\TextRender.cpp">
-      <Filter>mui</Filter>
+      <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreview.cpp">
-      <Filter>previewer</Filter>
+      <Filter>src\previewer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp">
-      <Filter>previewer</Filter>
+      <Filter>src\previewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\previewer\PdfPreview.rc">
-      <Filter>previewer</Filter>
+      <Filter>src\previewer</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

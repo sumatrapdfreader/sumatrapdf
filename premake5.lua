@@ -977,9 +977,8 @@ workspace "SumatraPDF"
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4100", "4457", "4838" }
     uses_zlib()
-    defines { "LIBHEIF_STATIC_BUILD", "LIBARCHIVE_STATIC" }
-    includedirs { "src", "ext/lzma/C" }
-    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/dav1d/include", "ext/libarchive", "mupdf/include", "ext/libjxl/lib/include" }
+    defines { "LIBARCHIVE_STATIC" }
+    includedirs { "src", "ext/lzma/C", "ext/libarchive" }
     base_files()
 
 ---- executables
@@ -1005,7 +1004,7 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
     disablewarnings { "4838" }
-    includedirs { "src", "ext/djvudec" }
+    includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar" }
     test_engines_files()
     links_zlib()
     links { "base", "djvudec", "libarchive", "unrar" }
@@ -1090,15 +1089,19 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
+    defines { "LIBHEIF_STATIC_BUILD" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
       "ext/libdjvu", "ext/djvudec", "ext/CHMLib",
       "ext/libarchive",
+      "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include",
+      "ext/brotli/c/include",
     }
+    brotli_files()
     pdf_preview_files()
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec" }
+    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1112,10 +1115,11 @@ workspace "SumatraPDF"
     warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     manifest("Off")
-    defines { "LIBARCHIVE_STATIC" }
+    defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
     -- so suppressions can only come from the environment.
@@ -1201,10 +1205,11 @@ workspace "SumatraPDF"
     warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     manifest("Off")
-    defines { "LIBARCHIVE_STATIC" }
+    defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
     includedirs { "ext/darkmodelib/include" }
+    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
     -- so suppressions can only come from the environment.

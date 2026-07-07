@@ -105,6 +105,9 @@
     <ClInclude Include="..\src\AppTools.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AvifReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -198,6 +201,9 @@
     <ClInclude Include="..\src\FzImgReader.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\GdiPlusExtFormats.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -220,6 +226,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Installer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\JxlReader.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\MainWindow.h">
@@ -378,6 +387,9 @@
     <ClInclude Include="..\src\Version.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\WebpReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\WindowTab.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -495,6 +507,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AppUnitTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AvifReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
@@ -617,6 +632,9 @@
     <ClCompile Include="..\src\FzImgReader_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\GdiPlusExtFormats.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -642,6 +660,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\InstallerCommon.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JxlReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">
@@ -825,6 +846,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UpdateCheck.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\WebpReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\WindowTab.cpp">

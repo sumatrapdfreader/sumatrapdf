@@ -3,8 +3,8 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/Archive.h"
 #include "base/GuessFileType.h"
+#include "base/Archive.h"
 
 static bool IsEpubArchive(Archive* archive) {
     auto* container = archive->GetFileDataByName("META-INF/container.xml");
