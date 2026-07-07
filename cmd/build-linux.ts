@@ -464,7 +464,7 @@ const djvudec: LibDef = {
 function makeMupdfLibs(): LibDef {
   const lib = structuredClone(mupdfLibsBase);
   lib.defines = lib.defines.filter((d) => d !== "_CRT_SECURE_NO_WARNINGS");
-  lib.defines.push("CMARK_GFM_STATIC_DEFINE");
+  lib.defines.push("CMARK_GFM_STATIC_DEFINE", "_stricmp=strcasecmp", "_strnicmp=strncasecmp");
   lib.includes.push(
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
@@ -684,8 +684,10 @@ const TEST_ENGINES_SOURCES = [
   "src/EngineBase.cpp",
   "src/EngineDjvuDec.cpp",
   "src/EngineDjvuDec_posix.cpp",
+  "src/EngineImages.cpp",
   "src/FzImgReader.cpp",
   "src/FzImgReader_posix.cpp",
+  "src/GumboHelpers.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];
