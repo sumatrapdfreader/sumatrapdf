@@ -560,9 +560,6 @@
     <ClCompile Include="..\src\EngineDjvuDec.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EngineDjvuDec_win.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EngineDump.cpp">
       <Filter>src</Filter>
     </ClCompile>

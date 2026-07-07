@@ -351,10 +351,6 @@ EpubDoc::EpubDoc(Str fileName) {
     archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
 }
 
-EpubDoc::EpubDoc(IStream* stream) {
-    archive = OpenArchiveFromStream(stream);
-}
-
 EpubDoc::~EpubDoc() {
     zipAccess.Lock();
 
@@ -896,8 +892,9 @@ EpubDoc* EpubDoc::CreateFromFile(Str path) {
     return doc;
 }
 
-EpubDoc* EpubDoc::CreateFromStream(IStream* stream) {
-    EpubDoc* doc = new EpubDoc(stream);
+EpubDoc* EpubDoc::CreateFromData(Str data) {
+    EpubDoc* doc = new EpubDoc(Str());
+    doc->archive = OpenArchiveFromData(data);
     if (!doc || !doc->Load()) {
         delete doc;
         return {};
@@ -916,18 +913,11 @@ static Str FB2_XLINK_NS() {
 
 Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName)) {}
 
-Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
-    stream->AddRef();
-}
-
 Fb2Doc::~Fb2Doc() {
     str::Free(coverImage);
     for (auto&& img : images) {
         str::Free(img.base);
         str::Free(img.fileName);
-    }
-    if (stream) {
-        stream->Release();
     }
     str::Free(fileName);
 }
@@ -980,30 +970,44 @@ static Str loadFromFile(Fb2Doc* doc) {
     return data;
 }
 
-static Str loadFromStream(Fb2Doc* doc) {
-    auto stream = doc->stream;
-    MultiFormatArchive* archive = OpenArchiveFromStream(stream);
+static Str loadFromData(Fb2Doc* doc, Str srcData) {
+    MultiFormatArchive* archive = OpenArchiveFromData(srcData);
     if (!archive) {
-        return {};
+        return str::Dup(srcData);
     }
 
     AutoDelete delArchive(archive);
-    int nFiles = len(archive->GetFileInfos());
-    if (nFiles != 1) {
+    doc->isZipped = true;
+    auto& fileInfos = archive->GetFileInfos();
+    int nFiles = len(fileInfos);
+    if (nFiles == 0) {
         return {};
     }
-    doc->isZipped = true;
-    return takeFileData(archive, 0);
+    if (nFiles == 1) {
+        return takeFileData(archive, 0);
+    }
+
+    Str data;
+    for (auto&& fileInfo : fileInfos) {
+        auto path = fileInfo->name;
+        if (str::EndsWithI(path, ".fb2") && len(data) == 0) {
+            data = takeFileData(archive, fileInfo->fileId);
+        } else if (!str::EndsWithI(path, ".url")) {
+            str::Free(data);
+            return {};
+        }
+    }
+    return data;
 }
 
-bool Fb2Doc::Load() {
-    ReportIf(!stream && len(fileName) == 0);
+bool Fb2Doc::Load(Str srcData) {
+    ReportIf(!srcData && len(fileName) == 0);
 
     Str data;
     if (len(fileName) > 0) {
         data = loadFromFile(this);
-    } else if (stream) {
-        data = loadFromStream(this);
+    } else if (srcData) {
+        data = loadFromData(this, srcData);
     }
     if (len(data) == 0) {
         return false;
@@ -1230,9 +1234,9 @@ Fb2Doc* Fb2Doc::CreateFromFile(Str path) {
     return doc;
 }
 
-Fb2Doc* Fb2Doc::CreateFromStream(IStream* stream) {
-    Fb2Doc* doc = new Fb2Doc(stream);
-    if (!doc || !doc->Load()) {
+Fb2Doc* Fb2Doc::CreateFromData(Str data) {
+    Fb2Doc* doc = new Fb2Doc(Str());
+    if (!doc || !doc->Load(data)) {
         delete doc;
         return {};
     }

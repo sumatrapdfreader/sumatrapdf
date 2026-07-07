@@ -2,8 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-// #include "base/ScopedWin.h"
-#include "base/Win.h"
 #include "base/File.h"
 #include "base/ByteOrderDecoder.h"
 
@@ -132,11 +130,6 @@ PdbReader* PdbReader::CreateFromData(Str d) {
 
 PdbReader* PdbReader::CreateFromFile(Str path) {
     Str d = file::ReadFile(path);
-    return CreateFromData(d);
-}
-
-PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    Str d = ReadIStream(stream);
     return CreateFromData(d);
 }
 

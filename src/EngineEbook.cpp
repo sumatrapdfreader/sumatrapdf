@@ -147,6 +147,7 @@ class EngineEbook : public EngineBase {
     Arena* a = nullptr;
     // TODO: still needed?
     Mutex pagesAccess;
+    Str sourceData;
     // page dimensions can vary between filetypes
     RectF pageRect;
     float pageBorder;
@@ -220,6 +221,7 @@ EngineEbook::~EngineEbook() {
     delete pages;
 
     pagesAccess.Unlock();
+    str::Free(sourceData);
     ArenaDelete(a);
 }
 
@@ -235,19 +237,14 @@ RectF EngineEbook::PageContentBox(int pageNo, RenderTarget) {
 
 Str EngineEbook::GetFileData() {
     Str fileName = FilePath();
-    if (!fileName) {
-        return {};
+    if (fileName) {
+        return file::ReadFile(fileName);
     }
-    return file::ReadFile(fileName);
+    return str::Dup(sourceData);
 }
 
 bool EngineEbook::SaveFileAs(Str dstPath) {
-    Str srcPath = FilePath();
-    if (!srcPath) {
-        return false;
-    }
-    auto res = file::Copy(dstPath, srcPath, false);
-    return res != 0;
+    return SaveFileOrData(FilePath(), sourceData, dstPath);
 }
 
 // make RenderCache request larger tiles than per default
@@ -782,9 +779,6 @@ class EngineEpub : public EngineEbook {
     ~EngineEpub() override;
     EngineBase* Clone() override;
 
-    Str GetFileData() override;
-    bool SaveFileAs(Str copyFileName) override;
-
     TempStr GetPropertyTemp(DocProp prop) override {
         if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
@@ -795,15 +789,14 @@ class EngineEpub : public EngineEbook {
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(Str fileName);
-    static EngineBase* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromData(Str data);
 
   protected:
     EpubDoc* doc = nullptr;
-    IStream* stream = nullptr;
     TocTree* tocTree = nullptr;
 
     bool Load(Str fileName);
-    bool Load(IStream* stream);
+    bool LoadFromData(Str data);
     bool FinishLoading();
 };
 
@@ -815,16 +808,13 @@ EngineEpub::EngineEpub() : EngineEbook() {
 EngineEpub::~EngineEpub() {
     delete doc;
     delete tocTree;
-    if (stream) {
-        stream->Release();
-    }
 }
 
 EngineBase* EngineEpub::Clone() {
-    if (stream) {
-        auto res = CreateFromStream(stream);
+    if (sourceData) {
+        auto res = CreateFromData(sourceData);
         if (!res) {
-            logf("EngineEpub::Clone() failed: CreateFromStream() failed\n");
+            log("EngineEpub::Clone() failed: CreateFromData() failed\n");
         }
         return res;
     }
@@ -844,28 +834,24 @@ bool EngineEpub::Load(Str fileName) {
     SetFilePath(fileName);
 #if OS_WIN
     if (dir::Exists(fileName)) {
-        // load uncompressed documents as a recompressed ZIP stream
-        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
-        if (!zipStream) {
+        // load uncompressed documents as recompressed ZIP data
+        Str data = ZipDirToData(fileName, true);
+        if (!data) {
             return false;
         }
-        return Load(zipStream);
+        bool ok = LoadFromData(data);
+        str::Free(data);
+        return ok;
     }
 #endif
     doc = EpubDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
 
-bool EngineEpub::Load(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return false;
-#else
-    stream->AddRef();
-    this->stream = stream;
-    doc = EpubDoc::CreateFromStream(stream);
+bool EngineEpub::LoadFromData(Str data) {
+    sourceData = str::Dup(data);
+    doc = EpubDoc::CreateFromData(data);
     return FinishLoading();
-#endif
 }
 
 bool EngineEpub::FinishLoading() {
@@ -898,36 +884,6 @@ bool EngineEpub::FinishLoading() {
     return pageCount > 0;
 }
 
-Str EngineEpub::GetFileData() {
-    Str path = FilePath();
-#if OS_WIN
-    return GetStreamOrFileData(stream, path);
-#else
-    if (stream) {
-        return {};
-    }
-    return file::ReadFile(path);
-#endif
-}
-
-bool EngineEpub::SaveFileAs(Str dstPath) {
-#if OS_WIN
-    if (stream) {
-        Str d = ReadIStream(stream);
-        bool ok = len(d) > 0 && file::WriteFile(dstPath, d);
-        str::Free(d);
-        if (ok) {
-            return true;
-        }
-    }
-#endif
-    Str srcPath = FilePath();
-    if (!srcPath) {
-        return false;
-    }
-    return file::Copy(dstPath, srcPath, false);
-}
-
 TocTree* EngineEpub::GetToc() {
     if (tocTree) {
         return tocTree;
@@ -953,26 +909,21 @@ EngineBase* EngineEpub::CreateFromFile(Str fileName) {
     return engine;
 }
 
-EngineBase* EngineEpub::CreateFromStream(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return nullptr;
-#else
+EngineBase* EngineEpub::CreateFromData(Str data) {
     EngineEpub* engine = new EngineEpub();
-    if (!engine->Load(stream)) {
+    if (!engine->LoadFromData(data)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
-#endif
 }
 
 EngineBase* CreateEngineEpubFromFile(Str fileName) {
     return EngineEpub::CreateFromFile(fileName);
 }
 
-EngineBase* CreateEngineEpubFromStream(IStream* stream) {
-    return EngineEpub::CreateFromStream(stream);
+EngineBase* CreateEngineEpubFromData(Str data) {
+    return EngineEpub::CreateFromData(data);
 }
 
 /* EngineBase for handling FictionBook2 documents */
@@ -989,10 +940,13 @@ class EngineFb2 : public EngineEbook {
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
-        if (!fileName) {
-            return {};
+        if (fileName) {
+            return CreateFromFile(fileName);
         }
-        return CreateFromFile(fileName);
+        if (sourceData) {
+            return CreateFromData(sourceData);
+        }
+        return {};
     }
 
     TempStr GetPropertyTemp(DocProp prop) override {
@@ -1005,14 +959,14 @@ class EngineFb2 : public EngineEbook {
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(Str fileName);
-    static EngineBase* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromData(Str data);
 
   protected:
     Fb2Doc* doc = nullptr;
     TocTree* tocTree = nullptr;
 
     bool Load(Str fileName);
-    bool Load(IStream* stream);
+    bool LoadFromData(Str data);
     bool FinishLoading();
 };
 
@@ -1022,14 +976,10 @@ bool EngineFb2::Load(Str fileName) {
     return FinishLoading();
 }
 
-bool EngineFb2::Load(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return false;
-#else
-    doc = Fb2Doc::CreateFromStream(stream);
+bool EngineFb2::LoadFromData(Str data) {
+    sourceData = str::Dup(data);
+    doc = Fb2Doc::CreateFromData(data);
     return FinishLoading();
-#endif
 }
 
 bool EngineFb2::FinishLoading() {
@@ -1084,26 +1034,21 @@ EngineBase* EngineFb2::CreateFromFile(Str fileName) {
     return engine;
 }
 
-EngineBase* EngineFb2::CreateFromStream(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return nullptr;
-#else
+EngineBase* EngineFb2::CreateFromData(Str data) {
     EngineFb2* engine = new EngineFb2();
-    if (!engine->Load(stream)) {
+    if (!engine->LoadFromData(data)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
-#endif
 }
 
 EngineBase* CreateEngineFb2FromFile(Str fileName) {
     return EngineFb2::CreateFromFile(fileName);
 }
 
-EngineBase* CreateEngineFb2FromStream(IStream* stream) {
-    return EngineFb2::CreateFromStream(stream);
+EngineBase* CreateEngineFb2FromData(Str data) {
+    return EngineFb2::CreateFromData(data);
 }
 
 /* EngineBase for handling Mobi documents */
@@ -1122,10 +1067,13 @@ class EngineMobi : public EngineEbook {
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
-        if (!fileName) {
-            return {};
+        if (fileName) {
+            return CreateFromFile(fileName);
         }
-        return CreateFromFile(fileName);
+        if (sourceData) {
+            return CreateFromData(sourceData);
+        }
+        return {};
     }
 
     TempStr GetPropertyTemp(DocProp prop) override {
@@ -1139,14 +1087,14 @@ class EngineMobi : public EngineEbook {
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(Str fileName);
-    static EngineBase* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromData(Str data);
 
   protected:
     MobiDoc* doc = nullptr;
     TocTree* tocTree = nullptr;
 
     bool Load(Str fileName);
-    bool Load(IStream* stream);
+    bool LoadFromData(Str data);
     bool FinishLoading();
 };
 
@@ -1156,14 +1104,10 @@ bool EngineMobi::Load(Str fileName) {
     return FinishLoading();
 }
 
-bool EngineMobi::Load(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return false;
-#else
-    doc = MobiDoc::CreateFromStream(stream);
+bool EngineMobi::LoadFromData(Str data) {
+    sourceData = str::Dup(data);
+    doc = MobiDoc::CreateFromData(data);
     return FinishLoading();
-#endif
 }
 
 bool EngineMobi::FinishLoading() {
@@ -1251,26 +1195,21 @@ EngineBase* EngineMobi::CreateFromFile(Str fileName) {
     return engine;
 }
 
-EngineBase* EngineMobi::CreateFromStream(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return nullptr;
-#else
+EngineBase* EngineMobi::CreateFromData(Str data) {
     EngineMobi* engine = new EngineMobi();
-    if (!engine->Load(stream)) {
+    if (!engine->LoadFromData(data)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
-#endif
 }
 
 EngineBase* CreateEngineMobiFromFile(Str fileName) {
     return EngineMobi::CreateFromFile(fileName);
 }
 
-EngineBase* CreateEngineMobiFromStream(IStream* stream) {
-    return EngineMobi::CreateFromStream(stream);
+EngineBase* CreateEngineMobiFromData(Str data) {
+    return EngineMobi::CreateFromData(data);
 }
 
 /* EngineBase for handling PalmDOC documents (and extensions such as TealDoc) */

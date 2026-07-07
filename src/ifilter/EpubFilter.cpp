@@ -34,23 +34,12 @@ HRESULT EpubFilter::OnInit() {
 
     CleanUp();
 
-    // TODO: EpubDoc::CreateFromStream never returns with
-    //       m_pStream instead of a clone - why?
-
-    // load content of EPUB document into a seekable stream
     Str data = ReadIStream(m_pStream);
     if (str::IsNull(data)) {
         return E_FAIL;
     }
-
-    IStream* strm = CreateStreamFromData(data);
+    m_epubDoc = EpubDoc::CreateFromData(data);
     str::Free(data);
-    ScopedComPtr<IStream> stream(strm);
-    if (!stream) {
-        return E_FAIL;
-    }
-
-    m_epubDoc = EpubDoc::CreateFromStream(stream);
     if (!m_epubDoc) {
         return E_FAIL;
     }

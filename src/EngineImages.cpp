@@ -123,11 +123,10 @@ class EngineImages : public EngineBase {
         return page != nullptr;
     }
 
-    IStream* fileStream = nullptr;
-
     RecursiveMutex cacheLock;
     Vec<ImagePage*> pageCache;
     Vec<ImagePageInfo*> pageInfos;
+    Str sourceData;
 
     // root mupdf context. Each thread that calls into mupdf gets its own
     // cloned context via Ctx() -- mupdf's per-context setjmp/error stack
@@ -226,9 +225,7 @@ EngineImages::~EngineImages() {
     if (fz_ctx) {
         fz_drop_context_windows(fz_ctx);
     }
-    if (fileStream) {
-        fileStream->Release();
-    }
+    str::Free(sourceData);
 }
 
 // Wrap the page's raw image bytes in an fz_image for lazy mupdf decoding.
@@ -668,29 +665,15 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
 }
 
 Str EngineImages::GetFileData() {
-#if OS_WIN
-    return GetStreamOrFileData(fileStream, FilePath());
-#else
-    if (fileStream) {
-        return {};
+    Str path = FilePath();
+    if (path) {
+        return file::ReadFile(path);
     }
-    return file::ReadFile(FilePath());
-#endif
+    return str::Dup(sourceData);
 }
 
 bool EngineImages::SaveFileAs(Str dstPath) {
-    Str srcPath = FilePath();
-    if (srcPath) {
-        bool ok = file::Copy(dstPath, srcPath, false);
-        if (ok) {
-            return true;
-        }
-    }
-    Str d = GetFileData();
-    if (len(d) == 0) {
-        return false;
-    }
-    return file::WriteFile(dstPath, d);
+    return SaveFileOrData(FilePath(), sourceData, dstPath);
 }
 
 ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
@@ -909,7 +892,7 @@ class EngineImage : public EngineImages {
     void GetImageProperties(int pageNo, Props& propsOut);
 
     static EngineBase* CreateFromFile(Str fileName);
-    static EngineBase* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromData(Str data);
 
     // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
     // owned by the engine; per-page cache entries may borrow these.
@@ -917,7 +900,7 @@ class EngineImage : public EngineImages {
     Kind imageFormat = nullptr;
 
     bool LoadSingleFile(Str fileName);
-    bool LoadFromStream(IStream* stream);
+    bool LoadFromData(Str data);
     bool FinishLoading(Size fallbackSize = {});
 
     Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
@@ -947,9 +930,7 @@ EngineBase* EngineImage::Clone() {
     clone->defaultExt = str::Dup(defaultExt);
     clone->imageFormat = imageFormat;
     clone->fileDPI = fileDPI;
-    if (fileStream) {
-        fileStream->Clone(&clone->fileStream);
-    }
+    clone->sourceData = str::Dup(sourceData);
     for (Pixmap* px : frames) {
         clone->frames.Append(ClonePixmap(px));
     }
@@ -1004,39 +985,25 @@ bool EngineImage::LoadSingleFile(Str path) {
     return ok;
 }
 
-bool EngineImage::LoadFromStream(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return false;
-#else
-    if (!stream) {
+bool EngineImage::LoadFromData(Str data) {
+    if (len(data) == 0) {
         return false;
     }
-    fileStream = stream;
-    fileStream->AddRef();
+    sourceData = str::Dup(data);
 
-    Str fileExt;
-    u8 header[18];
-    if (ReadDataFromStream(stream, header, sizeof(header))) {
-        Str d = Str((char*)header, (int)sizeof(header));
-        fileExt = GfxFileExtFromDataTemp(d);
-    }
+    Str fileExt = GfxFileExtFromDataTemp(data);
     if (!fileExt) {
         return false;
     }
     SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
 
-    Str data = ReadIStream(stream);
     frames = PixmapsFromData(data);
     Size fallbackSize = ImageSizeFromDataPortable(data);
     bool ok = FinishLoading(fallbackSize);
     if (ok) {
-        pageInfos[0]->rawData = data;
-    } else {
-        str::Free(data);
+        pageInfos[0]->rawData = str::Dup(data);
     }
     return ok;
-#endif
 }
 
 bool EngineImage::FinishLoading(Size fallbackSize) {
@@ -1342,9 +1309,8 @@ void EngineImages::GetImageProperties(int pageNo, Props& propsOut) {
 }
 
 void EngineImage::GetImageProperties(int pageNo, Props& propsOut) {
-    Str data = file::ReadFile(FilePath());
+    Str data = GetImageData(pageNo);
     GetExifPropertiesFromData(data, propsOut);
-    str::Free(data);
 }
 
 Pixmap* EngineImage::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
@@ -1362,7 +1328,8 @@ Str EngineImage::GetImageData(int) {
     ScopedRecursiveMutex scope(&cacheLock);
     auto pi = pageInfos[0];
     if (len(pi->rawData) == 0) {
-        pi->rawData = file::ReadFile(FilePath());
+        Str path = FilePath();
+        pi->rawData = path ? file::ReadFile(path) : str::Dup(sourceData);
     }
     return pi->rawData;
 }
@@ -1401,20 +1368,17 @@ EngineBase* EngineImage::CreateFromFile(Str path) {
     return engine;
 }
 
-EngineBase* EngineImage::CreateFromStream(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return nullptr;
-#else
+EngineBase* EngineImage::CreateFromData(Str data) {
     EngineImage* engine = new EngineImage();
-    bool ok = engine->LoadFromStream(stream);
+    bool ok = engine->LoadFromData(data);
+#if OS_WIN
     MaskFpExceptions();
+#endif
     if (!ok) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
-#endif
 }
 
 // clang-format off
@@ -1438,9 +1402,9 @@ EngineBase* CreateEngineImageFromFile(Str path) {
     return EngineImage::CreateFromFile(path);
 }
 
-EngineBase* CreateEngineImageFromStream(IStream* stream) {
-    log("CreateEngineImageFromStream\n");
-    return EngineImage::CreateFromStream(stream);
+EngineBase* CreateEngineImageFromData(Str data) {
+    log("CreateEngineImageFromData\n");
+    return EngineImage::CreateFromData(data);
 }
 
 ///// ImageDirEngine handles a directory full of image files /////
@@ -1839,7 +1803,7 @@ class EngineCbx : public EngineImages {
     // (file history, bookmarks, etc.) see the user's original file.
     static EngineBase* CreateFromFile(Str path, Str password = {}, MultiFormatArchive::Format* formatOut = nullptr,
                                       bool* isEncryptedOut = nullptr, Kind hintKind = nullptr, Str realPath = {});
-    static EngineBase* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromData(Str data);
 
   protected:
     Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
@@ -1848,7 +1812,7 @@ class EngineCbx : public EngineImages {
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
 
     bool LoadFromFile(Str fileName);
-    bool LoadFromStream(IStream* stream);
+    bool LoadFromData(Str data);
     bool FinishLoading();
 
     // access to cbxFile must be protected after initialization (with cacheLock)
@@ -1878,17 +1842,12 @@ EngineCbx::~EngineCbx() {
 }
 
 EngineBase* EngineCbx::Clone() {
-    if (fileStream) {
-        IStream* stm = nullptr;
-        HRESULT res = fileStream->Clone(&stm);
-        if (SUCCEEDED(res) && stm) {
-            auto clone = CreateFromStream(stm);
-            stm->Release();
-            if (!clone) {
-                logf("EngineCbx::Clone() failed: CreateFromStream() failed\n");
-            }
-            return clone;
+    if (sourceData) {
+        auto clone = CreateFromData(sourceData);
+        if (!clone) {
+            log("EngineCbx::Clone() failed: CreateFromData() failed\n");
         }
+        return clone;
     }
     Str path = FilePath();
     if (path) {
@@ -1911,12 +1870,11 @@ bool EngineCbx::LoadFromFile(Str file) {
     return FinishLoading();
 }
 
-bool EngineCbx::LoadFromStream(IStream* stream) {
-    if (!stream) {
+bool EngineCbx::LoadFromData(Str data) {
+    if (len(data) == 0) {
         return false;
     }
-    fileStream = stream;
-    fileStream->AddRef();
+    sourceData = str::Dup(data);
 
     return FinishLoading();
 }
@@ -2259,16 +2217,16 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, MultiFormatArchive
     return nullptr;
 }
 
-EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
-    // libarchive inside OpenArchiveFromStream tries every container it
+EngineBase* EngineCbx::CreateFromData(Str data) {
+    // libarchive inside OpenArchiveFromData tries every container it
     // knows (zip/rar/7z/tar/...) in one pass, so a single call replaces
     // the old try-each-format cascade.
-    MultiFormatArchive* archive = OpenArchiveFromStream(stream);
+    MultiFormatArchive* archive = OpenArchiveFromData(data);
     if (!archive) {
         return nullptr;
     }
     EngineCbx* engine = new EngineCbx(archive);
-    if (engine->LoadFromStream(stream)) {
+    if (engine->LoadFromData(data)) {
         return engine;
     }
     SafeEngineRelease(&engine);
@@ -2315,8 +2273,8 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, 
     }
 }
 
-EngineBase* CreateEngineCbxFromStream(IStream* stream) {
-    return EngineCbx::CreateFromStream(stream);
+EngineBase* CreateEngineCbxFromData(Str data) {
+    return EngineCbx::CreateFromData(data);
 }
 
 bool IsEngineImages(EngineBase* engine) {

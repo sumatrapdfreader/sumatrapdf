@@ -51,8 +51,6 @@ struct PdbReader {
 
     static PdbReader* CreateFromData(Str);
     static PdbReader* CreateFromFile(Str path);
-
-    static PdbReader* CreateFromStream(IStream* stream);
 };
 
 // stuff for mobi format

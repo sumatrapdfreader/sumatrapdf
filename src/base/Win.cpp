@@ -2232,38 +2232,6 @@ Str ReadIStream(IStream* stream) {
     return Str(d, n);
 }
 
-Str GetStreamOrFileData(IStream* stream, Str filePath) {
-    if (stream) {
-        return ReadIStream(stream);
-    }
-    if (!filePath) {
-        return {};
-    }
-    return file::ReadFile(filePath);
-}
-
-bool ReadDataFromStream(IStream* stream, void* buffer, size_t n, size_t offset) {
-    LARGE_INTEGER off;
-    off.QuadPart = offset;
-    HRESULT res = stream->Seek(off, STREAM_SEEK_SET, nullptr);
-    if (FAILED(res)) {
-        return false;
-    }
-    ULONG read;
-#ifdef _WIN64
-    for (; n > ULONG_MAX; n -= ULONG_MAX) {
-        res = stream->Read(buffer, ULONG_MAX, &read);
-        if (FAILED(res) || read != ULONG_MAX) {
-            return false;
-        }
-        n -= ULONG_MAX;
-        buffer = (char*)buffer + ULONG_MAX;
-    }
-#endif
-    res = stream->Read(buffer, (ULONG)n, &read);
-    return SUCCEEDED(res) && read == n;
-}
-
 uint GuessTextCodepage(Str data, uint defVal) {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;

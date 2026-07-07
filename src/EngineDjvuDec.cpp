@@ -138,10 +138,9 @@ class EngineDjvuDec : public EngineBase {
     TocTree* GetToc() override;
 
     bool Load(Str fileName);
-    bool Load(IStream* stream);
+    bool LoadFromData(Str data);
 
   protected:
-    IStream* stream = nullptr;
     Str fileData; // must outlive all docs
 
     // After djvu_init(), a djvu_doc is read-only and djvu_page_render /
@@ -164,12 +163,6 @@ class EngineDjvuDec : public EngineBase {
     static void CacheUnlockCb(void* user, void* ctx);
 };
 
-void SafeReleaseDjvuDecStream(IStream*);
-EngineBase* CloneDjvuDecStream(IStream*);
-bool LoadDjvuDecStreamData(IStream*, IStream**, Str& fileData);
-Str GetDjvuDecFileData(IStream*, Str filePath);
-bool SaveDjvuDecStreamAs(IStream*, Str dstPath);
-
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
     SetDefaultExt(defaultExt, ".djvu");
@@ -186,17 +179,15 @@ EngineDjvuDec::~EngineDjvuDec() {
         djvu_ctx_free(ctx);
     }
     str::Free(fileData);
-    SafeReleaseDjvuDecStream(stream);
 }
 
 EngineBase* EngineDjvuDec::Clone() {
-    EngineBase* clone = CloneDjvuDecStream(stream);
-    if (clone) {
-        return clone;
-    }
     Str path = FilePath();
     if (path) {
         return CreateEngineDjvuDecFromFile(path);
+    }
+    if (fileData) {
+        return CreateEngineDjvuDecFromData(fileData);
     }
     return nullptr;
 }
@@ -207,10 +198,11 @@ bool EngineDjvuDec::Load(Str fileName) {
     return FinishLoading();
 }
 
-bool EngineDjvuDec::Load(IStream* stm) {
-    if (!LoadDjvuDecStreamData(stm, &stream, fileData)) {
+bool EngineDjvuDec::LoadFromData(Str data) {
+    if (len(data) == 0) {
         return false;
     }
+    fileData = str::Dup(data);
     return FinishLoading();
 }
 
@@ -559,18 +551,15 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
 }
 
 Str EngineDjvuDec::GetFileData() {
-    return GetDjvuDecFileData(stream, FilePath());
+    Str path = FilePath();
+    if (path) {
+        return file::ReadFile(path);
+    }
+    return str::Dup(fileData);
 }
 
 bool EngineDjvuDec::SaveFileAs(Str dstPath) {
-    if (SaveDjvuDecStreamAs(stream, dstPath)) {
-        return true;
-    }
-    Str srcPath = FilePath();
-    if (!srcPath) {
-        return false;
-    }
-    return file::Copy(dstPath, srcPath, false);
+    return SaveFileOrData(FilePath(), fileData, dstPath);
 }
 
 // recursively collect word-level text + coords from the zone tree.
@@ -798,9 +787,9 @@ bool IsEngineDjVuSupportedFileType(Kind kind) {
     return kind == kindFileDjVu;
 }
 
-EngineBase* CreateEngineDjvuDecFromStream(IStream* stream) {
+EngineBase* CreateEngineDjvuDecFromData(Str data) {
     EngineDjvuDec* engine = new EngineDjvuDec();
-    if (engine->Load(stream)) {
+    if (engine->LoadFromData(data)) {
         return engine;
     }
     SafeEngineRelease(&engine);

@@ -1088,9 +1088,9 @@ MobiDoc* MobiDoc::CreateFromFile(Str fileName) {
     return mb;
 }
 
-MobiDoc* MobiDoc::CreateFromStream(IStream* stream) {
+MobiDoc* MobiDoc::CreateFromData(Str data) {
     MobiDoc* mb = new MobiDoc(Str());
-    PdbReader* pdbReader = PdbReader::CreateFromStream(stream);
+    PdbReader* pdbReader = PdbReader::CreateFromData(str::Dup(data));
     if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
         delete mb;
         return nullptr;

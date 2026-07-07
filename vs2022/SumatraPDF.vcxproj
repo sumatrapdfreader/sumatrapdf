@@ -1257,7 +1257,6 @@
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineCreate.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
-    <ClCompile Include="..\src\EngineDjvuDec_win.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />

@@ -24,6 +24,6 @@ class ZipCreator {
     bool Finish();
 };
 
-IStream* OpenDirAsZipStream(Str dirPath, bool recursive = false);
+Str ZipDirToData(Str dirPath, bool recursive = false);
 
 Str Ungzip(const Str&);

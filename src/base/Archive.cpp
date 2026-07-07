@@ -4,9 +4,6 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#if OS_WIN
-#include "base/Win.h"
-#endif
 
 #include "base/Archive.h"
 
@@ -226,14 +223,8 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
 }
 #endif
 
-bool MultiFormatArchive::Open(IStream* stream) {
-#if !OS_WIN
-    (void)stream;
-    return false;
-#else
-    // for IStream, read all data into memory and open from there
-    Str data = ReadIStream(stream);
-    if (str::IsNull(data)) {
+bool MultiFormatArchive::OpenFromData(Str data) {
+    if (len(data) == 0) {
         return false;
     }
 
@@ -256,9 +247,7 @@ bool MultiFormatArchive::Open(IStream* stream) {
         isEncrypted = true;
     }
     archive_read_free(a);
-    str::Free(data);
     return ok;
-#endif
 }
 
 bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
@@ -473,12 +462,11 @@ MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveE
     return archive;
 }
 
-// Open from an IStream. libarchive auto-detects the container (zip/rar/
-// 7z/tar/etc.). Always eager-loads (can't re-open a stream); no progress
-// reporting.
-MultiFormatArchive* OpenArchiveFromStream(IStream* stream) {
+// Open from in-memory data. libarchive auto-detects the container (zip/rar/
+// 7z/tar/etc.). Always eager-loads (can't re-open data); no progress reporting.
+MultiFormatArchive* OpenArchiveFromData(Str data) {
     auto* archive = new MultiFormatArchive();
-    if (!archive->Open(stream)) {
+    if (!archive->OpenFromData(data)) {
         delete archive;
         return nullptr;
     }

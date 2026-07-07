@@ -607,6 +607,7 @@ struct PdfViewerPrintPrefs {
 // reads the four print-related /ViewerPreferences entries from a PDF document.
 // returns false for non-PDF engines or when none of the entries are present.
 bool GetPdfViewerPrintPrefs(EngineBase* engine, PdfViewerPrintPrefs& prefs);
+bool SaveFileOrData(Str srcFilePath, Str data, Str dstFilePath);
 
 template <typename T>
 void SafeEngineRelease(T** enginePtr) {

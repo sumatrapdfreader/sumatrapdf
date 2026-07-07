@@ -185,15 +185,10 @@ static EngineBase* ps2pdf(Str path) {
         return nullptr;
     }
 
-    IStream* strm = CreateStreamFromData(pdfData);
-    str::Free(pdfData);
-    ScopedComPtr<IStream> stream(strm);
-    if (!stream) {
-        return nullptr;
-    }
-
     TempStr nameHint = str::JoinTemp(path, StrL(".pdf"));
-    return CreateEngineMupdfFromStream(stream, nameHint);
+    EngineBase* engine = CreateEngineMupdfFromData(pdfData, nameHint, nullptr);
+    str::Free(pdfData);
+    return engine;
 }
 
 static EngineBase* psgz2pdf(Str fileName) {

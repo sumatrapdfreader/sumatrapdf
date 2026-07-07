@@ -437,10 +437,6 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #define ReportDebugIf(cond)
 #endif
 
-#if OS_POSIX
-#include "base/IStream_posix.h"
-#endif
-
 void* AllocZero(int count, int size);
 
 template <typename T>

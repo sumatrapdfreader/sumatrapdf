@@ -56,5 +56,5 @@ struct MobiDoc {
 
     static bool IsSupportedFileType(Kind);
     static MobiDoc* CreateFromFile(Str fileName);
-    static MobiDoc* CreateFromStream(IStream* stream);
+    static MobiDoc* CreateFromData(Str data);
 };

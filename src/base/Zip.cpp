@@ -9,6 +9,7 @@
 #include "base/ScopedWin.h"
 #include "base/DirIter.h"
 #include "base/File.h"
+#include "base/Win.h"
 
 extern "C" {
 #include <zlib.h>
@@ -247,26 +248,25 @@ bool ZipCreator::Finish() {
     return ok;
 }
 
-IStream* OpenDirAsZipStream(Str dirPath, bool recursive) {
+Str ZipDirToData(Str dirPath, bool recursive) {
     if (!dir::Exists(dirPath)) {
-        return nullptr;
+        return {};
     }
 
     ScopedComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
-        return nullptr;
+        return {};
     }
 
     ZipCreator zc(stream);
     if (!zc.AddDir(dirPath, recursive)) {
-        return nullptr;
+        return {};
     }
     if (!zc.Finish()) {
-        return nullptr;
+        return {};
     }
 
-    stream->AddRef();
-    return stream;
+    return ReadIStream(stream);
 }
 
 // adapted from https://www.cocoanetics.com/2012/02/decompressing-files-into-memory/

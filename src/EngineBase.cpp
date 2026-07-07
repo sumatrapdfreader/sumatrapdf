@@ -3,6 +3,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 
 #include "TreeModel.h"
 
@@ -616,4 +617,17 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
 bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*) {
     // if not implemented in derived classes
     return false;
+}
+
+bool SaveFileOrData(Str srcFilePath, Str data, Str dstFilePath) {
+    if (srcFilePath) {
+        bool ok = file::Copy(dstFilePath, srcFilePath, false);
+        if (ok) {
+            return true;
+        }
+    }
+    if (len(data) == 0) {
+        return false;
+    }
+    return file::WriteFile(dstFilePath, data);
 }

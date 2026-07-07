@@ -6,21 +6,20 @@ enum class AnnotationType;
 struct PasswordUI;
 struct FileArgs;
 struct AnnotCreateArgs;
-struct IStream;
 struct PropValue;
 
 /* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(Kind kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
-EngineBase* CreateEngineDjvuDecFromStream(IStream* stream);
+EngineBase* CreateEngineDjvuDecFromData(Str data);
 
 /* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(Str fileName);
-EngineBase* CreateEngineEpubFromStream(IStream* stream);
+EngineBase* CreateEngineEpubFromData(Str data);
 EngineBase* CreateEngineFb2FromFile(Str fileName);
-EngineBase* CreateEngineFb2FromStream(IStream* stream);
+EngineBase* CreateEngineFb2FromData(Str data);
 EngineBase* CreateEngineMobiFromFile(Str fileName);
-EngineBase* CreateEngineMobiFromStream(IStream* stream);
+EngineBase* CreateEngineMobiFromData(Str data);
 EngineBase* CreateEnginePdbFromFile(Str fileName);
 EngineBase* CreateEngineChmFromFile(Str fileName);
 EngineBase* CreateEngineHtmlFromFile(Str fileName);
@@ -33,14 +32,14 @@ void EngineEbookCleanup();
 
 bool IsEngineImageSupportedFileType(Kind);
 EngineBase* CreateEngineImageFromFile(Str fileName);
-EngineBase* CreateEngineImageFromStream(IStream* stream);
+EngineBase* CreateEngineImageFromData(Str data);
 
 bool IsEngineImageDirSupportedFile(Str fileName, bool sniff = false);
 EngineBase* CreateEngineImageDirFromFile(Str fileName);
 
 bool IsEngineCbxSupportedFileType(Kind kind);
 EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, Kind hintKind = nullptr, Str realPath = {});
-EngineBase* CreateEngineCbxFromStream(IStream* stream);
+EngineBase* CreateEngineCbxFromData(Str data);
 
 bool IsEngineImages(EngineBase*);
 void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);
@@ -51,7 +50,6 @@ using ShowErrorCb = Func1<Str>;
 
 bool IsEngineMupdfSupportedFileType(Kind);
 EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
-EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI);
 Str LoadEmbeddedPDFFile(Str path);
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut);

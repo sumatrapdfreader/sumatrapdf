@@ -34,23 +34,12 @@ HRESULT PdfFilter::OnInit() {
     logf("PdfFilter::OnInit()\n");
     CleanUp();
 
-    // TODO: EngineMupdf::CreateFromStream never returns with
-    //       m_pStream instead of a clone - why?
-
-    // load content of PDF document into a seekable stream
     Str data = ReadIStream(m_pStream);
     if (str::IsNull(data)) {
         return E_FAIL;
     }
-
-    IStream* strm = CreateStreamFromData(data);
+    m_pdfEngine = CreateEngineMupdfFromData(data, "foo.pdf", nullptr);
     str::Free(data);
-    ScopedComPtr<IStream> stream(strm);
-    if (!stream) {
-        return E_FAIL;
-    }
-
-    m_pdfEngine = CreateEngineMupdfFromStream(stream, "foo.pdf");
     if (!m_pdfEngine) {
         return E_FAIL;
     }

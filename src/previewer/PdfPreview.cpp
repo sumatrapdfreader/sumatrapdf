@@ -387,23 +387,30 @@ PdfPreview::~PdfPreview() {
 }
 
 EngineBase* PdfPreview::LoadEngine(IStream* stream) {
+    Str data = ReadIStream(stream);
+    if (str::IsNull(data)) {
+        return nullptr;
+    }
+    defer {
+        str::Free(data);
+    };
     switch (m_type) {
         case PreviewType::Pdf:
-            return CreateEngineMupdfFromStream(stream, "foo.pdf");
+            return CreateEngineMupdfFromData(data, "foo.pdf", nullptr);
         case PreviewType::Xps:
-            return CreateEngineMupdfFromStream(stream, "foo.xps");
+            return CreateEngineMupdfFromData(data, "foo.xps", nullptr);
         case PreviewType::DjVu:
-            return CreateEngineDjvuDecFromStream(stream);
+            return CreateEngineDjvuDecFromData(data);
         case PreviewType::Epub:
-            return CreateEngineEpubFromStream(stream);
+            return CreateEngineEpubFromData(data);
         case PreviewType::Fb2:
-            return CreateEngineFb2FromStream(stream);
+            return CreateEngineFb2FromData(data);
         case PreviewType::Mobi:
-            return CreateEngineMobiFromStream(stream);
+            return CreateEngineMobiFromData(data);
         case PreviewType::Cbx:
-            return CreateEngineCbxFromStream(stream);
+            return CreateEngineCbxFromData(data);
         case PreviewType::Tga:
-            return CreateEngineImageFromStream(stream);
+            return CreateEngineImageFromData(data);
     }
     return nullptr;
 }

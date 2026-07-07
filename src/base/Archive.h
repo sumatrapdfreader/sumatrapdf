@@ -3,7 +3,6 @@
 
 struct archive;
 struct archive_entry;
-struct IStream;
 
 // forward-declared so ArchiveExtractProgress below can reference
 // MultiFormatArchive::FileInfo, which is defined inside the class body.
@@ -50,7 +49,7 @@ struct MultiFormatArchive {
     Format format = Format::Unknown;
 
     bool Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress);
-    bool Open(IStream* stream);
+    bool OpenFromData(Str data);
 
     Vec<FileInfo*> const& GetFileInfos();
 
@@ -117,4 +116,4 @@ struct ArchiveExtractProgress {
 
 MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
 
-MultiFormatArchive* OpenArchiveFromStream(IStream* stream);
+MultiFormatArchive* OpenArchiveFromData(Str data);

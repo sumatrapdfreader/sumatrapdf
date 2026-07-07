@@ -517,7 +517,6 @@ const TEST_ENGINES_SOURCES = [
   "src/DocProperties.cpp",
   "src/EngineBase.cpp",
   "src/EngineDjvuDec.cpp",
-  "src/EngineDjvuDec_posix.cpp",
   "src/EngineImages.cpp",
   "src/FzImgReader.cpp",
   "src/FzImgReader_posix.cpp",

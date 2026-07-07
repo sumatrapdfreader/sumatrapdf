@@ -35,7 +35,6 @@ struct EpubDoc {
     bool Load();
 
     explicit EpubDoc(Str fileName);
-    explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
     Str GetHtmlData() const;
@@ -53,7 +52,7 @@ struct EpubDoc {
     static bool IsSupportedFileType(Kind kind);
 
     static EpubDoc* CreateFromFile(Str path);
-    static EpubDoc* CreateFromStream(IStream* stream);
+    static EpubDoc* CreateFromData(Str data);
 };
 
 /* ********** FictionBook (FB2) ********** */
@@ -62,7 +61,6 @@ struct EpubDoc {
 
 struct Fb2Doc {
     Str fileName;
-    IStream* stream = nullptr;
 
     str::Builder xmlData;
     Vec<ImageData> images;
@@ -71,11 +69,10 @@ struct Fb2Doc {
     bool isZipped = false;
     bool hasToc = false;
 
-    bool Load();
+    bool Load(Str data = {});
     void ExtractImage(GumboHtmlParser* parser, HtmlToken* tok);
 
     explicit Fb2Doc(Str fileName);
-    explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
     Str GetXmlData() const;
@@ -93,7 +90,7 @@ struct Fb2Doc {
     static bool IsSupportedFileType(Kind kind);
 
     static Fb2Doc* CreateFromFile(Str path);
-    static Fb2Doc* CreateFromStream(IStream* stream);
+    static Fb2Doc* CreateFromData(Str data);
 };
 
 /* ********** PalmDOC (and TealDoc) ********** */

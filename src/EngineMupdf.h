@@ -149,7 +149,6 @@ class EngineMupdf : public EngineBase {
     bool modifiedAnnotations = false;
 
     bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
-    bool Load(IStream* stream, Str nameHint, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool LoadFromStream(fz_stream* stm, Str nameHing, PasswordUI* pwdUI = nullptr);

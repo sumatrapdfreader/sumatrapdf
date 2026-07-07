@@ -464,67 +464,6 @@ static void PdfCleanStringInPlace(WStr& ws) {
     ws.len = len(ws);
 }
 
-struct istream_filter {
-    IStream* stream;
-    u8 buf[4096];
-};
-
-extern "C" int next_istream(fz_context* ctx, fz_stream* stm, size_t) {
-    istream_filter* state = (istream_filter*)stm->state;
-    ULONG cbRead = sizeof(state->buf);
-    HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);
-    if (FAILED(res)) {
-        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream read error: %x", res);
-    }
-    stm->rp = state->buf;
-    stm->wp = stm->rp + cbRead;
-    stm->pos += cbRead;
-
-    return cbRead > 0 ? *stm->rp++ : EOF;
-}
-
-extern "C" void seek_istream(fz_context* ctx, fz_stream* stm, i64 offset, int whence) {
-    istream_filter* state = (istream_filter*)stm->state;
-    LARGE_INTEGER off;
-    ULARGE_INTEGER n;
-    off.QuadPart = offset;
-    HRESULT res = state->stream->Seek(off, whence, &n);
-    if (FAILED(res)) {
-        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
-    }
-    if (n.HighPart != 0 || n.LowPart > INT_MAX) {
-        fz_throw(ctx, FZ_ERROR_GENERIC, "documents beyond 2GB aren't supported");
-    }
-    stm->pos = n.LowPart;
-    stm->rp = stm->wp = state->buf;
-}
-
-extern "C" void drop_istream(fz_context* ctx, void* state_) {
-    istream_filter* state = (istream_filter*)state_;
-    state->stream->Release();
-    fz_free(ctx, state);
-}
-
-static fz_stream* FzOpenIStream(fz_context* ctx, IStream* stream) {
-    if (!stream) {
-        return nullptr;
-    }
-
-    LARGE_INTEGER zero{};
-    HRESULT res = stream->Seek(zero, STREAM_SEEK_SET, nullptr);
-    if (FAILED(res)) {
-        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
-    }
-
-    istream_filter* state = fz_malloc_struct(ctx, istream_filter);
-    state->stream = stream;
-    stream->AddRef();
-
-    fz_stream* stm = fz_new_stream(ctx, state, next_istream, drop_istream);
-    stm->seek = seek_istream;
-    return stm;
-}
-
 static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
     void* res = fz_malloc_no_throw(ctx, size);
     if (!res) {
@@ -2398,32 +2337,6 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         return false;
     }
 
-    return FinishLoading();
-}
-
-// TODO: need to do stuff to support .txt etc.
-bool EngineMupdf::Load(IStream* stream, Str nameHint, PasswordUI* pwdUI) {
-    auto ctx = Ctx();
-    ReportIf(FilePath() || _doc);
-    if (!ctx) {
-        return false;
-    }
-
-    fz_stream* stm = nullptr;
-    fz_var(stm);
-    fz_try(ctx) {
-        stm = FzOpenIStream(ctx, stream);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        stm = nullptr;
-    }
-    if (!stm) {
-        return false;
-    }
-    if (!LoadFromStream(stm, nameHint, pwdUI)) {
-        return false;
-    }
     return FinishLoading();
 }
 
@@ -4722,17 +4635,13 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
             return {};
         }
         Str d = Str((char*)(fi->data), fi->fileSizeUncompressed);
-        IStream* strm = CreateStreamFromData(d);
-        ScopedComPtr<IStream> stream(strm);
-        if (!stream) {
-            return {};
-        }
         EngineMupdf* engine = new EngineMupdf();
         if (displayDPI < 70) {
             displayDPI = 96;
         }
         engine->displayDPI = displayDPI;
-        if (!engine->Load(stream, "foo.fb2", pwdUI)) {
+        fz_stream* stm = FzStreamFromData(engine->Ctx(), (u8*)d.s, d.len);
+        if (!engine->LoadFromStream(stm, "foo.fb2", pwdUI) || !engine->FinishLoading()) {
             SafeEngineRelease(&engine);
             return {};
         }
@@ -4755,19 +4664,10 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
     return engine;
 }
 
-EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordUI* pwdUI) {
-    EngineMupdf* engine = new EngineMupdf();
-    if (!engine->Load(stream, nameHint, pwdUI)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
-}
-
 EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI) {
     EngineMupdf* engine = new EngineMupdf();
-    IStream* stream = CreateStreamFromData(data);
-    if (!engine->Load(stream, nameHint, pwdUI)) {
+    fz_stream* stm = FzStreamFromData(engine->Ctx(), (u8*)data.s, data.len);
+    if (!engine->LoadFromStream(stm, nameHint, pwdUI) || !engine->FinishLoading()) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
