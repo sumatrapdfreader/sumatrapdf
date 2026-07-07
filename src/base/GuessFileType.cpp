@@ -158,11 +158,13 @@ int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
     V(0, "GIF87a", FileType::Gif)                         \
     V(0, "GIF89a", FileType::Gif)                         \
     V(0, "BM", FileType::Bmp)                             \
+    V(0, "BA", FileType::Bmp)                             \
     V(0, "MM\x00\x2A", FileType::Tiff)                    \
     V(0, "II\x2A\x00", FileType::Tiff)                    \
     V(0, "II\xBC\x01", FileType::Jxr)                     \
     V(0, "II\xBC\x00", FileType::Jxr)                     \
     V(0, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", FileType::Jp2) \
+    V(0, "\xFF\x4F\xFF\x51", FileType::Jp2)               \
     V(0, "AT&T", FileType::DjVu)
 
 // a file signaure is a sequence of bytes at a specific
@@ -517,38 +519,53 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
 
 static void JpegInfoFromData(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
-    // find the last start of frame marker for non-differential Huffman/arithmetic coding
     int n = r.len;
     int idx = 2;
     for (;;) {
-        if (idx + 9 >= n) {
+        // resync to the next marker, skipping garbage and 0xff fill bytes
+        while (idx < n && r.Byte(idx) != 0xff) {
+            idx++;
+        }
+        while (idx < n && r.Byte(idx) == 0xff) {
+            idx++;
+        }
+        if (idx >= n) {
             return;
         }
-        u8 b = r.Byte(idx);
-        if (b != 0xff) {
-            return;
-        }
-        b = r.Byte(idx + 1);
-        if (0xC0 <= b && b <= 0xC3 || 0xC9 <= b && b <= 0xCB) {
-            res.imageDx = r.WordBE(idx + 7);
-            res.imageDy = r.WordBE(idx + 5);
-            return;
-        }
-        int segLen = r.WordBE(idx + 2);
-        int nextIdx = idx + segLen + 2;
-        if (nextIdx + 9 >= n) {
-            // can't read past this segment; if it's APP1/EXIF, try parsing dimensions from EXIF
-            if (b == 0xE1 && idx + 10 < n) {
-                // check for "Exif\0\0" signature
-                if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' &&
-                    r.Byte(idx + 7) == 'f' && r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
-                    int tiffBase = idx + 10; // TIFF header starts after "Exif\0\0"
-                    JpegSizeFromExif(r, tiffBase, res);
-                }
+        u8 marker = r.Byte(idx);
+        idx++;
+        if (0xC0 <= marker && marker <= 0xC3 || 0xC9 <= marker && marker <= 0xCB) {
+            // start of frame for non-differential Huffman/arithmetic coding:
+            // segment length, precision, then height and width
+            if (idx + 7 > n) {
+                return;
             }
+            res.imageDy = r.WordBE(idx + 3);
+            res.imageDx = r.WordBE(idx + 5);
             return;
         }
-        idx = nextIdx;
+        if (marker == 0xDA || marker == 0xD9) {
+            // start of scan / end of image without a start of frame
+            return;
+        }
+        if (marker == 0x01 || (0xD0 <= marker && marker <= 0xD8)) {
+            // standalone marker without a segment
+            continue;
+        }
+        int segLen = r.WordBE(idx);
+        if (segLen < 2) {
+            return;
+        }
+        if (marker == 0xE1 && idx + 8 <= n) {
+            // APP1: if it's EXIF, opportunistically parse dimensions from it;
+            // a start of frame later in the buffer overwrites them, but for a
+            // truncated buffer this may be the only size available
+            if (r.Byte(idx + 2) == 'E' && r.Byte(idx + 3) == 'x' && r.Byte(idx + 4) == 'i' && r.Byte(idx + 5) == 'f' &&
+                r.Byte(idx + 6) == 0 && r.Byte(idx + 7) == 0) {
+                JpegSizeFromExif(r, idx + 8, res);
+            }
+        }
+        idx += segLen;
     }
 }
 
@@ -620,21 +637,36 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
     u16 count = off <= r.len - 2 ? r.Word(off, isBE) : 0;
     for (int idx = off + 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
         u16 tag = r.Word(idx, isBE);
-        u16 type = r.Word(idx + 2, isBE);
-        if (r.DWord(idx + 4, isBE) != 1) {
+        if (tag != wTag && tag != hTag) {
             continue;
-        } else if (wTag == tag && 4 == type) {
-            res.dx = (int)r.DWord(idx + 8, isBE);
-        } else if (wTag == tag && 3 == type) {
-            res.dx = r.Word(idx + 8, isBE);
-        } else if (wTag == tag && 1 == type) {
-            res.dx = r.Byte(idx + 8);
-        } else if (hTag == tag && 4 == type) {
-            res.dy = (int)r.DWord(idx + 8, isBE);
-        } else if (hTag == tag && 3 == type) {
-            res.dy = r.Word(idx + 8, isBE);
-        } else if (hTag == tag && 1 == type) {
-            res.dy = r.Byte(idx + 8);
+        }
+        u16 type = r.Word(idx + 2, isBE);
+        int typeSize = type == 1 ? 1 : type == 3 ? 2 : type == 4 ? 4 : 0;
+        u32 nVals = r.DWord(idx + 4, isBE);
+        if (typeSize == 0 || nVals == 0) {
+            continue;
+        }
+        // the value is inline if it fits in the 4-byte field, otherwise the
+        // field holds the offset of the value; either way read the first one
+        int valOff = idx + 8;
+        if (nVals > 4u / typeSize) {
+            valOff = (int)r.DWord(idx + 8, isBE);
+            if (valOff < 0 || valOff + typeSize > r.len) {
+                continue;
+            }
+        }
+        int val;
+        if (typeSize == 4) {
+            val = (int)r.DWord(valOff, isBE);
+        } else if (typeSize == 2) {
+            val = r.Word(valOff, isBE);
+        } else {
+            val = r.Byte(valOff);
+        }
+        if (tag == wTag) {
+            res.dx = val;
+        } else {
+            res.dy = val;
         }
     }
     return res;
@@ -674,12 +706,28 @@ static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
 
 static void BmpInfoFromData(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
-    // 14-byte file header followed by BITMAPINFOHEADER
-    if (r.len < 26) {
+    int off = 0;
+    // "BA" is an OS/2 bitmap array: a 14-byte array header followed by the
+    // first bitmap's regular "BM" file header
+    if (r.Byte(0) == 'B' && r.Byte(1) == 'A') {
+        off = 14;
+        if (r.Byte(off) != 'B' || r.Byte(off + 1) != 'M') {
+            return;
+        }
+    }
+    // 14-byte file header followed by the info header, whose first field is
+    // its own size: 12 for an OS/2 BITMAPCOREHEADER with u16 dimensions,
+    // otherwise BITMAPINFOHEADER or later with i32 dimensions
+    if (r.DWordLE(off + 14) == 12) {
+        res.imageDx = r.WordLE(off + 18);
+        res.imageDy = r.WordLE(off + 20);
         return;
     }
-    res.imageDx = (int)r.DWordLE(18);
-    int dy = (int)r.DWordLE(22);
+    if (r.len < off + 26) {
+        return;
+    }
+    res.imageDx = (int)r.DWordLE(off + 18);
+    int dy = (int)r.DWordLE(off + 22);
     res.imageDy = dy >= 0 ? dy : -dy; // negative height means a top-down bitmap
 }
 
@@ -688,46 +736,6 @@ static void TgaInfoFromData(ByteReader r, FileTypeInfo& res) {
     if (r.len >= 16) {
         res.imageDx = r.WordLE(12);
         res.imageDy = r.WordLE(14);
-    }
-}
-
-#define JP2_JP2H 0x6a703268 /**< JP2 header box (super-box) */
-#define JP2_IHDR 0x69686472 /**< Image header box */
-
-static void Jp2InfoFromData(ByteReader r, FileTypeInfo& res) {
-    res.nImages = 1;
-    int n = r.len;
-    if (n < 32) {
-        return;
-    }
-    int idx = 0;
-    while (idx < n - 32) {
-        u32 boxLen = r.DWordBE(idx);
-        u32 boxType = r.DWordBE(idx + 4);
-        if (JP2_JP2H == boxType) {
-            idx += 8;
-            u32 boxLen2 = r.DWordBE(idx);
-            u32 boxType2 = r.DWordBE(idx + 4);
-            bool isIhdr = boxType2 == JP2_IHDR;
-            idx += 8;
-            if (isIhdr && boxLen2 <= (boxLen - 8)) {
-                int dy = (int)r.DWordBE(idx);
-                int dx = (int)r.DWordBE(idx + 4);
-                if (dx > 64 * 1024 || dy > 64 * 1024) {
-                    // sanity check, assuming that images that big can't
-                    // possibly be valid
-                    return;
-                }
-                res.imageDx = dx;
-                res.imageDy = dy;
-                return;
-            }
-            break;
-        } else if (boxLen != 0 && (u32)idx < UINT32_MAX - boxLen) {
-            idx += boxLen;
-        } else {
-            break;
-        }
     }
 }
 
@@ -808,29 +816,37 @@ static int JpegExifOrientation(ByteReader r) {
     int n = r.len;
     int idx = 2;
     for (;;) {
-        if (idx + 4 > n) {
+        // resync to the next marker, skipping garbage and 0xff fill bytes
+        while (idx < n && r.Byte(idx) != 0xff) {
+            idx++;
+        }
+        while (idx < n && r.Byte(idx) == 0xff) {
+            idx++;
+        }
+        if (idx >= n) {
             return 0;
         }
-        if (r.Byte(idx) != 0xff) {
+        u8 marker = r.Byte(idx);
+        idx++;
+        if (marker == 0xDA || marker == 0xD9) { // start of scan / end of image, stop
             return 0;
         }
-        u8 marker = r.Byte(idx + 1);
-        if (marker == 0xDA) { // start of scan, stop
-            return 0;
+        if (marker == 0x01 || (0xD0 <= marker && marker <= 0xD8)) {
+            // standalone marker without a segment
+            continue;
         }
-        int segLen = r.WordBE(idx + 2);
-        if (marker == 0xE1 && idx + 10 <= n) {
+        if (marker == 0xE1 && idx + 8 <= n) {
             // APP1 - check for EXIF
-            if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' && r.Byte(idx + 7) == 'f' &&
-                r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
-                return ExifOrientationFromTiff(r, idx + 10);
+            if (r.Byte(idx + 2) == 'E' && r.Byte(idx + 3) == 'x' && r.Byte(idx + 4) == 'i' && r.Byte(idx + 5) == 'f' &&
+                r.Byte(idx + 6) == 0 && r.Byte(idx + 7) == 0) {
+                return ExifOrientationFromTiff(r, idx + 8);
             }
         }
-        int nextIdx = idx + segLen + 2;
-        if (nextIdx <= idx) {
-            return 0; // overflow protection
+        int segLen = r.WordBE(idx);
+        if (segLen < 2) {
+            return 0;
         }
-        idx = nextIdx;
+        idx += segLen;
     }
 }
 
@@ -896,6 +912,50 @@ static int FindIsoBmffBox(ByteReader r, int idx, int end, const char* type, int*
         idx += (int)size;
     }
     return -1;
+}
+
+// dimensions from the SIZ marker segment of a JPEG 2000 codestream
+// starting at idx: the image grid size minus the image offset
+static void Jp2SizeFromSIZ(ByteReader r, int idx, FileTypeInfo& res) {
+    if (idx + 24 > r.len || r.Byte(idx) != 0xff || r.Byte(idx + 1) != 0x4f || r.Byte(idx + 2) != 0xff ||
+        r.Byte(idx + 3) != 0x51) {
+        return;
+    }
+    u32 xsiz = r.DWordBE(idx + 8);
+    u32 ysiz = r.DWordBE(idx + 12);
+    u32 xosiz = r.DWordBE(idx + 16);
+    u32 yosiz = r.DWordBE(idx + 20);
+    if (xsiz <= xosiz || ysiz <= yosiz || xsiz > (u32)INT_MAX || ysiz > (u32)INT_MAX) {
+        return;
+    }
+    res.imageDx = (int)(xsiz - xosiz);
+    res.imageDy = (int)(ysiz - yosiz);
+}
+
+// JPEG 2000: either a raw codestream (starts with the SOC marker) or a JP2
+// container with dimensions in the ihdr box inside the jp2h box; if there's
+// no ihdr, from the SIZ segment of the codestream in the jp2c box
+static void Jp2InfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    if (r.Byte(0) == 0xff) {
+        Jp2SizeFromSIZ(r, 0, res);
+        return;
+    }
+    int boxEnd;
+    int idx = FindIsoBmffBox(r, 0, r.len, "jp2h", &boxEnd);
+    if (idx >= 0) {
+        int ihdrEnd;
+        int ihdr = FindIsoBmffBox(r, idx, boxEnd, "ihdr", &ihdrEnd);
+        if (ihdr >= 0 && ihdr + 8 <= ihdrEnd) {
+            res.imageDy = (int)r.DWordBE(ihdr);
+            res.imageDx = (int)r.DWordBE(ihdr + 4);
+            return;
+        }
+    }
+    idx = FindIsoBmffBox(r, 0, r.len, "jp2c", &boxEnd);
+    if (idx >= 0) {
+        Jp2SizeFromSIZ(r, idx, res);
+    }
 }
 
 // HEIF/AVIF (ISO BMFF): dimensions from the 'ispe' (spatial extents) boxes

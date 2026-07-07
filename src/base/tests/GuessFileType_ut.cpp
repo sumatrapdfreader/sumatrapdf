@@ -138,6 +138,30 @@ static void bmpTest() {
     utassert(fti.imageDy == 5);
     utassert(fti.hasImageSize);
     utassert(fti.nImages == 1);
+
+    // OS/2 bitmap array: "BA" array header, then a regular "BM" bitmap
+    u8 ba[68] = {'B', 'A'};
+    ba[14] = 'B';
+    ba[15] = 'M';
+    ba[28] = 40; // BITMAPINFOHEADER size
+    ba[32] = 9;  // width
+    ba[36] = 3;  // height
+    fti = infoFromBytes(ba, dimofi(ba));
+    utassert(fti.ft == FileType::Bmp);
+    utassert(fti.imageDx == 9);
+    utassert(fti.imageDy == 3);
+    utassert(fti.hasImageSize);
+
+    // OS/2 BITMAPCOREHEADER with u16 dimensions
+    u8 core[26] = {'B', 'M'};
+    core[14] = 12; // BITMAPCOREHEADER size
+    core[18] = 9;  // width
+    core[20] = 4;  // height
+    fti = infoFromBytes(core, dimofi(core));
+    utassert(fti.ft == FileType::Bmp);
+    utassert(fti.imageDx == 9);
+    utassert(fti.imageDy == 4);
+    utassert(fti.hasImageSize);
 }
 
 static void jpegTest() {
@@ -180,6 +204,22 @@ static void jpegTest() {
     utassert(fti.orientation == 6);
     utassert(fti.imageDx == 2);
     utassert(fti.imageDy == 3);
+    utassert(fti.hasImageSize);
+
+    // 0xff fill bytes before the SOF marker are allowed
+    static const u8 jpgFill[] = {
+        0xFF, 0xD8,             // SOI
+        0xFF, 0xFF, 0xFF, 0xC0, // fill bytes, then SOF0
+        0x00, 0x11,             // segment length
+        0x08,                   // precision
+        0x00, 0x02,             // height 2
+        0x00, 0x03,             // width 3
+        0x00, 0x00, 0x00, 0x00, // padding
+    };
+    fti = infoFromBytes(jpgFill, dimofi(jpgFill));
+    utassert(fti.ft == FileType::Jpeg);
+    utassert(fti.imageDx == 3);
+    utassert(fti.imageDy == 2);
     utassert(fti.hasImageSize);
 }
 
@@ -267,6 +307,61 @@ static void tiffTest() {
     utassert(fti.imageSizes[0] == Size(5, 6));
     utassert(fti.imageSizes[1] == Size(0, 0)); // second IFD has no dimension tags
     FreeFileTypeInfo(&fti);
+
+    // a width entry whose values don't fit inline: the field holds the
+    // offset of the values, the first of which is the width
+    static const u8 tif3[] = {
+        'I',  'I',  0x2A, 0,                          // header
+        8,    0,    0,    0,                          // first IFD offset
+        2,    0,                                      // 2 entries
+        0x00, 0x01, 3,    0, 3, 0, 0, 0, 42, 0, 0, 0, // ImageWidth (short), 3 values at offset 42
+        0x01, 0x01, 3,    0, 1, 0, 0, 0, 6,  0, 0, 0, // ImageLength (short) 6
+        0,    0,    0,    0,                          // no next IFD
+        0,    0,    0,    0,                          // padding
+        5,    0,    7,    0, 9, 0,                    // width values at offset 42
+    };
+    fti = infoFromBytes(tif3, dimofi(tif3));
+    utassert(fti.ft == FileType::Tiff);
+    utassert(fti.imageDx == 5);
+    utassert(fti.imageDy == 6);
+    utassert(fti.hasImageSize);
+    utassert(fti.nImages == 1);
+}
+
+static void jp2Test() {
+    // raw JPEG 2000 codestream: SOC then SIZ with grid size minus offset
+    static const u8 j2k[] = {
+        0xFF, 0x4F, 0xFF, 0x51, // SOC + SIZ markers
+        0x00, 0x29,             // Lsiz
+        0x00, 0x00,             // Rsiz
+        0,    0,    0,    5,    // Xsiz
+        0,    0,    0,    7,    // Ysiz
+        0,    0,    0,    1,    // XOsiz
+        0,    0,    0,    2,    // YOsiz
+    };
+    FileTypeInfo fti = infoFromBytes(j2k, dimofi(j2k));
+    utassert(fti.ft == FileType::Jp2);
+    utassert(fti.imageDx == 4);
+    utassert(fti.imageDy == 5);
+    utassert(fti.hasImageSize);
+    utassert(fti.nImages == 1);
+
+    // JP2 container: signature box, ftyp, then jp2h > ihdr with height/width
+    static const u8 jp2[] = {
+        0,   0,   0,   12,   'j', 'P', ' ', ' ', 0x0D, 0x0A, 0x87, 0x0A,             // signature box
+        0,   0,   0,   20,   'f', 't', 'y', 'p', 'j',  'p',  '2',  ' ',  0, 0, 0, 0, // ftyp
+        'j', 'p', '2', ' ',                                                          //
+        0,   0,   0,   30,   'j', 'p', '2', 'h',                                     // jp2h
+        0,   0,   0,   22,   'i', 'h', 'd', 'r',                                     // ihdr
+        0,   0,   0,   7,                                                            // height 7
+        0,   0,   0,   5,                                                            // width 5
+        0,   3,   7,   0x07, 0,   0,                                                 // nc, bpc, C, UnkC, IPR
+    };
+    fti = infoFromBytes(jp2, dimofi(jp2));
+    utassert(fti.ft == FileType::Jp2);
+    utassert(fti.imageDx == 5);
+    utassert(fti.imageDy == 7);
+    utassert(fti.hasImageSize);
 }
 
 static void heifTest() {
@@ -365,6 +460,7 @@ void GuessFileTypeTest() {
     jpegTest();
     webpTest();
     tiffTest();
+    jp2Test();
     heifTest();
     jxlTest();
     nonImageTest();
