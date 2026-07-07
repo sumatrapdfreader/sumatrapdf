@@ -75,7 +75,7 @@ Current integration points:
 | File | Role |
 |------|------|
 | `src/EngineDjvuDec.cpp` | Engine using the djvu_* API |
-| `src/EngineCreate.cpp` | Dispatches to djvudec vs libdjvu per `DjvuEngine` setting |
+| `src/EngineCreate.cpp` | Creates the djvudec engine for DjVu files |
 | `cmd/scripts/gen_libmupdf.def.py` | Source of truth for djvudec DLL exports |
 | `src/libmupdf.def` | Generated/auto-synced export list for `libmupdf.dll` |
 | `premake5.lua` | `djvudec` static lib project |
@@ -157,9 +157,7 @@ Test with:
 ./out/dbg64/SumatraPDF-dll.exe -for-testing <path-to>.djvu
 ```
 
-Use a `.djvu` from `C:\Users\kjk\OneDrive\!sumatra\bugs\` if available. Toggle
-engines with `CmdToggleDjvuEngine` (command palette) to compare djvudec vs
-libdjvu rendering.
+Use a `.djvu` from `C:\Users\kjk\OneDrive\!sumatra\bugs\` if available.
 
 ### 8. Commit message
 
@@ -181,8 +179,8 @@ Append `prompt: ...` if the change was AI-assisted (per Agents.md).
   `djvu_page_render_into` / metadata calls are re-entrant on the same doc.
 - Thread-safety analysis lives in `ai/djvudec-threading.md` and upstream
   `thread-safety.md`.
-- Default engine is **libdjvu** (`DjvuEngine` advanced setting); opt in to
-  djvudec via `DjvuEngine = djvudec` or `CmdToggleDjvuEngine`.
+- djvudec is the **only** DjVu engine (the libdjvu-based `EngineDjVu` has been
+  removed; `EngineCreate.cpp` creates `EngineDjvuDec` for all DjVu files).
 
 ## Checklist
 

@@ -435,12 +435,10 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
 // Pick the largest subsample whose decoded bitmap still covers the target pixel
 // size, so final scaling only shrinks (never upscales). The coverage test is
 // ceil(dim/(s+1)) >= target; plain floor division (dim/target) is off by one
-// when target doesn't divide dim. Compound pages stay at subsample=1 so the
-// color composite runs.
-static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprightH, int targetDx, int targetDy) {
-    if (pageType == DJVU_PAGE_COMPOUND) {
-        return 1;
-    }
+// when target doesn't divide dim. Applies to every page type: the decoder
+// composes color (compound/photo) pages at any subsample, so they no longer
+// have to render at full resolution and downscale here.
+static int DjvuDecPickSubsample(int uprightW, int uprightH, int targetDx, int targetDy) {
     if (uprightW <= 0 || uprightH <= 0 || targetDx <= 0 || targetDy <= 0) {
         return 1;
     }
@@ -557,7 +555,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     }
 
     auto pi = pages[pageNo - 1];
-    int subsample = DjvuDecPickSubsample(pi->pageType, pi->uprightW, pi->uprightH, full.dx, full.dy);
+    int subsample = DjvuDecPickSubsample(pi->uprightW, pi->uprightH, full.dx, full.dy);
     // The decoder applies the page's intrinsic rotation at every subsample (via
     // a fast tiled transpose) and djvu_page_render_info already reports the
     // upright dims, so we only rotate here for an explicit user rotation (rare).

@@ -43,9 +43,9 @@ libdjvu         master     2026-05-05
   https://github.com/barak/djvulibre
   commit 03e6abd7295c74f795ed70a7118294b25351e0f4
 
-djvudec         main       2026-07-05
+djvudec         main       2026-07-07
   https://github.com/kjk/djvudec
-  commit 0667c504c45c1dcb873a19cd520aa7465de61e6d
+  commit 97e51b59a9b152250f625b18f6289485e413d74c
   amalgamated dist/djvu.c + dist/djvu.h only
 
 libwebp         1.6.0      2025-06-30
