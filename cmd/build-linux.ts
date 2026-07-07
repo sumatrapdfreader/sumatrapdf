@@ -696,6 +696,7 @@ const PORTABLE_COMPILE_SOURCES = [
   "src/GumboHtmlParser.cpp",
   "src/HtmlFormatter.cpp",
   "src/EbookFormatter.cpp",
+  "src/EngineEbook.cpp",
 ];
 
 export interface LinuxBuildOptions {
