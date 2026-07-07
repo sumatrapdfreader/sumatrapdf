@@ -1037,6 +1037,7 @@ function base_files()
     "StrUtf8.*",
     "StrVec.*",
     "TgaReader.*",
+    "TgaReader_win.cpp",
     "Thread.*",
     "TxtParser.*",
     "UITask.*",

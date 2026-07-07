@@ -2611,7 +2611,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
-Str SerializeBitmap(HBITMAP hbmp) {
+Str HBITMAPToLoadImageFormat(HBITMAP hbmp) {
     Size size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
@@ -2657,7 +2657,7 @@ Str GetClipboardImageBmp() {
     // owned by the clipboard - don't delete it.
     HBITMAP hbmp = (HBITMAP)GetClipboardData(CF_BITMAP);
     if (hbmp) {
-        res = SerializeBitmap(hbmp);
+        res = HBITMAPToLoadImageFormat(hbmp);
     }
     CloseClipboard();
     return res;

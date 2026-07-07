@@ -460,6 +460,7 @@ const DEP_LIBS_BASE = [
           "StrFormatParse.cpp",
           "StrVec.cpp",
           "Strconv.cpp",
+          "TgaReader.cpp",
         ],
       },
     ],

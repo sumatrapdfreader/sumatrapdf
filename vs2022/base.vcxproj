@@ -939,6 +939,7 @@
     <ClCompile Include="..\src\base\StrVec.cpp" />
     <ClCompile Include="..\src\base\Strconv.cpp" />
     <ClCompile Include="..\src\base\TgaReader.cpp" />
+    <ClCompile Include="..\src\base\TgaReader_win.cpp" />
     <ClCompile Include="..\src\base\Thread.cpp" />
     <ClCompile Include="..\src\base\UITask.cpp" />
     <ClCompile Include="..\src\base\WebpReader.cpp" />

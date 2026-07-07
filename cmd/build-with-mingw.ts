@@ -159,6 +159,7 @@ const utils: LibDef = {
         "TempAllocator.*",
         "Thread.*",
         "TgaReader.*",
+        "TgaReader_win.cpp",
         "TxtParser.*",
         "UITask.*",
         "WebpReader.*",
