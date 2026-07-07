@@ -173,6 +173,9 @@
     <ClCompile Include="..\src\base\DirIter.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\DirIter_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Dpi_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

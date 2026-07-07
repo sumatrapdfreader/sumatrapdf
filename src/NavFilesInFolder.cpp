@@ -28,7 +28,6 @@
 #include "DarkModeSubclass.h"
 #include "NavFilesInFolder.h"
 
-
 // A floating window with a directory listing of all sub-directories and
 // files SumatraPDF can open (judged by extension). Enter / double-click
 // opens a file or descends into a directory, the ".." entry at the top
@@ -152,7 +151,7 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
             continue;
         }
         NavFileEntry e;
-        if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
+        if (IsDirectory(de)) {
             e.isDir = true;
             e.name = str::Join(de->name, StrL("\\"));
         } else {
@@ -160,7 +159,7 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
                 continue;
             }
             e.name = str::Dup(de->name);
-            e.size = ((i64)de->fd->nFileSizeHigh << 32) | (i64)de->fd->nFileSizeLow;
+            e.size = GetFileSize(de);
         }
         m->entries.Append(e);
     }

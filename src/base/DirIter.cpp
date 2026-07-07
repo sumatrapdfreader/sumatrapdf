@@ -2,124 +2,45 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/File.h"
-#include "base/Win.h"
 #include "base/StrQueue.h"
 #include "base/DirIter.h"
 
-// try to filter out things that are not files
-// or not meant to be used by other applications
-bool IsRegularFile(DWORD fileAttr) {
-    if (fileAttr & FILE_ATTRIBUTE_DEVICE) {
-        return false;
-    }
-    if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
-        return false;
-    }
-    if (fileAttr & FILE_ATTRIBUTE_OFFLINE) {
-        return false;
-    }
-    if (fileAttr & FILE_ATTRIBUTE_TEMPORARY) {
-        return false;
-    }
-    if (fileAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
-        return false;
-    }
-    return true;
-}
-
-bool IsDirectory(DWORD fileAttr) {
-    return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
-}
-
-static bool IsSpecialDir(Str s) {
-    return str::Eq(s, ".") || str::Eq(s, "..");
-}
-
-static void AdvanceDirIter(DirIter::iterator* it, int n) {
-    ReportIf(n != 1);
-    if (it->didFinish) {
-        return;
-    }
-    if (it->data.stopTraversal) {
-        // could have been set by user accessing prev traversal
-        it->didFinish = true;
-        return;
-    }
-
-    bool includeFiles = it->di->includeFiles;
-    bool includeDirs = it->di->includeDirs;
-    bool recur = it->di->recurse;
-
-    bool ok;
-    bool isFile;
-    bool isDir;
-    TempStr name;
-    TempStr path;
-
-NextDir:
-    if (!it->pattern) {
-        int nDirs = len(it->dirsToVisit);
-        if (nDirs == 0) {
-            goto DidFinish;
-        }
-        it->currDir = it->dirsToVisit.RemoveAt(nDirs - 1);
-        TempWStr ws = ToWStrTemp(it->currDir);
-        it->pattern = path::Join(ws, WStr(L"*"));
-        it->h = FindFirstFileW(it->pattern.s, &it->fd);
-        if (!IsValidHandle(it->h)) {
-            goto DidFinish;
-        }
-    } else {
-        ok = FindNextFileW(it->h, &it->fd);
-        if (!ok) {
-            SafeFindClose(&it->h);
-            wstr::FreePtr(&it->pattern);
-            goto NextDir;
-        }
-    }
-    while (true) {
-        isFile = IsRegularFile(it->fd.dwFileAttributes);
-        isDir = IsDirectory(it->fd.dwFileAttributes);
-        name = ToUtf8Temp(it->fd.cFileName);
-        path = path::JoinTemp(it->currDir.s, name.s);
-        it->data.name = name;
-        it->data.filePath = path;
-        if (isFile && includeFiles) {
-            return;
-        }
-        if (isDir && !IsSpecialDir(name)) {
-            if (recur) {
-                it->dirsToVisit.Append(path);
-            }
-            if (includeDirs) {
-                return;
-            }
-        }
-        ok = FindNextFileW(it->h, &it->fd);
-        if (!ok) {
-            SafeFindClose(&it->h);
-            wstr::FreePtr(&it->pattern);
-            goto NextDir;
-        }
-    };
-DidFinish:
-    wstr::FreePtr(&it->pattern);
-    SafeFindClose(&it->h);
-    it->didFinish = true;
-    return;
-}
+void AdvanceDirIter(DirIter::iterator* it, int n);
+void CloseDirIter(DirIter::iterator* it);
 
 DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
     this->di = di;
     this->dirsToVisit.Append(di->dir);
     this->didFinish = didFinish;
+#if OS_WIN
     this->data.fd = &this->fd;
+#endif
     AdvanceDirIter(this, 1);
 }
 
+DirIter::iterator::iterator(const iterator& that) {
+    *this = that;
+}
+
+DirIter::iterator& DirIter::iterator::operator=(const iterator& that) {
+    if (this == &that) {
+        return *this;
+    }
+    CloseDirIter(this);
+    this->di = that.di;
+    this->didFinish = that.didFinish;
+    this->dirsToVisit = that.dirsToVisit;
+    this->currDir = that.currDir;
+    this->data = that.data;
+#if OS_WIN
+    this->fd = that.fd;
+    this->data.fd = &this->fd;
+#endif
+    return *this;
+}
+
 DirIter::iterator::~iterator() {
-    wstr::Free(pattern);
+    CloseDirIter(this);
 }
 
 DirIter::iterator DirIter::begin() const {
@@ -162,11 +83,16 @@ bool operator!=(const DirIter::iterator& a, const DirIter::iterator& b) {
     return (a.di != b.di) || (a.didFinish != b.didFinish);
 };
 
-i64 GetFileSize(WIN32_FIND_DATAW* fd) {
-    ULARGE_INTEGER ul;
-    ul.HighPart = fd->nFileSizeHigh;
-    ul.LowPart = fd->nFileSizeLow;
-    return (i64)ul.QuadPart;
+i64 GetFileSize(DirIterEntry* de) {
+    return de ? de->size : 0;
+}
+
+bool IsDirectory(DirIterEntry* de) {
+    return de && de->isDir;
+}
+
+bool IsRegularFile(DirIterEntry* de) {
+    return de && de->isFile;
 }
 
 struct DirTraverseThreadData {

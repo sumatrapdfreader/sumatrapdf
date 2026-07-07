@@ -1196,7 +1196,7 @@ static void DeleteStaleCbxCacheFiles() {
         if (!isCbx) {
             continue;
         }
-        FILETIME atime = de->fd->ftLastAccessTime;
+        FILETIME atime = de->accessTime;
         ULARGE_INTEGER a;
         a.LowPart = atime.dwLowDateTime;
         a.HighPart = atime.dwHighDateTime;
@@ -1252,7 +1252,7 @@ static i64 GetDirLastActivityAgeSec(Str dirPath, const ULARGE_INTEGER& now) {
     di.includeDirs = false;
     di.recurse = true;
     for (DirIterEntry* de : di) {
-        i64 age = FileTimeAgeSec(de->fd->ftLastWriteTime, now);
+        i64 age = FileTimeAgeSec(de->modificationTime, now);
         if (age < 0) {
             continue;
         }
@@ -1289,7 +1289,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
         if (!str::StartsWith(de->name, kPdfPreviewLogPrefix)) {
             continue;
         }
-        PreviewLogFile lf{str::Dup(de->filePath), de->fd->ftLastWriteTime};
+        PreviewLogFile lf{str::Dup(de->filePath), de->modificationTime};
         files.Append(lf);
     }
     int n = len(files);

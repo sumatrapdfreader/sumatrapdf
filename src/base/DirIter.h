@@ -4,9 +4,16 @@
 struct StrQueue;
 
 struct DirIterEntry {
+#if OS_WIN
     WIN32_FIND_DATAW* fd = nullptr;
+#endif
     Str name;
     Str filePath;
+    i64 size = 0;
+    FILETIME accessTime{};
+    FILETIME modificationTime{};
+    bool isDir = false;
+    bool isFile = false;
     bool stopTraversal = false;
     bool fileMatches = false;
 };
@@ -23,12 +30,18 @@ struct DirIter {
 
         StrVec dirsToVisit;
         TempStr currDir = {};
+#if OS_WIN
         WStr pattern;
         WIN32_FIND_DATAW fd{};
         HANDLE h = nullptr;
+#else
+        void* dirHandle = nullptr;
+#endif
         DirIterEntry data;
 
         iterator(const DirIter*, bool);
+        iterator(const iterator&);
+        iterator& operator=(const iterator&);
         ~iterator();
 
         DirIterEntry* operator*();
@@ -44,6 +57,6 @@ struct DirIter {
 
 void StartDirTraverseAsync(StrQueue* queue, Str dir, bool recurse);
 
-i64 GetFileSize(WIN32_FIND_DATAW*);
-bool IsDirectory(DWORD fileAttr);
-bool IsRegularFile(DWORD fileAttr);
+i64 GetFileSize(DirIterEntry*);
+bool IsDirectory(DirIterEntry*);
+bool IsRegularFile(DirIterEntry*);

@@ -436,6 +436,8 @@ const DEP_LIBS_BASE = [
           "CssParser.cpp",
           "Dict.cpp",
           "DbgHelpDyn_posix.cpp",
+          "DirIter.cpp",
+          "DirIter_posix.cpp",
           "DirScan.cpp",
           "DirScan_posix.cpp",
           "Dpi_posix.cpp",

@@ -914,6 +914,7 @@
     <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp" />
     <ClCompile Include="..\src\base\Dict.cpp" />
     <ClCompile Include="..\src\base\DirIter.cpp" />
+    <ClCompile Include="..\src\base\DirIter_win.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
     <ClCompile Include="..\src\base\DirScan_win.cpp" />
     <ClCompile Include="..\src\base\Dpi_win.cpp" />

@@ -10,7 +10,6 @@
 #include "Version.h"
 #include "Installer.h"
 
-
 // All registry manipulation needed for installer / uninstaller
 
 // list of supported file extensions for which SumatraPDF.exe will
@@ -72,7 +71,7 @@ static DWORD GetDirSize(Str dir, bool recur) {
     DirIter di{dir};
     di.recurse = recur;
     for (DirIterEntry* de : di) {
-        i64 fileSize = GetFileSize(de->fd);
+        i64 fileSize = GetFileSize(de);
         totalSize += fileSize;
     }
     return (DWORD)totalSize;
