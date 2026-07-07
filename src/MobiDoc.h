@@ -5,6 +5,7 @@ struct HuffDicDecompressor;
 struct PdbReader;
 struct PropValue;
 enum class DocProp : u8;
+enum class FileType : u8;
 
 struct MobiDoc {
     Str fileName;
@@ -54,7 +55,7 @@ struct MobiDoc {
     bool HasToc();
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFileType(Kind);
+    static bool IsSupportedFileType(FileType);
     static MobiDoc* CreateFromFile(Str fileName);
     static MobiDoc* CreateFromData(Str data);
 };

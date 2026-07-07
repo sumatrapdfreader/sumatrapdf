@@ -360,9 +360,9 @@ bool IsEnginePsAvailable() {
     return len(gswin32c) > 0;
 }
 
-bool IsEnginePsSupportedFileType(Kind kind) {
+bool IsEnginePsSupportedFileType(FileType kind) {
     if (!IsEnginePsAvailable()) {
         return false;
     }
-    return kind == kindFilePS;
+    return kind == FileType::PS;
 }

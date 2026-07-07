@@ -1064,18 +1064,18 @@ static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
 
 static bool ExtractExifBlob(Str d, Str& out, u8** ownedOut) {
     *ownedOut = nullptr;
-    Kind kind = GuessFileTypeFromContent(d);
-    if (kind == kindFileJpeg) {
+    FileType kind = GuessFileTypeFromContent(d);
+    if (kind == FileType::Jpeg) {
         return ExtractJpegExif(d, out);
     }
-    if (kind == kindFileTiff) {
+    if (kind == FileType::Tiff) {
         out = d;
         return true;
     }
-    if (kind == kindFileWebp) {
+    if (kind == FileType::Webp) {
         return ExtractWebpExif(d, out);
     }
-    if (kind == kindFileHeic || kind == kindFileAvif) {
+    if (kind == FileType::Heic || kind == FileType::Avif) {
         if (ExtractHeifExifFromBytes(d, out, ownedOut)) {
             return true;
         }

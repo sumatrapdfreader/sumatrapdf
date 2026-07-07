@@ -266,7 +266,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     }
     path = str::ReplaceTemp(pathStr, StrL("/"), StrL("\\"));
 
-    Kind kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path);
     if (!IsEngineMupdfSupportedFileType(kind)) {
         return false;
     }
@@ -2309,10 +2309,10 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     int streamNo = -1;
     TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
-    Kind kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path);
     // show .txt, .xml and other text files as plain text
     // using html engine
-    if (kind == kindFileTxt) {
+    if (kind == FileType::Txt) {
         // synthesize a .html file from text file
         Str d = TxtFileToHTML(path);
         if (len(d) == 0) {
@@ -2470,9 +2470,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     fz_var(dy);
     fz_var(fontDy);
     fz_var(dir);
-    Kind kind = GuessFileTypeFromName(nameHint);
+    FileType kind = GuessFileTypeFromName(nameHint);
     const char* nameHintZ = CStrTemp(nameHint);
-    if (kind == kindFileMarkdown) {
+    if (kind == FileType::Markdown) {
         TempStr parentDir = path::GetDirTemp(nameHint);
         if (len(parentDir) > 0) {
             fz_try(ctx) {
@@ -4671,45 +4671,45 @@ int EngineMupdf::GetPageByLabel(Str label) const {
     return pageNo;
 }
 
-bool IsEngineMupdfSupportedFileType(Kind kind) {
-    if (kind == kindFilePDF) {
+bool IsEngineMupdfSupportedFileType(FileType kind) {
+    if (kind == FileType::PDF) {
         return true;
     }
-    if (kind == kindFileEpub) {
+    if (kind == FileType::Epub) {
         return true;
     }
-    if (kind == kindFileMarkdown) {
+    if (kind == FileType::Markdown) {
         return true;
     }
-    if (kind == kindFileFb2) {
+    if (kind == FileType::Fb2) {
         return true;
     }
-    if (kind == kindFileFb2z) {
+    if (kind == FileType::Fb2z) {
         return true;
     }
-    if (kind == kindFileHTML) {
+    if (kind == FileType::HTML) {
         return true;
     }
-    if (kind == kindFileSvg) {
+    if (kind == FileType::Svg) {
         return true;
     }
-    if (kind == kindFileXps) {
+    if (kind == FileType::Xps) {
         return true;
     }
-    if (kind == kindFileTxt) {
+    if (kind == FileType::Txt) {
         return true;
     }
-    if (kind == kindFilePalmDoc) {
+    if (kind == FileType::PalmDoc) {
         return true;
     }
     return false;
 }
 
-EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, PasswordUI* pwdUI) {
     if (len(path) == 0) {
         return nullptr;
     }
-    if (kind == kindFileFb2z) {
+    if (kind == FileType::Fb2z) {
         AutoDelete archive = OpenArchiveFromFile(path, /*eagerLoad=*/true, gArchiveProgressCb);
         if (!archive) {
             return {};
@@ -4745,7 +4745,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
         SafeEngineRelease(&engine);
         return nullptr;
     }
-    TempStr ext = GetExtForKindTemp(kind);
+    TempStr ext = GetExtForFileTypeTemp(kind);
     if (ext) {
         SetDefaultExt(engine->defaultExt, ext);
     }

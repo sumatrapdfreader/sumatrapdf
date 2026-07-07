@@ -704,8 +704,8 @@ static bool KnownNonImageRec(Str d) {
 }
 
 static bool KnownImageFormat(Str d) {
-    Kind kind = GuessFileTypeFromContent(d);
-    return kind != nullptr;
+    FileType kind = GuessFileTypeFromContent(d);
+    return kind != FileType::Unknown;
 }
 
 // return false if we should stop loading images (because we
@@ -1074,8 +1074,8 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool MobiDoc::IsSupportedFileType(Kind kind) {
-    return kind == kindFileMobi;
+bool MobiDoc::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Mobi;
 }
 
 MobiDoc* MobiDoc::CreateFromFile(Str fileName) {

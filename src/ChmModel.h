@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct ChmFile;
+enum class FileType : u8;
 struct ChmTocTraceItem;
 class ChmDocView;
 struct HtmlWindowCallback;
@@ -67,7 +68,7 @@ struct ChmModel : DocController {
     Str GetDataForUrl(Str url);
     void DownloadData(Str url, Str data);
 
-    static bool IsSupportedFileType(Kind);
+    static bool IsSupportedFileType(FileType);
 
     Str fileName;
     ChmFile* doc = nullptr;

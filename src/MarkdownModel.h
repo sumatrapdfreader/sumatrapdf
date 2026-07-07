@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 class ChmDocView;
+enum class FileType : u8;
 struct HtmlWindowCallback;
 struct MarkdownCacheEntry;
 
@@ -39,7 +40,7 @@ struct MarkdownModel : DocController {
     MarkdownModel* AsMarkdown() override;
 
     static MarkdownModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
-    static bool IsSupportedFileType(Kind);
+    static bool IsSupportedFileType(FileType);
 
     bool SetParentHwnd(HWND hwnd);
     void RemoveParentHwnd();

@@ -37,20 +37,20 @@ int JpegExifOrientationFromTiff(ByteReader r, int tiffBase) {
     return 0;
 }
 
-Pixmap* PixmapFromExtFormatsData(Str bmpData, Kind kind) {
-    if (kindFileWebp == kind) {
+Pixmap* PixmapFromExtFormatsData(Str bmpData, FileType kind) {
+    if (FileType::Webp == kind) {
         Pixmap* px = webp::PixmapFromData(bmpData);
         if (px) {
             return px;
         }
     }
-    if (kindFileJxl == kind) {
+    if (FileType::Jxl == kind) {
         Pixmap* px = jxl::PixmapFromData(bmpData);
         if (px) {
             return px;
         }
     }
-    if (kindFileHeic == kind || kindFileAvif == kind) {
+    if (FileType::Heic == kind || FileType::Avif == kind) {
         Pixmap* px = PixmapFromAvifData(bmpData);
         if (px) {
             return px;

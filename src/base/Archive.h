@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+enum class FileType : u8;
+
 struct archive;
 struct archive_entry;
 
@@ -48,7 +50,7 @@ struct Archive {
 
     Format format = Format::Unknown;
 
-    bool Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress);
+    bool Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress);
     bool OpenFromData(Str data);
 
     Vec<FileInfo*> const& GetFileInfos();

@@ -17,6 +17,7 @@
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "AppTools.h"

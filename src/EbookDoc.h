@@ -5,6 +5,7 @@ class GumboHtmlParser;
 struct HtmlToken;
 struct PropValue;
 enum class DocProp : u8;
+enum class FileType : u8;
 
 struct ImageData {
     Str base;
@@ -49,7 +50,7 @@ struct EpubDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFileType(Kind kind);
+    static bool IsSupportedFileType(FileType kind);
 
     static EpubDoc* CreateFromFile(Str path);
     static EpubDoc* CreateFromData(Str data);
@@ -87,7 +88,7 @@ struct Fb2Doc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
 
-    static bool IsSupportedFileType(Kind kind);
+    static bool IsSupportedFileType(FileType kind);
 
     static Fb2Doc* CreateFromFile(Str path);
     static Fb2Doc* CreateFromData(Str data);
@@ -115,7 +116,7 @@ struct PalmDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFileType(Kind kind);
+    static bool IsSupportedFileType(FileType kind);
     static PalmDoc* CreateFromFile(Str path);
 };
 
@@ -142,7 +143,7 @@ struct HtmlDoc {
     TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
 
-    static bool IsSupportedFileType(Kind kind);
+    static bool IsSupportedFileType(FileType kind);
     static HtmlDoc* CreateFromFile(Str fileName);
 };
 
@@ -167,6 +168,6 @@ struct TxtDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFileType(Kind kind);
+    static bool IsSupportedFileType(FileType kind);
     static TxtDoc* CreateFromFile(Str fileName);
 };

@@ -900,7 +900,7 @@ void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail)
     CreateChmThumbnail(fileName, size, saveThumbnail);
 }
 
-bool ChmModel::IsSupportedFileType(Kind kind) {
+bool ChmModel::IsSupportedFileType(FileType kind) {
     return ChmFile::IsSupportedFileType(kind);
 }
 

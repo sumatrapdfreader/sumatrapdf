@@ -123,8 +123,8 @@ static void BenchFile(Str path, Str pagesSpec) {
     // using all text rendering methods, so that we can compare and find
     // docs that take a long time to load
 
-    Kind kind = GuessFileType(path, true);
-    if (!kind) {
+    FileType kind = GuessFileType(path, true);
+    if (kind == FileType::Unknown) {
         return;
     }
 
@@ -179,7 +179,7 @@ static void BenchFile(Str path, Str pagesSpec) {
 }
 
 static bool IsFileToBench(Str path) {
-    Kind kind = GuessFileType(path, true);
+    FileType kind = GuessFileType(path, true);
     if (IsSupportedFileType(kind, true)) {
         return true;
     }
@@ -239,8 +239,8 @@ static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     if (filter && !path::Match(path::GetBaseNameTemp(filePath), filter)) {
         return false;
     }
-    Kind kind = GuessFileType(filePath, false);
-    if (!kind) {
+    FileType kind = GuessFileType(filePath, false);
+    if (kind == FileType::Unknown) {
         return false;
     }
     if (IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind) || ChmModel::IsSupportedFileType(kind)) {
@@ -251,8 +251,8 @@ static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     }
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    Kind kindSniffed = GuessFileType(filePath, true);
-    if (!kindSniffed || kindSniffed == kind) {
+    FileType kindSniffed = GuessFileType(filePath, true);
+    if (kindSniffed == FileType::Unknown || kindSniffed == kind) {
         return false;
     }
     if (IsSupportedFileType(kindSniffed, true)) {

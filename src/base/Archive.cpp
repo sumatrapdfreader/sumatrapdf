@@ -147,37 +147,37 @@ static bool TryOpenUnrarFallback(Archive*, Str, bool, const ArchiveExtractProgre
 }
 #endif
 
-// hintKind is the result of a prior GuessFileTypeFromContent() done
-// by the caller. When non-null we skip the internal 2 KiB sniff and
+// hintType is the result of a prior GuessFileTypeFromContent() done
+// by the caller. When not Unknown we skip the internal 2 KiB sniff and
 // use it to drive rar-first vs. libarchive routing.
 // eagerLoad = true: decompress every entry at open time and close
 //   the archive so no re-open will ever happen.
 // cbProgress fires after each entry is processed (see
 // ArchiveExtractProgress). Pass a default-constructed Func1 to skip
 // notifications.
-bool Archive::Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress) {
     if (!path) {
         return false;
     }
-    Kind kind = hintKind;
-    if (!kind) {
+    FileType ft = hintType;
+    if (ft == FileType::Unknown) {
         // No pre-sniffed hint: peek at the first 2 KiB ourselves so we can
         // route RAR files through unrar.dll instead of libarchive.
         char buf[2048 + 1]{};
         int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
         if (n > 0) {
             Str d = Str((char*)(buf), n);
-            kind = GuessFileTypeFromContent(d);
+            ft = GuessFileTypeFromContent(d);
         }
     }
 
     // tar archives can't seek, so we have to eager-load even when the
     // caller didn't ask for it.
-    if (kind == kindFileTar) {
+    if (ft == FileType::Tar) {
         eagerLoad = true;
     }
 
-    bool isRar = kind == kindFileRar;
+    bool isRar = ft == FileType::Rar;
     bool ok = false;
     if (gUnrarFirst && isRar) {
         ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress, isRar);
@@ -455,7 +455,7 @@ Str Archive::GetComment() {
 // default-constructed Func1 to skip notifications.
 Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     auto* archive = new Archive();
-    if (!archive->Open(path, eagerLoad, nullptr, cbProgress)) {
+    if (!archive->Open(path, eagerLoad, FileType::Unknown, cbProgress)) {
         delete archive;
         return nullptr;
     }

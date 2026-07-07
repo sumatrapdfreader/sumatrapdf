@@ -42,8 +42,8 @@ bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {
     if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir) {
         return false;
     }
-    Kind kind = GuessFileTypeFromName(filePath);
-    if (kind == kindFilePDF) {
+    FileType kind = GuessFileTypeFromName(filePath);
+    if (kind == FileType::PDF) {
         return true;
     }
     return IsEngineImageSupportedFileType(kind);

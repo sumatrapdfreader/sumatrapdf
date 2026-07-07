@@ -399,7 +399,7 @@ bool SumatraLaunchBrowser(Str url) {
     return LaunchFileShell(url, nullptr, "open");
 }
 
-bool DocIsSupportedFileType(Kind kind) {
+bool DocIsSupportedFileType(FileType kind) {
     if (EpubDoc::IsSupportedFileType(kind)) {
         return true;
     }
@@ -1403,7 +1403,7 @@ static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
 }
 
 static DocController* CreateControllerForMarkdown(Str path, MainWindow* win) {
-    Kind kind = GuessFileType(path, true);
+    FileType kind = GuessFileType(path, true);
     if (!MarkdownModel::IsSupportedFileType(kind)) {
         return nullptr;
     }
@@ -1425,7 +1425,7 @@ static DocController* CreateControllerForMarkdown(Str path, MainWindow* win) {
 }
 
 static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWindow* win) {
-    Kind kind = GuessFileType(path, true);
+    FileType kind = GuessFileType(path, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
     if (!isChm) {
@@ -1478,7 +1478,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
     bool mdInFixedUI = gGlobalPrefs->markdownUI.useFixedPageUI;
     if (!mdInFixedUI && !engine) {
-        Kind kind = GuessFileTypeFromName(path);
+        FileType kind = GuessFileTypeFromName(path);
         if (MarkdownModel::IsSupportedFileType(kind)) {
             auto mdCtrl = CreateControllerForMarkdown(path, win);
             if (mdCtrl) {
@@ -1591,7 +1591,7 @@ static bool showTocByDefault(Str path) {
         return false;
     }
     // we don't want to show toc by default for comic book files
-    Kind kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path);
     bool showByDefault = !IsEngineCbxSupportedFileType(kind);
     return showByDefault;
 }
@@ -2940,7 +2940,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     // violates threading rules and that happens as part of CreateControllerForEngineOrFile()
     // we could probably delay creating web control but that's more complicated
     if (!gGlobalPrefs->chmUI.useFixedPageUI || !gGlobalPrefs->markdownUI.useFixedPageUI) {
-        Kind kind = GuessFileTypeFromName(path);
+        FileType kind = GuessFileTypeFromName(path);
         bool isChm = !gGlobalPrefs->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind);
         bool isMd = !gGlobalPrefs->markdownUI.useFixedPageUI && MarkdownModel::IsSupportedFileType(kind);
         if (isChm || isMd) {
@@ -3954,9 +3954,8 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
         type = ctrl->AsFixed()->engineType;
     } else if (ctrl->AsChm()) {
         type = kindEngineChm;
-    } else if (ctrl->AsMarkdown()) {
-        type = kindFileMarkdown;
     }
+    // markdown has no engine kind; it falls through to the default filter below
 
     auto ext = ctrl->GetDefaultFileExt();
     if (str::EqI(ext, ".xps")) {
@@ -4659,7 +4658,7 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     // traverse from the end so that removing doesn't change iterator
     for (int i = nFiles - 1; i >= 0; i--) {
         Str path2 = files[i];
-        Kind kind = GuessFileTypeFromName(path2);
+        FileType kind = GuessFileTypeFromName(path2);
         bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
         bool inHistory = gFileHistory.FindByPath(path2);
         if (isSupported || inHistory) {

@@ -884,8 +884,8 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     return ParseNavToc(tocDataStr, pagePath, visitor);
 }
 
-bool EpubDoc::IsSupportedFileType(Kind kind) {
-    return kind == kindFileEpub;
+bool EpubDoc::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Epub;
 }
 
 EpubDoc* EpubDoc::CreateFromFile(Str path) {
@@ -1226,8 +1226,8 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     return true;
 }
 
-bool Fb2Doc::IsSupportedFileType(Kind kind) {
-    return kind == kindFileFb2 || kind == kindFileFb2z;
+bool Fb2Doc::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Fb2 || kind == FileType::Fb2z;
 }
 
 Fb2Doc* Fb2Doc::CreateFromFile(Str path) {
@@ -1407,8 +1407,8 @@ bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool PalmDoc::IsSupportedFileType(Kind kind) {
-    return kind == kindFilePalmDoc;
+bool PalmDoc::IsSupportedFileType(FileType kind) {
+    return kind == FileType::PalmDoc;
 }
 
 PalmDoc* PalmDoc::CreateFromFile(Str path) {
@@ -1532,8 +1532,8 @@ Str HtmlDoc::GetFileName() const {
     return fileName;
 }
 
-bool HtmlDoc::IsSupportedFileType(Kind kind) {
-    return kind == kindFilePalmDoc;
+bool HtmlDoc::IsSupportedFileType(FileType kind) {
+    return kind == FileType::PalmDoc;
 }
 
 HtmlDoc* HtmlDoc::CreateFromFile(Str fileName) {
@@ -1887,8 +1887,8 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool TxtDoc::IsSupportedFileType(Kind kind) {
-    return kind == kindFileTxt;
+bool TxtDoc::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Txt;
 }
 
 TxtDoc* TxtDoc::CreateFromFile(Str fileName) {

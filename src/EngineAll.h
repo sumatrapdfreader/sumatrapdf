@@ -1,6 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+enum class FileType : u8;
 struct Annotation;
 enum class AnnotationType;
 struct PasswordUI;
@@ -9,7 +10,7 @@ struct AnnotCreateArgs;
 struct PropValue;
 
 /* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
-bool IsEngineDjVuSupportedFileType(Kind kind);
+bool IsEngineDjVuSupportedFileType(FileType kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromData(Str data);
 
@@ -30,15 +31,16 @@ void EngineEbookCleanup();
 
 /* EngineImages.cpp */
 
-bool IsEngineImageSupportedFileType(Kind);
+bool IsEngineImageSupportedFileType(FileType);
 EngineBase* CreateEngineImageFromFile(Str fileName);
 EngineBase* CreateEngineImageFromData(Str data);
 
 bool IsEngineImageDirSupportedFile(Str fileName, bool sniff = false);
 EngineBase* CreateEngineImageDirFromFile(Str fileName);
 
-bool IsEngineCbxSupportedFileType(Kind kind);
-EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, Kind hintKind = nullptr, Str realPath = {});
+bool IsEngineCbxSupportedFileType(FileType kind);
+EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, FileType hintType = FileType::Unknown,
+                                    Str realPath = {});
 EngineBase* CreateEngineCbxFromData(Str data);
 
 bool IsEngineImages(EngineBase*);
@@ -48,8 +50,8 @@ void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& pro
 
 using ShowErrorCb = Func1<Str>;
 
-bool IsEngineMupdfSupportedFileType(Kind);
-EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
+bool IsEngineMupdfSupportedFileType(FileType);
+EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI);
 Str LoadEmbeddedPDFFile(Str path);
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut);
@@ -76,12 +78,12 @@ TempStr EngineMupdfGetPdfOutline(Str path);
 /* EnginePs.cpp */
 
 bool IsEnginePsAvailable();
-bool IsEnginePsSupportedFileType(Kind);
+bool IsEnginePsSupportedFileType(FileType);
 EngineBase* CreateEnginePsFromFile(Str fileName);
 
 /* EngineCreate.cpp */
 
-bool IsSupportedFileType(Kind kind, bool enableEngineEbooks);
+bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 
 EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine);
 

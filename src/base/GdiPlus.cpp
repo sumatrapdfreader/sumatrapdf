@@ -455,8 +455,8 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
 
 // Decode an image to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
 Pixmap* PixmapFromDataWin(Str bmpData) {
-    Kind kind = GuessFileTypeFromContent(bmpData);
-    if (kindFileTga == kind) {
+    FileType kind = GuessFileTypeFromContent(bmpData);
+    if (FileType::Tga == kind) {
         Pixmap* px = tga::PixmapFromData(bmpData);
         if (px) {
             return px;
@@ -470,7 +470,7 @@ Pixmap* PixmapFromDataWin(Str bmpData) {
     // remaining formats (png, bmp, jxr, tiff, gif, ...) decode via GDI+/WIC. tryGdiplusFirst
     // for potentially multi-image formats (WICDecodeImageFromStream is single-frame). The
     // (first) frame is copied out into a uniform Pixmap.
-    bool tryGdiplusFirst = (kindFileTiff == kind) || (kindFileGif == kind);
+    bool tryGdiplusFirst = (FileType::Tiff == kind) || (FileType::Gif == kind);
     Gdiplus::Bitmap* bmp = nullptr;
     if (tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
@@ -493,15 +493,15 @@ Pixmap* PixmapFromDataWin(Str bmpData) {
 // than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
 Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
     Vec<Pixmap*> res;
-    Kind kind = GuessFileTypeFromContent(bmpData);
-    if (kindFileTiff == kind || kindFileGif == kind) {
+    FileType kind = GuessFileTypeFromContent(bmpData);
+    if (FileType::Tiff == kind || FileType::Gif == kind) {
         // decode every frame of a multi-page TIFF / animated GIF via GDI+
         Gdiplus::Bitmap* bmp = DecodeWithGdiplus(bmpData);
         if (!bmp) {
             bmp = DecodeWithWIC(bmpData);
         }
         if (bmp) {
-            const GUID* dim = (kindFileTiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
+            const GUID* dim = (FileType::Tiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
             UINT nFrames = bmp->GetFrameCount(dim);
             for (UINT i = 0; i < nFrames; i++) {
                 if (bmp->SelectActiveFrame(dim, i) != Gdiplus::Ok) {
@@ -802,32 +802,32 @@ static bool Jp2SizeFromData(ByteReader r, Size& result) {
 Size ImageSizeFromData(Str d) {
     Size result;
     bool ok = false;
-    Kind kind = GuessFileTypeFromContent(d);
+    FileType kind = GuessFileTypeFromContent(d);
 
     ByteReader r(d);
-    if (kind == kindFileBmp) {
+    if (kind == FileType::Bmp) {
         ok = BmpSizeFromData(r, result);
-    } else if (kind == kindFileGif) {
+    } else if (kind == FileType::Gif) {
         ok = GifSizeFromData(r, result);
-    } else if (kind == kindFileJpeg) {
+    } else if (kind == FileType::Jpeg) {
         ok = JpegSizeFromData(r, result);
         if (ok && ExifOrientationSwapsDimensions(JpegExifOrientation(r))) {
             std::swap(result.dx, result.dy);
         }
-    } else if (kind == kindFileJxr || kind == kindFileTiff) {
+    } else if (kind == FileType::Jxr || kind == FileType::Tiff) {
         ok = TiffSizeFromData(r, result);
-    } else if (kind == kindFilePng) {
+    } else if (kind == FileType::Png) {
         ok = PngSizeFromData(r, result);
-    } else if (kind == kindFileTga) {
+    } else if (kind == FileType::Tga) {
         ok = TgaSizeFromData(r, result);
-    } else if (kind == kindFileWebp) {
+    } else if (kind == FileType::Webp) {
         ok = WebpImageSizeFromData(r, result);
         if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
             std::swap(result.dx, result.dy);
         }
-    } else if (kind == kindFileJp2) {
+    } else if (kind == FileType::Jp2) {
         ok = Jp2SizeFromData(r, result);
-    } else if (kind == kindFileAvif || kind == kindFileHeic) {
+    } else if (kind == FileType::Avif || kind == FileType::Heic) {
         ok = AvifImageSizeFromData(r, result);
     }
     if (ok && !result.IsEmpty()) {
@@ -848,32 +848,32 @@ Size ImageSizeFromData(Str d) {
 Size ImageSizeFromHeader(Str d) {
     Size result;
     bool ok = false;
-    Kind kind = GuessFileTypeFromContent(d);
+    FileType kind = GuessFileTypeFromContent(d);
 
     ByteReader r(d);
-    if (kind == kindFileBmp) {
+    if (kind == FileType::Bmp) {
         ok = BmpSizeFromData(r, result);
-    } else if (kind == kindFileGif) {
+    } else if (kind == FileType::Gif) {
         ok = GifSizeFromData(r, result);
-    } else if (kind == kindFileJpeg) {
+    } else if (kind == FileType::Jpeg) {
         ok = JpegSizeFromData(r, result);
         if (ok && ExifOrientationSwapsDimensions(JpegExifOrientation(r))) {
             std::swap(result.dx, result.dy);
         }
-    } else if (kind == kindFileJxr || kind == kindFileTiff) {
+    } else if (kind == FileType::Jxr || kind == FileType::Tiff) {
         ok = TiffSizeFromData(r, result);
-    } else if (kind == kindFilePng) {
+    } else if (kind == FileType::Png) {
         ok = PngSizeFromData(r, result);
-    } else if (kind == kindFileTga) {
+    } else if (kind == FileType::Tga) {
         ok = TgaSizeFromData(r, result);
-    } else if (kind == kindFileWebp) {
+    } else if (kind == FileType::Webp) {
         ok = WebpImageSizeFromData(r, result);
         if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
             std::swap(result.dx, result.dy);
         }
-    } else if (kind == kindFileJp2) {
+    } else if (kind == FileType::Jp2) {
         ok = Jp2SizeFromData(r, result);
-    } else if (kind == kindFileAvif || kind == kindFileHeic) {
+    } else if (kind == FileType::Avif || kind == FileType::Heic) {
         ok = AvifImageSizeFromData(r, result);
     }
     if (ok && !result.IsEmpty()) {

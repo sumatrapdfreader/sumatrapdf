@@ -7,199 +7,159 @@
 #include "base/ByteReader.h"
 #include "base/GuessFileType.h"
 
-Kind kindFilePDF = "filePDF";
-Kind kindFilePS = "filePS";
-Kind kindFileXps = "fileXPS";
-Kind kindFileDjVu = "fileDjVu";
-Kind kindFileChm = "fileChm";
-Kind kindFilePng = "filePng";
-Kind kindFileJpeg = "fileJpeg";
-Kind kindFileGif = "fileGif";
-Kind kindFileTiff = "fileTiff";
-Kind kindFileBmp = "fileBmp";
-Kind kindFileTga = "fileTga";
-Kind kindFileJxr = "fileJxr";
-Kind kindFileHdp = "fileHdp";
-Kind kindFileWdp = "fileWdp";
-Kind kindFileWebp = "fileWebp";
-Kind kindFileJxl = "fileJxl";
-Kind kindFileJp2 = "fileJp2";
-Kind kindFileCbz = "fileCbz";
-Kind kindFileCbr = "fileCbr";
-Kind kindFileCb7 = "fileCb7";
-Kind kindFileCbt = "fileCbt";
-Kind kindFileZip = "fileZip";
-Kind kindFileRar = "fileRar";
-Kind kindFile7Z = "file7Z";
-Kind kindFileTar = "fileTar";
-Kind kindFileFb2 = "fileFb2";
-Kind kindFileFb2z = "fileFb2z"; // fb2 but inside .zip file
-Kind kindDirectory = "directory";
-Kind kindFileEpub = "fileEpub";
-Kind kindFileMarkdown = "fileMarkdown";
-// TODO: introduce kindFileTealDoc?
-Kind kindFileMobi = "fileMobi";
-Kind kindFilePalmDoc = "filePalmDoc";
-Kind kindFileHTML = "fileHTML";
-Kind kindFileTxt = "fileTxt";
-Kind kindFileSvg = "fileSvg";
-Kind kindFileHeic = "fileHeic";
-Kind kindFileAvif = "fileAvif";
-
 // http://en.wikipedia.org/wiki/.nfo
 // http://en.wikipedia.org/wiki/FILE_ID.DIZ
 // http://en.wikipedia.org/wiki/Read.me
 // http://www.cix.co.uk/~gidds/Software/TCR.html
 
-// TODO: should .prc be kindFilePalmDoc instead of kindFileMobi?
+// TODO: should .prc be FileType::PalmDoc instead of FileType::Mobi?
 // .zip etc. are at the end so that .fb2.zip etc. is recognized at fb2
-#define DEF_EXT_KIND(V)              \
-    V(".txt", kindFileTxt)           \
-    V(".js", kindFileTxt)            \
-    V(".json", kindFileTxt)          \
-    V(".xml", kindFileTxt)           \
-    V(".log", kindFileTxt)           \
-    V("file_id.diz", kindFileTxt)    \
-    V("read.me", kindFileTxt)        \
-    V(".nfo", kindFileTxt)           \
-    V(".tcr", kindFileTxt)           \
-    V(".ps", kindFilePS)             \
-    V(".ps.gz", kindFilePS)          \
-    V(".eps", kindFilePS)            \
-    V(".fb2", kindFileFb2)           \
-    V(".fb2z", kindFileFb2z)         \
-    V(".fbz", kindFileFb2z)          \
-    V(".zfb2", kindFileFb2z)         \
-    V(".fb2.zip", kindFileFb2z)      \
-    V(".cbz", kindFileCbz)           \
-    V(".ora", kindFileCbz)           \
-    V(".cbr", kindFileCbr)           \
-    V(".cb7", kindFileCb7)           \
-    V(".cbt", kindFileCbt)           \
-    V(".pdf", kindFilePDF)           \
-    V(".ai", kindFilePDF)            \
-    V(".xps", kindFileXps)           \
-    V(".oxps", kindFileXps)          \
-    V(".xod", kindFileXps)           \
-    V(".dwfx", kindFileXps)          \
-    V(".chm", kindFileChm)           \
-    V(".png", kindFilePng)           \
-    V(".jpg", kindFileJpeg)          \
-    V(".jpeg", kindFileJpeg)         \
-    V(".jfif", kindFileJpeg)         \
-    V(".gif", kindFileGif)           \
-    V(".tif", kindFileTiff)          \
-    V(".tiff", kindFileTiff)         \
-    V(".bmp", kindFileBmp)           \
-    V(".tga", kindFileTga)           \
-    V(".jxr", kindFileJxr)           \
-    V(".hdp", kindFileHdp)           \
-    V(".wdp", kindFileWdp)           \
-    V(".webp", kindFileWebp)         \
-    V(".jxl", kindFileJxl)           \
-    V(".epub", kindFileEpub)         \
-    V(".md", kindFileMarkdown)       \
-    V(".markdown", kindFileMarkdown) \
-    V(".mobi", kindFileMobi)         \
-    V(".prc", kindFileMobi)          \
-    V(".azw", kindFileMobi)          \
-    V(".azw1", kindFileMobi)         \
-    V(".azw3", kindFileMobi)         \
-    V(".azw4", kindFileMobi)         \
-    V(".pdb", kindFilePalmDoc)       \
-    V(".html", kindFileHTML)         \
-    V(".htm", kindFileHTML)          \
-    V(".xhtml", kindFileHTML)        \
-    V(".svg", kindFileSvg)           \
-    V(".djvu", kindFileDjVu)         \
-    V(".djv", kindFileDjVu)          \
-    V(".jp2", kindFileJp2)           \
-    V(".j2k", kindFileJp2)           \
-    V(".jpx", kindFileJp2)           \
-    V(".jpf", kindFileJp2)           \
-    V(".jpm", kindFileJp2)           \
-    V(".j2c", kindFileJp2)           \
-    V(".zip", kindFileZip)           \
-    V(".rar", kindFileRar)           \
-    V(".7z", kindFile7Z)             \
-    V(".heic", kindFileHeic)         \
-    V(".heif", kindFileHeic)         \
-    V(".avif", kindFileAvif)         \
-    V(".tar", kindFileTar)
+#define DEF_EXT_KIND(V)                \
+    V(".txt", FileType::Txt)           \
+    V(".js", FileType::Txt)            \
+    V(".json", FileType::Txt)          \
+    V(".xml", FileType::Txt)           \
+    V(".log", FileType::Txt)           \
+    V("file_id.diz", FileType::Txt)    \
+    V("read.me", FileType::Txt)        \
+    V(".nfo", FileType::Txt)           \
+    V(".tcr", FileType::Txt)           \
+    V(".ps", FileType::PS)             \
+    V(".ps.gz", FileType::PS)          \
+    V(".eps", FileType::PS)            \
+    V(".fb2", FileType::Fb2)           \
+    V(".fb2z", FileType::Fb2z)         \
+    V(".fbz", FileType::Fb2z)          \
+    V(".zfb2", FileType::Fb2z)         \
+    V(".fb2.zip", FileType::Fb2z)      \
+    V(".cbz", FileType::Cbz)           \
+    V(".ora", FileType::Cbz)           \
+    V(".cbr", FileType::Cbr)           \
+    V(".cb7", FileType::Cb7)           \
+    V(".cbt", FileType::Cbt)           \
+    V(".pdf", FileType::PDF)           \
+    V(".ai", FileType::PDF)            \
+    V(".xps", FileType::Xps)           \
+    V(".oxps", FileType::Xps)          \
+    V(".xod", FileType::Xps)           \
+    V(".dwfx", FileType::Xps)          \
+    V(".chm", FileType::Chm)           \
+    V(".png", FileType::Png)           \
+    V(".jpg", FileType::Jpeg)          \
+    V(".jpeg", FileType::Jpeg)         \
+    V(".jfif", FileType::Jpeg)         \
+    V(".gif", FileType::Gif)           \
+    V(".tif", FileType::Tiff)          \
+    V(".tiff", FileType::Tiff)         \
+    V(".bmp", FileType::Bmp)           \
+    V(".tga", FileType::Tga)           \
+    V(".jxr", FileType::Jxr)           \
+    V(".hdp", FileType::Hdp)           \
+    V(".wdp", FileType::Wdp)           \
+    V(".webp", FileType::Webp)         \
+    V(".jxl", FileType::Jxl)           \
+    V(".epub", FileType::Epub)         \
+    V(".md", FileType::Markdown)       \
+    V(".markdown", FileType::Markdown) \
+    V(".mobi", FileType::Mobi)         \
+    V(".prc", FileType::Mobi)          \
+    V(".azw", FileType::Mobi)          \
+    V(".azw1", FileType::Mobi)         \
+    V(".azw3", FileType::Mobi)         \
+    V(".azw4", FileType::Mobi)         \
+    V(".pdb", FileType::PalmDoc)       \
+    V(".html", FileType::HTML)         \
+    V(".htm", FileType::HTML)          \
+    V(".xhtml", FileType::HTML)        \
+    V(".svg", FileType::Svg)           \
+    V(".djvu", FileType::DjVu)         \
+    V(".djv", FileType::DjVu)          \
+    V(".jp2", FileType::Jp2)           \
+    V(".j2k", FileType::Jp2)           \
+    V(".jpx", FileType::Jp2)           \
+    V(".jpf", FileType::Jp2)           \
+    V(".jpm", FileType::Jp2)           \
+    V(".j2c", FileType::Jp2)           \
+    V(".zip", FileType::Zip)           \
+    V(".rar", FileType::Rar)           \
+    V(".7z", FileType::SevenZ)         \
+    V(".heic", FileType::Heic)         \
+    V(".heif", FileType::Heic)         \
+    V(".avif", FileType::Avif)         \
+    V(".tar", FileType::Tar)
 
-#define EXT(ext, kind) ext "\0"
+#define EXT(ext, ft) ext "\0"
 
 // .fb2.zip etc. must be first so that it isn't classified as .zip
 static const char* gFileExts = DEF_EXT_KIND(EXT);
 #undef EXT
 
-#define KIND(ext, kind) kind,
-static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
+#define KIND(ext, ft) ft,
+static FileType gExtsType[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
-static Kind GetKindByFileExt(Str path) {
+static FileType GetTypeByFileExt(Str path) {
     TempStr ext = path::GetExtTemp(path);
     int idx = SeqStrIndexIS(gFileExts, ext);
     if (idx < 0) {
-        return nullptr;
+        return FileType::Unknown;
     }
-    int n = (int)dimof(gExtsKind);
+    int n = (int)dimof(gExtsType);
     if (idx >= n) {
-        return nullptr;
+        return FileType::Unknown;
     }
-    return gExtsKind[idx];
+    return gExtsType[idx];
 }
 
-TempStr GetExtForKindTemp(Kind kind) {
-    int idx = KindIndexOf(gExtsKind, dimofi(gExtsKind), kind);
+TempStr GetExtForFileTypeTemp(FileType ft) {
+    int idx = FileTypeIndexOf(gExtsType, dimofi(gExtsType), ft);
     if (idx >= 0) {
         return SeqStrByIndex(gFileExts, idx);
     }
     return {};
 }
 
-// ensure gFileExts and gExtsKind match
+// ensure gFileExts and gExtsType match
 static bool gDidVerifyExtsMatch = false;
 static void VerifyExtsMatch() {
     if (gDidVerifyExtsMatch) {
         return;
     }
-    ReportIf(kindFileEpub != GetKindByFileExt("foo.epub"));
-    ReportIf(kindFileJp2 != GetKindByFileExt("foo.JP2"));
+    ReportIf(FileType::Epub != GetTypeByFileExt("foo.epub"));
+    ReportIf(FileType::Jp2 != GetTypeByFileExt("foo.JP2"));
     gDidVerifyExtsMatch = true;
 }
 
-int KindIndexOf(Kind* kinds, int nKinds, Kind kind) {
-    for (int i = 0; i < nKinds; i++) {
-        Kind k = kinds[i];
-        if (k == kind) {
+int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
+    for (int i = 0; i < nTypes; i++) {
+        if (types[i] == ft) {
             return i;
         }
     }
     return -1;
 }
 
-#define FILE_SIGS(V)                                    \
-    V(0, "Rar!\x1A\x07\x00", kindFileRar)               \
-    V(0, "Rar!\x1A\x07\x01\x00", kindFileRar)           \
-    V(0, "7z\xBC\xAF\x27\x1C", kindFile7Z)              \
-    V(0, "PK\x03\x04", kindFileZip)                     \
-    V(0, "ITSF", kindFileChm)                           \
-    V(0x3c, "BOOKMOBI", kindFileMobi)                   \
-    V(0x3c, "TEXtREAd", kindFilePalmDoc)                \
-    V(0x3c, "TEXtTlDc", kindFilePalmDoc)                \
-    V(0x3c, "DataPlkr", kindFilePalmDoc)                \
-    V(0, "\x89PNG\x0D\x0A\x1A\x0A", kindFilePng)        \
-    V(0, "\xFF\xD8", kindFileJpeg)                      \
-    V(0, "GIF87a", kindFileGif)                         \
-    V(0, "GIF89a", kindFileGif)                         \
-    V(0, "BM", kindFileBmp)                             \
-    V(0, "MM\x00\x2A", kindFileTiff)                    \
-    V(0, "II\x2A\x00", kindFileTiff)                    \
-    V(0, "II\xBC\x01", kindFileJxr)                     \
-    V(0, "II\xBC\x00", kindFileJxr)                     \
-    V(0, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", kindFileJp2) \
-    V(0, "AT&T", kindFileDjVu)
+#define FILE_SIGS(V)                                      \
+    V(0, "Rar!\x1A\x07\x00", FileType::Rar)               \
+    V(0, "Rar!\x1A\x07\x01\x00", FileType::Rar)           \
+    V(0, "7z\xBC\xAF\x27\x1C", FileType::SevenZ)          \
+    V(0, "PK\x03\x04", FileType::Zip)                     \
+    V(0, "ITSF", FileType::Chm)                           \
+    V(0x3c, "BOOKMOBI", FileType::Mobi)                   \
+    V(0x3c, "TEXtREAd", FileType::PalmDoc)                \
+    V(0x3c, "TEXtTlDc", FileType::PalmDoc)                \
+    V(0x3c, "DataPlkr", FileType::PalmDoc)                \
+    V(0, "\x89PNG\x0D\x0A\x1A\x0A", FileType::Png)        \
+    V(0, "\xFF\xD8", FileType::Jpeg)                      \
+    V(0, "GIF87a", FileType::Gif)                         \
+    V(0, "GIF89a", FileType::Gif)                         \
+    V(0, "BM", FileType::Bmp)                             \
+    V(0, "MM\x00\x2A", FileType::Tiff)                    \
+    V(0, "II\x2A\x00", FileType::Tiff)                    \
+    V(0, "II\xBC\x01", FileType::Jxr)                     \
+    V(0, "II\xBC\x00", FileType::Jxr)                     \
+    V(0, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", FileType::Jp2) \
+    V(0, "AT&T", FileType::DjVu)
 
 // a file signaure is a sequence of bytes at a specific
 // offset in the file
@@ -207,10 +167,10 @@ struct FileSig {
     int offset;
     Str sig;
     int sigLen;
-    Kind kind;
+    FileType ft;
 };
 
-#define MK_SIG(OFF, SIG, KIND) {OFF, SIG, (int)(sizeof(SIG) - 1), KIND},
+#define MK_SIG(OFF, SIG, FT) {OFF, SIG, (int)(sizeof(SIG) - 1), FT},
 static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
@@ -263,9 +223,9 @@ static bool IsPSFileContent(Str d) {
 // https://github.com/file/file/blob/7449263e1d6167233b3b6abfc3e4c13407d6432c/magic/Magdir/animation#L265
 // https://nokiatech.github.io/heif/technical.html
 // TODO: need to figure out heif vs. heic
-static Kind DetectHicAndAvif(Str d) {
+static FileType DetectHicAndAvif(Str d) {
     if (d.len < 0x18) {
-        return nullptr;
+        return FileType::Unknown;
     }
     Str s = d;
     Str hdr = Str(s.s + 4, s.len - 4);
@@ -283,22 +243,22 @@ static Kind DetectHicAndAvif(Str d) {
     */
     // TODO: support more ftyp types?
     if (str::StartsWith(hdr, "ftypheic")) {
-        return kindFileHeic;
+        return FileType::Heic;
     }
     if (str::StartsWith(hdr, "ftypheix")) {
-        return kindFileHeic;
+        return FileType::Heic;
     }
     if (str::StartsWith(hdr, "ftypmif1")) {
-        return kindFileHeic;
+        return FileType::Heic;
     }
     if (str::StartsWith(hdr, "ftypavif")) {
-        return kindFileAvif;
+        return FileType::Avif;
     }
     hdr = Str(s.s + 16, s.len - 16);
     if (str::StartsWith(hdr, "mif1heic")) {
-        return kindFileHeic;
+        return FileType::Heic;
     }
-    return nullptr;
+    return FileType::Unknown;
 }
 
 static bool HasWebpSignature(Str d) {
@@ -396,7 +356,7 @@ static bool HasTgaSignature(Str d) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(Str d) {
+FileType GuessFileTypeFromContent(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
     int dataLen = d.len;
@@ -409,30 +369,30 @@ Kind GuessFileTypeFromContent(Str d) {
         int sigMaxLen = off + sigLen;
         u8* dat = data + off;
         if ((dataLen > sigMaxLen) && memeq(dat, sig.s, sigLen)) {
-            return gFileSigs[i].kind;
+            return gFileSigs[i].ft;
         }
     }
-    Kind kind = DetectHicAndAvif(d);
-    if (kind) {
-        return kind;
+    FileType ft = DetectHicAndAvif(d);
+    if (ft != FileType::Unknown) {
+        return ft;
     }
 
     if (IsPdfFileContent(d)) {
-        return kindFilePDF;
+        return FileType::PDF;
     }
     if (IsPSFileContent(d)) {
-        return kindFilePS;
+        return FileType::PS;
     }
     if (HasTgaSignature(d)) {
-        return kindFileTga;
+        return FileType::Tga;
     }
     if (HasWebpSignature(d)) {
-        return kindFileWebp;
+        return FileType::Webp;
     }
     if (HasJxlSignature(d)) {
-        return kindFileJxl;
+        return FileType::Jxl;
     }
-    return nullptr;
+    return FileType::Unknown;
 }
 
 // parse an embedded-PDF path of the form "c:/foo.pdf:${pdfStreamNo}"
@@ -493,43 +453,43 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
     return res;
 }
 
-Kind GuessFileTypeFromName(Str path) {
+FileType GuessFileTypeFromName(Str path) {
     VerifyExtsMatch();
 
     if (!path) {
-        return nullptr;
+        return FileType::Unknown;
     }
     if (path::IsDirectory(path)) {
-        return kindDirectory;
+        return FileType::Directory;
     }
-    Kind res = GetKindByFileExt(path);
-    if (res != nullptr) {
+    FileType res = GetTypeByFileExt(path);
+    if (res != FileType::Unknown) {
         return res;
     }
 
     // cases that cannot be decided just by looking at file extension
     if (ParseEmbeddedPdfName(path).streamNoStr) {
-        return kindFilePDF;
+        return FileType::PDF;
     }
 
-    return nullptr;
+    return FileType::Unknown;
 }
 
 // clang-format off
-static const Kind gImageKinds[] = {
-    kindFilePng,
-    kindFileJpeg,
-    kindFileJpeg,
-    kindFileGif,
-    kindFileBmp,
-    kindFileTiff,
-    kindFileTiff,
-    kindFileTga,
-    kindFileJxr,
-    kindFileWebp,
-    kindFileJp2,
-    kindFileHeic,
-    kindFileAvif
+static const FileType gImageTypes[] = {
+    FileType::Png,
+    FileType::Jpeg,
+    FileType::Jpeg,
+    FileType::Gif,
+    FileType::Bmp,
+    FileType::Tiff,
+    FileType::Tiff,
+    FileType::Tga,
+    FileType::Jxr,
+    FileType::Webp,
+    FileType::Jp2,
+    FileType::Heic,
+    FileType::Avif
 };
 
 static const char* gImageFormatExts =
@@ -549,18 +509,8 @@ static const char* gImageFormatExts =
     "\0";
 // clang-format on
 
-static int FindImageKindIdx(Kind kind) {
-    int n = (int)dimof(gImageKinds);
-    for (int i = 0; i < n; i++) {
-        if (kind == gImageKinds[i]) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-TempStr GfxFileExtFromKindTemp(Kind kind) {
-    int idx = FindImageKindIdx(kind);
+TempStr GfxFileExtFromTypeTemp(FileType ft) {
+    int idx = FileTypeIndexOf(gImageTypes, dimofi(gImageTypes), ft);
     if (idx >= 0) {
         return SeqStrByIndex(gImageFormatExts, idx);
     }
@@ -568,11 +518,13 @@ TempStr GfxFileExtFromKindTemp(Kind kind) {
 }
 
 TempStr GfxFileExtFromDataTemp(Str d) {
-    Kind kind = GuessFileTypeFromContent(d);
-    return GfxFileExtFromKindTemp(kind);
+    FileType ft = GuessFileTypeFromContent(d);
+    return GfxFileExtFromTypeTemp(ft);
 }
 
-TempStr FileKindResultTemp(Str path, Str expectedKindName, int* exitCodeOut) {
+// compares the guessed type's canonical extension (the first extension
+// registered for it, e.g. ".pdf" for sample.ai) to expectedExt
+TempStr FileKindResultTemp(Str path, Str expectedExt, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
@@ -583,21 +535,22 @@ TempStr FileKindResultTemp(Str path, Str expectedKindName, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (len(path) == 0 || len(expectedKindName) == 0) {
-        return fail(StrL("ERROR missing path or expectedKind"));
+    if (len(path) == 0 || len(expectedExt) == 0) {
+        return fail(StrL("ERROR missing path or expectedExt"));
     }
-    Kind kind = GuessFileTypeFromName(path);
-    if (!kind) {
+    FileType ft = GuessFileTypeFromName(path);
+    if (ft == FileType::Unknown) {
         return fail(StrL("ERROR unknown-kind"));
     }
-    if (!str::Eq(kind, expectedKindName)) {
-        out.Append(fmt("FAIL path=%s got=%s expected=%s\n", path, Str(kind), expectedKindName));
+    TempStr ext = GetExtForFileTypeTemp(ft);
+    if (!str::EqI(ext, expectedExt)) {
+        out.Append(fmt("FAIL path=%s got=%s expected=%s\n", path, ext, expectedExt));
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
         return ToStrTemp(out);
     }
-    out.Append(fmt("OK path=%s kind=%s\n", path, Str(kind)));
+    out.Append(fmt("OK path=%s ext=%s\n", path, ext));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }

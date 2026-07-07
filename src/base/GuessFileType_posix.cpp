@@ -5,30 +5,30 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 
-Kind GuessFileTypeFromFile(Str path) {
+FileType GuessFileTypeFromFile(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
         TempStr mimetypePath = path::JoinTemp(path, StrL("mimetype"));
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
-            return kindFileEpub;
+            return FileType::Epub;
         }
-        return nullptr;
+        return FileType::Unknown;
     }
 
     char buf[2048 + 1]{};
     int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
     if (n <= 0) {
-        return nullptr;
+        return FileType::Unknown;
     }
 
     return GuessFileTypeFromContent(Str(buf, n));
 }
 
-Kind GuessFileType(Str path, bool sniff) {
+FileType GuessFileType(Str path, bool sniff) {
     if (sniff) {
-        Kind kind = GuessFileTypeFromFile(path);
-        if (kind) {
-            return kind;
+        FileType ft = GuessFileTypeFromFile(path);
+        if (ft != FileType::Unknown) {
+            return ft;
         }
         return GuessFileTypeFromName(path);
     }

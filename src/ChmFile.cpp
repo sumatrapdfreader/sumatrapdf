@@ -765,8 +765,8 @@ bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmFile::IsSupportedFileType(Kind kind) {
-    return kind == kindFileChm;
+bool ChmFile::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Chm;
 }
 
 ChmFile* ChmFile::CreateFromFile(Str path) {

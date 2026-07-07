@@ -114,15 +114,17 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
     return cachePath;
 }
 
-bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
-    if (!kind) return false;
+bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
+    if (kind == FileType::Unknown) {
+        return false;
+    }
     if (IsEngineMupdfSupportedFileType(kind)) {
         return true;
     } else if (IsEngineDjVuSupportedFileType(kind)) {
         return true;
     } else if (IsEngineImageSupportedFileType(kind)) {
         return true;
-    } else if (kind == kindDirectory) {
+    } else if (kind == FileType::Directory) {
         // TODO: more complex
         return false;
     } else if (IsEngineCbxSupportedFileType(kind)) {
@@ -135,34 +137,34 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
         return false;
     }
 
-    if (kind == kindFileEpub) {
+    if (kind == FileType::Epub) {
         return true;
-    } else if (kind == kindFileFb2) {
+    } else if (kind == FileType::Fb2) {
         return true;
-    } else if (kind == kindFileFb2z) {
+    } else if (kind == FileType::Fb2z) {
         return true;
-    } else if (kind == kindFileMobi) {
+    } else if (kind == FileType::Mobi) {
         return true;
-    } else if (kind == kindFilePalmDoc) {
+    } else if (kind == FileType::PalmDoc) {
         return true;
-    } else if (kind == kindFileHTML) {
+    } else if (kind == FileType::HTML) {
         return true;
-    } else if (kind == kindFileTxt) {
+    } else if (kind == FileType::Txt) {
         return true;
     }
     return false;
 }
 
-static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path, PasswordUI* pwdUI,
+static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, Str path, PasswordUI* pwdUI,
                                        bool enableChmEngine) {
-    if (!kind) {
+    if (kind == FileType::Unknown) {
         return nullptr;
     }
     int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
     // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
     // regardless of gEnableEpubWithPdfEngine.
-    if (kind == kindFilePDF || kind == kindFileXps || kind == kindFileMarkdown) {
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown) {
         engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         return engine;
     }
@@ -174,7 +176,7 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path
         engine = CreateEngineImageFromFile(path);
         return engine;
     }
-    if (kind == kindDirectory) {
+    if (kind == FileType::Directory) {
         // Image-dir engine only; a -folder-open-* flag could expose pdfs/other formats in toc.
         if (!engine) {
             engine = CreateEngineImageDirFromFile(path);
@@ -196,7 +198,7 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path
         engine = CreateEnginePsFromFile(path);
         return engine;
     }
-    if (enableChmEngine && (kind == kindFileChm)) {
+    if (enableChmEngine && (kind == FileType::Chm)) {
         engine = CreateEngineChmFromFile(path);
         return engine;
     }
@@ -210,29 +212,29 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path
         }
     }
 #if 0
-    if (kind == kindFileTxt) {
+    if (kind == FileType::Txt) {
         engine = CreateEngineTxtFromFile(path);
         return engine;
     }
 #endif
 
-    if (kind == kindFileEpub) {
+    if (kind == FileType::Epub) {
         engine = CreateEngineEpubFromFile(path);
         return engine;
     }
-    if (kind == kindFileFb2 || kind == kindFileFb2z) {
+    if (kind == FileType::Fb2 || kind == FileType::Fb2z) {
         engine = CreateEngineFb2FromFile(path);
         return engine;
     }
-    if (kind == kindFileMobi) {
+    if (kind == FileType::Mobi) {
         engine = CreateEngineMobiFromFile(path);
         return engine;
     }
-    if (kind == kindFilePalmDoc) {
+    if (kind == FileType::PalmDoc) {
         engine = CreateEnginePdbFromFile(path);
         return engine;
     }
-    if (kind == kindFileHTML) {
+    if (kind == FileType::HTML) {
         engine = CreateEngineHtmlFromFile(path);
         return engine;
     }
@@ -247,8 +249,8 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         Str extracted = ExtractP7m(fileData);
         str::Free(fileData);
         if (len(extracted) > 0) {
-            Kind kind = GuessFileTypeFromContent(extracted);
-            if (kind == kindFilePDF) {
+            FileType kind = GuessFileTypeFromContent(extracted);
+            if (kind == FileType::PDF) {
                 EngineBase* engine = CreateEngineMupdfFromData(extracted, "file.pdf", pwdUI);
                 str::Free(extracted);
                 if (engine) {
@@ -266,12 +268,12 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     // try to open with the engine guess from file name; if that fails,
     // guess the file type from content (one disk read inside
     // GuessFileTypeFromContent) and retry.
-    Kind kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path);
 
     // For archive-backed engines (cbx), pre-sniff the content upfront so
     // Archive::Open can skip its own 2 KiB read. For all other
     // engines the hint is unused.
-    Kind contentHint = nullptr;
+    FileType contentHint = FileType::Unknown;
     if (IsEngineCbxSupportedFileType(kind)) {
         contentHint = GuessFileTypeFromFile(path);
     }
@@ -287,10 +289,10 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         return engine;
     }
 
-    if (!contentHint) {
+    if (contentHint == FileType::Unknown) {
         contentHint = GuessFileTypeFromFile(path);
     }
-    // avoid trying the same engine type twice (e.g. kindFileCbz vs kindFileZip
+    // avoid trying the same engine type twice (e.g. FileType::Cbz vs FileType::Zip
     // both use the cbx engine, causing duplicate password prompts)
     bool sameCbx = IsEngineCbxSupportedFileType(kind) && IsEngineCbxSupportedFileType(contentHint);
     if (kind != contentHint && !sameCbx) {

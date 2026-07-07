@@ -644,8 +644,8 @@ void MarkdownModel::GetDisplayState(FileState* fs) {
 
 void MarkdownModel::CreateThumbnail(Size, const OnBitmapRendered*) {}
 
-bool MarkdownModel::IsSupportedFileType(Kind kind) {
-    return kind == kindFileMarkdown;
+bool MarkdownModel::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Markdown;
 }
 
 bool MarkdownModel::Load(Str fileName) {

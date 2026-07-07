@@ -103,7 +103,7 @@ static void ScheduleDeleteNavFilesWnd() {
 }
 
 static bool CanOpenFile(Str path) {
-    Kind kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path);
     return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
 }
 

@@ -10,6 +10,7 @@
 #include "wingui/UIModels.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "PdfSync.h"

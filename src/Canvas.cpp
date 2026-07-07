@@ -3484,7 +3484,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     // verify the downloaded file is a supported image type
-    Kind kind = GuessFileTypeFromFile(destPath);
+    FileType kind = GuessFileTypeFromFile(destPath);
     if (!IsEngineImageSupportedFileType(kind)) {
         logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath);
         file::Delete(destPath);
@@ -3495,7 +3495,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
 
     // ensure it has a good extension, some urls are like:
     // https://pbs.twimg.com/media/HEwit7bbQAAWiIO?format=jpg&name=large
-    TempStr ext = GetExtForKindTemp(kind);
+    TempStr ext = GetExtForFileTypeTemp(kind);
     if (!str::EndsWithI(destPath, ext)) {
         TempStr newDest = str::JoinTemp(destPath, ext);
         ok = file::Rename(newDest, destPath);

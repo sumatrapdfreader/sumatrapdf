@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct AnnotCreateArgs;
+enum class FileType : u8;
 
 #include "OverlayScrollbar.h"
 
@@ -294,7 +295,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);
-bool DocIsSupportedFileType(Kind);
+bool DocIsSupportedFileType(FileType);
 TempStr GetLogFilePathTemp();
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs);
 void SumatraOpenPathInDefaultFileManager(Str path);

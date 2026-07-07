@@ -6,6 +6,7 @@
 TempStr SmartToUtf8Temp(Str s, uint codepage);
 
 enum class DocProp : u8;
+enum class FileType : u8;
 
 struct ChmFile {
     struct chmFile* chmHandle = nullptr;
@@ -42,6 +43,6 @@ struct ChmFile {
     bool HasIndex() const;
     bool ParseIndex(EbookTocVisitor* visitor) const;
 
-    static bool IsSupportedFileType(Kind);
+    static bool IsSupportedFileType(FileType);
     static ChmFile* CreateFromFile(Str path);
 };

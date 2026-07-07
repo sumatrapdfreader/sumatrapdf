@@ -35,7 +35,7 @@ static EngineBase* CreateEngineForPath(Str path) {
         return CreateEngineImageDirFromFile(path);
     }
 
-    Kind kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path);
     if (IsEngineDjVuSupportedFileType(kind)) {
         return CreateEngineDjvuDecFromFile(path);
     }

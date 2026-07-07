@@ -18,6 +18,7 @@ extern "C" {
 #include "DocController.h"
 #include "Annotation.h"
 #include "EngineBase.h"
+#include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "EngineMupdf.h"
 #include "Translations.h"

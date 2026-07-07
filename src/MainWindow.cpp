@@ -593,7 +593,7 @@ void LinkHandler::LaunchURL(Str uri) {
 
 // return true if we can load the file based on sniffing file type from content
 static bool IsFileSupportedByContent(Str filePath) {
-    Kind kindSniffed = GuessFileType(filePath, true);
+    FileType kindSniffed = GuessFileType(filePath, true);
     return IsSupportedFileType(kindSniffed, true);
 }
 

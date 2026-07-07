@@ -11,13 +11,13 @@ extern "C" {
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
+#include "base/GuessFileType.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 
 Kind kindEngineDjVu = "engineDjVu";
-extern Kind kindFileDjVu;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
@@ -832,8 +832,8 @@ TocTree* EngineDjvuDec::GetToc() {
     return tocTree;
 }
 
-bool IsEngineDjVuSupportedFileType(Kind kind) {
-    return kind == kindFileDjVu;
+bool IsEngineDjVuSupportedFileType(FileType kind) {
+    return kind == FileType::DjVu;
 }
 
 EngineBase* CreateEngineDjvuDecFromData(Str data) {

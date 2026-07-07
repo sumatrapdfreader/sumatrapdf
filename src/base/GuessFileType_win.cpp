@@ -53,36 +53,36 @@ static bool IsFb2Archive(Archive* archive) {
     return str::EndsWithI(name, ".fb2");
 }
 
-Kind GuessFileTypeFromFile(Str path) {
+FileType GuessFileTypeFromFile(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
         TempStr mimetypePath = path::JoinTemp(path, StrL("mimetype"));
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
-            return kindFileEpub;
+            return FileType::Epub;
         }
-        return nullptr;
+        return FileType::Unknown;
     }
 
     char buf[2048 + 1]{};
     int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
     if (n <= 0) {
-        return nullptr;
+        return FileType::Unknown;
     }
 
     Str d = Str((char*)buf, n);
     auto res = GuessFileTypeFromContent(d);
-    if (res == kindFileZip) {
+    if (res == FileType::Zip) {
         ArchiveExtractProgressCb emptyCb;
         Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (archive) {
             if (IsXpsArchive(archive)) {
-                res = kindFileXps;
+                res = FileType::Xps;
             }
             if (IsEpubArchive(archive)) {
-                res = kindFileEpub;
+                res = FileType::Epub;
             }
             if (IsFb2Archive(archive)) {
-                res = kindFileFb2z;
+                res = FileType::Fb2z;
             }
             delete archive;
         }
@@ -90,11 +90,11 @@ Kind GuessFileTypeFromFile(Str path) {
     return res;
 }
 
-Kind GuessFileType(Str path, bool sniff) {
+FileType GuessFileType(Str path, bool sniff) {
     if (sniff) {
-        Kind kind = GuessFileTypeFromFile(path);
-        if (kind) {
-            return kind;
+        FileType ft = GuessFileTypeFromFile(path);
+        if (ft != FileType::Unknown) {
+            return ft;
         }
         return GuessFileTypeFromName(path);
     }

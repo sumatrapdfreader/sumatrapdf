@@ -897,7 +897,7 @@ class EngineImage : public EngineImages {
     // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
     // owned by the engine; per-page cache entries may borrow these.
     Vec<Pixmap*> frames;
-    Kind imageFormat = nullptr;
+    FileType imageFormat = FileType::Unknown;
 
     bool LoadSingleFile(Str fileName);
     bool LoadFromData(Str data);
@@ -951,12 +951,12 @@ bool EngineImage::LoadSingleFile(Str path) {
 
     Str data = file::ReadFile(path);
     imageFormat = GuessFileTypeFromContent(data);
-    if (imageFormat == nullptr) {
+    if (imageFormat == FileType::Unknown) {
         imageFormat = GuessFileTypeFromName(path);
     }
-    if (imageFormat == nullptr) {
+    if (imageFormat == FileType::Unknown) {
         logfa("EngineImage::LoadSingleFile: '%s'\n", path);
-        ReportIf(imageFormat == nullptr);
+        ReportIf(imageFormat == FileType::Unknown);
     }
 
     // TODO: maybe default to file extension and only use detected from content
@@ -965,7 +965,7 @@ bool EngineImage::LoadSingleFile(Str path) {
     if (!fileExt) {
         // imageFormat already holds the Kind we resolved above; skip the
         // redundant GuessFileTypeFromName call.
-        fileExt = GfxFileExtFromKindTemp(imageFormat);
+        fileExt = GfxFileExtFromTypeTemp(imageFormat);
     }
     if (!fileExt) {
         fileExt = path::GetExtTemp(path);
@@ -1382,19 +1382,19 @@ EngineBase* EngineImage::CreateFromData(Str data) {
 }
 
 // clang-format off
-static Kind imageEngineKinds[] = {
-    kindFilePng,  kindFileJpeg, kindFileGif,
-    kindFileTiff, kindFileBmp,  kindFileTga,
-    kindFileJxr,  kindFileHdp,  kindFileWdp,
-    kindFileWebp, kindFileJp2,  kindFileHeic,
-    kindFileAvif, kindFileJxl
+static FileType imageEngineTypes[] = {
+    FileType::Png,  FileType::Jpeg, FileType::Gif,
+    FileType::Tiff, FileType::Bmp,  FileType::Tga,
+    FileType::Jxr,  FileType::Hdp,  FileType::Wdp,
+    FileType::Webp, FileType::Jp2,  FileType::Heic,
+    FileType::Avif, FileType::Jxl
 };
 // clang-format on
 
-bool IsEngineImageSupportedFileType(Kind kind) {
+bool IsEngineImageSupportedFileType(FileType kind) {
     // logf("IsEngineImageSupportedFileType(%s)\n", kind);
-    int n = (int)dimof(imageEngineKinds);
-    return KindIndexOf(imageEngineKinds, n, kind) >= 0;
+    int n = (int)dimof(imageEngineTypes);
+    return FileTypeIndexOf(imageEngineTypes, n, kind) >= 0;
 }
 
 EngineBase* CreateEngineImageFromFile(Str path) {
@@ -1459,7 +1459,7 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
     DirIter di{dir};
     for (DirIterEntry* de : di) {
         auto path = de->filePath;
-        Kind kind = GuessFileTypeFromName(path);
+        FileType kind = GuessFileTypeFromName(path);
         if (IsEngineImageSupportedFileType(kind)) {
             e->pageFileNames.Append(path);
         }
@@ -1802,7 +1802,8 @@ class EngineCbx : public EngineImages {
     // (local) path but still report `path` via FilePath() so callers
     // (file history, bookmarks, etc.) see the user's original file.
     static EngineBase* CreateFromFile(Str path, Str password = {}, Archive::Format* formatOut = nullptr,
-                                      bool* isEncryptedOut = nullptr, Kind hintKind = nullptr, Str realPath = {});
+                                      bool* isEncryptedOut = nullptr, FileType hintType = FileType::Unknown,
+                                      Str realPath = {});
     static EngineBase* CreateFromData(Str data);
 
   protected:
@@ -1852,7 +1853,7 @@ EngineBase* EngineCbx::Clone() {
     Str path = FilePath();
     if (path) {
         // keep the cached-local-copy in play on the clone too
-        auto clone = CreateFromFile(path, {}, nullptr, nullptr, nullptr, physicalPath);
+        auto clone = CreateFromFile(path, {}, nullptr, nullptr, FileType::Unknown, physicalPath);
         if (!clone) {
             logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path);
         }
@@ -1936,7 +1937,7 @@ bool EngineCbx::FinishLoading() {
             return false;
         }
 
-        Kind kind = GuessFileTypeFromName(fileName);
+        FileType kind = GuessFileTypeFromName(fileName);
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
@@ -2173,7 +2174,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
 }
 
 EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* formatOut, bool* isEncryptedOut,
-                                      Kind hintKind, Str realPath) {
+                                      FileType hintType, Str realPath) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
@@ -2194,7 +2195,7 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* f
     i64 fileSize = file::GetSize(openPath);
     bool eagerLoad = fileSize > 0 && fileSize < kMaxEagerLoadSize;
 
-    if (!archive->Open(openPath, eagerLoad, hintKind, gArchiveProgressCb)) {
+    if (!archive->Open(openPath, eagerLoad, hintType, gArchiveProgressCb)) {
         delete archive;
         return nullptr;
     }
@@ -2233,19 +2234,20 @@ EngineBase* EngineCbx::CreateFromData(Str data) {
     return nullptr;
 }
 
-static Kind cbxKinds[] = {
-    kindFileCbz, kindFileCbr, kindFileCb7, kindFileCbt, kindFileZip, kindFileRar, kindFile7Z, kindFileTar,
+static FileType cbxTypes[] = {
+    FileType::Cbz, FileType::Cbr, FileType::Cb7,    FileType::Cbt,
+    FileType::Zip, FileType::Rar, FileType::SevenZ, FileType::Tar,
 };
 
-bool IsEngineCbxSupportedFileType(Kind kind) {
-    int n = dimof(cbxKinds);
-    return KindIndexOf(cbxKinds, n, kind) >= 0;
+bool IsEngineCbxSupportedFileType(FileType kind) {
+    int n = dimof(cbxTypes);
+    return FileTypeIndexOf(cbxTypes, n, kind) >= 0;
 }
 
-EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, Str realPath) {
+EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, FileType hintType, Str realPath) {
     Archive::Format fmt = Archive::Format::Unknown;
     bool isEncrypted = false;
-    EngineBase* engine = EngineCbx::CreateFromFile(path, {}, &fmt, &isEncrypted, hintKind, realPath);
+    EngineBase* engine = EngineCbx::CreateFromFile(path, {}, &fmt, &isEncrypted, hintType, realPath);
     if (engine || !pwdUI) {
         return engine;
     }
@@ -2265,7 +2267,7 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, 
         if (!pwd) {
             return {}; // user cancelled
         }
-        engine = EngineCbx::CreateFromFile(path, pwd, nullptr, nullptr, hintKind, realPath);
+        engine = EngineCbx::CreateFromFile(path, pwd, nullptr, nullptr, hintType, realPath);
         str::Free(pwd);
         if (engine) {
             return engine;
