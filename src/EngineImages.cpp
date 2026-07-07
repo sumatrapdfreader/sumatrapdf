@@ -4,18 +4,17 @@
 #include "base/Base.h"
 #include "base/Archive.h"
 #include "base/Exif.h"
-#include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
-#include "base/GdiPlus.h"
 #include "GumboHelpers.h"
 #include "base/JsonParser.h"
-#include "base/Win.h"
 #include "base/Timer.h"
 #include "base/DirIter.h"
 
-#include "wingui/UIModels.h"
+#if OS_WIN
+#include "base/Win.h"
+#endif
 
 #include <algorithm>
 
@@ -26,35 +25,17 @@ extern "C" {
 #include "FzImgReader.h"
 #include "DocProperties.h"
 #include "DocController.h"
+#include "TreeModel.h"
 #include "EngineBase.h"
-
-using Gdiplus::ARGB;
-using Gdiplus::Bitmap;
-using Gdiplus::Color;
-using Gdiplus::CompositingQualityHighQuality;
-using Gdiplus::FrameDimensionPage;
-using Gdiplus::FrameDimensionTime;
-using Gdiplus::Graphics;
-using Gdiplus::ImageAttributes;
-using Gdiplus::InterpolationModeHighQualityBilinear;
-using Gdiplus::Matrix;
-using Gdiplus::MatrixOrderAppend;
-using Gdiplus::Ok;
-using Gdiplus::OutOfMemory;
-using Gdiplus::SmoothingModeAntiAlias;
-using Gdiplus::SolidBrush;
-using Gdiplus::Status;
-using Gdiplus::UnitPixel;
-using Gdiplus::WrapModeTileFlipXY;
 
 Kind kindEngineImage = "engineImage";
 Kind kindEngineImageDir = "engineImageDir";
 Kind kindEngineComicBooks = "engineComicBooks";
 
-// number of decoded bitmaps to cache for quicker rendering.
+// number of decoded images to cache for quicker rendering.
 // Sized for multi-threaded prefetch: enough to hold a few visible pages,
 // the worker pool's in-flight pages, and a few prefetch slots without
-// thrashing. Each cached entry holds the decoded GDI+ Bitmap, so the
+// thrashing. Each cached entry holds the decoded Pixmap, so the
 // memory cost scales with image dimensions -- bump cautiously.
 #define MAX_IMAGE_PAGE_CACHE 32
 
@@ -66,14 +47,13 @@ struct ImagePage {
     // for RenderPage when available: each render decodes the JPEG at near-
     // target scale (DCT-domain 1/2, 1/4, 1/8 downsampling), so big images
     // displayed at small zooms cost only a fraction of a full-res decode.
-    // bmp (GDI+) is the fallback for paths that need GDI+ (multi-frame TIFF,
-    // or rotation/tile cases the mupdf render path doesn't handle yet).
-    Bitmap* bmp = nullptr;
+    // pixmap is the fallback for decoded frames and transformed renders.
+    Pixmap* pixmap = nullptr;
     fz_image* img = nullptr;
-    bool ownBmp = true;
+    bool ownPixmap = true;
     bool failedToLoad = false;
-    // true while LoadBitmapForPage / LoadFzPixmapForPage is running on a worker;
-    // concurrent GetPage callers wait on loadedEvent instead of serializing on cacheLock
+    // true while LoadPixmapForPage / LoadFzImageForPage is running on a worker;
+    // concurrent GetPage callers wait on loaded instead of serializing on cacheLock
     bool loading = false;
 
     // refcount: cache holds 1, every successful GetPage adds 1.
@@ -82,25 +62,18 @@ struct ImagePage {
     // because we need exclusion against eviction-in-progress.
     AtomicInt refs = 1;
 
-    // manual-reset event, signaled when loading transitions to false
-    HANDLE loadedEvent = nullptr;
+    Mutex loadLock;
+    ConditionVariable loaded;
 
-    // serializes GDI+ DrawImage calls against this->bmp -- a single Bitmap*
-    // is not safe to draw from multiple threads concurrently. Different pages
-    // have different drawLocks so they render in parallel.
-    // Not needed for the pix path: fz_pixmap is immutable after load and
-    // fz_scale_pixmap is safe to call concurrently.
+    // Serializes lazy fallback pixmap decode for pages initially loaded as
+    // fz_image. Different pages have different locks so they render in parallel.
     Mutex drawLock;
 
-    ImagePage(int pageNo, Bitmap* bmp) {
+    ImagePage(int pageNo, Pixmap* pixmap) {
         this->pageNo = pageNo;
-        this->bmp = bmp;
-        loadedEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+        this->pixmap = pixmap;
     }
     ~ImagePage() {
-        if (loadedEvent) {
-            CloseHandle(loadedEvent);
-        }
         // img is dropped by DropPage before delete (it needs the engine's
         // per-thread fz_context to call into mupdf safely).
         ReportIf(img);
@@ -150,7 +123,7 @@ class EngineImages : public EngineBase {
         return page != nullptr;
     }
 
-    ScopedComPtr<IStream> fileStream;
+    IStream* fileStream = nullptr;
 
     RecursiveMutex cacheLock;
     Vec<ImagePage*> pageCache;
@@ -171,9 +144,9 @@ class EngineImages : public EngineBase {
 
     fz_context* Ctx();
 
-    void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);
+    PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
 
-    virtual Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) = 0;
+    virtual Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) = 0;
     // Optional: load the page as an fz_image (encoded form, lazy decode).
     // RenderPage then asks mupdf to decode the JPEG at near-target scale on
     // each render -- much cheaper than decoding at full resolution and
@@ -253,6 +226,9 @@ EngineImages::~EngineImages() {
     if (fz_ctx) {
         fz_drop_context_windows(fz_ctx);
     }
+    if (fileStream) {
+        fileStream->Release();
+    }
 }
 
 // Wrap the page's raw image bytes in an fz_image for lazy mupdf decoding.
@@ -285,6 +261,50 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     return img;
 }
 
+static Size ImageSizeFromDataPortable(Str data) {
+    if (len(data) == 0) {
+        return {};
+    }
+
+    Size res;
+    fz_context* ctx = fz_new_context_windows();
+    if (!ctx) {
+        return {};
+    }
+    fz_buffer* buf = nullptr;
+    fz_image* img = nullptr;
+    fz_var(buf);
+    fz_var(img);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_shared_data(ctx, (const u8*)data.s, (size_t)data.len);
+        img = fz_new_image_from_buffer(ctx, buf);
+        res = Size(img->w, img->h);
+        uint8_t orientation = img->orientation;
+        if (orientation != 0 && (orientation & 1) == 0) {
+            std::swap(res.dx, res.dy);
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_image(ctx, img);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        res = {};
+    }
+    fz_drop_context_windows(ctx);
+    if (!res.IsEmpty()) {
+        return res;
+    }
+
+    Pixmap* pixmap = PixmapFromData(data);
+    if (pixmap) {
+        res = Size(pixmap->width, pixmap->height);
+        FreePixmap(pixmap);
+    }
+    return res;
+}
+
 RectF EngineImages::PageMediabox(int pageNo) {
     ReportIf((pageNo < 1) || (pageNo > pageCount));
     int n = pageNo - 1;
@@ -296,10 +316,7 @@ RectF EngineImages::PageMediabox(int pageNo) {
     return pi->mediabox;
 }
 
-// Wrap a fresh fz_pixmap into a RenderedBitmap (DIB section). Converts to
-// 32bpp BGRA which is the GDI-compatible layout. The pixmap argument is
-// not consumed; the caller keeps ownership and must drop it.
-static RenderedBitmap* FzPixmapToRenderedBitmap(fz_context* ctx, fz_pixmap* pixmap) {
+static Pixmap* FzPixmapToPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     fz_pixmap* bgr = nullptr;
     fz_var(bgr);
     fz_try(ctx) {
@@ -319,48 +336,91 @@ static RenderedBitmap* FzPixmapToRenderedBitmap(fz_context* ctx, fz_pixmap* pixm
     int w = bgr->w;
     int h = bgr->h;
     int n = bgr->n;
-    int bitsCount = n * 8;
-    // DIB rows are DWORD-aligned. mupdf pixmap rows are tightly packed
-    // (stride = n * w). For 24bpp these often differ -- e.g. w=4001, n=3:
-    // dibStride = 12004, pixmap stride = 12003. A bulk memcpy then offsets
-    // every subsequent row by 1 byte and the image renders skewed.
-    int dibStride = ((w * bitsCount + 31) / 32) * 4;
-    int srcStride = (int)bgr->stride;
-    int rowBytes = w * n;
-    int imgSize = dibStride * h;
-
-    BITMAPINFO bmi{};
-    BITMAPINFOHEADER* bmih = &bmi.bmiHeader;
-    bmih->biSize = sizeof(*bmih);
-    bmih->biWidth = w;
-    bmih->biHeight = -h;
-    bmih->biPlanes = 1;
-    bmih->biCompression = BI_RGB;
-    bmih->biBitCount = bitsCount;
-    bmih->biSizeImage = imgSize;
-
-    void* data = nullptr;
-    HANDLE hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, imgSize, nullptr);
-    HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hMap, 0);
-    if (data) {
-        u8* dst = (u8*)data;
-        u8* src = bgr->samples;
-        if (srcStride == dibStride) {
-            memcpy(dst, src, imgSize);
-        } else {
-            for (int y = 0; y < h; y++) {
-                memcpy(dst + (size_t)y * dibStride, src + (size_t)y * srcStride, rowBytes);
-            }
+    Pixmap* res = AllocPixmap(w, h, n == 3 ? PixmapFormat::BGR8 : PixmapFormat::BGRA8, n == 4);
+    if (res) {
+        res->xres = (float)bgr->xres;
+        res->yres = (float)bgr->yres;
+        int rowBytes = w * n;
+        for (int y = 0; y < h; y++) {
+            memcpy(res->data + (size_t)y * res->stride, bgr->samples + (size_t)y * bgr->stride, rowBytes);
         }
     }
     fz_drop_pixmap(ctx, bgr);
-    if (!hbmp) {
-        if (hMap) {
-            CloseHandle(hMap);
-        }
+    return res;
+}
+
+static Pixmap* FzImageToPixmap(fz_context* ctx, fz_image* img) {
+    fz_pixmap* pixmap = nullptr;
+    fz_var(pixmap);
+    fz_try(ctx) {
+        pixmap = fz_get_pixmap_from_image(ctx, img, nullptr, nullptr, nullptr, nullptr);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
         return nullptr;
     }
-    return new RenderedBitmap(hbmp, Size(w, h), hMap);
+    if (!pixmap) {
+        return nullptr;
+    }
+    Pixmap* res = FzPixmapToPixmap(ctx, pixmap);
+    fz_drop_pixmap(ctx, pixmap);
+    return res;
+}
+
+static inline int ClampInt(int v, int minVal, int maxVal) {
+    return std::min(std::max(v, minVal), maxVal);
+}
+
+static void GetPixmapPixelBgra(const Pixmap* pixmap, int x, int y, u8* bgra) {
+    int bpp = PixmapBytesPerPixel(pixmap->format);
+    const u8* src = pixmap->data + (size_t)y * pixmap->stride + (size_t)x * bpp;
+    u8 r, g, b, a;
+    if (pixmap->format == PixmapFormat::RGBA8) {
+        r = src[0];
+        g = src[1];
+        b = src[2];
+        a = src[3];
+    } else {
+        b = src[0];
+        g = src[1];
+        r = src[2];
+        a = pixmap->format == PixmapFormat::BGR8 ? 255 : src[3];
+    }
+
+    if (a < 255) {
+        if (pixmap->premultiplied) {
+            b = (u8)std::min(255, b + (255 - a));
+            g = (u8)std::min(255, g + (255 - a));
+            r = (u8)std::min(255, r + (255 - a));
+        } else {
+            b = (u8)((b * a + 255 * (255 - a)) / 255);
+            g = (u8)((g * a + 255 * (255 - a)) / 255);
+            r = (u8)((r * a + 255 * (255 - a)) / 255);
+        }
+    }
+    bgra[0] = b;
+    bgra[1] = g;
+    bgra[2] = r;
+    bgra[3] = 255;
+}
+
+static uint32_t GetPixmapPixelRgbKey(const Pixmap* pixmap, int x, int y) {
+    u8 bgra[4];
+    GetPixmapPixelBgra(pixmap, x, y, bgra);
+    uint32_t rgb = (bgra[2] << 16) | (bgra[1] << 8) | bgra[0];
+    return rgb & (~0x070707U);
+}
+
+static void FillPixmapWhite(Pixmap* pixmap) {
+    for (int y = 0; y < pixmap->height; y++) {
+        u8* row = pixmap->data + (size_t)y * pixmap->stride;
+        for (int x = 0; x < pixmap->width; x++) {
+            row[x * 4 + 0] = 255;
+            row[x * 4 + 1] = 255;
+            row[x * 4 + 2] = 255;
+            row[x * 4 + 3] = 255;
+        }
+    }
 }
 
 Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
@@ -385,6 +445,10 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     RectF mediabox = PageMediabox(pageNo);
     RectF pageRc = pageRect ? *pageRect : mediabox;
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    if (screen.IsEmpty()) {
+        DropPage(page, false);
+        return nullptr;
+    }
 
     // Mupdf fast path: rotation 0 + full-page render + cached fz_image available.
     // Tiles (pageRect != mediabox) and rotations fall through to the GDI+ path.
@@ -397,7 +461,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         if (isFullPage) {
             // Per-thread cloned context lets multiple workers decode/scale concurrently.
             fz_context* ctx = Ctx();
-            RenderedBitmap* result = nullptr;
+            Pixmap* result = nullptr;
             fz_pixmap* decoded = nullptr;
             fz_pixmap* scaled = nullptr;
             fz_var(decoded);
@@ -422,7 +486,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             }
             fz_pixmap* final = scaled ? scaled : decoded;
             if (final) {
-                result = FzPixmapToRenderedBitmap(ctx, final);
+                result = FzPixmapToPixmap(ctx, final);
             }
             if (scaled) {
                 fz_drop_pixmap(ctx, scaled);
@@ -432,118 +496,100 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             }
             if (result) {
                 DropPage(page, false);
-                return PixmapFromRenderedBitmap(result);
+                return result;
             }
-            // fall through to GDI+ on failure
+            // fall through to full decode on failure
         }
     }
 
-    // GDI+ path: needs page->bmp. If we only have img (subclass loaded via
-    // mupdf), lazy-load the GDI+ Bitmap on demand for this rare path
+    // Pixmap path: needs page->pixmap. If we only have img (subclass loaded via
+    // mupdf), lazy-load/decode the Pixmap on demand for this rare path
     // (rotation, sub-rect tile, or mupdf decode/scale failure).
-    if (!page->bmp && !page->failedToLoad) {
+    if (!page->pixmap && !page->failedToLoad) {
         ScopedMutex scope(&page->drawLock);
-        if (!page->bmp) {
-            bool ownBmp = true;
-            page->bmp = LoadBitmapForPage(pageNo, ownBmp);
-            page->ownBmp = ownBmp;
+        if (!page->pixmap) {
+            bool ownPixmap = true;
+            page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
+            page->ownPixmap = ownPixmap;
+            if (!page->pixmap && page->img) {
+                page->pixmap = FzImageToPixmap(Ctx(), page->img);
+                page->ownPixmap = true;
+            }
         }
     }
 
-    Point screenTL = screen.TL();
-    screen.Offset(-screen.x, -screen.y);
-
-    HANDLE hMap = nullptr;
-    HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
-    if (!hbmp) {
+    Pixmap* result = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
+    if (!result) {
         DropPage(page, false);
         return nullptr;
     }
-    HDC hDC = CreateCompatibleDC(nullptr);
-    DeleteObject(SelectObject(hDC, hbmp));
-
-    Graphics g(hDC);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    if (this->disableAntiAlias) {
-        g.SetSmoothingMode(Gdiplus::SmoothingModeNone);
-        g.SetInterpolationMode(Gdiplus::InterpolationModeNearestNeighbor);
-    } else {
-        g.SetSmoothingMode(SmoothingModeAntiAlias);
-        // HighQualityBilinear is several times faster than HighQualityBicubic
-        // and visually indistinguishable for typical photographic content,
-        // especially when downscaling (the common case for image viewing).
-        g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
-    }
-    g.SetPageUnit(UnitPixel);
-
-    Color white(0xFF, 0xFF, 0xFF);
-    SolidBrush tmpBrush(white);
-    Gdiplus::Rect screenR = ToGdipRect(screen);
-    screenR.Inflate(1, 1);
-    g.FillRectangle(&tmpBrush, screenR);
+    FillPixmapWhite(result);
 
     if (page->failedToLoad) {
-        // draw error message for pages that failed to load
-        Gdiplus::Font font(L"Arial", 14.0f * zoom);
-        Color red(0xFF, 0xCC, 0x00, 0x00);
-        SolidBrush textBrush(red);
-        Gdiplus::StringFormat sf;
-        sf.SetAlignment(Gdiplus::StringAlignmentCenter);
-        sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-        Gdiplus::RectF layoutRect(0, 0, (float)screen.dx, (float)screen.dy);
-        TempStr msg = fmt("Failed to load page %d", pageNo);
-        WCHAR* msgW = CWStrTemp(msg);
-        g.DrawString(msgW, -1, &font, layoutRect, &sf, &textBrush);
         DropPage(page, false);
-        DeleteDC(hDC);
-        return PixmapFromHBITMAP(hbmp, screen.Size(), hMap);
+        return result;
     }
 
-    Matrix m;
-    GetTransform(m, pageNo, zoom, rotation);
-    m.Translate((float)-screenTL.x, (float)-screenTL.y, MatrixOrderAppend);
-    g.SetTransform(&m);
-
-    Rect pageRcI = PageMediabox(pageNo).Round();
-    ImageAttributes imgAttrs;
-    imgAttrs.SetWrapMode(WrapModeTileFlipXY);
-    Status ok;
-    {
-        // GDI+ Bitmap is not thread-safe; concurrent DrawImage on the same Bitmap
-        // from multiple threads causes InsufficientBuffer (status 4) errors.
-        // Per-page lock: different pages render in parallel, only repeated draws
-        // of the same page serialize.
-        ScopedMutex scope(&page->drawLock);
-        ok = g.DrawImage(page->bmp, ToGdipRect(pageRcI), pageRcI.x, pageRcI.y, pageRcI.dx, pageRcI.dy, UnitPixel,
-                         &imgAttrs);
-    }
-
-    DropPage(page, false);
-    DeleteDC(hDC);
-
-    if (ok != Ok) {
-        DeleteObject(hbmp);
-        CloseHandle(hMap);
+    Pixmap* src = page->pixmap;
+    if (!src || !src->data) {
+        DropPage(page, false);
+        FreePixmap(result);
         return nullptr;
     }
 
-    return PixmapFromHBITMAP(hbmp, screen.Size(), hMap);
+    RectF mediaBox = PageMediabox(pageNo);
+    for (int y = 0; y < result->height; y++) {
+        u8* dst = result->data + (size_t)y * result->stride;
+        for (int x = 0; x < result->width; x++) {
+            PointF devPt((float)(screen.x + x) + 0.5f, (float)(screen.y + y) + 0.5f);
+            PointF srcPt = TransformPoint(devPt, pageNo, zoom, rotation, true);
+            if (!mediaBox.Contains(srcPt)) {
+                dst += 4;
+                continue;
+            }
+            int sx = ClampInt((int)srcPt.x, 0, src->width - 1);
+            int sy = ClampInt((int)srcPt.y, 0, src->height - 1);
+            GetPixmapPixelBgra(src, sx, sy, dst);
+            dst += 4;
+        }
+    }
+    DropPage(page, false);
+    return result;
 }
 
-void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation) {
-    GetBaseTransform(m, ToGdipRectF(PageMediabox(pageNo)), zoom, rotation);
+PointF EngineImages::TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
+    ReportIf(zoom <= 0);
+    if (zoom <= 0) {
+        return pt;
+    }
+    SizeF page = PageMediabox(pageNo).Size();
+    if (inverse) {
+        page.dx *= zoom;
+        page.dy *= zoom;
+        if (rotation % 180 != 0) {
+            std::swap(page.dx, page.dy);
+        }
+        rotation = -rotation;
+        zoom = 1.0f / zoom;
+    }
+    rotation = NormalizeRotation(rotation);
+    PointF res = pt;
+    if (rotation == 90) {
+        res = PointF(page.dy - pt.y, pt.x);
+    } else if (rotation == 180) {
+        res = PointF(page.dx - pt.x, page.dy - pt.y);
+    } else if (rotation == 270) {
+        res = PointF(pt.y, page.dx - pt.x);
+    }
+    res.x *= zoom;
+    res.y *= zoom;
+    return res;
 }
 
 RectF EngineImages::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    Gdiplus::PointF pts[2] = {Gdiplus::PointF((float)rect.x, (float)rect.y),
-                              Gdiplus::PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))};
-    Matrix m;
-    GetTransform(m, pageNo, zoom, rotation);
-    if (inverse) {
-        m.Invert();
-    }
-    m.TransformPoints(pts, 2);
-    RectF res = RectF::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    PointF tl = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
+    PointF br = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
+    RectF res = RectF::FromXY(tl, br);
     // try to undo rounding errors caused by a rotation
     // (necessary correction determined by experimentation)
     if (rotation != 0) {
@@ -583,6 +629,10 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
+#if !OS_WIN
+    (void)pel;
+    return nullptr;
+#else
     ReportIf(pel->GetKind() != kindPageElementImage);
     auto ipel = (PageElementImage*)pel;
     int pageNo = ipel->pageNo;
@@ -594,35 +644,38 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
         return nullptr;
     }
 
-    // mupdf fz_image path leaves page->bmp null; lazy-load the GDI+ Bitmap
-    if (!page->bmp && !page->failedToLoad) {
+    if (!page->pixmap && !page->failedToLoad) {
         ScopedMutex scope(&page->drawLock);
-        if (!page->bmp) {
-            bool ownBmp = true;
-            page->bmp = LoadBitmapForPage(pageNo, ownBmp);
-            page->ownBmp = ownBmp;
+        if (!page->pixmap) {
+            bool ownPixmap = true;
+            page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
+            page->ownPixmap = ownPixmap;
+            if (!page->pixmap && page->img) {
+                page->pixmap = FzImageToPixmap(Ctx(), page->img);
+                page->ownPixmap = true;
+            }
         }
     }
-    if (!page->bmp) {
+    if (!page->pixmap) {
         DropPage(page, false);
         return nullptr;
     }
 
-    HBITMAP hbmp;
-    auto bmp = page->bmp;
-    int dx = bmp->GetWidth();
-    int dy = bmp->GetHeight();
-    Size s{dx, dy};
-    auto status = bmp->GetHBITMAP((ARGB)Color::White, &hbmp);
+    Pixmap* pixmap = ClonePixmap(page->pixmap);
     DropPage(page, false);
-    if (status != Ok) {
-        return nullptr;
-    }
-    return new RenderedBitmap(hbmp, s);
+    return RenderedBitmapFromPixmap(pixmap);
+#endif
 }
 
 Str EngineImages::GetFileData() {
-    return GetStreamOrFileData(fileStream.Get(), FilePath());
+#if OS_WIN
+    return GetStreamOrFileData(fileStream, FilePath());
+#else
+    if (fileStream) {
+        return {};
+    }
+    return file::ReadFile(FilePath());
+#endif
 }
 
 bool EngineImages::SaveFileAs(Str dstPath) {
@@ -676,9 +729,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             pageCache.InsertAt(0, result);
         }
 
-        if (!isLoader && result->loading) {
-            waitForLoad = true;
-        }
+        waitForLoad = !isLoader;
         // ++ under lock: prevents racing with eviction that would otherwise
         // delete the page between our lookup and our ref bump.
         AtomicIntInc(&result->refs);
@@ -689,28 +740,34 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
         // (refs >= 2) so it can't be deleted under us, even if some other
         // thread evicts it from the cache while we're working.
         // Try the mupdf image path first (lazy decode at render time at near-
-        // target scale); fall back to GDI+ Bitmap if the subclass opts out
+        // target scale); fall back to Pixmap if the subclass opts out
         // or mupdf can't handle the format.
         fz_image* img = LoadFzImageForPage(Ctx(), pageNo);
-        Bitmap* bmp = nullptr;
-        bool ownBmp = true;
+        Pixmap* pixmap = nullptr;
+        bool ownPixmap = true;
         if (!img) {
-            bmp = LoadBitmapForPage(pageNo, ownBmp);
+            pixmap = LoadPixmapForPage(pageNo, ownPixmap);
         }
         {
             ScopedRecursiveMutex scope(&cacheLock);
             result->img = img;
-            result->bmp = bmp;
-            result->ownBmp = ownBmp;
-            if (!img && !bmp) {
+            result->pixmap = pixmap;
+            result->ownPixmap = ownPixmap;
+            if (!img && !pixmap) {
                 result->failedToLoad = true;
             }
-            result->loading = false;
         }
-        SetEvent(result->loadedEvent);
+        {
+            ScopedMutex scope(&result->loadLock);
+            result->loading = false;
+            result->loaded.WakeAll();
+        }
     } else if (waitForLoad) {
         // Another thread is decoding this same page; wait for it to finish.
-        WaitForSingleObject(result->loadedEvent, INFINITE);
+        ScopedMutex scope(&result->loadLock);
+        while (result->loading) {
+            result->loaded.Wait(&result->loadLock);
+        }
     }
 
     return result;
@@ -733,8 +790,8 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     }
 
     if (newRefs == 0) {
-        if (page->ownBmp) {
-            delete page->bmp;
+        if (page->ownPixmap) {
+            FreePixmap(page->pixmap);
         }
         if (page->img) {
             // safe across threads: fz_drop_image uses our per-thread cloned
@@ -755,10 +812,23 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
         DropPage(page, false);
     };
 
-    auto bmp = page->bmp;
-    if (!bmp) return RectF{};
+    if (!page->pixmap && !page->failedToLoad) {
+        ScopedMutex scope(&page->drawLock);
+        if (!page->pixmap) {
+            bool ownPixmap = true;
+            page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
+            page->ownPixmap = ownPixmap;
+            if (!page->pixmap && page->img) {
+                page->pixmap = FzImageToPixmap(Ctx(), page->img);
+                page->ownPixmap = true;
+            }
+        }
+    }
 
-    const int w = bmp->GetWidth(), h = bmp->GetHeight();
+    auto pixmap = page->pixmap;
+    if (!pixmap || !pixmap->data) return RectF{};
+
+    const int w = pixmap->width, h = pixmap->height;
 
     // Handle degenerate cases where the image is too small for margin detection
     // Minimum sensible dimension for margin cropping is about 10 pixels
@@ -771,34 +841,9 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
 
     Rect r(0, 0, w, h);
 
-    auto fmt = bmp->GetPixelFormat();
-    // getPixel can work with the following formats, otherwise convert it to 24bppRGB
-    switch (fmt) {
-        case PixelFormat24bppRGB:
-        case PixelFormat32bppRGB:
-        case PixelFormat32bppARGB:
-        case PixelFormat32bppPARGB:
-            break;
-        default:
-            fmt = PixelFormat24bppRGB;
-    }
-    const int bytesPerPixel = ((fmt >> 8) & 0xff) / 8; // either 3 or 4
-
-    Gdiplus::BitmapData bmpData;
-    // lock bitmap
-    {
-        Gdiplus::Rect bmpRect(0, 0, w, h);
-        Gdiplus::Status lock = bmp->LockBits(&bmpRect, Gdiplus::ImageLockModeRead, fmt, &bmpData);
-        if (lock != Gdiplus::Ok) return RectF{};
-    }
-
-    auto getPixel = [&bmpData, bytesPerPixel](int x, int y) -> uint32_t {
-        ReportIf(x < 0 || x >= (int)bmpData.Width || y < 0 || y >= (int)bmpData.Height);
-        auto data = static_cast<const uint8_t*>(bmpData.Scan0);
-        unsigned idx = bytesPerPixel * x + bmpData.Stride * y;
-        uint32_t rgb = (data[idx + 2] << 16) | (data[idx + 1] << 8) | data[idx];
-        // ignore the lowest 3 bits (7=0b111) of each color component
-        return rgb & (~0x070707U);
+    auto getPixel = [pixmap](int x, int y) -> uint32_t {
+        ReportIf(x < 0 || x >= pixmap->width || y < 0 || y >= pixmap->height);
+        return GetPixmapPixelRgbKey(pixmap, x, y);
     };
 
     uint32_t marginColor;
@@ -847,8 +892,6 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
         }
         if (!ok) break;
     }
-    bmp->UnlockBits(&bmpData);
-
     return ToRectF(r);
 }
 
@@ -869,15 +912,15 @@ class EngineImage : public EngineImages {
     static EngineBase* CreateFromStream(IStream* stream);
 
     // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
-    // owned by the engine; per-page Gdiplus::Bitmaps borrow these (WrapPixmapGdiplus).
+    // owned by the engine; per-page cache entries may borrow these.
     Vec<Pixmap*> frames;
     Kind imageFormat = nullptr;
 
     bool LoadSingleFile(Str fileName);
     bool LoadFromStream(IStream* stream);
-    bool FinishLoading();
+    bool FinishLoading(Size fallbackSize = {});
 
-    Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
     fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
@@ -894,8 +937,8 @@ EngineImage::~EngineImage() {
 }
 
 EngineBase* EngineImage::Clone() {
-    if (frames.empty() || !frames[0]) {
-        logf("EngineImage::Clone() failed: no frames for '%s'\n", FilePath() ? FilePath() : StrL("(null)"));
+    if ((frames.empty() || !frames[0]) && len(pageInfos) == 0) {
+        logf("EngineImage::Clone() failed: no image data for '%s'\n", FilePath() ? FilePath() : StrL("(null)"));
         return nullptr;
     }
 
@@ -910,7 +953,11 @@ EngineBase* EngineImage::Clone() {
     for (Pixmap* px : frames) {
         clone->frames.Append(ClonePixmap(px));
     }
-    clone->FinishLoading();
+    Size fallbackSize;
+    if (len(pageInfos) > 0) {
+        fallbackSize = PageMediabox(1).Round().Size();
+    }
+    clone->FinishLoading(fallbackSize);
 
     return clone;
 }
@@ -947,7 +994,8 @@ bool EngineImage::LoadSingleFile(Str path) {
     }
     SetDefaultExt(defaultExt, fileExt);
     frames = PixmapsFromData(data);
-    bool ok = FinishLoading();
+    Size fallbackSize = ImageSizeFromDataPortable(data);
+    bool ok = FinishLoading(fallbackSize);
     if (ok) {
         pageInfos[0]->rawData = data;
     } else {
@@ -957,6 +1005,10 @@ bool EngineImage::LoadSingleFile(Str path) {
 }
 
 bool EngineImage::LoadFromStream(IStream* stream) {
+#if !OS_WIN
+    (void)stream;
+    return false;
+#else
     if (!stream) {
         return false;
     }
@@ -976,24 +1028,30 @@ bool EngineImage::LoadFromStream(IStream* stream) {
 
     Str data = GetDataFromStream(stream, nullptr);
     frames = PixmapsFromData(data);
-    bool ok = FinishLoading();
+    Size fallbackSize = ImageSizeFromDataPortable(data);
+    bool ok = FinishLoading(fallbackSize);
     if (ok) {
         pageInfos[0]->rawData = data;
     } else {
         str::Free(data);
     }
     return ok;
+#endif
 }
 
-bool EngineImage::FinishLoading() {
-    if (frames.empty() || !frames[0]) {
+bool EngineImage::FinishLoading(Size fallbackSize) {
+    if ((frames.empty() || !frames[0]) && fallbackSize.IsEmpty()) {
         return false;
     }
-    Pixmap* p0 = frames[0];
-    fileDPI = p0->xres;
+    Pixmap* p0 = frames.empty() ? nullptr : frames[0];
+    if (p0) {
+        fileDPI = p0->xres;
+    }
 
     auto pi = new ImagePageInfo();
-    pi->mediabox = RectF(0, 0, (float)p0->width, (float)p0->height);
+    int w = p0 ? p0->width : fallbackSize.dx;
+    int h = p0 ? p0->height : fallbackSize.dy;
+    pi->mediabox = RectF(0, 0, (float)w, (float)h);
     pageInfos.Append(pi);
     pi->state = PageInfoState::Known;
 
@@ -1054,7 +1112,7 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, Props& p
     i64 intVal;
     double fVal;
 
-    Size imgSize = ImageSizeFromData(data);
+    Size imgSize = ImageSizeFromDataPortable(data);
     if (!imgSize.IsEmpty()) {
         AddProp(propsOut, DocProp::ImageSize, fmt("%d x %d", imgSize.dx, imgSize.dy));
     } else {
@@ -1289,15 +1347,15 @@ void EngineImage::GetImageProperties(int pageNo, Props& propsOut) {
     str::Free(data);
 }
 
-Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+Pixmap* EngineImage::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     int idx = pageNo - 1;
     if (idx < 0 || idx >= len(frames)) {
-        return nullptr;
+        Str data = GetImageData(pageNo);
+        deleteAfterUse = true;
+        return PixmapFromData(data);
     }
-    // zero-copy: borrow the frame's pixels. The Pixmap stays owned by `frames`;
-    // the caller deletes this wrapper (deleteAfterUse) without freeing the buffer.
-    deleteAfterUse = true;
-    return WrapPixmapGdiplus(frames[idx]);
+    deleteAfterUse = false;
+    return frames[idx];
 }
 
 Str EngineImage::GetImageData(int) {
@@ -1312,7 +1370,7 @@ Str EngineImage::GetImageData(int) {
 fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     // mupdf decodes the file's first frame lazily at render scale. Additional
     // frames of multi-page TIFFs / animated GIFs come from the pre-decoded
-    // `frames` list via LoadBitmapForPage, so opt out of the mupdf path for them.
+    // `frames` list via LoadPixmapForPage, so opt out of the mupdf path for them.
     if (pageNo != 1) {
         return nullptr;
     }
@@ -1333,7 +1391,9 @@ EngineBase* EngineImage::CreateFromFile(Str path) {
     bool ok = engine->LoadSingleFile(path);
     // decoding might run a 3rd-party WIC codec (e.g. CopyTrans HEIC) that
     // unmasks fp exceptions on this thread, which would crash later float math
+#if OS_WIN
     MaskFpExceptions();
+#endif
     if (!ok) {
         SafeEngineRelease(&engine);
         return nullptr;
@@ -1342,6 +1402,10 @@ EngineBase* EngineImage::CreateFromFile(Str path) {
 }
 
 EngineBase* EngineImage::CreateFromStream(IStream* stream) {
+#if !OS_WIN
+    (void)stream;
+    return nullptr;
+#else
     EngineImage* engine = new EngineImage();
     bool ok = engine->LoadFromStream(stream);
     MaskFpExceptions();
@@ -1350,6 +1414,7 @@ EngineBase* EngineImage::CreateFromStream(IStream* stream) {
         return nullptr;
     }
     return engine;
+#endif
 }
 
 // clang-format off
@@ -1415,7 +1480,7 @@ class EngineImageDir : public EngineImages {
 
     // protected:
 
-    Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(pageFileNames[pageNo - 1]); }
@@ -1453,8 +1518,8 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
     // TODO: better handle the case where images have different resolutions
     ImagePage* page = e->GetPage(1);
     if (page) {
-        if (page->bmp) {
-            e->fileDPI = page->bmp->GetHorizontalResolution();
+        if (page->pixmap) {
+            e->fileDPI = page->pixmap->xres;
         }
         e->DropPage(page, false);
     }
@@ -1534,14 +1599,14 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
     return ok;
 }
 
-Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+Pixmap* EngineImageDir::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     Str path = pageFileNames[pageNo - 1];
     Str bmpData = file::ReadFile(path);
     if (!bmpData) {
         return nullptr;
     }
     deleteAfterUse = true;
-    Bitmap* res = NewGdiplusBitmapFromPixmap(PixmapFromData(bmpData));
+    Pixmap* res = PixmapFromData(bmpData);
     str::Free(bmpData);
     return res;
 }
@@ -1560,7 +1625,7 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     Str path = pageFileNames[pageNo - 1];
     Str bmpData = file::ReadFile(path);
     if (bmpData) {
-        Size size = ImageSizeFromData(bmpData);
+        Size size = ImageSizeFromDataPortable(bmpData);
         str::Free(bmpData);
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
@@ -1777,7 +1842,7 @@ class EngineCbx : public EngineImages {
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
-    Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
@@ -1814,10 +1879,11 @@ EngineCbx::~EngineCbx() {
 
 EngineBase* EngineCbx::Clone() {
     if (fileStream) {
-        ScopedComPtr<IStream> stm;
+        IStream* stm = nullptr;
         HRESULT res = fileStream->Clone(&stm);
-        if (SUCCEEDED(res)) {
+        if (SUCCEEDED(res) && stm) {
             auto clone = CreateFromStream(stm);
+            stm->Release();
             if (!clone) {
                 logf("EngineCbx::Clone() failed: CreateFromStream() failed\n");
             }
@@ -2079,18 +2145,18 @@ void EngineCbx::GetProperties(Props& propsOut) {
     AddProp(propsOut, DocProp::Files, ToStr(filesStr));
 }
 
-Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
     defer{};
     Str img = GetImageData(pageNo);
     if (len(img) == 0) {
-        logf("EngineCbx::LoadBitmapForPage(page: %d) failed\n", pageNo);
+        logf("EngineCbx::LoadPixmapForPage(page: %d) failed\n", pageNo);
         return nullptr;
     }
     deleteAfterUse = true;
-    auto res = NewGdiplusBitmapFromPixmap(PixmapFromData(img));
+    auto res = PixmapFromData(img);
     auto dur = TimeSinceInMs(timeStart);
-    logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
+    logf("EngineCbx::LoadPixmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     return res;
 }
 
@@ -2100,7 +2166,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     // try to get image size from just the file header (first 1024 bytes)
     Str header = cbxArchive->GetFileDataPartById(fileId, 1024);
     if (len(header) > 0) {
-        Size size = ImageSizeFromHeader(header);
+        Size size = ImageSizeFromDataPortable(header);
         str::Free(header);
         if (!size.IsEmpty()) {
             return RectF(0, 0, (float)size.dx, (float)size.dy);
@@ -2110,7 +2176,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     // fall back to getting the full image data
     Str img = GetImageData(pageNo);
     if (len(img) > 0) {
-        Size size = ImageSizeFromData(img);
+        Size size = ImageSizeFromDataPortable(img);
         if (!size.IsEmpty()) {
             return RectF(0, 0, (float)size.dx, (float)size.dy);
         }
@@ -2132,9 +2198,9 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
             if (orientation != 0 && (orientation & 1) == 0) {
                 std::swap(w, h);
             }
-        } else if (page->bmp) {
-            w = (int)page->bmp->GetWidth();
-            h = (int)page->bmp->GetHeight();
+        } else if (page->pixmap) {
+            w = page->pixmap->width;
+            h = page->pixmap->height;
         }
         DropPage(page, false);
         if (w > 0 && h > 0) {

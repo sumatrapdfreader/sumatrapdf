@@ -1,5 +1,6 @@
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 #include "base/Timer.h"
 
@@ -21,11 +22,29 @@ void loga(Str s) {
 }
 
 static void Usage() {
-    printf("usage: test_engines <file.djvu>\n");
+    printf("usage: test_engines <document-or-image-path>\n");
 }
 
-static bool RenderDjvu(Str path) {
-    EngineBase* engine = CreateEngineDjvuDecFromFile(path);
+static EngineBase* CreateEngineForPath(Str path) {
+    if (IsEngineImageDirSupportedFile(path)) {
+        return CreateEngineImageDirFromFile(path);
+    }
+
+    Kind kind = GuessFileTypeFromName(path);
+    if (IsEngineDjVuSupportedFileType(kind)) {
+        return CreateEngineDjvuDecFromFile(path);
+    }
+    if (IsEngineImageSupportedFileType(kind)) {
+        return CreateEngineImageFromFile(path);
+    }
+    if (IsEngineCbxSupportedFileType(kind)) {
+        return CreateEngineCbxFromFile(path, nullptr, kind);
+    }
+    return nullptr;
+}
+
+static bool RenderPath(Str path) {
+    EngineBase* engine = CreateEngineForPath(path);
     if (!engine) {
         printf("failed to load: %.*s\n", path.len, path.s);
         return false;
@@ -59,7 +78,7 @@ int main(int argc, char** argv) {
     }
 
     Str path(argv[1]);
-    bool ok = RenderDjvu(path);
+    bool ok = RenderPath(path);
     DestroyTempArena();
     return ok ? 0 : 1;
 }
