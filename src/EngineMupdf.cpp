@@ -303,12 +303,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         fz_urldecode(pathNul.s);
         fz_cleanname(pathNul.s);
 
-#if OS_WIN
-        // mupdf does unix path, we want windows
-        path = str::ReplaceTemp(pathNul, StrL("/"), StrL("\\"));
-#else
-        path = pathNul;
-#endif
+        path = path::ToOSTemp(pathNul);
         if (destStr) {
             TempStr destNul = str::DupTemp(destStr);
             fz_urldecode(destNul.s);

@@ -35,6 +35,7 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2 = WStr());
 bool IsDirectory(Str path);
 
 TempStr NormalizeTemp(Str path);
+TempStr ToOSTemp(Str path);
 
 TempStr ShortPathTemp(Str path);
 bool IsSame(Str path1, Str path2);

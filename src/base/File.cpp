@@ -100,6 +100,14 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
     return res;
 }
 
+TempStr ToOSTemp(Str path) {
+#if OS_WIN
+    return str::ReplaceTemp(path, StrL("/"), StrL("\\"));
+#else
+    return str::ReplaceTemp(path, StrL("\\"), StrL("/"));
+#endif
+}
+
 Str Join(Arena* a, Str path, Str fileName) {
     SkipLeadingPathSep(fileName);
     Str sepStr = {};
