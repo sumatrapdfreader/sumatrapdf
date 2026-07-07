@@ -682,7 +682,6 @@ const TEST_UTIL_SOURCES = [
 const TEST_ENGINES_SOURCES = [
   "src/base/BitReader.cpp",
   "src/base/GuessFileType.cpp",
-  "src/base/GuessFileType_posix.cpp",
   "src/DocProperties.cpp",
   "src/EbookDoc.cpp",
   "src/EngineBase.cpp",

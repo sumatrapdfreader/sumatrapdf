@@ -1026,7 +1026,6 @@ function base_files()
     "GdiPlus.h",
     "Geom.*",
     "GuessFileType.*",
-    "GuessFileType_win.cpp",
     "HtmlTags.*",
     "Http.h",
     "Http.cpp",
