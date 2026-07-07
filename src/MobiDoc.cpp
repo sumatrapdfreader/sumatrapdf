@@ -574,7 +574,7 @@ bool MobiDoc::ParseHeader() {
         }
         ReportIf(nullptr != huffDic);
         huffDic = new HuffDicDecompressor();
-        if (!huffDic->SetHuffData((u8*)recData, huffRecSize)) {
+        if (!huffDic->SetHuffData(recData, huffRecSize)) {
             return false;
         }
         int cdicsCount = (int)mobiHdr.huffmanRecCount - 1;
@@ -593,7 +593,7 @@ bool MobiDoc::ParseHeader() {
             if (huffRecSize > (u32)-1) {
                 return false;
             }
-            if (!huffDic->AddCdicData((u8*)recData, (u32)huffRecSize)) {
+            if (!huffDic->AddCdicData(recData, (u32)huffRecSize)) {
                 return false;
             }
         }
@@ -831,7 +831,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut) {
         return ok;
     }
     if (COMPRESSION_HUFF == compressionType && huffDic) {
-        bool ok = huffDic->Decompress((u8*)recData, recSize, strOut);
+        bool ok = huffDic->Decompress(recData, recSize, strOut);
         if (!ok) {
             logf("HuffDic decompression failed\n");
         }

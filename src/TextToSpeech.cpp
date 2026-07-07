@@ -945,8 +945,8 @@ static DWORD WavGetU32(const u8* d) {
 
 // finds "fmt " and "data" chunks in a RIFF WAVE file
 static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** dataOut, DWORD* dataSizeOut) {
-    if (n < 12 + 8 || !str::EqN(Str((char*)(d), (int)(4)), StrL("RIFF"), 4) ||
-        !str::EqN(Str((char*)(d + 8), (int)(4)), StrL("WAVE"), 4)) {
+    if (n < 12 + 8 || !str::EqN(Str((char*)(d), 4), StrL("RIFF"), 4) ||
+        !str::EqN(Str((char*)(d + 8), 4), StrL("WAVE"), 4)) {
         return false;
     }
 
@@ -956,7 +956,7 @@ static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** 
 
     size_t off = 12;
     while (off + 8 <= n) {
-        Str chunkId = Str((char*)(d + off), (int)(4));
+        Str chunkId = Str((char*)(d + off), 4);
         DWORD chunkSize = WavGetU32(d + off + 4);
         off += 8;
         if (chunkSize > n - off) {

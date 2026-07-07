@@ -65,7 +65,7 @@ bool ByteReader::Unpack(void* strct, int size, Str format, int off, bool isBE) c
 
 ByteReader::ByteReader(Str data) : d((const u8*)data.s), len(data.len) {}
 
-ByteReader::ByteReader(const u8* data, int n) : d((const u8*)data), len(n) {}
+ByteReader::ByteReader(const u8* data, int n) : d(data), len(n) {}
 
 u8 ByteReader::Byte(int off) const {
     if (off < len) {

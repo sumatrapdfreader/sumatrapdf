@@ -2750,7 +2750,7 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
         FreePixmap(px);
         return nullptr;
     }
-    auto* rb = new RenderedBitmap((HBITMAP)px->hbmp, Size(px->width, px->height), (HANDLE)px->hMap);
+    auto* rb = new RenderedBitmap(px->hbmp, Size(px->width, px->height), px->hMap);
     px->hbmp = nullptr; // ownership moved to rb
     px->hMap = nullptr;
     px->data = nullptr; // pixels were owned by hbmp, now rb's
@@ -2764,11 +2764,11 @@ void FreePixmapNativeBitmap(Pixmap* p) {
         return;
     }
     if (p->hbmp) {
-        DeleteObject((HBITMAP)p->hbmp);
+        DeleteObject(p->hbmp);
         p->hbmp = nullptr;
     }
     if (p->hMap) {
-        CloseHandle((HANDLE)p->hMap);
+        CloseHandle(p->hMap);
         p->hMap = nullptr;
     }
     p->data = nullptr; // was owned by the DIB section
@@ -2782,7 +2782,7 @@ bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {
         return false;
     }
     if (p->hbmp) {
-        return BlitHBITMAP((HBITMAP)p->hbmp, hdc, target);
+        return BlitHBITMAP(p->hbmp, hdc, target);
     }
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);

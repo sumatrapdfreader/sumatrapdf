@@ -89,7 +89,7 @@ int FavTreeModel::ChildCount(TreeItem ti) {
         return 0;
     }
     int n = len(fti->children);
-    return (int)n;
+    return n;
 }
 
 TreeItem FavTreeModel::ChildAt(TreeItem ti, int idx) {

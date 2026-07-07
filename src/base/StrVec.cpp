@@ -143,7 +143,7 @@ static Str AppendJustString(StrVecPage* p, Str s, int idx) {
     u32* offsets = OffsetsForString(p, idx);
     u8* dst = p->currEnd - sLen - 1; // 1 for zero termination
     u32 off = (u32)(dst - (u8*)p);
-    offsets[0] = (u32)off;
+    offsets[0] = off;
     offsets[1] = (u32)sLen;
     memcpy(dst, s.s, (size_t)sLen);
     dst[sLen] = 0; // zero-terminate for C compat

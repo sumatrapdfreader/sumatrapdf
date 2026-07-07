@@ -1098,7 +1098,7 @@ u32 GetLibmupdfDllSize() {
         if (!str::EqI(fi->name, "libmupdf.dll")) {
             continue;
         }
-        return (u32)fi->uncompressedSize;
+        return fi->uncompressedSize;
     }
     return 0;
 }

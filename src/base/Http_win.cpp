@@ -138,7 +138,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
             break;
         }
         DWORD size;
-        BOOL wroteOk = WriteFile(hf, buf, (DWORD)dwRead, &size, nullptr);
+        BOOL wroteOk = WriteFile(hf, buf, dwRead, &size, nullptr);
         if (!wroteOk) {
             goto Exit;
         }

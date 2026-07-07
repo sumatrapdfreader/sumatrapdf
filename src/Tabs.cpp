@@ -33,7 +33,6 @@
 #include "Theme.h"
 #include "Translations.h"
 
-
 static void UpdateTabTitle(WindowTab* tab) {
     if (!tab) {
         return;
@@ -105,7 +104,7 @@ static void ShowTabBar(MainWindow* win, bool show) {
 }
 
 void UpdateTabWidth(MainWindow* win) {
-    int nTabs = (int)win->TabCount();
+    int nTabs = win->TabCount();
     bool showSingleTab = SettingsUseTabs() || win->tabsInTitlebar;
     bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
     int tabWidth = gGlobalPrefs->tabWidth;

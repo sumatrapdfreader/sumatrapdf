@@ -1743,17 +1743,17 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             int from = val;
             int to = val2;
             if (from < 0) {
-                from = (int)pageCount + from + 1;
+                from = pageCount + from + 1;
             }
             if (to < 0) {
-                to = (int)pageCount + to + 1;
+                to = pageCount + to + 1;
             }
             pr.nFromPage = limitValue((DWORD)from, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue((DWORD)to, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         } else if (!str::IsNull(str::Parse(s, "%d%$", &val))) {
             if (val < 0) {
-                val = (int)pageCount + val + 1;
+                val = pageCount + val + 1;
             }
             pr.nFromPage = pr.nToPage = limitValue((DWORD)val, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);

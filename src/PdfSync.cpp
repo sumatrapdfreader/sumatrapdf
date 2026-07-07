@@ -13,7 +13,6 @@
 #include "EngineBase.h"
 #include "PdfSync.h"
 
-
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE 10
 // maximum error in the source file line number when doing forward-search
@@ -170,7 +169,7 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
 
 static int SyncLineLen(Str data, int off) {
     int end = off;
-    int n = (int)data.len;
+    int n = data.len;
     while (end < n && ((u8*)data.s)[end]) {
         end++;
     }
@@ -178,13 +177,13 @@ static int SyncLineLen(Str data, int off) {
 }
 
 static Str SyncLineAt(Str data, int off) {
-    return Str((char*)((u8*)data.s + off), (int)SyncLineLen(data, off));
+    return Str((char*)((u8*)data.s + off), SyncLineLen(data, off));
 }
 
 // move to the next line in a list of zero-terminated lines
 static int SyncAdvanceLine(Str data, int off) {
     off += SyncLineLen(data, off);
-    int n = (int)data.len;
+    int n = data.len;
     while (off < n && !((u8*)data.s)[off]) {
         off++;
     }

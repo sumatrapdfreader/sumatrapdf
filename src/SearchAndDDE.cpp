@@ -2111,7 +2111,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
     HGLOBAL hCommand = (HGLOBAL)lp;
     bool isUnicode = IsWindowUnicode(hwndClient);
 
-    TempStr cmd = HGLOBALToStrTemp((HGLOBAL)hCommand, isUnicode);
+    TempStr cmd = HGLOBALToStrTemp(hCommand, isUnicode);
     bool didHandle = HandleExecuteCmds(hwnd, cmd);
     DDEACK ack{};
     ack.fAck = didHandle ? 1 : 0;

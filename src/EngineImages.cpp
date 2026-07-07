@@ -1946,7 +1946,7 @@ bool EngineCbx::FinishLoading() {
 
     auto* metadataFi = cbxArchive->GetFileDataByName("ComicInfo.xml");
     if (metadataFi && metadataFi->data) {
-        Str metadata = Str((char*)(metadataFi->data), metadataFi->fileSizeUncompressed);
+        Str metadata = Str(metadataFi->data, metadataFi->fileSizeUncompressed);
         cip.Parse(metadata);
     }
     Str comment = cbxArchive->GetComment();
@@ -2049,7 +2049,7 @@ Str EngineCbx::GetImageData(int pageNo) {
     if (!fi || !fi->data) {
         return {};
     }
-    return Str((char*)(fi->data), fi->fileSizeUncompressed);
+    return Str(fi->data, fi->fileSizeUncompressed);
 }
 
 TempStr EngineCbx::GetPropertyTemp(DocProp prop) {

@@ -2736,7 +2736,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             auto curr = (float)LowerU64(gi.ullArguments);
             bool isBegin = gi.dwFlags & GF_BEGIN;
             if (!isBegin) {
-                auto prev = (float)touchState.zoomIntermediate;
+                auto prev = touchState.zoomIntermediate;
                 float factor = curr / prev;
                 Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
                 HwndScreenToClient(win->hwndCanvas, pt);
@@ -3462,7 +3462,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     // avoid overwriting: if file exists, add a numeric suffix
     if (file::Exists(destPath)) {
         TempStr ext = path::GetExtTemp(destPath);
-        TempStr base = str::DupTemp(Str(fileName.s, (int)(len(fileName) - len(ext))));
+        TempStr base = str::DupTemp(Str(fileName.s, len(fileName) - len(ext)));
         for (int i = 1; i < 1000; i++) {
             TempStr newName = fmt("%s_%d%s", base, i, ext);
             destPath = path::JoinTemp(downloadsDir.s, newName.s);

@@ -19,7 +19,6 @@
 #include "TipText.h"
 #include "Theme.h"
 
-
 using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
@@ -804,7 +803,7 @@ static StrNode* AllocStrNode(Str s) {
     memcpy(dst, s.s, s.len);
     dst[s.len] = 0;
     node->next = nullptr;
-    node->s = Str((char*)dst, (int)s.len);
+    node->s = Str((char*)dst, s.len);
     return node;
 }
 

@@ -8,7 +8,6 @@
 #include "DisplayMode.h"
 #include "Notifications.h"
 
-
 // @gen-start cmd-c
 // clang-format off
 static SeqStrings gCommandNames =
@@ -847,7 +846,7 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, Str s) {
     }
     ReportIf(idx >= dimofi(gCommandIds));
     int cmdId = gCommandIds[idx];
-    return (int)cmdId;
+    return cmdId;
 }
 
 // cmdName is "CmdOpenFile" etc.

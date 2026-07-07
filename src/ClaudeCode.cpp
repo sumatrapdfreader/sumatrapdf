@@ -421,7 +421,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
             continue;
         }
         // extract session ID (remove .jsonl extension)
-        TempStr sessionId = str::DupTemp(Str(fileName.s, (int)(nameLen - 6)));
+        TempStr sessionId = str::DupTemp(Str(fileName.s, nameLen - 6));
 
         TempStr fullPath = fmt("%s\\%s", projectDir, fileName);
         Str desc = GetSessionDescription(fullPath);

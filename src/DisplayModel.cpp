@@ -695,8 +695,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         return 0;
     }
 
-    float zoomX = areaForPagesDx / (float)row.dx;
-    float zoomY = areaForPagesDy / (float)row.dy;
+    float zoomX = areaForPagesDx / row.dx;
+    float zoomY = areaForPagesDy / row.dy;
     float zoom;
     if (zoomX < zoomY || kZoomFitWidth == zoomVirtual) {
         zoom = zoomX;

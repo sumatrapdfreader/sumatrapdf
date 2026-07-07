@@ -10,7 +10,6 @@
 #include "Translations.h"
 #include "resource.h"
 
-
 namespace trans {
 
 // defined in Trans*_txt.cpp
@@ -224,7 +223,7 @@ void SetCurrentLangByCode(Str langCode) {
         return;
     }
     int dataSize = (int)(archive.files[fileIdx].uncompressedSize);
-    Str d = Str((char*)(data), (int)(dataSize));
+    Str d = Str((char*)(data), dataSize);
     ParseTranslationsTxt(d, langCode);
     free(data);
 }

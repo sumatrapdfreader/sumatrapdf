@@ -1176,7 +1176,7 @@ static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
     menuString = ShortenStringUtf8InTheMiddleTemp(menuString, kMaxRunes);
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
-    int menuIdx = (int)((index + 1) % 10);
+    int menuIdx = (index + 1) % 10;
     menuString = fmt("&%d) %s", menuIdx, fileName);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;

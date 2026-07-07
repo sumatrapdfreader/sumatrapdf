@@ -1903,7 +1903,7 @@ bool EndsWith(WStr txt, WStr end) {
     if (end.len > txt.len) {
         return false;
     }
-    return Eq(WStr(txt.s + txt.len - end.len, (int)end.len), end);
+    return Eq(WStr(txt.s + txt.len - end.len, end.len), end);
 }
 
 bool EndsWithI(WStr txt, WStr end) {
@@ -1913,7 +1913,7 @@ bool EndsWithI(WStr txt, WStr end) {
     if (end.len > txt.len) {
         return false;
     }
-    return EqI(WStr(txt.s + txt.len - end.len, (int)end.len), end);
+    return EqI(WStr(txt.s + txt.len - end.len, end.len), end);
 }
 
 int IndexOfChar(WStr s, WCHAR c) {

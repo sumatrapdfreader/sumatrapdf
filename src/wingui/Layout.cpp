@@ -416,8 +416,8 @@ Size VBox::Layout(const Constraints bc) {
     } else {
         cbc = cbc.LoosenWidth();
     }
-    auto height = int(0);
-    auto width = int(0);
+    auto height = 0;
+    auto width = 0;
     ILayout* previous = nullptr;
 
     for (int i = 0; i < n; i++) {
@@ -445,7 +445,7 @@ Size VBox::Layout(const Constraints bc) {
 
     // Need to adjust width to any widgets that have flex
     if (totalFlex > 0) {
-        auto extraHeight = int(0);
+        auto extraHeight = 0;
         if (bc.HasBoundedHeight() && bc.max.dy > totalHeight) {
             extraHeight = bc.max.dy - totalHeight;
         } else if (bc.min.dy > totalHeight) {
@@ -588,7 +588,7 @@ void VBox::SetBounds(Rect bounds) {
     // Adjust the bounds so that the minimum Y handles vertical alignment
     // of the controls.  We also calculate 'extraGap' which will adjust
     // spacing of the controls for non-packed alignments.
-    auto extraGap = int(0);
+    auto extraGap = 0;
     if (totalFlex == 0) {
         switch (alignMain) {
             case MainAxisAlign::MainStart:
@@ -741,8 +741,8 @@ Size HBox::Layout(const Constraints bc) {
     } else {
         cbc = cbc.LoosenHeight();
     }
-    auto width = int(0);
-    auto height = int(0);
+    auto width = 0;
+    auto height = 0;
     ILayout* previous = nullptr;
 
     for (int i = 0; i < n; i++) {
@@ -922,7 +922,7 @@ void HBox::SetBounds(Rect bounds) {
     // Adjust the bounds so that the minimum Y handles vertical alignment
     // of the controls.  We also calculate 'extraGap' which will adjust
     // spacing of the controls for non-packed alignments.
-    auto extraGap = int(0);
+    auto extraGap = 0;
     if (totalFlex == 0) {
         switch (alignMain) {
             case MainAxisAlign::MainStart:

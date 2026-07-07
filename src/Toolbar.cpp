@@ -1197,7 +1197,7 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
     u8 r, g, b;
     UnpackColor(bgCol, r, g, b);
     for (size_t y = 0; y < (size_t)dy; y++) {
-        u8* s = src->samples + (srcStride * (size_t)y);
+        u8* s = src->samples + (srcStride * y);
         size_t atY = y + (size_t)dstY;
         u8* d = dstSamples + (dstStride * atY) + ((size_t)dstX * dstN);
         for (int x = 0; x < dx; x++) {

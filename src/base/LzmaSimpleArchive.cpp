@@ -95,7 +95,7 @@ static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompre
 
     ISzAllocatorAlloc lzmaAlloc(a);
     ELzmaStatus status;
-    u8* dest = (u8*)uncompressed;
+    u8* dest = uncompressed;
     u8* src = (u8*)(compressed + LZMA_HEADER_SIZE);
     u8* propData = (u8*)(compressed + 1);
     int res = LzmaDecode(dest, &uncompressedSizeCmp, src, &compressedSizeTmp, propData, LZMA_PROPS_SIZE,
@@ -192,7 +192,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
 
     int headerSize = br.Offset();
     u32 headerCrc32 = br.UInt32();
-    u32 realCrc = lzma_crc32(0, (const u8*)archiveHeader, (u32)headerSize);
+    u32 realCrc = lzma_crc32(0, archiveHeader, (u32)headerSize);
     if (headerCrc32 != realCrc) {
         return false;
     }

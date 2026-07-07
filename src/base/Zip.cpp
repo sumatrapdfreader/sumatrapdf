@@ -306,5 +306,5 @@ Str Ungzip(const Str& d) {
     // also make it a valid 0-terminated char* or WCHAR* string
     dataUncr[lenUncr] = 0;
     dataUncr[lenUncr + 1] = 0;
-    return Str((char*)dataUncr, (int)lenUncr);
+    return Str((char*)dataUncr, lenUncr);
 }

@@ -908,9 +908,9 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     // compute pixel rectangles for each highlighted range
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(Str(title.s, (int)byteRanges[i].start));
+        TempWStr prefixToStart = ToWStrTemp(Str(title.s, byteRanges[i].start));
         int wStart = len(prefixToStart);
-        TempWStr prefixToEnd = ToWStrTemp(Str(title.s, (int)byteRanges[i].end));
+        TempWStr prefixToEnd = ToWStrTemp(Str(title.s, byteRanges[i].end));
         int wEnd = len(prefixToEnd);
 
         SIZE szStart, szEnd;

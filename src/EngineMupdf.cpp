@@ -1458,7 +1458,7 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
         }
     }
 
-    fz_point p = {(float)pt.x, (float)pt.y};
+    fz_point p = {pt.x, pt.y};
     for (auto& img : pageInfo->images) {
         fz_rect ir = img->rect;
         if (IsPointInRect(ir, p)) {
