@@ -926,6 +926,7 @@
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\base\HtmlTags.cpp" />
     <ClCompile Include="..\src\base\Http.cpp" />
+    <ClCompile Include="..\src\base\Http_win.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\JxlReader.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />

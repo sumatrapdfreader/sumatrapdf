@@ -446,6 +446,8 @@ const DEP_LIBS_BASE = [
           "Geom.cpp",
           "GuessFileType.cpp",
           "HtmlTags.cpp",
+          "Http.cpp",
+          "Http_mac.cpp",
           "JsonParser.cpp",
           "SettingsUtil.cpp",
           "SquareTreeParser.cpp",
