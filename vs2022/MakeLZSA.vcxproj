@@ -143,56 +143,56 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)bin\arm64\Debug\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\arm64\Debug\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)bin\arm64\Release\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\arm64\Release\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\MakeLZSA\</IntDir>
     <TargetName>MakeLZSA</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>

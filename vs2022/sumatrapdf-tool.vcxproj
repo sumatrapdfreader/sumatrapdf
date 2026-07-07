@@ -270,112 +270,112 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\x86\Debug\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\x64\Debug\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\arm64\Debug\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\x64_asan\Debug\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\x86\DebugFull\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\x64\DebugFull\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\arm64\DebugFull\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\x64_asan\DebugFull\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\x86\Release\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\x64\Release\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj\arm64\Release\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\x64_asan\Release\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\x86\ReleaseAnalyze\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\x64\ReleaseAnalyze\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\arm64\ReleaseAnalyze\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\sumatrapdf-tool\</IntDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\sumatrapdf-tool\</IntDir>
     <TargetName>sumatrapdf-tool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
@@ -403,7 +403,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbg32/obj/sumatrapdf-tool.lib" /MAP:"../out/dbg32/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -432,7 +433,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbg64/obj/sumatrapdf-tool.lib" /MAP:"../out/dbg64/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -461,7 +463,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj/sumatrapdf-tool.lib" /MAP:"../out/dbgarm64/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -490,7 +493,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj/sumatrapdf-tool.lib" /MAP:"../out/dbg64_asan/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -519,7 +523,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj/sumatrapdf-tool.lib" /MAP:"../out/dbgfull32/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -548,7 +553,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj/sumatrapdf-tool.lib" /MAP:"../out/dbgfull64/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -577,7 +583,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj/sumatrapdf-tool.lib" /MAP:"../out/dbgfullarm64/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -606,7 +613,8 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj/sumatrapdf-tool.lib" /MAP:"../out/dbgfull64_asan/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -639,7 +647,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/rel32/obj/sumatrapdf-tool.lib" /MAP:"../out/rel32/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -672,7 +681,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/rel64/obj/sumatrapdf-tool.lib" /MAP:"../out/rel64/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -705,7 +715,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/arm64/obj/sumatrapdf-tool.lib" /MAP:"../out/arm64/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -737,7 +748,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj/sumatrapdf-tool.lib" /MAP:"../out/rel64_asan/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -771,7 +783,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj/sumatrapdf-tool.lib" /MAP:"../out/rel32_prefast/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -805,7 +818,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj/sumatrapdf-tool.lib" /MAP:"../out/rel64_prefast/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -839,7 +853,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj/sumatrapdf-tool.lib" /MAP:"../out/arm64_prefast/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -872,7 +887,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj/sumatrapdf-tool.lib" /MAP:"../out/rel64_prefast_asan/obj/sumatrapdf-tool.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>

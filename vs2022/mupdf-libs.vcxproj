@@ -268,98 +268,98 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\x86\Debug\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\x64\Debug\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\arm64\Debug\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\x64_asan\Debug\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
-    <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\x86\DebugFull\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
-    <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\x64\DebugFull\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
-    <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\arm64\DebugFull\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\x64_asan\DebugFull\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\x86\Release\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\x64\Release\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj\arm64\Release\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\x64_asan\Release\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
-    <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\x86\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\x64\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
-    <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\arm64\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\mupdf-libs\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\mupdf-libs\</IntDir>
     <TargetName>mupdf-libs</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -1402,10 +1402,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1417,10 +1417,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jccolor-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jccolor-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jccolor-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jccolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jccolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jccolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jccolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jccolor-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1432,10 +1432,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1447,10 +1447,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1462,10 +1462,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcgray-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcgray-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcgray-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcgray-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcgray-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcgray-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcgray-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcgray-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1477,10 +1477,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1492,10 +1492,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1507,10 +1507,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1522,10 +1522,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1537,10 +1537,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcsample-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcsample-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcsample-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcsample-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1552,10 +1552,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1567,10 +1567,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1582,10 +1582,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdcolor-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdcolor-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdcolor-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdcolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdcolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdcolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdcolor-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdcolor-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1597,10 +1597,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1612,10 +1612,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1627,10 +1627,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdmerge-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdmerge-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdmerge-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdmerge-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdmerge-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdmerge-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdmerge-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdmerge-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1642,10 +1642,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1657,10 +1657,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1672,10 +1672,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdsample-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdsample-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdsample-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdsample-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdsample-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1687,10 +1687,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1702,10 +1702,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctflt-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctflt-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctflt-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctflt-3dn.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1717,10 +1717,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1732,10 +1732,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctfst-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctfst-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctfst-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctfst-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1747,10 +1747,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1762,10 +1762,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1777,10 +1777,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctint-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctint-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctint-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctint-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1792,10 +1792,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1807,10 +1807,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctflt-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctflt-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctflt-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctflt-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctflt-3dn.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1822,10 +1822,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctflt-sse.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1837,10 +1837,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1852,10 +1852,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctfst-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctfst-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctfst-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctfst-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctfst-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1867,10 +1867,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1882,10 +1882,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1897,10 +1897,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctint-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctint-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctint-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctint-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctint-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1912,10 +1912,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1927,10 +1927,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctred-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctred-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctred-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctred-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctred-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctred-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctred-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctred-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1942,10 +1942,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1957,10 +1957,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jquant-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jquant-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jquant-3dn.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jquant-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jquant-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jquant-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jquant-3dn.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jquant-3dn.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1972,10 +1972,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jquant-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jquant-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jquant-mmx.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jquant-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jquant-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jquant-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jquant-mmx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jquant-mmx.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -1987,10 +1987,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jquant-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jquant-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jquant-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jquant-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jquant-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jquant-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jquant-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jquant-sse.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -2002,10 +2002,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -2017,10 +2017,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -2032,10 +2032,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -2047,10 +2047,10 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
@@ -2066,14 +2066,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jccolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jccolor-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2093,14 +2093,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jccolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jccolor-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2120,14 +2120,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcgray-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jcgray-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2147,14 +2147,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcgray-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jcgray-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2174,14 +2174,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jchuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jchuff-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2201,14 +2201,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcphuff-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jcphuff-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2228,14 +2228,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jcsample-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2255,14 +2255,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jcsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jcsample-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2282,14 +2282,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdcolor-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jdcolor-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2309,14 +2309,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdcolor-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jdcolor-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2336,14 +2336,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdmerge-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jdmerge-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2363,14 +2363,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdmerge-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jdmerge-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2390,14 +2390,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdsample-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jdsample-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2417,14 +2417,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jdsample-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jdsample-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2444,14 +2444,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfdctflt-sse.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jfdctflt-sse.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2471,14 +2471,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfdctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jfdctfst-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2498,14 +2498,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfdctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jfdctint-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2525,14 +2525,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jfdctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jfdctint-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2552,14 +2552,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jidctflt-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jidctflt-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2579,14 +2579,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jidctfst-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jidctfst-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2606,14 +2606,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jidctint-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jidctint-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2633,14 +2633,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jidctint-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jidctint-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2660,14 +2660,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jidctred-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jidctred-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2687,14 +2687,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jquantf-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jquantf-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2714,14 +2714,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jquanti-avx2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jquanti-avx2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2741,14 +2741,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jquanti-sse2.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jquanti-sse2.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -2768,14 +2768,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf-libs/jsimdcpu.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf-libs/jsimdcpu.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>

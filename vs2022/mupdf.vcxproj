@@ -268,98 +268,98 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\x86\Debug\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\x64\Debug\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\arm64\Debug\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\x64_asan\Debug\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
-    <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\x86\DebugFull\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
-    <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\x64\DebugFull\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
-    <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\arm64\DebugFull\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\x64_asan\DebugFull\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\x86\Release\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\x64\Release\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj\arm64\Release\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\x64_asan\Release\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
-    <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\x86\ReleaseAnalyze\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\x64\ReleaseAnalyze\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
-    <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\arm64\ReleaseAnalyze\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\mupdf\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -1208,22 +1208,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/DroidSansFallbackFull.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).ttf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).ttf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).ttf (x86)</Message>
@@ -1259,22 +1259,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoEmoji-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).ttf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).ttf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).ttf (x86)</Message>
@@ -1310,22 +1310,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoMusic-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).otf (x86)</Message>
@@ -1361,22 +1361,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoSans-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).otf (x86)</Message>
@@ -1412,22 +1412,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoSansMath-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).otf (x86)</Message>
@@ -1463,22 +1463,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoSansSymbols-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).otf (x86)</Message>
@@ -1514,22 +1514,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).otf (x86)</Message>
@@ -1565,22 +1565,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NotoSerif-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).otf (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).otf (x86)</Message>
@@ -1616,22 +1616,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/CharisSIL-Bold.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1667,22 +1667,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/CharisSIL-BoldItalic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1718,22 +1718,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/CharisSIL-Italic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1769,22 +1769,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/CharisSIL.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1820,22 +1820,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/Dingbats.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1871,22 +1871,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusMonoPS-Bold.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1922,22 +1922,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -1973,22 +1973,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusMonoPS-Italic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2024,22 +2024,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusMonoPS-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2075,22 +2075,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusRoman-Bold.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2126,22 +2126,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2177,22 +2177,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusRoman-Italic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2228,22 +2228,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusRoman-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2279,22 +2279,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusSans-Bold.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2330,22 +2330,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusSans-BoldItalic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2381,22 +2381,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusSans-Italic.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2432,22 +2432,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/NimbusSans-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>
@@ -2483,22 +2483,22 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj/arm64/DebugFull/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">../out/dbgfullarm64/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/mupdf/StandardSymbolsPS.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">bin2coff %(Filename).cff (x86)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin2coff %(Filename).cff (x86)</Message>

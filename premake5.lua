@@ -217,6 +217,98 @@ function uses_zlib()
   zlib_defines()
 end
 
+-- out/<cfg>/ holds only shipping binaries (*.exe, *.dll, *.pdb). Everything
+-- else (.obj, .lib, .map, .exp, .ilk, static-lib .pdb, ...) lives under obj-s
+-- (static SumatraPDF.exe chain) or obj (SumatraPDF-dll / libmupdf chain) so the
+-- two flavors never share intermediates.
+local function for_each_out_config(fn)
+  fn("platforms:x86", "configurations:Release", "out/rel32")
+  fn("platforms:x86", "configurations:ReleaseAnalyze", "out/rel32_prefast")
+  fn("platforms:x86", "configurations:Debug", "out/dbg32")
+  fn("platforms:x86", "configurations:DebugFull", "out/dbgfull32")
+  fn("platforms:x64", "configurations:Release", "out/rel64")
+  fn("platforms:x64", "configurations:ReleaseAnalyze", "out/rel64_prefast")
+  fn("platforms:x64", "configurations:Debug", "out/dbg64")
+  fn("platforms:x64", "configurations:DebugFull", "out/dbgfull64")
+  fn("platforms:x64_asan", "configurations:Release", "out/rel64_asan")
+  fn("platforms:x64_asan", "configurations:ReleaseAnalyze", "out/rel64_prefast_asan")
+  fn("platforms:x64_asan", "configurations:Debug", "out/dbg64_asan")
+  fn("platforms:x64_asan", "configurations:DebugFull", "out/dbgfull64_asan")
+  fn("platforms:arm64", "configurations:Release", "out/arm64")
+  fn("platforms:arm64", "configurations:ReleaseAnalyze", "out/arm64_prefast")
+  fn("platforms:arm64", "configurations:Debug", "out/dbgarm64")
+  fn("platforms:arm64", "configurations:DebugFull", "out/dbgfullarm64")
+  filter {}
+end
+
+-- Premake normally appends %{cfg.platform}/%{cfg.buildcfg}/%{prj.name} to objdir;
+-- the ! prefix disables that because out/<cfg> already encodes platform + config.
+local function project_objdir(outDir, subdir)
+  objdir("!" .. outDir .. "/" .. subdir .. "/%{prj.name}")
+end
+
+function static_intermediate_dirs()
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    targetdir(outDir .. "/obj-s")
+    project_objdir(outDir, "obj-s")
+  end)
+end
+
+function dll_intermediate_dirs()
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    targetdir(outDir .. "/obj")
+    project_objdir(outDir, "obj")
+  end)
+end
+
+function static_app_objdir()
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    project_objdir(outDir, "obj-s")
+  end)
+end
+
+function dll_app_objdir()
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    project_objdir(outDir, "obj")
+  end)
+end
+
+function static_linker_intermediates()
+  mapfile "Off"
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    linkoptions('/IMPLIB:"../' .. outDir .. '/obj-s/%{prj.name}.lib"')
+    linkoptions('/MAP:"../' .. outDir .. '/obj-s/%{prj.name}.map"')
+  end)
+end
+
+function dll_linker_intermediates()
+  mapfile "Off"
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    linkoptions('/IMPLIB:"../' .. outDir .. '/obj/%{prj.name}.lib"')
+    linkoptions('/MAP:"../' .. outDir .. '/obj/%{prj.name}.map"')
+  end)
+end
+
+-- SharedLib (.dll) projects: intermediates under obj/, but ship the .dll/.pdb
+-- in out/<cfg>/.
+function dll_shared_lib_dirs()
+  dll_intermediate_dirs()
+  mapfile "Off"
+  for_each_out_config(function(platform, config, outDir)
+    filter { platform, config }
+    linkoptions('/OUT:"../' .. outDir .. '/%{prj.name}.dll"')
+    linkoptions('/PDB:"../' .. outDir .. '/%{prj.name}.pdb"')
+    linkoptions('/IMPLIB:"../' .. outDir .. '/obj/%{prj.name}.lib"')
+    linkoptions('/MAP:"../' .. outDir .. '/obj/%{prj.name}.map"')
+  end)
+end
+
 workspace "SumatraPDF"
   configurations { "Debug", "DebugFull", "Release", "ReleaseAnalyze", }
   platforms { "x86", "x64", "arm64", "x64_asan" }
@@ -298,8 +390,6 @@ workspace "SumatraPDF"
     targetdir "out/dbgfullarm64"
   filter {}
 
-  objdir "%{cfg.targetdir}/obj"
-
   -- https://github.com/premake/premake-core/wiki/symbols
   -- https://blogs.msdn.microsoft.com/vcblog/2016/10/05/faster-c-build-cycle-in-vs-15-with-debugfastlink/
   symbols "FastLink"
@@ -321,6 +411,7 @@ workspace "SumatraPDF"
   winver_defines()
 
   project "unrar"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     optimized_conf()
@@ -333,6 +424,7 @@ workspace "SumatraPDF"
     unrar_files()
 
   project "libdjvu"
+    dll_intermediate_dirs()
     kind "StaticLib"
     characterset("MBCS")
     language "C++"
@@ -355,6 +447,7 @@ workspace "SumatraPDF"
     libdjvu_files()
 
   project "chm"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -366,6 +459,7 @@ workspace "SumatraPDF"
   -- mupdf-libs also builds cmark for md.c inside libmupdf; the static SumatraPDF
   -- exe reuses that copy, only the dll build links this separate lib.
   project "cmark-gfm"
+    dll_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -375,6 +469,7 @@ workspace "SumatraPDF"
     cmark_gfm_files()
 
   project "djvudec"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -386,6 +481,7 @@ workspace "SumatraPDF"
     files { "ext/djvudec/djvu.c", "ext/djvudec/djvu.h" }
 
   project "libarchive"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -446,6 +542,7 @@ workspace "SumatraPDF"
     }
 
   project "libwebp"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -461,6 +558,7 @@ workspace "SumatraPDF"
 
   -- highway: SIMD dispatch library used by libjxl (ext/highway, v1.2.0)
   project "highway"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
@@ -471,6 +569,7 @@ workspace "SumatraPDF"
 
   -- skcms: color management used by libjxl (ext/skcms). Baseline only.
   project "skcms"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
@@ -483,6 +582,7 @@ workspace "SumatraPDF"
   -- libjxl decoder (ext/libjxl, v0.11.2). Decoder subset only; uses skcms for
   -- color management and brotli (compiled in mupdf-libs) for compressed metadata.
   project "libjxl"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
@@ -496,6 +596,7 @@ workspace "SumatraPDF"
     libjxl_files()
 
   project "libheif"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
@@ -509,6 +610,7 @@ workspace "SumatraPDF"
     libheif_files()
 
   project "dav1d"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -545,6 +647,7 @@ workspace "SumatraPDF"
     filter {}
 
   project "zlib"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -557,6 +660,7 @@ workspace "SumatraPDF"
 -- instead of having 9 projects
 
   project "mupdf-libs"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
@@ -769,6 +873,7 @@ workspace "SumatraPDF"
     end
 
   project "mupdf"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     mixed_dbg_rel_conf()
@@ -828,6 +933,7 @@ workspace "SumatraPDF"
     defines { "_UCRT_NOISY_NAN", "CMARK_GFM_STATIC_DEFINE" }
 
   project "libmupdf"
+    dll_shared_lib_dirs()
     kind "SharedLib"
     language "C"
     optimized_conf()
@@ -855,6 +961,7 @@ workspace "SumatraPDF"
     }
 
   project "base"
+    static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
@@ -878,6 +985,8 @@ workspace "SumatraPDF"
 ---- executables
 
   project "test_util"
+    dll_app_objdir()
+    dll_linker_intermediates()
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
@@ -889,6 +998,8 @@ workspace "SumatraPDF"
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
 
   project "test_engines"
+    static_app_objdir()
+    static_linker_intermediates()
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
@@ -904,6 +1015,8 @@ workspace "SumatraPDF"
     }
 
   project "bin2coff"
+    static_app_objdir()
+    static_linker_intermediates()
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
@@ -918,6 +1031,8 @@ workspace "SumatraPDF"
   -- links libmupdf.dll for everything, so the exe itself is tiny. It's embedded
   -- in SumatraPDF-dll.exe as a resource (see the InstallerData.dat prebuild).
   project "sumatrapdf-tool"
+    dll_app_objdir()
+    dll_linker_intermediates()
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
@@ -928,6 +1043,7 @@ workspace "SumatraPDF"
     links { "shell32" }
 
   project "PdfFilter"
+    dll_shared_lib_dirs()
     kind "SharedLib"
     language "C++"
     cppdialect "C++latest"
@@ -967,6 +1083,7 @@ workspace "SumatraPDF"
   --   links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   project "PdfPreview"
+    dll_shared_lib_dirs()
     kind "SharedLib"
     language "C++"
     cppdialect "C++latest"
@@ -986,6 +1103,8 @@ workspace "SumatraPDF"
 
   -- a single static executable
   project "SumatraPDF"
+    static_app_objdir()
+    static_linker_intermediates()
     kind "WindowedApp"
     language "C++"
     cppdialect "C++latest"
@@ -1073,6 +1192,8 @@ workspace "SumatraPDF"
 
   -- a dll version where most functionality is in libmupdf.dll
   project "SumatraPDF-dll"
+    dll_app_objdir()
+    dll_linker_intermediates()
     kind "WindowedApp"
     language "C++"
     cppdialect "C++latest"
@@ -1222,7 +1343,7 @@ workspace "MakeLZSA"
     targetdir "out/dbg64_asan"
   filter {}
 
-  objdir "%{cfg.targetdir}/obj"
+  objdir "!%{cfg.targetdir}/obj/%{prj.name}"
 
   -- https://github.com/premake/premake-core/wiki/symbols
   -- https://blogs.msdn.microsoft.com/vcblog/2016/10/05/faster-c-build-cycle-in-vs-15-with-debugfastlink/

@@ -268,98 +268,98 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\x86\Debug\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg32\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\x64\Debug\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\arm64\Debug\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgarm64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\x64_asan\Debug\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
-    <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\x86\DebugFull\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull32\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
-    <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\x64\DebugFull\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
-    <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\arm64\DebugFull\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\x64_asan\DebugFull\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\x86\Release\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\x64\Release\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj\arm64\Release\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\x64_asan\Release\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
-    <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\x86\ReleaseAnalyze\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\x64\ReleaseAnalyze\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
-    <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\arm64\ReleaseAnalyze\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
-    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\cmark-gfm\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\cmark-gfm\</IntDir>
     <TargetName>cmark-gfm</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>

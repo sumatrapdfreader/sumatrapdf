@@ -269,113 +269,113 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\x86\Debug\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg32\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\x64\Debug\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\arm64\Debug\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgarm64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\x64_asan\Debug\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\x86\DebugFull\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull32\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\x64\DebugFull\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\arm64\DebugFull\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\x64_asan\DebugFull\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\x86\Release\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\x64\Release\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj\arm64\Release\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\x64_asan\Release\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\x86\ReleaseAnalyze\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\x64\ReleaseAnalyze\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\arm64\ReleaseAnalyze\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\PdfFilter\</IntDir>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
@@ -407,8 +407,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbg32\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbg32\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbg32/PdfFilter.dll" /PDB:"../out/dbg32/PdfFilter.pdb" /IMPLIB:"../out/dbg32/obj/PdfFilter.lib" /MAP:"../out/dbg32/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -441,8 +442,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbg64\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbg64\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbg64/PdfFilter.dll" /PDB:"../out/dbg64/PdfFilter.pdb" /IMPLIB:"../out/dbg64/obj/PdfFilter.lib" /MAP:"../out/dbg64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -475,8 +477,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgarm64\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbgarm64\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbgarm64/PdfFilter.dll" /PDB:"../out/dbgarm64/PdfFilter.pdb" /IMPLIB:"../out/dbgarm64/obj/PdfFilter.lib" /MAP:"../out/dbgarm64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -509,8 +512,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbg64_asan\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbg64_asan\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbg64_asan/PdfFilter.dll" /PDB:"../out/dbg64_asan/PdfFilter.pdb" /IMPLIB:"../out/dbg64_asan/obj/PdfFilter.lib" /MAP:"../out/dbg64_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -543,8 +547,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfull32\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbgfull32\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbgfull32/PdfFilter.dll" /PDB:"../out/dbgfull32/PdfFilter.pdb" /IMPLIB:"../out/dbgfull32/obj/PdfFilter.lib" /MAP:"../out/dbgfull32/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -577,8 +582,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfull64\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbgfull64\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbgfull64/PdfFilter.dll" /PDB:"../out/dbgfull64/PdfFilter.pdb" /IMPLIB:"../out/dbgfull64/obj/PdfFilter.lib" /MAP:"../out/dbgfull64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -611,8 +617,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfullarm64\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbgfullarm64\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbgfullarm64/PdfFilter.dll" /PDB:"../out/dbgfullarm64/PdfFilter.pdb" /IMPLIB:"../out/dbgfullarm64/obj/PdfFilter.lib" /MAP:"../out/dbgfullarm64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -645,8 +652,9 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfull64_asan\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\dbgfull64_asan\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/dbgfull64_asan/PdfFilter.dll" /PDB:"../out/dbgfull64_asan/PdfFilter.pdb" /IMPLIB:"../out/dbgfull64_asan/obj/PdfFilter.lib" /MAP:"../out/dbgfull64_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -683,8 +691,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel32\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\rel32\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/rel32/PdfFilter.dll" /PDB:"../out/rel32/PdfFilter.pdb" /IMPLIB:"../out/rel32/obj/PdfFilter.lib" /MAP:"../out/rel32/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -721,8 +730,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\rel64\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/rel64/PdfFilter.dll" /PDB:"../out/rel64/PdfFilter.pdb" /IMPLIB:"../out/rel64/obj/PdfFilter.lib" /MAP:"../out/rel64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -759,8 +769,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\arm64\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\arm64\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/arm64/PdfFilter.dll" /PDB:"../out/arm64/PdfFilter.pdb" /IMPLIB:"../out/arm64/obj/PdfFilter.lib" /MAP:"../out/arm64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -796,8 +807,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64_asan\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\rel64_asan\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/rel64_asan/PdfFilter.dll" /PDB:"../out/rel64_asan/PdfFilter.pdb" /IMPLIB:"../out/rel64_asan/obj/PdfFilter.lib" /MAP:"../out/rel64_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -835,8 +847,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel32_prefast\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\rel32_prefast\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/rel32_prefast/PdfFilter.dll" /PDB:"../out/rel32_prefast/PdfFilter.pdb" /IMPLIB:"../out/rel32_prefast/obj/PdfFilter.lib" /MAP:"../out/rel32_prefast/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -874,8 +887,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64_prefast\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\rel64_prefast\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/rel64_prefast/PdfFilter.dll" /PDB:"../out/rel64_prefast/PdfFilter.pdb" /IMPLIB:"../out/rel64_prefast/obj/PdfFilter.lib" /MAP:"../out/rel64_prefast/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -913,8 +927,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\arm64_prefast\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\arm64_prefast\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/arm64_prefast/PdfFilter.dll" /PDB:"../out/arm64_prefast/PdfFilter.pdb" /IMPLIB:"../out/arm64_prefast/obj/PdfFilter.lib" /MAP:"../out/arm64_prefast/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -951,8 +966,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64_prefast_asan\PdfFilter.lib</ImportLibrary>
-      <GenerateMapFile>true</GenerateMapFile>
+      <ImportLibrary>..\out\rel64_prefast_asan\obj\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AdditionalOptions>/OUT:"../out/rel64_prefast_asan/PdfFilter.dll" /PDB:"../out/rel64_prefast_asan/PdfFilter.pdb" /IMPLIB:"../out/rel64_prefast_asan/obj/PdfFilter.lib" /MAP:"../out/rel64_prefast_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>

@@ -11,7 +11,7 @@ import { cpus } from "node:os";
 import { basename, dirname, join } from "node:path";
 
 const premakeFilesPath = join("premake5.files.lua");
-const objDir = join("out", "dbg64", "obj", "x64", "Debug", "mupdf", "remove-unused");
+const objDir = join("out", "dbg64", "obj-s", "mupdf", "remove-unused");
 
 interface IncludeLine {
   lineIndex: number;
