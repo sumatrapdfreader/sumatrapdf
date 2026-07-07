@@ -516,6 +516,8 @@ const TEST_ENGINES_SOURCES = [
   "src/EngineBase.cpp",
   "src/EngineDjvuDec.cpp",
   "src/EngineDjvuDec_posix.cpp",
+  "src/FzImgReader.cpp",
+  "src/FzImgReader_posix.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];
@@ -683,7 +685,7 @@ async function buildTestEngines(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec"];
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Imupdf/include", "-Imupdf/generated"];
 
   const units = TEST_ENGINES_SOURCES.map((src) => {
     const obj = objPath(outDir, "test_engines", src);
@@ -719,6 +721,8 @@ async function buildTestEngines(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
+    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "libmupdf-libs.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "libzlib.a"),

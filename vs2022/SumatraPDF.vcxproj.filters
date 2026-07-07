@@ -611,6 +611,9 @@
     <ClCompile Include="..\src\FzImgReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FzImgReader_win.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">
       <Filter>src</Filter>
     </ClCompile>
