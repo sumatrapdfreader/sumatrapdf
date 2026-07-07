@@ -2189,59 +2189,52 @@ IStream* CreateStreamFromData(const Str& d) {
     return stream;
 }
 
-static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* dataLen) {
+Str ReadIStream(IStream* stream) {
     if (!stream) {
-        return E_INVALIDARG;
+        return {};
     }
 
     STATSTG stat;
     HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res)) {
-        return res;
-    }
-    if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - sizeof(WCHAR) - 1) {
-        return E_OUTOFMEMORY;
-    }
-
-    ULONG n = stat.cbSize.LowPart;
-    // zero-terminate the stream's content, so that it could be
-    // used directly as either a char* or a WCHAR* string
-    char* d = AllocArray<char>(n + sizeof(WCHAR) + 1);
-    if (!d) {
-        return E_OUTOFMEMORY;
-    }
-
-    ULONG read;
-    LARGE_INTEGER zero{};
-    stream->Seek(zero, STREAM_SEEK_SET, nullptr);
-    res = stream->Read(d, stat.cbSize.LowPart, &read);
-    if (FAILED(res) || read != n) {
-        free(d);
-        return res;
-    }
-
-    *dataLen = n;
-    *data = d;
-    return S_OK;
-}
-
-Str GetDataFromStream(IStream* stream, HRESULT* resOpt) {
-    void* data = nullptr;
-    ULONG size = 0;
-    HRESULT res = GetDataFromStream(stream, &data, &size);
-    if (resOpt) {
-        *resOpt = res;
-    }
-    if (FAILED(res)) {
-        free(data);
         return {};
     }
-    return Str((char*)data, (int)size);
+    if (stat.cbSize.QuadPart > INT_MAX - sizeof(WCHAR)) {
+        return {};
+    }
+
+    int n = (int)stat.cbSize.QuadPart;
+    char* d = AllocArray<char>(n + sizeof(WCHAR));
+    if (!d) {
+        return {};
+    }
+
+    LARGE_INTEGER zero{};
+    res = stream->Seek(zero, STREAM_SEEK_SET, nullptr);
+    if (FAILED(res)) {
+        free(d);
+        return {};
+    }
+
+    int total = 0;
+    while (total < n) {
+        ULONG read = 0;
+        ULONG toRead = (ULONG)(n - total);
+        res = stream->Read(d + total, toRead, &read);
+        if (FAILED(res) || read == 0) {
+            free(d);
+            return {};
+        }
+        total += (int)read;
+    }
+    d[n] = 0;
+    d[n + 1] = 0;
+    return Str(d, n);
 }
 
 Str GetStreamOrFileData(IStream* stream, Str filePath) {
     if (stream) {
-        return GetDataFromStream(stream, nullptr);
+        return ReadIStream(stream);
     }
     if (!filePath) {
         return {};

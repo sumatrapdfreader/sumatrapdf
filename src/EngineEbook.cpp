@@ -913,7 +913,7 @@ Str EngineEpub::GetFileData() {
 bool EngineEpub::SaveFileAs(Str dstPath) {
 #if OS_WIN
     if (stream) {
-        Str d = GetDataFromStream(stream, nullptr);
+        Str d = ReadIStream(stream);
         bool ok = len(d) > 0 && file::WriteFile(dstPath, d);
         str::Free(d);
         if (ok) {

@@ -4,6 +4,9 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
+#if OS_WIN
+#include "base/Win.h"
+#endif
 
 #include "base/Archive.h"
 
@@ -224,22 +227,13 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
 #endif
 
 bool MultiFormatArchive::Open(IStream* stream) {
+#if !OS_WIN
+    (void)stream;
+    return false;
+#else
     // for IStream, read all data into memory and open from there
-    STATSTG stat;
-    if (FAILED(stream->Stat(&stat, STATFLAG_NONAME))) {
-        return false;
-    }
-    int size = (int)stat.cbSize.QuadPart;
-    u8* data = AllocArray<u8>(size);
-    if (!data) {
-        return false;
-    }
-    LARGE_INTEGER zero = {};
-    stream->Seek(zero, STREAM_SEEK_SET, nullptr);
-    ULONG read = 0;
-    HRESULT hr = stream->Read(data, (ULONG)size, &read);
-    if (FAILED(hr) || (int)read != size) {
-        free(data);
+    Str data = ReadIStream(stream);
+    if (str::IsNull(data)) {
         return false;
     }
 
@@ -247,10 +241,10 @@ bool MultiFormatArchive::Open(IStream* stream) {
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
     SetArchivePassword(a, password);
-    int r = archive_read_open_memory(a, data, size);
+    int r = archive_read_open_memory(a, data.s, (size_t)data.len);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
-        free(data);
+        str::Free(data);
         return false;
     }
     // no file path to re-open from, so load all file data now; no
@@ -262,8 +256,9 @@ bool MultiFormatArchive::Open(IStream* stream) {
         isEncrypted = true;
     }
     archive_read_free(a);
-    free(data);
+    str::Free(data);
     return ok;
+#endif
 }
 
 bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {

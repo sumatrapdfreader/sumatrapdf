@@ -38,10 +38,9 @@ HRESULT EpubFilter::OnInit() {
     //       m_pStream instead of a clone - why?
 
     // load content of EPUB document into a seekable stream
-    HRESULT res;
-    Str data = GetDataFromStream(m_pStream, &res);
-    if (len(data) == 0) {
-        return res;
+    Str data = ReadIStream(m_pStream);
+    if (str::IsNull(data)) {
+        return E_FAIL;
     }
 
     IStream* strm = CreateStreamFromData(data);

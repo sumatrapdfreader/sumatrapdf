@@ -11,10 +11,9 @@
 HRESULT TeXFilter::OnInit() {
     if (!m_pData) {
         // load content of LaTeX file into m_pData
-        HRESULT res;
-        Str data = GetDataFromStream(m_pStream, &res);
-        if (len(data) == 0) {
-            return res;
+        Str data = ReadIStream(m_pStream);
+        if (str::IsNull(data)) {
+            return E_FAIL;
         }
 
         m_pData = strconv::StrCPToWStr(Str((char*)(u8*)data.s, (int)(size_t)data.len), CP_ACP).s;

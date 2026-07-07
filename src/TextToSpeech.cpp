@@ -9,7 +9,6 @@
 
 #include <TextToSpeech.h>
 
-
 #pragma comment(lib, "sapi.lib")
 #pragma comment(lib, "winmm.lib")
 
@@ -925,37 +924,15 @@ static bool WinTtsReadStreamBytes(WMSS::ISpeechSynthesisStream* stream) {
     }
 
     bool ok = false;
-    STATSTG st{};
-    if (SUCCEEDED(istm->Stat(&st, STATFLAG_NONAME))) {
-        constexpr ULONGLONG kMaxWavSize = 512 * 1024 * 1024;
-        ULONGLONG size = st.cbSize.QuadPart;
-        if (size > 0 && size < kMaxWavSize) {
-            u8* buf = (u8*)malloc((size_t)size);
-            if (buf) {
-                LARGE_INTEGER zero{};
-                istm->Seek(zero, STREAM_SEEK_SET, nullptr);
-
-                size_t total = 0;
-                while (total < (size_t)size) {
-                    ULONG read = 0;
-                    hr = istm->Read(buf + total, (ULONG)((size_t)size - total), &read);
-                    if (FAILED(hr) || read == 0) {
-                        break;
-                    }
-                    total += read;
-                }
-
-                if (total == (size_t)size) {
-                    gWinWavData = buf;
-                    gWinWaveHdr.dwBufferLength = (DWORD)size; // temporarily holds the file size
-                    ok = true;
-                } else {
-                    free(buf);
-                }
-            }
-        }
+    Str data = ReadIStream(istm);
+    constexpr int kMaxWavSize = 512 * 1024 * 1024;
+    if (!str::IsNull(data) && data.len > 0 && data.len < kMaxWavSize) {
+        gWinWavData = (u8*)data.s;
+        gWinWaveHdr.dwBufferLength = (DWORD)data.len; // temporarily holds the file size
+        ok = true;
+    } else {
+        str::Free(data);
     }
-
     istm->Release();
     return ok;
 }

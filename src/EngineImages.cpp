@@ -1026,7 +1026,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     }
     SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
 
-    Str data = GetDataFromStream(stream, nullptr);
+    Str data = ReadIStream(stream);
     frames = PixmapsFromData(data);
     Size fallbackSize = ImageSizeFromDataPortable(data);
     bool ok = FinishLoading(fallbackSize);

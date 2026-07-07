@@ -20,7 +20,7 @@ EngineBase* CloneDjvuDecStream(IStream* stream) {
 }
 
 bool LoadDjvuDecStreamData(IStream* stm, IStream** streamOut, Str& fileData) {
-    fileData = GetDataFromStream(stm, nullptr);
+    fileData = ReadIStream(stm);
     if (len(fileData) == 0) {
         return false;
     }
@@ -37,7 +37,7 @@ bool SaveDjvuDecStreamAs(IStream* stream, Str dstPath) {
     if (!stream) {
         return false;
     }
-    Str d = GetDataFromStream(stream, nullptr);
+    Str d = ReadIStream(stream);
     bool ok = len(d) > 0 && file::WriteFile(dstPath, d);
     str::Free(d);
     return ok;

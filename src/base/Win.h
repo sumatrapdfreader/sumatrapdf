@@ -184,7 +184,7 @@ int GetSizeOfDefaultGuiFont();
 void DeleteCreatedFonts();
 
 IStream* CreateStreamFromData(const Str&);
-Str GetDataFromStream(IStream* stream, HRESULT* resOpt);
+Str ReadIStream(IStream* stream);
 Str GetStreamOrFileData(IStream* stream, Str filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t n, size_t offset = 0);
 uint GuessTextCodepage(Str data, uint defVal = CP_ACP);

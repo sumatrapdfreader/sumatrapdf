@@ -136,7 +136,7 @@ PdbReader* PdbReader::CreateFromFile(Str path) {
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    Str d = GetDataFromStream(stream, nullptr);
+    Str d = ReadIStream(stream);
     return CreateFromData(d);
 }
 
