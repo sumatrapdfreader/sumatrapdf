@@ -3,6 +3,8 @@
 
 class GumboHtmlParser;
 struct HtmlToken;
+struct PropValue;
+enum class DocProp : u8;
 
 struct ImageData {
     Str base;
@@ -26,7 +28,7 @@ struct EpubDoc {
     Vec<ImageData> images;
     Str tocPath;
     Str fileName;
-    Props props;
+    Vec<PropValue> props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
 
@@ -41,7 +43,7 @@ struct EpubDoc {
     Str GetImageData(Str fileName, Str pagePath);
     Str GetFileData(Str relPath, Str pagePath);
 
-    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
     bool IsRTL() const;
 
@@ -65,7 +67,7 @@ struct Fb2Doc {
     str::Builder xmlData;
     Vec<ImageData> images;
     Str coverImage;
-    Props props;
+    Vec<PropValue> props;
     bool isZipped = false;
     bool hasToc = false;
 
@@ -81,7 +83,7 @@ struct Fb2Doc {
     Str GetImageData(Str fileName) const;
     Str GetCoverImage() const;
 
-    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
     bool IsZipped() const;
 
@@ -110,7 +112,7 @@ struct PalmDoc {
 
     Str GetHtmlData() const;
 
-    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
 
     bool HasToc() const;
@@ -127,7 +129,7 @@ struct HtmlDoc {
     Str htmlData;
     Str pagePath;
     Vec<ImageData> images;
-    Props props;
+    Vec<PropValue> props;
 
     bool Load();
     Str LoadURL(Str url);
@@ -140,7 +142,7 @@ struct HtmlDoc {
     Str GetImageData(Str fileName);
     Str GetFileData(Str relPath);
 
-    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
@@ -161,7 +163,7 @@ struct TxtDoc {
 
     Str GetHtmlData() const;
 
-    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
 
     bool IsRFC() const;

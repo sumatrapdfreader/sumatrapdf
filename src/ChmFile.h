@@ -5,6 +5,8 @@
 // (unless already UTF-8). Returns a TempStr owned by the temp allocator.
 TempStr SmartToUtf8Temp(Str s, uint codepage);
 
+enum class DocProp : u8;
+
 struct ChmFile {
     struct chmFile* chmHandle = nullptr;
 
@@ -31,7 +33,7 @@ struct ChmFile {
     TempStr GetDataTemp(Str fileName) const;
     TempStr ResolveTopicID(unsigned int id) const;
 
-    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetPropertyTemp(DocProp prop) const;
     TempStr GetHomePath() const;
     void GetAllPaths(StrVec*) const;
 

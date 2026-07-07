@@ -702,11 +702,11 @@ class EngineEpub : public EngineEbook {
     Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     TocTree* GetToc() override;
@@ -891,11 +891,11 @@ class EngineFb2 : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     TocTree* GetToc() override;
@@ -1014,11 +1014,11 @@ class EngineMobi : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     IPageDestination* GetNamedDest(Str name) override;
@@ -1169,11 +1169,11 @@ class EnginePdb : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     TocTree* GetToc() override;
@@ -1389,11 +1389,11 @@ class EngineChm : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     IPageDestination* GetNamedDest(Str name) override;
@@ -1666,11 +1666,11 @@ class EngineHtml : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     static EngineBase* CreateFromFile(Str fileName);
@@ -1772,11 +1772,11 @@ class EngineTxt : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(Str name) override {
-        if (str::Eq(name, kPropFontList)) {
+    TempStr GetPropertyTemp(DocProp prop) override {
+        if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(name);
+        return doc->GetPropertyTemp(prop);
     }
 
     TocTree* GetToc() override;

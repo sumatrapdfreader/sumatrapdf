@@ -3,6 +3,8 @@
 
 struct HuffDicDecompressor;
 struct PdbReader;
+struct PropValue;
+enum class DocProp : u8;
 
 struct MobiDoc {
     Str fileName;
@@ -25,7 +27,7 @@ struct MobiDoc {
 
     HuffDicDecompressor* huffDic = nullptr;
 
-    Props props;
+    Vec<PropValue> props;
 
     explicit MobiDoc(Str filePath);
 
@@ -46,7 +48,7 @@ struct MobiDoc {
     Str GetCoverImage();
     Str GetImage(int imgRecIndex) const;
     Str GetFileName() const { return fileName; }
-    TempStr GetPropertyTemp(Str name);
+    TempStr GetPropertyTemp(DocProp prop);
     PdbDocType GetDocType() const { return docType; }
 
     bool HasToc();

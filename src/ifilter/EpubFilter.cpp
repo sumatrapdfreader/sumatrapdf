@@ -153,7 +153,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case STATE_EPUB_AUTHOR:
             m_state = STATE_EPUB_TITLE;
-            str = m_epubDoc->GetPropertyTemp(kPropAuthor);
+            str = m_epubDoc->GetPropertyTemp(DocProp::Author);
             if (len(str) > 0) {
                 ws = ToWStrTemp(str);
                 chunkValue.SetTextValue(PKEY_Author, ws.s);
@@ -163,9 +163,9 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case STATE_EPUB_TITLE:
             m_state = STATE_EPUB_DATE;
-            str = m_epubDoc->GetPropertyTemp(kPropTitle);
+            str = m_epubDoc->GetPropertyTemp(DocProp::Title);
             if (!str) {
-                str = m_epubDoc->GetPropertyTemp(kPropSubject);
+                str = m_epubDoc->GetPropertyTemp(DocProp::Subject);
             }
             if (len(str) > 0) {
                 ws = ToWStrTemp(str);
@@ -176,9 +176,9 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case STATE_EPUB_DATE:
             m_state = STATE_EPUB_CONTENT;
-            str = m_epubDoc->GetPropertyTemp(kPropModificationDate);
+            str = m_epubDoc->GetPropertyTemp(DocProp::ModificationDate);
             if (!str) {
-                str = m_epubDoc->GetPropertyTemp(kPropCreationDate);
+                str = m_epubDoc->GetPropertyTemp(DocProp::CreationDate);
             }
             if (len(str) > 0) {
                 SYSTEMTIME systime;

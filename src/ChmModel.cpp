@@ -99,8 +99,8 @@ int ChmModel::PageCount() const {
     return len(pages);
 }
 
-TempStr ChmModel::GetPropertyTemp(Str name) {
-    return doc->GetPropertyTemp(name);
+TempStr ChmModel::GetPropertyTemp(DocProp prop) {
+    return doc->GetPropertyTemp(prop);
 }
 
 int ChmModel::CurrentPageNo() const {

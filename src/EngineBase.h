@@ -7,6 +7,8 @@ struct Pixmap;
 struct RenderedBitmap;
 struct IPageDestination;
 struct TocItem;
+struct PropValue;
+enum class DocProp : u8;
 
 struct ILinkHandler {
     virtual ~ILinkHandler() {};
@@ -502,12 +504,12 @@ class EngineBase {
     bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual TempStr GetPropertyTemp(Str name) = 0;
+    virtual TempStr GetPropertyTemp(DocProp prop) = 0;
 
     // keys are names of properties the caller wants. If given, we append those
     // proerties in this order and potentially add more
     // if keys are empty, we put them in order we want
-    virtual void GetProperties(StrVec& keyValOut);
+    virtual void GetProperties(Vec<PropValue>& propsOut);
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

@@ -18,7 +18,6 @@ extern "C" {
 #include "FzImgReader.h"
 #include "PdfCreator.h"
 
-
 static Str gPdfProducer;
 
 void PdfCreator::SetProducerName(Str name) {
@@ -239,26 +238,31 @@ bool PdfCreator::AddPageFromImageData(Str data, float imgDpi) const {
     return ok;
 }
 
-// clang-format off
-static const Str pdfCreatorPropsMap[] = {
-    kPropTitle, StrL("Title"),
-    kPropAuthor, StrL("Author"),
-    kPropSubject, StrL("Subject"),
-    kPropCopyright, StrL("Copyright"),
-    kPropCreationDate, StrL("CreationDate"),
-    kPropModificationDate, StrL("ModDate"),
-    kPropCreatorApp, StrL("Creator"),
-    kPropPdfProducer, StrL("Producer"),
-    Str(),
-};
-// clang-format on
+static SeqStrNum pdfCreatorPropsMap =
+    "Title\0"
+    "\x02"
+    "Author\0"
+    "\x04"
+    "Subject\0"
+    "\x08"
+    "Copyright\0"
+    "\x06"
+    "CreationDate\0"
+    "\x0a"
+    "ModDate\0"
+    "\x0c"
+    "Creator\0"
+    "\x0e"
+    "Producer\0"
+    "\x16"
+    "\0";
 
-bool PdfCreator::SetProperty(Str propName, Str value) const {
+bool PdfCreator::SetProperty(DocProp prop, Str value) const {
     if (!ctx || !doc) {
         return false;
     }
 
-    Str name = GetMatchingString(pdfCreatorPropsMap, propName);
+    Str name = SeqStrNumStrByNumber(pdfCreatorPropsMap, (i64)prop);
     if (!name) {
         return false;
     }
@@ -283,13 +287,13 @@ bool PdfCreator::SetProperty(Str propName, Str value) const {
 }
 
 // clang-format off
-static const Str propsToCopy[] = {
-    kPropTitle,
-    kPropAuthor,
-    kPropSubject,
-    kPropCopyright,
-    kPropModificationDate,
-    kPropCreatorApp,
+static const DocProp propsToCopy[] = {
+    DocProp::Title,
+    DocProp::Author,
+    DocProp::Subject,
+    DocProp::Copyright,
+    DocProp::ModificationDate,
+    DocProp::CreatorApp,
 };
 // clang-format on
 
@@ -333,7 +337,7 @@ bool PdfCreator::SaveToFile(Str filePath) const {
     }
 
     if (gPdfProducer) {
-        SetProperty(kPropPdfProducer, gPdfProducer);
+        SetProperty(DocProp::PdfProducer, gPdfProducer);
     }
 
     fz_try(ctx) {

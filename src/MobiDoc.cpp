@@ -533,7 +533,7 @@ bool MobiDoc::ParseHeader() {
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Str v = strconv::WStrToCodePage(mobiHdr.textEncoding, WStrL(L"DRM"));
-        AddProp(props, kPropUnsupportedFeatures, v);
+        AddProp(props, DocProp::UnsupportedFeatures, v);
         str::Free(v);
     }
     textEncoding = mobiHdr.textEncoding;
@@ -633,22 +633,22 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
         }
         d.Skip(recLen - 8);
 
-        Str prop;
+        DocProp prop = DocProp::None;
         switch (type) {
             case 100:
-                prop = kPropAuthor;
+                prop = DocProp::Author;
                 break;
             case 105:
-                prop = kPropSubject;
+                prop = DocProp::Subject;
                 break;
             case 106:
-                prop = kPropCreationDate;
+                prop = DocProp::CreationDate;
                 break;
             case 108:
-                prop = kPropCreatorApp;
+                prop = DocProp::CreatorApp;
                 break;
             case 109:
-                prop = kPropCopyright;
+                prop = DocProp::Copyright;
                 break;
             case 201:
                 if (length == 12 && imageFirstRec) {
@@ -657,7 +657,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
                 }
                 continue;
             case 503:
-                prop = kPropTitle;
+                prop = DocProp::Title;
                 break;
             default:
                 continue;
@@ -899,8 +899,8 @@ Str MobiDoc::GetHtmlData() const {
     return {};
 }
 
-TempStr MobiDoc::GetPropertyTemp(Str name) {
-    Str v = GetPropValueTemp(props, name);
+TempStr MobiDoc::GetPropertyTemp(DocProp prop) {
+    Str v = GetPropValueTemp(props, prop);
     if (!v) {
         return {};
     }

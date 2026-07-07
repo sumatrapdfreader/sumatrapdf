@@ -1,67 +1,80 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern Str kPropTitle;
-extern Str kPropAuthor;
-extern Str kPropCopyright;
-extern Str kPropSubject;
-extern Str kPropCreationDate;
-extern Str kPropModificationDate;
-extern Str kPropCreatorApp;
-extern Str kPropUnsupportedFeatures;
-extern Str kPropFontList;
-extern Str kPropPdfVersion;
-extern Str kPropPdfProducer;
-extern Str kPropPdfFileStructure;
-extern Str kPropFiles;
-extern Str kPropKeywords;
-extern Str kPropEncryption;
-extern Str kPropSignatures;
-extern Str kPropImageSize;
-extern Str kPropDpi;
-extern Str kPropComment;
-extern Str kPropCameraMake;
-extern Str kPropCameraModel;
-extern Str kPropDateOriginal;
-extern Str kPropExposureTime;
-extern Str kPropFNumber;
-extern Str kPropIsoSpeed;
-extern Str kPropFocalLength;
-extern Str kPropFocalLength35mm;
-extern Str kPropFlash;
-extern Str kPropOrientation;
-extern Str kPropExposureProgram;
-extern Str kPropMeteringMode;
-extern Str kPropWhiteBalance;
-extern Str kPropExposureBias;
-extern Str kPropBitsPerSample;
-extern Str kPropResolutionUnit;
-extern Str kPropSoftware;
-extern Str kPropDateTime;
-extern Str kPropYCbCrPositioning;
-extern Str kPropExifVersion;
-extern Str kPropDateTimeDigitized;
-extern Str kPropComponentsConfig;
-extern Str kPropCompressedBpp;
-extern Str kPropMaxAperture;
-extern Str kPropLightSource;
-extern Str kPropUserComment;
-extern Str kPropFlashpixVersion;
-extern Str kPropColorSpace;
-extern Str kPropPixelXDimension;
-extern Str kPropPixelYDimension;
-extern Str kPropFileSource;
-extern Str kPropSceneType;
-extern Str kPropImageFileSize;
-extern Str kPropImagePath;
+#ifndef DocProperties_h
+#define DocProperties_h
 
-extern Str gAllProps[];
+enum class DocProp : u8 {
+    None = 0,
+    Title = 1,
+    Author = 2,
+    Copyright = 3,
+    Subject = 4,
+    CreationDate = 5,
+    ModificationDate = 6,
+    CreatorApp = 7,
+    UnsupportedFeatures = 8,
+    FontList = 9,
+    PdfVersion = 10,
+    PdfProducer = 11,
+    PdfFileStructure = 12,
+    Files = 13,
+    Keywords = 14,
+    Encryption = 15,
+    Signatures = 16,
+    ImageSize = 17,
+    Dpi = 18,
+    Comment = 19,
+    CameraMake = 20,
+    CameraModel = 21,
+    DateOriginal = 22,
+    ExposureTime = 23,
+    FNumber = 24,
+    IsoSpeed = 25,
+    FocalLength = 26,
+    FocalLength35mm = 27,
+    Flash = 28,
+    Orientation = 29,
+    ExposureProgram = 30,
+    MeteringMode = 31,
+    WhiteBalance = 32,
+    ExposureBias = 33,
+    BitsPerSample = 34,
+    ResolutionUnit = 35,
+    Software = 36,
+    DateTime = 37,
+    YCbCrPositioning = 38,
+    ExifVersion = 39,
+    DateTimeDigitized = 40,
+    ComponentsConfig = 41,
+    CompressedBpp = 42,
+    MaxAperture = 43,
+    LightSource = 44,
+    UserComment = 45,
+    FlashpixVersion = 46,
+    ColorSpace = 47,
+    PixelXDimension = 48,
+    PixelYDimension = 49,
+    FileSource = 50,
+    SceneType = 51,
+    ImageFileSize = 52,
+    ImagePath = 53,
+};
 
-// Props are stored in StrVec as name, value sequentially
-using Props = StrVec;
+extern DocProp gAllProps[];
+
+struct PropValue {
+    DocProp prop;
+    Str val;
+};
+
+using Props = Vec<PropValue>;
 int PropsCount(const Props& props);
-int GetPropIdx(const Props& props, Str name);
-Str GetPropValueTemp(const Props& props, Str name);
-void AddProp(Props& props, Str name, Str val, bool replaceIfExists = false);
+int GetPropIdx(const Props& props, DocProp prop);
+Str GetPropValueTemp(const Props& props, DocProp prop);
+void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists = false);
 
-Str GetMatchingString(const Str* strings, Str s);
+TempStr PropNameTemp(DocProp prop);
+DocProp PropFromName(Str name);
+
+#endif

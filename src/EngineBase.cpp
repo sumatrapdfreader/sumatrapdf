@@ -561,20 +561,19 @@ TocTree* EngineBase::GetToc() {
 #include "DocProperties.h"
 
 // default implementation that just sets wanted keys
-void EngineBase::GetProperties(StrVec& keyValueOut) {
+void EngineBase::GetProperties(Props& propsOut) {
     for (int i = 0;; i++) {
-        Str key = gAllProps[i];
-        if (!key) {
+        DocProp prop = gAllProps[i];
+        if (prop == DocProp::None) {
             break;
         }
         // font list is loaded asynchronously in ShowProperties()
-        if (str::Eq(key, kPropFontList)) {
+        if (prop == DocProp::FontList) {
             continue;
         }
-        TempStr val = GetPropertyTemp(key);
+        TempStr val = GetPropertyTemp(prop);
         if (val) {
-            keyValueOut.Append(key);
-            keyValueOut.Append(val);
+            AddProp(propsOut, prop, val);
         }
     }
 }

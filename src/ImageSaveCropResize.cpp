@@ -1157,9 +1157,9 @@ static bool SaveBitmapAsPdf(Bitmap* bmp, Str destPath) {
     bool ok = c->AddPageFromGdiplusBitmap(bmp, 0);
     if (ok) {
         TempStr now = FormatPdfDateTemp();
-        c->SetProperty(kPropCreationDate, now);
-        c->SetProperty(kPropModificationDate, now);
-        c->SetProperty(kPropCreatorApp, StrL("SumatraPDF"));
+        c->SetProperty(DocProp::CreationDate, now);
+        c->SetProperty(DocProp::ModificationDate, now);
+        c->SetProperty(DocProp::CreatorApp, StrL("SumatraPDF"));
         ok = c->SaveToFile(destPath);
     }
     delete c;

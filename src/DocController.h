@@ -13,6 +13,7 @@ struct MainWindow;
 struct FileState;
 struct RenderedBitmap;
 enum class DisplayMode;
+enum class DocProp : u8;
 
 using OnBitmapRendered = Func1<RenderedBitmap*>;
 
@@ -52,7 +53,7 @@ struct DocController {
     virtual Str GetFilePath() const = 0;
     virtual Str GetDefaultFileExt() const = 0;
     virtual int PageCount() const = 0;
-    virtual TempStr GetPropertyTemp(Str name) = 0;
+    virtual TempStr GetPropertyTemp(DocProp prop) = 0;
 
     // page navigation (stateful)
     virtual int CurrentPageNo() const = 0;

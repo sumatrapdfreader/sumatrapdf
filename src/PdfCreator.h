@@ -4,6 +4,7 @@
 struct fz_context;
 struct fz_image;
 struct pdf_document;
+enum class DocProp : u8;
 
 class PdfCreator {
   public:
@@ -17,7 +18,7 @@ class PdfCreator {
     bool AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi = 0);
     bool AddPageFromImageData(Str data, float imgDpi = 0) const;
 
-    bool SetProperty(Str prop, Str value) const;
+    bool SetProperty(DocProp prop, Str value) const;
     bool CopyProperties(EngineBase* engine) const;
 
     bool SaveToFile(Str filePath) const;

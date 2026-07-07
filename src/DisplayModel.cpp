@@ -66,7 +66,6 @@
 #include "WindowTab.h"
 #include "MainWindow.h"
 
-
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;
 
@@ -102,8 +101,8 @@ int DisplayModel::PageCount() const {
     return engine->PageCount();
 }
 
-TempStr DisplayModel::GetPropertyTemp(Str name) {
-    return engine->GetPropertyTemp(name);
+TempStr DisplayModel::GetPropertyTemp(DocProp prop) {
+    return engine->GetPropertyTemp(prop);
 }
 
 void DisplayModel::GoToPage(int pageNo, bool addNavPoint) {

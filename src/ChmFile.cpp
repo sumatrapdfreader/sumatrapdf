@@ -363,11 +363,11 @@ bool ChmFile::Load(Str path) {
     return true;
 }
 
-TempStr ChmFile::GetPropertyTemp(Str name) const {
+TempStr ChmFile::GetPropertyTemp(DocProp prop) const {
     TempStr result;
-    if (str::Eq(kPropTitle, name) && len(title) > 0) {
+    if (prop == DocProp::Title && len(title) > 0) {
         result = SmartToUtf8Temp(title, codepage);
-    } else if (str::Eq(kPropCreatorApp, name) && len(creator) > 0) {
+    } else if (prop == DocProp::CreatorApp && len(creator) > 0) {
         result = SmartToUtf8Temp(creator, codepage);
     }
     if (!result) {

@@ -192,7 +192,7 @@ class EngineImages : public EngineBase {
     void DropPage(ImagePage* page, bool forceRemove);
 
     RectF PageContentBox(int pageNo, RenderTarget) override;
-    void GetImageProperties(int pageNo, StrVec& keyValOut);
+    void GetImageProperties(int pageNo, Props& propsOut);
 };
 
 EngineImages::EngineImages() {
@@ -861,9 +861,9 @@ class EngineImage : public EngineImages {
 
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(Str name) override;
-    void GetProperties(StrVec& keyValOut) override;
-    void GetImageProperties(int pageNo, StrVec& keyValOut);
+    TempStr GetPropertyTemp(DocProp prop) override;
+    void GetProperties(Props& propsOut) override;
+    void GetImageProperties(int pageNo, Props& propsOut);
 
     static EngineBase* CreateFromFile(Str fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -1014,15 +1014,15 @@ static bool GetExifFloat(const ExifParser& parser, ExifProp prop, double& val) {
     return parser.GetFloatProp(prop, &val);
 }
 
-static void AddExifStringProp(StrVec& keyValOut, Str name, const ExifParser& parser, ExifProp prop,
+static void AddExifStringProp(Props& propsOut, DocProp docProp, const ExifParser& parser, ExifProp prop,
                               ExifProp altProp = ExifProp::None) {
     TempStr val = parser.GetStringProp(prop, altProp);
     if (val) {
-        AddProp(keyValOut, name, val);
+        AddProp(propsOut, docProp, val);
     }
 }
 
-TempStr EngineImage::GetPropertyTemp(Str name) {
+TempStr EngineImage::GetPropertyTemp(DocProp prop) {
     Str data = file::ReadFile(FilePath());
     if (len(data) == 0) {
         return nullptr;
@@ -1031,17 +1031,17 @@ TempStr EngineImage::GetPropertyTemp(Str name) {
     ExifParser parser;
     TempStr res = nullptr;
     if (parser.Parse(data)) {
-        if (str::Eq(name, kPropTitle)) {
+        if (prop == DocProp::Title) {
             res = parser.GetStringProp(ExifProp::ImageDescription, ExifProp::XPTitle);
-        } else if (str::Eq(name, kPropSubject)) {
+        } else if (prop == DocProp::Subject) {
             res = parser.GetStringProp(ExifProp::XPSubject);
-        } else if (str::Eq(name, kPropAuthor)) {
+        } else if (prop == DocProp::Author) {
             res = parser.GetStringProp(ExifProp::Artist, ExifProp::XPAuthor);
-        } else if (str::Eq(name, kPropCopyright)) {
+        } else if (prop == DocProp::Copyright) {
             res = parser.GetStringProp(ExifProp::Copyright);
-        } else if (str::Eq(name, kPropCreationDate)) {
+        } else if (prop == DocProp::CreationDate) {
             res = parser.GetStringProp(ExifProp::DateTime, ExifProp::DateTimeDigitized);
-        } else if (str::Eq(name, kPropCreatorApp)) {
+        } else if (prop == DocProp::CreatorApp) {
             res = parser.GetStringProp(ExifProp::Software);
         }
     }
@@ -1049,14 +1049,14 @@ TempStr EngineImage::GetPropertyTemp(Str name) {
     return res;
 }
 
-static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& keyValOut) {
+static void AddParsedExifProperties(Str data, const ExifParser& parser, Props& propsOut) {
     TempStr val;
     i64 intVal;
     double fVal;
 
     Size imgSize = ImageSizeFromData(data);
     if (!imgSize.IsEmpty()) {
-        AddProp(keyValOut, kPropImageSize, fmt("%d x %d", imgSize.dx, imgSize.dy));
+        AddProp(propsOut, DocProp::ImageSize, fmt("%d x %d", imgSize.dx, imgSize.dy));
     } else {
         i64 w = 0, h = 0;
         if ((!GetExifInt(parser, ExifProp::ExifImageWidth, w) && !GetExifInt(parser, ExifProp::ImageWidth, w)) ||
@@ -1064,7 +1064,7 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& 
             w = h = 0;
         }
         if (w > 0 && h > 0) {
-            AddProp(keyValOut, kPropImageSize, fmt("%d x %d", (int)w, (int)h));
+            AddProp(propsOut, DocProp::ImageSize, fmt("%d x %d", (int)w, (int)h));
         }
     }
 
@@ -1073,49 +1073,49 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& 
     if (GetExifFloat(parser, ExifProp::XResolution, dpiX) && GetExifFloat(parser, ExifProp::YResolution, dpiY) &&
         dpiX > 0 && dpiY > 0) {
         if (dpiX == dpiY) {
-            AddProp(keyValOut, kPropDpi, fmt("%.0f", dpiX));
+            AddProp(propsOut, DocProp::Dpi, fmt("%.0f", dpiX));
         } else {
-            AddProp(keyValOut, kPropDpi, fmt("%.0f x %.0f", dpiX, dpiY));
+            AddProp(propsOut, DocProp::Dpi, fmt("%.0f x %.0f", dpiX, dpiY));
         }
     }
 
-    AddExifStringProp(keyValOut, kPropKeywords, parser, ExifProp::XPKeywords);
-    AddExifStringProp(keyValOut, kPropComment, parser, ExifProp::XPComment);
-    AddExifStringProp(keyValOut, kPropCameraMake, parser, ExifProp::Make);
-    AddExifStringProp(keyValOut, kPropCameraModel, parser, ExifProp::Model);
-    AddExifStringProp(keyValOut, kPropDateOriginal, parser, ExifProp::DateTimeOriginal);
+    AddExifStringProp(propsOut, DocProp::Keywords, parser, ExifProp::XPKeywords);
+    AddExifStringProp(propsOut, DocProp::Comment, parser, ExifProp::XPComment);
+    AddExifStringProp(propsOut, DocProp::CameraMake, parser, ExifProp::Make);
+    AddExifStringProp(propsOut, DocProp::CameraModel, parser, ExifProp::Model);
+    AddExifStringProp(propsOut, DocProp::DateOriginal, parser, ExifProp::DateTimeOriginal);
 
     ExifRational rat;
     if (parser.GetRationalProp(ExifProp::ExposureTime, &rat) && rat.den > 0 && rat.num > 0) {
         if (rat.num == 1) {
-            AddProp(keyValOut, kPropExposureTime, fmt("1/%u s", (u32)rat.den));
+            AddProp(propsOut, DocProp::ExposureTime, fmt("1/%u s", (u32)rat.den));
         } else {
-            AddProp(keyValOut, kPropExposureTime, fmt("%u/%u s", (u32)rat.num, (u32)rat.den));
+            AddProp(propsOut, DocProp::ExposureTime, fmt("%u/%u s", (u32)rat.num, (u32)rat.den));
         }
     }
 
     if (GetExifFloat(parser, ExifProp::FNumber, fVal) && fVal > 0) {
-        AddProp(keyValOut, kPropFNumber, fmt("f/%.1f", fVal));
+        AddProp(propsOut, DocProp::FNumber, fmt("f/%.1f", fVal));
     }
 
     if (GetExifInt(parser, ExifProp::ISOSpeed, intVal)) {
-        AddProp(keyValOut, kPropIsoSpeed, fmt("ISO %u", (u32)intVal));
+        AddProp(propsOut, DocProp::IsoSpeed, fmt("ISO %u", (u32)intVal));
     }
 
     if (GetExifFloat(parser, ExifProp::FocalLength, fVal) && fVal > 0) {
-        AddProp(keyValOut, kPropFocalLength, fmt("%.1f mm", fVal));
+        AddProp(propsOut, DocProp::FocalLength, fmt("%.1f mm", fVal));
     }
 
     if (GetExifInt(parser, ExifProp::FocalLengthIn35mmFilm, intVal)) {
-        AddProp(keyValOut, kPropFocalLength35mm, fmt("%u mm", (u32)intVal));
+        AddProp(propsOut, DocProp::FocalLength35mm, fmt("%u mm", (u32)intVal));
     }
 
     if (GetExifInt(parser, ExifProp::Flash, intVal)) {
-        AddProp(keyValOut, kPropFlash, (intVal & 1) ? StrL("Yes") : StrL("No"));
+        AddProp(propsOut, DocProp::Flash, (intVal & 1) ? StrL("Yes") : StrL("No"));
     }
 
     if (GetExifInt(parser, ExifProp::Orientation, intVal)) {
-        AddProp(keyValOut, kPropOrientation, fmt("%u", (u32)intVal));
+        AddProp(propsOut, DocProp::Orientation, fmt("%u", (u32)intVal));
     }
 
     if (GetExifInt(parser, ExifProp::ExposureProgram, intVal)) {
@@ -1125,7 +1125,7 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& 
             StrL("Action program"),    StrL("Portrait mode"),    StrL("Landscape mode"),
         };
         if (intVal >= 0 && intVal < dimof(exposurePrograms)) {
-            AddProp(keyValOut, kPropExposureProgram, exposurePrograms[intVal]);
+            AddProp(propsOut, DocProp::ExposureProgram, exposurePrograms[intVal]);
         }
     }
 
@@ -1134,20 +1134,20 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& 
                                             StrL("Spot"),    StrL("Multi Spot"), StrL("Pattern"),
                                             StrL("Partial")};
         if (intVal >= 0 && intVal < dimof(meteringModes)) {
-            AddProp(keyValOut, kPropMeteringMode, meteringModes[intVal]);
+            AddProp(propsOut, DocProp::MeteringMode, meteringModes[intVal]);
         }
     }
 
     if (GetExifInt(parser, ExifProp::WhiteBalance, intVal)) {
-        AddProp(keyValOut, kPropWhiteBalance, intVal == 0 ? StrL("Auto") : StrL("Manual"));
+        AddProp(propsOut, DocProp::WhiteBalance, intVal == 0 ? StrL("Auto") : StrL("Manual"));
     }
 
     if (GetExifFloat(parser, ExifProp::ExposureBiasValue, fVal)) {
-        AddProp(keyValOut, kPropExposureBias, fmt("%+.1f EV", fVal));
+        AddProp(propsOut, DocProp::ExposureBias, fmt("%+.1f EV", fVal));
     }
 
     if (GetExifInt(parser, ExifProp::BitsPerSample, intVal)) {
-        AddProp(keyValOut, kPropBitsPerSample, fmt("%u", (u32)intVal));
+        AddProp(propsOut, DocProp::BitsPerSample, fmt("%u", (u32)intVal));
     }
 
     if (GetExifInt(parser, ExifProp::ResolutionUnit, intVal)) {
@@ -1157,35 +1157,35 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& 
         } else if (intVal == 3) {
             unitStr = StrL("centimeters");
         }
-        AddProp(keyValOut, kPropResolutionUnit, unitStr);
+        AddProp(propsOut, DocProp::ResolutionUnit, unitStr);
     }
 
-    AddExifStringProp(keyValOut, kPropSoftware, parser, ExifProp::Software);
-    AddExifStringProp(keyValOut, kPropDateTime, parser, ExifProp::DateTime);
+    AddExifStringProp(propsOut, DocProp::Software, parser, ExifProp::Software);
+    AddExifStringProp(propsOut, DocProp::DateTime, parser, ExifProp::DateTime);
 
     if (GetExifInt(parser, ExifProp::YCbCrPositioning, intVal)) {
-        AddProp(keyValOut, kPropYCbCrPositioning, intVal == 1 ? StrL("centered") : StrL("co-sited"));
+        AddProp(propsOut, DocProp::YCbCrPositioning, intVal == 1 ? StrL("centered") : StrL("co-sited"));
     }
 
-    AddExifStringProp(keyValOut, kPropExifVersion, parser, ExifProp::ExifVersion);
-    AddExifStringProp(keyValOut, kPropDateTimeDigitized, parser, ExifProp::DateTimeDigitized);
+    AddExifStringProp(propsOut, DocProp::ExifVersion, parser, ExifProp::ExifVersion);
+    AddExifStringProp(propsOut, DocProp::DateTimeDigitized, parser, ExifProp::DateTimeDigitized);
 
     val = parser.GetFormattedPropTemp(ExifProp::ComponentsConfiguration);
     if (val) {
-        AddProp(keyValOut, kPropComponentsConfig, val);
+        AddProp(propsOut, DocProp::ComponentsConfig, val);
     }
 
     if (parser.GetRationalProp(ExifProp::CompressedBitsPerPixel, &rat) && rat.den > 0) {
         double cbpp = (double)rat.num / (double)rat.den;
         if (rat.den == 1) {
-            AddProp(keyValOut, kPropCompressedBpp, fmt("%u", (u32)rat.num));
+            AddProp(propsOut, DocProp::CompressedBpp, fmt("%u", (u32)rat.num));
         } else {
-            AddProp(keyValOut, kPropCompressedBpp, fmt("%.2f", cbpp));
+            AddProp(propsOut, DocProp::CompressedBpp, fmt("%.2f", cbpp));
         }
     }
 
     if (GetExifFloat(parser, ExifProp::MaxApertureValue, fVal)) {
-        AddProp(keyValOut, kPropMaxAperture, fmt("%.2f", fVal));
+        AddProp(propsOut, DocProp::MaxAperture, fmt("%.2f", fVal));
     }
 
     if (GetExifInt(parser, ExifProp::LightSource, intVal)) {
@@ -1231,61 +1231,61 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, StrVec& 
                 lightStr = StrL("Unknown");
                 break;
         }
-        AddProp(keyValOut, kPropLightSource, lightStr);
+        AddProp(propsOut, DocProp::LightSource, lightStr);
     }
 
-    AddExifStringProp(keyValOut, kPropUserComment, parser, ExifProp::UserComment);
-    AddExifStringProp(keyValOut, kPropFlashpixVersion, parser, ExifProp::FlashpixVersion);
+    AddExifStringProp(propsOut, DocProp::UserComment, parser, ExifProp::UserComment);
+    AddExifStringProp(propsOut, DocProp::FlashpixVersion, parser, ExifProp::FlashpixVersion);
 
     if (GetExifInt(parser, ExifProp::ColorSpace, intVal)) {
         Str csStr = (intVal == 1) ? StrL("sRGB") : (intVal == 0xFFFF) ? StrL("Uncalibrated") : StrL("Unknown");
-        AddProp(keyValOut, kPropColorSpace, csStr);
+        AddProp(propsOut, DocProp::ColorSpace, csStr);
     }
 
     if (GetExifInt(parser, ExifProp::ExifImageWidth, intVal)) {
-        AddProp(keyValOut, kPropPixelXDimension, fmt("%u", (u32)intVal));
+        AddProp(propsOut, DocProp::PixelXDimension, fmt("%u", (u32)intVal));
     }
     if (GetExifInt(parser, ExifProp::ExifImageLength, intVal)) {
-        AddProp(keyValOut, kPropPixelYDimension, fmt("%u", (u32)intVal));
+        AddProp(propsOut, DocProp::PixelYDimension, fmt("%u", (u32)intVal));
     }
 
     if (GetExifInt(parser, ExifProp::FileSource, intVal) && intVal == 3) {
-        AddProp(keyValOut, kPropFileSource, StrL("DSC"));
+        AddProp(propsOut, DocProp::FileSource, StrL("DSC"));
     }
 
     if (GetExifInt(parser, ExifProp::SceneType, intVal) && intVal == 1) {
-        AddProp(keyValOut, kPropSceneType, StrL("A directly photographed image"));
+        AddProp(propsOut, DocProp::SceneType, StrL("A directly photographed image"));
     }
 }
 
-static void GetExifPropertiesFromData(Str data, StrVec& keyValOut) {
+static void GetExifPropertiesFromData(Str data, Props& propsOut) {
     if (len(data) == 0) {
         return;
     }
-    AddProp(keyValOut, kPropImageFileSize, fmt("%d", (int)data.len));
+    AddProp(propsOut, DocProp::ImageFileSize, fmt("%d", (int)data.len));
 
     ExifParser parser;
     if (parser.Parse(data)) {
-        AddParsedExifProperties(data, parser, keyValOut);
+        AddParsedExifProperties(data, parser, propsOut);
     }
 }
 
-void EngineImage::GetProperties(StrVec& keyValOut) {
-    EngineBase::GetProperties(keyValOut);
+void EngineImage::GetProperties(Props& propsOut) {
+    EngineBase::GetProperties(propsOut);
 }
 
-void EngineImages::GetImageProperties(int pageNo, StrVec& keyValOut) {
+void EngineImages::GetImageProperties(int pageNo, Props& propsOut) {
     TempStr imgPath = GetImagePathTemp(pageNo);
     if (imgPath) {
-        AddProp(keyValOut, kPropImagePath, imgPath);
+        AddProp(propsOut, DocProp::ImagePath, imgPath);
     }
     Str data = GetImageData(pageNo);
-    GetExifPropertiesFromData(data, keyValOut);
+    GetExifPropertiesFromData(data, propsOut);
 }
 
-void EngineImage::GetImageProperties(int pageNo, StrVec& keyValOut) {
+void EngineImage::GetImageProperties(int pageNo, Props& propsOut) {
     Str data = file::ReadFile(FilePath());
-    GetExifPropertiesFromData(data, keyValOut);
+    GetExifPropertiesFromData(data, propsOut);
     str::Free(data);
 }
 
@@ -1404,7 +1404,7 @@ class EngineImageDir : public EngineImages {
     Str GetFileData() override { return {}; }
     bool SaveFileAs(Str copyFileName) override;
 
-    TempStr GetPropertyTemp(Str) override { return nullptr; }
+    TempStr GetPropertyTemp(DocProp) override { return nullptr; }
 
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
@@ -1764,8 +1764,8 @@ class EngineCbx : public EngineImages {
 
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(Str name) override;
-    void GetProperties(StrVec& keyValOut) override;
+    TempStr GetPropertyTemp(DocProp prop) override;
+    void GetProperties(Props& propsOut) override;
 
     TocTree* GetToc() override;
 
@@ -2028,28 +2028,28 @@ Str EngineCbx::GetImageData(int pageNo) {
     return Str((char*)(fi->data), fi->fileSizeUncompressed);
 }
 
-TempStr EngineCbx::GetPropertyTemp(Str name) {
-    if (str::Eq(name, kPropTitle)) {
+TempStr EngineCbx::GetPropertyTemp(DocProp prop) {
+    if (prop == DocProp::Title) {
         return cip.propTitle;
     }
 
-    if (str::Eq(name, kPropAuthor)) {
+    if (prop == DocProp::Author) {
         if (len(cip.propAuthors) == 0) {
             return {};
         }
         return JoinTemp(&cip.propAuthors, ", ");
     }
 
-    if (str::Eq(name, kPropCreationDate)) {
+    if (prop == DocProp::CreationDate) {
         return cip.propDate;
     }
-    if (str::Eq(name, kPropModificationDate)) {
+    if (prop == DocProp::ModificationDate) {
         return cip.propModDate;
     }
-    if (str::Eq(name, kPropCreatorApp)) {
+    if (prop == DocProp::CreatorApp) {
         return cip.propCreator;
     }
-    if (str::Eq(name, kPropSubject)) {
+    if (prop == DocProp::Subject) {
         // TODO: replace with Prop_Summary
         return cip.propSummary;
     }
@@ -2057,8 +2057,8 @@ TempStr EngineCbx::GetPropertyTemp(Str name) {
     return {};
 }
 
-void EngineCbx::GetProperties(StrVec& keyValOut) {
-    EngineBase::GetProperties(keyValOut);
+void EngineCbx::GetProperties(Props& propsOut) {
+    EngineBase::GetProperties(propsOut);
 
     str::Builder filesStr;
     auto& fileInfos = cbxArchive->GetFileInfos();
@@ -2076,7 +2076,7 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
     }
     // show paths in Windows style (#5543)
     str::TransCharsInPlace(ToStr(filesStr), StrL("/"), StrL("\\"));
-    AddProp(keyValOut, kPropFiles, ToStr(filesStr));
+    AddProp(propsOut, DocProp::Files, ToStr(filesStr));
 }
 
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
@@ -2261,9 +2261,9 @@ bool IsEngineImages(EngineBase* engine) {
            IsOfKind(engine, kindEngineComicBooks);
 }
 
-void EngineImagesGetImageProperties(EngineBase* engine, int pageNo, StrVec& keyValOut) {
+void EngineImagesGetImageProperties(EngineBase* engine, int pageNo, Props& propsOut) {
     if (!IsEngineImages(engine)) {
         return;
     }
-    ((EngineImages*)engine)->GetImageProperties(pageNo, keyValOut);
+    ((EngineImages*)engine)->GetImageProperties(pageNo, propsOut);
 }

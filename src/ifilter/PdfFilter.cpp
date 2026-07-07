@@ -16,7 +16,6 @@
 #include "RegistrySearchFilter.h"
 #include "PdfFilter.h"
 
-
 struct EBookUI;
 EBookUI* GetEBookUI() {
     return nullptr;
@@ -111,7 +110,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Author:
             m_state = PdfFilterState::Title;
-            prop = m_pdfEngine->GetPropertyTemp(kPropAuthor);
+            prop = m_pdfEngine->GetPropertyTemp(DocProp::Author);
             if (len(prop) > 0) {
                 ws = ToWStr(prop);
                 chunkValue.SetTextValue(PKEY_Author, ws.s);
@@ -122,9 +121,9 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Title:
             m_state = PdfFilterState::Date;
-            prop = m_pdfEngine->GetPropertyTemp(kPropTitle);
+            prop = m_pdfEngine->GetPropertyTemp(DocProp::Title);
             if (!prop) {
-                prop = m_pdfEngine->GetPropertyTemp(kPropSubject);
+                prop = m_pdfEngine->GetPropertyTemp(DocProp::Subject);
             }
             if (len(prop) > 0) {
                 ws = ToWStr(prop);
@@ -136,9 +135,9 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Date:
             m_state = PdfFilterState::Content;
-            prop = m_pdfEngine->GetPropertyTemp(kPropModificationDate);
+            prop = m_pdfEngine->GetPropertyTemp(DocProp::ModificationDate);
             if (!prop) {
-                prop = m_pdfEngine->GetPropertyTemp(kPropCreationDate);
+                prop = m_pdfEngine->GetPropertyTemp(DocProp::CreationDate);
             }
             if (len(prop) > 0) {
                 SYSTEMTIME systime;

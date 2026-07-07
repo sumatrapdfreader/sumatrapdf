@@ -7,6 +7,7 @@ struct PasswordUI;
 struct FileArgs;
 struct AnnotCreateArgs;
 struct IStream;
+struct PropValue;
 
 /* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(Kind kind);
@@ -42,7 +43,7 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, Kind 
 EngineBase* CreateEngineCbxFromStream(IStream* stream);
 
 bool IsEngineImages(EngineBase*);
-void EngineImagesGetImageProperties(EngineBase*, int pageNo, StrVec& keyValOut);
+void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);
 
 /* EngineMupdf.cpp */
 

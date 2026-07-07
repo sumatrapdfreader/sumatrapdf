@@ -298,67 +298,79 @@ static void AppendProp(str::Builder& out, Str key, Str value) {
 }
 
 // clang-format off
-static const Str propToName[] = {
-    kPropTitle, _TRN("Title:"),
-    kPropSubject, _TRN("Subject:"),
-    kPropAuthor, _TRN("Author:"),
-    kPropCopyright, _TRN("Copyright:"),
-    kPropCreatorApp, _TRN("Application:"),
-    kPropPdfProducer, _TRN("PDF Producer:"),
-    kPropPdfVersion, _TRN("PDF Version:"),
-    kPropFiles, _TRN("Files:"),
-    kPropKeywords, _TRN("Keywords:"),
-    kPropEncryption, _TRN("Encryption:"),
-    kPropImageSize, _TRN("Image Size:"),
-    kPropDpi, _TRN("DPI:"),
-    kPropComment, _TRN("Comment:"),
-    kPropCameraMake, _TRN("Camera Make:"),
-    kPropCameraModel, _TRN("Camera Model:"),
-    kPropDateOriginal, _TRN("Date Original:"),
-    kPropExposureTime, _TRN("Exposure Time:"),
-    kPropFNumber, _TRN("F-Number:"),
-    kPropIsoSpeed, _TRN("ISO Speed:"),
-    kPropFocalLength, _TRN("Focal Length:"),
-    kPropFocalLength35mm, _TRN("Focal Length (35mm):"),
-    kPropFlash, _TRN("Flash:"),
-    kPropOrientation, _TRN("Orientation:"),
-    kPropExposureProgram, _TRN("Exposure Program:"),
-    kPropMeteringMode, _TRN("Metering Mode:"),
-    kPropWhiteBalance, _TRN("White Balance:"),
-    kPropExposureBias, _TRN("Exposure Bias:"),
-    kPropBitsPerSample, _TRN("Bits Per Sample:"),
-    kPropResolutionUnit, _TRN("Resolution Unit:"),
-    kPropSoftware, _TRN("Software:"),
-    kPropDateTime, _TRN("Date/Time:"),
-    kPropYCbCrPositioning, _TRN("YCbCr Positioning:"),
-    kPropExifVersion, _TRN("Exif Version:"),
-    kPropDateTimeDigitized, _TRN("Date/Time Digitized:"),
-    kPropComponentsConfig, _TRN("Components Configuration:"),
-    kPropCompressedBpp, _TRN("Compressed Bits/Pixel:"),
-    kPropMaxAperture, _TRN("Max Aperture:"),
-    kPropLightSource, _TRN("Light Source:"),
-    kPropUserComment, _TRN("User Comment:"),
-    kPropFlashpixVersion, _TRN("Flashpix Version:"),
-    kPropColorSpace, _TRN("Color Space:"),
-    kPropPixelXDimension, _TRN("Pixel X Dimension:"),
-    kPropPixelYDimension, _TRN("Pixel Y Dimension:"),
-    kPropFileSource, _TRN("File Source:"),
-    kPropSceneType, _TRN("Scene Type:"),
-    kPropImageFileSize, _TRN("Image File Size:"),
-    kPropImagePath, _TRN("Path:"),
-    Str(),
+struct PropLabel {
+    DocProp prop;
+    Str label;
+};
+
+static const PropLabel propToName[] = {
+    {DocProp::Title, _TRN("Title:")},
+    {DocProp::Subject, _TRN("Subject:")},
+    {DocProp::Author, _TRN("Author:")},
+    {DocProp::Copyright, _TRN("Copyright:")},
+    {DocProp::CreatorApp, _TRN("Application:")},
+    {DocProp::PdfProducer, _TRN("PDF Producer:")},
+    {DocProp::PdfVersion, _TRN("PDF Version:")},
+    {DocProp::Files, _TRN("Files:")},
+    {DocProp::Keywords, _TRN("Keywords:")},
+    {DocProp::Encryption, _TRN("Encryption:")},
+    {DocProp::ImageSize, _TRN("Image Size:")},
+    {DocProp::Dpi, _TRN("DPI:")},
+    {DocProp::Comment, _TRN("Comment:")},
+    {DocProp::CameraMake, _TRN("Camera Make:")},
+    {DocProp::CameraModel, _TRN("Camera Model:")},
+    {DocProp::DateOriginal, _TRN("Date Original:")},
+    {DocProp::ExposureTime, _TRN("Exposure Time:")},
+    {DocProp::FNumber, _TRN("F-Number:")},
+    {DocProp::IsoSpeed, _TRN("ISO Speed:")},
+    {DocProp::FocalLength, _TRN("Focal Length:")},
+    {DocProp::FocalLength35mm, _TRN("Focal Length (35mm):")},
+    {DocProp::Flash, _TRN("Flash:")},
+    {DocProp::Orientation, _TRN("Orientation:")},
+    {DocProp::ExposureProgram, _TRN("Exposure Program:")},
+    {DocProp::MeteringMode, _TRN("Metering Mode:")},
+    {DocProp::WhiteBalance, _TRN("White Balance:")},
+    {DocProp::ExposureBias, _TRN("Exposure Bias:")},
+    {DocProp::BitsPerSample, _TRN("Bits Per Sample:")},
+    {DocProp::ResolutionUnit, _TRN("Resolution Unit:")},
+    {DocProp::Software, _TRN("Software:")},
+    {DocProp::DateTime, _TRN("Date/Time:")},
+    {DocProp::YCbCrPositioning, _TRN("YCbCr Positioning:")},
+    {DocProp::ExifVersion, _TRN("Exif Version:")},
+    {DocProp::DateTimeDigitized, _TRN("Date/Time Digitized:")},
+    {DocProp::ComponentsConfig, _TRN("Components Configuration:")},
+    {DocProp::CompressedBpp, _TRN("Compressed Bits/Pixel:")},
+    {DocProp::MaxAperture, _TRN("Max Aperture:")},
+    {DocProp::LightSource, _TRN("Light Source:")},
+    {DocProp::UserComment, _TRN("User Comment:")},
+    {DocProp::FlashpixVersion, _TRN("Flashpix Version:")},
+    {DocProp::ColorSpace, _TRN("Color Space:")},
+    {DocProp::PixelXDimension, _TRN("Pixel X Dimension:")},
+    {DocProp::PixelYDimension, _TRN("Pixel Y Dimension:")},
+    {DocProp::FileSource, _TRN("File Source:")},
+    {DocProp::SceneType, _TRN("Scene Type:")},
+    {DocProp::ImageFileSize, _TRN("Image File Size:")},
+    {DocProp::ImagePath, _TRN("Path:")},
+    {DocProp::None, {}},
 };
 // clang-format on
 
-static void AppendPropTranslated(str::Builder& out, Str propName, Str val) {
-    if (!propName || !val) return;
-    if (str::Eq(propName, kPropImageFileSize)) {
+static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
+    if (prop == DocProp::None || !val) return;
+    if (prop == DocProp::ImageFileSize) {
         TempStr valFormatted = FormatFileSizeTransTemp(ParseInt64(val));
         AppendProp(out, _TRA("File Size:"), valFormatted);
         return;
     }
-    Str s = GetMatchingString(propToName, propName);
+    Str s;
+    for (int i = 0; propToName[i].prop != DocProp::None; i++) {
+        if (propToName[i].prop == prop) {
+            s = propToName[i].label;
+            break;
+        }
+    }
     if (!s) {
+        TempStr propName = PropNameTemp(prop);
         TempStr label = fmt("%s:", propName);
         AppendProp(out, label, val);
         return;
@@ -409,10 +421,12 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
         EngineBase* engine = dm->GetEngine();
         engine->GetProperties(propsOut);
     } else {
-        for (int i = 0; gAllProps[i]; i++) {
-            TempStr val = ctrl->GetPropertyTemp(gAllProps[i]);
-            propsOut.Append(gAllProps[i]);
-            propsOut.Append(val);
+        for (int i = 0; gAllProps[i] != DocProp::None; i++) {
+            DocProp prop = gAllProps[i];
+            TempStr val = ctrl->GetPropertyTemp(prop);
+            if (val) {
+                AddProp(propsOut, prop, val);
+            }
         }
     }
 }
@@ -444,9 +458,7 @@ static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out
     out.Append(header);
     out.AppendChar('\n');
     for (int i = 0; i < nImageProps; i++) {
-        Str propName = imageProps[i * 2];
-        Str propVal = imageProps[i * 2 + 1];
-        AppendPropTranslated(out, propName, propVal);
+        AppendPropTranslated(out, imageProps[i].prop, imageProps[i].val);
     }
 }
 
@@ -475,24 +487,24 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     Props props;
     GetAllProps(ctrl, props);
 
-    AppendPropTranslated(out, kPropTitle, GetPropValueTemp(props, kPropTitle));
-    AppendPropTranslated(out, kPropSubject, GetPropValueTemp(props, kPropSubject));
-    AppendPropTranslated(out, kPropAuthor, GetPropValueTemp(props, kPropAuthor));
-    AppendPropTranslated(out, kPropCopyright, GetPropValueTemp(props, kPropCopyright));
+    AppendPropTranslated(out, DocProp::Title, GetPropValueTemp(props, DocProp::Title));
+    AppendPropTranslated(out, DocProp::Subject, GetPropValueTemp(props, DocProp::Subject));
+    AppendPropTranslated(out, DocProp::Author, GetPropValueTemp(props, DocProp::Author));
+    AppendPropTranslated(out, DocProp::Copyright, GetPropValueTemp(props, DocProp::Copyright));
 
     bool isPdfDate = dm && kindEngineMupdf == dm->engineType;
-    Str val = GetPropValueTemp(props, kPropCreationDate);
+    Str val = GetPropValueTemp(props, DocProp::CreationDate);
     AppendDateProp(out, _TRA("Created:"), val, isPdfDate);
-    val = GetPropValueTemp(props, kPropModificationDate);
+    val = GetPropValueTemp(props, DocProp::ModificationDate);
     AppendDateProp(out, _TRA("Modified:"), val, isPdfDate);
 
-    AppendPropTranslated(out, kPropCreatorApp, GetPropValueTemp(props, kPropCreatorApp));
-    AppendPropTranslated(out, kPropPdfProducer, GetPropValueTemp(props, kPropPdfProducer));
-    AppendPropTranslated(out, kPropPdfVersion, GetPropValueTemp(props, kPropPdfVersion));
+    AppendPropTranslated(out, DocProp::CreatorApp, GetPropValueTemp(props, DocProp::CreatorApp));
+    AppendPropTranslated(out, DocProp::PdfProducer, GetPropValueTemp(props, DocProp::PdfProducer));
+    AppendPropTranslated(out, DocProp::PdfVersion, GetPropValueTemp(props, DocProp::PdfVersion));
     strTemp = FormatPermissionsTemp(ctrl);
     AppendProp(out, _TRA("Denied Permissions:"), strTemp);
 
-    AppendPdfFileStructure(out, GetPropValueTemp(props, kPropPdfFileStructure), ctrl->GetFilePath());
+    AppendPdfFileStructure(out, GetPropValueTemp(props, DocProp::PdfFileStructure), ctrl->GetFilePath());
 
     int pageNo = ctrl->CurrentPageNo();
     bool isImages = false;
@@ -517,27 +529,27 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
 
     // clang-format off
     // properties already shown above, skip when appending remaining
-    static const Str handledProps[] = {
-        kPropTitle, kPropSubject, kPropAuthor, kPropCopyright,
-        kPropCreationDate, kPropModificationDate,
-        kPropCreatorApp, kPropPdfProducer, kPropPdfVersion,
-        kPropPdfFileStructure, kPropFiles,
-        kPropUnsupportedFeatures, kPropFontList,
-        nullptr,
+    static const DocProp handledProps[] = {
+        DocProp::Title, DocProp::Subject, DocProp::Author, DocProp::Copyright,
+        DocProp::CreationDate, DocProp::ModificationDate,
+        DocProp::CreatorApp, DocProp::PdfProducer, DocProp::PdfVersion,
+        DocProp::PdfFileStructure, DocProp::Files,
+        DocProp::UnsupportedFeatures, DocProp::FontList,
+        DocProp::None,
     };
     // clang-format on
 
     // append any remaining properties not already shown
     int nProps = PropsCount(props);
     for (int i = 0; i < nProps; i++) {
-        Str propName = props[i * 2];
-        Str propVal = props[i * 2 + 1];
+        DocProp prop = props[i].prop;
+        Str propVal = props[i].val;
         if (!propVal) {
             continue;
         }
         bool handled = false;
-        for (int j = 0; handledProps[j]; j++) {
-            if (str::Eq(propName, handledProps[j])) {
+        for (int j = 0; handledProps[j] != DocProp::None; j++) {
+            if (prop == handledProps[j]) {
                 handled = true;
                 break;
             }
@@ -545,11 +557,11 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
         if (handled) {
             continue;
         }
-        AppendPropTranslated(out, propName, propVal);
+        AppendPropTranslated(out, prop, propVal);
     }
 
     out.AppendChar('\n');
-    AppendPropTranslated(out, kPropFiles, GetPropValueTemp(props, kPropFiles));
+    AppendPropTranslated(out, DocProp::Files, GetPropValueTemp(props, DocProp::Files));
 }
 
 static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
@@ -810,7 +822,7 @@ struct GetFontsData {
 };
 
 static void GetFontsThread(GetFontsData* data) {
-    TempStr val = data->ctrl->GetPropertyTemp(kPropFontList);
+    TempStr val = data->ctrl->GetPropertyTemp(DocProp::FontList);
     auto result = new GetFontsResult;
     result->hwnd = data->hwnd;
     if (val) {

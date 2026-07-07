@@ -1474,7 +1474,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
 
     TempStr docTitle = "";
     if (tab->ctrl) {
-        TempStr title = tab->ctrl->GetPropertyTemp(kPropTitle);
+        TempStr title = tab->ctrl->GetPropertyTemp(DocProp::Title);
         if (len(title) > 0) {
             title.len -= str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
@@ -1797,7 +1797,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
 
-    TempStr unsupported = win->ctrl->GetPropertyTemp(kPropUnsupportedFeatures);
+    TempStr unsupported = win->ctrl->GetPropertyTemp(DocProp::UnsupportedFeatures);
     if (unsupported) {
         Str s = _TRA("%s not supported");
         TempStr msg = fmt(s.s, unsupported);

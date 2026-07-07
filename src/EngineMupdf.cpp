@@ -4159,24 +4159,29 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     return JoinTemp(&fonts, "\n");
 }
 
-// clang-format off
-static const Str mupdfPropsMap[] = {
-    kPropTitle, Str(FZ_META_INFO_TITLE),
-    kPropAuthor, Str(FZ_META_INFO_AUTHOR),
-    kPropSubject, StrL("info:Subject"),
-    kPropPdfProducer, Str(FZ_META_INFO_PRODUCER),
-    kPropCreatorApp, StrL("info:Creator"), // not sure if the same meaning
-    kPropCreationDate, StrL("info:CreationDate"),
-    kPropModificationDate, StrL("info:ModDate"),
-    Str(),
-};
-// clang-format on
+static SeqStrNum mupdfPropsMap = FZ_META_INFO_TITLE
+    "\0"
+    "\x02" FZ_META_INFO_AUTHOR
+    "\0"
+    "\x04"
+    "info:Subject\0"
+    "\x08" FZ_META_INFO_PRODUCER
+    "\0"
+    "\x16"
+    // not sure if info:Creator has the same meaning
+    "info:Creator\0"
+    "\x0e"
+    "info:CreationDate\0"
+    "\x0a"
+    "info:ModDate\0"
+    "\x0c"
+    "\0";
 
-TempStr EngineMupdf::GetPropertyTemp(Str name) {
+TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     auto ctx = Ctx();
     ScopedRecursiveMutex ctxScope(&docLock);
 
-    Str key = GetMatchingString(mupdfPropsMap, name);
+    Str key = SeqStrNumStrByNumber(mupdfPropsMap, (i64)prop);
     if (key) {
         char buf[1024]{};
         int bufSize = (int)dimof(buf);
@@ -4194,7 +4199,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
         return {};
     }
 
-    if (str::Eq(kPropPdfVersion, name)) {
+    if (prop == DocProp::PdfVersion) {
         int major = pdfdoc->version / 10, minor = pdfdoc->version % 10;
         pdf_crypt* crypt = pdfdoc->crypt;
         if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
@@ -4208,7 +4213,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
         return fmt("%d.%d", major, minor);
     }
 
-    if (str::Eq(kPropPdfFileStructure, name)) {
+    if (prop == DocProp::PdfFileStructure) {
         StrVec fstruct;
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
             fstruct.Append("linearized");
@@ -4231,37 +4236,36 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
         return JoinTemp(&fstruct, ",");
     }
 
-    if (str::Eq(kPropUnsupportedFeatures, name)) {
+    if (prop == DocProp::UnsupportedFeatures) {
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Unsupported_XFA"))) {
             return "XFA";
         }
         return {};
     }
 
-    if (str::Eq(kPropFontList, name)) {
+    if (prop == DocProp::FontList) {
         return ExtractFontListTemp();
     }
 
-    static const Str pdfPropNames[] = {
-        kPropTitle,
-        StrL("Title"),
-        kPropAuthor,
-        StrL("Author"),
-        kPropSubject,
-        StrL("Subject"),
-        kPropCopyright,
-        StrL("Copyright"),
-        kPropCreationDate,
-        StrL("CreationDate"),
-        kPropModificationDate,
-        StrL("ModDate"),
-        kPropCreatorApp,
-        StrL("Creator"),
-        kPropPdfProducer,
-        StrL("Producer"),
-        Str(),
-    };
-    Str pdfPropName = GetMatchingString(pdfPropNames, name);
+    static SeqStrNum pdfPropNames =
+        "Title\0"
+        "\x02"
+        "Author\0"
+        "\x04"
+        "Subject\0"
+        "\x08"
+        "Copyright\0"
+        "\x06"
+        "CreationDate\0"
+        "\x0a"
+        "ModDate\0"
+        "\x0c"
+        "Creator\0"
+        "\x0e"
+        "Producer\0"
+        "\x16"
+        "\0";
+    Str pdfPropName = SeqStrNumStrByNumber(pdfPropNames, (i64)prop);
     if (!pdfPropName) {
         return {};
     }
@@ -4399,20 +4403,20 @@ static void AppendSignatureInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_veri
     }
 }
 
-void EngineMupdf::GetProperties(StrVec& keyValOut) {
-    EngineBase::GetProperties(keyValOut);
+void EngineMupdf::GetProperties(Props& propsOut) {
+    EngineBase::GetProperties(propsOut);
 
     auto ctx = Ctx();
     ScopedRecursiveMutex ctxScope(&docLock);
 
     TempStr val = LookupMetadataTemp(ctx, _doc, "info:Keywords");
     if (val) {
-        AddProp(keyValOut, kPropKeywords, val);
+        AddProp(propsOut, DocProp::Keywords, val);
     }
 
     val = LookupMetadataTemp(ctx, _doc, "encryption");
     if (val) {
-        AddProp(keyValOut, kPropEncryption, val);
+        AddProp(propsOut, DocProp::Encryption, val);
     }
 
     // pdf signatures (signed form widgets). Walks each page's widget set;
@@ -4449,7 +4453,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
             fz_report_error(ctx);
         }
         if (!sigs.IsEmpty()) {
-            AddProp(keyValOut, kPropSignatures, ToStr(sigs));
+            AddProp(propsOut, DocProp::Signatures, ToStr(sigs));
         }
     }
 
@@ -4470,7 +4474,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
                 filesStr.AppendChar('\n');
                 filesStr.Append(fi->name);
             }
-            AddProp(keyValOut, kPropFiles, ToStr(filesStr));
+            AddProp(propsOut, DocProp::Files, ToStr(filesStr));
             delete zip;
         }
     }

@@ -15,7 +15,7 @@ struct ChmModel : DocController {
     Str GetFilePath() const override;
     Str GetDefaultFileExt() const override;
     int PageCount() const override;
-    TempStr GetPropertyTemp(Str name) override;
+    TempStr GetPropertyTemp(DocProp prop) override;
 
     // page navigation (stateful)
     int CurrentPageNo() const override;

@@ -127,7 +127,7 @@ class EngineDjvuDec : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
-    TempStr GetPropertyTemp(Str name) override;
+    TempStr GetPropertyTemp(DocProp prop) override;
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*> GetElements(int pageNo) override;
@@ -314,7 +314,7 @@ bool EngineDjvuDec::HasClipOptimizations(int) {
     return false;
 }
 
-TempStr EngineDjvuDec::GetPropertyTemp(Str) {
+TempStr EngineDjvuDec::GetPropertyTemp(DocProp) {
     return {};
 }
 

@@ -70,8 +70,8 @@ class EngineMupdf : public EngineBase {
     void ReleaseTextExtractionThreadContext() override;
 
     bool HasClipOptimizations(int pageNo) override;
-    TempStr GetPropertyTemp(Str name) override;
-    void GetProperties(StrVec& keyValOut) override;
+    TempStr GetPropertyTemp(DocProp prop) override;
+    void GetProperties(Vec<PropValue>& propsOut) override;
 
     bool BenchLoadPage(int pageNo) override;
 

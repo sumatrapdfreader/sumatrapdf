@@ -15,7 +15,6 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-
 Kind kindEnginePostScript = "enginePostScript";
 
 static TempStr GetGhostscriptPathTemp() {
@@ -285,23 +284,23 @@ class EnginePs : public EngineBase {
 
     bool HasClipOptimizations(int pageNo) override { return pdfEngine->HasClipOptimizations(pageNo); }
 
-    TempStr GetPropertyTemp(Str name) override {
+    TempStr GetPropertyTemp(DocProp prop) override {
         // omit properties created by Ghostscript
         if (!pdfEngine) {
             return {};
         }
-        static const Str toOmit[] = {kPropCreationDate, kPropModificationDate, kPropPdfVersion,
-                                     kPropPdfProducer,  kPropPdfFileStructure, Str()};
+        static const DocProp toOmit[] = {DocProp::CreationDate, DocProp::ModificationDate, DocProp::PdfVersion,
+                                         DocProp::PdfProducer,  DocProp::PdfFileStructure, DocProp::None};
 
-        for (Str omit : toOmit) {
-            if (!omit) {
+        for (DocProp omit : toOmit) {
+            if (omit == DocProp::None) {
                 break;
             }
-            if (str::Eq(omit, name)) {
+            if (omit == prop) {
                 return {};
             }
         }
-        return pdfEngine->GetPropertyTemp(name);
+        return pdfEngine->GetPropertyTemp(prop);
     }
 
     bool BenchLoadPage(int pageNo) override { return pdfEngine->BenchLoadPage(pageNo); }

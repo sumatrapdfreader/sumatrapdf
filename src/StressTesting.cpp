@@ -31,7 +31,6 @@
 #include "Flags.h"
 #include "SearchAndDDE.h"
 
-
 #define FIRST_STRESS_TIMER_ID 101
 
 static bool gIsStressTesting = false;
@@ -792,9 +791,9 @@ static bool GoToNextPage(StressTest* st) {
         // trigger getting toc and props
         st->gotToc = true;
         ctrl->GetToc();
-        for (int i = 0; gAllProps[i]; i++) {
-            Str prop = gAllProps[i];
-            if (str::Eq(prop, kPropFontList)) {
+        for (int i = 0; gAllProps[i] != DocProp::None; i++) {
+            DocProp prop = gAllProps[i];
+            if (prop == DocProp::FontList) {
                 // this can be expensive so skip
                 continue;
             }
