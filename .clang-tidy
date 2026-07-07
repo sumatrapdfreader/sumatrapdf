@@ -12,8 +12,10 @@ Checks: >
   -misc-non-private-member-variables-in-classes,
   -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
+  -modernize-avoid-c-style-cast,
   -modernize-use-using,
   -performance-no-int-to-ptr,
+  -readability-identifier-length,
   -readability-magic-numbers
 CheckOptions:
   - key: readability-implicit-bool-conversion.AllowIntegerConditions
