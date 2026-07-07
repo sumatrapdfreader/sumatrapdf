@@ -462,6 +462,22 @@ static inline int ClampInt(int v, int minVal, int maxVal) {
     return std::min(std::max(v, minVal), maxVal);
 }
 
+static inline int FloorInt(float v) {
+    int i = (int)v;
+    return (v < (float)i) ? i - 1 : i;
+}
+
+static inline u8 BilinearByte(float v00, float v10, float v01, float v11, float tx, float ty) {
+    float v0 = v00 + (v10 - v00) * tx;
+    float v1 = v01 + (v11 - v01) * tx;
+    float v = v0 + (v1 - v0) * ty;
+    return (u8)ClampInt((int)(v + 0.5f), 0, 255);
+}
+
+// Map decoded page pixels into the target pixmap with bilinear filtering. The
+// previous Windows path used GDI StretchBlt(HALFTONE); nearest-neighbor here
+// visibly degraded text/graphics when decoded and screen sizes differ slightly
+// (common even at 100% zoom due to rounding).
 static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int comp, const Rect& screen,
                                        const Rect& full) {
     Pixmap* res = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGR8);
@@ -469,22 +485,57 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
         return nullptr;
     }
 
+    // 1:1 blit of the visible sub-rect (no resampling)
+    if (srcDx == screen.dx && srcDy == screen.dy && screen.x == full.x && screen.y == full.y &&
+        srcDx == full.dx && srcDy == full.dy) {
+        for (int y = 0; y < screen.dy; y++) {
+            const u8* sp = src + (size_t)y * srcDx * comp;
+            u8* dst = res->data + (size_t)y * res->stride;
+            if (comp == 1) {
+                for (int x = 0; x < screen.dx; x++) {
+                    u8 g = sp[x];
+                    dst[0] = g;
+                    dst[1] = g;
+                    dst[2] = g;
+                    dst += 3;
+                }
+            } else {
+                memcpy(dst, sp, (size_t)screen.dx * 3);
+            }
+        }
+        return res;
+    }
+
     double sx = (double)srcDx / (double)full.dx;
     double sy = (double)srcDy / (double)full.dy;
     for (int y = 0; y < screen.dy; y++) {
-        int srcY = ClampInt((int)(((screen.y - full.y) + y + 0.5) * sy), 0, srcDy - 1);
+        float srcYf = (float)(((screen.y - full.y) + y + 0.5) * sy - 0.5);
+        int y0 = ClampInt(FloorInt(srcYf), 0, srcDy - 1);
+        int y1 = ClampInt(y0 + 1, 0, srcDy - 1);
+        float ty = srcYf - (float)y0;
         u8* dst = res->data + (size_t)y * res->stride;
         for (int x = 0; x < screen.dx; x++) {
-            int srcX = ClampInt((int)(((screen.x - full.x) + x + 0.5) * sx), 0, srcDx - 1);
-            const u8* sp = src + ((size_t)srcY * srcDx + srcX) * comp;
+            float srcXf = (float)(((screen.x - full.x) + x + 0.5) * sx - 0.5);
+            int x0 = ClampInt(FloorInt(srcXf), 0, srcDx - 1);
+            int x1 = ClampInt(x0 + 1, 0, srcDx - 1);
+            float tx = srcXf - (float)x0;
             if (comp == 1) {
-                dst[0] = sp[0];
-                dst[1] = sp[0];
-                dst[2] = sp[0];
+                float v00 = src[(size_t)y0 * srcDx + x0];
+                float v10 = src[(size_t)y0 * srcDx + x1];
+                float v01 = src[(size_t)y1 * srcDx + x0];
+                float v11 = src[(size_t)y1 * srcDx + x1];
+                u8 g = BilinearByte(v00, v10, v01, v11, tx, ty);
+                dst[0] = g;
+                dst[1] = g;
+                dst[2] = g;
             } else {
-                dst[0] = sp[0];
-                dst[1] = sp[1];
-                dst[2] = sp[2];
+                size_t off00 = ((size_t)y0 * srcDx + x0) * 3;
+                size_t off10 = ((size_t)y0 * srcDx + x1) * 3;
+                size_t off01 = ((size_t)y1 * srcDx + x0) * 3;
+                size_t off11 = ((size_t)y1 * srcDx + x1) * 3;
+                dst[0] = BilinearByte(src[off00 + 0], src[off10 + 0], src[off01 + 0], src[off11 + 0], tx, ty);
+                dst[1] = BilinearByte(src[off00 + 1], src[off10 + 1], src[off01 + 1], src[off11 + 1], tx, ty);
+                dst[2] = BilinearByte(src[off00 + 2], src[off10 + 2], src[off01 + 2], src[off11 + 2], tx, ty);
             }
             dst += 3;
         }
