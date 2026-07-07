@@ -49,24 +49,88 @@ struct AutoDelete {
     }
 };
 
-template <typename T>
-struct AutoRun {
-    using fnPtr = void (*)(T*);
-    T* o = nullptr;
-    fnPtr fn = nullptr;
-    AutoRun() = default;
-    AutoRun(fnPtr fn, T* o) { // NOLINT
-        this->fn = fn;
-        this->o = o;
-    }
-    ~AutoRun() {
+template <typename Fn>
+struct AutoCall;
+
+template <typename Result>
+struct AutoCall<Result (*)()> {
+    using Fn = Result (*)();
+    Fn fn = nullptr;
+    AutoCall() = default;
+    AutoCall(Fn fn) { this->fn = fn; } // NOLINT
+    AutoCall(AutoCall& other) = delete;
+    AutoCall(AutoCall&& other) = delete;
+    AutoCall(const AutoCall& other) = delete;
+    AutoCall(const AutoCall&& other) = delete;
+    ~AutoCall() {
         if (fn) {
-            fn(o);
+            fn();
         }
     }
 
-    AutoRun& operator=(AutoRun& other) = delete;
-    AutoRun& operator=(AutoRun&& other) = delete;
-    AutoRun& operator=(const AutoRun& other) = delete;
-    AutoRun& operator=(const AutoRun&& other) = delete;
+    AutoCall& operator=(AutoCall& other) = delete;
+    AutoCall& operator=(AutoCall&& other) = delete;
+    AutoCall& operator=(const AutoCall& other) = delete;
+    AutoCall& operator=(const AutoCall&& other) = delete;
 };
+
+template <typename Result, typename Arg>
+struct AutoCall<Result (*)(Arg)> {
+    using Fn = Result (*)(Arg);
+    Fn fn = nullptr;
+    Arg arg{};
+    AutoCall() = default;
+    AutoCall(Fn fn, Arg arg) { // NOLINT
+        this->fn = fn;
+        this->arg = arg;
+    }
+    AutoCall(AutoCall& other) = delete;
+    AutoCall(AutoCall&& other) = delete;
+    AutoCall(const AutoCall& other) = delete;
+    AutoCall(const AutoCall&& other) = delete;
+    ~AutoCall() {
+        if (fn) {
+            fn(arg);
+        }
+    }
+
+    AutoCall& operator=(AutoCall& other) = delete;
+    AutoCall& operator=(AutoCall&& other) = delete;
+    AutoCall& operator=(const AutoCall& other) = delete;
+    AutoCall& operator=(const AutoCall&& other) = delete;
+};
+
+template <typename Result, typename Arg1, typename Arg2>
+struct AutoCall<Result (*)(Arg1, Arg2)> {
+    using Fn = Result (*)(Arg1, Arg2);
+    Fn fn = nullptr;
+    Arg1 arg1{};
+    Arg2 arg2{};
+    AutoCall() = default;
+    AutoCall(Fn fn, Arg1 arg1, Arg2 arg2) { // NOLINT
+        this->fn = fn;
+        this->arg1 = arg1;
+        this->arg2 = arg2;
+    }
+    AutoCall(AutoCall& other) = delete;
+    AutoCall(AutoCall&& other) = delete;
+    AutoCall(const AutoCall& other) = delete;
+    AutoCall(const AutoCall&& other) = delete;
+    ~AutoCall() {
+        if (fn) {
+            fn(arg1, arg2);
+        }
+    }
+
+    AutoCall& operator=(AutoCall& other) = delete;
+    AutoCall& operator=(AutoCall&& other) = delete;
+    AutoCall& operator=(const AutoCall& other) = delete;
+    AutoCall& operator=(const AutoCall&& other) = delete;
+};
+
+template <typename Result>
+AutoCall(Result (*)()) -> AutoCall<Result (*)()>;
+template <typename Result, typename Arg>
+AutoCall(Result (*)(Arg), Arg) -> AutoCall<Result (*)(Arg)>;
+template <typename Result, typename Arg1, typename Arg2>
+AutoCall(Result (*)(Arg1, Arg2), Arg1, Arg2) -> AutoCall<Result (*)(Arg1, Arg2)>;

@@ -76,10 +76,10 @@ static int ExtractString(str::Builder& string, Str data, int off) {
             case 'u':
                 if (off + 4 < data.len && !str::IsNull(str::Parse(Str(data.s + off + 1, 4), "%4x", &i)) && 0 < i &&
                     i < 0x10000) {
-                    char buf[5]{};
-                    wchar_t wc = (wchar_t)i;
-                    WideCharToMultiByte(CP_UTF8, 0, &wc, 1, buf, dimof(buf), nullptr, nullptr);
-                    string.Append(buf);
+                    char buf[4]{};
+                    int n = 0;
+                    str::Utf8Encode(buf, n, i);
+                    string.Append(Str(buf, n));
                     off += 4;
                     break;
                 }

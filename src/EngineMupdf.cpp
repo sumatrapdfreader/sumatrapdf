@@ -19,7 +19,6 @@ extern "C" {
 
 #include "Annotation.h"
 #include "DocProperties.h"
-#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
 #include "EngineAll.h"
@@ -1944,7 +1943,7 @@ static void InstallFitzErrorCallbacks(EngineMupdf* engine, fz_context* ctx) {
 struct ContextThreadID {
     EngineMupdf* engine = nullptr;
     fz_context* ctx = nullptr;
-    DWORD threadID = 0;
+    ThreadId threadID = 0;
 };
 
 static Vec<ContextThreadID>* gPerThreadContexts;
@@ -1967,7 +1966,7 @@ static void DeInitializeEngineMupdf() {
 }
 
 fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
-    DWORD threadID = GetCurrentThreadId();
+    ThreadId threadID = GetCurrentThreadId();
     {
         ScopedMutex cs(&gPerThreadContextsCs);
         for (auto& el : *gPerThreadContexts) {
@@ -1994,7 +1993,7 @@ fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
 }
 
 void ReleasePerThreadContext(EngineMupdf* engine) {
-    DWORD threadID = GetCurrentThreadId();
+    ThreadId threadID = GetCurrentThreadId();
     fz_context* ctxToDrop = nullptr;
     {
         ScopedMutex cs(&gPerThreadContextsCs);
@@ -2039,7 +2038,7 @@ EngineMupdf::EngineMupdf() {
 
     // pages Vec + its FzPageInfo elements live for the lifetime of the
     // engine, so bump-allocate them out of EngineBase::arena
-    pages.allocator = arena;
+    pages.a = arena;
 
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
@@ -2243,9 +2242,7 @@ static Str TxtFileToHTML(Str path) {
     }
 
     AtomicIntInc(&gAllowAllocFailure);
-    defer {
-        AtomicIntDec(&gAllowAllocFailure);
-    };
+    AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 
     TempStr data = fd;
     data = str::ReplaceTemp(data, StrL("&"), StrL("&amp;"));
@@ -3819,8 +3816,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     float h = isnan(ldest.h) ? DEST_USE_DEFAULT : ldest.h;
 
     RectF r(x, y, w, h);
-    auto ctrl = linkHandler->GetDocController();
-    ctrl->ScrollTo(pageNo + 1, r, zoom);
+    linkHandler->ScrollTo(pageNo + 1, r, zoom);
 }
 
 bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {

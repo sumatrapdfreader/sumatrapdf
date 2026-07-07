@@ -993,7 +993,7 @@ class PrintThreadData {
     MainWindow* win = nullptr;
 
     PrintData* data = nullptr;
-    HANDLE thread = nullptr; // close the print thread handle after execution
+    ThreadHandle thread = nullptr; // close the print thread handle after execution
 
     // called when printing has been canceled
     void RemovePrintNotification() {
@@ -1022,7 +1022,7 @@ class PrintThreadData {
     PrintThreadData& operator=(PrintThreadData const&) = delete;
 
     ~PrintThreadData() {
-        CloseHandle(thread);
+        SafeCloseThreadHandle(&thread);
         delete data;
         RemovePrintNotification();
     }
@@ -1045,7 +1045,7 @@ void RemovePrintNotif(PrintThreadData* self, NotificationWnd*) {
 
 struct DeletePrinterThreadData {
     MainWindow* win;
-    HANDLE thread;
+    ThreadHandle thread;
     PrintThreadData* threadData;
 };
 
@@ -1075,7 +1075,7 @@ static void PrintThread(PrintThreadData* ptd) {
         Sleep(1);
     }
 
-    HANDLE thread = ptd->thread = win->printThread;
+    ThreadHandle thread = ptd->thread = win->printThread;
 
     PrintData* pd = ptd->data;
     pd->progressCb = MkFunc1<PrintThreadData, ProgressUpdateData*>(UpdatePrintProgress, ptd);

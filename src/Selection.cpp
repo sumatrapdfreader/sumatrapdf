@@ -272,9 +272,7 @@ void CopySelectionToClipboard(MainWindow* win) {
     if (!OpenClipboardForUpdate()) {
         return;
     }
-    defer {
-        CloseClipboardAfterUpdate();
-    };
+    AutoCall closeClipboard(CloseClipboardAfterUpdate);
 
     DisplayModel* dm = win->AsFixed();
     TempStr selText = nullptr;

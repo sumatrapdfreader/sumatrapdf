@@ -33,34 +33,15 @@ static u64 ArenaClampBot(u64 minValue, u64 value) {
     return (value > minValue) ? value : minValue;
 }
 
-static u64 ArenaPageSize() {
-    static u64 pageSize = 0;
-    if (pageSize == 0) {
-        SYSTEM_INFO info = {};
-        GetSystemInfo(&info);
-        pageSize = info.dwPageSize;
-    }
-    return pageSize;
-}
+u64 ArenaPageSize();
+u64 ArenaLargePageSize();
+bool ArenaCommit(void* base, u64 size, bool largePages);
+void* ArenaReserve(u64 size);
+void* ArenaReserveAndCommit(u64 size, bool largePages);
+void ArenaReleaseMemory(void* base, u64 size);
 
-static u64 ArenaLargePageSize() {
-    static u64 largePageSize = 0;
-    if (largePageSize == 0) {
-        SIZE_T size = GetLargePageMinimum();
-        largePageSize = size ? (u64)size : ArenaPageSize();
-    }
-    return largePageSize;
-}
-
-static bool ArenaCommit(void* base, u64 size, bool largePages) {
-    if (size == 0) {
-        return true;
-    }
-    DWORD flags = MEM_COMMIT;
-    if (largePages) {
-        flags |= MEM_LARGE_PAGES;
-    }
-    return VirtualAlloc(base, (SIZE_T)size, flags, PAGE_READWRITE) != nullptr;
+static void ArenaRelease(Arena* arena) {
+    ArenaReleaseMemory(arena, arena->res);
 }
 
 static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
@@ -204,8 +185,7 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
 
     if (!usesExternalBuffer) {
         if (useLargePages) {
-            base =
-                VirtualAlloc(nullptr, (SIZE_T)reserveSize, MEM_RESERVE | MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
+            base = ArenaReserveAndCommit(reserveSize, true);
             if (base) {
                 commitSize = reserveSize;
             } else {
@@ -217,9 +197,9 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
         }
 
         if (!base) {
-            base = VirtualAlloc(nullptr, (SIZE_T)reserveSize, MEM_RESERVE, PAGE_READWRITE);
+            base = ArenaReserve(reserveSize);
             if (base && !ArenaCommit(base, commitSize, false)) {
-                VirtualFree(base, 0, MEM_RELEASE);
+                ArenaReleaseMemory(base, reserveSize);
                 base = nullptr;
             }
         }
@@ -262,7 +242,7 @@ void ArenaDelete(Arena* arena) {
     while (node) {
         Arena* prev = node->prev;
         if (!node->uses_external_buffer) {
-            VirtualFree(node, 0, MEM_RELEASE);
+            ArenaRelease(node);
         }
         node = prev;
     }
@@ -300,7 +280,7 @@ void Arena::PopTo(u64 pos) {
     while (current && current->base_pos >= bigPos) {
         Arena* prev = current->prev;
         if (!current->uses_external_buffer) {
-            VirtualFree(current, 0, MEM_RELEASE);
+            ArenaRelease(current);
         } else {
             current->pos = ARENA_HEADER_SIZE;
         }

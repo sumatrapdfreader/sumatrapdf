@@ -91,7 +91,7 @@ bool IsSpaceOnly(Str s);
 int HtmlEntityNameToRune(Str name);
 
 Str ResolveHtmlEntity(Str str, int& rune);
-Str ResolveHtmlEntities(Str s, Arena* alloc);
+Str ResolveHtmlEntities(Str s, Arena* a);
 Str ResolveHtmlEntities(Str s);
 Str ResolveHtmlEntitiesTemp(Str s);
 

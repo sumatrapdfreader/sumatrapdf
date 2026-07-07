@@ -876,6 +876,21 @@ workspace "SumatraPDF"
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
 
+  project "test_engines"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4838" }
+    includedirs { "src", "ext/djvudec" }
+    test_engines_files()
+    links_zlib()
+    links { "base", "djvudec", "libarchive", "unrar" }
+    links {
+      "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
+      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon"
+    }
+
   project "bin2coff"
     kind "ConsoleApp"
     language "C++"

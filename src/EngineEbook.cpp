@@ -22,7 +22,6 @@
 #include "GumboHelpers.h"
 
 #include "DocProperties.h"
-#include "DocController.h"
 #include "FzImgReader.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
@@ -131,7 +130,7 @@ class EngineEbook : public EngineBase {
     // a break between two merged documents
     Vec<DrawInstr*> baseAnchors;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
-    Arena* allocator = nullptr;
+    Arena* a = nullptr;
     // TODO: still needed?
     Mutex pagesAccess;
     // page dimensions can vary between filetypes
@@ -189,7 +188,7 @@ EngineEbook::EngineEbook() {
     pageRect = RectF(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
     preferredLayout = preferredLayout = PageLayout(PageLayout::Type::Single);
-    allocator = ArenaNew();
+    a = ArenaNew();
 }
 
 EngineEbook::~EngineEbook() {
@@ -204,7 +203,7 @@ EngineEbook::~EngineEbook() {
     delete pages;
 
     pagesAccess.Unlock();
-    ArenaDelete(allocator);
+    ArenaDelete(a);
 }
 
 RectF EngineEbook::PageMediabox(int) {
@@ -367,9 +366,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     ScopedMutex scope(&pagesAccess);
 
     AtomicIntInc(&gAllowAllocFailure);
-    defer {
-        AtomicIntDec(&gAllowAllocFailure);
-    };
+    AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 
     str::Builder content;
     Vec<Rect> coords;
@@ -792,7 +789,7 @@ bool EngineEpub::FinishLoading() {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
@@ -937,7 +934,7 @@ bool EngineFb2::FinishLoading() {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     if (doc->IsZipped()) {
@@ -1061,7 +1058,7 @@ bool EngineMobi::FinishLoading() {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
@@ -1204,7 +1201,7 @@ bool EnginePdb::Load(Str fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = HtmlFormatter(&args).FormatAllPages();
@@ -1530,9 +1527,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
             return;
         }
         AtomicIntInc(&gAllowAllocFailure);
-        defer {
-            AtomicIntDec(&gAllowAllocFailure);
-        };
+        AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
         TempStr pageHtml = doc->GetDataTemp(plainUrl);
         if (!pageHtml) {
             return;
@@ -1564,7 +1559,7 @@ bool EngineChm::Load(Str fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
@@ -1702,7 +1697,7 @@ bool EngineHtml::Load(Str fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
@@ -1820,7 +1815,7 @@ bool EngineTxt::Load(Str fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = allocator;
+    args.textAllocator = a;
     args.textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);

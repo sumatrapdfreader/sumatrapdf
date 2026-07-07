@@ -39,6 +39,7 @@ export interface LibDef {
 export interface BuildLibraryOptions {
   tools: BuildTools;
   commonDefines: string[];
+  commonFlags?: string[];
   cxxFlags: string[];
   jobs: number;
   /** extra object files to add to the archive (e.g. embedded fonts) */
@@ -290,6 +291,7 @@ export async function buildLibrary(
   opts: BuildLibraryOptions,
 ): Promise<{ archive: string; objs: string[] }> {
   const { tools, commonDefines, cxxFlags, jobs, extraObjs } = opts;
+  const commonFlags = opts.commonFlags ?? [];
   console.log(`Building ${lib.name}...`);
 
   const sources = await resolveSources(lib.files);
@@ -352,6 +354,7 @@ export async function buildLibrary(
         ...optFlags,
         ...defineFlags,
         ...includeFlags,
+        ...commonFlags,
         ...warnFlags,
         ...langFlags,
         ...(lib.extraCflags ?? []),

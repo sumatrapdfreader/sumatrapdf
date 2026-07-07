@@ -99,12 +99,12 @@ struct GraphicsCacheEntry {
         stride = bmpDx * 4,
     };
 
-    DWORD threadId;
+    ThreadId threadId;
     int refCount;
 
     Graphics* gfx;
     Bitmap* bmp;
-    BYTE data[bmpDx * bmpDy * 4];
+    u8 data[bmpDx * bmpDy * 4];
 
     bool Create();
     void Free() const;
@@ -226,7 +226,7 @@ CachedFont* GetCachedFont(WStr name, float sizePt, FontStyle style) {
 Graphics* AllocGraphicsForMeasureText() {
     ScopedMuiCritSec muiCs;
 
-    DWORD threadId = GetCurrentThreadId();
+    ThreadId threadId = GetCurrentThreadId();
     for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.threadId == threadId) {
             e.refCount++;
@@ -258,7 +258,7 @@ Graphics* AllocGraphicsForMeasureText() {
 void FreeGraphicsForMeasureText(Graphics* gfx) {
     ScopedMuiCritSec muiCs;
 
-    DWORD threadId = GetCurrentThreadId();
+    ThreadId threadId = GetCurrentThreadId();
     for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.gfx == gfx) {
             ReportIf(e.threadId != threadId);

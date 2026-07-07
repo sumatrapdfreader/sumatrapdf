@@ -2,8 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
+#endif
 
 static int g_nTotal = 0;
 static int g_nFailed = 0;
@@ -27,8 +29,16 @@ static void OutputDebugString(Str s) {
     if (str::IsNull(s)) {
         return;
     }
+#if OS_WIN
     TempStr s0 = str::Dup(s);
     OutputDebugStringA(s0.s);
+#else
+    fprintf(stderr, "%.*s", s.len, s.s);
+#endif
+}
+
+static void OutputDebugString(const char* s) {
+    OutputDebugString(Str(s));
 }
 
 static void PrintStdout(Str s) {
@@ -49,25 +59,29 @@ void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
         g_failedAssert[g_nFailed].lineNo = lineNo;
     }
     ++g_nFailed;
-    OutputDebugStringA("Assertion failed: ");
+    OutputDebugString("Assertion failed: ");
     OutputDebugString(exprStr);
-    OutputDebugStringA("\n");
+    OutputDebugString("\n");
     OutputDebugString(file);
-    OutputDebugStringA("\n");
+    OutputDebugString("\n");
     if (gForAi) {
         printf("Assertion failed: %.*s\n%.*s@%d\n", exprStr.len, exprStr.s, file.len, file.s, lineNo);
+#if OS_WIN
         str::Builder s;
         if (dbghelp::GetCurrentThreadCallstack(s)) {
             PrintStdout(ToStr(s));
         } else {
             printf("failed to get callstack\n");
         }
+#endif
         fflush(stdout);
         return;
     }
+#if OS_WIN
     if (IsDebuggerPresent()) {
         DebugBreak();
     }
+#endif
 }
 
 int utassert_print_results() {

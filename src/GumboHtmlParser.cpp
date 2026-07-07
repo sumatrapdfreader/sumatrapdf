@@ -176,10 +176,10 @@ Str ResolveHtmlEntity(Str str, int& rune) {
 
 // if s doesn't contain html entities, we just return it
 // if it contains html entities, we'll return string allocated
-// with alloc in which entities are converted to their values
+// with a in which entities are converted to their values
 // Entities are encoded as utf8 in the result.
-// alloc can be nullptr, in which case we'll allocate with malloc()
-Str ResolveHtmlEntities(Str str, Arena* alloc) {
+// a can be nullptr, in which case we'll allocate with malloc()
+Str ResolveHtmlEntities(Str str, Arena* a) {
     Str res;
     size_t resLen = 0;
     int dstOff = 0;
@@ -201,7 +201,7 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
             // I'm banking that text after resolving entities will
             // be smaller than the original
             resLen = (size_t)str.len + 8; // +8 just in case
-            res.s = (char*)Alloc(alloc, resLen);
+            res.s = (char*)Alloc(a, resLen);
         }
         MemAppend(res.s, dstOff, Str(str.s + chunkStart, off - chunkStart));
         // off points at '&'

@@ -44,10 +44,9 @@ struct DirScanCtx {
     Arena* a; // Permanent data arena
     OnScannedDirCallback onScannedDir;
     void* userData;
-    Mutex cs;                    // Protect queue access
-    HANDLE hSemaphore;           // Counting semaphore for work items
-    HANDLE hQueueEmptyEvent;     // Signaled when all work is done (queue empty + no in-flight)
-    HANDLE hThreadExitedEvent;   // Signaled when thread has exited
+    Mutex cs;                  // Protect queue access
+    ConditionVariable hasWork; // Signaled when work is queued or thread should exit
+    bool threadExited;
     DirEntriesNode* dirsToVisit; // Queue of directories to scan
     AtomicBool shouldExit;       // Signal thread to exit
     AtomicInt inFlightCount;     // Number of directories currently being processed
@@ -61,7 +60,7 @@ void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
 
 // Directory utilities (paths are UTF-8)
 DirEntry* FindEntryByName(DirEntries* dv, Str name);
-DWORD WINAPI DirScanThread(LPVOID param);
+void DirScanThread(DirScanCtx* ctx);
 
 DirEntries* AllocDirEntries(Arena* arena, Str fullDir);
 void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit);

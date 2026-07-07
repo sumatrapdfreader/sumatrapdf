@@ -437,7 +437,7 @@ struct ChmTocBuilder : EbookTocVisitor {
 
     StrVec* pages = nullptr;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
-    Arena* allocator = nullptr;
+    Arena* a = nullptr;
     // TODO: could use dict::MapStrToInt instead of StrList in the caller as well
     dict::MapStrToInt urlsSet;
 
@@ -462,11 +462,11 @@ struct ChmTocBuilder : EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Arena* allocator) {
+    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Arena* a) {
         this->doc = doc;
         this->pages = pages;
         this->tocTrace = tocTrace;
-        this->allocator = allocator;
+        this->a = a;
         int n = len(*pages);
         for (int i = 0; i < n; i++) {
             Str url = pages->At(i);
@@ -476,8 +476,8 @@ struct ChmTocBuilder : EbookTocVisitor {
     }
 
     void Visit(Str name, Str url, int level) override {
-        Str nameDup = str::Dup(allocator, name);
-        Str urlDup = str::Dup(allocator, url);
+        Str nameDup = str::Dup(a, name);
+        Str urlDup = str::Dup(a, url);
         int pageNo = CreatePageNoForURL(urlDup);
         ChmTocTraceItem item{nameDup, urlDup, level, pageNo};
         tocTrace->Append(item);

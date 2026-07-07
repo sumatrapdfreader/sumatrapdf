@@ -9224,7 +9224,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         if (win->isMenuOpen) {
             stateId = CBS_PUSHED;
         }
-        BYTE buttonRGB = 1;
+        u8 buttonRGB = 1;
         if (CBS_PUSHED == stateId) {
             buttonRGB = 0;
         } else if (CBS_HOT == stateId) {
@@ -9235,7 +9235,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
             if (GetLightness(ThemeWindowTextColor()) > GetLightness(ThemeControlBackgroundColor())) {
                 buttonRGB ^= 0xff;
             }
-            BYTE buttonAlpha = BYTE((255 - abs((int)GetLightness(ThemeControlBackgroundColor()) - buttonRGB)) / 2);
+            u8 buttonAlpha = u8((255 - abs((int)GetLightness(ThemeControlBackgroundColor()) - buttonRGB)) / 2);
             SolidBrush br(Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
             gfx.FillRectangle(&br, rc.x, rc.y, rc.dx, rc.dy);
         }

@@ -78,13 +78,13 @@ static Str gSystemInfo;
 static Str gSettingsFile;
 static Str gModulesInfo;
 static HANDLE gDumpEvent = nullptr;
-static HANDLE gDumpThread = nullptr;
+static ThreadHandle gDumpThread = nullptr;
 static bool isDllBuild = false;
 static bool gLocalOnlyCrashHandler = false;
 static bool gCrashed = false;
 static volatile LONG gCrashHandlerStarted = 0;
-static DWORD gCrashThreadId = 0;
-static DWORD gDumpThreadId = 0;
+static ThreadId gCrashThreadId = 0;
+static ThreadId gDumpThreadId = 0;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
@@ -99,7 +99,7 @@ static bool TryStartCrashHandling(Str handlerName) {
     OutputDebugStringA(CStrTemp(handlerName));
     OutputDebugStringA(": ignoring nested crash\n");
 
-    DWORD threadId = GetCurrentThreadId();
+    ThreadId threadId = GetCurrentThreadId();
     if (threadId == gCrashThreadId || threadId == gDumpThreadId) {
         TerminateProcess(GetCurrentProcess(), 1);
     }
@@ -128,12 +128,11 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             if (!str::ContainsI(gModulesInfo, pathA)) {
-                s.Append(str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA,
-                                     pathA));
+                s.Append(
+                    str::Format(s.a, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
             }
         } else {
-            s.Append(
-                str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
+            s.Append(str::Format(s.a, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
         }
         cont = Module32Next(snap, &mod);
     }
@@ -149,7 +148,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        s.Append(str::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
+        s.Append(str::Format(s.a, "Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -206,14 +205,14 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        s.Append(str::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
+        s.Append(str::Format(s.a, "Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
         s.Append("\n");
     }
 
-    DWORD crashedThreadId = gMei.ThreadId;
+    ThreadId crashedThreadId = gMei.ThreadId;
     if (gMei.ExceptionPointers) {
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     } else if (captureCallstack) {
@@ -268,7 +267,7 @@ void UploadCrashReport(Str d) {
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
-static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* allocator) {
+static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
     logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, archiveData.len);
     lzma::SimpleArchive archive;
     bool ok = ParseSimpleArchive((const u8*)archiveData.s, archiveData.len, &archive);
@@ -281,7 +280,7 @@ static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* allocator) {
         lzma::FileInfo* fi = &(archive.files[i]);
         Str name = fi->name;
         logf("ExtractSymbols: file %d is '%s'\n", i, name);
-        u8* uncompressed = GetFileDataByIdx(&archive, i, allocator);
+        u8* uncompressed = GetFileDataByIdx(&archive, i, a);
         if (!uncompressed) {
             return false;
         }
@@ -296,7 +295,7 @@ static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* allocator) {
             logf("ExtractSymbols: failed to write '%s'\n", filePath);
             LogLastError(err);
         }
-        Free(allocator, uncompressed);
+        Free(a, uncompressed);
         if (!ok) {
             return false;
         }
@@ -968,7 +967,7 @@ void UninstallCrashHandler() {
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec
 
-    CloseHandle(gDumpThread);
+    SafeCloseThreadHandle(&gDumpThread);
     CloseHandle(gDumpEvent);
 
     // those are allocated from gCrashHandlerArena so are freed by ArenaDelete()

@@ -56,10 +56,13 @@ struct LinkHandler : ILinkHandler {
     }
     ~LinkHandler() override;
 
-    DocController* GetDocController() override { return win->ctrl; }
     void GotoLink(IPageDestination*) override;
     void GotoNamedDest(Str) override;
+    void GoToPage(int pageNo, bool addNavPoint) override;
+    bool GoToNextPage() override;
+    bool GoToPrevPage(bool toBottom = false) override;
     void ScrollTo(IPageDestination*) override;
+    void ScrollTo(int pageNo, RectF rect, float zoom) override;
     void LaunchURL(Str) override;
     void LaunchFile(Str path, IPageDestination*) override;
     IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) override;
@@ -518,6 +521,38 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     }
     RectF rect = PageDestGetRect(dest);
     float zoom = PageDestGetZoom(dest);
+    ScrollTo(pageNo, rect, zoom);
+}
+
+void LinkHandler::GoToPage(int pageNo, bool addNavPoint) {
+    ReportIf(!win || !win->ctrl || win->linkHandler != this);
+    if (!win || !win->ctrl || !win->IsDocLoaded()) {
+        return;
+    }
+    win->ctrl->GoToPage(pageNo, addNavPoint);
+}
+
+bool LinkHandler::GoToNextPage() {
+    ReportIf(!win || !win->ctrl || win->linkHandler != this);
+    if (!win || !win->ctrl || !win->IsDocLoaded()) {
+        return false;
+    }
+    return win->ctrl->GoToNextPage();
+}
+
+bool LinkHandler::GoToPrevPage(bool toBottom) {
+    ReportIf(!win || !win->ctrl || win->linkHandler != this);
+    if (!win || !win->ctrl || !win->IsDocLoaded()) {
+        return false;
+    }
+    return win->ctrl->GoToPrevPage(toBottom);
+}
+
+void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
+    ReportIf(!win || !win->ctrl || win->linkHandler != this);
+    if (!win || !win->ctrl || !win->IsDocLoaded()) {
+        return;
+    }
     win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 

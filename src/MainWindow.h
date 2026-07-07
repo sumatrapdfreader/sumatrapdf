@@ -345,10 +345,10 @@ struct MainWindow {
     int wheelAccumDelta = 0;
     UINT_PTR delayedRepaintTimer = 0;
 
-    HANDLE printThread = nullptr;
+    ThreadHandle printThread = nullptr;
     bool printCanceled = false;
 
-    HANDLE findThread = nullptr;
+    ThreadHandle findThread = nullptr;
     bool findCancelled = false;
     bool findMatchCase = false;
     bool findMatchWholeWord = false;
@@ -360,7 +360,7 @@ struct MainWindow {
     // find bar "n / m" match counter (see SearchAndDDE.cpp). The positions of all
     // matches for findCountText are cached so prev/next is instant; a background
     // thread (re)builds the cache when the search term or match-case changes.
-    HANDLE findCountThread = nullptr;
+    ThreadHandle findCountThread = nullptr;
     LONG findCountEpoch = 0;
     Str findCountText;
     bool findCountMatchCase = false;

@@ -363,6 +363,9 @@
     <ClInclude Include="..\src\Translations.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TreeModel.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\UpdateCheck.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -555,6 +558,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EngineDjvuDec.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDjvuDec_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EngineDump.cpp">
@@ -798,6 +804,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Translations.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TreeModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Uninstaller.cpp">

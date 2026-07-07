@@ -14,7 +14,6 @@
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
-
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
    have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
    doesn't work.
@@ -315,7 +314,7 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
     s.Append("\n");
 }
 
-static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, HANDLE hThread) {
+static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
 #if defined(_WIN64)
     int machineType = IMAGE_FILE_MACHINE_AMD64;
 #else
@@ -340,7 +339,7 @@ static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT
     return true;
 }
 
-static bool GetCallstack(str::Builder& s, CONTEXT& ctx, HANDLE hThread) {
+static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
     if (!CanStackWalk()) {
         s.Append("GetCallstack(): CanStackWalk() returned false\n");
         return false;
@@ -382,7 +381,7 @@ static bool GetCallstack(str::Builder& s, CONTEXT& ctx, HANDLE hThread) {
     return true;
 }
 
-void GetThreadCallstack(str::Builder& s, DWORD threadId) {
+void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
     if (threadId == GetCurrentThreadId()) {
         return;
     }
@@ -390,7 +389,7 @@ void GetThreadCallstack(str::Builder& s, DWORD threadId) {
     s.Append(fmt("\nThread: %x\n", threadId));
 
     DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
-    HANDLE hThread = OpenThread(access, false, threadId);
+    ThreadHandle hThread = OpenThread(access, false, threadId);
     if (!hThread) {
         s.Append("Failed to OpenThread()\n");
         return;
@@ -411,7 +410,7 @@ void GetThreadCallstack(str::Builder& s, DWORD threadId) {
 
         ResumeThread(hThread);
     }
-    CloseHandle(hThread);
+    SafeCloseThreadHandle(&hThread);
 }
 
 // we disable optimizations for this function as it calls RtlCaptureContext()
@@ -480,7 +479,7 @@ void LogCallstack() {
     }
 }
 
-void GetAllThreadsCallstacksExcept(str::Builder& s, DWORD skipThreadId) {
+void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threadSnap == INVALID_HANDLE_VALUE) {
         return;

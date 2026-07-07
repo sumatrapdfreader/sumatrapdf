@@ -6,14 +6,13 @@
 #include "base/Win.h"
 #include "base/UITask.h"
 
-
 namespace uitask {
 
 static HWND gTaskDispatchHwnd = nullptr;
 
 UINT gExecuteTaskMessage = 0;
 
-static DWORD gMainUIThreadId = 0;
+static ThreadId gMainUIThreadId = 0;
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage == msg) {

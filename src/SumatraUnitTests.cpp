@@ -6,8 +6,6 @@
 #include "AppTools.h"
 
 #include "base/File.h"
-#include "base/Win.h"
-#include "base/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 
@@ -26,6 +24,7 @@
 
 #define utassert_fequal(a, b) utassert(fabs(a - b) < FLT_EPSILON);
 
+#if OS_WIN
 static void ParseCommandLineTest() {
     {
         Flags i;
@@ -137,6 +136,7 @@ static void ParseCommandLineTest() {
         utassert(0 == len(i.fileNames));
     }
 }
+#endif
 
 static void BenchRangeTest() {
     utassert(IsBenchPagesInfo("1"));
@@ -182,8 +182,7 @@ static void hexstrTest() {
     utassert(ok);
     utassert(memeq(buf, buf2, dimofi(buf)));
 
-    FILETIME ft1, ft2;
-    GetSystemTimeAsFileTime(&ft1);
+    FILETIME ft1{123, 456}, ft2;
     s = str::MemToHexTemp(Str((const char*)&ft1, (int)sizeof(ft1)));
     str::HexToMem(s, Str((char*)&ft2, (int)sizeof(ft2)));
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
@@ -297,7 +296,9 @@ void SumatraPDF_UnitTests() {
     parseCommandsTest();
     colorTest();
     BenchRangeTest();
+#if OS_WIN
     ParseCommandLineTest();
+#endif
     versioncheck_test();
     hexstrTest();
 }

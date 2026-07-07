@@ -1,0 +1,38 @@
+name: mac-daily
+on:
+  schedule:
+    - cron: "0 4 * * *"
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+jobs:
+  build:
+    name: macOS build
+    runs-on: macos-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Check Warsaw schedule time
+        id: schedule
+        shell: bash
+        env:
+          TZ: Europe/Warsaw
+        run: |
+          if [[ "${{ github.event_name }}" != "schedule" ]]; then
+            echo "run_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Warsaw local time: $(date)"
+          if [[ "$(date +%H)" == "06" ]]; then
+            echo "run_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and run test_util
+        if: steps.schedule.outputs.run_build == 'true'
+        run: bun cmd/build-mac.ts -asan

@@ -539,9 +539,7 @@ void StrTest() {
 // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
         char* strA = strconv::WStrToAnsi(TEXT(TEST_STRING)).s;
-        defer {
-            free(strA);
-        };
+        AutoCall freeStrA(free, (void*)strA);
         utassert(str::Eq(strA, TEST_STRING));
         auto res = strconv::AnsiToWStrTemp(Str(strA));
         utassert(wstr::Eq(res, TEXT(TEST_STRING)));
@@ -549,7 +547,11 @@ void StrTest() {
     }
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));
+#if OS_WIN
     utassert(iswdigit(L'\u0660') && !str::IsDigit(L'\xB2'));
+#else
+    utassert(!str::IsDigit(L'\xB2'));
+#endif
 
     utassert(str::CmpNatural(".hg", "2.pdf") < 0);
     utassert(str::CmpNatural("100.pdf", "2.pdf") > 0);

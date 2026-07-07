@@ -19,7 +19,6 @@
 
 bool NeedsWindowEmbeddingHacks();
 
-
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
 static bool HasBeenInstalled() {
@@ -422,8 +421,8 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             delayFocus = !HwndIsFocused(hwnd);
             if (delayFocus && NeedsWindowEmbeddingHacks()) {
                 HWND hwndFg = GetForegroundWindow();
-                DWORD fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
-                DWORD ourTid = GetCurrentThreadId();
+                ThreadId fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
+                ThreadId ourTid = GetCurrentThreadId();
                 bool attached = false;
                 if (fgTid && fgTid != ourTid) {
                     attached = AttachThreadInput(ourTid, fgTid, TRUE) != 0;

@@ -97,6 +97,9 @@
     <ClInclude Include="..\src\base\Strconv.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\Thread.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -124,6 +127,9 @@
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Arena_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Base.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -136,16 +142,19 @@
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Color.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Crypto.cpp">
+    <ClCompile Include="..\src\base\Crypto_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\CssParser.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\DbgHelpDyn.cpp">
+    <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Dict.cpp">
@@ -154,10 +163,16 @@
     <ClCompile Include="..\src\base\DirScan.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Dpi.cpp">
+    <ClCompile Include="..\src\base\DirScan_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\Dpi_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">
@@ -193,13 +208,16 @@
     <ClCompile Include="..\src\base\Strconv.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Thread.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\UtAssert.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Win.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\WinDynCalls.cpp">
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Base_ut.cpp">

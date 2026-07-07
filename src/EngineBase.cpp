@@ -3,12 +3,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
-#include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "TreeModel.h"
 
-#include "DocController.h"
 #include "EngineBase.h"
 
 Kind kindPageElementDest = "dest";
@@ -441,9 +438,9 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     data->engine = this;
     data->pageNo = pageNo;
     auto fn = MkFunc0<TextExtractionThreadData>(ExtractTextThread, data);
-    HANDLE thread = StartThread(fn, "ExtractPageText");
+    ThreadHandle thread = StartThread(fn, "ExtractPageText");
     if (thread) {
-        SafeCloseHandle(&thread);
+        SafeCloseThreadHandle(&thread);
         return;
     }
 

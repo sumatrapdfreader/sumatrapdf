@@ -167,13 +167,6 @@ static HBITMAP CaptureDesktop() {
     return hbm;
 }
 
-static bool IsNearBlack(DWORD px) {
-    BYTE r = (px >> 16) & 0xFF;
-    BYTE g = (px >> 8) & 0xFF;
-    BYTE b = px & 0xFF;
-    return r < 10 && g < 10 && b < 10;
-}
-
 static void InitBitmapInfo32(BITMAPINFO& bmi, int w, int h) {
     bmi = {};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -193,7 +186,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
     switch (edge) {
         case 0: // left column
             for (int y = y0; y < y0 + h; y++) {
-                if (IsNearBlack(pixels[y * stride + x0] & 0x00FFFFFF)) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[y * stride + x0] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -201,7 +194,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 1: // right column
             for (int y = y0; y < y0 + h; y++) {
-                if (IsNearBlack(pixels[y * stride + x0 + w - 1] & 0x00FFFFFF)) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[y * stride + x0 + w - 1] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -209,7 +202,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 2: // top row
             for (int x = x0; x < x0 + w; x++) {
-                if (IsNearBlack(pixels[y0 * stride + x] & 0x00FFFFFF)) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[y0 * stride + x] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -217,7 +210,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 3: // bottom row
             for (int x = x0; x < x0 + w; x++) {
-                if (IsNearBlack(pixels[(y0 + h - 1) * stride + x] & 0x00FFFFFF)) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[(y0 + h - 1) * stride + x] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -329,7 +322,7 @@ static void FixRoundedCorners(HBITMAP hbm, int w, int h, COLORREF bgColor, int r
 
     // only replace pixels that are actually near-black (avoids clobbering legitimate content)
     auto replaceIfBlack = [&](int idx) {
-        if (IsNearBlack(pixels[idx] & 0x00FFFFFF)) {
+        if (IsNearBlack(RgbToCOLORREF(pixels[idx] & 0x00FFFFFF))) {
             pixels[idx] = bg;
         }
     };
@@ -700,14 +693,6 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
     delete rbmp;
 }
 
-// Premultiply alpha for a pixel: component = component * alpha / 255
-static inline DWORD PremultiplyPixel(BYTE r, BYTE g, BYTE b, BYTE a) {
-    r = (BYTE)((r * a) / 255);
-    g = (BYTE)((g * a) / 255);
-    b = (BYTE)((b * a) / 255);
-    return (a << 24) | (r << 16) | (g << 8) | b;
-}
-
 static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     int w = data->winW;
     int h = data->winH;
@@ -729,7 +714,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmDib);
 
     // Fill background: light blue at 93% opaque (7% transparent), premultiplied
-    DWORD bgPixel = PremultiplyPixel(220, 230, 245, 237);
+    DWORD bgPixel = PremultiplyPixel(MkColor(220, 230, 245), 237);
     for (int i = 0; i < w * h; i++) {
         pixels[i] = bgPixel;
     }
@@ -854,11 +839,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
         for (int y = y0; y < y1; y++) {
             for (int x = x0; x < x1; x++) {
-                DWORD px = tempPixels[y * w + x];
-                BYTE r = (px >> 16) & 0xFF;
-                BYTE g = (px >> 8) & 0xFF;
-                BYTE bb = px & 0xFF;
-                pixels[y * w + x] = (255u << 24) | (r << 16) | (g << 8) | bb;
+                COLORREF c = RgbToCOLORREF(tempPixels[y * w + x] & 0x00FFFFFF);
+                pixels[y * w + x] = PremultiplyPixel(c, 255);
             }
         }
     }
@@ -867,11 +849,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     {
         for (int y = 0; y < kInfoBarHeight; y++) {
             for (int x = 0; x < w; x++) {
-                DWORD px = tempPixels[y * w + x];
-                BYTE r = (px >> 16) & 0xFF;
-                BYTE g = (px >> 8) & 0xFF;
-                BYTE bb = px & 0xFF;
-                pixels[y * w + x] = (255u << 24) | (r << 16) | (g << 8) | bb;
+                COLORREF c = RgbToCOLORREF(tempPixels[y * w + x] & 0x00FFFFFF);
+                pixels[y * w + x] = PremultiplyPixel(c, 255);
             }
         }
     }

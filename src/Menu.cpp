@@ -2350,10 +2350,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     FillRect(hdc, &rc, brBg);
     auto brTxt = CreateSolidBrush(txtCol);
 
-    defer {
-        DeleteObject(brBg);
-        DeleteObject(brTxt);
-    };
+    AutoCall deleteBgBrush(DeleteObject, (HGDIOBJ)brBg);
+    AutoCall deleteTxtBrush(DeleteObject, (HGDIOBJ)brTxt);
 
     if (isSeparator) {
         ReportIf(modi->text);

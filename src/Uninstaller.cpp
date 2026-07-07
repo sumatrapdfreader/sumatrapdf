@@ -26,7 +26,7 @@
 #include "SumatraLog.h"
 
 static HBRUSH ghbrBackground = nullptr;
-static HANDLE hThread = nullptr;
+static ThreadHandle hThread = nullptr;
 static bool success = false;
 static Button* gButtonExit = nullptr;
 static Button* gButtonUninstaller = nullptr;
@@ -195,7 +195,7 @@ void OnUninstallationFinished() {
     gMsgError = gFirstError;
     HwndRepaintNow(gHwndFrame);
 
-    CloseHandle(hThread);
+    SafeCloseThreadHandle(&hThread);
 }
 
 static bool UninstallerOnWmCommand(WPARAM wp) {

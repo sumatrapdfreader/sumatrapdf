@@ -19,7 +19,7 @@ struct StrQueue {
 
     volatile bool isFinished = false;
     Mutex cs;
-    HANDLE hEvent = nullptr;
+    ConditionVariable nonEmpty;
 };
 
 int len(StrQueue& q);

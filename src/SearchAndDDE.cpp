@@ -341,7 +341,7 @@ struct FindThreadData {
     bool wasModified = false;
     bool showProgress = false;
     Str text;
-    HANDLE thread = nullptr;
+    ThreadHandle thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified) {
         this->win = win;
@@ -508,7 +508,7 @@ struct CountThreadData {
     bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
     bool wantSnippets = false;  // build per-match snippet strings for the results list
     LONG epoch = 0;
-    HANDLE thread = nullptr;
+    ThreadHandle thread = nullptr;
 
     CountThreadData(MainWindow* win, EngineBase* engine, Str text, bool matchCase, bool matchWholeWord,
                     bool wantMatchList, bool wantSnippets, LONG epoch) {
@@ -523,7 +523,7 @@ struct CountThreadData {
     }
     ~CountThreadData() {
         str::Free(text);
-        CloseHandle(thread);
+        SafeCloseThreadHandle(&thread);
     }
 };
 
@@ -659,7 +659,7 @@ static void CountThread(CountThreadData* d) {
 static void AbortCount(MainWindow* win) {
     InterlockedIncrement(&win->findCountEpoch);
     str::FreePtr(&win->findCountPendingText);
-    HANDLE th = win->findCountThread;
+    ThreadHandle th = win->findCountThread;
     if (th) {
         WaitForSingleObject(th, INFINITE);
         win->findCountThread = nullptr;
@@ -817,9 +817,7 @@ static void FindThread(FindThreadData* ftd) {
 
     auto engine = dm->GetEngine();
     engine->AddRef();
-    defer {
-        SafeEngineRelease(&engine);
-    };
+    AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engine);
 
     TextSel* rect;
     textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
@@ -1151,7 +1149,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
         rects.Append(rect);
     }
 
-    BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
+    u8 alpha = (u8)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->forwardSearch.highlightColor);
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
 }

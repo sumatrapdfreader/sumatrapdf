@@ -1019,16 +1019,6 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
     return res;
 }
 
-/* Return <ft1> - <ft2> in seconds */
-int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
-    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
-    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
-    // diff is in 100 nanoseconds
-    LONGLONG diff = t1.QuadPart - t2.QuadPart;
-    diff = diff / (LONGLONG)10000000L;
-    return (int)diff;
-}
-
 TempStr ResolveLnkTemp(Str path) {
     WStr pathW = ToWStr(path);
     ScopedMem<OLECHAR> olePath(pathW.s);
@@ -2342,9 +2332,7 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
     if (!lib) {
         return false;
     }
-    defer {
-        FreeLibrary(lib);
-    };
+    AutoCall freeLibrary(FreeLibrary, lib);
 
     bool ok = false;
     typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);

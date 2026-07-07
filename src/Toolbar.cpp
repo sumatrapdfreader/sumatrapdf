@@ -44,7 +44,6 @@ extern "C" {
 #include "wingui/WinGui.h"
 #include "TextToSpeech.h"
 
-
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
 static int kButtonSpacingX = 4;
@@ -197,7 +196,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
             return true;
     }
     auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
     // Toolbar buttons stay visible (but disabled) when no document is open, so
     // decide visibility as if a document were loaded; otherwise the no-document
     // gate in GetCommandVisibility would remove them. Document-type-specific
@@ -211,7 +210,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
 
 static bool IsCmdEnabled(MainWindow* win, int cmdId) {
     auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
 
     switch (cmdId) {
         case CmdNextTab:

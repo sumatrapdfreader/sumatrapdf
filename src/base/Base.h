@@ -86,6 +86,7 @@
 #include "BuildConfig.h"
 
 // C/C++ standard headers  we use often
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -151,14 +152,46 @@
 using BYTE = uint8_t;
 using WORD = uint16_t;
 using DWORD = uint32_t;
+using DWORD64 = uint64_t;
 using UINT = unsigned int;
+using UINT_PTR = uintptr_t;
 using LONG = int32_t;
 using BOOL = int;
 using WCHAR = wchar_t;
+using WPARAM = uintptr_t;
+using LPARAM = intptr_t;
 using COLORREF = uint32_t;
 using LCID = uint32_t;
 
+struct HWND__;
+using HWND = HWND__*;
+struct HDC__;
+using HDC = HDC__*;
+struct HFONT__;
+using HFONT = HFONT__*;
+struct HIMAGELIST__;
+using HIMAGELIST = HIMAGELIST__*;
+struct HTREEITEM__;
+using HTREEITEM = HTREEITEM__*;
+using LPWSTR = WCHAR*;
+
+struct EXCEPTION_POINTERS;
+struct MINIDUMP_EXCEPTION_INFORMATION;
+
+struct FILETIME {
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+};
+
+#define CP_ACP 0
+#define CP_UTF8 65001
 #define LOCALE_USER_DEFAULT 0
+#define LOCALE_INVARIANT 0
+#define __TEXT(s) L##s
+#define TEXT(s) __TEXT(s)
+constexpr int MAX_PATH = 4096;
+constexpr int URLZONE_INVALID = -1;
+constexpr int URLZONE_INTERNET = 3;
 
 struct POINT {
     LONG x;
@@ -181,19 +214,44 @@ namespace Gdiplus {
 struct Point {
     int X;
     int Y;
+
+    Point() = default;
+    Point(int x, int y) : X(x), Y(y) {}
 };
 struct PointF {
     float X;
     float Y;
+
+    PointF() = default;
+    PointF(float x, float y) : X(x), Y(y) {}
 };
 struct Rect {
     int X;
     int Y;
     int Width;
     int Height;
+
+    Rect() = default;
+    Rect(int x, int y, int width, int height) : X(x), Y(y), Width(width), Height(height) {}
 };
-struct RectF;
-struct Color;
+struct RectF {
+    float X;
+    float Y;
+    float Width;
+    float Height;
+
+    RectF() = default;
+    RectF(float x, float y, float width, float height) : X(x), Y(y), Width(width), Height(height) {}
+};
+struct Color {
+    uint32_t argb = 0;
+
+    Color() = default;
+    explicit Color(uint32_t argb) : argb(argb) {}
+    Color(uint8_t r, uint8_t g, uint8_t b) : argb((uint32_t)0xff << 24 | (uint32_t)r << 16 | (uint32_t)g << 8 | b) {}
+    Color(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
+        : argb((uint32_t)a << 24 | (uint32_t)r << 16 | (uint32_t)g << 8 | b) {}
+};
 } // namespace Gdiplus
 
 #define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
@@ -384,6 +442,10 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #else
 #define ReportDebugIf(cond)
+#endif
+
+#if OS_POSIX
+#include "base/IStream_posix.h"
 #endif
 
 void* AllocZero(int count, int size);
@@ -767,8 +829,8 @@ int setMinMax(int& v, int minVal, int maxVal);
 extern AtomicInt gAllowAllocFailure;
 
 /* How to use:
-defer { free(tools_filename); };
-defer { fclose(f); };
+AutoCall freeToolsFileName(free, (void*)tools_filename);
+AutoCall closeFile(fclose, f);
 defer { instance->Release(); };
 */
 

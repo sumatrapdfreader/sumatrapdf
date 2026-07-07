@@ -6,6 +6,7 @@ enum class AnnotationType;
 struct PasswordUI;
 struct FileArgs;
 struct AnnotCreateArgs;
+struct IStream;
 
 /* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(Kind kind);

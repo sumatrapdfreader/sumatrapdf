@@ -1177,6 +1177,7 @@
     <ClInclude Include="..\src\TipText.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
+    <ClInclude Include="..\src\TreeModel.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />
     <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WindowTab.h" />
@@ -1256,6 +1257,7 @@
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineCreate.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
+    <ClCompile Include="..\src\EngineDjvuDec_win.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
@@ -1364,6 +1366,7 @@
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />
+    <ClCompile Include="..\src\TreeModel.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
     <ClCompile Include="..\src\WindowTab.cpp" />

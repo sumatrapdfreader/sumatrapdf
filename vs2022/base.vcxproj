@@ -898,6 +898,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
+    <ClCompile Include="..\src\base\Arena_win.cpp" />
     <ClCompile Include="..\src\base\AvifReader.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\Base_win.cpp" />
@@ -906,16 +907,19 @@
     <ClCompile Include="..\src\base\ByteReader.cpp" />
     <ClCompile Include="..\src\base\ByteWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />
     <ClCompile Include="..\src\base\Color.cpp" />
-    <ClCompile Include="..\src\base\Crypto.cpp" />
+    <ClCompile Include="..\src\base\Crypto_win.cpp" />
     <ClCompile Include="..\src\base\CssParser.cpp" />
-    <ClCompile Include="..\src\base\DbgHelpDyn.cpp" />
+    <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp" />
     <ClCompile Include="..\src\base\Dict.cpp" />
     <ClCompile Include="..\src\base\DirIter.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
-    <ClCompile Include="..\src\base\Dpi.cpp" />
+    <ClCompile Include="..\src\base\DirScan_win.cpp" />
+    <ClCompile Include="..\src\base\Dpi_win.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\FileWatcher.cpp" />
+    <ClCompile Include="..\src\base\File_win.cpp" />
     <ClCompile Include="..\src\base\GdiPlus.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
@@ -937,7 +941,7 @@
     <ClCompile Include="..\src\base\UITask.cpp" />
     <ClCompile Include="..\src\base\WebpReader.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
-    <ClCompile Include="..\src\base\WinDynCalls.cpp" />
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />
     <ClCompile Include="..\src\base\Zip.cpp" />
     <ClCompile Include="..\src\base\windrawlib.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

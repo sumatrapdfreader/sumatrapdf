@@ -10,8 +10,10 @@
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
 
+#if OS_WIN
 // TODO: set include path to ext/ dir
 #include "../../ext/unrar/dll.hpp"
+#endif
 
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
@@ -20,14 +22,24 @@
 
 thread_local ArchiveExtractProgressCb gArchiveProgressCb{};
 
+#if OS_WIN
 FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
     return ft;
 }
+#else
+FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
+    if (fileTime < 0) {
+        return {(DWORD)-1, (DWORD)-1};
+    }
+    u64 ns = (u64)fileTime * 1000000000ULL;
+    return {(DWORD)ns, (DWORD)(ns >> 32)};
+}
+#endif
 
 MultiFormatArchive::MultiFormatArchive() {
-    allocator_ = ArenaNew();
+    a = ArenaNew();
 }
 
 static MultiFormatArchive::Format FormatFromArchive(struct archive* a) {
@@ -54,7 +66,7 @@ MultiFormatArchive::~MultiFormatArchive() {
     }
     str::Free(archivePath_);
     str::Free(password);
-    ArenaDelete(allocator_);
+    ArenaDelete(a);
 }
 
 bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
@@ -71,12 +83,12 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
             nameZ = archive_entry_pathname(entry);
             entryName = nameZ ? Str(nameZ) : Str{};
         }
-        FileInfo* i = AllocArray<FileInfo>(allocator_);
+        FileInfo* i = AllocArray<FileInfo>(this->a);
         i->fileId = fileId;
         i->fileSizeUncompressed = (int)archive_entry_size(entry);
         i->filePos = (i64)fileId; // use fileId as position identifier
         i->fileTime = (i64)archive_entry_mtime(entry);
-        i->name = str::Dup(allocator_, entryName);
+        i->name = str::Dup(this->a, entryName);
         i->isDir = (archive_entry_filetype(entry) == AE_IFDIR);
         i->data = nullptr;
         fileInfos_.Append(i);
@@ -117,6 +129,24 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
 // unfortunately libarchive's rar support is weak
 static bool gUnrarFirst = true;
 
+#if OS_WIN
+static bool TryOpenUnrarFallback(MultiFormatArchive* archive, Str path, bool eagerLoad,
+                                 const ArchiveExtractProgressCb& cbProgress, bool isRar) {
+    if (!isRar) {
+        return false;
+    }
+    bool ok = archive->OpenUnrarFallback(path, eagerLoad, cbProgress);
+    if (ok) {
+        archive->format = MultiFormatArchive::Format::Rar;
+    }
+    return ok;
+}
+#else
+static bool TryOpenUnrarFallback(MultiFormatArchive*, Str, bool, const ArchiveExtractProgressCb&, bool) {
+    return false;
+}
+#endif
+
 // hintKind is the result of a prior GuessFileTypeFromContent() done
 // by the caller. When non-null we skip the internal 2 KiB sniff and
 // use it to drive rar-first vs. libarchive routing.
@@ -150,8 +180,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
     bool isRar = kind == kindFileRar;
     bool ok = false;
     if (gUnrarFirst && isRar) {
-        ok = OpenUnrarFallback(path, eagerLoad, cbProgress);
-        format = MultiFormatArchive::Format::Rar;
+        ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress, isRar);
     }
     if (!ok) {
         ok = OpenArchive(path, eagerLoad, cbProgress);
@@ -159,8 +188,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
     if (!ok && !gUnrarFirst && isRar) {
         // libarchive can open rar files but then fail to read them — fall
         // back to unrar.dll.
-        ok = OpenUnrarFallback(path, eagerLoad, cbProgress);
-        format = MultiFormatArchive::Format::Rar;
+        ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress, isRar);
     }
     if (!ok) {
         return false;
@@ -183,6 +211,17 @@ static void SetArchivePassword(struct archive* a, Str password) {
         archive_read_add_passphrase(a, CStrTemp(password));
     }
 }
+
+#if OS_WIN
+static int ArchiveReadOpenFilename(struct archive* a, Str path) {
+    WCHAR* pathW = CWStrTemp(path);
+    return archive_read_open_filename_w(a, pathW, 10240);
+}
+#else
+static int ArchiveReadOpenFilename(struct archive* a, Str path) {
+    return archive_read_open_filename(a, CStrTemp(path), 10240);
+}
+#endif
 
 bool MultiFormatArchive::Open(IStream* stream) {
     // for IStream, read all data into memory and open from there
@@ -232,8 +271,7 @@ bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtr
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
     SetArchivePassword(a, password);
-    WCHAR* pathW = CWStrTemp(path);
-    int r = archive_read_open_filename_w(a, pathW, 10240);
+    int r = ArchiveReadOpenFilename(a, path);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
         return false;
@@ -312,8 +350,7 @@ void MultiFormatArchive::LoadFileDataByIdLibarchive(int fileId) {
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
     SetArchivePassword(a, password);
-    WCHAR* pathW = CWStrTemp(archivePath_);
-    int r = archive_read_open_filename_w(a, pathW, 10240);
+    int r = ArchiveReadOpenFilename(a, archivePath_);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
         fileInfo->failed = true;
@@ -383,8 +420,7 @@ Str MultiFormatArchive::GetFileDataPartById(int fileId, int sizeHint) {
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
     SetArchivePassword(a, password);
-    WCHAR* pathW = CWStrTemp(archivePath_);
-    int r = archive_read_open_filename_w(a, pathW, 10240);
+    int r = ArchiveReadOpenFilename(a, archivePath_);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
         return {};
@@ -454,6 +490,7 @@ MultiFormatArchive* OpenArchiveFromStream(IStream* stream) {
     return archive;
 }
 
+#if OS_WIN
 struct UnrarData {
     u8* d = nullptr;
     int sz = 0;
@@ -692,12 +729,12 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
         wstr::TransCharsInPlace(WStr(rarHeader.FileNameW), WStrL(L"\\"), WStrL(L"/"));
         auto name = ToUtf8Temp(rarHeader.FileNameW);
 
-        FileInfo* i = AllocArray<FileInfo>(allocator_);
+        FileInfo* i = AllocArray<FileInfo>(a);
         i->fileId = fileId;
         i->fileSizeUncompressed = (int)rarHeader.UnpSize;
         i->filePos = 0;
         i->fileTime = (i64)rarHeader.FileTime;
-        i->name = str::Dup(allocator_, name);
+        i->name = str::Dup(a, name);
         i->isDir = (rarHeader.Flags & RHDF_DIRECTORY) != 0;
         i->data = nullptr;
         if (eagerLoad) {
@@ -744,6 +781,19 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
 
     RARCloseArchive(hArc);
 
-    rarFilePath_ = str::Dup(allocator_, rarPath);
+    rarFilePath_ = str::Dup(a, rarPath);
     return true;
 }
+#else
+void MultiFormatArchive::LoadFileDataByIdUnrarDll(int fileId) {
+    fileInfos_[fileId]->failed = true;
+}
+
+Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(int, int) {
+    return {};
+}
+
+bool MultiFormatArchive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
+    return false;
+}
+#endif

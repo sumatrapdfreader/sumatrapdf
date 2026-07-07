@@ -108,9 +108,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
 
     size_t compressedSize = (size_t)fileData.len + 1;
     char* compressed = (char*)malloc(compressedSize);
-    defer {
-        free(compressed);
-    };
+    AutoCall freeCompressed(free, (void*)compressed);
     if (!compressed) {
         return false;
     }
@@ -239,9 +237,7 @@ int mainVerify(Str archivePath) {
 
     for (int i = 0; i < lzsa.filesCount; i++) {
         auto data = lzma::GetFileDataByIdx(&lzsa, i, nullptr);
-        defer {
-            free(data);
-        };
+        AutoCall freeData(free, (void*)data);
         FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name.s);
         errorStep++;
     }

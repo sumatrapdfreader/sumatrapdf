@@ -57,7 +57,7 @@ struct InstallerWnd {
     Button* btnInstall = nullptr;
 
     bool showOptions = false;
-    HANDLE hThread = nullptr;
+    ThreadHandle hThread = nullptr;
 };
 
 static bool HasPreviousInstall() {
@@ -532,7 +532,7 @@ static void OnInstallationFinished(Flags* cli) {
     gMsgError = gFirstError;
     HwndRepaintNow(gWnd->hwnd);
 
-    CloseHandle(gWnd->hThread);
+    SafeCloseThreadHandle(&gWnd->hThread);
 
     if (cli->fastInstall && !gInstallFailed) {
         StartSumatra();

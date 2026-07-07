@@ -146,6 +146,9 @@
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Arena_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Base.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -161,16 +164,22 @@
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Color.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\DirIter.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Dpi.cpp">
+    <ClCompile Include="..\src\base\Dpi_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">
@@ -206,7 +215,7 @@
     <ClCompile Include="..\src\base\Win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\WinDynCalls.cpp">
+    <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">

@@ -126,9 +126,7 @@ static void log2(Str s, bool always) {
     gLogMutex.Lock();
 
     AtomicIntInc(&gAllowAllocFailure);
-    defer {
-        AtomicIntDec(&gAllowAllocFailure);
-    };
+    AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 
     if (!gLogBuf) {
         gLogAllocator = ArenaNew();

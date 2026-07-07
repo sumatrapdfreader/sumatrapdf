@@ -8,6 +8,7 @@
 #include "base/UtAssert.h"
 
 void FileUtilTest() {
+#if OS_WIN
     Str path1 = "C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
 
     TempStr baseName = path::GetBaseNameTemp(path1);
@@ -94,4 +95,43 @@ void FileUtilTest() {
         TempStr norm = path::NormalizeTemp(p);
         utassert(str::EqI(norm, p));
     }
+#else
+    Str path1 = "/Applications/SumatraPDF/SumatraPDF";
+
+    TempStr baseName = path::GetBaseNameTemp(path1);
+    utassert(str::Eq(baseName, "SumatraPDF"));
+
+    TempStr dirName = path::GetDirTemp(path1);
+    utassert(str::Eq(dirName, "/Applications/SumatraPDF"));
+    baseName = path::GetBaseNameTemp(dirName);
+    utassert(str::Eq(baseName, "SumatraPDF"));
+
+    dirName = path::GetDirTemp("/etc");
+    utassert(str::Eq(dirName, "/"));
+    dirName = path::GetDirTemp("file");
+    utassert(str::Eq(dirName, "."));
+
+    Str path2 = path::Join("/Applications", "SumatraPDF");
+    utassert(str::Eq(path2, "/Applications/SumatraPDF"));
+    str::Free(path2);
+    path2 = path::Join("/Applications/", "/SumatraPDF");
+    utassert(str::Eq(path2, "/Applications/SumatraPDF"));
+    str::Free(path2);
+
+    utassert(path::Match("/tmp/file.pdf", "*.pdf"));
+    utassert(path::Match("/tmp/file.pdf", "file.*"));
+    utassert(path::Match("/tmp/file.pdf", "*.xps;*.pdf"));
+    utassert(!path::Match("/tmp/file.pdf", "*.xps;*.djvu"));
+
+    TempStr path = path::JoinTemp("foo", "bar");
+    utassert(str::Eq(path, "foo/bar"));
+    path = path::JoinTemp("foo/", "/bar");
+    utassert(str::Eq(path, "foo/bar"));
+    path = path::JoinTemp("foo/", "/bar/", "/z");
+    utassert(str::Eq(path, "foo/bar/z"));
+
+    Str joined = path::Join("foo", "bar");
+    utassert(str::Eq(joined, "foo/bar"));
+    str::Free(joined);
+#endif
 }

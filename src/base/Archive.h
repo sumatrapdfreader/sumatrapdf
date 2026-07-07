@@ -3,6 +3,7 @@
 
 struct archive;
 struct archive_entry;
+struct IStream;
 
 // forward-declared so ArchiveExtractProgress below can reference
 // MultiFormatArchive::FileInfo, which is defined inside the class body.
@@ -82,7 +83,7 @@ struct MultiFormatArchive {
     bool isEncrypted = false;
 
     // used for allocating strings that are referenced by ArchFileInfo::name
-    Arena* allocator_ = nullptr;
+    Arena* a = nullptr;
     Vec<FileInfo*> fileInfos_;
 
     Str archivePath_;
