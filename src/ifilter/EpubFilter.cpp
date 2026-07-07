@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/ScopedWin.h"
 #include "base/Archive.h"
-#include "base/GdiPlus.h"
 #include "base/HtmlTags.h"
 #include "base/Win.h"
 
@@ -20,7 +19,6 @@
 #include "FilterBase.h"
 #include "RegistrySearchFilter.h"
 #include "EpubFilter.h"
-
 
 VOID EpubFilter::CleanUp() {
     log("EpubFilter::Cleanup()\n");

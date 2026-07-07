@@ -15,8 +15,6 @@
 #include <malloc.h>
 #include <objidl.h> /* IStream */
 
-#include "base/GdiPlus.h"
-
 #include "windrawlib.h"
 
 #pragma warning(disable : 4201)

@@ -7,7 +7,6 @@
 #include "base/File.h"
 #include "base/BitManip.h"
 #include "base/Dpi.h"
-#include "base/GdiPlus.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"

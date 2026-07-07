@@ -5,7 +5,6 @@
 #include "base/BitReader.h"
 #include "base/ByteOrderDecoder.h"
 #include "base/GuessFileType.h"
-#include "base/GdiPlus.h"
 
 #include "wingui/UIModels.h"
 
@@ -16,7 +15,6 @@
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
-
 
 constexpr int kInvalidSize = -1;
 

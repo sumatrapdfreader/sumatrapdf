@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/GdiPlus.h"
 #include "base/JxlReader.h"
 
 #ifndef NO_LIBJXL
