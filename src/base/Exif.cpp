@@ -251,43 +251,50 @@ static Str TagName(IfdGroup g, u16 tag) {
     return tags ? LookupTagName(tags, n, tag) : Str{};
 }
 
-static Str LookupEnum(const Str* names, int n, u32 val) {
-    if (val < (u32)n) {
-        return names[val];
+static Str LookupEnum(SeqStrings names, u32 val) {
+    if (val <= (u32)INT_MAX) {
+        return SeqStrByIndex(names, (int)val);
     }
     return {};
 }
 
 static Str FormatOrientation(u32 val) {
-    static const Str names[] = {
-        StrL(""), // 0 unused
-        StrL("Horizontal (normal)"),
-        StrL("Mirrored horizontal"),
-        StrL("Rotated 180"),
-        StrL("Mirrored vertical"),
-        StrL("Mirrored horizontal then rotated 90 CCW"),
-        StrL("Rotated 90 CW"),
-        StrL("Mirrored horizontal then rotated 90 CW"),
-        StrL("Rotated 90 CCW"),
-    };
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names =
+        "Horizontal (normal)\0"
+        "Mirrored horizontal\0"
+        "Rotated 180\0"
+        "Mirrored vertical\0"
+        "Mirrored horizontal then rotated 90 CCW\0"
+        "Rotated 90 CW\0"
+        "Mirrored horizontal then rotated 90 CW\0"
+        "Rotated 90 CCW\0";
+    return val > 0 ? LookupEnum(names, val - 1) : Str{};
 }
 
 static Str FormatExposureProgram(u32 val) {
-    static const Str names[] = {
-        StrL("Unidentified"),      StrL("Manual"),           StrL("Program Normal"),
-        StrL("Aperture Priority"), StrL("Shutter Priority"), StrL("Program Creative"),
-        StrL("Program Action"),    StrL("Portrait Mode"),    StrL("Landscape Mode"),
-    };
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names =
+        "Unidentified\0"
+        "Manual\0"
+        "Program Normal\0"
+        "Aperture Priority\0"
+        "Shutter Priority\0"
+        "Program Creative\0"
+        "Program Action\0"
+        "Portrait Mode\0"
+        "Landscape Mode\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatMeteringMode(u32 val) {
-    static const Str names[] = {
-        StrL("Unidentified"), StrL("Average"), StrL("CenterWeightedAverage"), StrL("Spot"), StrL("MultiSpot"),
-        StrL("Pattern"),      StrL("Partial"),
-    };
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names =
+        "Unidentified\0"
+        "Average\0"
+        "CenterWeightedAverage\0"
+        "Spot\0"
+        "MultiSpot\0"
+        "Pattern\0"
+        "Partial\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatColorSpace(u32 val) {
@@ -305,24 +312,28 @@ static Str FormatWhiteBalance(u32 val) {
 }
 
 static Str FormatExposureMode(u32 val) {
-    static const Str names[] = {StrL("Auto Exposure"), StrL("Manual Exposure"), StrL("Auto Bracket")};
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names = "Auto Exposure\0Manual Exposure\0Auto Bracket\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatSceneCaptureType(u32 val) {
-    static const Str names[] = {StrL("Standard"), StrL("Landscape"), StrL("Portrait"), StrL("Night")};
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names = "Standard\0Landscape\0Portrait\0Night\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatGainControl(u32 val) {
-    static const Str names[] = {StrL("None"), StrL("Low gain up"), StrL("High gain up"), StrL("Low gain down"),
-                                StrL("High gain down")};
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names =
+        "None\0"
+        "Low gain up\0"
+        "High gain up\0"
+        "Low gain down\0"
+        "High gain down\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatContrastSatSharp(u32 val) {
-    static const Str names[] = {StrL("Normal"), StrL("Soft"), StrL("Hard")};
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names = "Normal\0Soft\0Hard\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatCustomRendered(u32 val) {
@@ -330,17 +341,16 @@ static Str FormatCustomRendered(u32 val) {
 }
 
 static Str FormatSensitivityType(u32 val) {
-    static const Str names[] = {
-        StrL("Unknown"),
-        StrL("Standard Output Sensitivity"),
-        StrL("Recommended Exposure Index"),
-        StrL("ISO Speed"),
-        StrL("Standard Output Sensitivity and Recommended Exposure Index"),
-        StrL("Standard Output Sensitivity and ISO Speed"),
-        StrL("Recommended Exposure Index and ISO Speed"),
-        StrL("Standard Output Sensitivity, Recommended Exposure Index and ISO Speed"),
-    };
-    return LookupEnum(names, dimof(names), val);
+    static SeqStrings names =
+        "Unknown\0"
+        "Standard Output Sensitivity\0"
+        "Recommended Exposure Index\0"
+        "ISO Speed\0"
+        "Standard Output Sensitivity and Recommended Exposure Index\0"
+        "Standard Output Sensitivity and ISO Speed\0"
+        "Recommended Exposure Index and ISO Speed\0"
+        "Standard Output Sensitivity, Recommended Exposure Index and ISO Speed\0";
+    return LookupEnum(names, val);
 }
 
 static Str FormatResolutionUnit(u32 val) {
@@ -511,7 +521,7 @@ static TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) {
 }
 
 static TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
-    static const Str compNames[] = {StrL(""), StrL("Y"), StrL("Cb"), StrL("Cr"), StrL("R"), StrL("G"), StrL("B")};
+    static SeqStrings compNames = "Y\0Cb\0Cr\0R\0G\0B\0";
     str::Builder s;
     for (u32 i = 0; i < count && off + (int)i < r.len; i++) {
         u8 c = r.Byte(off + i);
@@ -521,8 +531,9 @@ static TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
         if (len(s) > 0) {
             s.Append(", ");
         }
-        if (c < dimof(compNames) && compNames[c]) {
-            s.Append(compNames[c]);
+        Str compName = SeqStrByIndex(compNames, c - 1);
+        if (compName) {
+            s.Append(compName);
         }
     }
     if (len(s) == 0) {
