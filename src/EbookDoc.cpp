@@ -2,14 +2,13 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
 #include "base/Archive.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/HtmlTags.h"
+#if OS_WIN
 #include "base/Win.h"
-
-#include "wingui/UIModels.h"
+#endif
 
 #include "DocProperties.h"
 #include "DocController.h"
@@ -19,6 +18,12 @@
 #include "EbookDoc.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
+
+#if !OS_WIN
+static uint GuessTextCodepage(Str, uint defVal) {
+    return defVal;
+}
+#endif
 
 static void SkipXmlPIAttrName(Str s, int& off) {
     while (off < s.len) {

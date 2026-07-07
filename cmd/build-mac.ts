@@ -512,15 +512,21 @@ const TEST_UTIL_SOURCES = [
 ];
 
 const TEST_ENGINES_SOURCES = [
+  "src/base/BitReader.cpp",
   "src/base/GuessFileType.cpp",
   "src/base/GuessFileType_posix.cpp",
   "src/DocProperties.cpp",
+  "src/EbookDoc.cpp",
   "src/EngineBase.cpp",
   "src/EngineDjvuDec.cpp",
   "src/EngineImages.cpp",
+  "src/EngineMupdf.cpp",
   "src/FzImgReader.cpp",
   "src/FzImgReader_posix.cpp",
+  "src/GumboHtmlParser.cpp",
   "src/GumboHelpers.cpp",
+  "src/MobiDoc.cpp",
+  "src/PalmDbReader.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];

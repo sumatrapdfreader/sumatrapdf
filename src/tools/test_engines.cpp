@@ -21,6 +21,11 @@ void loga(Str s) {
     log(s);
 }
 
+struct EBookUI;
+EBookUI* GetEBookUI() {
+    return nullptr;
+}
+
 static void Usage() {
     printf("usage: test_engines <document-or-image-path>\n");
 }
@@ -39,6 +44,9 @@ static EngineBase* CreateEngineForPath(Str path) {
     }
     if (IsEngineCbxSupportedFileType(kind)) {
         return CreateEngineCbxFromFile(path, nullptr, kind);
+    }
+    if (IsEngineMupdfSupportedFileType(kind)) {
+        return CreateEngineMupdfFromFile(path, kind, 96, nullptr);
     }
     return nullptr;
 }
