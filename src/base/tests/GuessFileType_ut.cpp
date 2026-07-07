@@ -453,7 +453,19 @@ static void nonImageTest() {
     utassert(fti.nImages == 0);
 }
 
+static void extMapTest() {
+    utassert(GuessFileTypeFromName(StrL("foo.pdf")) == FileType::PDF);
+    utassert(GuessFileTypeFromName(StrL("foo.JP2")) == FileType::Jp2); // case-insensitive
+    utassert(GuessFileTypeFromName(StrL("foo.tar")) == FileType::Tar);
+    utassert(GuessFileTypeFromName(StrL("foo.unknown-ext")) == FileType::Unknown);
+    // the canonical extension is the first one registered for the type
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Jpeg), ".jpg"));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Mobi), ".mobi"));
+    utassert(!GetExtForFileTypeTemp(FileType::Unknown));
+}
+
 void GuessFileTypeTest() {
+    extMapTest();
     pngTest();
     gifTest();
     bmpTest();

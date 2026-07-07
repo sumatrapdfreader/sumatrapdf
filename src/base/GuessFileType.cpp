@@ -413,7 +413,7 @@ static void AppendImageSize(FileTypeInfo& res, int n, int& cap, int dx, int dy) 
 
 // PNG: dimensions from the IHDR chunk; for APNG the acTL chunk gives the
 // frame count and each fcTL chunk a frame's size
-static void PngInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParsePng(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     if (r.len < 24 || !memeq(r.d + 12, "IHDR", 4)) {
         return;
@@ -517,7 +517,7 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
     return res.imageDx > 0 && res.imageDy > 0;
 }
 
-static void JpegInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     int n = r.len;
     int idx = 2;
@@ -572,7 +572,7 @@ static void JpegInfoFromData(ByteReader r, FileTypeInfo& res) {
 // GIF: walk the blocks counting image descriptors; the first image's size is
 // preferred over the "logical screen" size which is sometimes too large.
 // If the data is truncated the frame count is a lower bound.
-static void GifInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseGif(ByteReader r, FileTypeInfo& res) {
     int n = r.len;
     if (n < 13) {
         res.nImages = 1;
@@ -674,7 +674,7 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
 
 // TIFF and JXR: one image per IFD in the next-IFD chain, with dimensions
 // from each IFD's width/height tags
-static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
+static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
     res.nImages = 1;
     if (r.len < 10) {
         return;
@@ -704,7 +704,7 @@ static void TiffInfoFromData(ByteReader r, FileTypeInfo& res, bool isJxr) {
     }
 }
 
-static void BmpInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseBmp(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     int off = 0;
     // "BA" is an OS/2 bitmap array: a 14-byte array header followed by the
@@ -731,7 +731,7 @@ static void BmpInfoFromData(ByteReader r, FileTypeInfo& res) {
     res.imageDy = dy >= 0 ? dy : -dy; // negative height means a top-down bitmap
 }
 
-static void TgaInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseTga(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     if (r.len >= 16) {
         res.imageDx = r.WordLE(12);
@@ -741,7 +741,7 @@ static void TgaInfoFromData(ByteReader r, FileTypeInfo& res) {
 
 // WebP: walk the RIFF chunks; canvas size from VP8X, frame size from
 // VP8 (lossy) / VP8L (lossless), animation frame count from ANMF chunks
-static void WebpInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseWebp(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     int nFrames = 0;
     int cap = 0;
@@ -935,7 +935,7 @@ static void Jp2SizeFromSIZ(ByteReader r, int idx, FileTypeInfo& res) {
 // JPEG 2000: either a raw codestream (starts with the SOC marker) or a JP2
 // container with dimensions in the ihdr box inside the jp2h box; if there's
 // no ihdr, from the SIZ segment of the codestream in the jp2c box
-static void Jp2InfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseJp2(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     if (r.Byte(0) == 0xff) {
         Jp2SizeFromSIZ(r, 0, res);
@@ -962,7 +962,7 @@ static void Jp2InfoFromData(ByteReader r, FileTypeInfo& res) {
 // in meta/iprp/ipco. Several items can have an ispe (thumbnail, alpha plane,
 // grid tiles); the largest one is the full image. An odd 'irot' rotation
 // (90/270 degrees) swaps the displayed width/height.
-static void HeifInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseHeif(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     int boxEnd;
     int idx = FindIsoBmffBox(r, 0, r.len, "meta", &boxEnd);
@@ -1078,7 +1078,7 @@ static void JxlSizeFromCodestream(ByteReader r, FileTypeInfo& res) {
     res.orientation = orientation;
 }
 
-static void JxlInfoFromData(ByteReader r, FileTypeInfo& res) {
+static void ParseJxl(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     if (r.Byte(0) == 0xff && r.Byte(1) == 0x0a) {
         JxlSizeFromCodestream(r, res);
@@ -1115,38 +1115,38 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
     ByteReader r(d);
     switch (res.ft) {
         case FileType::Png:
-            PngInfoFromData(r, res);
+            ParsePng(r, res);
             break;
         case FileType::Jpeg:
-            JpegInfoFromData(r, res);
+            ParseJpeg(r, res);
             break;
         case FileType::Gif:
-            GifInfoFromData(r, res);
+            ParseGif(r, res);
             break;
         case FileType::Bmp:
-            BmpInfoFromData(r, res);
+            ParseBmp(r, res);
             break;
         case FileType::Tiff:
-            TiffInfoFromData(r, res, false);
+            ParseTiff(r, res, false);
             break;
         case FileType::Jxr:
-            TiffInfoFromData(r, res, true);
+            ParseTiff(r, res, true);
             break;
         case FileType::Tga:
-            TgaInfoFromData(r, res);
+            ParseTga(r, res);
             break;
         case FileType::Jp2:
-            Jp2InfoFromData(r, res);
+            ParseJp2(r, res);
             break;
         case FileType::Webp:
-            WebpInfoFromData(r, res);
+            ParseWebp(r, res);
             break;
         case FileType::Heic:
         case FileType::Avif:
-            HeifInfoFromData(r, res);
+            ParseHeif(r, res);
             break;
         case FileType::Jxl:
-            JxlInfoFromData(r, res);
+            ParseJxl(r, res);
             break;
         default:
             break;

@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/ByteReader.h"
 #include "base/GuessFileType.h"
 #include "AvifReader.h"
 #include "JxlReader.h"
@@ -31,18 +30,4 @@ Pixmap* PixmapFromExtFormatsData(Str bmpData, FileType kind) {
         }
     }
     return nullptr;
-}
-
-// only called when GuessFileInfoFromData() couldn't parse the size from
-// the VP8X/VP8/VP8L headers; asks libwebp instead
-bool WebpImageSizeFromData(ByteReader r, Size& result) {
-    Str bs((char*)(r.d), r.len);
-    result = webp::SizeFromData(bs);
-    return !result.IsEmpty();
-}
-
-bool AvifImageSizeFromData(ByteReader r, Size& result) {
-    Str bs((char*)(r.d), r.len);
-    result = AvifSizeFromData(bs);
-    return !result.IsEmpty();
 }
