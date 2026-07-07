@@ -462,13 +462,14 @@ bool RenderCache::ReduceTileSize() {
         maxTileSize.dy /= 2;
     }
 
-    // invalidate all rendered bitmaps and all requests
-    while (cacheCount > 0) {
-        FreeForDisplayModel(cache[0]->dm);
+    // invalidate all rendered bitmaps and all requests (force-clear: PaintTile may
+    // hold refs from Find(), so DropCacheEntryIfNotUsed would never make progress)
+    for (int i = cacheCount - 1; i >= 0; i--) {
+        delete cache[i];
+        cache[i] = nullptr;
     }
-    while (requestCount > 0) {
-        ClearQueueForDisplayModel(requests[0].dm);
-    }
+    cacheCount = 0;
+    requestCount = 0;
     for (int i = 0; i < nRenderThreads; i++) {
         AbortCurrentRequest(i);
     }
@@ -938,13 +939,15 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
     HBITMAP hbmp = renderedBmp ? renderedBmp->hbmp : nullptr;
 
     if (!hbmp) {
-        if (entry && !(renderedBmp && ReduceTileSize())) {
+        bool didReduce = entry && ReduceTileSize();
+        if (entry && !didReduce) {
             renderDelay = RENDER_DELAY_FAILED;
         } else if (0 == renderDelay) {
             renderDelay = 1;
         }
 
-        if (entry) {
+        // ReduceTileSize() deletes all cache entries; don't touch a stale pointer
+        if (entry && !didReduce) {
             DropCacheEntry(entry);
         }
         return renderDelay;
