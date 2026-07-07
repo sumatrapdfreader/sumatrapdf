@@ -568,11 +568,6 @@ Size ImageSizeFromData(Str d) {
     return result;
 }
 
-// like ImageSizeFromData but only parses headers, no full decode fallback
-Size ImageSizeFromHeader(Str d) {
-    return ImageSizeNoDecode(d);
-}
-
 CLSID GetGdiPlusEncoderClsid(WStr format) {
     CLSID null{};
     uint numEncoders, size;

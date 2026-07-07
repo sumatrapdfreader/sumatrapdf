@@ -26,7 +26,6 @@ void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, i
 Pixmap* PixmapFromDataWin(Str bmpData);
 Vec<Pixmap*> PixmapsFromDataWin(Str bmpData);
 Size ImageSizeFromData(Str);
-Size ImageSizeFromHeader(Str);
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
 CLSID GetGdiPlusEncoderClsid(WStr format);
 RenderedBitmap* LoadRenderedBitmapWin(Str path);
