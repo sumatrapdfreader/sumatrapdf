@@ -822,6 +822,90 @@ int WebpExifOrientation(Str d) {
     return 0;
 }
 
+// find a box of the given type among the ISO BMFF boxes in [idx, end).
+// Returns the offset of the box's payload and sets boxEndOut to the box's
+// end, or returns -1 if not found
+static int FindIsoBmffBox(ByteReader r, int idx, int end, const char* type, int* boxEndOut) {
+    while (idx + 8 <= end) {
+        i64 size = (i64)r.DWordBE(idx);
+        int hdr = 8;
+        if (size == 1) {
+            // 64-bit size follows the type
+            if (idx + 16 > end) {
+                return -1;
+            }
+            u64 size64 = r.QWordBE(idx + 8);
+            if (size64 > (u64)(end - idx)) {
+                return -1;
+            }
+            size = (i64)size64;
+            hdr = 16;
+        } else if (size == 0) {
+            size = end - idx; // box extends to the end
+        }
+        if (size < hdr || size > end - idx) {
+            return -1;
+        }
+        if (memeq(r.d + idx + 4, type, 4)) {
+            *boxEndOut = idx + (int)size;
+            return idx + hdr;
+        }
+        idx += (int)size;
+    }
+    return -1;
+}
+
+// HEIF/AVIF (ISO BMFF): dimensions from the 'ispe' (spatial extents) boxes
+// in meta/iprp/ipco. Several items can have an ispe (thumbnail, alpha plane,
+// grid tiles); the largest one is the full image. An odd 'irot' rotation
+// (90/270 degrees) swaps the displayed width/height.
+static void HeifInfoFromData(ByteReader r, FileTypeInfo& res) {
+    res.nImages = 1;
+    int boxEnd;
+    int idx = FindIsoBmffBox(r, 0, r.len, "meta", &boxEnd);
+    if (idx < 0) {
+        return;
+    }
+    idx += 4; // meta is a FullBox: skip version/flags
+    idx = FindIsoBmffBox(r, idx, boxEnd, "iprp", &boxEnd);
+    if (idx < 0) {
+        return;
+    }
+    idx = FindIsoBmffBox(r, idx, boxEnd, "ipco", &boxEnd);
+    if (idx < 0) {
+        return;
+    }
+    int dx = 0, dy = 0;
+    bool swapDims = false;
+    while (idx + 8 <= boxEnd) {
+        i64 size = (i64)r.DWordBE(idx);
+        if (size < 8 || size > boxEnd - idx) {
+            break;
+        }
+        const u8* type = r.d + idx + 4;
+        if (memeq(type, "ispe", 4) && size >= 20) {
+            // version/flags, then u32 width and height
+            int w = (int)r.DWordBE(idx + 12);
+            int h = (int)r.DWordBE(idx + 16);
+            if ((i64)w * h > (i64)dx * dy) {
+                dx = w;
+                dy = h;
+            }
+        } else if (memeq(type, "irot", 4) && size >= 9) {
+            // one byte: rotation in 90-degree counter-clockwise units
+            swapDims = (r.Byte(idx + 8) & 1) != 0;
+        }
+        idx += (int)size;
+    }
+    if (swapDims) {
+        int tmp = dx;
+        dx = dy;
+        dy = tmp;
+    }
+    res.imageDx = dx;
+    res.imageDy = dy;
+}
+
 // Like GuessFileTypeFromData() but for image files also reports the number
 // of images and, for single-image files, width/height parsed from the header
 // (hasImageSize tells if they were found; if not, callers can fall back to a
@@ -860,10 +944,12 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
         case FileType::Webp:
             WebpInfoFromData(r, res);
             break;
-        case FileType::Jxl:
         case FileType::Heic:
         case FileType::Avif:
-            // TODO: dimensions require full container/bitstream parsing
+            HeifInfoFromData(r, res);
+            break;
+        case FileType::Jxl:
+            // TODO: dimensions require parsing the codestream SIZE header
             res.nImages = 1;
             break;
         default:

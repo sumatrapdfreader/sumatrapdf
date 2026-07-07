@@ -196,6 +196,47 @@ static void tiffTest() {
     utassert(!fti.hasImageSize);
 }
 
+static void heifTest() {
+    // minimal 5x7 AVIF: ftyp, then meta > iprp > ipco > ispe
+    static const u8 avif[] = {
+        0, 0, 0, 16, 'f', 't', 'y', 'p', 'a', 'v', 'i', 'f', 0, 0, 0, 0, // ftyp
+        0, 0, 0, 48, 'm', 'e', 't', 'a', 0,   0,   0,   0,               // meta (FullBox)
+        0, 0, 0, 36, 'i', 'p', 'r', 'p',                                 // iprp
+        0, 0, 0, 28, 'i', 'p', 'c', 'o',                                 // ipco
+        0, 0, 0, 20, 'i', 's', 'p', 'e', 0,   0,   0,   0,               // ispe (FullBox)
+        0, 0, 0, 5,                                                      // width 5
+        0, 0, 0, 7,                                                      // height 7
+    };
+    FileTypeInfo fti = infoFromBytes(avif, dimofi(avif));
+    utassert(fti.ft == FileType::Avif);
+    utassert(fti.imageDx == 5);
+    utassert(fti.imageDy == 7);
+    utassert(fti.hasImageSize);
+    utassert(fti.nImages == 1);
+
+    // HEIC with a thumbnail ispe (2x3), the full-image ispe (5x7) and a
+    // 90-degree irot, which swaps the reported width/height
+    static const u8 heic[] = {
+        0, 0, 0, 16, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c', 0, 0, 0, 0, // ftyp
+        0, 0, 0, 77, 'm', 'e', 't', 'a', 0,   0,   0,   0,               // meta (FullBox)
+        0, 0, 0, 65, 'i', 'p', 'r', 'p',                                 // iprp
+        0, 0, 0, 57, 'i', 'p', 'c', 'o',                                 // ipco
+        0, 0, 0, 20, 'i', 's', 'p', 'e', 0,   0,   0,   0,               // thumbnail ispe
+        0, 0, 0, 2,                                                      // width 2
+        0, 0, 0, 3,                                                      // height 3
+        0, 0, 0, 20, 'i', 's', 'p', 'e', 0,   0,   0,   0,               // full-image ispe
+        0, 0, 0, 5,                                                      // width 5
+        0, 0, 0, 7,                                                      // height 7
+        0, 0, 0, 9,  'i', 'r', 'o', 't', 1,                              // rotation: 90 degrees ccw
+    };
+    fti = infoFromBytes(heic, dimofi(heic));
+    utassert(fti.ft == FileType::Heic);
+    utassert(fti.imageDx == 7);
+    utassert(fti.imageDy == 5);
+    utassert(fti.hasImageSize);
+    utassert(fti.nImages == 1);
+}
+
 static void nonImageTest() {
     static const char pdf[] = "%PDF-1.4\nhello";
     FileTypeInfo fti = GuessFileInfoFromData(StrL(pdf));
@@ -216,5 +257,6 @@ void GuessFileTypeTest() {
     jpegTest();
     webpTest();
     tiffTest();
+    heifTest();
     nonImageTest();
 }
