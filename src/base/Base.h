@@ -141,13 +141,6 @@
 #undef min
 #undef max
 
-// some GDI+ PropertyTag* are missing from mingw headers (but present in MS SDK)
-#ifndef PropertyTagExifFocalLengthIn35mmFilm
-#define PropertyTagExifFocalLengthIn35mmFilm ((PROPID)0xA405)
-#endif
-#ifndef PropertyTagExifWhiteBalance
-#define PropertyTagExifWhiteBalance ((PROPID)0xA403)
-#endif
 #else
 using BYTE = uint8_t;
 using WORD = uint16_t;

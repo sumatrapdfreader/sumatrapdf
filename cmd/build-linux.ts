@@ -611,6 +611,7 @@ const DEP_LIBS_BASE = [
           "DirScan.cpp",
           "DirScan_posix.cpp",
           "Dpi_posix.cpp",
+          "Exif.cpp",
           "File.cpp",
           "File_posix.cpp",
           "Geom.cpp",

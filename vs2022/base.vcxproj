@@ -864,6 +864,7 @@
     <ClInclude Include="..\src\base\DirIter.h" />
     <ClInclude Include="..\src\base\DirScan.h" />
     <ClInclude Include="..\src\base\Dpi.h" />
+    <ClInclude Include="..\src\base\Exif.h" />
     <ClInclude Include="..\src\base\File.h" />
     <ClInclude Include="..\src\base\FileWatcher.h" />
     <ClInclude Include="..\src\base\GdiPlus.h" />
@@ -919,6 +920,7 @@
     <ClCompile Include="..\src\base\DirScan.cpp" />
     <ClCompile Include="..\src\base\DirScan_win.cpp" />
     <ClCompile Include="..\src\base\Dpi_win.cpp" />
+    <ClCompile Include="..\src\base\Exif.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\FileWatcher.cpp" />
     <ClCompile Include="..\src\base\File_win.cpp" />

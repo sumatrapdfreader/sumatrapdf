@@ -1010,6 +1010,7 @@ function base_files()
     "DirScan_win.cpp",
     "Dpi.h",
     "Dpi_win.cpp",
+    "Exif.*",
     "File.h",
     "File.cpp",
     "File_win.cpp",

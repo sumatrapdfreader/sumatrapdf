@@ -130,6 +130,7 @@ const utils: LibDef = {
         "DirScan_win.cpp",
         "Dpi.h",
         "Dpi_win.cpp",
+        "Exif.*",
         "Geom.*",
         "GuessFileType.*",
         "File.h",
