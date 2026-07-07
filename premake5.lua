@@ -1004,13 +1004,17 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
     disablewarnings { "4838" }
-    includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar" }
+    includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "mupdf/include" }
+    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
+    defines { "LIBHEIF_STATIC_BUILD" }
     test_engines_files()
     links_zlib()
-    links { "base", "djvudec", "libarchive", "unrar" }
+    links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
+    links { "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
-      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon"
+      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon",
+      "windowscodecs"
     }
 
   project "bin2coff"

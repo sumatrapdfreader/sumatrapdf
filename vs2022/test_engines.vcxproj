@@ -384,8 +384,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -402,7 +402,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg32/obj-s/test_engines.lib" /MAP:"../out/dbg32/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -414,8 +414,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -432,7 +432,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg64/obj-s/test_engines.lib" /MAP:"../out/dbg64/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -444,8 +444,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -462,7 +462,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj-s/test_engines.lib" /MAP:"../out/dbgarm64/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -474,8 +474,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -492,7 +492,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj-s/test_engines.lib" /MAP:"../out/dbg64_asan/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -504,8 +504,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -522,7 +522,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj-s/test_engines.lib" /MAP:"../out/dbgfull32/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -534,8 +534,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -552,7 +552,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj-s/test_engines.lib" /MAP:"../out/dbgfull64/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -564,8 +564,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -582,7 +582,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj-s/test_engines.lib" /MAP:"../out/dbgfullarm64/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -594,8 +594,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -612,7 +612,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj-s/test_engines.lib" /MAP:"../out/dbgfull64_asan/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -624,8 +624,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -646,7 +646,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel32/obj-s/test_engines.lib" /MAP:"../out/rel32/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -658,8 +658,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -680,7 +680,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64/obj-s/test_engines.lib" /MAP:"../out/rel64/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -692,8 +692,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -714,7 +714,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/arm64/obj-s/test_engines.lib" /MAP:"../out/arm64/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -726,8 +726,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -747,7 +747,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj-s/test_engines.lib" /MAP:"../out/rel64_asan/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -759,8 +759,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -782,7 +782,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj-s/test_engines.lib" /MAP:"../out/rel32_prefast/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -794,8 +794,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -817,7 +817,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj-s/test_engines.lib" /MAP:"../out/rel64_prefast/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -829,8 +829,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -852,7 +852,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj-s/test_engines.lib" /MAP:"../out/arm64_prefast/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -864,8 +864,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\ext\djvudec;..\ext\libarchive;..\ext\unrar;..\mupdf\include;..\ext\libheif\libheif\api;..\ext\libwebp\src;..\ext\libjxl\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -886,7 +886,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;shell32.lib;ole32.lib;oleAut32.lib;urlmon.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj-s/test_engines.lib" /MAP:"../out/rel64_prefast_asan/obj-s/test_engines.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -900,10 +900,23 @@
     <ClInclude Include="..\src\TreeModel.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
+    <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
+    <ClCompile Include="..\src\EngineImages.cpp" />
+    <ClCompile Include="..\src\EngineMupdf.cpp" />
+    <ClCompile Include="..\src\FzImgReader.cpp" />
+    <ClCompile Include="..\src\FzImgReader_win.cpp" />
+    <ClCompile Include="..\src\GdiPlusExtFormats.cpp" />
+    <ClCompile Include="..\src\GumboHelpers.cpp" />
+    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
+    <ClCompile Include="..\src\JxlReader.cpp" />
+    <ClCompile Include="..\src\MobiDoc.cpp" />
+    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\TreeModel.cpp" />
+    <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\tools\test_engines.cpp" />
   </ItemGroup>
@@ -922,6 +935,27 @@
     </ProjectReference>
     <ProjectReference Include="unrar.vcxproj">
       <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="mupdf.vcxproj">
+      <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libwebp.vcxproj">
+      <Project>{0A466F79-7625-EE14-7F3D-79EBEB9B5476}</Project>
+    </ProjectReference>
+    <ProjectReference Include="dav1d.vcxproj">
+      <Project>{F5BF470F-61D4-6FC0-2A56-132096296CF1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libheif.vcxproj">
+      <Project>{380D6779-A4EC-E514-AD04-71EB19634C76}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libjxl.vcxproj">
+      <Project>{8AC56F0B-7667-9AE1-5F22-AE354B632132}</Project>
+    </ProjectReference>
+    <ProjectReference Include="highway.vcxproj">
+      <Project>{56E0D845-C2BF-57E1-CBD7-E2B73736BE42}</Project>
+    </ProjectReference>
+    <ProjectReference Include="skcms.vcxproj">
+      <Project>{46625C10-B276-84C1-7BF8-2721E7CB80F2}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

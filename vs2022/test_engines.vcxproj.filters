@@ -15,10 +15,23 @@
     <ClInclude Include="..\src\TreeModel.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
+    <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
+    <ClCompile Include="..\src\EngineImages.cpp" />
+    <ClCompile Include="..\src\EngineMupdf.cpp" />
+    <ClCompile Include="..\src\FzImgReader.cpp" />
+    <ClCompile Include="..\src\FzImgReader_win.cpp" />
+    <ClCompile Include="..\src\GdiPlusExtFormats.cpp" />
+    <ClCompile Include="..\src\GumboHelpers.cpp" />
+    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
+    <ClCompile Include="..\src\JxlReader.cpp" />
+    <ClCompile Include="..\src\MobiDoc.cpp" />
+    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\TreeModel.cpp" />
+    <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp">
       <Filter>base</Filter>
     </ClCompile>
