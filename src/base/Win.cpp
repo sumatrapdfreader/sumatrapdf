@@ -2802,15 +2802,25 @@ bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
         DeleteDC(bmpDC);
         return ok;
     }
+    // StretchDIBits can't reliably address a vertical source sub-rect of a
+    // top-down DIB (YSrc is interpreted in bottom-up DIB coordinates), which
+    // silently painted nothing when a page was partially scrolled off-screen.
+    // Instead advance data to the first source row and pass a DIB that is
+    // exactly source.dy rows tall, with YSrc = 0.
+    source = Rect(0, 0, p->width, p->height).Intersect(source);
+    if (source.IsEmpty()) {
+        return false;
+    }
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = p->width;
-    bmi.bmiHeader.biHeight = -p->height; // top-down
+    bmi.bmiHeader.biHeight = -source.dy; // top-down
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = (p->format == PixmapFormat::BGR8) ? 24 : 32;
     bmi.bmiHeader.biCompression = BI_RGB;
-    int r = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, source.y, source.dx, source.dy,
-                          p->data, &bmi, DIB_RGB_COLORS, SRCCOPY);
+    const u8* rows = p->data + (size_t)source.y * p->stride;
+    int r = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, 0, source.dx, source.dy, rows, &bmi,
+                          DIB_RGB_COLORS, SRCCOPY);
     return r != GDI_ERROR && r != 0;
 }
 
