@@ -33,12 +33,9 @@ Pixmap* PixmapFromExtFormatsData(Str bmpData, FileType kind) {
     return nullptr;
 }
 
+// only called when GuessFileInfoFromData() couldn't parse the size from
+// the VP8X/VP8/VP8L headers; asks libwebp instead
 bool WebpImageSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 30 && str::StartsWith(Str((char*)(r.d + 12), r.len - 12), "VP8 ")) {
-        result.dx = r.WordLE(26) & 0x3fff;
-        result.dy = r.WordLE(28) & 0x3fff;
-        return true;
-    }
     Str bs((char*)(r.d), r.len);
     result = webp::SizeFromData(bs);
     return !result.IsEmpty();
