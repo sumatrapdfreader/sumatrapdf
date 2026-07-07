@@ -2,11 +2,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// This file must only contain code that doesn't depend on
+// external libraries (mupdf/, ext/). GuessFileTypeFromFile.cpp has
+// the parts that need base/Archive.h (and thus ext/libarchive).
+
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/ByteReader.h"
 #include "base/GuessFileType.h"
-#include "base/Archive.h"
 
 // http://en.wikipedia.org/wiki/.nfo
 // http://en.wikipedia.org/wiki/FILE_ID.DIZ
@@ -357,7 +360,7 @@ static bool HasTgaSignature(Str d) {
 }
 
 // detect file type based on file content
-static FileType DetectFileTypeFromContent(Str d) {
+static FileType DetectFileTypeFromData(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
     int dataLen = d.len;
@@ -725,16 +728,16 @@ static void WebpInfoFromData(ByteReader r, FileTypeInfo& res) {
     }
 }
 
-// Like GuessFileTypeFromContent() but for image files also reports the number
+// Like GuessFileTypeFromData() but for image files also reports the number
 // of images and, for single-image files, width/height parsed from the header
 // (hasImageSize tells if they were found; if not, callers can fall back to a
 // more expensive method like decoding the image). Dimensions are as encoded
 // i.e. EXIF orientation is not applied; use ImageSizeFromData() for display
 // dimensions. Counts reflect the provided buffer: they can under-report if d
 // is a truncated prefix of the file.
-FileTypeInfo GuessFileInfoFromContent(Str d) {
+FileTypeInfo GuessFileInfoFromData(Str d) {
     FileTypeInfo res;
-    res.ft = DetectFileTypeFromContent(d);
+    res.ft = DetectFileTypeFromData(d);
     ByteReader r(d);
     switch (res.ft) {
         case FileType::Png:
@@ -782,8 +785,8 @@ FileTypeInfo GuessFileInfoFromContent(Str d) {
     return res;
 }
 
-FileType GuessFileTypeFromContent(Str d) {
-    return GuessFileInfoFromContent(d).ft;
+FileType GuessFileTypeFromData(Str d) {
+    return GuessFileInfoFromData(d).ft;
 }
 
 // parse an embedded-PDF path of the form "c:/foo.pdf:${pdfStreamNo}"
@@ -866,101 +869,6 @@ FileType GuessFileTypeFromName(Str path) {
     return FileType::Unknown;
 }
 
-static bool IsEpubArchive(Archive* archive) {
-    auto* container = archive->GetFileDataByName("META-INF/container.xml");
-    if (container && container->data) {
-        return true;
-    }
-
-    auto* mimeType = archive->GetFileDataByName("mimetype");
-    if (!mimeType || !mimeType->data) {
-        return false;
-    }
-
-    char* mt = mimeType->data;
-    int n = mimeType->fileSizeUncompressed;
-    for (int i = n; i > 0; i--) {
-        if (!str::IsWs(mt[i - 1])) {
-            n = i;
-            break;
-        }
-        mt[i - 1] = '\0';
-        if (i == 1) {
-            n = 0;
-        }
-    }
-
-    Str mtStr = Str(mt, n);
-    if (str::Eq(mtStr, "application/epub+zip")) {
-        return true;
-    }
-    return str::Eq(mtStr, "application/x-ibooks+zip");
-}
-
-static bool IsXpsArchive(Archive* archive) {
-    bool res = archive->GetFileId("_rels/.rels") >= 0 || archive->GetFileId("_rels/.rels/[0].piece") >= 0 ||
-               archive->GetFileId("_rels/.rels/[0].last.piece") >= 0;
-    return res;
-}
-
-static bool IsFb2Archive(Archive* archive) {
-    auto files = archive->GetFileInfos();
-    if (len(files) != 1) {
-        return false;
-    }
-    auto fi = files[0];
-    auto name = fi->name;
-    return str::EndsWithI(name, ".fb2");
-}
-
-FileType GuessFileTypeFromFile(Str path) {
-    ReportIf(!path);
-    if (path::IsDirectory(path)) {
-        TempStr mimetypePath = path::JoinTemp(path, StrL("mimetype"));
-        if (file::StartsWith(mimetypePath, "application/epub+zip")) {
-            return FileType::Epub;
-        }
-        return FileType::Unknown;
-    }
-
-    char buf[2048 + 1]{};
-    int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
-    if (n <= 0) {
-        return FileType::Unknown;
-    }
-
-    Str d = Str((char*)buf, n);
-    auto res = GuessFileTypeFromContent(d);
-    if (res == FileType::Zip) {
-        ArchiveExtractProgressCb emptyCb;
-        Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
-        if (archive) {
-            if (IsXpsArchive(archive)) {
-                res = FileType::Xps;
-            }
-            if (IsEpubArchive(archive)) {
-                res = FileType::Epub;
-            }
-            if (IsFb2Archive(archive)) {
-                res = FileType::Fb2z;
-            }
-            delete archive;
-        }
-    }
-    return res;
-}
-
-FileType GuessFileType(Str path, bool sniff) {
-    if (sniff) {
-        FileType ft = GuessFileTypeFromFile(path);
-        if (ft != FileType::Unknown) {
-            return ft;
-        }
-        return GuessFileTypeFromName(path);
-    }
-    return GuessFileTypeFromName(path);
-}
-
 // clang-format off
 static const FileType gImageTypes[] = {
     FileType::Png,
@@ -1004,7 +912,7 @@ TempStr GfxFileExtFromTypeTemp(FileType ft) {
 }
 
 TempStr GfxFileExtFromDataTemp(Str d) {
-    FileType ft = GuessFileTypeFromContent(d);
+    FileType ft = GuessFileTypeFromData(d);
     return GfxFileExtFromTypeTemp(ft);
 }
 

@@ -950,7 +950,7 @@ bool EngineImage::LoadSingleFile(Str path) {
     SetFilePath(path);
 
     Str data = file::ReadFile(path);
-    imageFormat = GuessFileTypeFromContent(data);
+    imageFormat = GuessFileTypeFromData(data);
     if (imageFormat == FileType::Unknown) {
         imageFormat = GuessFileTypeFromName(path);
     }

@@ -446,6 +446,7 @@ const DEP_LIBS_BASE = [
           "File_posix.cpp",
           "Geom.cpp",
           "GuessFileType.cpp",
+          "GuessFileTypeFromFile.cpp",
           "HtmlTags.cpp",
           "Http.cpp",
           "Http_mac.cpp",
@@ -710,8 +711,6 @@ async function buildTestUtil(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "libzlib.a"),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {

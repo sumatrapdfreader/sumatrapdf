@@ -65,9 +65,9 @@ struct FileTypeInfo {
     int nImages = 0; // only for image files: number of images
 };
 
-FileTypeInfo GuessFileInfoFromContent(Str d);
+FileTypeInfo GuessFileInfoFromData(Str d);
 FileType GuessFileTypeFromFile(Str path);
-FileType GuessFileTypeFromContent(Str d);
+FileType GuessFileTypeFromData(Str d);
 FileType GuessFileTypeFromName(Str path);
 FileType GuessFileType(Str path, bool sniff);
 TempStr GfxFileExtFromDataTemp(Str);

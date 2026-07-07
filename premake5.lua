@@ -991,11 +991,9 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
     disablewarnings { "4838" }
-    defines { "SUMATRA_TEST_UTIL=1", "LIBARCHIVE_STATIC" }
-    includedirs { "src", "ext/libarchive" }
+    defines { "SUMATRA_TEST_UTIL=1" }
+    includedirs { "src" }
     test_util_files()
-    links_zlib()
-    links { "libarchive", "unrar" }
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
 
   project "test_engines"

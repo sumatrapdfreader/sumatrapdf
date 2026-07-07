@@ -1064,7 +1064,7 @@ static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
 
 static bool ExtractExifBlob(Str d, Str& out, u8** ownedOut) {
     *ownedOut = nullptr;
-    FileType kind = GuessFileTypeFromContent(d);
+    FileType kind = GuessFileTypeFromData(d);
     if (kind == FileType::Jpeg) {
         return ExtractJpegExif(d, out);
     }

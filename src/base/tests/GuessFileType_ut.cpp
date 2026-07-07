@@ -8,7 +8,7 @@
 #include "base/UtAssert.h"
 
 static FileTypeInfo infoFromBytes(const u8* d, int n) {
-    return GuessFileInfoFromContent(Str((char*)d, n));
+    return GuessFileInfoFromData(Str((char*)d, n));
 }
 
 static void pngTest() {
@@ -27,7 +27,7 @@ static void pngTest() {
     utassert(fti.imageDy == 2);
     utassert(fti.hasImageSize);
     utassert(fti.nImages == 1);
-    utassert(GuessFileTypeFromContent(Str((char*)png, dimofi(png))) == FileType::Png);
+    utassert(GuessFileTypeFromData(Str((char*)png, dimofi(png))) == FileType::Png);
 
     // APNG: same but with an acTL chunk (3 frames) after IHDR
     static const u8 apng[] = {
@@ -173,13 +173,13 @@ static void tiffTest() {
 
 static void nonImageTest() {
     static const char pdf[] = "%PDF-1.4\nhello";
-    FileTypeInfo fti = GuessFileInfoFromContent(StrL(pdf));
+    FileTypeInfo fti = GuessFileInfoFromData(StrL(pdf));
     utassert(fti.ft == FileType::PDF);
     utassert(fti.imageDx == 0 && fti.imageDy == 0);
     utassert(!fti.hasImageSize);
     utassert(fti.nImages == 0);
 
-    fti = GuessFileInfoFromContent(StrL("no signature here at all"));
+    fti = GuessFileInfoFromData(StrL("no signature here at all"));
     utassert(fti.ft == FileType::Unknown);
     utassert(fti.nImages == 0);
 }

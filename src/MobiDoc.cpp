@@ -704,7 +704,7 @@ static bool KnownNonImageRec(Str d) {
 }
 
 static bool KnownImageFormat(Str d) {
-    FileType kind = GuessFileTypeFromContent(d);
+    FileType kind = GuessFileTypeFromData(d);
     return kind != FileType::Unknown;
 }
 

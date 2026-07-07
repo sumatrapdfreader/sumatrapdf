@@ -455,7 +455,7 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
 
 // Decode an image to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
 Pixmap* PixmapFromDataWin(Str bmpData) {
-    FileType kind = GuessFileTypeFromContent(bmpData);
+    FileType kind = GuessFileTypeFromData(bmpData);
     if (FileType::Tga == kind) {
         Pixmap* px = tga::PixmapFromData(bmpData);
         if (px) {
@@ -493,7 +493,7 @@ Pixmap* PixmapFromDataWin(Str bmpData) {
 // than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
 Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
     Vec<Pixmap*> res;
-    FileType kind = GuessFileTypeFromContent(bmpData);
+    FileType kind = GuessFileTypeFromData(bmpData);
     if (FileType::Tiff == kind || FileType::Gif == kind) {
         // decode every frame of a multi-page TIFF / animated GIF via GDI+
         Gdiplus::Bitmap* bmp = DecodeWithGdiplus(bmpData);
@@ -524,120 +524,6 @@ Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
         res.Append(px);
     }
     return res;
-}
-
-#define JP2_JP2H 0x6a703268 /**< JP2 header box (super-box) */
-#define JP2_IHDR 0x69686472 /**< Image header box */
-
-static bool BmpSizeFromData(ByteReader r, Size& result) {
-    if (r.len < sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
-        return false;
-    }
-    BITMAPINFOHEADER bmi;
-    bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
-    ReportIf(!ok);
-    result.dx = bmi.biWidth;
-    result.dy = bmi.biHeight;
-    return true;
-}
-
-static bool GifSizeFromData(ByteReader r, Size& result) {
-    const u8* data = r.d;
-    int n = r.len;
-    if (n < 13) {
-        return false;
-    }
-    // find the first image's actual size instead of using the
-    // "logical screen" size which is sometimes too large
-    int idx = 13;
-    // skip the global color table
-    if ((r.Byte(10) & 0x80)) {
-        idx += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
-    }
-    while (idx + 8 < r.len) {
-        if (r.Byte(idx) == 0x2C) {
-            result.dx = r.WordLE(idx + 5);
-            result.dy = r.WordLE(idx + 7);
-            return true;
-        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xF9) {
-            idx += 8;
-        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFE) {
-            const u8* commentEnd = r.Find(idx + 2, 0x00);
-            idx = commentEnd ? (int)(commentEnd - data) + 1 : n;
-        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < n) {
-            const u8* textDataEnd = r.Find(idx + 15, 0x00);
-            idx = textDataEnd ? (int)(textDataEnd - data) + 1 : n;
-        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < n) {
-            const u8* applicationDataEnd = r.Find(idx + 14, 0x00);
-            idx = applicationDataEnd ? (int)(applicationDataEnd - data) + 1 : n;
-        } else {
-            return false;
-        }
-    }
-    return false;
-}
-
-// try to get image dimensions from EXIF sub-IFD (tags 0xA002/0xA003)
-// tiffBase is the offset into r where the TIFF header starts
-static bool JpegSizeFromExif(ByteReader r, int tiffBase, Size& result) {
-    int n = r.len;
-    if (tiffBase + 8 > n) {
-        return false;
-    }
-    bool isBE = r.Byte(tiffBase) == 'M';
-    // read IFD0 offset
-    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
-    int ifdAbs = tiffBase + ifdOff;
-    if (ifdAbs + 2 > n) {
-        return false;
-    }
-    WORD count = r.Word(ifdAbs, isBE);
-    int exifIfdOff = 0;
-    // scan IFD0 for ExifIFD pointer (tag 0x8769)
-    for (WORD i = 0; i < count; i++) {
-        int entryOff = ifdAbs + 2 + i * 12;
-        if (entryOff + 12 > n) {
-            break;
-        }
-        WORD tag = r.Word(entryOff, isBE);
-        if (tag == 0x8769) {
-            exifIfdOff = (int)r.DWord(entryOff + 8, isBE);
-            break;
-        }
-    }
-    if (exifIfdOff == 0) {
-        return false;
-    }
-    // read EXIF sub-IFD
-    int exifAbs = tiffBase + exifIfdOff;
-    if (exifAbs + 2 > n) {
-        return false;
-    }
-    count = r.Word(exifAbs, isBE);
-    for (WORD i = 0; i < count; i++) {
-        int entryOff = exifAbs + 2 + i * 12;
-        if (entryOff + 12 > n) {
-            break;
-        }
-        WORD tag = r.Word(entryOff, isBE);
-        WORD type = r.Word(entryOff + 2, isBE);
-        if (tag == 0xA002) {
-            // PixelXDimension
-            if (type == 4) {
-                result.dx = (int)r.DWord(entryOff + 8, isBE);
-            } else if (type == 3) {
-                result.dx = r.Word(entryOff + 8, isBE);
-            }
-        } else if (tag == 0xA003) {
-            // PixelYDimension
-            if (type == 4) {
-                result.dy = (int)r.DWord(entryOff + 8, isBE);
-            } else if (type == 3) {
-                result.dy = r.Word(entryOff + 8, isBE);
-            }
-        }
-    }
-    return !result.IsEmpty();
 }
 
 // Read EXIF orientation from JPEG data. Returns 1-8 or 0 if not found.
@@ -676,166 +562,42 @@ bool ExifOrientationSwapsDimensions(int orientation) {
     return orientation >= 5 && orientation <= 8;
 }
 
-static bool JpegSizeFromData(ByteReader r, Size& result) {
-    // find the last start of frame marker for non-differential Huffman/arithmetic coding
-    int n = r.len;
-    int idx = 2;
-    for (;;) {
-        if (idx + 9 >= n) {
-            return false;
+// size from headers via GuessFileInfoFromData(), with EXIF orientation
+// applied; falls back to library-assisted parsing for formats it can't size
+// (avif/heic and non-trivial webp). Returns an empty Size if only a full
+// decode can tell (e.g. animated GIF, multi-page TIFF, jxl).
+static Size ImageSizeNoDecode(Str d) {
+    Size result;
+    FileTypeInfo fti = GuessFileInfoFromData(d);
+    if (fti.hasImageSize) {
+        result.dx = fti.imageDx;
+        result.dy = fti.imageDy;
+        if (fti.ft == FileType::Jpeg && ExifOrientationSwapsDimensions(JpegExifOrientation(ByteReader(d)))) {
+            std::swap(result.dx, result.dy);
         }
-        u8 b = r.Byte(idx);
-        if (b != 0xff) {
-            return false;
+        if (fti.ft == FileType::Webp && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
+            std::swap(result.dx, result.dy);
         }
-        b = r.Byte(idx + 1);
-        if (0xC0 <= b && b <= 0xC3 || 0xC9 <= b && b <= 0xCB) {
-            result.dx = r.WordBE(idx + 7);
-            result.dy = r.WordBE(idx + 5);
-            return true;
-        }
-        int segLen = r.WordBE(idx + 2);
-        int nextIdx = idx + segLen + 2;
-        if (nextIdx + 9 >= n) {
-            // can't read past this segment; if it's APP1/EXIF, try parsing dimensions from EXIF
-            if (b == 0xE1 && idx + 10 < n) {
-                // check for "Exif\0\0" signature
-                if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' &&
-                    r.Byte(idx + 7) == 'f' && r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
-                    int tiffBase = idx + 10; // TIFF header starts after "Exif\0\0"
-                    if (JpegSizeFromExif(r, tiffBase, result)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        idx = nextIdx;
+        return result;
     }
-    return false;
-}
-
-static bool TiffSizeFromData(ByteReader r, Size& result) {
-    if (r.len < 10) {
-        return false;
+    ByteReader r(d);
+    if (fti.ft == FileType::Webp && WebpImageSizeFromData(r, result)) {
+        return result;
     }
-    bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
-    ReportIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
-    const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
-    int idx = (int)r.DWord(4, isBE);
-    WORD count = idx <= r.len - 2 ? r.Word(idx, isBE) : 0;
-    for (idx += 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
-        WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
-        if (r.DWord(idx + 4, isBE) != 1) {
-            continue;
-        } else if (WIDTH == tag && 4 == type) {
-            result.dx = r.DWord(idx + 8, isBE);
-        } else if (WIDTH == tag && 3 == type) {
-            result.dx = r.Word(idx + 8, isBE);
-        } else if (WIDTH == tag && 1 == type) {
-            result.dx = r.Byte(idx + 8);
-        } else if (HEIGHT == tag && 4 == type) {
-            result.dy = r.DWord(idx + 8, isBE);
-        } else if (HEIGHT == tag && 3 == type) {
-            result.dy = r.Word(idx + 8, isBE);
-        } else if (HEIGHT == tag && 1 == type) {
-            result.dy = r.Byte(idx + 8);
-        }
+    if ((fti.ft == FileType::Avif || fti.ft == FileType::Heic) && AvifImageSizeFromData(r, result)) {
+        return result;
     }
-    return true;
-}
-
-static bool PngSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 24 && str::StartsWith(Str((char*)(r.d + 12), r.len - 12), "IHDR")) {
-        result.dx = r.DWordBE(16);
-        result.dy = r.DWordBE(20);
-        return true;
-    }
-    return false;
-}
-
-static bool TgaSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 16) {
-        result.dx = r.WordLE(12);
-        result.dy = r.WordLE(14);
-        return true;
-    }
-    return false;
-}
-
-static bool Jp2SizeFromData(ByteReader r, Size& result) {
-    int n = r.len;
-    if (n < 32) {
-        return false;
-    }
-    int idx = 0;
-    while (idx < n - 32) {
-        u32 boxLen = r.DWordBE(idx);
-        u32 boxType = r.DWordBE(idx + 4);
-        if (JP2_JP2H == boxType) {
-            idx += 8;
-            u32 boxLen2 = r.DWordBE(idx);
-            u32 boxType2 = r.DWordBE(idx + 4);
-            bool isIhdr = boxType2 == JP2_IHDR;
-            idx += 8;
-            if (isIhdr && boxLen2 <= (boxLen - 8)) {
-                result.dy = r.DWordBE(idx);
-                result.dx = r.DWordBE(idx + 4);
-                if (result.dx > 64 * 1024 || result.dy > 64 * 1024) {
-                    // sanity check, assuming that images that big can't
-                    // possibly be valid
-                    return false;
-                }
-                return true;
-            }
-            break;
-        } else if (boxLen != 0 && (u32)idx < UINT32_MAX - boxLen) {
-            idx += boxLen;
-        } else {
-            break;
-        }
-    }
-    return false;
+    return {};
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 Size ImageSizeFromData(Str d) {
-    Size result;
-    bool ok = false;
-    FileType kind = GuessFileTypeFromContent(d);
-
-    ByteReader r(d);
-    if (kind == FileType::Bmp) {
-        ok = BmpSizeFromData(r, result);
-    } else if (kind == FileType::Gif) {
-        ok = GifSizeFromData(r, result);
-    } else if (kind == FileType::Jpeg) {
-        ok = JpegSizeFromData(r, result);
-        if (ok && ExifOrientationSwapsDimensions(JpegExifOrientation(r))) {
-            std::swap(result.dx, result.dy);
-        }
-    } else if (kind == FileType::Jxr || kind == FileType::Tiff) {
-        ok = TiffSizeFromData(r, result);
-    } else if (kind == FileType::Png) {
-        ok = PngSizeFromData(r, result);
-    } else if (kind == FileType::Tga) {
-        ok = TgaSizeFromData(r, result);
-    } else if (kind == FileType::Webp) {
-        ok = WebpImageSizeFromData(r, result);
-        if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
-            std::swap(result.dx, result.dy);
-        }
-    } else if (kind == FileType::Jp2) {
-        ok = Jp2SizeFromData(r, result);
-    } else if (kind == FileType::Avif || kind == FileType::Heic) {
-        ok = AvifImageSizeFromData(r, result);
-    }
-    if (ok && !result.IsEmpty()) {
+    Size result = ImageSizeNoDecode(d);
+    if (!result.IsEmpty()) {
         return result;
     }
-
     // try expensive way of getting the info by decoding the image
-    // (currently happens for animated GIF)
+    // (e.g. for animated GIF and multi-page TIFF)
     Pixmap* px = PixmapFromDataWin(d);
     if (px) {
         result = Size(px->width, px->height);
@@ -846,40 +608,7 @@ Size ImageSizeFromData(Str d) {
 
 // like ImageSizeFromData but only parses headers, no full decode fallback
 Size ImageSizeFromHeader(Str d) {
-    Size result;
-    bool ok = false;
-    FileType kind = GuessFileTypeFromContent(d);
-
-    ByteReader r(d);
-    if (kind == FileType::Bmp) {
-        ok = BmpSizeFromData(r, result);
-    } else if (kind == FileType::Gif) {
-        ok = GifSizeFromData(r, result);
-    } else if (kind == FileType::Jpeg) {
-        ok = JpegSizeFromData(r, result);
-        if (ok && ExifOrientationSwapsDimensions(JpegExifOrientation(r))) {
-            std::swap(result.dx, result.dy);
-        }
-    } else if (kind == FileType::Jxr || kind == FileType::Tiff) {
-        ok = TiffSizeFromData(r, result);
-    } else if (kind == FileType::Png) {
-        ok = PngSizeFromData(r, result);
-    } else if (kind == FileType::Tga) {
-        ok = TgaSizeFromData(r, result);
-    } else if (kind == FileType::Webp) {
-        ok = WebpImageSizeFromData(r, result);
-        if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
-            std::swap(result.dx, result.dy);
-        }
-    } else if (kind == FileType::Jp2) {
-        ok = Jp2SizeFromData(r, result);
-    } else if (kind == FileType::Avif || kind == FileType::Heic) {
-        ok = AvifImageSizeFromData(r, result);
-    }
-    if (ok && !result.IsEmpty()) {
-        return result;
-    }
-    return {};
+    return ImageSizeNoDecode(d);
 }
 
 CLSID GetGdiPlusEncoderClsid(WStr format) {

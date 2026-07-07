@@ -147,7 +147,7 @@ static bool TryOpenUnrarFallback(Archive*, Str, bool, const ArchiveExtractProgre
 }
 #endif
 
-// hintType is the result of a prior GuessFileTypeFromContent() done
+// hintType is the result of a prior GuessFileTypeFromData() done
 // by the caller. When not Unknown we skip the internal 2 KiB sniff and
 // use it to drive rar-first vs. libarchive routing.
 // eagerLoad = true: decompress every entry at open time and close
@@ -167,7 +167,7 @@ bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExt
         int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
         if (n > 0) {
             Str d = Str((char*)(buf), n);
-            ft = GuessFileTypeFromContent(d);
+            ft = GuessFileTypeFromData(d);
         }
     }
 

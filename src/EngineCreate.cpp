@@ -249,7 +249,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         Str extracted = ExtractP7m(fileData);
         str::Free(fileData);
         if (len(extracted) > 0) {
-            FileType kind = GuessFileTypeFromContent(extracted);
+            FileType kind = GuessFileTypeFromData(extracted);
             if (kind == FileType::PDF) {
                 EngineBase* engine = CreateEngineMupdfFromData(extracted, "file.pdf", pwdUI);
                 str::Free(extracted);
@@ -267,7 +267,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
 
     // try to open with the engine guess from file name; if that fails,
     // guess the file type from content (one disk read inside
-    // GuessFileTypeFromContent) and retry.
+    // GuessFileTypeFromData) and retry.
     FileType kind = GuessFileTypeFromName(path);
 
     // For archive-backed engines (cbx), pre-sniff the content upfront so
