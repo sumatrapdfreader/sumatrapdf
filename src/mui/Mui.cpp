@@ -66,6 +66,9 @@ class ScopedMuiCritSec {
     ~ScopedMuiCritSec() { LeaveMuiLock(); }
 };
 
+static Graphics* AllocGraphicsForMeasureTextNoLock();
+static void FreeGraphicsForMeasureTextNoLock(Graphics* gfx);
+
 class FontListItem {
   public:
     FontListItem(WStr name, float sizePt, FontStyle style, Font* font, HFONT hFont) : next(nullptr) {
@@ -181,9 +184,11 @@ HFONT CachedFont::GetHFont() {
         // TODO: Graphics is probably only used for metrics,
         // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
         // but previous code wasn't much better
-        Graphics* gfx = AllocGraphicsForMeasureText();
+        // NoLock variants: we already hold the mui lock and it's not re-entrant
+        // (an SRWLOCK-based Mutex; re-acquiring self-deadlocks)
+        Graphics* gfx = AllocGraphicsForMeasureTextNoLock();
         Status status = font->GetLogFontW(gfx, &lf);
-        FreeGraphicsForMeasureText(gfx);
+        FreeGraphicsForMeasureTextNoLock(gfx);
         ReportIf(status != Ok);
         hFont = CreateFontIndirectW(&lf);
         ReportIf(!hFont);
@@ -223,9 +228,8 @@ CachedFont* GetCachedFont(WStr name, float sizePt, FontStyle style) {
     return &item->cf;
 }
 
-Graphics* AllocGraphicsForMeasureText() {
-    ScopedMuiCritSec muiCs;
-
+// caller must hold the mui lock (gMuiCs is not re-entrant)
+static Graphics* AllocGraphicsForMeasureTextNoLock() {
     ThreadId threadId = GetCurrentThreadId();
     for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.threadId == threadId) {
@@ -255,9 +259,13 @@ Graphics* AllocGraphicsForMeasureText() {
     return ce.gfx;
 }
 
-void FreeGraphicsForMeasureText(Graphics* gfx) {
+Graphics* AllocGraphicsForMeasureText() {
     ScopedMuiCritSec muiCs;
+    return AllocGraphicsForMeasureTextNoLock();
+}
 
+// caller must hold the mui lock (gMuiCs is not re-entrant)
+static void FreeGraphicsForMeasureTextNoLock(Graphics* gfx) {
     ThreadId threadId = GetCurrentThreadId();
     for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.gfx == gfx) {
@@ -268,6 +276,11 @@ void FreeGraphicsForMeasureText(Graphics* gfx) {
         }
     }
     ReportIf(true);
+}
+
+void FreeGraphicsForMeasureText(Graphics* gfx) {
+    ScopedMuiCritSec muiCs;
+    FreeGraphicsForMeasureTextNoLock(gfx);
 }
 
 } // namespace mui
