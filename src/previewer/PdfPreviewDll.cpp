@@ -14,7 +14,6 @@
 #include "PdfPreview.h"
 #include "SumatraLog.h"
 
-
 long g_lRefCount = 0;
 
 class PreviewClassFactory : public IClassFactory {

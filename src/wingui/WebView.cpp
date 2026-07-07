@@ -16,7 +16,6 @@
 #endif
 #include "wingui/WebView.h"
 
-
 Kind kindWebView = "webView";
 
 #ifndef _MSC_VER

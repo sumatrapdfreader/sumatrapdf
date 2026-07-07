@@ -6,7 +6,6 @@
 
 #include "Settings.h"
 
-
 bool IsSingle(DisplayMode mode) {
     return DisplayMode::SinglePage == mode || DisplayMode::Continuous == mode;
 }

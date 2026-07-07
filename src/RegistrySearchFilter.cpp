@@ -6,7 +6,6 @@
 
 #include "RegistrySearchFilter.h"
 
-
 bool InstallSearchFilter(Str dllPath, bool allUsers) {
     struct {
         Str key;

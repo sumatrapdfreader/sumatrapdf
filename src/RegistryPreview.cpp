@@ -9,7 +9,6 @@
 #include "RegistryPreview.h"
 #include "SumatraLog.h"
 
-
 #define kThumbnailProviderClsid "{e357fccd-a995-4576-b01f-234630154e96}"
 #define kExtractImageClsid "{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"
 #define kPreviewHandlerClsid "{8895b1c6-b41f-4c1c-a562-0d564250836f}"

@@ -17,7 +17,6 @@
 #endif
 #include "SumatraLog.h"
 
-
 long g_lRefCount = 0;
 
 class FilterClassFactory : public IClassFactory {

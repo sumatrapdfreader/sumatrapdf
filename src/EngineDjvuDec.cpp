@@ -486,8 +486,8 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
     }
 
     // 1:1 blit of the visible sub-rect (no resampling)
-    if (srcDx == screen.dx && srcDy == screen.dy && screen.x == full.x && screen.y == full.y &&
-        srcDx == full.dx && srcDy == full.dy) {
+    if (srcDx == screen.dx && srcDy == screen.dy && screen.x == full.x && screen.y == full.y && srcDx == full.dx &&
+        srcDy == full.dy) {
         for (int y = 0; y < screen.dy; y++) {
             const u8* sp = src + (size_t)y * srcDx * comp;
             u8* dst = res->data + (size_t)y * res->stride;

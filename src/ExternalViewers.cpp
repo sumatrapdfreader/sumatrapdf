@@ -17,7 +17,6 @@
 #include "Commands.h"
 #include "Translations.h"
 
-
 struct ExternalViewerInfo {
     Str name; // shown to the user
     int cmdId;

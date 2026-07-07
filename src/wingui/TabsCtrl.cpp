@@ -12,7 +12,6 @@
 
 #include "Theme.h"
 
-
 // Forward declaration - defined in MainWindow.cpp
 struct MainWindow;
 MainWindow* FindMainWindowByHwnd(HWND hwnd);

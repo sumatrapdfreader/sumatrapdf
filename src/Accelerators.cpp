@@ -6,7 +6,6 @@
 #include "Translations.h"
 #include "Commands.h"
 
-
 // http://www.kbdedit.com/manual/low_level_vk_list.html
 // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 // virtual key names: see cmd/gen-code.ts virtKeys (regenerate with bun cmd/gen-code.ts)

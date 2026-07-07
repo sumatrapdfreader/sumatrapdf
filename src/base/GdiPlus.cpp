@@ -20,7 +20,6 @@
 #endif
 #include <wincodec.h>
 
-
 using Gdiplus::Bitmap;
 using Gdiplus::BitmapData;
 using Gdiplus::CharacterRange;

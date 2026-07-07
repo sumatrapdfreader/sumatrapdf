@@ -29,7 +29,6 @@
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
 
-
 // clang-format off
 static i32 gCommandsNoActivate[] = {
     CmdOptions,

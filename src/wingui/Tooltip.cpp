@@ -9,7 +9,6 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-
 //--- Tooltip
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
