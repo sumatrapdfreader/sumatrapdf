@@ -521,8 +521,11 @@ static bool IsWindowOnCurrentDesktop(ISumatraVirtualDesktopManager* vdm, HWND hw
 // the current virtual desktop; if the instance only has windows on other
 // desktops, returns one of them and sets *openInNewWindow so the caller opens
 // the file in a new window (which Windows places on the current desktop),
-// instead of switching to another desktop (#5630).
-static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
+// instead of switching to another desktop (#5630). Returns nullptr if we can't
+// talk to the previous instance (e.g. it runs elevated and we don't), so the
+// caller opens files in this process instead of sending DDE messages that the
+// elevated process would never receive.
+static HWND FindExistingSumatraProcessHwnd(HANDLE* hMutex, bool* openInNewWindow) {
     *openInNewWindow = false;
     // create a unique identifier for this executable and appdata combination
     // (allows independent side-by-side installations)
@@ -563,6 +566,11 @@ Retry:
     prevProcId = *procId;
     UnmapViewOfFile(procId);
     CloseHandle(hMap);
+    // a non-admin process can't send DDE messages to an admin process, so
+    // don't return its window; retrying won't help either
+    if (!CanTalkToProcess(prevProcId)) {
+        return nullptr;
+    }
     {
         // nullptr on Win7 / no virtual desktops -> IsWindowOnCurrentDesktop()
         // returns true for every window, so we reuse the first one as before.
@@ -1147,25 +1155,6 @@ static void ShowNotValidInstallerError() {
     MsgBox(nullptr, _TRA("Not a valid installer"), _TRA("Error"), MB_OK | MB_ICONERROR);
 }
 
-static void ShowNoAdminErrorMessage() {
-    TASKDIALOGCONFIG dialogConfig{};
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_ENABLE_HYPERLINKS;
-    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.cxWidth = 340;
-    dialogConfig.pszWindowTitle = L"SumatraPDF";
-    dialogConfig.pszMainInstruction = L"SumatraPDF is running as admin and cannot open files from a non-admin process";
-    ;
-    dialogConfig.pszContent =
-        LR"(<a href="https://github.com/sumatrapdfreader/sumatrapdf/discussions/2316">Read more about this error</a>)";
-    dialogConfig.nDefaultButton = IDOK;
-    dialogConfig.dwFlags = flags;
-    dialogConfig.pfCallback = TaskdialogHandleLinkscallback;
-    dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
-    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
-
-    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-}
-
 // delete locally cached copies of cbx files that haven't been opened in a
 // while. We cache network-drive cbx archives under <data>/cbx-cache/ to
 // avoid slow re-reads; they're pure cache so evicting cold entries is
@@ -1370,19 +1359,6 @@ static void LayoutAndFocusOnStartup(MainWindow* win) {
     }
     RelayoutWindow(win);
     win->Focus();
-}
-
-// non-admin process cannot send DDE messages to admin process
-// so when that happens we need to alert the user
-// TODO: maybe a better fix is to re-launch ourselves as admin?
-static bool IsNoAdminToAdmin(HWND hPrevWnd) {
-    DWORD otherProcId = 1;
-    GetWindowThreadProcessId(hPrevWnd, &otherProcId);
-    if (CanTalkToProcess(otherProcId)) {
-        return false;
-    }
-    ShowNoAdminErrorMessage();
-    return false;
 }
 
 static int WineDpiFromEnv() {
@@ -2215,8 +2191,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         goto Exit;
     }
 
-    // only call FindPrevInstWindow() once
-    existingInstanceHwnd = FindPrevInstWindow(&hMutex, &openInNewWindow);
+    // only call FindExistingSumatraProcessHwnd() once
+    existingInstanceHwnd = FindExistingSumatraProcessHwnd(&hMutex, &openInNewWindow);
 
     if (flags.printDialog || flags.stressTestPath || gPluginMode || gForTesting) {
         // TODO: pass print request through to previous instance?
@@ -2234,10 +2210,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     if (existingHwnd) {
         int nFiles = len(flags.fileNames);
-        // we allow -new-window on its own if no files given
-        if (nFiles > 0 && IsNoAdminToAdmin(existingHwnd)) {
-            goto Exit;
-        }
         // reusing an instance whose windows are all on other virtual desktops:
         // open the first file in a new window so it lands on the current desktop
         // (#5630). Subsequent files then open into that (now current) window.
