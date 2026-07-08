@@ -15,7 +15,6 @@
 #include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "MarkdownModel.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
@@ -437,9 +436,10 @@ void HideFindBar(MainWindow* win) {
     // be shown or navigated into after the find UI is reopened (e.g. on another
     // tab, which would carry the previous document's page/glyph coordinates)
     ClearFindMatches(win);
-    if (win->AsMarkdown()) {
-        // remove in-page find highlights in the webview (no-op for IE backend)
-        win->AsMarkdown()->FindClear();
+    if (win->ctrl) {
+        // remove in-page find highlights in a chm / markdown webview
+        // (no-op for other document types and the IE backend)
+        win->ctrl->FindClear();
     }
     if (IsFindWindowVisible(win)) {
         HideFindWindow(win);

@@ -57,6 +57,8 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     void OnLButtonDown() override { cm->OnLButtonDown(); }
     Str GetDataForUrl(Str url) override { return cm->GetDataForUrl(url); }
     void DownloadData(Str url, Str data) override { cm->DownloadData(url, data); }
+    void OnFindResult(int gen, int current, int total) override { cm->OnFindResult(gen, current, total); }
+    void OnFindAllResult(Str payload) override { cm->OnFindAllResult(payload); }
 };
 
 struct ChmTocTraceItem {
@@ -85,6 +87,7 @@ ChmModel::~ChmModel() {
     ArenaDelete(poolAlloc);
     str::Free(fileName);
     str::Free(currentPageUrl);
+    str::Free(pendingFindTerm);
 }
 
 Str ChmModel::GetFilePath() const {
@@ -161,6 +164,60 @@ void ChmModel::FindInCurrentPage() const {
     if (docView) {
         docView->FindInCurrentPage();
     }
+}
+
+bool ChmModel::CanFindInPage() const {
+    return docView && docView->CanFindInPage();
+}
+
+void ChmModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) {
+    if (docView) {
+        docView->FindStart(term, matchCase, wholeWord, gen, -1);
+    }
+}
+
+void ChmModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
+    if (!docView) {
+        return;
+    }
+    // pages are internal chm paths; BrowserDocView::FindAllPages prefixes the
+    // virtual host to make them fetchable
+    docView->FindAllPages(pages, term, matchCase, wholeWord, gen);
+}
+
+void ChmModel::FindGoto(int idx) {
+    if (docView) {
+        docView->FindGoto(idx);
+    }
+}
+
+// navigate to pageNo and, once it has loaded, highlight term there and make
+// its idx-th match current (see OnDocumentComplete)
+void ChmModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) {
+    if (!ValidPageNo(pageNo)) {
+        return;
+    }
+    str::ReplaceWithCopy(&pendingFindTerm, term);
+    pendingFindMatchCase = matchCase;
+    pendingFindWholeWord = wholeWord;
+    pendingFindIdx = idx;
+    pendingFindGen = gen;
+    hasPendingFind = true;
+    GoToPage(pageNo, false);
+}
+
+void ChmModel::FindClear() {
+    if (docView) {
+        docView->FindClear();
+    }
+}
+
+void ChmModel::OnFindResult(int gen, int current, int total) {
+    cb->FindResultReceived(gen, current, total);
+}
+
+void ChmModel::OnFindAllResult(Str payload) {
+    cb->FindAllResultReceived(payload);
 }
 
 void ChmModel::SelectAll() const {
@@ -563,6 +620,14 @@ void ChmModel::OnDocumentComplete(Str url) {
 
     if (cb && pageNo > 0) {
         cb->PageNoChanged(this, pageNo);
+    }
+
+    // finish a pending "jump to a match on another page": the fresh document
+    // has no find state, so re-run the search and go to the requested match
+    if (hasPendingFind && docView) {
+        docView->FindStart(pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen, pendingFindIdx);
+        hasPendingFind = false;
+        str::FreePtr(&pendingFindTerm);
     }
 }
 

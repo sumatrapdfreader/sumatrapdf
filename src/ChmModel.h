@@ -57,6 +57,12 @@ struct ChmModel : DocController {
 
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;
+    bool CanFindInPage() const override;
+    void FindStart(Str term, bool matchCase, bool wholeWord, int gen) override;
+    void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) override;
+    void FindGoto(int idx) override;
+    void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) override;
+    void FindClear() override;
     void SelectAll() const;
     void CopySelection() const;
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
@@ -67,6 +73,8 @@ struct ChmModel : DocController {
     void OnLButtonDown();
     Str GetDataForUrl(Str url);
     void DownloadData(Str url, Str data);
+    void OnFindResult(int gen, int current, int total);
+    void OnFindAllResult(Str payload);
 
     static bool IsSupportedFileType(FileType);
 
@@ -93,6 +101,14 @@ struct ChmModel : DocController {
     // set when we already saved scroll pos before a programmatic navigation,
     // so the following OnBeforeNavigate doesn't save it again for the wrong page
     bool skipNextBeforeNavigateScrollSave = false;
+    // pending in-page find to run when the next page finishes loading (set by
+    // GoToPageWithFind when jumping to a match on another page)
+    Str pendingFindTerm; // owned
+    bool pendingFindMatchCase = false;
+    bool pendingFindWholeWord = false;
+    int pendingFindIdx = -1;
+    int pendingFindGen = 0;
+    bool hasPendingFind = false;
     // per-url remembered scroll positions (parallel arrays)
     StrVec htmlScrollUrls;
     Vec<PointF> htmlScrollPositions;

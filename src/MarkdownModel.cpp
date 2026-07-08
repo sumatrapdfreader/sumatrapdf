@@ -258,13 +258,13 @@ bool MarkdownModel::CanFindInPage() const {
     return docView && docView->CanFindInPage();
 }
 
-void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) const {
+void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) {
     if (docView) {
         docView->FindStart(term, matchCase, wholeWord, gen, -1);
     }
 }
 
-void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) const {
+void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
     if (!docView) {
         return;
     }
@@ -275,7 +275,7 @@ void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int g
     docView->FindAllPages(urls, term, matchCase, wholeWord, gen);
 }
 
-void MarkdownModel::FindGoto(int idx) const {
+void MarkdownModel::FindGoto(int idx) {
     if (docView) {
         docView->FindGoto(idx);
     }
@@ -293,7 +293,7 @@ void MarkdownModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool 
     GoToPage(pageNo, false);
 }
 
-void MarkdownModel::FindClear() const {
+void MarkdownModel::FindClear() {
     if (docView) {
         docView->FindClear();
     }

@@ -47,12 +47,12 @@ struct MarkdownModel : DocController {
 
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;
-    bool CanFindInPage() const;
-    void FindStart(Str term, bool matchCase, bool wholeWord, int gen) const;
-    void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) const;
-    void FindGoto(int idx) const;
-    void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen);
-    void FindClear() const;
+    bool CanFindInPage() const override;
+    void FindStart(Str term, bool matchCase, bool wholeWord, int gen) override;
+    void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) override;
+    void FindGoto(int idx) override;
+    void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) override;
+    void FindClear() override;
     void OnFindResult(int gen, int current, int total);
     void OnFindAllResult(Str payload);
     void SelectAll() const;

@@ -936,9 +936,9 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void FocusFrame(bool always) override;
     void SaveDownload(Str url, Str) override;
     void FindResultReceived(int gen, int current, int total) override {
-        MdFindResultReceived(win, gen, current, total);
+        BrowserFindResultReceived(win, gen, current, total);
     }
-    void FindAllResultReceived(Str payload) override { MdFindAllResultReceived(win, payload); }
+    void FindAllResultReceived(Str payload) override { BrowserFindAllResultReceived(win, payload); }
 };
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {

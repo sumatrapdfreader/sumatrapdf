@@ -62,10 +62,10 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
 // free the cached per-match snippets (win->findMatches)
 void ClearFindMatches(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearch::Direction direction);
-// in-page find result posted by a markdown webview: update the find bar status
-void MdFindResultReceived(MainWindow* win, int gen, int current, int total);
-// all-pages find result posted by a markdown webview: rebuild win->findMatches
-void MdFindAllResultReceived(MainWindow* win, Str payload);
+// in-page find result posted by a chm / markdown webview: update the find bar status
+void BrowserFindResultReceived(MainWindow* win, int gen, int current, int total);
+// all-pages find result posted by a chm / markdown webview: rebuild win->findMatches
+void BrowserFindAllResultReceived(MainWindow* win, Str payload);
 bool AbortFinding(MainWindow* win, bool hideMessage);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress);

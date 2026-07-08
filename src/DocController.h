@@ -77,6 +77,15 @@ struct DocController {
     virtual float GetNextZoomStep(float towards) const = 0;
     virtual void SetViewPortSize(Size size) = 0;
 
+    // in-page find in an embedded browser view (ChmModel, MarkdownModel with
+    // a WebView2 backend); see SearchAndDDE.cpp BrowserFind* and BrowserDocView
+    virtual bool CanFindInPage() const { return false; }
+    virtual void FindStart(Str, bool, bool, int) {}
+    virtual void FindAllPages(Str, bool, bool, int) {}
+    virtual void FindGoto(int) {}
+    virtual void GoToPageWithFind(int, Str, bool, bool, int, int) {}
+    virtual void FindClear() {}
+
     // table of contents
     bool HasToc() {
         auto* tree = GetToc();

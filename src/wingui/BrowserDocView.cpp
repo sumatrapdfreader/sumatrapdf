@@ -621,8 +621,13 @@ void BrowserDocView::FindStart(Str term, bool matchCase, bool wholeWord, int gen
     TempStr esc = JsEscapeTemp(term);
     Str sTrue = StrL("true");
     Str sFalse = StrL("false");
-    TempStr js = fmt("window.__sumatraFind && __sumatraFind.start('%s', %s, %s, %d, %d);", esc,
-                     matchCase ? sTrue : sFalse, wholeWord ? sTrue : sFalse, gen, gotoIdx);
+    // no {} in the js passed to fmt(): it would parse them as positional args.
+    // if the injected script is somehow missing, post a diagnostic message
+    // that the default OnBrowserMessage() handler logs
+    TempStr js =
+        fmt("window.__sumatraFind ? __sumatraFind.start('%s', %s, %s, %d, %d) : "
+            "window.chrome.webview.postMessage('mdfind-missing');",
+            esc, matchCase ? sTrue : sFalse, wholeWord ? sTrue : sFalse, gen, gotoIdx);
     wv->Eval(js);
 }
 
@@ -639,8 +644,17 @@ void BrowserDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCa
         if (i > 0) {
             js.AppendChar(',');
         }
+        // page urls may be internal document paths (e.g. chm pages); prefix
+        // the virtual host like NavigateToDataUrl() does to make them fetchable
+        TempStr fullUrl = pageUrls.At(i);
+        if (!str::StartsWith(fullUrl, virtualHost)) {
+            if (len(fullUrl) > 0 && fullUrl.s[0] == '/') {
+                fullUrl = Str(fullUrl.s + 1, fullUrl.len - 1);
+            }
+            fullUrl = str::JoinTemp(virtualHost, fullUrl);
+        }
         js.AppendChar('\'');
-        js.Append(JsEscapeTemp(pageUrls.At(i)));
+        js.Append(JsEscapeTemp(fullUrl));
         js.AppendChar('\'');
     }
     TempStr esc = JsEscapeTemp(term);
