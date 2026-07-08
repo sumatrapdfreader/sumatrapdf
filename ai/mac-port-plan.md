@@ -104,7 +104,6 @@ stray `#include` of a Win32 header, guarded by `#if OS_WIN`).
 | `TextSelection.{cpp,h}` | selection model over engine text |
 | `TextSearch.{cpp,h}` | search algorithm over engine text |
 | `Annotation.{cpp,h}` | annotation data model |
-| `PdfSync.cpp` | SyncTeX forward/inverse-search parsing |
 | `EngineCreate.cpp` | file-type → engine factory |
 | `HtmlFormatter.cpp`, `EbookFormatter.cpp`, `EngineEbook.cpp` | ebook layout (font metrics already behind a `#if OS_WIN` include) |
 | `GlobalPrefs.cpp`, `Settings.{h,cpp}` (generated) | settings structs + (de)serialization (`COLORREF` = `u32`) |
@@ -179,6 +178,10 @@ wanted.
 - `CrashHandler.cpp` (DbgHelp/minidump) — mac uses the existing
   `CrashHandlerNoOp.cpp` stub initially; a real mac crash reporter is optional
   later (signals + `backtrace()`).
+- `PdfSync.cpp` / SyncTeX forward/inverse search — deferred for the current mac
+  viewer work. It is useful for TeX workflows, but not needed for opening,
+  rendering, scrolling, selection, or search. Keep it Windows-only until TeX
+  integration becomes a mac feature target.
 - `ExternalViewers.cpp` MAPI + registry lookups — mac equivalent is
   `NSWorkspace`/LaunchServices, a separate `_mac` implementation.
 - DDE + `WM_COPYDATA` single-instance IPC, plugin embedding
@@ -263,7 +266,9 @@ is independently shippable and keeps both platforms building.
 
 **Phase 1 — portable document model**
 - Add tier-A model files to `MAC_APP_SOURCES`: `DisplayModel`, `TextSelection`,
-  `TextSearch`, `Annotation`, `PdfSync`, `DisplayMode`, `DocProperties`.
+  `TextSearch`, `Annotation`, `DisplayMode`, `DocProperties`.
+- Do not spend current porting time on `PdfSync.cpp` / SyncTeX; it is deferred
+  until mac TeX integration is explicitly in scope.
 - Introduce the `RenderCache` seam (cache `Pixmap*`, callback-based `Paint`) and
   compile it on mac.
 - **Milestone:** headless test that drives `DisplayModel` + `RenderCache`
@@ -340,7 +345,7 @@ UIA, DDE, plugin/embedding, Win32 crash minidumps.
 ## 9. Summary of decisions
 
 - **Portable (both platforms):** all of `base/`, engines, the document model
-  (`DisplayModel`, `TextSelection`, `TextSearch`, `Annotation`, `PdfSync`,
+  (`DisplayModel`, `TextSelection`, `TextSearch`, `Annotation`,
   `DisplayMode`, `DocProperties`, `DocController`), app logic (`Settings`,
   `GlobalPrefs`, `Commands`, `CommandAvailability`, `Flags`, `FileHistory`,
   `Favorites` data, `Translations`, `Theme` data, `Accelerators` data,
@@ -355,7 +360,7 @@ UIA, DDE, plugin/embedding, Win32 crash minidumps.
   message-loop/window-lifecycle halves of `SumatraPDF.cpp`/`SumatraStartup.cpp`.
 - **Windows-only, stays Windows-only:** crash minidumps, DDE/IPC, plugin
   embedding, `WinMain`, registry, installer, IFilter, preview handler, UIA,
-  Win32 printing.
+  Win32 printing, and `PdfSync` / SyncTeX until mac TeX integration is needed.
 
 The linchpin is the already-existing `DocController` / `DocControllerCallback`
 seam plus portable `Pixmap` output: they let the entire model layer move to macOS
