@@ -7,6 +7,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/Dpi.h"
+#include "base/Timer.h"
 
 #include "Notifications.h"
 #include "AppTools.h"
@@ -517,8 +518,67 @@ static void FreeCapturedScreenshots(ScreenshotOverlayData* data) {
     data->captures.Reset();
 }
 
+// one capture target; the result lands in cs (cs.bmp stays null on failure)
+struct CaptureItem {
+    HWND hwnd = nullptr; // nullptr: capture the desktop
+    bool done = false;
+    CapturedScreenshot cs;
+};
+
+struct CaptureCtx {
+    Vec<CaptureItem>* items = nullptr;
+    AtomicInt nextIdx;
+    AtomicInt captureMs; // aggregate PrintWindow/BitBlt time across items
+    AtomicInt thumbMs;   // aggregate thumbnail scaling time across items
+};
+
+static void CaptureOneItem(CaptureCtx* ctx, CaptureItem* item) {
+    auto t = TimeGet();
+    CapturedScreenshot& cs = item->cs;
+    if (!item->hwnd) {
+        HBITMAP hbm = CaptureDesktop();
+        if (!hbm) {
+            return;
+        }
+        cs.bmp = hbm;
+        cs.origW = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        cs.origH = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        cs.processName = str::Dup(StrL("desktop"));
+    } else {
+        int w = 0, h = 0;
+        HBITMAP hbm = CaptureWindowBmp(item->hwnd, &w, &h);
+        if (!hbm) {
+            return;
+        }
+        cs.bmp = hbm;
+        cs.srcHwnd = item->hwnd;
+        cs.origW = w;
+        cs.origH = h;
+        TempStr procName = GetWindowProcessNameTemp(item->hwnd);
+        cs.processName = procName ? str::Dup(procName) : str::Dup(StrL("unknown"));
+    }
+    AtomicIntAdd(&ctx->captureMs, (int)TimeSinceInMs(t));
+    t = TimeGet();
+    cs.thumb = CreateThumbnail(cs.bmp, cs.origW, cs.origH, &cs.thumbW, &cs.thumbH);
+    AtomicIntAdd(&ctx->thumbMs, (int)TimeSinceInMs(t));
+}
+
+static void CaptureWorker(CaptureCtx* ctx) {
+    int n = len(*ctx->items);
+    for (;;) {
+        int i = AtomicIntInc(&ctx->nextIdx) - 1;
+        if (i >= n) {
+            return;
+        }
+        CaptureItem* item = &(*ctx->items)[i];
+        if (!item->done) {
+            CaptureOneItem(ctx, item);
+        }
+    }
+}
+
 struct EnumCaptureCtx {
-    Vec<CapturedScreenshot>* captures;
+    Vec<CaptureItem>* items;
     HWND overlayHwnd;
 };
 
@@ -527,44 +587,83 @@ static BOOL CALLBACK EnumCaptureWindowsProc(HWND hwnd, LPARAM lParam) {
     if (!ShouldCaptureWindow(hwnd, ctx->overlayHwnd)) {
         return TRUE;
     }
-    int w = 0, h = 0;
-    HBITMAP hbm = CaptureWindowBmp(hwnd, &w, &h);
-    if (!hbm) {
-        return TRUE;
-    }
-
-    CapturedScreenshot cs;
-    cs.bmp = hbm;
-    cs.srcHwnd = hwnd;
-    cs.origW = w;
-    cs.origH = h;
-    cs.thumb = CreateThumbnail(hbm, w, h, &cs.thumbW, &cs.thumbH);
-    TempStr procName = GetWindowProcessNameTemp(hwnd);
-    cs.processName = procName ? str::Dup(procName) : str::Dup(StrL("unknown"));
-    ctx->captures->Append(cs);
+    CaptureItem item;
+    item.hwnd = hwnd;
+    ctx->items->Append(item);
     return TRUE;
 }
 
+// capturing + thumbnailing each window is independent and dominated by
+// PrintWindow / StretchBlt, so run the items on a small thread pool
 static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd) {
-    // Desktop first
-    HBITMAP hbmDesktop = CaptureDesktop();
-    if (hbmDesktop) {
-        int dw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        int dh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        CapturedScreenshot cs;
-        cs.bmp = hbmDesktop;
-        cs.origW = dw;
-        cs.origH = dh;
-        cs.thumb = CreateThumbnail(hbmDesktop, dw, dh, &cs.thumbW, &cs.thumbH);
-        cs.processName = str::Dup(StrL("desktop"));
-        data->captures.Append(cs);
+    auto timeStart = TimeGet();
+
+    // collect capture targets; item 0 is the desktop
+    Vec<CaptureItem> items;
+    {
+        CaptureItem item;
+        items.Append(item);
+    }
+    EnumCaptureCtx ectx;
+    ectx.items = &items;
+    ectx.overlayHwnd = overlayHwnd;
+    EnumWindows(EnumCaptureWindowsProc, (LPARAM)&ectx);
+    int nItems = len(items);
+
+    CaptureCtx ctx;
+    ctx.items = &items;
+    AtomicIntSet(&ctx.nextIdx, 0);
+    AtomicIntSet(&ctx.captureMs, 0);
+    AtomicIntSet(&ctx.thumbMs, 0);
+
+    // capture our own windows on this thread first: PrintWindow can message
+    // the window's owning thread (us), which would deadlock while we're
+    // blocked waiting for the pool below
+    DWORD myProcId = GetCurrentProcessId();
+    for (int i = 0; i < nItems; i++) {
+        CaptureItem& item = items[i];
+        if (!item.hwnd) {
+            continue;
+        }
+        DWORD procId = 0;
+        GetWindowThreadProcessId(item.hwnd, &procId);
+        if (procId == myProcId) {
+            CaptureOneItem(&ctx, &item);
+            item.done = true;
+        }
     }
 
-    // Individual windows
-    EnumCaptureCtx ctx;
-    ctx.captures = &data->captures;
-    ctx.overlayHwnd = overlayHwnd;
-    EnumWindows(EnumCaptureWindowsProc, (LPARAM)&ctx);
+    // measured (8-window desktop): 1 thread 186 ms, 2: 140, 3: 125, 4: 130,
+    // 6: 134, 8: 136. PrintWindow serializes inside DWM, so per-window
+    // captures slow each other down and gains saturate at ~3 threads
+    int numThreads = std::min(CpuCoreCount() - 2, 4);
+    if (numThreads > nItems) {
+        numThreads = nItems;
+    }
+    if (numThreads <= 1) {
+        CaptureWorker(&ctx);
+    } else {
+        Vec<ThreadHandle> threads;
+        for (int t = 0; t < numThreads; t++) {
+            auto fn = MkFunc0(CaptureWorker, &ctx);
+            threads.Append(StartThread(fn, "ScreenshotCapture"));
+        }
+        for (ThreadHandle h : threads) {
+            WaitForSingleObject(h, INFINITE);
+            SafeCloseThreadHandle(&h);
+        }
+    }
+
+    // keep successful captures, in enumeration order (desktop first)
+    for (int i = 0; i < nItems; i++) {
+        if (items[i].cs.bmp) {
+            data->captures.Append(items[i].cs);
+        }
+    }
+
+    logf("CaptureAllScreenshots: %d windows in %.1f ms (%d threads; capture %d ms, thumbs %d ms aggregate)\n",
+         len(data->captures), TimeSinceInMs(timeStart), numThreads, AtomicIntGet(&ctx.captureMs),
+         AtomicIntGet(&ctx.thumbMs));
 }
 
 // Compute grid layout and overlay window size
