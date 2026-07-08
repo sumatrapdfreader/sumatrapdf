@@ -4,17 +4,33 @@
 #ifndef SumatraMacEngine_h
 #define SumatraMacEngine_h
 
+// Plain C bridge between the Cocoa app (SumatraMac.mm) and the C++ engine/base
+// layer. Cocoa files must not include base/Base.h (Apple headers define names
+// like Size that clash with Sumatra types), so all engine access goes through
+// this header.
+
 struct MacRenderedPage {
     int width;
     int height;
     int stride;
     bool premultiplied;
     unsigned char* data;
-    char* error;
-    void* document;
 };
 
-bool MacOpenDocument(const char* path, MacRenderedPage* page);
+// Opens a document. Returns an opaque handle, or nullptr on failure; on failure
+// *errorOut (if non-null) is set to a malloc'd message the caller must free().
+void* MacOpenDocument(const char* path, char** errorOut);
+
+// Number of pages, or 0 if the handle is invalid.
+int MacPageCount(void* document);
+
+// Mediabox size of pageNo (1-based) in points. Returns false if invalid.
+bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut);
+
+// Renders pageNo (1-based) at the given zoom and rotation (0/90/180/270).
+// Fills *page (caller frees with MacFreeRenderedPage); returns false on failure.
+bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page);
+
 void MacFreeRenderedPage(MacRenderedPage* page);
 void MacCloseDocument(void* document);
 void MacShutdown();

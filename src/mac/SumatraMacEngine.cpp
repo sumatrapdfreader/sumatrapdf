@@ -58,14 +58,12 @@ static char* DupCString(const char* s) {
 
 static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
     if (!pixmap || !pixmap->data || pixmap->format != PixmapFormat::BGRA8) {
-        page->error = DupCString("Could not render the first page.");
         return false;
     }
 
     size_t nBytes = (size_t)pixmap->stride * (size_t)pixmap->height;
     auto* data = (unsigned char*)malloc(nBytes);
     if (!data) {
-        page->error = DupCString("Out of memory.");
         return false;
     }
 
@@ -78,37 +76,77 @@ static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
     return true;
 }
 
-bool MacOpenDocument(const char* path, MacRenderedPage* page) {
-    *page = {};
+void* MacOpenDocument(const char* path, char** errorOut) {
     if (!path || !path[0]) {
-        page->error = DupCString("Pass a document path on the command line.");
-        return false;
+        if (errorOut) {
+            *errorOut = DupCString("Pass a document path on the command line.");
+        }
+        return nullptr;
     }
 
     EngineBase* engine = CreateEngineForPath(Str((char*)path));
     if (!engine) {
-        page->error = DupCString("Could not open the document.");
-        return false;
+        if (errorOut) {
+            *errorOut = DupCString("Could not open the document.");
+        }
+        return nullptr;
     }
-
-    int pageCount = engine->PageCount();
-    if (pageCount < 1) {
+    if (engine->PageCount() < 1) {
         engine->Release();
-        page->error = DupCString("Document has no pages.");
+        if (errorOut) {
+            *errorOut = DupCString("Document has no pages.");
+        }
+        return nullptr;
+    }
+    return engine;
+}
+
+int MacPageCount(void* document) {
+    if (!document) {
+        return 0;
+    }
+    return ((EngineBase*)document)->PageCount();
+}
+
+bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut) {
+    if (!document) {
         return false;
     }
+    auto* engine = (EngineBase*)document;
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
+        return false;
+    }
+    RectF mb = engine->PageMediabox(pageNo);
+    if (widthOut) {
+        *widthOut = mb.dx;
+    }
+    if (heightOut) {
+        *heightOut = mb.dy;
+    }
+    return true;
+}
 
-    RenderPageArgs renderArgs(1, 1.0f, 0);
+bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page) {
+    if (!page) {
+        return false;
+    }
+    *page = {};
+    if (!document) {
+        return false;
+    }
+    auto* engine = (EngineBase*)document;
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
+        return false;
+    }
+    if (zoom <= 0) {
+        zoom = 1.0f;
+    }
+
+    RenderPageArgs renderArgs(pageNo, zoom, rotation);
     Pixmap* pixmap = engine->RenderPage(renderArgs);
     bool ok = CopyPixmap(pixmap, page);
     FreePixmap(pixmap);
-    if (!ok) {
-        engine->Release();
-        return false;
-    }
-
-    page->document = engine;
-    return true;
+    return ok;
 }
 
 void MacFreeRenderedPage(MacRenderedPage* page) {
@@ -116,17 +154,14 @@ void MacFreeRenderedPage(MacRenderedPage* page) {
         return;
     }
     free(page->data);
-    free(page->error);
     page->data = nullptr;
-    page->error = nullptr;
 }
 
 void MacCloseDocument(void* document) {
     if (!document) {
         return;
     }
-    auto* engine = (EngineBase*)document;
-    engine->Release();
+    ((EngineBase*)document)->Release();
 }
 
 void MacShutdown() {
