@@ -735,14 +735,8 @@ bool MarkdownModel::Load(Str fileName) {
         MarkdownFileToc& ft = fileTocs[i];
         int pageNo = i + 1;
         TempStr pageUrl = FileToVirtualUrlTemp(ft.filePath);
+        // first-level items show the full file name, extension included
         Str fileTitle = str::Dup(poolAlloc, path::GetBaseNameTemp(ft.filePath));
-        if (i != 0) {
-            if (str::EndsWithI(fileTitle, StrL(".markdown"))) {
-                fileTitle.len -= 9;
-            } else if (str::EndsWithI(fileTitle, StrL(".md"))) {
-                fileTitle.len -= 3;
-            }
-        }
 
         MarkdownTocTraceItem fileItem;
         fileItem.title = fileTitle;
