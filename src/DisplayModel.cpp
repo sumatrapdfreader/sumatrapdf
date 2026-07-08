@@ -51,6 +51,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
+#include "DocumentLayout.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -492,6 +493,25 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
     return pi;
 }
 
+static DocumentLayoutMargin ToDocumentLayoutMargin(WindowMargin margin) {
+    return {margin.top, margin.right, margin.bottom, margin.left};
+}
+
+static void CopyDocumentLayoutToPageInfo(const DisplayModel* dm, const DocumentLayout& layout) {
+    for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+        PageInfo* pageInfo = dm->GetPageInfo(pageNo);
+        const DocumentLayoutPage* page = layout.GetPage(pageNo);
+        if (!pageInfo || !page) {
+            continue;
+        }
+        pageInfo->pos = page->pos;
+        pageInfo->visibleRatio = page->visibleRatio;
+        pageInfo->pageOnScreen = page->pageOnScreen;
+        pageInfo->zoomReal = page->zoomReal;
+        pageInfo->isShown = page->isShown;
+    }
+}
+
 // Call this before the first Relayout
 void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, Size viewPort, int screenDPI) {
     totalViewPortSize = viewPort;
@@ -850,198 +870,63 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     bool needHScroll = false;
     bool needVScroll = false;
     viewPort = Rect(viewPort.TL(), totalViewPortSize);
-
-RestartLayout:
-    int currPosY = windowMargin.top;
-    float currZoomReal = zoomReal;
-    CalcZoomReal(newZoomVirtual);
-
-    int newViewPortOffsetX = 0;
-    if (0 != currZoomReal && kInvalidZoom != currZoomReal) {
-        newViewPortOffsetX = (int)(viewPort.x * zoomReal / currZoomReal);
-    }
-    viewPort.x = newViewPortOffsetX;
-    /* calculate the position of each page on the canvas, given current zoom,
-       rotation, columns parameters. You can think of it as a simple
-       table layout i.e. rows with a fixed number of columns. */
-    int columns = ColumnsFromDisplayMode(GetDisplayMode());
-    int columnMaxWidth[2] = {0, 0};
-    int pageInARow = 0;
-    int rowMaxPageDy = 0;
     bool hideScrollbars = ScrollbarsAreHidden();
     bool useOverlayScrollbar = ScrollbarsUseOverlay();
-    int nPages = PageCount();
-    for (int pageNo = 1; pageNo <= nPages; ++pageNo) {
-        PageInfo* pi = GetPageInfo(pageNo);
-        if (!pi->isShown) {
-            // ReportIf(0.0 != pageInfo->visibleRatio);
-            continue;
+
+    DocumentLayout layout;
+    for (;;) {
+        float currZoomReal = zoomReal;
+        CalcZoomReal(newZoomVirtual);
+
+        int newViewPortOffsetX = 0;
+        if (0 != currZoomReal && kInvalidZoom != currZoomReal) {
+            newViewPortOffsetX = (int)(viewPort.x * zoomReal / currZoomReal);
         }
-        SizeF pageSize = PageSizeAfterRotation(pageNo);
-        Rect pos;
-        // don't add the full 0.5 for rounding to account for precision errors
-        float zoom = GetZoomReal(pageNo);
-        pos.dx = (int)(pageSize.dx * zoom + 0.499);
-        pos.dy = (int)(pageSize.dy * zoom + 0.499);
+        viewPort.x = newViewPortOffsetX;
 
-        if (rowMaxPageDy < pos.dy) {
-            rowMaxPageDy = pos.dy;
-        }
-        pos.y = currPosY;
-
-        // restart the layout if we detect we need to show scrollbars, skip if
-        //   scrollbars are being hidden or if `needVScroll` has already been
-        //   set to true (i.e., the block has been processed)
-        if ((!hideScrollbars && !useOverlayScrollbar) && (!needVScroll) && viewPort.dy < currPosY + rowMaxPageDy) {
-            needVScroll = true;
-            viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
-            goto RestartLayout;
-        }
-
-        if (IsBookView(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1) {
-            pageInARow++;
-        }
-        ReportIf(pageInARow >= dimofi(columnMaxWidth));
-        if (columnMaxWidth[pageInARow] < pos.dx) {
-            columnMaxWidth[pageInARow] = pos.dx;
-        }
-
-        // restart the layout if we detect we need to show scrollbars, skip if
-        //   scrollbars are being hidden or if `needHScroll` has already been
-        //   set to true (i.e., the block has been processed)
-        if ((!hideScrollbars && !useOverlayScrollbar) && (!needHScroll) &&
-            viewPort.dx < windowMargin.left + columnMaxWidth[0] +
-                              (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) + windowMargin.right) {
-            needHScroll = true;
-            viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
-            goto RestartLayout;
-        }
-
-        pi->pos = pos;
-
-        pageInARow++;
-        ReportIf(pageInARow > columns);
-        if (pageInARow == columns) {
-            /* starting next row */
-            currPosY += rowMaxPageDy + pageSpacing.dy;
-            rowMaxPageDy = 0;
-            pageInARow = 0;
-        }
-    }
-
-    if (pageInARow != 0) {
-        /* this is a partial row */
-        currPosY += rowMaxPageDy + pageSpacing.dy;
-    }
-    // restart the layout if we detect we need to show scrollbars
-    // (there are some edge cases we can't catch in the above loop)
-    int canvasDy = currPosY + windowMargin.bottom - pageSpacing.dy;
-    if ((!hideScrollbars && !useOverlayScrollbar) && (!needVScroll) && canvasDy > viewPort.dy) {
-        needVScroll = true;
-        viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
-        goto RestartLayout;
-    }
-
-    if (columns == 2 && PageCount() == 1) {
-        /* don't center a single page over two columns */
-        if (IsBookView(GetDisplayMode())) {
-            columnMaxWidth[0] = columnMaxWidth[1];
-        } else {
-            columnMaxWidth[1] = columnMaxWidth[0];
-        }
-    }
-
-    // restart the layout if we detect we need to show scrollbars
-    // (there are some edge cases we can't catch in the above loop)
-    int canvasDx = windowMargin.left + columnMaxWidth[0] + (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) +
-                   windowMargin.right;
-    if ((!hideScrollbars && !useOverlayScrollbar) && (!needHScroll) && canvasDx > viewPort.dx) {
-        needHScroll = true;
-        viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
-        goto RestartLayout;
-    }
-
-    /* since pages can be smaller than the drawing area, center them in x axis */
-    int offX = 0;
-    if (canvasDx < viewPort.dx) {
-        viewPort.x = 0;
-        offX = (viewPort.dx - canvasDx) / 2;
-        canvasDx = viewPort.dx;
-    }
-
-    ReportIf(offX < 0);
-    pageInARow = 0;
-    int pageOffX = offX + windowMargin.left;
-    int nPages2 = PageCount();
-    for (int pageNo = 1; pageNo <= nPages2; ++pageNo) {
-        if (!pagesInfo[pageNo - 1].isShown) {
-            continue;
-        }
-        PageInfo* pageInfo = GetPageInfo(pageNo);
-        // leave first spot empty in cover page mode
-        if (IsBookView(GetDisplayMode()) && pageNo == 1) {
-            ReportIf(pageInARow >= dimofi(columnMaxWidth));
-            pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
-            ++pageInARow;
-        }
-        ReportIf(pageInARow >= dimofi(columnMaxWidth));
-        // center pages in a single column but right/left align them when using two columns
-        if (1 == columns) {
-            pageInfo->pos.x = pageOffX + (columnMaxWidth[0] - pageInfo->pos.dx) / 2;
-        } else if (0 == pageInARow) {
-            pageInfo->pos.x = pageOffX + columnMaxWidth[0] - pageInfo->pos.dx;
-        } else {
-            pageInfo->pos.x = pageOffX;
-        }
-        // center the cover page over the first two spots in non-continuous mode
-        if (IsBookView(GetDisplayMode()) && pageNo == 1 && !IsContinuous(GetDisplayMode())) {
-            pageInfo->pos.x = offX + windowMargin.left +
-                              (columnMaxWidth[0] + pageSpacing.dx + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
-        }
-        // mirror the page layout when displaying a Right-to-Left document
-        if (displayR2L && columns > 1) {
-            pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
-        }
-
-        ReportIf(pageInARow >= dimofi(columnMaxWidth));
-        pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
-        ++pageInARow;
-        ReportIf(!(pageOffX >= 0 && pageInfo->pos.x >= 0));
-
-        if (pageInARow == columns) {
-            pageOffX = offX + windowMargin.left;
-            pageInARow = 0;
-        }
-    }
-
-    /* if after resizing we would have blank space on the right due to x offset
-       being too much, make x offset smaller so that there's no blank space */
-    if (viewPort.dx - (canvasDx - newViewPortOffsetX) > 0) {
-        viewPort.x = canvasDx - viewPort.dx;
-    }
-
-    /* if a page is smaller than drawing area in y axis, y-center the page */
-    if (canvasDy < viewPort.dy) {
-        int offY = windowMargin.top + (viewPort.dy - canvasDy) / 2;
-        ReportIf(offY < 0.0);
-        for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
-            if (!pagesInfo[pageNo - 1].isShown) {
+        layout.Reset(PageCount());
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            DocumentLayoutPage* layoutPage = layout.GetPage(pageNo);
+            if (!layoutPage || !PageShown(pageNo)) {
                 continue;
             }
-            PageInfo* pageInfo = GetPageInfo(pageNo);
-            pageInfo->pos.y += offY;
+            layoutPage->mediaBox = PageMediaBox(pageNo);
+            layoutPage->zoomReal = GetZoomReal(pageNo);
         }
+
+        DocumentLayoutParams params;
+        params.displayMode = displayMode;
+        params.startPage = startPage;
+        params.viewPortSize = viewPort.Size();
+        params.viewPortOffset = viewPort.TL();
+        params.zoomVirtual = zoomVirtual;
+        params.dpiFactor = dpiFactor;
+        params.rotation = rotation;
+        params.displayR2L = displayR2L;
+        params.usePageZooms = true;
+        params.windowMargin = ToDocumentLayoutMargin(windowMargin);
+        params.pageSpacing = pageSpacing;
+        layout.Relayout(params);
+
+        if (!hideScrollbars && !useOverlayScrollbar && !needVScroll && layout.canvasSize.dy > layout.viewPort.dy) {
+            needVScroll = true;
+            viewPort = layout.viewPort;
+            viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
+            continue;
+        }
+        if (!hideScrollbars && !useOverlayScrollbar && !needHScroll && layout.canvasSize.dx > layout.viewPort.dx) {
+            needHScroll = true;
+            viewPort = layout.viewPort;
+            viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
+            continue;
+        }
+        break;
     }
 
-    // for kZoomFitPage in single-page modes, clamp canvas to viewport to avoid
-    // 1px scrollbar from floating point rounding in zoom calculation.
-    // Don't clamp in continuous modes where canvasDy spans all pages.
-    // (kZoomFitContent intentionally overflows because content box != full page)
-    if (zoomVirtual == kZoomFitPage && !IsContinuous(displayMode)) {
-        canvasDy = std::min(canvasDy, viewPort.dy);
-        canvasDx = std::min(canvasDx, viewPort.dx);
-    }
-    canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
+    viewPort = layout.viewPort;
+    canvasSize = layout.canvasSize;
+    zoomReal = layout.zoomReal;
+    CopyDocumentLayoutToPageInfo(this, layout);
 }
 
 void DisplayModel::ChangeStartPage(int newStartPage) {
@@ -1077,24 +962,21 @@ void DisplayModel::RecalcVisibleParts() const {
         return;
     }
 
+    DocumentLayout layout;
+    layout.Reset(PageCount());
+    layout.viewPort = viewPort;
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
-        if (!pagesInfo[pageNo - 1].isShown) {
+        DocumentLayoutPage* layoutPage = layout.GetPage(pageNo);
+        PageInfo* pageInfo = GetPageInfo(pageNo);
+        if (!layoutPage || !pageInfo) {
             continue;
         }
-        PageInfo* pageInfo = GetPageInfo(pageNo);
-
-        Rect pageRect = pageInfo->pos;
-        Rect visiblePart = pageRect.Intersect(viewPort);
-
-        pageInfo->visibleRatio = 0.0;
-        if (!visiblePart.IsEmpty()) {
-            ReportIf(pageRect.dx <= 0 || pageRect.dy <= 0);
-            // calculate with floating point precision to prevent an integer overflow
-            pageInfo->visibleRatio = 1.0f * visiblePart.dx * visiblePart.dy / ((float)pageRect.dx * pageRect.dy);
-        }
-        pageInfo->pageOnScreen = pageRect;
-        pageInfo->pageOnScreen.Offset(-viewPort.x, -viewPort.y);
+        layoutPage->pos = pageInfo->pos;
+        layoutPage->isShown = pageInfo->isShown;
+        layoutPage->zoomReal = pageInfo->zoomReal;
     }
+    layout.RecalcVisibleParts();
+    CopyDocumentLayoutToPageInfo(this, layout);
 }
 
 int DisplayModel::GetPageNoByPoint(Point pt) const {

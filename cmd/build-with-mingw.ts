@@ -261,6 +261,7 @@ const sumatraFiles: FileGroup[] = [
       "CommandPalette.*",
       "CrashHandler.*",
       "DisplayModel.*",
+      "DocumentLayout.*",
       "DisplayMode.*",
       "EditAnnotations.*",
       "EngineDump.cpp",

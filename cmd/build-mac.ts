@@ -535,6 +535,8 @@ const TEST_ENGINES_SOURCES = [
 const MAC_APP_SOURCES = [
   "src/base/BitReader.cpp",
   "src/base/GuessFileType.cpp",
+  "src/DisplayMode.cpp",
+  "src/DocumentLayout.cpp",
   "src/DocProperties.cpp",
   "src/EbookDoc.cpp",
   "src/EngineBase.cpp",
@@ -555,6 +557,8 @@ const MAC_APP_SOURCES = [
 ];
 
 const PORTABLE_COMPILE_SOURCES = [
+  "src/DisplayMode.cpp",
+  "src/DocumentLayout.cpp",
   "src/GumboHtmlParser.cpp",
   "src/HtmlFormatter.cpp",
   "src/EbookFormatter.cpp",

@@ -846,6 +846,7 @@ function sumatrapdf_files()
     "ImageSaveCropResize.*",
     "DisplayMode.*",
     "DisplayModel.*",
+    "DocumentLayout.*",
     "DocController.h",
     "DocProperties.*",
     "EditAnnotations.*",

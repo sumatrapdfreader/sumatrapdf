@@ -2,6 +2,9 @@
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 
+#include "Settings.h"
+#include "DisplayMode.h"
+#include "DocumentLayout.h"
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -164,6 +167,66 @@ double MacFileDPI(void* document) {
     return dpi > 0 ? dpi : 96.0;
 }
 
+bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumentLayout* layout) {
+    if (!document || !params || !layout) {
+        return false;
+    }
+    *layout = {};
+
+    auto* engine = (EngineBase*)document;
+    int pageCount = engine->PageCount();
+    if (pageCount <= 0) {
+        return false;
+    }
+
+    DocumentLayout docLayout;
+    docLayout.Reset(pageCount);
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        docLayout.SetPageMediaBox(pageNo, engine->PageMediabox(pageNo));
+    }
+
+    DocumentLayoutParams p;
+    p.displayMode = params->continuous ? DisplayMode::Continuous : DisplayMode::SinglePage;
+    p.startPage = params->startPage;
+    p.viewPortSize = Size(params->viewWidth, params->viewHeight);
+    p.viewPortOffset = Point(params->viewX, params->viewY);
+    p.zoomVirtual = (float)params->zoomVirtual;
+    p.dpiFactor = 72.0f / engine->GetFileDPI();
+    p.rotation = params->rotation;
+    p.windowMargin = {12, 12, 12, 12};
+    p.pageSpacing = Size(0, 14);
+    docLayout.Relayout(p);
+
+    auto* pages = (MacLayoutPage*)malloc(sizeof(MacLayoutPage) * (size_t)pageCount);
+    if (!pages) {
+        return false;
+    }
+    memset(pages, 0, sizeof(MacLayoutPage) * (size_t)pageCount);
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        const DocumentLayoutPage* page = docLayout.GetPage(pageNo);
+        MacLayoutPage* dst = &pages[pageNo - 1];
+        dst->pageNo = pageNo;
+        dst->x = page->pos.x;
+        dst->y = page->pos.y;
+        dst->width = page->pos.dx;
+        dst->height = page->pos.dy;
+        dst->screenX = page->pageOnScreen.x;
+        dst->screenY = page->pageOnScreen.y;
+        dst->screenWidth = page->pageOnScreen.dx;
+        dst->screenHeight = page->pageOnScreen.dy;
+        dst->visibleRatio = page->visibleRatio;
+        dst->renderZoom = page->zoomReal * params->backingScale;
+        dst->shown = page->isShown;
+    }
+
+    layout->pageCount = pageCount;
+    layout->currentPage = docLayout.CurrentPageNo();
+    layout->canvasWidth = docLayout.canvasSize.dx;
+    layout->canvasHeight = docLayout.canvasSize.dy;
+    layout->pages = pages;
+    return true;
+}
+
 bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page) {
     if (!page) {
         return false;
@@ -185,6 +248,14 @@ bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRend
     bool ok = CopyPixmap(pixmap, page);
     FreePixmap(pixmap);
     return ok;
+}
+
+void MacFreeDocumentLayout(MacDocumentLayout* layout) {
+    if (!layout) {
+        return;
+    }
+    free(layout->pages);
+    *layout = {};
 }
 
 void MacFreeRenderedPage(MacRenderedPage* page) {

@@ -74,6 +74,8 @@ static NSString* ResolveDocumentPath(NSString* path) {
 static const CGFloat kZoomMin = 0.125;
 static const CGFloat kZoomMax = 8.0;
 static const CGFloat kZoomStep = 1.25;
+static const CGFloat kMacZoomFitPage = -1.0;
+static const CGFloat kMacZoomFitWidth = -2.0;
 
 static NSString* const kToolbarOpen = @"sumatra.toolbar.open";
 static NSString* const kToolbarPrevPage = @"sumatra.toolbar.prev-page";
@@ -89,12 +91,40 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 
 @class SumatraAppDelegate;
 
+@interface SumatraPageImage : NSObject
+@property(nonatomic) int pageNo;
+@property(nonatomic) NSRect frame;
+@property(nonatomic) CGImageRef image;
+@end
+
+@implementation SumatraPageImage
+
+- (void)dealloc {
+    if (_image) {
+        CGImageRelease(_image);
+    }
+    [super dealloc];
+}
+
+- (void)setImage:(CGImageRef)image {
+    if (_image == image) {
+        return;
+    }
+    if (_image) {
+        CGImageRelease(_image);
+    }
+    _image = image ? CGImageRetain(image) : nullptr;
+}
+
+@end
+
 // A view that draws a single rendered page. In fit modes it scales the image to
 // its bounds; when zoomed it is sized to the image's pixels and scrolls inside
 // an NSScrollView. It owns keyboard navigation for the document.
 @interface SumatraDocumentView : NSView
 @property(nonatomic) CGImageRef image;
 @property(nonatomic) NSSize imageSize;
+@property(nonatomic, retain) NSArray* pages;
 @property(nonatomic, copy) NSString* message;
 @property(nonatomic) BOOL scaleToFit;
 @property(nonatomic, assign) SumatraAppDelegate* owner;
@@ -114,6 +144,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
     if (_image) {
         CGImageRelease(_image);
     }
+    [_pages release];
     [_message release];
     [super dealloc];
 }
@@ -129,9 +160,57 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
     [self setNeedsDisplay:YES];
 }
 
+- (void)setPages:(NSArray*)pages {
+    if (_pages == pages) {
+        return;
+    }
+    [_pages release];
+    _pages = [pages retain];
+    [self setNeedsDisplay:YES];
+}
+
+- (void)drawPageImage:(CGImageRef)image inRect:(NSRect)drawRect bounds:(NSRect)bounds {
+    if (!image) {
+        return;
+    }
+    CGContextRef ctx = [[NSGraphicsContext currentContext] CGContext];
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, 0, bounds.size.height);
+    CGContextScaleCTM(ctx, 1, -1);
+    CGRect cgDrawRect = CGRectMake(drawRect.origin.x, bounds.size.height - drawRect.origin.y - drawRect.size.height,
+                                   drawRect.size.width, drawRect.size.height);
+    CGContextDrawImage(ctx, cgDrawRect, image);
+    CGContextRestoreGState(ctx);
+}
+
 - (void)drawRect:(NSRect)dirtyRect {
     [[NSColor colorWithCalibratedWhite:0.18 alpha:1.0] setFill];
     NSRectFill(dirtyRect);
+
+    if ([_pages count] > 0) {
+        NSRect bounds = [self bounds];
+        for (SumatraPageImage* page in _pages) {
+            NSRect drawRect = [page frame];
+            if (!NSIntersectsRect(drawRect, dirtyRect)) {
+                continue;
+            }
+            [[NSColor colorWithCalibratedWhite:0.92 alpha:1.0] setFill];
+            NSRectFill(NSRectFromCGRect(CGRectInset(NSRectToCGRect(drawRect), -1, -1)));
+            if ([page image]) {
+                [self drawPageImage:[page image] inRect:drawRect bounds:bounds];
+            } else {
+                NSDictionary* attrs = @{
+                    NSFontAttributeName : [NSFont systemFontOfSize:13],
+                    NSForegroundColorAttributeName : [NSColor colorWithCalibratedWhite:0.45 alpha:1.0],
+                };
+                NSString* text = [NSString stringWithFormat:@"Page %d", [page pageNo]];
+                NSSize size = [text sizeWithAttributes:attrs];
+                NSPoint p = NSMakePoint(NSMidX(drawRect) - size.width / 2.0, NSMidY(drawRect) - size.height / 2.0);
+                [text drawAtPoint:p withAttributes:attrs];
+            }
+        }
+        return;
+    }
 
     if (!_image) {
         NSDictionary* attrs = @{
@@ -176,14 +255,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
     [[NSColor colorWithCalibratedWhite:0.92 alpha:1.0] setFill];
     NSRectFill(NSRectFromCGRect(CGRectInset(NSRectToCGRect(drawRect), -1, -1)));
 
-    CGContextRef ctx = [[NSGraphicsContext currentContext] CGContext];
-    CGContextSaveGState(ctx);
-    CGContextTranslateCTM(ctx, 0, bounds.size.height);
-    CGContextScaleCTM(ctx, 1, -1);
-    CGRect cgDrawRect = CGRectMake(drawRect.origin.x, bounds.size.height - drawRect.origin.y - drawRect.size.height,
-                                   drawRect.size.width, drawRect.size.height);
-    CGContextDrawImage(ctx, cgDrawRect, _image);
-    CGContextRestoreGState(ctx);
+    [self drawPageImage:_image inRect:drawRect bounds:bounds];
 }
 
 // Page navigation and zoom via the keyboard. Menu items provide the ⌘-modified
@@ -240,15 +312,18 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @property(nonatomic, retain) SumatraDocumentView* documentView;
 @property(nonatomic, retain) NSToolbar* toolbar;
 @property(nonatomic, retain) NSTextField* pageLabel;
+@property(nonatomic, retain) NSMutableDictionary* pageImageCache;
 @property(nonatomic) void* document;
 @property(nonatomic, copy) NSString* documentPath;
 @property(nonatomic) int pageCount;
 @property(nonatomic) int currentPage; // 1-based
 @property(nonatomic) int rotation;    // 0/90/180/270
 @property(nonatomic) CGFloat zoom;    // display zoom; 1 means actual size, 0 means fit to window
+@property(nonatomic) BOOL continuousView;
 - (void)installToolbar;
 - (void)updateToolbarStatus;
 - (BOOL)canPerformAction:(SEL)action;
+- (void)renderDocumentShowingErrors:(BOOL)showErrors;
 @end
 
 @implementation SumatraAppDelegate
@@ -433,8 +508,10 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
     (void)notification;
-    _zoom = 0; // fit page
+    _zoom = kMacZoomFitPage;
     _rotation = 0;
+    _continuousView = YES;
+    _pageImageCache = [[NSMutableDictionary alloc] init];
 
     NSRect frame = NSMakeRect(0, 0, 900, 1100);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
@@ -455,6 +532,11 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_scrollView setBorderType:NSNoBorder];
     [_scrollView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
     [_scrollView setBackgroundColor:[NSColor colorWithCalibratedWhite:0.18 alpha:1.0]];
+    [[_scrollView contentView] setPostsBoundsChangedNotifications:YES];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(scrollViewBoundsChanged:)
+                                                 name:NSViewBoundsDidChangeNotification
+                                               object:[_scrollView contentView]];
 
     _documentView = [[SumatraDocumentView alloc] initWithFrame:frame];
     [_documentView setOwner:self];
@@ -486,7 +568,8 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _pageCount = 0;
     _currentPage = 0;
     _rotation = 0;
-    _zoom = 0;
+    _zoom = kMacZoomFitPage;
+    [_pageImageCache removeAllObjects];
 }
 
 - (void)showOpenError:(NSString*)message forPath:(NSString*)path {
@@ -510,6 +593,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         NSString* message = @"The selected file does not exist.";
         if (![self hasDocument]) {
             [_documentView setImage:nullptr];
+            [_documentView setPages:nil];
             [_documentView setMessage:message];
         }
         [self showOpenError:message forPath:path];
@@ -523,6 +607,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         free(error);
         if (![self hasDocument]) {
             [_documentView setImage:nullptr];
+            [_documentView setPages:nil];
             [_documentView setMessage:message];
         }
         [self showOpenError:message forPath:path];
@@ -535,8 +620,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _pageCount = MacPageCount(doc);
     _currentPage = 1;
     _rotation = 0;
-    _zoom = 0; // fit
-    [self renderCurrentPageShowingErrors:YES];
+    _zoom = kMacZoomFitPage;
+    [_pageImageCache removeAllObjects];
+    [_documentView setImage:nullptr];
+    [_documentView setPages:nil];
+    [_documentView setMessage:nil];
+    [self renderDocumentShowingErrors:YES];
     [_window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
 }
@@ -591,35 +680,82 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     return (CGFloat)MIN(zoomW, zoomH);
 }
 
-- (void)renderCurrentPageShowingErrors:(BOOL)showErrors {
-    if (!_document) {
-        return;
+- (CGFloat)layoutZoomVirtual {
+    if (_zoom == kMacZoomFitWidth) {
+        return kMacZoomFitWidth;
     }
+    if (_zoom <= 0) {
+        return kMacZoomFitPage;
+    }
+    return _zoom * 100.0;
+}
 
-    BOOL fitMode = (_zoom <= 0);
-    CGFloat displayZoom = fitMode ? [self fitZoomForWidthOnly:NO] : _zoom;
-    CGFloat renderZoom = displayZoom * [self actualSizeRenderZoom];
-    if (renderZoom <= 0) {
-        displayZoom = 1.0;
-        renderZoom = [self actualSizeRenderZoom];
+- (NSString*)cacheKeyForPage:(int)pageNo renderZoom:(double)renderZoom {
+    return [NSString stringWithFormat:@"%d:%.4f:%d", pageNo, renderZoom, _rotation];
+}
+
+- (CGImageRef)cachedImageForPage:(int)pageNo renderZoom:(double)renderZoom {
+    SumatraPageImage* cached = [_pageImageCache objectForKey:[self cacheKeyForPage:pageNo renderZoom:renderZoom]];
+    return cached ? [cached image] : nullptr;
+}
+
+- (CGImageRef)renderedImageForPage:(int)pageNo renderZoom:(double)renderZoom showErrors:(BOOL)showErrors {
+    CGImageRef cached = [self cachedImageForPage:pageNo renderZoom:renderZoom];
+    if (cached) {
+        return cached;
     }
 
     MacRenderedPage page = {};
-    bool ok = MacRenderPage(_document, _currentPage, (float)renderZoom, _rotation, &page);
+    bool ok = MacRenderPage(_document, pageNo, (float)renderZoom, _rotation, &page);
     if (!ok) {
         MacFreeRenderedPage(&page);
-        [_documentView setImage:nullptr];
-        [_documentView setMessage:@"Could not render the page."];
         if (showErrors) {
             [self showOpenError:@"Could not render the page." forPath:_documentPath];
         }
-        return;
+        return nullptr;
     }
 
     CGImageRef image = CreateImageFromRenderedPage(&page);
     MacFreeRenderedPage(&page);
     if (!image) {
+        if (showErrors) {
+            [self showOpenError:@"Could not render the page." forPath:_documentPath];
+        }
+        return nullptr;
+    }
+
+    SumatraPageImage* cacheEntry = [[[SumatraPageImage alloc] init] autorelease];
+    [cacheEntry setPageNo:pageNo];
+    [cacheEntry setImage:image];
+    [_pageImageCache setObject:cacheEntry forKey:[self cacheKeyForPage:pageNo renderZoom:renderZoom]];
+    CGImageRelease(image);
+    return [cacheEntry image];
+}
+
+- (BOOL)buildDocumentLayout:(MacDocumentLayout*)layout {
+    NSRect visible = [[_scrollView contentView] bounds];
+    MacLayoutParams params = {};
+    params.continuous = _continuousView;
+    params.startPage = _currentPage > 0 ? _currentPage : 1;
+    params.viewX = (int)floor(visible.origin.x);
+    params.viewY = (int)floor(visible.origin.y);
+    params.viewWidth = (int)MAX(1.0, floor(visible.size.width));
+    params.viewHeight = (int)MAX(1.0, floor(visible.size.height));
+    params.zoomVirtual = [self layoutZoomVirtual];
+    params.backingScale = [self backingScale];
+    params.rotation = _rotation;
+    return MacLayoutDocument(_document, &params, layout);
+}
+
+- (void)renderDocumentShowingErrors:(BOOL)showErrors {
+    if (!_document) {
+        return;
+    }
+
+    MacDocumentLayout layout = {};
+    if (![self buildDocumentLayout:&layout]) {
         [_documentView setImage:nullptr];
+        [_documentView setPages:nil];
         [_documentView setMessage:@"Could not render the page."];
         if (showErrors) {
             [self showOpenError:@"Could not render the page." forPath:_documentPath];
@@ -627,23 +763,37 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
 
-    [_documentView setScaleToFit:fitMode];
-    [_documentView setImageSize:[self pageSizeForDisplayZoom:displayZoom]];
-    if (fitMode) {
-        [_documentView setFrame:[[_scrollView contentView] bounds]];
-        [_documentView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-    } else {
-        [_documentView setAutoresizingMask:NSViewNotSizable];
-        [_documentView setFrameSize:[self pageSizeForDisplayZoom:displayZoom]];
+    NSMutableArray* pageViews = [NSMutableArray arrayWithCapacity:(NSUInteger)layout.pageCount];
+    for (int i = 0; i < layout.pageCount; i++) {
+        MacLayoutPage* page = &layout.pages[i];
+        if (!page->shown) {
+            continue;
+        }
+        SumatraPageImage* pageView = [[[SumatraPageImage alloc] init] autorelease];
+        [pageView setPageNo:page->pageNo];
+        [pageView setFrame:NSMakeRect(page->x, page->y, page->width, page->height)];
+        if (page->visibleRatio > 0 || !_continuousView) {
+            [pageView setImage:[self renderedImageForPage:page->pageNo renderZoom:page->renderZoom showErrors:showErrors]];
+        }
+        [pageViews addObject:pageView];
     }
-    [_documentView setImage:image];
-    CGImageRelease(image);
+
+    [_documentView setScaleToFit:NO];
+    [_documentView setImage:nullptr];
+    [_documentView setPages:pageViews];
+    [_documentView setAutoresizingMask:NSViewNotSizable];
+    [_documentView setFrameSize:NSMakeSize(layout.canvasWidth, layout.canvasHeight)];
+
+    if (layout.currentPage != _currentPage && layout.currentPage >= 1) {
+        _currentPage = layout.currentPage;
+    }
+    MacFreeDocumentLayout(&layout);
 
     [self updateTitle];
 }
 
 - (void)renderCurrentPage {
-    [self renderCurrentPageShowingErrors:NO];
+    [self renderDocumentShowingErrors:NO];
 }
 
 - (void)updateTitle {
@@ -680,7 +830,8 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         action == @selector(goToPageDialog:) || action == @selector(rotateLeft:) ||
         action == @selector(rotateRight:) || action == @selector(zoomFitPage:) ||
         action == @selector(zoomFitWidth:) || action == @selector(zoomActualSize:) ||
-        action == @selector(zoomIn:) || action == @selector(zoomOut:)) {
+        action == @selector(zoomIn:) || action == @selector(zoomOut:) || action == @selector(setSinglePageView:) ||
+        action == @selector(setContinuousView:)) {
         return [self hasDocument];
     }
     return YES;
@@ -704,9 +855,24 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _currentPage = pageNo;
-    [self renderCurrentPage];
-    [[_scrollView contentView] scrollToPoint:NSZeroPoint];
+
+    if (_continuousView) {
+        MacDocumentLayout layout = {};
+        if ([self buildDocumentLayout:&layout]) {
+            for (int i = 0; i < layout.pageCount; i++) {
+                MacLayoutPage* page = &layout.pages[i];
+                if (page->pageNo == pageNo) {
+                    [[_scrollView contentView] scrollToPoint:NSMakePoint(0, page->y)];
+                    break;
+                }
+            }
+            MacFreeDocumentLayout(&layout);
+        }
+    } else {
+        [[_scrollView contentView] scrollToPoint:NSZeroPoint];
+    }
     [_scrollView reflectScrolledClipView:[_scrollView contentView]];
+    [self renderCurrentPage];
 }
 
 #pragma mark - Menu / key actions
@@ -737,6 +903,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_documentView setScaleToFit:YES];
     [_documentView setFrame:[[_scrollView contentView] bounds]];
     [_documentView setImage:nullptr];
+    [_documentView setPages:nil];
     [_documentView setImageSize:NSZeroSize];
     [_documentView setMessage:nil];
     [self updateTitle];
@@ -797,6 +964,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _rotation = (_rotation + 270) % 360;
+    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -806,6 +974,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _rotation = (_rotation + 90) % 360;
+    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -814,12 +983,35 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_window toggleFullScreen:nil];
 }
 
+- (IBAction)setSinglePageView:(id)sender {
+    (void)sender;
+    if (!_document) {
+        return;
+    }
+    _continuousView = NO;
+    [_pageImageCache removeAllObjects];
+    [self renderCurrentPage];
+    [[_scrollView contentView] scrollToPoint:NSZeroPoint];
+    [_scrollView reflectScrolledClipView:[_scrollView contentView]];
+}
+
+- (IBAction)setContinuousView:(id)sender {
+    (void)sender;
+    if (!_document) {
+        return;
+    }
+    _continuousView = YES;
+    [_pageImageCache removeAllObjects];
+    [self renderCurrentPage];
+}
+
 - (IBAction)zoomFitPage:(id)sender {
     (void)sender;
     if (!_document) {
         return;
     }
-    _zoom = 0; // fit
+    _zoom = kMacZoomFitPage;
+    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -828,7 +1020,8 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     if (!_document) {
         return;
     }
-    _zoom = [self fitZoomForWidthOnly:YES];
+    _zoom = kMacZoomFitWidth;
+    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -838,6 +1031,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _zoom = 1.0;
+    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -846,9 +1040,13 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     CGFloat base = (_zoom <= 0) ? [self fitZoomForWidthOnly:NO] : _zoom;
+    if (_zoom == kMacZoomFitWidth) {
+        base = [self fitZoomForWidthOnly:YES];
+    }
     CGFloat z = base * factor;
     z = MAX(kZoomMin, MIN(kZoomMax, z));
     _zoom = z;
+    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -878,6 +1076,11 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     if (action == @selector(unavailableFeature:)) {
         return NO;
     }
+    if (action == @selector(setSinglePageView:)) {
+        [item setState:(!_continuousView && [self hasDocument]) ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if (action == @selector(setContinuousView:)) {
+        [item setState:(_continuousView && [self hasDocument]) ? NSControlStateValueOn : NSControlStateValueOff];
+    }
     return [self canPerformAction:action];
 }
 
@@ -885,7 +1088,14 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (void)windowDidResize:(NSNotification*)notification {
     (void)notification;
-    if (_document && _zoom <= 0) {
+    if (_document) {
+        [self renderCurrentPage];
+    }
+}
+
+- (void)scrollViewBoundsChanged:(NSNotification*)notification {
+    (void)notification;
+    if (_document && _continuousView) {
         [self renderCurrentPage];
     }
 }
@@ -893,6 +1103,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 - (void)windowDidChangeBackingProperties:(NSNotification*)notification {
     (void)notification;
     if (_document) {
+        [_pageImageCache removeAllObjects];
         [self renderCurrentPage];
     }
 }
@@ -915,9 +1126,11 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 }
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [_window setDelegate:nil];
     [_toolbar setDelegate:nil];
     [_pageLabel release];
+    [_pageImageCache release];
     [_toolbar release];
     [_documentView release];
     [_scrollView release];
@@ -991,10 +1204,10 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     NSMenuItem* viewItem = [[[NSMenuItem alloc] initWithTitle:@"View" action:nil keyEquivalent:@""] autorelease];
     [mainMenu addItem:viewItem];
     NSMenu* viewMenu = [[[NSMenu alloc] initWithTitle:@"View"] autorelease];
-    AddPlaceholder(viewMenu, @"Single Page", delegate);
+    AddItem(viewMenu, @"Single Page", @selector(setSinglePageView:), delegate, @"", 0);
     AddPlaceholder(viewMenu, @"Facing", delegate);
     AddPlaceholder(viewMenu, @"Book View", delegate);
-    AddPlaceholder(viewMenu, @"Show Pages Continuously", delegate);
+    AddItem(viewMenu, @"Show Pages Continuously", @selector(setContinuousView:), delegate, @"", 0);
     AddPlaceholder(viewMenu, @"Manga Mode", delegate);
     [viewMenu addItem:[NSMenuItem separatorItem]];
     AddItem(viewMenu, @"Rotate Left", @selector(rotateLeft:), delegate, @"[", NSEventModifierFlagCommand);
