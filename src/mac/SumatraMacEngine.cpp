@@ -7,8 +7,7 @@
 #include "EngineAll.h"
 #include "mac/SumatraMacEngine.h"
 
-void _uploadDebugReport(Str, Str, bool, bool) {
-}
+void _uploadDebugReport(Str, Str, bool, bool) {}
 
 void log(Str s) {
     if (!s) {
@@ -57,7 +56,38 @@ static char* DupCString(const char* s) {
 }
 
 static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
-    if (!pixmap || !pixmap->data || pixmap->format != PixmapFormat::BGRA8) {
+    if (!pixmap || !pixmap->data) {
+        return false;
+    }
+
+    if (pixmap->format == PixmapFormat::BGR8) {
+        size_t stride = ((size_t)pixmap->width * 4 + 3) & ~(size_t)3;
+        size_t nBytes = stride * (size_t)pixmap->height;
+        auto* data = (unsigned char*)malloc(nBytes);
+        if (!data) {
+            return false;
+        }
+        for (int y = 0; y < pixmap->height; y++) {
+            const unsigned char* src = pixmap->data + (size_t)y * (size_t)pixmap->stride;
+            unsigned char* dst = data + (size_t)y * stride;
+            for (int x = 0; x < pixmap->width; x++) {
+                dst[0] = src[0];
+                dst[1] = src[1];
+                dst[2] = src[2];
+                dst[3] = 255;
+                src += 3;
+                dst += 4;
+            }
+        }
+        page->width = pixmap->width;
+        page->height = pixmap->height;
+        page->stride = (int)stride;
+        page->premultiplied = true;
+        page->data = data;
+        return true;
+    }
+
+    if (pixmap->format != PixmapFormat::BGRA8) {
         return false;
     }
 

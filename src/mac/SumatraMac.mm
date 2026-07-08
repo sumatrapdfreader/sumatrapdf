@@ -284,15 +284,43 @@ static const CGFloat kZoomStep = 1.25;
     _zoom = 0;
 }
 
+- (void)showOpenError:(NSString*)message forPath:(NSString*)path {
+    NSString* detail = path ? [path stringByAbbreviatingWithTildeInPath] : nil;
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setAlertStyle:NSAlertStyleWarning];
+    [alert setMessageText:message ?: @"Could not open the document."];
+    if ([detail length] > 0) {
+        [alert setInformativeText:detail];
+    }
+    if (_window) {
+        [alert beginSheetModalForWindow:_window completionHandler:nil];
+    } else {
+        [alert runModal];
+    }
+}
+
 - (void)openPath:(NSString*)path {
     path = ResolveDocumentPath(path);
+    if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        NSString* message = @"The selected file does not exist.";
+        if (![self hasDocument]) {
+            [_documentView setImage:nullptr];
+            [_documentView setMessage:message];
+        }
+        [self showOpenError:message forPath:path];
+        return;
+    }
+
     char* error = nullptr;
     void* doc = MacOpenDocument([path fileSystemRepresentation], &error);
     if (!doc) {
         NSString* message = error ? [NSString stringWithUTF8String:error] : @"Could not open the document.";
         free(error);
-        [_documentView setImage:nullptr];
-        [_documentView setMessage:message];
+        if (![self hasDocument]) {
+            [_documentView setImage:nullptr];
+            [_documentView setMessage:message];
+        }
+        [self showOpenError:message forPath:path];
         return;
     }
 
@@ -303,7 +331,9 @@ static const CGFloat kZoomStep = 1.25;
     _currentPage = 1;
     _rotation = 0;
     _zoom = 0; // fit
-    [self renderCurrentPage];
+    [self renderCurrentPageShowingErrors:YES];
+    [_window makeKeyAndOrderFront:nil];
+    [NSApp activateIgnoringOtherApps:YES];
 }
 
 // Computes the render zoom for the current fit mode, given the page's mediabox
@@ -333,7 +363,7 @@ static const CGFloat kZoomStep = 1.25;
     return (CGFloat)MIN(zoomW, zoomH);
 }
 
-- (void)renderCurrentPage {
+- (void)renderCurrentPageShowingErrors:(BOOL)showErrors {
     if (!_document) {
         return;
     }
@@ -350,6 +380,9 @@ static const CGFloat kZoomStep = 1.25;
         MacFreeRenderedPage(&page);
         [_documentView setImage:nullptr];
         [_documentView setMessage:@"Could not render the page."];
+        if (showErrors) {
+            [self showOpenError:@"Could not render the page." forPath:_documentPath];
+        }
         return;
     }
 
@@ -358,6 +391,9 @@ static const CGFloat kZoomStep = 1.25;
     if (!image) {
         [_documentView setImage:nullptr];
         [_documentView setMessage:@"Could not render the page."];
+        if (showErrors) {
+            [self showOpenError:@"Could not render the page." forPath:_documentPath];
+        }
         return;
     }
 
@@ -373,6 +409,10 @@ static const CGFloat kZoomStep = 1.25;
     CGImageRelease(image);
 
     [self updateTitle];
+}
+
+- (void)renderCurrentPage {
+    [self renderCurrentPageShowingErrors:NO];
 }
 
 - (void)updateTitle {
@@ -410,8 +450,10 @@ static const CGFloat kZoomStep = 1.25;
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     [panel setAllowsMultipleSelection:NO];
     [panel setCanChooseDirectories:NO];
+    [panel setCanChooseFiles:YES];
+    [panel setAllowsOtherFileTypes:YES];
     [panel setAllowedFileTypes:@[
-        @"pdf", @"xps", @"oxps", @"epub", @"mobi", @"fb2", @"cbz", @"cbr", @"cb7", @"cbt", @"djvu", @"chm",
+        @"pdf", @"xps", @"oxps", @"epub", @"mobi", @"fb2", @"cbz", @"cbr", @"cb7", @"cbt", @"djvu", @"djv", @"chm",
         @"png", @"jpg", @"jpeg", @"gif", @"tif", @"tiff", @"tga", @"bmp", @"webp", @"jxl", @"heic", @"avif"
     ]];
     if ([panel runModal] == NSModalResponseOK) {
