@@ -12,6 +12,28 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 
+// Fetch page text for search. When *abortSearch is set, the caller should stop
+// immediately (search was cancelled while engine locks were contended).
+static Str GetTextForPageForSearch(EngineBase* engine, int pageNo, int* lenOut, const ProgressUpdateCb& progressCb,
+                                   bool* abortSearch) {
+    if (abortSearch) {
+        *abortSearch = false;
+    }
+    if (!engine->TryGetTextForPage(pageNo, lenOut)) {
+        if (WasCanceled(progressCb)) {
+            if (abortSearch) {
+                *abortSearch = true;
+            }
+            if (lenOut) {
+                *lenOut = 0;
+            }
+            return {};
+        }
+        return engine->GetTextForPage(pageNo, lenOut);
+    }
+    return engine->GetTextForPage(pageNo, lenOut);
+}
+
 static void SkipWhitespace(Str text, int textLen, int& idx, int& byteIdx) {
     while (idx < textLen) {
         int nextByte = byteIdx;
@@ -459,7 +481,12 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
             // -> skip to next page
             ++currentPage;
-            currentPageText = engine->GetTextForPage(currentPage, &currentPageTextLen);
+            bool abortSearch = false;
+            currentPageText =
+                GetTextForPageForSearch(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
+            if (abortSearch) {
+                return notFound;
+            }
             endIdx = 0;
             endByteIdx = 0;
         }
@@ -476,7 +503,12 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             while (endIdx >= currentPageTextLen && currentPage < nPages) {
                 // treat page break as whitespace, too
                 ++currentPage;
-                currentPageText = engine->GetTextForPage(currentPage, &currentPageTextLen);
+                bool abortSearch = false;
+                currentPageText =
+                    GetTextForPageForSearch(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
+                if (abortSearch) {
+                    return notFound;
+                }
                 endIdx = 0;
                 endByteIdx = 0;
                 SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
@@ -533,6 +565,9 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     int found = -1;
     PageAndOffset fg;
     do {
+        if (WasCanceled(progressCb)) {
+            return false;
+        }
         if (!anchor) {
             found = GetNextIndex(pageTextLen, findIndex, forward);
         } else if (forward) {
@@ -588,7 +623,11 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
 
         Reset();
 
-        pageText = engine->GetTextForPage(pageNo, &pageTextLen);
+        bool abortSearch = false;
+        pageText = GetTextForPageForSearch(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
+        if (abortSearch) {
+            break;
+        }
         findIndex = pageTextLen;
         if (pageText) {
             if (forward) {
@@ -599,7 +638,10 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
                 if (forward) {
                     if (findPage != r.page) {
                         findPage = r.page;
-                        pageText = engine->GetTextForPage(findPage, &pageTextLen);
+                        pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+                        if (abortSearch) {
+                            break;
+                        }
                     }
                     findIndex = r.offset;
                 }
@@ -634,7 +676,11 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
         return nullptr;
     }
     Reset();
-    pageText = engine->GetTextForPage(pageNo, &pageTextLen);
+    bool abortSearch = false;
+    pageText = GetTextForPageForSearch(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
+    if (abortSearch) {
+        return nullptr;
+    }
     findIndex = pageTextLen;
     if (!pageText) {
         return nullptr;
@@ -649,7 +695,10 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     if (forward) {
         if (findPage != r.page) {
             findPage = r.page;
-            pageText = engine->GetTextForPage(findPage, &pageTextLen);
+            pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+            if (abortSearch) {
+                return nullptr;
+            }
         }
         findIndex = r.offset;
     }
@@ -672,7 +721,11 @@ TextSel* TextSearch::FindNext() {
         if (forward) {
             findPage = finalGlyph.page;
             findIndex = finalGlyph.offset;
-            pageText = engine->GetTextForPage(findPage, &pageTextLen);
+            bool abortSearch = false;
+            pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+            if (abortSearch) {
+                return nullptr;
+            }
         }
         return &result;
     }

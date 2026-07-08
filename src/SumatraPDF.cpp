@@ -3337,6 +3337,12 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         win->AsMarkdown()->RemoveParentHwnd();
     }
     ClearTocBox(win);
+    // stop render threads before waiting on find: they hold pagesLock/renderLock
+    // that the find thread needs for text extraction (issue: stress-test hang in
+    // AbortFinding while RenderCacheThread holds engine locks).
+    if (DisplayModel* dm = win->AsFixed()) {
+        gRenderCache->CancelRendering(dm);
+    }
     AbortFinding(win, true);
 
     ClearMouseState(win);
