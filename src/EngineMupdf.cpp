@@ -3281,28 +3281,6 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
     comments.Reverse();
 }
 
-// like GetFzPageInfo() but fails if we can't acquire locks
-// prevents blocking main thread due to render thread keeping the lock
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/4145
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/4187
-FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
-#if 0
-    return GetFzPageInfo(pageNo, true);
-#else
-    FzPageInfo* res = nullptr;
-    if (!pagesLock.TryLock()) {
-        return nullptr;
-    }
-    if (docLock.TryLock()) {
-        // RecursiveMutex locking is recursive
-        res = GetFzPageInfo(pageNo, true);
-        docLock.Unlock();
-    }
-    pagesLock.Unlock();
-    return res;
-#endif
-}
-
 /* SumatraPDF */
 fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
                                             fz_cookie* cookie) {
@@ -3358,31 +3336,22 @@ static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page
     return text;
 }
 
-// Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
-// (I don't think we read from network now).
-// Maybe: when loading fully, cache extracted text in FzPageInfo
-// so that we don't have to re-do fz_new_stext_page_from_page() when doing search
-FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie) {
-    auto ctx = Ctx();
-    // TODO: minimize time spent under pagesLock when fully loading
-    ScopedRecursiveMutex scope(&pagesLock);
-
-    ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) {
+// caller must hold pagesLock and renderLock
+static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuick, fz_cookie* cookie) {
+    auto ctx = e->Ctx();
+    ReportIf(pageNo < 1 || pageNo > e->pageCount);
+    if (pageNo < 1 || pageNo > e->pageCount) {
         return nullptr;
     }
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = pages[pageIdx];
+    FzPageInfo* pageInfo = e->pages[pageIdx];
     if (!pageInfo) {
         return nullptr;
     }
 
-    // page-running operations on this specific page run under per-page lock.
-    // pagesLock (held above) serializes concurrent fz_load_page on _doc.
-    ScopedMutex ctxScope(&renderLock);
     if (!pageInfo->page) {
         fz_try(ctx) {
-            pageInfo->page = fz_load_page(ctx, _doc, pageIdx);
+            pageInfo->page = fz_load_page(ctx, e->_doc, pageIdx);
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
@@ -3394,25 +3363,21 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
         return nullptr;
     }
 
-    // build annotations + widgets info on first access
-    if (pdfdoc && !pageInfo->annotsLoaded) {
+    if (e->pdfdoc && !pageInfo->annotsLoaded) {
         pageInfo->annotsLoaded = true;
         fz_try(ctx) {
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
             pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
             while (annot) {
-                Annotation* a = MakeAnnotationWrapper(this, annot, pageNo);
+                Annotation* a = MakeAnnotationWrapper(e, annot, pageNo);
                 if (a) {
                     pageInfo->annotations.Append(a);
                 }
                 annot = pdf_next_annot(ctx, annot);
             }
-            // form fields (widgets) are a separate mupdf list; keep them in their
-            // own list so they're hit-testable for form filling but don't show up
-            // as annotations (comments, edit-annotations panel)
             pdf_annot* widget = pdf_first_widget(ctx, pdfpage);
             while (widget) {
-                Annotation* a = MakeAnnotationWrapper(this, widget, pageNo);
+                Annotation* a = MakeAnnotationWrapper(e, widget, pageNo);
                 if (a) {
                     pageInfo->widgets.Append(a);
                 }
@@ -3444,10 +3409,10 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     }
 
     fz_link* link = fz_load_links(ctx, page);
-    link = FixupPageLinks(link); // TOOD: is this necessary?
+    link = FixupPageLinks(link);
     pageInfo->retainedLinks = link;
     while (link) {
-        auto pel = NewLinkDestination(pageNo, ctx, _doc, link, nullptr);
+        auto pel = NewLinkDestination(pageNo, ctx, e->_doc, link, nullptr);
         if (pel) {
             pageInfo->links.Append(pel);
         }
@@ -3458,12 +3423,43 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
         return pageInfo;
     }
 
-    if (!disableAutoLinks) {
+    if (!e->disableAutoLinks) {
         FzLinkifyPageText(pageInfo, stext);
     }
     FzFindImagePositions(ctx, pageNo, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
     return pageInfo;
+}
+
+// like GetFzPageInfo() but fails if we can't acquire locks
+// prevents blocking main thread due to render thread keeping the lock
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/4145
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/4187
+FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
+    if (!pagesLock.TryLock()) {
+        return nullptr;
+    }
+    if (!renderLock.TryLock()) {
+        pagesLock.Unlock();
+        return nullptr;
+    }
+    FzPageInfo* res = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    renderLock.Unlock();
+    pagesLock.Unlock();
+    return res;
+}
+
+// Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
+// (I don't think we read from network now).
+// Maybe: when loading fully, cache extracted text in FzPageInfo
+// so that we don't have to re-do fz_new_stext_page_from_page() when doing search
+FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie) {
+    // TODO: minimize time spent under pagesLock when fully loading
+    ScopedRecursiveMutex scope(&pagesLock);
+    // page-running operations on this specific page run under per-page lock.
+    // pagesLock (held above) serializes concurrent fz_load_page on _doc.
+    ScopedMutex ctxScope(&renderLock);
+    return GetFzPageInfoLocked(this, pageNo, loadQuick, cookie);
 }
 
 RectF EngineMupdf::PageMediabox(int pageNo) {
@@ -3940,16 +3936,8 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
 #endif
 }
 
-PageText EngineMupdf::ExtractPageText(int pageNo) {
-    auto ctx = Ctx();
-
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
-    if (!pageInfo) {
-        return {};
-    }
-
-    ScopedMutex scope(&renderLock);
-
+static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
+    auto ctx = e->Ctx();
     fz_stext_page* stext = nullptr;
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions();
@@ -3968,6 +3956,37 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
     res.len = res.text.len;
     res.nCodepoints = Utf8CodepointCount(res.text);
     return res;
+}
+
+PageText EngineMupdf::ExtractPageText(int pageNo) {
+    ScopedRecursiveMutex pagesScope(&pagesLock);
+    ScopedMutex renderScope(&renderLock);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    if (!pageInfo) {
+        return {};
+    }
+    return ExtractPageTextLocked(this, pageInfo);
+}
+
+bool EngineMupdf::TryExtractPageText(int pageNo, PageText* out) {
+    if (!pagesLock.TryLock()) {
+        return false;
+    }
+    if (!renderLock.TryLock()) {
+        pagesLock.Unlock();
+        return false;
+    }
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    if (!pageInfo) {
+        renderLock.Unlock();
+        pagesLock.Unlock();
+        *out = {};
+        return true;
+    }
+    *out = ExtractPageTextLocked(this, pageInfo);
+    renderLock.Unlock();
+    pagesLock.Unlock();
+    return true;
 }
 
 void EngineMupdf::ReleaseTextExtractionThreadContext() {

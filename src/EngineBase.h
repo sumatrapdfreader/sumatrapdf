@@ -486,6 +486,8 @@ class EngineBase {
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coordsOut (if coordsOut is non-nullptr)
     virtual PageText ExtractPageText(int) { return {}; }
+    // default always succeeds; EngineMupdf fails when locks are contended
+    virtual bool TryExtractPageText(int pageNo, PageText* out);
 
     // cached per-page text. First call on a page extracts text and caches it,
     // subsequent calls return the cached copy. The returned pointers are owned
@@ -494,6 +496,9 @@ class EngineBase {
     TextExtractionState GetTextExtractionState(int pageNo);
     void RequestTextExtraction(int pageNo);
     Str GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
+    // like GetTextForPage but returns false (and empty text) if the engine
+    // can't acquire locks without blocking (e.g. render thread is busy)
+    bool TryGetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
     virtual void ReleaseTextExtractionThreadContext() {}
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;

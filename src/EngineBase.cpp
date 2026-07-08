@@ -456,6 +456,85 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     delete data;
 }
 
+bool EngineBase::TryExtractPageText(int pageNo, PageText* out) {
+    *out = ExtractPageText(pageNo);
+    return true;
+}
+
+static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut) {
+    if (lenOut) {
+        *lenOut = pt->nCodepoints;
+    }
+    if (coordsOut) {
+        *coordsOut = pt->coords;
+    }
+    Str text = pt->text;
+    if (text.s) {
+        text.len = pt->len;
+        // str::Builder-backed buffers reserve a NUL slot at .len
+        if (text.len >= 0) {
+            text.s[text.len] = 0;
+        }
+    }
+    return text;
+}
+
+bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
+    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (pageNo < 1 || pageNo > pageCount) {
+        if (lenOut) {
+            *lenOut = 0;
+        }
+        if (coordsOut) {
+            *coordsOut = nullptr;
+        }
+        return true;
+    }
+
+    bool extract = false;
+    {
+        ScopedMutex scope(&textCacheLock);
+        if (!pagesText) {
+            pagesText = AllocArray<PageText>(pageCount);
+        }
+        if (!pagesTextState) {
+            pagesTextState = AllocArray<TextExtractionState>(pageCount);
+        }
+        if (pagesTextState[pageNo - 1] != TextExtractionState::Finished) {
+            extract = true;
+        }
+    }
+
+    if (extract) {
+        PageText extracted;
+        if (!TryExtractPageText(pageNo, &extracted)) {
+            if (lenOut) {
+                *lenOut = 0;
+            }
+            if (coordsOut) {
+                *coordsOut = nullptr;
+            }
+            return false;
+        }
+        EnsurePageText(&extracted);
+
+        ScopedMutex scope(&textCacheLock);
+        PageText* pt = &pagesText[pageNo - 1];
+        if (pagesTextState[pageNo - 1] != TextExtractionState::Finished) {
+            FreePageText(pt);
+            *pt = extracted;
+            extracted = PageText();
+            pagesTextState[pageNo - 1] = TextExtractionState::Finished;
+        }
+        FreePageText(&extracted);
+    }
+
+    ScopedMutex scope(&textCacheLock);
+    PageText* pt = &pagesText[pageNo - 1];
+    ReturnCachedPageText(pt, lenOut, coordsOut);
+    return true;
+}
+
 Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
@@ -504,21 +583,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
 
     ScopedMutex scope(&textCacheLock);
     PageText* pt = &pagesText[pageNo - 1];
-    if (lenOut) {
-        *lenOut = pt->nCodepoints;
-    }
-    if (coordsOut) {
-        *coordsOut = pt->coords;
-    }
-    Str text = pt->text;
-    if (text.s) {
-        text.len = pt->len;
-        // str::Builder-backed buffers reserve a NUL slot at .len
-        if (text.len >= 0) {
-            text.s[text.len] = 0;
-        }
-    }
-    return text;
+    return ReturnCachedPageText(pt, lenOut, coordsOut);
 }
 
 int EngineBase::PageCount() const {
