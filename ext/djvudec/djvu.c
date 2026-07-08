@@ -380,6 +380,9 @@ iw_pixmap *djvu_doc_iw44_acquire(djvu_doc *doc, int page_no, const char *chunk_i
 void djvu_doc_iw44_release(djvu_ctx *ctx, iw_pixmap *pm, int owned);
 iw_pixmap *djvu_doc_iw44_by_form_acquire(djvu_doc *doc, uint32_t form_off,
                                          const char *chunk_id, int *owned_out);
+
+iw_pixmap *djvu_doc_iw44_acquire_under_lock(djvu_doc *doc, djvu_page_int *pg,
+                                            const char *chunk_id);
 iw_pixmap *djvu_doc_iw44(djvu_doc *doc, int page_no, const char *chunk_id);
 iw_pixmap *djvu_doc_iw44_by_form(djvu_doc *doc, uint32_t form_off, const char *chunk_id);
 jb2_image *djvu_doc_jb2_mask_acquire(djvu_doc *doc, int page_no, int *owned_out);
@@ -2363,7 +2366,10 @@ static int code_record_type(jb2_codec *c)
 
 static int code_match_index(jb2_codec *c)
 {
-    return code_num(c, 0, c->nlib2shape - 1, &c->dist_match_index);
+    int match = code_num(c, 0, c->nlib2shape - 1, &c->dist_match_index);
+
+    if (match < 0 || match >= c->nlib2shape) { c->error = 1; return 0; }
+    return match;
 }
 
 static int code_abs_mark_size(jb2_codec *c, djvu_bitmap *bm, int border)
@@ -2546,6 +2552,7 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
         else if (rectype == REC_MatchedRefineLibraryOnly) { need_add_library = 1; }
         else { need_add_blit = 1; }
         match = code_match_index(c);
+        if (c->error) break;
         parent = c->lib2shape[match];
         tmp_shape.parent = parent;
         cbm = &djvu_jb2_get_shape(jim, parent)->bm;
@@ -2571,6 +2578,7 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
     case REC_MatchedCopy: {
         int xmin, ymin, xmax, ymax;
         match = code_match_index(c);
+        if (c->error) break;
         blit.shapeno = c->lib2shape[match];
         xmin = c->libinfo[match * 4 + 0];
         ymin = c->libinfo[match * 4 + 1];
@@ -4062,7 +4070,7 @@ static int compose_background_from_native(djvu_ctx *ctx, const djvu_cpix *native
     return djvu_cpix_scale_ratio(ctx, native, out, rw, rh, red, subsample);
 }
 
-static int compose_bg_native_build(djvu_doc *doc, djvu_page_int *pg)
+static int compose_bg_native_build(djvu_doc *doc, djvu_page_int *pg, int cache_locked)
 {
     djvu_ctx *ctx = doc->ctx;
     iw_pixmap *pm;
@@ -4075,7 +4083,10 @@ static int compose_bg_native_build(djvu_doc *doc, djvu_page_int *pg)
         return -1;
     if (!djvu_form_find_chunk(doc, pg->form_off, "BG44", &sz, NULL))
         return -1;
-    pm = djvu_doc_iw44_by_form_acquire(doc, pg->form_off, "BG44", &pm_owned);
+    if (cache_locked)
+        pm = djvu_doc_iw44_acquire_under_lock(doc, pg, "BG44");
+    else
+        pm = djvu_doc_iw44_by_form_acquire(doc, pg->form_off, "BG44", &pm_owned);
     if (!pm) return -1;
     bw = djvu_iw44_width(pm);
     bh = djvu_iw44_height(pm);
@@ -4113,7 +4124,7 @@ void djvu_doc_preload_compose_bg_range(djvu_doc *doc, int lo0, int hi0)
     if (hi0 >= doc->npages) hi0 = doc->npages - 1;
     if (lo0 > hi0) return;
     for (i = lo0; i <= hi0; i++)
-        compose_bg_native_build(doc, &doc->pages[i]);
+        compose_bg_native_build(doc, &doc->pages[i], 0);
 }
 
 int djvu_compose_background(djvu_doc *doc, uint32_t form_off, int width, int height,
@@ -4134,7 +4145,7 @@ int djvu_compose_background(djvu_doc *doc, uint32_t form_off, int width, int hei
         pg = &doc->pages[page_no];
         djvu_cache_lock(ctx);
         if (!pg->bg_native.d)
-            compose_bg_native_build(doc, pg);
+            compose_bg_native_build(doc, pg, 1);
         if (pg->bg_scaled.d && pg->bg_scaled.w == rw && pg->bg_scaled.h == rh) {
             size_t n = (size_t)rw * (size_t)rh * 3;
             djvu_free(ctx, out->d);
@@ -5178,6 +5189,26 @@ static void preload_iw_layer(djvu_doc *doc, djvu_page_int *pg, const char *id,
         return;
     }
     *slot = pm;
+}
+
+iw_pixmap *djvu_doc_iw44_acquire_under_lock(djvu_doc *doc, djvu_page_int *pg,
+                                            const char *chunk_id)
+{
+    iw_pixmap **slot;
+
+    if (!doc || !pg || !chunk_id) return NULL;
+    if (chunk_id[0] == 'B' && chunk_id[1] == 'G' && chunk_id[2] == '4')
+        slot = &pg->iw_bg;
+    else if (chunk_id[0] == 'F' && chunk_id[1] == 'G' && chunk_id[2] == '4')
+        slot = &pg->iw_fg;
+    else
+        return NULL;
+
+    if (!djvu_cache_stores_page(doc->ctx))
+        return decode_iw_layer_fresh(doc, pg, chunk_id);
+    if (!*slot)
+        preload_iw_layer(doc, pg, chunk_id, slot);
+    return *slot;
 }
 
 void djvu_doc_preload_iw44_range(djvu_doc *doc, int lo0, int hi0)
