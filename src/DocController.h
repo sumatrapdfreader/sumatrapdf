@@ -42,6 +42,9 @@ struct DocControllerCallback {
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
     virtual void SaveDownload(Str url, Str) = 0;
+    // MarkdownModel //
+    // in-page find result from the webview (1-based current match, total count)
+    virtual void FindResultReceived(int current, int total) = 0;
 };
 
 struct DocController {

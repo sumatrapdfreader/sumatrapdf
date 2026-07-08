@@ -121,6 +121,7 @@ class MarkdownHtmlWindowHandler : public HtmlWindowCallback {
     void OnLButtonDown() override { mm->OnLButtonDown(); }
     Str GetDataForUrl(Str url) override { return mm->GetDataForUrl(url); }
     void DownloadData(Str url, Str data) override { mm->DownloadData(url, data); }
+    void OnFindResult(int current, int total) override { mm->OnFindResult(current, total); }
 };
 
 MarkdownModel::MarkdownModel(DocControllerCallback* cb) : DocController(cb) {
@@ -240,6 +241,32 @@ void MarkdownModel::FindInCurrentPage() const {
     if (docView) {
         docView->FindInCurrentPage();
     }
+}
+
+bool MarkdownModel::CanFindInPage() const {
+    return docView && docView->CanFindInPage();
+}
+
+void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord) const {
+    if (docView) {
+        docView->FindStart(term, matchCase, wholeWord);
+    }
+}
+
+void MarkdownModel::FindNext(bool forward) const {
+    if (docView) {
+        docView->FindNext(forward);
+    }
+}
+
+void MarkdownModel::FindClear() const {
+    if (docView) {
+        docView->FindClear();
+    }
+}
+
+void MarkdownModel::OnFindResult(int current, int total) {
+    cb->FindResultReceived(current, total);
 }
 
 void MarkdownModel::SelectAll() const {

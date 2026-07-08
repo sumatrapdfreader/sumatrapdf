@@ -27,6 +27,11 @@ class ChmDocView {
     void SetScrollPos(Point pos);
     void PrintCurrentPage(bool showUI);
     void FindInCurrentPage();
+    // in-page find with our own UI (WebView2 backend only)
+    bool CanFindInPage() const;
+    void FindStart(Str term, bool matchCase, bool wholeWord);
+    void FindNext(bool forward);
+    void FindClear();
     void SelectAll();
     void CopySelection();
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);

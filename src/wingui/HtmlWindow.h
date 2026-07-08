@@ -28,6 +28,10 @@ struct HtmlWindowCallback {
     // called when a file can't be displayed and has to be downloaded instead
     virtual void DownloadData(Str url, Str data) = 0;
 
+    // in-page find result (ChmDocView WebView2 backend only): 1-based current
+    // match and total match count
+    virtual void OnFindResult(int, int) {}
+
     virtual ~HtmlWindowCallback() = default;
 };
 

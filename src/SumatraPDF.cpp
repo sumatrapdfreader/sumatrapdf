@@ -935,6 +935,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
     void FocusFrame(bool always) override;
     void SaveDownload(Str url, Str) override;
+    void FindResultReceived(int current, int total) override { MdFindResultReceived(win, current, total); }
 };
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {

@@ -47,6 +47,11 @@ struct MarkdownModel : DocController {
 
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;
+    bool CanFindInPage() const;
+    void FindStart(Str term, bool matchCase, bool wholeWord) const;
+    void FindNext(bool forward) const;
+    void FindClear() const;
+    void OnFindResult(int current, int total);
     void SelectAll() const;
     void CopySelection() const;
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;

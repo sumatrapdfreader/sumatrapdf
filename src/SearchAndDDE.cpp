@@ -84,12 +84,42 @@ void InvalidateFindMatchPaintCache() {
 
 Kind kNotifFindProgress = "findProgress";
 
+// the markdown model if the current document is markdown rendered in a
+// webview that supports our in-page find (native find bar + highlighting
+// driven from JS injected into the webview); null otherwise
+static MarkdownModel* MdFindModel(MainWindow* win) {
+    MarkdownModel* md = win->AsMarkdown();
+    if (md && md->CanFindInPage()) {
+        return md;
+    }
+    return nullptr;
+}
+
+// start an in-page find in the markdown webview for the find bar's text.
+// Results arrive asynchronously via MdFindResultReceived()
+static void MdStartSearch(MainWindow* win, MarkdownModel* md) {
+    TempStr term = HwndGetTextTemp(win->hwndFindEdit);
+    md->FindStart(term, win->findMatchCase, win->findMatchWholeWord);
+}
+
+void MdFindResultReceived(MainWindow* win, int current, int total) {
+    if (!IsFindUIVisible(win)) {
+        // stale result after the find bar was closed (highlights were cleared)
+        return;
+    }
+    TempStr s = fmt("%d / %d", current, total);
+    FindBarSetStatus(win, s);
+}
+
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific
 // text selection; default to showing it, since most users
 // will never use a format that does not support search
 bool NeedsFindUI(MainWindow* win) {
     if (!win->IsDocLoaded()) {
+        return true;
+    }
+    if (MdFindModel(win)) {
         return true;
     }
     if (!win->AsFixed()) {
@@ -105,7 +135,17 @@ void FindFirst(MainWindow* win) {
     if (win->AsChm()) {
         win->AsChm()->FindInCurrentPage();
     } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->FindInCurrentPage();
+        if (MdFindModel(win)) {
+            // our own find bar drives the search inside the webview
+            ShowFindBar(win);
+            if (win->hwndFindEdit) {
+                HwndSetFocus(win->hwndFindEdit);
+                Edit_SetSel(win->hwndFindEdit, 0, -1);
+            }
+        } else {
+            // IE backend: fall back to the browser's own find dialog
+            win->AsMarkdown()->FindInCurrentPage();
+        }
         return;
     }
 
@@ -151,6 +191,11 @@ constexpr UINT kFindDebounceShortDelayMs = 1000;
 
 // run the actual incremental search; assumes there is non-empty find text
 static void StartIncrementalFind(MainWindow* win) {
+    MarkdownModel* md = MdFindModel(win);
+    if (md) {
+        MdStartSearch(win, md);
+        return;
+    }
     // the full-document count (n/m + results list) is kicked from FindEndTask,
     // after this find thread exits, so the two never touch the engine's text
     // extraction concurrently (mupdf isn't safe for that)
@@ -167,6 +212,10 @@ void OnFindBarTextChanged(MainWindow* win) {
     TempStr s = HwndGetTextTemp(win->hwndFindEdit);
     if (len(s) == 0) {
         AbortFinding(win, true); // also cancels a pending debounce timer
+        MarkdownModel* md = MdFindModel(win);
+        if (md) {
+            md->FindClear(); // remove the highlights in the webview
+        }
         ClearSearchResult(win);
         FindBarSetStatus(win, "");
         ClearFindMatches(win);
@@ -215,33 +264,63 @@ void FindNext(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (HasFindText(win)) {
-        FindTextOnThread(win, TextSearch::Direction::Forward, true);
+    if (!HasFindText(win)) {
+        return;
     }
+    MarkdownModel* md = MdFindModel(win);
+    if (md) {
+        // typing still pending: run the search first instead of advancing
+        // through the previous term's matches
+        if (FindFlushPendingSearch(win)) {
+            return;
+        }
+        md->FindNext(true);
+        return;
+    }
+    FindTextOnThread(win, TextSearch::Direction::Forward, true);
 }
 
 void FindPrev(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (HasFindText(win)) {
-        FindTextOnThread(win, TextSearch::Direction::Backward, true);
+    if (!HasFindText(win)) {
+        return;
     }
+    MarkdownModel* md = MdFindModel(win);
+    if (md) {
+        if (FindFlushPendingSearch(win)) {
+            return;
+        }
+        md->FindNext(false);
+        return;
+    }
+    FindTextOnThread(win, TextSearch::Direction::Backward, true);
 }
 
 void FindToggleMatchCase(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
+    MarkdownModel* md = MdFindModel(win);
+    if (!md && !win->AsFixed()) {
+        return;
+    }
     win->findMatchCase = !win->findMatchCase;
-    win->AsFixed()->textSearch->SetMatchCase(win->findMatchCase);
+    if (win->AsFixed()) {
+        win->AsFixed()->textSearch->SetMatchCase(win->findMatchCase);
+    }
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
     if (win->hwndFindEdit) {
         Edit_SetModify(win->hwndFindEdit, TRUE);
     }
     // re-run the search with the new match-case setting
     if (HasFindText(win)) {
-        FindTextOnThread(win, TextSearch::Direction::Forward, true);
+        if (md) {
+            MdStartSearch(win, md);
+        } else {
+            FindTextOnThread(win, TextSearch::Direction::Forward, true);
+        }
     }
 }
 
@@ -249,20 +328,30 @@ void FindToggleMatchWholeWord(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
+    MarkdownModel* md = MdFindModel(win);
+    if (!md && !win->AsFixed()) {
+        return;
+    }
     win->findMatchWholeWord = !win->findMatchWholeWord;
-    win->AsFixed()->textSearch->SetMatchWholeWord(win->findMatchWholeWord);
+    if (win->AsFixed()) {
+        win->AsFixed()->textSearch->SetMatchWholeWord(win->findMatchWholeWord);
+    }
     FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     if (win->hwndFindEdit) {
         Edit_SetModify(win->hwndFindEdit, TRUE);
     }
     // re-run the search with the new whole-word setting
     if (HasFindText(win)) {
-        FindTextOnThread(win, TextSearch::Direction::Forward, true);
+        if (md) {
+            MdStartSearch(win, md);
+        } else {
+            FindTextOnThread(win, TextSearch::Direction::Forward, true);
+        }
     }
 }
 
 void FindSelection(MainWindow* win, TextSearch::Direction direction) {
-    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
+    if (!win->IsDocLoaded() || !NeedsFindUI(win) || !win->AsFixed()) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
