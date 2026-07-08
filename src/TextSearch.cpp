@@ -202,6 +202,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     forward = true;
 }
 
+#if !OS_WIN
 static int FoldCaseWCharPortable(int c) {
     if (c >= L'A' && c <= L'Z') {
         return c + 32;
@@ -220,6 +221,7 @@ static int FoldCaseWCharPortable(int c) {
     }
     return (int)towlower((wint_t)c);
 }
+#endif
 
 // Locale-independent Unicode case folding for search. CharLowerW folds accented
 // letters (e.g. É->é, Ş->ş) regardless of the CRT locale, unlike towlower() or
