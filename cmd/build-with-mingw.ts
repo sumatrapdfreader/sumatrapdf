@@ -33,6 +33,7 @@ import {
   unrar,
   libdjvu,
   chm,
+  zopfli,
   libarchive,
   libwebp,
   dav1d,
@@ -42,6 +43,7 @@ import {
   libheif,
   mupdfLibs,
   mupdf,
+  zopfli,
 } from "./build-lib-defs";
 
 export interface MingwTools {
@@ -283,6 +285,7 @@ const sumatraFiles: FileGroup[] = [
       "Notifications.*",
       "PdfSync.*",
       "PdfTools.*",
+      "PngOptimizer.*",
       "Print.*",
       "ProgressUpdateUI.*",
       "PreviewPipe.*",
@@ -413,6 +416,7 @@ async function buildSumatraExe(
     "ext/synctex",
     "ext/libdjvu",
     "ext/CHMLib",
+    "ext/zopfli/src",
     "ext/darkmodelib/include",
     "ext/zlib",
     "ext/libarchive",

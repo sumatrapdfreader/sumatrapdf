@@ -480,6 +480,24 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4101", "4244", "4267", "4996" }
     files { "ext/djvudec/djvu.c", "ext/djvudec/djvu.h" }
 
+  -- zopfli / zopflipng: lossless PNG recompression, used to shrink PNGs we
+  -- save (e.g. screenshots) on a background thread
+  project "zopfli"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C++"
+    optimized_conf()
+    -- CPU-bound compression loops, favor speed over size
+    optimize "Speed"
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4018", "4100", "4127", "4244", "4267", "4334", "4996" }
+    includedirs { "ext/zopfli/src" }
+    files {
+      "ext/zopfli/src/zopfli/*.c", "ext/zopfli/src/zopfli/*.h",
+      "ext/zopfli/src/zopflipng/*.cc", "ext/zopfli/src/zopflipng/*.h",
+      "ext/zopfli/src/zopflipng/lodepng/*.cpp", "ext/zopfli/src/zopflipng/lodepng/*.h",
+    }
+
   project "libarchive"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -1121,7 +1139,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
@@ -1176,7 +1194,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm"
+      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm", "zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1211,7 +1229,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
@@ -1272,7 +1290,7 @@ workspace "SumatraPDF"
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libmupdf", "unrar", "libarchive", "base", "chm", "cmark-gfm"
+      "libmupdf", "unrar", "libarchive", "base", "chm", "cmark-gfm", "zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

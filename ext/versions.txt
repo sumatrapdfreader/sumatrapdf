@@ -122,3 +122,7 @@ skcms           git        (libjxl dependency)
   https://skia.googlesource.com/skcms
   https://skia.googlesource.com/skcms/+/b2e692629c1fb19342517d7fb61f1cf83d075492
   baseline transform only (HSW/SKX disabled)
+zopfli         1.0.3+     2024-04-11
+  https://github.com/google/zopfli
+  https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6
+  vendored: src/zopfli (minus zopfli_bin.c), src/zopflipng (minus zopflipng_bin.cc), COPYING

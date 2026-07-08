@@ -186,6 +186,18 @@ export const chm: LibDef = {
   files: [{ dir: "ext/CHMLib", patterns: ["chm_lib.c", "lzx.c"] }],
 };
 
+export const zopfli: LibDef = {
+  name: "zopfli",
+  alwaysOptimize: true,
+  defines: ["_CRT_SECURE_NO_WARNINGS"],
+  includes: ["ext/zopfli/src"],
+  files: [
+    { dir: "ext/zopfli/src/zopfli", patterns: ["*.c"] },
+    { dir: "ext/zopfli/src/zopflipng", patterns: ["*.cc"] },
+    { dir: "ext/zopfli/src/zopflipng/lodepng", patterns: ["*.cpp"] },
+  ],
+};
+
 export const libarchive: LibDef = {
   name: "libarchive",
   alwaysOptimize: true,

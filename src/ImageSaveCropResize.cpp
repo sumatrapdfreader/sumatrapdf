@@ -18,6 +18,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "PdfCreator.h"
+#include "PngOptimizer.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -1288,6 +1289,7 @@ static void OnSave(ImageEditWindow* ew) {
         MessageBoxWarning(ew->hwnd, "Failed to save image", "Save Image");
         return;
     }
+    OptimizePngFileAsync(dest);
 
     // load the saved image
     HWND hwndParent = ew->hwndParent;

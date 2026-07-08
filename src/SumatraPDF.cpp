@@ -67,6 +67,7 @@
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
+#include "PngOptimizer.h"
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
@@ -7238,6 +7239,7 @@ static void PasteImageFromClipboard(MainWindow* win) {
     if (status != Gdiplus::Ok) {
         return;
     }
+    OptimizePngFileAsync(destPath);
 
     // load the saved file
     if (win) {
