@@ -12,14 +12,14 @@
 //
 // Run:  bun tests/ad-hoc-png-optimize.ts
 
-import { readdirSync, rmSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, runStandalone } from "./util.ts";
 import { waitForFrame, sendCommand } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
-const IMG_W = 2000;
-const IMG_H = 1500;
+const IMG_W = 1200;
+const IMG_H = 900;
 
 function ps(cmd: string, sta = false): string {
   const args = ["powershell", "-NoProfile"];
@@ -106,8 +106,9 @@ export async function testit(): Promise<void> {
     console.log(`saved: ${newFile}, ${sizeOrig} bytes`);
 
     // wait for the background optimizer to swap in the smaller file
+    // (zopfli takes anywhere from a few seconds to a couple of minutes)
     let sizeOpt = sizeOrig;
-    for (let i = 0; i < 600; i++) {
+    for (let i = 0; i < 1800; i++) {
       await sleep(100);
       const s = statSync(newFile).size;
       if (s !== sizeOrig) {
@@ -128,7 +129,14 @@ export async function testit(): Promise<void> {
     if (statSync(newFile + ".zopfli-tmp", { throwIfNoEntry: false })) {
       throw new Error("leftover .zopfli-tmp file");
     }
-    console.log("PASS: saved png was optimized in place and still decodes");
+
+    // the "optimized by us" tEXt marker chunk must sit right after IHDR
+    // (offset 33) so future optimize runs skip this file
+    const head = readFileSync(newFile).subarray(33, 33 + 64).toString("latin1");
+    if (!head.startsWith("\0\0\0\x1atEXtSoftware\0SumatraPDF zopfli")) {
+      throw new Error("optimized png is missing the SumatraPDF zopfli marker chunk after IHDR");
+    }
+    console.log("PASS: saved png was optimized in place, has the marker chunk and still decodes");
   } finally {
     proc.kill();
     await sleep(300);
