@@ -2,11 +2,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Win.h"
-
-#include "wingui/UIModels.h"
 
 #include "DocController.h"
+#include "TreeModel.h"
 #include "EngineBase.h"
 #include "TextSelection.h"
 
@@ -15,7 +13,11 @@ uint distSq(int x, int y) {
 }
 // underscore is mainly used for programming and is thus considered a word character
 bool isWordChar(int c) {
+#if OS_WIN
     return (c > 0 && c <= 0xffff && IsCharAlphaNumericW((WCHAR)c)) || c == '_';
+#else
+    return (c > 0 && c <= 0xffff && iswalnum((wint_t)c)) || c == '_';
+#endif
 }
 
 static bool isDigit(int c) {

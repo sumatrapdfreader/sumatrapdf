@@ -547,6 +547,8 @@ const MAC_APP_SOURCES = [
   "src/GumboHelpers.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
+  "src/TextSelection.cpp",
+  "src/TextSearch.cpp",
   "src/TreeModel.cpp",
   "src/mac/SumatraMacEngine.cpp",
   "src/mac/SumatraMac.mm",
@@ -557,6 +559,8 @@ const PORTABLE_COMPILE_SOURCES = [
   "src/HtmlFormatter.cpp",
   "src/EbookFormatter.cpp",
   "src/EngineEbook.cpp",
+  "src/TextSelection.cpp",
+  "src/TextSearch.cpp",
 ];
 
 export interface MacBuildOptions {
