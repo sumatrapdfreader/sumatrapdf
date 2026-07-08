@@ -148,6 +148,7 @@ class ScopedGdiObj {
 };
 using AutoDeletePen = ScopedGdiObj<HPEN>;
 using AutoDeleteBrush = ScopedGdiObj<HBRUSH>;
+using AutoDeleteObject = ScopedGdiObj<HGDIOBJ>;
 
 class ScopedGetDC {
     HDC hdc = nullptr;
