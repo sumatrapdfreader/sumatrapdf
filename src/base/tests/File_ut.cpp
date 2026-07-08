@@ -134,4 +134,22 @@ void FileUtilTest() {
     utassert(str::Eq(joined, "foo/bar"));
     str::Free(joined);
 #endif
+
+    {
+        // write a temp file, map it and verify the view matches what was written
+        TempStr path = GetTempFilePathTemp("mmap-test");
+        utassert(len(path) > 0);
+        Str content = StrL("file::MemoryMap test content 0123456789");
+        bool ok = file::WriteFile(path, content);
+        utassert(ok);
+        file::Mapping m;
+        ok = file::MemoryMap(path, &m);
+        utassert(ok);
+        utassert(m.size == (i64)len(content));
+        utassert(m.data && memcmp(m.data, content.s, (size_t)len(content)) == 0);
+        file::MemoryUnmap(&m);
+        utassert(!m.data && m.size == 0);
+        ok = file::Delete(path);
+        utassert(ok);
+    }
 }

@@ -13,6 +13,7 @@ struct PropValue;
 bool IsEngineDjVuSupportedFileType(FileType kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromData(Str data);
+extern bool gMemoryMapLargeFiles;
 
 /* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(Str fileName);

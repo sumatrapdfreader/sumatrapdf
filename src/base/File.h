@@ -87,6 +87,16 @@ bool WriteFile(Str path, Str);
 
 i64 GetSize(FileHandle h);
 i64 GetSize(Str path);
+
+// read-only memory-mapped view of an entire file
+struct Mapping {
+    u8* data = nullptr;
+    i64 size = 0;
+    FileHandle hFile = kInvalidFileHandle;
+    void* hMapping = nullptr;
+};
+bool MemoryMap(Str path, Mapping*);
+void MemoryUnmap(Mapping*);
 bool Delete(Str path);
 bool DeleteFileToTrash(Str path);
 

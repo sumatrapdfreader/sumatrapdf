@@ -337,6 +337,57 @@ i64 GetSize(FileHandle h) {
     return size.QuadPart;
 }
 
+// Maps the whole file at path into memory as a read-only view backed by the
+// OS file cache. Unlike ReadFile() this doesn't commit private memory for the
+// file content: pages are faulted in from disk on first access and can be
+// discarded by the OS under memory pressure. Caveats: the file stays locked
+// against writers for the lifetime of the mapping, and if the backing file
+// becomes unreadable while mapped (e.g. a network drive disconnects),
+// touching a mapped page raises EXCEPTION_IN_PAGE_ERROR instead of returning
+// an error, so avoid mapping files on unreliable media.
+bool MemoryMap(Str path, Mapping* res) {
+    HANDLE hFile = OpenReadOnly(path);
+    if (hFile == kInvalidFileHandle) {
+        return false;
+    }
+    i64 size = GetSize(hFile);
+    if (size <= 0) {
+        CloseHandle(hFile);
+        return false;
+    }
+    HANDLE hMapping = CreateFileMappingW(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr);
+    if (!hMapping) {
+        CloseHandle(hFile);
+        return false;
+    }
+    // mapping the full file can fail in 32-bit builds for files larger than
+    // the available address space
+    void* data = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+    if (!data) {
+        CloseHandle(hMapping);
+        CloseHandle(hFile);
+        return false;
+    }
+    res->data = (u8*)data;
+    res->size = size;
+    res->hFile = hFile;
+    res->hMapping = hMapping;
+    return true;
+}
+
+void MemoryUnmap(Mapping* m) {
+    if (m->data) {
+        UnmapViewOfFile(m->data);
+    }
+    if (m->hMapping) {
+        CloseHandle(m->hMapping);
+    }
+    if (m->hFile != kInvalidFileHandle && m->hFile != nullptr) {
+        CloseHandle(m->hFile);
+    }
+    *m = {};
+}
+
 static bool GetInfo(Str path, WIN32_FILE_ATTRIBUTE_DATA& fileInfo) {
     if (!path) {
         return false;

@@ -19,6 +19,17 @@ extern "C" {
 
 Kind kindEngineDjVu = "engineDjVu";
 
+// if true, files >= kMemoryMapMinFileSize are memory-mapped
+// instead of being read into memory, so opening a multi-GB file doesn't
+// commit private memory for the whole file: pages come from the OS file
+// cache on demand and can be discarded under memory pressure. Files on
+// network drives are always read into memory: if the connection drops while
+// mapped, touching a page raises EXCEPTION_IN_PAGE_ERROR (a crash) instead
+// of failing with an error code.
+bool gMemoryMapLargeFiles = true;
+
+constexpr i64 kMemoryMapMinFileSize = 128 * 1024 * 1024;
+
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
     str::SkipChar(link, '#');
@@ -141,7 +152,8 @@ class EngineDjvuDec : public EngineBase {
     bool LoadFromData(Str data);
 
   protected:
-    Str fileData; // must outlive all docs
+    Str fileData;          // must outlive all docs
+    file::Mapping fileMap; // used instead of fileData for large files; must outlive all docs
 
     // After djvu_init(), a djvu_doc is read-only and djvu_page_render /
     // djvu_page_text_get_zones / djvu_page_get_links are re-entrant on the same
@@ -178,6 +190,7 @@ EngineDjvuDec::~EngineDjvuDec() {
     if (ctx) {
         djvu_ctx_free(ctx);
     }
+    file::MemoryUnmap(&fileMap);
     str::Free(fileData);
 }
 
@@ -194,6 +207,11 @@ EngineBase* EngineDjvuDec::Clone() {
 
 bool EngineDjvuDec::Load(Str fileName) {
     SetFilePath(fileName);
+    bool tryMap =
+        gMemoryMapLargeFiles && !path::IsOnNetworkDrive(fileName) && file::GetSize(fileName) >= kMemoryMapMinFileSize;
+    if (tryMap && file::MemoryMap(fileName, &fileMap)) {
+        return FinishLoading();
+    }
     fileData = file::ReadFile(fileName);
     return FinishLoading();
 }
@@ -235,7 +253,13 @@ static void DjvuDecInitOnce() {
 }
 
 bool EngineDjvuDec::FinishLoading() {
-    if (len(fileData) == 0) {
+    const u8* data = (const u8*)fileData.s;
+    size_t dataLen = (size_t)fileData.len;
+    if (fileMap.data) {
+        data = fileMap.data;
+        dataLen = (size_t)fileMap.size;
+    }
+    if (!data || dataLen == 0) {
         return false;
     }
     DjvuDecInitOnce();
@@ -243,12 +267,16 @@ bool EngineDjvuDec::FinishLoading() {
     if (!ctx) {
         return false;
     }
-    djvu_ctx_set_cache_per_page(ctx, 1);
+    // only do caching for small files. for large files like 1 GB from https://github.com/sumatrapdfreader/sumatrapdf/issues/5778
+    // each rendered page would retain ~1MB 
+    if (dataLen < kMemoryMapMinFileSize) {
+        djvu_ctx_set_cache_per_page(ctx, 1);
+    }
     // ask the decoder to emit color output in B,G,R order so it lands in a
     // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
     // decoder's final output copy at no cost).
     djvu_ctx_set_bgr(ctx, 1);
-    doc = djvu_doc_open(ctx, (u8*)fileData.s, (size_t)fileData.len);
+    doc = djvu_doc_open(ctx, data, dataLen);
     if (!doc) {
         return false;
     }

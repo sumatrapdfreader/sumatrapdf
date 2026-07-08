@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -213,6 +214,41 @@ i64 GetSize(Str path) {
         return -1;
     }
     return (i64)st.st_size;
+}
+
+// Maps the whole file at path into memory as a read-only view backed by the
+// OS page cache. Unlike ReadFile() this doesn't allocate private memory for
+// the file content: pages are faulted in from disk on first access and can
+// be discarded by the OS under memory pressure. Caveat: if the backing file
+// becomes unreadable while mapped (e.g. a network mount disconnects) or is
+// truncated by another process, touching a mapped page raises SIGBUS instead
+// of returning an error, so avoid mapping files on unreliable media.
+bool MemoryMap(Str path, Mapping* res) {
+    int fd = open(PathZTemp(path), O_RDONLY);
+    if (fd < 0) {
+        return false;
+    }
+    i64 size = GetSize(fd);
+    if (size <= 0) {
+        close(fd);
+        return false;
+    }
+    void* data = mmap(nullptr, (size_t)size, PROT_READ, MAP_PRIVATE, fd, 0);
+    // the mapping stays valid after the fd is closed
+    close(fd);
+    if (data == MAP_FAILED) {
+        return false;
+    }
+    res->data = (u8*)data;
+    res->size = size;
+    return true;
+}
+
+void MemoryUnmap(Mapping* m) {
+    if (m->data) {
+        munmap(m->data, (size_t)m->size);
+    }
+    *m = {};
 }
 
 bool WriteFile(Str path, Str d) {
