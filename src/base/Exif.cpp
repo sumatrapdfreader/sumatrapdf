@@ -501,7 +501,7 @@ static void AppendLine(ExifParser& parser, IfdGroup g, u16 tag, u16 type, TempSt
         name = Str(tagNameBuf);
     }
     TempStr line = fmt("%s %s (%s): %s", prefix, name, TypeName(type), value);
-    parser.dumpLines.Append(str::Dup(line));
+    parser.dumpLines.Append(line);
 }
 
 static TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) {
@@ -1097,9 +1097,6 @@ ExifParser::~ExifParser() {
 }
 
 void ExifParser::Reset() {
-    for (Str line : dumpLines) {
-        str::Free(line);
-    }
     dumpLines.Reset();
     entries.Reset();
     free(ownedExif);
