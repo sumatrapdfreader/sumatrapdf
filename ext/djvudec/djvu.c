@@ -652,6 +652,8 @@ void djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm);
 
 void djvu_bm_ensure_bytes(djvu_ctx *ctx, djvu_bitmap *bm);
 
+int djvu_bm_uncompress_copy(djvu_ctx *ctx, const djvu_bitmap *src, djvu_bitmap *dst);
+
 void djvu_bm_visit_ink(const djvu_bitmap *src, int left, int bottom,
                        void (*fn)(void *user, int px, int py), void *user);
 
@@ -1438,11 +1440,27 @@ void djvu_bm_free(djvu_ctx *ctx, djvu_bitmap *bm)
     }
 }
 
+static void bm_decode_rle_rows(djvu_bitmap *bm, const uint8_t *runs)
+{
+    int c = 0, n = bm->height - 1, p = 0, x;
+
+    while (n >= 0) {
+        x = bm_read_run(&runs);
+        if (c + x > bm->width)
+            break;
+        while (x-- > 0)
+            bm->data[djvu_bm_rowoffset(bm, n) + c++] = (uint8_t)p;
+        p = 1 - p;
+        if (c >= bm->width) {
+            c = 0;
+            p = 0;
+            n--;
+        }
+    }
+}
+
 void djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm)
 {
-    const uint8_t *runs;
-    int c, n, p, x;
-
     if (!bm || bm->data || !bm->rle || bm->width <= 0 || bm->height <= 0)
         return;
 
@@ -1457,27 +1475,35 @@ void djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm)
         return;
     }
 
-    runs = bm->rle;
-    n = bm->height - 1;
-    c = 0;
-    p = 0;
-    while (n >= 0) {
-        x = bm_read_run(&runs);
-        if (c + x > bm->width)
-            break;
-        while (x-- > 0)
-            bm->data[djvu_bm_rowoffset(bm, n) + c++] = (uint8_t)p;
-        p = 1 - p;
-        if (c >= bm->width) {
-            c = 0;
-            p = 0;
-            n--;
-        }
-    }
+    bm_decode_rle_rows(bm, bm->rle);
 
     djvu_free(ctx, bm->rle);
     bm->rle = NULL;
     bm->rle_len = 0;
+}
+
+int djvu_bm_uncompress_copy(djvu_ctx *ctx, const djvu_bitmap *src, djvu_bitmap *dst)
+{
+    memset(dst, 0, sizeof(*dst));
+    if (!src || !src->rle || src->width <= 0 || src->height <= 0)
+        return -1;
+
+    dst->width = src->width;
+    dst->height = src->height;
+    dst->border = src->border;
+    dst->bytes_per_row = src->width + src->border;
+    dst->max_offset = src->height * dst->bytes_per_row + dst->border;
+    dst->data = (uint8_t *)djvu_alloc(ctx, (size_t)dst->max_offset);
+    if (!dst->data) return -1;
+    memset(dst->data, 0, (size_t)dst->max_offset);
+    if (djvu_bm_alloc_guard(ctx, dst) != 0) {
+        djvu_free(ctx, dst->data);
+        memset(dst, 0, sizeof(*dst));
+        return -1;
+    }
+
+    bm_decode_rle_rows(dst, src->rle);
+    return 0;
 }
 
 void djvu_bm_ensure_bytes(djvu_ctx *ctx, djvu_bitmap *bm)
@@ -2452,6 +2478,8 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
     case REC_MatchedRefineLibraryOnly:
     case REC_MatchedRefineImageOnly: {
         djvu_bitmap *cbm;
+        djvu_bitmap cbm_copy;
+        int cbm_owned = 0;
         int cw, ch;
         if (rectype == REC_MatchedRefine) { need_add_blit = need_add_library = 1; }
         else if (rectype == REC_MatchedRefineLibraryOnly) { need_add_library = 1; }
@@ -2460,11 +2488,20 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
         parent = c->lib2shape[match];
         tmp_shape.parent = parent;
         cbm = &djvu_jb2_get_shape(jim, parent)->bm;
-        djvu_bm_ensure_bytes(c->ctx, cbm);
+
+        if (!cbm->data && cbm->rle) {
+            if (djvu_bm_uncompress_copy(c->ctx, cbm, &cbm_copy) != 0) {
+                c->error = 1;
+                break;
+            }
+            cbm = &cbm_copy;
+            cbm_owned = 1;
+        }
         cw = (1 + c->libinfo[match * 4 + 2]) - c->libinfo[match * 4 + 0];
         ch = (1 + c->libinfo[match * 4 + 3]) - c->libinfo[match * 4 + 1];
         code_rel_mark_size(c, &tmp_shape.bm, cw, ch, 4);
         code_bitmap_cross(c, &tmp_shape.bm, cbm, match);
+        if (cbm_owned) djvu_bm_free(c->ctx, &cbm_copy);
         if (rectype != REC_MatchedRefineLibraryOnly)
             code_rel_location(c, &blit, tmp_shape.bm.height, tmp_shape.bm.width);
         break;
@@ -3534,13 +3571,20 @@ static void scaler_get_line(scaler *s, int fy, const djvu_cpix *in, int in_x0, i
     int ly0 = (fy << s->yshift);
     int ly1 = ((fy + 1) << s->yshift);
     int xmin = red_xmin << s->xshift, xmax = red_xmax << s->xshift;
-    if (ly1 > in->h + in_y0) ly1 = in->h + in_y0;
+    int xend = in_x0 + in->w, yend = in_y0 + in->h;
+    if (xmax > xend) xmax = xend;
+    if (ly0 < in_y0) ly0 = in_y0;
+    if (ly1 > yend) ly1 = yend;
     for (x = xmin; x < xmax; x += sw) {
         int r = 0, g = 0, b = 0, ss = 0, sy, sx;
         for (sy = ly0; sy < ly1; sy++) {
             int rowy = sy - in_y0;
+            if (rowy < 0 || rowy >= in->h)
+                continue;
             for (sx = x; sx < x + sw && sx < xmax; sx++) {
                 int px = sx - in_x0;
+                if (px < 0 || px >= in->w)
+                    continue;
                 const uint8_t *p = in->d + ((size_t)rowy * in->w + px) * 3;
                 r += p[0]; g += p[1]; b += p[2]; ss++;
             }
@@ -3551,6 +3595,19 @@ static void scaler_get_line(scaler *s, int fy, const djvu_cpix *in, int in_x0, i
             out[idx*3+0]=(uint8_t)((r+ss/2)/ss); out[idx*3+1]=(uint8_t)((g+ss/2)/ss); out[idx*3+2]=(uint8_t)((b+ss/2)/ss);
         }
         idx++;
+    }
+    {
+        int nout = red_xmax - red_xmin;
+        while (idx < nout) {
+            if (idx > 0) {
+                out[idx * 3 + 0] = out[(idx - 1) * 3 + 0];
+                out[idx * 3 + 1] = out[(idx - 1) * 3 + 1];
+                out[idx * 3 + 2] = out[(idx - 1) * 3 + 2];
+            } else {
+                out[0] = out[1] = out[2] = 0;
+            }
+            idx++;
+        }
     }
 }
 
@@ -3664,6 +3721,10 @@ static int scaler_scale_into(scaler *s, const djvu_cpix *in,
     djvu_ctx *ctx = s->ctx;
     int bufw, y;
     uint8_t *lbuf;
+
+    if (!in || !in->d || in->w <= 0 || in->h <= 0 ||
+        in->w != s->inw || in->h != s->inh)
+        return -1;
     uint8_t *p1 = NULL, *p2 = NULL; int l1 = -1, l2 = -1;
     int red_xmin = 0, red_xmax = s->redw;
     uint16_t *hinfo16 = NULL;
@@ -3736,8 +3797,12 @@ static int scaler_scale_into(scaler *s, const djvu_cpix *in,
             else { uint8_t *t = p1; p1 = p2; l1 = l2; p2 = t; l2 = want2;
                    scaler_get_line(s, want2, in, 0, 0, red_xmin, red_xmax, p2); upper = p2; }
         } else {
-            if (fy1 < 0) fy1 = 0; if (fy1 > s->redh - 1) fy1 = s->redh - 1;
-            if (fy2 < 0) fy2 = 0; if (fy2 > s->redh - 1) fy2 = s->redh - 1;
+            if (fy1 < 0) fy1 = 0;
+            if (fy2 < 0) fy2 = 0;
+            if (fy1 >= in->h) fy1 = in->h - 1;
+            if (fy2 >= in->h) fy2 = in->h - 1;
+            if (fy1 > s->redh - 1) fy1 = s->redh - 1;
+            if (fy2 > s->redh - 1) fy2 = s->redh - 1;
             lower = in->d + (size_t)fy1 * in->w * 3;
             upper = in->d + (size_t)fy2 * in->w * 3;
         }
@@ -4004,6 +4069,7 @@ int djvu_compose_background(djvu_doc *doc, uint32_t form_off, int width, int hei
     page_no = compose_bg_page_no(doc, form_off);
     if (page_no >= 0 && djvu_cache_stores_page(ctx)) {
         pg = &doc->pages[page_no];
+        djvu_cache_lock(ctx);
         if (!pg->bg_native.d)
             compose_bg_native_build(doc, pg);
         if (pg->bg_scaled.d && pg->bg_scaled.w == rw && pg->bg_scaled.h == rh) {
@@ -4012,13 +4078,21 @@ int djvu_compose_background(djvu_doc *doc, uint32_t form_off, int width, int hei
             out->w = rw;
             out->h = rh;
             out->d = (uint8_t *)djvu_alloc(ctx, n);
-            if (!out->d) return -1;
+            if (!out->d) {
+                djvu_cache_unlock(ctx);
+                return -1;
+            }
             memcpy(out->d, pg->bg_scaled.d, n);
+            djvu_cache_unlock(ctx);
             return 0;
         }
-        if (pg->bg_native.d)
-            return compose_background_from_native(ctx, &pg->bg_native, width, height,
-                                                  subsample, out);
+        if (pg->bg_native.d) {
+            rc = compose_background_from_native(ctx, &pg->bg_native, width, height,
+                                                subsample, out);
+            djvu_cache_unlock(ctx);
+            return rc;
+        }
+        djvu_cache_unlock(ctx);
     }
 
     pm = djvu_doc_iw44_by_form_acquire(doc, form_off, "BG44", &pm_owned);
