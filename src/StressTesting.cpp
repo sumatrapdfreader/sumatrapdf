@@ -308,6 +308,9 @@ static void FormatTime(int totalSecs, str::Builder* s) {
 
 static void MakeRandomSelection(MainWindow* win, int pageNo) {
     DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
     if (!dm->ValidPageNo(pageNo)) {
         pageNo = 1;
     }
