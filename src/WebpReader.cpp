@@ -13,21 +13,6 @@
 
 namespace webp {
 
-// checks whether this could be data for a WebP image
-bool HasSignature(const Str& d) {
-    if (d.len <= 12) {
-        return false;
-    }
-    Str data = d;
-    return str::StartsWith(data, "RIFF") && str::StartsWith(Str(data.s + 8, data.len - 8), "WEBP");
-}
-
-Size SizeFromData(const Str& d) {
-    Size size;
-    WebPGetInfo((const u8*)d.s, (size_t)d.len, &size.dx, &size.dy);
-    return size;
-}
-
 Pixmap* PixmapFromData(const Str& d) {
     int w, h;
     if (!WebPGetInfo((const u8*)d.s, (size_t)d.len, &w, &h)) {
@@ -50,12 +35,6 @@ Pixmap* PixmapFromData(const Str& d) {
 
 #else
 namespace webp {
-bool HasSignature(const Str&) {
-    return false;
-}
-Size SizeFromData(const Str&) {
-    return Size();
-}
 Pixmap* PixmapFromData(const Str&) {
     return nullptr;
 }

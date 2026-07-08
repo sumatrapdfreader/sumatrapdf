@@ -5,8 +5,6 @@ struct Pixmap;
 
 namespace webp {
 
-bool HasSignature(const Str&);
-Size SizeFromData(const Str&);
 Pixmap* PixmapFromData(const Str&);
 
 } // namespace webp
