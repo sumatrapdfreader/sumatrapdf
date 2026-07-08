@@ -1329,6 +1329,9 @@ class ChmDataCache {
     Str GetHtmlData() { return html; }
 
     Str GetImageData(Str id, Str pagePath) {
+        if (!id || !pagePath) {
+            return {};
+        }
         TempStr url = NormalizeURLTemp(id, pagePath);
         for (int i = 0; i < len(images); i++) {
             if (str::Eq(images[i].fileName, url)) {
@@ -1350,6 +1353,9 @@ class ChmDataCache {
     }
 
     TempStr GetFileData(Str relPath, Str pagePath) {
+        if (!relPath || !pagePath) {
+            return {};
+        }
         TempStr url = NormalizeURLTemp(relPath, pagePath);
         return doc->GetDataTemp(url);
     }
