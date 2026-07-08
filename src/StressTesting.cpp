@@ -33,6 +33,10 @@
 
 #define FIRST_STRESS_TIMER_ID 101
 
+constexpr int kStressTestMaxPagesPerFile = 16;
+constexpr int kStressTestMaxPagesSlowFile = 8;
+constexpr int kStressTestSlowPageMs = 4 * 1000;
+
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
 static Kind kNotifStressTestBenchmark = "stressTestBenchmark";
@@ -467,7 +471,8 @@ struct StressTest {
     int maxFiles = 0;        // max files to process, 0 means no limit
     int timerId = 0;
     bool exitWhenDone = false;
-    int nSlowPages = 0;
+    int maxPagesForFile = kStressTestMaxPagesPerFile;
+    int nPagesRenderedThisFile = 0;
 
     SYSTEMTIME stressStartTime{};
     int cycles = 1;
@@ -491,6 +496,12 @@ T RemoveRandomElementFromVec(Vec<T>& v) {
     int idx = rand() % n;
     int res = v.PopAt(idx);
     return res;
+}
+
+static void LimitPagesToRender(Vec<int>& pages, int maxPages) {
+    while (len(pages) > maxPages) {
+        RemoveRandomElementFromVec(pages);
+    }
 }
 
 StressTest::StressTest(MainWindow* win, bool exitWhenDone) {
@@ -532,6 +543,7 @@ static void Finished(StressTest* st, bool success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         TempStr tm = FormatTimeTemp(secs);
         TempStr s = fmt("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm);
+        logf("%s\n", s);
         printf("%s\n", s.s);
         fflush(stdout);
         NotificationCreateArgs args;
@@ -557,6 +569,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         Start(st, dirFileProvider, cycles);
     } else {
         TempStr s = fmt("Path '%s' doesn't exist", path);
+        logf("%s\n", s);
         NotificationCreateArgs args;
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;
@@ -632,16 +645,16 @@ static bool OpenFile(StressTest* st, Str fileName) {
         SetSidebarVisibility(st->win, st->win->tocVisible, gGlobalPrefs->showFavorites);
     }
 
-    st->nSlowPages = 0;
+    st->maxPagesForFile = kStressTestMaxPagesPerFile;
+    st->nPagesRenderedThisFile = 0;
     st->pagesToRender.Clear();
-    constexpr int nMaxPages = 32;
     int nPages = ctrl->PageCount();
     if (IsFullRange(st->pageRanges)) {
         Vec<int> allPages;
         for (int n = 1; n <= nPages; n++) {
             allPages.Append(n);
         }
-        while ((len(st->pagesToRender) < nMaxPages) && (len(allPages) > 0)) {
+        while ((len(st->pagesToRender) < kStressTestMaxPagesPerFile) && (len(allPages) > 0)) {
             int nRandom = RemoveRandomElementFromVec(allPages);
             st->pagesToRender.Append(nRandom);
         }
@@ -659,6 +672,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
         if (len(st->pagesToRender) == 0) {
             return false;
         }
+        LimitPagesToRender(st->pagesToRender, kStressTestMaxPagesPerFile);
     }
 
     int randomPageIdx = rand() % len(st->pagesToRender);
@@ -680,6 +694,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
     TempStr s = fmt("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
+    logf("%s\n", s);
     NotificationCreateArgs nargs;
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;
@@ -766,21 +781,20 @@ static bool GoToNextFile(StressTest* st) {
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
     TempStr s = fmt("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime);
+    logf("%s\n", s);
     NotificationCreateArgs args;
     args.hwndParent = st->win->hwndCanvas;
     args.msg = s;
     args.groupId = kNotifStressTestBenchmark;
     ShowNotification(args);
-    if (pageRenderTime > 700) {
-        st->nSlowPages += 1;
+    st->nPagesRenderedThisFile++;
+    if (pageRenderTime > kStressTestSlowPageMs) {
+        if (st->maxPagesForFile > kStressTestMaxPagesSlowFile) {
+            st->maxPagesForFile = kStressTestMaxPagesSlowFile;
+            logf("Slow page (%d ms), limiting file to %d pages\n", (int)pageRenderTime, st->maxPagesForFile);
+        }
     }
-    bool goToNextFile = len(st->pagesToRender) == 0;
-    if (st->nSlowPages >= 3) {
-        // some files are scanned .jpx images that are slow to render
-        // not much to learn from rendering them so we skip those if
-        // we see more than 3 slow pages
-        goToNextFile = true;
-    }
+    bool goToNextFile = len(st->pagesToRender) == 0 || st->nPagesRenderedThisFile >= st->maxPagesForFile;
     if (goToNextFile) {
         if (GoToNextFile(st)) {
             return true;
@@ -978,6 +992,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
 
         PositionStressWindows(windows, n);
 
+        logf("Scanning for files in directory %s\n", i->stressTestPath);
         printf("Scanning for files in directory %s\n", i->stressTestPath.s);
         fflush(stdout);
 
