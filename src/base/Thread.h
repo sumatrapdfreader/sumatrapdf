@@ -13,6 +13,7 @@ struct Mutex {
 
     void Lock() { AcquireSRWLockExclusive(&lock); }
     void Unlock() { ReleaseSRWLockExclusive(&lock); }
+    bool TryLock() { return TryAcquireSRWLockExclusive(&lock); }
 };
 
 struct ConditionVariable {
@@ -50,6 +51,7 @@ struct Mutex {
 
     void Lock() { pthread_mutex_lock(&lock); }
     void Unlock() { pthread_mutex_unlock(&lock); }
+    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
 };
 
 struct ConditionVariable {

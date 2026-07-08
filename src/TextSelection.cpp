@@ -154,7 +154,9 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
 bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     Rect* coords;
     int textLen = 0;
-    Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (!engine->TryGetTextForPage(pageNo, &textLen, &coords)) {
+        return false;
+    }
 
     int glyphIx = FindClosestGlyph(this, pageNo, x, y);
     Point pt = ToPoint(PointF((float)x, (float)y));
