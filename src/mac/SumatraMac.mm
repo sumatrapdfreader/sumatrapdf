@@ -75,6 +75,18 @@ static const CGFloat kZoomMin = 0.125;
 static const CGFloat kZoomMax = 8.0;
 static const CGFloat kZoomStep = 1.25;
 
+static NSString* const kToolbarOpen = @"sumatra.toolbar.open";
+static NSString* const kToolbarPrevPage = @"sumatra.toolbar.prev-page";
+static NSString* const kToolbarNextPage = @"sumatra.toolbar.next-page";
+static NSString* const kToolbarPageStatus = @"sumatra.toolbar.page-status";
+static NSString* const kToolbarZoomOut = @"sumatra.toolbar.zoom-out";
+static NSString* const kToolbarZoomActual = @"sumatra.toolbar.zoom-actual";
+static NSString* const kToolbarZoomIn = @"sumatra.toolbar.zoom-in";
+static NSString* const kToolbarFitPage = @"sumatra.toolbar.fit-page";
+static NSString* const kToolbarFitWidth = @"sumatra.toolbar.fit-width";
+static NSString* const kToolbarRotateLeft = @"sumatra.toolbar.rotate-left";
+static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
+
 @class SumatraAppDelegate;
 
 // A view that draws a single rendered page. In fit modes it scales the image to
@@ -222,19 +234,202 @@ static const CGFloat kZoomStep = 1.25;
 
 @end
 
-@interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
+@interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, NSToolbarDelegate>
 @property(nonatomic, retain) NSWindow* window;
 @property(nonatomic, retain) NSScrollView* scrollView;
 @property(nonatomic, retain) SumatraDocumentView* documentView;
+@property(nonatomic, retain) NSToolbar* toolbar;
+@property(nonatomic, retain) NSTextField* pageLabel;
 @property(nonatomic) void* document;
 @property(nonatomic, copy) NSString* documentPath;
 @property(nonatomic) int pageCount;
 @property(nonatomic) int currentPage; // 1-based
 @property(nonatomic) int rotation;    // 0/90/180/270
 @property(nonatomic) CGFloat zoom;    // display zoom; 1 means actual size, 0 means fit to window
+- (void)installToolbar;
+- (void)updateToolbarStatus;
+- (BOOL)canPerformAction:(SEL)action;
 @end
 
 @implementation SumatraAppDelegate
+
+static NSImage* ToolbarImage(NSString* symbolName, NSString* fallbackName) {
+    NSImage* image = nil;
+    if ([NSImage respondsToSelector:@selector(imageWithSystemSymbolName:accessibilityDescription:)]) {
+        image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil];
+    }
+    if (!image && fallbackName) {
+        image = [NSImage imageNamed:fallbackName];
+    }
+    [image setTemplate:YES];
+    return image;
+}
+
+static NSArray<NSString*>* ToolbarDefaultItems() {
+    return @[
+        kToolbarOpen,
+        NSToolbarSeparatorItemIdentifier,
+        kToolbarPrevPage,
+        kToolbarNextPage,
+        kToolbarPageStatus,
+        NSToolbarFlexibleSpaceItemIdentifier,
+        kToolbarZoomOut,
+        kToolbarZoomActual,
+        kToolbarZoomIn,
+        NSToolbarSeparatorItemIdentifier,
+        kToolbarFitPage,
+        kToolbarFitWidth,
+        NSToolbarSeparatorItemIdentifier,
+        kToolbarRotateLeft,
+        kToolbarRotateRight,
+    ];
+}
+
+static NSArray<NSString*>* ToolbarAllowedItems() {
+    NSMutableArray<NSString*>* items = [NSMutableArray arrayWithArray:ToolbarDefaultItems()];
+    [items addObject:NSToolbarSpaceItemIdentifier];
+    return items;
+}
+
+- (NSToolbarItem*)toolbarItem:(NSString*)identifier label:(NSString*)label tooltip:(NSString*)tooltip image:(NSImage*)image
+                       action:(SEL)action {
+    NSToolbarItem* item = [[[NSToolbarItem alloc] initWithItemIdentifier:identifier] autorelease];
+    [item setLabel:label];
+    [item setPaletteLabel:label];
+    [item setToolTip:tooltip];
+    [item setImage:image];
+    [item setTarget:self];
+    [item setAction:action];
+    return item;
+}
+
+- (NSToolbarItem*)pageStatusToolbarItem:(NSString*)identifier {
+    NSToolbarItem* item = [[[NSToolbarItem alloc] initWithItemIdentifier:identifier] autorelease];
+    [item setLabel:@"Page"];
+    [item setPaletteLabel:@"Page"];
+    [item setToolTip:@"Current page"];
+
+    NSTextField* field = [[[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 86, 24)] autorelease];
+    [field setAlignment:NSTextAlignmentCenter];
+    [field setBezeled:NO];
+    [field setDrawsBackground:NO];
+    [field setEditable:NO];
+    [field setSelectable:NO];
+    [field setFont:[NSFont monospacedDigitSystemFontOfSize:13 weight:NSFontWeightRegular]];
+    [field setTextColor:[NSColor secondaryLabelColor]];
+    self.pageLabel = field;
+
+    [item setView:field];
+    [item setMinSize:NSMakeSize(86, 24)];
+    [item setMaxSize:NSMakeSize(112, 24)];
+    [self updateToolbarStatus];
+    return item;
+}
+
+- (void)installToolbar {
+    NSToolbar* toolbar = [[[NSToolbar alloc] initWithIdentifier:@"sumatra.toolbar.main"] autorelease];
+    [toolbar setDelegate:self];
+    [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
+    [toolbar setSizeMode:NSToolbarSizeModeRegular];
+    [toolbar setAllowsUserCustomization:YES];
+    [toolbar setAutosavesConfiguration:YES];
+    self.toolbar = toolbar;
+    [_window setToolbar:toolbar];
+}
+
+- (NSArray*)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar {
+    (void)toolbar;
+    return ToolbarDefaultItems();
+}
+
+- (NSArray*)toolbarAllowedItemIdentifiers:(NSToolbar*)toolbar {
+    (void)toolbar;
+    return ToolbarAllowedItems();
+}
+
+- (NSArray*)toolbarSelectableItemIdentifiers:(NSToolbar*)toolbar {
+    (void)toolbar;
+    return @[];
+}
+
+- (NSToolbarItem*)toolbar:(NSToolbar*)toolbar itemForItemIdentifier:(NSString*)identifier willBeInsertedIntoToolbar:(BOOL)flag {
+    (void)toolbar;
+    (void)flag;
+    if ([identifier isEqualToString:kToolbarOpen]) {
+        return [self toolbarItem:identifier
+                           label:@"Open"
+                         tooltip:@"Open a document"
+                           image:ToolbarImage(@"doc", NSImageNameFolder)
+                          action:@selector(openDocument:)];
+    }
+    if ([identifier isEqualToString:kToolbarPrevPage]) {
+        return [self toolbarItem:identifier
+                           label:@"Previous"
+                         tooltip:@"Previous page"
+                           image:ToolbarImage(@"chevron.left", NSImageNameGoLeftTemplate)
+                          action:@selector(goToPrevPage:)];
+    }
+    if ([identifier isEqualToString:kToolbarNextPage]) {
+        return [self toolbarItem:identifier
+                           label:@"Next"
+                         tooltip:@"Next page"
+                           image:ToolbarImage(@"chevron.right", NSImageNameGoRightTemplate)
+                          action:@selector(goToNextPage:)];
+    }
+    if ([identifier isEqualToString:kToolbarPageStatus]) {
+        return [self pageStatusToolbarItem:identifier];
+    }
+    if ([identifier isEqualToString:kToolbarZoomOut]) {
+        return [self toolbarItem:identifier
+                           label:@"Out"
+                         tooltip:@"Zoom out"
+                           image:ToolbarImage(@"minus.magnifyingglass", nil)
+                          action:@selector(zoomOut:)];
+    }
+    if ([identifier isEqualToString:kToolbarZoomActual]) {
+        return [self toolbarItem:identifier
+                           label:@"Actual"
+                         tooltip:@"Actual size"
+                           image:ToolbarImage(@"1.magnifyingglass", nil)
+                          action:@selector(zoomActualSize:)];
+    }
+    if ([identifier isEqualToString:kToolbarZoomIn]) {
+        return [self toolbarItem:identifier
+                           label:@"In"
+                         tooltip:@"Zoom in"
+                           image:ToolbarImage(@"plus.magnifyingglass", nil)
+                          action:@selector(zoomIn:)];
+    }
+    if ([identifier isEqualToString:kToolbarFitPage]) {
+        return [self toolbarItem:identifier
+                           label:@"Fit Page"
+                         tooltip:@"Fit page"
+                           image:ToolbarImage(@"rectangle.portrait", nil)
+                          action:@selector(zoomFitPage:)];
+    }
+    if ([identifier isEqualToString:kToolbarFitWidth]) {
+        return [self toolbarItem:identifier
+                           label:@"Fit Width"
+                         tooltip:@"Fit width"
+                           image:ToolbarImage(@"arrow.left.and.right.square", nil)
+                          action:@selector(zoomFitWidth:)];
+    }
+    if ([identifier isEqualToString:kToolbarRotateLeft]) {
+        return [self toolbarItem:identifier
+                           label:@"Left"
+                         tooltip:@"Rotate left"
+                           image:ToolbarImage(@"rotate.left", NSImageNameRefreshTemplate)
+                          action:@selector(rotateLeft:)];
+    }
+    if ([identifier isEqualToString:kToolbarRotateRight]) {
+        return [self toolbarItem:identifier
+                           label:@"Right"
+                         tooltip:@"Rotate right"
+                           image:ToolbarImage(@"rotate.right", NSImageNameRefreshTemplate)
+                          action:@selector(rotateRight:)];
+    }
+    return nil;
+}
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
     (void)notification;
@@ -250,6 +445,8 @@ static const CGFloat kZoomStep = 1.25;
                                               defer:NO];
     [_window setTitle:@"SumatraPDF"];
     [_window setDelegate:self];
+
+    [self installToolbar];
 
     _scrollView = [[NSScrollView alloc] initWithFrame:frame];
     [_scrollView setHasVerticalScroller:YES];
@@ -456,6 +653,41 @@ static const CGFloat kZoomStep = 1.25;
     } else {
         [_window setTitle:name];
     }
+    [self updateToolbarStatus];
+}
+
+- (void)updateToolbarStatus {
+    if (_pageLabel) {
+        NSString* text = (_document && _pageCount > 0) ? [NSString stringWithFormat:@"%d / %d", _currentPage, _pageCount]
+                                                       : @"No document";
+        [_pageLabel setStringValue:text];
+    }
+    [_toolbar validateVisibleItems];
+}
+
+- (BOOL)canPerformAction:(SEL)action {
+    if (!action || action == @selector(openDocument:) || action == @selector(toggleFullScreen:) ||
+        action == @selector(openWebsite:)) {
+        return YES;
+    }
+    if (action == @selector(goToPrevPage:) || action == @selector(goToFirstPage:)) {
+        return [self hasDocument] && _currentPage > 1;
+    }
+    if (action == @selector(goToNextPage:) || action == @selector(goToLastPage:)) {
+        return [self hasDocument] && _currentPage < _pageCount;
+    }
+    if (action == @selector(performClose:) || action == @selector(showInFolder:) ||
+        action == @selector(goToPageDialog:) || action == @selector(rotateLeft:) ||
+        action == @selector(rotateRight:) || action == @selector(zoomFitPage:) ||
+        action == @selector(zoomFitWidth:) || action == @selector(zoomActualSize:) ||
+        action == @selector(zoomIn:) || action == @selector(zoomOut:)) {
+        return [self hasDocument];
+    }
+    return YES;
+}
+
+- (BOOL)validateToolbarItem:(NSToolbarItem*)item {
+    return [self canPerformAction:[item action]];
 }
 
 - (void)goToPage:(int)pageNo {
@@ -646,20 +878,7 @@ static const CGFloat kZoomStep = 1.25;
     if (action == @selector(unavailableFeature:)) {
         return NO;
     }
-    // actions that need an open document
-    if (action == @selector(performClose:) || action == @selector(showInFolder:) ||
-        action == @selector(goToNextPage:) || action == @selector(goToPrevPage:) ||
-        action == @selector(goToFirstPage:) || action == @selector(goToLastPage:) ||
-        action == @selector(goToPageDialog:) || action == @selector(rotateLeft:) ||
-        action == @selector(rotateRight:) || action == @selector(zoomFitPage:) ||
-        action == @selector(zoomFitWidth:) || action == @selector(zoomActualSize:) ||
-        action == @selector(zoomIn:) || action == @selector(zoomOut:)) {
-        return [self hasDocument];
-    }
-    if (action == @selector(goToNextPage:)) {
-        return [self hasDocument] && _currentPage < _pageCount;
-    }
-    return YES;
+    return [self canPerformAction:action];
 }
 
 #pragma mark - App lifecycle
@@ -696,6 +915,10 @@ static const CGFloat kZoomStep = 1.25;
 }
 
 - (void)dealloc {
+    [_window setDelegate:nil];
+    [_toolbar setDelegate:nil];
+    [_pageLabel release];
+    [_toolbar release];
     [_documentView release];
     [_scrollView release];
     [_window release];
@@ -782,7 +1005,7 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
             NSEventModifierFlagCommand | NSEventModifierFlagControl);
     [viewMenu addItem:[NSMenuItem separatorItem]];
     AddPlaceholder(viewMenu, @"Show Bookmarks", delegate);
-    AddPlaceholder(viewMenu, @"Show Toolbar", delegate);
+    AddItem(viewMenu, @"Show Toolbar", @selector(toggleToolbarShown:), nil, @"", 0);
     [viewItem setSubmenu:viewMenu];
 
     // Go To menu
