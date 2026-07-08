@@ -4,7 +4,7 @@
 struct ChmFile;
 enum class FileType : u8;
 struct ChmTocTraceItem;
-class ChmDocView;
+class BrowserDocView;
 struct HtmlWindowCallback;
 struct ChmCacheEntry;
 
@@ -81,7 +81,7 @@ struct ChmModel : DocController {
     // url of the currently displayed page; may be a redirect/anchor url that
     // isn't in `pages`, so it's tracked separately from currentPageNo
     Str currentPageUrl;
-    ChmDocView* docView = nullptr;
+    BrowserDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     float initZoom = kInvalidZoom;
     // intended zoom level, re-applied after every document load because the

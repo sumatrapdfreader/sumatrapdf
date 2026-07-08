@@ -8,7 +8,7 @@
 #include "base/Win.h"
 
 #include "wingui/HtmlWindow.h"
-#include "wingui/ChmDocView.h"
+#include "wingui/BrowserDocView.h"
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
@@ -128,7 +128,7 @@ bool ChmModel::SetParentHwnd(HWND hwnd) {
         RemoveParentHwnd();
     }
     htmlWindowCb = new HtmlWindowHandler(this);
-    docView = ChmDocView::Create(hwnd, htmlWindowCb);
+    docView = BrowserDocView::Create(hwnd, htmlWindowCb);
     if (!docView) {
         delete htmlWindowCb;
         htmlWindowCb = nullptr;

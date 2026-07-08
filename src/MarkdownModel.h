@@ -1,7 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class ChmDocView;
+class BrowserDocView;
 enum class FileType : u8;
 struct HtmlWindowCallback;
 struct MarkdownCacheEntry;
@@ -70,7 +70,7 @@ struct MarkdownModel : DocController {
     StrVec pages;
     int currentPageNo = 1;
     Str currentPageUrl;
-    ChmDocView* docView = nullptr;
+    BrowserDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     TocTree* tocTree = nullptr;
     Mutex docAccess;

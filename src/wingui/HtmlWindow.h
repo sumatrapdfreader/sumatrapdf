@@ -28,11 +28,11 @@ struct HtmlWindowCallback {
     // called when a file can't be displayed and has to be downloaded instead
     virtual void DownloadData(Str url, Str data) = 0;
 
-    // in-page find result (ChmDocView WebView2 backend only): search
+    // in-page find result (BrowserDocView WebView2 backend only): search
     // generation, 1-based current match and total match count on this page
     virtual void OnFindResult(int, int, int) {}
 
-    // all-pages find result (ChmDocView WebView2 backend only): raw
+    // all-pages find result (BrowserDocView WebView2 backend only): raw
     // 'mdfindall' payload ("<gen> <total> <records>")
     virtual void OnFindAllResult(Str) {}
 

@@ -1199,7 +1199,7 @@
     <ClInclude Include="..\src\uia\Provider.h" />
     <ClInclude Include="..\src\uia\StartPageProvider.h" />
     <ClInclude Include="..\src\uia\TextRange.h" />
-    <ClInclude Include="..\src\wingui\ChmDocView.h" />
+    <ClInclude Include="..\src\wingui\BrowserDocView.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
     <ClInclude Include="..\src\wingui\HtmlWindow.h" />
@@ -1611,9 +1611,9 @@
     <ClCompile Include="..\src\uia\Provider.cpp" />
     <ClCompile Include="..\src\uia\StartPageProvider.cpp" />
     <ClCompile Include="..\src\uia\TextRange.cpp" />
+    <ClCompile Include="..\src\wingui\BrowserDocView.cpp" />
     <ClCompile Include="..\src\wingui\Button.cpp" />
     <ClCompile Include="..\src\wingui\Checkbox.cpp" />
-    <ClCompile Include="..\src\wingui\ChmDocView.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
     <ClCompile Include="..\src\wingui\DropDown.cpp" />
     <ClCompile Include="..\src\wingui\Edit.cpp" />

@@ -10,7 +10,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/HtmlWindow.h"
 #include "wingui/WebView.h"
-#include "wingui/ChmDocView.h"
+#include "wingui/BrowserDocView.h"
 
 #include "AppTools.h"
 #include "Accelerators.h"
@@ -19,7 +19,7 @@ constexpr const char* kChmVirtualHost = "https://sumatrapdf.chm/";
 constexpr const WCHAR* kChmVirtualHostW = L"https://sumatrapdf.chm/";
 
 // Injected on every WebView2 navigation. Reports the document scroll position
-// back to the host on each scroll so ChmDocView can answer GetScrollPos()
+// back to the host on each scroll so BrowserDocView can answer GetScrollPos()
 // synchronously (WebView2 script eval is async and can't return a value here).
 constexpr const char* kReportScrollJs =
     "(function(){var post=function(){try{var x=Math.round(window.scrollX||window.pageXOffset||0);"
@@ -222,12 +222,12 @@ window.__sumatraFind = { start: start, gotoMatch: gotoMatch, searchAll: searchAl
 
 // WebView2 host that captures scroll-position and find-result messages posted
 // by kReportScrollJs / kFindInPageJs.
-struct ChmWebviewWnd : WebviewWnd {
-    ChmDocView* owner = nullptr;
+struct BrowserWebviewWnd : WebviewWnd {
+    BrowserDocView* owner = nullptr;
     void OnBrowserMessage(Str msg) override;
 };
 
-void ChmWebviewWnd::OnBrowserMessage(Str msg) {
+void BrowserWebviewWnd::OnBrowserMessage(Str msg) {
     int x = 0;
     int y = 0;
     if (owner && !str::IsNull(str::Parse(msg, "chmscroll %d %d", &x, &y))) {
@@ -271,8 +271,8 @@ static TempStr ChmMimeFromPathTemp(Str path, Str data) {
     return mime;
 }
 
-bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
-    auto* view = (ChmDocView*)ctx;
+bool BrowserDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
+    auto* view = (BrowserDocView*)ctx;
     if (!view || !view->cb || !res || len(path) == 0) {
         return false;
     }
@@ -287,16 +287,16 @@ bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     return true;
 }
 
-bool ChmDocView::NavigationStarting(void* ctx, Str url, bool newWindow) {
-    auto* view = (ChmDocView*)ctx;
+bool BrowserDocView::NavigationStarting(void* ctx, Str url, bool newWindow) {
+    auto* view = (BrowserDocView*)ctx;
     if (!view || !view->cb) {
         return false;
     }
     return view->cb->OnBeforeNavigate(url, newWindow);
 }
 
-void ChmDocView::NavigationCompleted(void* ctx, Str url, bool success) {
-    auto* view = (ChmDocView*)ctx;
+void BrowserDocView::NavigationCompleted(void* ctx, Str url, bool success) {
+    auto* view = (BrowserDocView*)ctx;
     if (!view || !view->cb || !success || len(url) == 0) {
         return;
     }
@@ -308,8 +308,8 @@ void ChmDocView::NavigationCompleted(void* ctx, Str url, bool success) {
     view->cb->OnDocumentComplete(url);
 }
 
-void ChmDocView::HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
-    auto* view = (ChmDocView*)ctx;
+void BrowserDocView::HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
+    auto* view = (BrowserDocView*)ctx;
     if (!view) {
         return;
     }
@@ -328,20 +328,20 @@ static int ChmResolveAccelCmd(void*, u16 vk, bool ctrl, bool shift, bool alt) {
     return SafeAcceleratorCmd(vk, ctrl, shift, alt);
 }
 
-void ChmDocView::UnsubclassParent() {
+void BrowserDocView::UnsubclassParent() {
     if (!subclassId || !hwndParent) {
         return;
     }
     RemoveWindowSubclass(hwndParent, ParentWndProc, subclassId);
-    auto curr = (ChmDocView*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
+    auto curr = (BrowserDocView*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
     if (curr == this) {
         SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
     }
     subclassId = 0;
 }
 
-LRESULT ChmDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    auto* view = reinterpret_cast<ChmDocView*>(data);
+LRESULT BrowserDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+    auto* view = reinterpret_cast<BrowserDocView*>(data);
     if (!view) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
@@ -381,8 +381,8 @@ LRESULT ChmDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UIN
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-bool ChmDocView::CreateWebView2() {
-    auto* chmWv = new ChmWebviewWnd();
+bool BrowserDocView::CreateWebView2() {
+    auto* chmWv = new BrowserWebviewWnd();
     chmWv->owner = this;
     wv = chmWv;
     wv->dataDir = str::Dup(GetWebViewDataDirTemp());
@@ -422,12 +422,12 @@ bool ChmDocView::CreateWebView2() {
     return true;
 }
 
-ChmDocView* ChmDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix) {
+BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix) {
     if (!hwndParent || !cb) {
         return nullptr;
     }
 
-    auto* view = new ChmDocView();
+    auto* view = new BrowserDocView();
     view->hwndParent = hwndParent;
     view->cb = cb;
     if (virtualHostPrefix) {
@@ -454,7 +454,7 @@ ChmDocView* ChmDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, Str virt
     return nullptr;
 }
 
-ChmDocView::~ChmDocView() {
+BrowserDocView::~BrowserDocView() {
     UnsubclassParent();
     delete wv;
     delete ie;
@@ -462,7 +462,7 @@ ChmDocView::~ChmDocView() {
     wstr::Free(virtualHostW);
 }
 
-void ChmDocView::NavigateToDataUrl(Str url) {
+void BrowserDocView::NavigateToDataUrl(Str url) {
     if (!url) {
         return;
     }
@@ -479,7 +479,7 @@ void ChmDocView::NavigateToDataUrl(Str url) {
     }
 }
 
-void ChmDocView::GoBack() {
+void BrowserDocView::GoBack() {
     if (backend == Backend::WebView2 && wv) {
         wv->GoBack();
         return;
@@ -489,7 +489,7 @@ void ChmDocView::GoBack() {
     }
 }
 
-void ChmDocView::GoForward() {
+void BrowserDocView::GoForward() {
     if (backend == Backend::WebView2 && wv) {
         wv->GoForward();
         return;
@@ -499,7 +499,7 @@ void ChmDocView::GoForward() {
     }
 }
 
-void ChmDocView::SetZoomPercent(int zoom) {
+void BrowserDocView::SetZoomPercent(int zoom) {
     zoomPercent = zoom;
     if (backend == Backend::WebView2 && wv) {
         wv->SetZoomPercent(zoom);
@@ -512,7 +512,7 @@ void ChmDocView::SetZoomPercent(int zoom) {
     }
 }
 
-int ChmDocView::GetZoomPercent() const {
+int BrowserDocView::GetZoomPercent() const {
     if (backend == Backend::WebView2 && wv) {
         return wv->GetZoomPercent();
     }
@@ -522,7 +522,7 @@ int ChmDocView::GetZoomPercent() const {
     return zoomPercent;
 }
 
-Point ChmDocView::GetScrollPos() const {
+Point BrowserDocView::GetScrollPos() const {
     if (backend == Backend::WebView2 && wv) {
         return webviewScrollPos;
     }
@@ -532,7 +532,7 @@ Point ChmDocView::GetScrollPos() const {
     return Point(-1, -1);
 }
 
-void ChmDocView::SetScrollPos(Point pos) {
+void BrowserDocView::SetScrollPos(Point pos) {
     if (pos.x < 0 && pos.y < 0) {
         return;
     }
@@ -553,7 +553,7 @@ void ChmDocView::SetScrollPos(Point pos) {
     }
 }
 
-void ChmDocView::PrintCurrentPage(bool showUI) {
+void BrowserDocView::PrintCurrentPage(bool showUI) {
     if (backend == Backend::WebView2 && wv) {
         if (showUI) {
             wv->Eval("window.print()");
@@ -567,7 +567,7 @@ void ChmDocView::PrintCurrentPage(bool showUI) {
     }
 }
 
-void ChmDocView::FindInCurrentPage() {
+void BrowserDocView::FindInCurrentPage() {
     if (backend == Backend::WebView2 && wv) {
         // trigger the WebView2 (Chromium) find-on-page bar, like IE's own find
         wv->ShowFindUI();
@@ -578,7 +578,7 @@ void ChmDocView::FindInCurrentPage() {
     }
 }
 
-bool ChmDocView::CanFindInPage() const {
+bool BrowserDocView::CanFindInPage() const {
     return backend == Backend::WebView2 && wv != nullptr;
 }
 
@@ -614,7 +614,7 @@ static TempStr JsEscapeTemp(Str s) {
 // highlight matches of term on the current page; gotoIdx >= 0 makes that
 // match current (used after navigating to a match on another page), -1 picks
 // the first match at/below the current scroll position
-void ChmDocView::FindStart(Str term, bool matchCase, bool wholeWord, int gen, int gotoIdx) {
+void BrowserDocView::FindStart(Str term, bool matchCase, bool wholeWord, int gen, int gotoIdx) {
     if (!CanFindInPage()) {
         return;
     }
@@ -628,7 +628,7 @@ void ChmDocView::FindStart(Str term, bool matchCase, bool wholeWord, int gen, in
 
 // search all pages of the document (pageUrls in page order); the match list
 // is posted back asynchronously as one 'mdfindall' message
-void ChmDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen) {
+void BrowserDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen) {
     if (!CanFindInPage()) {
         return;
     }
@@ -651,7 +651,7 @@ void ChmDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, 
 }
 
 // jump to the idx-th match on the current page (as counted by FindStart)
-void ChmDocView::FindGoto(int idx) {
+void BrowserDocView::FindGoto(int idx) {
     if (!CanFindInPage()) {
         return;
     }
@@ -659,14 +659,14 @@ void ChmDocView::FindGoto(int idx) {
     wv->Eval(js);
 }
 
-void ChmDocView::FindClear() {
+void BrowserDocView::FindClear() {
     if (!CanFindInPage()) {
         return;
     }
     wv->Eval("window.__sumatraFind && __sumatraFind.clear();");
 }
 
-void ChmDocView::SelectAll() {
+void BrowserDocView::SelectAll() {
     if (backend == Backend::WebView2 && wv) {
         wv->Eval("document.execCommand('selectAll', false, null)");
         return;
@@ -676,7 +676,7 @@ void ChmDocView::SelectAll() {
     }
 }
 
-void ChmDocView::CopySelection() {
+void BrowserDocView::CopySelection() {
     if (backend == Backend::WebView2 && wv) {
         wv->Eval("document.execCommand('copy', false, null)");
         return;
@@ -686,7 +686,7 @@ void ChmDocView::CopySelection() {
     }
 }
 
-LRESULT ChmDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
     if (backend == Backend::WebView2 && wv && wv->hwnd) {
         return SendMessageW(wv->hwnd, msg, wp, lp);
     }

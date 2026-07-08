@@ -153,7 +153,7 @@ void MdFindResultReceived(MainWindow* win, int gen, int current, int total) {
 
 // payload: "<gen> <total> <records>", records separated by \x1e (record sep),
 // each "<page>\x1f<idx>\x1f<snippet>" (\x1f: unit sep). Built by searchAll()
-// in kFindInPageJs (ChmDocView.cpp)
+// in kFindInPageJs (BrowserDocView.cpp)
 void MdFindAllResultReceived(MainWindow* win, Str payload) {
     int gen = 0;
     int total = 0;

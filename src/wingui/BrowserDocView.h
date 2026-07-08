@@ -3,18 +3,19 @@
 
 struct HtmlWindowCallback;
 struct WebViewResourceResult;
-struct ChmWebviewWnd;
+struct BrowserWebviewWnd;
 
-// Hosts CHM HTML content in WebView2 when available, otherwise in embedded IE.
-class ChmDocView {
-    friend struct ChmWebviewWnd;
+// Hosts a document's HTML content (CHM, markdown) in an embedded browser:
+// WebView2 when available, otherwise IE.
+class BrowserDocView {
+    friend struct BrowserWebviewWnd;
 
   public:
     bool canGoBack = false;
     bool canGoForward = false;
 
-    static ChmDocView* Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix = {});
-    ~ChmDocView();
+    static BrowserDocView* Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix = {});
+    ~BrowserDocView();
 
     void NavigateToDataUrl(Str url);
     void GoBack();

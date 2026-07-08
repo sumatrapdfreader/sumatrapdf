@@ -10,7 +10,7 @@
 #include "base/Win.h"
 
 #include "wingui/HtmlWindow.h"
-#include "wingui/ChmDocView.h"
+#include "wingui/BrowserDocView.h"
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
@@ -212,7 +212,7 @@ bool MarkdownModel::SetParentHwnd(HWND hwnd) {
         RemoveParentHwnd();
     }
     htmlWindowCb = new MarkdownHtmlWindowHandler(this);
-    docView = ChmDocView::Create(hwnd, htmlWindowCb, Str(kMdVirtualHost));
+    docView = BrowserDocView::Create(hwnd, htmlWindowCb, Str(kMdVirtualHost));
     if (!docView) {
         delete htmlWindowCb;
         htmlWindowCb = nullptr;
