@@ -4,6 +4,7 @@
 
 // The website / manual URL opened from the Help menu.
 static NSString* const kWebsiteURL = @"https://www.sumatrapdfreader.org";
+static const CGFloat kCocoaPointsPerInch = 72.0;
 
 static void ReleaseCopiedPixels(void* info, const void*, size_t) {
     free(info);
@@ -81,6 +82,7 @@ static const CGFloat kZoomStep = 1.25;
 // an NSScrollView. It owns keyboard navigation for the document.
 @interface SumatraDocumentView : NSView
 @property(nonatomic) CGImageRef image;
+@property(nonatomic) NSSize imageSize;
 @property(nonatomic, copy) NSString* message;
 @property(nonatomic) BOOL scaleToFit;
 @property(nonatomic, assign) SumatraAppDelegate* owner;
@@ -136,22 +138,27 @@ static const CGFloat kZoomStep = 1.25;
     NSRect bounds = [self bounds];
     CGFloat imageW = (CGFloat)CGImageGetWidth(_image);
     CGFloat imageH = (CGFloat)CGImageGetHeight(_image);
+    NSSize imageSize = _imageSize;
+    if (imageSize.width <= 0 || imageSize.height <= 0) {
+        imageSize = NSMakeSize(imageW, imageH);
+    }
 
     NSRect drawRect;
     if (_scaleToFit) {
         CGFloat margin = 8.0;
-        CGFloat scale = MIN((bounds.size.width - 2 * margin) / imageW, (bounds.size.height - 2 * margin) / imageH);
+        CGFloat scale =
+            MIN((bounds.size.width - 2 * margin) / imageSize.width, (bounds.size.height - 2 * margin) / imageSize.height);
         if (!isfinite(scale) || scale <= 0) {
             scale = 1;
         }
         scale = MIN(scale, 1.0);
-        CGSize drawSize = CGSizeMake(floor(imageW * scale), floor(imageH * scale));
+        CGSize drawSize = CGSizeMake(floor(imageSize.width * scale), floor(imageSize.height * scale));
         drawRect = NSMakeRect(floor((bounds.size.width - drawSize.width) / 2.0),
                               floor((bounds.size.height - drawSize.height) / 2.0), drawSize.width, drawSize.height);
     } else {
-        // sized to the image (1:1); center if the view is larger than the image
-        drawRect = NSMakeRect(floor(MAX(0, (bounds.size.width - imageW) / 2.0)),
-                              floor(MAX(0, (bounds.size.height - imageH) / 2.0)), imageW, imageH);
+        drawRect = NSMakeRect(floor(MAX(0, (bounds.size.width - imageSize.width) / 2.0)),
+                              floor(MAX(0, (bounds.size.height - imageSize.height) / 2.0)), imageSize.width,
+                              imageSize.height);
     }
 
     [[NSColor colorWithCalibratedWhite:0.92 alpha:1.0] setFill];
@@ -215,7 +222,7 @@ static const CGFloat kZoomStep = 1.25;
 
 @end
 
-@interface SumatraAppDelegate : NSObject <NSApplicationDelegate>
+@interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
 @property(nonatomic, retain) NSWindow* window;
 @property(nonatomic, retain) NSScrollView* scrollView;
 @property(nonatomic, retain) SumatraDocumentView* documentView;
@@ -224,7 +231,7 @@ static const CGFloat kZoomStep = 1.25;
 @property(nonatomic) int pageCount;
 @property(nonatomic) int currentPage; // 1-based
 @property(nonatomic) int rotation;    // 0/90/180/270
-@property(nonatomic) CGFloat zoom;    // render zoom; 0 means "fit to window"
+@property(nonatomic) CGFloat zoom;    // display zoom; 1 means actual size, 0 means fit to window
 @end
 
 @implementation SumatraAppDelegate
@@ -242,6 +249,7 @@ static const CGFloat kZoomStep = 1.25;
                                             backing:NSBackingStoreBuffered
                                               defer:NO];
     [_window setTitle:@"SumatraPDF"];
+    [_window setDelegate:self];
 
     _scrollView = [[NSScrollView alloc] initWithFrame:frame];
     [_scrollView setHasVerticalScroller:YES];
@@ -336,30 +344,53 @@ static const CGFloat kZoomStep = 1.25;
     [NSApp activateIgnoringOtherApps:YES];
 }
 
-// Computes the render zoom for the current fit mode, given the page's mediabox
-// (in points) and the space available in the scroll view's clip area.
-- (CGFloat)fitZoomForWidthOnly:(BOOL)widthOnly {
+- (CGFloat)backingScale {
+    CGFloat scale = [_window backingScaleFactor];
+    return scale > 0 ? scale : 1.0;
+}
+
+- (CGFloat)fileDPI {
+    if (!_document) {
+        return 96.0;
+    }
+    double dpi = MacFileDPI(_document);
+    return dpi > 0 ? (CGFloat)dpi : 96.0;
+}
+
+- (CGFloat)actualSizeRenderZoom {
+    return [self backingScale] * kCocoaPointsPerInch / [self fileDPI];
+}
+
+- (NSSize)pageSizeForDisplayZoom:(CGFloat)displayZoom {
     double wPts = 0, hPts = 0;
     if (!MacPageSize(_document, _currentPage, &wPts, &hPts) || wPts <= 0 || hPts <= 0) {
-        return 1.0;
+        return NSMakeSize(1, 1);
     }
-    // rotation swaps width/height
     if (_rotation == 90 || _rotation == 270) {
         double t = wPts;
         wPts = hPts;
         hPts = t;
     }
-    // at zoom 1.0 the engine renders roughly points * 96/72 pixels
-    const double pxPerPt = 96.0 / 72.0;
+    CGFloat scale = kCocoaPointsPerInch * displayZoom / [self fileDPI];
+    return NSMakeSize((CGFloat)wPts * scale, (CGFloat)hPts * scale);
+}
+
+// Computes the user-visible zoom for fit modes. At display zoom 1.0, file DPI
+// units are mapped to Cocoa points so "Actual Size" has physical scale.
+- (CGFloat)fitZoomForWidthOnly:(BOOL)widthOnly {
+    NSSize pageSize = [self pageSizeForDisplayZoom:1.0];
+    if (pageSize.width <= 0 || pageSize.height <= 0) {
+        return 1.0;
+    }
     NSSize clip = [[_scrollView contentView] bounds].size;
     double margin = 16.0;
     double availW = MAX(1.0, clip.width - margin);
-    double zoomW = availW / (wPts * pxPerPt);
+    double zoomW = availW / pageSize.width;
     if (widthOnly) {
         return (CGFloat)zoomW;
     }
     double availH = MAX(1.0, clip.height - margin);
-    double zoomH = availH / (hPts * pxPerPt);
+    double zoomH = availH / pageSize.height;
     return (CGFloat)MIN(zoomW, zoomH);
 }
 
@@ -369,9 +400,11 @@ static const CGFloat kZoomStep = 1.25;
     }
 
     BOOL fitMode = (_zoom <= 0);
-    CGFloat renderZoom = fitMode ? [self fitZoomForWidthOnly:NO] : _zoom;
+    CGFloat displayZoom = fitMode ? [self fitZoomForWidthOnly:NO] : _zoom;
+    CGFloat renderZoom = displayZoom * [self actualSizeRenderZoom];
     if (renderZoom <= 0) {
-        renderZoom = 1.0;
+        displayZoom = 1.0;
+        renderZoom = [self actualSizeRenderZoom];
     }
 
     MacRenderedPage page = {};
@@ -398,12 +431,13 @@ static const CGFloat kZoomStep = 1.25;
     }
 
     [_documentView setScaleToFit:fitMode];
+    [_documentView setImageSize:[self pageSizeForDisplayZoom:displayZoom]];
     if (fitMode) {
         [_documentView setFrame:[[_scrollView contentView] bounds]];
         [_documentView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
     } else {
         [_documentView setAutoresizingMask:NSViewNotSizable];
-        [_documentView setFrameSize:NSMakeSize(CGImageGetWidth(image), CGImageGetHeight(image))];
+        [_documentView setFrameSize:[self pageSizeForDisplayZoom:displayZoom]];
     }
     [_documentView setImage:image];
     CGImageRelease(image);
@@ -471,6 +505,7 @@ static const CGFloat kZoomStep = 1.25;
     [_documentView setScaleToFit:YES];
     [_documentView setFrame:[[_scrollView contentView] bounds]];
     [_documentView setImage:nullptr];
+    [_documentView setImageSize:NSZeroSize];
     [_documentView setMessage:nil];
     [self updateTitle];
 }
@@ -632,6 +667,13 @@ static const CGFloat kZoomStep = 1.25;
 - (void)windowDidResize:(NSNotification*)notification {
     (void)notification;
     if (_document && _zoom <= 0) {
+        [self renderCurrentPage];
+    }
+}
+
+- (void)windowDidChangeBackingProperties:(NSNotification*)notification {
+    (void)notification;
+    if (_document) {
         [self renderCurrentPage];
     }
 }

@@ -27,6 +27,8 @@ int MacPageCount(void* document);
 // Mediabox size of pageNo (1-based) in points. Returns false if invalid.
 bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut);
 
+double MacFileDPI(void* document);
+
 // Renders pageNo (1-based) at the given zoom and rotation (0/90/180/270).
 // Fills *page (caller frees with MacFreeRenderedPage); returns false on failure.
 bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page);

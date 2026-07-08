@@ -156,6 +156,14 @@ bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut
     return true;
 }
 
+double MacFileDPI(void* document) {
+    if (!document) {
+        return 96.0;
+    }
+    double dpi = ((EngineBase*)document)->GetFileDPI();
+    return dpi > 0 ? dpi : 96.0;
+}
+
 bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page) {
     if (!page) {
         return false;
