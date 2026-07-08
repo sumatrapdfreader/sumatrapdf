@@ -43,6 +43,8 @@ void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
 
 void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable);
 
+void djvu_request_abort(djvu_ctx *ctx);
+
 djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len);
 void djvu_doc_close(djvu_doc *doc);
 
@@ -173,11 +175,13 @@ void djvu_page_links_destroy(djvu_ctx *ctx, djvu_page_links *links);
 #define DJVU_INTERNAL_H
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #if defined(_WIN32)
 #include <windows.h>
 #else
 #include <time.h>
+#include <stdatomic.h>
 #endif
 
 #ifndef DJVU_RESTRICT
@@ -198,6 +202,33 @@ void djvu_page_links_destroy(djvu_ctx *ctx, djvu_page_links *links);
 #endif
 #endif
 
+#if defined(_WIN32)
+typedef struct { volatile LONG v; } djvu_atomic_epoch;
+static inline void djvu_atomic_epoch_init(djvu_atomic_epoch *a) { a->v = 0; }
+static inline uint32_t djvu_atomic_epoch_load(const djvu_atomic_epoch *a)
+{
+    return (uint32_t)InterlockedCompareExchange((LONG *)&a->v, 0, 0);
+}
+static inline void djvu_atomic_epoch_bump(djvu_atomic_epoch *a)
+{
+    InterlockedIncrement((LONG *)&a->v);
+}
+#else
+typedef struct { atomic_uint v; } djvu_atomic_epoch;
+static inline void djvu_atomic_epoch_init(djvu_atomic_epoch *a)
+{
+    atomic_init(&a->v, 0);
+}
+static inline uint32_t djvu_atomic_epoch_load(const djvu_atomic_epoch *a)
+{
+    return atomic_load_explicit(&a->v, memory_order_relaxed);
+}
+static inline void djvu_atomic_epoch_bump(djvu_atomic_epoch *a)
+{
+    atomic_fetch_add_explicit(&a->v, 1, memory_order_relaxed);
+}
+#endif
+
 struct djvu_ctx {
     djvu_alloc_cb alloc;
     djvu_free_cb  free;
@@ -205,11 +236,30 @@ struct djvu_ctx {
     djvu_unlock_cb unlock;
     djvu_error_cb error;
     void *user;
+    djvu_atomic_epoch abort_epoch;
     int cache_per_page;
     int no_compose;
     int iw_max_chunks;
     int bgr;
 };
+
+#if defined(_MSC_VER)
+static __declspec(thread) uint32_t djvu_render_epoch_tls;
+#else
+static __thread uint32_t djvu_render_epoch_tls;
+#endif
+
+static inline void djvu_render_begin(djvu_ctx *ctx)
+{
+    if (ctx)
+        djvu_render_epoch_tls = djvu_atomic_epoch_load(&ctx->abort_epoch);
+}
+
+static inline int djvu_aborted(djvu_ctx *ctx)
+{
+    if (!ctx) return 0;
+    return djvu_atomic_epoch_load(&ctx->abort_epoch) != djvu_render_epoch_tls;
+}
 
 static inline int djvu_cache_stores_page(djvu_ctx *ctx)
 {
@@ -1231,8 +1281,14 @@ static int bzz_decode_block(bzz_dec *d, djvu_ctx *ctx)
     j2 = 0;
     last = size - 1;
     while (last > 0) {
-        int n = d->pos[j2];
-        signed char c = (signed char)(d->pos[j2] >> 24);
+        int n, c;
+
+        if (j2 < 0 || j2 >= size) {
+            djvu_errorf(ctx, DJVU_SEVERITY_ERROR, "bzz: corrupt (BWT index)");
+            return -1;
+        }
+        n = d->pos[j2];
+        c = (signed char)(d->pos[j2] >> 24);
         data[--last] = (uint8_t)c;
         j2 = count[0xff & c] + (n & 0xffffff);
     }
@@ -1929,8 +1985,13 @@ static int img_shapecount(jb2_image *im)
 
 jb2_shape *djvu_jb2_get_shape(jb2_image *im, int n)
 {
-    if (n >= im->inherited_shapes)
-        return &im->shapes[n - im->inherited_shapes];
+    if (n < 0) return NULL;
+    if (n >= im->inherited_shapes) {
+        int local = n - im->inherited_shapes;
+
+        if (local >= im->nshapes) return NULL;
+        return &im->shapes[local];
+    }
     if (im->inherited_dict)
         return djvu_jb2_get_shape(im->inherited_dict, n);
     return NULL;
@@ -2644,6 +2705,8 @@ static jb2_image *jb2_decode_into(djvu_ctx *ctx, const uint8_t *data, size_t len
             rectype = code_record(c, jim, is_image);
             if (rectype >= 0 && rectype < 12) hist[rectype]++;
             if (c->error) break;
+
+            if (c->zp.eof) break;
         } while (rectype != REC_EndOfData);
         if (dbg) {
             fprintf(stderr, "JB2 rectypes: SOD=%d NM=%d NMlib=%d NMimg=%d MR=%d "
@@ -4520,6 +4583,7 @@ static int compose_to_bg(djvu_doc *doc, int page_no, jb2_image *mask,
     int i, stencil_rc = 0;
     double t0 = 0.0;
 
+    if (djvu_aborted(ctx)) return -1;
     if (subsample < 1) subsample = 1;
     memset(&bg, 0, sizeof(bg)); memset(&fgnat, 0, sizeof(fgnat));
     if (t) t0 = djvu_bench_now_ms();
@@ -4580,6 +4644,7 @@ static int compose_to_bg(djvu_doc *doc, int page_no, jb2_image *mask,
             jb2_blit *b = &mask->blits[i];
             jb2_shape *s = djvu_jb2_get_shape(mask, b->shapeno);
             compose_ink_ctx ink;
+            if ((i & 63) == 0 && djvu_aborted(ctx)) return -1;
             if (!s || !djvu_bm_has_pixels(&s->bm)) continue;
             ink.bg = &bg;
             ink.palr = ink.palg = ink.palb = 0;
@@ -4716,6 +4781,7 @@ int djvu_compose_page_into(djvu_doc *doc, int page_no, jb2_image *mask,
     djvu_cpix bg;
     unsigned char lut[256]; const unsigned char *lp = NULL;
 
+    if (djvu_aborted(ctx)) return -1;
     if (subsample < 1) subsample = 1;
     memset(&bg, 0, sizeof(bg));
     if (subsample == 1 &&
@@ -4770,6 +4836,7 @@ djvu_ctx *djvu_ctx_new(djvu_alloc_cb alloc, djvu_free_cb free_cb,
     ctx->no_compose = 0;
     ctx->iw_max_chunks = 0;
     ctx->bgr = 0;
+    djvu_atomic_epoch_init(&ctx->abort_epoch);
     return ctx;
 }
 
@@ -4802,6 +4869,12 @@ void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable)
 void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks)
 {
     if (ctx) ctx->iw_max_chunks = max_chunks < 0 ? 0 : max_chunks;
+}
+
+void djvu_request_abort(djvu_ctx *ctx)
+{
+    if (ctx)
+        djvu_atomic_epoch_bump(&ctx->abort_epoch);
 }
 
 static int parse_info(const uint8_t *p, size_t len, djvu_page_info *info)
@@ -5366,6 +5439,7 @@ static void preload_jb2_mask(djvu_doc *doc, djvu_page_int *pg)
     const uint8_t *sjbz;
     jb2_image *dict, *mask;
 
+    if (djvu_aborted(doc->ctx)) return;
     if (!djvu_cache_stores_page(doc->ctx)) return;
     if (!doc || !pg || pg->jb2_mask) return;
     sjbz = djvu_form_find_chunk(doc, pg->form_off, "Sjbz", &sz, NULL);
@@ -5925,6 +5999,11 @@ static djvu_image *render_bitonal(djvu_ctx *ctx, jb2_image *img, int subsample)
         for (i = 0; i < img->nblits; i++) {
             jb2_blit *b = &img->blits[i];
             jb2_shape *s = djvu_jb2_get_shape(img, b->shapeno);
+            if ((i & 63) == 0 && djvu_aborted(ctx)) {
+                djvu_free(ctx, out->data);
+                djvu_free(ctx, out);
+                return NULL;
+            }
             if (s && djvu_bm_has_pixels(&s->bm))
                 djvu_bm_visit_ink_runs(&s->bm, b->left, b->bottom,
                                         bitonal_stamp_run, &stamp);
@@ -5952,6 +6031,12 @@ static djvu_image *render_bitonal(djvu_ctx *ctx, jb2_image *img, int subsample)
         for (i = 0; i < img->nblits; i++) {
             jb2_blit *b = &img->blits[i];
             jb2_shape *s = djvu_jb2_get_shape(img, b->shapeno);
+            if ((i & 63) == 0 && djvu_aborted(ctx)) {
+                djvu_free(ctx, acc);
+                djvu_free(ctx, out->data);
+                djvu_free(ctx, out);
+                return NULL;
+            }
             if (s && djvu_bm_has_pixels(&s->bm))
                 djvu_bm_visit_ink(&s->bm, b->left, b->bottom,
                                   bitonal_accum_ink, &c);
@@ -5997,9 +6082,10 @@ djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
     double t0 = 0.0;
 
     if (!doc || page_no < 0 || page_no >= doc->npages) return NULL;
+    ctx = doc->ctx;
+    djvu_render_begin(ctx);
     if (subsample < 1) subsample = 1;
     if (t) djvu_render_timings_clear(t);
-    ctx = doc->ctx;
     form_off = doc->pages[page_no].form_off;
     type = djvu_page_get_type(doc, page_no);
     info_ok = (djvu_doc_page_info(doc, page_no, &pi) == 0);
@@ -6011,7 +6097,7 @@ djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
         if (t) t0 = djvu_bench_now_ms();
         mask = djvu_doc_jb2_mask_acquire(doc, page_no, &mask_owned);
         if (t) t->jb2_ms += djvu_bench_now_ms() - t0;
-        if (!mask) goto done;
+        if (!mask || djvu_aborted(ctx)) goto done;
     }
 
 
@@ -6123,10 +6209,12 @@ int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
     djvu_image *img;
 
     if (!dst) return -1;
+    if (!doc || !doc->ctx) return -1;
     if (render_plan(doc, page_no, subsample, &w, &h, &fmt, &color, &rotation) != 0)
         return -1;
     if (subsample < 1) subsample = 1;
     ctx = doc->ctx;
+    djvu_render_begin(ctx);
     k = rotation_quarter_turns(rotation);
 
 

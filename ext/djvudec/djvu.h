@@ -78,6 +78,10 @@ void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
    wants BGR (e.g. a Windows DIB) skip a separate RGB->BGR pass -- the swap is
    folded into the decoder's final output copy at no extra cost. */
 void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable);
+/* Bump the cooperative render-abort epoch on ctx. In-flight page renders that
+   already entered via djvu_page_render / djvu_page_render_into exit promptly;
+   renders that start afterward proceed normally. Thread-safe. */
+void djvu_request_abort(djvu_ctx *ctx);
 
 /* ----- documents ----- */
 

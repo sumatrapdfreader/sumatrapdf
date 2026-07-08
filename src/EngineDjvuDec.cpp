@@ -109,6 +109,22 @@ static TocItem* NewDjvuDecTocItem(TocItem* parent, Str title, Str link) {
     return res;
 }
 
+constexpr int kMaxConcurrentDjvuRenders = 3;
+
+class DjvuDecAbortCookie : public AbortCookie {
+  public:
+    djvu_ctx* ctx = nullptr;
+    bool abort = false;
+
+    void Abort() override {
+        abort = true;
+        if (ctx) {
+            djvu_request_abort(ctx);
+        }
+    }
+    void* GetData() override { return nullptr; }
+};
+
 struct DjvuDecPageInfo {
     RectF mediabox;
     int dpi = 300;
@@ -151,6 +167,36 @@ class EngineDjvuDec : public EngineBase {
     bool Load(Str fileName);
     bool LoadFromData(Str data);
 
+    struct ScopedRenderSlot {
+        EngineDjvuDec* eng;
+        bool acquired = false;
+
+        ScopedRenderSlot(EngineDjvuDec* e, bool* abortFlag) : eng(e) {
+            for (;;) {
+                eng->renderSlotsLock.Lock();
+                if (eng->activeRenders < kMaxConcurrentDjvuRenders) {
+                    eng->activeRenders++;
+                    acquired = true;
+                    eng->renderSlotsLock.Unlock();
+                    return;
+                }
+                eng->renderSlotsLock.Unlock();
+                if (abortFlag && *abortFlag) {
+                    return;
+                }
+                Sleep(10);
+            }
+        }
+        ~ScopedRenderSlot() {
+            if (!acquired) {
+                return;
+            }
+            eng->renderSlotsLock.Lock();
+            eng->activeRenders--;
+            eng->renderSlotsLock.Unlock();
+        }
+    };
+
   protected:
     Str fileData;          // must outlive all docs
     file::Mapping fileMap; // used instead of fileData for large files; must outlive all docs
@@ -163,6 +209,8 @@ class EngineDjvuDec : public EngineBase {
     djvu_doc* doc = nullptr;
     Mutex djvuCacheLock;
     Mutex cacheLock;
+    Mutex renderSlotsLock;
+    int activeRenders = 0;
 
     Vec<DjvuDecPageInfo*> pages;
     TocTree* tocTree = nullptr;
@@ -267,8 +315,8 @@ bool EngineDjvuDec::FinishLoading() {
     if (!ctx) {
         return false;
     }
-    // only do caching for small files. for large files like 1 GB from https://github.com/sumatrapdfreader/sumatrapdf/issues/5778
-    // each rendered page would retain ~1MB 
+    // only do caching for small files. for large files like 1 GB from
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/5778 each rendered page would retain ~1MB
     if (dataLen < kMemoryMapMinFileSize) {
         djvu_ctx_set_cache_per_page(ctx, 1);
     }
@@ -570,6 +618,17 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
 }
 
 Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
+    DjvuDecAbortCookie* cookie = nullptr;
+    if (args.cookie_out) {
+        cookie = new DjvuDecAbortCookie();
+        cookie->ctx = ctx;
+        *args.cookie_out = cookie;
+    }
+    ScopedRenderSlot renderSlot(this, cookie ? &cookie->abort : nullptr);
+    if (!renderSlot.acquired || (cookie && cookie->abort)) {
+        return nullptr;
+    }
+
     int pageNo = args.pageNo;
     int userRotation = NormalizeRotation(args.rotation);
     float zoom = args.zoom;

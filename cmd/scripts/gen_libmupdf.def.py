@@ -98,6 +98,7 @@ EXPORTS
 	djvu_ctx_set_no_compose
 	djvu_ctx_set_iw_max_chunks
 	djvu_ctx_set_bgr
+	djvu_request_abort
 	djvu_doc_open
 	djvu_doc_close
 	djvu_doc_page_count
