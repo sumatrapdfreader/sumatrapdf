@@ -184,7 +184,7 @@ class EngineDjvuDec : public EngineBase {
                 if (abortFlag && *abortFlag) {
                     return;
                 }
-                Sleep(10);
+                SleepInMs(10);
             }
         }
         ~ScopedRenderSlot() {

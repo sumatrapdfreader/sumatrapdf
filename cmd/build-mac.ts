@@ -532,6 +532,26 @@ const TEST_ENGINES_SOURCES = [
   "src/tools/test_engines.cpp",
 ];
 
+const MAC_APP_SOURCES = [
+  "src/base/BitReader.cpp",
+  "src/base/GuessFileType.cpp",
+  "src/DocProperties.cpp",
+  "src/EbookDoc.cpp",
+  "src/EngineBase.cpp",
+  "src/EngineDjvuDec.cpp",
+  "src/EngineImages.cpp",
+  "src/EngineMupdf.cpp",
+  "src/FzImgReader.cpp",
+  "src/FzImgReader_posix.cpp",
+  "src/GumboHtmlParser.cpp",
+  "src/GumboHelpers.cpp",
+  "src/MobiDoc.cpp",
+  "src/PalmDbReader.cpp",
+  "src/TreeModel.cpp",
+  "src/mac/SumatraMacEngine.cpp",
+  "src/mac/SumatraMac.mm",
+];
+
 const PORTABLE_COMPILE_SOURCES = [
   "src/GumboHtmlParser.cpp",
   "src/HtmlFormatter.cpp",
@@ -614,6 +634,7 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildMacApp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
@@ -730,6 +751,98 @@ async function buildTestUtil(
   if (code !== 0) {
     throw new Error(`test_util failed with exit code ${code}`);
   }
+}
+
+async function buildMacApp(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  commonFlags: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Building SumatraPDF.app...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Imupdf/include", "-Imupdf/generated"];
+
+  const units = MAC_APP_SOURCES.map((src) => {
+    const obj = objPath(outDir, "sumatrapdf_app", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        ...includeFlags,
+        ...commonFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+
+  await compileAll(units, jobs);
+
+  const appDir = join(outDir, "SumatraPDF.app");
+  const contentsDir = join(appDir, "Contents");
+  const macosDir = join(contentsDir, "MacOS");
+  mkdirSync(macosDir, { recursive: true });
+
+  const exePath = join(macosDir, "SumatraPDF");
+  const linkArgs = [
+    tools.cxx,
+    "-o",
+    exePath,
+    ...commonFlags,
+    ...units.map((u) => u.obj),
+    join(outDir, "lib", "libbase.a"),
+    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "libmupdf-libs.a"),
+    join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "liblibarchive.a"),
+    join(outDir, "lib", "libzlib.a"),
+    "-framework",
+    "Cocoa",
+  ];
+  const res = await spawnCmd(linkArgs);
+  if (!res.ok) {
+    throw new Error(`link SumatraPDF.app failed: ${res.stderr}`);
+  }
+
+  await writeFile(
+    join(contentsDir, "Info.plist"),
+    `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>
+  <string>SumatraPDF</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.sumatrapdf.SumatraPDF</string>
+  <key>CFBundleName</key>
+  <string>SumatraPDF</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>
+`,
+  );
+  console.log(`  -> ${appDir}`);
 }
 
 async function buildTestEngines(

@@ -8,9 +8,9 @@
 #include "WinDynCalls.h"
 #include "Win.h"
 #else
+#include <unistd.h>
 #if OS_LINUX
 #include <sys/syscall.h>
-#include <unistd.h>
 #endif
 #endif
 
@@ -180,6 +180,17 @@ bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
 void RunAsync(const Func0& fn, Str threadName) {
     ThreadHandle hThread = StartThread(fn, threadName);
     SafeCloseThreadHandle(&hThread);
+}
+
+void SleepInMs(int ms) {
+    if (ms <= 0) {
+        return;
+    }
+#if OS_WIN
+    Sleep((DWORD)ms);
+#else
+    usleep((useconds_t)ms * 1000);
+#endif
 }
 
 AtomicInt gDangerousThreadCount = 0;

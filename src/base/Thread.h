@@ -100,6 +100,7 @@ struct ScopedRecursiveMutex {
 };
 
 void SetThreadName(Str threadName, ThreadId threadId = 0);
+void SleepInMs(int ms);
 
 void RunAsync(const Func0&, Str threadName = {});
 ThreadHandle StartThread(const Func0&, Str threadName = {});
