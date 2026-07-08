@@ -192,10 +192,19 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
     if (fragment) {
         pathPart = Str(pathPart.s, (int)(fragment.s - pathPart.s));
     }
-    if (str::EndsWithI(pathPart, StrL(".html"))) {
-        pathPart.len -= 5;
-    }
     TempStr rel = str::ReplaceTemp(pathPart, StrL("/"), StrL("\\"));
+    if (str::EndsWithI(rel, StrL(".html"))) {
+        // a page url made by FileToVirtualUrlTemp(): <name>.html for <name>.md
+        rel.len -= 5;
+    } else {
+        // a file referenced by its real name: an image, a raw link to
+        // another .md file etc.
+        TempStr direct = path::JoinTemp(baseDir, rel);
+        if (pages.Find(direct) >= 0 || file::Exists(direct)) {
+            return direct;
+        }
+        // fall through: possibly an extension-less link to a page
+    }
     TempStr mdPath = path::JoinTemp(baseDir, Str(str::JoinTemp(rel, StrL(".md"))));
     if (pages.Find(mdPath) >= 0) {
         return mdPath;
