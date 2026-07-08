@@ -380,6 +380,15 @@ struct MainWindow {
     Vec<FindMatch> findMatches;
     bool findCountHasSnippets = false;
 
+    // state of in-page find in a markdown webview (see SearchAndDDE.cpp Md*
+    // functions). For markdown, findMatches holds (page, in-page match index,
+    // snippet) built from the webview's all-pages sweep
+    int mdFindGen = 0;         // generation; JS echoes it so stale async results are dropped
+    int mdFindPageCurrent = 0; // 1-based current match on the current page (0: none)
+    int mdFindCurrent = -1;    // index into findMatches of the current match (-1: none)
+    int mdFindTotal = -1;      // total matches across all pages (-1: sweep not done)
+    Str mdFindTerm;            // owned; the term the current md find ran with
+
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
     Str urlOnLastButtonDown;

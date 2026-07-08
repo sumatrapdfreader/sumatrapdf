@@ -48,10 +48,13 @@ struct MarkdownModel : DocController {
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;
     bool CanFindInPage() const;
-    void FindStart(Str term, bool matchCase, bool wholeWord) const;
-    void FindNext(bool forward) const;
+    void FindStart(Str term, bool matchCase, bool wholeWord, int gen) const;
+    void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) const;
+    void FindGoto(int idx) const;
+    void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen);
     void FindClear() const;
-    void OnFindResult(int current, int total);
+    void OnFindResult(int gen, int current, int total);
+    void OnFindAllResult(Str payload);
     void SelectAll() const;
     void CopySelection() const;
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
@@ -76,6 +79,14 @@ struct MarkdownModel : DocController {
     PointF htmlScrollPos = PointF(-1, -1);
     bool restoreHtmlScrollPos = false;
     bool skipNextBeforeNavigateScrollSave = false;
+    // pending in-page find to run when the next page finishes loading (set by
+    // GoToPageWithFind when jumping to a match on another page)
+    Str pendingFindTerm; // owned
+    bool pendingFindMatchCase = false;
+    bool pendingFindWholeWord = false;
+    int pendingFindIdx = -1;
+    int pendingFindGen = 0;
+    bool hasPendingFind = false;
     StrVec htmlScrollUrls;
     Vec<PointF> htmlScrollPositions;
     Vec<MarkdownCacheEntry*> urlDataCache;

@@ -95,20 +95,140 @@ static MarkdownModel* MdFindModel(MainWindow* win) {
     return nullptr;
 }
 
-// start an in-page find in the markdown webview for the find bar's text.
-// Results arrive asynchronously via MdFindResultReceived()
+// start a new find in the markdown webview for the find bar's text: highlight
+// the current page and sweep all pages for the match list. Results arrive
+// asynchronously via MdFindResultReceived() / MdFindAllResultReceived()
 static void MdStartSearch(MainWindow* win, MarkdownModel* md) {
     TempStr term = HwndGetTextTemp(win->hwndFindEdit);
-    md->FindStart(term, win->findMatchCase, win->findMatchWholeWord);
+    str::ReplaceWithCopy(&win->mdFindTerm, term);
+    ClearFindMatches(win); // also resets mdFindPageCurrent / mdFindCurrent / mdFindTotal
+    win->mdFindGen++;
+    md->FindStart(term, win->findMatchCase, win->findMatchWholeWord, win->mdFindGen);
+    md->FindAllPages(term, win->findMatchCase, win->findMatchWholeWord, win->mdFindGen);
 }
 
-void MdFindResultReceived(MainWindow* win, int current, int total) {
-    if (!IsFindUIVisible(win)) {
-        // stale result after the find bar was closed (highlights were cleared)
+// index into win->findMatches of the in-page match pageCur (1-based) on
+// pageNo, or -1. findMatches is in (page, in-page index) order
+static int MdGlobalMatchIdx(MainWindow* win, int pageNo, int pageCur) {
+    if (pageCur <= 0) {
+        return -1;
+    }
+    int n = len(win->findMatches);
+    for (int i = 0; i < n; i++) {
+        const FindMatch& fm = win->findMatches[i];
+        if (fm.startPage == pageNo && fm.startGlyph == pageCur - 1) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// update the find bar's "n / m" status (and the results list selection) from
+// the current in-page match and the all-pages sweep
+static void MdUpdateFindStatus(MainWindow* win, MarkdownModel* md, int pageCur, int pageTotal) {
+    if (win->mdFindTotal < 0) {
+        // the all-pages sweep hasn't finished: show per-page numbers for now
+        TempStr s = fmt("%d / %d", pageCur, pageTotal);
+        FindBarSetStatus(win, s);
         return;
     }
-    TempStr s = fmt("%d / %d", current, total);
+    win->mdFindCurrent = MdGlobalMatchIdx(win, md->CurrentPageNo(), pageCur);
+    TempStr s = fmt("%d / %d", win->mdFindCurrent + 1, win->mdFindTotal);
     FindBarSetStatus(win, s);
+    FindWindowRefreshResults(win); // mirror the current match in the results list
+}
+
+void MdFindResultReceived(MainWindow* win, int gen, int current, int total) {
+    if (gen != win->mdFindGen || !IsFindUIVisible(win)) {
+        // result of a superseded search or the find UI was closed
+        return;
+    }
+    MarkdownModel* md = MdFindModel(win);
+    if (!md) {
+        return;
+    }
+    win->mdFindPageCurrent = current;
+    MdUpdateFindStatus(win, md, current, total);
+}
+
+// payload: "<gen> <total> <records>", records separated by \x1e (record sep),
+// each "<page>\x1f<idx>\x1f<snippet>" (\x1f: unit sep). Built by searchAll()
+// in kFindInPageJs (ChmDocView.cpp)
+void MdFindAllResultReceived(MainWindow* win, Str payload) {
+    int gen = 0;
+    int total = 0;
+    Str rest = str::Parse(payload, "%d %d ", &gen, &total);
+    if (str::IsNull(rest) || gen != win->mdFindGen || !IsFindUIVisible(win)) {
+        return;
+    }
+    MarkdownModel* md = MdFindModel(win);
+    if (!md) {
+        return;
+    }
+    int pageCur = win->mdFindPageCurrent; // survives the ClearFindMatches below
+    ClearFindMatches(win);
+    win->mdFindPageCurrent = pageCur;
+    while (rest.len > 0) {
+        int recLen = rest.len;
+        for (int i = 0; i < rest.len; i++) {
+            if (rest.s[i] == '\x1e') {
+                recLen = i;
+                break;
+            }
+        }
+        Str rec = Str(rest.s, recLen);
+        rest = (recLen < rest.len) ? Str(rest.s + recLen + 1, rest.len - recLen - 1) : Str();
+        int page = 0;
+        int idx = 0;
+        Str snippet = str::Parse(rec, "%d\x1f%d\x1f", &page, &idx);
+        if (str::IsNull(snippet)) {
+            continue;
+        }
+        FindMatch fm;
+        fm.startPage = page;
+        fm.startGlyph = idx;
+        fm.endPage = page;
+        fm.endGlyph = idx;
+        fm.snippet = str::Dup(snippet);
+        win->findMatches.Append(fm);
+    }
+    win->mdFindTotal = total;
+    win->findCountHasSnippets = true;
+    MdUpdateFindStatus(win, md, win->mdFindPageCurrent, total); // also refreshes the results list
+}
+
+// jump to the idxInPage-th match on pageNo: directly if that page is showing,
+// otherwise navigate there and re-run the in-page find once it has loaded
+static void MdGotoMatch(MainWindow* win, MarkdownModel* md, int pageNo, int idxInPage) {
+    if (pageNo == md->CurrentPageNo()) {
+        md->FindGoto(idxInPage);
+        return;
+    }
+    md->GoToPageWithFind(pageNo, win->mdFindTerm, win->findMatchCase, win->findMatchWholeWord, idxInPage,
+                         win->mdFindGen);
+}
+
+// advance to the next/previous match, across page boundaries (wraps around)
+static void MdFindNextPrev(MainWindow* win, MarkdownModel* md, bool forward) {
+    // typing still pending: run the search first instead of advancing
+    // through the previous term's matches
+    if (FindFlushPendingSearch(win)) {
+        return;
+    }
+    int n = len(win->findMatches);
+    if (win->mdFindTotal < 0 || n == 0) {
+        MdStartSearch(win, md);
+        return;
+    }
+    int j = win->mdFindCurrent;
+    if (j < 0) {
+        j = forward ? 0 : n - 1;
+    } else {
+        j = forward ? (j + 1) % n : (j + n - 1) % n;
+    }
+    win->mdFindCurrent = j;
+    const FindMatch& fm = win->findMatches[j];
+    MdGotoMatch(win, md, fm.startPage, fm.startGlyph);
 }
 
 // don't show the Search UI for document types that don't
@@ -269,12 +389,7 @@ void FindNext(MainWindow* win) {
     }
     MarkdownModel* md = MdFindModel(win);
     if (md) {
-        // typing still pending: run the search first instead of advancing
-        // through the previous term's matches
-        if (FindFlushPendingSearch(win)) {
-            return;
-        }
-        md->FindNext(true);
+        MdFindNextPrev(win, md, true);
         return;
     }
     FindTextOnThread(win, TextSearch::Direction::Forward, true);
@@ -289,10 +404,7 @@ void FindPrev(MainWindow* win) {
     }
     MarkdownModel* md = MdFindModel(win);
     if (md) {
-        if (FindFlushPendingSearch(win)) {
-            return;
-        }
-        md->FindNext(false);
+        MdFindNextPrev(win, md, false);
         return;
     }
     FindTextOnThread(win, TextSearch::Direction::Backward, true);
@@ -569,6 +681,12 @@ void ClearFindMatches(MainWindow* win) {
     win->findMatches.Reset();
     win->findCountHasSnippets = false;
     InvalidateFindMatchPaintCache();
+    // for markdown, findMatches came from the webview's all-pages sweep; reset
+    // the state tied to it (but not mdFindGen, which is monotonic so stale
+    // async results keep getting dropped)
+    win->mdFindPageCurrent = 0;
+    win->mdFindCurrent = -1;
+    win->mdFindTotal = -1;
 }
 
 // build a one-line "...context match context..." snippet (UTF-8) around a match
@@ -822,7 +940,18 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
 // navigate to a match chosen from the floating results list and select it, so
 // Find Next/Prev and the n/m counter continue from there
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph) {
-    if (!win->IsDocLoaded() || !win->AsFixed()) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    MarkdownModel* md = MdFindModel(win);
+    if (md) {
+        // for markdown, startGlyph is the in-page match index (see
+        // MdFindAllResultReceived)
+        win->mdFindCurrent = MdGlobalMatchIdx(win, startPage, startGlyph + 1);
+        MdGotoMatch(win, md, startPage, startGlyph);
+        return;
+    }
+    if (!win->AsFixed()) {
         return;
     }
     // join any in-flight find/count worker first: we're about to mutate

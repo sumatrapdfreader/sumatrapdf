@@ -29,8 +29,9 @@ class ChmDocView {
     void FindInCurrentPage();
     // in-page find with our own UI (WebView2 backend only)
     bool CanFindInPage() const;
-    void FindStart(Str term, bool matchCase, bool wholeWord);
-    void FindNext(bool forward);
+    void FindStart(Str term, bool matchCase, bool wholeWord, int gen, int gotoIdx);
+    void FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen);
+    void FindGoto(int idx);
     void FindClear();
     void SelectAll();
     void CopySelection();

@@ -121,7 +121,8 @@ class MarkdownHtmlWindowHandler : public HtmlWindowCallback {
     void OnLButtonDown() override { mm->OnLButtonDown(); }
     Str GetDataForUrl(Str url) override { return mm->GetDataForUrl(url); }
     void DownloadData(Str url, Str data) override { mm->DownloadData(url, data); }
-    void OnFindResult(int current, int total) override { mm->OnFindResult(current, total); }
+    void OnFindResult(int gen, int current, int total) override { mm->OnFindResult(gen, current, total); }
+    void OnFindAllResult(Str payload) override { mm->OnFindAllResult(payload); }
 };
 
 MarkdownModel::MarkdownModel(DocControllerCallback* cb) : DocController(cb) {
@@ -138,6 +139,7 @@ MarkdownModel::~MarkdownModel() {
     ArenaDelete(poolAlloc);
     str::Free(fileName);
     str::Free(currentPageUrl);
+    str::Free(pendingFindTerm);
 }
 
 Str MarkdownModel::GetFilePath() const {
@@ -247,16 +249,39 @@ bool MarkdownModel::CanFindInPage() const {
     return docView && docView->CanFindInPage();
 }
 
-void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord) const {
+void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) const {
     if (docView) {
-        docView->FindStart(term, matchCase, wholeWord);
+        docView->FindStart(term, matchCase, wholeWord, gen, -1);
     }
 }
 
-void MarkdownModel::FindNext(bool forward) const {
-    if (docView) {
-        docView->FindNext(forward);
+void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) const {
+    if (!docView) {
+        return;
     }
+    StrVec urls;
+    for (Str page : pages) {
+        urls.Append(FileToVirtualUrlTemp(page));
+    }
+    docView->FindAllPages(urls, term, matchCase, wholeWord, gen);
+}
+
+void MarkdownModel::FindGoto(int idx) const {
+    if (docView) {
+        docView->FindGoto(idx);
+    }
+}
+
+// navigate to pageNo and, once it has loaded, highlight term there and make
+// its idx-th match current (see OnDocumentComplete)
+void MarkdownModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) {
+    str::ReplaceWithCopy(&pendingFindTerm, term);
+    pendingFindMatchCase = matchCase;
+    pendingFindWholeWord = wholeWord;
+    pendingFindIdx = idx;
+    pendingFindGen = gen;
+    hasPendingFind = true;
+    GoToPage(pageNo, false);
 }
 
 void MarkdownModel::FindClear() const {
@@ -265,8 +290,12 @@ void MarkdownModel::FindClear() const {
     }
 }
 
-void MarkdownModel::OnFindResult(int current, int total) {
-    cb->FindResultReceived(current, total);
+void MarkdownModel::OnFindResult(int gen, int current, int total) {
+    cb->FindResultReceived(gen, current, total);
+}
+
+void MarkdownModel::OnFindAllResult(Str payload) {
+    cb->FindAllResultReceived(payload);
 }
 
 void MarkdownModel::SelectAll() const {
@@ -594,6 +623,14 @@ void MarkdownModel::OnDocumentComplete(Str url) {
 
     if (cb && pageNo > 0) {
         cb->PageNoChanged(this, pageNo);
+    }
+
+    // finish a pending "jump to a match on another page": the fresh document
+    // has no find state, so re-run the search and go to the requested match
+    if (hasPendingFind && docView) {
+        docView->FindStart(pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen, pendingFindIdx);
+        hasPendingFind = false;
+        str::FreePtr(&pendingFindTerm);
     }
 }
 

@@ -33,14 +33,25 @@ constexpr const char* kReportScrollJs =
 // which doesn't mutate the DOM. Matches can span text-node boundaries: the
 // text nodes are concatenated into one string, the search runs over that, and
 // global offsets are mapped back to (node, offset) pairs for the Ranges.
-// After every start/next the current 1-based match index and total count are
-// posted back as 'mdfind <current> <total>'.
+//
+// searchAll() additionally sweeps every page of a multi-page document: it
+// fetches each page's HTML from the virtual host and parses it with
+// DOMParser, so all pages go through the *same* text extraction and matching
+// code as the visible page and match counts/indices stay aligned with what
+// start() highlights when that page is shown.
+//
+// Messages posted back to the host (gen is an echo of the generation the
+// host passed in, so it can drop results of a superseded search):
+//   'mdfind <gen> <current> <total>'  current 1-based match on this page
+//   'mdfindall <gen> <total> <recs>'  recs: page US idx US snippet, RS-joined
 constexpr const char* kFindInPageJs = R"JS((function(){
 if (window.__sumatraFind) { return; }
 var matches = [];
 var cur = -1;
 var curHl = null;
+var gen = 0;
 var styleDone = false;
+var kMaxMatches = 5000;
 function ensureStyle() {
   if (styleDone) { return; }
   styleDone = true;
@@ -51,28 +62,59 @@ function ensureStyle() {
   } catch (e) {}
 }
 function post() {
-  try { window.chrome.webview.postMessage("mdfind " + (cur + 1) + " " + matches.length); } catch (e) {}
+  try { window.chrome.webview.postMessage("mdfind " + gen + " " + (cur + 1) + " " + matches.length); } catch (e) {}
 }
 function isWordChar(c) {
   try { return /[\p{L}\p{N}_]/u.test(c); } catch (e) { return /\w/.test(c); }
 }
-function collectNodes() {
+// concatenated text of all visible-ish text nodes under body, with per-node
+// start offsets (also used for documents parsed by DOMParser, which have no
+// layout, so no computed-style checks here to keep both paths identical)
+function textFromBody(body) {
   var nodes = [];
-  if (!document.body) { return nodes; }
-  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+  var starts = [];
+  var text = "";
+  var walker = body.ownerDocument.createTreeWalker(body, NodeFilter.SHOW_TEXT, {
     acceptNode: function(n) {
       var p = n.parentElement;
       if (!p) { return NodeFilter.FILTER_REJECT; }
       var tag = p.tagName;
       if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "TEXTAREA") { return NodeFilter.FILTER_REJECT; }
-      var cs = window.getComputedStyle(p);
-      if (cs.display === "none" || cs.visibility === "hidden") { return NodeFilter.FILTER_REJECT; }
       return NodeFilter.FILTER_ACCEPT;
     }
   });
   var n;
-  while ((n = walker.nextNode())) { nodes.push(n); }
-  return nodes;
+  while ((n = walker.nextNode())) { nodes.push(n); starts.push(text.length); text += n.data; }
+  return { nodes: nodes, starts: starts, text: text };
+}
+// [start, end) offsets of every match of term in text. Literal search: regex
+// metacharacters are escaped; a regex is used only for its case-insensitive
+// mode (which unlike toLowerCase() can't shift offsets)
+function findInText(text, term, matchCase, wholeWord) {
+  var out = [];
+  var esc = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  var re;
+  try { re = new RegExp(esc, matchCase ? "g" : "gi"); } catch (e) { return out; }
+  var m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index === re.lastIndex) { re.lastIndex++; continue; }
+    if (wholeWord) {
+      var b = m.index > 0 ? text[m.index - 1] : " ";
+      var a = re.lastIndex < text.length ? text[re.lastIndex] : " ";
+      if (isWordChar(b) || isWordChar(a)) { continue; }
+    }
+    out.push([m.index, m.index + m[0].length]);
+    if (out.length >= kMaxMatches) { break; }
+  }
+  return out;
+}
+function makeSnippet(text, s, e) {
+  var from = Math.max(0, s - 40);
+  var to = Math.min(text.length, e + 40);
+  var sn = text.slice(from, to).replace(/[\x00-\x1f]+/g, " ").replace(/\s+/g, " ").trim();
+  if (from > 0) { sn = "..." + sn; }
+  if (to < text.length) { sn = sn + "..."; }
+  return sn;
 }
 function clearHighlights() {
   if (window.CSS && CSS.highlights) {
@@ -97,40 +139,25 @@ function setCur(i, scroll) {
     }
   }
 }
-function start(term, matchCase, wholeWord) {
+// initIdx >= 0: make that match current (used when jumping to a match on a
+// freshly loaded page); otherwise the first match at/below the viewport top
+function start(term, matchCase, wholeWord, g, initIdx) {
+  gen = g;
   clearHighlights();
   ensureStyle();
   if (!term || !window.CSS || !CSS.highlights || !window.Highlight) { post(); return; }
-  var nodes = collectNodes();
-  var text = "";
-  var starts = [];
-  for (var i = 0; i < nodes.length; i++) { starts.push(text.length); text += nodes[i].data; }
-  // literal search: escape regex metacharacters, use a regex only for its
-  // case-insensitive mode (which unlike toLowerCase() can't shift offsets)
-  var esc = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  var re;
-  try { re = new RegExp(esc, matchCase ? "g" : "gi"); } catch (e) { post(); return; }
-  var found = [];
-  var m;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index === re.lastIndex) { re.lastIndex++; continue; }
-    if (wholeWord) {
-      var b = m.index > 0 ? text[m.index - 1] : " ";
-      var a = re.lastIndex < text.length ? text[re.lastIndex] : " ";
-      if (isWordChar(b) || isWordChar(a)) { continue; }
-    }
-    found.push([m.index, m.index + m[0].length]);
-  }
+  var t = textFromBody(document.body);
+  var found = findInText(t.text, term, matchCase, wholeWord);
   // node for a global offset: last node whose start is <= off; for a match
   // end, < off so an end exactly on a node boundary stays in the prior node
   function locate(off, isEnd) {
-    var lo = 0, hi = nodes.length - 1, res = 0;
+    var lo = 0, hi = t.nodes.length - 1, res = 0;
     while (lo <= hi) {
       var mid = (lo + hi) >> 1;
-      var ok = isEnd ? (starts[mid] < off) : (starts[mid] <= off);
+      var ok = isEnd ? (t.starts[mid] < off) : (t.starts[mid] <= off);
       if (ok) { res = mid; lo = mid + 1; } else { hi = mid - 1; }
     }
-    return [nodes[res], off - starts[res]];
+    return [t.nodes[res], off - t.starts[res]];
   }
   var all = new Highlight();
   for (var j = 0; j < found.length; j++) {
@@ -149,20 +176,48 @@ function start(term, matchCase, wholeWord) {
   CSS.highlights.set("sumatra-find-cur", curHl);
   if (matches.length > 0) {
     var first = 0;
-    for (var k = 0; k < matches.length; k++) {
-      var rc = matches[k].getBoundingClientRect();
-      if (rc.bottom >= 0) { first = k; break; }
+    if (initIdx >= 0) {
+      first = Math.min(initIdx, matches.length - 1);
+    } else {
+      for (var k = 0; k < matches.length; k++) {
+        var rc = matches[k].getBoundingClientRect();
+        if (rc.bottom >= 0) { first = k; break; }
+      }
     }
     setCur(first, true);
   }
   post();
 }
-function next(fwd) {
+function gotoMatch(i) {
   if (matches.length === 0) { post(); return; }
-  setCur(cur + (fwd ? 1 : -1), true);
+  setCur(i, true);
   post();
 }
-window.__sumatraFind = { start: start, next: next, clear: clearHighlights };
+// search every page of the document (urls in page order); pages are fetched
+// sequentially so the match records stay in page order
+function searchAll(urls, term, matchCase, wholeWord, g) {
+  var recs = [];
+  var parser = new DOMParser();
+  var chain = Promise.resolve();
+  urls.forEach(function(url, pi) {
+    chain = chain.then(function() {
+      if (recs.length >= kMaxMatches) { return; }
+      return fetch(url).then(function(r) { return r.text(); }).then(function(html) {
+        var doc = parser.parseFromString(html, "text/html");
+        if (!doc.body) { return; }
+        var t = textFromBody(doc.body);
+        var found = findInText(t.text, term, matchCase, wholeWord);
+        for (var i = 0; i < found.length && recs.length < kMaxMatches; i++) {
+          recs.push((pi + 1) + "\x1f" + i + "\x1f" + makeSnippet(t.text, found[i][0], found[i][1]));
+        }
+      }).catch(function() {});
+    });
+  });
+  chain.then(function() {
+    try { window.chrome.webview.postMessage("mdfindall " + g + " " + recs.length + " " + recs.join("\x1e")); } catch (e) {}
+  });
+}
+window.__sumatraFind = { start: start, gotoMatch: gotoMatch, searchAll: searchAll, clear: clearHighlights };
 })();)JS";
 
 // WebView2 host that captures scroll-position and find-result messages posted
@@ -185,8 +240,16 @@ void ChmWebviewWnd::OnBrowserMessage(Str msg) {
         owner->webviewScrollPos = Point(x, y);
         return;
     }
-    if (owner && owner->cb && !str::IsNull(str::Parse(msg, "mdfind %d %d", &x, &y))) {
-        owner->cb->OnFindResult(x, y);
+    // note: "mdfindall" must be tested before "mdfind" (shared prefix)
+    constexpr int kMdFindAllPrefixLen = 10; // "mdfindall "
+    if (owner && owner->cb && str::StartsWith(msg, "mdfindall ")) {
+        Str payload = Str(msg.s + kMdFindAllPrefixLen, msg.len - kMdFindAllPrefixLen);
+        owner->cb->OnFindAllResult(payload);
+        return;
+    }
+    int gen = 0;
+    if (owner && owner->cb && !str::IsNull(str::Parse(msg, "mdfind %d %d %d", &gen, &x, &y))) {
+        owner->cb->OnFindResult(gen, x, y);
         return;
     }
     WebviewWnd::OnBrowserMessage(msg);
@@ -548,27 +611,52 @@ static TempStr JsEscapeTemp(Str s) {
     return ToStrTemp(buf);
 }
 
-void ChmDocView::FindStart(Str term, bool matchCase, bool wholeWord) {
+// highlight matches of term on the current page; gotoIdx >= 0 makes that
+// match current (used after navigating to a match on another page), -1 picks
+// the first match at/below the current scroll position
+void ChmDocView::FindStart(Str term, bool matchCase, bool wholeWord, int gen, int gotoIdx) {
     if (!CanFindInPage()) {
         return;
     }
     TempStr esc = JsEscapeTemp(term);
     Str sTrue = StrL("true");
     Str sFalse = StrL("false");
-    TempStr js = fmt("window.__sumatraFind && __sumatraFind.start('%s', %s, %s);", esc, matchCase ? sTrue : sFalse,
-                     wholeWord ? sTrue : sFalse);
+    TempStr js = fmt("window.__sumatraFind && __sumatraFind.start('%s', %s, %s, %d, %d);", esc,
+                     matchCase ? sTrue : sFalse, wholeWord ? sTrue : sFalse, gen, gotoIdx);
     wv->Eval(js);
 }
 
-void ChmDocView::FindNext(bool forward) {
+// search all pages of the document (pageUrls in page order); the match list
+// is posted back asynchronously as one 'mdfindall' message
+void ChmDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen) {
     if (!CanFindInPage()) {
         return;
     }
-    if (forward) {
-        wv->Eval("window.__sumatraFind && __sumatraFind.next(true);");
-    } else {
-        wv->Eval("window.__sumatraFind && __sumatraFind.next(false);");
+    str::Builder js;
+    js.Append("window.__sumatraFind && __sumatraFind.searchAll([");
+    int n = len(pageUrls);
+    for (int i = 0; i < n; i++) {
+        if (i > 0) {
+            js.AppendChar(',');
+        }
+        js.AppendChar('\'');
+        js.Append(JsEscapeTemp(pageUrls.At(i)));
+        js.AppendChar('\'');
     }
+    TempStr esc = JsEscapeTemp(term);
+    Str sTrue = StrL("true");
+    Str sFalse = StrL("false");
+    js.Append(fmt("], '%s', %s, %s, %d);", esc, matchCase ? sTrue : sFalse, wholeWord ? sTrue : sFalse, gen));
+    wv->Eval(ToStrTemp(js));
+}
+
+// jump to the idx-th match on the current page (as counted by FindStart)
+void ChmDocView::FindGoto(int idx) {
+    if (!CanFindInPage()) {
+        return;
+    }
+    TempStr js = fmt("window.__sumatraFind && __sumatraFind.gotoMatch(%d);", idx);
+    wv->Eval(js);
 }
 
 void ChmDocView::FindClear() {

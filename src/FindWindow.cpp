@@ -412,6 +412,9 @@ void FindWindowWnd::OnResultSelected() {
         return;
     }
     const FindMatch& fm = win->findMatches[idx];
+    if (win->AsMarkdown() && idx == win->mdFindCurrent) {
+        return; // already on this match
+    }
     DisplayModel* dm = win->AsFixed();
     if (dm && dm->textSearch && dm->textSearch->startPage == fm.startPage &&
         dm->textSearch->startGlyph == fm.startGlyph) {
@@ -433,6 +436,10 @@ void FindWindowWnd::OnResultSelected() {
 // list index of the match the document is currently on (so the selection can
 // track the current match), or -1 if it isn't in the list
 int FindWindowWnd::CurrentMatchIndex() {
+    if (win->AsMarkdown()) {
+        // tracked by the markdown webview find (see SearchAndDDE.cpp Md*)
+        return win->mdFindCurrent;
+    }
     DisplayModel* dm = win->AsFixed();
     if (!dm || !dm->textSearch) {
         return -1;

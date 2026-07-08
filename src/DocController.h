@@ -43,8 +43,11 @@ struct DocControllerCallback {
     // tell the UI to let the user save the provided data to a file
     virtual void SaveDownload(Str url, Str) = 0;
     // MarkdownModel //
-    // in-page find result from the webview (1-based current match, total count)
-    virtual void FindResultReceived(int current, int total) = 0;
+    // in-page find result from the webview: search generation, 1-based
+    // current match and total match count on the current page
+    virtual void FindResultReceived(int gen, int current, int total) = 0;
+    // all-pages find result from the webview (raw 'mdfindall' payload)
+    virtual void FindAllResultReceived(Str payload) = 0;
 };
 
 struct DocController {

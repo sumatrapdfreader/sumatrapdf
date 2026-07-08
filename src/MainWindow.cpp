@@ -146,6 +146,7 @@ MainWindow::~MainWindow() {
     }
     str::FreePtr(&findCountText);
     str::FreePtr(&findCountPendingText);
+    str::FreePtr(&mdFindTerm);
     ClearFindMatches(this);
 
     delete linkHandler;
