@@ -2,10 +2,11 @@
 // does nothing". Opens the dialog via CmdAdvancedSettings, closes it, and opens
 // it again, checking each time that a top-level "Advanced Settings" window
 // appears. Run: bun tests/ad-hoc-adv-settings-reopen.ts
+import { cmdId } from "./util.ts";
 import { launchSumatra, waitForFrame, sendCommand } from "./win-automation.ts";
 import { enumWindows, getWindowText, getWindowPid, postMessage, sleep } from "./winapi.ts";
 
-const CmdAdvancedSettings = 324;
+const CmdAdvancedSettings = cmdId("CmdAdvancedSettings");
 const WM_CLOSE = 0x0010;
 const PDF = "ext/zlib/zlib.3.pdf";
 
