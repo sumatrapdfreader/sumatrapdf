@@ -31,7 +31,6 @@ class Field {
   Comment: string;
   NotSaved = false;
   CName: string;
-  Expert = false;
   // saved & deserialized like any setting, but hidden from the advanced
   // settings dialog (app-managed / deprecated-for-migration values)
   Internal = false;
@@ -48,13 +47,9 @@ class Field {
     this.DocComment = comment;
   }
 
-  // fluent modifiers, chainable: field(...).ver("3.6").internal().expert()
+  // fluent modifiers, chainable: field(...).ver("3.6").internal()
   ver(v: string): this {
     this.Version = v;
-    return this;
-  }
-  expert(): this {
-    this.Expert = true;
     return this;
   }
   internal(): this {
@@ -619,28 +614,22 @@ const globalPrefs: Field[] = [
     Bool,
     false,
     "if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)",
-  )
-    .expert()
-    .ver("3.7"),
+  ).ver("3.7"),
   field(
     "AllowExternalImages",
     Bool,
     false,
     "if true, a PDF may load an image stored in a separate file referenced by name (an external " +
       "image stream); the file must sit next to the PDF. Off by default for security (matches Acrobat)",
-  )
-    .expert()
-    .ver("3.7"),
+  ).ver("3.7"),
   field(
     "EnableTeXEnhancements",
     Bool,
     false,
     "if true, we expose the SyncTeX inverse search command line in Settings -> Options",
   ),
-  field("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF").expert(),
-  field("FullPathInTitle", Bool, false, "if true, we show the full path to a file in the title bar")
-    .expert()
-    .ver("3.0"),
+  field("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF"),
+  field("FullPathInTitle", Bool, false, "if true, we show the full path to a file in the title bar").ver("3.0"),
   field("InverseSearchCmdLine", Str, null, "pattern used to launch the LaTeX editor when doing inverse search"),
   field(
     "LazyLoading",
@@ -653,7 +642,7 @@ const globalPrefs: Field[] = [
     Color,
     rgba(0xff, 0xf2, 0x00, 0x80),
     "background color of the non-document windows, traditionally yellow",
-  ).expert(),
+  ),
   field("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
   field(
     "HomePageSortByFrequentlyRead",
@@ -673,9 +662,7 @@ const globalPrefs: Field[] = [
     true,
     "if true, a document will be reloaded automatically whenever it's changed " +
       "(currently doesn't work for documents shown in the ebook UI)",
-  )
-    .expert()
-    .ver("2.5"),
+  ).ver("2.5"),
   field("RememberOpenedFiles", Bool, true, "if true, we remember which files we opened and their display settings"),
   field(
     "RememberStatePerDocument",
@@ -684,21 +671,14 @@ const globalPrefs: Field[] = [
     "if true, we store display settings for each document separately (i.e. everything " +
       "after UseDefaultState in FileStates)",
   ),
-  field(
-    "RestoreSession",
-    Bool,
-    true,
-    "if true and SessionData isn't empty, that session will be restored at startup",
-  ).expert(),
-  field("ReuseInstance", Bool, true, "if true, we'll always open files using existing SumatraPDF process").expert(),
+  field("RestoreSession", Bool, true, "if true and SessionData isn't empty, that session will be restored at startup"),
+  field("ReuseInstance", Bool, true, "if true, we'll always open files using existing SumatraPDF process"),
   field(
     "ShowMenubar",
     Bool,
     true,
     "if false, the menu bar will be hidden (use F9 to toggle, persisted across sessions)",
-  )
-    .expert()
-    .ver("2.5"),
+  ).ver("2.5"),
   field("ShowMenubarWithTabs", Bool, false, "if true, show the menu bar when using tabs (useTabs = true)").ver("3.7"),
   field("ShowTips", Bool, true, "if true, we show tips on the home page").ver("3.7"),
   field(
@@ -730,9 +710,7 @@ const globalPrefs: Field[] = [
     false,
     "if true, the find UI is a floating, movable window with a results list " +
       "instead of the compact toolbar overlay",
-  )
-    .expert()
-    .ver("3.7"),
+  ).ver("3.7"),
   field("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
   field(
     "ShowToc",
@@ -762,17 +740,13 @@ const globalPrefs: Field[] = [
     Str,
     null,
     "voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)",
-  )
-    .expert()
-    .ver("3.7"),
+  ).ver("3.7"),
   field(
     "ReadAloudSpeed",
     Float,
     1,
     "playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar",
-  )
-    .expert()
-    .ver("3.7"),
+  ).ver("3.7"),
   field(
     "FastScrollOverScrollbar",
     Bool,
@@ -809,13 +783,13 @@ const globalPrefs: Field[] = [
     Bool,
     false,
     "if true, disables auto-linking of URLs and email addresses found in PDF text",
-  ).expert(),
+  ),
   field(
     "UseSysColors",
     Bool,
     false,
     "if true, we use Windows system colors for background/text color. Over-rides other settings",
-  ).expert(),
+  ),
   field("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows").ver("3.0"),
   field(
     "TabsMru",
@@ -829,9 +803,7 @@ const globalPrefs: Field[] = [
     "",
     "zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
       "the minimum and maximum allowed values (8.33 and 6400)",
-  )
-    .expert()
-    .doc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
+  ).doc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
   compactArray("ZoomLevelsCmdIds", Int, "", "").notSaved(),
   field(
     "ZoomIncrement",
@@ -839,35 +811,35 @@ const globalPrefs: Field[] = [
     0,
     "zoom step size in percents relative to the current zoom level. " +
       "if zero or negative, the values from ZoomLevels are used instead",
-  ).expert(),
+  ),
 
   emptyLine(),
 
-  struct("FixedPageUI", fixedPageUI, "customization options for PDF, XPS, DjVu and PostScript UI").expert(),
+  struct("FixedPageUI", fixedPageUI, "customization options for PDF, XPS, DjVu and PostScript UI"),
   emptyLine(),
-  struct("EBookUI", ebookUI, "customization options for eBookUI").expert(),
+  struct("EBookUI", ebookUI, "customization options for eBookUI"),
   emptyLine(),
-  struct("ComicBookUI", comicBookUI, "customization options for Comic Book UI").expert(),
+  struct("ComicBookUI", comicBookUI, "customization options for Comic Book UI"),
   emptyLine(),
-  struct("ImageUI", imageUI, "customization options for image files UI").expert(),
+  struct("ImageUI", imageUI, "customization options for image files UI"),
   emptyLine(),
   struct(
     "ChmUI",
     chmUI,
     "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
-  ).expert(),
+  ),
   emptyLine(),
   struct(
     "MarkdownUI",
     markdownUI,
     "customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
-  ).expert(),
+  ),
   emptyLine(),
-  struct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar").expert().ver("3.7"),
+  struct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar").ver("3.7"),
   emptyLine(),
-  struct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar").expert().ver("3.7"),
+  struct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar").ver("3.7"),
   emptyLine(),
-  struct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar").expert().ver("3.7"),
+  struct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar").ver("3.7"),
   emptyLine(),
   field(
     "AIChatSidebarDx",
@@ -875,7 +847,6 @@ const globalPrefs: Field[] = [
     0,
     "width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)",
   )
-    .expert()
     .internal()
     .ver("3.7"),
   emptyLine(),
@@ -884,28 +855,26 @@ const globalPrefs: Field[] = [
     Str,
     "",
     "remembered destination language for selection translation; empty uses OS UI language",
-  )
-    .expert()
-    .ver("3.7"),
+  ).ver("3.7"),
   emptyLine(),
-  struct("Annotations", annotations, "default values for annotations in PDF documents").expert().ver("3.3"),
+  struct("Annotations", annotations, "default values for annotations in PDF documents").ver("3.3"),
   emptyLine(),
   array(
     "ExternalViewers",
     externalViewer,
     "list of additional external viewers for various file types. " +
       "See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)",
-  ).expert(),
+  ),
   emptyLine(),
   struct(
     "ForwardSearch",
     forwardSearch,
     "customization options for how we show forward search results (used from " + "LaTeX editors)",
-  ).expert(),
+  ),
   emptyLine(),
-  struct("PrinterDefaults", printerDefaults, "these override the default settings in the Print dialog").expert(),
+  struct("PrinterDefaults", printerDefaults, "these override the default settings in the Print dialog"),
   emptyLine(),
-  struct("Fullscreen", fullscreen, "options for fullscreen mode").expert().ver("3.7"),
+  struct("Fullscreen", fullscreen, "options for fullscreen mode").ver("3.7"),
   emptyLine(),
   array(
     "SelectionHandlers",
@@ -925,14 +894,11 @@ const globalPrefs: Field[] = [
     Int,
     0,
     "actual resolution of the main screen in DPI (if this value " + "isn't positive, the system's UI setting is used)",
-  )
-    .expert()
-    .ver("2.5"),
+  ).ver("2.5"),
   emptyLine(),
 
   comment("You're not expected to change those manually"),
   compactArray("DefaultPasswords", Str, null, "passwords to try when opening a password protected document")
-    .expert()
     .ver("2.4")
     .doc(
       "a whitespace separated list of passwords to try when opening a password protected document " +
@@ -1350,12 +1316,10 @@ function genCommentHTML(comment: string, fieldID: string, start: string, first: 
 function genStructHTML(struc: Field, indent: string): string {
   const lines: string[] = [];
   let first = true;
-  let insideExpert = false;
 
   const fields = struc.Default as Field[];
   for (const field of fields) {
     if (field.NotSaved || isComment(field)) continue;
-    const startIdx = lines.length;
     let comment = field.DocComment;
     if (field.Version !== "2.3") {
       comment += ` (introduced in version ${field.Version})`;
@@ -1383,12 +1347,6 @@ function genStructHTML(struc: Field, indent: string): string {
       lines.push(indent + s);
     }
     first = false;
-    if (field.Expert && !insideExpert) {
-      lines[startIdx] = `<div>` + lines[startIdx];
-    } else if (!field.Expert && insideExpert) {
-      lines[startIdx] = `</div>` + lines[startIdx];
-    }
-    insideExpert = field.Expert;
   }
   return lines.join("\n");
 }
