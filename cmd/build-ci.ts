@@ -23,8 +23,6 @@ import {
 const { msbuildPath, llvmPdbutilPath } = detectVisualStudio2026();
 const slnPath = join("vs2022", "SumatraPDF.sln");
 
-const pdbFiles = ["libmupdf.pdb", "SumatraPDF-dll.pdb", "SumatraPDF.pdb"];
-
 // === Secrets ===
 
 let r2Access = "";
@@ -274,21 +272,6 @@ function removeReleaseBuilds(): void {
   }
 }
 
-async function createPdbZip(dir: string): Promise<void> {
-  // use PowerShell to create zip from PDB files
-  const files = pdbFiles.map((f) => `'${f}'`).join(",");
-  const cmd = `Compress-Archive -Path ${files} -DestinationPath 'SumatraPDF.pdb.zip' -Force`;
-  await runLogged("powershell", ["-Command", cmd], dir);
-}
-
-async function createPdbLzsa(dir: string): Promise<void> {
-  const makeLzsa = resolve(join("bin", "MakeLZSA.exe"));
-  if (!existsSync(makeLzsa)) {
-    throw new Error(`'${makeLzsa}' doesn't exist`);
-  }
-  await runLogged(makeLzsa, ["SumatraPDF.pdb.lzsa", ...pdbFiles], dir);
-}
-
 async function buildPreRelease(
   preRelVer: string,
   sha1: string,
@@ -314,10 +297,6 @@ async function buildPreRelease(
     const targets = ["PdfFilter", "PdfPreview", "SumatraPDF", "SumatraPDF-dll"];
     const t = `/t:${targets.map((t) => t + ":Rebuild").join(";")}`;
     await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
-
-    // create PDB archives
-    await createPdbZip(outDir);
-    await createPdbLzsa(outDir);
   } finally {
     await revertBuildConfig();
   }
@@ -499,7 +478,7 @@ async function main() {
         const { main: genDocs } = await import("./gen-docs");
         await genDocs();
       }
-      await buildPreRelease(preRelVer, sha1, "x64", join("out", "rel64"));
+      await buildPreRelease(preRelVer, sha1, "Win32", join("out", "rel32"));
       break;
     case "codeql":
       await buildSmoke();
