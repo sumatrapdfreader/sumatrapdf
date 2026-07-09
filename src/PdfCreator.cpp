@@ -238,24 +238,20 @@ bool PdfCreator::AddPageFromImageData(Str data, float imgDpi) const {
     return ok;
 }
 
+// @gen-start docprop-pdfcreator
+// clang-format off
 static SeqStrNum pdfCreatorPropsMap =
-    "Title\0"
-    "\x01"
-    "Author\0"
-    "\x02"
-    "Subject\0"
-    "\x04"
-    "Copyright\0"
-    "\x03"
-    "CreationDate\0"
-    "\x05"
-    "ModDate\0"
-    "\x06"
-    "Creator\0"
-    "\x07"
-    "Producer\0"
-    "\x0b"
+    "Title\0" "\x02"
+    "Author\0" "\x04"
+    "Subject\0" "\x08"
+    "Copyright\0" "\x06"
+    "CreationDate\0" "\x0a"
+    "ModDate\0" "\x0c"
+    "Creator\0" "\x0e"
+    "Producer\0" "\x16"
     "\0";
+// clang-format on
+// @gen-end docprop-pdfcreator
 
 bool PdfCreator::SetProperty(DocProp prop, Str value) const {
     if (!ctx || !doc) {

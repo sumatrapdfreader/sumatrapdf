@@ -294,12 +294,18 @@ void parseCommandsTest() {
 }
 
 static void DocPropertiesTest() {
+    // gPropNames round-trips: first (Title=1), a middle one (FocalLength35mm=27)
+    // and the last property (ImagePath=53), both directions.
     utassert(str::Eq(PropNameTemp(DocProp::Title), "title"));
-    utassert(str::Eq(PropNameTemp(DocProp::CreationDate), "creationDate"));
-    utassert(str::Eq(PropNameTemp(DocProp::ModificationDate), "modDate"));
-    utassert(PropFromName("creationDate") == DocProp::CreationDate);
+    utassert(str::Eq(PropNameTemp(DocProp::FocalLength35mm), "focalLength35mm"));
+    utassert(str::Eq(PropNameTemp(DocProp::ImagePath), "imagePath"));
     utassert(PropFromName("title") == DocProp::Title);
+    utassert(PropFromName("focalLength35mm") == DocProp::FocalLength35mm);
+    utassert(PropFromName("imagePath") == DocProp::ImagePath);
+    // a couple more, plus unknown/None
+    utassert(str::Eq(PropNameTemp(DocProp::CreationDate), "creationDate"));
     utassert(PropFromName("modDate") == DocProp::ModificationDate);
+    utassert(PropFromName("bogusPropName") == DocProp::None);
 }
 
 void SumatraPDF_UnitTests() {

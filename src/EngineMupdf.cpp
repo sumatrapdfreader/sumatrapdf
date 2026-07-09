@@ -4175,23 +4175,19 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     return JoinTemp(&fonts, "\n");
 }
 
-static SeqStrNum mupdfPropsMap = FZ_META_INFO_TITLE
-    "\0"
-    "\x01" FZ_META_INFO_AUTHOR
-    "\0"
-    "\x02"
-    "info:Subject\0"
-    "\x04" FZ_META_INFO_PRODUCER
-    "\0"
-    "\x0b"
-    // not sure if info:Creator has the same meaning
-    "info:Creator\0"
-    "\x07"
-    "info:CreationDate\0"
-    "\x05"
-    "info:ModDate\0"
-    "\x06"
+// @gen-start docprop-mupdf
+// clang-format off
+static SeqStrNum mupdfPropsMap =
+    "info:Title\0" "\x02"
+    "info:Author\0" "\x04"
+    "info:Subject\0" "\x08"
+    "info:Producer\0" "\x16"
+    "info:Creator\0" "\x0e"
+    "info:CreationDate\0" "\x0a"
+    "info:ModDate\0" "\x0c"
     "\0";
+// clang-format on
+// @gen-end docprop-mupdf
 
 TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     auto ctx = Ctx();
@@ -4263,24 +4259,20 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
         return ExtractFontListTemp();
     }
 
-    static SeqStrNum pdfPropNames =
-        "Title\0"
-        "\x01"
-        "Author\0"
-        "\x02"
-        "Subject\0"
-        "\x04"
-        "Copyright\0"
-        "\x03"
-        "CreationDate\0"
-        "\x05"
-        "ModDate\0"
-        "\x06"
-        "Creator\0"
-        "\x07"
-        "Producer\0"
-        "\x0b"
-        "\0";
+    // @gen-start docprop-pdf-info
+// clang-format off
+static SeqStrNum pdfPropNames =
+    "Title\0" "\x02"
+    "Author\0" "\x04"
+    "Subject\0" "\x08"
+    "Copyright\0" "\x06"
+    "CreationDate\0" "\x0a"
+    "ModDate\0" "\x0c"
+    "Creator\0" "\x0e"
+    "Producer\0" "\x16"
+    "\0";
+// clang-format on
+// @gen-end docprop-pdf-info
     Str pdfPropName = SeqStrNumStrByNumber(pdfPropNames, (i64)prop);
     if (!pdfPropName) {
         return {};

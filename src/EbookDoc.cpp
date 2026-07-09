@@ -586,20 +586,18 @@ bool EpubDoc::Load() {
     return len(htmlData) > 0;
 }
 
+// @gen-start docprop-epub
+// clang-format off
 static SeqStrNum epubPropsMap =
-    "dc:title\0"
-    "\x01"
-    "dc:creator\0"
-    "\x02"
-    "dc:date\0"
-    "\x05"
-    "dcterms:modified\0"
-    "\x06"
-    "dc:description\0"
-    "\x04"
-    "dc:rights\0"
-    "\x03"
+    "dc:title\0" "\x02"
+    "dc:creator\0" "\x04"
+    "dc:date\0" "\x0a"
+    "dcterms:modified\0" "\x0c"
+    "dc:description\0" "\x08"
+    "dc:rights\0" "\x06"
     "\0";
+// clang-format on
+// @gen-end docprop-epub
 
 static bool IsTokPropName(HtmlToken* tok, Str name) {
     if (tok->NameIs(name)) {
