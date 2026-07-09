@@ -746,6 +746,18 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
+// clicking the window's close box sends WM_CLOSE. We must schedule our own
+// teardown here: the framework's default WM_CLOSE handler calls Wnd::Destroy(),
+// which removes the Wnd from the hwnd->Wnd list *before* DestroyWindow(), so the
+// following WM_DESTROY never reaches onDestroy - leaving gAdvancedSettingsWnd
+// dangling and blocking reopen. CloseEvent::didHandle defaults to true, so
+// returning from here skips that default Destroy().
+static void OnClose(Wnd::CloseEvent*) {
+    if (gAdvancedSettingsWnd) {
+        gAdvancedSettingsWnd->ScheduleDelete();
+    }
+}
+
 static void OnDestroy(Wnd::DestroyEvent*) {
     if (gAdvancedSettingsWnd) {
         gAdvancedSettingsWnd->ScheduleDelete();
@@ -942,6 +954,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
         return;
     }
     auto wnd = new AdvancedSettingsWnd();
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppFont();
     bool ok = wnd->Create(win);
