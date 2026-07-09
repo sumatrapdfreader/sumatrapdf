@@ -32,10 +32,6 @@ Below is an explanation of what the different settings mean and what their defau
 If you add or remove lines with square brackets, **make sure to always add/remove square brackets in pairs**! Else you risk losing all the data following them.
 
 ```
-; actual resolution of the main screen in DPI (if this value isn't positive, the
-; system's UI setting is used) (introduced in version 2.5)
-CustomScreenDPI = 0
-
 ; default layout of pages. valid values: automatic, single page, facing, book
 ; view, continuous, continuous facing, continuous book view
 DefaultDisplayMode = automatic
@@ -596,6 +592,10 @@ TabGroups [
     ]
   ]
 ]
+
+; actual resolution of the main screen in DPI (if this value isn't positive, the
+; system's UI setting is used) (introduced in version 2.5)
+CustomScreenDPI = 0
 
 ; a whitespace separated list of passwords to try when opening a password
 ; protected document (passwords containing spaces must be quoted) (introduced in

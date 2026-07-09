@@ -477,9 +477,6 @@ struct SessionData {
 
 // Preferences are persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {
-    // actual resolution of the main screen in DPI (if this value isn't
-    // positive, the system's UI setting is used)
-    int customScreenDPI;
     // how pages should be laid out by default, needs to be synchronized
     // with DefaultDisplayMode after deserialization and before
     // serialization
@@ -680,6 +677,9 @@ struct GlobalPrefs {
     Vec<Theme*>* themes;
     // saved groups of tabs
     Vec<TabGroup*>* tabGroups;
+    // actual resolution of the main screen in DPI (if this value isn't
+    // positive, the system's UI setting is used)
+    int customScreenDPI;
     // passwords to try when opening a password protected document
     Vec<Str>* defaultPasswords;
     // ISO code of the current UI language
@@ -1140,7 +1140,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
      (intptr_t)"For documentation, see https://www.sumatrapdfreader.org/settings/settings3-7.html"},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
     {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t)"automatic"},
     {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(GlobalPrefs, disableJavaScript), SettingType::Bool, false},
@@ -1235,6 +1234,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, tabGroups), SettingType::Array, (intptr_t)&gTabGroupInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
+    {(size_t)-1, SettingType::Comment, 0},
     {(size_t)-1, SettingType::Comment, (intptr_t)"You're not expected to change those manually", true},
     {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0, true},
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0, true},
@@ -1253,21 +1254,20 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 113, gGlobalPrefsFields,
-    "\0\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancement"
-    "s\0EscToExit\0FullPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByF"
-    "requentlyRead\0HomePageShowList\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSe"
-    "ssion\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosit"
-    "ion\0SearchUIFloating\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSingleP"
-    "age\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFu"
-    "llscreen\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAu"
-    "toLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Ima"
-    "geUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Anno"
-    "tations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0"
-    "Themes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0F"
-    "ileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
-    "\0\0actual resolution of the main screen in DPI (if this value isn't positive, the system's UI setting is "
-    "used)\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
+    sizeof(GlobalPrefs), 114, gGlobalPrefsFields,
+    "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
+    "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
+    "mePageShowList\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
+    "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
+    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll"
+    "\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidt"
+    "h\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLinks\0UseSysCo"
+    "lors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0"
+    "MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0Extern"
+    "alViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGrou"
+    "ps\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos"
+    "\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
     "may load an image stored in a separate file referenced by name (an external image stream); the file must sit next "
@@ -1323,7 +1323,8 @@ static const StructInfo gGlobalPrefsInfo = {
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
     "selection is active. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)\0\0custom keyboard "
-    "shortcuts\0\0color themes\0\0saved groups of tabs\0\0You're not expected to change those manually\0a whitespace "
+    "shortcuts\0\0color themes\0\0saved groups of tabs\0\0actual resolution of the main screen in DPI (if this value "
+    "isn't positive, the system's UI setting is used)\0\0You're not expected to change those manually\0a whitespace "
     "separated list of passwords to try when opening a password protected document (passwords containing spaces must "
     "be quoted)\0[ISO code](langs.html) of the current UI language\0we won't ask again to update to this "
     "version\0default state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0default "

@@ -714,18 +714,6 @@ const globalPrefs: Field[] = [
   mkComment(""),
   mkEmptyLine(),
 
-  setVersion(
-    setExpert(
-      mkField(
-        "CustomScreenDPI",
-        Int,
-        0,
-        "actual resolution of the main screen in DPI (if this value " +
-          "isn't positive, the system's UI setting is used)",
-      ),
-    ),
-    "2.5",
-  ),
   setDoc(
     mkField(
       "DefaultDisplayMode",
@@ -1132,6 +1120,20 @@ const globalPrefs: Field[] = [
   setVersion(mkArray("Themes", theme, "color themes"), "3.6"),
   mkEmptyLine(),
   setVersion(mkArray("TabGroups", tabGroup, "saved groups of tabs"), "3.7"),
+  mkEmptyLine(),
+
+  setVersion(
+    setExpert(
+      mkField(
+        "CustomScreenDPI",
+        Int,
+        0,
+        "actual resolution of the main screen in DPI (if this value " +
+          "isn't positive, the system's UI setting is used)",
+      ),
+    ),
+    "2.5",
+  ),
   mkEmptyLine(),
 
   mkComment("You're not expected to change those manually"),
