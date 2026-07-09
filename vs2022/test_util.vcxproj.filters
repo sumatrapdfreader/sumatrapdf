@@ -14,6 +14,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
+    <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\RefHoverDetect.h" />
     <ClInclude Include="..\src\RefHoverTextDetect.h" />
@@ -126,6 +127,7 @@
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
+    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\RefHoverTextDetect.cpp" />

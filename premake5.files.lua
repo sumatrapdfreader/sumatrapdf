@@ -1505,6 +1505,7 @@ function test_util_files()
     "Commands.*",
     "CrashHandlerNoOp.cpp",
     "DisplayMode.*",
+    "DocProperties.*",
     "Flags.*",
     "RefHoverDetect.*",
     "RefHoverTextDetect.*",
