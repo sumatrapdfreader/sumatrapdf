@@ -115,7 +115,7 @@ function generateCode(): string {
     lines.push("");
 
     // generate gArgNames, 4 per line
-    lines.push("static const char* gArgNames =");
+    lines.push("static SeqStrings gArgNames =");
     for (let i = 0; i < strNames.length; i += 4) {
         const chunk = strNames.slice(i, i + 4);
         const parts = chunk.map(s => `"${s}\\0"`).join(" ");
