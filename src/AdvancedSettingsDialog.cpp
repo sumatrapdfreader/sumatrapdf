@@ -133,6 +133,12 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
         Str name(fieldName);
         fieldName += len(name) + 1;
         if (field.type == SettingType::Comment) {
+            // internal settings (WindowState, OpenCountWeek ...) follow this
+            // marker comment; they are managed by the app, not the user
+            Str comment = (const char*)field.value;
+            if (len(comment) > 0 && str::StartsWith(comment, "You're not expected to change")) {
+                return;
+            }
             continue;
         }
         u8* fieldPtr = base + field.offset;
@@ -204,18 +210,22 @@ struct AdvancedSettingsWnd : Wnd {
     ~AdvancedSettingsWnd() override;
 
     HFONT font = nullptr;
+    HFONT fontBold = nullptr; // for changed settings, owned
     MainWindow* win = nullptr;
 
     Edit* editFilter = nullptr;
     ListBox* listBox = nullptr;
     ListBoxModelSettings* model = nullptr; // owned by listBox
     Edit* editValue = nullptr;             // in-place value editor, created on demand
+    DropDown* dropDownValue = nullptr;     // in-place enum editor, created on demand
+    Str dropDownOrigVal;                   // value before the drop-down opened (owned), for Esc
     int editItemIdx = -1;                  // index into items of the setting being edited
 
     Vec<SettingItem*> items;
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG&) override;
+    void OnSize(UINT msg, UINT type, SIZE size) override;
 
     void QueryChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
@@ -225,6 +235,11 @@ struct AdvancedSettingsWnd : Wnd {
     void BeginEditValue(int idx);
     void CommitEditValue();
     void CancelEditValue();
+
+    void BeginEditEnum(int idx);
+    void OnEnumSelectionChanged();
+    void CheckDropDownClosed();
+    void CloseEnumEdit(bool keepValue);
 
     void OnOpenSettingsFile();
     void OnHelp();
@@ -240,9 +255,14 @@ static AdvancedSettingsWnd* gAdvancedSettingsWnd = nullptr;
 AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     delete editFilter;
     delete editValue;
+    delete dropDownValue;
     delete listBox;
     DeleteVecMembers(items);
     delete layout;
+    str::Free(dropDownOrigVal);
+    if (fontBold) {
+        DeleteObject(fontBold);
+    }
 }
 
 void SafeDeleteAdvancedSettingsDialog() {
@@ -297,23 +317,48 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     int pad = DpiScale(hwnd, 4);
 
-    // setting name on the left; changed settings are marked with '*'
+    // changed settings are drawn in bold, with a dot after the name
+    HGDIOBJ prevFont = nullptr;
+    if (item->changed && fontBold) {
+        prevFont = SelectObject(hdc, fontBold);
+    }
+
+    // setting name on the left
     SetTextColor(hdc, colText);
     RECT rcName = rc;
     rcName.left += pad;
-    TempStr name = item->changed ? fmt("* %s", item->name) : str::DupTemp(item->name);
-    TempWStr ws = ToWStrTemp(name);
+    TempWStr ws = ToWStrTemp(item->name);
     DrawTextW(hdc, ws.s, -1, &rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+
+    if (item->changed) {
+        // a small filled circle right after the name
+        SIZE textSize{};
+        GetTextExtentPoint32W(hdc, ws.s, len(ws), &textSize);
+        int d = DpiScale(hwnd, 6);
+        int x = (int)rcName.left + textSize.cx + DpiScale(hwnd, 5);
+        int y = (int)rc.top + ((int)(rc.bottom - rc.top) - d) / 2;
+        COLORREF dotCol = ThemeWindowLinkColor();
+        HBRUSH brush = CreateSolidBrush(dotCol);
+        HPEN pen = CreatePen(PS_SOLID, 1, dotCol);
+        HGDIOBJ prevBrush = SelectObject(hdc, brush);
+        HGDIOBJ prevPen = SelectObject(hdc, pen);
+        Ellipse(hdc, x, y, x + d, y + d);
+        SelectObject(hdc, prevBrush);
+        SelectObject(hdc, prevPen);
+        DeleteObject(brush);
+        DeleteObject(pen);
+    }
 
     // value on the right
     TempStr val = FormatSettingValueTemp(item);
-    if (item->changed) {
-        SetTextColor(hdc, AccentColor(colText, 60));
-    }
     RECT rcVal = rc;
     rcVal.right -= pad;
     ws = ToWStrTemp(val);
     DrawTextW(hdc, ws.s, -1, &rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+
+    if (prevFont) {
+        SelectObject(hdc, prevFont);
+    }
 }
 
 // the value occupies the right half of the item's rect
@@ -370,6 +415,7 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
 }
 
 void AdvancedSettingsWnd::CancelEditValue() {
+    CloseEnumEdit(true);
     if (!editValue) {
         return;
     }
@@ -377,6 +423,88 @@ void AdvancedSettingsWnd::CancelEditValue() {
     editValue = nullptr;
     editItemIdx = -1;
     delete tmp;
+    HwndSetFocus(listBox->hwnd);
+}
+
+// show a drop-down with the allowed values over the item's value rect
+void AdvancedSettingsWnd::BeginEditEnum(int idx) {
+    CancelEditValue();
+    SettingItem* item = items[idx];
+    Rect r = ValueRectForItem(idx);
+    if (r.IsEmpty()) {
+        return;
+    }
+
+    DropDown::CreateArgs args;
+    args.parent = listBox->hwnd;
+    args.font = font;
+    auto c = new DropDown();
+    HWND ok = c->Create(args);
+    if (!ok) {
+        delete c;
+        return;
+    }
+    StrVec vals;
+    int currSel = 0;
+    for (int i = 0; item->enumValues[i]; i++) {
+        vals.Append(item->enumValues[i]);
+        if (str::EqI(item->strVal, item->enumValues[i])) {
+            currSel = i;
+        }
+    }
+    c->SetItems(vals);
+    c->SetCurrentSelection(currSel);
+    c->onSelectionChanged = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnEnumSelectionChanged>(this);
+    dropDownValue = c;
+    editItemIdx = idx;
+    str::ReplaceWithCopy(&dropDownOrigVal, item->strVal);
+    SetWindowPos(c->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW);
+    HwndSetFocus(c->hwnd);
+    SendMessageW(c->hwnd, CB_SHOWDROPDOWN, TRUE, 0);
+}
+
+void AdvancedSettingsWnd::OnEnumSelectionChanged() {
+    if (!dropDownValue) {
+        return;
+    }
+    SettingItem* item = items[editItemIdx];
+    int sel = dropDownValue->GetCurrentSelection();
+    if (sel >= 0) {
+        str::ReplaceWithCopy(&item->strVal, item->enumValues[sel]);
+        SetItemChanged(item);
+        InvalidateRect(listBox->hwnd, nullptr, TRUE);
+    }
+    // selecting with the mouse closes the list: dispose of the control then.
+    // can't do it here (we're inside its notification), so check afterwards;
+    // during keyboard browsing the list stays open and the control stays up
+    auto fn = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::CheckDropDownClosed>(this);
+    uitask::Post(fn, "AdvSettingsCheckDropDownClosed");
+}
+
+void AdvancedSettingsWnd::CheckDropDownClosed() {
+    if (gAdvancedSettingsWnd != this || !dropDownValue) {
+        return;
+    }
+    bool droppedDown = SendMessageW(dropDownValue->hwnd, CB_GETDROPPEDSTATE, 0, 0) != 0;
+    if (!droppedDown) {
+        CloseEnumEdit(true);
+    }
+}
+
+void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
+    if (!dropDownValue) {
+        return;
+    }
+    auto tmp = dropDownValue;
+    dropDownValue = nullptr;
+    if (!keepValue) {
+        SettingItem* item = items[editItemIdx];
+        str::ReplaceWithCopy(&item->strVal, dropDownOrigVal);
+        SetItemChanged(item);
+    }
+    editItemIdx = -1;
+    delete tmp;
+    InvalidateRect(listBox->hwnd, nullptr, TRUE);
     HwndSetFocus(listBox->hwnd);
 }
 
@@ -418,19 +546,7 @@ void AdvancedSettingsWnd::OnItemClicked(int lbIdx) {
         return;
     }
     if (item->enumValues) {
-        // cycle to the next allowed value
-        const char** vals = item->enumValues;
-        int curr = -1;
-        for (int i = 0; vals[i]; i++) {
-            if (str::EqI(item->strVal, vals[i])) {
-                curr = i;
-                break;
-            }
-        }
-        const char* next = vals[curr + 1] ? vals[curr + 1] : vals[0];
-        str::ReplaceWithCopy(&item->strVal, next);
-        SetItemChanged(item);
-        InvalidateRect(listBox->hwnd, nullptr, TRUE);
+        BeginEditEnum(idx);
         return;
     }
     BeginEditValue(idx);
@@ -503,9 +619,12 @@ void AdvancedSettingsWnd::OnSave() {
 bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         bool isEditingValue = editValue && msg.hwnd == editValue->hwnd;
+        bool isEditingEnum = dropDownValue && msg.hwnd == dropDownValue->hwnd;
         if (msg.wParam == VK_ESCAPE) {
             if (isEditingValue) {
                 CancelEditValue();
+            } else if (isEditingEnum) {
+                CloseEnumEdit(false);
             } else {
                 ScheduleDelete();
             }
@@ -514,6 +633,10 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
         if (msg.wParam == VK_RETURN) {
             if (isEditingValue) {
                 CommitEditValue();
+                return true;
+            }
+            if (isEditingEnum) {
+                CloseEnumEdit(true);
                 return true;
             }
             int lbIdx = listBox->GetCurrentSelection();
@@ -555,6 +678,35 @@ static void OnDestroy(Wnd::DestroyEvent*) {
     }
 }
 
+// re-layout the controls when the (resizable) window is resized
+void AdvancedSettingsWnd::OnSize(UINT, UINT, SIZE size) {
+    // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
+    // before the child controls exist; ignore layout until they're created
+    if (!layout || !listBox) {
+        return;
+    }
+    int dx = (int)size.cx;
+    int dy = (int)size.cy;
+    if (dx == 0 || dy == 0) {
+        return;
+    }
+    // in-place editors are positioned over a specific item rect; that rect
+    // moves on resize, so close them
+    CancelEditValue();
+    LayoutToSize(layout, {dx, dy});
+    InvalidateRect(hwnd, nullptr, false);
+}
+
+// a bold variant of the given font, for drawing changed settings
+static HFONT CreateBoldFont(HFONT font) {
+    LOGFONTW lf{};
+    if (0 == GetObjectW(font, sizeof(lf), &lf)) {
+        return nullptr;
+    }
+    lf.lfWeight = FW_BOLD;
+    return CreateFontIndirectW(&lf);
+}
+
 // center the dialog over the main window frame
 static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     Rect rRelative = WindowRect(hwndRelative);
@@ -574,13 +726,15 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         CreateCustomArgs args;
         args.title = _TRA("Advanced Settings");
         args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
+        args.style = WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME;
         args.font = font;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
+    fontBold = CreateBoldFont(font ? font : GetAppFont());
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
