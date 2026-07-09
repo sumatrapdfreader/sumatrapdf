@@ -275,9 +275,8 @@ struct AdvancedSettingsWnd : Wnd {
 
     void QueryChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
-    void OnItemClicked(int lbIdx);
+    void ActivateItem(int lbIdx);
     void OnItemDoubleClicked();
-    void ToggleBool(int lbIdx);
     void OnSelectionChanged();
 
     Rect ValueRectForItem(int idx); // in listBox client coords
@@ -596,25 +595,18 @@ void AdvancedSettingsWnd::CommitEditValue() {
     InvalidateRect(listBox->hwnd, nullptr, TRUE);
 }
 
-void AdvancedSettingsWnd::ToggleBool(int lbIdx) {
-    SettingItem* item = model->ItemAt(lbIdx);
-    if (!item || item->type != SettingType::Bool) {
-        return;
-    }
-    item->boolVal = !item->boolVal;
-    SetItemChanged(item);
-    InvalidateRect(listBox->hwnd, nullptr, TRUE);
-}
-
-// single click: begin editing enum / value settings. Booleans are intentionally
-// left alone here so a stray click doesn't flip them - they toggle on double
-// click (OnItemDoubleClicked) or Enter instead.
-void AdvancedSettingsWnd::OnItemClicked(int lbIdx) {
+// activate a setting: toggle a bool, or begin editing an enum / value. A single
+// click only selects (so a stray click doesn't change anything); activation
+// happens on double-click or Enter.
+void AdvancedSettingsWnd::ActivateItem(int lbIdx) {
     SettingItem* item = model->ItemAt(lbIdx);
     if (!item) {
         return;
     }
     if (item->type == SettingType::Bool) {
+        item->boolVal = !item->boolVal;
+        SetItemChanged(item);
+        InvalidateRect(listBox->hwnd, nullptr, TRUE);
         return;
     }
     int idx = model->filtered[lbIdx];
@@ -626,7 +618,7 @@ void AdvancedSettingsWnd::OnItemClicked(int lbIdx) {
 }
 
 void AdvancedSettingsWnd::OnItemDoubleClicked() {
-    ToggleBool(listBox->GetCurrentSelection());
+    ActivateItem(listBox->GetCurrentSelection());
 }
 
 void AdvancedSettingsWnd::ApplyChangesAndSave() {
@@ -718,12 +710,7 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
             }
             int lbIdx = listBox->GetCurrentSelection();
             if (msg.hwnd == listBox->hwnd && lbIdx >= 0) {
-                SettingItem* item = model->ItemAt(lbIdx);
-                if (item && item->type == SettingType::Bool) {
-                    ToggleBool(lbIdx); // Enter activates a bool (unlike a single click)
-                } else {
-                    OnItemClicked(lbIdx);
-                }
+                ActivateItem(lbIdx);
                 return true;
             }
             return false;
@@ -745,13 +732,8 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
         }
         return false;
     }
-    if (msg.message == WM_LBUTTONUP && msg.hwnd == listBox->hwnd) {
-        LRESULT res = SendMessageW(listBox->hwnd, LB_ITEMFROMPOINT, 0, msg.lParam);
-        if (HIWORD(res) == 0) {
-            OnItemClicked(LOWORD(res));
-        }
-        return false; // let the listbox also process the click
-    }
+    // a single click only selects; activation (toggle / edit) is on double-click
+    // (OnItemDoubleClicked) or Enter, so there's no WM_LBUTTONUP handling here
     return false;
 }
 
@@ -888,6 +870,24 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         SendMessageW(c->hwnd, EM_SETREADONLY, TRUE, 0);
         commentText = c;
         vbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 2)));
+    }
+
+    // centered hint telling the user how to edit a setting, above the buttons
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Static::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = _TRA("double-click or Enter to edit");
+        args.isRtl = isRtl;
+        auto c = new Static();
+        c->SetColors(colTxt, colBg);
+        c->Create(args);
+        hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 2, 8)));
+        vbox->AddChild(hbox);
     }
 
     {
