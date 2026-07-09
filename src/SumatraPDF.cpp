@@ -5335,17 +5335,6 @@ static void OnMenuChangeScrollbar(HWND hwnd) {
     }
 }
 
-static void OpenAdvancedOptions() {
-    if (!CanAccessDisk() || !HasPermission(Perm::SavePreferences)) {
-        return;
-    }
-
-    // TODO: disable/hide the menu item when there's no prefs file
-    //       (happens e.g. when run in portable mode from a CD)?
-    TempStr path = GetSettingsPathTemp();
-    LaunchFileIfExists(path);
-}
-
 static void ShowOptionsDialog(HWND hwnd) {
     if (!HasPermission(Perm::SavePreferences)) {
         return;
@@ -5921,8 +5910,6 @@ static bool ChmForwardKey(WPARAM key) {
     }
     return false;
 }
-
-
 
 static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot, LPARAM lp = 0) {
     DisplayModel* dm = tab->AsFixed();
@@ -6583,10 +6570,236 @@ void ShowLogFileSmart() {
     LaunchFileIfExists(path);
 }
 
+static bool IsChmTab(WindowTab* tab) {
+    if (!tab || !tab->IsDocLoaded()) {
+        return false;
+    }
+    if (tab->AsChm()) {
+        return true;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    return dm && dm->GetEngineType() == kindEngineChm;
+}
+
+static bool IsMarkdownTab(WindowTab* tab) {
+    if (!tab || !tab->IsDocLoaded()) {
+        return false;
+    }
+    return tab->AsMarkdown() != nullptr;
+}
+
 // collect file paths from all windows, closing all but the last
 // returns the surviving window (with no documents)
+static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            if (tab->IsAboutTab() || !tab->filePath) {
+                continue;
+            }
+            paths.Append(tab->filePath);
+        }
+    }
 
+    SaveSettings();
 
+    // close all windows except the last; use quitIfLast=false to keep it alive
+    Vec<MainWindow*> toClose(gWindows);
+    for (MainWindow* w : toClose) {
+        if (!CanCloseWindow(w)) {
+            continue;
+        }
+        CloseWindow(w, false, false);
+    }
+
+    // the last window survives as an empty/about window
+    if (len(gWindows) > 0) {
+        return gWindows[0];
+    }
+    return nullptr;
+}
+
+static void TransitionToNoTabs() {
+    StrVec paths;
+
+    // if no files are open, just relayout each window without tabs
+    bool hasFiles = false;
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            if (!tab->IsAboutTab() && tab->filePath) {
+                hasFiles = true;
+                break;
+            }
+        }
+        if (hasFiles) {
+            break;
+        }
+    }
+    if (!hasFiles) {
+        for (MainWindow* w : gWindows) {
+            DestroyMenuBarRebar(w);
+            SetTabsInTitlebar(w, false);
+            if (IsMenubarVisible()) {
+                SetMenu(w->hwndFrame, w->menu);
+            }
+            ShowOrHideToolbar(w);
+            w->RedrawAllIncludingNonClient();
+        }
+        return;
+    }
+
+    MainWindow* surviving = CollectPathsAndCloseWindows(paths);
+
+    // re-open each file in its own window, reuse the surviving window for the first file
+    for (int i = 0; i < len(paths); i++) {
+        Str path = paths[i];
+        MainWindow* win;
+        if (i == 0 && surviving) {
+            win = surviving;
+            DestroyMenuBarRebar(win);
+            SetTabsInTitlebar(win, false);
+        } else {
+            win = CreateAndShowMainWindow(nullptr);
+            if (!win) {
+                continue;
+            }
+        }
+        LoadArgs args(path, win);
+        args.showWin = true;
+        args.forceReuse = true;
+        LoadDocument(&args);
+    }
+}
+
+static void TransitionToTabs() {
+    StrVec paths;
+
+    // if no files are open, just relayout each window with tabs
+    bool hasFiles = false;
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            if (!tab->IsAboutTab() && tab->filePath) {
+                hasFiles = true;
+                break;
+            }
+        }
+        if (hasFiles) {
+            break;
+        }
+    }
+    if (!hasFiles) {
+        for (MainWindow* w : gWindows) {
+            SetTabsInTitlebar(w, true);
+            ShowOrHideToolbar(w);
+            w->RedrawAllIncludingNonClient();
+        }
+        return;
+    }
+
+    MainWindow* surviving = CollectPathsAndCloseWindows(paths);
+
+    // open all files as tabs in the surviving window
+    MainWindow* win = surviving;
+    if (!win) {
+        win = CreateAndShowMainWindow(nullptr);
+        if (!win) {
+            return;
+        }
+    }
+    SetTabsInTitlebar(win, true);
+    for (int i = 0; i < len(paths); i++) {
+        Str path = paths[i];
+        LoadArgs args(path, win);
+        args.showWin = true;
+        args.forceReuse = (i == 0);
+        LoadDocument(&args);
+    }
+}
+
+// set a window's menu bar visibility to match the current showMenubar pref
+// (unlike ToggleMenuBar, which flips the pref). No-op in fullscreen /
+// presentation, where the menu bar is governed by that mode.
+static void ApplyMenuBarVisibility(MainWindow* win) {
+    if (!win->menu || win->presentation || win->isFullScreen) {
+        return;
+    }
+    bool visible = IsMenubarVisible();
+    if (win->tabsInTitlebar) {
+        bool showing = IsShowingMenuBarRebar(win);
+        if (visible && !showing) {
+            CreateMenuBarRebar(win);
+        } else if (!visible && showing) {
+            DestroyMenuBarRebar(win);
+        }
+        RelayoutWindow(win);
+        ShowMenuBarRebar(win);
+    } else {
+        SetMenu(win->hwndFrame, visible ? win->menu : nullptr);
+    }
+}
+
+SettingsApplyState GetSettingsApplyState() {
+    GlobalPrefs* p = gGlobalPrefs;
+    SettingsApplyState s;
+    s.useTabs = p->useTabs;
+    s.showMenubar = p->showMenubar;
+    s.showMenubarWithTabs = p->showMenubarWithTabs;
+    s.disableAntiAlias = p->disableAntiAlias;
+    s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
+    s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
+    return s;
+}
+
+// apply settings changes that need explicit handling beyond a settings reload,
+// then re-layout all windows. `before` is a snapshot taken before the change.
+void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
+    GlobalPrefs* p = gGlobalPrefs;
+
+    if (before.disableAntiAlias != p->disableAntiAlias) {
+        for (MainWindow* w : gWindows) {
+            DisplayModel* dm = w->AsFixed();
+            if (dm) {
+                dm->GetEngine()->disableAntiAlias = p->disableAntiAlias;
+            }
+        }
+        RerenderFixedPage();
+    }
+
+    if (before.chmUseFixedPageUI != p->chmUI.useFixedPageUI) {
+        for (MainWindow* w : gWindows) {
+            if (IsChmTab(w->CurrentTab())) {
+                ReloadDocument(w, false);
+            }
+        }
+    }
+    if (before.markdownUseFixedPageUI != p->markdownUI.useFixedPageUI) {
+        for (MainWindow* w : gWindows) {
+            if (IsMarkdownTab(w->CurrentTab())) {
+                ReloadDocument(w, false);
+            }
+        }
+    }
+
+    bool menubarChanged =
+        (before.showMenubar != p->showMenubar) || (before.showMenubarWithTabs != p->showMenubarWithTabs);
+    if (menubarChanged) {
+        for (MainWindow* w : gWindows) {
+            ApplyMenuBarVisibility(w);
+        }
+    }
+
+    // re-layout so toolbar / menu / findbox changes take effect
+    ApplySettingsToOpenWindows();
+
+    // UseTabs converts existing windows <-> tabs (closes and reopens windows);
+    // post it so it runs after the settings dialog has been torn down
+    if (before.useTabs != p->useTabs) {
+        if (p->useTabs) {
+            uitask::Post(MkFunc0Void(TransitionToTabs));
+        } else {
+            uitask::Post(MkFunc0Void(TransitionToNoTabs));
+        }
+    }
+}
 
 struct ListPrintersResult {
     HWND hwndParent;
@@ -7961,9 +8174,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdAdvancedOptions:
-            OpenAdvancedOptions();
-            break;
-
         case CmdAdvancedSettings:
             ShowAdvancedSettingsDialog(win);
             break;

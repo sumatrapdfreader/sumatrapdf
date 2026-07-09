@@ -622,6 +622,9 @@ void AdvancedSettingsWnd::OnItemDoubleClicked() {
 }
 
 void AdvancedSettingsWnd::ApplyChangesAndSave() {
+    // snapshot settings that need explicit apply (tabs, menu bar ...) before we
+    // overwrite them, so we can act on what actually changed after the reload
+    SettingsApplyState before = GetSettingsApplyState();
     bool didChange = false;
     for (SettingItem* item : items) {
         if (!item->changed) {
@@ -661,6 +664,9 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
     // reload so that all state derived from settings (theme, fonts, parsed
     // colors, custom commands, accelerators ...) is re-computed and applied
     ForceReloadSettings();
+    // apply changes that a reload doesn't pick up on its own (menu bar, tabs,
+    // anti-alias ...) and re-layout the open windows
+    ApplyChangedSettingsAndRelayout(before);
 }
 
 void AdvancedSettingsWnd::OnOpenSettingsFile() {
@@ -681,8 +687,11 @@ void AdvancedSettingsWnd::OnCancel() {
 
 void AdvancedSettingsWnd::OnSave() {
     CommitEditValue();
-    ApplyChangesAndSave();
+    // queue the dialog teardown first: ApplyChangesAndSave() may post a tabs
+    // transition that closes/recreates windows (including this dialog's owner),
+    // and uitask runs FIFO, so the delete must be enqueued before it
     ScheduleDelete();
+    ApplyChangesAndSave();
 }
 
 bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {

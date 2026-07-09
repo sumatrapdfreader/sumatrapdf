@@ -288,6 +288,20 @@ void ExitFullScreen(MainWindow* win);
 void SetCurrentLang(Str langCode);
 void RebuildMenuBarForWindow(MainWindow* win);
 void DeleteMainWindow(MainWindow* win);
+
+// snapshot of settings whose changes need explicit handling beyond a settings
+// reload (used by the advanced settings dialog to apply changes on Save)
+struct SettingsApplyState {
+    bool useTabs = false;
+    bool showMenubar = false;
+    bool showMenubarWithTabs = false;
+    bool disableAntiAlias = false;
+    bool chmUseFixedPageUI = false;
+    bool markdownUseFixedPageUI = false;
+};
+SettingsApplyState GetSettingsApplyState();
+void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before);
+
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
