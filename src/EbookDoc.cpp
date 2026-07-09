@@ -588,17 +588,17 @@ bool EpubDoc::Load() {
 
 static SeqStrNum epubPropsMap =
     "dc:title\0"
-    "\x02"
+    "\x01"
     "dc:creator\0"
-    "\x04"
+    "\x02"
     "dc:date\0"
-    "\x0a"
+    "\x05"
     "dcterms:modified\0"
-    "\x0c"
-    "dc:description\0"
-    "\x08"
-    "dc:rights\0"
     "\x06"
+    "dc:description\0"
+    "\x04"
+    "dc:rights\0"
+    "\x03"
     "\0";
 
 static bool IsTokPropName(HtmlToken* tok, Str name) {

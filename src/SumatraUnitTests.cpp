@@ -11,6 +11,7 @@
 
 #include "Settings.h"
 #include "DocController.h"
+#include "DocProperties.h"
 #include "EngineBase.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
@@ -292,7 +293,17 @@ void parseCommandsTest() {
     }
 }
 
+static void DocPropertiesTest() {
+    utassert(str::Eq(PropNameTemp(DocProp::Title), "title"));
+    utassert(str::Eq(PropNameTemp(DocProp::CreationDate), "creationDate"));
+    utassert(str::Eq(PropNameTemp(DocProp::ModificationDate), "modDate"));
+    utassert(PropFromName("creationDate") == DocProp::CreationDate);
+    utassert(PropFromName("title") == DocProp::Title);
+    utassert(PropFromName("modDate") == DocProp::ModificationDate);
+}
+
 void SumatraPDF_UnitTests() {
+    DocPropertiesTest();
     parseCommandsTest();
     colorTest();
     BenchRangeTest();

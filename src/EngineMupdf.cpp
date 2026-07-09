@@ -4177,20 +4177,20 @@ TempStr EngineMupdf::ExtractFontListTemp() {
 
 static SeqStrNum mupdfPropsMap = FZ_META_INFO_TITLE
     "\0"
-    "\x02" FZ_META_INFO_AUTHOR
+    "\x01" FZ_META_INFO_AUTHOR
     "\0"
-    "\x04"
+    "\x02"
     "info:Subject\0"
-    "\x08" FZ_META_INFO_PRODUCER
+    "\x04" FZ_META_INFO_PRODUCER
     "\0"
-    "\x16"
+    "\x0b"
     // not sure if info:Creator has the same meaning
     "info:Creator\0"
-    "\x0e"
+    "\x07"
     "info:CreationDate\0"
-    "\x0a"
+    "\x05"
     "info:ModDate\0"
-    "\x0c"
+    "\x06"
     "\0";
 
 TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
@@ -4265,21 +4265,21 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
 
     static SeqStrNum pdfPropNames =
         "Title\0"
-        "\x02"
+        "\x01"
         "Author\0"
-        "\x04"
+        "\x02"
         "Subject\0"
-        "\x08"
+        "\x04"
         "Copyright\0"
-        "\x06"
+        "\x03"
         "CreationDate\0"
-        "\x0a"
+        "\x05"
         "ModDate\0"
-        "\x0c"
+        "\x06"
         "Creator\0"
-        "\x0e"
+        "\x07"
         "Producer\0"
-        "\x16"
+        "\x0b"
         "\0";
     Str pdfPropName = SeqStrNumStrByNumber(pdfPropNames, (i64)prop);
     if (!pdfPropName) {

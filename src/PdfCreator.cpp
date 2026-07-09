@@ -240,21 +240,21 @@ bool PdfCreator::AddPageFromImageData(Str data, float imgDpi) const {
 
 static SeqStrNum pdfCreatorPropsMap =
     "Title\0"
-    "\x02"
+    "\x01"
     "Author\0"
-    "\x04"
+    "\x02"
     "Subject\0"
-    "\x08"
+    "\x04"
     "Copyright\0"
-    "\x06"
+    "\x03"
     "CreationDate\0"
-    "\x0a"
+    "\x05"
     "ModDate\0"
-    "\x0c"
+    "\x06"
     "Creator\0"
-    "\x0e"
+    "\x07"
     "Producer\0"
-    "\x16"
+    "\x0b"
     "\0";
 
 bool PdfCreator::SetProperty(DocProp prop, Str value) const {
