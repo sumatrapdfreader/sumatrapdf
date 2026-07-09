@@ -518,10 +518,9 @@ static bool IsEmailAttachmentSendAvailable() {
     if (cached >= 0) {
         return cached != 0;
     }
-    if (IsRunningOnWine()) {
-        cached = 0;
-        return false;
-    }
+    // note: don't gate on IsRunningOnWine() here - Wine implements MAPISendMailW
+    // (routing to the configured mailer), and the Wine heuristic has
+    // false-positives that would wrongly hide the feature for real users
     bool ok = IsMapiSendMailAvailable();
     cached = ok ? 1 : 0;
     return ok;
