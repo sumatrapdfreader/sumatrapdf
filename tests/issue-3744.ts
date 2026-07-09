@@ -20,7 +20,10 @@ import { sleep, enumWindows, getWindowPid, getClassName, sendMessage, captureWin
 const WM_COMMAND = 0x111;
 const IDOK = 1;
 
-// minimal N-page PDF; each page draws a big "Page N" so screenshots differ
+// minimal N-page PDF. Each page is filled with a distinct grey level so that
+// screenshots differ per page *regardless of the view's zoom/scroll* - drawing
+// only a "Page N" label isn't enough because the canvas can clip the right edge
+// and hide the units digit (making "Page 10" look identical to "Page 1").
 function makePdf(nPages: number): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const body: Record<number, Buffer> = {};
@@ -34,7 +37,8 @@ function makePdf(nPages: number): Buffer {
   for (let i = 0; i < nPages; i++) {
     const po = 4 + i * 2;
     const co = po + 1;
-    const stream = `BT /F1 80 Tf 180 400 Td (Page ${i + 1}) Tj ET`;
+    const grey = ((i + 1) / (nPages + 1)).toFixed(3);
+    const stream = `${grey} g 0 0 612 792 re f 0 g BT /F1 60 Tf 72 690 Td (Page ${i + 1}) Tj ET`;
     body[po] = enc(
       `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
         `/Resources << /Font << /F1 3 0 R >> >> /Contents ${co} 0 R >>`,
