@@ -70,7 +70,8 @@ static const char** GetEnumValuesForSetting(Str name) {
 // a single editable setting; fieldPtr points into gGlobalPrefs, the pending
 // (possibly edited) value is kept here and only written back on Save
 struct SettingItem {
-    Str name; // dotted path, e.g. "FixedPageUI.TextColor", owned
+    Str name;    // dotted path, e.g. "FixedPageUI.TextColor", owned
+    Str comment; // doc comment describing the setting, owned
     SettingType type = SettingType::Bool;
     u8* fieldPtr = nullptr;
     const char** enumValues = nullptr; // non-null for enum (string) settings
@@ -91,6 +92,7 @@ struct SettingItem {
 
     ~SettingItem() {
         str::Free(name);
+        str::Free(comment);
         str::Free(strVal);
         str::Free(defStr);
     }
@@ -156,15 +158,21 @@ static void SetItemChanged(SettingItem* item) {
 // sub-structs with a dotted path prefix
 static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8* base, Str prefix) {
     const char* fieldName = info->fieldNames;
+    const char* fieldComment = info->fieldComments; // parallel to fieldNames
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
         Str name(fieldName);
         fieldName += len(name) + 1;
+        Str comment;
+        if (fieldComment) {
+            comment = Str(fieldComment);
+            fieldComment += len(comment) + 1;
+        }
         if (field.type == SettingType::Comment) {
             // internal settings (WindowState, OpenCountWeek ...) follow this
             // marker comment; they are managed by the app, not the user
-            Str comment = (const char*)field.value;
-            if (len(comment) > 0 && str::StartsWith(comment, "You're not expected to change")) {
+            Str marker = (const char*)field.value;
+            if (len(marker) > 0 && str::StartsWith(marker, "You're not expected to change")) {
                 return;
             }
             continue;
@@ -189,6 +197,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
             case SettingType::Color: {
                 auto item = new SettingItem();
                 item->name = str::Dup(path);
+                item->comment = str::Dup(comment);
                 item->type = field.type;
                 item->fieldPtr = fieldPtr;
                 // field.value holds the default: the value itself for Bool/Int,
@@ -252,6 +261,7 @@ struct AdvancedSettingsWnd : Wnd {
     Edit* editFilter = nullptr;
     ListBox* listBox = nullptr;
     ListBoxModelSettings* model = nullptr; // owned by listBox
+    Edit* commentText = nullptr;           // read-only, shows the selected setting's doc comment
     Edit* editValue = nullptr;             // in-place value editor, created on demand
     DropDown* dropDownValue = nullptr;     // in-place enum editor, created on demand
     Str dropDownOrigVal;                   // value before the drop-down opened (owned), for Esc
@@ -266,6 +276,7 @@ struct AdvancedSettingsWnd : Wnd {
     void QueryChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
     void OnItemClicked(int lbIdx);
+    void OnSelectionChanged();
 
     Rect ValueRectForItem(int idx); // in listBox client coords
     void BeginEditValue(int idx);
@@ -292,6 +303,7 @@ AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     delete editFilter;
     delete editValue;
     delete dropDownValue;
+    delete commentText;
     delete listBox;
     DeleteVecMembers(items);
     delete layout;
@@ -328,7 +340,17 @@ void AdvancedSettingsWnd::QueryChanged() {
             model->filtered.Append(i);
         }
     }
-    listBox->SetModel(model);
+    listBox->SetModel(model); // resets selection to -1
+    OnSelectionChanged();
+}
+
+// show the selected setting's doc comment in the text area below the list
+void AdvancedSettingsWnd::OnSelectionChanged() {
+    if (!commentText) {
+        return;
+    }
+    SettingItem* item = model->ItemAt(listBox->GetCurrentSelection());
+    commentText->SetText(item ? item->comment : Str(""));
 }
 
 void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
@@ -452,9 +474,17 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     if (r.IsEmpty()) {
         return;
     }
+    // ValueRectForItem is in listBox client coords; the drop-down is parented
+    // to the dialog (see below), so map the rect into dialog client coords
+    RECT rr = {r.x, r.y, r.x + r.dx, r.y + r.dy};
+    MapWindowPoints(listBox->hwnd, hwnd, (POINT*)&rr, 2);
+    r = ToRect(rr);
 
     DropDown::CreateArgs args;
-    args.parent = listBox->hwnd;
+    // parent to the dialog, not the listBox: a subclassed control (the listBox)
+    // does not reflect WM_COMMAND to child controls, so CBN_SELCHANGE would
+    // never reach DropDown::OnCommand and the selection would be lost
+    args.parent = hwnd;
     args.font = font;
     auto c = new DropDown();
     HWND ok = c->Create(args);
@@ -675,6 +705,7 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
             if (n > 0) {
                 int sel = (listBox->GetCurrentSelection() + dir + n) % n;
                 listBox->SetCurrentSelection(sel);
+                OnSelectionChanged(); // programmatic selection: no LBN_SELCHANGE
             }
             return true;
         }
@@ -800,8 +831,28 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         for (int i = 0; i < n; i++) {
             model->filtered.Append(i);
         }
+        c->onSelectionChanged = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnSelectionChanged>(this);
         c->SetModel(model);
         vbox->AddChild(c, 1);
+    }
+
+    // read-only text area showing the selected setting's doc comment, between
+    // the list and the buttons
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.isMultiLine = true;
+        args.withBorder = false;
+        args.idealSizeLines = 3;
+        args.font = font;
+        args.isRtl = isRtl;
+        auto c = new Edit();
+        c->SetColors(colTxt, colBg);
+        HWND ok = c->Create(args);
+        ReportIf(!ok);
+        SendMessageW(c->hwnd, EM_SETREADONLY, TRUE, 0);
+        commentText = c;
+        vbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 2)));
     }
 
     {

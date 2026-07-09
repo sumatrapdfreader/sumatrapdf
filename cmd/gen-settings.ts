@@ -1231,6 +1231,16 @@ function formatArrayLines(data: string[][]): string[] {
   return data.map((ld) => `\t{ ${ld[0]}, ${ld[1]}, ${ld[2]} },`);
 }
 
+// escape a string so it can be embedded in a C string literal
+function escapeCStr(s: string): string {
+  return s
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n")
+    .replace(/\t/g, "\\t");
+}
+
 function cdefault(f: Field, built: Record<string, number>): string {
   if (f.Type === Bool) {
     return `${f.Default}`;
@@ -1361,6 +1371,7 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
 function buildMetaData(struc: Field, built: Record<string, number>): string {
   const lines: string[] = [];
   const names: string[] = [];
+  const comments: string[] = [];
   const data: string[][] = [];
   let suffix = "";
   const n = built[struc.StructName] || 0;
@@ -1376,6 +1387,9 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     dataLine.push(`SettingType::${field.Type.name}`);
     dataLine.push(cdefault(field, built));
     names.push(field.Name);
+    // per-field doc comment, aligned with names; used by the advanced settings
+    // dialog to describe the selected setting
+    comments.push(field.DocComment || "");
     if (["Struct", "Prerelease", "Compact", "Array"].includes(field.Type.name)) {
       const sublines = buildMetaData(field, built);
       lines.push(sublines, "");
@@ -1390,8 +1404,9 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
   lines.push("};");
   const constStr = fullName !== "FileState" ? "const " : "";
   const namesStr = names.join("\\0");
+  const commentsStr = comments.map(escapeCStr).join("\\0");
   lines.push(
-    `static ${constStr}StructInfo g${fullName}Info = { sizeof(${struc.StructName}), ${names.length}, g${fullName}Fields, "${namesStr}" };`,
+    `static ${constStr}StructInfo g${fullName}Info = { sizeof(${struc.StructName}), ${names.length}, g${fullName}Fields, "${namesStr}", "${commentsStr}" };`,
   );
   return lines.join("\n");
 }

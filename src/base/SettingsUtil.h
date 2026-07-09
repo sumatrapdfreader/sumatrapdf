@@ -57,6 +57,9 @@ struct StructInfo {
     // one string of fieldCount zero-terminated names of all fields
     // in the order of fields
     const char* fieldNames = nullptr;
+    // one string of fieldCount zero-terminated per-field doc comments, in the
+    // same order as fieldNames (empty entry if a field has no comment)
+    const char* fieldComments = nullptr;
 };
 
 Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {});
