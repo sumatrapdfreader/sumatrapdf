@@ -276,6 +276,8 @@ struct AdvancedSettingsWnd : Wnd {
     void QueryChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
     void OnItemClicked(int lbIdx);
+    void OnItemDoubleClicked();
+    void ToggleBool(int lbIdx);
     void OnSelectionChanged();
 
     Rect ValueRectForItem(int idx); // in listBox client coords
@@ -347,10 +349,22 @@ void AdvancedSettingsWnd::QueryChanged() {
 
 // show the selected setting's doc comment in the text area below the list
 void AdvancedSettingsWnd::OnSelectionChanged() {
+    int lbSel = listBox->GetCurrentSelection();
+    int selItemIdx = (lbSel >= 0 && lbSel < model->ItemsCount()) ? model->filtered[lbSel] : -1;
+    // an in-place editor stays keyed to editItemIdx; when the selection moves to
+    // a different setting, dismiss the editor (keeping the value). Guarding on
+    // the index (rather than dismissing unconditionally) is important: creating
+    // an editor can synchronously re-enter here (focus change / CB_SHOWDROPDOWN)
+    // while the selection is still on the item being edited, and dismissing then
+    // would free the editor mid-construction.
+    if (editItemIdx >= 0 && editItemIdx != selItemIdx) {
+        CommitEditValue();
+        CloseEnumEdit(true);
+    }
     if (!commentText) {
         return;
     }
-    SettingItem* item = model->ItemAt(listBox->GetCurrentSelection());
+    SettingItem* item = model->ItemAt(lbSel);
     commentText->SetText(item ? item->comment : Str(""));
 }
 
@@ -582,23 +596,37 @@ void AdvancedSettingsWnd::CommitEditValue() {
     InvalidateRect(listBox->hwnd, nullptr, TRUE);
 }
 
+void AdvancedSettingsWnd::ToggleBool(int lbIdx) {
+    SettingItem* item = model->ItemAt(lbIdx);
+    if (!item || item->type != SettingType::Bool) {
+        return;
+    }
+    item->boolVal = !item->boolVal;
+    SetItemChanged(item);
+    InvalidateRect(listBox->hwnd, nullptr, TRUE);
+}
+
+// single click: begin editing enum / value settings. Booleans are intentionally
+// left alone here so a stray click doesn't flip them - they toggle on double
+// click (OnItemDoubleClicked) or Enter instead.
 void AdvancedSettingsWnd::OnItemClicked(int lbIdx) {
     SettingItem* item = model->ItemAt(lbIdx);
     if (!item) {
         return;
     }
-    int idx = model->filtered[lbIdx];
     if (item->type == SettingType::Bool) {
-        item->boolVal = !item->boolVal;
-        SetItemChanged(item);
-        InvalidateRect(listBox->hwnd, nullptr, TRUE);
         return;
     }
+    int idx = model->filtered[lbIdx];
     if (item->enumValues) {
         BeginEditEnum(idx);
         return;
     }
     BeginEditValue(idx);
+}
+
+void AdvancedSettingsWnd::OnItemDoubleClicked() {
+    ToggleBool(listBox->GetCurrentSelection());
 }
 
 void AdvancedSettingsWnd::ApplyChangesAndSave() {
@@ -690,7 +718,12 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
             }
             int lbIdx = listBox->GetCurrentSelection();
             if (msg.hwnd == listBox->hwnd && lbIdx >= 0) {
-                OnItemClicked(lbIdx);
+                SettingItem* item = model->ItemAt(lbIdx);
+                if (item && item->type == SettingType::Bool) {
+                    ToggleBool(lbIdx); // Enter activates a bool (unlike a single click)
+                } else {
+                    OnItemClicked(lbIdx);
+                }
                 return true;
             }
             return false;
@@ -833,6 +866,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             model->filtered.Append(i);
         }
         c->onSelectionChanged = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnSelectionChanged>(this);
+        c->onDoubleClick = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnItemDoubleClicked>(this);
         c->SetModel(model);
         vbox->AddChild(c, 1);
     }
