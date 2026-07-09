@@ -364,16 +364,38 @@ bool IsRunningOnWine() {
         return cached != 0;
     }
     bool isWine = false;
-    // Canonical Wine detection: Wine's ntdll.dll exports wine_get_version().
-    // This works regardless of the graphics backend and is what Wine itself
-    // documents as the detection mechanism.
+    // Canonical Wine detection: Wine's ntdll.dll exports wine_get_version() and
+    // siblings. This works regardless of the graphics backend and is what Wine
+    // itself documents. We probe several exports because some configs hide only
+    // wine_get_version (e.g. staging's "hide Wine version" option).
     HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
-    if (hNtdll && GetProcAddress(hNtdll, "wine_get_version")) {
-        isWine = true;
+    if (hNtdll) {
+        const char* wineExports[] = {
+            "wine_get_version",
+            "wine_get_host_version",
+            "wine_get_build_id",
+            "wine_nt_to_unix_file_name",
+        };
+        for (const char* fn : wineExports) {
+            if (GetProcAddress(hNtdll, fn)) {
+                isWine = true;
+                break;
+            }
+        }
     }
-    // Fallback: scan loaded modules for a Wine graphics driver. Covers the X11
-    // (winex11.drv) and Wayland (winewayland.drv) backends, and Wine configs
-    // that hide the wine_get_version export.
+    // Fallback: Wine creates a Software\Wine registry key. Cheap, independent of
+    // the graphics backend, available from process start, and present even when
+    // the ntdll wine_* exports are hidden.
+    if (!isWine) {
+        if (RegKeyExists(HKEY_CURRENT_USER, R"(Software\Wine)") ||
+            RegKeyExists(HKEY_LOCAL_MACHINE, R"(Software\Wine)")) {
+            isWine = true;
+        }
+    }
+    // Last resort: scan loaded modules for a Wine graphics driver. Covers the X11
+    // (winex11.drv) and Wayland (winewayland.drv) backends. Misses headless Wine
+    // and the early-startup window before a driver is loaded, hence the checks
+    // above run first.
     if (!isWine) {
         AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
         if (snap != INVALID_HANDLE_VALUE) {
