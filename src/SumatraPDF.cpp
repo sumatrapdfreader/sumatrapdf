@@ -93,6 +93,7 @@
 #include "SelectionTranslate.h"
 #include "CodexBuild.h"
 #include "CommandPalette.h"
+#include "AdvancedSettingsDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -8132,8 +8133,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdAdvancedOptions:
-        case CmdAdvancedSettings:
             OpenAdvancedOptions();
+            break;
+
+        case CmdAdvancedSettings:
+            ShowAdvancedSettingsDialog(win);
             break;
 
         case CmdSendByEmail:

@@ -96,6 +96,9 @@
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AdvancedSettingsDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Annotation.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -501,6 +504,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Accelerators.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AdvancedSettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Annotation.cpp">

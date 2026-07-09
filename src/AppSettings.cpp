@@ -688,6 +688,13 @@ void CleanUpSettings() {
     gGlobalPrefs = nullptr;
 }
 
+// reload settings from disk even if the file's timestamp matches
+// gGlobalPrefs->lastPrefUpdate (e.g. right after we saved it ourselves)
+void ForceReloadSettings() {
+    gGlobalPrefs->lastPrefUpdate = {};
+    ReloadSettings();
+}
+
 static void SchedulePrefsReload() {
     auto fn = MkFunc0Void(ReloadSettings);
     uitask::Post(fn, "TaskReloadSettings");

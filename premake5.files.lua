@@ -823,6 +823,7 @@ function sumatrapdf_files()
     "Accelerators.*",
     "Actions.*",
     "AvifReader.*",
+    "AdvancedSettingsDialog.*",
     "AppSettings.*",
     "AppTools.*",
     "Canvas.*",
