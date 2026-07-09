@@ -58,23 +58,9 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdDebugToggleCacheInfo,
     CmdDebugToggleRtl,
     CmdChangeScrollbar,
-    CmdToggleAntiAlias,
-    CmdToggleSmoothScroll,
-    CmdToggleScrollbarInSinglePage,
-    CmdToggleLazyLoading,
-    CmdToggleEscToExit,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
     CmdToggleToolbar,
-    CmdToggleToolbarPosition,
-    CmdToggleUseTabs,
-    CmdToggleTabsMru,
-    CmdToggleTips,
-    CmdToggleFrequentlyRead,
-    CmdToggleChmUI,
-    CmdToggleMarkdownUI,
-    CmdToggleReuseInstance,
-    CmdToggleHoverPreview,
     CmdToggleInverseSearch,
     CmdToggleLinks,
     CmdToggleWindowsPreviewer,
@@ -540,10 +526,6 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if ((cmdId == CmdSelectionHandler) || (origCmdId == CmdSelectionHandler) ||
         CmdIdInList(cmdId, disableIfNoSelection)) {
         return ctx.hasSelection ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
-    }
-
-    if (surface == CommandSurface::Palette && cmdId == CmdToggleFrequentlyRead) {
-        return CommandVisibility::Hide;
     }
 
     if (cmdId == CmdToggleMenuBar) {

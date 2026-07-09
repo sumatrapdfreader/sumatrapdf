@@ -1183,12 +1183,6 @@ bool ToolbarAtBottom() {
     return ToolbarPositionFromPrefs() == kToolbarBottom;
 }
 
-void ToggleToolbarPosition() {
-    int pos = ToolbarPositionFromPrefs() == kToolbarBottom ? kToolbarTop : kToolbarBottom;
-    Str name = SeqStrByIndex(gToolbarPositionNames, pos);
-    str::ReplaceWithCopy(&gGlobalPrefs->toolbarPosition, name);
-}
-
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -5928,23 +5922,7 @@ static bool ChmForwardKey(WPARAM key) {
     return false;
 }
 
-static bool IsChmTab(WindowTab* tab) {
-    if (!tab || !tab->IsDocLoaded()) {
-        return false;
-    }
-    if (tab->AsChm()) {
-        return true;
-    }
-    DisplayModel* dm = tab->AsFixed();
-    return dm && dm->GetEngineType() == kindEngineChm;
-}
 
-static bool IsMarkdownTab(WindowTab* tab) {
-    if (!tab || !tab->IsDocLoaded()) {
-        return false;
-    }
-    return tab->AsMarkdown() != nullptr;
-}
 
 static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot, LPARAM lp = 0) {
     DisplayModel* dm = tab->AsFixed();
@@ -6607,132 +6585,8 @@ void ShowLogFileSmart() {
 
 // collect file paths from all windows, closing all but the last
 // returns the surviving window (with no documents)
-static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
-    for (MainWindow* w : gWindows) {
-        for (WindowTab* tab : w->Tabs()) {
-            if (tab->IsAboutTab() || !tab->filePath) {
-                continue;
-            }
-            paths.Append(tab->filePath);
-        }
-    }
 
-    SaveSettings();
 
-    // close all windows except the last; use quitIfLast=false to keep it alive
-    Vec<MainWindow*> toClose(gWindows);
-    for (MainWindow* w : toClose) {
-        if (!CanCloseWindow(w)) {
-            continue;
-        }
-        CloseWindow(w, false, false);
-    }
-
-    // the last window survives as an empty/about window
-    if (len(gWindows) > 0) {
-        return gWindows[0];
-    }
-    return nullptr;
-}
-
-static void TransitionToNoTabs() {
-    StrVec paths;
-
-    if (len(paths) == 0) {
-        // check before collecting - if no files, just relayout
-        bool hasFiles = false;
-        for (MainWindow* w : gWindows) {
-            for (WindowTab* tab : w->Tabs()) {
-                if (!tab->IsAboutTab() && tab->filePath) {
-                    hasFiles = true;
-                    break;
-                }
-            }
-            if (hasFiles) {
-                break;
-            }
-        }
-        if (!hasFiles) {
-            for (MainWindow* w : gWindows) {
-                DestroyMenuBarRebar(w);
-                SetTabsInTitlebar(w, false);
-                if (IsMenubarVisible()) {
-                    SetMenu(w->hwndFrame, w->menu);
-                }
-                ShowOrHideToolbar(w);
-                w->RedrawAllIncludingNonClient();
-            }
-            return;
-        }
-    }
-
-    MainWindow* surviving = CollectPathsAndCloseWindows(paths);
-
-    // re-open each file in its own window, reuse the surviving window for the first file
-    for (int i = 0; i < len(paths); i++) {
-        Str path = paths[i];
-        MainWindow* win;
-        if (i == 0 && surviving) {
-            win = surviving;
-            DestroyMenuBarRebar(win);
-            SetTabsInTitlebar(win, false);
-        } else {
-            win = CreateAndShowMainWindow(nullptr);
-            if (!win) {
-                continue;
-            }
-        }
-        LoadArgs args(path, win);
-        args.showWin = true;
-        args.forceReuse = true;
-        LoadDocument(&args);
-    }
-}
-
-static void TransitionToTabs() {
-    StrVec paths;
-
-    // check if any files are open
-    bool hasFiles = false;
-    for (MainWindow* w : gWindows) {
-        for (WindowTab* tab : w->Tabs()) {
-            if (!tab->IsAboutTab() && tab->filePath) {
-                hasFiles = true;
-                break;
-            }
-        }
-        if (hasFiles) {
-            break;
-        }
-    }
-    if (!hasFiles) {
-        for (MainWindow* w : gWindows) {
-            SetTabsInTitlebar(w, true);
-            ShowOrHideToolbar(w);
-            w->RedrawAllIncludingNonClient();
-        }
-        return;
-    }
-
-    MainWindow* surviving = CollectPathsAndCloseWindows(paths);
-
-    // open all files as tabs in the surviving window
-    MainWindow* win = surviving;
-    if (!win) {
-        win = CreateAndShowMainWindow(nullptr);
-        if (!win) {
-            return;
-        }
-    }
-    SetTabsInTitlebar(win, true);
-    for (int i = 0; i < len(paths); i++) {
-        Str path = paths[i];
-        LoadArgs args(path, win);
-        args.showWin = true;
-        args.forceReuse = (i == 0);
-        LoadDocument(&args);
-    }
-}
 
 struct ListPrintersResult {
     HWND hwndParent;
@@ -7685,32 +7539,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdToggleToolbarPosition:
-            ToggleToolbarPosition();
-            for (MainWindow* w : gWindows) {
-                RelayoutWindow(w);
-            }
-            break;
-
         case CmdChangeScrollbar:
             OnMenuChangeScrollbar(win->hwndFrame);
             break;
 
         case CmdChangeBackgroundColor:
             OnMenuChangeBackgroundColor(win);
-            break;
-
-        case CmdToggleUseTabs:
-            gGlobalPrefs->useTabs = !gGlobalPrefs->useTabs;
-            if (gGlobalPrefs->useTabs) {
-                uitask::Post(MkFunc0Void(TransitionToTabs));
-            } else {
-                uitask::Post(MkFunc0Void(TransitionToNoTabs));
-            }
-            break;
-
-        case CmdToggleTabsMru:
-            gGlobalPrefs->tabsMru = !gGlobalPrefs->tabsMru;
             break;
 
         case CmdSaveAnnotations: {
@@ -7770,12 +7604,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 TtsStop();
             }
             ReadAloudSelectionInTab(tab);
-            break;
-        }
-
-        case CmdToggleFrequentlyRead: {
-            gGlobalPrefs->showStartPage = !gGlobalPrefs->showStartPage;
-            win->RedrawAll(true);
             break;
         }
 
@@ -8457,83 +8285,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             UpdateControlsColors(win);
             // UpdateUiForCurrentTab(win);
             SaveSettings();
-            break;
-        }
-
-        case CmdToggleAntiAlias: {
-            gGlobalPrefs->disableAntiAlias ^= true;
-            for (auto* w : gWindows) {
-                DisplayModel* fixedModel = w->AsFixed();
-                if (fixedModel) {
-                    fixedModel->GetEngine()->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
-                }
-            }
-            RerenderFixedPage();
-            SaveSettings();
-            break;
-        }
-
-        case CmdToggleSmoothScroll: {
-            gGlobalPrefs->smoothScroll = !gGlobalPrefs->smoothScroll;
-            SaveSettings();
-            break;
-        }
-
-            // removed: CmdToggleHideScrollbar (replaced by CmdChangeScrollbar)
-
-        case CmdToggleScrollbarInSinglePage:
-            gGlobalPrefs->scrollbarInSinglePage = !gGlobalPrefs->scrollbarInSinglePage;
-            UpdateFixedPageScrollbarsVisibility();
-            SaveSettings();
-            break;
-
-        case CmdToggleLazyLoading:
-            gGlobalPrefs->lazyLoading = !gGlobalPrefs->lazyLoading;
-            SaveSettings();
-            break;
-
-        case CmdToggleEscToExit:
-            gGlobalPrefs->escToExit = !gGlobalPrefs->escToExit;
-            SaveSettings();
-            break;
-
-        case CmdToggleReuseInstance:
-            gGlobalPrefs->reuseInstance = !gGlobalPrefs->reuseInstance;
-            SaveSettings();
-            break;
-
-        case CmdToggleHoverPreview:
-            // a negative CitationHoverDelay disables the citation /
-            // reference hover preview; re-enable with the default delay
-            gGlobalPrefs->citationHoverDelay = (gGlobalPrefs->citationHoverDelay >= 0) ? -1 : 300;
-            SaveSettings();
-            break;
-
-        case CmdToggleChmUI: {
-            gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
-            SaveSettings();
-            if (IsChmTab(tab)) {
-                ReloadDocument(win, false);
-            }
-            return 0;
-        }
-
-        case CmdToggleMarkdownUI: {
-            gGlobalPrefs->markdownUI.useFixedPageUI = !gGlobalPrefs->markdownUI.useFixedPageUI;
-            SaveSettings();
-            if (IsMarkdownTab(tab)) {
-                ReloadDocument(win, false);
-            }
-            return 0;
-        }
-
-        case CmdToggleTips: {
-            gGlobalPrefs->showTips = !gGlobalPrefs->showTips;
-            SaveSettings();
-            tab = win->CurrentTab();
-            if (!tab || tab->IsAboutTab()) {
-                win->RedrawAll(true);
-            }
             break;
         }
 

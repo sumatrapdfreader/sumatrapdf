@@ -81,13 +81,41 @@ struct SettingItem {
     float floatVal = 0;
     Str strVal;
 
-    bool changed = false;
+    // default value from the settings metadata; defStr (owned) for String/Color
+    bool defBool = false;
+    int defInt = 0;
+    float defFloat = 0;
+    Str defStr;
+
+    bool changed = false; // pending value differs from what was loaded (this session)
 
     ~SettingItem() {
         str::Free(name);
         str::Free(strVal);
+        str::Free(defStr);
     }
 };
+
+static bool StrValsEq(Str a, Str b) {
+    if (len(a) == 0 && len(b) == 0) {
+        return true;
+    }
+    return str::Eq(a, b);
+}
+
+// true if the pending value differs from the setting's default value
+static bool SettingDiffersFromDefault(SettingItem* item) {
+    switch (item->type) {
+        case SettingType::Bool:
+            return item->boolVal != item->defBool;
+        case SettingType::Int:
+            return item->intVal != item->defInt;
+        case SettingType::Float:
+            return item->floatVal != item->defFloat;
+        default:
+            return !StrValsEq(item->strVal, item->defStr);
+    }
+}
 
 // value of the setting formatted for display; the result is temp-allocated
 static TempStr FormatSettingValueTemp(SettingItem* item) {
@@ -163,18 +191,26 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                 item->name = str::Dup(path);
                 item->type = field.type;
                 item->fieldPtr = fieldPtr;
+                // field.value holds the default: the value itself for Bool/Int,
+                // a string pointer for Float/String/Color (null == empty). It's
+                // NOT a valid pointer for Bool/Int, so only deref it for the
+                // string-backed types.
                 switch (field.type) {
                     case SettingType::Bool:
                         item->boolVal = *(bool*)fieldPtr;
+                        item->defBool = field.value != 0;
                         break;
                     case SettingType::Int:
                         item->intVal = *(int*)fieldPtr;
+                        item->defInt = (int)field.value;
                         break;
                     case SettingType::Float:
                         item->floatVal = *(float*)fieldPtr;
+                        str::Parse(Str((const char*)field.value), "%f", &item->defFloat);
                         break;
                     default:
                         item->strVal = str::Dup(*(Str*)fieldPtr);
+                        item->defStr = str::Dup(Str((const char*)field.value));
                         if (field.type == SettingType::String) {
                             item->enumValues = GetEnumValuesForSetting(path);
                         }
@@ -316,49 +352,31 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
 
     int pad = DpiScale(hwnd, 4);
+    HFONT fontNormal = font ? font : GetAppFont();
 
-    // changed settings are drawn in bold, with a dot after the name
-    HGDIOBJ prevFont = nullptr;
-    if (item->changed && fontBold) {
-        prevFont = SelectObject(hdc, fontBold);
-    }
+    // bold name => changed this session; bold value => differs from default.
+    // together they show both "not the default" and "edited since opening".
+    HFONT nameFont = (item->changed && fontBold) ? fontBold : fontNormal;
+    HFONT valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
+
+    SetTextColor(hdc, colText);
 
     // setting name on the left
-    SetTextColor(hdc, colText);
     RECT rcName = rc;
     rcName.left += pad;
+    HGDIOBJ prevFont = SelectObject(hdc, nameFont);
     TempWStr ws = ToWStrTemp(item->name);
     DrawTextW(hdc, ws.s, -1, &rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
-
-    if (item->changed) {
-        // a small filled circle right after the name
-        SIZE textSize{};
-        GetTextExtentPoint32W(hdc, ws.s, len(ws), &textSize);
-        int d = DpiScale(hwnd, 6);
-        int x = (int)rcName.left + textSize.cx + DpiScale(hwnd, 5);
-        int y = (int)rc.top + ((int)(rc.bottom - rc.top) - d) / 2;
-        COLORREF dotCol = ThemeWindowLinkColor();
-        HBRUSH brush = CreateSolidBrush(dotCol);
-        HPEN pen = CreatePen(PS_SOLID, 1, dotCol);
-        HGDIOBJ prevBrush = SelectObject(hdc, brush);
-        HGDIOBJ prevPen = SelectObject(hdc, pen);
-        Ellipse(hdc, x, y, x + d, y + d);
-        SelectObject(hdc, prevBrush);
-        SelectObject(hdc, prevPen);
-        DeleteObject(brush);
-        DeleteObject(pen);
-    }
 
     // value on the right
     TempStr val = FormatSettingValueTemp(item);
     RECT rcVal = rc;
     rcVal.right -= pad;
+    SelectObject(hdc, valFont);
     ws = ToWStrTemp(val);
     DrawTextW(hdc, ws.s, -1, &rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 
-    if (prevFont) {
-        SelectObject(hdc, prevFont);
-    }
+    SelectObject(hdc, prevFont);
 }
 
 // the value occupies the right half of the item's rect

@@ -44,8 +44,6 @@ static SeqStrings gCommandNames =
     "CmdToggleToolbar\0"
     "CmdChangeScrollbar\0"
     "CmdToggleMenuBar\0"
-    "CmdToggleUseTabs\0"
-    "CmdToggleTabsMru\0"
     "CmdCopySelection\0"
     "CmdTranslateSelectionWithGoogle\0"
     "CmdTranslateSelectionWithDeepL\0"
@@ -192,7 +190,6 @@ static SeqStrings gCommandNames =
     "CmdMoveTabLeft\0"
     "CmdMoveTabRight\0"
     "CmdSelectNextTheme\0"
-    "CmdToggleFrequentlyRead\0"
     "CmdInvokeInverseSearch\0"
     "CmdExec\0"
     "CmdViewWithExternalViewer\0"
@@ -207,11 +204,6 @@ static SeqStrings gCommandNames =
     "CmdDebugStartStressTest\0"
     "CmdDebugTogglePredictiveRender\0"
     "CmdDebugToggleRtl\0"
-    "CmdToggleAntiAlias\0"
-    "CmdToggleSmoothScroll\0"
-    "CmdToggleScrollbarInSinglePage\0"
-    "CmdToggleLazyLoading\0"
-    "CmdToggleEscToExit\0"
     "CmdListPrinters\0"
     "CmdToggleWindowsPreviewer\0"
     "CmdToggleWindowsSearchFilter\0"
@@ -222,7 +214,6 @@ static SeqStrings gCommandNames =
     "CmdPasteClipboardImage\0"
     "CmdTabGroupSave\0"
     "CmdTabGroupRestore\0"
-    "CmdToggleTips\0"
     "CmdChangeBackgroundColor\0"
     "CmdSetTabColor\0"
     "CmdPdfCompress\0"
@@ -236,16 +227,12 @@ static SeqStrings gCommandNames =
     "CmdDocumentExtractText\0"
     "CmdDocumentShowOutline\0"
     "CmdSetScreenshotHotkey\0"
-    "CmdToggleReuseInstance\0"
-    "CmdToggleChmUI\0"
-    "CmdToggleMarkdownUI\0"
     "CmdReadAloud\0"
     "CmdPauseReadAloud\0"
     "CmdContinueReadAloud\0"
     "CmdStopReadAloud\0"
     "CmdReadAloudFromTopPage\0"
     "CmdReadAloudSelection\0"
-    "CmdToggleHoverPreview\0"
     "CmdRemoveDeletedFilesFromHistory\0"
     "CmdCommandPaletteTOC\0"
     "CmdDebugToggleRenderInfo\0"
@@ -263,7 +250,6 @@ static SeqStrings gCommandNames =
     "CmdGoToPrevFavorite\0"
     "CmdCreateAnnotImageFromClipboard\0"
     "CmdSetInverseSearch\0"
-    "CmdToggleToolbarPosition\0"
     "CmdCommandPaletteFavorites\0"
     "CmdNavigateFilesInFolder\0"
     "CmdDebugToggleCacheInfo\0"
@@ -304,8 +290,6 @@ static i32 gCommandIds[] = {
     CmdToggleToolbar,
     CmdChangeScrollbar,
     CmdToggleMenuBar,
-    CmdToggleUseTabs,
-    CmdToggleTabsMru,
     CmdCopySelection,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -452,7 +436,6 @@ static i32 gCommandIds[] = {
     CmdMoveTabLeft,
     CmdMoveTabRight,
     CmdSelectNextTheme,
-    CmdToggleFrequentlyRead,
     CmdInvokeInverseSearch,
     CmdExec,
     CmdViewWithExternalViewer,
@@ -467,11 +450,6 @@ static i32 gCommandIds[] = {
     CmdDebugStartStressTest,
     CmdDebugTogglePredictiveRender,
     CmdDebugToggleRtl,
-    CmdToggleAntiAlias,
-    CmdToggleSmoothScroll,
-    CmdToggleScrollbarInSinglePage,
-    CmdToggleLazyLoading,
-    CmdToggleEscToExit,
     CmdListPrinters,
     CmdToggleWindowsPreviewer,
     CmdToggleWindowsSearchFilter,
@@ -482,7 +460,6 @@ static i32 gCommandIds[] = {
     CmdPasteClipboardImage,
     CmdTabGroupSave,
     CmdTabGroupRestore,
-    CmdToggleTips,
     CmdChangeBackgroundColor,
     CmdSetTabColor,
     CmdPdfCompress,
@@ -496,16 +473,12 @@ static i32 gCommandIds[] = {
     CmdDocumentExtractText,
     CmdDocumentShowOutline,
     CmdSetScreenshotHotkey,
-    CmdToggleReuseInstance,
-    CmdToggleChmUI,
-    CmdToggleMarkdownUI,
     CmdReadAloud,
     CmdPauseReadAloud,
     CmdContinueReadAloud,
     CmdStopReadAloud,
     CmdReadAloudFromTopPage,
     CmdReadAloudSelection,
-    CmdToggleHoverPreview,
     CmdRemoveDeletedFilesFromHistory,
     CmdCommandPaletteTOC,
     CmdDebugToggleRenderInfo,
@@ -523,7 +496,6 @@ static i32 gCommandIds[] = {
     CmdGoToPrevFavorite,
     CmdCreateAnnotImageFromClipboard,
     CmdSetInverseSearch,
-    CmdToggleToolbarPosition,
     CmdCommandPaletteFavorites,
     CmdNavigateFilesInFolder,
     CmdDebugToggleCacheInfo,
@@ -564,8 +536,6 @@ SeqStrings gCommandDescriptions =
     "Toggle Toolbar\0"
     "Change Scrollbar\0"
     "Toggle Menu Bar\0"
-    "Toggle Use Tabs\0"
-    "Toggle Tabs MRU Order\0"
     "Copy Selection\0"
     "Translate Selection with Google\0"
     "Translate Selection With DeepL\0"
@@ -712,7 +682,6 @@ SeqStrings gCommandDescriptions =
     "Move Tab Left\0"
     "Move Tab Right\0"
     "Select next theme\0"
-    "Toggle Frequently Read\0"
     "Invoke Inverse Search\0"
     "Execute a program\0"
     "View With Custom External Viewer\0"
@@ -727,11 +696,6 @@ SeqStrings gCommandDescriptions =
     "Debug: Start Stress Test\0"
     "Debug: Toggle Predictive Rendering\0"
     "Debug: Toggle Rtl\0"
-    "Toggle Anti-Alias Rendering\0"
-    "Toggle Smooth Scroll\0"
-    "Toggle Scrollbar In Single Page\0"
-    "Toggle Lazy Loading\0"
-    "Toggle Esc to Exit\0"
     "List Printers\0"
     "Toggle Windows Previewer\0"
     "Toggle Windows Search Filter\0"
@@ -742,7 +706,6 @@ SeqStrings gCommandDescriptions =
     "Paste Image From Clipboard\0"
     "Save Tab Group\0"
     "Restore Tab Group\0"
-    "Toggle Tips\0"
     "Change Background Color\0"
     "Set Tab Color\0"
     "Compress PDF\0"
@@ -756,16 +719,12 @@ SeqStrings gCommandDescriptions =
     "Extract Text From Document\0"
     "Show Document Bookmarks\0"
     "Set Screenshot Hotkey\0"
-    "Toggle Reuse Instance\0"
-    "Toggle CHM UI\0"
-    "Toggle Markdown UI\0"
     "Read Aloud\0"
     "Pause Reading\0"
     "Continue Reading\0"
     "Stop Reading\0"
     "Start Reading From Top\0"
     "Start Reading Selection\0"
-    "Toggle Hover Preview\0"
     "Remove Deleted Files From History\0"
     "Command Palette: Table Of Contents\0"
     "Debug: Toggle Render Queue Info\0"
@@ -783,7 +742,6 @@ SeqStrings gCommandDescriptions =
     "Go to Previous Favorite\0"
     "Create Image Annotation From Clipboard\0"
     "Set Inverse Search Command Line\0"
-    "Toggle Toolbar Position\0"
     "Command Palette: Favorites\0"
     "Navigate Files in Folder\0"
     "Debug: Toggle Cache Info\0"

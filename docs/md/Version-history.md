@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- new `Advanced Settings...` dialog (`Ctrl + K` command palette): a filterable list of the advanced settings where you can toggle booleans, pick enum values from a drop-down and edit strings, colors and numbers in-place, then `Save`. Replaces the per-setting toggle commands (`CmdToggleSmoothScroll`, `CmdToggleEscToExit`, `CmdToggleReuseInstance` etc.), which were removed
 - can open and view Markdown documents (`.md`, `.markdown`): they render as formatted text (GitHub Flavored Markdown, including tables, task lists and strikethrough) via the rendering engine, and the installer registers the file association so they open from Explorer and drag&drop
 - Read Aloud: adjustable playback speed — pick 0.5x .. 3x in the new `Speed` submenu (next to `Voice` in the Read Aloud menu, toolbar dropdown and context menu) or click the speed button on the playback bar to cycle presets (right-click cycles backwards); the speed persists across sessions via the `ReadAloudSpeed` advanced setting
 - updated the bundled MuPDF rendering engine to 1.28.0
@@ -37,7 +38,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `ToolbarText` and `ToolbarSvgIcon` parameters for `ExternalViewers` advanced setting to show external viewer as a toolbar button with text or an SVG icon (fixes #5741)
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
 - toolbar has a new `overlay` mode: the toolbar floats over the page (sized to its natural width and centered) and is only revealed when the mouse moves near it. Set it with the new top-level `Toolbar = show | hide | overlay` advanced setting; `F8` (Toggle Toolbar) now cycles show → overlay → hide instead of just toggling show/hide
-- the toolbar can be placed at the top or bottom of the window via the new `ToolbarPosition = top | bottom` advanced setting (works in both show and overlay modes); toggle it with the `CmdToggleToolbarPosition` command (`Ctrl + k` command palette)
+- the toolbar can be placed at the top or bottom of the window via the new `ToolbarPosition = top | bottom` advanced setting (works in both show and overlay modes)
 - DjVu documents can be rendered with a new built-in plain-C decoder (`ext/djvudec`) instead of libdjvu. Choose it with the new `DjvuEngine = djvudec | libdjvu` advanced setting (defaults to `djvudec`); toggle and reload the current document with the `CmdToggleDjvuEngine` command (`Ctrl + k` command palette)
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)
 - add `ComicBookUI.BackgroundColor` advanced setting to override the default black background for comic book files
@@ -140,16 +141,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdStartAutoScroll` : "Start Auto-Scroll"
 - `CmdTabGroupRestore` : "Restore Tab Group"
 - `CmdTabGroupSave` : "Save Tab Group"
-- `CmdToggleChmUI` : "Toggle CHM UI"
-- `CmdToggleEscToExit` : "Toggle Esc to Exit"
-- `CmdToggleHoverPreview` : "Toggle Hover Preview"
-- `CmdToggleReuseInstance` : "Toggle Reuse Instance"
-- `CmdToggleScrollbarInSinglePage` : "Toggle Scrollbar In Single Page"
-- `CmdToggleSmoothScroll` : "Toggle Smooth Scroll"
-- `CmdToggleToolbarPosition` : "Toggle Toolbar Position" (command palette shows the target, e.g. "set to bottom")
 - `CmdToggleDjvuEngine` : "Toggle DjVu Engine" (command palette shows the target, e.g. "set to libdjvu")
-- `CmdToggleTabsMru` : "Toggle Tabs MRU"
-- `CmdToggleTips` : "Toggle Tips"
 - `CmdToggleWindowsPreviewer` : "Toggle Windows Previewer"
 - `CmdToggleWindowsSearchFilter` : "Toggle Windows Search Filter"
 - `CmdTranslateSelectionWithClaudeCode` : "Translate Selection with Claude Code"

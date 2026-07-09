@@ -53,10 +53,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gDisableInteractiveInverseSearch;
         } break;
-        case CmdToggleFrequentlyRead: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->showStartPage;
-        } break;
         case CmdToggleFullscreen: {
             isToggle = true;
             newIsOn = !(win->isFullScreen || win->presentation);
@@ -115,34 +111,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showFavorites;
         } break;
-        case CmdToggleAntiAlias: {
-            isToggle = true;
-            newIsOn = gGlobalPrefs->disableAntiAlias;
-        } break;
-        case CmdToggleSmoothScroll: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->smoothScroll;
-        } break;
-        case CmdToggleScrollbarInSinglePage: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->scrollbarInSinglePage;
-        } break;
-        case CmdToggleLazyLoading: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->lazyLoading;
-        } break;
-        case CmdToggleEscToExit: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->escToExit;
-        } break;
-        case CmdToggleUseTabs: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->useTabs;
-        } break;
-        case CmdToggleTabsMru: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->tabsMru;
-        } break;
         case CmdToggleZoom: {
             // TODO: this toggles via different values
         } break;
@@ -154,41 +122,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !wnd;
         } break;
-        case CmdToggleTips: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->showTips;
-        } break;
-        case CmdToggleReuseInstance: {
-            isToggle = true;
-            newIsOn = !gGlobalPrefs->reuseInstance;
-        } break;
-        case CmdToggleHoverPreview: {
-            isToggle = true;
-            newIsOn = gGlobalPrefs->citationHoverDelay < 0;
-        } break;
     }
 
     if (isToggle) {
         return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
-    }
-
-    if (cmdId == CmdToggleChmUI) {
-        if (gGlobalPrefs->chmUI.useFixedPageUI) {
-            return str::JoinTemp(s, StrL(": browser"));
-        }
-        return str::JoinTemp(s, StrL(": fixed"));
-    }
-
-    if (cmdId == CmdToggleMarkdownUI) {
-        if (gGlobalPrefs->markdownUI.useFixedPageUI) {
-            return str::JoinTemp(s, StrL(": browser"));
-        }
-        return str::JoinTemp(s, StrL(": mupdf"));
-    }
-
-    if (cmdId == CmdToggleToolbarPosition) {
-        Str next = ToolbarAtBottom() ? StrL("top") : StrL("bottom");
-        return str::JoinTemp(s, StrL(": set to "), next);
     }
 
     if (cmdId == CmdToggleWindowsPreviewer) {

@@ -86,13 +86,9 @@ CmdChangeScrollbar,,Change Scrollbar,"Opens dialog to choose scrollbar mode (win
 CmdChangeBackgroundColor,,Change Background Color,"Opens color picker to change document background color"
 CmdToggleToolbar,F8,Toggle Toolbar,
 CmdToggleToolbarPosition,,Toggle Toolbar Position,"ver 3.7+, moves the toolbar between the top and bottom of the window (works in both show and overlay modes)"
-CmdToggleChmUI,,Toggle CHM UI,"Toggle dedicated CHM UI for CHM documents, reloading the current CHM document, ver 3.7+"
 CmdAIChatWithClaudeCode,,AI Chat with document using Claude Code,"Toggle Claude Code chat sidebar, ver 3.7+. See AI-Chat-with-document.md"
 CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Build chat sidebar, ver 3.7+. See AI-Chat-with-document.md#grok-build"
 CmdAIChatWithOpenAICodex,,AI Chat with document using OpenAI Codex,"Toggle OpenAI Codex chat sidebar, ver 3.7+. See AI-Chat-with-document.md#openai-codex"
-CmdToggleUseTabs,,Toggle Use Tabs,"Toggle UseTabs setting, only affects new windows, ver 3.7+"
-CmdToggleTabsMru,,Toggle Tabs MRU Order,"Toggle TabsMru setting: Ctrl+Tab switches tabs in most recently used order, ver 3.7+"
-CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
 ```
@@ -265,8 +261,8 @@ CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
-CmdAdvancedOptions,,Advanced Options (Settings)...,
-CmdAdvancedSettings,,Advanced Options (Settings)...,
+CmdAdvancedOptions,,Advanced Options...,Opens the settings file in a text editor
+CmdAdvancedSettings,,Advanced Settings...,"ver 3.7+, opens a dialog for viewing and editing the advanced settings: filter by name, click a setting to toggle / pick / edit its value, then Save"
 CmdChangeLanguage,,Change Language...,
 CmdCheckUpdate,,Check For Updates,
 CmdClearHistory,,Clear History,Clears history of opened files (for recently opened list in home page)
@@ -302,13 +298,6 @@ CmdHelpVisitWebsite,,Help: SumatraPDF Website,
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdToggleInverseSearch,,Toggle Inverse Search,"temporarily disable TeX inverse search on left mouse click, ver 3.6+"
-CmdToggleAntiAlias,,Toggle Anti-Alias Rendering,"Toggle anti-alias rendering in pdf and epub documents, ver 3.6+"
-CmdToggleSmoothScroll,,Toggle Smooth Scroll,"Toggle SmoothScroll advanced setting, ver 3.7+"
-CmdToggleScrollbarInSinglePage,,Toggle Scrollbar In Single Page,"Toggle ScrollbarInSinglePage advanced setting, ver 3.7+"
-CmdToggleLazyLoading,,Toggle Lazy Loading,"Toggle LazyLoading advanced setting, ver 3.7+"
-CmdToggleEscToExit,,Toggle Esc to Exit,"Toggle EscToExit advanced setting, ver 3.7+"
-CmdToggleTips,,Toggle Tips,"Toggle ShowTips advanced setting, ver 3.7+"
-CmdToggleReuseInstance,,Toggle Reuse Instance,"Toggle ReuseInstance advanced setting, ver 3.7+"
 CmdToggleWindowsPreviewer,,Register / Un-register Windows Previewer,"Only available when SumatraPDF is installed. Registers or un-registers the PDF preview handler for Windows Explorer preview pane, ver 3.7+"
 CmdToggleWindowsSearchFilter,,Register / Un-register Windows Search Filter,"Only available when SumatraPDF is installed. Registers or un-registers the PDF search filter for Windows Search indexing, ver 3.7+"
 CmdSetTabColor,,Set Tab Color,"Set a custom color for the tab of the current document, available from tab context menu, ver 3.7+"
@@ -319,7 +308,6 @@ CmdPdfExtractPages,,Extract Pages From PDF,"Extract pages from a PDF file using 
 CmdPdfEncrypt,,Encrypt PDF,"Encrypt a PDF file with a password using AES-256 encryption, ver 3.7+"
 CmdPdfDecrypt,,Decrypt PDF,"Decrypt an encrypted PDF file, removing password protection, ver 3.7+"
 CmdSetScreenshotHotkey,,Set Screenshot Hotkey,"Open dialog to set or remove a global hotkey for taking screenshots, ver 3.7+"
-CmdToggleHoverPreview,,Toggle Hover Preview,"Toggle the citation / reference hover preview by setting CitationHoverDelay to -1 (disabled) or 300 (the default delay), ver 3.7+"
 CmdReadAloud,,Read Aloud,"Read selected text (or from the viewport if no selection) through the end of the document using Windows text-to-speech. Invoking again pauses reading. Voice is chosen in the Read Aloud Voice submenu and remembered in ReadAloudVoiceId, ver 3.7+"
 CmdPauseReadAloud,,Pause Reading,"Pause reading text aloud; resume with CmdContinueReadAloud, ver 3.7+"
 CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where it was paused, ver 3.7+"

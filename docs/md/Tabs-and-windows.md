@@ -26,10 +26,7 @@ This is the most frequent tabs question on the [forum](https://github.com/sumatr
 | `ReuseInstance` | No — takes effect on the next file open |
 | `UseTabs` | **Yes** — close and restart SumatraPDF |
 
-You can also toggle at runtime (**ver 3.7+**):
-
-- `Ctrl + K` → `Toggle Reuse Instance` (`CmdToggleReuseInstance`)
-- `Ctrl + K` → `Toggle Use Tabs` (`CmdToggleUseTabs`) — affects **new** windows only; switching between tabbed and non-tabbed layout for an existing window may still need a restart
+You can also change `ReuseInstance` and `UseTabs` at runtime (**ver 3.7+**) via `Ctrl + K` → `Advanced Settings...` (`CmdAdvancedSettings`). Changing `UseTabs` affects **new** windows only; switching between tabbed and non-tabbed layout for an existing window may still need a restart.
 
 ## Command-line flags
 
