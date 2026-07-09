@@ -13,11 +13,14 @@
 
 import { mkdirSync, copyFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { cmdId } from "./util.ts";
 import { launchSumatra, waitForFrame, sendCommand } from "./win-automation.ts";
 import { getWindowText, sleep } from "./winapi.ts";
 
-const CmdOpenNextFileInFolder = 368;
-const CmdOpenPrevFileInFolder = 369;
+// look these up by name: command ids are auto-numbered and shift whenever
+// commands are added/removed, so hardcoding them silently sends the wrong command
+const CmdOpenNextFileInFolder = cmdId("CmdOpenNextFileInFolder");
+const CmdOpenPrevFileInFolder = cmdId("CmdOpenPrevFileInFolder");
 
 const SRC_PDF = join(import.meta.dir, "issue-3219.pdf");
 
