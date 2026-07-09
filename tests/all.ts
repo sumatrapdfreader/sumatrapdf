@@ -10,6 +10,7 @@
 // and register it in the `tests` array below.
 
 import { buildApp, formatDuration, isSilentArg, runTest } from "./util.ts";
+import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as cmdStartAutoScroll } from "./cmd-start-autoscroll.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
@@ -41,6 +42,7 @@ import { testit as issue1201 } from "./issue-1201.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
+  ["lint-command-ids", lintCommandIds],
   ["combining-mark-first", combiningMarkFirst],
   ["cmd-start-autoscroll", cmdStartAutoScroll],
   ["issue-1998", issue1998],
