@@ -841,7 +841,7 @@ const globalPrefs: Field[] = [
     "3.7",
   ),
   setVersion(mkField("ShowTips", Bool, true, "if true, we show tips on the home page"), "3.7"),
-  setVersion(mkField("CustomColors", Str, null, "up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')"), "3.7"),
+  setVersion(setInternal(mkField("CustomColors", Str, null, "up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')")), "3.7"),
   mkField("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
   setVersion(
     mkField(
@@ -889,7 +889,7 @@ const globalPrefs: Field[] = [
     true,
     "if true, we show a list of frequently read documents when no document is loaded",
   ),
-  mkField("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)"),
+  setInternal(mkField("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)")),
   setVersion(
     mkField(
       "Scrollbars",
@@ -952,12 +952,14 @@ const globalPrefs: Field[] = [
     setVersion(mkField("Theme", Str, "", "the name of the theme to use"), "3.5"),
     "Valid themes: light, dark, darker",
   ),
-  mkField(
-    "TocDy",
-    Int,
-    0,
-    "if both favorites and bookmarks parts of sidebar are visible, this is " +
-      "the height of bookmarks (table of contents) part",
+  setInternal(
+    mkField(
+      "TocDy",
+      Int,
+      0,
+      "if both favorites and bookmarks parts of sidebar are visible, this is " +
+        "the height of bookmarks (table of contents) part",
+    ),
   ),
   setVersion(mkField("ToolbarSize", Int, 18, "height of toolbar"), "3.4"),
   mkField(
@@ -1063,12 +1065,14 @@ const globalPrefs: Field[] = [
   ),
   mkEmptyLine(),
   setVersion(
-    setExpert(
-      mkField(
-        "AIChatSidebarDx",
-        Int,
-        0,
-        "width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)",
+    setInternal(
+      setExpert(
+        mkField(
+          "AIChatSidebarDx",
+          Int,
+          0,
+          "width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)",
+        ),
       ),
     ),
     "3.7",
