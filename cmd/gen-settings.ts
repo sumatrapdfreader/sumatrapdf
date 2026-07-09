@@ -24,20 +24,61 @@ interface Type {
   ctype: string;
 }
 
-interface Field {
+class Field {
   Name: string;
   Type: Type;
   Default: any;
   Comment: string;
-  NotSaved: boolean;
+  NotSaved = false;
   CName: string;
-  Expert: boolean;
+  Expert = false;
   // saved & deserialized like any setting, but hidden from the advanced
   // settings dialog (app-managed / deprecated-for-migration values)
-  Internal: boolean;
+  Internal = false;
   DocComment: string;
-  Version: string;
-  StructName: string;
+  Version = "2.3";
+  StructName = "";
+
+  constructor(name: string, typ: Type, def: any, comment: string) {
+    this.Name = name;
+    this.Type = typ;
+    this.Default = def;
+    this.Comment = comment;
+    this.CName = name !== "" ? toCName(name) : "";
+    this.DocComment = comment;
+  }
+
+  // fluent modifiers, chainable: field(...).ver("3.6").internal().expert()
+  ver(v: string): this {
+    this.Version = v;
+    return this;
+  }
+  expert(): this {
+    this.Expert = true;
+    return this;
+  }
+  internal(): this {
+    this.Internal = true;
+    return this;
+  }
+  notSaved(): this {
+    this.NotSaved = true;
+    return this;
+  }
+  doc(s: string): this {
+    this.DocComment = s;
+    return this;
+  }
+  structName(structName: string): this {
+    this.StructName = structName;
+    if (this.Type.name === "Array") {
+      this.Type.ctype = `Vec<${structName}*>*`;
+    }
+    if (this.Type.name === "Struct" || this.Type.name === "Compact") {
+      this.Type.ctype = structName;
+    }
+    return this;
+  }
 }
 
 const Bool: Type = { name: "Bool", ctype: "bool" };
@@ -56,106 +97,54 @@ function toCName(name: string): string {
   return name[0].toLowerCase() + name.slice(1);
 }
 
-function mkField(name: string, typ: Type, def: any, comment: string): Field {
-  const f: Field = {
-    Name: name,
-    Type: typ,
-    Default: def,
-    Comment: comment,
-    NotSaved: false,
-    CName: name !== "" ? toCName(name) : "",
-    Expert: false,
-    Internal: false,
-    DocComment: comment,
-    Version: "2.3",
-    StructName: "",
-  };
-  return f;
+function field(name: string, typ: Type, def: any, comment: string): Field {
+  return new Field(name, typ, def, comment);
 }
 
-function setExpert(f: Field): Field {
-  f.Expert = true;
-  return f;
-}
-
-function setInternal(f: Field): Field {
-  f.Internal = true;
-  return f;
-}
-
-function notSaved(f: Field): Field {
-  f.NotSaved = true;
-  return f;
-}
-
-function setVersion(f: Field, v: string): Field {
-  f.Version = v;
-  return f;
-}
-
-function setDoc(f: Field, s: string): Field {
-  f.DocComment = s;
-  return f;
-}
-
-function setStructName(f: Field, structName: string): Field {
-  f.StructName = structName;
-  if (f.Type.name === "Array") {
-    f.Type.ctype = `Vec<${structName}*>*`;
-  }
-  if (f.Type.name === "Struct") {
-    f.Type.ctype = structName;
-  }
-  if (f.Type.name === "Compact") {
-    f.Type.ctype = structName;
-  }
-  return f;
-}
-
-function mkStruct(name: string, fields: Field[], comment: string): Field {
+function struct(name: string, fields: Field[], comment: string): Field {
   const typ: Type = { name: "Struct", ctype: name };
-  const res = mkField(name, typ, fields, comment);
+  const res = field(name, typ, fields, comment);
   res.StructName = name;
   return res;
 }
 
-function mkCompactStruct(name: string, fields: Field[], comment: string): Field {
-  const res = mkStruct(name, fields, comment);
+function compactStruct(name: string, fields: Field[], comment: string): Field {
+  const res = struct(name, fields, comment);
   res.Type.name = "Compact";
   return res;
 }
 
-function mkArray(name: string, fields: Field[], comment: string): Field {
+function array(name: string, fields: Field[], comment: string): Field {
   let structName = name;
   if (structName.endsWith("s")) {
     structName = structName.slice(0, -1);
   }
   const ctype = `Vec<${structName}*>*`;
   const typ: Type = { name: "Array", ctype };
-  const res = mkField(name, typ, fields, comment);
+  const res = field(name, typ, fields, comment);
   res.StructName = structName;
   return res;
 }
 
-function mkCompactArray(name: string, typ: Type, def: any, comment: string): Field {
+function compactArray(name: string, typ: Type, def: any, comment: string): Field {
   const typ2: Type = { name: `${typ.name}Array`, ctype: `Vec<${typ.ctype}>*` };
-  return mkField(name, typ2, def, comment);
+  return field(name, typ2, def, comment);
 }
 
-function mkComment(comment: string): Field {
-  return mkField("", Comment, null, comment);
+function comment(text: string): Field {
+  return field("", Comment, null, text);
 }
 
-function mkEmptyLine(): Field {
-  return mkComment("");
+function emptyLine(): Field {
+  return comment("");
 }
 
-function mkRGB(r: number, g: number, b: number): string {
+function rgb(r: number, g: number, b: number): string {
   const hex = (n: number) => n.toString(16).padStart(2, "0");
   return `#${hex(r)}${hex(g)}${hex(b)}`;
 }
 
-function mkRGBA(r: number, g: number, b: number, a: number): string {
+function rgba(r: number, g: number, b: number, a: number): string {
   const hex = (n: number) => n.toString(16).padStart(2, "0");
   return `#${hex(a)}${hex(r)}${hex(g)}${hex(b)}`;
 }
@@ -165,75 +154,69 @@ function isComment(f: Field): boolean {
 }
 
 const ebookUI: Field[] = [
-  mkField("FontSize", Float, 0, "font size, default 8.0"),
-  mkField("LayoutDx", Float, 0, "default is 420"),
-  mkField("LayoutDy", Float, 0, "default is 595"),
-  mkField("IgnoreDocumentCSS", Bool, false, "if true, we ignore ebook's CSS"),
-  mkField("CustomCSS", Str, null, "custom CSS. Might need to set IgnoreDocumentCSS = true"),
-  setVersion(
-    mkField(
-      "WindowBgCol",
-      Color,
-      "",
-      "if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
-    ),
-    "3.7",
-  ),
+  field("FontSize", Float, 0, "font size, default 8.0"),
+  field("LayoutDx", Float, 0, "default is 420"),
+  field("LayoutDy", Float, 0, "default is 595"),
+  field("IgnoreDocumentCSS", Bool, false, "if true, we ignore ebook's CSS"),
+  field("CustomCSS", Str, null, "custom CSS. Might need to set IgnoreDocumentCSS = true"),
+  field(
+    "WindowBgCol",
+    Color,
+    "",
+    "if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
+  ).ver("3.7"),
 ];
 
 const theme: Field[] = [
-  mkField("Name", Str, "", "name of the theme"),
-  mkField("TextColor", Color, "", "text color"),
-  mkField("BackgroundColor", Color, "", "background color"),
-  mkField("ControlBackgroundColor", Color, "", "control background color"),
-  mkField("LinkColor", Color, "", "link color"),
-  mkField("ColorizeControls", Bool, false, "should we colorize Windows controls and window areas"),
+  field("Name", Str, "", "name of the theme"),
+  field("TextColor", Color, "", "text color"),
+  field("BackgroundColor", Color, "", "background color"),
+  field("ControlBackgroundColor", Color, "", "control background color"),
+  field("LinkColor", Color, "", "link color"),
+  field("ColorizeControls", Bool, false, "should we colorize Windows controls and window areas"),
 ];
 
-const tabFile: Field[] = [mkField("Path", Str, "", "file path")];
+const tabFile: Field[] = [field("Path", Str, "", "file path")];
 
 const tabGroup: Field[] = [
-  mkField("Name", Str, "", "name of the tab group"),
-  mkArray("TabFiles", tabFile, "files in the tab group"),
+  field("Name", Str, "", "name of the tab group"),
+  array("TabFiles", tabFile, "files in the tab group"),
 ];
 
 const windowPos: Field[] = [
-  mkField("X", Int, 0, "x coordinate"),
-  mkField("Y", Int, 0, "y coordinate"),
-  mkField("Dx", Int, 0, "width"),
-  mkField("Dy", Int, 0, "height"),
+  field("X", Int, 0, "x coordinate"),
+  field("Y", Int, 0, "y coordinate"),
+  field("Dx", Int, 0, "width"),
+  field("Dy", Int, 0, "height"),
 ];
 
-const pointPos: Field[] = [mkField("X", Int, 0, "x coordinate"), mkField("Y", Int, 0, "y coordinate")];
+const pointPos: Field[] = [field("X", Int, 0, "x coordinate"), field("Y", Int, 0, "y coordinate")];
 
 const keyboardShortcut: Field[] = [
-  mkField("Cmd", Str, "", "command"),
-  mkField("Key", Str, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
-  setVersion(mkField("Name", Str, null, "name shown in command palette"), "3.6"),
-  setVersion(mkField("ToolbarText", Str, null, "if given, shows in toolbar"), "3.6"),
-  setVersion(
-    mkField(
-      "ToolbarSvgIcon",
-      Str,
-      null,
-      "optional SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
-    ),
-    "3.7",
-  ),
-  notSaved(setVersion(mkField("CmdId", Int, null, "command id"), "3.6")),
+  field("Cmd", Str, "", "command"),
+  field("Key", Str, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
+  field("Name", Str, null, "name shown in command palette").ver("3.6"),
+  field("ToolbarText", Str, null, "if given, shows in toolbar").ver("3.6"),
+  field(
+    "ToolbarSvgIcon",
+    Str,
+    null,
+    "optional SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
+  ).ver("3.7"),
+  field("CmdId", Int, null, "command id").ver("3.6").notSaved(),
 ];
 
-const scrollPos: Field[] = [mkField("X", Float, 0, "x coordinate"), mkField("Y", Float, 0, "y coordinate")];
+const scrollPos: Field[] = [field("X", Float, 0, "x coordinate"), field("Y", Float, 0, "y coordinate")];
 
-const fileTime: Field[] = [mkField("DwHighDateTime", Int, 0, ""), mkField("DwLowDateTime", Int, 0, "")];
+const fileTime: Field[] = [field("DwHighDateTime", Int, 0, ""), field("DwLowDateTime", Int, 0, "")];
 
 const printerDefaults: Field[] = [
-  mkField("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)"),
-  mkField("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)"),
+  field("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)"),
+  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)"),
 ];
 
 const forwardSearch: Field[] = [
-  mkField(
+  field(
     "HighlightOffset",
     Int,
     0,
@@ -241,9 +224,9 @@ const forwardSearch: Field[] = [
       "be changed to a rectangle at the left of the page (with the indicated " +
       "amount of margin from the page margin)",
   ),
-  mkField("HighlightWidth", Int, 15, "width of the highlight rectangle (if HighlightOffset is > 0)"),
-  mkField("HighlightColor", Color, mkRGB(0x65, 0x81, 0xff), "color used for the forward search highlight"),
-  mkField(
+  field("HighlightWidth", Int, 15, "width of the highlight rectangle (if HighlightOffset is > 0)"),
+  field("HighlightColor", Color, rgb(0x65, 0x81, 0xff), "color used for the forward search highlight"),
+  field(
     "HighlightPermanent",
     Bool,
     false,
@@ -252,57 +235,48 @@ const forwardSearch: Field[] = [
 ];
 
 const windowMarginFixedPageUI: Field[] = [
-  mkField("Top", Int, 2, "size of the top margin between window and document"),
-  mkField("Right", Int, 4, "size of the right margin between window and document"),
-  mkField("Bottom", Int, 2, "size of the bottom margin between window and document"),
-  mkField("Left", Int, 4, "size of the left margin between window and document"),
+  field("Top", Int, 2, "size of the top margin between window and document"),
+  field("Right", Int, 4, "size of the right margin between window and document"),
+  field("Bottom", Int, 2, "size of the bottom margin between window and document"),
+  field("Left", Int, 4, "size of the left margin between window and document"),
 ];
 
 const windowMarginComicBookUI: Field[] = [
-  mkField("Top", Int, 0, "size of the top margin between window and document"),
-  mkField("Right", Int, 0, "size of the right margin between window and document"),
-  mkField("Bottom", Int, 0, "size of the bottom margin between window and document"),
-  mkField("Left", Int, 0, "size of the left margin between window and document"),
+  field("Top", Int, 0, "size of the top margin between window and document"),
+  field("Right", Int, 0, "size of the right margin between window and document"),
+  field("Bottom", Int, 0, "size of the bottom margin between window and document"),
+  field("Left", Int, 0, "size of the left margin between window and document"),
 ];
 
-const pageSpacing: Field[] = [
-  mkField("Dx", Int, 4, "horizontal difference"),
-  mkField("Dy", Int, 4, "vertical difference"),
-];
+const pageSpacing: Field[] = [field("Dx", Int, 4, "horizontal difference"), field("Dy", Int, 4, "vertical difference")];
 
 const fixedPageUI: Field[] = [
-  mkField("TextColor", Color, mkRGB(0x00, 0x00, 0x00), "color value with which black (text) will be substituted"),
-  mkField(
+  field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color value with which black (text) will be substituted"),
+  field(
     "BackgroundColor",
     Color,
-    mkRGB(0xff, 0xff, 0xff),
+    rgb(0xff, 0xff, 0xff),
     "color value with which white (background) will be substituted",
   ),
-  setVersion(
-    mkField(
-      "SelectionColor",
-      Color,
-      mkRGB(0xff, 0xff, 0x00),
-      "color value for the text selection rectangle (also used to highlight found text). " +
-        "Use an #aarrggbb value to control opacity: a smaller alpha (e.g. #40ffff00) makes the " +
-        "selection more transparent so the selected text stays crisp; #rrggbb uses the default opacity",
-    ),
-    "2.4",
-  ),
-  mkCompactStruct(
+  field(
+    "SelectionColor",
+    Color,
+    rgb(0xff, 0xff, 0x00),
+    "color value for the text selection rectangle (also used to highlight found text). " +
+      "Use an #aarrggbb value to control opacity: a smaller alpha (e.g. #40ffff00) makes the " +
+      "selection more transparent so the selected text stays crisp; #rrggbb uses the default opacity",
+  ).ver("2.4"),
+  compactStruct(
     "WindowMargin",
     windowMarginFixedPageUI,
     "top, right, bottom and left margin (in that order) between window and document",
   ),
-  setStructName(
-    mkCompactStruct(
-      "PageSpacing",
-      pageSpacing,
-      "horizontal and vertical distance between two pages in facing and book view modes",
-    ),
-    "Size",
-  ),
-  mkCompactArray(
+  compactStruct(
+    "PageSpacing",
+    pageSpacing,
+    "horizontal and vertical distance between two pages in facing and book view modes",
+  ).structName("Size"),
+  compactArray(
     "GradientColors",
     Color,
     null,
@@ -312,77 +286,47 @@ const fixedPageUI: Field[] = [
       "background might allow to subconsciously determine reading progress; " +
       "suggested values: #2828aa #28aa28 #aa2828",
   ),
-  mkField("InvertColors", Bool, false, "if true, TextColor and BackgroundColor of the document will be swapped"),
-  setVersion(
-    mkField(
-      "WindowBgCol",
-      Color,
-      "",
-      "if given, sets the canvas background color for PDF files",
-    ),
-    "3.7",
-  ),
+  field("InvertColors", Bool, false, "if true, TextColor and BackgroundColor of the document will be swapped"),
+  field("WindowBgCol", Color, "", "if given, sets the canvas background color for PDF files").ver("3.7"),
 ];
 
 const comicBookUI: Field[] = [
-  mkCompactStruct(
+  compactStruct(
     "WindowMargin",
     windowMarginComicBookUI,
     "top, right, bottom and left margin (in that order) between window and document",
   ),
-  setStructName(
-    mkCompactStruct(
-      "PageSpacing",
-      pageSpacing,
-      "horizontal and vertical distance between two pages in facing and book view modes",
-    ),
-    "Size",
-  ),
-  mkField(
+  compactStruct(
+    "PageSpacing",
+    pageSpacing,
+    "horizontal and vertical distance between two pages in facing and book view modes",
+  ).structName("Size"),
+  field(
     "CbxMangaMode",
     Bool,
     false,
     "if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)",
   ),
-  setVersion(
-    mkField(
-      "WindowBgCol",
-      Color,
-      "",
-      "if given, sets the canvas background color for comic book files",
-    ),
-    "3.7",
-  ),
+  field("WindowBgCol", Color, "", "if given, sets the canvas background color for comic book files").ver("3.7"),
 ];
 
 const imageUI: Field[] = [
-  setVersion(
-    mkField("WindowBgCol", Color, "", "if given, sets the canvas background color for image files"),
-    "3.7",
-  ),
-  setVersion(
-    mkField(
-      "DefaultZoom",
-      Str,
-      "shrink to fit",
-      "default zoom for image files. valid values: fit page, fit width, fit content, shrink to fit or percent like 100%",
-    ),
-    "3.7",
-  ),
-  notSaved(mkField("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage")),
+  field("WindowBgCol", Color, "", "if given, sets the canvas background color for image files").ver("3.7"),
+  field(
+    "DefaultZoom",
+    Str,
+    "shrink to fit",
+    "default zoom for image files. valid values: fit page, fit width, fit content, shrink to fit or percent like 100%",
+  ).ver("3.7"),
+  field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
 ];
 
 const chmUI: Field[] = [
-  mkField(
-    "UseFixedPageUI",
-    Bool,
-    false,
-    "if true, the UI used for PDF documents will be used for CHM documents as well",
-  ),
+  field("UseFixedPageUI", Bool, false, "if true, the UI used for PDF documents will be used for CHM documents as well"),
 ];
 
 const markdownUI: Field[] = [
-  mkField(
+  field(
     "UseFixedPageUI",
     Bool,
     false,
@@ -391,76 +335,56 @@ const markdownUI: Field[] = [
 ];
 
 const codexBuild: Field[] = [
-  mkField("Model", Str, "gpt-5.5", "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)"),
-  mkField(
+  field("Model", Str, "gpt-5.5", "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)"),
+  field(
     "Models",
     Str,
     "",
     "extra Codex model IDs for the dropdown, comma-separated; gpt-5.5, gpt-5.4, and o3 are always included",
   ),
-  mkField("Sandbox", Int, 1, "Codex sandbox mode: 0=read-only, 1=workspace-write, 2=danger-full-access"),
-  mkField(
-    "SkipSandbox",
-    Bool,
-    false,
-    "if true, pass --dangerously-bypass-approvals-and-sandbox to Codex",
-  ),
-  mkField("BgColor", Color, "#ffffff", "background color of the OpenAI Codex chat panel"),
+  field("Sandbox", Int, 1, "Codex sandbox mode: 0=read-only, 1=workspace-write, 2=danger-full-access"),
+  field("SkipSandbox", Bool, false, "if true, pass --dangerously-bypass-approvals-and-sandbox to Codex"),
+  field("BgColor", Color, "#ffffff", "background color of the OpenAI Codex chat panel"),
 ];
 
 const grokBuild: Field[] = [
-  mkField(
-    "Model",
-    Str,
-    "grok-composer-2.5-fast",
-    "Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)",
-  ),
-  mkField(
+  field("Model", Str, "grok-composer-2.5-fast", "Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)"),
+  field(
     "Models",
     Str,
     "",
     "extra Grok model IDs for the dropdown, comma-separated; grok-composer-2.5-fast and grok-build are always included",
   ),
-  mkField("Effort", Int, 1, "Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max"),
-  mkField(
-    "AlwaysApprove",
-    Bool,
-    false,
-    "if true, pass --always-approve to Grok Build (auto-approve tool executions)",
-  ),
-  mkField("BgColor", Color, "#ffffff", "background color of the Grok Build chat panel"),
+  field("Effort", Int, 1, "Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max"),
+  field("AlwaysApprove", Bool, false, "if true, pass --always-approve to Grok Build (auto-approve tool executions)"),
+  field("BgColor", Color, "#ffffff", "background color of the Grok Build chat panel"),
 ];
 
 const claudeCode: Field[] = [
-  mkField(
+  field(
     "Model",
     Str,
     "sonnet",
     "Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if not in the model list",
   ),
-  mkField(
+  field(
     "Models",
     Str,
     "",
     "extra Claude model aliases for the dropdown, comma-separated; sonnet, opus, and haiku are always included",
   ),
-  mkField("Effort", Int, 1, "Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
-  mkField(
-    "SkipPermissions",
-    Bool,
-    false,
-    "if true, pass --dangerously-skip-permissions to Claude Code",
-  ),
-  mkField("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
+  field("Effort", Int, 1, "Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
+  field("SkipPermissions", Bool, false, "if true, pass --dangerously-skip-permissions to Claude Code"),
+  field("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
 ];
 
 const fullscreen: Field[] = [
-  mkField("ShowToolbar", Bool, false, "if true, show the toolbar in fullscreen mode"),
-  mkField("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
+  field("ShowToolbar", Bool, false, "if true, show the toolbar in fullscreen mode"),
+  field("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
 ];
 
 const externalViewer: Field[] = [
-  mkField(
+  field(
     "CommandLine",
     Str,
     null,
@@ -468,760 +392,610 @@ const externalViewer: Field[] = [
       '%p for page number and "%1" for the file name (add quotation ' +
       "marks around paths containing spaces)",
   ),
-  mkField("Name", Str, null, "name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
-  mkField(
+  field("Name", Str, null, "name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
+  field(
     "Filter",
     Str,
     null,
     "optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)",
   ),
-  setVersion(mkField("Key", Str, null, "optional: keyboard shortcut e.g. Alt + 7"), "3.6"),
-  setVersion(mkField("ToolbarText", Str, null, "if given, shows in toolbar"), "3.7"),
-  setVersion(
-    mkField(
-      "ToolbarSvgIcon",
-      Str,
-      null,
-      "optional SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
-    ),
-    "3.7",
-  ),
+  field("Key", Str, null, "optional: keyboard shortcut e.g. Alt + 7").ver("3.6"),
+  field("ToolbarText", Str, null, "if given, shows in toolbar").ver("3.7"),
+  field(
+    "ToolbarSvgIcon",
+    Str,
+    null,
+    "optional SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
+  ).ver("3.7"),
 ];
 
 const selectionHandler: Field[] = [
-  mkField(
+  field(
     "URL",
     Str,
     null,
     "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)",
   ),
-  mkField("Name", Str, null, "name shown in context menu"),
-  setVersion(mkField("Key", Str, null, "keyboard shortcut"), "3.6"),
+  field("Name", Str, null, "name shown in context menu"),
+  field("Key", Str, null, "keyboard shortcut").ver("3.6"),
 ];
 
 const annotations: Field[] = [
-  mkField("HighlightColor", Color, mkRGB(0xff, 0xff, 0x0), "highlight annotation color"),
-  mkField("UnderlineColor", Color, mkRGB(0x00, 0xff, 0x0), "underline annotation color"),
-  setVersion(mkField("SquigglyColor", Color, mkRGB(0xff, 0x00, 0xff), "squiggly annotation color"), "3.5"),
-  setVersion(mkField("StrikeOutColor", Color, mkRGB(0xff, 0x00, 0x00), "strike out annotation color"), "3.5"),
-  setVersion(mkField("FreeTextColor", Color, "", "text color of free text annotation"), "3.5"),
-  setVersion(mkField("FreeTextBackgroundColor", Color, "", "background color of free text annotation"), "3.6"),
-  setVersion(
-    mkField(
-      "FreeTextOpacity",
-      Int,
-      100,
-      "opacity of free text annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque",
-    ),
-    "3.6",
-  ),
-  setVersion(mkField("FreeTextSize", Int, 12, "size of free text annotation"), "3.5"),
-  setVersion(mkField("FreeTextBorderWidth", Int, 1, "width of free text annotation border"), "3.5"),
-  mkField("TextIconColor", Color, "", "text icon annotation color"),
-  mkField(
+  field("HighlightColor", Color, rgb(0xff, 0xff, 0x0), "highlight annotation color"),
+  field("UnderlineColor", Color, rgb(0x00, 0xff, 0x0), "underline annotation color"),
+  field("SquigglyColor", Color, rgb(0xff, 0x00, 0xff), "squiggly annotation color").ver("3.5"),
+  field("StrikeOutColor", Color, rgb(0xff, 0x00, 0x00), "strike out annotation color").ver("3.5"),
+  field("FreeTextColor", Color, "", "text color of free text annotation").ver("3.5"),
+  field("FreeTextBackgroundColor", Color, "", "background color of free text annotation").ver("3.6"),
+  field(
+    "FreeTextOpacity",
+    Int,
+    100,
+    "opacity of free text annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque",
+  ).ver("3.6"),
+  field("FreeTextSize", Int, 12, "size of free text annotation").ver("3.5"),
+  field("FreeTextBorderWidth", Int, 1, "width of free text annotation border").ver("3.5"),
+  field("TextIconColor", Color, "", "text icon annotation color"),
+  field(
     "TextIconType",
     Str,
     "",
     "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.",
   ),
-  setVersion(
-    mkField(
-      "DefaultAuthor",
-      Str,
-      "",
-      "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name",
-    ),
-    "3.4",
-  ),
+  field(
+    "DefaultAuthor",
+    Str,
+    "",
+    "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name",
+  ).ver("3.4"),
 ];
 
 const favorite: Field[] = [
-  mkField("Name", Str, null, "name of this favorite as shown in the menu"),
-  mkField("PageNo", Int, 0, "number of the bookmarked page"),
-  mkField(
+  field("Name", Str, null, "name of this favorite as shown in the menu"),
+  field("PageNo", Int, 0, "number of the bookmarked page"),
+  field(
     "PageLabel",
     Str,
     null,
     "label for this page (only present if logical and physical page numbers are not the same)",
   ),
-  notSaved(mkField("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)")),
+  field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)").notSaved(),
 ];
 
 const fileSettings: Field[] = [
-  mkField("FilePath", Str, null, "path of the document"),
-  mkArray("Favorites", favorite, "Values which are persisted for bookmarks/favorites"),
-  mkField(
+  field("FilePath", Str, null, "path of the document"),
+  array("Favorites", favorite, "Values which are persisted for bookmarks/favorites"),
+  field(
     "IsPinned",
     Bool,
     false,
     'a document can be "pinned" to the Frequently Read list so that it ' +
       "isn't displaced by recently opened documents",
   ),
-  setDoc(
-    mkField(
-      "IsMissing",
-      Bool,
-      false,
-      "if a document can no longer be found but we still remember valuable state, " +
-        "it's classified as missing so that it can be hidden instead of removed",
-    ),
-    "if true, the file is considered missing and won't be shown in any list",
-  ),
-  setDoc(
-    mkField(
-      "OpenCount",
-      Int,
-      0,
-      "in order to prevent documents that haven't been opened for a while " +
-        "but used to be opened very frequently constantly remain in top positions, " +
-        "the openCount will be cut in half after every week, so that the " +
-        "Frequently Read list hopefully better reflects the currently relevant documents",
-    ),
-    "number of times this document has been opened recently",
-  ),
-  setDoc(
-    mkField(
-      "DecryptionKey",
-      Str,
-      null,
-      "Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
-        "crypt key (64 chars) - only applies for PDF documents",
-    ),
-    "data required to open a password protected document without having to " + "ask for the password again",
-  ),
-  mkField(
+  field(
+    "IsMissing",
+    Bool,
+    false,
+    "if a document can no longer be found but we still remember valuable state, " +
+      "it's classified as missing so that it can be hidden instead of removed",
+  ).doc("if true, the file is considered missing and won't be shown in any list"),
+  field(
+    "OpenCount",
+    Int,
+    0,
+    "in order to prevent documents that haven't been opened for a while " +
+      "but used to be opened very frequently constantly remain in top positions, " +
+      "the openCount will be cut in half after every week, so that the " +
+      "Frequently Read list hopefully better reflects the currently relevant documents",
+  ).doc("number of times this document has been opened recently"),
+  field(
+    "DecryptionKey",
+    Str,
+    null,
+    "Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+      "crypt key (64 chars) - only applies for PDF documents",
+  ).doc("data required to open a password protected document without having to " + "ask for the password again"),
+  field(
     "UseDefaultState",
     Bool,
     false,
     "if true, we use global defaults when opening this file (instead of " + "the values below)",
   ),
-  setDoc(
-    mkField(
-      "DisplayMode",
-      Str,
-      "automatic",
-      "how pages should be laid out for this document, needs to be synchronized with " +
-        "DefaultDisplayMode after deserialization and before serialization",
-    ),
+  field(
+    "DisplayMode",
+    Str,
+    "automatic",
+    "how pages should be laid out for this document, needs to be synchronized with " +
+      "DefaultDisplayMode after deserialization and before serialization",
+  ).doc(
     "layout of pages. valid values: automatic, single page, facing, book view, " +
       "continuous, continuous facing, continuous book view",
   ),
-  setStructName(
-    mkCompactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)"),
+  compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(
     "PointF",
   ),
-  mkField("PageNo", Int, 1, "number of the last read page"),
-  mkField("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit content"),
-  mkField("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
-  mkField(
+  field("PageNo", Int, 1, "number of the last read page"),
+  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit content"),
+  field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
+  field(
     "WindowState",
     Int,
     0,
     "state of the window. 1 is normal, 2 is maximized, " + "3 is fullscreen, 4 is minimized",
   ),
-  setStructName(mkCompactStruct("WindowPos", windowPos, "default position (can be on any monitor)"), "Rect"),
-  mkField(
+  compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
+  field(
     "ShowToc",
     Bool,
     true,
     "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
   ),
-  mkField("SidebarDx", Int, 0, "width of the left sidebar panel containing the table of contents"),
-  mkField(
+  field("SidebarDx", Int, 0, "width of the left sidebar panel containing the table of contents"),
+  field(
     "DisplayR2L",
     Bool,
     false,
     "if true, the document is displayed right-to-left in facing and book view modes " +
       "(only used for comic book documents)",
   ),
-  setVersion(
-    mkField("BgCol", Color, "", "if given, overrides the background color for this document"),
-    "3.7",
-  ),
-  setVersion(
-    mkField("TabCol", Color, "", "if given, overrides the tab color for this document"),
-    "3.7",
-  ),
-  setDoc(
-    mkField(
-      "ReparseIdx",
-      Int,
-      0,
-      "index into an ebook's HTML data from which reparsing has to happen " +
-        "in order to restore the last viewed page (i.e. the equivalent of PageNo for the ebook UI)",
-    ),
-    "data required to restore the last read page in the ebook UI",
-  ),
-  setDoc(
-    mkCompactArray(
-      "TocState",
-      Int,
-      null,
-      "tocState is an array of ids for ToC items that have been toggled by " +
-        "the user (i.e. aren't in their default expansion state). - " +
-        "Note: We intentionally track toggle state as opposed to expansion state " +
-        "so that we only have to save a diff instead of all states for the whole " +
-        "tree (which can be quite large) (internal)",
-    ),
-    "data required to determine which parts of the table of contents have been expanded",
-  ),
-  notSaved(
-    mkField(
-      "Thumbnail",
-      { name: "", ctype: "RenderedBitmap *" },
-      "NULL",
-      "thumbnails are saved as PNG files in sumatrapdfcache directory",
-    ),
-  ),
-  notSaved(
-    mkField("Index", Int, 0, "temporary value needed for FileHistory::cmpOpenCount"),
-  ),
-  notSaved(mkField("Himl", { name: "", ctype: "HIMAGELIST" }, "NULL", "")),
-  notSaved(mkField("IconIdx", Int, -1, "")),
+  field("BgCol", Color, "", "if given, overrides the background color for this document").ver("3.7"),
+  field("TabCol", Color, "", "if given, overrides the tab color for this document").ver("3.7"),
+  field(
+    "ReparseIdx",
+    Int,
+    0,
+    "index into an ebook's HTML data from which reparsing has to happen " +
+      "in order to restore the last viewed page (i.e. the equivalent of PageNo for the ebook UI)",
+  ).doc("data required to restore the last read page in the ebook UI"),
+  compactArray(
+    "TocState",
+    Int,
+    null,
+    "tocState is an array of ids for ToC items that have been toggled by " +
+      "the user (i.e. aren't in their default expansion state). - " +
+      "Note: We intentionally track toggle state as opposed to expansion state " +
+      "so that we only have to save a diff instead of all states for the whole " +
+      "tree (which can be quite large) (internal)",
+  ).doc("data required to determine which parts of the table of contents have been expanded"),
+  field(
+    "Thumbnail",
+    { name: "", ctype: "RenderedBitmap *" },
+    "NULL",
+    "thumbnails are saved as PNG files in sumatrapdfcache directory",
+  ).notSaved(),
+  field("Index", Int, 0, "temporary value needed for FileHistory::cmpOpenCount").notSaved(),
+  field("Himl", { name: "", ctype: "HIMAGELIST" }, "NULL", "").notSaved(),
+  field("IconIdx", Int, -1, "").notSaved(),
 ];
 
 const tabState: Field[] = [
-  mkField("FilePath", Str, null, "path of the document"),
-  mkField("DisplayMode", Str, "automatic", "same as FileStates -> DisplayMode"),
-  mkField("PageNo", Int, 1, "number of the last read page"),
-  mkField("Zoom", Str, "fit page", "same as FileStates -> Zoom"),
-  mkField("Rotation", Int, 0, "same as FileStates -> Rotation"),
-  setStructName(
-    mkCompactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)"),
+  field("FilePath", Str, null, "path of the document"),
+  field("DisplayMode", Str, "automatic", "same as FileStates -> DisplayMode"),
+  field("PageNo", Int, 1, "number of the last read page"),
+  field("Zoom", Str, "fit page", "same as FileStates -> Zoom"),
+  field("Rotation", Int, 0, "same as FileStates -> Rotation"),
+  compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(
     "PointF",
   ),
-  mkField("ShowToc", Bool, true, "if true, the table of contents was shown when the document was closed"),
-  mkCompactArray("TocState", Int, null, "same as FileStates -> TocState"),
+  field("ShowToc", Bool, true, "if true, the table of contents was shown when the document was closed"),
+  compactArray("TocState", Int, null, "same as FileStates -> TocState"),
 ];
 
 const sessionData: Field[] = [
-  setDoc(
-    mkArray(
-      "TabStates",
-      tabState,
-      "a subset of FileState required for restoring the state of a single tab " +
-        "(required for handling documents being opened twice)",
-    ),
-    "data required for restoring the view state of a single tab",
-  ),
-  mkField("TabIndex", Int, 1, "index of the currently selected tab (1-based)"),
-  mkField("WindowState", Int, 0, "same as FileState -> WindowState"),
-  setStructName(mkCompactStruct("WindowPos", windowPos, "default position (can be on any monitor)"), "Rect"),
-  mkField("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)"),
+  array(
+    "TabStates",
+    tabState,
+    "a subset of FileState required for restoring the state of a single tab " +
+      "(required for handling documents being opened twice)",
+  ).doc("data required for restoring the view state of a single tab"),
+  field("TabIndex", Int, 1, "index of the currently selected tab (1-based)"),
+  field("WindowState", Int, 0, "same as FileState -> WindowState"),
+  compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
+  field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)"),
 ];
 
 const globalPrefs: Field[] = [
-  mkComment(""),
-  mkEmptyLine(),
+  comment(""),
+  emptyLine(),
 
-  setDoc(
-    mkField(
-      "DefaultDisplayMode",
-      Str,
-      "automatic",
-      "how pages should be laid out by default, needs to be synchronized with " +
-        "DefaultDisplayMode after deserialization and before serialization",
-    ),
+  field(
+    "DefaultDisplayMode",
+    Str,
+    "automatic",
+    "how pages should be laid out by default, needs to be synchronized with " +
+      "DefaultDisplayMode after deserialization and before serialization",
+  ).doc(
     "default layout of pages. valid values: automatic, single page, facing, " +
       "book view, continuous, continuous facing, continuous book view",
   ),
-  mkField(
+  field(
     "DefaultZoom",
     Str,
     "fit page",
     "default zoom. valid values: fit page, fit width, fit content or percent like 100%",
   ),
-  setVersion(
-    setExpert(
-      mkField(
-        "DisableJavaScript",
-        Bool,
-        false,
-        "if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)",
-      ),
-    ),
-    "3.7",
-  ),
-  setVersion(
-    setExpert(
-      mkField(
-        "AllowExternalImages",
-        Bool,
-        false,
-        "if true, a PDF may load an image stored in a separate file referenced by name (an external " +
-          "image stream); the file must sit next to the PDF. Off by default for security (matches Acrobat)",
-      ),
-    ),
-    "3.7",
-  ),
-  mkField(
+  field(
+    "DisableJavaScript",
+    Bool,
+    false,
+    "if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)",
+  )
+    .expert()
+    .ver("3.7"),
+  field(
+    "AllowExternalImages",
+    Bool,
+    false,
+    "if true, a PDF may load an image stored in a separate file referenced by name (an external " +
+      "image stream); the file must sit next to the PDF. Off by default for security (matches Acrobat)",
+  )
+    .expert()
+    .ver("3.7"),
+  field(
     "EnableTeXEnhancements",
     Bool,
     false,
     "if true, we expose the SyncTeX inverse search command line in Settings -> Options",
   ),
-  setExpert(mkField("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF")),
-  setVersion(
-    setExpert(mkField("FullPathInTitle", Bool, false, "if true, we show the full path to a file in the title bar")),
-    "3.0",
-  ),
-  mkField("InverseSearchCmdLine", Str, null, "pattern used to launch the LaTeX editor when doing inverse search"),
-  setVersion(
-    mkField(
-      "LazyLoading",
-      Bool,
-      false,
-      "when restoring session, delay loading of documents until their tab is selected",
-    ),
-    "3.6",
-  ),
-  setExpert(
-    mkField(
-      "MainWindowBackground",
-      Color,
-      mkRGBA(0xff, 0xf2, 0x00, 0x80),
-      "background color of the non-document windows, traditionally yellow",
-    ),
-  ),
-  mkField("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
-  mkField(
+  field("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF").expert(),
+  field("FullPathInTitle", Bool, false, "if true, we show the full path to a file in the title bar")
+    .expert()
+    .ver("3.0"),
+  field("InverseSearchCmdLine", Str, null, "pattern used to launch the LaTeX editor when doing inverse search"),
+  field(
+    "LazyLoading",
+    Bool,
+    false,
+    "when restoring session, delay loading of documents until their tab is selected",
+  ).ver("3.6"),
+  field(
+    "MainWindowBackground",
+    Color,
+    rgba(0xff, 0xf2, 0x00, 0x80),
+    "background color of the non-document windows, traditionally yellow",
+  ).expert(),
+  field("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
+  field(
     "HomePageSortByFrequentlyRead",
     Bool,
     false,
     "if true implements pre-3.6 behavior of showing opened files by frequently used count. If false, shows most recently opened first",
   ),
-  mkField(
+  field(
     "HomePageShowList",
     Bool,
     false,
     "if true, shows the home page document history as a list instead of thumbnails",
   ),
-  setVersion(
-    setExpert(
-      mkField(
-        "ReloadModifiedDocuments",
-        Bool,
-        true,
-        "if true, a document will be reloaded automatically whenever it's changed " +
-          "(currently doesn't work for documents shown in the ebook UI)",
-      ),
-    ),
-    "2.5",
-  ),
-  mkField("RememberOpenedFiles", Bool, true, "if true, we remember which files we opened and their display settings"),
-  mkField(
+  field(
+    "ReloadModifiedDocuments",
+    Bool,
+    true,
+    "if true, a document will be reloaded automatically whenever it's changed " +
+      "(currently doesn't work for documents shown in the ebook UI)",
+  )
+    .expert()
+    .ver("2.5"),
+  field("RememberOpenedFiles", Bool, true, "if true, we remember which files we opened and their display settings"),
+  field(
     "RememberStatePerDocument",
     Bool,
     true,
     "if true, we store display settings for each document separately (i.e. everything " +
       "after UseDefaultState in FileStates)",
   ),
-  setExpert(
-    mkField(
-      "RestoreSession",
-      Bool,
-      true,
-      "if true and SessionData isn't empty, that session will be restored at startup",
-    ),
-  ),
-  setExpert(mkField("ReuseInstance", Bool, true, "if true, we'll always open files using existing SumatraPDF process")),
-  setVersion(
-    setExpert(
-      mkField(
-        "ShowMenubar",
-        Bool,
-        true,
-        "if false, the menu bar will be hidden (use F9 to toggle, persisted across sessions)",
-      ),
-    ),
-    "2.5",
-  ),
-  setVersion(
-    mkField("ShowMenubarWithTabs", Bool, false, "if true, show the menu bar when using tabs (useTabs = true)"),
-    "3.7",
-  ),
-  setVersion(mkField("ShowTips", Bool, true, "if true, we show tips on the home page"), "3.7"),
-  setVersion(setInternal(mkField("CustomColors", Str, null, "up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')")), "3.7"),
-  mkField("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
-  setVersion(
-    mkField(
-      "Toolbar",
-      Str,
-      null,
-      "toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over " +
-        "the page, sized to its natural width and centered, only shown when the mouse is near it). " +
-        "if empty, derived from ShowToolbar",
-    ),
-    "3.7",
-  ),
-  setVersion(
-    mkField(
-      "ToolbarPosition",
-      Str,
-      "top",
-      "where the toolbar is placed: top or bottom (applies to both show and overlay modes)",
-    ),
-    "3.7",
-  ),
-  setVersion(
-    setExpert(
-      mkField(
-        "SearchUIFloating",
-        Bool,
-        false,
-        "if true, the find UI is a floating, movable window with a results list " +
-          "instead of the compact toolbar overlay",
-      ),
-    ),
-    "3.7",
-  ),
-  mkField("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
-  mkField(
+  field(
+    "RestoreSession",
+    Bool,
+    true,
+    "if true and SessionData isn't empty, that session will be restored at startup",
+  ).expert(),
+  field("ReuseInstance", Bool, true, "if true, we'll always open files using existing SumatraPDF process").expert(),
+  field(
+    "ShowMenubar",
+    Bool,
+    true,
+    "if false, the menu bar will be hidden (use F9 to toggle, persisted across sessions)",
+  )
+    .expert()
+    .ver("2.5"),
+  field("ShowMenubarWithTabs", Bool, false, "if true, show the menu bar when using tabs (useTabs = true)").ver("3.7"),
+  field("ShowTips", Bool, true, "if true, we show tips on the home page").ver("3.7"),
+  field(
+    "CustomColors",
+    Str,
+    null,
+    "up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')",
+  )
+    .internal()
+    .ver("3.7"),
+  field("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
+  field(
+    "Toolbar",
+    Str,
+    null,
+    "toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over " +
+      "the page, sized to its natural width and centered, only shown when the mouse is near it). " +
+      "if empty, derived from ShowToolbar",
+  ).ver("3.7"),
+  field(
+    "ToolbarPosition",
+    Str,
+    "top",
+    "where the toolbar is placed: top or bottom (applies to both show and overlay modes)",
+  ).ver("3.7"),
+  field(
+    "SearchUIFloating",
+    Bool,
+    false,
+    "if true, the find UI is a floating, movable window with a results list " +
+      "instead of the compact toolbar overlay",
+  )
+    .expert()
+    .ver("3.7"),
+  field("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
+  field(
     "ShowToc",
     Bool,
     true,
     "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
   ),
-  setVersion(mkField("ShowLinks", Bool, false, "if true we draw a blue border around links in the document"), "3.6"),
-  mkField(
-    "ShowStartPage",
+  field("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").ver("3.6"),
+  field("ShowStartPage", Bool, true, "if true, we show a list of frequently read documents when no document is loaded"),
+  field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)").internal(),
+  field(
+    "Scrollbars",
+    Str,
+    "windows",
+    "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
+  ).ver("3.7"),
+  field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
+  field("SmoothScroll", Bool, false, "if true, implements smooth scrolling").ver("3.6"),
+  field(
+    "CitationHoverDelay",
+    Int,
+    -1,
+    "how long to hover an internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it",
+  ).ver("3.7"),
+  field(
+    "ReadAloudVoiceId",
+    Str,
+    null,
+    "voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)",
+  )
+    .expert()
+    .ver("3.7"),
+  field(
+    "ReadAloudSpeed",
+    Float,
+    1,
+    "playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar",
+  )
+    .expert()
+    .ver("3.7"),
+  field(
+    "FastScrollOverScrollbar",
     Bool,
-    true,
-    "if true, we show a list of frequently read documents when no document is loaded",
-  ),
-  setInternal(mkField("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)")),
-  setVersion(
-    mkField(
-      "Scrollbars",
-      Str,
-      "windows",
-      "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
-    ),
-    "3.7",
-  ),
-  setVersion(mkField("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode"), "3.6"),
-  setVersion(mkField("SmoothScroll", Bool, false, "if true, implements smooth scrolling"), "3.6"),
-  setVersion(
-    mkField(
-      "CitationHoverDelay",
-      Int,
-      -1,
-      "how long to hover an internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it",
-    ),
-    "3.7",
-  ),
-  setVersion(
-    setExpert(
-      mkField(
-        "ReadAloudVoiceId",
-        Str,
-        null,
-        "voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)",
-      ),
-    ),
-    "3.7",
-  ),
-  setVersion(
-    setExpert(
-      mkField(
-        "ReadAloudSpeed",
-        Float,
-        1,
-        "playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar",
-      ),
-    ),
-    "3.7",
-  ),
-  setVersion(
-    mkField(
-      "FastScrollOverScrollbar",
-      Bool,
-      false,
-      "if true, mouse wheel scrolling is faster when mouse is over a scrollbar",
-    ),
-    "3.6",
-  ),
-  mkField(
+    false,
+    "if true, mouse wheel scrolling is faster when mouse is over a scrollbar",
+  ).ver("3.6"),
+  field(
     "PreventSleepInFullscreen",
     Bool,
     true,
     "if true, prevents the screen from turning off when in fullscreen or presentation mode",
   ),
-  mkField("TabWidth", Int, 300, "maximum width of a single tab"),
-  setDoc(
-    setVersion(mkField("Theme", Str, "", "the name of the theme to use"), "3.5"),
-    "Valid themes: light, dark, darker",
-  ),
-  setInternal(
-    mkField(
-      "TocDy",
-      Int,
-      0,
-      "if both favorites and bookmarks parts of sidebar are visible, this is " +
-        "the height of bookmarks (table of contents) part",
-    ),
-  ),
-  setVersion(mkField("ToolbarSize", Int, 18, "height of toolbar"), "3.4"),
-  mkField(
+  field("TabWidth", Int, 300, "maximum width of a single tab"),
+  field("Theme", Str, "", "the name of the theme to use").ver("3.5").doc("Valid themes: light, dark, darker"),
+  field(
+    "TocDy",
+    Int,
+    0,
+    "if both favorites and bookmarks parts of sidebar are visible, this is " +
+      "the height of bookmarks (table of contents) part",
+  ).internal(),
+  field("ToolbarSize", Int, 18, "height of toolbar").ver("3.4"),
+  field(
     "TreeFontName",
     Str,
     "automatic",
     "font name for bookmarks and favorites tree views. automatic means Windows default",
   ),
-  setVersion(
-    mkField("TreeFontSize", Int, 0, "font size for bookmarks and favorites tree views. 0 means Windows default"),
-    "3.3",
-  ),
-  setVersion(mkField("UIFontSize", Int, 0, "over-ride application font size. 0 means Windows default"), "3.6"),
-  setVersion(
-    mkField("DisableAntiAlias", Bool, false, "if true, disables anti-aliasing for rendering PDF documents"),
-    "3.6",
-  ),
-  setExpert(
-    mkField(
-      "DisableAutoLinks",
-      Bool,
-      false,
-      "if true, disables auto-linking of URLs and email addresses found in PDF text",
-    ),
-  ),
-  setExpert(
-    mkField(
-      "UseSysColors",
-      Bool,
-      false,
-      "if true, we use Windows system colors for background/text color. Over-rides other settings",
-    ),
-  ),
-  setVersion(mkField("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows"), "3.0"),
-  mkField(
+  field("TreeFontSize", Int, 0, "font size for bookmarks and favorites tree views. 0 means Windows default").ver("3.3"),
+  field("UIFontSize", Int, 0, "over-ride application font size. 0 means Windows default").ver("3.6"),
+  field("DisableAntiAlias", Bool, false, "if true, disables anti-aliasing for rendering PDF documents").ver("3.6"),
+  field(
+    "DisableAutoLinks",
+    Bool,
+    false,
+    "if true, disables auto-linking of URLs and email addresses found in PDF text",
+  ).expert(),
+  field(
+    "UseSysColors",
+    Bool,
+    false,
+    "if true, we use Windows system colors for background/text color. Over-rides other settings",
+  ).expert(),
+  field("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows").ver("3.0"),
+  field(
     "TabsMru",
     Bool,
     false,
     "if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order",
   ),
-  setDoc(
-    setExpert(
-      mkCompactArray(
-        "ZoomLevels",
-        Float,
-        "",
-        "zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
-          "the minimum and maximum allowed values (8.33 and 6400)",
-      ),
-    ),
-    "sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400",
-  ),
-  notSaved(mkCompactArray("ZoomLevelsCmdIds", Int, "", "")),
-  setExpert(
-    mkField(
-      "ZoomIncrement",
-      Float,
-      0,
-      "zoom step size in percents relative to the current zoom level. " +
-        "if zero or negative, the values from ZoomLevels are used instead",
-    ),
-  ),
+  compactArray(
+    "ZoomLevels",
+    Float,
+    "",
+    "zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
+      "the minimum and maximum allowed values (8.33 and 6400)",
+  )
+    .expert()
+    .doc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
+  compactArray("ZoomLevelsCmdIds", Int, "", "").notSaved(),
+  field(
+    "ZoomIncrement",
+    Float,
+    0,
+    "zoom step size in percents relative to the current zoom level. " +
+      "if zero or negative, the values from ZoomLevels are used instead",
+  ).expert(),
 
-  mkEmptyLine(),
+  emptyLine(),
 
-  setExpert(mkStruct("FixedPageUI", fixedPageUI, "customization options for PDF, XPS, DjVu and PostScript UI")),
-  mkEmptyLine(),
-  setExpert(mkStruct("EBookUI", ebookUI, "customization options for eBookUI")),
-  mkEmptyLine(),
-  setExpert(mkStruct("ComicBookUI", comicBookUI, "customization options for Comic Book UI")),
-  mkEmptyLine(),
-  setExpert(mkStruct("ImageUI", imageUI, "customization options for image files UI")),
-  mkEmptyLine(),
-  setExpert(
-    mkStruct(
-      "ChmUI",
-      chmUI,
-      "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
-    ),
-  ),
-  mkEmptyLine(),
-  setExpert(
-    mkStruct(
-      "MarkdownUI",
-      markdownUI,
-      "customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
-    ),
-  ),
-  mkEmptyLine(),
-  setVersion(
-    setExpert(mkStruct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar")),
-    "3.7",
-  ),
-  mkEmptyLine(),
-  setVersion(
-    setExpert(mkStruct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar")),
-    "3.7",
-  ),
-  mkEmptyLine(),
-  setVersion(
-    setExpert(mkStruct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar")),
-    "3.7",
-  ),
-  mkEmptyLine(),
-  setVersion(
-    setInternal(
-      setExpert(
-        mkField(
-          "AIChatSidebarDx",
-          Int,
-          0,
-          "width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)",
-        ),
-      ),
-    ),
-    "3.7",
-  ),
-  mkEmptyLine(),
-  setVersion(
-    setExpert(
-      mkField(
-        "TranslateToLang",
-        Str,
-        "",
-        "remembered destination language for selection translation; empty uses OS UI language",
-      ),
-    ),
-    "3.7",
-  ),
-  mkEmptyLine(),
-  setVersion(setExpert(mkStruct("Annotations", annotations, "default values for annotations in PDF documents")), "3.3"),
-  mkEmptyLine(),
-  setExpert(
-    mkArray(
-      "ExternalViewers",
-      externalViewer,
-      "list of additional external viewers for various file types. " +
-        "See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)",
-    ),
-  ),
-  mkEmptyLine(),
-  setExpert(
-    mkStruct(
-      "ForwardSearch",
-      forwardSearch,
-      "customization options for how we show forward search results (used from " + "LaTeX editors)",
-    ),
-  ),
-  mkEmptyLine(),
-  setExpert(mkStruct("PrinterDefaults", printerDefaults, "these override the default settings in the Print dialog")),
-  mkEmptyLine(),
-  setVersion(setExpert(mkStruct("Fullscreen", fullscreen, "options for fullscreen mode")), "3.7"),
-  mkEmptyLine(),
-  mkArray(
+  struct("FixedPageUI", fixedPageUI, "customization options for PDF, XPS, DjVu and PostScript UI").expert(),
+  emptyLine(),
+  struct("EBookUI", ebookUI, "customization options for eBookUI").expert(),
+  emptyLine(),
+  struct("ComicBookUI", comicBookUI, "customization options for Comic Book UI").expert(),
+  emptyLine(),
+  struct("ImageUI", imageUI, "customization options for image files UI").expert(),
+  emptyLine(),
+  struct(
+    "ChmUI",
+    chmUI,
+    "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
+  ).expert(),
+  emptyLine(),
+  struct(
+    "MarkdownUI",
+    markdownUI,
+    "customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
+  ).expert(),
+  emptyLine(),
+  struct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar").expert().ver("3.7"),
+  emptyLine(),
+  struct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar").expert().ver("3.7"),
+  emptyLine(),
+  struct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar").expert().ver("3.7"),
+  emptyLine(),
+  field(
+    "AIChatSidebarDx",
+    Int,
+    0,
+    "width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)",
+  )
+    .expert()
+    .internal()
+    .ver("3.7"),
+  emptyLine(),
+  field(
+    "TranslateToLang",
+    Str,
+    "",
+    "remembered destination language for selection translation; empty uses OS UI language",
+  )
+    .expert()
+    .ver("3.7"),
+  emptyLine(),
+  struct("Annotations", annotations, "default values for annotations in PDF documents").expert().ver("3.3"),
+  emptyLine(),
+  array(
+    "ExternalViewers",
+    externalViewer,
+    "list of additional external viewers for various file types. " +
+      "See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)",
+  ).expert(),
+  emptyLine(),
+  struct(
+    "ForwardSearch",
+    forwardSearch,
+    "customization options for how we show forward search results (used from " + "LaTeX editors)",
+  ).expert(),
+  emptyLine(),
+  struct("PrinterDefaults", printerDefaults, "these override the default settings in the Print dialog").expert(),
+  emptyLine(),
+  struct("Fullscreen", fullscreen, "options for fullscreen mode").expert().ver("3.7"),
+  emptyLine(),
+  array(
     "SelectionHandlers",
     selectionHandler,
     "list of handlers for selected text, shown in context menu when text selection is active. See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)",
   ),
-  mkEmptyLine(),
-  mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
-  mkEmptyLine(),
-  setVersion(mkArray("Themes", theme, "color themes"), "3.6"),
-  mkEmptyLine(),
-  setVersion(mkArray("TabGroups", tabGroup, "saved groups of tabs"), "3.7"),
-  mkEmptyLine(),
+  emptyLine(),
+  array("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
+  emptyLine(),
+  array("Themes", theme, "color themes").ver("3.6"),
+  emptyLine(),
+  array("TabGroups", tabGroup, "saved groups of tabs").ver("3.7"),
+  emptyLine(),
 
-  setVersion(
-    setExpert(
-      mkField(
-        "CustomScreenDPI",
-        Int,
-        0,
-        "actual resolution of the main screen in DPI (if this value " +
-          "isn't positive, the system's UI setting is used)",
-      ),
-    ),
-    "2.5",
-  ),
-  mkEmptyLine(),
+  field(
+    "CustomScreenDPI",
+    Int,
+    0,
+    "actual resolution of the main screen in DPI (if this value " + "isn't positive, the system's UI setting is used)",
+  )
+    .expert()
+    .ver("2.5"),
+  emptyLine(),
 
-  mkComment("You're not expected to change those manually"),
-  setDoc(
-    setVersion(
-      setExpert(
-        mkCompactArray("DefaultPasswords", Str, null, "passwords to try when opening a password protected document"),
-      ),
-      "2.4",
+  comment("You're not expected to change those manually"),
+  compactArray("DefaultPasswords", Str, null, "passwords to try when opening a password protected document")
+    .expert()
+    .ver("2.4")
+    .doc(
+      "a whitespace separated list of passwords to try when opening a password protected document " +
+        "(passwords containing spaces must be quoted)",
     ),
-    "a whitespace separated list of passwords to try when opening a password protected document " +
-      "(passwords containing spaces must be quoted)",
-  ),
-  setDoc(
-    mkField("UiLanguage", Str, null, "ISO code of the current UI language"),
+  field("UiLanguage", Str, null, "ISO code of the current UI language").doc(
     "[ISO code](langs.html) of the current UI language",
   ),
-  mkField("VersionToSkip", Str, null, "we won't ask again to update to this version"),
-  setDoc(
-    mkField("WindowState", Int, 1, "default state of new windows (same as the last closed)"),
+  field("VersionToSkip", Str, null, "we won't ask again to update to this version"),
+  field("WindowState", Int, 1, "default state of new windows (same as the last closed)").doc(
     "default state of the window. 1 is normal, 2 is maximized, " + "3 is fullscreen, 4 is minimized",
   ),
-  setDoc(
-    setStructName(mkCompactStruct("WindowPos", windowPos, "default position (can be on any monitor)"), "Rect"),
-    "default position (x, y) and size (width, height) of the window",
-  ),
-  setStructName(
-    mkCompactStruct("SearchUIWindowPos", windowPos, "position/size of the floating find window (see SearchUIFloating)"),
-    "Rect",
-  ),
+  compactStruct("WindowPos", windowPos, "default position (can be on any monitor)")
+    .structName("Rect")
+    .doc("default position (x, y) and size (width, height) of the window"),
+  compactStruct(
+    "SearchUIWindowPos",
+    windowPos,
+    "position/size of the floating find window (see SearchUIFloating)",
+  ).structName("Rect"),
 
-  mkArray("FileStates", fileSettings, "information about opened files (in most recently used order)"),
-  setVersion(mkArray("SessionData", sessionData, "state of the last session, usage depends on RestoreSession"), "3.1"),
+  array("FileStates", fileSettings, "information about opened files (in most recently used order)"),
+  array("SessionData", sessionData, "state of the last session, usage depends on RestoreSession").ver("3.1"),
 
-  setDoc(
-    setVersion(
-      mkCompactArray(
-        "ReopenOnce",
-        Str,
-        null,
-        "a list of paths for files to be reopened at the next start " +
-          'or the string "SessionData" if this data is saved in SessionData ' +
-          "(needed for auto-updating)",
-      ),
-      "3.0",
-    ),
-    "data required for reloading documents after an auto-update",
-  ),
-  setDoc(
-    setStructName(mkCompactStruct("TimeOfLastUpdateCheck", fileTime, "timestamp of the last update check"), "FILETIME"),
-    "data required to determine when SumatraPDF last checked for updates",
-  ),
+  compactArray(
+    "ReopenOnce",
+    Str,
+    null,
+    "a list of paths for files to be reopened at the next start " +
+      'or the string "SessionData" if this data is saved in SessionData ' +
+      "(needed for auto-updating)",
+  )
+    .ver("3.0")
+    .doc("data required for reloading documents after an auto-update"),
+  compactStruct("TimeOfLastUpdateCheck", fileTime, "timestamp of the last update check")
+    .structName("FILETIME")
+    .doc("data required to determine when SumatraPDF last checked for updates"),
 
-  setDoc(
-    mkField("OpenCountWeek", Int, 0, 'week count since 2011-01-01 needed to "age" openCount values in file history'),
+  field("OpenCountWeek", Int, 0, 'week count since 2011-01-01 needed to "age" openCount values in file history').doc(
     "value required to determine recency for the OpenCount value in FileStates",
   ),
-  notSaved(
-    setStructName(
-      mkCompactStruct("LastPrefUpdate", fileTime, "modification time of the preferences file when it was last read"),
-      "FILETIME",
-    ),
-  ),
-  notSaved(
-    mkField(
-      "DefaultDisplayModeEnum",
-      { name: "", ctype: "DisplayMode" },
-      "DM_AUTOMATIC",
-      "value of DefaultDisplayMode for internal usage",
-    ),
-  ),
-  notSaved(mkField("DefaultZoomFloat", Float, -1, "value of DefaultZoom for internal usage")),
-  setStructName(mkCompactStruct("PropWinPos", pointPos, "position of the document properties window"), "Point"),
+  compactStruct("LastPrefUpdate", fileTime, "modification time of the preferences file when it was last read")
+    .structName("FILETIME")
+    .notSaved(),
+  field(
+    "DefaultDisplayModeEnum",
+    { name: "", ctype: "DisplayMode" },
+    "DM_AUTOMATIC",
+    "value of DefaultDisplayMode for internal usage",
+  ).notSaved(),
+  field("DefaultZoomFloat", Float, -1, "value of DefaultZoom for internal usage").notSaved(),
+  compactStruct("PropWinPos", pointPos, "position of the document properties window").structName("Point"),
   // saved & honored, but hidden from the advanced settings dialog (edited via
   // the "Automatically check for updates" checkbox in Options instead)
-  setInternal(mkField("CheckForUpdates", Bool, true, "if true, we check once a day if an update is available")),
-  mkEmptyLine(),
-  mkComment("Settings below are not recognized by the current version"),
+  field("CheckForUpdates", Bool, true, "if true, we check once a day if an update is available").internal(),
+  emptyLine(),
+  comment("Settings below are not recognized by the current version"),
 ];
 
-const globalPrefsStruct = mkStruct("GlobalPrefs", globalPrefs, "Preferences are persisted in SumatraPDF-settings.txt");
+const globalPrefsStruct = struct("GlobalPrefs", globalPrefs, "Preferences are persisted in SumatraPDF-settings.txt");
 
-const themes: Field[] = [setVersion(mkArray("Themes", theme, "color themes"), "3.6")];
-const themesStruct = mkStruct("Themes", themes, "for parsing themes");
+const themes: Field[] = [array("Themes", theme, "color themes").ver("3.6")];
+const themesStruct = struct("Themes", themes, "for parsing themes");
 
 // ---------------------------------------------------------------------------
 // C code generation
