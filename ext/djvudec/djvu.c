@@ -719,6 +719,9 @@ uint8_t *djvu_bzz_decode_all(djvu_ctx *ctx, const uint8_t *data, size_t len,
 
 typedef struct {
     int parent;
+
+    int bbox_valid;
+    int bx0, by0, bx1, by1;
     djvu_bitmap bm;
 } jb2_shape;
 
@@ -2299,13 +2302,29 @@ static void shape2lib_set(jb2_codec *c, int shapeno, int libno)
     c->shape2lib[shapeno] = libno;
 }
 
+static void shape_bbox(jb2_shape *jshp, int may_write,
+                       int *xmin, int *ymin, int *xmax, int *ymax)
+{
+    if (!jshp->bbox_valid) {
+        int x0, y0, x1, y1;
+        djvu_bm_bbox(&jshp->bm, &x0, &y0, &x1, &y1);
+        if (may_write) {
+            jshp->bx0 = x0; jshp->by0 = y0; jshp->bx1 = x1; jshp->by1 = y1;
+            jshp->bbox_valid = 1;
+        }
+        *xmin = x0; *ymin = y0; *xmax = x1; *ymax = y1;
+        return;
+    }
+    *xmin = jshp->bx0; *ymin = jshp->by0; *xmax = jshp->bx1; *ymax = jshp->by1;
+}
+
 static int add_library(jb2_codec *c, int shapeno, jb2_shape *jshp)
 {
     int libno = c->nlib2shape;
     int xmin, ymin, xmax, ymax;
     iarr_push(c->ctx, &c->lib2shape, &c->nlib2shape, &c->cap_lib2shape, shapeno);
     shape2lib_set(c, shapeno, libno);
-    djvu_bm_bbox(&jshp->bm, &xmin, &ymin, &xmax, &ymax);
+    shape_bbox(jshp, 1, &xmin, &ymin, &xmax, &ymax);
     iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmin);
     iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymin);
     iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmax);
@@ -2323,7 +2342,8 @@ static void init_library(jb2_codec *c, jb2_image *jim)
         int xmin, ymin, xmax, ymax;
         iarr_push(c->ctx, &c->shape2lib, &c->nshape2lib, &c->cap_shape2lib, i);
         iarr_push(c->ctx, &c->lib2shape, &c->nlib2shape, &c->cap_lib2shape, i);
-        djvu_bm_bbox(&jshp->bm, &xmin, &ymin, &xmax, &ymax);
+
+        shape_bbox(jshp, 0, &xmin, &ymin, &xmax, &ymax);
         iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmin);
         iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymin);
         iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmax);
@@ -2767,6 +2787,12 @@ static jb2_image *jb2_decode_into(djvu_ctx *ctx, const uint8_t *data, size_t len
         djvu_free(ctx, c);
         djvu_jb2_free(ctx, jim);
         return NULL;
+    }
+    if (!is_image) {
+
+        int si, x0, y0, x1, y1;
+        for (si = 0; si < jim->nshapes; si++)
+            shape_bbox(&jim->shapes[si], 1, &x0, &y0, &x1, &y1);
     }
     compress_decoded_shapes(ctx, jim, is_image);
     codec_free(c);
