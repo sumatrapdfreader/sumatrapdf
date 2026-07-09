@@ -111,17 +111,16 @@ static TocItem* NewDjvuDecTocItem(TocItem* parent, Str title, Str link) {
 
 constexpr int kMaxConcurrentDjvuRenders = 3;
 
+// Per-render djvu_abort token: cancels only this render. Never use the
+// ctx-wide djvu_request_abort here -- the ctx is shared by all pages of the
+// document, so it also kills concurrent in-flight renders of other pages,
+// which RenderCache then mis-reports as permanently failed (blank pages).
 class DjvuDecAbortCookie : public AbortCookie {
   public:
-    djvu_ctx* ctx = nullptr;
-    bool abort = false;
+    djvu_abort ab;
 
-    void Abort() override {
-        abort = true;
-        if (ctx) {
-            djvu_request_abort(ctx);
-        }
-    }
+    DjvuDecAbortCookie() { djvu_abort_init(&ab); }
+    void Abort() override { djvu_abort_request(&ab); }
     void* GetData() override { return nullptr; }
 };
 
@@ -171,7 +170,7 @@ class EngineDjvuDec : public EngineBase {
         EngineDjvuDec* eng;
         bool acquired = false;
 
-        ScopedRenderSlot(EngineDjvuDec* e, bool* abortFlag) : eng(e) {
+        ScopedRenderSlot(EngineDjvuDec* e, const djvu_abort* ab) : eng(e) {
             for (;;) {
                 eng->renderSlotsLock.Lock();
                 if (eng->activeRenders < kMaxConcurrentDjvuRenders) {
@@ -181,7 +180,7 @@ class EngineDjvuDec : public EngineBase {
                     return;
                 }
                 eng->renderSlotsLock.Unlock();
-                if (abortFlag && *abortFlag) {
+                if (ab && ab->requested) {
                     return;
                 }
                 SleepInMs(10);
@@ -619,13 +618,14 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
 
 Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     DjvuDecAbortCookie* cookie = nullptr;
+    const djvu_abort* ab = nullptr;
     if (args.cookie_out) {
         cookie = new DjvuDecAbortCookie();
-        cookie->ctx = ctx;
         *args.cookie_out = cookie;
+        ab = &cookie->ab;
     }
-    ScopedRenderSlot renderSlot(this, cookie ? &cookie->abort : nullptr);
-    if (!renderSlot.acquired || (cookie && cookie->abort)) {
+    ScopedRenderSlot renderSlot(this, ab);
+    if (!renderSlot.acquired || (ab && ab->requested)) {
         return nullptr;
     }
 
@@ -662,7 +662,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     if (!pixels) {
         return nullptr;
     }
-    if (djvu_page_render_into(doc, pageNo - 1, subsample, pixels, sdx * comp) != 0) {
+    if (djvu_page_render_into_abortable(doc, pageNo - 1, subsample, pixels, sdx * comp, ab) != 0) {
         free(pixels);
         return nullptr;
     }

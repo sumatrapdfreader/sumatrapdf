@@ -45,6 +45,12 @@ void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable);
 
 void djvu_request_abort(djvu_ctx *ctx);
 
+typedef struct {
+    volatile int requested;
+} djvu_abort;
+void djvu_abort_init(djvu_abort *ab);
+void djvu_abort_request(djvu_abort *ab);
+
 djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len);
 void djvu_doc_close(djvu_doc *doc);
 
@@ -87,6 +93,12 @@ int djvu_page_render_info(djvu_doc *doc, int page_no, int subsample,
 
 int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
                           uint8_t *dst, int stride);
+
+djvu_image *djvu_page_render_abortable(djvu_doc *doc, int page_no,
+                                       int subsample, const djvu_abort *ab);
+int djvu_page_render_into_abortable(djvu_doc *doc, int page_no, int subsample,
+                                    uint8_t *dst, int stride,
+                                    const djvu_abort *ab);
 
 typedef enum {
     DJVU_PAGE_UNKNOWN  = 0,
@@ -244,20 +256,29 @@ struct djvu_ctx {
 };
 
 #if defined(_MSC_VER)
-static __declspec(thread) uint32_t djvu_render_epoch_tls;
+extern __declspec(thread) uint32_t djvu_render_epoch_tls;
+extern __declspec(thread) const djvu_abort *djvu_render_abort_tls;
 #else
-static __thread uint32_t djvu_render_epoch_tls;
+extern __thread uint32_t djvu_render_epoch_tls;
+extern __thread const djvu_abort *djvu_render_abort_tls;
 #endif
 
-static inline void djvu_render_begin(djvu_ctx *ctx)
+static inline void djvu_render_begin(djvu_ctx *ctx, const djvu_abort *ab)
 {
     if (ctx)
         djvu_render_epoch_tls = djvu_atomic_epoch_load(&ctx->abort_epoch);
+    djvu_render_abort_tls = ab;
+}
+
+static inline void djvu_render_end(void)
+{
+    djvu_render_abort_tls = NULL;
 }
 
 static inline int djvu_aborted(djvu_ctx *ctx)
 {
     if (!ctx) return 0;
+    if (djvu_render_abort_tls && djvu_render_abort_tls->requested) return 1;
     return djvu_atomic_epoch_load(&ctx->abort_epoch) != djvu_render_epoch_tls;
 }
 
@@ -4914,6 +4935,25 @@ void djvu_request_abort(djvu_ctx *ctx)
         djvu_atomic_epoch_bump(&ctx->abort_epoch);
 }
 
+#if defined(_MSC_VER)
+__declspec(thread) uint32_t djvu_render_epoch_tls;
+__declspec(thread) const djvu_abort *djvu_render_abort_tls;
+#else
+__thread uint32_t djvu_render_epoch_tls;
+__thread const djvu_abort *djvu_render_abort_tls;
+#endif
+
+void djvu_abort_init(djvu_abort *ab)
+{
+    if (ab) ab->requested = 0;
+}
+
+void djvu_abort_request(djvu_abort *ab)
+{
+
+    if (ab) ab->requested = 1;
+}
+
 static int parse_info(const uint8_t *p, size_t len, djvu_page_info *info)
 {
     int flag;
@@ -6126,8 +6166,8 @@ static djvu_image *apply_page_rotation(djvu_ctx *ctx, djvu_doc *doc, int page_no
     return img;
 }
 
-djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
-                                   djvu_render_timings *t)
+static djvu_image *page_render_timed_impl(djvu_doc *doc, int page_no, int subsample,
+                                          djvu_render_timings *t)
 {
     djvu_ctx *ctx;
     uint32_t form_off, sz;
@@ -6141,7 +6181,6 @@ djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
 
     if (!doc || page_no < 0 || page_no >= doc->npages) return NULL;
     ctx = doc->ctx;
-    djvu_render_begin(ctx);
     if (subsample < 1) subsample = 1;
     if (t) djvu_render_timings_clear(t);
     form_off = doc->pages[page_no].form_off;
@@ -6185,9 +6224,33 @@ done:
     return apply_page_rotation(ctx, doc, page_no, out, subsample, t);
 }
 
+djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
+                                   djvu_render_timings *t)
+{
+    djvu_image *out;
+
+    if (!doc) return NULL;
+    djvu_render_begin(doc->ctx, NULL);
+    out = page_render_timed_impl(doc, page_no, subsample, t);
+    djvu_render_end();
+    return out;
+}
+
 djvu_image *djvu_page_render(djvu_doc *doc, int page_no, int subsample)
 {
     return djvu_page_render_timed(doc, page_no, subsample, NULL);
+}
+
+djvu_image *djvu_page_render_abortable(djvu_doc *doc, int page_no, int subsample,
+                                       const djvu_abort *ab)
+{
+    djvu_image *out;
+
+    if (!doc) return NULL;
+    djvu_render_begin(doc->ctx, ab);
+    out = page_render_timed_impl(doc, page_no, subsample, NULL);
+    djvu_render_end();
+    return out;
 }
 
 static int render_plan(djvu_doc *doc, int page_no, int subsample,
@@ -6258,21 +6321,18 @@ static int blit_image_into(djvu_image *img, uint8_t *dst, int stride,
     return 0;
 }
 
-int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
-                          uint8_t *dst, int stride)
+static int page_render_into_impl(djvu_doc *doc, int page_no, int subsample,
+                                 uint8_t *dst, int stride)
 {
     djvu_ctx *ctx;
     int w, h, color, rotation, k, rc;
     djvu_format fmt;
     djvu_image *img;
 
-    if (!dst) return -1;
-    if (!doc || !doc->ctx) return -1;
     if (render_plan(doc, page_no, subsample, &w, &h, &fmt, &color, &rotation) != 0)
         return -1;
     if (subsample < 1) subsample = 1;
     ctx = doc->ctx;
-    djvu_render_begin(ctx);
     k = rotation_quarter_turns(rotation);
 
 
@@ -6297,10 +6357,35 @@ int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
     }
 
 
-    img = djvu_page_render(doc, page_no, subsample);
+    img = page_render_timed_impl(doc, page_no, subsample, NULL);
     if (!img) return -1;
     rc = blit_image_into(img, dst, stride, w, h, fmt);
     djvu_image_destroy(ctx, img);
+    return rc;
+}
+
+int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
+                          uint8_t *dst, int stride)
+{
+    int rc;
+
+    if (!dst || !doc || !doc->ctx) return -1;
+    djvu_render_begin(doc->ctx, NULL);
+    rc = page_render_into_impl(doc, page_no, subsample, dst, stride);
+    djvu_render_end();
+    return rc;
+}
+
+int djvu_page_render_into_abortable(djvu_doc *doc, int page_no, int subsample,
+                                    uint8_t *dst, int stride,
+                                    const djvu_abort *ab)
+{
+    int rc;
+
+    if (!dst || !doc || !doc->ctx) return -1;
+    djvu_render_begin(doc->ctx, ab);
+    rc = page_render_into_impl(doc, page_no, subsample, dst, stride);
+    djvu_render_end();
     return rc;
 }
 

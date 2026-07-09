@@ -99,6 +99,8 @@ EXPORTS
 	djvu_ctx_set_iw_max_chunks
 	djvu_ctx_set_bgr
 	djvu_request_abort
+	djvu_abort_init
+	djvu_abort_request
 	djvu_doc_open
 	djvu_doc_close
 	djvu_doc_page_count
@@ -107,6 +109,8 @@ EXPORTS
 	djvu_page_render
 	djvu_page_render_info
 	djvu_page_render_into
+	djvu_page_render_abortable
+	djvu_page_render_into_abortable
 	djvu_image_destroy
 	djvu_doc_page_id
 	djvu_doc_page_title

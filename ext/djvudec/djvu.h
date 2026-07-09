@@ -78,10 +78,26 @@ void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
    wants BGR (e.g. a Windows DIB) skip a separate RGB->BGR pass -- the swap is
    folded into the decoder's final output copy at no extra cost. */
 void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable);
-/* Bump the cooperative render-abort epoch on ctx. In-flight page renders that
-   already entered via djvu_page_render / djvu_page_render_into exit promptly;
-   renders that start afterward proceed normally. Thread-safe. */
+/* Bump the cooperative render-abort epoch on ctx. ALL in-flight page renders
+   on this ctx that already entered via djvu_page_render / djvu_page_render_into
+   exit promptly; renders that start afterward proceed normally. Thread-safe.
+   To cancel one render without disturbing concurrent renders of other pages
+   on the same ctx, use a djvu_abort token with the _abortable variants
+   instead. */
 void djvu_request_abort(djvu_ctx *ctx);
+
+/* Caller-owned cooperative abort token scoped to individual render calls.
+   Initialize with djvu_abort_init, pass to djvu_page_render_abortable /
+   djvu_page_render_into_abortable; calling djvu_abort_request (from any
+   thread) makes only the render(s) given this token exit promptly --
+   unlike djvu_request_abort, which aborts every in-flight render on the
+   ctx. The request is sticky: re-init the token to reuse it. The token must
+   stay valid until the render call it was passed to has returned. */
+typedef struct {
+    volatile int requested;
+} djvu_abort;
+void djvu_abort_init(djvu_abort *ab);
+void djvu_abort_request(djvu_abort *ab);
 
 /* ----- documents ----- */
 
@@ -147,6 +163,15 @@ int djvu_page_render_info(djvu_doc *doc, int page_no, int subsample,
    one pass. Returns 0 on success, -1 on error. */
 int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
                           uint8_t *dst, int stride);
+
+/* Same as djvu_page_render / djvu_page_render_into, but cancellable through
+   the caller's per-render djvu_abort token (see above; NULL behaves like the
+   plain variants). An aborted render returns NULL / -1. */
+djvu_image *djvu_page_render_abortable(djvu_doc *doc, int page_no,
+                                       int subsample, const djvu_abort *ab);
+int djvu_page_render_into_abortable(djvu_doc *doc, int page_no, int subsample,
+                                    uint8_t *dst, int stride,
+                                    const djvu_abort *ab);
 
 /* Page content classification (from the chunks present in the page form).
    Lets a caller pick a render format the way ddjvu_page_get_type does. */
