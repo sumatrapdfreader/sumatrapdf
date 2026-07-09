@@ -300,13 +300,14 @@ struct AdvancedSettingsWnd : Wnd {
 static AdvancedSettingsWnd* gAdvancedSettingsWnd = nullptr;
 
 AdvancedSettingsWnd::~AdvancedSettingsWnd() {
-    delete editFilter;
+    // editFilter, listBox and commentText are added to the layout; VBox owns
+    // and deletes its children, and the base Wnd::~Wnd() deletes `layout`, so
+    // they must not be deleted here (doing so is a double-free). editValue and
+    // dropDownValue are created on demand and are not part of the layout, so
+    // they are freed explicitly.
     delete editValue;
     delete dropDownValue;
-    delete commentText;
-    delete listBox;
     DeleteVecMembers(items);
-    delete layout;
     str::Free(dropDownOrigVal);
     if (fontBold) {
         DeleteObject(fontBold);
