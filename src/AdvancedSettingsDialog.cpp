@@ -168,13 +168,13 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
             comment = Str(fieldComment);
             fieldComment += len(comment) + 1;
         }
+        // internal settings (WindowState, OpenCountWeek, deprecated keys ...) are
+        // app-managed and not shown to the user. The generated metadata marks
+        // them, so no comment-string matching is needed here.
+        if (field.internal) {
+            continue;
+        }
         if (field.type == SettingType::Comment) {
-            // internal settings (WindowState, OpenCountWeek ...) follow this
-            // marker comment; they are managed by the app, not the user
-            Str marker = (const char*)field.value;
-            if (len(marker) > 0 && str::StartsWith(marker, "You're not expected to change")) {
-                return;
-            }
             continue;
         }
         u8* fieldPtr = base + field.offset;

@@ -32,9 +32,6 @@ Below is an explanation of what the different settings mean and what their defau
 If you add or remove lines with square brackets, **make sure to always add/remove square brackets in pairs**! Else you risk losing all the data following them.
 
 ```
-; if true, we check once a day if an update is available
-CheckForUpdates = true
-
 ; actual resolution of the main screen in DPI (if this value isn't positive, the
 ; system's UI setting is used) (introduced in version 2.5)
 CustomScreenDPI = 0
@@ -770,6 +767,9 @@ OpenCountWeek = 0
 
 ; position of the document properties window
 PropWinPos = 0 0
+
+; if true, we check once a day if an update is available
+CheckForUpdates = true
 ```
 
 ## Syntax for color values

@@ -32,6 +32,9 @@ interface Field {
   NotSaved: boolean;
   CName: string;
   Expert: boolean;
+  // saved & deserialized like any setting, but hidden from the advanced
+  // settings dialog (app-managed / deprecated-for-migration values)
+  Internal: boolean;
   DocComment: string;
   Version: string;
   StructName: string;
@@ -62,6 +65,7 @@ function mkField(name: string, typ: Type, def: any, comment: string): Field {
     NotSaved: false,
     CName: name !== "" ? toCName(name) : "",
     Expert: false,
+    Internal: false,
     DocComment: comment,
     Version: "2.3",
     StructName: "",
@@ -71,6 +75,11 @@ function mkField(name: string, typ: Type, def: any, comment: string): Field {
 
 function setExpert(f: Field): Field {
   f.Expert = true;
+  return f;
+}
+
+function setInternal(f: Field): Field {
+  f.Internal = true;
   return f;
 }
 
@@ -705,7 +714,6 @@ const globalPrefs: Field[] = [
   mkComment(""),
   mkEmptyLine(),
 
-  mkField("CheckForUpdates", Bool, true, "if true, we check once a day if an update is available"),
   setVersion(
     setExpert(
       mkField(
@@ -1197,6 +1205,9 @@ const globalPrefs: Field[] = [
   ),
   notSaved(mkField("DefaultZoomFloat", Float, -1, "value of DefaultZoom for internal usage")),
   setStructName(mkCompactStruct("PropWinPos", pointPos, "position of the document properties window"), "Point"),
+  // saved & honored, but hidden from the advanced settings dialog (edited via
+  // the "Automatically check for updates" checkbox in Options instead)
+  setInternal(mkField("CheckForUpdates", Bool, true, "if true, we check once a day if an update is available")),
   mkEmptyLine(),
   mkComment("Settings below are not recognized by the current version"),
 ];
@@ -1228,7 +1239,12 @@ function formatComment(comment: string, start: string): string[] {
 }
 
 function formatArrayLines(data: string[][]): string[] {
-  return data.map((ld) => `\t{ ${ld[0]}, ${ld[1]}, ${ld[2]} },`);
+  return data.map((ld) => {
+    // 4th element (internal flag) is only emitted when true; otherwise the
+    // FieldInfo::internal default (false) applies
+    const extra = ld.length > 3 ? `, ${ld[3]}` : "";
+    return `\t{ ${ld[0]}, ${ld[1]}, ${ld[2]}${extra} },`;
+  });
 }
 
 // escape a string so it can be embedded in a C string literal
@@ -1380,8 +1396,15 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
   }
   const fullName = struc.StructName + suffix;
   const fields = struc.Default as Field[];
+  // everything following the "You're not expected to change those manually"
+  // marker comment is app-managed state; mark it internal so it's hidden from
+  // the advanced settings dialog (without needing a runtime comment check)
+  let internalRest = false;
   for (const field of fields) {
     if (field.NotSaved) continue;
+    if (field.Type.name === "Comment" && field.Comment.startsWith("You're not expected to change")) {
+      internalRest = true;
+    }
     const dataLine: string[] = [];
     dataLine.push(`offsetof(${struc.StructName}, ${field.CName})`);
     dataLine.push(`SettingType::${field.Type.name}`);
@@ -1396,6 +1419,9 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
       built[field.StructName] = (built[field.StructName] || 0) + 1;
     } else if (field.Type.name === "Comment") {
       dataLine[0] = "(size_t)-1";
+    }
+    if (field.Internal || internalRest) {
+      dataLine.push("true");
     }
     data.push(dataLine);
   }

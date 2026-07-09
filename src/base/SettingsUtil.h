@@ -48,6 +48,9 @@ struct FieldInfo {
     SettingType type = SettingType::Struct;
     // default value for primitive types and pointer to StructInfo for complex ones
     intptr_t value = 0;
+    // app-managed / deprecated setting: serialized like any other, but hidden
+    // from the advanced settings dialog
+    bool internal = false;
 };
 
 struct StructInfo {
