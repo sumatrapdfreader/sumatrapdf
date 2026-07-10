@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include <chm_lib.h>
+#include <chm.h>
 #include "base/ByteReader.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
@@ -15,7 +15,8 @@
 #include "ChmFile.h"
 
 ChmFile::~ChmFile() {
-    chm_close(chmHandle);
+    // chm_ctx_free also closes the archive and frees the entries + their paths
+    chm_ctx_free(chmCtx);
     str::Free(title);
     str::Free(tocPath);
     str::Free(indexPath);
@@ -24,12 +25,25 @@ ChmFile::~ChmFile() {
     str::Free(data);
 }
 
+// find an entry by path. CHM path resolution is case-insensitive (the old
+// chm_resolve_object was too), which some files rely on - e.g. bug-842 has
+// home=HTML/PCAbout.htm in #SYSTEM but the entry is /Html/PCAbout.htm.
+static chm_entry* ChmLookupPath(const ChmFile* chm, Str path) {
+    for (int i = 0; i < chm->nEntries; i++) {
+        chm_entry* e = chm->entries[i];
+        if (e->path && str::EqI(Str(e->path), path)) {
+            return e;
+        }
+    }
+    return nullptr;
+}
+
 // Resolve a CHM object by its path, normalizing the leading slash and
 // tolerating backslashes in URLs the way Microsoft's HTML Help viewer does.
-// Returns true and fills `info` on success.
-static bool ChmResolveObject(struct chmFile* chmHandle, Str fileName, struct chmUnitInfo* info) {
+// Returns the entry (owned by chmCtx) or nullptr.
+static chm_entry* ChmResolveObject(const ChmFile* chm, Str fileName) {
     if (!fileName) {
-        return false;
+        return nullptr;
     }
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp(StrL("/"), fileName);
@@ -37,37 +51,36 @@ static bool ChmResolveObject(struct chmFile* chmHandle, Str fileName, struct chm
         fileName = Str(fileName.s + 2, fileName.len - 2);
     }
 
-    int res = chm_resolve_object(chmHandle, fileName.s, info);
-    if (CHM_RESOLVE_SUCCESS != res && str::ContainsChar(fileName, '\\')) {
+    chm_entry* e = ChmLookupPath(chm, fileName);
+    if (!e && str::ContainsChar(fileName, '\\')) {
         TempStr fileNameTemp = str::DupTemp(fileName);
         str::TransCharsInPlace(fileNameTemp, StrL("\\"), StrL("/"));
-        res = chm_resolve_object(chmHandle, fileNameTemp.s, info);
+        e = ChmLookupPath(chm, fileNameTemp);
     }
-    return CHM_RESOLVE_SUCCESS == res;
+    return e;
 }
 
 bool ChmFile::HasData(Str fileName) const {
-    struct chmUnitInfo info{};
-    return ChmResolveObject(chmHandle, fileName, &info);
+    return ChmResolveObject(this, fileName) != nullptr;
 }
 
 TempStr ChmFile::GetDataTemp(Str fileName) const {
-    struct chmUnitInfo info{};
-    if (!ChmResolveObject(chmHandle, fileName, &info)) {
+    chm_entry* e = ChmResolveObject(this, fileName);
+    if (!e) {
         return {};
     }
-    if (info.length > 128 * 1024 * 1024) {
+    if (e->length > 128 * 1024 * 1024) {
         // limit to 128 MB
         return {};
     }
-    int n = (int)info.length;
+    int n = (int)e->length;
 
     // +1 for 0 terminator for C string compatibility
     u8* d = AllocArrayTemp<u8>(n + 1);
     if (!d) {
         return {};
     }
-    if (!chm_retrieve_object(chmHandle, &info, d, 0, n)) {
+    if (chm_read_entry(chmCtx, e, d) != (int64_t)e->length) {
         return {};
     }
 
@@ -319,10 +332,13 @@ void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
 
 bool ChmFile::Load(Str path) {
     data = file::ReadFile(path);
-    chmHandle = chm_open(data.s, (size_t)data.len);
-    if (!chmHandle) {
+    chmCtx = chm_ctx_new(nullptr, nullptr, nullptr, nullptr);
+    if (!chmCtx || !chm_open(chmCtx, (const uint8_t*)data.s, (size_t)data.len)) {
         return false;
     }
+    // the data buffer must outlive chmCtx (chm_open doesn't copy it); it does,
+    // it's freed in ~ChmFile after chm_ctx_free
+    nEntries = chm_get_entries(chmCtx, &entries);
 
     ParseWindowsData();
     if (!ParseSystemData()) {
@@ -381,17 +397,14 @@ TempStr ChmFile::GetHomePath() const {
     return homePath;
 }
 
-static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
-    if (len(info->path) == 0) {
-        return CHM_ENUMERATOR_CONTINUE;
-    }
-    StrVec* paths = (StrVec*)data;
-    paths->Append(info->path);
-    return CHM_ENUMERATOR_CONTINUE;
-}
-
 void ChmFile::GetAllPaths(StrVec* v) const {
-    chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, v);
+    // equivalent of the old CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL
+    for (int i = 0; i < nEntries; i++) {
+        chm_entry* e = entries[i];
+        if (e->is_file && e->is_normal && e->path && e->path[0]) {
+            v->Append(e->path);
+        }
+    }
 }
 
 /* The html looks like:

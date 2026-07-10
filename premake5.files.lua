@@ -1106,13 +1106,6 @@ function engines_files()
   })
 end
 
-function chm_files()
-  files_in_dir("ext/CHMLib/src", {
-    "chm_lib.c",
-    "lzx.c",
-  })
-end
-
 -- cmark-gfm: markdown parser used by mupdf's source/html/md.c (FZ_ENABLE_MD).
 -- Parser-only subset matching mupdf's Makelists CMARKGFM_SRC (no CLI main.c,
 -- no commonmark/latex/man/xml/plaintext renderers). Generated config headers

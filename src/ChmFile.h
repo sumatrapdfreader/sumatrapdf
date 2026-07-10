@@ -8,8 +8,14 @@ TempStr SmartToUtf8Temp(Str s, uint codepage);
 enum class DocProp : u8;
 enum class FileType : u8;
 
+struct chm_ctx;
+struct chm_entry;
+
 struct ChmFile {
-    struct chmFile* chmHandle = nullptr;
+    chm_ctx* chmCtx = nullptr;
+    // entries and their paths are owned by chmCtx (freed by chm_ctx_free)
+    chm_entry** entries = nullptr;
+    int nEntries = 0;
 
     // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
     Str title;

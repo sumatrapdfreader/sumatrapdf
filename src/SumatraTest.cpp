@@ -24,10 +24,12 @@
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
 
-#include <chm_lib.h>
-#include "lzx.h"
+#include <chm.h>
 #include "EbookBase.h"
 #include "ChmFile.h"
+
+// internal LZX test hook, defined in chm.c but not exposed in chm.h
+extern "C" int LZX_test_pretree_make_decode_table(void);
 
 Str CleanRemoteDestName(Str destName);
 
@@ -233,18 +235,9 @@ TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
     return ToStrTemp(out);
 }
 
-static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx) {
-    if (!ui || len(ui->path) == 0) {
-        return CHM_ENUMERATOR_CONTINUE;
-    }
-    auto* paths = (StrVec*)ctx;
-    paths->Append(ui->path);
-    return CHM_ENUMERATOR_CONTINUE;
-}
-
 // Headless CHM exercise test. Runs an isolated PRETREE make_decode_table check (so
-// ASan can catch the lzx.c overflow on a heap buffer), opens the chm via chm_open,
-// enumerates and retrieves objects, and optionally loads ChmFile / EngineChm.
+// ASan can catch the lzx overflow on a heap buffer), opens the chm via chm_open,
+// reads every entry, and optionally loads ChmFile / EngineChm.
 // Used by tests/issue-chm-lzx.ts; not meant for end users.
 TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
@@ -266,34 +259,35 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
         out.Append(fmt("open=FAILED path=%s\n", chmPath));
         ok = false;
     } else {
-        struct chmFile* h = chm_open((const char*)(u8*)fileData.s, (size_t)fileData.len);
-        if (!h) {
+        chm_ctx* h = chm_ctx_new(nullptr, nullptr, nullptr, nullptr);
+        if (!h || !chm_open(h, (const u8*)fileData.s, (size_t)fileData.len)) {
             out.Append(fmt("chm_open=FAILED path=%s\n", chmPath));
             ok = false;
+            chm_ctx_free(h);
         } else {
             out.Append("chm_open=OK\n");
 
             int retrieveOk = 0;
             int retrieveFail = 0;
-            StrVec paths;
-            chm_enumerate(h, CHM_ENUMERATE_ALL, ChmTestEnumerate, &paths);
+            chm_entry** entries = nullptr;
+            int nEntries = chm_get_entries(h, &entries);
+            struct chm_entry* payloadEntry = nullptr;
 
-            for (int i = 0; i < len(paths); i++) {
-                Str path = paths[i];
-                struct chmUnitInfo ui{};
-                if (chm_resolve_object(h, path.s, &ui) != CHM_RESOLVE_SUCCESS) {
+            for (int i = 0; i < nEntries; i++) {
+                chm_entry* e = entries[i];
+                if (e->path && str::Eq(e->path, "/payload")) {
+                    payloadEntry = e;
+                }
+                if (e->length == 0 || e->length > 128 * 1024 * 1024) {
                     continue;
                 }
-                if (ui.length == 0 || ui.length > 128 * 1024 * 1024) {
-                    continue;
-                }
-                u8* buf = AllocArray<u8>((int)ui.length + 1);
+                u8* buf = AllocArray<u8>((int)e->length + 1);
                 if (!buf) {
                     retrieveFail++;
                     continue;
                 }
-                int64_t got = chm_retrieve_object(h, &ui, buf, 0, (int64_t)ui.length);
-                if (got == (int64_t)ui.length) {
+                int64_t got = chm_read_entry(h, e, buf);
+                if (got == (int64_t)e->length) {
                     retrieveOk++;
                 } else {
                     retrieveFail++;
@@ -301,21 +295,22 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 free(buf);
             }
 
-            struct chmUnitInfo payloadUi{};
-            if (chm_resolve_object(h, "/payload", &payloadUi) == CHM_RESOLVE_SUCCESS) {
-                u8 payloadBuf[16]{};
-                int64_t got = chm_retrieve_object(h, &payloadUi, payloadBuf, 0, 1);
-                if (got > 0) {
-                    out.Append("payload_retrieve=ATTEMPTED\n");
-                } else {
-                    out.Append("payload_retrieve=FAILED\n");
-                }
+            if (payloadEntry && payloadEntry->length > 0 && payloadEntry->length <= 128 * 1024 * 1024) {
+                // chm_read_entry reads the whole entry, so the buffer must be
+                // at least entry->length bytes; this decompresses /payload and
+                // lets ASan catch the LZX overflow (issue-chm-lzx)
+                u8* payloadBuf = AllocArray<u8>((int)payloadEntry->length);
+                int64_t got = payloadBuf ? chm_read_entry(h, payloadEntry, payloadBuf) : 0;
+                out.Append(got > 0 ? "payload_retrieve=ATTEMPTED\n" : "payload_retrieve=FAILED\n");
+                free(payloadBuf);
+            } else if (payloadEntry) {
+                out.Append("payload_retrieve=FAILED\n");
             } else {
                 out.Append("payload_retrieve=NOTFOUND\n");
             }
 
-            out.Append(fmt("paths=%d retrieve_ok=%d retrieve_fail=%d\n", len(paths), retrieveOk, retrieveFail));
-            chm_close(h);
+            out.Append(fmt("paths=%d retrieve_ok=%d retrieve_fail=%d\n", nEntries, retrieveOk, retrieveFail));
+            chm_ctx_free(h);
         }
     }
 
