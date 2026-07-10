@@ -72,6 +72,8 @@ struct PrintData {
         this->printer = printer;
         this->advData = advData;
         this->rotation = rotation;
+        // prefer an independent engine for the print thread: Clone() and (as a
+        // fallback) re-loading from the file both re-read the document from disk.
         this->engine = engine->Clone();
         if (!this->engine) {
             // re-create engine from file to avoid sharing with render cache
@@ -80,6 +82,17 @@ struct PrintData {
             if (path) {
                 this->engine = CreateEngineFromFile(path, nullptr, false);
             }
+        }
+        if (!this->engine) {
+            // Clone and reload both failed - almost always because the file was
+            // moved or deleted after opening (issue #5790). The document is still
+            // loaded in memory, so print from the original engine directly.
+            // EngineMupdf is safe to use from the print thread (Ctx() hands out a
+            // per-thread fz_context) and printing only reads, so sharing it with
+            // the UI thread is fine. Before this, printing failed silently.
+            logf("PrintData: clone/reload failed, printing from the original in-memory engine\n");
+            this->engine = engine;
+            this->engine->AddRef();
         }
         if (!this->engine) {
             logf("PrintData: failed to create engine for printing\n");
