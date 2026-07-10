@@ -1735,7 +1735,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     } else {
         fs = nullptr;
     }
-    delete prevCtrl;
 
     if (fs) {
         ReportIf(!win->IsDocLoaded());
@@ -1755,12 +1754,16 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
 
     // DisplayModel needs a valid zoom value before any relayout
-    // caused by showing/hiding UI elements happends
+    // caused by showing/hiding UI elements happends.
+    // Relayout before tearing down prevCtrl so a WM_PAINT pumped during
+    // the teardown never calls SetViewPortSize with an invalid zoom.
     if (win->AsFixed()) {
         win->AsFixed()->Relayout(zoomVirtual, rotation);
     } else if (win && win->ctrl && win->IsDocLoaded()) {
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
     }
+
+    delete prevCtrl;
 
 #if defined(ENABLE_REDRAW_ON_RELOAD)
     // TODO: why is this needed?

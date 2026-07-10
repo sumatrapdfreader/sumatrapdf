@@ -1250,6 +1250,12 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     }
 
     totalViewPortSize = newViewPortSize;
+    // during document swap in ReplaceDocumentInCurrentTab a WM_PAINT can
+    // arrive before a valid zoom is set; relayout would corrupt the state
+    if (!IsValidZoom(zoomVirtual)) {
+        cb->UpdateScrollbars(canvasSize);
+        return;
+    }
     Relayout(zoomVirtual, rotation);
 
     if (isDocReady) {
