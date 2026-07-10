@@ -528,8 +528,8 @@ void FileWatcherWaitForShutdown(void) {
     ReportIf(gWatchedFiles != nullptr);
     ReportIf(gWatchedDirs != nullptr);
 
-    DWORD timeStart = GetTickCount();
-    while (GetRemovalsPending() > 0 && (GetTickCount() - timeStart) < 15000) {
+    u64 timeStart = GetTickCount64();
+    while (GetRemovalsPending() > 0 && (GetTickCount64() - timeStart) < 15000) {
         Sleep(100);
     }
     if (IsDebuggerPresent() && GetRemovalsPending() != 0) {

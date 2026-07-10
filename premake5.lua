@@ -194,7 +194,7 @@ function clang_conf()
 end
 
 function warnings_as_errors()
-  filter { "configurations:not ReleaseAnalyze" and "options:not with-clang" }
+  filter { "configurations:not ReleaseAnalyze", "options:not with-clang" }
       fatalwarnings { "All" }
   filter {}
 end

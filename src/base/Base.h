@@ -136,7 +136,12 @@
 #endif
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
+// /analyze flags a bogus C6385 (invalid read) inside GdiplusFontCollection.h;
+// it's a false positive in the SDK header, so silence it at the include site.
+#pragma warning(push)
+#pragma warning(disable : 6385)
 #include <gdiplus.h>
+#pragma warning(pop)
 #undef NOMINMAX
 #undef min
 #undef max

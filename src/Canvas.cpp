@@ -174,9 +174,14 @@ class TextDataObject : public IDataObject {
         hText = GlobalAlloc(GMEM_MOVEABLE, cb);
         if (hText) {
             void* p = GlobalLock(hText);
-            memcpy(p, text.s, text.len * sizeof(WCHAR));
-            ((WCHAR*)p)[text.len] = 0;
-            GlobalUnlock(hText);
+            if (p) {
+                memcpy(p, text.s, text.len * sizeof(WCHAR));
+                ((WCHAR*)p)[text.len] = 0;
+                GlobalUnlock(hText);
+            } else {
+                GlobalFree(hText);
+                hText = nullptr;
+            }
         }
     }
     ~TextDataObject() {
@@ -217,6 +222,16 @@ class TextDataObject : public IDataObject {
         }
         void* src = GlobalLock(hText);
         void* dst = GlobalLock(hCopy);
+        if (!src || !dst) {
+            if (src) {
+                GlobalUnlock(hText);
+            }
+            if (dst) {
+                GlobalUnlock(hCopy);
+            }
+            GlobalFree(hCopy);
+            return E_OUTOFMEMORY;
+        }
         memcpy(dst, src, cb);
         GlobalUnlock(hCopy);
         GlobalUnlock(hText);
@@ -405,6 +420,10 @@ class ImageDataObject : public IDataObject {
                 return E_OUTOFMEMORY;
             }
             auto* fgd = (FILEGROUPDESCRIPTORW*)GlobalLock(h);
+            if (!fgd) {
+                GlobalFree(h);
+                return E_OUTOFMEMORY;
+            }
             fgd->cItems = 1;
             fgd->fgd[0].dwFlags = FD_FILESIZE | FD_ATTRIBUTES;
             fgd->fgd[0].dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
@@ -427,6 +446,16 @@ class ImageDataObject : public IDataObject {
                 }
                 void* src = GlobalLock(hPngData);
                 void* dst = GlobalLock(hCopy);
+                if (!src || !dst) {
+                    if (src) {
+                        GlobalUnlock(hPngData);
+                    }
+                    if (dst) {
+                        GlobalUnlock(hCopy);
+                    }
+                    GlobalFree(hCopy);
+                    return E_OUTOFMEMORY;
+                }
                 memcpy(dst, src, pngSize);
                 GlobalUnlock(hCopy);
                 GlobalUnlock(hPngData);
@@ -442,6 +471,10 @@ class ImageDataObject : public IDataObject {
                     return E_OUTOFMEMORY;
                 }
                 void* src = GlobalLock(hPngData);
+                if (!src) {
+                    stream->Release();
+                    return E_OUTOFMEMORY;
+                }
                 ULONG written = 0;
                 stream->Write(src, (ULONG)pngSize, &written);
                 GlobalUnlock(hPngData);
@@ -460,6 +493,10 @@ class ImageDataObject : public IDataObject {
                 return E_OUTOFMEMORY;
             }
             auto* effect = (DWORD*)GlobalLock(h);
+            if (!effect) {
+                GlobalFree(h);
+                return E_OUTOFMEMORY;
+            }
             *effect = DROPEFFECT_COPY;
             GlobalUnlock(h);
             pMedium->tymed = TYMED_HGLOBAL;

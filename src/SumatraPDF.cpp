@@ -2246,6 +2246,8 @@ void ShowMainWindow(MainWindow* win, int windowState) {
              win->captionRect.dy);
     }
 
+    // the `true ||` is deliberate (always foreground); silence /analyze C6286/C6240
+#pragma warning(suppress : 6286 6240)
     if (len(gWindows) == 1 && (true || IsDebuggerPresent())) {
         HwndToForeground(win->hwndFrame);
     }
@@ -4606,6 +4608,8 @@ static void OpenFile(MainWindow* win) {
     // several dozen file paths and hope that this is enough
     // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
     ofn.nMaxFile = MAX_PATH * 100;
+    // the `false &&` disable is deliberate; silence /analyze C6237
+#pragma warning(suppress : 6237)
     if (false && !IsWindowsVistaOrGreater()) {
 #if 0
         ofn.lpfnHook = FileOpenHook;
@@ -6996,6 +7000,8 @@ void DebugCorruptMemory() {
     free(d);
     // this triggers ntdll.dll!RtlReportCriticalFailure()
     // cppcheck-suppress doubleFree
+    // the double free is deliberate; silence /analyze C6001
+#pragma warning(suppress : 6001)
     free(s);
 }
 

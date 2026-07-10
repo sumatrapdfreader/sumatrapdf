@@ -1676,6 +1676,8 @@ static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
 
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/1666
+            // the `false &&` disable is deliberate; silence /analyze C6237
+#pragma warning(suppress : 6237)
             if (false && !pdf_is_embedded_file(ctx, fs)) {
                 continue;
             }
@@ -1740,6 +1742,8 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, Str pa
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
 
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/1666
+            // the `false &&` disable is deliberate; silence /analyze C6237
+#pragma warning(suppress : 6237)
             if (false && !pdf_is_embedded_file(ctx, fs)) {
                 continue;
             }
