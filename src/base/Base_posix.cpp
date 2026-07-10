@@ -38,3 +38,10 @@ int AtomicIntInc(AtomicInt* p) {
 int AtomicIntDec(AtomicInt* p) {
     return __atomic_sub_fetch(p, 1, __ATOMIC_SEQ_CST);
 }
+
+// portable stand-in for Win32 GetTickCount64(): monotonic milliseconds.
+u64 GetTickCount64() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ((u64)ts.tv_sec * 1000) + ((u64)ts.tv_nsec / 1000000);
+}

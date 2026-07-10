@@ -2795,7 +2795,7 @@ static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
 struct ExtractProgressState {
     NotificationWnd* wnd;
     Str path;
-    DWORD lastUpdate;
+    u64 lastUpdate = 0;
 };
 
 static void OnExtractProgress(ExtractProgressState* s, ArchiveExtractProgress* p) {
@@ -2803,7 +2803,7 @@ static void OnExtractProgress(ExtractProgressState* s, ArchiveExtractProgress* p
     // so the final count is displayed; intermediate callbacks post at
     // most once every 100 ms.
     bool isFinal = (p->nTotal > 0 && p->nDecoded == p->nTotal);
-    DWORD now = GetTickCount();
+    u64 now = GetTickCount64();
     if (!isFinal && (now - s->lastUpdate) < 100) {
         return;
     }

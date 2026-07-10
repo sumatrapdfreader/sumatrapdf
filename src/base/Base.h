@@ -280,6 +280,12 @@ int AtomicIntDec(AtomicInt* p);
 int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
 
+#if !OS_WIN
+// milliseconds since some unspecified epoch, monotonic; a portable stand-in for
+// the Win32 GetTickCount64() (which <windows.h> already declares on Windows).
+u64 GetTickCount64();
+#endif
+
 struct Arena;
 
 struct Str {

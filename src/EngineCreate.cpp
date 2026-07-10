@@ -49,14 +49,14 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
 }
 
 struct CbxCopyProgressState {
-    DWORD lastUpdate;
+    u64 lastUpdate = 0;
 };
 
 static void OnCbxCopyProgress(CbxCopyProgressState* s, file::CopyProgress* p) {
     // throttle to once every 100 ms; the "done" callback (bytesCopied ==
     // bytesTotal) always fires because CopyFileExW issues a final update.
     bool isFinal = (p->bytesTotal > 0 && p->bytesCopied == p->bytesTotal);
-    DWORD now = GetTickCount();
+    u64 now = GetTickCount64();
     if (!isFinal && (now - s->lastUpdate) < 100) {
         return;
     }

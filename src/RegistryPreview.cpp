@@ -215,7 +215,7 @@ static TempStr GetNewPdfPreviewLogFilePathTemp() {
     GetLocalTime(&st);
     // unique part: pid plus low bits of tick, so concurrent preview hosts that
     // start in the same minute don't collide
-    DWORD uniq = (GetCurrentProcessId() << 16) ^ (GetTickCount() & 0xffff);
+    DWORD uniq = (GetCurrentProcessId() << 16) ^ (DWORD)(GetTickCount64() & 0xffff);
     TempStr name = fmt("%s%02d-%02d.%02d-%02d.%08x.txt", Str(kPdfPreviewLogPrefix), (int)st.wMonth, (int)st.wDay,
                        (int)st.wHour, (int)st.wMinute, uniq);
     return path::JoinTemp(dir.s, name.s);

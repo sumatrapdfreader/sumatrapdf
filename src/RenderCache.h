@@ -89,7 +89,7 @@ struct PageRenderRequest {
     RectF pageRect; // calculated from TilePosition
     bool abort = false;
     AbortCookie* abortCookie = nullptr;
-    DWORD timestamp = 0;
+    u64 timestamp = 0;
 
     // set by render thread before calling renderFinishedCb
     Pixmap* bmp = nullptr;
@@ -127,7 +127,7 @@ struct CacheChangeInfo {
     int rotation = 0;
     TilePosition tile;
     i64 bytes = 0;
-    DWORD timestamp = 0;
+    u64 timestamp = 0;
     char fileName[128]{};
 };
 
@@ -136,8 +136,8 @@ struct FinishedRequestInfo {
     float zoom = 0;
     int rotation = 0;
     TilePosition tile;
-    DWORD timestamp = 0;  // when it was requested
-    DWORD finishedAt = 0; // when it finished
+    u64 timestamp = 0;  // when it was requested
+    u64 finishedAt = 0; // when it finished
     bool aborted = false;
     int predictiveOriginPageNo = 0;
     int nPredictiveRequests = 0;

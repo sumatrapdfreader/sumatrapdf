@@ -17,8 +17,6 @@
 #include "DisplayModel.h"
 #include "RenderCache.h"
 
-#pragma warning(disable : 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
-
 // CONSERVE_MEMORY sets the compile-time default for gConserveMemory. When defined,
 // cached page bitmaps for non-visible pages are freed aggressively. Undefining it
 // keeps more pages resident (higher GDI memory use, fewer re-renders).
@@ -681,7 +679,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     }
     newRequest->abort = false;
     newRequest->abortCookie = nullptr;
-    newRequest->timestamp = GetTickCount();
+    newRequest->timestamp = GetTickCount64();
     newRequest->bmp = nullptr;
     newRequest->errorCode = 0;
     newRequest->predictiveOriginPageNo = 0;
@@ -721,13 +719,13 @@ int RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile)
     for (int i = 0; i < nRenderThreads; i++) {
         auto* cr = curReqs[i];
         if (cr && cr->pageNo == pageNo && cr->dm == dm && cr->tile == tile) {
-            return GetTickCount() - cr->timestamp;
+            return (int)(GetTickCount64() - cr->timestamp);
         }
     }
 
     for (int i = 0; i < requestCount; i++) {
         if (requests[i].pageNo == pageNo && requests[i].dm == dm && requests[i].tile == tile) {
-            return GetTickCount() - requests[i].timestamp;
+            return (int)(GetTickCount64() - requests[i].timestamp);
         }
     }
 
@@ -1123,7 +1121,7 @@ static void SerializePredictive(str::Builder& s, int originPageNo, int nPred, co
     s.Append("]");
 }
 
-static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, DWORD now) {
+static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, u64 now) {
     int ageMs = (int)(now - r->timestamp);
     s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label, r->pageNo, r->zoom,
                  r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs));
@@ -1138,7 +1136,7 @@ static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, D
     s.Append("\r\n");
 }
 
-static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, DWORD now) {
+static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, u64 now) {
     int durMs = (int)(r->finishedAt - r->timestamp);
     int agoMs = (int)(now - r->finishedAt);
     Str label = r->aborted ? StrL("ABORTED") : StrL("DONE");
@@ -1158,7 +1156,7 @@ void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
     fi.rotation = r->rotation;
     fi.tile = r->tile;
     fi.timestamp = r->timestamp;
-    fi.finishedAt = GetTickCount();
+    fi.finishedAt = GetTickCount64();
     fi.aborted = r->abort;
     fi.predictiveOriginPageNo = r->predictiveOriginPageNo;
     fi.nPredictiveRequests = r->nPredictiveRequests;
@@ -1178,7 +1176,7 @@ void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
 
 void RenderCache::SerializeQueueState(str::Builder& s) {
     ScopedRecursiveMutex scope(&requestAccess);
-    DWORD now = GetTickCount();
+    u64 now = GetTickCount64();
     int nInProgress = 0;
     for (int i = 0; i < nRenderThreads; i++) {
         if (curReqs[i]) {
@@ -1333,7 +1331,7 @@ void RenderCache::RecordCacheChange(bool isAdd, BitmapCacheEntry* entry) {
     ci.rotation = entry->rotation;
     ci.tile = entry->tile;
     ci.bytes = entry->bitmap ? PixmapByteSize(entry->bitmap) : 0;
-    ci.timestamp = GetTickCount();
+    ci.timestamp = GetTickCount64();
     SetDmFileName(entry->dm, ci.fileName, dimof(ci.fileName));
     cacheHistoryNext = (cacheHistoryNext + 1) % kCacheHistorySize;
     if (cacheHistoryCount < kCacheHistorySize) {
@@ -1342,7 +1340,7 @@ void RenderCache::RecordCacheChange(bool isAdd, BitmapCacheEntry* entry) {
     UpdateCacheInfo();
 }
 
-static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, DWORD now) {
+static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, u64 now) {
     Str label = c->isAdd ? StrL("ADD") : StrL("REMOVE");
     int agoMs = (int)(now - c->timestamp);
     s.Append(fmt("%-7s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  %8s  %6dms ago", label, c->pageNo,
@@ -1355,7 +1353,7 @@ static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, DWORD now)
 
 void RenderCache::SerializeCacheState(str::Builder& s) {
     ScopedRecursiveMutex scope(&cacheAccess);
-    DWORD now = GetTickCount();
+    u64 now = GetTickCount64();
     i64 totalBytes = 0;
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
