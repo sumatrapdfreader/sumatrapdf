@@ -1782,6 +1782,39 @@ int CmpPageLabelInfo(const void* a, const void* b) {
     return ((PageLabelInfo*)a)->startAt - ((PageLabelInfo*)b)->startAt;
 }
 
+// Some PDFs (often scanned ebooks) assign a separate PageLabels entry to
+// almost every page with only a custom prefix and no numbering style (/S).
+// These aren't meaningful page numbers and break the toolbar display.
+static bool IsPerPagePrefixOnlyLabels(Vec<PageLabelInfo>& data, int pageCount) {
+    int n = len(data);
+    if (n < 16 || pageCount <= 0 || n < pageCount / 4) {
+        return false;
+    }
+    int prefixOnly = 0;
+    for (int i = 0; i < n; i++) {
+        PageLabelInfo& pli = data[i];
+        if (len(pli.type) == 0 && pli.prefix) {
+            prefixOnly++;
+        }
+    }
+    return prefixOnly * 4 >= n * 3;
+}
+
+// Scanned ebooks converted from .pdg image collections leak internal image
+// file names into PageLabels; treat those as no labels at all.
+static bool PageLabelsContainInternalPdgNames(StrVec* labels, int pageCount) {
+    int n = labels->size;
+    int samples = std::min(n, pageCount);
+    samples = std::min(samples, 32);
+    for (int i = 0; i < samples; i++) {
+        Str label = labels->At(i);
+        if (str::ContainsI(label, StrL(".pdg"))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::Eq(type, "D")) {
         return fmt("%s%d", prefix, pageNo);
@@ -1858,6 +1891,9 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         // this is the default case, no need for special treatment
         return nullptr;
     }
+    if (IsPerPagePrefixOnlyLabels(data, pageCount)) {
+        return nullptr;
+    }
 
     StrVec* labels = new StrVec();
     for (int i = 0; i < pageCount; i++) {
@@ -1885,6 +1921,10 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         labels->SetAt(idx, "");
     }
 
+    if (PageLabelsContainInternalPdgNames(labels, pageCount)) {
+        delete labels;
+        return nullptr;
+    }
     return labels;
 }
 struct PageTreeStackItem {
@@ -4278,7 +4318,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     }
 
     // @gen-start docprop-pdf-info
-// clang-format off
+    // clang-format off
 static SeqStrNum pdfPropNames =
     "Title\0" "\x02"
     "Author\0" "\x04"
@@ -4289,8 +4329,8 @@ static SeqStrNum pdfPropNames =
     "Creator\0" "\x0e"
     "Producer\0" "\x16"
     "\0";
-// clang-format on
-// @gen-end docprop-pdf-info
+    // clang-format on
+    // @gen-end docprop-pdf-info
     Str pdfPropName = SeqStrNumStrByNumber(pdfPropNames, (i64)prop);
     if (!pdfPropName) {
         return {};
@@ -4680,7 +4720,11 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    return (*pageLabels)[pageNo - 1];
+    TempStr res = (*pageLabels)[pageNo - 1];
+    if (len(res) == 0 || str::ContainsI(res, StrL(".pdg"))) {
+        return EngineBase::GetPageLabeTemp(pageNo);
+    }
+    return res;
 }
 
 int EngineMupdf::GetPageByLabel(Str label) const {
