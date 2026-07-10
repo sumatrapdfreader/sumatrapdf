@@ -273,7 +273,7 @@ additions (we generate via premake).
 | _(pending)_ | B. Offline dictionary lookup | — | |
 | _(pending)_ | C. Ask AI | — | |
 | _(pending)_ | D. Smart PDF dark mode | — | |
-| _(pending)_ | E. CAD line enhancement | — | |
+| 2026-07-10 | E. CAD line enhancement (`735894b11`, `b058ba496`, `38006d0e8`) | **merged** | as `211f989d1`; ported by hand against master (fork base predates Pixmap/PCH/Str refactors). Key adaptations: `EngineeringDrawingEnhance` mode pushed via setter from `LoadSettings` (gDisableFormJavaScript pattern) instead of reading gGlobalPrefs in PdfCadDetect.cpp — so no `PdfCadEnhanceNoOp.cpp` needed; real files compile everywhere (incl. mac) with mode defaulting to Off outside the app. Fixed fork's read-after-free of analysis-device stats (stats now caller-owned) and their unguarded fz_rethrow out of DetectCadPdf. Added 12 missing fz_* exports to libmupdf.def (fork's approach was the NoOp stub instead). Skipped: their RenderCache/UpdateAfterThemeChange hunks (dark-mode toolbar fix, belongs to D). Setting editable in Advanced Settings dialog (enum values added). |
 | _(pending)_ | F. Themes & chrome | — | |
 | _(pending)_ | G. Ebook engine work | — | |
 | _(pending)_ | H. Selection toolbar | — | |
