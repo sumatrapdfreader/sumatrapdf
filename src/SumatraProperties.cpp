@@ -373,13 +373,15 @@ static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
         }
     }
     if (len(s) > 0) {
-        TempStr propName = PropNameTemp(prop);
-        TempStr label = fmt("%s:", propName);
-        AppendProp(out, label, val);
+        // found a display label (e.g. "Application:"); show its translation
+        Str trans = trans::GetTranslation(s);
+        AppendProp(out, trans, val);
         return;
     }
-    Str trans = trans::GetTranslation(s);
-    AppendProp(out, trans, val);
+    // no display label: fall back to the raw property name
+    TempStr propName = PropNameTemp(prop);
+    TempStr label = fmt("%s:", propName);
+    AppendProp(out, label, val);
 }
 
 static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath) {
