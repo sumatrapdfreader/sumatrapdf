@@ -13,6 +13,7 @@ struct LabelWithCloseWnd;
 struct Splitter;
 struct Tooltip;
 struct TreeView;
+struct SelectionToolbar;
 struct ILayout;
 struct TabsCtrl;
 struct TocTree;
@@ -427,6 +428,10 @@ struct MainWindow {
     FrameRateWnd* frameRateWnd = nullptr;
 
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
+
+    // small floating toolbar shown after a text selection in fixed-page
+    // documents (controlled by the Annotations.SelectionToolbar setting)
+    SelectionToolbar* selectionToolbar = nullptr;
 
     // set at the beginning of CloseWindow() to prevent
     // processing commands while closing (e.g. reentrancy

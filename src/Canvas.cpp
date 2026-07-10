@@ -46,6 +46,7 @@
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
+#include "SelectionToolbar.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 #include "TextToSpeech.h"
@@ -2211,6 +2212,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     if (win->showSelection) {
         PaintSelection(win, hdc);
     }
+    // keep the floating selection toolbar aligned with the selection while
+    // scrolling/zooming; hides itself when the selection is gone or off-screen
+    UpdateSelectionToolbarPosition(win);
 
     PaintReadAloudHighlight(win, hdc);
 

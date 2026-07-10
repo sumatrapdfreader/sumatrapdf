@@ -32,6 +32,7 @@
 #include "GrokBuild.h"
 #include "CodexBuild.h"
 #include "MainWindow.h"
+#include "SelectionToolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "SearchAndDDE.h"
@@ -148,6 +149,8 @@ MainWindow::~MainWindow() {
     str::FreePtr(&findCountPendingText);
     str::FreePtr(&browserFindTerm);
     ClearFindMatches(this);
+
+    DeleteSelectionToolbar(this);
 
     delete linkHandler;
     delete buffer;

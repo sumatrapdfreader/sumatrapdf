@@ -1178,6 +1178,7 @@
     <ClInclude Include="..\src\Screenshot.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
+    <ClInclude Include="..\src\SelectionToolbar.h" />
     <ClInclude Include="..\src\SelectionTranslate.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
@@ -1400,6 +1401,7 @@
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
+    <ClCompile Include="..\src\SelectionToolbar.cpp" />
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />

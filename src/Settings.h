@@ -224,6 +224,10 @@ struct Annotations {
     // default author for created annotations, use (none) to not add an
     // author at all. If not set will use Windows user name
     Str defaultAuthor;
+    // if true, a small floating toolbar with selection actions (copy, read
+    // aloud, highlight etc.) pops up after selecting text. Set to false to
+    // disable it
+    bool selectionToolbar;
 };
 
 // list of additional external viewers for various file types. See [docs
@@ -890,17 +894,20 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
+    {offsetof(Annotations, selectionToolbar), SettingType::Bool, true},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 12, gAnnotationsFields,
+    sizeof(Annotations), 13, gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor",
+    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor\0SelectionToolbar",
     "highlight annotation color\0underline annotation color\0squiggly annotation color\0strike out annotation "
     "color\0text color of free text annotation\0background color of free text annotation\0opacity of free text "
     "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0size "
     "of free text annotation\0width of free text annotation border\0text icon annotation color\0type of text "
     "annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.\0default author "
-    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name"};
+    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name\0if true, "
+    "a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. "
+    "Set to false to disable it"};
 
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},

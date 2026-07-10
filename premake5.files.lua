@@ -900,6 +900,7 @@ function sumatrapdf_files()
     "OverlayScrollbar.*",
     "Screenshot.*",
     "Selection.*",
+    "SelectionToolbar.*",
     "SelectionTranslate.*",
     "Settings.h",
     "SettingsStructs.*",

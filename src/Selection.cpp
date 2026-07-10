@@ -24,6 +24,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Selection.h"
+#include "SelectionToolbar.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
@@ -92,6 +93,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 }
 
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
+    HideSelectionToolbar(win);
     win->showSelection = false;
     win->selectionMeasure = SizeF();
     WindowTab* tab = win->CurrentTab();
@@ -452,4 +454,10 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     // runs from PaintSelection on each frame, which flickered the toolbar)
     ToolbarUpdateStateForWindow(win, false);
     ScheduleRepaint(win, 0);
+
+    // show the floating selection toolbar for a finished text selection
+    // (self-guards: needs a non-empty on-screen text selection)
+    if (!aborted) {
+        ShowSelectionToolbar(win);
+    }
 }
