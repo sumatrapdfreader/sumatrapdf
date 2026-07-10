@@ -371,7 +371,7 @@ int
     file_header->Characteristics = IMAGE_FILE_LINE_NUMS_STRIPPED;
 
     /* Populate data section header */
-    strncpy(section_header->Name, ".data", IMAGE_SIZEOF_SHORT_NAME);
+    memcpy(section_header->Name, ".data", 5);
     section_header->SizeOfRawData = (uint32_t)size + 4;
     section_header->PointerToRawData = sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER);
     section_header->Characteristics =
@@ -390,7 +390,7 @@ int
     /* Populate symbol table */
     if (short_label) {
         symbol_table[0].N.ShortName[0] = '_';
-        strcpy(&symbol_table[0].N.ShortName[addUnderscore], label);
+        memcpy(&symbol_table[0].N.ShortName[addUnderscore], label, strlen(label));
     } else {
         symbol_table[0].N.LongName.Zeroes = 0;
         symbol_table[0].N.LongName.Offset = sizeof(IMAGE_STRINGS);
@@ -404,8 +404,8 @@ int
 
     if (short_size) {
         symbol_table[1].N.ShortName[1] = '_';
-        strcpy(&symbol_table[1].N.ShortName[addUnderscore], label);
-        strcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], SIZE_LABEL_SUFFIX);
+        memcpy(&symbol_table[1].N.ShortName[addUnderscore], label, strlen(label));
+        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], SIZE_LABEL_SUFFIX, strlen(SIZE_LABEL_SUFFIX));
     } else {
         symbol_table[1].N.LongName.Zeroes = 0;
         symbol_table[1].N.LongName.Offset =
@@ -420,14 +420,14 @@ int
     string_table->TotalSize = sizeof(IMAGE_STRINGS);
     if (!short_label) {
         string_table->Strings[0] = '_';
-        strcpy(&string_table->Strings[0] + addUnderscore, label);
+        memcpy(&string_table->Strings[0] + addUnderscore, label, strlen(label) + 1);
         string_table->TotalSize += addUnderscore + (uint32_t)strlen(label) + 1;
     }
     if (!short_size) {
         string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] = '_';
-        strcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] + addUnderscore, label);
+        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] + addUnderscore, label, strlen(label));
         string_table->TotalSize += addUnderscore + (uint32_t)strlen(label);
-        strcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)], SIZE_LABEL_SUFFIX);
+        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)], SIZE_LABEL_SUFFIX, strlen(SIZE_LABEL_SUFFIX) + 1);
         string_table->TotalSize += (uint32_t)strlen(SIZE_LABEL_SUFFIX) + 1;
     }
 
@@ -441,7 +441,9 @@ int
         fprintf(stderr, "Couldn't write file '%s'.\n", argv[2]);
         goto err;
     }
-    printf("Successfully created COFF object file '%s'\n", argv[2]);
+    fputs("Successfully created COFF object file '", stdout);
+    fputs(argv[2], stdout);
+    fputs("'\n", stdout);
 
     r = 0;
 
