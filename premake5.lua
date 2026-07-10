@@ -277,6 +277,36 @@ function dll_app_objdir()
   end)
 end
 
+-- precompiled header for base/Base.h (~10% of compile time). base/Base.h is the
+-- first include in almost every .cpp, so precompiling it speeds up clean builds.
+-- Files that include mupdf/windows headers before it (or don't include it at
+-- all - external code, .c files) opt out via NoPCH.
+function setup_base_pch()
+  pchheader "base/Base.h"
+  pchsource "src/BasePch.cpp"
+  files { "src/BasePch.cpp" }
+  filter { "files:ext/**" }
+    flags { "NoPCH" }
+  filter { "files:**.c" }
+    flags { "NoPCH" }
+  filter {}
+  for _, f in ipairs({
+    "src/AppUnitTests.cpp", -- has #if defined(DEBUG) before base/Base.h
+    "src/Annotation.cpp",
+    "src/EditAnnotations.cpp",
+    "src/EngineDjvuDec.cpp",
+    "src/EngineMupdf.cpp",
+    "src/MuPDF_Exports.cpp",
+    "src/PdfCreator.cpp",
+    "src/Toolbar.cpp",
+    "src/TranslationLangs.cpp",
+  }) do
+    filter { "files:" .. f }
+      flags { "NoPCH" }
+  end
+  filter {}
+end
+
 function static_linker_intermediates()
   mapfile "Off"
   for_each_out_config(function(platform, config, outDir)
@@ -1165,6 +1195,8 @@ workspace "SumatraPDF"
     engines_files()
     sumatrapdf_files()
 
+    setup_base_pch()
+
     debugdir(".")
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -1252,6 +1284,8 @@ workspace "SumatraPDF"
     filter "configurations:Debug or DebugFull"
       files { "src/AppUnitTests.cpp" }
     filter {}
+
+    setup_base_pch()
 
     webview_conf()
 

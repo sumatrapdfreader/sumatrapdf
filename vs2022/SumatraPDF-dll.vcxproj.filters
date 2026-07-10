@@ -524,6 +524,9 @@
     <ClCompile Include="..\src\AvifReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\BasePch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
       <Filter>src</Filter>
     </ClCompile>
