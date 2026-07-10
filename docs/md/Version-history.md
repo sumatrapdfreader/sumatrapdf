@@ -98,6 +98,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - text in some PDFs that use embedded subset fonts naming glyphs like `G45` (with no `ToUnicode` map) is now extracted and searchable: previously such text came out as `�` and couldn't be found (e.g. searching "Emergency" failed). mupdf now recovers Unicode from those glyph names the way pdf.js does (fixes #3219)
 - add `AllowExternalImages` advanced setting (off by default): when on, a PDF may display an image stored in a separate file referenced by name (an "external image stream"); the file must sit next to the PDF. Off by default for security, matching Acrobat (fixes #3731)
 - add **Set Inverse Search Command Line** (`Ctrl + K` [command palette](Command-Palette.md)): opens a standalone dialog to configure the SyncTeX inverse-search command (with detected TeX editors in a drop-down and a Help link to [LaTeX integration](LaTeX-integration.md)); OK saves `InverseSearchCmdLine` and enables TeX enhancements, Cancel leaves settings unchanged. Works from the home page without an open document
+- clearer rendering of CAD / engineering-drawing PDFs: hairline strokes get a zoom-aware minimum width and typical CAD-export grays are darkened toward Acrobat-like contrast, so drawings stay readable when zoomed out. Applied automatically when a drawing is detected (PDF/E marker, CAD authoring tool in the metadata, or content heuristics; screenshot/raster and WPS-style hairline exports are handled too); control it with the `EngineeringDrawingEnhance` advanced setting (`off` / `auto` / `on`) or per document with **Toggle Engineering Drawing Enhancement** (`Ctrl + K` command palette). Ported from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
 
 **New commands:**
 
@@ -142,6 +143,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdTabGroupRestore` : "Restore Tab Group"
 - `CmdTabGroupSave` : "Save Tab Group"
 - `CmdToggleDjvuEngine` : "Toggle DjVu Engine" (command palette shows the target, e.g. "set to libdjvu")
+- `CmdToggleEngineeringDrawingEnhance` : "Toggle Engineering Drawing Enhancement" — per-document override of the `EngineeringDrawingEnhance` advanced setting
 - `CmdToggleWindowsPreviewer` : "Toggle Windows Previewer"
 - `CmdToggleWindowsSearchFilter` : "Toggle Windows Search Filter"
 - `CmdTranslateSelectionWithClaudeCode` : "Translate Selection with Claude Code"

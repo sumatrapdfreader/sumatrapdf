@@ -18,6 +18,7 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "PdfCadDetect.h"
 #include "SumatraConfig.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
@@ -268,6 +269,7 @@ bool LoadSettings() {
     // takes effect for PDFs loaded after this (startup, and on settings reload)
     EngineMupdfSetDisableJavaScript(gGlobalPrefs->disableJavaScript);
     EngineMupdfSetAllowExternalImages(gGlobalPrefs->allowExternalImages);
+    SetEngineeringDrawingEnhanceMode(gGlobalPrefs->engineeringDrawingEnhance);
 
     if (trans::ValidateLangCode(gprefs->uiLanguage)) {
         SetCurrentLang(gprefs->uiLanguage);

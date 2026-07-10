@@ -246,6 +246,7 @@ export const commands = [
     "CmdCommandPaletteFavorites", "Command Palette: Favorites",
     "CmdNavigateFilesInFolder", "Navigate Files in Folder",
     "CmdDebugToggleCacheInfo", "Debug: Toggle Cache Info",
+    "CmdToggleEngineeringDrawingEnhance", "Toggle Engineering Drawing Enhancement",
     "CmdNone", "Do nothing",
 ];
 

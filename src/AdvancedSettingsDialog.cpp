@@ -45,6 +45,7 @@ static const char* gEnumDisplayMode[] = {
 static const char* gEnumToolbar[] = {"show", "hide", "overlay", nullptr};
 static const char* gEnumToolbarPosition[] = {"top", "bottom", nullptr};
 static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden", nullptr};
+static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
 
 struct EnumSettingDef {
     const char* name; // dotted path of the setting
@@ -55,6 +56,7 @@ static const EnumSettingDef gEnumSettings[] = {
     {"Toolbar", gEnumToolbar},
     {"ToolbarPosition", gEnumToolbarPosition},
     {"Scrollbars", gEnumScrollbars},
+    {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
 };
 // clang-format on
 

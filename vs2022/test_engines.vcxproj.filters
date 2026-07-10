@@ -12,6 +12,8 @@
     <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
+    <ClInclude Include="..\src\PdfCadDetect.h" />
+    <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
     <ClInclude Include="..\src\TreeModel.h" />
   </ItemGroup>
   <ItemGroup>
@@ -30,6 +32,8 @@
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\PdfCadDetect.cpp" />
+    <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp" />
     <ClCompile Include="..\src\TreeModel.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp">

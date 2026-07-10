@@ -297,6 +297,8 @@ function setup_base_pch()
     "src/EngineDjvuDec.cpp",
     "src/EngineMupdf.cpp",
     "src/MuPDF_Exports.cpp",
+    "src/PdfCadDetect.cpp",
+    "src/PdfCadEnhanceDevice.cpp",
     "src/PdfCreator.cpp",
     "src/Toolbar.cpp",
     "src/TranslationLangs.cpp",

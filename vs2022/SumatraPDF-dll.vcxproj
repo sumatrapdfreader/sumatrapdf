@@ -1184,6 +1184,8 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\OverlayScrollbar.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
+    <ClInclude Include="..\src\PdfCadDetect.h" />
+    <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\PdfTools.h" />
@@ -1388,6 +1390,12 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\PdfCadDetect.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\PdfCreator.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

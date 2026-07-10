@@ -253,6 +253,7 @@ static SeqStrings gCommandNames =
     "CmdCommandPaletteFavorites\0"
     "CmdNavigateFilesInFolder\0"
     "CmdDebugToggleCacheInfo\0"
+    "CmdToggleEngineeringDrawingEnhance\0"
     "CmdNone\0"
     "\0";
 
@@ -499,6 +500,7 @@ static i32 gCommandIds[] = {
     CmdCommandPaletteFavorites,
     CmdNavigateFilesInFolder,
     CmdDebugToggleCacheInfo,
+    CmdToggleEngineeringDrawingEnhance,
     CmdNone,
 };
 
@@ -745,6 +747,7 @@ SeqStrings gCommandDescriptions =
     "Command Palette: Favorites\0"
     "Navigate Files in Folder\0"
     "Debug: Toggle Cache Info\0"
+    "Toggle Engineering Drawing Enhancement\0"
     "Do nothing\0"
     "\0";
 // clang-format on

@@ -983,6 +983,8 @@
     <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
+    <ClInclude Include="..\src\PdfCadDetect.h" />
+    <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h" />
@@ -1002,6 +1004,8 @@
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\PdfCadDetect.cpp" />
+    <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />

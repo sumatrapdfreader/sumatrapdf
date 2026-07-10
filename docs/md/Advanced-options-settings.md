@@ -211,6 +211,10 @@ UIFontSize = 0
 ; version 3.6)
 DisableAntiAlias = false
 
+; CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is
+; detected) or on (introduced in version 3.7)
+EngineeringDrawingEnhance = auto
+
 ; if true, disables auto-linking of URLs and email addresses found in PDF text
 DisableAutoLinks = false
 

@@ -1102,6 +1102,8 @@ function engines_files()
     "HtmlFormatter.*",
     "MobiDoc.*",
     "PalmDbReader.*",
+    "PdfCadDetect.*",
+    "PdfCadEnhanceDevice.*",
     "PdfCreator.*",
   })
 end
@@ -1533,6 +1535,10 @@ function test_engines_files()
     "src/JxlReader.cpp",
     "src/MobiDoc.cpp",
     "src/PalmDbReader.cpp",
+    "src/PdfCadDetect.cpp",
+    "src/PdfCadDetect.h",
+    "src/PdfCadEnhanceDevice.cpp",
+    "src/PdfCadEnhanceDevice.h",
     "src/WebpReader.cpp",
     "src/TreeModel.cpp",
     "src/TreeModel.h",
@@ -1575,6 +1581,8 @@ function pdf_preview_files()
     "mui/TextRender.*",
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",
+    "PdfCadDetect.*",
+    "PdfCadEnhanceDevice.*",
     "PdfCreator.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
@@ -1606,6 +1614,8 @@ function search_filter_files()
     "MobiDoc.*",
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",
+    "PdfCadDetect.*",
+    "PdfCadEnhanceDevice.*",
     "RegistrySearchFilter.*",
     "SumatraLog.*",
   })

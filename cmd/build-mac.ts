@@ -528,6 +528,8 @@ const TEST_ENGINES_SOURCES = [
   "src/GumboHelpers.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
+  "src/PdfCadDetect.cpp",
+  "src/PdfCadEnhanceDevice.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];
@@ -549,6 +551,8 @@ const MAC_APP_SOURCES = [
   "src/GumboHelpers.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
+  "src/PdfCadDetect.cpp",
+  "src/PdfCadEnhanceDevice.cpp",
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",
   "src/TreeModel.cpp",

@@ -8528,6 +8528,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdToggleEngineeringDrawingEnhance: {
+            DisplayModel* fixedDm = win->AsFixed();
+            if (fixedDm) {
+                EngineMupdfToggleCadEnhance(fixedDm->GetEngine());
+                MainWindowRerender(win, true);
+            }
+            break;
+        }
+
         case CmdNavigateBack:
             if (ctrl) {
                 ctrl->Navigate(-1);
