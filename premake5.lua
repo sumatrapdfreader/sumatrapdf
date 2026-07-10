@@ -1173,11 +1173,15 @@ workspace "SumatraPDF"
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
-    -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
-    -- so suppressions can only come from the environment.
-    -- the path must be quoted: asan parses ':' as flag separator, so an
-    -- unquoted "C:\..." drive letter breaks parsing
-    debugenvs { 'ASAN_OPTIONS=suppressions="$(SolutionDir)..\\asan.supp"' }
+    -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
+    -- so asan options can only come from the environment.
+    -- windows_hook_legacy_allocators=0: the Windows print dialog (PrintDlgEx ->
+    -- Windows.Graphics.Printing / prntvpt) LocalAllocs/LocalFrees and GlobalLocks
+    -- in ways asan's legacy-allocator interceptors mishandle, causing false-
+    -- positive crashes; disabling that hooking routes them to the real allocators.
+    -- the suppressions path must be quoted: asan parses ':' as flag separator, so
+    -- an unquoted "C:\..." drive letter breaks parsing
+    debugenvs { 'ASAN_OPTIONS=windows_hook_legacy_allocators=0:suppressions="$(SolutionDir)..\\asan.supp"' }
 
     includedirs { "ext/darkmodelib/include" }
     defines { "_DARKMODELIB_NO_INI_CONFIG" }
@@ -1265,11 +1269,15 @@ workspace "SumatraPDF"
     includedirs { "ext/darkmodelib/include" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
-    -- MSVC's dynamic asan runtime ignores __asan_default_suppressions(),
-    -- so suppressions can only come from the environment.
-    -- the path must be quoted: asan parses ':' as flag separator, so an
-    -- unquoted "C:\..." drive letter breaks parsing
-    debugenvs { 'ASAN_OPTIONS=suppressions="$(SolutionDir)..\\asan.supp"' }
+    -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
+    -- so asan options can only come from the environment.
+    -- windows_hook_legacy_allocators=0: the Windows print dialog (PrintDlgEx ->
+    -- Windows.Graphics.Printing / prntvpt) LocalAllocs/LocalFrees and GlobalLocks
+    -- in ways asan's legacy-allocator interceptors mishandle, causing false-
+    -- positive crashes; disabling that hooking routes them to the real allocators.
+    -- the suppressions path must be quoted: asan parses ':' as flag separator, so
+    -- an unquoted "C:\..." drive letter breaks parsing
+    debugenvs { 'ASAN_OPTIONS=windows_hook_legacy_allocators=0:suppressions="$(SolutionDir)..\\asan.supp"' }
 
     includedirs { "ext/darkmodelib/include" }
     defines { "_DARKMODELIB_NO_INI_CONFIG" }

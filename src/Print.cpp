@@ -1140,6 +1140,44 @@ static HGLOBAL GlobalMemDup(const void* data, size_t n) {
     return hGlobal;
 }
 
+// Build a DEVNAMES handle for the given device (printer) name. PrintDlgEx wants
+// hDevMode and hDevNames to be a consistent pair; passing hDevMode alone makes
+// COMDLG32 GlobalLock the missing (null) hDevNames, which is harmless normally
+// but crashes under ASan's GlobalLock interceptor. The offsets are in WCHARs
+// from the start of the structure; PrintDlgEx overwrites this on return, so the
+// driver/output hints just need to be present, not exact.
+static HGLOBAL GlobalMemDevNames(const WCHAR* device) {
+    const WCHAR* driver = L"winspool";
+    const WCHAR* output = L"";
+    size_t headerW = sizeof(DEVNAMES) / sizeof(WCHAR);
+    size_t driverLen = wcslen(driver);
+    size_t deviceLen = wcslen(device);
+    size_t outputLen = wcslen(output);
+    size_t total = headerW + (driverLen + 1) + (deviceLen + 1) + (outputLen + 1);
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, total * sizeof(WCHAR));
+    if (!hGlobal) {
+        return nullptr;
+    }
+    auto* dn = (DEVNAMES*)GlobalLock(hGlobal);
+    if (!dn) {
+        GlobalFree(hGlobal);
+        return nullptr;
+    }
+    auto* base = (WCHAR*)dn;
+    size_t off = headerW;
+    dn->wDriverOffset = (WORD)off;
+    memcpy(base + off, driver, (driverLen + 1) * sizeof(WCHAR));
+    off += driverLen + 1;
+    dn->wDeviceOffset = (WORD)off;
+    memcpy(base + off, device, (deviceLen + 1) * sizeof(WCHAR));
+    off += deviceLen + 1;
+    dn->wOutputOffset = (WORD)off;
+    memcpy(base + off, output, (outputLen + 1) * sizeof(WCHAR));
+    dn->wDefault = 0;
+    GlobalUnlock(hGlobal);
+    return hGlobal;
+}
+
 // the PrinterDefaults.Collate setting (issue #1558).
 // returns 1 to force collate, 0 to force no-collate, -1 to leave the driver default
 static int CollateDefaultPref() {
@@ -1286,21 +1324,34 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
     }
 
-    // seed the dialog's Collate checkbox from the PrinterDefaults.Collate setting
-    // (issue #1558). When there's no remembered DEVMODE yet (first print of the
-    // session), seed one from the default printer so the preference still shows.
+    // Always hand PrintDlgEx a DEVMODE: seed one from the default printer when
+    // there's no remembered one. This also seeds the Collate checkbox from the
+    // PrinterDefaults.Collate setting (issue #1558). Crucially, starting from a
+    // null hDevMode/hDevNames makes PrintDlgEx GlobalLock a null handle
+    // internally, which crashes under ASan's GlobalLock interceptor.
+    if (!pdex.hDevMode) {
+        TempStr defName = GetDefaultPrinterNameTemp();
+        Printer* seed = defName ? NewPrinter(defName) : nullptr;
+        if (seed && seed->devMode) {
+            auto p = seed->devMode;
+            pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+        }
+        delete seed;
+    }
+
     int collatePref = CollateDefaultPref();
     if (collatePref >= 0) {
-        if (!pdex.hDevMode) {
-            TempStr defName = GetDefaultPrinterNameTemp();
-            Printer* seed = defName ? NewPrinter(defName) : nullptr;
-            if (seed && seed->devMode) {
-                auto p = seed->devMode;
-                pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
-            }
-            delete seed;
-        }
         SetDevModeCollate(pdex.hDevMode, collatePref);
+    }
+
+    // pair the hDevMode with a matching hDevNames so the two are consistent and
+    // PrintDlgEx never GlobalLocks a null handle (see the ASan note above)
+    if (pdex.hDevMode && !pdex.hDevNames) {
+        auto* dmp = (DEVMODE*)GlobalLock(pdex.hDevMode);
+        if (dmp) {
+            pdex.hDevNames = GlobalMemDevNames(dmp->dmDeviceName);
+            GlobalUnlock(pdex.hDevMode);
+        }
     }
 
     HRESULT res = PrintDlgExW(&pdex);
