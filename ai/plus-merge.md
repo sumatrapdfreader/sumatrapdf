@@ -279,5 +279,12 @@ additions (we generate via premake).
 | _(pending)_ | H. Selection toolbar | — | |
 | _(pending)_ | I. Home page list view | — | |
 | _(pending)_ | J. Auto-update changes | — | fork-specific URLs; ideas only |
-| _(pending)_ | K. Standalone bug fixes | — | analyzed 2026-07-10, see section K verdicts; awaiting merge decision |
+| 2026-07-10 | K: TOC scrollbar capture stuck (`5491f5520`) | **merged** | ported TreeView.cpp hunk only, as `a1b40ef1f` |
+| 2026-07-10 | K: junk .pdg PDF page labels (`8cc39e227` part) | **merged** | hand-ported to Str-based page labels, as `dc36c20ce` |
+| 2026-07-10 | K: bin2coff strcpy overflow (`231e4124e`) | **merged** | clean cherry-pick, as `dbc91d370`; skipped their C test file (doesn't fit our test conventions) |
+| 2026-07-10 | K: render-teardown hardening (`ac8a2f73b` residual parts) | **merged** | IsValidZoom guard + relayout-before-delete, as `622dcb8d0`; core race already fixed in master; skipped their WaitForRenderingComplete (duplicate) and CloseTab pauseRendering (covered by CloseWindow/~DisplayModel) |
+| 2026-07-10 | K: multi-monitor DPI fonts (`21ef059f7`+`1369facda`) | **merged** | re-implemented against master's font cache, as `1c1fccdec`; per-DPI font cache + SystemParametersInfoForDpi + WM_DPICHANGED re-apply; skipped their Dpi.cpp rewrite (master's Dpi_win.cpp already better) |
+| 2026-07-10 | K: no-tabs open crash (`edebf7dbe`) | **skip** | structurally prevented by master's load-then-create-tab design; optional guards not taken |
+| 2026-07-10 | K: compiler warnings (`c7a20f168`) | **skip** | warnings are in fork-only code |
+| 2026-07-10 | K: dark TOC scrollbar (`2183086c1`) | **skip** | master's recursive dark-mode pass already themes nested trees |
 | 2026-07-10 | L. Branding / fork-only | **skip** | readmes, renames, versioning, translations blobs, vs2022 files |
