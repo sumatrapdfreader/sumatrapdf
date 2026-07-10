@@ -2133,11 +2133,6 @@ class PasswordCloner : public PasswordUI {
 
 EngineBase* EngineMupdf::Clone() {
     ScopedRecursiveMutex scope(&docLock);
-    if (!FilePath()) {
-        // before port we could clone streams but it's no longer possible
-        logf("EngineMupdf::Clone() failed: no file path\n");
-        return nullptr;
-    }
     auto ctx = Ctx();
     // use this document's encryption key (if any) to load the clone
     PasswordCloner* pwdUI = nullptr;
@@ -2147,11 +2142,30 @@ EngineBase* EngineMupdf::Clone() {
         }
     }
 
-    EngineMupdf* clone = new EngineMupdf();
-    bool ok = clone->Load(FilePath(), pwdUI);
-    if (!ok) {
-        logf("EngineMupdf::Clone() failed: Load('%s') failed\n", FilePath());
-        delete clone;
+    // prefer re-loading from the file: it streams large documents on demand
+    // rather than copying them, and is the cheapest path when the file is present.
+    EngineMupdf* clone = nullptr;
+    if (FilePath()) {
+        clone = new EngineMupdf();
+        if (!clone->Load(FilePath(), pwdUI)) {
+            delete clone;
+            clone = nullptr;
+        }
+    }
+    // The file may have been moved or deleted after opening. mupdf can no longer
+    // re-open a file stream, but documents loaded fully into memory (those under
+    // kMaxMemoryFileSize) still hold their bytes, so clone from those instead of
+    // the missing file. This is what let e.g. printing a moved/deleted PDF keep
+    // working before the port (issue #5790); GetFileData() is PDF-only.
+    if (!clone) {
+        Str data = GetFileData();
+        if (data) {
+            clone = (EngineMupdf*)CreateEngineMupdfFromData(data, FilePath(), pwdUI);
+        }
+        str::Free(data);
+    }
+    if (!clone) {
+        logf("EngineMupdf::Clone() failed for '%s'\n", FilePath() ? FilePath() : StrL("(null)"));
         delete pwdUI;
         return nullptr;
     }
