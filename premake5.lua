@@ -280,15 +280,15 @@ end
 -- precompiled header for base/Base.h (~10% of compile time). base/Base.h is the
 -- first include in almost every .cpp, so precompiling it speeds up clean builds.
 -- Files that include mupdf/windows headers before it (or don't include it at
--- all - external code, .c files) opt out via NoPCH.
+-- all - external code, .c files) opt out via enablepch "Off".
 function setup_base_pch()
   pchheader "base/Base.h"
   pchsource "src/BasePch.cpp"
   files { "src/BasePch.cpp" }
   filter { "files:ext/**" }
-    flags { "NoPCH" }
+    enablepch "Off"
   filter { "files:**.c" }
-    flags { "NoPCH" }
+    enablepch "Off"
   filter {}
   for _, f in ipairs({
     "src/AppUnitTests.cpp", -- has #if defined(DEBUG) before base/Base.h
@@ -302,7 +302,7 @@ function setup_base_pch()
     "src/TranslationLangs.cpp",
   }) do
     filter { "files:" .. f }
-      flags { "NoPCH" }
+      enablepch "Off"
   end
   filter {}
 end
