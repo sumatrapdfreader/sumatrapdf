@@ -239,11 +239,23 @@ EXPORTS
 	fz_clip_image_mask
 	fz_begin_mask
 	fz_end_mask
+	fz_end_mask_tr
 	fz_begin_group
 	fz_end_group
 	fz_begin_tile
 	fz_begin_tile_id
+	fz_begin_tile_tid
 	fz_end_tile
+	fz_render_flags
+	fz_set_default_colorspaces
+	fz_begin_layer
+	fz_end_layer
+	fz_begin_structure
+	fz_end_structure
+	fz_begin_metatext
+	fz_end_metatext
+	fz_graphics_min_line_width
+	fz_set_graphics_min_line_width
 	fz_drop_device
 	fz_enable_device_hints
 	fz_disable_device_hints

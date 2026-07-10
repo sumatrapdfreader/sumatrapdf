@@ -27,6 +27,7 @@ extern "C" {
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
+#include "PdfCadEnhanceDevice.h"
 #include "EngineAll.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
@@ -2217,6 +2218,12 @@ EngineBase* EngineMupdf::Clone() {
 
     clone->disableAntiAlias = disableAntiAlias;
     clone->disableAutoLinks = disableAutoLinks;
+    clone->cadDetectDone = cadDetectDone;
+    clone->cadDetectEnable = cadDetectEnable;
+    clone->cadDetectScore = cadDetectScore;
+    clone->cadRasterDominant = cadRasterDominant;
+    clone->cadHairlineVector = cadHairlineVector;
+    clone->cadEnhanceOverride = cadEnhanceOverride;
 
     if (!decryptionKey.s && pdfdoc && pdfdoc->crypt) {
         clone->decryptionKey = Str();
@@ -3032,6 +3039,12 @@ bool EngineMupdf::FinishLoading() {
         }
     }
 
+    // when Off, skip the detection pass; the manual toggle command runs it
+    // lazily if needed (see EngineMupdfToggleCadEnhance)
+    if (GetEngineeringDrawingEnhanceMode() != EngineeringDrawingEnhanceMode::Off) {
+        RunCadDetection();
+    }
+
     return true;
 }
 
@@ -3619,6 +3632,53 @@ RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rota
     return ToRectF(rect2);
 }
 
+bool EngineMupdf::CadEnhanceActive() const {
+    if (!pdfdoc) {
+        return false;
+    }
+    CadDetectResult detect;
+    detect.enable = cadDetectEnable;
+    detect.score = cadDetectScore;
+    return CadEnhanceEnabledForEngine(detect, cadEnhanceOverride);
+}
+
+// Analyze the document once for CAD/engineering-drawing content. Caller must
+// hold docLock (or own the document exclusively, as during FinishLoading).
+void EngineMupdf::RunCadDetection() {
+    if (!pdfdoc || cadDetectDone) {
+        return;
+    }
+    CadDetectResult res = DetectCadPdf(Ctx(), pdfdoc);
+    cadDetectEnable = res.enable;
+    cadDetectScore = res.score;
+    cadRasterDominant = res.rasterDominant;
+    cadHairlineVector = res.hairlineVector;
+    cadDetectDone = true;
+    if (cadDetectEnable) {
+        logfa("CAD enhance detect: score=%d reason=%s raster=%d hairline=%d\n", cadDetectScore,
+              Str(CadEnhanceReasonName(res.reason)), (int)cadRasterDominant, (int)cadHairlineVector);
+    } else if (cadDetectScore >= 30) {
+        logfa("CAD enhance not enabled: score=%d hairline=%d (auto threshold 60, or metadata+45)\n", cadDetectScore,
+              (int)cadHairlineVector);
+    }
+}
+
+// First toggle flips away from the current effective state; after that it
+// alternates between forced on and forced off.
+void EngineMupdf::ToggleCadEnhanceOverride() {
+    switch (cadEnhanceOverride) {
+        case CadEnhanceOverride::Unset:
+            cadEnhanceOverride = CadEnhanceActive() ? CadEnhanceOverride::ForceOff : CadEnhanceOverride::ForceOn;
+            break;
+        case CadEnhanceOverride::ForceOn:
+            cadEnhanceOverride = CadEnhanceOverride::ForceOff;
+            break;
+        case CadEnhanceOverride::ForceOff:
+            cadEnhanceOverride = CadEnhanceOverride::ForceOn;
+            break;
+    }
+}
+
 Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto ctx = Ctx();
     auto pageNo = args.pageNo;
@@ -3648,6 +3708,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
     auto rotation = args.rotation;
+
+    // like the AA level, min line width is per-thread-context state
+    CadMinLineWidthScope cadMinLineWidth(ctx, zoom, CadEnhanceActive(), cadHairlineVector);
 
     // The "View" rendering (no Print, no hideAnnotations) is what
     // fz_new_display_list_from_page produces; safe to cache and re-run lock-free.
@@ -3695,8 +3758,17 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
             dev = fz_new_draw_device(ctx, ctm, pix);
+            if (CadEnhanceActive()) {
+                CadEnhanceRenderOpts opts;
+                opts.zoom = zoom;
+                opts.hairlineVector = cadHairlineVector;
+                dev = PdfCadEnhanceWrapDevice(ctx, dev, opts);
+            }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
             fz_close_device(ctx, dev);
+            if (CadEnhanceActive() && cadRasterDominant) {
+                PdfCadEnhancePixmap(ctx, pix, zoom, true);
+            }
             pixmap = NewPixmapFromFzPixmap(ctx, pix);
         }
         fz_always(ctx) {
@@ -3743,8 +3815,11 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             } else {
                 pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             }
-            pixmap = NewPixmapFromFzPixmap(ctx, pix);
             fz_close_device(ctx, dev);
+            if (CadEnhanceActive() && cadRasterDominant) {
+                PdfCadEnhancePixmap(ctx, pix, zoom, true);
+            }
+            pixmap = NewPixmapFromFzPixmap(ctx, pix);
         }
         fz_always(ctx) {
             if (dev) {
@@ -4867,6 +4942,23 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
         return false;
     }
     return (epdf->pdfdoc != nullptr);
+}
+
+// Toggle CAD/engineering-drawing line enhancement for this document
+// (CmdToggleEngineeringDrawingEnhance); caller re-renders. Runs the detection
+// pass lazily for documents loaded while the mode pref was "off".
+void EngineMupdfToggleCadEnhance(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
+        return;
+    }
+    if (!epdf->cadDetectDone) {
+        // lock order: renderLock before docLock (see EngineMupdf.h)
+        ScopedMutex render(&epdf->renderLock);
+        ScopedRecursiveMutex doc(&epdf->docLock);
+        epdf->RunCadDetection();
+    }
+    epdf->ToggleCadEnhanceOverride();
 }
 
 // caller must free

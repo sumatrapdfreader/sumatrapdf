@@ -1056,6 +1056,8 @@
     <ClInclude Include="..\src\JxlReader.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
+    <ClInclude Include="..\src\PdfCadDetect.h" />
+    <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
@@ -1125,6 +1127,8 @@
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\PdfCadDetect.cpp" />
+    <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />

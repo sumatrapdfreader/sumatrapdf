@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "PdfCadDetect.h"
+
 struct Annotation;
 
 struct FitzPageImageInfo {
@@ -148,6 +150,18 @@ class EngineMupdf : public EngineBase {
     // used to track "dirty" state of annotations. not perfect because if we add and delete
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
+
+    // CAD/engineering-drawing enhancement (PdfCadDetect.cpp)
+    bool cadDetectDone = false;
+    bool cadDetectEnable = false;
+    int cadDetectScore = 0;
+    bool cadRasterDominant = false;
+    bool cadHairlineVector = false;
+    CadEnhanceOverride cadEnhanceOverride = CadEnhanceOverride::Unset;
+
+    bool CadEnhanceActive() const;
+    void RunCadDetection();
+    void ToggleCadEnhanceOverride();
 
     bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)

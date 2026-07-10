@@ -779,6 +779,12 @@ const globalPrefs: Field[] = [
   field("UIFontSize", Int, 0, "over-ride application font size. 0 means Windows default").ver("3.6"),
   field("DisableAntiAlias", Bool, false, "if true, disables anti-aliasing for rendering PDF documents").ver("3.6"),
   field(
+    "EngineeringDrawingEnhance",
+    Str,
+    "auto",
+    "CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on",
+  ).ver("3.7"),
+  field(
     "DisableAutoLinks",
     Bool,
     false,

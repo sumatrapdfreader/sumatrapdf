@@ -71,6 +71,8 @@ void EngineMupdfSetDisableJavaScript(bool disable);
 // allow PDFs to load images from an external sibling file (#3731), for PDFs
 // loaded after this call; set from gGlobalPrefs->allowExternalImages
 void EngineMupdfSetAllowExternalImages(bool allow);
+// toggle CAD/engineering-drawing line enhancement for this document
+void EngineMupdfToggleCadEnhance(EngineBase* engine);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(Str path);

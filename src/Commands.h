@@ -251,7 +251,8 @@ enum {
     CmdCommandPaletteFavorites = 440,
     CmdNavigateFilesInFolder = 441,
     CmdDebugToggleCacheInfo = 442,
-    CmdNone = 443,
+    CmdToggleEngineeringDrawingEnhance = 443,
+    CmdNone = 444,
 
     /* range for file history */
     CmdFileHistoryFirst,
