@@ -735,6 +735,32 @@ int NormalizeWSInPlace(Str s) {
     return s.len - dst;
 }
 
+// like NormalizeWSInPlace but non-mutating: returns s with whitespace runs
+// collapsed to single spaces and leading/trailing whitespace removed. Allocates
+// a temp copy only when normalization would change something; otherwise returns
+// s unchanged (no allocation).
+TempStr NormalizeWSTemp(Str s) {
+    int n = s.len;
+    if (n == 0) {
+        return s;
+    }
+    // decide whether normalizing changes anything, so we can skip allocating
+    bool changed = IsWs(s.s[0]) || IsWs(s.s[n - 1]);
+    for (int i = 0; !changed && i < n; i++) {
+        char c = s.s[i];
+        if (IsWs(c)) {
+            // a non-space whitespace char becomes ' ', or a run collapses to one
+            changed = (c != ' ') || (i + 1 < n && IsWs(s.s[i + 1]));
+        }
+    }
+    if (!changed) {
+        return s;
+    }
+    TempStr res = DupTemp(s);
+    res.len -= NormalizeWSInPlace(res);
+    return res;
+}
+
 static bool isNl(char c) {
     return '\r' == c || '\n' == c;
 }

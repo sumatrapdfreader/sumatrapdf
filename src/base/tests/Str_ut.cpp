@@ -415,6 +415,22 @@ void StrTest() {
     utassert(str::Eq(buf, "one two three"));
 
     {
+        // NormalizeWSTemp: already-normalized input returns the same buffer (no copy)
+        Str norm = "one two three";
+        TempStr r = str::NormalizeWSTemp(norm);
+        utassert(r.s == norm.s);
+        utassert(str::Eq(r, "one two three"));
+        // needs normalizing: returns a distinct temp copy, original untouched
+        Str raw = " one\t\rtwo  three ";
+        r = str::NormalizeWSTemp(raw);
+        utassert(r.s != raw.s);
+        utassert(str::Eq(r, "one two three"));
+        utassert(str::Eq(raw, " one\t\rtwo  three "));
+        // empty input
+        utassert(str::NormalizeWSTemp(Str()).len == 0);
+    }
+
+    {
         Str str2 = "[Open(\"filename.pdf\",0,1,0)]";
         {
             uint u1 = 0;

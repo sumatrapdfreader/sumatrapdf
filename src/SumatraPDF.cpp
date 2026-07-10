@@ -1524,13 +1524,11 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
 
     TempStr docTitle = "";
     if (tab->ctrl) {
-        TempStr title = tab->ctrl->GetPropertyTemp(DocProp::Title);
+        // NormalizeWSTemp (not in-place): GetPropertyTemp() may return a string
+        // owned by the document, which we must not mutate
+        TempStr title = str::NormalizeWSTemp(tab->ctrl->GetPropertyTemp(DocProp::Title));
         if (len(title) > 0) {
-            title.len -= str::NormalizeWSInPlace(title);
-            docTitle = str::DupTemp(title);
-            if (len(title) > 0) {
-                docTitle = fmt("- [%s] ", title);
-            }
+            docTitle = fmt("- [%s] ", title);
         }
     }
 

@@ -117,6 +117,31 @@ void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     props[idx].val = val;
 }
 
+void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
+    if (!val) {
+        return;
+    }
+    int idx = GetPropIdx(props, prop);
+    if (idx >= 0 && !replaceIfExists) {
+        return;
+    }
+    Str owned = str::Dup(val);
+    if (idx < 0) {
+        props.Append({prop, owned});
+        return;
+    }
+    str::Free(props[idx].val);
+    props[idx].val = owned;
+}
+
+void FreeProps(Props& props) {
+    int n = PropsCount(props);
+    for (int i = 0; i < n; i++) {
+        str::Free(props[i].val);
+    }
+    props.Reset();
+}
+
 // gPropNames lists the names in DocProp order, so DocProp::Title (value 1) is
 // the first name (index 0); the value is index + 1.
 TempStr PropNameTemp(DocProp prop) {

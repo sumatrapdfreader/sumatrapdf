@@ -73,6 +73,11 @@ int PropsCount(const Props& props);
 int GetPropIdx(const Props& props, DocProp prop);
 Str GetPropValueTemp(const Props& props, DocProp prop);
 void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists = false);
+// like AddProp but stores an owned (heap) copy of val. Use when props must
+// outlive the buffer val points into (e.g. the temp arena). Free with FreeProps.
+void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists = false);
+// frees values stored by AddPropOwned and empties props
+void FreeProps(Props& props);
 
 TempStr PropNameTemp(DocProp prop);
 DocProp PropFromName(Str name);

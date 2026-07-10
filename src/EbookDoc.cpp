@@ -366,6 +366,7 @@ EpubDoc::~EpubDoc() {
 
     zipAccess.Unlock();
     delete archive;
+    FreeProps(props);
     str::Free(tocPath);
     str::Free(fileName);
 }
@@ -642,7 +643,7 @@ static void ParseMetadata(Str content, Props& props) {
                 i64 propNo = 0;
                 SeqStrNumIndex(epubPropsMap, epubName, &propNo);
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
-                AddProp(props, (DocProp)propNo, val);
+                AddPropOwned(props, (DocProp)propNo, val);
             }
             break;
         }
@@ -922,6 +923,7 @@ Fb2Doc::~Fb2Doc() {
         str::Free(img.base);
         str::Free(img.fileName);
     }
+    FreeProps(props);
     str::Free(fileName);
 }
 
@@ -1055,7 +1057,7 @@ bool Fb2Doc::Load(Str srcData) {
             }
             if (tok->IsText()) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
-                AddProp(props, DocProp::Title, val);
+                AddPropOwned(props, DocProp::Title, val);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS())) {
             TempStr docAuthor = nullptr;
@@ -1075,20 +1077,20 @@ bool Fb2Doc::Load(Str srcData) {
                 if (len(docAuthor) > 0) {
                     TempStr val = docAuthor;
                     bool replaceIfExists = inTitleInfo != 0;
-                    AddProp(props, DocProp::Author, val, replaceIfExists);
+                    AddPropOwned(props, DocProp::Author, val, replaceIfExists);
                 }
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {
             AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), FB2_MAIN_NS());
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
-                AddProp(props, DocProp::CreationDate, val);
+                AddPropOwned(props, DocProp::CreationDate, val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {
             AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), FB2_MAIN_NS());
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
-                AddProp(props, DocProp::ModificationDate, val);
+                AddPropOwned(props, DocProp::ModificationDate, val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("program-used"), FB2_MAIN_NS())) {
             if ((tok = parser.Next()) == nullptr || tok->IsError()) {
@@ -1096,7 +1098,7 @@ bool Fb2Doc::Load(Str srcData) {
             }
             if (tok->IsText()) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
-                AddProp(props, DocProp::CreatorApp, val);
+                AddPropOwned(props, DocProp::CreatorApp, val);
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("coverpage"), FB2_MAIN_NS())) {
             tok = parser.Next();
@@ -1427,6 +1429,7 @@ HtmlDoc::~HtmlDoc() {
         str::Free(img.base);
         str::Free(img.fileName);
     }
+    FreeProps(props);
     str::Free(htmlData);
     str::Free(fileName);
     str::Free(pagePath);
@@ -1458,7 +1461,7 @@ bool HtmlDoc::Load() {
             tok = parser.Next();
             if (tok && tok->IsText()) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
-                AddProp(props, DocProp::Title, val);
+                AddPropOwned(props, DocProp::Title, val);
             }
         } else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
             AttrInfo* attrName = tok->GetAttrByName(StrL("name"));
@@ -1467,13 +1470,13 @@ bool HtmlDoc::Load() {
                 /* ignore this tag */;
             } else if (attrName->ValIs("author")) {
                 TempStr val = ResolveHtmlEntitiesTemp(attrValue->val);
-                AddProp(props, DocProp::Author, val);
+                AddPropOwned(props, DocProp::Author, val);
             } else if (attrName->ValIs("date")) {
                 TempStr val = ResolveHtmlEntitiesTemp(attrValue->val);
-                AddProp(props, DocProp::CreationDate, val);
+                AddPropOwned(props, DocProp::CreationDate, val);
             } else if (attrName->ValIs("copyright")) {
                 TempStr val = ResolveHtmlEntitiesTemp(attrValue->val);
-                AddProp(props, DocProp::Copyright, val);
+                AddPropOwned(props, DocProp::Copyright, val);
             }
         }
     }

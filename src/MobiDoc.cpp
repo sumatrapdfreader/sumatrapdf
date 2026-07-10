@@ -458,6 +458,7 @@ MobiDoc::MobiDoc(Str filePath) {
 }
 
 MobiDoc::~MobiDoc() {
+    FreeProps(props);
     str::Free(fileName);
     free(images);
     delete huffDic;
@@ -533,7 +534,7 @@ bool MobiDoc::ParseHeader() {
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Str v = strconv::WStrToCodePage(mobiHdr.textEncoding, WStrL(L"DRM"));
-        AddProp(props, DocProp::UnsupportedFeatures, v);
+        AddPropOwned(props, DocProp::UnsupportedFeatures, v);
         str::Free(v);
     }
     textEncoding = mobiHdr.textEncoding;
@@ -664,7 +665,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
         }
         TempStr value = str::DupTemp(Str((char*)(data + d.Offset() - length + 8), (int)length - 8));
         if (len(value) > 0) {
-            AddProp(props, prop, value);
+            AddPropOwned(props, prop, value);
         }
     }
 
