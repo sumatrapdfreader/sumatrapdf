@@ -12,7 +12,7 @@
                 "${workspaceRoot}/ext/brotli/c/include",
                 "${workspaceRoot}/ext/darkmodelib/include",
                 "${workspaceRoot}/ext/zlib",
-                "${workspaceRoot}/ext/CHMLIB",
+                "${workspaceRoot}/ext/libchm",
                 "${workspaceRoot}/packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include"
             ],
             "defines": [

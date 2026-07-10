@@ -842,10 +842,10 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ext\CHMLib\chm.h" />
+    <ClInclude Include="..\ext\libchm\chm.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\CHMLib\chm.c" />
+    <ClCompile Include="..\ext\libchm\chm.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

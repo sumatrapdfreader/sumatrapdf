@@ -483,7 +483,7 @@ workspace "SumatraPDF"
     optimized_conf()
     defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4018", "4244", "4267", "4996" }
-    files { "ext/CHMLib/*.c", "ext/CHMLib/*.h" }
+    files { "ext/libchm/*.c", "ext/libchm/*.h" }
 
   -- cmark-gfm for SumatraPDF-dll markdown browser (MarkdownToc/MarkdownModel).
   -- mupdf-libs also builds cmark for md.c inside libmupdf; the static SumatraPDF
@@ -1144,7 +1144,7 @@ workspace "SumatraPDF"
     defines { "LIBHEIF_STATIC_BUILD" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
-      "ext/libdjvu", "ext/djvudec", "ext/CHMLib",
+      "ext/libdjvu", "ext/djvudec", "ext/libchm",
       "ext/libarchive",
       "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include",
       "ext/brotli/c/include",
@@ -1169,7 +1169,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
@@ -1265,7 +1265,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
 

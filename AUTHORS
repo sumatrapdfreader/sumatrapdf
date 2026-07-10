@@ -40,7 +40,7 @@ Project        License                   Type Website
 ---------------------------------------------------------------------------------------------------------
 MuPDF          mupdf/COPYING             AGPL https://mupdf.com/
 bzip2          ext/bzip2/LICENSE              https://bzip.org/
-CHMLIB         ext/CHMLib/COPYING        LGPL https://www.jedrea.com/chmlib/
+libchm         ext/libchm/LICENSE.md     MIT  https://github.com/kjk/libchm
 FreeType       ext/freetype2/FTL.txt          https://www.freetype.org/
 jbig2dec       ext/jbig2dec/COPYING      AGPL https://www.ghostscript.com/jbig2dec.html
 libjpeg-turbo  ext/.../README-turbo.txt  BSD  https://libjpeg-turbo.virtualgl.org/

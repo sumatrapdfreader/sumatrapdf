@@ -25,7 +25,7 @@ function pmglEntry(path: string, space: number, start: number, length: number): 
   return [...encodeCword(bytes.length), ...bytes, ...encodeCword(space), ...encodeCword(start), ...encodeCword(length)];
 }
 
-// LZX bitstream writer matching ext/CHMLib/lzx.c READ_BITS (32-bit buffer, 16-bit input words LE).
+// LZX bitstream writer matching the LZX decoder in ext/libchm/chm.c READ_BITS (32-bit buffer, 16-bit input words LE).
 class LzxBitWriter {
   private bits: number[] = [];
 

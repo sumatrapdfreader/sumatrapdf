@@ -183,7 +183,7 @@ export const chm: LibDef = {
   alwaysOptimize: true,
   defines: ["_CRT_SECURE_NO_WARNINGS"],
   includes: [],
-  files: [{ dir: "ext/CHMLib", patterns: ["chm_lib.c", "lzx.c"] }],
+  files: [{ dir: "ext/libchm", patterns: ["chm.c"] }],
 };
 
 export const zopfli: LibDef = {

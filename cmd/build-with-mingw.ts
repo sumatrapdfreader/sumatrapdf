@@ -416,7 +416,7 @@ async function buildSumatraExe(
     "mupdf/include",
     "ext/synctex",
     "ext/libdjvu",
-    "ext/CHMLib",
+    "ext/libchm",
     "ext/zopfli/src",
     "ext/darkmodelib/include",
     "ext/zlib",

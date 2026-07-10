@@ -13,7 +13,7 @@ const includes = [
   "-I",
   "src/wingui",
   "-I",
-  "ext/CHMLib/src",
+  "ext/libchm",
   "-I",
   "ext/libdjvu",
   "-I",

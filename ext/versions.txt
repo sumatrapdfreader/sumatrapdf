@@ -14,8 +14,8 @@ mujs           1.3.9
 bzip2           1.0.8      2019-07-21
   https://www.sourceware.org/bzip2/
 
-CHMLib          0.40a      2009-07-02
-  https://github.com/jedwing/CHMLib
+libchm                     2026-07-10
+  https://github.com/kjk/libchm (dist amalgamation; ported/cleaned from CHMLib)
 
 freetype        2.14.3
   https://github.com/ArtifexSoftware/thirdparty-freetype2/tree/artifex

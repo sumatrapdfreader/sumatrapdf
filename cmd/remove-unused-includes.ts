@@ -79,7 +79,7 @@ const clArgs = [
   "/I",
   "ext/libdjvu",
   "/I",
-  "ext/CHMLib",
+  "ext/libchm",
   "/I",
   "ext/libarchive",
   "/I",

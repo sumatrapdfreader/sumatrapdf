@@ -449,7 +449,7 @@ function makeChm(): LibDef {
     defines: ["_stricmp=strcasecmp", "_strnicmp=strncasecmp"],
     includes: [],
     extraCflags: ["-include", "limits.h"],
-    files: [{ dir: "ext/CHMLib", patterns: ["chm_lib.c", "lzx.c"] }],
+    files: [{ dir: "ext/libchm", patterns: ["chm.c"] }],
   };
 }
 

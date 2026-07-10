@@ -2,7 +2,7 @@
 -Isrc/base
 -Imupdf/include
 -Iext/libdjvu
--Iext/CHMLib
+-Iext/libchm
 -Iext/libarchive
 -Iext/darkmodelib/include
 -Iext/zlib
