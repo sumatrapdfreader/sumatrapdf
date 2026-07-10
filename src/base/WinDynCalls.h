@@ -99,10 +99,12 @@ typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
 typedef HANDLE(WINAPI* Sig_GetThreadDpiAwarenessContext)(void);
 typedef int(WINAPI* Sig_GetAwarenessFromDpiAwarenessContext)(HANDLE);
 typedef HANDLE(WINAPI* Sig_SetThreadDpiAwarenessContext)(HANDLE);
+typedef BOOL(WINAPI* Sig_SystemParametersInfoForDpi)(UINT, UINT, PVOID, UINT, UINT);
 extern Sig_GetDpiForWindow DynGetDpiForWindow;
 extern Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext;
 extern Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext;
 extern Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext;
+extern Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi;
 
 // shcore.dll
 typedef HRESULT(WINAPI* Sig_GetDpiForMonitor)(HMONITOR, int, UINT*, UINT*);

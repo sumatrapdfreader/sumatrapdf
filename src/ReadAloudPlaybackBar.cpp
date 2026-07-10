@@ -102,7 +102,7 @@ HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     args.parent = parentCanvas;
     args.style = WS_CHILD | SS_CENTER;
     args.exStyle = WS_EX_TOPMOST;
-    args.font = GetAppBiggerFont();
+    args.font = GetAppBiggerFont(parentCanvas);
     args.visible = false;
     args.isRtl = IsUIRtl();
     CreateCustom(args);

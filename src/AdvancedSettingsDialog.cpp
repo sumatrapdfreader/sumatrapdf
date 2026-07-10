@@ -388,7 +388,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
 
     int pad = DpiScale(hwnd, 4);
-    HFONT fontNormal = font ? font : GetAppFont();
+    HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
     // bold name => changed this session; bold value => differs from default.
     // together they show both "not the default" and "edited since opening".
@@ -820,7 +820,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     if (!hwnd) {
         return false;
     }
-    fontBold = CreateBoldFont(font ? font : GetAppFont());
+    fontBold = CreateBoldFont(font ? font : GetAppFont(hwnd));
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
@@ -956,7 +956,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     auto wnd = new AdvancedSettingsWnd();
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
-    wnd->font = GetAppFont();
+    wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

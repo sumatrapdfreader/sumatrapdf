@@ -2142,7 +2142,7 @@ static MainWindow* CreateMainWindow() {
 
     Tooltip::CreateArgs args;
     args.parent = win->hwndCanvas;
-    args.font = GetAppFont();
+    args.font = GetAppFont(win->hwndCanvas);
     args.isRtl = IsUIRtl();
 
     win->infotip = new Tooltip();
@@ -5169,6 +5169,29 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested) {
     RebuildMenuBarForWindow(win);
     ReCreateToolbar(win);
     RecreateFindBar(win);
+
+    // re-apply fonts to controls that keep an HFONT: app fonts are cached
+    // per DPI, so these get fonts sized for the new monitor
+    HWND hwndFrame = win->hwndFrame;
+    if (win->tabsCtrl) {
+        win->tabsCtrl->SetFont(GetAppFont(hwndFrame));
+        UpdateTabWidth(win);
+    }
+    if (win->tocLabelWithClose) {
+        win->tocLabelWithClose->SetFont(GetAppSidebarLabelFont(hwndFrame));
+    }
+    if (win->tocFilterEdit) {
+        win->tocFilterEdit->SetFont(GetAppFont(hwndFrame));
+    }
+    if (win->tocTreeView) {
+        win->tocTreeView->SetFont(GetAppTreeFont(hwndFrame));
+    }
+    if (win->favLabelWithClose) {
+        win->favLabelWithClose->SetFont(GetAppSidebarLabelFont(hwndFrame));
+    }
+    if (win->favTreeView) {
+        win->favTreeView->SetFont(GetAppTreeFont(hwndFrame));
+    }
 
     if (suggested) {
         int dx = suggested->right - suggested->left;

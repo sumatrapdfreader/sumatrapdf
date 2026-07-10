@@ -1456,7 +1456,7 @@ void CreateToolbar(MainWindow* win) {
 
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 
-    int defFontSize = GetAppFontSize();
+    int defFontSize = GetAppFontSize(win->hwndFrame);
     // ToolbarSize scales icons only; UI font size comes from UIFontSize (GetAppFontSize).
     int newSize = defFontSize;
     int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically
@@ -1490,7 +1490,7 @@ void ReCreateToolbar(MainWindow* win) {
 }
 
 static int MenuBarToolbarIdealDy(MainWindow* win) {
-    HFONT font = GetAppMenuFont();
+    HFONT font = GetAppMenuFont(win->hwndFrame);
     int dy = FontDyPx(win->hwndFrame, font) + DpiScale(win->hwndFrame, 4);
     int minDy = DpiScale(win->hwndFrame, kTabBarDy);
     return std::max(dy, minDy);
@@ -1789,7 +1789,7 @@ void CreateMenuBarRebar(MainWindow* win) {
         }
     }
 
-    HFONT font = GetAppMenuFont();
+    HFONT font = GetAppMenuFont(win->hwndFrame);
     HwndSetFont(win->hwndMenuToolbar, font);
 
     LRESULT tbExStyle = SendMessageW(win->hwndMenuToolbar, TB_GETEXTENDEDSTYLE, 0, 0);

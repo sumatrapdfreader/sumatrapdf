@@ -2225,7 +2225,7 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
 static int GetMenuCheckMarkCx(HWND hwnd) {
     int cx = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
     if (!IsMenuFontSizeDefault()) {
-        cx = GetAppMenuFontSize();
+        cx = GetAppMenuFontSize(hwnd);
         // this applies scaling for default values on my win 11 i.e.:
         // font size is 12, menu checkmark is 15
         cx = (cx * 15) / 12;
@@ -2251,7 +2251,7 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     }
 
     Str text = modi && modi->text ? modi->text : StrL("Dummy");
-    HFONT font = GetAppMenuFont();
+    HFONT font = GetAppMenuFont(hwnd);
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
 
@@ -2319,7 +2319,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
     auto hdc = dis->hDC;
-    HFONT font = GetAppMenuFont();
+    HFONT font = GetAppMenuFont(hwnd);
     ScopedSelectFont restoreFont(hdc, font);
 
     COLORREF bgCol = ThemeMainWindowBackgroundColor();

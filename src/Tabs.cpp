@@ -59,7 +59,7 @@ static void UpdateTabTitle(WindowTab* tab) {
 
 int GetTabbarHeight(HWND hwnd, float factor) {
     int tabDy = DpiScale(hwnd, kTabBarDy);
-    HFONT hfont = GetAppFont();
+    HFONT hfont = GetAppFont(hwnd);
     int fontDyWithPadding = FontDyPx(hwnd, hfont) + DpiScale(hwnd, 2);
     if (fontDyWithPadding > tabDy) {
         tabDy = fontDyWithPadding;
@@ -586,7 +586,7 @@ void CreateTabbar(MainWindow* win) {
     TabsCtrl::CreateArgs args;
     args.parent = win->hwndFrame;
     args.withToolTips = true;
-    args.font = GetAppFont();
+    args.font = GetAppFont(win->hwndFrame);
     int tabWidth = gGlobalPrefs->tabWidth;
     args.tabDefaultDx = tabWidth;
     args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)

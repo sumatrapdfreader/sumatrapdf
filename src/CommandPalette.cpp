@@ -562,7 +562,7 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     auto wnd = new CommandPaletteWnd();
     auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
     wnd->onDestroy = fn;
-    wnd->font = GetAppBiggerFont();
+    wnd->font = GetAppBiggerFont(win->hwndFrame);
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);

@@ -181,6 +181,7 @@ HFONT GetDefaultGuiFontOfSize(int size);
 HFONT GetUserGuiFont(Str fontName, int size);
 HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic);
 int GetSizeOfDefaultGuiFont();
+bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm);
 void DeleteCreatedFonts();
 
 IStream* CreateStreamFromData(const Str&);

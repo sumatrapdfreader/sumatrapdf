@@ -866,7 +866,7 @@ static void CreateInfotipForLink(StaticLink* linkInfo) {
 
     Tooltip::CreateArgs args;
     args.parent = gHwndAbout;
-    args.font = GetAppFont();
+    args.font = GetAppFont(gHwndAbout);
     args.isRtl = IsUIRtl();
 
     gAboutTooltip = new Tooltip();

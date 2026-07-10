@@ -1175,7 +1175,7 @@ static Static* CreateStatic(HWND parent, Str s = nullptr) {
     args.parent = parent;
     args.text = s;
     args.isRtl = IsUIRtl();
-    args.font = GetAppFont();
+    args.font = GetAppFont(parent);
     HWND hwnd = w->Create(args);
     ReportIf(!hwnd);
     return w;
@@ -1186,7 +1186,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-    HFONT fnt = GetAppFont();
+    HFONT fnt = GetAppFont(parent);
 
     {
         ListBox::CreateArgs args;
@@ -1655,7 +1655,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
 
     args.title = str::JoinTemp(_TRA("Annotations"), StrL(": "), tab->GetTabTitle());
     args.visible = false;
-    args.font = GetAppFont();
+    args.font = GetAppFont(tab->win ? tab->win->hwndFrame : nullptr);
 
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};

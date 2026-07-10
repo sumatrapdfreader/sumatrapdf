@@ -273,7 +273,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     cargs.style = WS_CHILD | SS_CENTER;
     cargs.title = args.msg;
     if (cargs.font == nullptr) {
-        cargs.font = GetAppBiggerFont();
+        cargs.font = GetAppBiggerFont(args.hwndParent);
     }
     cargs.pos = Rect(0, 0, 0, 0);
     cargs.visible = args.delayInMs == 0;

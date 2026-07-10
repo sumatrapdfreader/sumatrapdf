@@ -155,7 +155,7 @@ static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM d
     }
 
     DLGTEMPLATE* tpl = DupTemplate(dlgId);
-    int fntSize = GetAppFontSize();
+    int fntSize = GetAppFontSize(parent);
     if (isDefaultFont) {
         SetDlgTemplateRtl(tpl);
     } else {

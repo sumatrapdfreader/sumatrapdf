@@ -931,7 +931,7 @@ void CreateFavorites(MainWindow* win) {
         LabelWithCloseWnd::CreateArgs args;
         args.parent = win->hwndFavBox;
         args.cmdId = IDC_FAV_LABEL_WITH_CLOSE;
-        args.font = GetAppSidebarLabelFont();
+        args.font = GetAppSidebarLabelFont(win->hwndFrame);
         args.isRtl = IsUIRtl();
         l->Create(args);
     }
@@ -943,7 +943,7 @@ void CreateFavorites(MainWindow* win) {
     auto treeView = new TreeView();
     TreeView::CreateArgs args;
     args.parent = win->hwndFavBox;
-    args.font = GetAppTreeFont();
+    args.font = GetAppTreeFont(win->hwndFrame);
     args.fullRowSelect = true;
     args.exStyle = 0;
     args.isRtl = IsUIRtl();

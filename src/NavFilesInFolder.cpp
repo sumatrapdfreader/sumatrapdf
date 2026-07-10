@@ -484,7 +484,7 @@ void ShowNavFilesInFolder(MainWindow* win) {
 
     auto wnd = new NavFilesInFolderWnd();
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);
-    wnd->font = GetAppBiggerFont();
+    wnd->font = GetAppBiggerFont(win->hwndFrame);
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

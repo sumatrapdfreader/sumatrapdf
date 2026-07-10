@@ -2055,6 +2055,35 @@ int GetSizeOfDefaultGuiFont() {
     return res;
 }
 
+// fills ncm with non-client metrics (incl. font sizes) scaled for the given
+// dpi, so UI fonts can be sized for the monitor a window is on and not just
+// the system dpi. Uses SystemParametersInfoForDpi() (Win 10 1607+) when
+// available, otherwise scales the system-dpi metrics manually.
+bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm) {
+    ncm->cbSize = sizeof(*ncm);
+    if (DynSystemParametersInfoForDpi &&
+        DynSystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, sizeof(*ncm), ncm, 0, (UINT)dpi)) {
+        return true;
+    }
+    if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(*ncm), ncm, 0)) {
+        return false;
+    }
+    int sysDpi = DpiGet(nullptr);
+    if (sysDpi <= 0 || sysDpi == dpi) {
+        return true;
+    }
+    auto scaleLf = [sysDpi, dpi](LOGFONTW& lf) {
+        int h = (int)std::abs(lf.lfHeight);
+        lf.lfHeight = -MulDiv(h, dpi, sysDpi);
+    };
+    scaleLf(ncm->lfMessageFont);
+    scaleLf(ncm->lfMenuFont);
+    scaleLf(ncm->lfStatusFont);
+    scaleLf(ncm->lfCaptionFont);
+    scaleLf(ncm->lfSmCaptionFont);
+    return true;
+}
+
 DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::GetDC(hwnd)), rect(rect) {
     if (rect.IsEmpty()) {
         return;

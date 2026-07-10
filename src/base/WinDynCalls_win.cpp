@@ -25,6 +25,7 @@ Sig_GetDpiForWindow DynGetDpiForWindow = nullptr;
 Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext = nullptr;
 Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext = nullptr;
 Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext = nullptr;
+Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi = nullptr;
 Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
 
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
@@ -65,6 +66,7 @@ void InitDynCalls() {
         (Sig_GetAwarenessFromDpiAwarenessContext)GetProcAddress(h, "GetAwarenessFromDpiAwarenessContext");
     DynSetThreadDpiAwarenessContext =
         (Sig_SetThreadDpiAwarenessContext)GetProcAddress(h, "SetThreadDpiAwarenessContext");
+    DynSystemParametersInfoForDpi = (Sig_SystemParametersInfoForDpi)GetProcAddress(h, "SystemParametersInfoForDpi");
 
     h = SafeLoadLibrary("shcore.dll");
     if (h) {
