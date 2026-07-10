@@ -175,7 +175,9 @@ static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
 }
 
 static TempStr AddTimeZone(TempStr s, int timeZone) {
-    if (timeZone == 0) return {};
+    // timeZone 0 means UTC or unspecified: nothing to append, return the date as-is
+    // (returning {} here would drop the whole formatted date, e.g. for "D:...Z" dates)
+    if (timeZone == 0) return s;
 
     Str tzSign = (timeZone > 0) ? StrL("+") : StrL("-");
     int abs = (timeZone > 0) ? timeZone : -timeZone;
@@ -292,7 +294,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
 }
 
 static void AppendProp(str::Builder& out, Str key, Str value) {
-    if (!value) {
+    if (len(value) == 0) {
         return;
     }
     out.Append(fmt("%s %s\n", key, value));
@@ -370,7 +372,7 @@ static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
             break;
         }
     }
-    if (!s) {
+    if (len(s) > 0) {
         TempStr propName = PropNameTemp(prop);
         TempStr label = fmt("%s:", propName);
         AppendProp(out, label, val);
@@ -421,13 +423,13 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
     if (dm) {
         EngineBase* engine = dm->GetEngine();
         engine->GetProperties(propsOut);
-    } else {
-        for (int i = 0; gAllProps[i] != DocProp::None; i++) {
-            DocProp prop = gAllProps[i];
-            TempStr val = ctrl->GetPropertyTemp(prop);
-            if (val) {
-                AddProp(propsOut, prop, val);
-            }
+        return;
+    }
+    for (int i = 0; gAllProps[i] != DocProp::None; i++) {
+        DocProp prop = gAllProps[i];
+        TempStr val = ctrl->GetPropertyTemp(prop);
+        if (val) {
+            AddProp(propsOut, prop, val);
         }
     }
 }

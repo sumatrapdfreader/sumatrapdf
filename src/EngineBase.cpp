@@ -638,9 +638,8 @@ void EngineBase::GetProperties(Props& propsOut) {
             continue;
         }
         TempStr val = GetPropertyTemp(prop);
-        if (val) {
-            AddProp(propsOut, prop, val);
-        }
+        if (len(val) == 0) continue;
+        AddProp(propsOut, prop, val);
     }
 }
 
