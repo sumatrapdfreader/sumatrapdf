@@ -40,11 +40,14 @@ class AbortCookieManager {
     ~AbortCookieManager() { Clear(); }
 
     void Abort() {
+        // don't call Clear() here: it re-locks cookieAccess, which is a
+        // non-recursive SRWLOCK, so we'd self-deadlock. Do the clear inline.
         ScopedMutex scope(&cookieAccess);
         if (cookie) {
             cookie->Abort();
+            delete cookie;
+            cookie = nullptr;
         }
-        Clear();
     }
 
     void Clear() {
