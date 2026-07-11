@@ -110,7 +110,10 @@ void SelectionTranslateWnd::ScheduleDelete() {
 }
 
 struct SelectionTranslateTaskData {
-    SelectionTranslateWnd* wnd = nullptr;
+    // the dialog can be closed and deleted (via ScheduleDelete) while the
+    // translation thread runs, so remember only its HWND, never the object.
+    // OnTranslateDone re-validates the HWND against gSelectionTranslateWnd.
+    HWND hwndDlg = nullptr;
     AIChatBackend backend = AIChatBackend::Grok;
     Str srcLang;
     Str dstLang;
@@ -781,7 +784,7 @@ void SelectionTranslateWnd::StartTranslation() {
     }
 
     auto task = new SelectionTranslateTaskData();
-    task->wnd = this;
+    task->hwndDlg = hwnd;
     task->backend = backend;
     task->srcLang = str::Dup(srcLang);
     task->dstLang = str::Dup(dstLang);
@@ -833,7 +836,7 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     }
 
     auto done = new SelectionTranslateDoneData();
-    done->hwndDlg = data->wnd ? data->wnd->hwnd : nullptr;
+    done->hwndDlg = data->hwndDlg;
     done->ok = ok;
     done->msg = result;
     uitask::Post(MkFunc0(OnTranslateDone, done), "SelectionTranslateDone");
