@@ -200,7 +200,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
-        args.title = documentColorsFollowThemeOnly ? _TRA("Document colors follow theme") : _TRA("Change Theme");
+        args.title = documentColorsFollowThemeOnly ? _TRA("Change Document Colors Follow Theme") : _TRA("Change Theme");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
         args.font = font;

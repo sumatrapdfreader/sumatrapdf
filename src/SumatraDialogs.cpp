@@ -1682,7 +1682,7 @@ bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF
     data.applyToAll = false;
     data.selectedCustomIdx = -1;
     data.previewSelected = true;
-    data.title = _TRA("Set Tab Color");
+    data.title = _TRA("Change Tab Color");
     data.showRadioButtons = false;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_CHANGE_BG_COLOR, hwnd, Dialog_ChangeBgColor_Proc, (LPARAM)&data);

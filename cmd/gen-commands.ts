@@ -1,6 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+// Command palette display verbs:
+// - Toggle: immediate on/off or cycle, no dialog
+// - Change: dialog to pick a new app/document preference or mode
+// - Set: dialog to assign an optional per-object value or integration string
+//
 // prettier-ignore
 export const commands = [
     "CmdOpenFile", "Open File...",
@@ -207,7 +212,7 @@ export const commands = [
     "CmdTabGroupSave", "Save Tab Group...",
     "CmdTabGroupRestore", "Restore Tab Group...",
     "CmdChangeBackgroundColor", "Change Background Color...",
-    "CmdSetTabColor", "Set Tab Color...",
+    "CmdSetTabColor", "Change Tab Color...",
     "CmdPdfCompress", "Compress PDF...",
     "CmdPdfDecompress", "Decompress PDF...",
     "CmdPdfDeletePages", "Delete Pages From PDF...",
@@ -246,7 +251,7 @@ export const commands = [
     "CmdNavigateFilesInFolder", "Navigate Files in Folder...",
     "CmdDebugToggleCacheInfo", "Debug: Toggle Cache Info",
     "CmdToggleEngineeringDrawingEnhance", "Toggle Engineering Drawing Enhancement",
-    "CmdSetDocumentColorsFollowTheme", "Set Document Colors Follow Theme...",
+    "CmdSetDocumentColorsFollowTheme", "Change Document Colors Follow Theme...",
     "CmdTogglePreservePdfImages", "Toggle Preserve PDF Image Colors in Dark Mode",
     "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
     "CmdChangeTheme", "Change Theme...",

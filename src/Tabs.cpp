@@ -333,7 +333,7 @@ static MenuDef menuDefContextTab[] = {
         CmdDuplicateInNewWindow,
     },
     {
-        _TRN("Set Tab Color"),
+        _TRN("Change Tab Color"),
         CmdSetTabColor,
     },
     {

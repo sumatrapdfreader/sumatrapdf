@@ -249,6 +249,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdSaveAttachment,
     CmdOpenAttachment,
     CmdCreateShortcutToFile,
+    CmdSetDocumentColorsFollowTheme,
     0,
 };
 
