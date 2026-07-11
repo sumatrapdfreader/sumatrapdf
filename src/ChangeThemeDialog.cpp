@@ -205,7 +205,6 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.font = font;
         args.isRtl = isRtl;
         auto c = new ListBox();
-        c->idealSizeLines = n;
         c->Create(args);
         c->SetColors(colTxt, colBg);
         listBox = c;

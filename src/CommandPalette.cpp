@@ -484,7 +484,6 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<CommandPaletteWnd, ListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
-        c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         c->Create(args);
         c->SetColors(colTxt, colBg);

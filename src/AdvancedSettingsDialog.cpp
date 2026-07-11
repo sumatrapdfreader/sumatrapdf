@@ -863,7 +863,6 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         auto c = new ListBox();
         c->onDrawItem =
             MkMethod1<AdvancedSettingsWnd, ListBox::DrawItemEvent*, &AdvancedSettingsWnd::DrawListBoxItem>(this);
-        c->idealSizeLines = 24;
         c->SetInsetsPt(4, 0);
         c->Create(args);
         c->SetColors(colTxt, colBg);

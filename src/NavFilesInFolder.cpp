@@ -418,7 +418,6 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         c->onDoubleClick = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<NavFilesInFolderWnd, ListBox::DrawItemEvent*, &NavFilesInFolderWnd::DrawListBoxItem>(this);
-        c->idealSizeLines = 24;
         c->SetInsetsPt(4, 0);
         c->Create(args);
         c->SetColors(colTxt, colBg);

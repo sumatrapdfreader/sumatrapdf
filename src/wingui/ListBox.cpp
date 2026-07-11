@@ -76,8 +76,21 @@ int ListBox::GetItemHeight(int idx) {
 
 Size ListBox::GetIdealSize() {
     Size res = idealSize;
-    if (idealSizeLines > 0) {
-        int dy = GetItemHeight(0) * idealSizeLines + DpiScale(hwnd, 2 + 2); // padding of 2 at top and bottom
+    int nLines = idealSizeLines;
+    if (nLines <= 0) {
+        int nItems = 0;
+        if (model) {
+            nItems = model->ItemsCount();
+        } else if (hwnd) {
+            nItems = GetCount();
+        }
+        nLines = std::min(nItems, 16);
+        if (nLines <= 0) {
+            nLines = 1;
+        }
+    }
+    if (hwnd) {
+        int dy = GetItemHeight(0) * nLines + DpiScale(hwnd, 2 + 2); // padding of 2 at top and bottom
         res.dy = dy;
     }
     return res;
@@ -119,7 +132,6 @@ void ListBox::SetModel(ListBoxModel* model) {
         FillWithItems(this->hwnd, model);
     }
     SetCurrentSelection(-1);
-    // TODO: update ideal size based on the size of the model
 }
 
 bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
