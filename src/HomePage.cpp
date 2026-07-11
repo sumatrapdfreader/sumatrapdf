@@ -1044,12 +1044,24 @@ struct ThumbnailLayout {
     Rect rcListRow;
     Rect rcListThumb;
     Rect rcListFileName;
+    Rect rcListPath;
     Rect rcListSize;
     Rect rcListRemove;
     Rect rcListPin;
     FileState* fs = nullptr; // info needed to draw the thumbnail
     StaticLink* sl = nullptr;
 };
+
+static TempStr FileSizeForHomeListTemp(Str path);
+
+bool HomePageIsListView() {
+    return gGlobalPrefs && str::EqI(gGlobalPrefs->homePageViewMode, StrL("list"));
+}
+
+void SetHomePageListView(bool listView) {
+    Str mode = listView ? StrL("list") : StrL("thumbnails");
+    str::ReplaceWithCopy(&gGlobalPrefs->homePageViewMode, mode);
+}
 
 struct HomePageLayout {
     // args in
@@ -1365,7 +1377,7 @@ void LayoutHomePage(HomePageLayout& l) {
     l.rcThumbsArea = {0, thumbsTopY, rc.dx, thumbsVisibleDy};
 
     int nFiles = len(fileStates);
-    bool showList = gGlobalPrefs->homePageShowList;
+    bool showList = HomePageIsListView();
     int thumbsRows = 0;
     int thumbsContentDy = 0;
     if (showList) {
@@ -1396,13 +1408,16 @@ void LayoutHomePage(HomePageLayout& l) {
         }
         int listIconDx = l.rcIconListView.dx;
         int listIconGap = DpiScale(hdc, 6);
-        int listSizeDx = DpiScale(hdc, 64);
+        HFONT fontRow = CreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
         for (int row = 0; row < nFiles; row++) {
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
             FileState* fs = fileStates[row];
             thumb.fs = fs;
             Rect rcRow(listX, ptOff.y + row * kHomeListRowDy, thumbsContentWidth, kHomeListRowDy);
             thumb.rcListRow = rcRow;
+            // size the file-size column to its text so it never ellipsizes
+            TempStr fileSize = FileSizeForHomeListTemp(fs->filePath);
+            int listSizeDx = HdcMeasureText(hdc, Str(fileSize), fontRow).dx + DpiScale(hdc, 4);
             Rect rcThumb(rcRow.x, rcRow.y + (rcRow.dy - kHomeListThumbDy) / 2, kHomeListThumbDx, kHomeListThumbDy);
             Rect rcPin(rcRow.x + rcRow.dx - listIconDx, rcRow.y + (rcRow.dy - listIconDx) / 2, listIconDx, listIconDx);
             Rect rcRemove(rcPin.x - listIconGap - listIconDx, rcPin.y, listIconDx, listIconDx);
@@ -1420,11 +1435,30 @@ void LayoutHomePage(HomePageLayout& l) {
             if (rcFileName.dx < 0) {
                 rcFileName.dx = 0;
             }
+            // give the file name the width it needs; the directory path goes
+            // into the remaining space, right-aligned (mirrored for RTL)
+            Rect rcPath;
+            {
+                TempStr fileName = path::GetBaseNameTemp(fs->filePath);
+                int nameDx = HdcMeasureText(hdc, Str(fileName), fontRow).dx + DpiScale(hdc, 4);
+                int minPathDx = DpiScale(hdc, 80);
+                if (nameDx + kHomeListRowGapDx + minPathDx <= rcFileName.dx) {
+                    int pathDx = rcFileName.dx - nameDx - kHomeListRowGapDx;
+                    if (isRtl) {
+                        rcPath = Rect(rcFileName.x, rcFileName.y, pathDx, rcFileName.dy);
+                        rcFileName.x = rcFileName.x + rcFileName.dx - nameDx;
+                    } else {
+                        rcPath = Rect(rcFileName.x + nameDx + kHomeListRowGapDx, rcFileName.y, pathDx, rcFileName.dy);
+                    }
+                    rcFileName.dx = nameDx;
+                }
+            }
             thumb.rcListThumb = rcThumb;
             thumb.rcListPin = rcPin;
             thumb.rcListRemove = rcRemove;
             thumb.rcListSize = rcSize;
             thumb.rcListFileName = rcFileName;
+            thumb.rcListPath = rcPath;
             RenderedBitmap* thumbImg = LoadThumbnail(fs);
             if (thumbImg) {
                 thumb.szThumb = thumbImg->GetSize();
@@ -1657,7 +1691,7 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
 }
 
 void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
-    if (!win || !CanAccessDisk() || gGlobalPrefs->homePageShowList) {
+    if (!win || !CanAccessDisk() || HomePageIsListView()) {
         HomePageHideCloseButton();
         return;
     }
@@ -1782,6 +1816,15 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
                                  nameFmt);
     }
 
+    // directory path, right-aligned and muted, in the space the file name doesn't need
+    if (!thumb.rcListPath.IsEmpty()) {
+        TempStr dirPath = path::GetDirTemp(path);
+        SetTextColor(hdc, ThemeWindowTextDisabledColor());
+        RECT rcPath = ToRECT(thumb.rcListPath);
+        UINT pathFmt = DT_SINGLELINE | DT_VCENTER | DT_PATH_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
+        DrawTextA(hdc, dirPath.s, -1, &rcPath, pathFmt);
+    }
+
     TempStr fileSize = FileSizeForHomeListTemp(path);
     SetTextColor(hdc, ThemeWindowTextColor());
     RECT rcSize = ToRECT(thumb.rcListSize);
@@ -1845,8 +1888,8 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     color = ThemeWindowTextColor();
     SetTextColor(hdc, color);
 
-    DrawHomeViewButton(hdc, l.himlOpen, l.rcIconThumbnailView, TbIcon::HomeThumbnails, !gGlobalPrefs->homePageShowList);
-    DrawHomeViewButton(hdc, l.himlOpen, l.rcIconListView, TbIcon::HomeList, gGlobalPrefs->homePageShowList);
+    DrawHomeViewButton(hdc, l.himlOpen, l.rcIconThumbnailView, TbIcon::HomeThumbnails, !HomePageIsListView());
+    DrawHomeViewButton(hdc, l.himlOpen, l.rcIconListView, TbIcon::HomeList, HomePageIsListView());
     l.freqRead->Paint(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
@@ -1860,7 +1903,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
     for (const ThumbnailLayout& thumb : l.thumbnails) {
         FileState* fs = thumb.fs;
-        if (gGlobalPrefs->homePageShowList) {
+        if (HomePageIsListView()) {
             DrawHomeListRow(l, thumb, fontText, backgroundColor, isRtl);
             continue;
         }
@@ -1969,7 +2012,7 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
 void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
     USHORT msg = LOWORD(wp);
     HDC hdc = GetDC(win->hwndCanvas);
-    int lineDy = gGlobalPrefs->homePageShowList ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int lineDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
     int pageDy = lineDy * 3;
     ReleaseDC(win->hwndCanvas, hdc);
 
@@ -2016,7 +2059,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
 void HomePageOnMouseWheel(MainWindow* win, int delta) {
     Rect rc = ClientRect(win->hwndCanvas);
     HDC hdc = GetDC(win->hwndCanvas);
-    int thumbsRowDy = gGlobalPrefs->homePageShowList ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
     ReleaseDC(win->hwndCanvas, hdc);
 
     int scrollBy = thumbsRowDy / 3;

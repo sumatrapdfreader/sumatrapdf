@@ -14,6 +14,10 @@ void ShowAboutWindow(MainWindow*);
 
 void DrawAboutPage(MainWindow* win, HDC hdc);
 
+// HomePageViewMode setting ("thumbnails" or "list")
+bool HomePageIsListView();
+void SetHomePageListView(bool listView);
+
 TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
 
 constexpr const char* kLinkOpenFile = "<File,Open>";

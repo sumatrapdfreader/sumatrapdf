@@ -657,11 +657,13 @@ const globalPrefs: Field[] = [
     "if true implements pre-3.6 behavior of showing opened files by frequently used count. If false, shows most recently opened first",
   ),
   field(
-    "HomePageShowList",
-    Bool,
-    false,
-    "if true, shows the home page document history as a list instead of thumbnails",
-  ),
+    "HomePageViewMode",
+    Str,
+    "thumbnails",
+    "how the home page shows the document history: thumbnails (a grid of page previews) or list (one row per file)",
+  )
+    .ver("3.7")
+    .doc("Valid values: thumbnails, list"),
   field(
     "ReloadModifiedDocuments",
     Bool,

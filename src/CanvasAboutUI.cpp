@@ -99,12 +99,12 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         PickAnotherRandomPromotion();
         win->RedrawAll(true);
     } else if (str::Eq(url, kLinkHomeListView)) {
-        gGlobalPrefs->homePageShowList = true;
+        SetHomePageListView(true);
         win->homePageScrollY = 0;
         SaveSettings();
         win->RedrawAll(true);
     } else if (str::Eq(url, kLinkHomeThumbnailView)) {
-        gGlobalPrefs->homePageShowList = false;
+        SetHomePageListView(false);
         win->homePageScrollY = 0;
         SaveSettings();
         win->RedrawAll(true);
