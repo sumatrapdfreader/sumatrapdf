@@ -5006,7 +5006,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
             fz_report_error(ctx);
         }
         if (!sigs.IsEmpty()) {
-            AddProp(propsOut, DocProp::Signatures, ToStr(sigs));
+            AddProp(propsOut, DocProp::Signatures, str::DupTemp(ToStr(sigs)));
         }
     }
 #endif
@@ -5028,7 +5028,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
                 filesStr.AppendChar('\n');
                 filesStr.Append(fi->name);
             }
-            AddProp(propsOut, DocProp::Files, ToStr(filesStr));
+            AddProp(propsOut, DocProp::Files, str::DupTemp(ToStr(filesStr)));
             delete zip;
         }
     }

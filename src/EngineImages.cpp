@@ -2116,7 +2116,7 @@ void EngineCbx::GetProperties(Props& propsOut) {
     }
     // show paths in Windows style (#5543)
     str::TransCharsInPlace(ToStr(filesStr), StrL("/"), StrL("\\"));
-    AddProp(propsOut, DocProp::Files, ToStr(filesStr));
+    AddProp(propsOut, DocProp::Files, str::DupTemp(ToStr(filesStr)));
 }
 
 Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
