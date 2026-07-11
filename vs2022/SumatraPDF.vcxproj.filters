@@ -920,6 +920,9 @@
     <ClCompile Include="..\src\TextToSpeech.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TextViewWnd.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Theme.cpp">
       <Filter>src</Filter>
     </ClCompile>

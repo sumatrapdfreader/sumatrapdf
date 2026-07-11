@@ -317,6 +317,7 @@ const sumatraFiles: FileGroup[] = [
       "Tests.cpp",
       "TextSearch.*",
       "TextSelection.*",
+      "TextViewWnd.*",
       "Theme.*",
       "Toolbar.*",
       "Translations.*",
