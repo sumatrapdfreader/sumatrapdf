@@ -306,6 +306,11 @@ struct Edit : Wnd {
     int idealSizeLines = 1;
     int maxDx = 0;
 
+    // remembers CreateArgs.withBorder: with themes darkmodelib strips
+    // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, so
+    // window styles can't be used to detect the border
+    bool createdWithBorder = false;
+
     Edit();
     ~Edit() override;
 

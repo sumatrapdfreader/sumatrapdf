@@ -72,9 +72,7 @@ HWND Edit::Create(const CreateArgs& args) {
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
     if (args.withBorder) {
         cargs.exStyle = WS_EX_CLIENTEDGE;
-        // Note: when using WS_BORDER, we would need to remember
-        // we have border and use it in Edit::HasBorder
-        // args.style |= WS_BORDER;
+        createdWithBorder = true;
     }
     if (args.isMultiLine) {
         cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
@@ -122,9 +120,10 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 bool Edit::HasBorder() {
-    DWORD exStyle = GetWindowExStyle(hwnd);
-    bool res = bit::IsMaskSet<DWORD>(exStyle, WS_EX_CLIENTEDGE);
-    return res;
+    // don't infer from window styles: with themes darkmodelib strips
+    // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, which
+    // made GetIdealSize() too small for the font
+    return createdWithBorder;
 }
 
 Size Edit::GetIdealSize() {
