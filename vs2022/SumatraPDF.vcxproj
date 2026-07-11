@@ -1101,13 +1101,13 @@
     <ClInclude Include="..\src\AIChatCommon.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\AdvancedSettingsDialog.h" />
-    <ClInclude Include="..\src\ChangeThemeDialog.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
     <ClInclude Include="..\src\AppTools.h" />
     <ClInclude Include="..\src\AvifReader.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\CaptionGlyphs.h" />
+    <ClInclude Include="..\src\ChangeThemeDialog.h" />
     <ClInclude Include="..\src\ChmDump.h" />
     <ClInclude Include="..\src\ChmFile.h" />
     <ClInclude Include="..\src\ChmModel.h" />
@@ -1270,7 +1270,6 @@
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
-    <ClCompile Include="..\src\ChangeThemeDialog.cpp" />
     <ClCompile Include="..\src\Annotation.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -1301,6 +1300,7 @@
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\CaptionGlyphs.cpp" />
+    <ClCompile Include="..\src\ChangeThemeDialog.cpp" />
     <ClCompile Include="..\src\ChmDump.cpp" />
     <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />

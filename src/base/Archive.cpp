@@ -527,8 +527,9 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
         if (0 != res) {
             return false;
         }
-        wstr::TransCharsInPlace(WStr(rarHeader->FileNameW), WStrL(L"\\"), WStrL(L"/"));
-        if (wstr::EqI(WStr(rarHeader->FileNameW), fileName)) {
+        WStr nameW(rarHeader->FileNameW);
+        wstr::TransCharsInPlace(nameW, WStrL(L"\\"), WStrL(L"/"));
+        if (wstr::EqI(nameW, fileName)) {
             // don't support files whose uncompressed size is greater than 4GB
             return rarHeader->UnpSizeHigh == 0;
         }
@@ -709,7 +710,8 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
             isEncrypted = true;
         }
 
-        wstr::TransCharsInPlace(WStr(rarHeader.FileNameW), WStrL(L"\\"), WStrL(L"/"));
+        WStr nameW(rarHeader.FileNameW);
+        wstr::TransCharsInPlace(nameW, WStrL(L"\\"), WStrL(L"/"));
         auto name = ToUtf8Temp(rarHeader.FileNameW);
 
         FileInfo* i = AllocArray<FileInfo>(a);

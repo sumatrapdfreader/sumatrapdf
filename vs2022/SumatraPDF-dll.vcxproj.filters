@@ -99,9 +99,6 @@
     <ClInclude Include="..\src\AdvancedSettingsDialog.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ChangeThemeDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Annotation.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -118,6 +115,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\CaptionGlyphs.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ChangeThemeDialog.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ChmDump.h">
@@ -530,9 +530,6 @@
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ChangeThemeDialog.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Annotation.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -558,6 +555,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CaptionGlyphs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChangeThemeDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmDump.cpp">

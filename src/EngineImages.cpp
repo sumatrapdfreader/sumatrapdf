@@ -2115,8 +2115,9 @@ void EngineCbx::GetProperties(Props& propsOut) {
         filesStr.Append(fi->name);
     }
     // show paths in Windows style (#5543)
-    str::TransCharsInPlace(ToStr(filesStr), StrL("/"), StrL("\\"));
-    AddProp(propsOut, DocProp::Files, str::DupTemp(ToStr(filesStr)));
+    Str filesStrView = ToStr(filesStr);
+    str::TransCharsInPlace(filesStrView, StrL("/"), StrL("\\"));
+    AddProp(propsOut, DocProp::Files, str::DupTemp(filesStrView));
 }
 
 Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {

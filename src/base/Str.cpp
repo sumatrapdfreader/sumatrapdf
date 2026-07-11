@@ -659,23 +659,22 @@ bool NextLine(Str s, Str& line, Str& rest) {
     return true;
 }
 
-/* replace in <str> the chars from <oldChars> with their equivalents
-   from <newChars> (similar to UNIX's tr command)
-   Returns the number of replaced characters. */
-int TransCharsInPlace(Str str, Str oldChars, Str newChars) {
-    if (!str) {
-        return 0;
-    }
-    int findCount = 0;
+// replace in str the chars from oldChars with their equivalents from newChars
+// (similar to UNIX's tr command).
+void TransCharsInPlace(Str& str, Str oldChars, Str newChars) {
+    int nDiff = len(oldChars) - len(newChars);
+    ReportIf(nDiff < 0);
+    int nChanged = 0;
     for (int i = 0; i < str.len; i++) {
         int idx = str::IndexOfChar(oldChars, str.s[i]);
         if (idx >= 0) {
             str.s[i] = newChars.s[idx];
-            findCount++;
+            nChanged++;
         }
     }
-
-    return findCount;
+    if (nChanged * nDiff > 0) {
+        str.s[str.len] = '\0';
+    }
 }
 
 // Trim whitespace characters, in-place, inside s.
@@ -2009,20 +2008,20 @@ WStr ToLower(WStr s) {
     return ToLowerInPlace(s2);
 }
 
-int TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
-    if (!str) {
-        return 0;
-    }
-    int nReplaced = 0;
+void TransCharsInPlace(WStr& str, WStr oldChars, WStr newChars) {
+    int nDiff = len(oldChars) - len(newChars);
+    ReportIf(nDiff < 0);
+    int nChanged = 0;
     for (int i = 0; i < str.len; i++) {
         int idx = wstr::IndexOfChar(oldChars, str.s[i]);
         if (idx >= 0) {
             str.s[i] = newChars.s[idx];
-            nReplaced++;
+            nChanged++;
         }
     }
-
-    return nReplaced;
+    if (nChanged * nDiff > 0) {
+        str.s[str.len] = L'\0';
+    }
 }
 
 // free() the result via str::Free(s) or str::FreePtr(&s)

@@ -92,7 +92,7 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 
 int TrimWSInPlace(Str s, TrimOpt opt);
 
-int TransCharsInPlace(Str str, Str oldChars, Str newChars);
+void TransCharsInPlace(Str& str, Str oldChars, Str newChars);
 
 int NormalizeWSInPlace(Str str);
 TempStr NormalizeWSTemp(Str s);
@@ -152,7 +152,7 @@ WStr FindFrom(WStr str, WStr find);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
-int TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
+void TransCharsInPlace(WStr& str, WStr oldChars, WStr newChars);
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
 } // namespace wstr

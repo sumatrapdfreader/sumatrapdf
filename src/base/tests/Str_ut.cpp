@@ -387,16 +387,16 @@ void StrTest() {
 #endif
 
     str::BufSet(Str(buf, dimof(buf)), "abc\1efg\1");
-    size_t count = str::TransCharsInPlace(Str(buf), StrL("ace"), StrL("ACE"));
-    utassert(str::Eq(buf, "AbC\1Efg\1") && count == 3);
-    count = str::TransCharsInPlace(Str(buf), StrL("\1"), StrL("\0"));
-    utassert(count == 2);
-    utassert(str::Eq(buf, "AbC") && str::Eq(buf + 4, "Efg") && count == 2);
-    count = str::TransCharsInPlace(Str(buf), StrL(""), StrL("X"));
-    utassert(str::Eq(buf, "AbC") && count == 0);
+    Str bufStr(buf, 9);
+    str::TransCharsInPlace(bufStr, StrL("ace"), StrL("ACE"));
+    utassert(str::Eq(buf, "AbC\1Efg\1"));
+    str::TransCharsInPlace(bufStr, StrL("\1"), StrL("\0"));
+    utassert(str::Eq(buf, "AbC") && str::Eq(buf + 4, "Efg"));
+    str::TransCharsInPlace(bufStr, StrL(""), StrL("X"));
+    utassert(str::Eq(buf, "AbC"));
 
     str::BufSet(Str(buf, dimof(buf)), "blogarapato");
-    count = str::RemoveCharsInPlace(buf, "bo");
+    int count = str::RemoveCharsInPlace(buf, "bo");
     utassert(3 == count);
     utassert(str::Eq(buf, "lgarapat"));
 

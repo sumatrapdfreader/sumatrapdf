@@ -3538,8 +3538,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
-    WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
+    Str fileFilterStr = ToStr(fileFilter);
+    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
+    WCHAR* fileFilterW = CWStrTemp(fileFilterStr);
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
@@ -4079,7 +4080,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
+    Str fileFilterStr = ToStr(fileFilter);
+    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
 
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
@@ -4110,7 +4112,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = CWStrTemp(ToStr(fileFilter));
+    ofn.lpstrFilter = CWStrTemp(fileFilterStr);
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
     if (len(defExt) > 0 && defExt.s[0] == '.') {
@@ -4287,7 +4289,8 @@ static void RenameCurrentFile(MainWindow* win) {
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.Append(fmt("\1*%s\1", defExt));
-    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
+    Str fileFilterStr = ToStr(fileFilter);
+    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
 
     WCHAR dstFilePathW[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
@@ -4306,7 +4309,7 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFilePathW;
     ofn.nMaxFile = dimof(dstFilePathW);
-    ofn.lpstrFilter = CWStrTemp(ToStr(fileFilter));
+    ofn.lpstrFilter = CWStrTemp(fileFilterStr);
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
     auto s = _TRA("Rename To");
@@ -4369,7 +4372,8 @@ static void CreateLnkShortcut(MainWindow* win) {
     // Remove the extension so that it can be replaced with .lnk
     auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
-    wstr::TransCharsInPlace(WStr(dstFileName), WStrL(L":"), WStrL(L"_"));
+    WStr dstName(dstFileName);
+    wstr::TransCharsInPlace(dstName, WStrL(L":"), WStrL(L"_"));
     if (wstr::EndsWithI(dstFileName, defExt)) {
         int idx = len(dstFileName) - len(defExt);
         dstFileName[idx] = '\0';
@@ -4380,8 +4384,9 @@ static void CreateLnkShortcut(MainWindow* win) {
     // methods too early on)
     str::Builder fileFilter;
     fileFilter.Append(fmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts")));
-    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
-    WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
+    Str fileFilterStr = ToStr(fileFilter);
+    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
+    WCHAR* fileFilterW = CWStrTemp(fileFilterStr);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -4616,8 +4621,9 @@ static TempWStr GetFileFilterTemp() {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
-    return ToWStrTemp(ToStr(fileFilter));
+    Str fileFilterStr = ToStr(fileFilter);
+    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
+    return ToWStrTemp(fileFilterStr);
 }
 
 static void OpenFile(MainWindow* win) {
