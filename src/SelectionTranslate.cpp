@@ -7,10 +7,15 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "SumatraPDF.h"
+#include "SumatraConfig.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
@@ -20,15 +25,8 @@
 #include "ClaudeCode.h"
 #include "CodexBuild.h"
 #include "Translations.h"
-
-constexpr UINT WM_SELECTION_TRANSLATE_DONE = WM_USER + 211;
-
-constexpr int kIdSrcText = 100;
-constexpr int kIdSrcLang = 101;
-constexpr int kIdDstLang = 102;
-constexpr int kIdResultText = 103;
-constexpr int kIdTranslateBtn = 104;
-constexpr int kIdCloseBtn = 105;
+#include "Theme.h"
+#include "DarkModeSubclass.h"
 
 static const Str kSrcLangAuto = StrL("Auto");
 
@@ -67,31 +65,57 @@ static const Str gPopularLanguages[] = {
     StrL("Slovak"),
 };
 
-struct SelectionTranslateDialog {
-    HWND hwnd = nullptr;
+struct SelectionTranslateWnd : Wnd {
+    ~SelectionTranslateWnd() override;
+
+    HFONT font = nullptr;
     HWND hwndOwner = nullptr;
-    HWND hwndSrcText = nullptr;
-    HWND hwndSrcLang = nullptr;
-    HWND hwndDstLang = nullptr;
-    HWND hwndResultLabel = nullptr;
-    HWND hwndResultText = nullptr;
-    HWND hwndTranslateBtn = nullptr;
-    HWND hwndCloseBtn = nullptr;
-    HFONT hFont = nullptr;
+    Static* staticPrompt = nullptr;
+    Edit* editSrcText = nullptr;
+    Static* staticFromLabel = nullptr;
+    DropDown* dropSrcLang = nullptr;
+    Static* staticToLabel = nullptr;
+    DropDown* dropDstLang = nullptr;
+    Button* btnTranslate = nullptr;
+    Button* btnClose = nullptr;
+    Static* staticResultLabel = nullptr;
+    Edit* editResult = nullptr;
+
     AIChatBackend backend = AIChatBackend::Grok;
     bool translating = false;
     bool resultVisible = false;
-    int contentDx = 0;
-    int labelShift = 0;
-    int yAfterLangs = 0;
-    int pad = 0;
-    int gap = 0;
-    int btnDy = 0;
-    int btnW = 0;
+
+    bool Create(HWND owner, Str selText, Str title);
+    void Relayout();
+    void UpdateTheme();
+    void UpdateTranslateButtonState();
+    void ShowTranslationResult(Str text, bool isError);
+    void StartTranslation();
+    void OnTranslationFinished(bool ok, Str msg);
+    void OnCloseClicked();
+    void ScheduleDelete();
 };
 
+static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
+
+SelectionTranslateWnd::~SelectionTranslateWnd() = default;
+
+static void SafeDeleteSelectionTranslateWnd() {
+    if (!gSelectionTranslateWnd) {
+        return;
+    }
+    auto* wnd = gSelectionTranslateWnd;
+    gSelectionTranslateWnd = nullptr;
+    delete wnd;
+}
+
+void SelectionTranslateWnd::ScheduleDelete() {
+    auto fn = MkFunc0Void(SafeDeleteSelectionTranslateWnd);
+    uitask::Post(fn, "SafeDeleteSelectionTranslateWnd");
+}
+
 struct SelectionTranslateTaskData {
-    SelectionTranslateDialog* dlg = nullptr;
+    SelectionTranslateWnd* wnd = nullptr;
     AIChatBackend backend = AIChatBackend::Grok;
     Str srcLang;
     Str dstLang;
@@ -109,6 +133,31 @@ struct SelectionTranslateDoneData {
     Str msg;
     ~SelectionTranslateDoneData() { str::Free(msg); }
 };
+
+static void SelectionTranslateThread(SelectionTranslateTaskData* data);
+
+static void PopulateLanguageDropDown(DropDown* dd, Str initial, bool includeAuto) {
+    if (!dd) {
+        return;
+    }
+    StrVec items;
+    if (includeAuto) {
+        items.Append(kSrcLangAuto);
+    }
+    for (Str lang : gPopularLanguages) {
+        items.Append(lang);
+    }
+    dd->SetItems(items);
+    if (!str::IsEmptyOrWhiteSpace(initial)) {
+        dd->SetText(initial);
+        for (int i = 0; i < len(items); i++) {
+            if (str::EqI(items[i], initial)) {
+                dd->SetCurrentSelection(i);
+                return;
+            }
+        }
+    }
+}
 
 static Str PrimaryLangIdToEnglishName(WORD primary) {
     switch (primary) {
@@ -221,24 +270,6 @@ static void MaybeSaveTranslateToLang(Str dstLang) {
     SaveSettings();
 }
 
-static void PopulateLanguageCombo(HWND hwnd, Str initial, bool includeAuto) {
-    SendMessageW(hwnd, CB_RESETCONTENT, 0, 0);
-    if (includeAuto) {
-        CbAddString(hwnd, kSrcLangAuto);
-    }
-    for (Str lang : gPopularLanguages) {
-        CbAddString(hwnd, lang);
-    }
-    if (!str::IsEmptyOrWhiteSpace(initial)) {
-        HwndSetText(hwnd, initial);
-        WCHAR* initialW = CWStrTemp(initial);
-        LRESULT idx = SendMessageW(hwnd, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)initialW);
-        if (idx != CB_ERR) {
-            SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)idx, 0);
-        }
-    }
-}
-
 static bool IsSrcLangAutoTemp(Str srcLang) {
     if (str::IsEmptyOrWhiteSpace(srcLang)) {
         return false;
@@ -246,16 +277,6 @@ static bool IsSrcLangAutoTemp(Str srcLang) {
     TempStr lang = str::DupTemp(srcLang);
     str::TrimWSInPlace(lang, str::TrimOpt::Both);
     return str::EqI(lang, kSrcLangAuto);
-}
-
-static TempStr GetWindowTextUtf8Temp(HWND hwnd) {
-    int n = GetWindowTextLengthW(hwnd);
-    if (n <= 0) {
-        return nullptr;
-    }
-    WCHAR* ws = AllocArrayTemp<WCHAR>(n + 1);
-    GetWindowTextW(hwnd, ws, n + 1);
-    return ToUtf8Temp(WStr(ws));
 }
 
 static bool LanguagesAreSameTemp(Str a, Str b) {
@@ -657,110 +678,155 @@ TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str 
     return res;
 }
 
-static void SetDialogClientSize(HWND hwnd, int clientW, int clientH) {
-    RECT rc{0, 0, clientW, clientH};
-    DWORD style = (DWORD)GetWindowLongPtrW(hwnd, GWL_STYLE);
-    DWORD exStyle = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-    AdjustWindowRectEx(&rc, style, FALSE, exStyle);
-    SetWindowPos(hwnd, nullptr, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
-}
-
-static int ComboVisibleDy(HWND hwndCombo) {
-    int itemH = (int)SendMessageW(hwndCombo, CB_GETITEMHEIGHT, (WPARAM)-1, 0);
-    return itemH + 8;
-}
-
-static int ComboLabelYOffset(HWND hwndCombo, HWND hwnd, HFONT font) {
-    COMBOBOXINFO cbi{};
-    cbi.cbSize = sizeof(COMBOBOXINFO);
-    if (!GetComboBoxInfo(hwndCombo, &cbi)) {
-        return DpiScale(hwnd, 4);
+void SelectionTranslateWnd::UpdateTheme() {
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    auto setColors = [&](Wnd* w) {
+        if (w) {
+            w->SetColors(colTxt, colBg);
+        }
+    };
+    setColors(staticPrompt);
+    setColors(editSrcText);
+    setColors(staticFromLabel);
+    setColors(dropSrcLang);
+    setColors(staticToLabel);
+    setColors(dropDstLang);
+    setColors(btnTranslate);
+    setColors(btnClose);
+    setColors(staticResultLabel);
+    setColors(editResult);
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
     }
-    int editDy = cbi.rcItem.bottom - cbi.rcItem.top;
-    AutoReleaseDC dc(hwnd);
-    ScopedSelectFont selectFont(dc, font);
-    TEXTMETRIC tm{};
-    int textDy = GetTextMetrics(dc, &tm) ? tm.tmHeight : FontDyPx(hwnd, font);
-    // static text draws flush to the top of its rect; nudge up to match combo text visually
-    constexpr int kComboLabelAdjust = 2;
-    return cbi.rcItem.top + (editDy - textDy) / 2 - DpiScale(hwnd, kComboLabelAdjust);
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-static void LayoutButtons(SelectionTranslateDialog* dlg, int y) {
-    int x = dlg->pad;
-    int innerDx = dlg->contentDx;
-    SetWindowPos(dlg->hwndTranslateBtn, nullptr, x + innerDx - 2 * dlg->btnW - dlg->gap, y, dlg->btnW, dlg->btnDy,
-                 SWP_NOZORDER);
-    SetWindowPos(dlg->hwndCloseBtn, nullptr, x + innerDx - dlg->btnW, y, dlg->btnW, dlg->btnDy, SWP_NOZORDER);
-}
-
-static void ShowTranslationResult(SelectionTranslateDialog* dlg, Str text, bool isError) {
-    if (!dlg || !dlg->hwnd) {
+void SelectionTranslateWnd::Relayout() {
+    if (!layout) {
         return;
     }
-    HWND hwnd = dlg->hwnd;
-    int labelDy = DpiScale(hwnd, 16);
-    int resultDy = DpiScale(hwnd, 120);
-    int x = dlg->pad;
-    int y = dlg->yAfterLangs;
-    Str label = isError ? Str(_TRA("Error:")) : Str(_TRA("Translation:"));
-
-    if (!dlg->resultVisible) {
-        dlg->hwndResultLabel = CreateWindowExW(0, L"STATIC", CWStrTemp(label), WS_CHILD | WS_VISIBLE,
-                                               x + dlg->labelShift, y, dlg->contentDx - dlg->labelShift, labelDy, hwnd,
-                                               nullptr, GetModuleHandleW(nullptr), nullptr);
-        SetWindowFont(dlg->hwndResultLabel, dlg->hFont, TRUE);
-        y += labelDy + dlg->gap;
-        dlg->hwndResultText = CreateWindowExW(
-            WS_EX_CLIENTEDGE, L"EDIT", L"",
-            WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, x, y, dlg->contentDx,
-            resultDy, hwnd, (HMENU)(INT_PTR)kIdResultText, GetModuleHandleW(nullptr), nullptr);
-        SetWindowFont(dlg->hwndResultText, dlg->hFont, TRUE);
-        y += resultDy + dlg->gap;
-        LayoutButtons(dlg, y);
-        int clientH = y + dlg->btnDy + dlg->pad;
-        SetDialogClientSize(hwnd, dlg->contentDx + 2 * dlg->pad, clientH);
-        CenterDialog(hwnd, dlg->hwndOwner);
-        dlg->resultVisible = true;
-    }
-    if (dlg->hwndResultLabel) {
-        HwndSetText(dlg->hwndResultLabel, label);
-    }
-    HwndSetText(dlg->hwndResultText, text);
-    ShowWindow(dlg->hwndResultLabel, SW_SHOW);
-    ShowWindow(dlg->hwndResultText, SW_SHOW);
+    int minDx = DpiScale(hwnd, 500);
+    LayoutAndSizeToContent(layout, minDx, 0, hwnd);
+    CenterDialog(hwnd, hwndOwner);
 }
 
-static void UpdateTranslateButtonState(SelectionTranslateDialog* dlg) {
-    if (!dlg || !dlg->hwndTranslateBtn) {
+void SelectionTranslateWnd::UpdateTranslateButtonState() {
+    if (!btnTranslate) {
         return;
     }
-    TempStr srcLang = GetWindowTextUtf8Temp(dlg->hwndSrcLang);
-    TempStr dstLang = GetWindowTextUtf8Temp(dlg->hwndDstLang);
-    TempStr srcText = GetWindowTextUtf8Temp(dlg->hwndSrcText);
+    TempStr srcLang = dropSrcLang ? dropSrcLang->GetTextTemp() : TempStr{};
+    TempStr dstLang = dropDstLang ? dropDstLang->GetTextTemp() : TempStr{};
+    TempStr srcText = editSrcText ? editSrcText->GetTextTemp() : TempStr{};
     bool sameLang = LanguagesAreSameTemp(srcLang, dstLang);
     bool hasText = !str::IsEmptyOrWhiteSpace(srcText);
-    bool enable = !dlg->translating && hasText && !sameLang;
-    EnableWindow(dlg->hwndTranslateBtn, enable);
+    bool enable = !translating && hasText && !sameLang;
+    btnTranslate->SetIsEnabled(enable);
+}
+
+void SelectionTranslateWnd::ShowTranslationResult(Str text, bool isError) {
+    if (!hwnd) {
+        return;
+    }
+    Str label = isError ? Str(_TRA("Error:")) : Str(_TRA("Translation:"));
+    if (!resultVisible) {
+        if (staticResultLabel) {
+            staticResultLabel->SetVisibility(Visibility::Visible);
+        }
+        if (editResult) {
+            editResult->SetVisibility(Visibility::Visible);
+        }
+        resultVisible = true;
+        Relayout();
+    }
+    if (staticResultLabel) {
+        staticResultLabel->SetText(label);
+    }
+    if (editResult) {
+        editResult->SetText(text);
+    }
+}
+
+void SelectionTranslateWnd::StartTranslation() {
+    if (translating) {
+        return;
+    }
+    TempStr srcLang = dropSrcLang ? dropSrcLang->GetTextTemp() : TempStr{};
+    TempStr dstLang = dropDstLang ? dropDstLang->GetTextTemp() : TempStr{};
+    TempStr text = editSrcText ? editSrcText->GetTextTemp() : TempStr{};
+    if (str::IsEmptyOrWhiteSpace(text) || LanguagesAreSameTemp(srcLang, dstLang)) {
+        return;
+    }
+
+    translating = true;
+    if (editSrcText) {
+        editSrcText->SetIsEnabled(false);
+    }
+    if (dropSrcLang) {
+        dropSrcLang->SetIsEnabled(false);
+    }
+    if (dropDstLang) {
+        dropDstLang->SetIsEnabled(false);
+    }
+    if (btnTranslate) {
+        btnTranslate->SetIsEnabled(false);
+        btnTranslate->SetText(_TRA("Translating..."));
+    }
+    if (resultVisible) {
+        if (staticResultLabel) {
+            staticResultLabel->SetVisibility(Visibility::Collapse);
+        }
+        if (editResult) {
+            editResult->SetVisibility(Visibility::Collapse);
+        }
+        resultVisible = false;
+        Relayout();
+    }
+
+    auto task = new SelectionTranslateTaskData();
+    task->wnd = this;
+    task->backend = backend;
+    task->srcLang = str::Dup(srcLang);
+    task->dstLang = str::Dup(dstLang);
+    task->text = str::Dup(text);
+    RunAsync(MkFunc0(SelectionTranslateThread, task), "SelectionTranslate");
+}
+
+void SelectionTranslateWnd::OnTranslationFinished(bool ok, Str msg) {
+    translating = false;
+    if (editSrcText) {
+        editSrcText->SetIsEnabled(true);
+    }
+    if (dropSrcLang) {
+        dropSrcLang->SetIsEnabled(true);
+    }
+    if (dropDstLang) {
+        dropDstLang->SetIsEnabled(true);
+    }
+    if (btnTranslate) {
+        btnTranslate->SetText(_TRA("Translate"));
+    }
+    TempStr display = ok ? msg : FormatTranslationErrorForDisplayTemp(backend, msg);
+    ShowTranslationResult(display, !ok);
+    if (ok && dropDstLang) {
+        MaybeSaveTranslateToLang(dropDstLang->GetTextTemp());
+    }
+    UpdateTranslateButtonState();
+}
+
+void SelectionTranslateWnd::OnCloseClicked() {
+    Close();
 }
 
 static void OnTranslateDone(SelectionTranslateDoneData* data) {
     AutoDelete del(data);
-    SelectionTranslateDialog* dlg = (SelectionTranslateDialog*)GetWindowLongPtrW(data->hwndDlg, GWLP_USERDATA);
-    if (!dlg || !IsWindow(dlg->hwnd)) {
+    if (!gSelectionTranslateWnd || !IsWindow(gSelectionTranslateWnd->hwnd) ||
+        gSelectionTranslateWnd->hwnd != data->hwndDlg) {
         return;
     }
-    dlg->translating = false;
-    EnableWindow(dlg->hwndSrcText, TRUE);
-    EnableWindow(dlg->hwndSrcLang, TRUE);
-    EnableWindow(dlg->hwndDstLang, TRUE);
-    HwndSetText(dlg->hwndTranslateBtn, _TRA("Translate"));
-    TempStr display = data->ok ? data->msg : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg);
-    ShowTranslationResult(dlg, display, !data->ok);
-    if (data->ok) {
-        MaybeSaveTranslateToLang(GetWindowTextUtf8Temp(dlg->hwndDstLang));
-    }
-    UpdateTranslateButtonState(dlg);
+    gSelectionTranslateWnd->OnTranslationFinished(data->ok, data->msg);
 }
 
 static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
@@ -772,96 +838,199 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     }
 
     auto done = new SelectionTranslateDoneData();
-    done->hwndDlg = data->dlg->hwnd;
+    done->hwndDlg = data->wnd ? data->wnd->hwnd : nullptr;
     done->ok = ok;
-    done->msg = result; // transfer ownership; freed in ~SelectionTranslateDoneData
+    done->msg = result;
     uitask::Post(MkFunc0(OnTranslateDone, done), "SelectionTranslateDone");
 }
 
-static void StartTranslation(SelectionTranslateDialog* dlg) {
-    if (!dlg || dlg->translating) {
+static void OnSelectionTranslateDestroy(Wnd::DestroyEvent*) {
+    if (!gSelectionTranslateWnd) {
         return;
     }
-    TempStr srcLang = GetWindowTextUtf8Temp(dlg->hwndSrcLang);
-    TempStr dstLang = GetWindowTextUtf8Temp(dlg->hwndDstLang);
-    TempStr text = GetWindowTextUtf8Temp(dlg->hwndSrcText);
-    if (str::IsEmptyOrWhiteSpace(text) || LanguagesAreSameTemp(srcLang, dstLang)) {
-        return;
+    HWND hwndOwner = gSelectionTranslateWnd->hwndOwner;
+    if (hwndOwner) {
+        EnableWindow(hwndOwner, TRUE);
+        HwndToForeground(hwndOwner);
     }
-
-    dlg->translating = true;
-    EnableWindow(dlg->hwndSrcText, FALSE);
-    EnableWindow(dlg->hwndSrcLang, FALSE);
-    EnableWindow(dlg->hwndDstLang, FALSE);
-    EnableWindow(dlg->hwndTranslateBtn, FALSE);
-    HwndSetText(dlg->hwndTranslateBtn, _TRA("Translating..."));
-    if (dlg->resultVisible) {
-        ShowWindow(dlg->hwndResultLabel, SW_HIDE);
-        ShowWindow(dlg->hwndResultText, SW_HIDE);
-    }
-
-    auto task = new SelectionTranslateTaskData();
-    task->dlg = dlg;
-    task->backend = dlg->backend;
-    task->srcLang = str::Dup(srcLang);
-    task->dstLang = str::Dup(dstLang);
-    task->text = str::Dup(text);
-    RunAsync(MkFunc0(SelectionTranslateThread, task), "SelectionTranslate");
+    gSelectionTranslateWnd->ScheduleDelete();
 }
 
-static LRESULT CALLBACK SelectionTranslateDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    SelectionTranslateDialog* dlg = nullptr;
-    if (msg == WM_CREATE) {
-        CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
-        dlg = (SelectionTranslateDialog*)cs->lpCreateParams;
-        dlg->hwnd = hwnd;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)dlg);
-        return 0;
+bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
+    hwndOwner = owner;
+    bool isRtl = IsUIRtl();
+
+    {
+        CreateCustomArgs args;
+        args.title = title;
+        args.visible = false;
+        args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+        args.exStyle = WS_EX_DLGMODALFRAME;
+        args.font = font;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
+        CreateCustom(args);
     }
-    dlg = (SelectionTranslateDialog*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    if (!dlg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
+    if (!hwnd) {
+        return false;
     }
 
-    switch (msg) {
-        case WM_COMMAND: {
-            HWND ctl = (HWND)lp;
-            int code = HIWORD(wp);
-            if (ctl == dlg->hwndTranslateBtn && code == BN_CLICKED) {
-                StartTranslation(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndCloseBtn && code == BN_CLICKED) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            if ((ctl == dlg->hwndSrcLang || ctl == dlg->hwndDstLang || ctl == dlg->hwndSrcText) &&
-                (code == CBN_EDITCHANGE || code == EN_CHANGE)) {
-                UpdateTranslateButtonState(dlg);
-                return 0;
-            }
-            break;
-        }
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY: {
-            HWND hwndOwner = dlg->hwndOwner;
-            if (hwndOwner) {
-                EnableWindow(hwndOwner, TRUE);
-            }
-            delete dlg;
-            if (hwndOwner) {
-                HwndToForeground(hwndOwner);
-            }
-            return 0;
-        }
+    auto* vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = selText;
+        args.isMultiLine = true;
+        args.withBorder = true;
+        args.idealSizeLines = 7;
+        args.isRtl = isRtl;
+        editSrcText = new Edit();
+        editSrcText->Create(args);
+        editSrcText->onTextChanged =
+            MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
     }
-    return DefWindowProc(hwnd, msg, wp, lp);
+
+    if (editSrcText) {
+        int labelShift = editSrcText->GetLeftTextMargin();
+        Static::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = _TRA("Translate:");
+        args.isRtl = isRtl;
+        staticPrompt = new Static();
+        staticPrompt->Create(args);
+        auto* promptPad = new Padding(staticPrompt, {0, 0, 0, labelShift});
+        vbox->AddChild(promptPad);
+    }
+
+    vbox->AddChild(editSrcText);
+
+    {
+        auto* langRow = new HBox();
+        langRow->alignMain = MainAxisAlign::MainStart;
+        langRow->alignCross = CrossAxisAlign::CrossCenter;
+
+        {
+            Static::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = _TRA("From:");
+            args.isRtl = isRtl;
+            staticFromLabel = new Static();
+            staticFromLabel->Create(args);
+            langRow->AddChild(staticFromLabel);
+        }
+        {
+            DropDown::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.isEditable = true;
+            args.isRtl = isRtl;
+            dropSrcLang = new DropDown();
+            dropSrcLang->Create(args);
+            PopulateLanguageDropDown(dropSrcLang, kSrcLangAuto, true);
+            dropSrcLang->onTextChanged =
+                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
+            dropSrcLang->onSelectionChanged =
+                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
+            dropSrcLang->SetInsetsPt(0, 0, 0, 4);
+            langRow->AddChild(dropSrcLang, 1);
+        }
+        {
+            Static::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = _TRA("To:");
+            args.isRtl = isRtl;
+            staticToLabel = new Static();
+            staticToLabel->Create(args);
+            staticToLabel->SetInsetsPt(0, 0, 0, 4);
+            langRow->AddChild(staticToLabel);
+        }
+        {
+            DropDown::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.isEditable = true;
+            args.isRtl = isRtl;
+            dropDstLang = new DropDown();
+            dropDstLang->Create(args);
+            PopulateLanguageDropDown(dropDstLang, DefaultDestinationLanguageTemp(), false);
+            dropDstLang->onTextChanged =
+                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
+            dropDstLang->onSelectionChanged =
+                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
+            langRow->AddChild(dropDstLang, 1);
+        }
+        vbox->AddChild(new Padding(langRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
+    }
+
+    {
+        auto* btnRow = new HBox();
+        btnRow->alignMain = MainAxisAlign::MainEnd;
+        btnRow->alignCross = CrossAxisAlign::CrossCenter;
+
+        btnClose = CreateButton(hwnd, _TRA("Close"),
+                                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::OnCloseClicked>(this), isRtl);
+        btnRow->AddChild(btnClose);
+        {
+            auto* btn = new Button();
+            btn->isDefault = true;
+            btn->onClick = MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::StartTranslation>(this);
+            Button::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = _TRA("Translate");
+            args.isRtl = isRtl;
+            btn->Create(args);
+            btn->SetInsetsPt(0, 0, 0, 4);
+            btnTranslate = btn;
+            btnRow->AddChild(btnTranslate);
+        }
+        vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
+    }
+
+    {
+        Static::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = _TRA("Translation:");
+        args.isRtl = isRtl;
+        staticResultLabel = new Static();
+        staticResultLabel->Create(args);
+        staticResultLabel->SetVisibility(Visibility::Collapse);
+        staticResultLabel->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(staticResultLabel);
+    }
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.isMultiLine = true;
+        args.withBorder = true;
+        args.idealSizeLines = 6;
+        args.isRtl = isRtl;
+        editResult = new Edit();
+        editResult->Create(args);
+        SendMessageW(editResult->hwnd, EM_SETREADONLY, TRUE, 0);
+        editResult->SetVisibility(Visibility::Collapse);
+        editResult->SetInsetsPt(4, 0, 0, 0);
+        vbox->AddChild(editResult);
+    }
+
+    layout = new Padding(vbox, DpiScaledInsets(hwnd, 12, 12));
+    Relayout();
+    UpdateTheme();
+    UpdateTranslateButtonState();
+    SetIsVisible(true);
+    if (editSrcText) {
+        HwndSetFocus(editSrcText->hwnd);
+    }
+    return true;
 }
-
-static constexpr const WCHAR* kSelectionTranslateWinClass = L"SUMATRA_SELECTION_TRANSLATE";
-static bool gSelectionTranslateWinClassRegistered = false;
 
 void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     if (!tab || !tab->win || !tab->selectionOnPage) {
@@ -873,6 +1042,10 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     if (!IsBackendInstalled(backend)) {
         return;
     }
+    if (gSelectionTranslateWnd) {
+        HwndSetFocus(gSelectionTranslateWnd->hwnd);
+        return;
+    }
 
     bool isTextOnlySelection = false;
     TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelection);
@@ -880,116 +1053,21 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
         return;
     }
 
-    if (!gSelectionTranslateWinClassRegistered) {
-        WNDCLASSEXW wc{};
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = SelectionTranslateDlgProc;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-        wc.lpszClassName = kSelectionTranslateWinClass;
-        RegisterClassExW(&wc);
-        gSelectionTranslateWinClassRegistered = true;
-    }
-
     HWND hwndOwner = tab->win->hwndFrame;
     EnableWindow(hwndOwner, FALSE);
 
-    auto dlg = new SelectionTranslateDialog();
-    dlg->hwndOwner = hwndOwner;
-    dlg->backend = backend;
-    dlg->hFont = GetDefaultGuiFont();
-
+    auto* wnd = new SelectionTranslateWnd();
+    wnd->hwndOwner = hwndOwner;
+    wnd->backend = backend;
+    wnd->font = GetAppFont(hwndOwner);
+    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSelectionTranslateDestroy);
     TempStr title = fmt(_TRA("Translate with %s").s, BackendDisplayName(backend));
-
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSelectionTranslateWinClass, CWStrTemp(title),
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                                100, 100, hwndOwner, nullptr, GetModuleHandleW(nullptr), dlg);
-    if (!hwnd) {
+    if (!wnd->Create(hwndOwner, selText, title)) {
         EnableWindow(hwndOwner, TRUE);
-        delete dlg;
+        delete wnd;
         return;
     }
 
-    dlg->pad = DpiScale(hwnd, 12);
-    dlg->gap = DpiScale(hwnd, 8);
-    int labelDy = DpiScale(hwnd, 16);
-    dlg->btnDy = DpiScale(hwnd, 28);
-    dlg->btnW = DpiScale(hwnd, 96);
-    int clientW = DpiScale(hwndOwner, 500);
-    int x = dlg->pad;
-    int y = dlg->pad;
-    dlg->contentDx = clientW - 2 * dlg->pad;
-    int colDx = (dlg->contentDx - dlg->gap) / 2;
-
-    auto createLabel = [&](Str text, int lx, int ly, int ldx) {
-        HWND h = CreateWindowExW(0, L"STATIC", CWStrTemp(text.s), WS_CHILD | WS_VISIBLE, lx, ly, ldx, labelDy, hwnd,
-                                 nullptr, GetModuleHandleW(nullptr), nullptr);
-        SetWindowFont(h, dlg->hFont, TRUE);
-        return h;
-    };
-
-    int translateLabelY = y;
-    y += labelDy + dlg->gap;
-    int srcTextDy = DpiScale(hwnd, 140);
-    dlg->hwndSrcText =
-        CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", CWStrTemp(selText),
-                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, x, y, dlg->contentDx,
-                        srcTextDy, hwnd, (HMENU)(INT_PTR)kIdSrcText, GetModuleHandleW(nullptr), nullptr);
-    SetWindowFont(dlg->hwndSrcText, dlg->hFont, TRUE);
-    int editBorder = GetSystemMetrics(SM_CXEDGE);
-    LRESULT margins = SendMessageW(dlg->hwndSrcText, EM_GETMARGINS, 0, 0);
-    dlg->labelShift = editBorder + LOWORD(margins);
-    createLabel(Str(_TRA("Translate:")), x + dlg->labelShift, translateLabelY, dlg->contentDx - dlg->labelShift);
-    y += srcTextDy + dlg->gap;
-
-    int charDx = HwndMeasureText(hwnd, " ", dlg->hFont).dx;
-    Size fromLabelSize = HwndMeasureText(hwnd, _TRA("From:"), dlg->hFont);
-    Size toLabelSize = HwndMeasureText(hwnd, _TRA("To:"), dlg->hFont);
-    int col2X = x + colDx + dlg->gap;
-    int langRowY = y;
-    int fromLabelX = x + dlg->labelShift;
-    int srcComboX = fromLabelX + fromLabelSize.dx + charDx;
-    int srcComboDx = x + colDx - srcComboX;
-    dlg->hwndSrcLang = CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
-                                       srcComboX, langRowY, srcComboDx, DpiScale(hwnd, 200), hwnd,
-                                       (HMENU)(INT_PTR)kIdSrcLang, GetModuleHandleW(nullptr), nullptr);
-    SetWindowFont(dlg->hwndSrcLang, dlg->hFont, TRUE);
-    int comboRowDy = ComboVisibleDy(dlg->hwndSrcLang);
-    MoveWindow(dlg->hwndSrcLang, srcComboX, langRowY, srcComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
-    PopulateLanguageCombo(dlg->hwndSrcLang, kSrcLangAuto, true);
-    int labelYOffset = ComboLabelYOffset(dlg->hwndSrcLang, hwnd, dlg->hFont);
-    createLabel(Str(_TRA("From:")), fromLabelX, langRowY + labelYOffset, fromLabelSize.dx);
-
-    int toLabelX = col2X + dlg->labelShift;
-    int dstComboX = toLabelX + toLabelSize.dx + charDx;
-    int dstComboDx = x + dlg->contentDx - dstComboX;
-    dlg->hwndDstLang = CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
-                                       dstComboX, langRowY, dstComboDx, DpiScale(hwnd, 200), hwnd,
-                                       (HMENU)(INT_PTR)kIdDstLang, GetModuleHandleW(nullptr), nullptr);
-    SetWindowFont(dlg->hwndDstLang, dlg->hFont, TRUE);
-    MoveWindow(dlg->hwndDstLang, dstComboX, langRowY, dstComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
-    PopulateLanguageCombo(dlg->hwndDstLang, DefaultDestinationLanguageTemp(), false);
-    createLabel(Str(_TRA("To:")), toLabelX, langRowY + labelYOffset, toLabelSize.dx);
-    y += comboRowDy + dlg->gap;
-    dlg->yAfterLangs = y;
-
-    dlg->hwndTranslateBtn = CreateWindowExW(0, L"BUTTON", CWStrTemp(_TRA("Translate")),
-                                            WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, y, dlg->btnW, dlg->btnDy, hwnd,
-                                            (HMENU)(INT_PTR)kIdTranslateBtn, GetModuleHandleW(nullptr), nullptr);
-    SetWindowFont(dlg->hwndTranslateBtn, dlg->hFont, TRUE);
-    dlg->hwndCloseBtn =
-        CreateWindowExW(0, L"BUTTON", CWStrTemp(_TRA("Close")), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, y, dlg->btnW,
-                        dlg->btnDy, hwnd, (HMENU)(INT_PTR)kIdCloseBtn, GetModuleHandleW(nullptr), nullptr);
-    SetWindowFont(dlg->hwndCloseBtn, dlg->hFont, TRUE);
-    LayoutButtons(dlg, y);
-
-    int clientH = y + dlg->btnDy + dlg->pad;
-    SetDialogClientSize(hwnd, clientW, clientH);
-    CenterDialog(hwnd, hwndOwner);
-
-    UpdateTranslateButtonState(dlg);
-    ShowWindow(hwnd, SW_SHOW);
-    SetForegroundWindow(hwnd);
+    gSelectionTranslateWnd = wnd;
+    HwndToForeground(wnd->hwnd);
 }

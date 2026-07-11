@@ -32,6 +32,10 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
 
 bool DropDown::OnCommand(WPARAM wp, LPARAM) {
     auto code = HIWORD(wp);
+    if (code == CBN_EDITCHANGE && onTextChanged.IsValid()) {
+        onTextChanged.Call();
+        return true;
+    }
     if ((code == CBN_SELCHANGE) && onSelectionChanged.IsValid()) {
         onSelectionChanged.Call();
         // must return false or else the drop-down list will not close
@@ -44,7 +48,12 @@ HWND DropDown::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;
-    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
+    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    if (args.isEditable) {
+        cargs.style |= CBS_DROPDOWN | WS_VSCROLL;
+    } else {
+        cargs.style |= CBS_DROPDOWNLIST;
+    }
     cargs.className = WC_COMBOBOX;
     cargs.font = args.font;
 

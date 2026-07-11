@@ -439,6 +439,7 @@ struct DropDown : Wnd {
         HWND parent = nullptr;
         HFONT font = nullptr;
         bool isRtl = false;
+        bool isEditable = false;
         // TODO: model or items
     };
 
@@ -447,6 +448,7 @@ struct DropDown : Wnd {
     // TODO: use DropDownModel
     StrVec items;
     SelectionChangedHandler onSelectionChanged;
+    TextChangedHandler onTextChanged;
 
     DropDown();
     ~DropDown() override = default;
