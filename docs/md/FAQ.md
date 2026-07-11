@@ -32,7 +32,7 @@ Some settings (for example `UseTabs`) require restarting SumatraPDF. Per-documen
 
 **I accidentally inverted document colors — how do I undo?**
 
-Press `Shift + I` again (`CmdInvertColors`), or set `FixedPageUI.InvertColors = false` in advanced settings. See [Customize theme colors](Customize-theme-colors.md).
+Press `Shift + I` again (`CmdInvertColors`), or set `DocumentColorsFollowTheme = off` in advanced settings. See [Customize theme colors](Customize-theme-colors.md).
 
 **How do I get a dark background without inverting images in EPUBs?**
 

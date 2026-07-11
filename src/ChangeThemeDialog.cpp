@@ -19,6 +19,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkModeSubclass.h"
+#include "PdfDarkMode.h"
 #include "ChangeThemeDialog.h"
 
 struct ChangeThemeWnd : Wnd {
@@ -26,20 +27,51 @@ struct ChangeThemeWnd : Wnd {
 
     HFONT font = nullptr;
     MainWindow* win = nullptr;
+    bool documentColorsFollowThemeOnly = false;
     ListBox* listBox = nullptr;
     ListBoxModelStrings* model = nullptr; // owned by listBox
-    Str startThemePref;                   // prefs theme at open, for Cancel revert
+    DropDown* dropDownDocumentColorsFollowTheme = nullptr;
+    Str startThemePref; // prefs theme at open, for Cancel revert
+    DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG&) override;
 
     void OnSelectionChanged();
+    void OnDocumentColorsFollowThemeChanged();
+    void PreviewDocumentColors();
     void OnCancel();
     void OnChange();
     void ScheduleDelete();
 };
 
 static ChangeThemeWnd* gChangeThemeWnd = nullptr;
+
+static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";
+
+static int DocumentColorsFollowThemeToDropDownIndex(DocumentColorsFollowTheme mode) {
+    switch (mode) {
+        case DocumentColorsFollowTheme::Smart:
+            return 1;
+        case DocumentColorsFollowTheme::Legacy:
+            return 2;
+        case DocumentColorsFollowTheme::Off:
+        default:
+            return 0;
+    }
+}
+
+static DocumentColorsFollowTheme DocumentColorsFollowThemeFromDropDownIndex(int idx) {
+    switch (idx) {
+        case 1:
+            return DocumentColorsFollowTheme::Smart;
+        case 2:
+            return DocumentColorsFollowTheme::Legacy;
+        case 0:
+        default:
+            return DocumentColorsFollowTheme::Off;
+    }
+}
 
 ChangeThemeWnd::~ChangeThemeWnd() {
     str::Free(startThemePref);
@@ -72,6 +104,13 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+void ChangeThemeWnd::PreviewDocumentColors() {
+    UpdateDocumentColors();
+    if (win && win->AsFixed()) {
+        MainWindowRerender(win);
+    }
+}
+
 void ChangeThemeWnd::OnSelectionChanged() {
     int idx = listBox->GetCurrentSelection();
     if (idx < 0) {
@@ -86,10 +125,24 @@ void ChangeThemeWnd::OnSelectionChanged() {
         DarkMode::setDarkWndSafe(hwnd);
     }
     HwndScheduleRepaint(hwnd);
+    PreviewDocumentColors();
+}
+
+void ChangeThemeWnd::OnDocumentColorsFollowThemeChanged() {
+    int idx = dropDownDocumentColorsFollowTheme->GetCurrentSelection();
+    if (idx < 0) {
+        return;
+    }
+    SetDocumentColorsFollowTheme(DocumentColorsFollowThemeFromDropDownIndex(idx));
+    PreviewDocumentColors();
 }
 
 void ChangeThemeWnd::OnCancel() {
-    SetTheme(startThemePref);
+    if (!documentColorsFollowThemeOnly) {
+        SetTheme(startThemePref);
+    }
+    SetDocumentColorsFollowTheme(startDocumentColorsFollowTheme);
+    PreviewDocumentColors();
     ScheduleDelete();
 }
 
@@ -121,10 +174,11 @@ static void OnDestroy(Wnd::DestroyEvent*) {
 bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     startThemePref = str::Dup(gGlobalPrefs->theme);
+    startDocumentColorsFollowTheme = GetDocumentColorsFollowTheme();
 
     {
         CreateCustomArgs args;
-        args.title = _TRA("Change Theme");
+        args.title = documentColorsFollowThemeOnly ? _TRA("Document colors follow theme") : _TRA("Change Theme");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
         args.font = font;
@@ -144,18 +198,18 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    {
+    if (!documentColorsFollowThemeOnly) {
+        int n = ThemeGetCount();
         ListBox::CreateArgs args;
         args.parent = hwnd;
         args.font = font;
         args.isRtl = isRtl;
         auto c = new ListBox();
-        c->idealSizeLines = 16;
+        c->idealSizeLines = n;
         c->Create(args);
         c->SetColors(colTxt, colBg);
         listBox = c;
         model = new ListBoxModelStrings();
-        int n = ThemeGetCount();
         for (int i = 0; i < n; i++) {
             model->strings.Append(ThemeGetNameAt(i));
         }
@@ -165,7 +219,36 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         if (currIdx >= 0 && currIdx < n) {
             c->SetCurrentSelection(currIdx);
         }
-        vbox->AddChild(c, 1);
+        vbox->AddChild(c);
+    }
+
+    if (!documentColorsFollowThemeOnly) {
+        Static::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = _TRA("Document colors follow theme");
+        args.isRtl = isRtl;
+        auto c = new Static();
+        c->SetColors(colTxt, colBg);
+        c->SetInsetsPt(8, 0, 0, 0);
+        c->Create(args);
+        vbox->AddChild(c);
+    }
+
+    {
+        DropDown::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.isRtl = isRtl;
+        auto c = new DropDown();
+        c->SetInsetsPt(4, 0, 0, 0);
+        c->Create(args);
+        c->SetColors(colTxt, colBg);
+        c->SetItemsSeqStrings(gDocumentColorsFollowThemeNames);
+        c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnDocumentColorsFollowThemeChanged>(this);
+        dropDownDocumentColorsFollowTheme = c;
+        c->SetCurrentSelection(DocumentColorsFollowThemeToDropDownIndex(startDocumentColorsFollowTheme));
+        vbox->AddChild(c);
     }
 
     {
@@ -186,8 +269,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     layout = padding;
 
     int dx = DpiScale(hwnd, 280);
-    int dy = DpiScale(hwnd, 360);
-    LayoutAndSizeToContent(layout, dx, dy, hwnd);
+    LayoutAndSizeToContent(layout, dx, 0, hwnd);
     PositionDialog(hwnd, win->hwndFrame);
 
     if (UseDarkModeLib()) {
@@ -195,11 +277,11 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     }
 
     SetIsVisible(true);
-    HwndSetFocus(listBox->hwnd);
+    HwndSetFocus(documentColorsFollowThemeOnly ? dropDownDocumentColorsFollowTheme->hwnd : listBox->hwnd);
     return true;
 }
 
-void ShowChangeThemeDialog(MainWindow* win) {
+static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly) {
     if (!HasPermission(Perm::SavePreferences)) {
         return;
     }
@@ -208,6 +290,7 @@ void ShowChangeThemeDialog(MainWindow* win) {
         return;
     }
     auto wnd = new ChangeThemeWnd();
+    wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppFont(win->hwndFrame);
@@ -217,4 +300,12 @@ void ShowChangeThemeDialog(MainWindow* win) {
         return;
     }
     gChangeThemeWnd = wnd;
+}
+
+void ShowChangeThemeDialog(MainWindow* win) {
+    ShowThemeDialog(win, false);
+}
+
+void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win) {
+    ShowThemeDialog(win, true);
 }

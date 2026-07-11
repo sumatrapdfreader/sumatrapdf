@@ -105,11 +105,20 @@ PdfDarkModeRenderer GetPdfDarkModeRenderer() {
     return PdfDarkModeRenderer::LegacyBitmapPostProcess;
 }
 
-PdfDocumentColorMode GetPdfDocumentColorMode() {
-    return PdfDocumentColorMode::Auto;
+bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
+    (void)engine;
+    return false;
 }
 
-void SetPdfDocumentColorMode(PdfDocumentColorMode mode) {
+bool DocumentColorsFollowThemeEnabled() {
+    return false;
+}
+
+DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
+    return DocumentColorsFollowTheme::Off;
+}
+
+void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     (void)mode;
 }
 

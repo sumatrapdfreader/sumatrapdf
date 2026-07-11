@@ -3265,17 +3265,17 @@ void UpdateDocumentColors() {
     // dark-mode options that also affect rendered pages but not the two
     // cache colors; a change must invalidate cached renders the same way
     static bool s_lastPreservePdfImages = false;
-    static int s_lastPdfDocumentColorMode = -1;
+    static int s_lastDocumentColorsFollowTheme = -1;
     bool preservePdfImages = pagesDark && GetPreservePdfImagesInDarkMode();
-    int pdfDocumentColorMode = (int)GetPdfDocumentColorMode();
+    int documentColorsFollowTheme = (int)GetDocumentColorsFollowTheme();
 
     if ((text == gRenderCache->textColor) && (bg == gRenderCache->backgroundColor) &&
         (link == gRenderCache->linkColor) && preservePdfImages == s_lastPreservePdfImages &&
-        pdfDocumentColorMode == s_lastPdfDocumentColorMode) {
+        documentColorsFollowTheme == s_lastDocumentColorsFollowTheme) {
         return; // colors didn't change
     }
     s_lastPreservePdfImages = preservePdfImages;
-    s_lastPdfDocumentColorMode = pdfDocumentColorMode;
+    s_lastDocumentColorsFollowTheme = documentColorsFollowTheme;
 
     gRenderCache->textColor = text;
     gRenderCache->backgroundColor = bg;
@@ -8560,10 +8560,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdInvertColors: {
-            gGlobalPrefs->fixedPageUI.invertColors ^= true;
+            DocumentColorsFollowTheme mode = GetDocumentColorsFollowTheme();
+            if (mode == DocumentColorsFollowTheme::Off) {
+                SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Smart);
+            } else {
+                SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Off);
+            }
             UpdateDocumentColors();
             UpdateControlsColors(win);
-            // UpdateUiForCurrentTab(win);
             SaveSettings();
             break;
         }
@@ -8583,20 +8587,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdSetPdfDocumentColorModeAuto:
-        case CmdSetPdfDocumentColorModeBlack:
-        case CmdSetPdfDocumentColorModeLight: {
-            PdfDocumentColorMode mode = PdfDocumentColorMode::Auto;
-            if (cmdId == CmdSetPdfDocumentColorModeBlack) {
-                mode = PdfDocumentColorMode::Black;
-            } else if (cmdId == CmdSetPdfDocumentColorModeLight) {
-                mode = PdfDocumentColorMode::Light;
-            }
-            SetPdfDocumentColorMode(mode);
-            UpdateDocumentColors();
-            SaveSettings();
+        case CmdSetDocumentColorsFollowTheme:
+            ShowSetDocumentColorsFollowThemeDialog(win);
             break;
-        }
 
         case CmdNavigateBack:
             if (ctrl) {

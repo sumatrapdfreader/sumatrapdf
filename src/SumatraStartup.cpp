@@ -34,6 +34,7 @@
 #include "Accelerators.h"
 #include "PdfSync.h"
 #include "RenderCache.h"
+#include "PdfDarkMode.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
@@ -779,7 +780,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
         gGlobalPrefs->enableTeXEnhancements = true;
     }
     if (i.invertColors) {
-        gGlobalPrefs->fixedPageUI.invertColors = true;
+        SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Smart);
     }
 
     Str arg;

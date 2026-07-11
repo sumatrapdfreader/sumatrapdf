@@ -46,7 +46,7 @@ static const char* gEnumToolbar[] = {"show", "hide", "overlay", nullptr};
 static const char* gEnumToolbarPosition[] = {"top", "bottom", nullptr};
 static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden", nullptr};
 static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
-static const char* gEnumPdfDocumentColorMode[] = {"auto", "black", "light", nullptr};
+static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
 static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
 
 struct EnumSettingDef {
@@ -59,7 +59,7 @@ static const EnumSettingDef gEnumSettings[] = {
     {"ToolbarPosition", gEnumToolbarPosition},
     {"Scrollbars", gEnumScrollbars},
     {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
-    {"PdfDocumentColorMode", gEnumPdfDocumentColorMode},
+    {"DocumentColorsFollowTheme", gEnumDocumentColorsFollowTheme},
     {"HomePageViewMode", gEnumHomePageViewMode},
 };
 // clang-format on

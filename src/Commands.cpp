@@ -253,9 +253,7 @@ static SeqStrings gCommandNames =
     "CmdNavigateFilesInFolder\0"
     "CmdDebugToggleCacheInfo\0"
     "CmdToggleEngineeringDrawingEnhance\0"
-    "CmdSetPdfDocumentColorModeAuto\0"
-    "CmdSetPdfDocumentColorModeBlack\0"
-    "CmdSetPdfDocumentColorModeLight\0"
+    "CmdSetDocumentColorsFollowTheme\0"
     "CmdTogglePreservePdfImages\0"
     "CmdToggleLightDarkTheme\0"
     "CmdChangeTheme\0"
@@ -505,9 +503,7 @@ static i32 gCommandIds[] = {
     CmdNavigateFilesInFolder,
     CmdDebugToggleCacheInfo,
     CmdToggleEngineeringDrawingEnhance,
-    CmdSetPdfDocumentColorModeAuto,
-    CmdSetPdfDocumentColorModeBlack,
-    CmdSetPdfDocumentColorModeLight,
+    CmdSetDocumentColorsFollowTheme,
     CmdTogglePreservePdfImages,
     CmdToggleLightDarkTheme,
     CmdChangeTheme,
@@ -757,9 +753,7 @@ SeqStrings gCommandDescriptions =
     "Navigate Files in Folder\0"
     "Debug: Toggle Cache Info\0"
     "Toggle Engineering Drawing Enhancement\0"
-    "Set PDF Document Color Mode: Auto\0"
-    "Set PDF Document Color Mode: Black\0"
-    "Set PDF Document Color Mode: Light\0"
+    "Set Document Colors Follow Theme\0"
     "Toggle Preserve PDF Image Colors in Dark Mode\0"
     "Toggle Light/Dark Theme\0"
     "Change Theme\0"

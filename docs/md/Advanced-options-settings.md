@@ -196,8 +196,8 @@ LastLightTheme =
 ; (introduced in version 3.7)
 LastDarkTheme = 
 
-; Valid values: auto, black, light (introduced in version 3.7)
-PdfDocumentColorMode = auto
+; Valid values: off, smart, legacy (introduced in version 3.7)
+DocumentColorsFollowTheme = off
 
 ; if both favorites and bookmarks parts of sidebar are visible, this is the
 ; height of bookmarks (table of contents) part
@@ -277,9 +277,6 @@ FixedPageUI [
     ; the background might allow to subconsciously determine reading progress;
     ; suggested values: #2828aa #28aa28 #aa2828
     GradientColors =
-
-    ; if true, TextColor and BackgroundColor of the document will be swapped
-    InvertColors = false
 
     ; if given, sets the canvas background color for PDF files (introduced in
     ; version 3.7)

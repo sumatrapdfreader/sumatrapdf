@@ -34,19 +34,12 @@ static DWORD WINAPI RenderCacheThread(LPVOID data);
 bool gShowTileLayout = false;
 int gMaxRenderThreads = 8;
 
-// Whether to run the bitmap recolor pass when no dark profile applies:
-// master's default behavior (recolor with the cache colors, which no-ops
-// for black-on-white), except for PDFs in the Light document color mode,
-// which show original colors even when pages would render dark (inverted).
+// Whether to run the bitmap recolor pass when no dark profile applies.
+// Only MuPDF-rendered documents (PDF, XPS, EPUB, MOBI, FB2, HTML, etc.) and
+// DjVu are recolored; image/comic/native-ebook engines keep original pixels.
 static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cache) {
-    if (!engine || engine->IsImageCollection()) {
-        return false;
-    }
-    if (engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf")) &&
-        GetPdfDocumentColorMode() == PdfDocumentColorMode::Light && !IsLightColor(cache->backgroundColor)) {
-        return false;
-    }
-    return true;
+    (void)cache;
+    return EngineUsesDocumentColorsFollowTheme(engine);
 }
 
 // Several preserved regions in one tile -> keep the largest artwork, drop layout ornaments.
@@ -975,7 +968,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
                 COLORREF textCol = profile ? profile->foreground : cache->textColor;
                 COLORREF bgCol = profile ? profile->pageBackground : cache->backgroundColor;
                 COLORREF linkCol = profile ? profile->linkColor : cache->linkColor;
-                UpdateBitmapColors(bmp->hbmp, textCol, bgCol, linkCol, skipRectsPtr);
+                RecolorPixmap(bmp, textCol, bgCol, linkCol, skipRectsPtr);
             }
             if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
                 // colors changed while recoloring - discard result

@@ -435,9 +435,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::InvertColors || arg == Arg::InvertColors2) {
             // -invertcolors is for backwards compat (was used pre-1.3)
-            // -invert-colors is for consistency
-            // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
-            // now it non-permanently swaps textColor and backgroundColor
+            // -invert-colors is for consistency; maps to DocumentColorsFollowTheme = smart
             i.invertColors = true;
             continue;
         }

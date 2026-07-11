@@ -67,9 +67,6 @@ struct FixedPageUI {
     // subconsciously determine reading progress; suggested values: #2828aa
     // #28aa28 #aa2828
     Vec<Str>* gradientColors;
-    // if true, TextColor and BackgroundColor of the document will be
-    // swapped
-    bool invertColors;
     // if given, sets the canvas background color for PDF files
     Str windowBgCol;
     ParsedColor windowBgColParsed;
@@ -602,11 +599,11 @@ struct GlobalPrefs {
     Str lastLightTheme;
     // the dark theme the light/dark toggle and the System theme switch to
     Str lastDarkTheme;
-    // how PDFs render when page colors are inverted
-    // (FixedPageUI.InvertColors or custom dark page colors): auto (adapt
-    // colors but preserve photos/artwork), black (recolor everything), or
-    // light (keep original colors)
-    Str pdfDocumentColorMode;
+    // how fixed-page documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, HTML,
+    // etc.) follow the UI theme: off (keep original page colors), smart
+    // (recolor text and background but not images), or legacy (recolor
+    // text and background and images, pre-3.7 behavior)
+    Str documentColorsFollowTheme;
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
     int tocDy;
@@ -766,12 +763,11 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMarginInfo},
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
-    {offsetof(FixedPageUI, invertColors), SettingType::Bool, false},
     {offsetof(FixedPageUI, windowBgCol), SettingType::Color, (intptr_t)""},
 };
 static const StructInfo gFixedPageUIInfo = {
-    sizeof(FixedPageUI), 8, gFixedPageUIFields,
-    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0InvertColors\0WindowBgCol",
+    sizeof(FixedPageUI), 7, gFixedPageUIFields,
+    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0WindowBgCol",
     "color value with which black (text) will be substituted\0color value with which white (background) will be "
     "substituted\0color value for the text selection rectangle (also used to highlight found text). Use an #aarrggbb "
     "value to control opacity: a smaller alpha (e.g. #40ffff00) makes the selection more transparent so the selected "
@@ -779,9 +775,8 @@ static const StructInfo gFixedPageUIInfo = {
     "window and document\0horizontal and vertical distance between two pages in facing and book view modes\0colors to "
     "use for the gradient from top to bottom (stops will be inserted at regular intervals throughout the document); "
     "currently only up to three colors are supported; the idea behind this experimental feature is that the background "
-    "might allow to subconsciously determine reading progress; suggested values: #2828aa #28aa28 #aa2828\0if true, "
-    "TextColor and BackgroundColor of the document will be swapped\0if given, sets the canvas background color for PDF "
-    "files"};
+    "might allow to subconsciously determine reading progress; suggested values: #2828aa #28aa28 #aa2828\0if given, "
+    "sets the canvas background color for PDF files"};
 
 static const FieldInfo gEBookUIFields[] = {
     {offsetof(EBookUI, fontSize), SettingType::Float, (intptr_t)"0"},
@@ -1203,7 +1198,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t)""},
     {offsetof(GlobalPrefs, lastLightTheme), SettingType::String, (intptr_t)""},
     {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)""},
-    {offsetof(GlobalPrefs, pdfDocumentColorMode), SettingType::String, (intptr_t)"auto"},
+    {offsetof(GlobalPrefs, documentColorsFollowTheme), SettingType::String, (intptr_t)"off"},
     {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
     {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t)"automatic"},
@@ -1285,13 +1280,13 @@ static const StructInfo gGlobalPrefsInfo = {
     "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
     "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll"
     "\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidt"
-    "h\0Theme\0LastLightTheme\0LastDarkTheme\0PdfDocumentColorMode\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIF"
-    "ontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels"
-    "\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBu"
-    "ild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0Prin"
-    "terDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0Default"
-    "Passwords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOn"
-    "ce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "h\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize"
+    "\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomL"
+    "evels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0G"
+    "rokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0"
+    "\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0D"
+    "efaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0Re"
+    "openOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
@@ -1326,7 +1321,7 @@ static const StructInfo gGlobalPrefsInfo = {
     "is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or "
     "presentation mode\0maximum width of a single tab\0Valid themes: light, dark, darker, system\0the light theme the "
     "light/dark toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme "
-    "switch to\0Valid values: auto, black, light\0if both favorites and bookmarks parts of sidebar are visible, this "
+    "switch to\0Valid values: off, smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this "
     "is the height of bookmarks (table of contents) part\0height of toolbar\0font name for bookmarks and favorites "
     "tree views. automatic means Windows default\0font size for bookmarks and favorites tree views. 0 means Windows "
     "default\0over-ride application font size. 0 means Windows default\0if true, disables anti-aliasing for rendering "

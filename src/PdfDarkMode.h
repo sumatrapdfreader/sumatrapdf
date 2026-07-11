@@ -53,10 +53,10 @@ enum class PdfDarkModeRenderer {
     ObjectLevelDevice = 1,
 };
 
-enum class PdfDocumentColorMode {
-    Auto = 0,
-    Black = 1,
-    Light = 2,
+enum class DocumentColorsFollowTheme {
+    Off = 0,
+    Smart = 1,
+    Legacy = 2,
 };
 
 // Per-render dark mode path (View target only for Smart/Legacy PDF paths).
@@ -139,9 +139,11 @@ bool DarkModeProfileUsesObjectLevel(const DarkModeProfile* profile);
 bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile);
 void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile);
 u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile);
-PdfDocumentColorMode GetPdfDocumentColorMode();
-void SetPdfDocumentColorMode(PdfDocumentColorMode mode);
-const char* PdfDocumentColorModeDescription(PdfDocumentColorMode mode);
+bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine);
+bool DocumentColorsFollowThemeEnabled();
+DocumentColorsFollowTheme GetDocumentColorsFollowTheme();
+void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode);
+const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode);
 DarkModeOptions PdfDarkModeCurrentOptions();
 u32 PdfDarkModeComputeOptionsHash();
 DarkModePalette PdfDarkModeBuildPalette();

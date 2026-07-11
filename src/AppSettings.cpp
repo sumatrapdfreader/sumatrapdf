@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/FileWatcher.h"
+#include "base/SquareTreeParser.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "base/Dpi.h"
@@ -32,6 +33,7 @@
 #include "Translations.h"
 #include "Accelerators.h"
 #include "Theme.h"
+#include "PdfDarkMode.h"
 #include "TextToSpeech.h"
 
 #include <Notifications.h>
@@ -67,6 +69,57 @@ static bool ApplyReadAloudVoiceFromSettings() {
 extern void RememberDefaultWindowPosition(MainWindow* win);
 
 static WatchedFile* gWatchedSettingsFile = nullptr;
+
+static DocumentColorsFollowTheme MapLegacyDocumentColorMode(Str v) {
+    if (str::EqI(v, StrL("auto"))) {
+        return DocumentColorsFollowTheme::Smart;
+    }
+    if (str::EqI(v, StrL("black"))) {
+        return DocumentColorsFollowTheme::Legacy;
+    }
+    return DocumentColorsFollowTheme::Off;
+}
+
+// Migrate FixedPageUI.InvertColors and DocumentColorMode to DocumentColorsFollowTheme
+static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
+    if (!prefsData) {
+        return false;
+    }
+    SquareTreeNode* root = ParseSquareTree(prefsData);
+    if (!root) {
+        return false;
+    }
+
+    Str newSetting = root->GetValue(StrL("DocumentColorsFollowTheme"));
+    if (!str::IsNull(newSetting)) {
+        delete root;
+        DocumentColorsFollowTheme mode = GetDocumentColorsFollowTheme();
+        SetDocumentColorsFollowTheme(mode);
+        return false;
+    }
+
+    Str oldSetting = root->GetValue(StrL("DocumentColorMode"));
+    bool hadOldSetting = !str::IsNull(oldSetting);
+
+    bool hadInvertColors = false;
+    SquareTreeNode* fixedPageUI = root->GetChild(StrL("FixedPageUI"));
+    if (fixedPageUI) {
+        Str invertColors = fixedPageUI->GetValue(StrL("InvertColors"));
+        hadInvertColors = str::EqI(invertColors, StrL("true"));
+    }
+
+    delete root;
+
+    if (hadOldSetting) {
+        SetDocumentColorsFollowTheme(MapLegacyDocumentColorMode(oldSetting));
+        return true;
+    }
+    if (hadInvertColors) {
+        SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Smart);
+        return true;
+    }
+    return false;
+}
 
 // UI fonts are cached per DPI so windows on monitors with different scale
 // factors get correctly sized fonts. User-set sizes (UIFontSize, TreeFontSize)
@@ -257,12 +310,14 @@ bool LoadSettings() {
 
     GlobalPrefs* gprefs = nullptr;
     TempStr settingsPath = GetSettingsPathTemp();
+    bool migratedDocumentColorsFollowTheme = false;
     {
         Str prefsData = file::ReadFile(settingsPath);
 
         gGlobalPrefs = NewGlobalPrefs(prefsData);
         ReportIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
+        migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
         str::Free(prefsData);
     }
 
@@ -402,7 +457,7 @@ bool LoadSettings() {
 
     if (!file::Exists(settingsPath)) {
         SaveSettings();
-    } else if (readAloudVoiceCleared) {
+    } else if (readAloudVoiceCleared || migratedDocumentColorsFollowTheme) {
         SaveSettings();
     }
 

@@ -251,13 +251,11 @@ enum {
     CmdNavigateFilesInFolder = 440,
     CmdDebugToggleCacheInfo = 441,
     CmdToggleEngineeringDrawingEnhance = 442,
-    CmdSetPdfDocumentColorModeAuto = 443,
-    CmdSetPdfDocumentColorModeBlack = 444,
-    CmdSetPdfDocumentColorModeLight = 445,
-    CmdTogglePreservePdfImages = 446,
-    CmdToggleLightDarkTheme = 447,
-    CmdChangeTheme = 448,
-    CmdNone = 449,
+    CmdSetDocumentColorsFollowTheme = 443,
+    CmdTogglePreservePdfImages = 444,
+    CmdToggleLightDarkTheme = 445,
+    CmdChangeTheme = 446,
+    CmdNone = 447,
 
     /* range for file history */
     CmdFileHistoryFirst,

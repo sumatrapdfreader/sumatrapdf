@@ -31,8 +31,7 @@ Full field reference: [Advanced options / settings](Advanced-options-settings.md
 
 UI themes (`Theme = ...` in advanced settings) change window chrome. To change how the **document** looks:
 
-- **`Shift + I`** (`CmdInvertColors`) swaps text and background colors for the rendered page. This affects **images** as well as text — there is no built-in "invert text only" mode.
-- `FixedPageUI.InvertColors = true` persists invert for PDF-style rendering; ebook pages respect the same invert when shown through shared color paths.
+- **`Shift + I`** (`CmdInvertColors`) toggles the `DocumentColorsFollowTheme` advanced setting between `off` and `smart` for MuPDF-rendered documents (PDF-style and ebook pages through the shared color path). `smart` recolors text and background but preserves images; `legacy` recolors images too (pre-3.7 behavior).
 
 For dark reading without crushing photos, experiment with `CustomCSS` (dark background, light text) and `IgnoreDocumentCSS = true` instead of global invert. See [Customize theme colors](Customize-theme-colors.md).
 

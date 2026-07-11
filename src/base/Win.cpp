@@ -2535,11 +2535,123 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
     return res;
 }
 
+static bool SkipRecolorPixel(int x, int y, Vec<Rect>* skipRects) {
+    if (!skipRects) {
+        return false;
+    }
+    for (Rect& sr : *skipRects) {
+        if (sr.Contains(x, y)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor, Vec<Rect>* skipRects) {
+    if (!px) {
+        return;
+    }
+    if (px->hbmp) {
+        UpdateBitmapColors(px->hbmp, textColor, bgColor, linkColor, skipRects);
+        return;
+    }
+    if (!px->data || px->width <= 0 || px->height <= 0) {
+        return;
+    }
+    if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE && !linkColor && !skipRects) {
+        return;
+    }
+
+    byte linkR = 0, linkG = 0, linkB = 0;
+    bool recolorLinks = linkColor != 0;
+    if (recolorLinks) {
+        UnpackColor(linkColor, linkR, linkG, linkB);
+    }
+
+    auto isLikelyLinkPixel = [](u8 r, u8 g, u8 b) -> bool {
+        int maxRG = r > g ? r : g;
+        if (b < maxRG + 25) {
+            return false;
+        }
+        if (b < 72) {
+            return false;
+        }
+        int lum = (int(r) + g + b) / 3;
+        if (lum > 230) {
+            return false;
+        }
+        return true;
+    };
+
+    byte rt, gt, bt;
+    UnpackColor(textColor, rt, gt, bt);
+    const int base[4] = {bt, gt, rt, 0};
+    byte rb, gb, bb;
+    UnpackColor(bgColor, rb, gb, bb);
+    const int diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
+
+    auto setLinkPixel = [&](u8* pixel) {
+        pixel[0] = linkB;
+        pixel[1] = linkG;
+        pixel[2] = linkR;
+    };
+
+    if (px->format == PixmapFormat::BGRA8) {
+        for (int y = 0; y < px->height; y++) {
+            u8* row = px->data + (size_t)y * px->stride;
+            for (int x = 0; x < px->width; x++) {
+                if (SkipRecolorPixel(x, y, skipRects)) {
+                    continue;
+                }
+                u8* pixel = row + (size_t)x * 4;
+                u8 b = pixel[0];
+                u8 g = pixel[1];
+                u8 r = pixel[2];
+                if (recolorLinks && isLikelyLinkPixel(r, g, b)) {
+                    setLinkPixel(pixel);
+                    continue;
+                }
+                for (int k = 0; k < 4; k++) {
+                    pixel[k] = (u8)(base[k] + mul255(pixel[k], diff[k]));
+                }
+            }
+        }
+        return;
+    }
+
+    if (px->format == PixmapFormat::BGR8) {
+        for (int y = 0; y < px->height; y++) {
+            u8* row = px->data + (size_t)y * px->stride;
+            for (int x = 0; x < px->width; x++) {
+                if (SkipRecolorPixel(x, y, skipRects)) {
+                    continue;
+                }
+                u8* pixel = row + (size_t)x * 3;
+                u8 b = pixel[0];
+                u8 g = pixel[1];
+                u8 r = pixel[2];
+                if (recolorLinks && isLikelyLinkPixel(r, g, b)) {
+                    pixel[0] = linkB;
+                    pixel[1] = linkG;
+                    pixel[2] = linkR;
+                    continue;
+                }
+                for (int k = 0; k < 3; k++) {
+                    pixel[k] = (u8)(base[k] + mul255(pixel[k], diff[k]));
+                }
+            }
+        }
+    }
+}
+
 // Recolor a rendered page bitmap: map black->textColor and white->bgColor
 // (proportionally in between). When linkColor is non-zero, pixels that look
 // like link text (blue-ish) are set to linkColor instead. Pixels inside
 // skipRects keep their original colors (dark-mode image preservation).
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLORREF linkColor, Vec<Rect>* skipRects) {
+    if (!hbmp) {
+        return;
+    }
     if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE && !linkColor && !skipRects) {
         return;
     }

@@ -281,7 +281,6 @@ const fixedPageUI: Field[] = [
       "background might allow to subconsciously determine reading progress; " +
       "suggested values: #2828aa #28aa28 #aa2828",
   ),
-  field("InvertColors", Bool, false, "if true, TextColor and BackgroundColor of the document will be swapped"),
   field("WindowBgCol", Color, "", "if given, sets the canvas background color for PDF files").ver("3.7"),
 ];
 
@@ -774,13 +773,13 @@ const globalPrefs: Field[] = [
   field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to").ver("3.7"),
   field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to").ver("3.7"),
   field(
-    "PdfDocumentColorMode",
+    "DocumentColorsFollowTheme",
     Str,
-    "auto",
-    "how PDFs render when page colors are inverted (FixedPageUI.InvertColors or custom dark page colors): auto (adapt colors but preserve photos/artwork), black (recolor everything), or light (keep original colors)",
+    "off",
+    "how fixed-page documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, HTML, etc.) follow the UI theme: off (keep original page colors), smart (recolor text and background but not images), or legacy (recolor text and background and images, pre-3.7 behavior)",
   )
     .ver("3.7")
-    .doc("Valid values: auto, black, light"),
+    .doc("Valid values: off, smart, legacy"),
   field(
     "TocDy",
     Int,

@@ -297,6 +297,8 @@ void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
                         Vec<Rect>* skipRects = nullptr);
+void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
+                   Vec<Rect>* skipRects = nullptr);
 Str HBITMAPToBmpFormat(HBITMAP hbmp);
 Str GetClipboardImageBmp();
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);

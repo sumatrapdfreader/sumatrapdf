@@ -10,6 +10,7 @@ License: GPLv3 */
 #include "GlobalPrefs.h"
 #include "Translations.h"
 #include "DarkModeSubclass.h"
+#include "PdfDarkMode.h"
 
 // allow only x64 and arm64 for compatibility for older OS
 #if !defined(_DARKMODELIB_NOT_USED) && \
@@ -401,7 +402,7 @@ COLORREF AccentColor(COLORREF col, int light, int dark) {
 COLORREF ThemeDocumentColors(COLORREF& bg) {
     bg = ThemeMainWindowBackgroundColor();
 
-    if (!gGlobalPrefs->fixedPageUI.invertColors) {
+    if (!DocumentColorsFollowThemeEnabled()) {
         return ThemeWindowTextColor();
     }
 
@@ -431,7 +432,7 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
         bg = parsedCol->col;
     }
 
-    if (!gGlobalPrefs->fixedPageUI.invertColors) {
+    if (!DocumentColorsFollowThemeEnabled()) {
         return text;
     }
 

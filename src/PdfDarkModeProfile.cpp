@@ -83,7 +83,7 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
     *profile = DarkModeProfile{};
 
     // unlike the fork's themes, master's themes never touch page colors:
-    // dark pages come from FixedPageUI.InvertColors or custom dark
+    // dark pages come from DocumentColorsFollowTheme or custom dark
     // FixedPageUI colors, so key the dark modes off the effective page
     // background rather than the window chrome
     COLORREF bgCol;
@@ -105,15 +105,12 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
         return;
     }
 
-    if (engine && str::EqI(engine->defaultExt, StrL(".pdf"))) {
-        switch (GetPdfDocumentColorMode()) {
-            case PdfDocumentColorMode::Light:
-                profile->mode = PageColorMode::Normal;
-                break;
-            case PdfDocumentColorMode::Black:
+    if (EngineUsesDocumentColorsFollowTheme(engine)) {
+        switch (GetDocumentColorsFollowTheme()) {
+            case DocumentColorsFollowTheme::Legacy:
                 profile->mode = PageColorMode::LegacyInvert;
                 break;
-            case PdfDocumentColorMode::Auto:
+            case DocumentColorsFollowTheme::Smart:
             default:
                 if (EngineSupportsSmartDarkMode(engine) && PdfDarkModeUsesObjectLevel()) {
                     profile->mode = PageColorMode::SmartDark;
@@ -124,9 +121,11 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
                 }
                 break;
         }
-    } else if (engine && str::EqI(engine->defaultExt, StrL(".xps"))) {
-        profile->mode = PageColorMode::LegacyInvert;
     }
 
     profile->hash = PdfDarkModeComputeProfileHash(profile);
+}
+
+bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
+    return engine && (engine->kind == kindEngineMupdf || engine->kind == kindEngineDjVu);
 }

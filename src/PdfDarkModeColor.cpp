@@ -23,7 +23,7 @@ static constexpr PdfDarkModeRenderer kPdfDarkModeRenderer = PdfDarkModeRenderer:
 static bool gPreservePdfImagesInDarkMode = true;
 
 // dark page rendering is active when the effective page background is dark
-// (FixedPageUI.InvertColors or custom dark FixedPageUI colors); master's
+// (DocumentColorsFollowTheme or custom dark FixedPageUI colors); master's
 // themes never touch page colors, unlike the fork's
 static bool DarkChromeActive() {
     COLORREF bg;
@@ -31,28 +31,38 @@ static bool DarkChromeActive() {
     return !IsLightColor(bg);
 }
 
-static PdfDocumentColorMode PdfDocumentColorModeFromString(Str v) {
-    if (!v || str::EqI(v, StrL("auto"))) {
-        return PdfDocumentColorMode::Auto;
+static DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
+    if (!v || str::EqI(v, StrL("off"))) {
+        return DocumentColorsFollowTheme::Off;
+    }
+    if (str::EqI(v, StrL("smart"))) {
+        return DocumentColorsFollowTheme::Smart;
+    }
+    if (str::EqI(v, StrL("legacy"))) {
+        return DocumentColorsFollowTheme::Legacy;
+    }
+    // migrate pre-3.7 DocumentColorMode values
+    if (str::EqI(v, StrL("auto"))) {
+        return DocumentColorsFollowTheme::Smart;
     }
     if (str::EqI(v, StrL("black"))) {
-        return PdfDocumentColorMode::Black;
+        return DocumentColorsFollowTheme::Legacy;
     }
-    if (str::EqI(v, StrL("light"))) {
-        return PdfDocumentColorMode::Light;
+    if (str::EqI(v, StrL("none")) || str::EqI(v, StrL("light"))) {
+        return DocumentColorsFollowTheme::Off;
     }
-    return PdfDocumentColorMode::Auto;
+    return DocumentColorsFollowTheme::Off;
 }
 
-static const char* PdfDocumentColorModeToString(PdfDocumentColorMode mode) {
+static const char* DocumentColorsFollowThemeToString(DocumentColorsFollowTheme mode) {
     switch (mode) {
-        case PdfDocumentColorMode::Black:
-            return "black";
-        case PdfDocumentColorMode::Light:
-            return "light";
-        case PdfDocumentColorMode::Auto:
+        case DocumentColorsFollowTheme::Smart:
+            return "smart";
+        case DocumentColorsFollowTheme::Legacy:
+            return "legacy";
+        case DocumentColorsFollowTheme::Off:
         default:
-            return "auto";
+            return "off";
     }
 }
 
@@ -84,35 +94,39 @@ PdfDarkModeRenderer GetPdfDarkModeRenderer() {
     return kPdfDarkModeRenderer;
 }
 
-PdfDocumentColorMode GetPdfDocumentColorMode() {
-    if (!gGlobalPrefs || !gGlobalPrefs->pdfDocumentColorMode) {
-        return PdfDocumentColorMode::Auto;
-    }
-    return PdfDocumentColorModeFromString(gGlobalPrefs->pdfDocumentColorMode);
+bool DocumentColorsFollowThemeEnabled() {
+    return GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Off;
 }
 
-void SetPdfDocumentColorMode(PdfDocumentColorMode mode) {
-    if (mode < PdfDocumentColorMode::Auto || mode > PdfDocumentColorMode::Light) {
-        mode = PdfDocumentColorMode::Auto;
+DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
+    if (!gGlobalPrefs || !gGlobalPrefs->documentColorsFollowTheme) {
+        return DocumentColorsFollowTheme::Off;
+    }
+    return DocumentColorsFollowThemeFromString(gGlobalPrefs->documentColorsFollowTheme);
+}
+
+void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
+    if (mode < DocumentColorsFollowTheme::Off || mode > DocumentColorsFollowTheme::Legacy) {
+        mode = DocumentColorsFollowTheme::Off;
     }
     if (!gGlobalPrefs) {
         return;
     }
-    Str name(PdfDocumentColorModeToString(mode));
-    if (!str::EqI(gGlobalPrefs->pdfDocumentColorMode, name)) {
-        str::ReplaceWithCopy(&gGlobalPrefs->pdfDocumentColorMode, name);
+    Str name(DocumentColorsFollowThemeToString(mode));
+    if (!str::EqI(gGlobalPrefs->documentColorsFollowTheme, name)) {
+        str::ReplaceWithCopy(&gGlobalPrefs->documentColorsFollowTheme, name);
     }
 }
 
-const char* PdfDocumentColorModeDescription(PdfDocumentColorMode mode) {
+const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode) {
     switch (mode) {
-        case PdfDocumentColorMode::Black:
-            return _TRN("Document Color Mode: Black (full dark)");
-        case PdfDocumentColorMode::Light:
-            return _TRN("Document Color Mode: Light (original colors)");
-        case PdfDocumentColorMode::Auto:
+        case DocumentColorsFollowTheme::Smart:
+            return _TRN("Document colors follow theme: Smart (recolor text and background, not images)");
+        case DocumentColorsFollowTheme::Legacy:
+            return _TRN("Document colors follow theme: Legacy (recolor text, background and images)");
+        case DocumentColorsFollowTheme::Off:
         default:
-            return _TRN("Document Color Mode: Auto (smart dark mode)");
+            return _TRN("Document colors follow theme: Off");
     }
 }
 
@@ -120,7 +134,7 @@ bool PdfDarkModeUsesObjectLevel() {
     if (!DarkChromeActive()) {
         return false;
     }
-    if (GetPdfDocumentColorMode() != PdfDocumentColorMode::Auto) {
+    if (GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Smart) {
         return false;
     }
     return GetPdfDarkModeRenderer() == PdfDarkModeRenderer::ObjectLevelDevice;
@@ -328,7 +342,7 @@ void MapRgbFillToDarkTheme(float r, float g, float b, const DarkModePalette& pal
     float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
     float chroma = maxC - minC;
     DarkModeOptions opts = PdfDarkModeCurrentOptions();
-    if (GetPdfDocumentColorMode() != PdfDocumentColorMode::Auto && lum >= opts.lightFillLuminanceThreshold &&
+    if (GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Smart && lum >= opts.lightFillLuminanceThreshold &&
         chroma >= opts.lightFillChromaThreshold) {
         ApplyAdaptiveDocumentDarkMode(r, g, b, palette, &outRgb[0], &outRgb[1], &outRgb[2]);
         return;
