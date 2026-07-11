@@ -1259,7 +1259,9 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     if (win->AsChm()) {
         win->AsChm()->PrintCurrentPage(true);
-    } else if (win->AsMarkdown()) {
+        return;
+    }
+    if (win->AsMarkdown()) {
         win->AsMarkdown()->PrintCurrentPage(true);
         return;
     }
