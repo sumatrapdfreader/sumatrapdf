@@ -198,6 +198,7 @@ struct Static : Wnd {
         HFONT font = nullptr;
         Str text;
         bool isRtl = false;
+        bool pathEllipsis = false;
     };
 
     Static();

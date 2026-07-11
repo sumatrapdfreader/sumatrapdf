@@ -25,6 +25,9 @@ HWND Static::Create(const CreateArgs& args) {
     cargs.parent = args.parent;
     cargs.font = args.font;
     cargs.style = WS_CHILD | WS_VISIBLE | SS_NOTIFY;
+    if (args.pathEllipsis) {
+        cargs.style |= SS_PATHELLIPSIS;
+    }
     cargs.text = args.text;
     cargs.isRtl = args.isRtl;
 

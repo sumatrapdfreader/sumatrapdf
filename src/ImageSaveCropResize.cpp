@@ -129,10 +129,11 @@ struct ImageEditWindow {
     HWND hwndParent = nullptr;
 
     // child controls
-    HWND hwndPathLabel = nullptr;
+    Static* staticPathLabel = nullptr;
+    Static* staticInfoLabel = nullptr;
+    HBox* row3Layout = nullptr;
     HWND hwndDestEdit = nullptr;
     HWND hwndBrowseBtn = nullptr;
-    HWND hwndInfoLabel = nullptr;
     Button* btnSave = nullptr;
     Button* btnCrop = nullptr;   // "Crop" or "Apply Crop"
     Button* btnResize = nullptr; // "Resize" or "Apply Resize"
@@ -183,10 +184,9 @@ struct ImageEditWindow {
     ~ImageEditWindow() {
         delete srcBitmap;
         str::Free(filePath);
+        delete staticPathLabel;
+        delete row3Layout; // owns staticInfoLabel, dropFormat, btnCrop, btnResize
         delete btnSave;
-        delete btnCrop;
-        delete btnResize;
-        delete dropFormat;
     }
 };
 
@@ -477,16 +477,16 @@ static void ImageEditApplyFont(ImageEditWindow* ew) {
             SendMessageW(h, WM_SETFONT, (WPARAM)f, TRUE);
         }
     };
-    setFont(ew->hwndPathLabel);
-    setFont(ew->hwndDestEdit);
-    setFont(ew->hwndBrowseBtn);
-    setFont(ew->hwndInfoLabel);
     auto setWndFont = [&](Wnd* w) {
         if (w && w->hwnd) {
             w->font = f;
             setFont(w->hwnd);
         }
     };
+    setWndFont(ew->staticPathLabel);
+    setFont(ew->hwndDestEdit);
+    setFont(ew->hwndBrowseBtn);
+    setWndFont(ew->staticInfoLabel);
     setWndFont(ew->btnSave);
     setWndFont(ew->btnCrop);
     setWndFont(ew->btnResize);
@@ -553,7 +553,9 @@ static void UpdateInfoLabel(ImageEditWindow* ew) {
     } else {
         s = fmt("%d x %d", ew->imgW, ew->imgH);
     }
-    HwndSetText(ew->hwndInfoLabel, s);
+    if (ew->staticInfoLabel) {
+        ew->staticInfoLabel->SetText(s);
+    }
     LayoutControls(ew);
 }
 
@@ -1096,20 +1098,20 @@ static void LayoutControls(ImageEditWindow* ew) {
     int rowPad = ImageEditRowPadding(ew);
     int btnPad = ImageEditButtonPadding(ew);
     int gap = DpiScale(ew->hwnd, 4);
-    int labelDy = ImageEditLabelDy(ew);
     int editRowDy = ImageEditEditRowDy(ew);
     int y = ew->imgAreaH + rowPad;
     int x = btnPad;
     int w = cRc.dx - 2 * btnPad;
 
     // row 1: file path label — skip if from RenderedBitmap
-    if (!ew->fromRenderedBitmap) {
+    if (ew->staticPathLabel) {
         int editBorder = GetSystemMetrics(SM_CXEDGE);
         LRESULT margins = SendMessageW(ew->hwndDestEdit, EM_GETMARGINS, 0, 0);
         int editLeftMargin = LOWORD(margins);
         int labelShift = editBorder + editLeftMargin;
-        MoveWindow(ew->hwndPathLabel, x + labelShift, y, w - labelShift, labelDy, TRUE);
-        y += labelDy + rowPad;
+        Size szPath = ew->staticPathLabel->GetIdealSize();
+        ew->staticPathLabel->SetBounds({x + labelShift, y, w - labelShift, szPath.dy});
+        y += szPath.dy + rowPad;
     }
 
     // row 2: dest edit + browse button + save (right-aligned after browse)
@@ -1132,40 +1134,12 @@ static void LayoutControls(ImageEditWindow* ew) {
     MoveWindow(ew->hwndDestEdit, x, y, editW, editRowDy, TRUE);
     y += editRowDy + rowPad;
 
-    // row 3: info label, crop/resize/format
-    // layout buttons first to know where info label must stop
-    int bx = cRc.dx - btnPad;
-    // right-to-left: Resize, Crop, [Format]
-    if (ew->btnResize) {
-        Size szResize = ew->btnResize->GetIdealSize();
-        bx -= szResize.dx;
-        ew->btnResize->SetBounds({bx, y, szResize.dx, szResize.dy});
+    // row 3: info label + format + crop/resize buttons
+    if (ew->row3Layout) {
+        Constraints bc = Loose({w, Inf});
+        Size row3Size = ew->row3Layout->Layout(bc);
+        ew->row3Layout->SetBounds({x, y, w, row3Size.dy});
     }
-    if (ew->btnCrop) {
-        Size szCrop = ew->btnCrop->GetIdealSize();
-        bx -= szCrop.dx + gap;
-        ew->btnCrop->SetBounds({bx, y, szCrop.dx, szCrop.dy});
-    }
-    if (ew->dropFormat) {
-        Size szDrop = ew->dropFormat->GetIdealSize();
-        bx -= szDrop.dx + gap;
-        Size szRef = ew->btnResize ? ew->btnResize->GetIdealSize()
-                                   : (ew->btnCrop ? ew->btnCrop->GetIdealSize() : Size{0, editRowDy});
-        int dropY = y + (szRef.dy - szDrop.dy) / 2;
-        ew->dropFormat->SetBounds({bx, dropY, szDrop.dx, szDrop.dy});
-    }
-
-    // size info label to its text, but don't overlap buttons
-    TempStr labelTxt = HwndGetTextTemp(ew->hwndInfoLabel);
-    Size textSize = HwndMeasureText(ew->hwnd, labelTxt, ew->hFont);
-    int labelPad = DpiScale(ew->hwnd, 8);
-    int maxLabelW = bx - x - labelPad;
-    int labelW = std::min(textSize.dx + labelPad, maxLabelW);
-    if (labelW < 0) {
-        labelW = 0;
-    }
-    int infoLabelYOffset = DpiScale(ew->hwnd, 4);
-    MoveWindow(ew->hwndInfoLabel, x, y + infoLabelYOffset, labelW, labelDy, TRUE);
 }
 
 static void OnBrowse(ImageEditWindow* ew) {
@@ -2173,13 +2147,16 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
 
     // create child controls
     // row 1: file path label (read-only) — hidden when from RenderedBitmap
-    DWORD pathLabelStyle = WS_CHILD | SS_LEFT | SS_PATHELLIPSIS;
     if (!fromRenderedBitmap) {
-        pathLabelStyle |= WS_VISIBLE;
+        auto* pathLabel = new Static();
+        Static::CreateArgs pathArgs;
+        pathArgs.parent = hwnd;
+        pathArgs.font = ew->hFont;
+        pathArgs.text = filePath ? filePath : Str{};
+        pathArgs.pathEllipsis = true;
+        pathLabel->Create(pathArgs);
+        ew->staticPathLabel = pathLabel;
     }
-    ew->hwndPathLabel = CreateWindowExW(0, L"STATIC", filePath ? CWStrTemp(filePath) : L"", pathLabelStyle, 0, 0, 0, 0,
-                                        hwnd, nullptr, h, nullptr);
-    SendMessageW(ew->hwndPathLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 
     // row 2: dest edit + browse
     TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
@@ -2195,7 +2172,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
                                         nullptr, h, nullptr);
     SendMessageW(ew->hwndBrowseBtn, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 
-    // row 3: info label
+    // row 3: info label (buttons and format dropdown added below, then wired into row3Layout)
     TempStr infoStr;
     if (mode == ImageEditMode::Save) {
         infoStr = fmt("%d x %d", imgW, imgH);
@@ -2204,9 +2181,15 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     } else {
         infoStr = FormatResizeInfoTemp(imgW, imgH, imgW, imgH);
     }
-    ew->hwndInfoLabel = CreateWindowExW(0, L"STATIC", CWStrTemp(infoStr), WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0,
-                                        hwnd, nullptr, h, nullptr);
-    SendMessageW(ew->hwndInfoLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
+    {
+        auto* infoLabel = new Static();
+        Static::CreateArgs infoArgs;
+        infoArgs.parent = hwnd;
+        infoArgs.font = ew->hFont;
+        infoArgs.text = infoStr;
+        infoLabel->Create(infoArgs);
+        ew->staticInfoLabel = infoLabel;
+    }
 
     // buttons
     {
@@ -2267,6 +2250,26 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
         if (selectPdf) {
             // sync the dest edit's extension to the pre-selected PDF format
             OnFormatChanged(ew);
+        }
+    }
+
+    {
+        int gap = DpiScale(hwnd, 4);
+        ew->row3Layout = new HBox();
+        ew->row3Layout->alignMain = MainAxisAlign::MainStart;
+        ew->row3Layout->alignCross = CrossAxisAlign::CrossCenter;
+        ew->row3Layout->AddChild(ew->staticInfoLabel, 1);
+        if (ew->dropFormat) {
+            ew->dropFormat->SetInsetsPt(0, 0, 0, gap);
+            ew->row3Layout->AddChild(ew->dropFormat);
+        }
+        if (ew->btnCrop) {
+            ew->btnCrop->SetInsetsPt(0, 0, 0, gap);
+            ew->row3Layout->AddChild(ew->btnCrop);
+        }
+        if (ew->btnResize) {
+            ew->btnResize->SetInsetsPt(0, 0, 0, gap);
+            ew->row3Layout->AddChild(ew->btnResize);
         }
     }
 
