@@ -37,9 +37,6 @@ static WCHAR FoldCaseWChar(WCHAR c) {
 // regardless of the CRT locale. POSIX uses a small built-in fold for scripts
 // used by our tests and falls back to towlower().
 static void FoldCaseWInPlace(WStr s) {
-    if (!s) {
-        return;
-    }
 #if OS_WIN
     CharLowerBuffW(s.s, (DWORD)s.len);
 #else
@@ -526,9 +523,6 @@ bool IsWs(char c) {
 }
 
 int IndexOfChar(Str s, char c) {
-    if (!s) {
-        return -1;
-    }
     for (int i = 0; i < s.len; i++) {
         if (s.s[i] == c) {
             return i;
@@ -550,9 +544,6 @@ Str SliceFromChar(Str str, char c) {
 }
 
 Str SliceFromCharLast(Str str, char c) {
-    if (!str) {
-        return {};
-    }
     for (int i = str.len - 1; i >= 0; i--) {
         if (str.s[i] == c) {
             return Str(str.s + i, str.len - i);
@@ -766,9 +757,6 @@ static bool isNl(char c) {
 
 // replaces '\r\n' and '\r' with just '\n' and removes empty lines
 int NormalizeNewlinesInPlace(Str s, Str endExclusive) {
-    if (!s) {
-        return 0;
-    }
     int endOff = endExclusive.s ? (int)(endExclusive.s - s.s) : s.len;
     int read = 0;
     while (read < endOff && isNl(s.s[read])) {
@@ -1014,9 +1002,6 @@ int CmpNatural(Str aIn, Str bIn) {
 }
 
 bool IsEmptyOrWhiteSpace(Str s) {
-    if (!s) {
-        return true;
-    }
     for (int i = 0; i < s.len; i++) {
         if (!str::IsWs(s.s[i])) {
             return false;
@@ -1942,9 +1927,6 @@ bool EndsWithI(WStr txt, WStr end) {
 }
 
 int IndexOfChar(WStr s, WCHAR c) {
-    if (!s) {
-        return -1;
-    }
     for (int i = 0; i < s.len; i++) {
         if (s.s[i] == c) {
             return i;
@@ -1981,9 +1963,6 @@ WStr FindFrom(WStr str, WStr find) {
 namespace str {
 
 Str ToUpperInPlace(Str s) {
-    if (!s) {
-        return {};
-    }
     for (int i = 0; i < s.len; i++) {
         s.s[i] = (char)toupper((u8)s.s[i]);
     }
@@ -1994,9 +1973,6 @@ Str ToUpperInPlace(Str s) {
 namespace wstr {
 
 WStr ToLowerInPlace(WStr s) {
-    if (!s) {
-        return {};
-    }
     for (int i = 0; i < s.len; i++) {
         s.s[i] = towlower(s.s[i]);
     }
