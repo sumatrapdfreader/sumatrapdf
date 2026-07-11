@@ -371,6 +371,10 @@ static void PositionNavFilesWnd(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+static void OnNavFilesWndClose(Wnd::CloseEvent*) {
+    ScheduleDeleteNavFilesWnd();
+}
+
 static void OnNavFilesWndDestroy(Wnd::DestroyEvent*) {
     ScheduleDeleteNavFilesWnd();
 }
@@ -473,8 +477,11 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
 
 void ShowNavFilesInFolder(MainWindow* win) {
     if (gNavFilesWnd) {
-        HwndSetFocus(gNavFilesWnd->hwnd);
-        return;
+        if (gNavFilesWnd->hwnd && IsWindow(gNavFilesWnd->hwnd)) {
+            HwndSetFocus(gNavFilesWnd->hwnd);
+            return;
+        }
+        ScheduleDeleteNavFilesWnd();
     }
     WindowTab* tab = win->CurrentTab();
     if (!tab || len(tab->filePath) == 0) {
@@ -482,6 +489,7 @@ void ShowNavFilesInFolder(MainWindow* win) {
     }
 
     auto wnd = new NavFilesInFolderWnd();
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);
     wnd->font = GetAppBiggerFont(win->hwndFrame);
     bool ok = wnd->Create(win);

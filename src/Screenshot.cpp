@@ -1360,17 +1360,12 @@ SetHotkeyWnd::~SetHotkeyWnd() {
     str::Free(newHotkey);
 }
 
-static void SafeDeleteSetHotkeyWnd() {
-    if (!gSetHotkeyWnd) {
-        return;
-    }
-    auto* wnd = gSetHotkeyWnd;
-    gSetHotkeyWnd = nullptr;
-    delete wnd;
+static void DeleteSetHotkeyWndInstance(SetHotkeyWnd* w) {
+    delete w;
 }
 
 void SetHotkeyWnd::ScheduleDelete() {
-    auto fn = MkFunc0Void(SafeDeleteSetHotkeyWnd);
+    auto fn = MkFunc0<SetHotkeyWnd>(DeleteSetHotkeyWndInstance, this);
     uitask::Post(fn, "SafeDeleteSetHotkeyWnd");
 }
 
@@ -1512,17 +1507,31 @@ bool SetHotkeyWnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-static void OnSetHotkeyDestroy(Wnd::DestroyEvent*) {
+static void TeardownSetHotkeyWnd() {
     if (!gSetHotkeyWnd) {
         return;
     }
-    gSetHotkeyWnd->CleanupHook();
-    if (!gSetHotkeyWnd->committed) {
-        for (MainWindow* w : gWindows) {
-            RegisterScreenshotHotkey(w->hwndFrame);
+    SetHotkeyWnd* w = gSetHotkeyWnd;
+    gSetHotkeyWnd = nullptr;
+    w->CleanupHook();
+    if (!w->committed) {
+        for (MainWindow* win : gWindows) {
+            RegisterScreenshotHotkey(win->hwndFrame);
         }
     }
-    gSetHotkeyWnd->ScheduleDelete();
+    w->ScheduleDelete();
+}
+
+static void OnSetHotkeyClose(Wnd::CloseEvent* ev) {
+    if (gSetHotkeyWnd == (SetHotkeyWnd*)ev->e->self) {
+        TeardownSetHotkeyWnd();
+    }
+}
+
+static void OnSetHotkeyDestroy(Wnd::DestroyEvent* ev) {
+    if (gSetHotkeyWnd == (SetHotkeyWnd*)ev->e->self) {
+        TeardownSetHotkeyWnd();
+    }
 }
 
 bool SetHotkeyWnd::Create(HWND owner) {
@@ -1623,8 +1632,11 @@ bool SetHotkeyWnd::Create(HWND owner) {
 
 void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     if (gSetHotkeyWnd) {
-        HwndSetFocus(gSetHotkeyWnd->hwnd);
-        return;
+        if (gSetHotkeyWnd->hwnd && IsWindow(gSetHotkeyWnd->hwnd)) {
+            HwndSetFocus(gSetHotkeyWnd->hwnd);
+            return;
+        }
+        TeardownSetHotkeyWnd();
     }
 
     for (MainWindow* win : gWindows) {
@@ -1633,6 +1645,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
 
     auto* wnd = new SetHotkeyWnd();
     wnd->hwndOwner = hwndOwner;
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnSetHotkeyClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSetHotkeyDestroy);
     wnd->font = GetAppFont(hwndOwner);
     if (!wnd->Create(hwndOwner)) {

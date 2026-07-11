@@ -100,17 +100,12 @@ static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
 
 SelectionTranslateWnd::~SelectionTranslateWnd() = default;
 
-static void SafeDeleteSelectionTranslateWnd() {
-    if (!gSelectionTranslateWnd) {
-        return;
-    }
-    auto* wnd = gSelectionTranslateWnd;
-    gSelectionTranslateWnd = nullptr;
-    delete wnd;
+static void DeleteSelectionTranslateWndInstance(SelectionTranslateWnd* w) {
+    delete w;
 }
 
 void SelectionTranslateWnd::ScheduleDelete() {
-    auto fn = MkFunc0Void(SafeDeleteSelectionTranslateWnd);
+    auto fn = MkFunc0<SelectionTranslateWnd>(DeleteSelectionTranslateWndInstance, this);
     uitask::Post(fn, "SafeDeleteSelectionTranslateWnd");
 }
 
@@ -844,16 +839,30 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     uitask::Post(MkFunc0(OnTranslateDone, done), "SelectionTranslateDone");
 }
 
-static void OnSelectionTranslateDestroy(Wnd::DestroyEvent*) {
+static void TeardownSelectionTranslateWnd() {
     if (!gSelectionTranslateWnd) {
         return;
     }
-    HWND hwndOwner = gSelectionTranslateWnd->hwndOwner;
+    SelectionTranslateWnd* w = gSelectionTranslateWnd;
+    gSelectionTranslateWnd = nullptr;
+    HWND hwndOwner = w->hwndOwner;
     if (hwndOwner) {
         EnableWindow(hwndOwner, TRUE);
         HwndToForeground(hwndOwner);
     }
-    gSelectionTranslateWnd->ScheduleDelete();
+    w->ScheduleDelete();
+}
+
+static void OnSelectionTranslateClose(Wnd::CloseEvent* ev) {
+    if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
+        TeardownSelectionTranslateWnd();
+    }
+}
+
+static void OnSelectionTranslateDestroy(Wnd::DestroyEvent* ev) {
+    if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
+        TeardownSelectionTranslateWnd();
+    }
 }
 
 bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
@@ -1043,8 +1052,11 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
         return;
     }
     if (gSelectionTranslateWnd) {
-        HwndSetFocus(gSelectionTranslateWnd->hwnd);
-        return;
+        if (gSelectionTranslateWnd->hwnd && IsWindow(gSelectionTranslateWnd->hwnd)) {
+            HwndSetFocus(gSelectionTranslateWnd->hwnd);
+            return;
+        }
+        TeardownSelectionTranslateWnd();
     }
 
     bool isTextOnlySelection = false;
@@ -1060,6 +1072,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     wnd->hwndOwner = hwndOwner;
     wnd->backend = backend;
     wnd->font = GetAppFont(hwndOwner);
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSelectionTranslateDestroy);
     TempStr title = fmt(_TRA("Translate with %s").s, BackendDisplayName(backend));
     if (!wnd->Create(hwndOwner, selText, title)) {

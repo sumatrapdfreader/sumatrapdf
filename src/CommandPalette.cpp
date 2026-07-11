@@ -371,6 +371,10 @@ void CommandPaletteWnd::OnListDoubleClick() {
     ExecuteCurrentSelection();
 }
 
+static void OnClose(Wnd::CloseEvent*) {
+    ScheduleDeleteAndExecCommand();
+}
+
 static void OnDestroy(Wnd::DestroyEvent*) {
     ScheduleDeleteAndExecCommand();
 }
@@ -554,13 +558,16 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
 void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (gCommandPaletteWnd) {
-        HwndSetFocus(gCommandPaletteHwnd);
-        return;
+        if (gCommandPaletteHwnd && IsWindow(gCommandPaletteHwnd)) {
+            HwndSetFocus(gCommandPaletteHwnd);
+            return;
+        }
+        ScheduleDeleteAndExecCommand();
     }
 
     auto wnd = new CommandPaletteWnd();
-    auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
-    wnd->onDestroy = fn;
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
+    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppBiggerFont(win->hwndFrame);
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);

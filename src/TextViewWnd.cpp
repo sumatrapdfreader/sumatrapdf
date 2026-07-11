@@ -134,8 +134,7 @@ LRESULT TextViewWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
-static void OnTextViewDestroy(Wnd::DestroyEvent* ev) {
-    TextViewWnd* w = (TextViewWnd*)WndListFindByHwnd(ev->e->hwnd);
+static void TeardownTextViewWnd(TextViewWnd* w) {
     if (!w) {
         return;
     }
@@ -148,9 +147,18 @@ static void OnTextViewDestroy(Wnd::DestroyEvent* ev) {
     w->ScheduleDelete();
 }
 
+static void OnTextViewClose(Wnd::CloseEvent* ev) {
+    TeardownTextViewWnd((TextViewWnd*)ev->e->self);
+}
+
+static void OnTextViewDestroy(Wnd::DestroyEvent* ev) {
+    TeardownTextViewWnd((TextViewWnd*)ev->e->self);
+}
+
 HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     auto* wnd = new TextViewWnd();
     wnd->hwndPtr = hwndPtr;
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnTextViewDestroy);
     if (!wnd->Create(title, text)) {
         delete wnd;
@@ -162,6 +170,7 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
 void ShowTextInWindowDialog(Str title, Str text) {
     auto* wnd = new TextViewWnd();
     wnd->isDialog = true;
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnTextViewDestroy);
     if (!wnd->Create(title, text)) {
         delete wnd;

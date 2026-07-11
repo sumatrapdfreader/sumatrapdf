@@ -85,15 +85,6 @@ static Vec<TabGroupsWnd*> gTabGroupsWnds;
 
 TabGroupsWnd::~TabGroupsWnd() = default;
 
-static TabGroupsWnd* FindTabGroupsWnd(HWND hwnd) {
-    for (auto* w : gTabGroupsWnds) {
-        if (w->hwnd == hwnd) {
-            return w;
-        }
-    }
-    return nullptr;
-}
-
 static void DeleteTabGroupsWndInstance(TabGroupsWnd* w) {
     delete w;
 }
@@ -366,14 +357,21 @@ bool TabGroupsWnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-static void OnTabGroupsDestroy(Wnd::DestroyEvent* ev) {
-    TabGroupsWnd* w = FindTabGroupsWnd(ev->e->hwnd);
-    if (!w) {
+static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
+    if (!w || gTabGroupsWnds.Find(w) < 0) {
         return;
     }
     gTabGroupsWnds.Remove(w);
     w->model = nullptr;
     w->ScheduleDelete();
+}
+
+static void OnTabGroupsClose(Wnd::CloseEvent* ev) {
+    TeardownTabGroupsWnd((TabGroupsWnd*)ev->e->self);
+}
+
+static void OnTabGroupsDestroy(Wnd::DestroyEvent* ev) {
+    TeardownTabGroupsWnd((TabGroupsWnd*)ev->e->self);
 }
 
 bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
@@ -474,13 +472,18 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
 static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     for (auto* w : gTabGroupsWnds) {
         if (w->win == win && w->mode == mode) {
-            BringWindowToTop(w->hwnd);
-            return;
+            if (w->hwnd && IsWindow(w->hwnd)) {
+                BringWindowToTop(w->hwnd);
+                return;
+            }
+            TeardownTabGroupsWnd(w);
+            break;
         }
     }
 
     auto* wnd = new TabGroupsWnd();
     wnd->font = GetAppFont(win->hwndFrame);
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnTabGroupsDestroy);
     if (!wnd->Create(win, mode)) {
         delete wnd;

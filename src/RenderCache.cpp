@@ -1290,26 +1290,44 @@ LRESULT DebugTextWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
 static DebugTextWnd* gRenderInfoWnd = nullptr;
 static DebugTextWnd* gCacheInfoWnd = nullptr;
 
-static void OnRenderInfoDestroy(Wnd::DestroyEvent*) {
-    if (!gRenderInfoWnd) {
+static void TeardownDebugTextWnd(DebugTextWnd** slot, DebugTextWnd* w) {
+    if (!slot || !*slot || *slot != w) {
         return;
     }
-    DebugTextWnd* w = gRenderInfoWnd;
-    gRenderInfoWnd = nullptr;
+    *slot = nullptr;
     w->ScheduleDelete();
 }
 
-static void OnCacheInfoDestroy(Wnd::DestroyEvent*) {
-    if (!gCacheInfoWnd) {
+static void CloseDebugTextWnd(DebugTextWnd** slot) {
+    if (!slot || !*slot) {
         return;
     }
-    DebugTextWnd* w = gCacheInfoWnd;
-    gCacheInfoWnd = nullptr;
-    w->ScheduleDelete();
+    DebugTextWnd* w = *slot;
+    if (w->hwnd && IsWindow(w->hwnd)) {
+        w->Close();
+    } else {
+        TeardownDebugTextWnd(slot, w);
+    }
+}
+
+static void OnRenderInfoClose(Wnd::CloseEvent* ev) {
+    TeardownDebugTextWnd(&gRenderInfoWnd, (DebugTextWnd*)ev->e->self);
+}
+
+static void OnRenderInfoDestroy(Wnd::DestroyEvent* ev) {
+    TeardownDebugTextWnd(&gRenderInfoWnd, (DebugTextWnd*)ev->e->self);
+}
+
+static void OnCacheInfoClose(Wnd::CloseEvent* ev) {
+    TeardownDebugTextWnd(&gCacheInfoWnd, (DebugTextWnd*)ev->e->self);
+}
+
+static void OnCacheInfoDestroy(Wnd::DestroyEvent* ev) {
+    TeardownDebugTextWnd(&gCacheInfoWnd, (DebugTextWnd*)ev->e->self);
 }
 
 bool IsRenderInfoWindowVisible() {
-    return gRenderInfoWnd != nullptr;
+    return gRenderInfoWnd && gRenderInfoWnd->hwnd && IsWindow(gRenderInfoWnd->hwnd);
 }
 
 static void SerializePredictive(str::Builder& s, int originPageNo, int nPred, const int* pred) {
@@ -1435,6 +1453,7 @@ void RenderCache::UpdateRenderInfo() {
 
 static void CreateRenderInfoWindow() {
     auto* wnd = new DebugTextWnd();
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnRenderInfoClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnRenderInfoDestroy);
     if (!wnd->Create(StrL("Render Queue Info"), 12)) {
         delete wnd;
@@ -1445,7 +1464,7 @@ static void CreateRenderInfoWindow() {
 
 void ToggleRenderInfoWindow() {
     if (gRenderInfoWnd) {
-        gRenderInfoWnd->Close();
+        CloseDebugTextWnd(&gRenderInfoWnd);
         return;
     }
     CreateRenderInfoWindow();
@@ -1457,7 +1476,7 @@ void ToggleRenderInfoWindow() {
 // --------- bitmap cache debug window (CmdDebugToggleCacheInfo) ---------
 
 bool IsCacheInfoWindowVisible() {
-    return gCacheInfoWnd != nullptr;
+    return gCacheInfoWnd && gCacheInfoWnd->hwnd && IsWindow(gCacheInfoWnd->hwnd);
 }
 
 static TempStr FormatCacheBytesTemp(i64 bytes) {
@@ -1557,6 +1576,7 @@ void RenderCache::UpdateCacheInfo() {
 
 static void CreateCacheInfoWindow() {
     auto* wnd = new DebugTextWnd();
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnCacheInfoClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnCacheInfoDestroy);
     if (!wnd->Create(StrL("Cache Info"), 12)) {
         delete wnd;
@@ -1567,7 +1587,7 @@ static void CreateCacheInfoWindow() {
 
 void ToggleCacheInfoWindow() {
     if (gCacheInfoWnd) {
-        gCacheInfoWnd->Close();
+        CloseDebugTextWnd(&gCacheInfoWnd);
         return;
     }
     CreateCacheInfoWindow();

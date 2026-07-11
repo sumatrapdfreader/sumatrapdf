@@ -92,8 +92,14 @@ PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
 
 void DeletePropertiesWindow(HWND hwndParent) {
     PropertiesWnd* w = FindPropertyWindowByHwnd(hwndParent);
-    if (w) {
+    if (!w) {
+        return;
+    }
+    if (w->hwnd && IsWindow(w->hwnd)) {
         w->Close();
+    } else {
+        gPropertiesWindows.Remove(w);
+        w->ScheduleDelete();
     }
 }
 
@@ -709,7 +715,8 @@ void PropertiesWnd::SizeToContent() {
     if (btnCopyToClipboard) {
         btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + 2 * ButtonPadding(hwnd));
     }
-    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + btnAreaDy + frameDy;
+    int bottomMargin = DpiScale(hwnd, GetAppFontSize(hwnd));
+    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + btnAreaDy + bottomMargin + frameDy;
 
     // cap at 80% of screen
     Rect work = GetWorkAreaRect(WindowRect(hwnd), hwnd);
@@ -781,17 +788,36 @@ bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
     return Wnd::OnCommand(wparam, lparam);
 }
 
-static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
-    PropertiesWnd* w = FindPropertyWindowByHwnd(ev->e->hwnd);
-    if (!w) {
+static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
+    if (!hwnd || !IsWindow(hwnd)) {
         return;
     }
-    Rect rc = WindowRect(w->hwnd);
+    Rect rc = WindowRect(hwnd);
     Point pos = {rc.x, rc.y};
     if (pos != w->initialPos) {
         gGlobalPrefs->propWinPos = pos;
         SaveSettings();
     }
+}
+
+// WM_CLOSE must clean up here: Wnd::Destroy() clears hwnd and drops the Wnd from
+// the hwnd map before DestroyWindow(), so WM_DESTROY never reaches onDestroy.
+static void OnPropertiesClose(Wnd::CloseEvent* ev) {
+    PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
+    if (!w) {
+        return;
+    }
+    SavePropertiesWindowPos(w, w->hwnd);
+    gPropertiesWindows.Remove(w);
+    w->ScheduleDelete();
+}
+
+static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
+    PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
+    if (!w || gPropertiesWindows.Find(w) < 0) {
+        return;
+    }
+    SavePropertiesWindowPos(w, ev->e->hwnd);
     gPropertiesWindows.Remove(w);
     w->ScheduleDelete();
 }
@@ -847,7 +873,7 @@ bool PropertiesWnd::Create(HWND parent) {
         vbox->AddChild(btnRow);
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding));
+    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, GetAppFontSize(hwnd)));
 
     SetPropsText(ToStr(propsText));
     SizeToContent();
@@ -919,6 +945,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     wnd->propsText.Append("\n");
     wnd->propsText.Append(_TRA("Getting fonts information..."));
 
+    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnPropertiesClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnPropertiesDestroy);
     if (!wnd->Create(parent)) {
         gPropertiesWindows.Remove(wnd);
