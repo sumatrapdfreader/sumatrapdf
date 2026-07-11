@@ -103,7 +103,9 @@ struct Wnd : ILayout {
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
 
-    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
+    void SetInsetsPt(int uniform);
+    void SetInsetsPt(int topBottom, int leftRight);
+    void SetInsetsPt(int top, int right, int bottom, int left);
 
     void Attach(HWND hwnd);
     void AttachDlgItem(UINT id, HWND parent);

@@ -935,8 +935,14 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     return hwnd;
 }
 
-// if only top given, set them all to top
-// if top, right given, set bottom to top and left to right
+void Wnd::SetInsetsPt(int uniform) {
+    insets = DpiScaledInsets(hwnd, uniform);
+}
+
+void Wnd::SetInsetsPt(int topBottom, int leftRight) {
+    insets = DpiScaledInsets(hwnd, topBottom, leftRight);
+}
+
 void Wnd::SetInsetsPt(int top, int right, int bottom, int left) {
     insets = DpiScaledInsets(hwnd, top, right, bottom, left);
 }

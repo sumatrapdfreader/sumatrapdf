@@ -1110,22 +1110,26 @@ Insets DefaultInsets() {
     return Insets{padding, padding, padding, padding};
 }
 
-Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
+// DpiScaledInsets has 1-, 2-, and 4-value overloads only (no 3-value form) so a
+// mistaken top/right/bottom call without left fails at compile time.
+static Insets DpiScaledInsetsAll(HWND hwnd, int top, int right, int bottom, int left) {
     ReportIf(top < 0);
-    if (right == -1) {
-        // only first given, consider all to be the same
-        right = top;
-        bottom = top;
-        left = top;
-    }
-    if (bottom == -1) {
-        // first 2 given, consider them top / bottom, left / right
-        bottom = top;
-        left = right;
-    }
-    ReportIf(left == -1);
-    Insets res = {DpiScale(hwnd, top), DpiScale(hwnd, right), DpiScale(hwnd, bottom), DpiScale(hwnd, left)};
-    return res;
+    ReportIf(right < 0);
+    ReportIf(bottom < 0);
+    ReportIf(left < 0);
+    return {DpiScale(hwnd, top), DpiScale(hwnd, right), DpiScale(hwnd, bottom), DpiScale(hwnd, left)};
+}
+
+Insets DpiScaledInsets(HWND hwnd, int uniform) {
+    return DpiScaledInsetsAll(hwnd, uniform, uniform, uniform, uniform);
+}
+
+Insets DpiScaledInsets(HWND hwnd, int topBottom, int leftRight) {
+    return DpiScaledInsetsAll(hwnd, topBottom, leftRight, topBottom, leftRight);
+}
+
+Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
+    return DpiScaledInsetsAll(hwnd, top, right, bottom, left);
 }
 
 Kind kindSpacer = "spacer";

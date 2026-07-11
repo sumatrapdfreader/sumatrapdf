@@ -873,7 +873,7 @@ bool PropertiesWnd::Create(HWND parent) {
         vbox->AddChild(btnRow);
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, GetAppFontSize(hwnd)));
+    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, GetAppFontSize(hwnd), kButtonPadding));
 
     SetPropsText(ToStr(propsText));
     SizeToContent();
