@@ -8,10 +8,18 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/Timer.h"
+#include "base/UITask.h"
+
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
 
 #include "Notifications.h"
 #include "AppTools.h"
 #include "Screenshot.h"
+#include "Theme.h"
+#include "SumatraConfig.h"
+#include "DarkModeSubclass.h"
 #include "ImageSaveCropResize.h"
 #include "Commands.h"
 #include "Accelerators.h"
@@ -19,6 +27,7 @@
 #include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
 
 extern Vec<MainWindow*> gWindows;
@@ -1315,40 +1324,101 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
     return CallNextHookEx(gKeyboardHook, nCode, wp, lp);
 }
 
-struct SetHotkeyDialog {
-    HWND hwnd = nullptr;
-    HWND hwndCurrentLabel = nullptr;
-    HWND hwndHotkeyLabel = nullptr;
-    HWND hwndSetBtn = nullptr;
-    HWND hwndRemoveBtn = nullptr;
-    HWND hwndCancelBtn = nullptr;
-    HFONT hFont = nullptr;
+struct SetHotkeyWnd : Wnd {
+    ~SetHotkeyWnd() override;
+
+    HFONT font = nullptr;
     HWND hwndOwner = nullptr;
+    Static* staticPrompt = nullptr;
+    Edit* editHotkey = nullptr;
+    Button* btnSet = nullptr;
+    Button* btnRemove = nullptr;
+    Button* btnCancel = nullptr;
+
     Str currentHotkey;      // current hotkey string, or empty if none
     Str newHotkey;          // newly captured hotkey string
     bool committed = false; // true if Set or Remove was pressed
+
+    bool Create(HWND owner);
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    bool PreTranslateMessage(MSG& msg) override;
+
+    void UpdateTheme();
+    void UpdateUI();
+    bool HandleKeyDown(UINT vk);
+    void DoSet();
+    void DoRemove();
+    void OnCancel();
+    void CleanupHook();
+    void ScheduleDelete();
 };
 
-static void SetHotkeyUpdateUI(SetHotkeyDialog* dlg) {
-    Str display = dlg->newHotkey ? dlg->newHotkey : (dlg->currentHotkey ? dlg->currentHotkey : StrL("None"));
-    HwndSetText(dlg->hwndHotkeyLabel, display);
-    EnableWindow(dlg->hwndSetBtn, len(dlg->newHotkey) > 0);
-    EnableWindow(dlg->hwndRemoveBtn, len(dlg->currentHotkey) > 0 || len(dlg->newHotkey) > 0);
+static SetHotkeyWnd* gSetHotkeyWnd = nullptr;
+
+SetHotkeyWnd::~SetHotkeyWnd() {
+    str::Free(currentHotkey);
+    str::Free(newHotkey);
 }
 
-static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
-    if (!dlg->newHotkey) {
+static void SafeDeleteSetHotkeyWnd() {
+    if (!gSetHotkeyWnd) {
         return;
     }
-    logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", dlg->newHotkey);
+    auto* wnd = gSetHotkeyWnd;
+    gSetHotkeyWnd = nullptr;
+    delete wnd;
+}
+
+void SetHotkeyWnd::ScheduleDelete() {
+    auto fn = MkFunc0Void(SafeDeleteSetHotkeyWnd);
+    uitask::Post(fn, "SafeDeleteSetHotkeyWnd");
+}
+
+void SetHotkeyWnd::UpdateUI() {
+    Str display = newHotkey ? newHotkey : (currentHotkey ? currentHotkey : StrL("None"));
+    if (editHotkey) {
+        editHotkey->SetText(display);
+    }
+    if (btnSet) {
+        btnSet->SetIsEnabled(len(newHotkey) > 0);
+    }
+    if (btnRemove) {
+        btnRemove->SetIsEnabled(len(currentHotkey) > 0 || len(newHotkey) > 0);
+    }
+}
+
+bool SetHotkeyWnd::HandleKeyDown(UINT vk) {
+    if (vk == VK_CONTROL || vk == VK_SHIFT || vk == VK_MENU || vk == VK_LWIN || vk == VK_RWIN) {
+        return true;
+    }
+    if (vk == VK_ESCAPE) {
+        OnCancel();
+        return true;
+    }
+    bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+    bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+    TempStr hotkey = SerializeHotkeyTemp(vk, ctrl, shift, alt);
+    if (hotkey) {
+        str::ReplaceWithCopy(&newHotkey, hotkey);
+        UpdateUI();
+    }
+    return true;
+}
+
+void SetHotkeyWnd::DoSet() {
+    if (!newHotkey) {
+        return;
+    }
+    logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", newHotkey);
 
     Shortcut* sc = FindScreenshotShortcutEntry();
     if (sc) {
-        str::ReplaceWithCopy(&sc->key, dlg->newHotkey);
+        str::ReplaceWithCopy(&sc->key, newHotkey);
     } else {
         sc = new Shortcut();
         sc->cmd = str::Dup(StrL("CmdScreenshot"));
-        sc->key = str::Dup(dlg->newHotkey);
+        sc->key = str::Dup(newHotkey);
         sc->name = nullptr;
         sc->toolbarText = nullptr;
         sc->toolbarSvgIcon = nullptr;
@@ -1357,22 +1427,20 @@ static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
     }
     SaveSettings();
 
-    // register the new hotkey (old one was unregistered before dialog opened)
     for (MainWindow* win : gWindows) {
         RegisterScreenshotHotkey(win->hwndFrame);
     }
-    dlg->committed = true;
-    DestroyWindow(dlg->hwnd);
+    committed = true;
+    Close();
 }
 
-static void SetHotkeyDoRemove(SetHotkeyDialog* dlg) {
+void SetHotkeyWnd::DoRemove() {
     logf("SetHotkeyDoRemove: removing screenshot hotkey\n");
 
     Shortcut* sc = FindScreenshotShortcutEntry();
     if (sc) {
         gGlobalPrefs->shortcuts->Remove(sc);
     }
-    // also clear the key in the custom command chain so it doesn't get picked up
     auto curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdScreenshot) {
@@ -1381,177 +1449,202 @@ static void SetHotkeyDoRemove(SetHotkeyDialog* dlg) {
         curr = curr->next;
     }
     SaveSettings();
-    // hotkey was already unregistered before dialog opened, nothing to re-register
-    dlg->committed = true;
-    DestroyWindow(dlg->hwnd);
+    committed = true;
+    Close();
 }
 
-static LRESULT CALLBACK SetHotkeyDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    SetHotkeyDialog* dlg = nullptr;
-    if (msg == WM_CREATE) {
-        CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
-        dlg = (SetHotkeyDialog*)cs->lpCreateParams;
-        dlg->hwnd = hwnd;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)dlg);
+void SetHotkeyWnd::OnCancel() {
+    Close();
+}
+
+void SetHotkeyWnd::CleanupHook() {
+    if (gKeyboardHook) {
+        UnhookWindowsHookEx(gKeyboardHook);
+        gKeyboardHook = nullptr;
+    }
+    gHotkeyDlgHwnd = nullptr;
+}
+
+void SetHotkeyWnd::UpdateTheme() {
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    if (staticPrompt) {
+        staticPrompt->SetColors(colTxt, colBg);
+    }
+    if (editHotkey) {
+        editHotkey->SetColors(colTxt, colBg);
+    }
+    if (btnSet) {
+        btnSet->SetColors(colTxt, colBg);
+    }
+    if (btnRemove) {
+        btnRemove->SetColors(colTxt, colBg);
+    }
+    if (btnCancel) {
+        btnCancel->SetColors(colTxt, colBg);
+    }
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
+LRESULT SetHotkeyWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_HOTKEY_CAPTURED || msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) {
+        HandleKeyDown((UINT)wp);
         return 0;
     }
-    dlg = (SetHotkeyDialog*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    if (!dlg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    switch (msg) {
-        case WM_HOTKEY_CAPTURED:
-        case WM_KEYDOWN:
-        case WM_SYSKEYDOWN: {
-            UINT vk = (UINT)wp;
-            // ignore bare modifier keys
-            if (vk == VK_CONTROL || vk == VK_SHIFT || vk == VK_MENU || vk == VK_LWIN || vk == VK_RWIN) {
-                return 0;
-            }
-            if (vk == VK_ESCAPE) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-            bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-            bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-            TempStr hotkey = SerializeHotkeyTemp(vk, ctrl, shift, alt);
-            if (hotkey) {
-                str::ReplaceWithCopy(&dlg->newHotkey, hotkey);
-                SetHotkeyUpdateUI(dlg);
-            }
-            return 0;
-        }
-        case WM_COMMAND: {
-            int code = HIWORD(wp);
-            HWND ctl = (HWND)lp;
-            if (ctl == dlg->hwndSetBtn && code == BN_CLICKED) {
-                SetHotkeyDoSet(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndRemoveBtn && code == BN_CLICKED) {
-                SetHotkeyDoRemove(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndCancelBtn && code == BN_CLICKED) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            break;
-        }
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            // remove keyboard hook
-            if (gKeyboardHook) {
-                UnhookWindowsHookEx(gKeyboardHook);
-                gKeyboardHook = nullptr;
-            }
-            gHotkeyDlgHwnd = nullptr;
-            if (!dlg->committed) {
-                // cancelled: re-register the original hotkey
-                for (MainWindow* w : gWindows) {
-                    RegisterScreenshotHotkey(w->hwndFrame);
-                }
-            }
-            str::Free(dlg->currentHotkey);
-            str::Free(dlg->newHotkey);
-            delete dlg;
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
+    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-static constexpr const WCHAR* kSetHotkeyWinClassName = L"SUMATRA_SET_HOTKEY";
-static bool gSetHotkeyWinClassRegistered = false;
+bool SetHotkeyWnd::PreTranslateMessage(MSG& msg) {
+    if (!hwnd) {
+        return false;
+    }
+    if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
+        return false;
+    }
+    if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) {
+        return HandleKeyDown((UINT)msg.wParam);
+    }
+    return false;
+}
 
-void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
-    if (!gSetHotkeyWinClassRegistered) {
-        WNDCLASSEXW wc{};
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = SetHotkeyDlgProc;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-        wc.lpszClassName = kSetHotkeyWinClassName;
-        RegisterClassExW(&wc);
-        gSetHotkeyWinClassRegistered = true;
+static void OnSetHotkeyDestroy(Wnd::DestroyEvent*) {
+    if (!gSetHotkeyWnd) {
+        return;
+    }
+    gSetHotkeyWnd->CleanupHook();
+    if (!gSetHotkeyWnd->committed) {
+        for (MainWindow* w : gWindows) {
+            RegisterScreenshotHotkey(w->hwndFrame);
+        }
+    }
+    gSetHotkeyWnd->ScheduleDelete();
+}
+
+bool SetHotkeyWnd::Create(HWND owner) {
+    hwndOwner = owner;
+    Str existing = FindScreenshotShortcut();
+    if (existing) {
+        currentHotkey = str::Dup(existing);
     }
 
-    // unregister current hotkey so the dialog can capture those keys
+    bool isRtl = IsUIRtl();
+    {
+        CreateCustomArgs args;
+        args.title = _TRA("Set Screenshot Hotkey");
+        args.visible = false;
+        args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+        args.exStyle = WS_EX_DLGMODALFRAME;
+        args.font = font;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
+        CreateCustom(args);
+    }
+    if (!hwnd) {
+        return false;
+    }
+
+    Str display = currentHotkey ? currentHotkey : StrL("None");
+
+    auto* vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        Static::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = _TRA("Press a key combination:");
+        args.isRtl = isRtl;
+        auto* c = new Static();
+        c->Create(args);
+        staticPrompt = c;
+        vbox->AddChild(c);
+    }
+
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = display;
+        args.withBorder = true;
+        args.isRtl = isRtl;
+        auto* c = new Edit();
+        c->Create(args);
+        SendMessageW(c->hwnd, EM_SETREADONLY, TRUE, 0);
+        editHotkey = c;
+        c->SetInsetsPt(6, 0, 0, 0);
+        vbox->AddChild(c);
+    }
+
+    {
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        btnCancel = CreateButton(hwnd, _TRA("Cancel"), MkMethod0<SetHotkeyWnd, &SetHotkeyWnd::OnCancel>(this), isRtl);
+        hbox->AddChild(btnCancel);
+        btnRemove = CreateButton(hwnd, _TRA("Remove"), MkMethod0<SetHotkeyWnd, &SetHotkeyWnd::DoRemove>(this), isRtl);
+        btnRemove->SetInsetsPt(0, 0, 0, 4);
+        hbox->AddChild(btnRemove);
+        {
+            auto* btn = new Button();
+            btn->isDefault = true;
+            btn->onClick = MkMethod0<SetHotkeyWnd, &SetHotkeyWnd::DoSet>(this);
+            Button::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = _TRA("Set");
+            args.isRtl = isRtl;
+            btn->Create(args);
+            btn->SetInsetsPt(0, 0, 0, 4);
+            btnSet = btn;
+            hbox->AddChild(btnSet);
+        }
+        auto* hboxPad = new Padding(hbox, DpiScaledInsets(hwnd, 8, 0, 0, 0));
+        vbox->AddChild(hboxPad);
+    }
+
+    layout = new Padding(vbox, DpiScaledInsets(hwnd, 8, 12));
+
+    int minDx = DpiScale(hwnd, 320);
+    LayoutAndSizeToContent(layout, minDx, 0, hwnd);
+    CenterDialog(hwnd, owner);
+    UpdateTheme();
+    UpdateUI();
+
+    SetIsVisible(true);
+    HwndSetFocus(hwnd);
+    return true;
+}
+
+void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
+    if (gSetHotkeyWnd) {
+        HwndSetFocus(gSetHotkeyWnd->hwnd);
+        return;
+    }
+
     for (MainWindow* win : gWindows) {
         UnregisterScreenshotHotkey(win->hwndFrame);
     }
 
-    SetHotkeyDialog* dlg = new SetHotkeyDialog();
-    dlg->hwndOwner = hwndOwner;
-    dlg->hFont = GetDefaultGuiFont();
-    Str existing = FindScreenshotShortcut();
-    if (existing) {
-        dlg->currentHotkey = str::Dup(existing);
-    }
-
-    int dlgW = 350;
-    int dlgH = 140;
-
-    HINSTANCE h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSetHotkeyWinClassName, _TRW("Set Screenshot Hotkey").s,
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                                dlgW, dlgH, hwndOwner, nullptr, h, dlg);
-    if (!hwnd) {
-        delete dlg;
+    auto* wnd = new SetHotkeyWnd();
+    wnd->hwndOwner = hwndOwner;
+    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSetHotkeyDestroy);
+    wnd->font = GetAppFont(hwndOwner);
+    if (!wnd->Create(hwndOwner)) {
+        delete wnd;
+        for (MainWindow* win : gWindows) {
+            RegisterScreenshotHotkey(win->hwndFrame);
+        }
         return;
     }
 
-    int padding = 10;
-    int x = padding;
-    int y = padding;
-    int w = dlgW - 2 * padding - 16;
-    int rowH = 22;
-    int rowGap = 6;
-
-    // row 1: "Current hotkey:" label
-    dlg->hwndCurrentLabel = CreateWindowExW(0, L"STATIC", _TRW("Press a key combination:").s,
-                                            WS_CHILD | WS_VISIBLE | SS_LEFT, x, y, w, rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndCurrentLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += rowH + rowGap;
-
-    // row 2: hotkey display
-    Str display = dlg->currentHotkey ? dlg->currentHotkey : StrL("None");
-    dlg->hwndHotkeyLabel =
-        CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", CWStrTemp(display),
-                        WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, x, y, w, rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndHotkeyLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += rowH + rowGap;
-
-    // row 3: Set + Remove + Cancel buttons (right-aligned)
-    int btnW = 75;
-    int btnH = 24;
-    int bx = x + w - btnW;
-    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel").s, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         btnW, btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= btnW + 4;
-    dlg->hwndRemoveBtn = CreateWindowExW(0, L"BUTTON", _TRW("Remove").s, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         btnW, btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndRemoveBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= btnW + 4;
-    dlg->hwndSetBtn = CreateWindowExW(0, L"BUTTON", _TRW("Set").s, WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, bx, y,
-                                      btnW, btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndSetBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    EnableWindow(dlg->hwndSetBtn, FALSE);
-    EnableWindow(dlg->hwndRemoveBtn, len(dlg->currentHotkey) > 0);
-
-    CenterDialog(hwnd, hwndOwner);
-
-    // install low-level keyboard hook to capture PrtSc (VK_SNAPSHOT)
-    // which doesn't generate WM_KEYDOWN
-    gHotkeyDlgHwnd = hwnd;
+    gSetHotkeyWnd = wnd;
+    gHotkeyDlgHwnd = wnd->hwnd;
+    HINSTANCE h = GetModuleHandleW(nullptr);
     gKeyboardHook = SetWindowsHookExW(WH_KEYBOARD_LL, LowLevelKeyboardProc, h, 0);
-
-    ShowWindow(hwnd, SW_SHOW);
 }
