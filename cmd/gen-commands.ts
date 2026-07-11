@@ -181,7 +181,6 @@ export const commands = [
     "CmdPrevTabSmart", "Smart Next Tab",
     "CmdMoveTabLeft", "Move Tab Left",
     "CmdMoveTabRight", "Move Tab Right",
-    "CmdSelectNextTheme", "Select next theme",
     "CmdInvokeInverseSearch", "Invoke Inverse Search",
     "CmdExec", "Execute a program",
     "CmdViewWithExternalViewer", "View With Custom External Viewer",
@@ -252,6 +251,7 @@ export const commands = [
     "CmdSetPdfDocumentColorModeLight", "Set PDF Document Color Mode: Light",
     "CmdTogglePreservePdfImages", "Toggle Preserve PDF Image Colors in Dark Mode",
     "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
+    "CmdChangeTheme", "Change Theme",
     "CmdNone", "Do nothing",
 ];
 

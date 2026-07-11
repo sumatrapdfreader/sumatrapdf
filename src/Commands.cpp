@@ -189,7 +189,6 @@ static SeqStrings gCommandNames =
     "CmdPrevTabSmart\0"
     "CmdMoveTabLeft\0"
     "CmdMoveTabRight\0"
-    "CmdSelectNextTheme\0"
     "CmdInvokeInverseSearch\0"
     "CmdExec\0"
     "CmdViewWithExternalViewer\0"
@@ -259,6 +258,7 @@ static SeqStrings gCommandNames =
     "CmdSetPdfDocumentColorModeLight\0"
     "CmdTogglePreservePdfImages\0"
     "CmdToggleLightDarkTheme\0"
+    "CmdChangeTheme\0"
     "CmdNone\0"
     "\0";
 
@@ -441,7 +441,6 @@ static i32 gCommandIds[] = {
     CmdPrevTabSmart,
     CmdMoveTabLeft,
     CmdMoveTabRight,
-    CmdSelectNextTheme,
     CmdInvokeInverseSearch,
     CmdExec,
     CmdViewWithExternalViewer,
@@ -511,6 +510,7 @@ static i32 gCommandIds[] = {
     CmdSetPdfDocumentColorModeLight,
     CmdTogglePreservePdfImages,
     CmdToggleLightDarkTheme,
+    CmdChangeTheme,
     CmdNone,
 };
 
@@ -693,7 +693,6 @@ SeqStrings gCommandDescriptions =
     "Smart Next Tab\0"
     "Move Tab Left\0"
     "Move Tab Right\0"
-    "Select next theme\0"
     "Invoke Inverse Search\0"
     "Execute a program\0"
     "View With Custom External Viewer\0"
@@ -763,6 +762,7 @@ SeqStrings gCommandDescriptions =
     "Set PDF Document Color Mode: Light\0"
     "Toggle Preserve PDF Image Colors in Dark Mode\0"
     "Toggle Light/Dark Theme\0"
+    "Change Theme\0"
     "Do nothing\0"
     "\0";
 // clang-format on

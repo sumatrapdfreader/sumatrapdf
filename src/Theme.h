@@ -3,7 +3,10 @@ License: GPLv3 */
 
 void SetTheme(Str name);
 void SetCurrentThemeFromSettings();
-void SelectNextTheme();
+void SetThemeByIndex(int themeIdx);
+int ThemeGetCount();
+Str ThemeGetNameAt(int idx);
+int ThemeGetCurrentIndex();
 void ToggleLightDarkTheme();
 void UpdateThemeAfterSystemColorChange();
 void CreateThemeCommands();

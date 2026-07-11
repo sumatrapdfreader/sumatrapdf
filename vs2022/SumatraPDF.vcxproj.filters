@@ -99,6 +99,9 @@
     <ClInclude Include="..\src\AdvancedSettingsDialog.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ChangeThemeDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Annotation.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -525,6 +528,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChangeThemeDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Annotation.cpp">

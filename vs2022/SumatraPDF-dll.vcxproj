@@ -1129,6 +1129,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\AIChatCommon.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\AdvancedSettingsDialog.h" />
+    <ClInclude Include="..\src\ChangeThemeDialog.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
     <ClInclude Include="..\src\AppTools.h" />
@@ -1297,6 +1298,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
+    <ClCompile Include="..\src\ChangeThemeDialog.cpp" />
     <ClCompile Include="..\src\Annotation.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

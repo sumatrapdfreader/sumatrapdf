@@ -220,6 +220,21 @@ static void RememberLastLightDarkTheme() {
     }
 }
 
+int ThemeGetCount() {
+    return gThemeCount;
+}
+
+Str ThemeGetNameAt(int idx) {
+    if (idx < 0 || idx >= gThemeCount) {
+        return nullptr;
+    }
+    return (*gThemes)[idx]->name;
+}
+
+int ThemeGetCurrentIndex() {
+    return gCurrThemeIndex;
+}
+
 void SetThemeByIndex(int themeIdx) {
     ReportIf((themeIdx < 0) || (themeIdx >= gThemeCount));
     if (themeIdx >= gThemeCount) {
@@ -271,11 +286,6 @@ void SetThemeByIndex(int themeIdx) {
         }
     }
 };
-
-void SelectNextTheme() {
-    int newIdx = (gCurrThemeIndex + 1) % gThemeCount;
-    SetThemeByIndex(newIdx);
-}
 
 // not case sensitive
 static int GetThemeByName(Str name) {

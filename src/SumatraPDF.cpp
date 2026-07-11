@@ -97,6 +97,7 @@
 #include "CodexBuild.h"
 #include "CommandPalette.h"
 #include "AdvancedSettingsDialog.h"
+#include "ChangeThemeDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -8243,6 +8244,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowAdvancedSettingsDialog(win);
             break;
 
+        case CmdChangeTheme:
+            ShowChangeThemeDialog(win);
+            break;
+
         case CmdSendByEmail:
             SendAsEmailAttachment(tab, win->hwndFrame);
             break;
@@ -8832,10 +8837,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
             str::Free(img);
         } break;
-
-        case CmdSelectNextTheme:
-            SelectNextTheme();
-            break;
 
         case CmdToggleLightDarkTheme:
             ToggleLightDarkTheme();

@@ -43,6 +43,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdAdvancedOptions,
     CmdAdvancedSettings,
     CmdChangeLanguage,
+    CmdChangeTheme,
     CmdCheckUpdate,
     CmdHelpOpenManual,
     CmdHelpOpenManualOnWebsite,
@@ -71,7 +72,6 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdClearHistory,
     CmdRemoveDeletedFilesFromHistory,
     CmdReopenLastClosedFile,
-    CmdSelectNextTheme,
     CmdListPrinters,
     CmdDebugCrashMe,
     CmdDebugCorruptMemory,
@@ -413,6 +413,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     CustomCommand* cmd = FindCustomCommand(cmdId);
     int origCmdId = cmd ? cmd->origId : 0;
     if (origCmdId == CmdSetTheme) {
+        if (surface == CommandSurface::Palette) {
+            return CommandVisibility::Hide;
+        }
         return CommandVisibility::Show;
     }
 
