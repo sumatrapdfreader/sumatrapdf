@@ -73,6 +73,7 @@
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
+#include "SelectionToolbar.h"
 #include "Screenshot.h"
 #include "ImageSaveCropResize.h"
 #include "StressTesting.h"
@@ -3110,6 +3111,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     tab->canvasRc = win->canvasRc;
 
     win->showSelection = tab->selectionOnPage != nullptr;
+    if (win->showSelection) {
+        ShowSelectionToolbar(win);
+    }
     if (win->uiaProvider) {
         win->uiaProvider->OnSelectionChanged();
     }

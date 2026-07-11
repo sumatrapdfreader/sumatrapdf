@@ -509,6 +509,9 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     }
     if (win->CurrentTab() != tb->tab) {
         HideSelectionToolbar(win);
+        if (win->showSelection) {
+            ShowSelectionToolbar(win);
+        }
         return;
     }
     Rect sel;

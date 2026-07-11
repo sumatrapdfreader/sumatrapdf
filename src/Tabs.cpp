@@ -26,6 +26,7 @@
 #include "Commands.h"
 #include "CommandAvailability.h"
 #include "FindBar.h"
+#include "SelectionToolbar.h"
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
@@ -639,6 +640,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     // results so the next tab can't show or navigate into the old document's
     // matches)
     HideFindBar(win);
+    HideSelectionToolbar(win);
 
     int current = win->tabsCtrl->GetSelected();
     if (-1 == current) {
