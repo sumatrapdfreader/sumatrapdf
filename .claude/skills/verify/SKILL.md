@@ -39,6 +39,8 @@ postMessage(frame, 0x0010 /*WM_CLOSE*/, 0, 0);
 
 ## Gotchas
 
+- `out/dbg64/SumatraPDF-settings.txt` exists (portable mode): the dbg build **loads** it even under `-for-testing` (which only prevents saving). Stale values there change app behavior in tests — e.g. a non-default `PdfDocumentColorMode` silently alters rendering. Check it when the app behaves unexpectedly at startup; it's written only by non-`-for-testing` (manual) launches.
+
 - Unit tests: `bun cmd/run-unit-tests.ts -dbg` (but verification = driving the app, not tests).
 - PdfFilter/PdfPreview link mupdf through `src/libmupdf.def`; new `fz_*`/`pdf_*` calls in code they compile need exports added there.
 - New `src/*.cpp` that include mupdf headers before `base/Base.h` must be added to the PCH opt-out list in `premake5.lua` (`setup_base_pch`), or every symbol from those headers is "undeclared" (PCH skips everything before `#include "base/Base.h"`).
