@@ -4,14 +4,20 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
+#include "base/Dpi.h"
 #include "base/Win.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Timer.h"
 
 #include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "Theme.h"
+#include "DarkModeSubclass.h"
+#include "SumatraConfig.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "PdfDarkMode.h"
@@ -1176,13 +1182,134 @@ void RenderCache::LogCacheSize() {
 
 extern RenderCache* gRenderCache;
 
-constexpr const WCHAR* kRenderInfoWinClass = L"SUMATRA_RENDER_INFO";
+struct DebugTextWnd : Wnd {
+    ~DebugTextWnd() override;
 
-static HWND gRenderInfoHwnd = nullptr;
-static HWND gRenderInfoEdit = nullptr;
+    Edit* edit = nullptr;
+    HFONT monoFont = nullptr;
+
+    bool Create(Str title, int fontSize);
+    void LayoutToClient();
+    void UpdateTheme();
+    void SetTextContent(Str text);
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    void ScheduleDelete();
+};
+
+DebugTextWnd::~DebugTextWnd() {
+    if (monoFont) {
+        DeleteObject(monoFont);
+        monoFont = nullptr;
+    }
+}
+
+static void DeleteDebugTextWndInstance(DebugTextWnd* w) {
+    delete w;
+}
+
+void DebugTextWnd::ScheduleDelete() {
+    auto fn = MkFunc0<DebugTextWnd>(DeleteDebugTextWndInstance, this);
+    uitask::Post(fn, "SafeDeleteDebugTextWnd");
+}
+
+void DebugTextWnd::LayoutToClient() {
+    if (!edit || !hwnd) {
+        return;
+    }
+    Rect rc = ClientRect(hwnd);
+    edit->SetBounds(rc);
+}
+
+void DebugTextWnd::UpdateTheme() {
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    if (edit) {
+        edit->SetColors(colTxt, colBg);
+    }
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
+void DebugTextWnd::SetTextContent(Str text) {
+    if (edit) {
+        edit->SetText(text);
+    }
+}
+
+bool DebugTextWnd::Create(Str title, int fontSize) {
+    {
+        CreateCustomArgs args;
+        args.title = title;
+        args.visible = false;
+        args.style = WS_OVERLAPPEDWINDOW;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
+        CreateCustom(args);
+    }
+    if (!hwnd) {
+        return false;
+    }
+
+    Edit::CreateArgs args;
+    args.parent = hwnd;
+    args.isMultiLine = true;
+    args.withBorder = true;
+    edit = new Edit();
+    edit->Create(args);
+    SendMessageW(edit->hwnd, EM_SETREADONLY, TRUE, 0);
+
+    HDC hdc = GetDC(hwnd);
+    monoFont = CreateSimpleFont(hdc, "Consolas", fontSize);
+    ReleaseDC(hwnd, hdc);
+    if (monoFont) {
+        edit->font = monoFont;
+        SendMessageW(edit->hwnd, WM_SETFONT, (WPARAM)monoFont, TRUE);
+    }
+    layout = edit;
+
+    int winW = DpiScale(hwnd, 700);
+    int winH = DpiScale(hwnd, 500);
+    SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
+    LayoutToClient();
+    UpdateTheme();
+    SetIsVisible(true);
+    return true;
+}
+
+LRESULT DebugTextWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_SIZE) {
+        LayoutToClient();
+        return 0;
+    }
+    return WndProcDefault(hwndIn, msg, wp, lp);
+}
+
+static DebugTextWnd* gRenderInfoWnd = nullptr;
+static DebugTextWnd* gCacheInfoWnd = nullptr;
+
+static void OnRenderInfoDestroy(Wnd::DestroyEvent*) {
+    if (!gRenderInfoWnd) {
+        return;
+    }
+    DebugTextWnd* w = gRenderInfoWnd;
+    gRenderInfoWnd = nullptr;
+    w->ScheduleDelete();
+}
+
+static void OnCacheInfoDestroy(Wnd::DestroyEvent*) {
+    if (!gCacheInfoWnd) {
+        return;
+    }
+    DebugTextWnd* w = gCacheInfoWnd;
+    gCacheInfoWnd = nullptr;
+    w->ScheduleDelete();
+}
 
 bool IsRenderInfoWindowVisible() {
-    return gRenderInfoHwnd != nullptr;
+    return gRenderInfoWnd != nullptr;
 }
 
 static void SerializePredictive(str::Builder& s, int originPageNo, int nPred, const int* pred) {
@@ -1286,8 +1413,8 @@ void RenderCache::SerializeQueueState(str::Builder& s) {
 }
 
 static void SetRenderInfoTextOnUI(Str* s) {
-    if (gRenderInfoEdit) {
-        HwndSetText(gRenderInfoEdit, *s);
+    if (gRenderInfoWnd) {
+        gRenderInfoWnd->SetTextContent(*s);
     }
     str::Free(*s);
     delete s;
@@ -1306,57 +1433,19 @@ void RenderCache::UpdateRenderInfo() {
     uitask::Post(fn, "RenderInfo");
 }
 
-static LRESULT CALLBACK WndProcRenderInfo(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    switch (msg) {
-        case WM_SIZE:
-            if (gRenderInfoEdit) {
-                MoveWindow(gRenderInfoEdit, 0, 0, LOWORD(lp), HIWORD(lp), TRUE);
-            }
-            return 0;
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            gRenderInfoHwnd = nullptr;
-            gRenderInfoEdit = nullptr;
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
 static void CreateRenderInfoWindow() {
-    HMODULE h = GetModuleHandleW(nullptr);
-    WNDCLASSEX wcex = {};
-    FillWndClassEx(wcex, kRenderInfoWinClass, WndProcRenderInfo);
-    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    RegisterClassEx(&wcex);
-
-    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
-    HWND hwnd = CreateWindowExW(0, kRenderInfoWinClass, L"Render Queue Info", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
-                                700, 500, nullptr, nullptr, h, nullptr);
-    if (!hwnd) {
+    auto* wnd = new DebugTextWnd();
+    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnRenderInfoDestroy);
+    if (!wnd->Create(StrL("Render Queue Info"), 12)) {
+        delete wnd;
         return;
     }
-    gRenderInfoHwnd = hwnd;
-
-    Rect cRc = ClientRect(hwnd);
-    DWORD editStyle =
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
-    HWND hwndEdit = CreateWindowExW(0, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, cRc.dy, hwnd, nullptr, h, nullptr);
-    gRenderInfoEdit = hwndEdit;
-
-    HDC hdc = GetDC(hwnd);
-    HFONT font = CreateSimpleFont(hdc, "Consolas", 12);
-    ReleaseDC(hwnd, hdc);
-    if (font) {
-        SendMessageW(hwndEdit, WM_SETFONT, (WPARAM)font, TRUE);
-    }
-    ShowWindow(hwnd, SW_SHOW);
+    gRenderInfoWnd = wnd;
 }
 
 void ToggleRenderInfoWindow() {
-    if (gRenderInfoHwnd) {
-        DestroyWindow(gRenderInfoHwnd);
+    if (gRenderInfoWnd) {
+        gRenderInfoWnd->Close();
         return;
     }
     CreateRenderInfoWindow();
@@ -1367,13 +1456,8 @@ void ToggleRenderInfoWindow() {
 
 // --------- bitmap cache debug window (CmdDebugToggleCacheInfo) ---------
 
-constexpr const WCHAR* kCacheInfoWinClass = L"SUMATRA_CACHE_INFO";
-
-static HWND gCacheInfoHwnd = nullptr;
-static HWND gCacheInfoEdit = nullptr;
-
 bool IsCacheInfoWindowVisible() {
-    return gCacheInfoHwnd != nullptr;
+    return gCacheInfoWnd != nullptr;
 }
 
 static TempStr FormatCacheBytesTemp(i64 bytes) {
@@ -1453,8 +1537,8 @@ void RenderCache::SerializeCacheState(str::Builder& s) {
 }
 
 static void SetCacheInfoTextOnUI(Str* s) {
-    if (gCacheInfoEdit) {
-        HwndSetText(gCacheInfoEdit, *s);
+    if (gCacheInfoWnd) {
+        gCacheInfoWnd->SetTextContent(*s);
     }
     str::Free(*s);
     delete s;
@@ -1471,57 +1555,19 @@ void RenderCache::UpdateCacheInfo() {
     uitask::Post(fn, "CacheInfo");
 }
 
-static LRESULT CALLBACK WndProcCacheInfo(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    switch (msg) {
-        case WM_SIZE:
-            if (gCacheInfoEdit) {
-                MoveWindow(gCacheInfoEdit, 0, 0, LOWORD(lp), HIWORD(lp), TRUE);
-            }
-            return 0;
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            gCacheInfoHwnd = nullptr;
-            gCacheInfoEdit = nullptr;
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
 static void CreateCacheInfoWindow() {
-    HMODULE h = GetModuleHandleW(nullptr);
-    WNDCLASSEX wcex = {};
-    FillWndClassEx(wcex, kCacheInfoWinClass, WndProcCacheInfo);
-    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    RegisterClassEx(&wcex);
-
-    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
-    HWND hwnd = CreateWindowExW(0, kCacheInfoWinClass, L"Cache Info", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, 700, 500,
-                                nullptr, nullptr, h, nullptr);
-    if (!hwnd) {
+    auto* wnd = new DebugTextWnd();
+    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnCacheInfoDestroy);
+    if (!wnd->Create(StrL("Cache Info"), 12)) {
+        delete wnd;
         return;
     }
-    gCacheInfoHwnd = hwnd;
-
-    Rect cRc = ClientRect(hwnd);
-    DWORD editStyle =
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
-    HWND hwndEdit = CreateWindowExW(0, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, cRc.dy, hwnd, nullptr, h, nullptr);
-    gCacheInfoEdit = hwndEdit;
-
-    HDC hdc = GetDC(hwnd);
-    HFONT font = CreateSimpleFont(hdc, "Consolas", 12);
-    ReleaseDC(hwnd, hdc);
-    if (font) {
-        SendMessageW(hwndEdit, WM_SETFONT, (WPARAM)font, TRUE);
-    }
-    ShowWindow(hwnd, SW_SHOW);
+    gCacheInfoWnd = wnd;
 }
 
 void ToggleCacheInfoWindow() {
-    if (gCacheInfoHwnd) {
-        DestroyWindow(gCacheInfoHwnd);
+    if (gCacheInfoWnd) {
+        gCacheInfoWnd->Close();
         return;
     }
     CreateCacheInfoWindow();
