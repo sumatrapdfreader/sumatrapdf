@@ -715,7 +715,7 @@ void PropertiesWnd::SizeToContent() {
     if (btnCopyToClipboard) {
         btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + 2 * ButtonPadding(hwnd));
     }
-    int bottomMargin = DpiScale(hwnd, GetAppFontSize(hwnd));
+    int bottomMargin = ButtonPadding(hwnd);
     int wantedDy = (nLines + 3) * lineHeight + editBorderDy + btnAreaDy + bottomMargin + frameDy;
 
     // cap at 80% of screen
@@ -873,7 +873,7 @@ bool PropertiesWnd::Create(HWND parent) {
         vbox->AddChild(btnRow);
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, GetAppFontSize(hwnd), kButtonPadding));
+    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, kButtonPadding, kButtonPadding));
 
     SetPropsText(ToStr(propsText));
     SizeToContent();
