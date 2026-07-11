@@ -44,6 +44,14 @@ static Str themesTxt = StrL(R"(Themes [
         ColorizeControls = false
     ]
     [
+        Name = Light Warm
+        TextColor = #333333
+        BackgroundColor = #ebe6da
+        ControlBackgroundColor = #f5f1e8
+        LinkColor = #0020a0
+        ColorizeControls = true
+    ]
+    [
         Name = Dark from 3.5
         TextColor = #bac9d0
         BackgroundColor = #263238
