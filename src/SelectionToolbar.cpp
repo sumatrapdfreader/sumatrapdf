@@ -60,6 +60,7 @@ struct SelectionToolbar {
 // GetCommandVisibility (hidden buttons are dropped, disabled ones grayed)
 static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdCopySelection, "Copy"},
+    {CmdTranslateSelectionWithGoogle, "Translate"},
     {CmdReadAloudSelection, "Read Aloud"},
     {CmdCreateAnnotHighlight, "Highlight"},
     {CmdCreateAnnotUnderline, "Underline"},
