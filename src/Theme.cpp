@@ -194,16 +194,36 @@ void CreateThemeCommands() {
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + gCurrThemeIndex;
 }
 
+// when true, the user picked "System" as the theme: we resolve it to the
+// preferred light/dark theme from the OS setting and re-resolve when Windows
+// switches modes; gGlobalPrefs->theme stays "System"
+static bool gThemeFollowsSystem = false;
+
+// remember the last explicitly used light and dark theme so the light/dark
+// toggle and the System theme know what to switch to
+static void RememberLastLightDarkTheme() {
+    if (!gGlobalPrefs || !gCurrentTheme) {
+        return;
+    }
+    if (IsLightColor(ThemeWindowBackgroundColor())) {
+        str::ReplaceWithCopy(&gGlobalPrefs->lastLightTheme, gCurrentTheme->name);
+    } else {
+        str::ReplaceWithCopy(&gGlobalPrefs->lastDarkTheme, gCurrentTheme->name);
+    }
+}
+
 void SetThemeByIndex(int themeIdx) {
     ReportIf((themeIdx < 0) || (themeIdx >= gThemeCount));
     if (themeIdx >= gThemeCount) {
         themeIdx = 0;
     }
+    gThemeFollowsSystem = false;
     bool themeChanged = (gCurrThemeIndex != themeIdx);
     gCurrThemeIndex = themeIdx;
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
+    RememberLastLightDarkTheme();
     if (UseDarkModeLib()) {
         // TODO: we should apply themes to every theme other than 0
         // but in Solarized Light in Find dialog's input field text is invisible i.e. black
@@ -267,7 +287,42 @@ static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
 }
 
+// true if Windows "choose your default app mode" is set to dark
+static bool OsAppsUseDarkMode() {
+    DWORD val = 1; // AppsUseLightTheme defaults to 1 (light)
+    DWORD cb = sizeof(val);
+    RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                 L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &val, &cb);
+    return val == 0;
+}
+
+static int GetPreferredLightThemeIndex() {
+    int idx = GetThemeByName(gGlobalPrefs->lastLightTheme);
+    if (idx >= 0) {
+        return idx;
+    }
+    return 0; // gThemeLight
+}
+
+static int GetPreferredDarkThemeIndex() {
+    int idx = GetThemeByName(gGlobalPrefs->lastDarkTheme);
+    if (idx >= 0) {
+        return idx;
+    }
+    idx = GetThemeByName(StrL("Dark"));
+    return idx >= 0 ? idx : 0;
+}
+
 void SetTheme(Str name) {
+    if (str::EqI(name, StrL("System"))) {
+        // resolve to the preferred light/dark theme from the OS setting; keep
+        // "System" in prefs so it persists and keeps following the OS
+        int idx = OsAppsUseDarkMode() ? GetPreferredDarkThemeIndex() : GetPreferredLightThemeIndex();
+        SetThemeByIndex(idx);
+        gThemeFollowsSystem = true;
+        str::ReplaceWithCopy(&gGlobalPrefs->theme, StrL("System"));
+        return;
+    }
     int idx = GetThemeByName(name);
     if (idx < 0) {
         // invalid name, reset to light theme
@@ -275,6 +330,22 @@ void SetTheme(Str name) {
         idx = 0;
     }
     SetThemeByIndex(idx);
+}
+
+// switch between the last used light and dark theme (CmdToggleLightDarkTheme)
+void ToggleLightDarkTheme() {
+    bool isDark = !IsLightColor(ThemeWindowBackgroundColor());
+    int idx = isDark ? GetPreferredLightThemeIndex() : GetPreferredDarkThemeIndex();
+    SetThemeByIndex(idx);
+}
+
+// call on WM_SETTINGCHANGE "ImmersiveColorSet": re-resolves the System theme
+// when the user switches Windows between light and dark mode
+void UpdateThemeAfterSystemColorChange() {
+    if (!gThemeFollowsSystem) {
+        return;
+    }
+    SetTheme(StrL("System")); // no-op unless the resolved theme changed
 }
 
 // call after loading settings

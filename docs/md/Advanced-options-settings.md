@@ -185,8 +185,16 @@ PreventSleepInFullscreen = true
 ; maximum width of a single tab
 TabWidth = 300
 
-; Valid themes: light, dark, darker (introduced in version 3.5)
+; Valid themes: light, dark, darker, system (introduced in version 3.5)
 Theme = 
+
+; the light theme the light/dark toggle and the System theme switch to
+; (introduced in version 3.7)
+LastLightTheme = 
+
+; the dark theme the light/dark toggle and the System theme switch to
+; (introduced in version 3.7)
+LastDarkTheme = 
 
 ; Valid values: auto, black, light (introduced in version 3.7)
 PdfDocumentColorMode = auto

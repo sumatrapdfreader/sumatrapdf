@@ -4,6 +4,8 @@ License: GPLv3 */
 void SetTheme(Str name);
 void SetCurrentThemeFromSettings();
 void SelectNextTheme();
+void ToggleLightDarkTheme();
+void UpdateThemeAfterSystemColorChange();
 void CreateThemeCommands();
 
 COLORREF ThemeDocumentColors(COLORREF&);

@@ -4802,7 +4802,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     }
 
     // @gen-start docprop-pdf-info
-    // clang-format off
+// clang-format off
 static SeqStrNum pdfPropNames =
     "Title\0" "\x02"
     "Author\0" "\x04"
@@ -4813,8 +4813,8 @@ static SeqStrNum pdfPropNames =
     "Creator\0" "\x0e"
     "Producer\0" "\x16"
     "\0";
-    // clang-format on
-    // @gen-end docprop-pdf-info
+// clang-format on
+// @gen-end docprop-pdf-info
     Str pdfPropName = SeqStrNumStrByNumber(pdfPropNames, (i64)prop);
     if (!pdfPropName) {
         return {};

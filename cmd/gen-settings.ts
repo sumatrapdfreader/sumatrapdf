@@ -766,7 +766,11 @@ const globalPrefs: Field[] = [
     "if true, prevents the screen from turning off when in fullscreen or presentation mode",
   ),
   field("TabWidth", Int, 300, "maximum width of a single tab"),
-  field("Theme", Str, "", "the name of the theme to use").ver("3.5").doc("Valid themes: light, dark, darker"),
+  field("Theme", Str, "", "the name of the theme to use. System picks the last used light or dark theme based on the Windows app mode")
+    .ver("3.5")
+    .doc("Valid themes: light, dark, darker, system"),
+  field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to").ver("3.7"),
+  field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to").ver("3.7"),
   field(
     "PdfDocumentColorMode",
     Str,

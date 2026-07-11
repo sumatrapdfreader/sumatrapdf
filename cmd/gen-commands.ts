@@ -251,6 +251,7 @@ export const commands = [
     "CmdSetPdfDocumentColorModeBlack", "Set PDF Document Color Mode: Black",
     "CmdSetPdfDocumentColorModeLight", "Set PDF Document Color Mode: Light",
     "CmdTogglePreservePdfImages", "Toggle Preserve PDF Image Colors in Dark Mode",
+    "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
     "CmdNone", "Do nothing",
 ];
 

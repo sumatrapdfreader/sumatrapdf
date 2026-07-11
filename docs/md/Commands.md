@@ -90,6 +90,7 @@ CmdAIChatWithClaudeCode,,AI Chat with document using Claude Code,"Toggle Claude 
 CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Build chat sidebar, ver 3.7+. See AI-Chat-with-document.md#grok-build"
 CmdAIChatWithOpenAICodex,,AI Chat with document using OpenAI Codex,"Toggle OpenAI Codex chat sidebar, ver 3.7+. See AI-Chat-with-document.md#openai-codex"
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
+CmdToggleLightDarkTheme,,Toggle Light/Dark Theme,"ver 3.7+, switches between the last used light and dark themes (see `LastLightTheme` / `LastDarkTheme` advanced settings)"
 CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 3.7+, toggles CAD/engineering-drawing line enhancement for the current PDF (see the `EngineeringDrawingEnhance` advanced setting)"
 CmdSetPdfDocumentColorModeAuto,,Set PDF Document Color Mode: Auto,"ver 3.7+, inverted PDF pages preserve photo/artwork colors (see the `PdfDocumentColorMode` advanced setting)"
 CmdSetPdfDocumentColorModeBlack,,Set PDF Document Color Mode: Black,"ver 3.7+, inverted PDF pages recolor everything, including images"

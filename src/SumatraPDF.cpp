@@ -8830,6 +8830,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SelectNextTheme();
             break;
 
+        case CmdToggleLightDarkTheme:
+            ToggleLightDarkTheme();
+            SaveSettings();
+            break;
+
         case CmdToggleInverseSearch:
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/5289
             // allow to temporarily disable invoking tex inverse search
@@ -10877,6 +10882,11 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         }
 
         case WM_SETTINGCHANGE:
+            // Windows switched between light and dark mode: re-resolve the
+            // System theme (no-op unless Theme = System)
+            if (lp && str::EqI(ToUtf8Temp((const WCHAR*)lp), StrL("ImmersiveColorSet"))) {
+                UpdateThemeAfterSystemColorChange();
+            }
         InitMouseWheelInfo:
             UpdateDeltaPerLine();
 
