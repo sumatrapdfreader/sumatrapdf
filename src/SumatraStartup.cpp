@@ -2411,7 +2411,10 @@ Exit:
     LogArenaStats("temp allocator", GetTempArena());
     LogArenaStats("perm arena", gPermArena);
 
-    if (!logFileBecauseDebug) {
+    // don't shell-open the log for -for-testing automation runs: it spawns a
+    // stray editor window per run (and, depending on the .txt association,
+    // could even launch another non-testing SumatraPDF that saves settings)
+    if (!logFileBecauseDebug && !gForTesting) {
         LaunchFileIfExists(logFilePath);
     }
     str::FreePtr(&logFilePath);
