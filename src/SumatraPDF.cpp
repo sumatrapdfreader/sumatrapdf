@@ -62,6 +62,7 @@
 #include "AppSettings.h"
 #include "AppTools.h"
 #include "Canvas.h"
+#include "CaptionGlyphs.h"
 #include "RefHover.h"
 #include "CrashHandler.h"
 #include "ExternalViewers.h"
@@ -4813,6 +4814,8 @@ constexpr int kSidebarMinDx = 150;
 constexpr int kTocMinDy = 100;
 
 constexpr int kFrameBorderSize = 1;
+// size (DIP) of the min/max/restore/close caption glyphs
+constexpr int kCaptionGlyphDip = 10;
 
 using LayoutState = MainWindow::LayoutState;
 
@@ -9334,49 +9337,30 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
             gfx.FillRectangle(&bgBr, x, y, w, h);
         }
 
-        Color iconCol;
+        COLORREF iconCol;
         if (isInactive) {
-            iconCol = Color(153, 153, 153);
+            iconCol = RGB(153, 153, 153);
         } else if (isClose && (isHot || isPushed)) {
-            iconCol = Color(255, 255, 255);
+            iconCol = RGB(255, 255, 255);
         } else {
-            COLORREF tc = ThemeWindowTextColor();
-            iconCol = Color(GetRValue(tc), GetGValue(tc), GetBValue(tc));
+            iconCol = ThemeWindowTextColor();
         }
 
-        int iconSz = rc.dy * 10 / 30;
-        if (iconSz < 6) {
-            iconSz = 6;
-        }
-        iconSz = iconSz & ~1;
-        int ix = rc.x + (rc.dx - iconSz) / 2;
-        int iy = rc.y + (rc.dy - iconSz) / 2;
-
-        Pen pen(iconCol, 1.0f);
-
+        // Windows 11 style caption glyphs (Segoe Fluent Icons outlines)
+        CaptionSysButtonKind kind = CaptionSysButtonKind::Close;
         switch (button) {
-            case CB_CLOSE:
-                gfx.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-                gfx.DrawLine(&pen, ix, iy, ix + iconSz, iy + iconSz);
-                gfx.DrawLine(&pen, ix + iconSz, iy, ix, iy + iconSz);
+            case CB_MINIMIZE:
+                kind = CaptionSysButtonKind::Minimize;
                 break;
             case CB_MAXIMIZE:
-                gfx.DrawRectangle(&pen, ix, iy, iconSz, iconSz);
+                kind = CaptionSysButtonKind::Maximize;
                 break;
-            case CB_MINIMIZE: {
-                int midY = iy + iconSz / 2;
-                gfx.DrawLine(&pen, ix, midY, ix + iconSz, midY);
-            } break;
-            case CB_RESTORE: {
-                int off = iconSz / 3;
-                int sz = iconSz - off;
-                gfx.DrawRectangle(&pen, ix, iy + off, sz, sz);
-                gfx.DrawLine(&pen, ix + off, iy, ix + iconSz, iy);
-                gfx.DrawLine(&pen, ix + iconSz, iy, ix + iconSz, iy + sz);
-                gfx.DrawLine(&pen, ix + sz, iy + off, ix + iconSz, iy + off);
-                gfx.DrawLine(&pen, ix + off, iy, ix + off, iy + off);
-            } break;
+            case CB_RESTORE:
+                kind = CaptionSysButtonKind::Restore;
+                break;
         }
+        int iconPx = DpiScale(win->hwndFrame, kCaptionGlyphDip);
+        DrawCaptionSysButtonGlyph(hdc, kind, rc, iconCol, iconPx);
     } else if (button == CB_MENU) {
         SolidBrush bgBrMenu(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
         gfx.FillRectangle(&bgBrMenu, rButton.x, rButton.y, rButton.dx, rButton.dy);

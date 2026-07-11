@@ -828,6 +828,7 @@ function sumatrapdf_files()
     "AppTools.*",
     "Canvas.*",
     "CanvasAboutUI.*",
+    "CaptionGlyphs.*",
     "ChmDump.*",
     "ChmModel.*",
     "MarkdownModel.*",
