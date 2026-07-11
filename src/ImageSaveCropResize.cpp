@@ -42,6 +42,8 @@ using Gdiplus::Status;
 constexpr const WCHAR* kImageEditWinClassName = L"SUMATRA_PDF_IMAGE_EDIT";
 
 constexpr int kMinWindowWidth = 640;
+constexpr int kDownsizeMinImgDx = 320;
+constexpr int kDownsizeMinImgDy = 200;
 constexpr int kImagePadding = 16;
 constexpr int kResizeEdgeThreshold = 2;
 constexpr int kDragHandleSize = 6;
@@ -435,6 +437,7 @@ static int ImageToDisplayH(ImageEditWindow* ew, int ih) {
 }
 
 static void LayoutControls(ImageEditWindow* ew);
+static void CalcImageLayout(ImageEditWindow* ew);
 
 static int ImageEditImagePadding(ImageEditWindow* ew) {
     return DpiScale(ew->hwnd, kImagePadding);
@@ -528,8 +531,11 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
     LayoutControls(ew);
 }
 
+static bool IsCropChanged(ImageEditWindow* ew);
+static bool IsResizeChanged(ImageEditWindow* ew);
+
 static TempStr FormatCropInfoTemp(int srcW, int srcH, int cropW, int cropH, int cropX, int cropY) {
-    return fmt("%d x %d => %d x %d @ %d , %d", srcW, srcH, cropW, cropH, cropX, cropY);
+    return fmt("%d x %d => %d x %d @ %d, %d", srcW, srcH, cropW, cropH, cropX, cropY);
 }
 
 static TempStr FormatResizeInfoTemp(int srcW, int srcH, int newW, int newH) {
@@ -540,14 +546,15 @@ static TempStr FormatResizeInfoTemp(int srcW, int srcH, int newW, int newH) {
 
 static void UpdateInfoLabel(ImageEditWindow* ew) {
     TempStr s;
-    if (ew->mode == ImageEditMode::Save) {
-        s = fmt("%d x %d", ew->imgW, ew->imgH);
-    } else if (ew->mode == ImageEditMode::Crop) {
+    if (ew->mode == ImageEditMode::Crop && IsCropChanged(ew)) {
         s = FormatCropInfoTemp(ew->imgW, ew->imgH, ew->cropW, ew->cropH, ew->cropX, ew->cropY);
-    } else {
+    } else if (ew->mode == ImageEditMode::Resize && IsResizeChanged(ew)) {
         s = FormatResizeInfoTemp(ew->imgW, ew->imgH, ew->newW, ew->newH);
+    } else {
+        s = fmt("%d x %d", ew->imgW, ew->imgH);
     }
     HwndSetText(ew->hwndInfoLabel, s);
+    LayoutControls(ew);
 }
 
 // invalidate only the image area, not the control area below
@@ -564,6 +571,70 @@ static int GetControlAreaDy(ImageEditWindow* ew) {
         dy -= ImageEditPathLabelRowDy(ew);
     }
     return dy;
+}
+
+// Client image dimensions used to compute outer window size (image at 100% + padding + controls).
+static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRenderedBitmap, int imgW, int imgH,
+                                      ImageEditWindow* ew) {
+    int imagePadding;
+    int controlDy;
+    if (ew && ew->hwnd) {
+        imagePadding = ImageEditImagePadding(ew);
+        controlDy = GetControlAreaDy(ew);
+        dpiHwnd = ew->hwnd;
+    } else {
+        imagePadding = DpiScale(dpiHwnd, kImagePadding);
+        controlDy = DpiScale(dpiHwnd, kControlAreaDy);
+        if (fromRenderedBitmap) {
+            controlDy -= DpiScale(dpiHwnd, 16) + DpiScale(dpiHwnd, kRowPadding);
+        }
+    }
+    int wantW = imgW + 2 * imagePadding;
+    int wantH = imgH + 2 * imagePadding + controlDy;
+    RECT rc = {0, 0, wantW, wantH};
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+    int winW = rc.right - rc.left;
+    int minWinW = DpiScale(dpiHwnd, kMinWindowWidth);
+    if (winW < minWinW) {
+        winW = minWinW;
+    }
+    int winH = rc.bottom - rc.top;
+    HMONITOR hMon = MonitorFromWindow(hwndParent ? hwndParent : dpiHwnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi = {sizeof(mi)};
+    GetMonitorInfo(hMon, &mi);
+    int screenW = mi.rcWork.right - mi.rcWork.left;
+    int screenH = mi.rcWork.bottom - mi.rcWork.top;
+    if (winW > screenW) {
+        winW = screenW;
+    }
+    if (winH > screenH) {
+        winH = screenH;
+    }
+    return {winW, winH};
+}
+
+static void ImageEditLayoutDimensions(ImageEditWindow* ew, int imgW, int imgH, bool downsizing, int* layoutW,
+                                      int* layoutH) {
+    *layoutW = imgW;
+    *layoutH = imgH;
+    if (downsizing) {
+        int minDx = DpiScale(ew->hwnd, kDownsizeMinImgDx);
+        int minDy = DpiScale(ew->hwnd, kDownsizeMinImgDy);
+        *layoutW = std::max(*layoutW, minDx);
+        *layoutH = std::max(*layoutH, minDy);
+    }
+}
+
+static void ResizeImageEditWindowToImage(ImageEditWindow* ew, int prevW, int prevH) {
+    bool downsizing = ew->imgW < prevW || ew->imgH < prevH;
+    int layoutW, layoutH;
+    ImageEditLayoutDimensions(ew, ew->imgW, ew->imgH, downsizing, &layoutW, &layoutH);
+    Size winSize = CalcImageEditWindowSizeEx(ew->hwnd, ew->hwndParent, ew->fromRenderedBitmap, layoutW, layoutH, ew);
+    SetWindowPos(ew->hwnd, nullptr, 0, 0, winSize.dx, winSize.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    CenterDialog(ew->hwnd, ew->hwndParent);
+    CalcImageLayout(ew);
+    LayoutControls(ew);
+    InvalidateRect(ew->hwnd, nullptr, TRUE);
 }
 
 static void CalcImageLayout(ImageEditWindow* ew) {
@@ -1085,17 +1156,11 @@ static void LayoutControls(ImageEditWindow* ew) {
     }
 
     // size info label to its text, but don't overlap buttons
-    HDC hdc = GetDC(ew->hwndInfoLabel);
-    HFONT oldFont = (HFONT)SelectObject(hdc, ew->hFont);
-    char buf[256];
-    int textLen = GetWindowTextA(ew->hwndInfoLabel, buf, dimof(buf));
-    SIZE textSize{};
-    GetTextExtentPoint32A(hdc, buf, textLen, &textSize);
-    SelectObject(hdc, oldFont);
-    ReleaseDC(ew->hwndInfoLabel, hdc);
+    TempStr labelTxt = HwndGetTextTemp(ew->hwndInfoLabel);
+    Size textSize = HwndMeasureText(ew->hwnd, labelTxt, ew->hFont);
     int labelPad = DpiScale(ew->hwnd, 8);
     int maxLabelW = bx - x - labelPad;
-    int labelW = std::min((int)textSize.cx + labelPad, maxLabelW);
+    int labelW = std::min(textSize.dx + labelPad, maxLabelW);
     if (labelW < 0) {
         labelW = 0;
     }
@@ -1399,7 +1464,6 @@ static void ReplaceSrcBitmap(ImageEditWindow* ew, Bitmap* newBmp) {
     ew->srcBitmap = newBmp;
     ew->imgW = (int)newBmp->GetWidth();
     ew->imgH = (int)newBmp->GetHeight();
-    CalcImageLayout(ew);
 }
 
 static bool IsCropChanged(ImageEditWindow* ew) {
@@ -1440,6 +1504,8 @@ static void ApplyCrop(ImageEditWindow* ew) {
     Gdiplus::Rect srcRect(ew->cropX, ew->cropY, ew->cropW, ew->cropH);
     Bitmap* cropped = ew->srcBitmap->Clone(srcRect, ew->srcBitmap->GetPixelFormat());
     if (cropped) {
+        int prevW = ew->imgW;
+        int prevH = ew->imgH;
         ReplaceSrcBitmap(ew, cropped);
         ew->cropX = 0;
         ew->cropY = 0;
@@ -1447,8 +1513,7 @@ static void ApplyCrop(ImageEditWindow* ew) {
         ew->cropH = ew->imgH;
         UpdateModeButtons(ew);
         UpdateInfoLabel(ew);
-        LayoutControls(ew);
-        InvalidateImageArea(ew);
+        ResizeImageEditWindowToImage(ew, prevW, prevH);
     }
 }
 
@@ -1461,6 +1526,8 @@ static void ApplyResize(ImageEditWindow* ew) {
     }
     Bitmap* resized = new Bitmap(ew->newW, ew->newH, ew->srcBitmap->GetPixelFormat());
     if (resized) {
+        int prevW = ew->imgW;
+        int prevH = ew->imgH;
         Graphics g(resized);
         g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
         g.DrawImage(ew->srcBitmap, 0, 0, ew->newW, ew->newH);
@@ -1469,8 +1536,7 @@ static void ApplyResize(ImageEditWindow* ew) {
         ew->newH = ew->imgH;
         UpdateModeButtons(ew);
         UpdateInfoLabel(ew);
-        LayoutControls(ew);
-        InvalidateImageArea(ew);
+        ResizeImageEditWindowToImage(ew, prevW, prevH);
     }
 }
 
@@ -2082,36 +2148,8 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     wcex.hIcon = LoadIconW(h, iconName);
     RegisterClassEx(&wcex);
 
-    // calculate window size: image at 100% + padding + control area, clamped to screen
     HWND dpiHwnd = win->hwndFrame;
-    int imagePadding = DpiScale(dpiHwnd, kImagePadding);
-    int controlDy = DpiScale(dpiHwnd, kControlAreaDy);
-    if (fromRenderedBitmap) {
-        controlDy -= DpiScale(dpiHwnd, 16) + DpiScale(dpiHwnd, kRowPadding);
-    }
-    int wantW = imgW + 2 * imagePadding;
-    int wantH = imgH + 2 * imagePadding + controlDy;
-    // add window chrome
-    RECT rc = {0, 0, wantW, wantH};
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-    int winW = rc.right - rc.left;
-    int minWinW = DpiScale(dpiHwnd, kMinWindowWidth);
-    if (winW < minWinW) {
-        winW = minWinW;
-    }
-    int winH = rc.bottom - rc.top;
-    // clamp to screen
-    HMONITOR hMon = MonitorFromWindow(win->hwndFrame, MONITOR_DEFAULTTONEAREST);
-    MONITORINFO mi = {sizeof(mi)};
-    GetMonitorInfo(hMon, &mi);
-    int screenW = mi.rcWork.right - mi.rcWork.left;
-    int screenH = mi.rcWork.bottom - mi.rcWork.top;
-    if (winW > screenW) {
-        winW = screenW;
-    }
-    if (winH > screenH) {
-        winH = screenH;
-    }
+    Size winSize = CalcImageEditWindowSizeEx(dpiHwnd, win->hwndFrame, fromRenderedBitmap, imgW, imgH, nullptr);
 
     WStr title = L"Save Image";
     if (mode == ImageEditMode::Crop) {
@@ -2121,7 +2159,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     }
     HWND hwnd =
         CreateWindowExW(WS_EX_CONTROLPARENT, kImageEditWinClassName, title.s, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-                        CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, nullptr, nullptr, h, nullptr);
+                        CW_USEDEFAULT, CW_USEDEFAULT, winSize.dx, winSize.dy, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         gImageEditWindows.Remove(ew);
         delete ew;
