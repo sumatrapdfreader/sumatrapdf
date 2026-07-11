@@ -30,13 +30,17 @@ struct ChangeThemeWnd : Wnd {
     bool documentColorsFollowThemeOnly = false;
     ListBox* listBox = nullptr;
     ListBoxModelStrings* model = nullptr; // owned by listBox
+    Static* staticDocumentColorsFollowTheme = nullptr;
     DropDown* dropDownDocumentColorsFollowTheme = nullptr;
+    Button* btnCancel = nullptr;
+    Button* btnChange = nullptr;
     Str startThemePref; // prefs theme at open, for Cancel revert
     DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG&) override;
 
+    void UpdateTheme();
     void OnSelectionChanged();
     void OnDocumentColorsFollowThemeChanged();
     void PreviewDocumentColors();
@@ -111,20 +115,38 @@ void ChangeThemeWnd::PreviewDocumentColors() {
     }
 }
 
+void ChangeThemeWnd::UpdateTheme() {
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    if (listBox) {
+        listBox->SetColors(colTxt, colBg);
+    }
+    if (staticDocumentColorsFollowTheme) {
+        staticDocumentColorsFollowTheme->SetColors(colTxt, colBg);
+    }
+    if (dropDownDocumentColorsFollowTheme) {
+        dropDownDocumentColorsFollowTheme->SetColors(colTxt, colBg);
+    }
+    if (btnCancel) {
+        btnCancel->SetColors(colTxt, colBg);
+    }
+    if (btnChange) {
+        btnChange->SetColors(colTxt, colBg);
+    }
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+    }
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
 void ChangeThemeWnd::OnSelectionChanged() {
     int idx = listBox->GetCurrentSelection();
     if (idx < 0) {
         return;
     }
     SetThemeByIndex(idx);
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    listBox->SetColors(colTxt, colBg);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
-    HwndScheduleRepaint(hwnd);
+    UpdateTheme();
     PreviewDocumentColors();
 }
 
@@ -189,9 +211,6 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         return false;
     }
 
-    auto colBg = ThemeWindowControlBackgroundColor();
-    auto colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
     bool isRtl = IsUIRtl();
 
     auto vbox = new VBox();
@@ -206,7 +225,6 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.isRtl = isRtl;
         auto c = new ListBox();
         c->Create(args);
-        c->SetColors(colTxt, colBg);
         listBox = c;
         model = new ListBoxModelStrings();
         for (int i = 0; i < n; i++) {
@@ -228,9 +246,9 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.text = _TRA("Document colors follow theme");
         args.isRtl = isRtl;
         auto c = new Static();
-        c->SetColors(colTxt, colBg);
         c->SetInsetsPt(8, 0, 0, 0);
         c->Create(args);
+        staticDocumentColorsFollowTheme = c;
         vbox->AddChild(c);
     }
 
@@ -242,7 +260,6 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         auto c = new DropDown();
         c->SetInsetsPt(4, 0, 0, 0);
         c->Create(args);
-        c->SetColors(colTxt, colBg);
         c->SetItemsSeqStrings(gDocumentColorsFollowThemeNames);
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnDocumentColorsFollowThemeChanged>(this);
         dropDownDocumentColorsFollowTheme = c;
@@ -256,11 +273,12 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        Button* b =
+        btnCancel =
             CreateButton(hwnd, _TRA("Cancel"), MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnCancel>(this), isRtl);
-        hbox->AddChild(new Padding(b, pad));
-        b = CreateButton(hwnd, _TRA("Change"), MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnChange>(this), isRtl);
-        hbox->AddChild(new Padding(b, pad));
+        hbox->AddChild(new Padding(btnCancel, pad));
+        btnChange =
+            CreateButton(hwnd, _TRA("Change"), MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnChange>(this), isRtl);
+        hbox->AddChild(new Padding(btnChange, pad));
         vbox->AddChild(hbox);
     }
 
@@ -270,10 +288,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     int dx = DpiScale(hwnd, 280);
     LayoutAndSizeToContent(layout, dx, 0, hwnd);
     PositionDialog(hwnd, win->hwndFrame);
-
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    UpdateTheme();
 
     SetIsVisible(true);
     HwndSetFocus(documentColorsFollowThemeOnly ? dropDownDocumentColorsFollowTheme->hwnd : listBox->hwnd);
