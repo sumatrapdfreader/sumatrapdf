@@ -86,6 +86,7 @@ UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
     CmdFindNextSel,
     CmdFindPrevSel,
+    CmdTranslateSelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithGrokBuild,
@@ -144,6 +145,7 @@ static UINT_PTR removeIfNoPrefsPerms[] = {
 };
 
 static UINT_PTR removeIfNoCopyPerms[] = {
+    CmdTranslateSelection,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
     CmdSearchSelectionWithGoogle,

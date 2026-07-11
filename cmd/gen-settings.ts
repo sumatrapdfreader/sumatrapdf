@@ -881,6 +881,17 @@ const globalPrefs: Field[] = [
     "",
     "remembered destination language for selection translation; empty uses OS UI language",
   ).ver("3.7"),
+  field("TranslateFromLang", Str, "", "remembered source language for selection translation; empty means Auto")
+    .internal()
+    .ver("3.7"),
+  field(
+    "TranslateEngine",
+    Str,
+    "",
+    "remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex",
+  )
+    .internal()
+    .ver("3.7"),
   emptyLine(),
   struct("Annotations", annotations, "default values for annotations in PDF documents").ver("3.3"),
   emptyLine(),

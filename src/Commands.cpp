@@ -257,6 +257,7 @@ static SeqStrings gCommandNames =
     "CmdTogglePreservePdfImages\0"
     "CmdToggleLightDarkTheme\0"
     "CmdChangeTheme\0"
+    "CmdTranslateSelection\0"
     "CmdNone\0"
     "\0";
 
@@ -507,6 +508,7 @@ static i32 gCommandIds[] = {
     CmdTogglePreservePdfImages,
     CmdToggleLightDarkTheme,
     CmdChangeTheme,
+    CmdTranslateSelection,
     CmdNone,
 };
 
@@ -757,6 +759,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Preserve PDF Image Colors in Dark Mode\0"
     "Toggle Light/Dark Theme\0"
     "Change Theme...\0"
+    "Translate Selection...\0"
     "Do nothing\0"
     "\0";
 // clang-format on

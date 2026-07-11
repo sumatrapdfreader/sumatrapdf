@@ -6477,7 +6477,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
 
 // if url-encoded s is bigger than a reasonable URL path,
 // we don't want to fail but truncate and encode less
-static TempStr URLEncodeMayTruncateTemp(Str s) {
+TempStr URLEncodeMayTruncateTemp(Str s) {
     constexpr int kMaxURLLen = 1500;
 
     HRESULT hr;
@@ -8369,34 +8369,28 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdTranslateSelectionWithGoogle:
-            LaunchBrowserWithSelection(
-                tab, "https://translate.google.com/?op=translate&sl=auto&tl=${userlang}&text=${selection}");
+        case CmdTranslateSelection:
+            ShowSelectionTranslateDialog(tab, TranslateEngine::Default);
             break;
 
-        case CmdTranslateSelectionWithDeepL: {
-            // Note: we don't know if selected string is English but I don't know
-            // how to get deepl.com to auto-detect language
-            Str lang = trans::GetCurrentLangCode();
-            Str uri = "https://www.deepl.com/translator#en/${userlang}/${selection}";
-            if (str::Eq(lang, "en")) {
-                // it's pointless to translate from English to English
-                // this format will hopefully trigger auto-detection of user languge by deepl.com
-                uri = "https://www.deepl.com/translator#en/${selection}";
-            }
-            LaunchBrowserWithSelection(tab, uri);
-        } break;
+        case CmdTranslateSelectionWithGoogle:
+            ShowSelectionTranslateDialog(tab, TranslateEngine::Google);
+            break;
+
+        case CmdTranslateSelectionWithDeepL:
+            ShowSelectionTranslateDialog(tab, TranslateEngine::DeepL);
+            break;
 
         case CmdTranslateSelectionWithGrokBuild:
-            ShowSelectionTranslateDialog(tab, AIChatBackend::Grok);
+            ShowSelectionTranslateDialog(tab, TranslateEngine::Grok);
             break;
 
         case CmdTranslateSelectionWithClaudeCode:
-            ShowSelectionTranslateDialog(tab, AIChatBackend::Claude);
+            ShowSelectionTranslateDialog(tab, TranslateEngine::Claude);
             break;
 
         case CmdTranslateSelectionWithOpenAICodex:
-            ShowSelectionTranslateDialog(tab, AIChatBackend::Codex);
+            ShowSelectionTranslateDialog(tab, TranslateEngine::Codex);
             break;
 
         case CmdSearchSelectionWithGoogle:

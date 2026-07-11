@@ -255,7 +255,8 @@ enum {
     CmdTogglePreservePdfImages = 444,
     CmdToggleLightDarkTheme = 445,
     CmdChangeTheme = 446,
-    CmdNone = 447,
+    CmdTranslateSelection = 447,
+    CmdNone = 448,
 
     /* range for file history */
     CmdFileHistoryFirst,

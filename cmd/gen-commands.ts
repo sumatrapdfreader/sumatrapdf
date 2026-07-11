@@ -255,6 +255,7 @@ export const commands = [
     "CmdTogglePreservePdfImages", "Toggle Preserve PDF Image Colors in Dark Mode",
     "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
     "CmdChangeTheme", "Change Theme...",
+    "CmdTranslateSelection", "Translate Selection...",
     "CmdNone", "Do nothing",
 ];
 

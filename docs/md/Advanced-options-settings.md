@@ -418,6 +418,14 @@ AIChatSidebarDx = 0
 ; language (introduced in version 3.7)
 TranslateToLang = 
 
+; remembered source language for selection translation; empty means Auto
+; (introduced in version 3.7)
+TranslateFromLang = 
+
+; remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude
+; Code or OpenAI Codex (introduced in version 3.7)
+TranslateEngine = 
+
 ; default values for annotations in PDF documents (introduced in version 3.3)
 Annotations [
     ; highlight annotation color

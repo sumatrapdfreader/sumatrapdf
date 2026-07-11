@@ -27,6 +27,7 @@
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
+#include "SelectionTranslate.h"
 
 static const Str kSrcLangAuto = StrL("Auto");
 
@@ -65,12 +66,37 @@ static const Str gPopularLanguages[] = {
     StrL("Slovak"),
 };
 
+// maps the language names offered in the From/To dropdowns to ISO 639 codes
+// used in Google / DeepL urls (name, code pairs)
+static const char* gLangNameToCode =
+    "English\0en\0Chinese (Simplified)\0zh-CN\0Chinese (Traditional)\0zh-TW\0Spanish\0es\0Arabic\0ar\0Hindi\0hi\0"
+    "Portuguese\0pt\0Bengali\0bn\0Russian\0ru\0Japanese\0ja\0Punjabi\0pa\0German\0de\0French\0fr\0Korean\0ko\0"
+    "Turkish\0tr\0Vietnamese\0vi\0Italian\0it\0Polish\0pl\0Ukrainian\0uk\0Dutch\0nl\0Thai\0th\0Indonesian\0id\0"
+    "Czech\0cs\0Swedish\0sv\0Romanian\0ro\0Greek\0el\0Hebrew\0he\0Danish\0da\0Finnish\0fi\0Norwegian\0no\0"
+    "Hungarian\0hu\0Slovak\0sk\0";
+
+// empty result means unknown language (the dropdowns are editable, so the
+// user can type anything) => auto-detect for source, English for destination
+static TempStr LangCodeForUrlTemp(Str name) {
+    if (str::IsEmptyOrWhiteSpace(name)) {
+        return {};
+    }
+    TempStr n = str::DupTemp(name);
+    str::TrimWSInPlace(n, str::TrimOpt::Both);
+    int idx = SeqStrIndexIS(gLangNameToCode, n);
+    if (idx < 0 || idx % 2 != 0) {
+        return {};
+    }
+    return SeqStrByIndex(gLangNameToCode, idx + 1);
+}
+
 struct SelectionTranslateWnd : Wnd {
     ~SelectionTranslateWnd() override;
 
     HFONT font = nullptr;
     HWND hwndOwner = nullptr;
     Static* staticPrompt = nullptr;
+    DropDown* dropEngine = nullptr;
     Edit* editSrcText = nullptr;
     Static* staticFromLabel = nullptr;
     DropDown* dropSrcLang = nullptr;
@@ -81,6 +107,9 @@ struct SelectionTranslateWnd : Wnd {
     Static* staticResultLabel = nullptr;
     Edit* editResult = nullptr;
 
+    // engine pre-selected in the dropdown when the dialog opens
+    TranslateEngine engine = TranslateEngine::Google;
+    // AI backend of the in-flight translation (for error formatting)
     AIChatBackend backend = AIChatBackend::Grok;
     bool translating = false;
     bool resultVisible = false;
@@ -252,20 +281,36 @@ static TempStr NormalizeLangNameTemp(Str lang) {
     return normalized;
 }
 
-static void MaybeSaveTranslateToLang(Str dstLang) {
-    if (!gGlobalPrefs || str::IsEmptyOrWhiteSpace(dstLang)) {
+static const TempStr DefaultSourceLanguageTemp() {
+    if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateFromLang)) {
+        return gGlobalPrefs->translateFromLang;
+    }
+    return kSrcLangAuto;
+}
+
+// update one remembered translate pref; returns true if it changed
+static bool UpdateTranslatePref(Str* pref, Str value) {
+    TempStr normalized = NormalizeLangNameTemp(value);
+    if (!normalized || (*pref && str::EqI(*pref, normalized))) {
+        return false;
+    }
+    str::ReplacePtr(pref, str::Dup(normalized));
+    return true;
+}
+
+static Str EngineDisplayName(TranslateEngine engine);
+
+// remember engine / from / to across launches of the dialog
+static void MaybeSaveTranslatePrefs(TranslateEngine engine, Str srcLang, Str dstLang) {
+    if (!gGlobalPrefs) {
         return;
     }
-    TempStr normalized = NormalizeLangNameTemp(dstLang);
-    if (!normalized) {
-        return;
+    bool changed = UpdateTranslatePref(&gGlobalPrefs->translateEngine, EngineDisplayName(engine));
+    changed |= UpdateTranslatePref(&gGlobalPrefs->translateFromLang, srcLang);
+    changed |= UpdateTranslatePref(&gGlobalPrefs->translateToLang, dstLang);
+    if (changed) {
+        SaveSettings();
     }
-    Str saved = gGlobalPrefs->translateToLang;
-    if (saved && str::EqI(saved, normalized)) {
-        return;
-    }
-    str::ReplacePtr(&gGlobalPrefs->translateToLang, str::Dup(normalized));
-    SaveSettings();
 }
 
 static bool IsSrcLangAutoTemp(Str srcLang) {
@@ -590,6 +635,120 @@ static Str BackendDisplayName(AIChatBackend backend) {
     return StrL("AI");
 }
 
+// in dropdown order
+static const TranslateEngine gAllEngines[] = {
+    TranslateEngine::Google, TranslateEngine::DeepL, TranslateEngine::Grok,
+    TranslateEngine::Claude, TranslateEngine::Codex,
+};
+
+static bool EngineIsAI(TranslateEngine engine) {
+    return engine == TranslateEngine::Grok || engine == TranslateEngine::Claude || engine == TranslateEngine::Codex;
+}
+
+static AIChatBackend BackendFromEngine(TranslateEngine engine) {
+    switch (engine) {
+        case TranslateEngine::Claude:
+            return AIChatBackend::Claude;
+        case TranslateEngine::Codex:
+            return AIChatBackend::Codex;
+        default:
+            return AIChatBackend::Grok;
+    }
+}
+
+static Str EngineDisplayName(TranslateEngine engine) {
+    switch (engine) {
+        case TranslateEngine::DeepL:
+            return StrL("DeepL");
+        case TranslateEngine::Grok:
+        case TranslateEngine::Claude:
+        case TranslateEngine::Codex:
+            return BackendDisplayName(BackendFromEngine(engine));
+        default:
+            return StrL("Google");
+    }
+}
+
+static bool IsEngineAvailable(TranslateEngine engine) {
+    if (EngineIsAI(engine)) {
+        return IsBackendInstalled(BackendFromEngine(engine));
+    }
+    // Google / DeepL translate by opening a browser
+    return HasPermission(Perm::InternetAccess);
+}
+
+static TranslateEngine EngineFromName(Str name) {
+    for (TranslateEngine engine : gAllEngines) {
+        if (!str::IsEmptyOrWhiteSpace(name) && str::EqI(name, EngineDisplayName(engine))) {
+            return engine;
+        }
+    }
+    return TranslateEngine::Default;
+}
+
+// Default => the engine remembered in settings; anything unavailable falls
+// back to the first available engine
+static TranslateEngine ResolveEngine(TranslateEngine engine) {
+    if (engine == TranslateEngine::Default && gGlobalPrefs) {
+        engine = EngineFromName(gGlobalPrefs->translateEngine);
+    }
+    if (engine != TranslateEngine::Default && IsEngineAvailable(engine)) {
+        return engine;
+    }
+    for (TranslateEngine cand : gAllEngines) {
+        if (IsEngineAvailable(cand)) {
+            return cand;
+        }
+    }
+    return TranslateEngine::Google;
+}
+
+static void PopulateEngineDropDown(DropDown* dd, TranslateEngine selected) {
+    StrVec items;
+    int selIdx = 0;
+    for (TranslateEngine engine : gAllEngines) {
+        if (!IsEngineAvailable(engine)) {
+            continue;
+        }
+        if (engine == selected) {
+            selIdx = len(items);
+        }
+        items.Append(EngineDisplayName(engine));
+    }
+    if (len(items) == 0) {
+        items.Append(EngineDisplayName(TranslateEngine::Google));
+    }
+    dd->SetItems(items);
+    dd->SetCurrentSelection(selIdx);
+}
+
+// build the Google / DeepL web-translator url for the given languages and text
+static TempStr BuildTranslateUrlTemp(TranslateEngine engine, Str srcLang, Str dstLang, Str text) {
+    TempStr enc = URLEncodeMayTruncateTemp(text);
+    if (!enc) {
+        return {};
+    }
+    TempStr src = LangCodeForUrlTemp(srcLang);
+    if (!src) {
+        src = str::DupTemp("auto");
+    }
+    TempStr dst = LangCodeForUrlTemp(dstLang);
+    if (!dst) {
+        dst = str::DupTemp("en");
+    }
+    if (engine == TranslateEngine::DeepL) {
+        // DeepL uses plain "zh" for Chinese
+        if (str::StartsWithI(src, "zh")) {
+            src = str::DupTemp("zh");
+        }
+        if (str::StartsWithI(dst, "zh")) {
+            dst = str::DupTemp("zh");
+        }
+        return fmt("https://www.deepl.com/translator#%s/%s/%s", src, dst, enc);
+    }
+    return fmt("https://translate.google.com/?op=translate&sl=%s&tl=%s&text=%s", src, dst, enc);
+}
+
 static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, Str& msgOut) {
     TempStr exePath = FindBackendExecutableTemp(backend);
     if (!exePath) {
@@ -686,6 +845,7 @@ void SelectionTranslateWnd::UpdateTheme() {
         }
     };
     setColors(staticPrompt);
+    setColors(dropEngine);
     setColors(editSrcText);
     setColors(staticFromLabel);
     setColors(dropSrcLang);
@@ -758,6 +918,20 @@ void SelectionTranslateWnd::StartTranslation() {
         return;
     }
 
+    TranslateEngine curEngine = ResolveEngine(dropEngine ? EngineFromName(dropEngine->GetTextTemp()) : engine);
+    MaybeSaveTranslatePrefs(curEngine, srcLang, dstLang);
+
+    if (!EngineIsAI(curEngine)) {
+        // Google / DeepL translate in the browser; keep the dialog open so the
+        // user can tweak languages or pick a different engine
+        TempStr url = BuildTranslateUrlTemp(curEngine, srcLang, dstLang, text);
+        if (url) {
+            SumatraLaunchBrowser(url);
+        }
+        return;
+    }
+
+    backend = BackendFromEngine(curEngine);
     translating = true;
     if (editSrcText) {
         editSrcText->SetIsEnabled(false);
@@ -808,9 +982,6 @@ void SelectionTranslateWnd::OnTranslationFinished(bool ok, Str msg) {
     }
     TempStr display = ok ? msg : FormatTranslationErrorForDisplayTemp(backend, msg);
     ShowTranslationResult(display, !ok);
-    if (ok && dropDstLang) {
-        MaybeSaveTranslateToLang(dropDstLang->GetTextTemp());
-    }
     UpdateTranslateButtonState();
 }
 
@@ -905,17 +1076,34 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
     }
 
-    if (editSrcText) {
-        int labelShift = editSrcText->GetLeftTextMargin();
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.text = _TRA("Translate:");
-        args.isRtl = isRtl;
-        staticPrompt = new Static();
-        staticPrompt->Create(args);
-        auto* promptPad = new Padding(staticPrompt, {0, 0, 0, labelShift});
-        vbox->AddChild(promptPad);
+    {
+        auto* engineRow = new HBox();
+        engineRow->alignMain = MainAxisAlign::MainStart;
+        engineRow->alignCross = CrossAxisAlign::CrossCenter;
+        {
+            Static::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = _TRA("Translate with");
+            args.isRtl = isRtl;
+            staticPrompt = new Static();
+            staticPrompt->Create(args);
+            engineRow->AddChild(staticPrompt);
+        }
+        {
+            DropDown::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.isRtl = isRtl;
+            dropEngine = new DropDown();
+            dropEngine->Create(args);
+            PopulateEngineDropDown(dropEngine, engine);
+            dropEngine->onSelectionChanged =
+                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
+            dropEngine->SetInsetsPt(0, 0, 0, 4);
+            engineRow->AddChild(dropEngine, 1);
+        }
+        vbox->AddChild(new Padding(engineRow, DpiScaledInsets(hwnd, 0, 0, 8, 0)));
     }
 
     vbox->AddChild(editSrcText);
@@ -943,7 +1131,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             args.isRtl = isRtl;
             dropSrcLang = new DropDown();
             dropSrcLang->Create(args);
-            PopulateLanguageDropDown(dropSrcLang, kSrcLangAuto, true);
+            PopulateLanguageDropDown(dropSrcLang, DefaultSourceLanguageTemp(), true);
             dropSrcLang->onTextChanged =
                 MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
             dropSrcLang->onSelectionChanged =
@@ -1044,16 +1232,14 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     return true;
 }
 
-void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
+void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     if (!tab || !tab->win || !tab->selectionOnPage) {
         return;
     }
     if (!HasPermission(Perm::CopySelection)) {
         return;
     }
-    if (!IsBackendInstalled(backend)) {
-        return;
-    }
+    TranslateEngine engine = ResolveEngine(engineIn);
     if (gSelectionTranslateWnd) {
         if (gSelectionTranslateWnd->hwnd && IsWindow(gSelectionTranslateWnd->hwnd)) {
             HwndSetFocus(gSelectionTranslateWnd->hwnd);
@@ -1073,11 +1259,11 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
 
     auto* wnd = new SelectionTranslateWnd();
     wnd->hwndOwner = hwndOwner;
-    wnd->backend = backend;
+    wnd->engine = engine;
     wnd->font = GetAppFont(hwndOwner);
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSelectionTranslateDestroy);
-    TempStr title = fmt(_TRA("Translate with %s").s, BackendDisplayName(backend));
+    Str title = _TRA("Translate");
     if (!wnd->Create(hwndOwner, selText, title)) {
         EnableWindow(hwndOwner, TRUE);
         delete wnd;
