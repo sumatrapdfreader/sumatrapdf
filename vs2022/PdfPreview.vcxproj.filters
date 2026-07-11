@@ -288,6 +288,9 @@
     <ClInclude Include="..\src\PdfCreator.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PdfDarkMode.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\RegistryPreview.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -489,6 +492,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfCreator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PdfDarkModeNoOp.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RegistryPreview.cpp">

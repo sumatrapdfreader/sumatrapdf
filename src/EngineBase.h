@@ -406,6 +406,8 @@ class AbortCookie {
     virtual void* GetData() = 0;
 };
 
+struct DarkModeProfile;
+
 struct RenderPageArgs {
     int pageNo = 0;
     float zoom = 0.f;
@@ -414,6 +416,9 @@ struct RenderPageArgs {
     RectF* pageRect = nullptr;
     RenderTarget target = RenderTarget::View;
     AbortCookie** cookie_out = nullptr;
+    // dark/recolor rendering profile for View renders (see PdfDarkMode.h);
+    // owned by the caller, only valid for the duration of RenderPage()
+    const DarkModeProfile* darkProfile = nullptr;
 
     RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect = nullptr,
                    RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
@@ -571,6 +576,19 @@ class EngineBase {
     // returns false if didn't perform action (temporary until we move
     // all code there)
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
+
+    // bitmap regions (in device pixels of the rendered tile) whose original
+    // colors should be preserved by the dark-mode bitmap recolor pass
+    // (photos / artwork); default: none
+    virtual void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
+                                           Size bmpSize, Vec<Rect>& skipRects) {
+        (void)pageNo;
+        (void)zoom;
+        (void)rotation;
+        (void)renderPageRect;
+        (void)bmpSize;
+        skipRects.Clear();
+    }
 
     // protected:
     void SetFilePath(Str s);

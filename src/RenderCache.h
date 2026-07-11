@@ -64,6 +64,9 @@ struct BitmapCacheEntry {
     Pixmap* bitmap = nullptr;
     bool outOfDate = false;
     int refs = 1;
+    // RenderCache::darkModeEpoch at render time; entries from an older epoch
+    // were rendered/recolored with stale colors and must not be reused
+    u32 darkModeEpoch = 0;
 
     BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile, Pixmap* bitmap) {
         this->dm = dm;
@@ -89,6 +92,7 @@ struct PageRenderRequest {
     RectF pageRect; // calculated from TilePosition
     bool abort = false;
     AbortCookie* abortCookie = nullptr;
+    u32 darkModeEpoch = 0;
     u64 timestamp = 0;
 
     // set by render thread before calling renderFinishedCb
@@ -183,6 +187,11 @@ struct RenderCache {
 
     COLORREF textColor = 0;
     COLORREF backgroundColor = 0;
+    COLORREF linkColor = 0;
+    // bumped by UpdateDocumentColors when page render colors / the PDF
+    // document color mode change; renders started under an older epoch are
+    // discarded instead of cached
+    u32 darkModeEpoch = 0;
 
     /* Interface for page rendering thread */
     HANDLE startRendering = nullptr; // semaphore, signaled once per queued request

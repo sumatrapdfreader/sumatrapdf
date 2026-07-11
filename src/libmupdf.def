@@ -165,6 +165,7 @@ EXPORTS
 	fz_grow_buffer
 	fz_trim_buffer
 	fz_colorspace_is_indexed
+	fz_colorspace_n
 	fz_device_gray
 	fz_device_rgb
 	fz_device_bgr

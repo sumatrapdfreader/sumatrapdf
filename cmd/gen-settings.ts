@@ -768,6 +768,14 @@ const globalPrefs: Field[] = [
   field("TabWidth", Int, 300, "maximum width of a single tab"),
   field("Theme", Str, "", "the name of the theme to use").ver("3.5").doc("Valid themes: light, dark, darker"),
   field(
+    "PdfDocumentColorMode",
+    Str,
+    "auto",
+    "how PDFs render when page colors are inverted (FixedPageUI.InvertColors or custom dark page colors): auto (adapt colors but preserve photos/artwork), black (recolor everything), or light (keep original colors)",
+  )
+    .ver("3.7")
+    .doc("Valid values: auto, black, light"),
+  field(
     "TocDy",
     Int,
     0,

@@ -91,6 +91,10 @@ CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Buil
 CmdAIChatWithOpenAICodex,,AI Chat with document using OpenAI Codex,"Toggle OpenAI Codex chat sidebar, ver 3.7+. See AI-Chat-with-document.md#openai-codex"
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
 CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 3.7+, toggles CAD/engineering-drawing line enhancement for the current PDF (see the `EngineeringDrawingEnhance` advanced setting)"
+CmdSetPdfDocumentColorModeAuto,,Set PDF Document Color Mode: Auto,"ver 3.7+, inverted PDF pages preserve photo/artwork colors (see the `PdfDocumentColorMode` advanced setting)"
+CmdSetPdfDocumentColorModeBlack,,Set PDF Document Color Mode: Black,"ver 3.7+, inverted PDF pages recolor everything, including images"
+CmdSetPdfDocumentColorModeLight,,Set PDF Document Color Mode: Light,"ver 3.7+, PDF pages keep original colors even when Invert Colors is on"
+CmdTogglePreservePdfImages,,Toggle Preserve PDF Image Colors in Dark Mode,"ver 3.7+, session-only toggle of image preservation on inverted pages"
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
 ```
 

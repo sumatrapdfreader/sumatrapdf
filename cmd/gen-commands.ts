@@ -247,6 +247,10 @@ export const commands = [
     "CmdNavigateFilesInFolder", "Navigate Files in Folder",
     "CmdDebugToggleCacheInfo", "Debug: Toggle Cache Info",
     "CmdToggleEngineeringDrawingEnhance", "Toggle Engineering Drawing Enhancement",
+    "CmdSetPdfDocumentColorModeAuto", "Set PDF Document Color Mode: Auto",
+    "CmdSetPdfDocumentColorModeBlack", "Set PDF Document Color Mode: Black",
+    "CmdSetPdfDocumentColorModeLight", "Set PDF Document Color Mode: Light",
+    "CmdTogglePreservePdfImages", "Toggle Preserve PDF Image Colors in Dark Mode",
     "CmdNone", "Do nothing",
 ];
 

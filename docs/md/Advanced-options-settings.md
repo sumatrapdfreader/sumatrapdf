@@ -188,6 +188,9 @@ TabWidth = 300
 ; Valid themes: light, dark, darker (introduced in version 3.5)
 Theme = 
 
+; Valid values: auto, black, light (introduced in version 3.7)
+PdfDocumentColorMode = auto
+
 ; if both favorites and bookmarks parts of sidebar are visible, this is the
 ; height of bookmarks (table of contents) part
 TocDy = 0

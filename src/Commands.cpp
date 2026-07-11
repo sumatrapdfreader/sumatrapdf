@@ -254,6 +254,10 @@ static SeqStrings gCommandNames =
     "CmdNavigateFilesInFolder\0"
     "CmdDebugToggleCacheInfo\0"
     "CmdToggleEngineeringDrawingEnhance\0"
+    "CmdSetPdfDocumentColorModeAuto\0"
+    "CmdSetPdfDocumentColorModeBlack\0"
+    "CmdSetPdfDocumentColorModeLight\0"
+    "CmdTogglePreservePdfImages\0"
     "CmdNone\0"
     "\0";
 
@@ -501,6 +505,10 @@ static i32 gCommandIds[] = {
     CmdNavigateFilesInFolder,
     CmdDebugToggleCacheInfo,
     CmdToggleEngineeringDrawingEnhance,
+    CmdSetPdfDocumentColorModeAuto,
+    CmdSetPdfDocumentColorModeBlack,
+    CmdSetPdfDocumentColorModeLight,
+    CmdTogglePreservePdfImages,
     CmdNone,
 };
 
@@ -748,6 +756,10 @@ SeqStrings gCommandDescriptions =
     "Navigate Files in Folder\0"
     "Debug: Toggle Cache Info\0"
     "Toggle Engineering Drawing Enhancement\0"
+    "Set PDF Document Color Mode: Auto\0"
+    "Set PDF Document Color Mode: Black\0"
+    "Set PDF Document Color Mode: Light\0"
+    "Toggle Preserve PDF Image Colors in Dark Mode\0"
     "Do nothing\0"
     "\0";
 // clang-format on

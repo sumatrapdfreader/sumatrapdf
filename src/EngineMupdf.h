@@ -4,11 +4,16 @@
 #include "PdfCadDetect.h"
 
 struct Annotation;
+struct DarkModePageAnalysis;
+struct DarkModeEngineCache;
 
 struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
     fz_matrix transform;
     IPageElement* imageElement = nullptr;
+    // kept reference to the drawn image, when known (used by the dark-mode
+    // image classifier); dropped with the engine's context, not in the dtor
+    fz_image* image = nullptr;
     ~FitzPageImageInfo() { delete imageElement; }
 };
 
@@ -51,6 +56,19 @@ struct FzPageInfo {
     // races inside mupdf's image store on concurrent decode. So renderLock
     // is engine-wide, not per-page.
     fz_display_list* displayList = nullptr;
+
+    // smart dark mode (PdfDarkMode*.cpp): cached per-page analysis for the
+    // object-level renderer, freed via PdfDarkModeInvalidatePage
+    DarkModePageAnalysis* darkModeAnalysis = nullptr;
+    u32 darkModeAnalysisHash = 0;
+    // dark-mode legacy recolor: cached skip rects (device px, absolute) of
+    // images whose colors should be preserved
+    bool contentImagesCollected = false;
+    u32 darkLegacySkipHash = 0;
+    float darkLegacySkipZoom = 0.f;
+    int darkLegacySkipRotation = 0;
+    float darkLegacyArtworkPageBottom = 0.f;
+    Vec<Rect> darkLegacySkipDevAbs;
 };
 
 class EngineMupdf : public EngineBase {
@@ -150,6 +168,12 @@ class EngineMupdf : public EngineBase {
     // used to track "dirty" state of annotations. not perfect because if we add and delete
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
+
+    // smart dark mode: engine-level image feature/processed caches
+    DarkModeEngineCache* darkModeEngineCache = nullptr;
+
+    void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
+                                   Vec<Rect>& skipRects) override;
 
     // CAD/engineering-drawing enhancement (PdfCadDetect.cpp)
     bool cadDetectDone = false;

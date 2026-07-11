@@ -27,6 +27,8 @@ extern void StrFormatTest();
 extern void StrTest();
 extern void VecTest();
 extern void StrVecTest();
+extern void PdfDarkModeOklab_UnitTests();
+extern void PdfDarkModeImageClassifier_UnitTests();
 #if OS_WIN
 extern void WinUtilTest();
 #endif
@@ -120,6 +122,8 @@ int main(int argc, char** argv) {
     StrTest();
     StrVecTest();
     VecTest();
+    PdfDarkModeOklab_UnitTests();
+    PdfDarkModeImageClassifier_UnitTests();
 #if OS_WIN
     WinUtilTest();
 #endif

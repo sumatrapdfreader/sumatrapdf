@@ -14,6 +14,7 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "PdfDarkMode.h"
 #include "DisplayModel.h"
 #include "RenderCache.h"
 
@@ -32,6 +33,50 @@ static DWORD WINAPI RenderCacheThread(LPVOID data);
 
 bool gShowTileLayout = false;
 int gMaxRenderThreads = 8;
+
+// Whether to run the bitmap recolor pass when no dark profile applies:
+// master's default behavior (recolor with the cache colors, which no-ops
+// for black-on-white), except for PDFs in the Light document color mode,
+// which show original colors even when pages would render dark (inverted).
+static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cache) {
+    if (!engine || engine->IsImageCollection()) {
+        return false;
+    }
+    if (engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf")) &&
+        GetPdfDocumentColorMode() == PdfDocumentColorMode::Light && !IsLightColor(cache->backgroundColor)) {
+        return false;
+    }
+    return true;
+}
+
+// Several preserved regions in one tile -> keep the largest artwork, drop layout ornaments.
+static void FinalizeTileSkipRects(Vec<Rect>& skipRects, Size bmpSize) {
+    if (len(skipRects) <= 1 || bmpSize.dx <= 0 || bmpSize.dy <= 0) {
+        return;
+    }
+    i64 totalArea = (i64)bmpSize.dx * bmpSize.dy;
+    if (totalArea <= 0) {
+        return;
+    }
+    i64 skipArea = 0;
+    for (Rect& r : skipRects) {
+        skipArea += (i64)r.dx * r.dy;
+    }
+    if (len(skipRects) > 1 && skipArea * 100 > totalArea * 40) {
+        int bestIdx = 0;
+        i64 bestArea = 0;
+        for (int i = 0; i < len(skipRects); i++) {
+            i64 a = (i64)skipRects[i].dx * skipRects[i].dy;
+            if (a > bestArea) {
+                bestArea = a;
+                bestIdx = i;
+            }
+        }
+        Rect keep = skipRects[bestIdx];
+        skipRects.Clear();
+        skipRects.Append(keep);
+    }
+}
 
 // RenderCache's verbose per-operation logging (FreePage / Paint / DropCacheEntry
 // / ...) is noisy, so it's disabled by default. Set gLogRenderCache = true to
@@ -124,7 +169,8 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
         if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
-            (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile)) {
+            (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile) &&
+            (e->darkModeEpoch == darkModeEpoch)) {
             e->refs++;
             ReportIf(i != e->cacheIdx);
             return e;
@@ -242,6 +288,7 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
 
     // Copy the PageRenderRequest as it will be reused
     auto entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
+    entry->darkModeEpoch = darkModeEpoch;
     entry->cacheIdx = cacheCount;
     cache[cacheCount] = entry;
     cacheCount++;
@@ -743,6 +790,7 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
     ReportIf(requestCount > MAX_PAGE_REQUESTS);
     requestCount--;
     *req = requests[requestCount];
+    req->darkModeEpoch = darkModeEpoch;
     curReqs[threadIdx] = req;
     ReportIf(requestCount < 0);
     ReportIf(req->abort);
@@ -878,13 +926,18 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         EngineBase* engine = req.dm->GetEngine();
 
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+        DarkModeProfile darkProfile;
+        BuildViewDarkModeProfile(engine, &darkProfile);
+        if (darkProfile.mode != PageColorMode::Normal) {
+            args.darkProfile = &darkProfile;
+        }
         // a previous render might have run a 3rd-party WIC codec that unmasked
         // fp exceptions on this thread, which would crash mupdf float math
         MaskFpExceptions();
         auto timeStart = TimeGet();
         bmp = engine->RenderPage(args);
-        if (req.abort) {
-            // aborted - do nothing, discard result
+        if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
+            // aborted or colors changed mid-render - discard result
             FreePixmap(bmp);
             continue;
         }
@@ -898,8 +951,37 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         req.errorCode = bmp ? 0 : 1;
 
         if (bmp) {
-            if (!engine->IsImageCollection()) {
-                UpdateBitmapColors(bmp->hbmp, cache->textColor, cache->backgroundColor);
+            const DarkModeProfile* profile = args.darkProfile;
+            bool recolor;
+            if (profile) {
+                // object-level smart dark renders themed output directly
+                recolor = DarkModeProfileUsesLegacyPostProcess(profile);
+            } else {
+                recolor = ShouldUpdateBitmapColorsLegacy(engine, cache);
+            }
+            if (recolor) {
+                bool preserve = profile && profile->mode == PageColorMode::PreserveImages && profile->preservePdfImages;
+                Vec<Rect> skipRects;
+                Vec<Rect>* skipRectsPtr = nullptr;
+                if (preserve) {
+                    Size bmpSize(bmp->width, bmp->height);
+                    engine->GetBitmapRecolorSkipRects(req.pageNo, req.zoom, req.rotation, req.pageRect, bmpSize,
+                                                      skipRects);
+                    FinalizeTileSkipRects(skipRects, bmpSize);
+                    if (len(skipRects) > 0) {
+                        skipRectsPtr = &skipRects;
+                    }
+                }
+                COLORREF textCol = profile ? profile->foreground : cache->textColor;
+                COLORREF bgCol = profile ? profile->pageBackground : cache->backgroundColor;
+                COLORREF linkCol = profile ? profile->linkColor : cache->linkColor;
+                UpdateBitmapColors(bmp->hbmp, textCol, bgCol, linkCol, skipRectsPtr);
+            }
+            if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
+                // colors changed while recoloring - discard result
+                FreePixmap(bmp);
+                req.bmp = nullptr;
+                continue;
             }
             cache->Add(req, bmp);
             req.bmp = nullptr; // ownership transferred to cache

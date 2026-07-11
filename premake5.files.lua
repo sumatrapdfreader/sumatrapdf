@@ -1106,6 +1106,20 @@ function engines_files()
     "PdfCadDetect.*",
     "PdfCadEnhanceDevice.*",
     "PdfCreator.*",
+    "PdfDarkMode.h",
+    "PdfDarkModeInternal.h",
+    "PdfDarkModeAnalysis.cpp",
+    "PdfDarkModeCache.cpp",
+    "PdfDarkModeColor.cpp",
+    "PdfDarkModeDevice.cpp",
+    "PdfDarkModeEngineCache.cpp",
+    "PdfDarkModeImageBgBlend.cpp",
+    "PdfDarkModeImageClassifier.cpp",
+    "PdfDarkModeImageRules.cpp",
+    "PdfDarkModeImageStats.cpp",
+    "PdfDarkModeOklab.cpp",
+    "PdfDarkModeProfile.cpp",
+    "PdfDarkModeScanProcess.cpp",
   })
 end
 
@@ -1511,6 +1525,11 @@ function test_util_files()
     "SumatraLog.*",
     "SumatraUnitTests.cpp",
     "SimpleLog_ut.cpp",
+    "PdfDarkMode.h",
+    "PdfDarkModeImageRules.cpp",
+    "PdfDarkModeOklab.cpp",
+    "PdfDarkModeImageClassifier_ut.cpp",
+    "PdfDarkModeOklab_ut.cpp",
     "tools/test_util.cpp"
   })
 end
@@ -1540,6 +1559,8 @@ function test_engines_files()
     "src/PdfCadDetect.h",
     "src/PdfCadEnhanceDevice.cpp",
     "src/PdfCadEnhanceDevice.h",
+    "src/PdfDarkMode.h",
+    "src/PdfDarkModeNoOp.cpp",
     "src/WebpReader.cpp",
     "src/TreeModel.cpp",
     "src/TreeModel.h",
@@ -1584,6 +1605,8 @@ function pdf_preview_files()
     "PalmDbReader.*",
     "PdfCadDetect.*",
     "PdfCadEnhanceDevice.*",
+    "PdfDarkMode.h",
+    "PdfDarkModeNoOp.cpp",
     "PdfCreator.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
@@ -1617,6 +1640,8 @@ function search_filter_files()
     "PalmDbReader.*",
     "PdfCadDetect.*",
     "PdfCadEnhanceDevice.*",
+    "PdfDarkMode.h",
+    "PdfDarkModeNoOp.cpp",
     "RegistrySearchFilter.*",
     "SumatraLog.*",
   })

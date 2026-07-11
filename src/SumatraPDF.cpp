@@ -33,6 +33,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "PdfDarkMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
 #include "PdfTools.h"
@@ -3252,13 +3253,40 @@ static void RerenderFixedPage() {
 void UpdateDocumentColors() {
     COLORREF bg;
     COLORREF text = ThemePageRenderColors(bg);
+    bool pagesDark = !IsLightColor(bg);
+    COLORREF link = pagesDark ? ThemeWindowLinkColor() : 0;
 
-    if ((text == gRenderCache->textColor) && (bg == gRenderCache->backgroundColor)) {
+    // dark-mode options that also affect rendered pages but not the two
+    // cache colors; a change must invalidate cached renders the same way
+    static bool s_lastPreservePdfImages = false;
+    static int s_lastPdfDocumentColorMode = -1;
+    bool preservePdfImages = pagesDark && GetPreservePdfImagesInDarkMode();
+    int pdfDocumentColorMode = (int)GetPdfDocumentColorMode();
+
+    if ((text == gRenderCache->textColor) && (bg == gRenderCache->backgroundColor) &&
+        (link == gRenderCache->linkColor) && preservePdfImages == s_lastPreservePdfImages &&
+        pdfDocumentColorMode == s_lastPdfDocumentColorMode) {
         return; // colors didn't change
     }
+    s_lastPreservePdfImages = preservePdfImages;
+    s_lastPdfDocumentColorMode = pdfDocumentColorMode;
 
     gRenderCache->textColor = text;
     gRenderCache->backgroundColor = bg;
+    gRenderCache->linkColor = link;
+    gRenderCache->darkModeEpoch++;
+
+    // also drop the engines' cached dark-mode analyses / processed images
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            DisplayModel* dm = tab->AsFixed();
+            if (!dm) {
+                continue;
+            }
+            EngineMupdfInvalidateDarkMode(dm->GetEngine());
+        }
+    }
+
     RerenderEverything();
 }
 
@@ -8534,6 +8562,27 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 EngineMupdfToggleCadEnhance(fixedDm->GetEngine());
                 MainWindowRerender(win, true);
             }
+            break;
+        }
+
+        case CmdTogglePreservePdfImages: {
+            SetPreservePdfImagesInDarkMode(!GetPreservePdfImagesInDarkMode());
+            UpdateDocumentColors();
+            break;
+        }
+
+        case CmdSetPdfDocumentColorModeAuto:
+        case CmdSetPdfDocumentColorModeBlack:
+        case CmdSetPdfDocumentColorModeLight: {
+            PdfDocumentColorMode mode = PdfDocumentColorMode::Auto;
+            if (cmdId == CmdSetPdfDocumentColorModeBlack) {
+                mode = PdfDocumentColorMode::Black;
+            } else if (cmdId == CmdSetPdfDocumentColorModeLight) {
+                mode = PdfDocumentColorMode::Light;
+            }
+            SetPdfDocumentColorMode(mode);
+            UpdateDocumentColors();
+            SaveSettings();
             break;
         }
 
