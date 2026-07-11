@@ -27,6 +27,8 @@ Args:
 import io
 import os
 import re
+import shutil
+import subprocess
 import sys
 import textwrap
 
@@ -148,8 +150,9 @@ def main():
     check_path_safe(path_in)
     check_path_safe(path_out)
     path_temp = f'{path_in}.dir'
-    os.system(f'rm -r "{path_temp}" 2>/dev/null')
-    system(f'unzip -q -d {path_temp} {path_in}')
+    if os.path.exists(path_temp):
+        shutil.rmtree(path_temp)
+    subprocess.run(['unzip', '-q', '-d', path_temp, path_in], check=True)
 
     out_c = io.StringIO()
     out_c.write(f'/* THIS IS AUTO-GENERATED CODE, DO NOT EDIT. */\n')
