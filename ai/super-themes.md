@@ -78,6 +78,37 @@ polish. Commit series `1cd0c85d6`→`b0002c393`.
    theme; maximized frame edge color in dark themes). The rest is presumed
    superseded by darkmodelib.
 
+## Outcome (2026-07-11)
+
+1. Done as `0de700a15` (System theme + `CmdToggleLightDarkTheme` +
+   `LastLightTheme`/`LastDarkTheme`).
+2. Done as `8797b20f3` — only **Light Warm** was added; the fork's Dracula and
+   pure-black palettes already exist in master as the `Dracula` and `Dark`
+   themes.
+3. Done as `c837e3d92` (`src/CaptionGlyphs.{cpp,h}` +
+   `tools/gen_caption_glyphs.py`, wired into `DrawCaptionButton`).
+4. **All evaluated chrome fixes are superseded on master — nothing ported:**
+   - scrollbar reset (`597f0c47d`): master calls
+     `DarkMode::setDarkScrollBar(hwndCanvas)` on *every* theme change and
+     darkmodelib's `setDarkExplorerTheme` passes `nullptr` (reset) when
+     experimental dark is inactive, so switching back to a light theme already
+     resets the scrollbar. The fork fixed a code shape (dark-only call) master
+     doesn't have.
+   - maximized frame edges / border color (`c4018ec06`): master already has
+     `UpdateWindowFrameBorderColor` + `dwm::SetWindowBorderColor` on theme
+     change.
+   - toolbar separators (`0e493c658`, parts of `c4018ec06`): tied to their
+     extra toolbar buttons; master's toolbar has since been reworked (overlay
+     mode etc.); no symptom observed.
+   - `81defc78b` (Light-Warm menubar without tabs), `36468333a` (broad dark
+     polish): fork-theme-specific; master themes chrome via darkmodelib's
+     `setWindowMenuBarSubclass`/`setChildCtrlsSubclassAndTheme`.
+
+Verification note: neither the custom caption nor native scrollbars render
+into `PrintWindow` captures (caption paints via `BeginPaint` on the frame DC;
+scrollbars are non-client) — glyphs were verified by dumping
+`DrawCaptionSysButtonGlyph` output to bitmaps via a temporary harness.
+
 ## Gotchas
 
 - Fork's theme code assumes their fixed 5-theme indexes (`kThemeIdx*`) —

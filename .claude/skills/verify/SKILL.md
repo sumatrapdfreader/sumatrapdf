@@ -39,6 +39,14 @@ postMessage(frame, 0x0010 /*WM_CLOSE*/, 0, 0);
 
 ## Gotchas
 
+- `captureWindowToPng` (PrintWindow) does NOT capture the custom caption row's
+  buttons (painted via `BeginPaint` directly on the frame DC) nor native
+  scrollbars (non-client area) — those regions come out blank. Screen capture
+  (`CopyFromScreen`) is also unavailable in this environment (blank desktop).
+  To verify such drawing code, dump its output to a bitmap via a temporary
+  harness (render into a `CreateDIBSection` DC, save with `HBITMAPToBmpFormat`
+  + `file::WriteFile`, view, then remove the harness).
+
 - `out/dbg64/SumatraPDF-settings.txt` exists (portable mode): the dbg build **loads** it even under `-for-testing` (which only prevents saving). Stale values there change app behavior in tests — e.g. a non-default `PdfDocumentColorMode` silently alters rendering. Check it when the app behaves unexpectedly at startup; it's written only by non-`-for-testing` (manual) launches.
 
 - Unit tests: `bun cmd/run-unit-tests.ts -dbg` (but verification = driving the app, not tests).
