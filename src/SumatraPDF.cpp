@@ -2069,6 +2069,20 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
 
 static void UpdateWindowFrameBorderColor(MainWindow* win);
 
+// DefWindowProc handles WM_SETREDRAW by clearing (FALSE) or setting (TRUE)
+// the WS_VISIBLE style bit directly, without sending WM_SHOWWINDOW. On a
+// frame that is meant to stay hidden (during startup, before ShowMainWindow
+// fires the deferred SWP_FRAMECHANGED for the custom caption) the TRUE call
+// would put the window on screen with the standard caption. Call this after
+// WM_SETREDRAW TRUE with the visibility captured before the FALSE/TRUE pair.
+static void HwndClearVisibleAfterSetRedraw(HWND hwnd, bool wasVisible) {
+    if (wasVisible) {
+        return;
+    }
+    LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+    SetWindowLongPtrW(hwnd, GWL_STYLE, style & ~WS_VISIBLE);
+}
+
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
@@ -2212,8 +2226,10 @@ static MainWindow* CreateMainWindow() {
         // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
     }
 
-    // re-enable painting now that dark mode is configured
+    // re-enable painting now that dark mode is configured; the frame must
+    // stay hidden until ShowMainWindow / LoadDocument decide to show it
     SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
+    HwndClearVisibleAfterSetRedraw(win->hwndFrame, false);
 
     // show menu bar rebar now that layout is done
     ShowMenuBarRebar(win);
@@ -4899,6 +4915,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     OverlayScrollbarHide(win->overlayScrollH);
 
     bool suppressIntermediateRedraws = !win->suppressFrameRedraw;
+    bool frameWasVisible = IsWindowVisible(win->hwndFrame);
     if (suppressIntermediateRedraws) {
         // suppress intermediate repaints during relayout
         SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
@@ -5079,6 +5096,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (suppressIntermediateRedraws) {
         // re-enable redraw and invalidate once
         SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
+        HwndClearVisibleAfterSetRedraw(win->hwndFrame, frameWasVisible);
         // RDW_ALLCHILDREN ensures notification windows (children of canvas) also repaint
         RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
@@ -5155,6 +5173,7 @@ static void BeginFrameRedrawSuppression(MainWindow* win) {
         return;
     }
     win->suppressFrameRedraw = true;
+    win->frameVisibleBeforeRedrawSuppress = IsWindowVisible(win->hwndFrame);
     SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
 }
 
@@ -5164,6 +5183,7 @@ static void EndFrameRedrawSuppression(MainWindow* win) {
     }
     win->suppressFrameRedraw = false;
     SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
+    HwndClearVisibleAfterSetRedraw(win->hwndFrame, win->frameVisibleBeforeRedrawSuppress);
     InvalidateRect(win->hwndCanvas, nullptr, FALSE);
     RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
 }
