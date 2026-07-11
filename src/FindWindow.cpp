@@ -158,7 +158,11 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         CreateCustomArgs args;
         args.visible = false;
         args.title = _TRA("Find");
-        args.style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+        // WS_CLIPCHILDREN neutralizes CS_PARENTDC of the standard controls
+        // (their DCs get clipped to the control, not to this window), so e.g.
+        // the results listbox can't paint its partially visible bottom row
+        // below itself onto this window
+        args.style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
         args.exStyle = WS_EX_TOOLWINDOW; // small caption, off the taskbar
         args.isRtl = IsUIRtl();
         CreateCustom(args);
@@ -380,18 +384,14 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         SetTextColor(hdc, colText);
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
         // clip snippet drawing so match highlights cannot bleed into the page
-        // number column when the floating window is narrow (issue #5736)
-        HRGN clipRgn = CreateRectRgnIndirect(&rcSnippet);
-        if (clipRgn) {
-            SelectClipRgn(hdc, clipRgn);
-            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
-                                     win->findMatchWholeWord, drawFmt);
-            SelectClipRgn(hdc, nullptr);
-            DeleteObject(clipRgn);
-        } else {
-            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
-                                     win->findMatchWholeWord, drawFmt);
-        }
+        // number column when the floating window is narrow (issue #5736);
+        // SaveDC/RestoreDC (rather than SelectClipRgn(nullptr)) so the outer
+        // listbox-client clip stays in effect afterwards
+        int snippetDC = SaveDC(hdc);
+        IntersectClipRect(hdc, rcSnippet.left, rcSnippet.top, rcSnippet.right, rcSnippet.bottom);
+        DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
+                                 win->findMatchWholeWord, drawFmt);
+        RestoreDC(hdc, snippetDC);
     }
 
     // repaint the page column on top in case a prior draw left stray pixels
