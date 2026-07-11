@@ -2069,20 +2069,6 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
 
 static void UpdateWindowFrameBorderColor(MainWindow* win);
 
-// DefWindowProc handles WM_SETREDRAW by clearing (FALSE) or setting (TRUE)
-// the WS_VISIBLE style bit directly, without sending WM_SHOWWINDOW. On a
-// frame that is meant to stay hidden (during startup, before ShowMainWindow
-// fires the deferred SWP_FRAMECHANGED for the custom caption) the TRUE call
-// would put the window on screen with the standard caption. Call this after
-// WM_SETREDRAW TRUE with the visibility captured before the FALSE/TRUE pair.
-static void HwndClearVisibleAfterSetRedraw(HWND hwnd, bool wasVisible) {
-    if (wasVisible) {
-        return;
-    }
-    LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
-    SetWindowLongPtrW(hwnd, GWL_STYLE, style & ~WS_VISIBLE);
-}
-
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
@@ -2152,9 +2138,12 @@ static MainWindow* CreateMainWindow() {
     // if tabsInTitlebar, we use a rebar menu bar; otherwise native SetMenu
     win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
 
-    // suppress painting during window setup to avoid white flash with dark themes
-    SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
-
+    // Note: don't send WM_SETREDRAW to hwndFrame here. The frame is hidden
+    // (shown later by ShowMainWindow / LoadDocument) so nothing paints anyway,
+    // and DefWindowProc's WM_SETREDRAW TRUE handling *shows* the window, which
+    // would flash a normal-size standard-caption window before the custom
+    // caption / maximized / fullscreen state is applied (the old fix for the
+    // dark-theme startup flash, #5421, predates creating the frame hidden).
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
 
@@ -2226,11 +2215,6 @@ static MainWindow* CreateMainWindow() {
         // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
     }
 
-    // re-enable painting now that dark mode is configured; the frame must
-    // stay hidden until ShowMainWindow / LoadDocument decide to show it
-    SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
-    HwndClearVisibleAfterSetRedraw(win->hwndFrame, false);
-
     // show menu bar rebar now that layout is done
     ShowMenuBarRebar(win);
 
@@ -2250,6 +2234,13 @@ void ShowMainWindow(MainWindow* win, int windowState) {
     if (win->tabsInTitlebar) {
         uint flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
         SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
+    }
+
+    // go fullscreen before the first paint so the user doesn't see the
+    // intermediate maximized window (EnterFullScreen requires a visible
+    // window, so it can't happen before ShowWindow above)
+    if (WIN_STATE_FULLSCREEN == windowState) {
+        EnterFullScreen(win);
     }
 
     // Hidden startup windows can miss the final titlebar/menu-bar geometry
@@ -2273,7 +2264,7 @@ void ShowMainWindow(MainWindow* win, int windowState) {
         HwndToForeground(win->hwndFrame);
     }
 
-    if (win->tabsInTitlebar) {
+    if (win->tabsInTitlebar && !win->isFullScreen) {
         RECT r = ToRECT(win->captionRect);
         InvalidateRect(win->hwndFrame, &r, TRUE);
         RedrawWindow(win->hwndFrame, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
@@ -2284,10 +2275,6 @@ void ShowMainWindow(MainWindow* win, int windowState) {
         if (win->tabsCtrl && win->tabsCtrl->IsVisible()) {
             RedrawWindow(win->tabsCtrl->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
         }
-    }
-
-    if (WIN_STATE_FULLSCREEN == windowState) {
-        EnterFullScreen(win);
     }
 }
 
@@ -2454,8 +2441,13 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     return false;
 }
 
-static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs) {
-    ShowWindow(win->hwndFrame, SW_SHOW);
+static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
+    // don't show a deliberately hidden window (session restore at startup:
+    // ShowMainWindow shows it later with the remembered maximized/fullscreen
+    // state; showing here would flash a normal-size window first)
+    if (showWin) {
+        ShowWindow(win->hwndFrame, SW_SHOW);
+    }
 
     // display the notification ASAP (SaveSettings() can introduce a notable delay)
     win->RedrawAll(true);
@@ -2473,16 +2465,16 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     }
 }
 
-static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs) {
+static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
     nargs.msg = fmt(_TRA("File %s not found").s, path);
     ShowNotification(nargs);
-    LoadDocumentMarkNotExist(win, path, noSavePrefs);
+    LoadDocumentMarkNotExist(win, path, noSavePrefs, showWin);
 }
 
-void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs) {
+void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
     // TODO: same message as in Canvas.cpp to not introduce
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
@@ -2491,7 +2483,7 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs) {
     nargs.warning = true;
     nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
-    LoadDocumentMarkNotExist(win, path, noSavePrefs);
+    LoadDocumentMarkNotExist(win, path, noSavePrefs, showWin);
 }
 
 extern void SetTabState(WindowTab* tab, TabState* state);
@@ -2774,7 +2766,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     }
     Str path = args->FilePath();
     if (!args->ctrl) {
-        ShowErrorLoadingNotification(win, path, args->noSavePrefs);
+        ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
         // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
         // which can pump messages and change tab selection
         WindowTab* currTab = win->CurrentTab();
@@ -2935,7 +2927,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     bool failEarly = AdjustPathForMaybeMovedFile(argsIn);
     Str path = argsIn->FilePath();
     if (failEarly) {
-        ShowFileNotFound(win, path, argsIn->noSavePrefs);
+        ShowFileNotFound(win, path, argsIn->noSavePrefs, argsIn->showWin);
         argsIn->onFinished.Call(false);
         return;
     }
@@ -2975,7 +2967,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
             args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
             RemoveNotification(wndNotif);
             if (!args->ctrl) {
-                ShowErrorLoadingNotification(win, path, args->noSavePrefs);
+                ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
                 // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
                 // which can pump messages and change tab selection
                 WindowTab* currTab = win->CurrentTab();
@@ -3023,7 +3015,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
     // fail fast if the file doesn't exist and there is a window the user
     // has just been interacting with
     if (failEarly) {
-        ShowFileNotFound(win, path, args->noSavePrefs);
+        ShowFileNotFound(win, path, args->noSavePrefs, args->showWin);
         return nullptr;
     }
 
@@ -3054,7 +3046,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
             if (!IsWindowVisible(win->hwndFrame)) {
                 ShowMainWindow(win, gGlobalPrefs->windowState);
             }
-            ShowErrorLoadingNotification(win, path, args->noSavePrefs);
+            ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
             // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
             // which can pump messages and change tab selection
             WindowTab* currTab = win->CurrentTab();
@@ -4914,8 +4906,12 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     OverlayScrollbarHide(win->overlayScrollV);
     OverlayScrollbarHide(win->overlayScrollH);
 
-    bool suppressIntermediateRedraws = !win->suppressFrameRedraw;
-    bool frameWasVisible = IsWindowVisible(win->hwndFrame);
+    // Never send WM_SETREDRAW to a hidden frame: nothing paints while hidden
+    // so there's nothing to suppress, and DefWindowProc's WM_SETREDRAW TRUE
+    // handling *shows* the window, which would flash a normal-size standard-
+    // caption window during startup, before ShowMainWindow / LoadDocument
+    // show it with the intended state.
+    bool suppressIntermediateRedraws = !win->suppressFrameRedraw && IsWindowVisible(win->hwndFrame);
     if (suppressIntermediateRedraws) {
         // suppress intermediate repaints during relayout
         SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
@@ -5096,7 +5092,6 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (suppressIntermediateRedraws) {
         // re-enable redraw and invalidate once
         SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
-        HwndClearVisibleAfterSetRedraw(win->hwndFrame, frameWasVisible);
         // RDW_ALLCHILDREN ensures notification windows (children of canvas) also repaint
         RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
@@ -5173,8 +5168,13 @@ static void BeginFrameRedrawSuppression(MainWindow* win) {
         return;
     }
     win->suppressFrameRedraw = true;
-    win->frameVisibleBeforeRedrawSuppress = IsWindowVisible(win->hwndFrame);
-    SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
+    // only send WM_SETREDRAW to a visible frame: for a hidden one there's
+    // nothing to suppress and re-enabling would show the window (DefWindowProc
+    // implements WM_SETREDRAW TRUE by showing it)
+    win->frameRedrawSuppressSent = IsWindowVisible(win->hwndFrame);
+    if (win->frameRedrawSuppressSent) {
+        SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
+    }
 }
 
 static void EndFrameRedrawSuppression(MainWindow* win) {
@@ -5182,8 +5182,10 @@ static void EndFrameRedrawSuppression(MainWindow* win) {
         return;
     }
     win->suppressFrameRedraw = false;
-    SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
-    HwndClearVisibleAfterSetRedraw(win->hwndFrame, win->frameVisibleBeforeRedrawSuppress);
+    if (win->frameRedrawSuppressSent) {
+        SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
+        win->frameRedrawSuppressSent = false;
+    }
     InvalidateRect(win->hwndCanvas, nullptr, FALSE);
     RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
 }

@@ -315,9 +315,9 @@ struct MainWindow {
     PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;
     bool suppressFrameRedraw = false;
-    // frame visibility when suppressFrameRedraw was set; restored when cleared
-    // (WM_SETREDRAW TRUE sets WS_VISIBLE as a side effect)
-    bool frameVisibleBeforeRedrawSuppress = true;
+    // whether BeginFrameRedrawSuppression sent WM_SETREDRAW FALSE (it doesn't
+    // for a hidden frame: WM_SETREDRAW TRUE would show the window)
+    bool frameRedrawSuppressSent = false;
 
     long nonFullScreenWindowStyle = 0;
     Rect nonFullScreenFrameRect;
