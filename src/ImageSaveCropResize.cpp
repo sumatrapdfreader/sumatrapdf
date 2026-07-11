@@ -128,12 +128,12 @@ struct ImageEditWindow {
     HWND hwnd = nullptr;
     HWND hwndParent = nullptr;
 
-    // child controls
+    // child controls (owned by controlLayout except non-owning refs below)
+    ILayout* controlLayout = nullptr;
     Static* staticPathLabel = nullptr;
     Static* staticInfoLabel = nullptr;
-    HBox* row3Layout = nullptr;
-    HWND hwndDestEdit = nullptr;
-    HWND hwndBrowseBtn = nullptr;
+    Edit* destEdit = nullptr;
+    Button* btnBrowse = nullptr;
     Button* btnSave = nullptr;
     Button* btnCrop = nullptr;   // "Crop" or "Apply Crop"
     Button* btnResize = nullptr; // "Resize" or "Apply Resize"
@@ -184,9 +184,7 @@ struct ImageEditWindow {
     ~ImageEditWindow() {
         delete srcBitmap;
         str::Free(filePath);
-        delete staticPathLabel;
-        delete row3Layout; // owns staticInfoLabel, dropFormat, btnCrop, btnResize
-        delete btnSave;
+        delete controlLayout;
     }
 };
 
@@ -333,8 +331,8 @@ static void RestoreImageEditFocus(ImageEditWindow* ew) {
     if (!ew || !ew->hwnd) {
         return;
     }
-    if (ew->mode == ImageEditMode::Save) {
-        SetFocus(ew->hwndDestEdit);
+    if (ew->mode == ImageEditMode::Save && ew->destEdit) {
+        SetFocus(ew->destEdit->hwnd);
     } else {
         SetFocus(ew->hwnd);
     }
@@ -455,17 +453,6 @@ static int ImageEditLabelDy(ImageEditWindow* ew) {
     return HwndMeasureText(ew->hwnd, "Ag", ew->hFont).dy;
 }
 
-static int ImageEditEditRowDy(ImageEditWindow* ew) {
-    int dy = ImageEditLabelDy(ew) + DpiScale(ew->hwnd, 8);
-    int minDy = DpiScale(ew->hwnd, 22);
-    return std::max(dy, minDy);
-}
-
-static int ImageEditBrowseBtnDx(ImageEditWindow* ew) {
-    Size sz = HwndMeasureText(ew->hwnd, "...", ew->hFont);
-    return sz.dx + DpiScale(ew->hwnd, 20);
-}
-
 static int ImageEditPathLabelRowDy(ImageEditWindow* ew) {
     return ImageEditLabelDy(ew) + ImageEditRowPadding(ew);
 }
@@ -484,8 +471,8 @@ static void ImageEditApplyFont(ImageEditWindow* ew) {
         }
     };
     setWndFont(ew->staticPathLabel);
-    setFont(ew->hwndDestEdit);
-    setFont(ew->hwndBrowseBtn);
+    setWndFont(ew->destEdit);
+    setWndFont(ew->btnBrowse);
     setWndFont(ew->staticInfoLabel);
     setWndFont(ew->btnSave);
     setWndFont(ew->btnCrop);
@@ -508,23 +495,22 @@ static void OnFormatChanged(ImageEditWindow* ew) {
     int idx = GetSelectedFormatIdx(ew);
     Str newExt = gImageFormats[idx].ext;
     // update the extension in the dest path
-    WCHAR destW[MAX_PATH + 1]{};
-    GetWindowTextW(ew->hwndDestEdit, destW, MAX_PATH);
-    TempStr dest = ToUtf8Temp(destW);
+    TempStr dest = ew->destEdit ? ew->destEdit->GetTextTemp() : TempStr{};
     if (len(dest) > 0) {
         TempStr oldExt = path::GetExtTemp(dest);
         int baseLen = len(dest) - len(oldExt);
         TempStr base = str::DupTemp(Str(dest.s, baseLen));
         TempStr newDest = fmt("%s%s", base, newExt);
-        HwndSetText(ew->hwndDestEdit, newDest);
+        ew->destEdit->SetText(newDest);
     }
     SetFocus(ew->hwnd);
 }
 
 static void UpdateSaveButtonText(ImageEditWindow* ew) {
-    WCHAR destW[MAX_PATH + 1]{};
-    GetWindowTextW(ew->hwndDestEdit, destW, MAX_PATH);
-    TempStr dest = ToUtf8Temp(destW);
+    if (!ew->btnSave || !ew->destEdit) {
+        return;
+    }
+    TempStr dest = ew->destEdit->GetTextTemp();
     Str text = file::Exists(dest) ? Str(_TRA("&Overwrite")) : Str(_TRA("&Save"));
     ew->btnSave->SetText(text);
     // re-layout since button width may have changed
@@ -1094,59 +1080,23 @@ static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
 }
 
 static void LayoutControls(ImageEditWindow* ew) {
+    if (!ew->controlLayout) {
+        return;
+    }
     Rect cRc = ClientRect(ew->hwnd);
-    int rowPad = ImageEditRowPadding(ew);
     int btnPad = ImageEditButtonPadding(ew);
-    int gap = DpiScale(ew->hwnd, 4);
-    int editRowDy = ImageEditEditRowDy(ew);
-    int y = ew->imgAreaH + rowPad;
-    int x = btnPad;
     int w = cRc.dx - 2 * btnPad;
-
-    // row 1: file path label — skip if from RenderedBitmap
-    if (ew->staticPathLabel) {
-        int editBorder = GetSystemMetrics(SM_CXEDGE);
-        LRESULT margins = SendMessageW(ew->hwndDestEdit, EM_GETMARGINS, 0, 0);
-        int editLeftMargin = LOWORD(margins);
-        int labelShift = editBorder + editLeftMargin;
-        Size szPath = ew->staticPathLabel->GetIdealSize();
-        ew->staticPathLabel->SetBounds({x + labelShift, y, w - labelShift, szPath.dy});
-        y += szPath.dy + rowPad;
-    }
-
-    // row 2: dest edit + browse button + save (right-aligned after browse)
-    int browseW = ImageEditBrowseBtnDx(ew);
-    int rightX = x + w;
-    if (ew->btnSave) {
-        Size szSave = ew->btnSave->GetIdealSize();
-        rightX -= szSave.dx;
-        int saveY = y + (editRowDy - szSave.dy) / 2;
-        ew->btnSave->SetBounds({rightX, saveY, szSave.dx, szSave.dy});
-        rightX -= gap;
-    }
-    rightX -= browseW;
-    MoveWindow(ew->hwndBrowseBtn, rightX, y, browseW, editRowDy, TRUE);
-    rightX -= gap;
-    int editW = rightX - x;
-    if (editW < 0) {
-        editW = 0;
-    }
-    MoveWindow(ew->hwndDestEdit, x, y, editW, editRowDy, TRUE);
-    y += editRowDy + rowPad;
-
-    // row 3: info label + format + crop/resize buttons
-    if (ew->row3Layout) {
-        Constraints bc = Loose({w, Inf});
-        Size row3Size = ew->row3Layout->Layout(bc);
-        ew->row3Layout->SetBounds({x, y, w, row3Size.dy});
-    }
+    Constraints bc = Loose({w, Inf});
+    Size layoutSize = ew->controlLayout->Layout(bc);
+    ew->controlLayout->SetBounds({0, ew->imgAreaH, cRc.dx, layoutSize.dy});
 }
 
 static void OnBrowse(ImageEditWindow* ew) {
     WCHAR dstFileName[MAX_PATH + 1]{};
-    // pre-populate with current dest path
-    int n = GetWindowTextW(ew->hwndDestEdit, dstFileName, MAX_PATH);
-    (void)n;
+    if (ew->destEdit) {
+        WCHAR* dest = CWStrTemp(ew->destEdit->GetTextTemp());
+        wcsncpy_s(dstFileName, dest, _TRUNCATE);
+    }
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -1161,8 +1111,8 @@ static void OnBrowse(ImageEditWindow* ew) {
         L"All Files\0*.*\0";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (GetSaveFileNameW(&ofn)) {
-        HwndSetText(ew->hwndDestEdit, ToUtf8Temp(dstFileName));
+    if (GetSaveFileNameW(&ofn) && ew->destEdit) {
+        ew->destEdit->SetText(ToUtf8Temp(dstFileName));
     }
 }
 
@@ -1334,9 +1284,7 @@ static void OnSave(ImageEditWindow* ew) {
         return;
     }
 
-    WCHAR rawDestW[MAX_PATH + 1]{};
-    GetWindowTextW(ew->hwndDestEdit, rawDestW, MAX_PATH);
-    TempStr rawDest = ToUtf8Temp(rawDestW);
+    TempStr rawDest = ew->destEdit ? ew->destEdit->GetTextTemp() : TempStr{};
     if (len(rawDest) == 0) {
         return;
     }
@@ -1981,26 +1929,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
         }
 
-        case WM_COMMAND: {
-            ew = FindImageEditWindowByHwnd(hwnd);
-            if (!ew) {
-                break;
-            }
-            int code = HIWORD(wp);
-            // browse button
-            if ((HWND)lp == ew->hwndBrowseBtn && code == BN_CLICKED) {
-                OnBrowse(ew);
-                UpdateSaveButtonText(ew);
-                return 0;
-            }
-            // dest edit changed
-            if ((HWND)lp == ew->hwndDestEdit && code == EN_CHANGE) {
-                UpdateSaveButtonText(ew);
-                return 0;
-            }
-            break;
-        }
-
         case WM_ACTIVATE:
             // modeless dialog: route Alt+<mnemonic> / Tab via IsDialogMessage in main loop
             if (LOWORD(wp) == WA_INACTIVE) {
@@ -2024,8 +1952,8 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 HWND hwndParent = ew->hwndParent;
-                if (ew->hwndDestEdit && gDestEditSubclassId) {
-                    RemoveWindowSubclass(ew->hwndDestEdit, WndProcDestEditSubclass, gDestEditSubclassId);
+                if (ew->destEdit && ew->destEdit->hwnd && gDestEditSubclassId) {
+                    RemoveWindowSubclass(ew->destEdit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId);
                 }
                 gImageEditWindows.Remove(ew);
                 delete ew;
@@ -2146,7 +2074,32 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     ew->hFont = GetAppFont(hwnd);
 
     // create child controls
-    // row 1: file path label (read-only) — hidden when from RenderedBitmap
+    TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
+    {
+        auto* edit = new Edit();
+        Edit::CreateArgs editArgs;
+        editArgs.parent = hwnd;
+        editArgs.font = ew->hFont;
+        editArgs.text = destPath;
+        editArgs.withBorder = true;
+        edit->Create(editArgs);
+        edit->onTextChanged = MkFunc0<ImageEditWindow>(UpdateSaveButtonText, ew);
+        if (!gDestEditSubclassId) {
+            gDestEditSubclassId = 1;
+        }
+        SetWindowSubclass(edit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId, (DWORD_PTR)ew);
+        ew->destEdit = edit;
+    }
+    {
+        auto* btn = new Button();
+        Button::CreateArgs args;
+        args.parent = hwnd;
+        args.font = ew->hFont;
+        args.text = StrL("...");
+        btn->Create(args);
+        btn->onClick = MkFunc0<ImageEditWindow>(OnBrowse, ew);
+        ew->btnBrowse = btn;
+    }
     if (!fromRenderedBitmap) {
         auto* pathLabel = new Static();
         Static::CreateArgs pathArgs;
@@ -2158,21 +2111,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
         ew->staticPathLabel = pathLabel;
     }
 
-    // row 2: dest edit + browse
-    TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
-    ew->hwndDestEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, CWStrTemp(destPath),
-                                       WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 0, 0, hwnd, nullptr, h, nullptr);
-    SendMessageW(ew->hwndDestEdit, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
-    if (!gDestEditSubclassId) {
-        gDestEditSubclassId = 1;
-    }
-    SetWindowSubclass(ew->hwndDestEdit, WndProcDestEditSubclass, gDestEditSubclassId, (DWORD_PTR)ew);
-
-    ew->hwndBrowseBtn = CreateWindowExW(0, L"BUTTON", L"...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd,
-                                        nullptr, h, nullptr);
-    SendMessageW(ew->hwndBrowseBtn, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
-
-    // row 3: info label (buttons and format dropdown added below, then wired into row3Layout)
+    // row 3: info label (buttons and format dropdown added below, then wired into controlLayout)
     TempStr infoStr;
     if (mode == ImageEditMode::Save) {
         infoStr = fmt("%d x %d", imgW, imgH);
@@ -2254,23 +2193,50 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     }
 
     {
-        int gap = DpiScale(hwnd, 4);
-        ew->row3Layout = new HBox();
-        ew->row3Layout->alignMain = MainAxisAlign::MainStart;
-        ew->row3Layout->alignCross = CrossAxisAlign::CrossCenter;
-        ew->row3Layout->AddChild(ew->staticInfoLabel, 1);
-        if (ew->dropFormat) {
-            ew->dropFormat->SetInsetsPt(0, 0, 0, gap);
-            ew->row3Layout->AddChild(ew->dropFormat);
+        auto* vbox = new VBox();
+        vbox->alignMain = MainAxisAlign::MainStart;
+        vbox->alignCross = CrossAxisAlign::Stretch;
+
+        if (ew->staticPathLabel && ew->destEdit) {
+            int labelShift = ew->destEdit->GetLeftTextMargin();
+            auto* pathPad = new Padding(ew->staticPathLabel, {0, 0, ImageEditRowPadding(ew), labelShift});
+            vbox->AddChild(pathPad);
         }
-        if (ew->btnCrop) {
-            ew->btnCrop->SetInsetsPt(0, 0, 0, gap);
-            ew->row3Layout->AddChild(ew->btnCrop);
+
+        {
+            auto* row2 = new HBox();
+            row2->alignMain = MainAxisAlign::MainStart;
+            row2->alignCross = CrossAxisAlign::CrossCenter;
+            row2->AddChild(ew->destEdit, 1);
+            ew->btnBrowse->SetInsetsPt(0, 0, 0, 4);
+            row2->AddChild(ew->btnBrowse);
+            ew->btnSave->SetInsetsPt(0, 0, 0, 4);
+            row2->AddChild(ew->btnSave);
+            auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(ew), 0});
+            vbox->AddChild(row2Pad);
         }
-        if (ew->btnResize) {
-            ew->btnResize->SetInsetsPt(0, 0, 0, gap);
-            ew->row3Layout->AddChild(ew->btnResize);
+
+        {
+            auto* row3 = new HBox();
+            row3->alignMain = MainAxisAlign::MainStart;
+            row3->alignCross = CrossAxisAlign::CrossCenter;
+            row3->AddChild(ew->staticInfoLabel, 1);
+            if (ew->dropFormat) {
+                ew->dropFormat->SetInsetsPt(0, 0, 0, 4);
+                row3->AddChild(ew->dropFormat);
+            }
+            if (ew->btnCrop) {
+                ew->btnCrop->SetInsetsPt(0, 0, 0, 4);
+                row3->AddChild(ew->btnCrop);
+            }
+            if (ew->btnResize) {
+                ew->btnResize->SetInsetsPt(0, 0, 0, 4);
+                row3->AddChild(ew->btnResize);
+            }
+            vbox->AddChild(row3);
         }
+
+        ew->controlLayout = new Padding(vbox, DpiScaledInsets(hwnd, kRowPadding, kButtonPadding));
     }
 
     CalcImageLayout(ew);
@@ -2320,8 +2286,8 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     }
     ImageEditWindow* ew = gImageEditWindows[len(gImageEditWindows) - 1];
     int wBefore = ew->newW;
-    SetFocus(ew->hwndDestEdit);
-    SendMessageW(ew->hwndDestEdit, WM_KEYDOWN, VK_RIGHT, 0);
+    SetFocus(ew->destEdit->hwnd);
+    SendMessageW(ew->destEdit->hwnd, WM_KEYDOWN, VK_RIGHT, 0);
     int wAfter = ew->newW;
     if (wAfter != wBefore + 1) {
         out.Append(fmt("FAIL before=%d after=%d\n", wBefore, wAfter));
