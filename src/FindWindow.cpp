@@ -86,7 +86,7 @@ struct FindWindowWnd : Wnd {
     bool Create(MainWindow* win);
     void Layout();
     void SavePos();
-    void RefreshResults();
+    void RefreshResults(bool allowNavigation = true);
     void UpdateTheme();
 
     void OnTextChanged();
@@ -309,7 +309,7 @@ void FindWindowWnd::Layout() {
     MoveWindow(results->hwnd, pad, listTop, contentDx, listDy, TRUE);
 }
 
-void FindWindowWnd::RefreshResults() {
+void FindWindowWnd::RefreshResults(bool allowNavigation) {
     if (!results) {
         return;
     }
@@ -337,7 +337,12 @@ void FindWindowWnd::RefreshResults() {
         // like find-as-you-type would have.
         sel = FirstMatchFromCurrentPage();
         results->SetCurrentSelection(sel);
-        OnResultSelected();
+        // streamed partial updates must not navigate: OnResultSelected joins
+        // the in-flight count worker (GoToFindMatch), which would cancel the
+        // very scan that's producing these results
+        if (allowNavigation) {
+            OnResultSelected();
+        }
     }
 }
 
@@ -457,20 +462,32 @@ int FindWindowWnd::CurrentMatchIndex() {
     return -1;
 }
 
-// first match at/after the current page (matches are in page order); wraps to
-// the first match if none follow. Mirrors find-as-you-type's FindFirst(curPage).
+// first match at/after the current page. The matches are in scan order (the
+// scan starts at the page that was current at the time and wraps around), so
+// pick the match with the smallest forward page distance from the current page.
 int FindWindowWnd::FirstMatchFromCurrentPage() {
     int n = len(win->findMatches);
     if (n == 0) {
         return -1;
     }
     int curPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
+    int nPages = win->ctrl ? win->ctrl->PageCount() : 1;
+    int best = 0;
+    int bestDist = INT_MAX;
     for (int i = 0; i < n; i++) {
-        if (win->findMatches[i].startPage >= curPage) {
-            return i;
+        int dist = win->findMatches[i].startPage - curPage;
+        if (dist < 0) {
+            dist += nPages;
+        }
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = i;
+            if (dist == 0) {
+                break; // first match on the current page
+            }
         }
     }
-    return 0;
+    return best;
 }
 
 // move the results-list selection (keyboard arrows or the Next/Prev buttons)
@@ -813,9 +830,9 @@ void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked) {
     }
 }
 
-void FindWindowRefreshResults(MainWindow* win) {
+void FindWindowRefreshResults(MainWindow* win, bool allowNavigation) {
     if (IsFindWindowVisible(win)) {
-        win->findWindow->RefreshResults();
+        win->findWindow->RefreshResults(allowNavigation);
     }
 }
 

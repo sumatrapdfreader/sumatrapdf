@@ -14,8 +14,10 @@ bool IsFindWindowVisible(MainWindow* win);
 void FindWindowSetStatus(MainWindow* win, Str s);
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked);
-// repopulate the results list from win->findMatches (no-op if not visible)
-void FindWindowRefreshResults(MainWindow* win);
+// repopulate the results list from win->findMatches (no-op if not visible).
+// allowNavigation=false for streamed partial updates: don't navigate the
+// document (navigation would cancel the in-flight count scan)
+void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);
 // re-apply theme colors/icons to the floating window after a theme change
 void UpdateFindWindowTheme(MainWindow* win);
 

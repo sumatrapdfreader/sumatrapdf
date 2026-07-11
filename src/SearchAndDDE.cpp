@@ -636,21 +636,16 @@ static u64 MatchKey(int page, int offset) {
     return ((u64)(u32)page << 32) | (u32)offset;
 }
 
-// 1-based index of `key` within the sorted positions cache, or 0 if not found
+// 1-based index of `key` within the positions cache, or 0 if not found.
+// positions are in scan order (starting at the page current when the scan
+// started, wrapping around), so this is a linear lookup (n <= kMaxFindCount)
 static int MatchIndexInCache(MainWindow* win, u64 key) {
     Vec<u64>& pos = win->findCountPositions;
     int n = len(pos);
-    int lo = 0, hi = n;
-    while (lo < hi) {
-        int mid = (lo + hi) / 2;
-        if (pos[mid] < key) {
-            lo = mid + 1;
-        } else {
-            hi = mid;
+    for (int i = 0; i < n; i++) {
+        if (pos[i] == key) {
+            return i + 1;
         }
-    }
-    if (lo < n && pos[lo] == key) {
-        return lo + 1;
     }
     return 0;
 }
@@ -667,13 +662,17 @@ static void ShowMatchCount(MainWindow* win) {
         u64 key = MatchKey(dm->textSearch->startPage, dm->textSearch->startGlyph);
         n = MatchIndexInCache(win, key);
     }
-    TempStr s = fmt("%d / %d", n, total);
+    TempStr s = fmt("%d / %d%s", n, total, Str(win->findCountCapped ? "+" : ""));
     FindBarSetStatus(win, s);
 }
 
 // cap on how many per-match snippets we build for the floating results list
 // (matches beyond this still count toward "n / m", just aren't listed)
 constexpr int kMaxFindResults = 5000;
+
+// stop scanning after this many matches: with a common word the full count
+// isn't useful, only slow. The status then shows "n / 999+".
+constexpr int kMaxFindCount = 999;
 
 void ClearFindMatches(MainWindow* win) {
     int n = len(win->findMatches);
@@ -719,11 +718,12 @@ struct CountThreadData {
     bool matchWholeWord = false;
     bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
     bool wantSnippets = false;  // build per-match snippet strings for the results list
+    int startPage = 1;          // scan from here (the current page), wrapping around
     LONG epoch = 0;
     ThreadHandle thread = nullptr;
 
     CountThreadData(MainWindow* win, EngineBase* engine, Str text, bool matchCase, bool matchWholeWord,
-                    bool wantMatchList, bool wantSnippets, LONG epoch) {
+                    bool wantMatchList, bool wantSnippets, int startPage, LONG epoch) {
         this->win = win;
         this->engine = engine;
         this->text = str::Dup(text);
@@ -731,6 +731,7 @@ struct CountThreadData {
         this->matchWholeWord = matchWholeWord;
         this->wantMatchList = wantMatchList;
         this->wantSnippets = wantSnippets;
+        this->startPage = startPage;
         this->epoch = epoch;
     }
     ~CountThreadData() {
@@ -752,6 +753,7 @@ struct CountEndTaskData {
     MainWindow* win = nullptr;
     CountThreadData* ctd = nullptr;
     Vec<u64>* positions = nullptr;
+    bool capped = false;               // scan stopped at kMaxFindCount matches
     Vec<FindMatch>* matches = nullptr; // nullptr unless snippets were requested
     ~CountEndTaskData() {
         delete ctd;
@@ -783,6 +785,7 @@ static void CountEndTask(CountEndTaskData* d) {
         win->findCountMatchWholeWord = ctd->matchWholeWord;
         win->findCountEngine = ctd->engine;
         win->findCountPositions = *d->positions;
+        win->findCountCapped = d->capped;
         win->findCountValid = true;
         if (d->matches) {
             // install the snippet list (steal ownership of the snippet strings)
@@ -815,22 +818,91 @@ static void CountProgress(CountThreadData* d, ProgressUpdateData* data) {
     }
 }
 
+// streaming partial results to the floating results list while the scan runs:
+// first batch after kFindResultsFirstBatch matches, then a batch only when
+// both kFindResultsBatch new matches accumulated and kFindResultsBatchMs
+// passed since the last one (avoids flooding the UI thread for common words)
+constexpr int kFindResultsFirstBatch = 16;
+constexpr int kFindResultsBatch = 100;
+constexpr DWORD kFindResultsBatchMs = 500;
+
+struct CountPartialTaskData {
+    MainWindow* win = nullptr;
+    LONG epoch = 0;
+    bool firstBatch = false;
+    int nFoundSoFar = 0;               // running match count (keeps growing past kMaxFindResults)
+    Vec<FindMatch>* matches = nullptr; // owns the snippets until transferred
+    ~CountPartialTaskData() {
+        FreeMatchSnippets(matches);
+        delete matches;
+    }
+};
+
+static void CountPartialTask(CountPartialTaskData* d) {
+    AutoDelete delData(d);
+    MainWindow* win = d->win;
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+    if (win->findCountEpoch != d->epoch) {
+        return; // canceled or superseded; drop stale partial results
+    }
+    // running count while the scan is in flight; ShowMatchCount switches this
+    // to "n / m" when the scan finishes
+    FindBarSetStatus(win, fmt("%d...", d->nFoundSoFar));
+    if (len(*d->matches) > 0) {
+        if (d->firstBatch) {
+            ClearFindMatches(win);
+        }
+        for (int i = 0; i < len(*d->matches); i++) {
+            win->findMatches.Append((*d->matches)[i]);
+            (*d->matches)[i].snippet = Str(); // transferred to win->findMatches
+        }
+        win->findCountHasSnippets = true;
+        InvalidateFindMatchPaintCache();
+        FindWindowRefreshResults(win, false /* allowNavigation */);
+        ScheduleRepaint(win, 0);
+    }
+}
+
+// clones matches[from..to) incl. copies of the snippet strings
+static Vec<FindMatch>* CloneMatchesRange(Vec<FindMatch>* matches, int from, int to) {
+    auto res = new Vec<FindMatch>();
+    for (int i = from; i < to; i++) {
+        FindMatch fm = (*matches)[i];
+        fm.snippet = str::Dup(fm.snippet);
+        res->Append(fm);
+    }
+    return res;
+}
+
 static void CountThread(CountThreadData* d) {
     MainWindow* win = d->win;
     EngineBase* engine = d->engine;
 
     auto positions = new Vec<u64>();
     Vec<FindMatch>* matches = d->wantMatchList ? new Vec<FindMatch>() : nullptr;
+    int nSent = 0;        // positions already reported via a partial batch
+    int nSentMatches = 0; // matches already streamed to the results list
+    DWORD lastSendMs = 0;
+    bool capped = false; // scan stopped at kMaxFindCount matches
     {
         TextSearch ts(engine);
         ts.SetMatchCase(d->matchCase);
         ts.SetMatchWholeWord(d->matchWholeWord);
         ts.SetDirection(TextSearch::Direction::Forward);
         ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
-        TextSel* m = ts.FindFirst(1, d->text);
+        // scan from the current page so results near the reading position come
+        // first; wrap around to cover pages 1..startPage-1 at the end
+        bool wrapped = false;
+        TextSel* m = ts.FindFirst(d->startPage, d->text);
         // check the epoch at the top so a cancel (AbortCount, which joins us on
         // the UI thread) bails before the expensive snippet build / next scan
         while (m && win->findCountEpoch == d->epoch) {
+            if (len(*positions) >= kMaxFindCount) {
+                capped = true;
+                break;
+            }
             positions->Append(MatchKey(ts.startPage, ts.startGlyph));
             if (matches && len(*matches) < kMaxFindResults) {
                 FindMatch fm;
@@ -843,7 +915,42 @@ static void CountThread(CountThreadData* d) {
                 }
                 matches->Append(fm);
             }
+            // stream partial results so a slow scan (common word, big doc)
+            // shows results and a running count early; the final full list is
+            // installed by CountEndTask. CountPartialTask re-checks the epoch
+            // on the UI thread, so a stale batch can't clobber a newer search.
+            // batching is driven by the (uncapped) position count so the
+            // running count keeps updating after kMaxFindResults is reached.
+            if (d->wantSnippets) {
+                int n = len(*positions);
+                bool send;
+                if (nSent == 0) {
+                    send = n >= kFindResultsFirstBatch;
+                } else {
+                    send = (n - nSent >= kFindResultsBatch) && (GetTickCount() - lastSendMs >= kFindResultsBatchMs);
+                }
+                if (send) {
+                    auto pd = new CountPartialTaskData;
+                    pd->win = win;
+                    pd->epoch = d->epoch;
+                    pd->firstBatch = (nSentMatches == 0);
+                    pd->nFoundSoFar = n;
+                    int nMatches = matches ? len(*matches) : 0;
+                    pd->matches = CloneMatchesRange(matches, nSentMatches, nMatches);
+                    nSent = n;
+                    nSentMatches = nMatches;
+                    lastSendMs = GetTickCount();
+                    uitask::Post(MkFunc0<CountPartialTaskData>(CountPartialTask, pd), "TaskFindCountPartial");
+                }
+            }
             m = ts.FindNext();
+            if (!m && !wrapped && d->startPage > 1) {
+                wrapped = true;
+                m = ts.FindFirst(1, d->text);
+            }
+            if (wrapped && m && ts.startPage >= d->startPage) {
+                m = nullptr; // came full circle
+            }
         }
     }
     SafeEngineRelease(&engine);
@@ -857,6 +964,7 @@ static void CountThread(CountThreadData* d) {
     data->win = win;
     data->ctd = d;
     data->positions = positions;
+    data->capped = capped;
     data->matches = matches;
     auto fn = MkFunc0<CountEndTaskData>(CountEndTask, data);
     uitask::Post(fn, "TaskFindCount");
@@ -911,7 +1019,9 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = wantSnippets || gShowAllMatches;
     LONG epoch = InterlockedIncrement(&win->findCountEpoch);
-    auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, epoch);
+    int startPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
+    auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, startPage,
+                                 epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
     win->findCountThread = StartThread(fn, "FindCountThread");
