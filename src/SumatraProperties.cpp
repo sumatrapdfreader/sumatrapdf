@@ -32,55 +32,68 @@
 
 void ShowProperties(HWND parent, DocController* ctrl);
 
-constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
-
-constexpr int kButtonAreaDy = 40;
 constexpr int kButtonPadding = 8;
 
-struct PropertiesLayout {
-    HWND hwnd = nullptr;
+struct PropertiesWnd : Wnd {
+    ~PropertiesWnd() override;
+
     HWND hwndParent = nullptr;
-    HWND hwndEdit = nullptr;
+    Edit* editProps = nullptr;
     Button* btnCopyToClipboard = nullptr;
+    HFONT propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
 
-    PropertiesLayout() = default;
-    ~PropertiesLayout() { delete btnCopyToClipboard; }
+    bool Create(HWND parent);
+    void LayoutToClient();
+    void UpdateTheme();
+    void SetPropsText(Str text);
+    void SizeToContent();
+    void CopyToClipboard();
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    bool PreTranslateMessage(MSG& msg) override;
+    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void ScheduleDelete();
 };
 
-static Vec<PropertiesLayout*> gPropertiesWindows;
+static Vec<PropertiesWnd*> gPropertiesWindows;
+
+PropertiesWnd::~PropertiesWnd() {
+    if (propsFont) {
+        DeleteObject(propsFont);
+        propsFont = nullptr;
+    }
+}
+
+static void DeletePropertiesWndInstance(PropertiesWnd* w) {
+    delete w;
+}
+
+void PropertiesWnd::ScheduleDelete() {
+    auto fn = MkFunc0<PropertiesWnd>(DeletePropertiesWndInstance, this);
+    uitask::Post(fn, "SafeDeletePropertiesWnd");
+}
 
 static int ButtonPadding(HWND hwnd) {
     return DpiScale(hwnd, kButtonPadding);
 }
 
-static int ButtonAreaDy(PropertiesLayout* pl) {
-    int padding = ButtonPadding(pl->hwnd);
-    int buttonAreaDy = DpiScale(pl->hwnd, kButtonAreaDy);
-    if (pl->btnCopyToClipboard) {
-        Size buttonSize = pl->btnCopyToClipboard->GetIdealSize();
-        buttonAreaDy = std::max(buttonAreaDy, buttonSize.dy + 2 * padding);
-    }
-    return buttonAreaDy;
-}
-
-PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
-    for (PropertiesLayout* pl : gPropertiesWindows) {
-        if (pl->hwnd == hwnd) {
-            return pl;
+PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
+    for (PropertiesWnd* w : gPropertiesWindows) {
+        if (w->hwnd == hwnd) {
+            return w;
         }
-        if (pl->hwndParent == hwnd) {
-            return pl;
+        if (w->hwndParent == hwnd) {
+            return w;
         }
     }
     return nullptr;
 }
 
 void DeletePropertiesWindow(HWND hwndParent) {
-    PropertiesLayout* pl = FindPropertyWindowByHwnd(hwndParent);
-    if (pl) {
-        DestroyWindow(pl->hwnd);
+    PropertiesWnd* w = FindPropertyWindowByHwnd(hwndParent);
+    if (w) {
+        w->Close();
     }
 }
 
@@ -625,8 +638,14 @@ static void AlignPropertiesText(str::Builder& text) {
     text.Reset(ToStr(aligned));
 }
 
-static void SetEditText(HWND hwndEdit, Str text) {
-    // edit control needs \r\n line endings
+void PropertiesWnd::CopyToClipboard() {
+    CopyTextToClipboard(ToStr(propsText));
+}
+
+void PropertiesWnd::SetPropsText(Str text) {
+    if (!editProps) {
+        return;
+    }
     str::Builder crlfText;
     for (int i = 0; i < text.len; i++) {
         char c = text.s[i];
@@ -635,27 +654,22 @@ static void SetEditText(HWND hwndEdit, Str text) {
         }
         crlfText.AppendChar(c);
     }
-    HwndSetText(hwndEdit, ToStr(crlfText));
-    SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
+    editProps->SetText(ToStr(crlfText));
+    SendMessageW(editProps->hwnd, EM_SETSEL, 0, 0);
 }
 
-static void CopyPropertiesToClipboard(PropertiesLayout* pl) {
-    if (!pl) {
+void PropertiesWnd::SizeToContent() {
+    if (!editProps) {
         return;
     }
-    CopyTextToClipboard(ToStr(pl->propsText));
-}
-
-static void SizeToContent(PropertiesLayout* pl) {
-    HWND hwnd = pl->hwnd;
-    HWND hwndEdit = pl->hwndEdit;
+    HWND hwndEdit = editProps->hwnd;
 
     HFONT font = (HFONT)SendMessageW(hwndEdit, WM_GETFONT, 0, 0);
     HDC hdcEdit = GetDC(hwndEdit);
     HGDIOBJ origFont = SelectObject(hdcEdit, font);
     int maxLineDx = 0;
     int nLines = 0;
-    Str text = ToStr(pl->propsText);
+    Str text = ToStr(propsText);
     for (int off = 0; off < text.len;) {
         Str rest = Str(text.s + off, text.len - off);
         int nl = str::IndexOfChar(rest, '\n');
@@ -682,8 +696,8 @@ static void SizeToContent(PropertiesLayout* pl) {
     int editPadding = GetSystemMetrics(SM_CXVSCROLL) + 2 * GetSystemMetrics(SM_CXEDGE) + 16;
     int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
     int wantedClientDx = maxLineDx + editPadding;
-    if (pl->btnCopyToClipboard) {
-        Size buttonSize = pl->btnCopyToClipboard->GetIdealSize();
+    if (btnCopyToClipboard) {
+        Size buttonSize = btnCopyToClipboard->GetIdealSize();
         wantedClientDx = std::max(wantedClientDx, buttonSize.dx + 2 * ButtonPadding(hwnd));
     }
     int wantedDx = wantedClientDx + frameDx;
@@ -691,7 +705,11 @@ static void SizeToContent(PropertiesLayout* pl) {
     // calculate height to fit all lines
     int editBorderDy = 2 * GetSystemMetrics(SM_CYEDGE);
     int frameDy = GetSystemMetrics(SM_CYFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
-    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + ButtonAreaDy(pl) + frameDy;
+    int btnAreaDy = DpiScale(hwnd, 40);
+    if (btnCopyToClipboard) {
+        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + 2 * ButtonPadding(hwnd));
+    }
+    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + btnAreaDy + frameDy;
 
     // cap at 80% of screen
     Rect work = GetWorkAreaRect(WindowRect(hwnd), hwnd);
@@ -702,98 +720,140 @@ static void SizeToContent(PropertiesLayout* pl) {
 
     Rect wRc = WindowRect(hwnd);
     MoveWindow(hwnd, wRc.x, wRc.y, wantedDx, wantedDy, TRUE);
+    LayoutToClient();
 }
 
-static void LayoutButtons(PropertiesLayout* pl) {
-    Rect cRc = ClientRect(pl->hwnd);
-    int padding = ButtonPadding(pl->hwnd);
-    int btnY = cRc.dy - ButtonAreaDy(pl) + padding;
-
-    if (pl->btnCopyToClipboard) {
-        auto sz = pl->btnCopyToClipboard->GetIdealSize();
-        int x = cRc.dx - padding - sz.dx;
-        Rect rc{x, btnY, sz.dx, sz.dy};
-        pl->btnCopyToClipboard->SetBounds(rc);
+void PropertiesWnd::LayoutToClient() {
+    if (!layout || !hwnd) {
+        return;
     }
+    Rect rc = ClientRect(hwnd);
+    Constraints bc = Tight({rc.dx, rc.dy});
+    layout->Layout(bc);
+    layout->SetBounds({0, 0, rc.dx, rc.dy});
 }
 
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+void PropertiesWnd::UpdateTheme() {
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    if (editProps) {
+        editProps->SetColors(colTxt, colBg);
+    }
+    if (btnCopyToClipboard) {
+        btnCopyToClipboard->SetColors(colTxt, colBg);
+    }
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
 
-static WNDPROC DefWndProcPropertiesEdit = nullptr;
-
-static LRESULT CALLBACK WndProcPropertiesEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_CHAR == msg && VK_ESCAPE == wp) {
-        DestroyWindow(GetParent(hwnd));
+LRESULT PropertiesWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_SIZE) {
+        LayoutToClient();
         return 0;
     }
-    return CallWindowProc(DefWndProcPropertiesEdit, hwnd, msg, wp, lp);
+    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
-static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
-    auto cmd = LOWORD(wp);
-    PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
-    switch (cmd) {
-        case CmdCopySelection:
-            CopyPropertiesToClipboard(pl);
-            break;
+bool PropertiesWnd::PreTranslateMessage(MSG& msg) {
+    if (!hwnd) {
+        return false;
     }
+    if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
+        return false;
+    }
+    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    return false;
 }
 
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PropertiesLayout* pl;
+bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
+    auto cmd = LOWORD(wparam);
+    if (cmd == CmdCopySelection) {
+        CopyToClipboard();
+        return true;
+    }
+    return Wnd::OnCommand(wparam, lparam);
+}
 
-    LRESULT res = 0;
-    res = TryReflectMessages(hwnd, msg, wp, lp);
-    if (res != 0) {
-        return res;
+static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
+    PropertiesWnd* w = FindPropertyWindowByHwnd(ev->e->hwnd);
+    if (!w) {
+        return;
+    }
+    Rect rc = WindowRect(w->hwnd);
+    Point pos = {rc.x, rc.y};
+    if (pos != w->initialPos) {
+        gGlobalPrefs->propWinPos = pos;
+        SaveSettings();
+    }
+    gPropertiesWindows.Remove(w);
+    w->ScheduleDelete();
+}
+
+bool PropertiesWnd::Create(HWND parent) {
+    hwndParent = parent;
+    bool isRtl = IsUIRtl();
+
+    {
+        CreateCustomArgs args;
+        args.title = _TRA("Document Properties");
+        args.visible = false;
+        args.style = WS_OVERLAPPEDWINDOW;
+        args.font = GetAppFont(parent);
+        args.isRtl = isRtl;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
+        CreateCustom(args);
+    }
+    if (!hwnd) {
+        return false;
     }
 
-    switch (msg) {
-        case WM_CREATE:
-            break;
+    HDC hdc = GetDC(hwnd);
+    propsFont = CreateSimpleFont(hdc, "Consolas", 14);
+    ReleaseDC(hwnd, hdc);
 
-        case WM_SIZE:
-            pl = FindPropertyWindowByHwnd(hwnd);
-            if (pl && pl->hwndEdit) {
-                int dx = LOWORD(lp);
-                int dy = HIWORD(lp);
-                int editDy = dy - ButtonAreaDy(pl);
-                MoveWindow(pl->hwndEdit, 0, 0, dx, editDy, TRUE);
-                LayoutButtons(pl);
-                RECT rc = {0, editDy, dx, dy};
-                InvalidateRect(hwnd, &rc, TRUE);
-            }
-            return 0;
+    auto* vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
 
-        case WM_CHAR:
-            if (VK_ESCAPE == wp) {
-                DestroyWindow(hwnd);
-            }
-            break;
-
-        case WM_DESTROY:
-            pl = FindPropertyWindowByHwnd(hwnd);
-            ReportIf(!pl);
-            if (pl) {
-                Rect rc = WindowRect(hwnd);
-                Point pos = {rc.x, rc.y};
-                if (pos != pl->initialPos) {
-                    gGlobalPrefs->propWinPos = pos;
-                    SaveSettings();
-                }
-            }
-            gPropertiesWindows.Remove(pl);
-            delete pl;
-            break;
-
-        case WM_COMMAND:
-            PropertiesOnCommand(hwnd, wp);
-            break;
-
-        default:
-            return DefWindowProc(hwnd, msg, wp, lp);
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = propsFont;
+        args.isMultiLine = true;
+        args.withBorder = true;
+        args.isRtl = isRtl;
+        editProps = new Edit();
+        editProps->Create(args);
+        SendMessageW(editProps->hwnd, EM_SETREADONLY, TRUE, 0);
+        DWORD tabStop = 16;
+        SendMessageW(editProps->hwnd, EM_SETTABSTOPS, 1, (LPARAM)&tabStop);
+        vbox->AddChild(editProps, 1);
     }
-    return 0;
+
+    {
+        auto* btnRow = new HBox();
+        btnRow->alignMain = MainAxisAlign::MainEnd;
+        btnRow->alignCross = CrossAxisAlign::CrossCenter;
+        btnCopyToClipboard = CreateButton(hwnd, _TRA("Copy To Clipboard"),
+                                          MkMethod0<PropertiesWnd, &PropertiesWnd::CopyToClipboard>(this), isRtl);
+        btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(hwnd, kButtonPadding, 0, 0, 0)));
+        vbox->AddChild(btnRow);
+    }
+
+    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding));
+
+    SetPropsText(ToStr(propsText));
+    SizeToContent();
+    UpdateTheme();
+    SetIsVisible(true);
+    return true;
 }
 
 struct GetFontsResult {
@@ -802,21 +862,20 @@ struct GetFontsResult {
 };
 
 static void OnGetFontsFinished(GetFontsResult* result) {
-    PropertiesLayout* pl = FindPropertyWindowByHwnd(result->hwnd);
-    if (pl) {
-        // remove "Getting fonts information..." line
+    PropertiesWnd* w = FindPropertyWindowByHwnd(result->hwnd);
+    if (w) {
         Str marker = _TRA("Getting fonts information...");
-        Str props = ToStr(pl->propsText);
+        Str props = ToStr(w->propsText);
         int pos = str::IndexOf(props, marker);
         if (pos >= 0) {
             if (pos > 0 && props.s[pos - 1] == '\n') {
                 pos--;
             }
-            pl->propsText.RemoveAt(pos, len(pl->propsText) - pos);
+            w->propsText.RemoveAt(pos, len(w->propsText) - pos);
         }
-        pl->propsText.Append(ToStr(result->fontsText));
-        SetEditText(pl->hwndEdit, ToStr(pl->propsText));
-        SizeToContent(pl);
+        w->propsText.Append(ToStr(result->fontsText));
+        w->SetPropsText(ToStr(w->propsText));
+        w->SizeToContent();
     }
     delete result;
 }
@@ -843,9 +902,9 @@ static void GetFontsThread(GetFontsData* data) {
 }
 
 void ShowProperties(HWND parent, DocController* ctrl) {
-    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(parent);
-    if (layoutData) {
-        SetActiveWindow(layoutData->hwnd);
+    PropertiesWnd* w = FindPropertyWindowByHwnd(parent);
+    if (w) {
+        SetActiveWindow(w->hwnd);
         return;
     }
 
@@ -853,97 +912,35 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         return;
     }
 
-    layoutData = new PropertiesLayout();
-    gPropertiesWindows.Append(layoutData);
-    GetPropsText(ctrl, layoutData->propsText);
-    AlignPropertiesText(layoutData->propsText);
-    layoutData->propsText.Append("\n");
-    layoutData->propsText.Append(_TRA("Getting fonts information..."));
+    auto* wnd = new PropertiesWnd();
+    gPropertiesWindows.Append(wnd);
+    GetPropsText(ctrl, wnd->propsText);
+    AlignPropertiesText(wnd->propsText);
+    wnd->propsText.Append("\n");
+    wnd->propsText.Append(_TRA("Getting fonts information..."));
 
-    HMODULE h = GetModuleHandleW(nullptr);
-    WNDCLASSEX wcex = {};
-    FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
-    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    wcex.hIcon = LoadIconW(h, iconName);
-    ReportIf(!wcex.hIcon);
-    RegisterClassEx(&wcex);
-
-    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
-    WCHAR* title = CWStrTemp(_TRA("Document Properties"));
-    HWND hwnd = CreateWindowExW(0, kPropertiesWinClassName, title, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, 500, 400,
-                                nullptr, nullptr, h, nullptr);
-    if (!hwnd) {
-        gPropertiesWindows.Remove(layoutData);
-        delete layoutData;
+    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnPropertiesDestroy);
+    if (!wnd->Create(parent)) {
+        gPropertiesWindows.Remove(wnd);
+        delete wnd;
         return;
     }
 
-    layoutData->hwnd = hwnd;
-    layoutData->hwndParent = parent;
-
-    bool isRtl = IsUIRtl();
-    HwndSetRtl(hwnd, isRtl);
-
-    // create the edit control
-    Rect cRc = ClientRect(hwnd);
-    int editDy = cRc.dy - DpiScale(hwnd, kButtonAreaDy);
-    DWORD editStyle =
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
-    HWND hwndEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, editDy, hwnd, nullptr, h, nullptr);
-    layoutData->hwndEdit = hwndEdit;
-
-    if (!DefWndProcPropertiesEdit) {
-        DefWndProcPropertiesEdit = (WNDPROC)GetWindowLongPtr(hwndEdit, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, (LONG_PTR)WndProcPropertiesEdit);
-
-    HDC hdc = GetDC(hwnd);
-    HFONT font = CreateSimpleFont(hdc, "Consolas", 14);
-    ReleaseDC(hwnd, hdc);
-    if (font) {
-        SendMessageW(hwndEdit, WM_SETFONT, (WPARAM)font, TRUE);
-    }
-
-    // create buttons
-    {
-        Button::CreateArgs args;
-        args.parent = hwnd;
-        args.text = _TRA("Copy To Clipboard");
-        args.isRtl = isRtl;
-
-        auto b = new Button();
-        b->Create(args);
-        layoutData->btnCopyToClipboard = b;
-        b->onClick = MkFunc0(CopyPropertiesToClipboard, layoutData);
-    }
-
-    SetEditText(hwndEdit, ToStr(layoutData->propsText));
-
-    SizeToContent(layoutData);
-    LayoutButtons(layoutData);
-
     Point savedPos = gGlobalPrefs->propWinPos;
     if (!savedPos.IsEmpty()) {
-        SetWindowPos(hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+        SetWindowPos(wnd->hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+        wnd->LayoutToClient();
     } else {
-        CenterDialog(hwnd, parent);
+        CenterDialog(wnd->hwnd, parent);
     }
-    HwndEnsureVisible(hwnd);
+    HwndEnsureVisible(wnd->hwnd);
     {
-        Rect rc = WindowRect(hwnd);
-        layoutData->initialPos = {rc.x, rc.y};
+        Rect rc = WindowRect(wnd->hwnd);
+        wnd->initialPos = {rc.x, rc.y};
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    ShowWindow(hwnd, SW_SHOW);
 
-    // start background font loading
     auto data = new GetFontsData;
-    data->hwnd = hwnd;
+    data->hwnd = wnd->hwnd;
     data->ctrl = ctrl;
     auto fn = MkFunc0<GetFontsData>(GetFontsThread, data);
     RunAsync(fn, "GetFontsThread");
