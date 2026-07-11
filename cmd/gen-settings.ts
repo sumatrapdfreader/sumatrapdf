@@ -3,7 +3,7 @@
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve, basename } from "node:path";
-import { extractSumatraVersion, detectVisualStudio, runLogged, isGitClean } from "./util";
+import { extractSumatraVersion, clangFormatFiles, runLogged, isGitClean } from "./util";
 
 async function runCapture(cmd: string, args: string[], cwd?: string): Promise<string> {
   const proc = Bun.spawn([cmd, ...args], { stdout: "pipe", stderr: "pipe", cwd });
@@ -1772,7 +1772,7 @@ async function updateSumatraWebsite(): Promise<string> {
 // Main
 // ---------------------------------------------------------------------------
 
-export async function main() {
+export async function main(opts?: { formatOutput?: boolean }) {
   const timeStart = performance.now();
   const updateWebsite = process.argv.includes("-website");
 
@@ -1790,9 +1790,10 @@ export async function main() {
   s = s.replaceAll("\t", "    ");
   const settingsPath = join("src", "Settings.h");
   writeFileMust(settingsPath, s);
-  const { clangFormatPath } = detectVisualStudio();
-  if (!clangFormatPath) throw new Error("couldn't find clang-format.exe");
-  await runLogged(clangFormatPath, ["-i", "-style=file", settingsPath]);
+  if (opts?.formatOutput !== false) {
+    const rootDir = join(import.meta.dir, "..");
+    await clangFormatFiles(rootDir, [settingsPath]);
+  }
   console.log(`Wrote '${settingsPath}'`);
 
   // Generate settings markdown

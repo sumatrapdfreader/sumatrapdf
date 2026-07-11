@@ -5,6 +5,20 @@ import { join } from "node:path";
 import { main as genFlags } from "./gen-flags";
 import { main as genCommands } from "./gen-commands";
 import { main as genSettings } from "./gen-settings";
+import { clangFormatFiles } from "./util";
+
+// C++ outputs touched by gen-code; formatted at the end so a follow-up
+// cmd/format.ts run does not dirty the tree (e.g. indented @gen markers).
+const generatedCppFiles = [
+    "src/Flags.cpp",
+    "src/Commands.h",
+    "src/Commands.cpp",
+    "src/Accelerators.cpp",
+    "src/EbookDoc.cpp",
+    "src/PdfCreator.cpp",
+    "src/EngineMupdf.cpp",
+    "src/Settings.h",
+];
 
 // prettier-ignore
 // if there are multiple declarations, the first one will be shown in menu
@@ -410,7 +424,9 @@ export async function main() {
     genCommands();
     genVirtKeys(rootDir);
     genDocPropMaps(rootDir);
-    await genSettings();
+    await genSettings({ formatOutput: false });
+
+    await clangFormatFiles(rootDir, generatedCppFiles);
 
     const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
     console.log(`gen-code finished in ${elapsed}s`);

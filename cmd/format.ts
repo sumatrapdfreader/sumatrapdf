@@ -46,8 +46,6 @@ async function main() {
     "src/ifilter/*.h",
     "src/previewer/*.cpp",
     "src/previewer/*.h",
-    "ext/libchm/*.c",
-    "ext/libchm/*.h",
     "ext/mupdf_load_system_font.c",
   ];
 

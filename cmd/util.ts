@@ -156,6 +156,18 @@ export async function runLogged(cmd: string, args: string[], cwd?: string): Prom
   }
 }
 
+// clang-format every generated C++ file so gen-code output matches cmd/format.ts
+export async function clangFormatFiles(rootDir: string, relativePaths: string[]): Promise<void> {
+  const { clangFormatPath } = detectVisualStudio();
+  if (!clangFormatPath) {
+    throw new Error("couldn't find clang-format.exe");
+  }
+  for (const rel of [...new Set(relativePaths)]) {
+    const path = join(rootDir, rel);
+    await runLogged(clangFormatPath, ["-i", "-style=file", path]);
+  }
+}
+
 export async function isGitClean(dir: string): Promise<boolean> {
   const proc = Bun.spawn(["git", "status", "--porcelain"], {
     cwd: dir || ".",
