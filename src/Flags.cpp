@@ -85,8 +85,6 @@ void ShowPrintersDialog() {
     gLogToConsole = false;
 #ifndef SUMATRA_TEST_UTIL
     ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), ToStr(out));
-#else
-    ShowTextInWindowDialog("SumatraPDF - Show Printers", ToStr(out));
 #endif
 }
 #else

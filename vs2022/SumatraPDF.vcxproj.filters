@@ -893,6 +893,9 @@
     <ClCompile Include="..\src\TabGroupsManage.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TextViewWnd.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\TableOfContents.cpp">
       <Filter>src</Filter>
     </ClCompile>
