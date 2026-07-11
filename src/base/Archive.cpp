@@ -739,7 +739,10 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
 
         int op = RAR_SKIP;
         if (eagerLoad && !i->failed) {
-            op = RAR_EXTRACT;
+            // RAR_TEST unpacks through the UCM_PROCESSDATA callback into our
+            // buffer. RAR_EXTRACT would also write files to the current
+            // working directory (ExtrPath is empty when DestPath is null).
+            op = RAR_TEST;
         }
         int rres = RARProcessFile(hArc, op, nullptr, nullptr);
         if (eagerLoad && !i->failed) {
