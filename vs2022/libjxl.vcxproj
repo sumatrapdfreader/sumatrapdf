@@ -370,7 +370,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -402,7 +402,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -434,7 +434,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -466,7 +466,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -497,7 +497,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -528,7 +528,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -559,7 +559,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -590,7 +590,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -622,7 +622,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -654,7 +654,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -686,7 +686,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -718,7 +718,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -749,7 +749,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -782,7 +782,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -815,7 +815,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -848,7 +848,7 @@
       <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4201;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4505;4806;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\a-skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>

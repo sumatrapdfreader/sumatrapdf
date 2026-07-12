@@ -960,8 +960,8 @@
     <ProjectReference Include="highway.vcxproj">
       <Project>{56E0D845-C2BF-57E1-CBD7-E2B73736BE42}</Project>
     </ProjectReference>
-    <ProjectReference Include="skcms.vcxproj">
-      <Project>{46625C10-B276-84C1-7BF8-2721E7CB80F2}</Project>
+    <ProjectReference Include="a-skcms.vcxproj">
+      <Project>{F428E69F-6008-653B-6920-F011D57ECB9C}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,0 +1,5 @@
+project_homepage: https://skia.googlesource.com/skcms
+repo_url: https://skia.googlesource.com/skcms
+revision: b2e692629c1fb19342517d7fb61f1cf83d075492
+commit_sha1: b2e692629c1fb19342517d7fb61f1cf83d075492
+source_url: https://skia.googlesource.com/skcms/+/b2e692629c1fb19342517d7fb61f1cf83d075492

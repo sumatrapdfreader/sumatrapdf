@@ -596,17 +596,17 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4127", "4244", "4245", "4267", "4324", "4456", "4457", "4701", "4702", "4723", "5054", "4146", "4458" }
     highway_files()
 
-  -- skcms: color management used by libjxl (ext/skcms). Baseline only.
-  project "skcms"
+  -- skcms: color management used by libjxl. Baseline only.
+  project "a-skcms"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
     optimized_conf()
     defines { "SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX" }
-    includedirs { "ext/skcms" }
+    includedirs { "ext/a-skcms" }
     disablewarnings { "4100", "4201", "4244", "4245", "4267", "4310", "4456", "4701", "4702" }
-    skcms_files()
+    files { "ext/a-skcms/skcms.cpp", "ext/a-skcms/skcms.h", "ext/a-skcms/version.txt" }
 
   -- libjxl decoder (ext/libjxl, v0.11.2). Decoder subset only; uses skcms for
   -- color management and brotli for compressed metadata.
@@ -619,7 +619,7 @@ workspace "SumatraPDF"
     exceptionhandling "On"
     rtti "On"
     defines { "JPEGXL_ENABLE_SKCMS=1", "JPEGXL_ENABLE_TRANSCODE_JPEG=0", "JPEGXL_BUNDLING_LIBJXL=1", "_CRT_SECURE_NO_WARNINGS" }
-    includedirs { "ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/skcms", "ext/brotli/c/include" }
+    includedirs { "ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/a-skcms", "ext/brotli/c/include" }
     disablewarnings { "4018", "4100", "4127", "4146", "4201", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4505", "4806", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
     buildoptions { "/bigobj" }
     libjxl_files()
@@ -1006,7 +1006,7 @@ workspace "SumatraPDF"
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
-    links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
+    links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -1064,7 +1064,7 @@ workspace "SumatraPDF"
     test_engines_files()
     links_zlib()
     links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
-    links { "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
+    links { "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon",
@@ -1159,7 +1159,7 @@ workspace "SumatraPDF"
     pdf_preview_files()
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
+    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1236,7 +1236,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
+      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms", "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
