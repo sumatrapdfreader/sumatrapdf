@@ -3290,13 +3290,18 @@ void UpdateDocumentColors() {
     gRenderCache->darkModeEpoch++;
 
     // also drop the engines' cached dark-mode analyses / processed images
+    // and regenerate markdown previews (their colors are baked into the html)
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             DisplayModel* dm = tab->AsFixed();
-            if (!dm) {
+            if (dm) {
+                EngineMupdfInvalidateDarkMode(dm->GetEngine());
                 continue;
             }
-            EngineMupdfInvalidateDarkMode(dm->GetEngine());
+            MarkdownModel* mm = tab->AsMarkdown();
+            if (mm) {
+                mm->UpdateTheme();
+            }
         }
     }
 

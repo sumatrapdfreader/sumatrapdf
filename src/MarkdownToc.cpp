@@ -6,6 +6,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 
+#include "Theme.h"
 #include "MarkdownToc.h"
 
 extern "C" {
@@ -342,23 +343,50 @@ void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
     }
 }
 
-static const char* kMarkdownPageCss = R"(
+static const char* kMarkdownPageCssFmt = R"(
+:root { %s }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px;
-  line-height: 1.5; color: #24292f; background: #ffffff; margin: 0; padding: 2rem 3rem; max-width: 980px; }
-a { color: #0969da; text-decoration: none; }
+  line-height: 1.5; color: var(--fg); background: var(--bg); margin: 0; padding: 2rem 3rem; max-width: 980px; }
+a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 h1,h2,h3,h4,h5,h6 { margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 600; line-height: 1.25; }
-h1 { font-size: 2em; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; }
-h2 { font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; }
-code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; }
-pre { background: #f6f8fa; padding: 16px; overflow: auto; border-radius: 6px; }
-code { background: #f6f8fa; padding: .2em .4em; border-radius: 6px; }
+h1 { font-size: 2em; border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%%; }
+pre { background: var(--code-bg); padding: 16px; overflow: auto; border-radius: 6px; }
+code { background: var(--code-bg); padding: .2em .4em; border-radius: 6px; }
 pre code { background: transparent; padding: 0; }
-blockquote { margin: 0; padding: 0 1em; color: #57606a; border-left: .25em solid #d0d7de; }
+blockquote { margin: 0; padding: 0 1em; color: var(--muted); border-left: .25em solid var(--border); }
 table { border-collapse: collapse; }
-table th, table td { border: 1px solid #d0d7de; padding: 6px 13px; }
-img { max-width: 100%; }
+table th, table td { border: 1px solid var(--border); padding: 6px 13px; }
+img { max-width: 100%%; }
 )";
+
+static TempStr ColorToCssTemp(COLORREF c) {
+    return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
+}
+
+// page colors follow the document color mode: ThemePageRenderColors gives
+// black-on-white (or FixedPageUI overrides) when DocumentColorsFollowTheme
+// is off and theme-derived page colors when it's on
+static TempStr MarkdownPageCssTemp() {
+    COLORREF bgCol;
+    COLORREF txtCol = ThemePageRenderColors(bgCol);
+    bool dark = !IsLightColor(bgCol);
+    bool isDefault = (bgCol == RGB(0xff, 0xff, 0xff)) && (txtCol == RGB(0, 0, 0));
+
+    TempStr bg = ColorToCssTemp(bgCol);
+    // the default black-on-white gets the classic GitHub palette
+    TempStr fg = isDefault ? str::DupTemp("#24292f") : ColorToCssTemp(txtCol);
+    Str link = dark ? StrL("#4493f8") : StrL("#0969da");
+    Str muted = dark ? StrL("#9198a1") : StrL("#57606a");
+    TempStr border = isDefault ? str::DupTemp("#d0d7de") : ColorToCssTemp(AccentColor(bgCol, 25));
+    TempStr codeBg = isDefault ? str::DupTemp("#f6f8fa") : ColorToCssTemp(AccentColor(bgCol, 8));
+
+    TempStr cssVars =
+        fmt("--bg:%s; --fg:%s; --link:%s; --muted:%s; --border:%s; --code-bg:%s;", bg, fg, link, muted, border, codeBg);
+    return fmt(kMarkdownPageCssFmt, cssVars);
+}
 
 Str MarkdownToHtmlPage(Str markdown) {
     if (!markdown) {
@@ -391,7 +419,7 @@ Str MarkdownToHtmlPage(Str markdown) {
         StrL("<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
              "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
              "<style>"));
-    html.Append(Str(kMarkdownPageCss));
+    html.Append(Str(MarkdownPageCssTemp()));
     html.Append(StrL("</style></head><body>"));
     html.Append(Str(body));
     html.Append(StrL("</body></html>"));

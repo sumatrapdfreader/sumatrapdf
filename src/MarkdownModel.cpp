@@ -673,6 +673,22 @@ Str MarkdownModel::GetDataForUrl(Str url) {
     return e->data;
 }
 
+// theme colors are baked into the generated HTML: drop the cached pages and
+// re-render the current one with the new colors (a hidden tab has no docView;
+// it regenerates when re-selected)
+void MarkdownModel::UpdateTheme() {
+    {
+        ScopedMutex scope(&docAccess);
+        DeleteVecMembers(urlDataCache);
+        urlDataCache.Reset();
+    }
+    if (docView && currentPageUrl) {
+        SaveHtmlScrollPos();
+        restoreHtmlScrollPos = true;
+        DisplayPage(currentPageUrl);
+    }
+}
+
 void MarkdownModel::DownloadData(Str url, Str data) {
     if (cb) {
         cb->SaveDownload(url, data);

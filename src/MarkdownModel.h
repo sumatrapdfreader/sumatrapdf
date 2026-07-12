@@ -64,6 +64,7 @@ struct MarkdownModel : DocController {
     void OnLButtonDown();
     Str GetDataForUrl(Str url);
     void DownloadData(Str url, Str data);
+    void UpdateTheme();
 
     Str fileName;
     Str baseDir;
