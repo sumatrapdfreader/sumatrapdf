@@ -10,6 +10,13 @@ struct Builder;
 }
 struct ReadAloudHighlightMap;
 
+// per-tab state of one AI chat provider (see AIChatPanel.cpp)
+struct AIChatTabState {
+    Str sessionId;
+    str::Builder chatLog;
+    HANDLE process = nullptr;
+};
+
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on MainWindow, so that a WindowTab could
    be moved between windows once this is supported) */
@@ -77,20 +84,9 @@ struct WindowTab {
     // TODO: arguably a hack
     bool ignoreNextAutoReload = false;
 
-    // Claude Code session for this tab
-    Str claudeSessionId;
-    str::Builder claudeChatLog;
-    HANDLE claudeProcess = nullptr;
-
-    // Grok Build session for this tab
-    Str grokSessionId;
-    str::Builder grokChatLog;
-    HANDLE grokProcess = nullptr;
-
-    // OpenAI Codex session for this tab
-    Str codexSessionId;
-    str::Builder codexChatLog;
-    HANDLE codexProcess = nullptr;
+    // per-provider AI chat state, indexed by AIChatBackend
+    // (0 = Claude, 1 = Grok, 2 = Codex)
+    AIChatTabState aiChat[3];
 
     // which AI chat sidebar is open for this tab (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex)
     int aiChatPanelOpen = -1;

@@ -1099,6 +1099,7 @@
     <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
     <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
     <ClInclude Include="..\src\AIChatCommon.h" />
+    <ClInclude Include="..\src\AIChatPanel.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\AdvancedSettingsDialog.h" />
     <ClInclude Include="..\src\Annotation.h" />
@@ -1111,8 +1112,6 @@
     <ClInclude Include="..\src\ChmDump.h" />
     <ClInclude Include="..\src\ChmFile.h" />
     <ClInclude Include="..\src\ChmModel.h" />
-    <ClInclude Include="..\src\ClaudeCode.h" />
-    <ClInclude Include="..\src\CodexBuild.h" />
     <ClInclude Include="..\src\CommandAvailability.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
@@ -1141,7 +1140,6 @@
     <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\GdiPlusExtFormats.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
-    <ClInclude Include="..\src\GrokBuild.h" />
     <ClInclude Include="..\src\GumboHelpers.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HomePage.h" />
@@ -1268,6 +1266,7 @@
       <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="..\src\AIChatCommon.cpp" />
+    <ClCompile Include="..\src\AIChatPanel.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
     <ClCompile Include="..\src\Annotation.cpp">

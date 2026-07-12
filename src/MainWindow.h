@@ -15,6 +15,10 @@ struct Tooltip;
 struct TreeView;
 struct SelectionToolbar;
 struct ILayout;
+struct Spacer;
+struct DropDown;
+struct Checkbox;
+struct Button;
 struct TabsCtrl;
 struct TocTree;
 struct FindBarWnd;
@@ -181,47 +185,29 @@ struct MainWindow {
     ILayout* favLayout = nullptr;
     Vec<FileState*> expandedFavorites;
 
-    // AI chat sidebars (right side; Claude Code and Grok Build are mutually exclusive)
-    HWND hwndClaudeBox = nullptr;
-    UINT_PTR claudeBoxSubclassId = 0;
-    LabelWithCloseWnd* claudeLabelWithClose = nullptr;
-    HWND hwndClaudeSessionCombo = nullptr;
-    WebviewWnd* claudeWebView = nullptr;
-    bool claudeWebViewReady = false;
-    HWND hwndClaudeModelCombo = nullptr;
-    HWND hwndClaudeEffortCombo = nullptr;
-    HWND hwndClaudeSkipPermsCheck = nullptr;
-    Edit* claudeInput = nullptr;
-    HWND hwndClaudeStopBtn = nullptr;
-    Splitter* claudeSplitter = nullptr;
+    // AI chat sidebar (right side); a single set of controls shared by all
+    // providers (Claude Code, Grok Build, OpenAI Codex), see AIChatPanel.cpp
+    HWND hwndAiChatBox = nullptr;
+    UINT_PTR aiChatBoxSubclassId = 0;
+    LabelWithCloseWnd* aiChatLabel = nullptr;
+    DropDown* aiChatSessionCombo = nullptr;
+    DropDown* aiChatModelCombo = nullptr;
+    DropDown* aiChatOptionCombo = nullptr; // effort / sandbox
+    Checkbox* aiChatCheckbox = nullptr;    // skip permissions / always approve / skip sandbox
+    Button* aiChatStopBtn = nullptr;
+    Edit* aiChatInput = nullptr;
+    WebviewWnd* aiChatWebView = nullptr;
+    bool aiChatWebViewReady = false;
+    Splitter* aiChatSplitter = nullptr;
+    // VBox(label, session combo, webview slot, input row, options row);
+    // owns those controls and lays them out in hwndAiChatBox
+    ILayout* aiChatLayout = nullptr;
+    // the webview is created lazily; this spacer reserves its area in the layout
+    Spacer* aiChatWebViewSlot = nullptr;
+    // provider (AIChatBackend value) the panel content is configured for; -1 = none
+    int aiChatProvider = -1;
 
-    HWND hwndGrokBox = nullptr;
-    UINT_PTR grokBoxSubclassId = 0;
-    LabelWithCloseWnd* grokLabelWithClose = nullptr;
-    HWND hwndGrokSessionCombo = nullptr;
-    WebviewWnd* grokWebView = nullptr;
-    bool grokWebViewReady = false;
-    HWND hwndGrokModelCombo = nullptr;
-    HWND hwndGrokEffortCombo = nullptr;
-    HWND hwndGrokAlwaysApproveCheck = nullptr;
-    Edit* grokInput = nullptr;
-    HWND hwndGrokStopBtn = nullptr;
-    Splitter* grokSplitter = nullptr;
-
-    HWND hwndCodexBox = nullptr;
-    UINT_PTR codexBoxSubclassId = 0;
-    LabelWithCloseWnd* codexLabelWithClose = nullptr;
-    HWND hwndCodexSessionCombo = nullptr;
-    WebviewWnd* codexWebView = nullptr;
-    bool codexWebViewReady = false;
-    HWND hwndCodexModelCombo = nullptr;
-    HWND hwndCodexSandboxCombo = nullptr;
-    HWND hwndCodexSkipSandboxCheck = nullptr;
-    Edit* codexInput = nullptr;
-    HWND hwndCodexStopBtn = nullptr;
-    Splitter* codexSplitter = nullptr;
-
-    // width of the active AI chat sidebar (shared by Claude Code, Grok Build, and OpenAI Codex)
+    // width of the AI chat sidebar
     int aiChatDx = 0;
 
     // vertical splitter for resizing left side panel
@@ -340,9 +326,7 @@ struct MainWindow {
             bool tocVisible = false;
             bool showFavorites = false;
             bool showMenuBarRebar = false;
-            bool claudeVisible = false;
-            bool grokVisible = false;
-            bool codexVisible = false;
+            bool aiChatVisible = false;
             int aiChatDx = 0;
         };
         Layout layout; // last applied layout state
@@ -350,9 +334,7 @@ struct MainWindow {
         // (HwndSetVisibility) by RelayoutFrame
         bool tocVisible = false;
         bool favVisible = false;
-        bool claudeVisible = false;
-        bool grokVisible = false;
-        bool codexVisible = false;
+        bool aiChatVisible = false;
         bool updatePending = false; // a WM_UPDATE_UI is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update

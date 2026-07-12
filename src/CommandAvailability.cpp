@@ -25,9 +25,8 @@
 #include "ExternalViewers.h"
 #include "FileHistory.h"
 #include "Installer.h"
-#include "ClaudeCode.h"
-#include "GrokBuild.h"
-#include "CodexBuild.h"
+#include "AIChatCommon.h"
+#include "AIChatPanel.h"
 #include "TextToSpeech.h"
 #include "CommandAvailability.h"
 
@@ -422,27 +421,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Show;
     }
 
-    if (cmdId == CmdAIChatWithClaudeCode) {
-        if (!IsClaudeCodeAvailable()) {
+    if (cmdId == CmdAIChatWithClaudeCode || cmdId == CmdAIChatWithGrokBuild || cmdId == CmdAIChatWithOpenAICodex) {
+        if (!IsAIChatAvailable()) {
             return CommandVisibility::Hide;
         }
-        if (!IsClaudeCodeSupportedForTab(ctx.tab)) {
-            return MapForSurface(CommandVisibility::Disable, surface);
-        }
-    }
-    if (cmdId == CmdAIChatWithGrokBuild) {
-        if (!IsGrokBuildAvailable()) {
-            return CommandVisibility::Hide;
-        }
-        if (!IsGrokBuildSupportedForTab(ctx.tab)) {
-            return MapForSurface(CommandVisibility::Disable, surface);
-        }
-    }
-    if (cmdId == CmdAIChatWithOpenAICodex) {
-        if (!IsCodexBuildAvailable()) {
-            return CommandVisibility::Hide;
-        }
-        if (!IsCodexBuildSupportedForTab(ctx.tab)) {
+        if (!IsAIChatSupportedForTab(ctx.tab)) {
             return MapForSurface(CommandVisibility::Disable, surface);
         }
     }

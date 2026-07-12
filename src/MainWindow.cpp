@@ -28,9 +28,8 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"
-#include "ClaudeCode.h"
-#include "GrokBuild.h"
-#include "CodexBuild.h"
+#include "AIChatCommon.h"
+#include "AIChatPanel.h"
 #include "MainWindow.h"
 #include "SelectionToolbar.h"
 #include "FindBar.h"
@@ -156,9 +155,7 @@ MainWindow::~MainWindow() {
     delete buffer;
     delete tabSelectionHistory;
     DeleteVecMembers(staticLinks);
-    ShutdownClaudeForMainWindow(this);
-    ShutdownGrokForMainWindow(this);
-    ShutdownCodexForMainWindow(this);
+    ShutdownAIChatForMainWindow(this);
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
     {
@@ -189,9 +186,7 @@ MainWindow::~MainWindow() {
     // favLayout (VBox) owns favLabelWithClose and favTreeView
     delete favLayout;
 
-    DestroyClaudePanel(this);
-    DestroyGrokPanel(this);
-    DestroyCodexPanel(this);
+    DestroyAIChatPanel(this);
 
     delete sidebarSplitter;
     delete favSplitter;

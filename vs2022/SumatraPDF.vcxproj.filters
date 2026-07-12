@@ -93,6 +93,9 @@
     <ClInclude Include="..\src\AIChatCommon.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AIChatPanel.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -127,12 +130,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ChmModel.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ClaudeCode.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\CodexBuild.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\CommandAvailability.h">
@@ -217,9 +214,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\GrokBuild.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\GumboHelpers.h">
@@ -522,6 +516,9 @@
       <Filter>ext\synctex</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AIChatCommon.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AIChatPanel.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Accelerators.cpp">

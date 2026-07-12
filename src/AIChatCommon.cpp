@@ -302,6 +302,19 @@ int AIChatFindModelInList(const StrVec& models, Str model) {
     return -1;
 }
 
+// the saved model if it's in the list, else defaultModel
+Str AIChatResolveModel(const StrVec& models, Str model, Str defaultModel) {
+    int idx = AIChatFindModelInList(models, model);
+    if (idx >= 0) {
+        return models[idx];
+    }
+    idx = AIChatFindModelInList(models, defaultModel);
+    if (idx >= 0) {
+        return models[idx];
+    }
+    return defaultModel;
+}
+
 TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
     if (len(model) == 0) {
         return str::DupTemp(defaultDisplay ? defaultDisplay : StrL(""));
@@ -573,9 +586,7 @@ void AIChatSyncPanelsToCurrentTab(MainWindow* win) {
         return;
     }
     AIChatBackend open = AIChatGetTabPanelOpen(win->CurrentTab());
-    win->uiState.claudeVisible = open == AIChatBackend::Claude;
-    win->uiState.grokVisible = open == AIChatBackend::Grok;
-    win->uiState.codexVisible = open == AIChatBackend::Codex;
+    win->uiState.aiChatVisible = open != AIChatBackend::None;
 }
 
 void AIChatApplySavedSidebarDx(MainWindow* win) {

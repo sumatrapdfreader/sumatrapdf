@@ -77,23 +77,13 @@ WindowTab::~WindowTab() {
         ReadAloudHighlightFree(readAloudHighlight);
         delete readAloudHighlight;
     }
-    str::Free(claudeSessionId);
-    claudeSessionId = {};
-    if (claudeProcess) {
-        TerminateProcess(claudeProcess, 0);
-        CloseHandle(claudeProcess);
-    }
-    str::Free(grokSessionId);
-    grokSessionId = {};
-    if (grokProcess) {
-        TerminateProcess(grokProcess, 0);
-        CloseHandle(grokProcess);
-    }
-    str::Free(codexSessionId);
-    codexSessionId = {};
-    if (codexProcess) {
-        TerminateProcess(codexProcess, 0);
-        CloseHandle(codexProcess);
+    for (AIChatTabState& st : aiChat) {
+        str::Free(st.sessionId);
+        st.sessionId = {};
+        if (st.process) {
+            TerminateProcess(st.process, 0);
+            CloseHandle(st.process);
+        }
     }
 }
 
