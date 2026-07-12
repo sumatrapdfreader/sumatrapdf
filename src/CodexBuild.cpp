@@ -1255,7 +1255,7 @@ static void OnCodexSplitterMove(Splitter::MoveEvent* ev) {
 }
 
 void RelayoutCodexPanel(MainWindow* win) {
-    if (!win || !win->hwndCodexBox || !win->codexVisible) {
+    if (!win || !win->hwndCodexBox || !win->uiState.codexVisible) {
         return;
     }
     LayoutCodexBox(win);
@@ -1456,7 +1456,7 @@ void ToggleCodexPanel(MainWindow* win) {
     }
     AIChatSyncPanelsToCurrentTab(win);
 
-    if (win->codexVisible) {
+    if (win->uiState.codexVisible) {
         UpdateCodexPanelTitle(win, 0);
         EnsureWebViewReady(win);
         UpdateCodexPanelForCurrentTab(win);
@@ -1477,7 +1477,7 @@ void OnCodexTabChanged(MainWindow* win) {
     bool supported = IsCodexBuildSupportedForTab(tab);
     UpdateCodexPanelForCurrentTab(win);
 
-    if (!win->codexVisible) {
+    if (!win->uiState.codexVisible) {
         return;
     }
 

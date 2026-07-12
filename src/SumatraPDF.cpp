@@ -3153,11 +3153,11 @@ void LoadModelIntoTab(WindowTab* tab) {
     ShowNotificationsForActiveTab(win->hwndCanvas, tab);
 
     if (IsMainWindowValid(win)) {
-        bool claudeWas = win->claudeVisible;
-        bool grokWas = win->grokVisible;
-        bool codexWas = win->codexVisible;
+        bool claudeWas = win->uiState.claudeVisible;
+        bool grokWas = win->uiState.grokVisible;
+        bool codexWas = win->uiState.codexVisible;
         AIChatSyncPanelsToCurrentTab(win);
-        if (claudeWas != win->claudeVisible || grokWas != win->grokVisible || codexWas != win->codexVisible) {
+        if (claudeWas != win->uiState.claudeVisible || grokWas != win->uiState.grokVisible || codexWas != win->uiState.codexVisible) {
             ScheduleUiUpdate(win);
         }
         OnClaudeTabChanged(win);
@@ -4870,9 +4870,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.tocVisible = win->uiState.tocVisible;
     curState.showFavorites = win->uiState.favVisible;
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
-    curState.claudeVisible = win->claudeVisible;
-    curState.grokVisible = win->grokVisible;
-    curState.codexVisible = win->codexVisible;
+    curState.claudeVisible = win->uiState.claudeVisible;
+    curState.grokVisible = win->uiState.grokVisible;
+    curState.codexVisible = win->uiState.codexVisible;
     curState.aiChatDx = win->aiChatDx;
 
     // skip redundant relayouts when all layout-affecting state is unchanged
@@ -4886,6 +4886,30 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     } else {
         win->uiState.layout = {};
     }
+
+    // apply the desired visibility of the sidebar / AI chat panels (no-ops
+    // when unchanged). All the inputs are part of the layout snapshot, so a
+    // skipped relayout means the windows are already in the desired state.
+    {
+        const MainWindow::UIState& ui = win->uiState;
+        HwndSetVisibility(win->sidebarSplitter->hwnd, ui.tocVisible || ui.favVisible);
+        HwndSetVisibility(win->hwndTocBox, ui.tocVisible);
+        HwndSetVisibility(win->favSplitter->hwnd, ui.tocVisible && ui.favVisible);
+        HwndSetVisibility(win->hwndFavBox, ui.favVisible);
+        if (win->hwndClaudeBox) {
+            HwndSetVisibility(win->hwndClaudeBox, ui.claudeVisible);
+            HwndSetVisibility(win->claudeSplitter->hwnd, ui.claudeVisible);
+        }
+        if (win->hwndGrokBox) {
+            HwndSetVisibility(win->hwndGrokBox, ui.grokVisible);
+            HwndSetVisibility(win->grokSplitter->hwnd, ui.grokVisible);
+        }
+        if (win->hwndCodexBox) {
+            HwndSetVisibility(win->hwndCodexBox, ui.codexVisible);
+            HwndSetVisibility(win->codexSplitter->hwnd, ui.codexVisible);
+        }
+    }
+
     if (gRedrawLog) {
         RECT r = ToRECT(rc);
         LogRedraw("RelayoutFrame", win->hwndFrame, &r);
@@ -5071,13 +5095,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     HWND hwndAIChatBox = nullptr;
     Splitter* aiChatSplitter = nullptr;
-    if (win->codexVisible && win->hwndCodexBox) {
+    if (win->uiState.codexVisible && win->hwndCodexBox) {
         hwndAIChatBox = win->hwndCodexBox;
         aiChatSplitter = win->codexSplitter;
-    } else if (win->grokVisible && win->hwndGrokBox) {
+    } else if (win->uiState.grokVisible && win->hwndGrokBox) {
         hwndAIChatBox = win->hwndGrokBox;
         aiChatSplitter = win->grokSplitter;
-    } else if (win->claudeVisible && win->hwndClaudeBox) {
+    } else if (win->uiState.claudeVisible && win->hwndClaudeBox) {
         hwndAIChatBox = win->hwndClaudeBox;
         aiChatSplitter = win->claudeSplitter;
     }
@@ -5114,11 +5138,11 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (favVisible) {
         RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
-    if (win->codexVisible && win->hwndCodexBox) {
+    if (win->uiState.codexVisible && win->hwndCodexBox) {
         RelayoutCodexPanel(win);
-    } else if (win->grokVisible && win->hwndGrokBox) {
+    } else if (win->uiState.grokVisible && win->hwndGrokBox) {
         RelayoutGrokPanel(win);
-    } else if (win->claudeVisible && win->hwndClaudeBox) {
+    } else if (win->uiState.claudeVisible && win->hwndClaudeBox) {
         RelayoutClaudePanel(win);
     }
     if (tocVisible || favVisible) {
@@ -5221,13 +5245,6 @@ static void FrameUpdateUi(MainWindow* win) {
     int sidebarDx = ui.sidebarDx;
     ui.updateToolbars = false;
     ui.sidebarDx = -1;
-    // apply the desired sidebar visibility (no-ops when unchanged)
-    if (win->sidebarSplitter) {
-        HwndSetVisibility(win->sidebarSplitter->hwnd, ui.tocVisible || ui.favVisible);
-        HwndSetVisibility(win->hwndTocBox, ui.tocVisible);
-        HwndSetVisibility(win->favSplitter->hwnd, ui.tocVisible && ui.favVisible);
-        HwndSetVisibility(win->hwndFavBox, ui.favVisible);
-    }
     // RelayoutFrame skips when nothing layout-affecting changed (a force is
     // requested by clearing win->uiState.layout)
     bool didLayout = RelayoutFrame(win, updateToolbars, sidebarDx);

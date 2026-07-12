@@ -194,7 +194,6 @@ struct MainWindow {
     Edit* claudeInput = nullptr;
     HWND hwndClaudeStopBtn = nullptr;
     Splitter* claudeSplitter = nullptr;
-    bool claudeVisible = false;
 
     HWND hwndGrokBox = nullptr;
     UINT_PTR grokBoxSubclassId = 0;
@@ -208,7 +207,6 @@ struct MainWindow {
     Edit* grokInput = nullptr;
     HWND hwndGrokStopBtn = nullptr;
     Splitter* grokSplitter = nullptr;
-    bool grokVisible = false;
 
     HWND hwndCodexBox = nullptr;
     UINT_PTR codexBoxSubclassId = 0;
@@ -222,7 +220,6 @@ struct MainWindow {
     Edit* codexInput = nullptr;
     HWND hwndCodexStopBtn = nullptr;
     Splitter* codexSplitter = nullptr;
-    bool codexVisible = false;
 
     // width of the active AI chat sidebar (shared by Claude Code, Grok Build, and OpenAI Codex)
     int aiChatDx = 0;
@@ -349,11 +346,13 @@ struct MainWindow {
             int aiChatDx = 0;
         };
         Layout layout; // last applied layout state
-        // desired visibility of the sidebar panels, set via
-        // SetSidebarVisibility and applied (show/hide + relayout) by the
-        // deferred update
+        // desired visibility of the sidebar / AI chat panels; applied
+        // (HwndSetVisibility) by RelayoutFrame
         bool tocVisible = false;
         bool favVisible = false;
+        bool claudeVisible = false;
+        bool grokVisible = false;
+        bool codexVisible = false;
         bool updatePending = false; // a WM_UPDATE_UI is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update

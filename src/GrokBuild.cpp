@@ -1133,7 +1133,7 @@ static void OnGrokSplitterMove(Splitter::MoveEvent* ev) {
 }
 
 void RelayoutGrokPanel(MainWindow* win) {
-    if (!win || !win->hwndGrokBox || !win->grokVisible) {
+    if (!win || !win->hwndGrokBox || !win->uiState.grokVisible) {
         return;
     }
     LayoutGrokBox(win);
@@ -1336,7 +1336,7 @@ void ToggleGrokPanel(MainWindow* win) {
     }
     AIChatSyncPanelsToCurrentTab(win);
 
-    if (win->grokVisible) {
+    if (win->uiState.grokVisible) {
         UpdateGrokPanelTitle(win, 0);
         EnsureWebViewReady(win);
         UpdateGrokPanelForCurrentTab(win);
@@ -1357,7 +1357,7 @@ void OnGrokTabChanged(MainWindow* win) {
     bool supported = IsGrokBuildSupportedForTab(tab);
     UpdateGrokPanelForCurrentTab(win);
 
-    if (!win->grokVisible) {
+    if (!win->uiState.grokVisible) {
         return;
     }
 

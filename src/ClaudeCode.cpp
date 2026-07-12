@@ -1081,7 +1081,7 @@ static void OnClaudeSplitterMove(Splitter::MoveEvent* ev) {
 }
 
 void RelayoutClaudePanel(MainWindow* win) {
-    if (!win || !win->hwndClaudeBox || !win->claudeVisible) {
+    if (!win || !win->hwndClaudeBox || !win->uiState.claudeVisible) {
         return;
     }
     LayoutClaudeBox(win);
@@ -1283,7 +1283,7 @@ void ToggleClaudePanel(MainWindow* win) {
     }
     AIChatSyncPanelsToCurrentTab(win);
 
-    if (win->claudeVisible) {
+    if (win->uiState.claudeVisible) {
         UpdateClaudePanelTitle(win, 0);
         EnsureWebViewReady(win);
         UpdateClaudePanelForCurrentTab(win);
@@ -1304,7 +1304,7 @@ void OnClaudeTabChanged(MainWindow* win) {
     bool supported = IsClaudeCodeSupportedForTab(tab);
     UpdateClaudePanelForCurrentTab(win);
 
-    if (!win->claudeVisible) {
+    if (!win->uiState.claudeVisible) {
         return;
     }
 

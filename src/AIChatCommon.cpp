@@ -549,39 +549,16 @@ void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend) {
     tab->aiChatPanelOpen = BackendToTabStorage(backend);
 }
 
-static void ApplyPanelHwndVisibility(MainWindow* win) {
-    if (!win) {
-        return;
-    }
-    if (win->hwndClaudeBox) {
-        HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
-    }
-    if (win->claudeSplitter && win->claudeSplitter->hwnd) {
-        HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
-    }
-    if (win->hwndGrokBox) {
-        HwndSetVisibility(win->hwndGrokBox, win->grokVisible);
-    }
-    if (win->grokSplitter && win->grokSplitter->hwnd) {
-        HwndSetVisibility(win->grokSplitter->hwnd, win->grokVisible);
-    }
-    if (win->hwndCodexBox) {
-        HwndSetVisibility(win->hwndCodexBox, win->codexVisible);
-    }
-    if (win->codexSplitter && win->codexSplitter->hwnd) {
-        HwndSetVisibility(win->codexSplitter->hwnd, win->codexVisible);
-    }
-}
-
+// records the desired panel visibility; RelayoutFrame (via the scheduled UI
+// update, which every caller triggers) shows/hides the panel windows
 void AIChatSyncPanelsToCurrentTab(MainWindow* win) {
     if (!win) {
         return;
     }
     AIChatBackend open = AIChatGetTabPanelOpen(win->CurrentTab());
-    win->claudeVisible = open == AIChatBackend::Claude;
-    win->grokVisible = open == AIChatBackend::Grok;
-    win->codexVisible = open == AIChatBackend::Codex;
-    ApplyPanelHwndVisibility(win);
+    win->uiState.claudeVisible = open == AIChatBackend::Claude;
+    win->uiState.grokVisible = open == AIChatBackend::Grok;
+    win->uiState.codexVisible = open == AIChatBackend::Codex;
 }
 
 void AIChatApplySavedSidebarDx(MainWindow* win) {
