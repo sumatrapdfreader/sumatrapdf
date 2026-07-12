@@ -37,7 +37,16 @@ import {
   highway,
   libjxl,
   libheif,
-  mupdfLibs as mupdfLibsBase,
+  libjpegTurbo,
+  jbig2dec,
+  openjpeg,
+  freetype,
+  lcms2,
+  harfbuzz,
+  mujs,
+  extract,
+  brotli,
+  cmarkGfm,
   mupdf as mupdfBase,
 } from "./build-lib-defs";
 
@@ -78,48 +87,6 @@ function resolveMacTools(): BuildTools {
   ]);
   return { cc, cxx, ar, embed };
 }
-
-const CMARK_GFM_FILES = [
-  {
-    dir: "ext/cmark-gfm/src",
-    patterns: [
-      "arena.c",
-      "blocks.c",
-      "buffer.c",
-      "cmark.c",
-      "cmark_ctype.c",
-      "footnotes.c",
-      "houdini_href_e.c",
-      "houdini_html_e.c",
-      "houdini_html_u.c",
-      "html.c",
-      "inlines.c",
-      "iterator.c",
-      "linked_list.c",
-      "map.c",
-      "node.c",
-      "plugin.c",
-      "references.c",
-      "registry.c",
-      "scanners.c",
-      "syntax_extension.c",
-      "utf8.c",
-    ],
-  },
-  {
-    dir: "ext/cmark-gfm/extensions",
-    patterns: [
-      "autolink.c",
-      "core-extensions.c",
-      "ext_scanners.c",
-      "strikethrough.c",
-      "table.c",
-      "tagfilter.c",
-      "tasklist.c",
-      "autoheaderid.c",
-    ],
-  },
-];
 
 function makeLibdjvu(): LibDef {
   return {
@@ -460,23 +427,6 @@ const djvudec: LibDef = {
   files: [{ dir: "ext/djvudec", patterns: ["djvu.c"] }],
 };
 
-function makeMupdfLibs(): LibDef {
-  const lib = structuredClone(mupdfLibsBase);
-  lib.defines = lib.defines.filter((d) => d !== "_CRT_SECURE_NO_WARNINGS");
-  lib.defines.push(
-    "CMARK_GFM_STATIC_DEFINE",
-    "_stricmp=strcasecmp",
-    "_strnicmp=strncasecmp",
-  );
-  lib.includes.push(
-    "ext/cmark-gfm/src",
-    "ext/cmark-gfm/extensions",
-    "mupdf/scripts/cmark-gfm",
-  );
-  lib.files.push(...CMARK_GFM_FILES);
-  return lib;
-}
-
 function makeMupdf(arch: MacArch): LibDef {
   const lib = structuredClone(mupdfBase);
   lib.defines = lib.defines.filter((d) => !d.startsWith("_CRT"));
@@ -658,7 +608,16 @@ const DEP_LIBS_BASE = [
   skcms,
   highway,
   libjxl,
-  makeMupdfLibs,
+  libjpegTurbo,
+  jbig2dec,
+  openjpeg,
+  freetype,
+  lcms2,
+  harfbuzz,
+  mujs,
+  extract,
+  brotli,
+  cmarkGfm,
   makeMupdf,
 ] as const;
 
@@ -1055,7 +1014,16 @@ async function buildMacApp(
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libmupdf.a"),
     join(outDir, "lib", "liba-gumbo.a"),
-    join(outDir, "lib", "libmupdf-libs.a"),
+    join(outDir, "lib", "libcmark-gfm.a"),
+    join(outDir, "lib", "libmujs.a"),
+    join(outDir, "lib", "libextract.a"),
+    join(outDir, "lib", "libharfbuzz.a"),
+    join(outDir, "lib", "libfreetype.a"),
+    join(outDir, "lib", "libbrotli.a"),
+    join(outDir, "lib", "liblcms2.a"),
+    join(outDir, "lib", "libopenjpeg.a"),
+    join(outDir, "lib", "libjbig2dec.a"),
+    join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "libzlib.a"),
@@ -1148,7 +1116,16 @@ async function buildTestEngines(
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libmupdf.a"),
     join(outDir, "lib", "liba-gumbo.a"),
-    join(outDir, "lib", "libmupdf-libs.a"),
+    join(outDir, "lib", "libcmark-gfm.a"),
+    join(outDir, "lib", "libmujs.a"),
+    join(outDir, "lib", "libextract.a"),
+    join(outDir, "lib", "libharfbuzz.a"),
+    join(outDir, "lib", "libfreetype.a"),
+    join(outDir, "lib", "libbrotli.a"),
+    join(outDir, "lib", "liblcms2.a"),
+    join(outDir, "lib", "libopenjpeg.a"),
+    join(outDir, "lib", "libjbig2dec.a"),
+    join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "libzlib.a"),

@@ -99,80 +99,80 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{B812ACA6-A4DF-06B2-CDF8-F459B9243C40}</ProjectGuid>
+    <ProjectGuid>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>libmupdf</RootNamespace>
+    <RootNamespace>lcms2</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
@@ -180,28 +180,28 @@
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
@@ -209,7 +209,7 @@
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
@@ -268,124 +268,109 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbg32\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbg64\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgarm64\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfull32\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfull64\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel32\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\arm64\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64_asan\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\libmupdf\</IntDir>
-    <TargetName>libmupdf</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\lcms2\</IntDir>
+    <TargetName>lcms2</TargetName>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -399,20 +384,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbg32\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbg32/libmupdf.dll" /PDB:"../out/dbg32/libmupdf.pdb" /IMPLIB:"../out/dbg32/obj/libmupdf.lib" /MAP:"../out/dbg32/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -421,9 +398,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -437,20 +415,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbg64\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbg64/libmupdf.dll" /PDB:"../out/dbg64/libmupdf.pdb" /IMPLIB:"../out/dbg64/obj/libmupdf.lib" /MAP:"../out/dbg64/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -459,9 +429,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -475,20 +446,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgarm64\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbgarm64/libmupdf.dll" /PDB:"../out/dbgarm64/libmupdf.pdb" /IMPLIB:"../out/dbgarm64/obj/libmupdf.lib" /MAP:"../out/dbgarm64/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -497,9 +460,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -513,20 +477,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbg64_asan\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbg64_asan/libmupdf.dll" /PDB:"../out/dbg64_asan/libmupdf.pdb" /IMPLIB:"../out/dbg64_asan/obj/libmupdf.lib" /MAP:"../out/dbg64_asan/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -535,8 +491,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -550,20 +507,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfull32\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbgfull32/libmupdf.dll" /PDB:"../out/dbgfull32/libmupdf.pdb" /IMPLIB:"../out/dbgfull32/obj/libmupdf.lib" /MAP:"../out/dbgfull32/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -572,8 +521,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -587,20 +537,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfull64\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbgfull64/libmupdf.dll" /PDB:"../out/dbgfull64/libmupdf.pdb" /IMPLIB:"../out/dbgfull64/obj/libmupdf.lib" /MAP:"../out/dbgfull64/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -609,8 +551,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -624,20 +567,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfullarm64\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbgfullarm64/libmupdf.dll" /PDB:"../out/dbgfullarm64/libmupdf.pdb" /IMPLIB:"../out/dbgfullarm64/obj/libmupdf.lib" /MAP:"../out/dbgfullarm64/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -646,8 +581,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -661,20 +597,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\dbgfull64_asan\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/dbgfull64_asan/libmupdf.dll" /PDB:"../out/dbgfull64_asan/libmupdf.pdb" /IMPLIB:"../out/dbgfull64_asan/obj/libmupdf.lib" /MAP:"../out/dbgfull64_asan/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -683,9 +611,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -699,20 +628,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel32\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/rel32/libmupdf.dll" /PDB:"../out/rel32/libmupdf.pdb" /IMPLIB:"../out/rel32/obj/libmupdf.lib" /MAP:"../out/rel32/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -721,9 +642,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -737,20 +659,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/rel64/libmupdf.dll" /PDB:"../out/rel64/libmupdf.pdb" /IMPLIB:"../out/rel64/obj/libmupdf.lib" /MAP:"../out/rel64/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -759,9 +673,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -775,20 +690,12 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\arm64\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/arm64/libmupdf.dll" /PDB:"../out/arm64/libmupdf.pdb" /IMPLIB:"../out/arm64/obj/libmupdf.lib" /MAP:"../out/arm64/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -797,9 +704,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -813,19 +721,11 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64_asan\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/rel64_asan/libmupdf.dll" /PDB:"../out/rel64_asan/libmupdf.pdb" /IMPLIB:"../out/rel64_asan/obj/libmupdf.lib" /MAP:"../out/rel64_asan/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -834,9 +734,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -850,9 +751,6 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -860,11 +758,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel32_prefast\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/rel32_prefast/libmupdf.dll" /PDB:"../out/rel32_prefast/libmupdf.pdb" /IMPLIB:"../out/rel32_prefast/obj/libmupdf.lib" /MAP:"../out/rel32_prefast/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -873,9 +766,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -889,9 +783,6 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -899,11 +790,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64_prefast\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/rel64_prefast/libmupdf.dll" /PDB:"../out/rel64_prefast/libmupdf.pdb" /IMPLIB:"../out/rel64_prefast/obj/libmupdf.lib" /MAP:"../out/rel64_prefast/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -912,9 +798,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -928,9 +815,6 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -938,11 +822,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\arm64_prefast\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/arm64_prefast/libmupdf.dll" /PDB:"../out/arm64_prefast/libmupdf.pdb" /IMPLIB:"../out/arm64_prefast/obj/libmupdf.lib" /MAP:"../out/arm64_prefast/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -951,9 +830,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -967,64 +847,47 @@
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>..\out\rel64_prefast_asan\obj\libmupdf.lib</ImportLibrary>
-      <GenerateMapFile>false</GenerateMapFile>
-      <ModuleDefinitionFile>../src/libmupdf.def</ModuleDefinitionFile>
-      <AdditionalOptions>/OUT:"../out/rel64_prefast_asan/libmupdf.dll" /PDB:"../out/rel64_prefast_asan/libmupdf.pdb" /IMPLIB:"../out/rel64_prefast_asan/obj/libmupdf.lib" /MAP:"../out/rel64_prefast_asan/obj/libmupdf.map" -IGNORE:4701 -IGNORE:4702 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\no_op_for_premake.cpp" />
+    <ClInclude Include="..\ext\lcms2\src\extra_xform.h" />
+    <ClInclude Include="..\ext\lcms2\src\lcms2_internal.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\libmupdf.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\src\libmupdf.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="zlib.vcxproj">
-      <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>
-    </ProjectReference>
-    <ProjectReference Include="mupdf.vcxproj">
-      <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libdjvu.vcxproj">
-      <Project>{B5F26479-21D2-E314-2AEA-6EEB96484A76}</Project>
-    </ProjectReference>
-    <ProjectReference Include="djvudec.vcxproj">
-      <Project>{0A565B15-7635-DAB0-7F4D-6587EBAB4012}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libwebp.vcxproj">
-      <Project>{0A466F79-7625-EE14-7F3D-79EBEB9B5476}</Project>
-    </ProjectReference>
-    <ProjectReference Include="dav1d.vcxproj">
-      <Project>{F5BF470F-61D4-6FC0-2A56-132096296CF1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libheif.vcxproj">
-      <Project>{380D6779-A4EC-E514-AD04-71EB19634C76}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libjxl.vcxproj">
-      <Project>{8AC56F0B-7667-9AE1-5F22-AE354B632132}</Project>
-    </ProjectReference>
-    <ProjectReference Include="highway.vcxproj">
-      <Project>{56E0D845-C2BF-57E1-CBD7-E2B73736BE42}</Project>
-    </ProjectReference>
-    <ProjectReference Include="skcms.vcxproj">
-      <Project>{46625C10-B276-84C1-7BF8-2721E7CB80F2}</Project>
-    </ProjectReference>
+    <ClCompile Include="..\ext\lcms2\src\cmsalpha.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmscam02.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmscgats.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmscnvrt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmserr.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsgamma.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsgmt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmshalf.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsintrp.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsio0.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsio1.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmslut.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsmd5.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsmtrx.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsnamed.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsopt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmspack.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmspcs.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsplugin.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsps2.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmssamp.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmssm.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmstypes.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsvirt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmswtpnt.c" />
+    <ClCompile Include="..\ext\lcms2\src\cmsxform.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,4 @@
-import type { LibDef } from "./build-deps-common.ts";
+import type { FileGroup, LibDef } from "./build-deps-common.ts";
 
 // ── Library definitions ─────────────────────────────────────────────────────
 // Each matches a project in premake5.lua / premake5.files.lua
@@ -628,10 +628,8 @@ export const libheif: LibDef = {
   ],
 };
 
-// mupdf-libs: combined library (libjpeg-turbo + jbig2dec + openjpeg + freetype
-// + lcms2 + harfbuzz + mujs + extract + brotli)
-export const mupdfLibs: LibDef = {
-  name: "mupdf-libs",
+const mupdfThirdPartySources: LibDef = {
+  name: "mupdf-third-party-sources",
   alwaysOptimize: true,
   defines: [
     "_CRT_SECURE_NO_WARNINGS",
@@ -1005,6 +1003,167 @@ export const mupdfLibs: LibDef = {
     { dir: "ext/brotli/c/enc", patterns: ["*.c"] },
   ],
 };
+
+function sourceFiles(...indexes: number[]): FileGroup[] {
+  return indexes.map((index) =>
+    structuredClone(mupdfThirdPartySources.files[index]),
+  );
+}
+
+function thirdPartyLib(args: {
+  name: string;
+  defines?: string[];
+  includes?: string[];
+  files: FileGroup[];
+  debugExtraDefines?: string[];
+  releaseExtraDefines?: string[];
+}): LibDef {
+  return {
+    name: args.name,
+    alwaysOptimize: true,
+    defines: args.defines ?? [],
+    includes: args.includes ?? [],
+    files: args.files,
+    debugExtraDefines: args.debugExtraDefines,
+    releaseExtraDefines: args.releaseExtraDefines,
+  };
+}
+
+export const libjpegTurbo = thirdPartyLib({
+  name: "libjpeg-turbo",
+  defines: ["_CRT_SECURE_NO_WARNINGS", "WITHOUT_SIMD"],
+  includes: ["ext/libjpeg-turbo/src"],
+  files: sourceFiles(0, 1),
+});
+
+export const jbig2dec = thirdPartyLib({
+  name: "jbig2dec",
+  defines: ["_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO"],
+  includes: ["ext/jbig2dec"],
+  files: sourceFiles(2),
+});
+
+export const openjpeg = thirdPartyLib({
+  name: "openjpeg",
+  defines: ["_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"],
+  files: sourceFiles(3),
+});
+
+export const freetype = thirdPartyLib({
+  name: "freetype",
+  defines: [
+    "FT2_BUILD_LIBRARY",
+    'FT_CONFIG_MODULES_H="slimftmodules.h"',
+    'FT_CONFIG_OPTIONS_H="slimftoptions.h"',
+  ],
+  includes: [
+    "mupdf/scripts/freetype",
+    "ext/freetype/include",
+    "ext/brotli/c/include",
+  ],
+  files: sourceFiles(4, 5),
+});
+
+export const lcms2 = thirdPartyLib({
+  name: "lcms2",
+  includes: ["ext/lcms2/include"],
+  files: sourceFiles(6),
+});
+
+const harfbuzzAllocDefines = [
+  "hb_malloc_impl=sumatra_hb_malloc",
+  "hb_calloc_impl=sumatra_hb_calloc",
+  "hb_realloc_impl=sumatra_hb_realloc",
+  "hb_free_impl=sumatra_hb_free",
+];
+
+export const harfbuzz = thirdPartyLib({
+  name: "harfbuzz",
+  defines: [
+    "_CRT_SECURE_NO_WARNINGS",
+    "HAVE_FALLBACK=1",
+    "HAVE_OT",
+    "HAVE_UCDN",
+    "HAVE_FREETYPE",
+  ],
+  includes: [
+    "ext/harfbuzz/src/hb-ucdn",
+    "mupdf/scripts/freetype",
+    "ext/freetype/include",
+  ],
+  files: sourceFiles(7),
+  debugExtraDefines: ["HAVE_ATEXIT", ...harfbuzzAllocDefines],
+  releaseExtraDefines: harfbuzzAllocDefines,
+});
+
+export const mujs = thirdPartyLib({
+  name: "mujs",
+  includes: ["ext/mujs"],
+  files: sourceFiles(8),
+});
+
+export const extract = thirdPartyLib({
+  name: "extract",
+  includes: ["ext/extract/include", "ext/a-zlib"],
+  files: sourceFiles(9),
+});
+
+export const brotli = thirdPartyLib({
+  name: "brotli",
+  includes: ["ext/brotli/c/include"],
+  files: sourceFiles(10, 11, 12),
+});
+
+export const cmarkGfm = thirdPartyLib({
+  name: "cmark-gfm",
+  defines: ["CMARK_GFM_STATIC_DEFINE", "_CRT_SECURE_NO_WARNINGS"],
+  includes: [
+    "ext/cmark-gfm/src",
+    "ext/cmark-gfm/extensions",
+    "mupdf/scripts/cmark-gfm",
+  ],
+  files: [
+    {
+      dir: "ext/cmark-gfm/src",
+      patterns: [
+        "arena.c",
+        "blocks.c",
+        "buffer.c",
+        "cmark.c",
+        "cmark_ctype.c",
+        "footnotes.c",
+        "houdini_href_e.c",
+        "houdini_html_e.c",
+        "houdini_html_u.c",
+        "html.c",
+        "inlines.c",
+        "iterator.c",
+        "linked_list.c",
+        "map.c",
+        "node.c",
+        "plugin.c",
+        "references.c",
+        "registry.c",
+        "scanners.c",
+        "syntax_extension.c",
+        "utf8.c",
+      ],
+    },
+    {
+      dir: "ext/cmark-gfm/extensions",
+      patterns: [
+        "autolink.c",
+        "core-extensions.c",
+        "ext_scanners.c",
+        "strikethrough.c",
+        "table.c",
+        "tagfilter.c",
+        "tasklist.c",
+        "autoheaderid.c",
+      ],
+    },
+  ],
+});
 
 // mupdf core library (mixed debug/release optimization)
 export const mupdf: LibDef = {

@@ -471,9 +471,7 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4996" }
     files { "ext/libchm/*.c", "ext/libchm/*.h" }
 
-  -- cmark-gfm for SumatraPDF-dll markdown browser (MarkdownToc/MarkdownModel).
-  -- mupdf-libs also builds cmark for md.c inside libmupdf; the static SumatraPDF
-  -- exe reuses that copy, only the dll build links this separate lib.
+  -- cmark-gfm for markdown browser (MarkdownToc/MarkdownModel) and mupdf md.c.
   project "cmark-gfm"
     dll_intermediate_dirs()
     kind "StaticLib"
@@ -612,7 +610,7 @@ workspace "SumatraPDF"
     skcms_files()
 
   -- libjxl decoder (ext/libjxl, v0.11.2). Decoder subset only; uses skcms for
-  -- color management and brotli (compiled in mupdf-libs) for compressed metadata.
+  -- color management and brotli for compressed metadata.
   project "libjxl"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -701,17 +699,11 @@ workspace "SumatraPDF"
 -- combine 9 libs only used by mupdf into a single project
 -- instead of having 9 projects
 
-  project "mupdf-libs"
+  project "libjpeg-turbo"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
-
-    -- zlib
-    -- disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    -- zlib_files()
-
-    -- libjpeg-turbo
     defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4013", "4018", "4100", "4244", "4245", "4819" }
     includedirs { "ext/libjpeg-turbo/src" }
@@ -733,13 +725,21 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-    -- jbig2dec
+  project "jbig2dec"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
     defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
-    -- openjpeg
+  project "openjpeg"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
     disablewarnings { "4100", "4244", "4310", "4389", "4456" }
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
@@ -749,26 +749,38 @@ workspace "SumatraPDF"
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
 
-    -- freetype
+  project "freetype"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
     defines {
       "FT2_BUILD_LIBRARY",
       "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-      "FT_CONFIG_OPTION_USE_BROTLI",
     }
     disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
     freetype_files()
 
-    -- lcms2
-    disablewarnings { "4100" }
+  project "lcms2"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings { "4100", "4244" }
     includedirs { "ext/lcms2/include" }
     lcms2_files()
 
-    -- harfbuzz
+  project "harfbuzz"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++latest"
+    optimized_conf()
     includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
     defines {
-      --"_CRT_SECURE_NO_WARNINGS",
+      "_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
       "HAVE_OT",
       "HAVE_UCDN",
@@ -787,33 +799,38 @@ workspace "SumatraPDF"
       "HAVE_ATEXIT",
     }
     filter {}
-    disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4505", "4701", "4702", "4706" }
+    disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
     harfbuzz_files()
 
-    -- mujs
+  project "mujs"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
     includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
+    disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
-    -- extract
-    disablewarnings { "4005", "4201", "4130" }
+  project "extract"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings {
+      "4005", "4100", "4130", "4201", "4245", "4310", "4389", "4456", "4457", "4701", "4996"
+    }
     includedirs { "ext/extract/include" }
     uses_zlib()
     extract_files()
 
-    -- brotli
+  project "brotli"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings { "4100", "4201" }
     includedirs { "ext/brotli/c/include" }
     brotli_files()
-
-    -- cmark-gfm (markdown parser for mupdf's source/html/md.c, FZ_ENABLE_MD).
-    -- generated config headers live in mupdf/scripts/cmark-gfm.
-    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
-    defines { "CMARK_GFM_STATIC_DEFINE" }
-    disablewarnings { "4100", "4127", "4232", "4244", "4245", "4267", "4456", "4457", "4701", "4702", "4706" }
-    cmark_gfm_files()
-
-    -- libheif
-    defines { "LIBHEIF_STATIC_BUILD" }
 
     function fonts()
       files {
@@ -957,14 +974,16 @@ workspace "SumatraPDF"
     fonts()
 
     mupdf_files()
-    links { "mupdf-libs", "libarchive", "a-gumbo" }
-    -- links { "mupdf-libs", "zlib", "freetype", "openjpeg", "libjpeg-turbo", "jbig2dec", "lcms2", "harfbuzz", "mujs", "gumbo" }
+    links {
+      "cmark-gfm", "mujs", "extract", "harfbuzz", "freetype", "brotli",
+      "lcms2", "openjpeg", "jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
+    }
 
     -- mupdf
     -- this fixes "NAN" is not a constant in some version of msvc
     -- without this it's #define _UCRT_NAN (__ucrt_int_to_float(0x7FC00000))
     -- CMARK_GFM_STATIC_DEFINE: md.c includes cmark-gfm headers; we link the
-    -- cmark-gfm static lib (built in mupdf-libs). FZ_ENABLE_MD defaults to 1
+    -- cmark-gfm static lib. FZ_ENABLE_MD defaults to 1
     -- in mupdf's config.h, enabling markdown support.
     defines { "_UCRT_NOISY_NAN", "CMARK_GFM_STATIC_DEFINE" }
 
@@ -973,7 +992,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C"
     optimized_conf()
-    disablewarnings { "4206", "4702" }
+    disablewarnings { "4206", "4701", "4702" }
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
 
     filter { "platforms:arm64" }
@@ -986,7 +1005,7 @@ workspace "SumatraPDF"
     implibname "libmupdf"
     -- TODO: is thre a better way to do it?
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
-    linkoptions { "-IGNORE:4702" }
+    linkoptions { "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
     links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
     links {
