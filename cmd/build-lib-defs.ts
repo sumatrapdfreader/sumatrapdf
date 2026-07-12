@@ -4,7 +4,7 @@ import type { FileGroup, LibDef } from "./build-deps-common.ts";
 // Each matches a project in premake5.lua / premake5.files.lua
 
 export const zlib: LibDef = {
-  name: "zlib",
+  name: "a-zlib",
   alwaysOptimize: true,
   defines: [],
   includes: [],

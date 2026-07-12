@@ -209,7 +209,7 @@ end
 -- add to a project that links zlib
 function links_zlib()
   -- links { "zlib-ng" }
-  links { "zlib" }
+  links { "a-zlib" }
 end
 
 -- add to a project that needs to see zlib headers
@@ -675,7 +675,7 @@ workspace "SumatraPDF"
       dav1d_x68_files()
     filter {}
 
-  project "zlib"
+  project "a-zlib"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"

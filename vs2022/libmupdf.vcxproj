@@ -995,8 +995,8 @@
     <ResourceCompile Include="..\src\libmupdf.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="zlib.vcxproj">
-      <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>
+    <ProjectReference Include="a-zlib.vcxproj">
+      <Project>{047896ED-F019-C1C3-D9D4-D417C5154814}</Project>
     </ProjectReference>
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>

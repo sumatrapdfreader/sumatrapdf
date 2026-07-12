@@ -99,10 +99,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{16CFA17C-0206-A30D-ABF2-881097081F0F}</ProjectGuid>
+    <ProjectGuid>{047896ED-F019-C1C3-D9D4-D417C5154814}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>zlib</RootNamespace>
+    <RootNamespace>a-zlib</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -269,98 +269,98 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
     <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
     <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
     <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\zlib\</IntDir>
-    <TargetName>zlib</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\a-zlib\</IntDir>
+    <TargetName>a-zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
