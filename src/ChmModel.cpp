@@ -18,6 +18,7 @@
 #include "EbookBase.h"
 #include "ChmFile.h"
 #include "GlobalPrefs.h"
+#include "Theme.h"
 #include "ChmModel.h"
 
 static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
@@ -666,21 +667,111 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
+static TempStr ColorToCssTemp(COLORREF c) {
+    return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
+}
+
+// best-effort theming for CHM pages: we don't control their HTML, so inject
+// a <style> block with !important overrides for the page background and text
+// color. Returns null when the effective page colors are the plain default
+// (black on white) — i.e. nothing to override.
+static TempStr ChmThemeStyleTemp() {
+    COLORREF bgCol;
+    COLORREF txtCol = ThemePageRenderColors(bgCol);
+    bool isDefault = (bgCol == RGB(0xff, 0xff, 0xff)) && (txtCol == RGB(0, 0, 0));
+    if (isDefault) {
+        return nullptr;
+    }
+    bool dark = !IsLightColor(bgCol);
+    TempStr bg = ColorToCssTemp(bgCol);
+    TempStr fg = ColorToCssTemp(txtCol);
+    Str link = dark ? StrL("#4493f8") : StrL("#0969da");
+    TempStr border = ColorToCssTemp(AccentColor(bgCol, 25));
+    // force text color on all elements (pages with explicit dark colors would
+    // otherwise be invisible on a dark background) but keep links recognizable;
+    // clear element backgrounds so the page background shows through
+    return fmt(
+        "<style>"
+        "html,body{background-color:%s !important;}"
+        "*{color:%s !important;background-color:transparent !important;border-color:%s !important;}"
+        "a,a *{color:%s !important;}"
+        "</style>",
+        bg, fg, border, link);
+}
+
+// insert `style` into `raw` (an HTML page): after the <head> tag when present
+// so the doctype stays first (avoids quirks mode), else before <body>, else at
+// the start. Returns a heap copy.
+static Str ChmInjectStyle(Str raw, Str style) {
+    int insertAt = 0;
+    int headIdx = str::IndexOfI(raw, StrL("<head"));
+    if (headIdx >= 0) {
+        for (int i = headIdx; i < raw.len; i++) {
+            if (raw.s[i] == '>') {
+                insertAt = i + 1;
+                break;
+            }
+        }
+    } else {
+        int bodyIdx = str::IndexOfI(raw, StrL("<body"));
+        if (bodyIdx >= 0) {
+            insertAt = bodyIdx;
+        }
+    }
+    str::Builder b;
+    b.Append(Str(raw.s, insertAt));
+    b.Append(style);
+    b.Append(Str(raw.s + insertAt, raw.len - insertAt));
+    return b.TakeStr();
+}
+
+// returns a heap copy of `raw` (the CHM resource for a url), with a theme
+// <style> injected when `raw` is an HTML page and the color mode wants
+// non-default page colors
+static Str ChmThemeApplyToData(Str raw) {
+    TempStr style = ChmThemeStyleTemp();
+    if (!style) {
+        return str::Dup(raw);
+    }
+    bool isHtml = str::IndexOfI(raw, StrL("<html")) >= 0 || str::IndexOfI(raw, StrL("<head")) >= 0 ||
+                  str::IndexOfI(raw, StrL("<body")) >= 0;
+    if (!isHtml) {
+        return str::Dup(raw);
+    }
+    return ChmInjectStyle(raw, style);
+}
+
 Str ChmModel::GetDataForUrl(Str url) {
     ScopedMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
-        Str s = str::Dup(poolAlloc, plainUrl);
-        e = new ChmCacheEntry(s);
-        e->data = str::Dup(doc->GetDataTemp(plainUrl));
-        if (len(e->data) == 0) {
-            delete e;
+        Str raw = doc->GetDataTemp(plainUrl);
+        if (len(raw) == 0) {
             return {};
         }
+        Str s = str::Dup(poolAlloc, plainUrl);
+        e = new ChmCacheEntry(s);
+        e->data = ChmThemeApplyToData(raw);
         urlDataCache.Append(e);
     }
     return e->data;
+}
+
+// theme colors are baked into the served HTML: drop the cached pages and
+// reload the current one with the new colors (a hidden tab has no docView and
+// regenerates when re-selected)
+void ChmModel::UpdateTheme() {
+    {
+        ScopedMutex scope(&docAccess);
+        DeleteVecMembers(urlDataCache);
+        urlDataCache.Reset();
+    }
+    if (docView && len(currentPageUrl) > 0) {
+        SaveHtmlScrollPos();
+        restoreHtmlScrollPos = true;
+        DisplayPage(currentPageUrl);
+    }
 }
 
 void ChmModel::DownloadData(Str url, Str data) {

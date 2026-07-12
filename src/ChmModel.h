@@ -73,6 +73,7 @@ struct ChmModel : DocController {
     void OnLButtonDown();
     Str GetDataForUrl(Str url);
     void DownloadData(Str url, Str data);
+    void UpdateTheme();
     void OnFindResult(int gen, int current, int total);
     void OnFindAllResult(Str payload);
 
