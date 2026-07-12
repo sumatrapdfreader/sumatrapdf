@@ -724,15 +724,15 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-  project "jbig2dec"
+  project "a-jbig2dec"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
     defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
-    includedirs { "ext/jbig2dec" }
-    jbig2dec_files()
+    includedirs { "ext/a-jbig2dec" }
+    files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
 
   project "openjpeg"
     static_intermediate_dirs()
@@ -975,7 +975,7 @@ workspace "SumatraPDF"
     mupdf_files()
     links {
       "cmark-gfm", "a-mujs", "extract", "harfbuzz", "freetype", "brotli",
-      "lcms2", "openjpeg", "jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
+      "lcms2", "openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 
     -- mupdf

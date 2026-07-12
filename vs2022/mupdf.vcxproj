@@ -2542,8 +2542,8 @@
     <ProjectReference Include="openjpeg.vcxproj">
       <Project>{FDC4548D-E991-AF98-12AB-9D40FED6E426}</Project>
     </ProjectReference>
-    <ProjectReference Include="jbig2dec.vcxproj">
-      <Project>{BF5813C3-AB25-6ECE-D43E-5C76C06AA35C}</Project>
+    <ProjectReference Include="a-jbig2dec.vcxproj">
+      <Project>{ADC8EE7E-9980-30CC-0288-0928EE5ECBBC}</Project>
     </ProjectReference>
     <ProjectReference Include="libjpeg-turbo.vcxproj">
       <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>

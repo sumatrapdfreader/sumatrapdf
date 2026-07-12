@@ -99,10 +99,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BF5813C3-AB25-6ECE-D43E-5C76C06AA35C}</ProjectGuid>
+    <ProjectGuid>{ADC8EE7E-9980-30CC-0288-0928EE5ECBBC}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>jbig2dec</RootNamespace>
+    <RootNamespace>a-jbig2dec</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -269,98 +269,98 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
     <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
     <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
     <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\jbig2dec\</IntDir>
-    <TargetName>jbig2dec</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\a-jbig2dec\</IntDir>
+    <TargetName>a-jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -370,7 +370,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -401,7 +401,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -432,7 +432,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -463,7 +463,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -493,7 +493,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -523,7 +523,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -553,7 +553,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -583,7 +583,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -614,7 +614,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -645,7 +645,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -676,7 +676,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -707,7 +707,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -737,7 +737,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -769,7 +769,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -801,7 +801,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -833,7 +833,7 @@
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -858,21 +858,13 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\jbig2dec\jbig2.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_arith.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_arith_iaid.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_arith_int.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_generic.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_halftone.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_huffman.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_hufftab.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_image.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_mmr.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_page.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_refinement.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_segment.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_symbol_dict.c" />
-    <ClCompile Include="..\ext\jbig2dec\jbig2_text.c" />
+    <ClInclude Include="..\ext\a-jbig2dec\jbig2.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\a-jbig2dec\jbig2dec.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\a-jbig2dec\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
