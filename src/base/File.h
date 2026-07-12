@@ -129,6 +129,7 @@ extern thread_local CopyProgressCb gFileCopyProgressCb;
 bool Copy(Str dst, Str src, bool dontOverwrite);
 bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress);
 bool Rename(Str newPath, Str oldPath);
+bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs);
 
 bool SetAccessTime(Str path, FILETIME accessTime);
 FILETIME GetAccessTime(Str path);

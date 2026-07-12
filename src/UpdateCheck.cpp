@@ -253,10 +253,20 @@ void StartInstallerAutoUpgrade(Str installerPath) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.Append(fmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp()));
+        cmd.Append(fmt(R"( -sleep-ms 2000 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp()));
     }
     logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", ToStr(cmd));
     CreateProcessHelper(installerPath, ToStr(cmd));
+}
+
+static void ExitAfterStartingUpdater() {
+    // Exit immediately so the updater can overwrite our exe. PostQuitMessage(0)
+    // is unreliable when the dialog was shown from a uitask during startup.
+    if (gPluginMode) {
+        PostQuitMessage(0);
+        return;
+    }
+    ::ExitProcess(0);
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
@@ -269,7 +279,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         SaveSettings(); // persist timeOfLastUpdateCheck
         if (installerPathAuto && file::Exists(installerPathAuto)) {
             StartInstallerAutoUpgrade(installerPathAuto);
-            PostQuitMessage(0);
+            ExitAfterStartingUpdater();
         } else {
             logf("NotifyUserOfUpdate: auto-install requested but installer not downloaded\n");
         }
@@ -340,7 +350,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     }
 
     StartInstallerAutoUpgrade(installerPath);
-    PostQuitMessage(0);
+    ExitAfterStartingUpdater();
 }
 
 struct UpdateProgressData {
@@ -360,8 +370,10 @@ struct DownloadUpdateAsyncData {
 static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
     auto hwndForNotif = data->hwndForNotif;
     auto updateInfo = data->updateInfo;
+    data->updateInfo = nullptr;
     RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
     NotifyUserOfUpdate(updateInfo);
+    delete updateInfo;
     gUpdateCheckInProgress = false;
     delete data;
 }
@@ -766,11 +778,9 @@ void UpdateSelfTo(Str path) {
     ::Sleep(gCli->sleepMs);
 
     TempStr srcPath = GetSelfExePathTemp();
-    bool ok = file::Copy(path, srcPath, false);
-    // TODO: maybe retry if copy fails under the theory that the file
-    // might be temporarily locked
+    bool ok = file::OverwriteAtomicRetry(srcPath, path, 20, 250);
     if (!ok) {
-        logf("UpdateSelfTo: failed to copy self to file\n");
+        logf("UpdateSelfTo: failed to overwrite self file\n");
         return;
     }
     logf("UpdateSelfTo: copied self to file\n");

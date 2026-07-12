@@ -415,6 +415,43 @@ bool Rename(Str newPath, Str oldPath) {
     return rename(PathZTemp(oldPath), PathZTemp(newPath)) == 0;
 }
 
+bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
+    if (!dst || !src) {
+        return false;
+    }
+
+    TempStr dstDir = path::GetDirTemp(dst);
+    TempStr dstName = path::GetBaseNameTemp(dst);
+    TempStr tempTemplate = fmt("%s/.%s.tmp.XXXXXX", dstDir, dstName);
+    char* tempPathZ = CStrTemp(tempTemplate);
+    int tempFd = mkstemp(tempPathZ);
+    if (tempFd < 0) {
+        return false;
+    }
+    close(tempFd);
+
+    TempStr tempPath = Str(tempPathZ);
+    if (!Copy(tempPath, src, false)) {
+        Delete(tempPath);
+        return false;
+    }
+
+    if (retryCount < 1) {
+        retryCount = 1;
+    }
+    for (int i = 0; i < retryCount; i++) {
+        if (rename(PathZTemp(tempPath), PathZTemp(dst)) == 0) {
+            return true;
+        }
+        if (i + 1 < retryCount && retrySleepMs > 0) {
+            usleep((useconds_t)retrySleepMs * 1000);
+        }
+    }
+
+    Delete(tempPath);
+    return false;
+}
+
 } // namespace file
 
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {

@@ -541,6 +541,57 @@ bool Rename(Str newPath, Str oldPath) {
     return true;
 }
 
+bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
+    if (!dst || !src) {
+        return false;
+    }
+
+    TempStr dstDir = path::GetDirTemp(dst);
+    TempStr dstName = path::GetBaseNameTemp(dst);
+    WCHAR* dstDirW = CWStrTemp(dstDir);
+    WCHAR* prefixW = CWStrTemp(dstName);
+    WCHAR prefix[4] = L"tmp";
+    int prefixLen = (int)wcslen(prefixW);
+    if (prefixLen > 3) {
+        prefixLen = 3;
+    }
+    for (int i = 0; i < prefixLen; i++) {
+        prefix[i] = prefixW[i];
+    }
+    if (prefixLen > 0) {
+        prefix[prefixLen] = 0;
+    }
+
+    WCHAR tempPathW[MAX_PATH]{};
+    if (!GetTempFileNameW(dstDirW, prefix, 0, tempPathW)) {
+        LogLastError();
+        return false;
+    }
+
+    TempStr tempPath = ToUtf8Temp(tempPathW);
+    if (!Copy(tempPath, src, false)) {
+        Delete(tempPath);
+        return false;
+    }
+
+    if (retryCount < 1) {
+        retryCount = 1;
+    }
+    for (int i = 0; i < retryCount; i++) {
+        BOOL ok = MoveFileExW(CWStrTemp(tempPath), CWStrTemp(dst), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+        if (ok) {
+            return true;
+        }
+        if (i + 1 < retryCount && retrySleepMs > 0) {
+            Sleep((DWORD)retrySleepMs);
+        }
+    }
+
+    LogLastError();
+    Delete(tempPath);
+    return false;
+}
+
 } // namespace file
 
 static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
