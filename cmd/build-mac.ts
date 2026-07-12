@@ -29,6 +29,7 @@ import {
   spawnCmd,
 } from "./build-deps-common";
 import {
+  aGumbo,
   zlib,
   unrar,
   libwebp,
@@ -71,22 +72,53 @@ function resolveMacTools(): BuildTools {
   const cxx = resolveTool("C++ compiler", ["clang++"]);
   const ar = resolveTool("archiver", ["ar"]);
   // ld from cctools; clang driver also works but plain ld is what mupdf uses on Unix
-  const embed = resolveTool("linker for binary embedding", ["ld", "/usr/bin/ld"]);
+  const embed = resolveTool("linker for binary embedding", [
+    "ld",
+    "/usr/bin/ld",
+  ]);
   return { cc, cxx, ar, embed };
 }
 
 const CMARK_GFM_FILES = [
-  { dir: "ext/cmark-gfm/src", patterns: [
-    "arena.c", "blocks.c", "buffer.c", "cmark.c", "cmark_ctype.c",
-    "footnotes.c", "houdini_href_e.c", "houdini_html_e.c", "houdini_html_u.c",
-    "html.c", "inlines.c", "iterator.c", "linked_list.c", "map.c", "node.c",
-    "plugin.c", "references.c", "registry.c", "scanners.c",
-    "syntax_extension.c", "utf8.c",
-  ]},
-  { dir: "ext/cmark-gfm/extensions", patterns: [
-    "autolink.c", "core-extensions.c", "ext_scanners.c", "strikethrough.c",
-    "table.c", "tagfilter.c", "tasklist.c", "autoheaderid.c",
-  ]},
+  {
+    dir: "ext/cmark-gfm/src",
+    patterns: [
+      "arena.c",
+      "blocks.c",
+      "buffer.c",
+      "cmark.c",
+      "cmark_ctype.c",
+      "footnotes.c",
+      "houdini_href_e.c",
+      "houdini_html_e.c",
+      "houdini_html_u.c",
+      "html.c",
+      "inlines.c",
+      "iterator.c",
+      "linked_list.c",
+      "map.c",
+      "node.c",
+      "plugin.c",
+      "references.c",
+      "registry.c",
+      "scanners.c",
+      "syntax_extension.c",
+      "utf8.c",
+    ],
+  },
+  {
+    dir: "ext/cmark-gfm/extensions",
+    patterns: [
+      "autolink.c",
+      "core-extensions.c",
+      "ext_scanners.c",
+      "strikethrough.c",
+      "table.c",
+      "tagfilter.c",
+      "tasklist.c",
+      "autoheaderid.c",
+    ],
+  },
 ];
 
 function makeLibdjvu(): LibDef {
@@ -119,19 +151,63 @@ function libdjvuBase(): LibDef {
       {
         dir: "ext/libdjvu",
         patterns: [
-          "Arrays.cpp", "atomic.cpp", "BSByteStream.cpp", "BSEncodeByteStream.cpp",
-          "ByteStream.cpp", "DataPool.cpp", "DjVmDir0.cpp", "DjVmDoc.cpp", "DjVmNav.cpp",
-          "DjVuAnno.cpp", "DjVuDocEditor.cpp", "DjVuDocument.cpp", "DjVuDumpHelper.cpp",
-          "DjVuErrorList.cpp", "DjVuFile.cpp", "DjVuFileCache.cpp", "DjVuGlobal.cpp",
-          "DjVuGlobalMemory.cpp", "DjVuImage.cpp", "DjVuInfo.cpp", "DjVuMessage.cpp",
-          "DjVuMessageLite.cpp", "DjVuNavDir.cpp", "DjVuPalette.cpp", "DjVuPort.cpp",
-          "DjVuText.cpp", "DjVuToPS.cpp", "GBitmap.cpp", "GContainer.cpp", "GException.cpp",
-          "GIFFManager.cpp", "GMapAreas.cpp", "GOS.cpp", "GPixmap.cpp", "GRect.cpp",
-          "GScaler.cpp", "GSmartPointer.cpp", "GString.cpp", "GThreads.cpp", "GUnicode.cpp",
-          "GURL.cpp", "IFFByteStream.cpp", "IW44EncodeCodec.cpp", "IW44Image.cpp",
-          "JB2EncodeCodec.cpp", "DjVmDir.cpp", "JB2Image.cpp", "JPEGDecoder.cpp",
-          "MMRDecoder.cpp", "MMX.cpp", "UnicodeByteStream.cpp", "XMLParser.cpp",
-          "XMLTags.cpp", "ZPCodec.cpp", "ddjvuapi.cpp", "debug.cpp", "miniexp.cpp",
+          "Arrays.cpp",
+          "atomic.cpp",
+          "BSByteStream.cpp",
+          "BSEncodeByteStream.cpp",
+          "ByteStream.cpp",
+          "DataPool.cpp",
+          "DjVmDir0.cpp",
+          "DjVmDoc.cpp",
+          "DjVmNav.cpp",
+          "DjVuAnno.cpp",
+          "DjVuDocEditor.cpp",
+          "DjVuDocument.cpp",
+          "DjVuDumpHelper.cpp",
+          "DjVuErrorList.cpp",
+          "DjVuFile.cpp",
+          "DjVuFileCache.cpp",
+          "DjVuGlobal.cpp",
+          "DjVuGlobalMemory.cpp",
+          "DjVuImage.cpp",
+          "DjVuInfo.cpp",
+          "DjVuMessage.cpp",
+          "DjVuMessageLite.cpp",
+          "DjVuNavDir.cpp",
+          "DjVuPalette.cpp",
+          "DjVuPort.cpp",
+          "DjVuText.cpp",
+          "DjVuToPS.cpp",
+          "GBitmap.cpp",
+          "GContainer.cpp",
+          "GException.cpp",
+          "GIFFManager.cpp",
+          "GMapAreas.cpp",
+          "GOS.cpp",
+          "GPixmap.cpp",
+          "GRect.cpp",
+          "GScaler.cpp",
+          "GSmartPointer.cpp",
+          "GString.cpp",
+          "GThreads.cpp",
+          "GUnicode.cpp",
+          "GURL.cpp",
+          "IFFByteStream.cpp",
+          "IW44EncodeCodec.cpp",
+          "IW44Image.cpp",
+          "JB2EncodeCodec.cpp",
+          "DjVmDir.cpp",
+          "JB2Image.cpp",
+          "JPEGDecoder.cpp",
+          "MMRDecoder.cpp",
+          "MMX.cpp",
+          "UnicodeByteStream.cpp",
+          "XMLParser.cpp",
+          "XMLTags.cpp",
+          "ZPCodec.cpp",
+          "ddjvuapi.cpp",
+          "debug.cpp",
+          "miniexp.cpp",
         ],
       },
     ],
@@ -171,61 +247,133 @@ function makeLibarchive(outDir: string): LibDef {
       {
         dir: "ext/libarchive/libarchive",
         patterns: [
-          "archive_acl.c", "archive_check_magic.c", "archive_cmdline.c", "archive_cryptor.c",
-          "archive_digest.c", "archive_entry.c", "archive_entry_copy_bhfi.c",
-          "archive_entry_copy_stat.c", "archive_entry_link_resolver.c", "archive_entry_sparse.c",
-          "archive_entry_stat.c", "archive_entry_strmode.c", "archive_entry_xattr.c",
-          "archive_hmac.c", "archive_match.c", "archive_options.c", "archive_pack_dev.c",
-          "archive_pathmatch.c", "archive_ppmd7.c", "archive_ppmd8.c", "archive_random.c",
-          "archive_rb.c", "archive_string.c", "archive_string_sprintf.c", "archive_time.c",
-          "archive_util.c", "archive_version_details.c", "archive_virtual.c",
-          "archive_blake2s_ref.c", "archive_blake2sp_ref.c",
-          "archive_read.c", "archive_read_add_passphrase.c", "archive_read_append_filter.c",
-          "archive_read_data_into_fd.c", "archive_read_extract.c", "archive_read_extract2.c",
-          "archive_read_open_fd.c", "archive_read_open_file.c", "archive_read_open_filename.c",
-          "archive_read_open_memory.c", "archive_read_set_format.c", "archive_read_set_options.c",
-          "archive_read_support_filter_all.c", "archive_read_support_filter_by_code.c",
-          "archive_read_support_filter_bzip2.c", "archive_read_support_filter_compress.c",
-          "archive_read_support_filter_grzip.c", "archive_read_support_filter_gzip.c",
-          "archive_read_support_filter_lrzip.c", "archive_read_support_filter_lz4.c",
-          "archive_read_support_filter_lzop.c", "archive_read_support_filter_none.c",
-          "archive_read_support_filter_program.c", "archive_read_support_filter_rpm.c",
-          "archive_read_support_filter_uu.c", "archive_read_support_filter_xz.c",
+          "archive_acl.c",
+          "archive_check_magic.c",
+          "archive_cmdline.c",
+          "archive_cryptor.c",
+          "archive_digest.c",
+          "archive_entry.c",
+          "archive_entry_copy_bhfi.c",
+          "archive_entry_copy_stat.c",
+          "archive_entry_link_resolver.c",
+          "archive_entry_sparse.c",
+          "archive_entry_stat.c",
+          "archive_entry_strmode.c",
+          "archive_entry_xattr.c",
+          "archive_hmac.c",
+          "archive_match.c",
+          "archive_options.c",
+          "archive_pack_dev.c",
+          "archive_pathmatch.c",
+          "archive_ppmd7.c",
+          "archive_ppmd8.c",
+          "archive_random.c",
+          "archive_rb.c",
+          "archive_string.c",
+          "archive_string_sprintf.c",
+          "archive_time.c",
+          "archive_util.c",
+          "archive_version_details.c",
+          "archive_virtual.c",
+          "archive_blake2s_ref.c",
+          "archive_blake2sp_ref.c",
+          "archive_read.c",
+          "archive_read_add_passphrase.c",
+          "archive_read_append_filter.c",
+          "archive_read_data_into_fd.c",
+          "archive_read_extract.c",
+          "archive_read_extract2.c",
+          "archive_read_open_fd.c",
+          "archive_read_open_file.c",
+          "archive_read_open_filename.c",
+          "archive_read_open_memory.c",
+          "archive_read_set_format.c",
+          "archive_read_set_options.c",
+          "archive_read_support_filter_all.c",
+          "archive_read_support_filter_by_code.c",
+          "archive_read_support_filter_bzip2.c",
+          "archive_read_support_filter_compress.c",
+          "archive_read_support_filter_grzip.c",
+          "archive_read_support_filter_gzip.c",
+          "archive_read_support_filter_lrzip.c",
+          "archive_read_support_filter_lz4.c",
+          "archive_read_support_filter_lzop.c",
+          "archive_read_support_filter_none.c",
+          "archive_read_support_filter_program.c",
+          "archive_read_support_filter_rpm.c",
+          "archive_read_support_filter_uu.c",
+          "archive_read_support_filter_xz.c",
           "archive_read_support_filter_zstd.c",
-          "archive_read_support_format_7zip.c", "archive_read_support_format_all.c",
-          "archive_read_support_format_ar.c", "archive_read_support_format_by_code.c",
-          "archive_read_support_format_cab.c", "archive_read_support_format_cpio.c",
-          "archive_read_support_format_empty.c", "archive_read_support_format_iso9660.c",
-          "archive_read_support_format_lha.c", "archive_read_support_format_mtree.c",
-          "archive_read_support_format_rar.c", "archive_read_support_format_rar5.c",
-          "archive_read_support_format_raw.c", "archive_read_support_format_tar.c",
-          "archive_read_support_format_warc.c", "archive_read_support_format_xar.c",
+          "archive_read_support_format_7zip.c",
+          "archive_read_support_format_all.c",
+          "archive_read_support_format_ar.c",
+          "archive_read_support_format_by_code.c",
+          "archive_read_support_format_cab.c",
+          "archive_read_support_format_cpio.c",
+          "archive_read_support_format_empty.c",
+          "archive_read_support_format_iso9660.c",
+          "archive_read_support_format_lha.c",
+          "archive_read_support_format_mtree.c",
+          "archive_read_support_format_rar.c",
+          "archive_read_support_format_rar5.c",
+          "archive_read_support_format_raw.c",
+          "archive_read_support_format_tar.c",
+          "archive_read_support_format_warc.c",
+          "archive_read_support_format_xar.c",
           "archive_read_support_format_zip.c",
-          "archive_read_disk_set_standard_lookup.c", "archive_read_disk_posix.c",
-          "archive_parse_date.c", "filter_fork_posix.c", "xxhash.c",
+          "archive_read_disk_set_standard_lookup.c",
+          "archive_read_disk_posix.c",
+          "archive_parse_date.c",
+          "filter_fork_posix.c",
+          "xxhash.c",
         ],
       },
       {
         dir: "ext/bzip2",
         patterns: [
-          "blocksort.c", "bzlib.c", "bz_internal_error.c", "compress.c",
-          "crctable.c", "decompress.c", "huffman.c", "randtable.c",
+          "blocksort.c",
+          "bzlib.c",
+          "bz_internal_error.c",
+          "compress.c",
+          "crctable.c",
+          "decompress.c",
+          "huffman.c",
+          "randtable.c",
         ],
       },
       { dir: "ext/lzma/C", patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"] },
       {
         dir: "ext/liblzma",
         patterns: [
-          "common/alone_decoder.c", "common/auto_decoder.c", "common/block_decoder.c",
-          "common/block_header_decoder.c", "common/block_util.c", "common/common.c",
-          "common/filter_common.c", "common/filter_decoder.c", "common/filter_flags_decoder.c",
-          "common/index.c", "common/index_decoder.c", "common/index_hash.c",
-          "common/stream_decoder.c", "common/stream_flags_common.c", "common/stream_flags_decoder.c",
-          "common/vli_decoder.c", "common/vli_size.c",
-          "check/check.c", "check/crc32_fast.c", "check/crc64_fast.c",
-          "lz/lz_decoder.c", "lzma/lzma_decoder.c", "lzma/lzma2_decoder.c",
-          "rangecoder/price_table.c", "delta/delta_common.c", "delta/delta_decoder.c",
-          "simple/simple_coder.c", "simple/simple_decoder.c", "simple/x86.c",
+          "common/alone_decoder.c",
+          "common/auto_decoder.c",
+          "common/block_decoder.c",
+          "common/block_header_decoder.c",
+          "common/block_util.c",
+          "common/common.c",
+          "common/filter_common.c",
+          "common/filter_decoder.c",
+          "common/filter_flags_decoder.c",
+          "common/index.c",
+          "common/index_decoder.c",
+          "common/index_hash.c",
+          "common/stream_decoder.c",
+          "common/stream_flags_common.c",
+          "common/stream_flags_decoder.c",
+          "common/vli_decoder.c",
+          "common/vli_size.c",
+          "check/check.c",
+          "check/crc32_fast.c",
+          "check/crc64_fast.c",
+          "lz/lz_decoder.c",
+          "lzma/lzma_decoder.c",
+          "lzma/lzma2_decoder.c",
+          "rangecoder/price_table.c",
+          "delta/delta_common.c",
+          "delta/delta_decoder.c",
+          "simple/simple_coder.c",
+          "simple/simple_decoder.c",
+          "simple/x86.c",
         ],
       },
     ],
@@ -245,12 +393,35 @@ function makeDav1d(arch: MacArch, generatedDir: string): LibDef {
     {
       dir: "ext/dav1d/src",
       patterns: [
-        "lib.c", "thread_task.c", "cdf.c", "cpu.c", "ctx.c", "data.c", "decode.c",
-        "dequant_tables.c", "getbits.c", "intra_edge.c", "itx_1d.c", "lf_mask.c",
-        "log.c", "mem.c", "msac.c", "obu.c", "pal.c", "picture.c", "qm.c", "ref.c",
-        "refmvs.c", "scan.c", "tables.c", "warpmv.c", "wedge.c",
-        "sumatra_bitdepth_8.c", "sumatra_bitdepth_8_2.c",
-        "sumatra_bitdepth_16.c", "sumatra_bitdepth_16_2.c",
+        "lib.c",
+        "thread_task.c",
+        "cdf.c",
+        "cpu.c",
+        "ctx.c",
+        "data.c",
+        "decode.c",
+        "dequant_tables.c",
+        "getbits.c",
+        "intra_edge.c",
+        "itx_1d.c",
+        "lf_mask.c",
+        "log.c",
+        "mem.c",
+        "msac.c",
+        "obu.c",
+        "pal.c",
+        "picture.c",
+        "qm.c",
+        "ref.c",
+        "refmvs.c",
+        "scan.c",
+        "tables.c",
+        "warpmv.c",
+        "wedge.c",
+        "sumatra_bitdepth_8.c",
+        "sumatra_bitdepth_8_2.c",
+        "sumatra_bitdepth_16.c",
+        "sumatra_bitdepth_16_2.c",
       ],
     },
   ];
@@ -260,7 +431,13 @@ function makeDav1d(arch: MacArch, generatedDir: string): LibDef {
     defines.push("ARCH_AARCH64=1", "ARCH_ARM=0", "ARCH_X86=0", "PREFIX=1");
     // HAVE_ASM=0: generic src/cpu.c is enough; arch-specific cpu.c needs asm headers
   } else {
-    defines.push("ARCH_AARCH64=0", "ARCH_ARM=0", "ARCH_X86=1", "ARCH_X86_32=0", "ARCH_X86_64=1");
+    defines.push(
+      "ARCH_AARCH64=0",
+      "ARCH_ARM=0",
+      "ARCH_X86=1",
+      "ARCH_X86_32=0",
+      "ARCH_X86_64=1",
+    );
     files.push({ dir: "ext/dav1d/src/x86", patterns: ["cpu.c"] });
   }
 
@@ -295,7 +472,11 @@ const djvudec: LibDef = {
 function makeMupdfLibs(): LibDef {
   const lib = structuredClone(mupdfLibsBase);
   lib.defines = lib.defines.filter((d) => d !== "_CRT_SECURE_NO_WARNINGS");
-  lib.defines.push("CMARK_GFM_STATIC_DEFINE", "_stricmp=strcasecmp", "_strnicmp=strncasecmp");
+  lib.defines.push(
+    "CMARK_GFM_STATIC_DEFINE",
+    "_stricmp=strcasecmp",
+    "_strnicmp=strncasecmp",
+  );
   lib.includes.push(
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
@@ -364,7 +545,10 @@ async function writeLiblzmaConfig(outDir: string): Promise<void> {
   await writeFile(join(dir, "config.h"), src);
 }
 
-async function writeDav1dConfig(generatedDir: string, arch: MacArch): Promise<void> {
+async function writeDav1dConfig(
+  generatedDir: string,
+  arch: MacArch,
+): Promise<void> {
   const isArm = arch === "arm64";
   const text = `/* Generated by cmd/build-mac.ts for dav1d on macOS */
 #pragma once
@@ -409,7 +593,9 @@ function makeUnrar(): LibDef {
   const lib = structuredClone(unrar);
   lib.defines = lib.defines.filter((d) => d !== "_CRT_SECURE_NO_WARNINGS");
   const files = lib.files[0];
-  files.patterns = files.patterns.filter((p) => p !== "isnt.cpp" && p !== "motw.cpp");
+  files.patterns = files.patterns.filter(
+    (p) => p !== "isnt.cpp" && p !== "motw.cpp",
+  );
   return lib;
 }
 
@@ -469,6 +655,7 @@ const DEP_LIBS_BASE = [
     ],
   },
   zlib,
+  aGumbo,
   makeUnrar,
   makeLibdjvu,
   makeChm,
@@ -603,7 +790,9 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
 
   const startTime = performance.now();
   const config = isAsan ? "asan" : isRelease ? "release" : "debug";
-  console.log(`\n=== Building SumatraPDF dependencies (${config}, macOS ${arch}) ===\n`);
+  console.log(
+    `\n=== Building SumatraPDF dependencies (${config}, macOS ${arch}) ===\n`,
+  );
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);
   console.log(`Parallel jobs: ${jobs}\n`);
@@ -614,7 +803,9 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   await writeLiblzmaConfig(outDir);
 
   const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
-  const commonFlags = isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [];
+  const commonFlags = isAsan
+    ? ["-fsanitize=address", "-fno-omit-frame-pointer"]
+    : [];
   const cxxFlags: string[] = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
 
   const fontObjs = await embedFonts(tools, outDir);
@@ -634,7 +825,9 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
     } else {
       lib = structuredClone(entry);
       if (lib.defines) {
-        lib.defines = lib.defines.filter((d) => d !== "_CRT_SECURE_NO_WARNINGS");
+        lib.defines = lib.defines.filter(
+          (d) => d !== "_CRT_SECURE_NO_WARNINGS",
+        );
       }
     }
 
@@ -649,10 +842,42 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
     });
   }
 
-  await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
-  await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
-  await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
-  await buildMacApp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildTestUtil(
+    outDir,
+    isRelease,
+    tools,
+    jobs,
+    commonDefines,
+    commonFlags,
+    cxxFlags,
+  );
+  await compilePortableSources(
+    outDir,
+    isRelease,
+    tools,
+    jobs,
+    commonDefines,
+    commonFlags,
+    cxxFlags,
+  );
+  await buildTestEngines(
+    outDir,
+    isRelease,
+    tools,
+    jobs,
+    commonDefines,
+    commonFlags,
+    cxxFlags,
+  );
+  await buildMacApp(
+    outDir,
+    isRelease,
+    tools,
+    jobs,
+    commonDefines,
+    commonFlags,
+    cxxFlags,
+  );
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
@@ -713,7 +938,11 @@ async function buildTestUtil(
   console.log("Building test_util...");
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
-  const defineFlags = [...commonDefines, ...configDefines, "SUMATRA_TEST_UTIL=1"].map((d) => `-D${d}`);
+  const defineFlags = [
+    ...commonDefines,
+    ...configDefines,
+    "SUMATRA_TEST_UTIL=1",
+  ].map((d) => `-D${d}`);
   const includeFlags = ["-Isrc"];
 
   const units = TEST_UTIL_SOURCES.map((src) => {
@@ -758,7 +987,10 @@ async function buildTestUtil(
   console.log(`  -> ${exePath}`);
 
   const env = commonFlags.includes("-fsanitize=address")
-    ? { ...process.env, ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0" }
+    ? {
+        ...process.env,
+        ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0",
+      }
     : process.env;
   const run = Bun.spawn([exePath, "-for-ai"], {
     env,
@@ -784,7 +1016,12 @@ async function buildMacApp(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Imupdf/include", "-Imupdf/generated"];
+  const includeFlags = [
+    "-Isrc",
+    "-Iext/djvudec",
+    "-Imupdf/include",
+    "-Imupdf/generated",
+  ];
 
   const units = MAC_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "sumatrapdf_app", src);
@@ -826,6 +1063,7 @@ async function buildMacApp(
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libmupdf-libs.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
@@ -876,7 +1114,12 @@ async function buildTestEngines(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Imupdf/include", "-Imupdf/generated"];
+  const includeFlags = [
+    "-Isrc",
+    "-Iext/djvudec",
+    "-Imupdf/include",
+    "-Imupdf/generated",
+  ];
 
   const units = TEST_ENGINES_SOURCES.map((src) => {
     const obj = objPath(outDir, "test_engines", src);
@@ -913,6 +1156,7 @@ async function buildTestEngines(
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libmupdf-libs.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
@@ -939,13 +1183,17 @@ if (import.meta.main) {
     else if (arg === "-clean") doClean = true;
     else {
       console.error(`Unknown argument: ${arg}`);
-      console.error("Usage: bun cmd/build-mac.ts [-debug] [-release] [-asan] [-clean]");
+      console.error(
+        "Usage: bun cmd/build-mac.ts [-debug] [-release] [-asan] [-clean]",
+      );
       process.exit(1);
     }
   }
 
   if (!doDebug && !doRelease && !doAsan) {
-    console.error("Usage: bun cmd/build-mac.ts [-debug] [-release] [-asan] [-clean]");
+    console.error(
+      "Usage: bun cmd/build-mac.ts [-debug] [-release] [-asan] [-clean]",
+    );
     process.exit(1);
   }
 

@@ -30,6 +30,14 @@ export const zlib: LibDef = {
   ],
 };
 
+export const aGumbo: LibDef = {
+  name: "a-gumbo",
+  alwaysOptimize: true,
+  defines: [],
+  includes: ["ext/a-gumbo"],
+  files: [{ dir: "ext/a-gumbo", patterns: ["gumbo.c"] }],
+};
+
 export const unrar: LibDef = {
   name: "unrar",
   alwaysOptimize: true,
@@ -417,7 +425,12 @@ export const libwebp: LibDef = {
 export const dav1d: LibDef = {
   name: "dav1d",
   alwaysOptimize: true,
-  defines: ["_CRT_SECURE_NO_WARNINGS", "ARCH_X86_32=0", "ARCH_X86_64=1", "HAVE_ASM=0"],
+  defines: [
+    "_CRT_SECURE_NO_WARNINGS",
+    "ARCH_X86_32=0",
+    "ARCH_X86_64=1",
+    "HAVE_ASM=0",
+  ],
   // NOTE: do NOT include ext/dav1d/include/compat/msvc — it shadows GCC's
   // native <stdatomic.h> with an MSVC-only version
   includes: ["ext/dav1d", "ext/dav1d/include"],
@@ -498,7 +511,13 @@ export const libjxl: LibDef = {
     "JPEGXL_BUNDLING_LIBJXL=1",
     "_CRT_SECURE_NO_WARNINGS",
   ],
-  includes: ["ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/skcms", "ext/brotli/c/include"],
+  includes: [
+    "ext/libjxl",
+    "ext/libjxl/lib/include",
+    "ext/highway",
+    "ext/skcms",
+    "ext/brotli/c/include",
+  ],
   files: [{ dir: "ext/libjxl/lib/jxl", patterns: ["**/*.cc"] }],
 };
 
@@ -508,7 +527,11 @@ export const libheif: LibDef = {
   rtti: true,
   exceptions: true,
   defines: ["_CRT_SECURE_NO_WARNINGS", "HAVE_DAV1D", "LIBHEIF_STATIC_BUILD"],
-  includes: ["ext/libheif/libheif", "ext/libheif/libheif/api", "ext/dav1d/include"],
+  includes: [
+    "ext/libheif/libheif",
+    "ext/libheif/libheif/api",
+    "ext/dav1d/include",
+  ],
   files: [
     {
       dir: "ext/libheif/libheif",
@@ -600,7 +623,13 @@ export const libheif: LibDef = {
     },
     {
       dir: "ext/libheif/libheif/sequences",
-      patterns: ["chunk.*", "seq_boxes.*", "track.*", "track_metadata.*", "track_visual.*"],
+      patterns: [
+        "chunk.*",
+        "seq_boxes.*",
+        "track.*",
+        "track_metadata.*",
+        "track_visual.*",
+      ],
     },
     {
       dir: "ext/libheif/libheif/api/libheif",
@@ -623,7 +652,7 @@ export const libheif: LibDef = {
 };
 
 // mupdf-libs: combined library (libjpeg-turbo + jbig2dec + openjpeg + freetype
-// + lcms2 + harfbuzz + mujs + gumbo + extract + brotli)
+// + lcms2 + harfbuzz + mujs + extract + brotli)
 export const mupdfLibs: LibDef = {
   name: "mupdf-libs",
   alwaysOptimize: true,
@@ -660,8 +689,6 @@ export const mupdfLibs: LibDef = {
     "ext/lcms2/include",
     "ext/harfbuzz/src/hb-ucdn",
     "ext/mujs",
-    "ext/gumbo-parser/include",
-    "ext/gumbo-parser/visualc/include",
     "ext/extract/include",
     "ext/brotli/c/include",
     "ext/zlib",
@@ -725,34 +752,77 @@ export const mupdfLibs: LibDef = {
     {
       dir: "ext/libjpeg-turbo/src/wrapper",
       patterns: [
-        "jcapistd-8.c", "jcapistd-12.c", "jcapistd-16.c",
-        "jccoefct-8.c", "jccoefct-12.c",
-        "jccolor-8.c", "jccolor-12.c", "jccolor-16.c",
-        "jcdctmgr-8.c", "jcdctmgr-12.c",
-        "jcdiffct-8.c", "jcdiffct-12.c", "jcdiffct-16.c",
-        "jclossls-8.c", "jclossls-12.c", "jclossls-16.c",
-        "jcmainct-8.c", "jcmainct-12.c", "jcmainct-16.c",
-        "jcprepct-8.c", "jcprepct-12.c", "jcprepct-16.c",
-        "jcsample-8.c", "jcsample-12.c", "jcsample-16.c",
-        "jdapistd-8.c", "jdapistd-12.c", "jdapistd-16.c",
-        "jdcoefct-8.c", "jdcoefct-12.c",
-        "jdcolor-8.c", "jdcolor-12.c", "jdcolor-16.c",
-        "jddctmgr-8.c", "jddctmgr-12.c",
-        "jddiffct-8.c", "jddiffct-12.c", "jddiffct-16.c",
-        "jdlossls-8.c", "jdlossls-12.c", "jdlossls-16.c",
-        "jdmainct-8.c", "jdmainct-12.c", "jdmainct-16.c",
-        "jdmerge-8.c", "jdmerge-12.c",
-        "jdpostct-8.c", "jdpostct-12.c", "jdpostct-16.c",
-        "jdsample-8.c", "jdsample-12.c", "jdsample-16.c",
-        "jfdctfst-8.c", "jfdctfst-12.c",
-        "jfdctint-8.c", "jfdctint-12.c",
-        "jidctflt-8.c", "jidctflt-12.c",
-        "jidctfst-8.c", "jidctfst-12.c",
-        "jidctint-8.c", "jidctint-12.c",
-        "jidctred-8.c", "jidctred-12.c",
-        "jquant1-8.c", "jquant1-12.c",
-        "jquant2-8.c", "jquant2-12.c",
-        "jutils-8.c", "jutils-12.c", "jutils-16.c",
+        "jcapistd-8.c",
+        "jcapistd-12.c",
+        "jcapistd-16.c",
+        "jccoefct-8.c",
+        "jccoefct-12.c",
+        "jccolor-8.c",
+        "jccolor-12.c",
+        "jccolor-16.c",
+        "jcdctmgr-8.c",
+        "jcdctmgr-12.c",
+        "jcdiffct-8.c",
+        "jcdiffct-12.c",
+        "jcdiffct-16.c",
+        "jclossls-8.c",
+        "jclossls-12.c",
+        "jclossls-16.c",
+        "jcmainct-8.c",
+        "jcmainct-12.c",
+        "jcmainct-16.c",
+        "jcprepct-8.c",
+        "jcprepct-12.c",
+        "jcprepct-16.c",
+        "jcsample-8.c",
+        "jcsample-12.c",
+        "jcsample-16.c",
+        "jdapistd-8.c",
+        "jdapistd-12.c",
+        "jdapistd-16.c",
+        "jdcoefct-8.c",
+        "jdcoefct-12.c",
+        "jdcolor-8.c",
+        "jdcolor-12.c",
+        "jdcolor-16.c",
+        "jddctmgr-8.c",
+        "jddctmgr-12.c",
+        "jddiffct-8.c",
+        "jddiffct-12.c",
+        "jddiffct-16.c",
+        "jdlossls-8.c",
+        "jdlossls-12.c",
+        "jdlossls-16.c",
+        "jdmainct-8.c",
+        "jdmainct-12.c",
+        "jdmainct-16.c",
+        "jdmerge-8.c",
+        "jdmerge-12.c",
+        "jdpostct-8.c",
+        "jdpostct-12.c",
+        "jdpostct-16.c",
+        "jdsample-8.c",
+        "jdsample-12.c",
+        "jdsample-16.c",
+        "jfdctfst-8.c",
+        "jfdctfst-12.c",
+        "jfdctint-8.c",
+        "jfdctint-12.c",
+        "jidctflt-8.c",
+        "jidctflt-12.c",
+        "jidctfst-8.c",
+        "jidctfst-12.c",
+        "jidctint-8.c",
+        "jidctint-12.c",
+        "jidctred-8.c",
+        "jidctred-12.c",
+        "jquant1-8.c",
+        "jquant1-12.c",
+        "jquant2-8.c",
+        "jquant2-12.c",
+        "jutils-8.c",
+        "jutils-12.c",
+        "jutils-16.c",
       ],
     },
     // ── jbig2dec ──
@@ -925,8 +995,6 @@ export const mupdfLibs: LibDef = {
     },
     // ── mujs ──
     { dir: "ext/mujs", patterns: ["one.c"] },
-    // ── gumbo ──
-    { dir: "ext/gumbo-parser/src", patterns: ["*.c"] },
     // ── extract ──
     {
       dir: "ext/extract/src",
@@ -994,7 +1062,7 @@ export const mupdf: LibDef = {
     "ext/brotli/c/include",
     "ext/harfbuzz/src",
     "ext/lcms2/include",
-    "ext/gumbo-parser/src",
+    "ext/a-gumbo",
     "ext/extract/include",
     "ext/zlib",
     "ext/libarchive",

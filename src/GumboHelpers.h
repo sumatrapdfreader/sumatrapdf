@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 extern "C" {
-#include "../ext/gumbo-parser/src/gumbo.h"
+#include "../ext/a-gumbo/gumbo.h"
 }
 
 // True if `node` is an element whose tag name matches `name`

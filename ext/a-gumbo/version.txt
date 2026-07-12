@@ -1,0 +1,5 @@
+repo_url: https://github.com/ArtifexSoftware/thirdparty-gumbo-parser.git
+revision: v0.10.1
+commit_sha1: 3973c58d759574f2899528d2b3379e17d66dbcad
+github_url: https://github.com/ArtifexSoftware/thirdparty-gumbo-parser
+github_commit_url: https://github.com/ArtifexSoftware/thirdparty-gumbo-parser/commit/3973c58d759574f2899528d2b3379e17d66dbcad

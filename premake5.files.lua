@@ -1736,6 +1736,14 @@ function gumbo_files()
   })
 end
 
+function a_gumbo_files()
+  files {
+    "ext/a-gumbo/gumbo.c",
+    "ext/a-gumbo/gumbo.h",
+    "ext/a-gumbo/version.txt",
+  }
+end
+
 function bin2coff_files()
   files_in_dir("tools", {
     "bin2coff.c"

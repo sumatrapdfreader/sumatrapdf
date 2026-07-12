@@ -688,6 +688,16 @@ workspace "SumatraPDF"
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
+  project "a-gumbo"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings { "4018", "4100", "4132", "4189", "4204", "4244", "4245", "4267",
+      "4305", "4306", "4389", "4456", "4701", "4702" }
+    includedirs { "ext/a-gumbo" }
+    a_gumbo_files()
+
 -- to make Visual Studio solution smaller
 -- combine 9 libs only used by mupdf into a single project
 -- instead of having 9 projects
@@ -785,12 +795,6 @@ workspace "SumatraPDF"
     includedirs { "ext/mujs" }
     disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
-
-    -- gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
-      "4305", "4306", "4389", "4456", "4701" }
-    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
-    gumbo_files()
 
     -- extract
     disablewarnings { "4005", "4201", "4130" }
@@ -947,14 +951,14 @@ workspace "SumatraPDF"
       "mupdf/scripts/cmark-gfm",
       "ext/harfbuzz/src",
       "ext/lcms2/include",
-      "ext/gumbo-parser/src",
+      "ext/a-gumbo",
       "ext/extract/include",
       "ext/libarchive",
     }
     fonts()
 
     mupdf_files()
-    links { "mupdf-libs", "libarchive" }
+    links { "mupdf-libs", "libarchive", "a-gumbo" }
     -- links { "mupdf-libs", "zlib", "freetype", "openjpeg", "libjpeg-turbo", "jbig2dec", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
     -- mupdf

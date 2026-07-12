@@ -73,12 +73,6 @@
     <Filter Include="freetype\src\type1">
       <UniqueIdentifier>{A24FBFC3-8E33-8019-F793-7A6CE3966A9B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="gumbo-parser">
-      <UniqueIdentifier>{59BFF452-4522-84F7-EEA7-BCADDAE94F7A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gumbo-parser\src">
-      <UniqueIdentifier>{F081A233-DC7A-C185-05AD-A60AF104A191}</UniqueIdentifier>
-    </Filter>
     <Filter Include="harfbuzz">
       <UniqueIdentifier>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</UniqueIdentifier>
     </Filter>
@@ -383,60 +377,6 @@
     </ClInclude>
     <ClInclude Include="..\ext\extract\src\zip.h">
       <Filter>extract\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\attribute.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\char_ref.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\error.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\gumbo.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\insertion_mode.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\parser.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\string_buffer.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\string_piece.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\tag_enum.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\tag_gperf.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\tag_sizes.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\tag_strings.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\token_type.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\tokenizer.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\tokenizer_states.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\utf8.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\util.h">
-      <Filter>gumbo-parser\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\gumbo-parser\src\vector.h">
-      <Filter>gumbo-parser\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\lcms2\src\extra_xform.h">
       <Filter>lcms2\src</Filter>
@@ -874,42 +814,6 @@
     </ClCompile>
     <ClCompile Include="..\ext\freetype\src\type1\type1.c">
       <Filter>freetype\src\type1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\attribute.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\char_ref.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\error.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\gumbo_utils.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\parser.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\string_buffer.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\string_piece.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\tag.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\tokenizer.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\utf8.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\util.c">
-      <Filter>gumbo-parser\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\gumbo-parser\src\vector.c">
-      <Filter>gumbo-parser\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\harfbuzz\src\OT\Var\VARC\VARC.cc">
       <Filter>harfbuzz\src\OT\Var\VARC</Filter>
