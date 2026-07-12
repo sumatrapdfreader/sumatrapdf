@@ -277,9 +277,16 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
             continue;
         }
         if ('{' == c) {
-            addRawStr(o, start, off - start);
-            off = parseArgDefPositional(o, off);
-            start = off;
+            // only "{N}" is an argument reference; a '{' not followed by a
+            // digit is raw text (e.g. CSS / JS braces in html templates that
+            // are run through fmt)
+            if (off + 1 < fmtStr.len && str::IsDigit(fmtStr.s[off + 1])) {
+                addRawStr(o, start, off - start);
+                off = parseArgDefPositional(o, off);
+                start = off;
+                continue;
+            }
+            off++;
             continue;
         }
         if ('%' == c) {
