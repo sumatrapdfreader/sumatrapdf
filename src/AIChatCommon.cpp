@@ -29,11 +29,8 @@
 #include "EngineAll.h"
 
 bool IsAIChatAvailable() {
-#ifdef _MSC_VER
-    return IsWindows10OrGreater();
-#else
-    return false;
-#endif
+    // the chat UI is a WebView
+    return HasWebView();
 }
 
 bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {

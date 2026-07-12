@@ -37,7 +37,7 @@ TempStr GetWebView2VersionTemp() {
     return res;
 }
 
-bool HasWebView() {
+static bool IsWebViewAvailable() {
     WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
     if (FAILED(hr) || len(ver) == 0) {
@@ -45,6 +45,12 @@ bool HasWebView() {
         return false;
     }
     return true;
+}
+
+bool HasWebView() {
+    // the runtime's availability doesn't change while we're running
+    static bool hasWebView = IsWebViewAvailable();
+    return hasWebView;
 }
 #endif // _MSC_VER
 
