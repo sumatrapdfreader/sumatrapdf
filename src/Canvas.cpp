@@ -1793,7 +1793,7 @@ static void OnMouseRightButtonDblClick(MainWindow* win, int x, int y, WPARAM key
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE 1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation, COLORREF) {
     // Frame info
     Rect frame = bounds;
     frame.Inflate(BORDER_SIZE, BORDER_SIZE);
@@ -1828,11 +1828,8 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool, COLORREF bgCol) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
-    COLORREF bgCol;
-    ThemeDocumentColors(bgCol);
-    // use canvas background color, not page rendering color
     AutoDeleteBrush brush(CreateSolidBrush(bgCol));
     ScopedSelectPen restorePen(hdc, pen);
     ScopedSelectObject restoreBrush(hdc, brush);
@@ -2023,6 +2020,22 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         colDocBg = curTab->bgColor;
     }
 
+    // placeholder painted where a page's bitmap isn't rendered yet; normally
+    // the page render background so an incoming page doesn't flash a
+    // different color
+    COLORREF colPlaceholder;
+    ThemeDocumentColors(colPlaceholder);
+    // until the first page of this tab has been painted, use the theme's
+    // window background instead: e.g. restoring a session into a maximized
+    // window can take a while to render the first page and a white
+    // placeholder (+ white doc background) flashes in dark themes
+    bool firstDocPaint = curTab && !curTab->everPaintedPage && !isImage;
+    if (firstDocPaint) {
+        colDocBg = ThemeMainWindowBackgroundColor();
+        colDocTxt = ThemeWindowTextColor();
+        colPlaceholder = colDocBg;
+    }
+
     bool shouldPaint = false;
     auto* gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = len(*gcols);
@@ -2119,7 +2132,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (!dm->GetEngine()->IsImageCollection()) {
             Rect r = pi->pageOnScreen;
             auto presMode = win->presentation;
-            PaintPageFrameAndShadow(hdc, bounds, r, presMode);
+            PaintPageFrameAndShadow(hdc, bounds, r, presMode, colPlaceholder);
         }
 
         // check if this page is known to have failed rendering
@@ -2139,6 +2152,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         int renderDelay = gRenderCache->Paint(hdc, bounds, dm, pageNo, pi, &renderOutOfDateCue);
         if (renderDelay == 0) {
             shouldPaint = true;
+            if (curTab) {
+                curTab->everPaintedPage = true;
+            }
         }
         if (renderDelay != 0) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);

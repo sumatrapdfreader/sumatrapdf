@@ -67,6 +67,13 @@ struct WindowTab {
     // per-document tab color from FileState; kColorUnset = use default
     COLORREF tabColor = kColorUnset;
 
+    // a page of this tab has been painted from the render cache at least
+    // once. Until then page placeholders paint in the theme background color
+    // instead of the (possibly white) page color, so e.g. restoring a session
+    // into a maximized window doesn't flash white in dark themes while the
+    // first render is in flight
+    bool everPaintedPage = false;
+
     // TODO: arguably a hack
     bool ignoreNextAutoReload = false;
 
