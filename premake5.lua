@@ -802,14 +802,14 @@ workspace "SumatraPDF"
     disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
     harfbuzz_files()
 
-  project "mujs"
+  project "a-mujs"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
-    includedirs { "ext/mujs" }
+    includedirs { "ext/a-mujs" }
     disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
-    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
 
   project "extract"
     static_intermediate_dirs()
@@ -960,7 +960,7 @@ workspace "SumatraPDF"
       "ext/openjpeg/src/lib/openjp2",
       "mupdf/scripts/freetype",
       "ext/freetype/include",
-      "ext/mujs",
+      "ext/a-mujs",
       "ext/brotli/c/include",
       "ext/cmark-gfm/src",
       "ext/cmark-gfm/extensions",
@@ -975,7 +975,7 @@ workspace "SumatraPDF"
 
     mupdf_files()
     links {
-      "cmark-gfm", "mujs", "extract", "harfbuzz", "freetype", "brotli",
+      "cmark-gfm", "a-mujs", "extract", "harfbuzz", "freetype", "brotli",
       "lcms2", "openjpeg", "jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 
