@@ -21,6 +21,8 @@
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Theme.h"
+#include "DarkModeSubclass.h"
 #include "resource.h"
 
 #include "AIChatCommon.h"
@@ -1080,6 +1082,12 @@ static LRESULT CALLBACK WndProcGrokBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             FillRect(hdc, &rc, win->brControlBgColor);
             return TRUE;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, ThemeWindowTextColor());
+            SetBkMode(hdc, TRANSPARENT);
+            return (LRESULT)win->brControlBgColor;
+        }
         case WM_SIZE:
             LayoutGrokBox(win);
             break;
@@ -1104,6 +1112,10 @@ static LRESULT CALLBACK WndProcGrokBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                 if (win->grokWebView) {
                     win->grokWebView->UpdateWebviewSize();
                 }
+            } else if (wp == 44) {
+                // WebView recreated after a theme change: restore the chat
+                KillTimer(hwnd, 44);
+                OnGrokTabChanged(win);
             }
             break;
     }
@@ -1183,6 +1195,39 @@ static void EnsureWebViewReady(MainWindow* win) {
     } else {
         delete webView;
     }
+}
+
+// apply theme colors to the panel's native controls and, since the chat
+// colors are baked into the WebView's html, recreate the WebView (the chat
+// log is replayed into it once the new page has loaded)
+void UpdateGrokTheme(MainWindow* win) {
+    if (!win || !win->hwndGrokBox) {
+        return;
+    }
+    COLORREF bgCol = ThemeControlBackgroundColor();
+    COLORREF txtCol = ThemeWindowTextColor();
+    if (win->grokLabelWithClose) {
+        win->grokLabelWithClose->SetColors(txtCol, bgCol);
+    }
+    if (win->grokInput) {
+        win->grokInput->SetColors(txtCol, bgCol);
+    }
+    // the panel is created after the frame-wide dark mode pass, so its
+    // controls (e.g. the checkbox) need their own subclass + theme pass
+    if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
+        DarkMode::setChildCtrlsSubclassAndTheme(win->hwndGrokBox);
+    }
+    if (win->grokWebView) {
+        delete win->grokWebView;
+        win->grokWebView = nullptr;
+        win->grokWebViewReady = false;
+        if (win->uiState.grokVisible) {
+            EnsureWebViewReady(win);
+            // replay the chat once the new page has had time to load
+            SetTimer(win->hwndGrokBox, 44, 600, nullptr);
+        }
+    }
+    RedrawWindow(win->hwndGrokBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // --- Public API ---
@@ -1282,6 +1327,7 @@ void CreateGrokPanel(MainWindow* win) {
 
     ApplyGrokSettingsToUI(win);
     AIChatApplySavedSidebarDx(win);
+    UpdateGrokTheme(win);
 }
 
 // Auto-select the most recent session for the current tab if none is set

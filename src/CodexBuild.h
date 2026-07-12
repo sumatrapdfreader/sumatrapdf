@@ -16,6 +16,7 @@ void ToggleCodexPanel(MainWindow* win);
 void ShutdownCodexForMainWindow(MainWindow* win);
 void DestroyCodexPanel(MainWindow* win);
 void OnCodexTabChanged(MainWindow* win);
+void UpdateCodexTheme(MainWindow* win);
 
 // called from SumatraPDF.cpp for width change relayout
 // reposition children and repaint after the container is moved/resized

@@ -16,6 +16,7 @@ void ToggleClaudePanel(MainWindow* win);
 void ShutdownClaudeForMainWindow(MainWindow* win);
 void DestroyClaudePanel(MainWindow* win);
 void OnClaudeTabChanged(MainWindow* win);
+void UpdateClaudeTheme(MainWindow* win);
 
 // called from SumatraPDF.cpp for width change relayout
 // reposition children and repaint after the container is moved/resized

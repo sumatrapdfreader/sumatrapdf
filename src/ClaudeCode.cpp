@@ -21,6 +21,8 @@
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Theme.h"
+#include "DarkModeSubclass.h"
 #include "resource.h"
 
 #include "AIChatCommon.h"
@@ -1028,6 +1030,12 @@ static LRESULT CALLBACK WndProcClaudeBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
             FillRect(hdc, &rc, win->brControlBgColor);
             return TRUE;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, ThemeWindowTextColor());
+            SetBkMode(hdc, TRANSPARENT);
+            return (LRESULT)win->brControlBgColor;
+        }
         case WM_SIZE:
             LayoutClaudeBox(win);
             break;
@@ -1052,6 +1060,10 @@ static LRESULT CALLBACK WndProcClaudeBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
                 if (win->claudeWebView) {
                     win->claudeWebView->UpdateWebviewSize();
                 }
+            } else if (wp == 44) {
+                // WebView recreated after a theme change: restore the chat
+                KillTimer(hwnd, 44);
+                OnClaudeTabChanged(win);
             }
             break;
     }
@@ -1131,6 +1143,39 @@ static void EnsureWebViewReady(MainWindow* win) {
     } else {
         delete webView;
     }
+}
+
+// apply theme colors to the panel's native controls and, since the chat
+// colors are baked into the WebView's html, recreate the WebView (the chat
+// log is replayed into it once the new page has loaded)
+void UpdateClaudeTheme(MainWindow* win) {
+    if (!win || !win->hwndClaudeBox) {
+        return;
+    }
+    COLORREF bgCol = ThemeControlBackgroundColor();
+    COLORREF txtCol = ThemeWindowTextColor();
+    if (win->claudeLabelWithClose) {
+        win->claudeLabelWithClose->SetColors(txtCol, bgCol);
+    }
+    if (win->claudeInput) {
+        win->claudeInput->SetColors(txtCol, bgCol);
+    }
+    // the panel is created after the frame-wide dark mode pass, so its
+    // controls (e.g. the checkbox) need their own subclass + theme pass
+    if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
+        DarkMode::setChildCtrlsSubclassAndTheme(win->hwndClaudeBox);
+    }
+    if (win->claudeWebView) {
+        delete win->claudeWebView;
+        win->claudeWebView = nullptr;
+        win->claudeWebViewReady = false;
+        if (win->uiState.claudeVisible) {
+            EnsureWebViewReady(win);
+            // replay the chat once the new page has had time to load
+            SetTimer(win->hwndClaudeBox, 44, 600, nullptr);
+        }
+    }
+    RedrawWindow(win->hwndClaudeBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // --- Public API ---
@@ -1229,6 +1274,7 @@ void CreateClaudePanel(MainWindow* win) {
 
     ApplyClaudeSettingsToUI(win);
     AIChatApplySavedSidebarDx(win);
+    UpdateClaudeTheme(win);
 }
 
 // Auto-select the most recent session for the current tab if none is set

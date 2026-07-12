@@ -21,6 +21,7 @@
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Theme.h"
 
 #include "base/GuessFileType.h"
 
@@ -333,23 +334,24 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
 static const char* kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
 <script src='%smarked.min.js'></script>
 <style>
+:root { %s }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; padding: 6px;
-  background: %s; color: #222; line-height: 1.4; }
+  background: var(--bg); color: var(--fg); line-height: 1.4; }
 p { margin: 2px 0; }
 h1,h2,h3,h4 { margin: 6px 0 2px 0; }
 ul,ol { margin: 2px 0 2px 18px; }
 li { margin: 1px 0; }
-.user { color: #1a5276; font-weight: bold; margin: 8px 0 2px 0; padding: 4px 0;
-  border-top: 1px solid #ccc; }
-.tool { color: #555; font-size: 11px; font-style: italic;
-  border-left: 3px solid #999; padding-left: 6px; margin: 2px 0; }
+.user { color: var(--user); font-weight: bold; margin: 8px 0 2px 0; padding: 4px 0;
+  border-top: 1px solid var(--border); }
+.tool { color: var(--muted); font-size: 11px; font-style: italic;
+  border-left: 3px solid var(--muted); padding-left: 6px; margin: 2px 0; }
 .assistant { margin: 2px 0; }
-.assistant pre { background: #f0f0f0; padding: 6px; border-radius: 4px;
+.assistant pre { background: var(--code-bg); padding: 6px; border-radius: 4px;
   overflow-x: auto; margin: 3px 0; font-size: 12px; }
-.assistant code { background: #e8e8e8; padding: 1px 3px; border-radius: 2px; font-size: 12px; }
+.assistant code { background: var(--code-bg); padding: 1px 3px; border-radius: 2px; font-size: 12px; }
 .assistant pre code { background: none; padding: 0; }
-.error { color: #c0392b; font-weight: bold; margin: 4px 0; }
+.error { color: var(--error); font-weight: bold; margin: 4px 0; }
 </style></head><body><div id='chat'></div>
 <script>
 var chatDiv = document.getElementById('chat');
@@ -406,10 +408,28 @@ function scrollToBottom() {
 }
 </script></body></html>)";
 
+static TempStr ColorToCssTemp(COLORREF c) {
+    return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
+}
+
+// bgColor is the per-backend BgColor setting; "#ffffff" is its default value
+// and means "follow the theme". An explicitly different color keeps the
+// classic light chat colors on top of that background.
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     Str host = virtualHost ? virtualHost : StrL("");
-    Str bg = bgColor ? bgColor : StrL("#ffffff");
-    return fmt(kAIChatHtmlFmt, host, bg);
+    bool followTheme = str::IsEmptyOrWhiteSpace(bgColor) || str::EqI(bgColor, StrL("#ffffff"));
+    COLORREF themeBg = ThemeControlBackgroundColor();
+    bool dark = followTheme && !IsLightColor(themeBg);
+    TempStr bg = followTheme ? ColorToCssTemp(themeBg) : str::DupTemp(bgColor);
+    TempStr fg = dark ? ColorToCssTemp(ThemeWindowTextColor()) : str::DupTemp("#222222");
+    Str muted = dark ? StrL("#a0a0a0") : StrL("#555555");
+    Str user = dark ? StrL("#7fb3d5") : StrL("#1a5276");
+    Str border = dark ? StrL("#4a4a4a") : StrL("#cccccc");
+    Str codeBg = dark ? StrL("#3a3a3a") : StrL("#f0f0f0");
+    Str error = dark ? StrL("#e74c3c") : StrL("#c0392b");
+    TempStr cssVars = fmt("--bg:%s; --fg:%s; --muted:%s; --user:%s; --border:%s; --code-bg:%s; --error:%s;", bg, fg,
+                          muted, user, border, codeBg, error);
+    return fmt(kAIChatHtmlFmt, host, cssVars);
 }
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {

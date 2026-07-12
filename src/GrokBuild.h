@@ -16,6 +16,7 @@ void ToggleGrokPanel(MainWindow* win);
 void ShutdownGrokForMainWindow(MainWindow* win);
 void DestroyGrokPanel(MainWindow* win);
 void OnGrokTabChanged(MainWindow* win);
+void UpdateGrokTheme(MainWindow* win);
 
 // called from SumatraPDF.cpp for width change relayout
 // reposition children and repaint after the container is moved/resized

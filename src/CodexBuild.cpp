@@ -21,6 +21,8 @@
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Theme.h"
+#include "DarkModeSubclass.h"
 #include "resource.h"
 
 #include "AIChatCommon.h"
@@ -1202,6 +1204,12 @@ static LRESULT CALLBACK WndProcCodexBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             FillRect(hdc, &rc, win->brControlBgColor);
             return TRUE;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, ThemeWindowTextColor());
+            SetBkMode(hdc, TRANSPARENT);
+            return (LRESULT)win->brControlBgColor;
+        }
         case WM_SIZE:
             LayoutCodexBox(win);
             break;
@@ -1226,6 +1234,10 @@ static LRESULT CALLBACK WndProcCodexBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
                 if (win->codexWebView) {
                     win->codexWebView->UpdateWebviewSize();
                 }
+            } else if (wp == 44) {
+                // WebView recreated after a theme change: restore the chat
+                KillTimer(hwnd, 44);
+                OnCodexTabChanged(win);
             }
             break;
     }
@@ -1305,6 +1317,39 @@ static void EnsureWebViewReady(MainWindow* win) {
     } else {
         delete webView;
     }
+}
+
+// apply theme colors to the panel's native controls and, since the chat
+// colors are baked into the WebView's html, recreate the WebView (the chat
+// log is replayed into it once the new page has loaded)
+void UpdateCodexTheme(MainWindow* win) {
+    if (!win || !win->hwndCodexBox) {
+        return;
+    }
+    COLORREF bgCol = ThemeControlBackgroundColor();
+    COLORREF txtCol = ThemeWindowTextColor();
+    if (win->codexLabelWithClose) {
+        win->codexLabelWithClose->SetColors(txtCol, bgCol);
+    }
+    if (win->codexInput) {
+        win->codexInput->SetColors(txtCol, bgCol);
+    }
+    // the panel is created after the frame-wide dark mode pass, so its
+    // controls (e.g. the checkbox) need their own subclass + theme pass
+    if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
+        DarkMode::setChildCtrlsSubclassAndTheme(win->hwndCodexBox);
+    }
+    if (win->codexWebView) {
+        delete win->codexWebView;
+        win->codexWebView = nullptr;
+        win->codexWebViewReady = false;
+        if (win->uiState.codexVisible) {
+            EnsureWebViewReady(win);
+            // replay the chat once the new page has had time to load
+            SetTimer(win->hwndCodexBox, 44, 600, nullptr);
+        }
+    }
+    RedrawWindow(win->hwndCodexBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // --- Public API ---
@@ -1402,6 +1447,7 @@ void CreateCodexPanel(MainWindow* win) {
 
     ApplyCodexSettingsToUI(win);
     AIChatApplySavedSidebarDx(win);
+    UpdateCodexTheme(win);
 }
 
 // Auto-select the most recent session for the current tab if none is set

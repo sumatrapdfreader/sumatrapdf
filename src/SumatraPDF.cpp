@@ -2356,6 +2356,9 @@ void UpdateAfterThemeChange() {
         UpdateToolbarAfterThemeChange(win);
         RecreateFindBar(win);
         UpdateFindWindowTheme(win);
+        UpdateClaudeTheme(win);
+        UpdateGrokTheme(win);
+        UpdateCodexTheme(win);
         if (UseDarkModeLib()) {
             DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
             DarkMode::setChildCtrlsTheme(win->hwndFrame);
