@@ -214,12 +214,17 @@ constexpr u32 kUiRelayout = 0x1;
 constexpr u32 kUiForceRelayout = 0x2;
 constexpr u32 kUiToolbarDirty = 0x4; // repaint the toolbar
 constexpr u32 kUiTabsDirty = 0x8;    // repaint the tab bar
+// this request doesn't need the toolbars re-fit (sidebar/splitter changes);
+// ignored if another pending request wants them updated
+constexpr u32 kUiNoToolbars = 0x10;
+constexpr u32 kUiSidebarDirty = 0x20; // repaint toc/favorites boxes and their splitters
 
 // Request an async, coalesced UI update: records what needs to happen and
 // posts WM_UPDATE_UI once; any further requests before it's handled are
 // folded into the same pass. Prefer this over direct relayout/RedrawWindow
-// calls to avoid excessive repaints.
-void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout);
+// calls to avoid excessive repaints. sidebarDx >= 0 relayouts with a new
+// sidebar width (splitter dragging).
+void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout, int sidebarDx = -1);
 // same as ScheduleUiUpdate(win, kUiRelayout)
 void RelayoutWindow(MainWindow* win);
 void DuplicateTabInNewWindow(WindowTab* tab);

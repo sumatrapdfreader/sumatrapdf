@@ -349,6 +349,12 @@ struct MainWindow {
         bool updatePending = false; // a WM_UPDATE_UI is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update
+        bool sidebarDirty = false;  // repaint toc/favorites boxes on the next update
+        // RelayoutFrame args for the pending update: updateToolbars is the OR
+        // of all pending requests, sidebarDx is last-request-wins (-1 = keep
+        // the current sidebar width)
+        bool updateToolbars = false;
+        int sidebarDx = -1;
     };
     UIState uiState;
 

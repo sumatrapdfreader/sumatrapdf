@@ -5222,45 +5222,77 @@ static void FrameOnSize(MainWindow* win, int, int) {
 // handle WM_UPDATE_UI: perform all UI work requested via ScheduleUiUpdate
 // since the last update in one pass
 static void FrameUpdateUi(MainWindow* win) {
-    win->uiState.updatePending = false;
+    MainWindow::UIState& ui = win->uiState;
+    ui.updatePending = false;
+    bool updateToolbars = ui.updateToolbars;
+    int sidebarDx = ui.sidebarDx;
+    ui.updateToolbars = false;
+    ui.sidebarDx = -1;
     // RelayoutFrame skips when nothing layout-affecting changed (a force is
     // requested by clearing win->uiState.layout)
-    bool didLayout = RelayoutFrame(win);
+    bool didLayout = RelayoutFrame(win, updateToolbars, sidebarDx);
     if (didLayout) {
         // re-anchor the floating find bar over the (possibly moved) search icon
         FindBarReposition(win);
     }
-    if (win->uiState.toolbarDirty) {
-        win->uiState.toolbarDirty = false;
+    if (ui.toolbarDirty) {
+        ui.toolbarDirty = false;
         if (win->hwndReBar) {
             RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
-    if (win->uiState.tabsDirty) {
-        win->uiState.tabsDirty = false;
+    if (ui.tabsDirty) {
+        ui.tabsDirty = false;
         if (win->tabsCtrl && win->tabsCtrl->IsVisible()) {
             RedrawWindow(win->tabsCtrl->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE);
         }
     }
+    if (ui.sidebarDirty) {
+        ui.sidebarDirty = false;
+        bool tocVisible = win->tocVisible;
+        bool favVisible = gGlobalPrefs->showFavorites;
+        if (tocVisible) {
+            RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
+        if (favVisible) {
+            RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
+        if (tocVisible || favVisible) {
+            InvalidateRect(win->sidebarSplitter->hwnd, nullptr, TRUE);
+        }
+        if (tocVisible && favVisible) {
+            InvalidateRect(win->favSplitter->hwnd, nullptr, TRUE);
+        }
+    }
 }
 
-void ScheduleUiUpdate(MainWindow* win, u32 flags) {
+void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
     if (!win || !win->hwndFrame) {
         return;
     }
+    MainWindow::UIState& ui = win->uiState;
     if (flags & kUiForceRelayout) {
-        win->uiState.layout = {};
+        ui.layout = {};
+    }
+    if (!(flags & kUiNoToolbars)) {
+        ui.updateToolbars = true;
+    }
+    if (sidebarDx >= 0) {
+        ui.sidebarDx = sidebarDx; // last request wins
     }
     if (flags & kUiToolbarDirty) {
-        win->uiState.toolbarDirty = true;
+        ui.toolbarDirty = true;
     }
     if (flags & kUiTabsDirty) {
-        win->uiState.tabsDirty = true;
+        ui.tabsDirty = true;
     }
-    if (win->uiState.updatePending) {
+    if (flags & kUiSidebarDirty) {
+        ui.sidebarDirty = true;
+    }
+    if (ui.updatePending) {
         return; // one WM_UPDATE_UI is already queued; it'll pick this up
     }
-    win->uiState.updatePending = true;
+    ui.updatePending = true;
     PostMessageW(win->hwndFrame, WM_UPDATE_UI, 0, 0);
 }
 
@@ -6423,7 +6455,8 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
         return;
     }
 
-    RelayoutFrame(win, false, sidebarDx);
+    // coalesces a burst of splitter moves into one relayout
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars, sidebarDx);
 }
 
 static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
@@ -6445,19 +6478,19 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
         return;
     }
     gGlobalPrefs->tocDy = tocDy;
-    RelayoutFrame(win, false, rToc.dx);
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars, rToc.dx);
 }
 
 void RelayoutForClaudeSplitter(MainWindow* win) {
-    RelayoutFrame(win, false);
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
 }
 
 void RelayoutForGrokSplitter(MainWindow* win) {
-    RelayoutFrame(win, false);
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
 }
 
 void RelayoutForCodexSplitter(MainWindow* win) {
-    RelayoutFrame(win, false);
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
 }
 
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
@@ -6509,19 +6542,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     win->favSplitter->isLive = true;
 
     if (relayout) {
-        RelayoutFrame(win, false);
-        if (tocVisible) {
-            RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-        }
-        if (showFavorites) {
-            RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-        }
-        if (tocVisible || showFavorites) {
-            InvalidateRect(win->sidebarSplitter->hwnd, nullptr, TRUE);
-        }
-        if (tocVisible && showFavorites) {
-            InvalidateRect(win->favSplitter->hwnd, nullptr, TRUE);
-        }
+        ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
     }
 }
 
