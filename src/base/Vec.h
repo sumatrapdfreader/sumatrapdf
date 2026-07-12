@@ -28,7 +28,7 @@ class Vec {
     static constexpr size_t kElSize = sizeof(T);
 
   private:
-    NO_INLINE bool EnsureCapSlow(int needed) {
+    NO_INLINE bool EnsureCapSlow(int needed, size_t elSize) {
         int newCap = cap * 2;
         if (needed > newCap) {
             newCap = needed;
@@ -38,7 +38,7 @@ class Vec {
         }
 
         size_t newElCount = (size_t)newCap + kPadding;
-        if (newElCount >= SIZE_MAX / kElSize) {
+        if (newElCount >= SIZE_MAX / elSize) {
             return false;
         }
         if (newElCount > INT_MAX) {
@@ -46,20 +46,21 @@ class Vec {
             return false;
         }
 
-        size_t allocSize = newElCount * kElSize;
-        size_t newPadding = allocSize - (size_t)len * kElSize;
+        size_t oldSize = (size_t)len * elSize;
+        size_t allocSize = newElCount * elSize;
+        size_t newPadding = allocSize - oldSize;
         T* newEls;
         if (buf == els) {
-            newEls = (T*)MemDup(a, buf, (size_t)len * kElSize, newPadding);
+            newEls = (T*)MemDup(a, buf, oldSize, newPadding);
         } else {
-            newEls = (T*)Realloc(a, els, allocSize, (size_t)len * kElSize);
+            newEls = (T*)Realloc(a, els, allocSize, oldSize);
         }
         if (!newEls) {
             ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
             return false;
         }
         els = newEls;
-        memset(els + len, 0, newPadding);
+        memset((char*)els + oldSize, 0, newPadding);
         cap = newCap;
         return true;
     }
@@ -71,7 +72,7 @@ class Vec {
             return els;
         }
         // slow path
-        if (!EnsureCapSlow(capNeeded)) {
+        if (!EnsureCapSlow(capNeeded, kElSize)) {
             return nullptr;
         }
         return els;
