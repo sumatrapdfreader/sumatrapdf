@@ -17,6 +17,7 @@ PATH=%PATH%;c:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSV
 Make sure you're targeting the righat Configuration / Platform
 
 Reference for warnings:
+ 4005 - macro redefinition
  4018 - signed/unsigned mismatch
  4057 - function X differs in indirection to slightly different base types
  4090 - different 'const' qualifiers
@@ -201,7 +202,7 @@ end
 
 function zlib_defines()
   includedirs {
-    "ext/zlib",
+    "ext/a-zlib",
   }
 end
 
@@ -683,7 +684,7 @@ workspace "SumatraPDF"
     language "C"
     optimized_conf()
     favor_speed()
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    disablewarnings { "4005", "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
   project "a-gumbo"
@@ -1428,7 +1429,7 @@ workspace "MakeLZSA"
     defines { "_7ZIP_ST" }
 
     -- for zlib
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    disablewarnings { "4005", "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
     uses_zlib()
 

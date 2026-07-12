@@ -75,10 +75,10 @@ function brotli_files()
 end
 
 function zlib_files()
-  files_in_dir("ext/zlib", {
-    "adler32.c", "compress.c", "crc32.c", "deflate.c", "gzclose.c",
-    "gzlib.c", "gzread.c", "gzwrite.c", "inffast.c", "inflate.c",
-    "inftrees.c", "trees.c", "zutil.c",
+  files_in_dir("ext/a-zlib", {
+    "zlib.c",
+    "zlib.h",
+    "version.txt",
   })
 end
 

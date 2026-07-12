@@ -1,0 +1,6 @@
+project_homepage: https://zlib.net/
+repo_url: https://github.com/madler/zlib
+revision: v1.3.2
+commit_sha1: da607da739fa6047df13e66a2af6b8bec7c2a498
+github_url: https://github.com/madler/zlib
+github_commit_url: https://github.com/madler/zlib/commit/da607da739fa6047df13e66a2af6b8bec7c2a498

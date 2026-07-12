@@ -229,7 +229,7 @@ function makeLibarchive(outDir: string): LibDef {
       liblzmaConfigDir,
       "ext/libarchive/libarchive",
       "ext/libarchive",
-      "ext/zlib",
+      "ext/a-zlib",
       "ext/a-bzip2",
       "ext/lzma/C",
       "ext/liblzma/api",

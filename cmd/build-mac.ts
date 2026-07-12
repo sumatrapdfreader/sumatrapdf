@@ -230,7 +230,7 @@ function makeLibarchive(outDir: string): LibDef {
       liblzmaConfigDir, // config.h (macOS liblzma) shadows ext/liblzma/config.h
       "ext/libarchive/libarchive",
       "ext/libarchive",
-      "ext/zlib",
+      "ext/a-zlib",
       "ext/a-bzip2",
       "ext/lzma/C",
       "ext/liblzma/api",

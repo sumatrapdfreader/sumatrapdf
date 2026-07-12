@@ -371,7 +371,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -403,7 +403,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -435,7 +435,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -467,7 +467,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -498,7 +498,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -529,7 +529,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -560,7 +560,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -591,7 +591,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -623,7 +623,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -655,7 +655,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -687,7 +687,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -719,7 +719,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -749,7 +749,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -781,7 +781,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -813,7 +813,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -845,7 +845,7 @@
       <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4018;4054;4055;4090;4098;4100;4127;4130;4146;4152;4200;4201;4244;4245;4267;4305;4389;4456;4457;4701;4703;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;LIBARCHIVE_STATIC;PLATFORM_CONFIG_H="config_windows.h";BZ_NO_STDIO;HAVE_CONFIG_H;LZMA_API_STATIC;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-zlib;..\ext\libarchive\libarchive;..\ext\a-bzip2;..\ext\lzma\C;..\ext\liblzma\api;..\ext\liblzma\common;..\ext\liblzma\check;..\ext\liblzma\delta;..\ext\liblzma\lz;..\ext\liblzma\lzma;..\ext\liblzma\rangecoder;..\ext\liblzma\simple;..\ext\liblzma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>

@@ -10,22 +10,8 @@ export const zlib: LibDef = {
   includes: [],
   files: [
     {
-      dir: "ext/zlib",
-      patterns: [
-        "adler32.c",
-        "compress.c",
-        "crc32.c",
-        "deflate.c",
-        "inffast.c",
-        "inflate.c",
-        "inftrees.c",
-        "trees.c",
-        "zutil.c",
-        "gzlib.c",
-        "gzread.c",
-        "gzwrite.c",
-        "gzclose.c",
-      ],
+      dir: "ext/a-zlib",
+      patterns: ["zlib.c"],
     },
   ],
 };
@@ -220,7 +206,7 @@ export const libarchive: LibDef = {
   includes: [
     "ext/libarchive/libarchive",
     "ext/libarchive",
-    "ext/zlib",
+    "ext/a-zlib",
     "ext/a-bzip2",
     "ext/lzma/C",
     "ext/liblzma/api",
@@ -682,7 +668,7 @@ export const mupdfLibs: LibDef = {
     "ext/mujs",
     "ext/extract/include",
     "ext/brotli/c/include",
-    "ext/zlib",
+    "ext/a-zlib",
   ],
   // plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that harfbuzz
   // allocations don't depend on mupdf's thread-local fz_hb_secret context
@@ -1055,7 +1041,7 @@ export const mupdf: LibDef = {
     "ext/lcms2/include",
     "ext/a-gumbo",
     "ext/extract/include",
-    "ext/zlib",
+    "ext/a-zlib",
     "ext/libarchive",
   ],
   files: [

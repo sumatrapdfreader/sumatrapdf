@@ -4,14 +4,14 @@
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\a-zlib">
+      <UniqueIdentifier>{642AAB7D-50E2-ECCA-B9E9-C526A5C087BB}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\lzma">
       <UniqueIdentifier>{39F81ED9-25C5-79E4-4EDE-678C3A0AAF72}</UniqueIdentifier>
     </Filter>
     <Filter Include="ext\lzma\C">
       <UniqueIdentifier>{CBF0BD9C-B7A8-FFE9-20B0-D8450C879ADA}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ext\zlib">
-      <UniqueIdentifier>{766926D9-6236-81E4-8B4F-6F8C777BB672}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
@@ -24,6 +24,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\a-zlib\zlib.h">
+      <Filter>ext\a-zlib</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Arena.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -89,6 +92,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\a-zlib\zlib.c">
+      <Filter>ext\a-zlib</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\lzma\C\Bra86.c">
       <Filter>ext\lzma\C</Filter>
     </ClCompile>
@@ -100,45 +106,6 @@
     </ClCompile>
     <ClCompile Include="..\ext\lzma\C\LzmaEnc.c">
       <Filter>ext\lzma\C</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\adler32.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\compress.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\crc32.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\deflate.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzclose.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzlib.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzread.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\gzwrite.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inffast.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inflate.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\inftrees.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\trees.c">
-      <Filter>ext\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\zlib\zutil.c">
-      <Filter>ext\zlib</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp">
       <Filter>src</Filter>
@@ -224,5 +191,10 @@
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">
       <Filter>src\tools</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\a-zlib\version.txt">
+      <Filter>ext\a-zlib</Filter>
+    </None>
   </ItemGroup>
 </Project>
