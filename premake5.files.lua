@@ -1065,11 +1065,6 @@ function base_files()
     "Win.*",
     "Zip.*",
   })
-  filter { "configurations:Debug or DebugFull" }
-      files_in_dir("src/base", {
-        "windrawlib.*",
-      })
-  filter {}
 end
 
 function wingui_files()

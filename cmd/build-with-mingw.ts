@@ -175,7 +175,7 @@ const utils: LibDef = {
 };
 
 // Debug-only extra files for utils
-const utilsDebugExtra: FileGroup[] = [{ dir: "src/base", patterns: ["windrawlib.*"] }];
+const utilsDebugExtra: FileGroup[] = [];
 
 // SumatraPDF main executable sources (mixed debug/release)
 // Combines: darkmodelib_files, synctex_files, mui_files, wingui_files,
