@@ -7,10 +7,13 @@
 // link this file along libmupdf.lib and omit it when
 // building a static SumatraPDF.exe.
 
+#include "base/Base.h"
+
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable : 4100)
 #pragma warning(disable : 4611)
+#pragma warning(disable : 4668)
 #endif /* _MSC_VER */
 
 extern "C" {

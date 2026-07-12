@@ -1,14 +1,15 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "base/Base.h"
+#include "base/Win.h"
+#include "wingui/UIModels.h"
+
 extern "C" {
 #include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 }
 
-#include "base/Base.h"
-#include "base/Win.h"
-#include "wingui/UIModels.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"

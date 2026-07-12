@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "base/Base.h"
+
 extern "C" {
 #include <mupdf/fitz.h>
 }
-
-#include "base/Base.h"
 
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"

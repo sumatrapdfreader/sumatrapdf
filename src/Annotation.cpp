@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+
 extern "C" {
 #include <mupdf/pdf.h>
 }
-
-#include "base/Base.h"
-#include "base/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 

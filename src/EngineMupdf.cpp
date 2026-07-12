@@ -1,14 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-extern "C" {
-#include <mupdf/pdf.h>
-#if defined(_WIN32)
-#include <mupdf/helpers/pkcs7-windows.h>
-#endif
-#include "../mupdf/source/fitz/color-imp.h"
-}
-
 #include "base/Base.h"
 #include "base/Archive.h"
 #if OS_WIN
@@ -21,6 +13,14 @@ extern "C" {
 #include "base/Win.h"
 #endif
 #include "base/Timer.h"
+
+extern "C" {
+#include <mupdf/pdf.h>
+#if defined(_WIN32)
+#include <mupdf/helpers/pkcs7-windows.h>
+#endif
+#include "../mupdf/source/fitz/color-imp.h"
+}
 
 #include "Annotation.h"
 #include "DocProperties.h"

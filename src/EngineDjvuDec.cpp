@@ -4,14 +4,14 @@
 // EngineDjvuDec: a DjVu engine built on the small plain-C decoder in
 // ext/djvudec (djvu.h / djvu.c).
 
-extern "C" {
-#include "djvu.h"
-}
-
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/GuessFileType.h"
+
+extern "C" {
+#include "djvu.h"
+}
 
 #include "TreeModel.h"
 #include "EngineBase.h"
