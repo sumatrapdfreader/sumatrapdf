@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="zopflipng">
+      <UniqueIdentifier>{7E4C3C89-EAB6-F0FF-33F5-A1A59F9ECE54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="zopflipng\lodepng">
+      <UniqueIdentifier>{B61EE72F-2235-E5C5-6BAC-70E7D701B64D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\a-zopfli\zopflipng\lodepng\lodepng.h">
+      <Filter>zopflipng\lodepng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-zopfli\zopflipng\zopflipng_lib.h">
+      <Filter>zopflipng</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\a-zopfli\zopfli.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\a-zopfli\version.txt" />
+  </ItemGroup>
+</Project>

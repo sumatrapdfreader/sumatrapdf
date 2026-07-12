@@ -496,7 +496,7 @@ workspace "SumatraPDF"
 
   -- zopfli / zopflipng: lossless PNG recompression, used to shrink PNGs we
   -- save (e.g. screenshots) on a background thread
-  project "zopfli"
+  project "a-zopfli"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
@@ -504,12 +504,11 @@ workspace "SumatraPDF"
     -- CPU-bound compression loops, favor speed over size
     optimize "Speed"
     defines { "_CRT_SECURE_NO_WARNINGS" }
-    disablewarnings { "4018", "4100", "4127", "4244", "4267", "4334", "4996" }
-    includedirs { "ext/zopfli/src" }
+    disablewarnings { "4018", "4100", "4127", "4244", "4267", "4305", "4334", "4457", "4459", "4477", "4530", "4702", "4996" }
+    includedirs { "ext/a-zopfli" }
     files {
-      "ext/zopfli/src/zopfli/*.c", "ext/zopfli/src/zopfli/*.h",
-      "ext/zopfli/src/zopflipng/*.cc", "ext/zopfli/src/zopflipng/*.h",
-      "ext/zopfli/src/zopflipng/lodepng/*.cpp", "ext/zopfli/src/zopflipng/lodepng/*.h",
+      "ext/a-zopfli/zopfli.cpp", "ext/a-zopfli/zopflipng/zopflipng_lib.h",
+      "ext/a-zopfli/zopflipng/lodepng/lodepng.h", "ext/a-zopfli/version.txt",
     }
 
   project "libarchive"
@@ -1237,7 +1236,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm", "zopfli"
+      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1339,7 +1338,7 @@ workspace "SumatraPDF"
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libmupdf", "unrar", "libarchive", "base", "chm", "cmark-gfm", "zopfli"
+      "libmupdf", "unrar", "libarchive", "base", "chm", "cmark-gfm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

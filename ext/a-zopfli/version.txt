@@ -1,0 +1,6 @@
+project_homepage: https://github.com/google/zopfli
+repo_url: https://github.com/google/zopfli
+revision: ccf9f0588d4a4509cb1040310ec122243e670ee6
+commit_sha1: ccf9f0588d4a4509cb1040310ec122243e670ee6
+github_url: https://github.com/google/zopfli
+github_commit_url: https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6

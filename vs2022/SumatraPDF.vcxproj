@@ -1740,8 +1740,8 @@
     <ProjectReference Include="chm.vcxproj">
       <Project>{DD65880B-496F-887C-D2EA-9E7C3EF3937C}</Project>
     </ProjectReference>
-    <ProjectReference Include="zopfli.vcxproj">
-      <Project>{192C8C2C-05CE-B602-EE88-CA56DAC93D53}</Project>
+    <ProjectReference Include="a-zopfli.vcxproj">
+      <Project>{87C84EAD-7395-A9B8-9CAE-976088DADE46}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
