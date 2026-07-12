@@ -7,12 +7,13 @@ extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
 extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
 
-static std::tuple<ILayout*, Button*> CreateButtonLayout(HWND parent, const char* s, OnClicked onClicked) {
+static void CreateButtonLayout(HWND parent, const char* s, OnClicked onClicked, ILayout** layoutOut, Button** buttonOut) {
     auto b = new Button(parent);
     b->OnClicked = onClicked;
     b->SetText(s);
     b->Create();
-    return {NewButtonLayout(b), b};
+    *layoutOut = NewButtonLayout(b);
+    *buttonOut = b;
 }
 
 HINSTANCE gHinst = nullptr;
@@ -32,12 +33,16 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     vbox->alignCross = CrossAxisAlign::CrossCenter;
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Tabs test", LaunchTabs);
+        ILayout* l = nullptr;
+        Button* b = nullptr;
+        CreateButtonLayout(hwnd, "Tabs test", LaunchTabs, &l, &b);
         vbox->addChild(l);
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Layout test", LaunchLayout);
+        ILayout* l = nullptr;
+        Button* b = nullptr;
+        CreateButtonLayout(hwnd, "Layout test", LaunchLayout, &l, &b);
         vbox->addChild(l);
     }
 
