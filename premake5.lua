@@ -1162,7 +1162,7 @@ workspace "SumatraPDF"
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
-  project "SumatraPDF"
+  project "SumatraPDF-static"
     static_app_objdir()
     static_linker_intermediates()
     kind "WindowedApp"
@@ -1258,7 +1258,7 @@ workspace "SumatraPDF"
     prebuildcommands { "..\\bin\\MakeLZSA.exe ..\\translations\\translations.txt.lzsa ..\\translations\\translations-good.txt:translations-good.txt" }
 
   -- a dll version where most functionality is in libmupdf.dll
-  project "SumatraPDF-dll"
+  project "SumatraPDF"
     dll_app_objdir()
     dll_linker_intermediates()
     kind "WindowedApp"
