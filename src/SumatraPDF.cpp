@@ -650,7 +650,9 @@ void RememberDefaultWindowPosition(MainWindow* win) {
         gGlobalPrefs->windowState = WIN_STATE_NORMAL;
     }
 
-    gGlobalPrefs->sidebarDx = WindowRect(win->hwndTocBox).dx;
+    // win->sidebarDx is the layout's source of truth; the toc box rect is
+    // stale when the sidebar is hidden or only favorites are showing
+    gGlobalPrefs->sidebarDx = win->sidebarDx > 0 ? win->sidebarDx : WindowRect(win->hwndTocBox).dx;
 
     if (IsIconic(win->hwndFrame) || win->presentation) {
         return;
@@ -5010,18 +5012,23 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool favVisible = gGlobalPrefs->showFavorites && !gPluginMode && CanAccessDisk();
     bool tocVisible = win->tocVisible;
     if (tocVisible || favVisible) {
-        Size toc = ClientRect(win->hwndTocBox).Size();
         if (sidebarDx > 0) {
-            toc = Size(sidebarDx, rc.y);
+            win->sidebarDx = sidebarDx; // splitter drag
+        }
+        Size toc(win->sidebarDx, 0);
+        if (0 == toc.dx) {
+            // not laid out yet: width the toc box was created with
+            // (gGlobalPrefs->sidebarDx, see CreateToc)
+            toc.dx = ClientRect(win->hwndTocBox).dx;
         }
         if (0 == toc.dx) {
-            // TODO: use saved sidebarDx from saved preferences?
             toc.dx = rc.dx / 4;
         }
         // make sure that the sidebar is never too wide or too narrow
         // note: requires that the main frame is at least 2 * kSidebarMinDx
         //       wide (cf. OnFrameGetMinMaxInfo)
         toc.dx = limitValue(toc.dx, kSidebarMinDx, rc.dx / 2);
+        win->sidebarDx = toc.dx; // remember what's applied
 
         toc.dy = 0;
         if (tocVisible) {

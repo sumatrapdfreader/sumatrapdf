@@ -169,6 +169,10 @@ struct MainWindow {
     bool tocVisible = false;
     // set to temporarily disable UpdateTocSelection
     bool tocKeepSelection = false;
+    // width of the toc/favorites sidebar; the source of truth for layout
+    // (the toc box window can be hidden and its rect stale, e.g. when only
+    // favorites are showing). 0 = not laid out yet
+    int sidebarDx = 0;
 
     // state related to favorites
     HWND hwndFavBox = nullptr;
