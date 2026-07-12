@@ -6440,12 +6440,12 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
     int sidebarDx = pcur.x; // without splitter
 
     // make sure to keep this in sync with the calculations in RelayoutFrame
-    // note: without the min/max(..., rToc.dx), the sidebar will be
+    // note: without the min/max(..., curDx), the sidebar will be
     //       stuck at its width if it accidentally got too wide or too narrow
     Rect rFrame = ClientRect(win->hwndFrame);
-    Rect rToc = ClientRect(win->hwndTocBox);
-    int minDx = std::min(kSidebarMinDx, rToc.dx);
-    int maxDx = std::max(rFrame.dx / 2, rToc.dx);
+    int curDx = win->sidebarDx; // don't read the toc box rect, it can be stale
+    int minDx = std::min(kSidebarMinDx, curDx);
+    int maxDx = std::max(rFrame.dx / 2, curDx);
     if (sidebarDx < minDx || sidebarDx > maxDx) {
         ev->resizeAllowed = false;
         return;
@@ -6463,10 +6463,11 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
     Point pcur = HwndGetCursorPos(win->hwndCanvas);
     int tocDy = pcur.y; // without splitter
 
-    // make sure to keep this in sync with the calculations in RelayoutFrame
+    // make sure to keep this in sync with the calculations in RelayoutFrame.
+    // the toc box is visible here (this splitter only exists when both toc
+    // and favorites are showing), so its rect is current
     Rect rFrame = ClientRect(win->hwndFrame);
     Rect rToc = ClientRect(win->hwndTocBox);
-    ReportIf(rToc.dx != ClientRect(win->hwndFavBox).dx);
     int minDy = std::min(kTocMinDy, rToc.dy);
     int maxDy = std::max(rFrame.dy - kTocMinDy, rToc.dy);
     if (tocDy < minDy || tocDy > maxDy) {
@@ -6474,7 +6475,9 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
         return;
     }
     gGlobalPrefs->tocDy = tocDy;
-    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars, rToc.dx);
+    // the sidebar width is unchanged (win->sidebarDx); kUiNoToolbars makes
+    // the relayout run unconditionally
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
 }
 
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
