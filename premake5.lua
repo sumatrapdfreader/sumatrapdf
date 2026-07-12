@@ -734,19 +734,15 @@ workspace "SumatraPDF"
     includedirs { "ext/a-jbig2dec" }
     files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
 
-  project "openjpeg"
+  project "a-openjpeg"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
-    disablewarnings { "4100", "4244", "4310", "4389", "4456" }
-    -- openjpeg has opj_config_private.h for such over-rides
-    -- but we can't change it because we bring openjpeg as submodule
-    -- and we can't provide our own in a different directory because
-    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
-    -- because #include "opj_config_private.h" searches current directory first
+    disablewarnings { "4005", "4100", "4127", "4244", "4310", "4389", "4456", "4702" }
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
-    openjpeg_files()
+    includedirs { "ext/a-openjpeg" }
+    files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
 
   project "freetype"
     static_intermediate_dirs()
@@ -959,7 +955,7 @@ workspace "SumatraPDF"
       "mupdf/generated",
       "ext/jbig2dec",
       "ext/libjpeg-turbo/src",
-      "ext/openjpeg/src/lib/openjp2",
+      "ext/a-openjpeg",
       "mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/a-mujs",
@@ -978,7 +974,7 @@ workspace "SumatraPDF"
     mupdf_files()
     links {
       "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "brotli",
-      "lcms2", "openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
+      "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 
     -- mupdf

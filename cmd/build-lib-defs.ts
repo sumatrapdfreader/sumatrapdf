@@ -1044,9 +1044,10 @@ export const jbig2dec = thirdPartyLib({
 });
 
 export const openjpeg = thirdPartyLib({
-  name: "openjpeg",
+  name: "a-openjpeg",
   defines: ["_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"],
-  files: sourceFiles(3),
+  includes: ["ext/a-openjpeg"],
+  files: [{ dir: "ext/a-openjpeg", patterns: ["openjpeg.c"] }],
 });
 
 export const freetype = thirdPartyLib({
@@ -1191,7 +1192,7 @@ export const mupdf: LibDef = {
     "mupdf/generated",
     "ext/jbig2dec",
     "ext/libjpeg-turbo/src",
-    "ext/openjpeg/src/lib/openjp2",
+    "ext/a-openjpeg",
     "mupdf/scripts/freetype",
     "ext/freetype/include",
     "ext/mujs",

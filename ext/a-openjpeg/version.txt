@@ -1,0 +1,6 @@
+project_homepage: https://www.openjpeg.org/
+repo_url: https://github.com/ArtifexSoftware/thirdparty-openjpeg
+revision: 957029eb875eee1118743f200cb86da9d8289de2
+commit_sha1: 957029eb875eee1118743f200cb86da9d8289de2
+github_url: https://github.com/ArtifexSoftware/thirdparty-openjpeg
+github_commit_url: https://github.com/ArtifexSoftware/thirdparty-openjpeg/commit/957029eb875eee1118743f200cb86da9d8289de2
