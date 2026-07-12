@@ -1,6 +1,29 @@
 #include "zopflipng/zopflipng_lib.h"
 #include "zopflipng/lodepng/lodepng.h"
 
+static unsigned update_adler32(unsigned adler, const unsigned char* data, unsigned len) {
+  unsigned s1 = adler & 0xffffu;
+  unsigned s2 = (adler >> 16u) & 0xffffu;
+
+  while(len != 0u) {
+    unsigned i;
+    unsigned amount = len > 5552u ? 5552u : len;
+    len -= amount;
+    for(i = 0; i != amount; ++i) {
+      s1 += (*data++);
+      s2 += s1;
+    }
+    s1 %= 65521u;
+    s2 %= 65521u;
+  }
+
+  return (s2 << 16u) | s1;
+}
+
+static unsigned adler32(const unsigned char* data, unsigned len) {
+  return update_adler32(1u, data, len);
+}
+
 #ifndef ZOPFLI_BLOCKSPLITTER_H_
 #define ZOPFLI_BLOCKSPLITTER_H_
 
@@ -3198,27 +3221,6 @@ void ZopfliZlibCompress(const ZopfliOptions* options,
 
 #include <stdio.h>
 
-static unsigned adler32(const unsigned char* data, size_t size)
-{
-  static const unsigned sums_overflow = 5550;
-  unsigned s1 = 1;
-  unsigned s2 = 1 >> 16;
-
-  while (size > 0) {
-    size_t amount = size > sums_overflow ? sums_overflow : size;
-    size -= amount;
-    while (amount > 0) {
-      s1 += (*data++);
-      s2 += s1;
-      amount--;
-    }
-    s1 %= 65521;
-    s2 %= 65521;
-  }
-
-  return (s2 << 16) | s1;
-}
-
 void ZopfliZlibCompress(const ZopfliOptions* options,
                         const unsigned char* in, size_t insize,
                         unsigned char** out, size_t* outsize) {
@@ -5067,30 +5069,6 @@ static unsigned deflate(unsigned char** out, size_t* outsize,
 }
 
 #endif
-
-static unsigned update_adler32(unsigned adler, const unsigned char* data, unsigned len) {
-  unsigned s1 = adler & 0xffffu;
-  unsigned s2 = (adler >> 16u) & 0xffffu;
-
-  while(len != 0u) {
-    unsigned i;
-
-    unsigned amount = len > 5552u ? 5552u : len;
-    len -= amount;
-    for(i = 0; i != amount; ++i) {
-      s1 += (*data++);
-      s2 += s1;
-    }
-    s1 %= 65521u;
-    s2 %= 65521u;
-  }
-
-  return (s2 << 16u) | s1;
-}
-
-static unsigned adler32(const unsigned char* data, unsigned len) {
-  return update_adler32(1u, data, len);
-}
 
 #ifdef LODEPNG_COMPILE_DECODER
 

@@ -27,6 +27,34 @@ const sourcePreamble = `#include "zopflipng/zopflipng_lib.h"
 #include "zopflipng/lodepng/lodepng.h"
 `;
 
+// Hoisted from lodepng.cpp. In the non-amalgamated build, zlib_container.c and
+// lodepng.cpp each had their own file-local static adler32(). Concatenating both
+// into one translation unit collides on Win32 where size_t is unsigned.
+const adler32Helpers = `
+static unsigned update_adler32(unsigned adler, const unsigned char* data, unsigned len) {
+  unsigned s1 = adler & 0xffffu;
+  unsigned s2 = (adler >> 16u) & 0xffffu;
+
+  while(len != 0u) {
+    unsigned i;
+    unsigned amount = len > 5552u ? 5552u : len;
+    len -= amount;
+    for(i = 0; i != amount; ++i) {
+      s1 += (*data++);
+      s2 += s1;
+    }
+    s1 %= 65521u;
+    s2 %= 65521u;
+  }
+
+  return (s2 << 16u) | s1;
+}
+
+static unsigned adler32(const unsigned char* data, unsigned len) {
+  return update_adler32(1u, data, len);
+}
+`;
+
 const zopfliSources = [
   "blocksplitter.c",
   "cache.c",
@@ -316,6 +344,31 @@ function prepareChunk(
   );
 }
 
+function stripZlibContainerAdler32(text: string): string {
+  return text.replace(
+    /static unsigned adler32\(const unsigned char\* data, size_t size\)\s*\{[\s\S]*?\n\}\n\n/,
+    "",
+  );
+}
+
+function stripLodepngAdler32(text: string): string {
+  return text.replace(
+    /static unsigned update_adler32\(unsigned adler, const unsigned char\* data, unsigned len\) \{[\s\S]*?\n\}\n\nstatic unsigned adler32\(const unsigned char\* data, unsigned len\) \{\s*return update_adler32\(1u, data, len\);\s*\}\n\n/,
+    "",
+  );
+}
+
+function postProcessChunk(relPath: string, text: string): string {
+  const base = basename(relPath);
+  if (base === "zlib_container.c") {
+    return stripZlibContainerAdler32(text);
+  }
+  if (base === "lodepng.cpp") {
+    return stripLodepngAdler32(text);
+  }
+  return text;
+}
+
 function generateAmalgamation(root: string): {
   lodepngHeader: string;
   zopflipngHeader: string;
@@ -339,20 +392,23 @@ function generateAmalgamation(root: string): {
     "lodepng/lodepng.h",
   ]);
   const includedIncludes = new Set<string>();
-  const chunks = [sourcePreamble];
+  const chunks = [sourcePreamble, adler32Helpers];
   for (const name of zopfliSources) {
+    const path = join(srcDir, "zopfli", name);
     chunks.push(
-      prepareChunk(
-        join(srcDir, "zopfli", name),
-        byName,
-        skipIncludes,
-        includedIncludes,
+      postProcessChunk(
+        name,
+        prepareChunk(path, byName, skipIncludes, includedIncludes),
       ),
     );
   }
   for (const name of cppSources) {
+    const path = join(srcDir, name);
     chunks.push(
-      prepareChunk(join(srcDir, name), byName, skipIncludes, includedIncludes),
+      postProcessChunk(
+        name,
+        prepareChunk(path, byName, skipIncludes, includedIncludes),
+      ),
     );
   }
 
