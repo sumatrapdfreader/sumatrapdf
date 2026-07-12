@@ -99,10 +99,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{80E8D782-ECC7-561E-F5DF-E1F4613EBD7F}</ProjectGuid>
+    <ProjectGuid>{AE12EE1B-1A7D-A292-63BB-5338CF6480E7}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>extract</RootNamespace>
+    <RootNamespace>a-extract</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -269,108 +269,108 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
     <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
     <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
     <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\extract\</IntDir>
-    <TargetName>extract</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\a-extract\</IntDir>
+    <TargetName>a-extract</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -398,10 +398,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -429,10 +429,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -460,10 +460,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -491,9 +491,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -521,9 +521,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -551,9 +551,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -581,9 +581,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -611,10 +611,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -642,10 +642,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -673,10 +673,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -704,10 +704,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -734,10 +734,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -766,10 +766,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -798,10 +798,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -830,10 +830,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458;4522;4611;4702;4800;6319;4005;4100;4127;4130;4201;4245;4310;4389;4456;4457;4701;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\extract\include;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\a-extract;..\ext\a-zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -858,47 +858,16 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ext\extract\src\astring.h" />
-    <ClInclude Include="..\ext\extract\src\document.h" />
-    <ClInclude Include="..\ext\extract\src\docx.h" />
-    <ClInclude Include="..\ext\extract\src\docx_template.h" />
-    <ClInclude Include="..\ext\extract\src\html.h" />
-    <ClInclude Include="..\ext\extract\src\json.h" />
-    <ClInclude Include="..\ext\extract\src\mem.h" />
-    <ClInclude Include="..\ext\extract\src\memento.h" />
-    <ClInclude Include="..\ext\extract\src\odt.h" />
-    <ClInclude Include="..\ext\extract\src\odt_template.h" />
-    <ClInclude Include="..\ext\extract\src\outf.h" />
-    <ClInclude Include="..\ext\extract\src\sys.h" />
-    <ClInclude Include="..\ext\extract\src\text.h" />
-    <ClInclude Include="..\ext\extract\src\xml.h" />
-    <ClInclude Include="..\ext\extract\src\zip.h" />
+    <ClInclude Include="..\ext\a-extract\extract\alloc.h" />
+    <ClInclude Include="..\ext\a-extract\extract\buffer.h" />
+    <ClInclude Include="..\ext\a-extract\extract\extract.h" />
+    <ClInclude Include="..\ext\a-extract\memento.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\extract\src\alloc.c" />
-    <ClCompile Include="..\ext\extract\src\astring.c" />
-    <ClCompile Include="..\ext\extract\src\boxer.c" />
-    <ClCompile Include="..\ext\extract\src\buffer.c" />
-    <ClCompile Include="..\ext\extract\src\document.c" />
-    <ClCompile Include="..\ext\extract\src\docx.c" />
-    <ClCompile Include="..\ext\extract\src\docx_template.c" />
-    <ClCompile Include="..\ext\extract\src\extract.c" />
-    <ClCompile Include="..\ext\extract\src\html.c" />
-    <ClCompile Include="..\ext\extract\src\join.c" />
-    <ClCompile Include="..\ext\extract\src\json.c" />
-    <ClCompile Include="..\ext\extract\src\mem.c" />
-    <ClCompile Include="..\ext\extract\src\memento.c" />
-    <ClCompile Include="..\ext\extract\src\odt.c" />
-    <ClCompile Include="..\ext\extract\src\odt_template.c" />
-    <ClCompile Include="..\ext\extract\src\outf.c" />
-    <ClCompile Include="..\ext\extract\src\rect.c" />
-    <ClCompile Include="..\ext\extract\src\sys.c" />
-    <ClCompile Include="..\ext\extract\src\text.c" />
-    <ClCompile Include="..\ext\extract\src\xml.c" />
-    <ClCompile Include="..\ext\extract\src\zip.c" />
+    <ClCompile Include="..\ext\a-extract\extract.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\ext\extract\src\memento.py" />
+    <None Include="..\ext\a-extract\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

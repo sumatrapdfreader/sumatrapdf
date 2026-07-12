@@ -1,0 +1,6 @@
+project_homepage: https://github.com/ArtifexSoftware/extract
+repo_url: https://github.com/ArtifexSoftware/extract
+revision: 8750ac39c30a0d65119b426b5a491c5b8e8bf674
+commit_sha1: 8750ac39c30a0d65119b426b5a491c5b8e8bf674
+github_url: https://github.com/ArtifexSoftware/extract
+github_commit_url: https://github.com/ArtifexSoftware/extract/commit/8750ac39c30a0d65119b426b5a491c5b8e8bf674

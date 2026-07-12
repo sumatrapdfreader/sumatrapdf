@@ -810,17 +810,20 @@ workspace "SumatraPDF"
     disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
     files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
 
-  project "extract"
+  project "a-extract"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
     disablewarnings {
-      "4005", "4100", "4130", "4201", "4245", "4310", "4389", "4456", "4457", "4701", "4996"
+      "4005", "4100", "4127", "4130", "4201", "4245", "4310", "4389", "4456", "4457", "4701", "4996"
     }
-    includedirs { "ext/extract/include" }
+    includedirs { "ext/a-extract" }
     uses_zlib()
-    extract_files()
+    files {
+      "ext/a-extract/extract.c", "ext/a-extract/memento.h",
+      "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
+    }
 
   project "brotli"
     static_intermediate_dirs()
@@ -967,14 +970,14 @@ workspace "SumatraPDF"
       "ext/harfbuzz/src",
       "ext/lcms2/include",
       "ext/a-gumbo",
-      "ext/extract/include",
+      "ext/a-extract",
       "ext/libarchive",
     }
     fonts()
 
     mupdf_files()
     links {
-      "cmark-gfm", "a-mujs", "extract", "harfbuzz", "freetype", "brotli",
+      "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "brotli",
       "lcms2", "openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 
