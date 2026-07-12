@@ -17,7 +17,7 @@ async function main() {
 
   const { msbuildPath } = detectVisualStudio2026();
   const sln = String.raw`vs2022\SumatraPDF.sln`;
-  const t = `/t:SumatraPDF-dll;SumatraPDF`;
+  const t = `/t:SumatraPDF;SumatraPDF-static`;
   // const t = `/t:SumatraPDF;test_util`;
   const p = `/p:Configuration=Release;Platform=x64`;
   await runLogged(msbuildPath, [sln, t, p, `/m`]);

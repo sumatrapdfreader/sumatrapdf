@@ -77,7 +77,7 @@ export async function testit(): Promise<void> {
 
   setClipboardImage();
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
   const proc = Bun.spawn([EXE, "-for-testing"], { stdout: "ignore", stderr: "ignore" });
   let newFile = "";

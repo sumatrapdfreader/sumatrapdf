@@ -294,7 +294,7 @@ async function buildPreRelease(
     }
 
     // build all targets
-    const targets = ["PdfFilter", "PdfPreview", "SumatraPDF", "SumatraPDF-dll"];
+    const targets = ["PdfFilter", "PdfPreview", "SumatraPDF", "SumatraPDF-static"];
     const t = `/t:${targets.map((t) => t + ":Rebuild").join(";")}`;
     await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
   } finally {
@@ -319,7 +319,7 @@ async function buildSmoke(): Promise<void> {
     throw new Error(`'${makeLzsa}' doesn't exist`);
   }
 
-  const t = `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`;
+  const t = `/t:SumatraPDF:Rebuild;test_util:Rebuild`;
   const p = `/p:Configuration=Release;Platform=x64`;
   await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
 
@@ -333,7 +333,7 @@ async function buildSmoke(): Promise<void> {
     [
       "SumatraPDF.pdb.lzsa",
       "libmupdf.pdb:libmupdf.pdb",
-      "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb",
+      "SumatraPDF.pdb:SumatraPDF.pdb",
     ],
     outDir,
   );
@@ -394,7 +394,7 @@ async function extractClassesAndGlobalsFromPDB(): Promise<void> {
     return;
   }
 
-  const pdbPath = join("out", "rel64", "SumatraPDF.pdb");
+  const pdbPath = join("out", "rel64", "SumatraPDF-static.pdb");
   if (!existsSync(pdbPath)) {
     console.log(
       `uploadPdbBuildArtifacts: '${pdbPath}' doesn't exist, skipping`,

@@ -40,7 +40,7 @@ export { captureWindowToPng };
 export const FRAME_CLASS = "SUMATRA_PDF_FRAME";
 export const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
 
-// Launch SumatraPDF-dll.exe with -for-testing: a fresh instance that won't
+// Launch SumatraPDF.exe with -for-testing: a fresh instance that won't
 // interfere with a running SumatraPDF, doesn't restore the previous session
 // (only opens files passed on the cmd-line) and doesn't save settings. Use
 // proc.pid with waitForFrame() to get the window.

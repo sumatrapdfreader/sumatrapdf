@@ -30,14 +30,14 @@ type Bucket = {
   sections: Map<string, number>;
 };
 
-const defaultExe = join("out", "rel64", "SumatraPDF.exe");
-const defaultPdb = join("out", "rel64", "SumatraPDF.pdb");
+const defaultExe = join("out", "rel64", "SumatraPDF-static.exe");
+const defaultPdb = join("out", "rel64", "SumatraPDF-static.pdb");
 const sectionColumns = [".text", ".rdata", ".data", ".pdata", ".rsrc", ".reloc"];
 
 function usage(exitCode = 1): never {
   console.error(`Usage: bun cmd/exe-sizes.ts [options]
 
-Breaks down the static x64 release SumatraPDF.exe size by project.
+Breaks down the static x64 release SumatraPDF-static.exe size by project.
 
 Options:
   -exe <path>       EXE to summarize (default: ${defaultExe})
@@ -355,7 +355,7 @@ function renderReport(
   const projects = sortedBuckets(projectBuckets);
   const objects = sortedBuckets(objectBuckets);
   const lines: string[] = [];
-  lines.push(`SumatraPDF.exe size report`);
+  lines.push(`SumatraPDF-static.exe size report`);
   lines.push(`Generated: ${new Date().toISOString()}`);
   lines.push(`EXE: ${exe}`);
   lines.push(`PDB: ${pdb}`);

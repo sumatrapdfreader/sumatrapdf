@@ -8,13 +8,13 @@ Our code is in src/ directory. External dependencies are in ext/ directory and m
 
 To build run: bun ./cmd/build.ts
 
-This creates ./out/dbg64/SumatraPDF-dll.exe executable. Note: ./out/dbg64/SumatraPDF.exe is a different (static) build target that build.ts does NOT update, so it can be stale — always use SumatraPDF-dll.exe for testing.
+This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is SumatraPDF-static and produces ./out/<config>/SumatraPDF-static.exe.
 
 To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -branch <temporary-branch> -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build-mac.ts`, and restores the original remote checkout on success or failure. The macOS build compiles the dependency/base libraries, builds `out/mac-<config>64/test_util`, runs it with `-for-ai`, builds `out/mac-<config>64/test_engines`, and builds `out/mac-<config>64/SumatraPDF.app`.
 
 To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
-To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF-dll.exe`
+To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`
 
 When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing` cmd-line flag. It starts a new instance (won't interfere with an already running SumatraPDF), doesn't restore the previous session (only loads files given on the cmd-line) and doesn't save settings (won't overwrite the settings of the user).
 
@@ -265,7 +265,7 @@ Some checks are too slow, need large external corpora, or require network/git an
 Example: `tests/ad-hoc-exif.ts` clones/updates `../exif-py` and compares `-dump-exif` output to exif-py's `dump.txt`.
 
 Guidelines for test scripts:
-- build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF-dll.exe
+- build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF.exe
 - if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/all.ts` continues
 - a good test fails when the fix is reverted (verify this) — not just passes with the fix present
 - write ad-hoc GUI automation (driving the app via window messages, screenshots) in **Bun TypeScript, not PowerShell** — bun has FFI. Put raw Win32 wrappers in `tests/winapi.ts` and higher-level actions in `tests/win-automation.ts`; extend and reuse those rather than re-declaring FFI per script. The ad-hoc scripts themselves don't need to be checked in, but the reusable helpers in those two files do.
@@ -273,7 +273,7 @@ Guidelines for test scripts:
   - `tests/win-automation.ts` = high-level actions built on winapi: `launchSumatra` (passes `-for-testing`), `waitForFrame`/`findCanvas`, `clickAt`, `pressEnter/Tab/Escape`, `typeIntoInput` / `fillFormFieldAt`, `openContextMenu`/`waitForContextMenu`, `sendCommand`.
   - on this machine injected SendInput mouse/keyboard is dropped, but posting window messages cross-process works; see the project memory `env-gui-automation`.
 - resolve command ids by name with `cmdId("CmdName")` (from `tests/util.ts`), never hardcode the numeric id. Command ids are auto-numbered in `src/Commands.h` and shift whenever commands are added or removed, so a hardcoded constant silently starts sending a *different* command. This broke `tests/issue-5780.ts` (it sent `CmdCommandPalette` instead of `CmdOpenNextFileInFolder` after ids shifted) and had stale ids lurking in several ad-hoc tests. `tests/lint-command-ids.ts` (runs first in `tests/all.ts`) enforces this — it fails the suite on any hardcoded `const Cmd... = <number>` or numeric `sendCommand(win, <number>)`.
-- prefer driving the app through `-dbg-control <named-pipe>` and `cmd/control.ts` over GUI automation or adding new test-only command-line flags. Tests should pick a unique pipe name, launch `SumatraPDF-dll.exe -for-testing -dbg-control <name>`, send binary request/response commands, and quit the app through the control client.
+- prefer driving the app through `-dbg-control <named-pipe>` and `cmd/control.ts` over GUI automation or adding new test-only command-line flags. Tests should pick a unique pipe name, launch `SumatraPDF.exe -for-testing -dbg-control <name>`, send binary request/response commands, and quit the app through the control client.
 - `-dbg-control` protocol: requests are `[u32 payloadSize][u16 command][u16 requestId][args...]`; responses are `[u32 payloadSize][u16 requestId][results...]`. Arguments/results are encoded as `[u16 type]` where `0=end`, `1=i32` plus 4 bytes, `2=bytes` plus u32 length and data, `3=utf8 string` plus u32 length, bytes, and a zero terminator, and `4=list` plus u16 element count followed by encoded elements.
 - never write runtime scratch / result files directly into `tests/` — that leaves the repo dirty. Write them under `tests/tmp/` (gitignored), using `tmpPath("name")` from `tests/util.ts` (it creates the dir on demand); the OS temp dir (`os.tmpdir()`) is also fine if you clean up after
 - if a binary test fixture (e.g. a .pdf) is generated from source (LaTeX, a script, etc.), commit the source alongside it (e.g. `tests/issue-<number>.tex` next to `tests/issue-<number>.pdf`) with a comment on how to regenerate it, so the fixture can be modified later

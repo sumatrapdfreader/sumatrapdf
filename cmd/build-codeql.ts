@@ -22,7 +22,7 @@ async function main() {
   const { msbuildPath } = detectVisualStudio();
   const slnPath = join("vs2022", "SumatraPDF.sln");
 
-  await runLogged(msbuildPath, [slnPath, `/t:SumatraPDF:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`]);
+  await runLogged(msbuildPath, [slnPath, `/t:SumatraPDF-static:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`]);
 
   await revertBuildConfig();
 

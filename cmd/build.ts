@@ -8,7 +8,6 @@ let platform = "x64";
 let outDir = join("out", "dbg64");
 
 let t = `/t:SumatraPDF`;
-t = `/t:SumatraPDF-dll`;
 
 for (const arg of process.argv.slice(2)) {
   if (arg === "-clean") {

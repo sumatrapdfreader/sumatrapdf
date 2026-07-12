@@ -76,7 +76,7 @@ export async function testit(): Promise<void> {
   mkdirSync(appdata, { recursive: true });
   writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
 
   const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });

@@ -102,7 +102,7 @@ async function main() {
         `buidling pre-release ${plat.vsplatform} version ${preRelVer}`,
       );
       const p = `/p:Configuration=Release;Platform=${plat.vsplatform}`;
-      const t = `/t:SumatraPDF;SumatraPDF-dll`;
+      const t = `/t:SumatraPDF;SumatraPDF-static`;
       await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
       const platElapsed = ((performance.now() - platStart) / 1000).toFixed(1);
       console.log(

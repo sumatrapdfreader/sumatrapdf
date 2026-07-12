@@ -34,8 +34,8 @@ function copyAsanRuntime(vsRoot: string, outDir: string): void {
   console.log(`copied ${asanDllName}`);
 }
 
-// Build SumatraPDF.exe (static) with MSVC AddressSanitizer (x64_asan).
-// Output: out/dbg64_asan/SumatraPDF.exe or out/rel64_asan/SumatraPDF.exe
+// Build SumatraPDF-static.exe with MSVC AddressSanitizer (x64_asan).
+// Output: out/dbg64_asan/SumatraPDF-static.exe or out/rel64_asan/SumatraPDF-static.exe
 //
 // Usage:
 //   bun cmd/build-asan.ts            # Debug ASan build
@@ -50,7 +50,7 @@ const outDir = isRelease ? join("out", "rel64_asan") : join("out", "dbg64_asan")
 
 async function main() {
   const timeStart = performance.now();
-  console.log(`${config} ASan build (SumatraPDF.exe, x64_asan)`);
+  console.log(`${config} ASan build (SumatraPDF-static.exe, x64_asan)`);
 
   if (clean) {
     clearDirPreserveSettings(outDir);
@@ -60,14 +60,14 @@ async function main() {
 
   const { msbuildPath, vsRoot } = detectVisualStudio2026();
   const sln = String.raw`vs2022\SumatraPDF.sln`;
-  const t = `/t:SumatraPDF`;
+  const t = `/t:SumatraPDF-static`;
   const p = `/p:Configuration=${config};Platform=x64_asan`;
   await runLogged(msbuildPath, [sln, t, p, `/m`]);
   copyAsanRuntime(vsRoot, outDir);
 
   const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
   console.log(`build took ${elapsed}s`);
-  console.log(`exe: ${join(outDir, "SumatraPDF.exe")}`);
+  console.log(`exe: ${join(outDir, "SumatraPDF-static.exe")}`);
 }
 
 await main();

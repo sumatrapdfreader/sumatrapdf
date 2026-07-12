@@ -83,7 +83,7 @@ export async function testit(): Promise<void> {
   const cNextFav = cmdId("CmdGoToNextFavorite");
   const cPrevFav = cmdId("CmdGoToPrevFavorite");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
   const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
   try {

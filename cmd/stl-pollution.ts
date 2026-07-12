@@ -39,8 +39,8 @@ type Bucket = {
   symbols: SymbolInfo[];
 };
 
-const defaultPdb = join("out", "rel64", "SumatraPDF.pdb");
-const defaultExe = join("out", "rel64", "SumatraPDF.exe");
+const defaultPdb = join("out", "rel64", "SumatraPDF-static.pdb");
+const defaultExe = join("out", "rel64", "SumatraPDF-static.exe");
 
 const stlSymbolPattern =
   /\bstd::|stdext::|`eh vector |std::(vector|basic_string|string|wstring|shared_ptr|unique_ptr|weak_ptr|optional|variant|function|map|set|unordered_map|unordered_set|deque|list|array|span|tuple|pair|allocator|char_traits|exception|ios|locale|mutex|thread|chrono)\b|\?\$?(vector|basic_string|shared_ptr|unique_ptr|weak_ptr|optional|variant|function|map|set|unordered_map|unordered_set|deque|list)@/i;

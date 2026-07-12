@@ -83,7 +83,7 @@ Current integration points:
 
 ### 5. Update DLL exports (if API changed)
 
-djvudec is statically linked into `libmupdf.dll`; `SumatraPDF-dll.exe` imports
+djvudec is statically linked into `libmupdf.dll`; `SumatraPDF.exe` imports
 `djvu_*` symbols from that DLL via `src/libmupdf.def`.
 
 When new public functions are added, append them to the `; djvudec exports`
@@ -154,7 +154,7 @@ bun ./cmd/build.ts
 Test with:
 
 ```bash
-./out/dbg64/SumatraPDF-dll.exe -for-testing <path-to>.djvu
+./out/dbg64/SumatraPDF.exe -for-testing <path-to>.djvu
 ```
 
 Use a `.djvu` from `C:\Users\kjk\OneDrive\!sumatra\bugs\` if available.
