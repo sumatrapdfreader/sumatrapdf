@@ -5204,21 +5204,6 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win) {
     }
 }
 
-static void FrameOnSize(MainWindow* win, int, int) {
-    RelayoutFrame(win);
-    // re-anchor the floating find bar over the (possibly moved) search icon
-    FindBarReposition(win);
-
-    if (win->presentation || win->isFullScreen) {
-        Rect fullscreen = GetFullscreenRect(win->hwndFrame);
-        Rect rect = WindowRect(win->hwndFrame);
-        // Windows XP sometimes seems to change the window size on it's own
-        if (rect != fullscreen && rect != GetVirtualScreenRect()) {
-            MoveWindow(win->hwndFrame, fullscreen);
-        }
-    }
-}
-
 // handle WM_UPDATE_UI: perform all UI work requested via ScheduleUiUpdate
 // since the last update in one pass
 static void FrameUpdateUi(MainWindow* win) {
@@ -5234,6 +5219,14 @@ static void FrameUpdateUi(MainWindow* win) {
     if (didLayout) {
         // re-anchor the floating find bar over the (possibly moved) search icon
         FindBarReposition(win);
+        if (win->presentation || win->isFullScreen) {
+            Rect fullscreen = GetFullscreenRect(win->hwndFrame);
+            Rect rect = WindowRect(win->hwndFrame);
+            // Windows XP sometimes seems to change the window size on it's own
+            if (rect != fullscreen && rect != GetVirtualScreenRect()) {
+                MoveWindow(win->hwndFrame, fullscreen);
+            }
+        }
     }
     if (ui.toolbarDirty) {
         ui.toolbarDirty = false;
@@ -10769,10 +10762,10 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_SIZE:
             if (win && SIZE_MINIMIZED != wp) {
                 RememberDefaultWindowPosition(win);
-                int dx = LOWORD(lp);
-                int dy = HIWORD(lp);
-                // dbglog::LogF("dx: %d, dy: %d", dx, dy);
-                FrameOnSize(win, dx, dy);
+                // UIState.layout.rc remembers the last laid-out client size;
+                // the scheduled update relayouts only when the size actually
+                // changed, and a burst of WM_SIZE does the work once
+                ScheduleUiUpdate(win);
             }
             break;
 
