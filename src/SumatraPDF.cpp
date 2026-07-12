@@ -762,7 +762,7 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
         HwndSetRtl(win->tabsCtrl->hwnd, false);
     }
 
-    bool tocVisible = win->tocVisible;
+    bool tocVisible = win->uiState.tocVisible;
     bool favVisible = gGlobalPrefs->showFavorites;
     if (tocVisible || favVisible) {
         SetSidebarVisibility(win, false, false);
@@ -2055,7 +2055,7 @@ static void CreateSidebar(MainWindow* win) {
     CreateGrokPanel(win);
     CreateCodexPanel(win);
 
-    if (win->tocVisible) {
+    if (win->uiState.tocVisible) {
         HwndRepaintNow(win->hwndTocBox);
     }
 
@@ -4867,8 +4867,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.isFullScreen = win->isFullScreen;
     curState.tabsVisible = win->tabsVisible;
     curState.isToolbarVisible = win->isToolbarVisible;
-    curState.tocVisible = win->tocVisible;
-    curState.showFavorites = gGlobalPrefs->showFavorites;
+    curState.tocVisible = win->uiState.tocVisible;
+    curState.showFavorites = win->uiState.favVisible;
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
     curState.claudeVisible = win->claudeVisible;
     curState.grokVisible = win->grokVisible;
@@ -5009,8 +5009,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     // ToC and Favorites sidebars at the left
-    bool favVisible = gGlobalPrefs->showFavorites && !gPluginMode && CanAccessDisk();
-    bool tocVisible = win->tocVisible;
+    // desired state, normalized by SetSidebarVisibility
+    bool favVisible = win->uiState.favVisible;
+    bool tocVisible = win->uiState.tocVisible;
     if (tocVisible || favVisible) {
         if (sidebarDx > 0) {
             win->sidebarDx = sidebarDx; // splitter drag
@@ -5220,6 +5221,13 @@ static void FrameUpdateUi(MainWindow* win) {
     int sidebarDx = ui.sidebarDx;
     ui.updateToolbars = false;
     ui.sidebarDx = -1;
+    // apply the desired sidebar visibility (no-ops when unchanged)
+    if (win->sidebarSplitter) {
+        HwndSetVisibility(win->sidebarSplitter->hwnd, ui.tocVisible || ui.favVisible);
+        HwndSetVisibility(win->hwndTocBox, ui.tocVisible);
+        HwndSetVisibility(win->favSplitter->hwnd, ui.tocVisible && ui.favVisible);
+        HwndSetVisibility(win->hwndFavBox, ui.favVisible);
+    }
     // RelayoutFrame skips when nothing layout-affecting changed (a force is
     // requested by clearing win->uiState.layout)
     bool didLayout = RelayoutFrame(win, updateToolbars, sidebarDx);
@@ -5249,8 +5257,8 @@ static void FrameUpdateUi(MainWindow* win) {
     }
     if (ui.sidebarDirty) {
         ui.sidebarDirty = false;
-        bool tocVisible = win->tocVisible;
-        bool favVisible = gGlobalPrefs->showFavorites;
+        bool tocVisible = ui.tocVisible;
+        bool favVisible = ui.favVisible;
         if (tocVisible) {
             RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
@@ -5855,8 +5863,8 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     // fullscreen size during the transition.
     // TODO: make showFavorites a per-window pref
     bool showFavoritesTmp = gGlobalPrefs->showFavorites;
-    if (presentation && (win->tocVisible || gGlobalPrefs->showFavorites)) {
-        SetSidebarVisibility(win, false, false, false);
+    if (presentation && (win->uiState.tocVisible || gGlobalPrefs->showFavorites)) {
+        SetSidebarVisibility(win, false, false);
     }
 
     // Set state flags; RelayoutFrame (triggered by SetWindowPos/WM_SIZE)
@@ -5944,7 +5952,7 @@ void ExitFullScreen(MainWindow* win) {
 
     BeginFrameRedrawSuppression(win);
     bool tocVisible = win->CurrentTab() && win->CurrentTab()->showToc;
-    SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites, false);
+    SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
 
     if (win->tabsVisible) {
         win->tabsCtrl->SetIsVisible(true);
@@ -6032,7 +6040,7 @@ void AdvanceFocus(MainWindow* win) {
     }
     // note: the find edit is no longer in the toolbar tab order; it lives in the
     // floating findBar and is reached via Ctrl+F / the search toolbar icon
-    if (win->tocLoaded && win->tocVisible) {
+    if (win->tocLoaded && win->uiState.tocVisible) {
         tabOrder[nWindows++] = win->tocTreeView->hwnd;
     }
     if (gGlobalPrefs->showFavorites) {
@@ -6480,7 +6488,10 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
 }
 
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
+// Records the desired sidebar visibility in UIState and schedules the
+// deferred update, which shows/hides the sidebar windows and relayouts
+// (see FrameUpdateUi).
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) {
     if (gPluginMode || !CanAccessDisk()) {
         showFavorites = false;
     }
@@ -6510,7 +6521,6 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     } else if (PM_ENABLED == win->presentation) {
         win->CurrentTab()->showTocPresentation = tocVisible;
     }
-    win->tocVisible = tocVisible;
 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
@@ -6520,17 +6530,9 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
         HwndSetFocus(win->hwndFrame);
     }
 
-    HwndSetVisibility(win->sidebarSplitter->hwnd, tocVisible || showFavorites);
-    HwndSetVisibility(win->hwndTocBox, tocVisible);
-    win->sidebarSplitter->isLive = true;
-
-    HwndSetVisibility(win->favSplitter->hwnd, tocVisible && showFavorites);
-    HwndSetVisibility(win->hwndFavBox, showFavorites);
-    win->favSplitter->isLive = true;
-
-    if (relayout) {
-        ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
-    }
+    win->uiState.tocVisible = tocVisible;
+    win->uiState.favVisible = showFavorites;
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
 }
 
 // if url-encoded s is bigger than a reasonable URL path,
@@ -8025,7 +8027,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents:
-            if (ShouldToggle(cmd, win->tocVisible)) {
+            if (ShouldToggle(cmd, win->uiState.tocVisible)) {
                 ToggleTocBox(win);
             }
             break;
@@ -8422,7 +8424,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdMoveFrameFocus:
             if (!HwndIsFocused(win->hwndFrame)) {
                 HwndSetFocus(win->hwndFrame);
-            } else if (win->tocVisible) {
+            } else if (win->uiState.tocVisible) {
                 HwndSetFocus(win->tocTreeView->hwnd);
             }
             break;

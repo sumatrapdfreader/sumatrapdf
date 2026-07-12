@@ -286,12 +286,12 @@ void ToggleTocBox(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    if (win->tocVisible) {
+    if (win->uiState.tocVisible) {
         SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
         return;
     }
     SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
-    if (win->tocVisible) {
+    if (win->uiState.tocVisible) {
         HwndSetFocus(win->tocTreeView->hwnd);
     }
 }
@@ -365,7 +365,7 @@ static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
 }
 
 void UpdateTocSelection(MainWindow* win, int currPageNo) {
-    if (!win->tocLoaded || !win->tocVisible || win->tocKeepSelection) {
+    if (!win->tocLoaded || !win->uiState.tocVisible || win->tocKeepSelection) {
         return;
     }
 
@@ -385,10 +385,10 @@ void ExpandTocToCurrentPage(MainWindow* win) {
         return;
     }
     // make sure the bookmarks (table of contents) sidebar is visible
-    if (!win->tocVisible) {
+    if (!win->uiState.tocVisible) {
         SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
     }
-    if (!win->tocLoaded || !win->tocVisible) {
+    if (!win->tocLoaded || !win->uiState.tocVisible) {
         return;
     }
     TreeView* treeView = win->tocTreeView;

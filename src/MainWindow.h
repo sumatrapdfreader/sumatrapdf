@@ -166,7 +166,6 @@ struct MainWindow {
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
     // whether the ToC sidebar is currently visible
-    bool tocVisible = false;
     // set to temporarily disable UpdateTocSelection
     bool tocKeepSelection = false;
     // width of the toc/favorites sidebar; the source of truth for layout
@@ -349,7 +348,12 @@ struct MainWindow {
             bool codexVisible = false;
             int aiChatDx = 0;
         };
-        Layout layout;              // last applied layout state
+        Layout layout; // last applied layout state
+        // desired visibility of the sidebar panels, set via
+        // SetSidebarVisibility and applied (show/hide + relayout) by the
+        // deferred update
+        bool tocVisible = false;
+        bool favVisible = false;
         bool updatePending = false; // a WM_UPDATE_UI is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update

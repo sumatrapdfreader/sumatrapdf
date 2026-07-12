@@ -622,7 +622,7 @@ static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
             expectedTocVisibility = tdata->showTocPresentation;
         }
     }
-    ReportDebugIf(win->tocVisible != expectedTocVisibility);
+    ReportDebugIf(win->uiState.tocVisible != expectedTocVisibility);
     ReportIf(tdata->canvasRc != win->canvasRc);
 }
 

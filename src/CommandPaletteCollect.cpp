@@ -69,7 +69,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents: {
             isToggle = true;
-            newIsOn = !win->tocVisible;
+            newIsOn = !win->uiState.tocVisible;
         } break;
         case CmdTogglePresentationMode: {
             isToggle = true;

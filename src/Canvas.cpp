@@ -2440,7 +2440,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
 
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
+    if (win->uiState.tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
@@ -2709,7 +2709,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
 static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
+    if (win->uiState.tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that

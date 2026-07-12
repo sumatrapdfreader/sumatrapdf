@@ -166,7 +166,7 @@ HMENU GetReadAloudContextSubmenu();
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void PostAppExit();
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout = true);
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);
 void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(Str langCode);

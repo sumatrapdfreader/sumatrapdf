@@ -1676,7 +1676,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetEnabled(win->menu, CmdToggleBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
-    bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
+    bool checked = documentSpecific ? win->uiState.tocVisible : gGlobalPrefs->showToc;
     MenuSetChecked(win->menu, CmdToggleBookmarks, checked);
 
     MenuSetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
@@ -1908,7 +1908,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
     MenuUpdatePrintItem(win, popup, true);
     MenuSetEnabled(popup, CmdToggleBookmarks, win->ctrl->HasToc());
-    MenuSetChecked(popup, CmdToggleBookmarks, win->tocVisible);
+    MenuSetChecked(popup, CmdToggleBookmarks, win->uiState.tocVisible);
 
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
