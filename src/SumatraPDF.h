@@ -204,6 +204,23 @@ bool ToolbarAtBottom();
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
+
+// flags for ScheduleUiUpdate
+// relayout unless nothing layout-affecting changed (RelayoutFrame compares
+// against MainWindow::uiState.layout)
+constexpr u32 kUiRelayout = 0x1;
+// relayout even when the tracked layout state looks unchanged (something
+// outside of it changed: fonts, tab width, menu bar height, ...)
+constexpr u32 kUiForceRelayout = 0x2;
+constexpr u32 kUiToolbarDirty = 0x4; // repaint the toolbar
+constexpr u32 kUiTabsDirty = 0x8;    // repaint the tab bar
+
+// Request an async, coalesced UI update: records what needs to happen and
+// posts WM_UPDATE_UI once; any further requests before it's handled are
+// folded into the same pass. Prefer this over direct relayout/RedrawWindow
+// calls to avoid excessive repaints.
+void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout);
+// same as ScheduleUiUpdate(win, kUiRelayout)
 void RelayoutWindow(MainWindow* win);
 void DuplicateTabInNewWindow(WindowTab* tab);
 void CopyFilePath(WindowTab*);

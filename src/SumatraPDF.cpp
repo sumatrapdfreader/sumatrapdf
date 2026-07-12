@@ -170,8 +170,12 @@ bool gSupressNextAltMenuTrigger = false;
 bool gCrashOnOpen = false;
 bool gRedrawLog = false;
 
-static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1);
+// returns false when the relayout was skipped (nothing layout-affecting changed)
+static bool RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1);
 static void UpdateOverlayScrollbarPositions(MainWindow* win);
+
+// message for deferred, coalesced UI updates (see ScheduleUiUpdate)
+constexpr UINT WM_UPDATE_UI = WM_APP + 0x400;
 
 static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
@@ -786,8 +790,8 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
         }
     }
     ReCreateToolbar(win);
-    // RTL is not part of LayoutState; force a full relayout and repaint
-    win->lastLayoutState = {};
+    // RTL is not part of the layout snapshot; force a full relayout and repaint
+    win->uiState.layout = {};
     RelayoutWindow(win);
     uint redrawFlags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
     RedrawWindow(win->hwndFrame, nullptr, nullptr, redrawFlags);
@@ -4836,9 +4840,9 @@ constexpr int kFrameBorderSize = 1;
 // size (DIP) of the min/max/restore/close caption glyphs
 constexpr int kCaptionGlyphDip = 10;
 
-using LayoutState = MainWindow::LayoutState;
+using UILayout = MainWindow::UIState::Layout;
 
-static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
+static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
     return s1->rc == s2->rc && s1->presentation == s2->presentation && s1->tabsInTitlebar == s2->tabsInTitlebar &&
            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
@@ -4847,14 +4851,14 @@ static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
            s1->codexVisible == s2->codexVisible && s1->aiChatDx == s2->aiChatDx;
 }
 
-static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
+static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     Rect rc = ClientRect(win->hwndFrame);
     // don't relayout while the window is minimized
     if (rc.IsEmpty()) {
-        return;
+        return false;
     }
     // build a snapshot of all state that affects layout
-    MainWindow::LayoutState curState;
+    UILayout curState;
     curState.rc = rc;
     curState.presentation = (int)win->presentation;
     curState.tabsInTitlebar = win->tabsInTitlebar;
@@ -4870,15 +4874,15 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.aiChatDx = win->aiChatDx;
 
     // skip redundant relayouts when all layout-affecting state is unchanged
-    if (IsLayoutStateEq(&curState, &win->lastLayoutState) && updateToolbars && sidebarDx == -1) {
-        return;
+    if (IsUiLayoutEq(&curState, &win->uiState.layout) && updateToolbars && sidebarDx == -1) {
+        return false;
     }
     // only cache for default calls; non-default calls (sidebar dragging etc.)
     // must not prevent a subsequent default call from running
     if (updateToolbars && sidebarDx == -1) {
-        win->lastLayoutState = curState;
+        win->uiState.layout = curState;
     } else {
-        win->lastLayoutState = {};
+        win->uiState.layout = {};
     }
     if (gRedrawLog) {
         RECT r = ToRECT(rc);
@@ -4888,7 +4892,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         // make the black/white canvas cover the entire window
         MoveWindow(win->hwndCanvas, rc);
-        return;
+        return true;
     }
 
     // inset by border for resize hit-testing (only with custom caption, not when maximized/fullscreen)
@@ -5161,6 +5165,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
+    return true;
 }
 
 static void BeginFrameRedrawSuppression(MainWindow* win) {
@@ -5214,8 +5219,53 @@ static void FrameOnSize(MainWindow* win, int, int) {
     }
 }
 
+// handle WM_UPDATE_UI: perform all UI work requested via ScheduleUiUpdate
+// since the last update in one pass
+static void FrameUpdateUi(MainWindow* win) {
+    win->uiState.updatePending = false;
+    // RelayoutFrame skips when nothing layout-affecting changed (a force is
+    // requested by clearing win->uiState.layout)
+    bool didLayout = RelayoutFrame(win);
+    if (didLayout) {
+        // re-anchor the floating find bar over the (possibly moved) search icon
+        FindBarReposition(win);
+    }
+    if (win->uiState.toolbarDirty) {
+        win->uiState.toolbarDirty = false;
+        if (win->hwndReBar) {
+            RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
+    }
+    if (win->uiState.tabsDirty) {
+        win->uiState.tabsDirty = false;
+        if (win->tabsCtrl && win->tabsCtrl->IsVisible()) {
+            RedrawWindow(win->tabsCtrl->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE);
+        }
+    }
+}
+
+void ScheduleUiUpdate(MainWindow* win, u32 flags) {
+    if (!win || !win->hwndFrame) {
+        return;
+    }
+    if (flags & kUiForceRelayout) {
+        win->uiState.layout = {};
+    }
+    if (flags & kUiToolbarDirty) {
+        win->uiState.toolbarDirty = true;
+    }
+    if (flags & kUiTabsDirty) {
+        win->uiState.tabsDirty = true;
+    }
+    if (win->uiState.updatePending) {
+        return; // one WM_UPDATE_UI is already queued; it'll pick this up
+    }
+    win->uiState.updatePending = true;
+    PostMessageW(win->hwndFrame, WM_UPDATE_UI, 0, 0);
+}
+
 void RelayoutWindow(MainWindow* win) {
-    RelayoutFrame(win);
+    ScheduleUiUpdate(win, kUiRelayout);
 }
 
 // WM_DPICHANGED: the frame moved to a monitor with a different DPI (or the
@@ -5263,7 +5313,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested) {
         SetWindowPos(win->hwndFrame, nullptr, suggested->left, suggested->top, dx, dy, SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    win->lastLayoutState = {};
+    win->uiState.layout = {};
     RelayoutWindow(win);
     MainWindowRerender(win, true);
     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
@@ -10720,6 +10770,13 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                 FrameOnSize(win, dx, dy);
             }
             break;
+
+        case WM_UPDATE_UI:
+            // deferred, coalesced UI update requested via ScheduleUiUpdate
+            if (win) {
+                FrameUpdateUi(win);
+            }
+            return 0;
 
         case WM_GETMINMAXINFO:
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);

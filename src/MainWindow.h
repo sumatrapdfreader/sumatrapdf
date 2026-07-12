@@ -324,23 +324,33 @@ struct MainWindow {
 
     Rect canvasRc; // size of the canvas (excluding any scroll bars)
 
-    // state snapshot used to skip redundant RelayoutFrame calls
-    struct LayoutState {
-        Rect rc;
-        int presentation = 0;
-        bool tabsInTitlebar = false;
-        bool isFullScreen = false;
-        bool tabsVisible = false;
-        bool isToolbarVisible = false;
-        bool tocVisible = false;
-        bool showFavorites = false;
-        bool showMenuBarRebar = false;
-        bool claudeVisible = false;
-        bool grokVisible = false;
-        bool codexVisible = false;
-        int aiChatDx = 0;
+    // deferred, coalesced UI update (WM_UPDATE_UI; see ScheduleUiUpdate):
+    // multiple relayout/repaint requests before the message pump runs are
+    // handled in one pass. `layout` is a snapshot of everything that affects
+    // frame layout; RelayoutFrame skips when it's unchanged (force a relayout
+    // by resetting it to {})
+    struct UIState {
+        struct Layout {
+            Rect rc;
+            int presentation = 0;
+            bool tabsInTitlebar = false;
+            bool isFullScreen = false;
+            bool tabsVisible = false;
+            bool isToolbarVisible = false;
+            bool tocVisible = false;
+            bool showFavorites = false;
+            bool showMenuBarRebar = false;
+            bool claudeVisible = false;
+            bool grokVisible = false;
+            bool codexVisible = false;
+            int aiChatDx = 0;
+        };
+        Layout layout;              // last applied layout state
+        bool updatePending = false; // a WM_UPDATE_UI is queued
+        bool toolbarDirty = false;  // repaint the toolbar on the next update
+        bool tabsDirty = false;     // repaint the tab bar on the next update
     };
-    LayoutState lastLayoutState;
+    UIState uiState;
 
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 

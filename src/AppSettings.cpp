@@ -288,17 +288,12 @@ static void CreateCustomShortcuts() {
 /* Caller needs to CleanUpSettings() */
 void ApplySettingsToOpenWindows() {
     for (MainWindow* win : gWindows) {
-        // RelayoutFrame skips when lastLayoutState is unchanged, but toolbar
-        // size/font are not part of that snapshot (see issue #5136).
-        win->lastLayoutState = {};
         ReCreateToolbar(win);
-        RelayoutWindow(win);
         ToolbarUpdateStateForWindow(win, true);
         UpdateFindbox(win);
-        if (win->hwndReBar && win->isToolbarVisible) {
-            RedrawWindow(win->hwndReBar, nullptr, nullptr,
-                         RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
-        }
+        // force the relayout: toolbar size/font are not part of the layout
+        // state snapshot (see issue #5136), and repaint the toolbar after it
+        ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
         win->RedrawAll(true);
     }
 }
