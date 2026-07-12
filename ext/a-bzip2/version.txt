@@ -1,0 +1,4 @@
+project_homepage: https://www.sourceware.org/bzip2/
+repo_url: git://sourceware.org/git/bzip2.git
+revision: bzip2-1.0.8
+commit_sha1: 6a8690fc8d26c815e798c588f796eabe9d684cf0

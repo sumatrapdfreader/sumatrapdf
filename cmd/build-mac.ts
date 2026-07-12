@@ -231,7 +231,7 @@ function makeLibarchive(outDir: string): LibDef {
       "ext/libarchive/libarchive",
       "ext/libarchive",
       "ext/zlib",
-      "ext/bzip2",
+      "ext/a-bzip2",
       "ext/lzma/C",
       "ext/liblzma/api",
       "ext/liblzma/common",
@@ -329,17 +329,8 @@ function makeLibarchive(outDir: string): LibDef {
         ],
       },
       {
-        dir: "ext/bzip2",
-        patterns: [
-          "blocksort.c",
-          "bzlib.c",
-          "bz_internal_error.c",
-          "compress.c",
-          "crctable.c",
-          "decompress.c",
-          "huffman.c",
-          "randtable.c",
-        ],
+        dir: "ext/a-bzip2",
+        patterns: ["bzip2.c"],
       },
       { dir: "ext/lzma/C", patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"] },
       {
