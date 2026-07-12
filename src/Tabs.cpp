@@ -102,7 +102,7 @@ static void ShowTabBar(MainWindow* win, bool show) {
     if (win->tabsCtrl) {
         win->tabsCtrl->SetIsVisible(show);
     }
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
 }
 
 void UpdateTabWidth(MainWindow* win) {

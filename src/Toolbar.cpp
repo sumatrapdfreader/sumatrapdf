@@ -673,7 +673,7 @@ void ShowOrHideToolbar(MainWindow* win) {
             HwndSetFocus(win->hwndFrame);
         }
     }
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
     if (enteredOverlay) {
         ScheduleOverlayHide(win);
     }
@@ -1753,7 +1753,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
 
-    // create hidden; caller shows after RelayoutWindow positions it
+    // create hidden; caller shows after the scheduled relayout positions it
     // no WS_BORDER (avoids 1px gap) and no RBS_BANDBORDERS (avoids gray band separators)
     DWORD style = WS_CHILD | WS_CLIPCHILDREN | RBS_VARHEIGHT;
     style |= CCS_NODIVIDER | CCS_NOPARENTALIGN;

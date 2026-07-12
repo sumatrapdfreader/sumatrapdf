@@ -792,7 +792,7 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     ReCreateToolbar(win);
     // RTL is not part of the layout snapshot; force a full relayout and repaint
     win->uiState.layout = {};
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
     uint redrawFlags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
     RedrawWindow(win->hwndFrame, nullptr, nullptr, redrawFlags);
 }
@@ -3156,7 +3156,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         bool codexWas = win->codexVisible;
         AIChatSyncPanelsToCurrentTab(win);
         if (claudeWas != win->claudeVisible || grokWas != win->grokVisible || codexWas != win->codexVisible) {
-            RelayoutWindow(win);
+            ScheduleUiUpdate(win);
         }
         OnClaudeTabChanged(win);
         OnGrokTabChanged(win);
@@ -5296,10 +5296,6 @@ void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
     PostMessageW(win->hwndFrame, WM_UPDATE_UI, 0, 0);
 }
 
-void RelayoutWindow(MainWindow* win) {
-    ScheduleUiUpdate(win, kUiRelayout);
-}
-
 // WM_DPICHANGED: the frame moved to a monitor with a different DPI (or the
 // monitor's scaling changed). Resize to the rectangle Windows suggests for the
 // new DPI and rebuild the DPI-scaled chrome (menu bar fonts, toolbar icons,
@@ -5346,7 +5342,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested) {
     }
 
     win->uiState.layout = {};
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
     MainWindowRerender(win, true);
     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
     RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
@@ -6481,18 +6477,6 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars, rToc.dx);
 }
 
-void RelayoutForClaudeSplitter(MainWindow* win) {
-    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
-}
-
-void RelayoutForGrokSplitter(MainWindow* win) {
-    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
-}
-
-void RelayoutForCodexSplitter(MainWindow* win) {
-    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
-}
-
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
     if (gPluginMode || !CanAccessDisk()) {
         showFavorites = false;
@@ -6893,7 +6877,7 @@ static void ApplyMenuBarVisibility(MainWindow* win) {
         } else if (!visible && showing) {
             DestroyMenuBarRebar(win);
         }
-        RelayoutWindow(win);
+        ScheduleUiUpdate(win);
         ShowMenuBarRebar(win);
     } else {
         SetMenu(win->hwndFrame, visible ? win->menu : nullptr);
@@ -10761,7 +10745,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         DestroyMenuBarRebar(win);
         SetMenu(hwnd, nullptr);
         UpdateTabWidth(win);
-        RelayoutWindow(win);
+        ScheduleUiUpdate(win);
     }
     if (win && win->tabsInTitlebar) {
         bool callDefault = true;

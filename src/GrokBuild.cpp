@@ -1128,7 +1128,7 @@ static void OnGrokSplitterMove(Splitter::MoveEvent* ev) {
     }
     AIChatUpdateSidebarDx(win, dx, ev->finishedDragging);
     if (ev->finishedDragging) {
-        RelayoutForGrokSplitter(win);
+        ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
     }
 }
 
@@ -1347,7 +1347,7 @@ void ToggleGrokPanel(MainWindow* win) {
         // defer auto-select so SetHtml has time to load the page
         SetTimer(win->hwndGrokBox, 42, 500, nullptr);
     }
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
 }
 
 // call when switching tabs to update session context

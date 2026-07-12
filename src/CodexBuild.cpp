@@ -1250,7 +1250,7 @@ static void OnCodexSplitterMove(Splitter::MoveEvent* ev) {
     }
     AIChatUpdateSidebarDx(win, dx, ev->finishedDragging);
     if (ev->finishedDragging) {
-        RelayoutForCodexSplitter(win);
+        ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
     }
 }
 
@@ -1467,7 +1467,7 @@ void ToggleCodexPanel(MainWindow* win) {
         // defer auto-select so SetHtml has time to load the page
         SetTimer(win->hwndCodexBox, 42, 500, nullptr);
     }
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
 }
 
 // call when switching tabs to update session context

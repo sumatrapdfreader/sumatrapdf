@@ -2488,7 +2488,7 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
         } else {
             DestroyMenuBarRebar(win);
         }
-        RelayoutWindow(win);
+        ScheduleUiUpdate(win);
         ShowMenuBarRebar(win);
         return;
     }
@@ -2506,7 +2506,7 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
             gGlobalPrefs->showMenubarWithTabs = true;
         }
         // layout first so the rebar is positioned correctly, then show it
-        RelayoutWindow(win);
+        ScheduleUiUpdate(win);
         ShowMenuBarRebar(win);
         return;
     }

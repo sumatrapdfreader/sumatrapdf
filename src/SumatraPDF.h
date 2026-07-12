@@ -225,8 +225,6 @@ constexpr u32 kUiSidebarDirty = 0x20; // repaint toc/favorites boxes and their s
 // calls to avoid excessive repaints. sidebarDx >= 0 relayouts with a new
 // sidebar width (splitter dragging).
 void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout, int sidebarDx = -1);
-// same as ScheduleUiUpdate(win, kUiRelayout)
-void RelayoutWindow(MainWindow* win);
 void DuplicateTabInNewWindow(WindowTab* tab);
 void CopyFilePath(WindowTab*);
 

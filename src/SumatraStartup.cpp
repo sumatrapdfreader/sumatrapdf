@@ -1358,7 +1358,7 @@ static void LayoutAndFocusOnStartup(MainWindow* win) {
     if (!win || !IsWindow(win->hwndFrame)) {
         return;
     }
-    RelayoutWindow(win);
+    ScheduleUiUpdate(win);
     win->Focus();
 }
 
