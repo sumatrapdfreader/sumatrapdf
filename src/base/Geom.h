@@ -87,7 +87,7 @@ struct Rect {
     void SubLR(int l, int r);
     Point TL() const;
     Point BR() const;
-    Size Size() const;
+    struct Size Size() const;
     void SetSize(const struct Size&);
     void SetPos(const Point&);
     bool Equals(const Rect& other) const;

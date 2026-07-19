@@ -1,0 +1,49 @@
+name: Linux
+on:
+  push:
+  pull_request:
+jobs:
+  wine:
+    name: Cross-compile and test under Wine
+    runs-on: ubuntu-latest
+    # mingw-w64 >= 12 is required (ubuntu-24.04 runners ship v11, whose
+    # headers predate SetThreadDescription, DWMWCP_*, ...)
+    container: debian:trixie
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v7
+
+      - name: Install mingw-w64, Wine and bun
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            g++-mingw-w64-x86-64 wine wine64 xvfb xauth \
+            ca-certificates curl unzip git
+          curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash
+
+      - name: Cross-compile SumatraPDF.exe
+        run: bun cmd/build-linux-wine.ts
+
+      # WINEPREFIX: the runner sets HOME=/github/home, owned by the runner
+      # uid, but the container runs as root and wine refuses a prefix in a
+      # directory it doesn't own
+      - name: Run unit tests under Wine
+        env:
+          WINEDEBUG: "-all"
+          WINEPREFIX: /tmp/wineprefix
+        run: xvfb-run -a wine out/dbg64-wine/SumatraPDF.exe -for-testing -unit-tests
+
+      # -bench does not return 0 on success, so gate on its output instead
+      - name: Render smoke test under Wine
+        env:
+          WINEDEBUG: "-all"
+          WINEPREFIX: /tmp/wineprefix
+        run: |
+          xvfb-run -a wine out/dbg64-wine/SumatraPDF.exe -for-testing -bench tests/issue-3219.pdf 2>&1 | tee bench.log || true
+          grep -q "Finished" bench.log
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: SumatraPDF-linux-wine-debug
+          path: out/dbg64-wine/SumatraPDF.exe

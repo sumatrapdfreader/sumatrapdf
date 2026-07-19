@@ -47,9 +47,12 @@ function resolveTool(role: string, candidates: string[]): string {
 
 function resolveMingwTools(): MingwTools {
   const prefix = "x86_64-w64-mingw32";
+  // Prefer the posix-threads variants: Debian's default *-gcc/*-g++ are the
+  // win32-threads flavor whose libstdc++ lacks std::mutex/std::thread (needed
+  // by libheif); on Ubuntu the plain names are already the posix flavor.
   return {
-    cc: resolveTool("mingw gcc", [`${prefix}-gcc`, "gcc-mingw-w64-x86-64"]),
-    cxx: resolveTool("mingw g++", [`${prefix}-g++`, "g++-mingw-w64-x86-64"]),
+    cc: resolveTool("mingw gcc", [`${prefix}-gcc-posix`, `${prefix}-gcc`, "gcc-mingw-w64-x86-64"]),
+    cxx: resolveTool("mingw g++", [`${prefix}-g++-posix`, `${prefix}-g++`, "g++-mingw-w64-x86-64"]),
     ar: resolveTool("mingw ar", [`${prefix}-ar`, "ar-mingw-w64-x86-64"]),
     windres: resolveTool("mingw windres", [`${prefix}-windres`, "windres-mingw-w64-x86-64"]),
     objcopy: resolveTool("mingw objcopy", [`${prefix}-objcopy`, "objcopy-mingw-w64-x86-64"]),

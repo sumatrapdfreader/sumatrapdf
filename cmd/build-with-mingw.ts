@@ -14,7 +14,7 @@
 
 import { mkdirSync, existsSync, rmSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import { join, extname, dirname } from "node:path";
+import { join, extname, dirname, basename } from "node:path";
 import { cpus } from "node:os";
 import {
   type BuildTools,
@@ -41,7 +41,17 @@ import {
   highway,
   libjxl,
   libheif,
-  mupdfLibs,
+  libjpegTurbo,
+  jbig2dec,
+  openjpeg,
+  freetype,
+  lcms2,
+  harfbuzz,
+  mujs,
+  extract,
+  brotli,
+  cmarkGfm,
+  aGumbo,
   mupdf,
   zopfli,
 } from "./build-lib-defs";
@@ -80,7 +90,7 @@ function mingwBuildTools(): BuildTools {
 let compileJobs = DEFAULT_JOBS;
 
 const COMMON_DEFINES = ["WIN32", "_WIN32", "WINVER=0x0605", "_WIN32_WINNT=0x0603"];
-const MINGW_CXX_FLAGS = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
+const MINGW_CXX_FLAGS = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1", "-Wno-narrowing"];
 
 // utils static library (mixed debug/release)
 const utils: LibDef = {
@@ -155,6 +165,7 @@ const utils: LibDef = {
         "SquareTreeParser.*",
         "Strconv.*",
         "StrFormat.*",
+        "StrFormatParse.*",
         "Str.*",
         "StrUtf8.*",
         "StrVec.*",
@@ -225,7 +236,7 @@ const sumatraFiles: FileGroup[] = [
       "DocProperties.*",
       "EngineBase.*",
       "EngineCreate.*",
-      "EngineDjVu.*",
+      "EngineDjvuDec.*",
       "EngineEbook.*",
       "EngineImages.*",
       "EngineMupdf.*",
@@ -236,6 +247,20 @@ const sumatraFiles: FileGroup[] = [
       "GumboHtmlParser.*",
       "HtmlFormatter.*",
       "MobiDoc.*",
+      "PdfCadDetect.*",
+      "PdfCadEnhanceDevice.*",
+      "PdfDarkModeAnalysis.cpp",
+      "PdfDarkModeCache.cpp",
+      "PdfDarkModeColor.cpp",
+      "PdfDarkModeDevice.cpp",
+      "PdfDarkModeEngineCache.cpp",
+      "PdfDarkModeImageBgBlend.cpp",
+      "PdfDarkModeImageClassifier.cpp",
+      "PdfDarkModeImageRules.cpp",
+      "PdfDarkModeImageStats.cpp",
+      "PdfDarkModeOklab.cpp",
+      "PdfDarkModeProfile.cpp",
+      "PdfDarkModeScanProcess.cpp",
       "PdfCreator.*",
       "PalmDbReader.*",
     ],
@@ -254,11 +279,31 @@ const sumatraFiles: FileGroup[] = [
       "CanvasAboutUI.*",
       "ChmDump.*",
       "ChmModel.*",
+      "AdvancedSettingsDialog.*",
+      "AIChatCommon.*",
+      "AppUnitTests.*",
+      "AIChatPanel.*",
+      "CaptionGlyphs.*",
+      "ChangeThemeDialog.*",
       "ClaudeCode.*",
+      "CommandAvailability.*",
+      "ExifDump.*",
+      "FilterHighlightDraw.*",
+      "FindBar.*",
+      "FindWindow.*",
+      "MarkdownModel.*",
+      "MarkdownToc.*",
+      "NavFilesInFolder.*",
+      "SelectionTranslate.*",
+      "TreeModel.*",
       "GrokBuild.*",
       "CodexBuild.*",
       "Commands.*",
       "CommandPalette.*",
+      "CommandPaletteCollect.*",
+      "CommandPaletteDraw.*",
+      "CommandPaletteFilter.*",
+      "WebpReader.*",
       "CrashHandler.*",
       "DisplayModel.*",
       "DocumentLayout.*",
@@ -290,8 +335,18 @@ const sumatraFiles: FileGroup[] = [
       "Print.*",
       "ProgressUpdateUI.*",
       "PreviewPipe.*",
+      "ReadAloudHighlight.*",
+      "ReadAloudPlaybackBar.*",
       "RefHover.*",
+      "RefHoverCanvas.*",
       "RefHoverDetect.*",
+      "RefHoverInternal.*",
+      "RefHoverPopup.*",
+      "RefHoverRender.*",
+      "RefHoverShow.*",
+      "RefHoverText.*",
+      "RefHoverTextDetect.*",
+      "FormFields.*",
       "OverlayScrollbar.*",
       "RenderCache.*",
       "RegistryInstaller.*",
@@ -300,9 +355,11 @@ const sumatraFiles: FileGroup[] = [
       "SearchAndDDE.*",
       "Screenshot.*",
       "Selection.*",
+      "SelectionToolbar.*",
       "SettingsStructs.*",
       "SimpleBrowserWindow.*",
       "SumatraControl.*",
+      "SumatraLog.cpp",
       "SumatraPDF.cpp",
       "SumatraStartup.cpp",
       "SumatraConfig.cpp",
@@ -409,6 +466,7 @@ async function buildSumatraExe(
     "UNICODE",
     "_UNICODE",
     "_USE_MATH_DEFINES",
+    "CMARK_GFM_STATIC_DEFINE",
   ];
   const defineFlags = allDefines.map((d) => `-D${d}`);
 
@@ -417,11 +475,18 @@ async function buildSumatraExe(
     "mupdf/include",
     "ext/synctex",
     "ext/libdjvu",
+    "ext/djvudec",
     "ext/libchm",
     "ext/zopfli/src",
     "ext/darkmodelib/include",
     "ext/zlib",
     "ext/libarchive",
+    "ext/libjxl/lib/include",
+    "ext/libheif/libheif/api",
+    "ext/libwebp/src",
+    "ext/cmark-gfm/src",
+    "ext/cmark-gfm/extensions",
+    "mupdf/scripts/cmark-gfm",
   ];
   const includeFlags = includes.map((d) => `-I${d}`);
 
@@ -487,17 +552,19 @@ namespace _com_util {
 #include "base/Base.h"
 #include "TextToSpeech.h"
 
-bool TtsSpeakUtf8(const char*) { return false; }
+bool TtsSpeakUtf8(Str) { return false; }
 void TtsStop() {}
 void TtsRelease() {}
 bool TtsIsSpeaking() { return false; }
 int TtsGetSpokenPosUtf8() { return -1; }
 void TtsSetNotifyWindow(HWND, UINT, WPARAM, LPARAM) {}
 void TtsProcessEvents() {}
-Vec<TtsVoiceInfo> TtsGetVoices() { return {}; }
+Vec<TtsVoiceInfo> TtsGetVoices() { return Vec<TtsVoiceInfo>(); }
 void TtsFreeVoices(Vec<TtsVoiceInfo>&) {}
-bool TtsSetVoiceById(const char*) { return false; }
-const char* TtsGetVoiceId() { return nullptr; }
+bool TtsSetVoiceById(Str) { return false; }
+Str TtsGetVoiceId() { return Str(); }
+void TtsSetSpeed(float) {}
+float TtsGetSpeed() { return 1.0f; }
 `);
   const ttsRes = await spawnCmd([
     mingwTools.cxx,
@@ -519,11 +586,11 @@ const char* TtsGetVoiceId() { return nullptr; }
   const testStubSrc = join(outDir, "obj", "_test_stub.cpp");
   const testStubObj = join(outDir, "obj", "_test_stub.o");
   await writeFile(testStubSrc, `
-#include <windows.h>
-void TestPlugin(const WCHAR*) {}
-void TestPreview(const WCHAR*) {}
+#include "base/Base.h"
+void TestPlugin(WStr) {}
+void TestPreview(WStr) {}
 `);
-  const testRes = await spawnCmd([mingwTools.cxx, "-Os", ...MINGW_CXX_FLAGS, "-c", testStubSrc, "-o", testStubObj]);
+  const testRes = await spawnCmd([mingwTools.cxx, "-Os", ...MINGW_CXX_FLAGS, "-Isrc", "-c", testStubSrc, "-o", testStubObj]);
   if (!testRes.ok) {
     console.error(`Failed to compile test stub: ${testRes.stderr}`);
     throw new Error("test stub compile failed");
@@ -607,12 +674,22 @@ void TestPreview(const WCHAR*) {}
 
 // ── Top-level build functions ───────────────────────────────────────────────
 
+// same def as in build-linux.ts (ext/djvudec is the standalone DjVu decoder)
+const djvudec: LibDef = {
+  name: "djvudec",
+  alwaysOptimize: true,
+  defines: [],
+  includes: [],
+  files: [{ dir: "ext/djvudec", patterns: ["djvu.c"] }],
+};
+
 // Order: libraries that have no deps first, then dependents.
 // The link order for archives is: most-dependent first, least-dependent last.
 const ALL_LIBS: LibDef[] = [
   zlib,
   unrar,
   libdjvu,
+  djvudec,
   chm,
   libarchive,
   libwebp,
@@ -621,7 +698,18 @@ const ALL_LIBS: LibDef[] = [
   skcms,
   highway,
   libjxl,
-  mupdfLibs,
+  libjpegTurbo,
+  jbig2dec,
+  openjpeg,
+  freetype,
+  lcms2,
+  harfbuzz,
+  mujs,
+  extract,
+  brotli,
+  cmarkGfm,
+  aGumbo,
+  zopfli,
   mupdf,
   utils,
 ];

@@ -64,6 +64,13 @@ typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 NORMALIZ_API_LIST(API_DECLARATION)
 
+// mingw-w64 headers before v12 (e.g. Debian's 10.0.0) don't declare
+// SetThreadDescription; the decltype in API_DECLARATION2 needs a declaration.
+// An identical redeclaration is harmless on newer headers.
+#ifdef __MINGW32__
+extern "C" WINBASEAPI HRESULT WINAPI SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
+#endif
+
 // kernel32.dll
 #define KERNEL32_API_LIST(V)    \
     V(SetProcessDEPPolicy)      \
