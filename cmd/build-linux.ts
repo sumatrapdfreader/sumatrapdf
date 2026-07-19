@@ -30,6 +30,7 @@ import {
   spawnCmd,
 } from "./build-deps-common";
 import {
+  aGumbo,
   zlib,
   unrar,
   libwebp,
@@ -594,6 +595,7 @@ const DEP_LIBS_BASE = [
       },
     ],
   },
+  aGumbo,
   zlib,
   makeUnrar,
   makeLibdjvu,
@@ -623,7 +625,12 @@ const TEST_UTIL_SOURCES = [
   "src/Commands.cpp",
   "src/CrashHandlerNoOp.cpp",
   "src/DisplayMode.cpp",
+  "src/DocProperties.cpp",
   "src/Flags.cpp",
+  "src/PdfDarkModeImageClassifier_ut.cpp",
+  "src/PdfDarkModeImageRules.cpp",
+  "src/PdfDarkModeOklab.cpp",
+  "src/PdfDarkModeOklab_ut.cpp",
   "src/RefHoverDetect.cpp",
   "src/RefHoverTextDetect.cpp",
   "src/SimpleLog_ut.cpp",
@@ -663,6 +670,9 @@ const TEST_ENGINES_SOURCES = [
   "src/GumboHelpers.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
+  "src/PdfCadDetect.cpp",
+  "src/PdfCadEnhanceDevice.cpp",
+  "src/PdfDarkModeNoOp.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];
@@ -880,6 +890,7 @@ async function buildTestUtil(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
+    "-lcrypto",
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
@@ -957,6 +968,7 @@ async function buildTestEngines(
     exePath,
     ...commonFlags,
     ...units.map((u) => u.obj),
+    "-Wl,--start-group",
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libmupdf.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
@@ -966,12 +978,15 @@ async function buildTestEngines(
     join(outDir, "lib", "libfreetype.a"),
     join(outDir, "lib", "libbrotli.a"),
     join(outDir, "lib", "liblcms2.a"),
-    join(outDir, "lib", "libopenjpeg.a"),
+    join(outDir, "lib", "liba-openjpeg.a"),
     join(outDir, "lib", "libjbig2dec.a"),
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "libzlib.a"),
+    join(outDir, "lib", "liba-gumbo.a"),
+    join(outDir, "lib", "liba-zlib.a"),
+    "-Wl,--end-group",
+    "-lcrypto",
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {

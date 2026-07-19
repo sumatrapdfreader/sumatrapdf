@@ -47,3 +47,32 @@ jobs:
         with:
           name: SumatraPDF-linux-wine-debug
           path: out/dbg64-wine/SumatraPDF.exe
+
+  native:
+    name: Native build and unit tests
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v7
+
+      - name: Install clang, OpenSSL headers and bun
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential clang lld libssl-dev \
+            ca-certificates curl unzip git
+          curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash
+
+      # builds all dependency libs, runs test_util's unit-test suite
+      # natively, and links test_engines
+      - name: Build dependencies and run native unit tests
+        run: bun cmd/build-linux.ts -debug
+
+      - name: Upload test tools
+        uses: actions/upload-artifact@v7
+        with:
+          name: sumatra-linux-native-tools
+          path: |
+            out/linux-dbg64/test_util
+            out/linux-dbg64/test_engines
