@@ -641,6 +641,40 @@ void TestPreview(WStr) {}
     console.error(`  WARNING: windres failed (resource file skipped): ${rcRes.stderr.slice(0, 200)}`);
   }
 
+  // ── uiautomationcore import lib (missing from mingw-w64 < 12) ─────────
+  // mingw-w64 v11 (Ubuntu 24.04) has the UIA headers but not the import
+  // library; synthesize one from a .def for the few functions we call.
+  const probe = await spawnCmd([mingwTools.cxx, "-print-file-name=libuiautomationcore.a"], {
+    captureStdout: true,
+  });
+  const extraLibDirs: string[] = [];
+  if (probe.stdout.trim() === "libuiautomationcore.a") {
+    console.log("Generating uiautomationcore import library (not in this mingw-w64)...");
+    const defPath = join(outDir, "obj", "uiautomationcore.def");
+    await writeFile(
+      defPath,
+      [
+        "LIBRARY UIAutomationCore.dll",
+        "EXPORTS",
+        "UiaGetReservedNotSupportedValue",
+        "UiaHostProviderFromHwnd",
+        "UiaRaiseAutomationEvent",
+        "UiaRaiseStructureChangedEvent",
+        "UiaReturnRawElementProvider",
+        "UiaClientsAreListening",
+        "UiaDisconnectProvider",
+        "",
+      ].join("\n"),
+    );
+    const dlltool = mingwTools.cxx.replace(/g\+\+.*$/, "dlltool");
+    const libPath = join(outDir, "obj", "libuiautomationcore.a");
+    const dtRes = await spawnCmd([dlltool, "-d", defPath, "-l", libPath]);
+    if (!dtRes.ok) {
+      throw new Error(`dlltool failed: ${dtRes.stderr}`);
+    }
+    extraLibDirs.push(`-L${join(outDir, "obj")}`);
+  }
+
   // ── Link ──────────────────────────────────────────────────────────────
   console.log("Linking SumatraPDF.exe...");
   const exePath = join(outDir, "SumatraPDF.exe");
@@ -660,6 +694,7 @@ void TestPreview(WStr) {}
     "-static-libstdc++",
     "-mwindows", // GUI app (WinMain entry point)
     "@" + rspPath,
+    ...extraLibDirs,
     // system libraries
     ...SYSTEM_LIBS.map((l) => `-l${l}`),
   ];
