@@ -13,7 +13,7 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
-#include "SumatraPdf.h"
+#include "SumatraPDF.h"
 
 #include "Notifications.h"
 #include "TipText.h"

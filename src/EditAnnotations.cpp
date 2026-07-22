@@ -31,7 +31,7 @@ extern "C" {
 #include "SumatraPDF.h"
 #include "DarkModeSubclass.h"
 
-#include "theme.h"
+#include "Theme.h"
 
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;

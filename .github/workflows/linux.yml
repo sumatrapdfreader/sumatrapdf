@@ -1,0 +1,47 @@
+name: Linux
+on:
+  push:
+  pull_request:
+jobs:
+  wine:
+    name: Cross-compile and test under Wine
+    # ubuntu-24.04 ships mingw-w64 v11; the pre-v12 header gaps
+    # (SetThreadDescription, Win11 DWM enums) are shimmed in
+    # src/base/WinDynCalls.h
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v7
+
+      - name: Install mingw-w64 and Wine (cached)
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: g++-mingw-w64-x86-64 wine wine64 xvfb xauth
+          version: 1
+          # wine registers /usr/bin/wine via update-alternatives in postinst
+          execute_install_scripts: true
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cross-compile SumatraPDF.exe
+        run: bun cmd/build-linux-wine.ts
+
+      - name: Run unit tests under Wine
+        env:
+          WINEDEBUG: "-all"
+        run: xvfb-run -a wine out/dbg64-wine/SumatraPDF.exe -for-testing -unit-tests
+
+      # -bench does not return 0 on success, so gate on its output instead
+      - name: Render smoke test under Wine
+        env:
+          WINEDEBUG: "-all"
+        run: |
+          xvfb-run -a wine out/dbg64-wine/SumatraPDF.exe -for-testing -bench tests/issue-3219.pdf 2>&1 | tee bench.log || true
+          grep -q "Finished" bench.log
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: SumatraPDF-linux-wine-debug
+          path: out/dbg64-wine/SumatraPDF.exe

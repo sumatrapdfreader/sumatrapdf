@@ -64,6 +64,28 @@ typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 NORMALIZ_API_LIST(API_DECLARATION)
 
+// mingw-w64 headers before v12 (e.g. Debian's 10.0.0) don't declare
+// SetThreadDescription; the decltype in API_DECLARATION2 needs a declaration.
+// An identical redeclaration is harmless on newer headers.
+#ifdef __MINGW32__
+extern "C" WINBASEAPI HRESULT WINAPI SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
+#endif
+
+// mingw-w64 headers before v12 (e.g. Ubuntu 24.04's 11.0.1) also predate the
+// Windows 11 DWM additions; the dwm:: wrappers pass attributes as DWORD.
+#if defined(__MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR < 12
+typedef enum {
+    DWMWCP_DEFAULT = 0,
+    DWMWCP_DONOTROUND = 1,
+    DWMWCP_ROUND = 2,
+    DWMWCP_ROUNDSMALL = 3,
+} DWM_WINDOW_CORNER_PREFERENCE;
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#define DWMWA_BORDER_COLOR 34
+#define DWMWA_COLOR_DEFAULT 0xFFFFFFFF
+#define DWMWA_COLOR_NONE 0xFFFFFFFE
+#endif
+
 // kernel32.dll
 #define KERNEL32_API_LIST(V)    \
     V(SetProcessDEPPolicy)      \

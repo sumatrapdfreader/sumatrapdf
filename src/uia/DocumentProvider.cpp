@@ -171,7 +171,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     }
 
     // RuntimeID magic, use hwnd to differentiate providers of different windows
-    LONG rId[] = {(LONG)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID};
+    LONG rId[] = {HandleToLong(canvasHwnd), SUMATRA_UIA_DOCUMENT_RUNTIME_ID};
     for (LONG i = 0; i < 2; i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
         ReportIf(FAILED(hr));

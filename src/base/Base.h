@@ -87,6 +87,7 @@
 
 // C/C++ standard headers  we use often
 #include <ctype.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
