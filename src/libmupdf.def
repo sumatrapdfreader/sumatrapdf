@@ -3,7 +3,6 @@
 LIBRARY libmupdf
 EXPORTS
 	gzwrite
-	ddjvu_page_get_initial_rotation
 	fz_set_optind
 	fz_open_document
 	fz_write_byte
@@ -826,6 +825,9 @@ EXPORTS
 
 ; djvu exports (required for DjVuEngine)
 
+	djvu_doc_drop_page_cache
+	djvu_doc_page_cache_size
+	ddjvu_page_get_initial_rotation
 	ddjvu_anno_get_hyperlinks
 	ddjvu_cache_clear
 	ddjvu_context_create
