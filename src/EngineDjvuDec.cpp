@@ -202,14 +202,19 @@ class EngineDjvuDec : public EngineBase {
 
     // After djvu_init(), a djvu_doc is read-only and djvu_page_render /
     // djvu_page_text_get_zones / djvu_page_get_links are re-entrant on the same
-    // doc. djvuCacheLock is passed to djvudec for per-page layer caching;
-    // cacheLock guards lazy one-time caches (page links, TOC).
+    // doc. djvuCacheLock is passed to djvudec for per-page layer caching
+    // (Sjbz / IW44 / composited bg). Do not hold it while calling
+    // djvu_doc_drop_page_cache / djvu_doc_page_cache_size — those re-enter the
+    // same lock via CacheLockCb. cacheLock guards TOC/links and the LRU list.
     djvu_ctx* ctx = nullptr;
     djvu_doc* doc = nullptr;
     Mutex djvuCacheLock;
     Mutex cacheLock;
     Mutex renderSlotsLock;
     int activeRenders = 0;
+    bool pageCacheEnabled = false;
+    // 0-based page indices with live djvudec page-local cache, MRU first.
+    Vec<int> pageCacheLru;
 
     Vec<DjvuDecPageInfo*> pages;
     TocTree* tocTree = nullptr;
@@ -217,10 +222,18 @@ class EngineDjvuDec : public EngineBase {
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
     TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter);
+    // After a successful render of page0: mark MRU and drop cold pages if the
+    // decoder's page-local cache exceeds the byte/page budget.
+    void NotePageCacheAfterRender(int page0);
 
     static void CacheLockCb(void* user, void* ctx);
     static void CacheUnlockCb(void* user, void* ctx);
 };
+
+// Cap decoder page-local cache (Sjbz/IW44/bg) so multi-GB books don't keep
+// every visited page. Tuned for interactive re-paint of a few recent pages.
+constexpr size_t kDjvuPageCacheMaxBytes = 64 * 1024 * 1024;
+constexpr int kDjvuPageCacheMaxPages = 32;
 
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
@@ -314,11 +327,13 @@ bool EngineDjvuDec::FinishLoading() {
     if (!ctx) {
         return false;
     }
-    // only do caching for small files. for large files like 1 GB from
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/5778 each rendered page would retain ~1MB
-    if (dataLen < kMemoryMapMinFileSize) {
-        djvu_ctx_set_cache_per_page(ctx, 1);
-    }
+    // Lazy per-page layer cache (first render fills Sjbz/IW44/bg; later paints
+    // reuse). Requires lock/unlock callbacks (set above). Budget-enforced in
+    // NotePageCacheAfterRender via djvu_doc_drop_page_cache so large files
+    // (e.g. multi-GB books) do not retain every page forever.
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/5778
+    djvu_ctx_set_cache_per_page(ctx, 1);
+    pageCacheEnabled = true;
     // ask the decoder to emit color output in B,G,R order so it lands in a
     // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
     // decoder's final output copy at no cost).
@@ -666,6 +681,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         free(pixels);
         return nullptr;
     }
+    NotePageCacheAfterRender(pageNo - 1);
 
     u8* rotated = pixels;
     int rdx = sdx, rdy = sdy;
@@ -917,6 +933,50 @@ TocTree* EngineDjvuDec::GetToc() {
     realRoot->child = rootItem;
     tocTree = new TocTree(realRoot);
     return tocTree;
+}
+
+void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
+    if (!pageCacheEnabled || !doc || page0 < 0 || page0 >= pageCount) {
+        return;
+    }
+    // Reorder LRU under cacheLock. Size queries and drops re-enter djvuCacheLock
+    // via the decoder callbacks — never hold djvuCacheLock here.
+    {
+        ScopedMutex scope(&cacheLock);
+        for (int i = 0; i < len(pageCacheLru); i++) {
+            if (pageCacheLru[i] == page0) {
+                pageCacheLru.RemoveAt(i);
+                break;
+            }
+        }
+        pageCacheLru.InsertAt(0, page0);
+    }
+
+    for (;;) {
+        size_t total = 0;
+        int n = 0;
+        int dropPage = -1;
+        {
+            ScopedMutex scope(&cacheLock);
+            n = len(pageCacheLru);
+            if (n <= 1) {
+                return;
+            }
+            for (int i = 0; i < n; i++) {
+                total += djvu_doc_page_cache_size(doc, pageCacheLru[i]);
+            }
+            if (total <= kDjvuPageCacheMaxBytes && n <= kDjvuPageCacheMaxPages) {
+                return;
+            }
+            // Evict least-recently used that is not the page we just rendered.
+            dropPage = pageCacheLru.Last();
+            if (dropPage == page0) {
+                return;
+            }
+            pageCacheLru.RemoveAt(n - 1);
+        }
+        djvu_doc_drop_page_cache(doc, dropPage);
+    }
 }
 
 bool IsEngineDjVuSupportedFileType(FileType kind) {
