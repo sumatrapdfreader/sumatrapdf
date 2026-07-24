@@ -2059,7 +2059,7 @@ function ipred_reverse_16bpc_neon, export=1
         ret
 endfunc
 
-const increments
+const increments, align=4
         .short          0,  1,  2,  3,  4,  5,  6,  7
 endconst
 
@@ -2077,8 +2077,7 @@ function ipred_z2_fill1_16bpc_neon, export=1
         add             x9,  x9,  x10
         sub             w8,  w8,  w6              // xpos -= dx
 
-        movrel          x11, increments
-        ld1             {v31.8h},  [x11]          // increments
+        ldrel           q31, x11, increments
         neg             w7,  w7                   // -dy
 
         br              x9
@@ -2849,8 +2848,7 @@ function ipred_z2_fill2_16bpc_neon, export=1
         mov             w8,  #(2 << 6)            // xpos = 2 << 6
         sub             w8,  w8,  w6              // xpos -= dx
 
-        movrel          x11, increments
-        ld1             {v31.8h},  [x11]          // increments
+        ldrel           q31, x11, increments
         neg             w7,  w7                   // -dy
         b.eq            80f
 
@@ -3152,8 +3150,7 @@ function ipred_z2_fill3_16bpc_neon, export=1
         mov             w8,  #(1 << 6)            // xpos = 1 << 6
         sub             w8,  w8,  w6              // xpos -= dx
 
-        movrel          x11, increments
-        ld1             {v31.8h},  [x11]          // increments
+        ldrel           q31, x11, increments
         neg             w7,  w7                   // -dy
         b.eq            80f
 

@@ -133,10 +133,10 @@ function save_tmvs_neon, export=1
         and             r9,  r7,  #30             // (y & 15) * 2
         ldr             r9,  [r2, r9, lsl #2]     // b = rr[(y & 15) * 2]
         add             r9,  r9,  #12             // &b[... + 1]
-        mla             r10, r4,  r11,  r9        // end_cand_b = &b[col_end8*2 + 1]
-        mla             r9,  r6,  r11,  r9        // cand_b = &b[x*2 + 1]
+        mla             r10, r4,  r11, r9         // end_cand_b = &b[col_end8*2 + 1]
+        mla             r9,  r6,  r11, r9         // cand_b = &b[x*2 + 1]
 
-        mla             r3,  r6,  r3,   r0        // &rp[x]
+        mla             r3,  r6,  r3,  r0         // &rp[x]
 
         push            {r2,r4,r6}
 
@@ -175,8 +175,8 @@ function save_tmvs_neon, export=1
         vmov.u16        r6,  d2[1]
         ldr             r11, [r11, #4]            // Fetch jump table entry
         ldr             r2,  [r2,  #4]
-        add             r4,  r12,  r4,  lsl #4
-        add             r6,  r12,  r6,  lsl #4
+        add             r4,  r12, r4,  lsl #4
+        add             r6,  r12, r6,  lsl #4
         vld1.8          {d2, d3}, [r4]            // Load permutation table base on case
         vld1.8          {d4, d5}, [r6]
         add             r11, r8,  r11             // Find jump table target

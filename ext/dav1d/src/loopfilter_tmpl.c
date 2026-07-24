@@ -143,10 +143,10 @@ loop_filter(pixel *dst, int E, int I, int H,
                 dst[strideb * -1] = iclip_pixel(p0 + f2);
                 dst[strideb * +0] = iclip_pixel(q0 - f1);
             } else {
-                int f = iclip_diff(3 * (q0 - p0)), f1, f2;
+                int f = iclip_diff(3 * (q0 - p0));
 
-                f1 = imin(f + 4, (128 << bitdepth_min_8) - 1) >> 3;
-                f2 = imin(f + 3, (128 << bitdepth_min_8) - 1) >> 3;
+                const int f1 = imin(f + 4, (128 << bitdepth_min_8) - 1) >> 3;
+                const int f2 = imin(f + 3, (128 << bitdepth_min_8) - 1) >> 3;
 
                 dst[strideb * -1] = iclip_pixel(p0 + f2);
                 dst[strideb * +0] = iclip_pixel(q0 - f1);

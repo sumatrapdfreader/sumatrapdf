@@ -450,22 +450,19 @@ endfunc
 .endm
 
 function inv_dct_4h_x4_neon, export=1
-        movrel          x16, idct_coeffs
-        ld1             {v0.4h}, [x16]
+        ldrel           d0,  x16, idct_coeffs
         idct_4          v16, v17, v18, v19, .4h
         ret
 endfunc
 
 function inv_dct_8h_x4_neon, export=1
-        movrel          x16, idct_coeffs
-        ld1             {v0.4h}, [x16]
+        ldrel           d0,  x16, idct_coeffs
         idct_4          v16, v17, v18, v19, .8h
         ret
 endfunc
 
 .macro iadst_4x4 o0, o1, o2, o3
-        movrel          x16, iadst4_coeffs
-        ld1             {v0.8h}, [x16]
+        ldrel           q0,  x16, iadst4_coeffs
 
         ssubl           v3.4s,   v16.4h,  v18.4h
         smull           v4.4s,   v16.4h,  v0.h[0]
@@ -500,8 +497,7 @@ function inv_flipadst_4h_x4_neon, export=1
 endfunc
 
 .macro iadst_8x4 o0, o1, o2, o3
-        movrel          x16, iadst4_coeffs
-        ld1             {v0.8h}, [x16]
+        ldrel           q0,  x16, iadst4_coeffs
 
         ssubl           v2.4s,   v16.4h,  v18.4h
         ssubl2          v3.4s,   v16.8h,  v18.8h
@@ -545,7 +541,7 @@ endfunc
         sqrshrn2        \o0\().8h, v17.4s, #12
 
 .ifc \o2, v17
-        mov             v17.16b,   v18.16b
+        mov             v17.16b, v18.16b
 .endif
 
         sqrshrn         \o1\().4h, v6.4s,  #12
@@ -742,15 +738,13 @@ def_fn_4x4 identity, flipadst
 .endm
 
 function inv_dct_8h_x8_neon, export=1
-        movrel          x16, idct_coeffs
-        ld1             {v0.8h}, [x16]
+        ldrel           q0,  x16, idct_coeffs
         idct_8          v16, v17, v18, v19, v20, v21, v22, v23, .8h, .16b
         ret
 endfunc
 
 function inv_dct_4h_x8_neon, export=1
-        movrel          x16, idct_coeffs
-        ld1             {v0.8h}, [x16]
+        ldrel           q0,  x16, idct_coeffs
         idct_8          v16, v17, v18, v19, v20, v21, v22, v23, .4h, .8b
         ret
 endfunc
@@ -1130,7 +1124,6 @@ endfunc
 .macro iadst_16 o0, o1, o2, o3, o4, o5, o6, o7, o8, o9, o10, o11, o12, o13, o14, o15, sz, szb
         movrel          x16, iadst16_coeffs
         ld1             {v0.8h, v1.8h}, [x16]
-        movrel          x16, idct_coeffs
 
         smull_smlal     v2,  v3,  v31, v16, v0.h[0], v0.h[1], \sz // -> t0
         smull_smlsl     v4,  v5,  v31, v16, v0.h[1], v0.h[0], \sz // -> t1
@@ -1165,7 +1158,7 @@ endfunc
         sqrshrn_sz      v17, v6,  v7,  #12, \sz   // t14
         sqrshrn_sz      v30, v2,  v3,  #12, \sz   // t15
 
-        ld1             {v0.8h}, [x16]
+        ldrel           q0,  x16, idct_coeffs
 
         sqsub           v2\sz,   v16\sz,  v23\sz // t8a
         sqadd           v16\sz,  v16\sz,  v23\sz // t0a
@@ -1854,8 +1847,7 @@ def_fns_816 16, 8
 
 function inv_dct32_odd_8h_x16_neon, export=1
         movrel          x16, idct_coeffs, 2*16
-        ld1             {v0.8h, v1.8h}, [x16]
-        sub             x16, x16, #2*16
+        ldp             q0,  q1,  [x16], #-2*16
 
         smull_smlsl     v2,  v3,  v16, v31, v0.h[0], v0.h[1], .8h // -> t16a
         smull_smlal     v4,  v5,  v16, v31, v0.h[1], v0.h[0], .8h // -> t31a
@@ -1993,7 +1985,7 @@ function inv_dct32_odd_8h_x16_neon, export=1
 
         smull_smlal     v4,  v5,  v25, v27, v0.h[0], v0.h[0], .8h // -> t26a
         smull_smlsl     v6,  v7,  v25, v27, v0.h[0], v0.h[0], .8h // -> t21a
-        mov             v27.16b,  v22.16b         // t27
+        mov             v27.16b, v22.16b          // t27
         sqrshrn_sz      v26, v4,  v5,  #12, .8h   // t26a
 
         smull_smlsl     v24, v25, v21, v23, v0.h[0], v0.h[0], .8h // -> t22
@@ -2625,8 +2617,7 @@ function inv_dct64_step1_neon
 endfunc
 
 function inv_dct64_step2_neon
-        movrel          x16, idct_coeffs
-        ld1             {v0.4h}, [x16]
+        ldrel           d0,  x16, idct_coeffs
 1:
         // t32a/33/34a/35/60/61a/62/63a
         // t56a/57/58a/59/36/37a/38/39a

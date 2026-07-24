@@ -36,6 +36,23 @@
 #define __has_feature(x) 0
 #endif
 
+.macro  ldrel rd, raddr, val, offset=0
+#if defined(__APPLE__)
+        adrp            \raddr, \val+(\offset)@PAGE
+        ldr             \rd, [\raddr, \val+(\offset)@PAGEOFF]
+#elif defined(_MSC_VER)
+        movrel          \raddr, \val, \offset
+        ldr             \rd, [\raddr]
+#elif __has_feature(hwaddress_sanitizer)
+        adrp            \raddr, :pg_hi21_nc:\val+(\offset)
+        movk            \raddr, #:prel_g3:\val+0x100000000
+        ldr             \rd, [\raddr, :lo12:\val+(\offset)]
+#else
+        adrp            \raddr, \val+(\offset)
+        ldr             \rd, [\raddr, :lo12:\val+(\offset)]
+#endif
+.endm
+
 .macro  movrel rd, val, offset=0
 #if defined(__APPLE__)
   .if \offset < 0
@@ -72,7 +89,7 @@
 .if \space > 8192
         // Here, we'd need to touch two (or more) pages while decrementing
         // the stack pointer.
-        .error          "sub_sp_align doesn't support values over 8K at the moment"
+        .error          "sub_sp doesn't support values over 8K at the moment"
 .elseif \space > 4096
         sub             x16, sp,  #4096
         ldr             xzr, [x16]

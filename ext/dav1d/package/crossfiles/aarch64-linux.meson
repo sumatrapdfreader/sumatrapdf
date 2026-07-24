@@ -3,7 +3,7 @@ c = 'aarch64-linux-gnu-gcc'
 cpp = 'aarch64-linux-gnu-g++'
 ar = 'aarch64-linux-gnu-ar'
 strip = 'aarch64-linux-gnu-strip'
-exe_wrapper = 'qemu-aarch64'
+exe_wrapper = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
 
 [host_machine]
 system = 'linux'

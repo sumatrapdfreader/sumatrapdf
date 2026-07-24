@@ -117,9 +117,8 @@ function save_tmvs_neon, export=1
         movi            v30.8b,  #0
         ld1             {v31.8b}, [x3]
         movrel          x8,  save_tmvs_tbl
-        movrel          x16, mask_mult
+        ldrel           d29, x16, mask_mult
         movrel          x13, mv_tbls
-        ld1             {v29.8b}, [x16]
         ext             v31.8b,  v30.8b,  v31.8b,  #7 // [0, ref_sign]
         mov             w15, #5
         mov             w14, #12*2
@@ -133,10 +132,10 @@ function save_tmvs_neon, export=1
         and             w9,  w7,  #30             // (y & 15) * 2
         ldr             x9,  [x2, w9, uxtw #3]    // b = rr[(y & 15) * 2]
         add             x9,  x9,  #12             // &b[... + 1]
-        madd            x10, x4,  x14,  x9        // end_cand_b = &b[col_end8*2 + 1]
-        madd            x9,  x6,  x14,  x9        // cand_b = &b[x*2 + 1]
+        madd            x10, x4,  x14, x9         // end_cand_b = &b[col_end8*2 + 1]
+        madd            x9,  x6,  x14, x9         // cand_b = &b[x*2 + 1]
 
-        madd            x3,  x6,  x15,  x0        // &rp[x]
+        madd            x3,  x6,  x15, x0         // &rp[x]
 
 2:
         ldrb            w11, [x9, #10]            // cand_b->bs

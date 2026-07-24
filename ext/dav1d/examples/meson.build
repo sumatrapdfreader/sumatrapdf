@@ -40,7 +40,7 @@ dav1dplay_sources = files(
     'dp_renderer_sdl.c',
 )
 
-sdl2_dependency = dependency('sdl2', version: '>= 2.0.1', required: true)
+sdl2_dependency = dependency('sdl2', version: '>= 2.0.1', required: true, include_type: 'system')
 
 if sdl2_dependency.found()
     dav1dplay_deps = [sdl2_dependency, libm_dependency]

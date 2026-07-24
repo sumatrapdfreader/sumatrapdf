@@ -417,6 +417,8 @@ fguv_ss_fn(444, 0, 0);
 #include "src/arm/filmgrain.h"
 #elif ARCH_X86
 #include "src/x86/filmgrain.h"
+#elif ARCH_RISCV
+#include "src/riscv/filmgrain.h"
 #endif
 #endif
 
@@ -436,6 +438,8 @@ COLD void bitfn(dav1d_film_grain_dsp_init)(Dav1dFilmGrainDSPContext *const c) {
     film_grain_dsp_init_arm(c);
 #elif ARCH_X86
     film_grain_dsp_init_x86(c);
+#elif ARCH_RISCV
+    film_grain_dsp_init_riscv(c);
 #endif
 #endif
 }

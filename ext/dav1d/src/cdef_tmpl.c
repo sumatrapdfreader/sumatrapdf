@@ -113,6 +113,7 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
     assert((w == 4 || w == 8) && (h == 4 || h == 8));
     int16_t tmp_buf[144]; // 12*12 is the maximum value of tmp_stride * (h + 4)
     int16_t *tmp = tmp_buf + 2 * tmp_stride + 2;
+    const int8_t (*const cdef_dirs)[2] = &dav1d_cdef_directions[dir];
 
     padding(tmp, tmp_stride, dst, dst_stride, left, top, bottom, w, h, edges);
 
@@ -129,7 +130,7 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
                     int max = px, min = px;
                     int pri_tap_k = pri_tap;
                     for (int k = 0; k < 2; k++) {
-                        const int off1 = dav1d_cdef_directions[dir + 2][k]; // dir
+                        const int off1 = cdef_dirs[2][k]; // dir
                         const int p0 = tmp[x + off1];
                         const int p1 = tmp[x - off1];
                         sum += pri_tap_k * constrain(p0 - px, pri_strength, pri_shift);
@@ -140,8 +141,8 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
                         max = imax(p0, max);
                         min = umin(p1, min);
                         max = imax(p1, max);
-                        const int off2 = dav1d_cdef_directions[dir + 4][k]; // dir + 2
-                        const int off3 = dav1d_cdef_directions[dir + 0][k]; // dir - 2
+                        const int off2 = cdef_dirs[4][k]; // dir + 2
+                        const int off3 = cdef_dirs[0][k]; // dir - 2
                         const int s0 = tmp[x + off2];
                         const int s1 = tmp[x - off2];
                         const int s2 = tmp[x + off3];
@@ -173,7 +174,7 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
                     int sum = 0;
                     int pri_tap_k = pri_tap;
                     for (int k = 0; k < 2; k++) {
-                        const int off = dav1d_cdef_directions[dir + 2][k]; // dir
+                        const int off = cdef_dirs[2][k]; // dir
                         const int p0 = tmp[x + off];
                         const int p1 = tmp[x - off];
                         sum += pri_tap_k * constrain(p0 - px, pri_strength, pri_shift);
@@ -194,8 +195,8 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
                 const int px = dst[x];
                 int sum = 0;
                 for (int k = 0; k < 2; k++) {
-                    const int off1 = dav1d_cdef_directions[dir + 4][k]; // dir + 2
-                    const int off2 = dav1d_cdef_directions[dir + 0][k]; // dir - 2
+                    const int off1 = cdef_dirs[4][k]; // dir + 2
+                    const int off2 = cdef_dirs[0][k]; // dir - 2
                     const int s0 = tmp[x + off1];
                     const int s1 = tmp[x - off1];
                     const int s2 = tmp[x + off2];

@@ -4948,26 +4948,26 @@ MC_8TAP_SCALED prep
 
 %macro WARP_V 5 ; dst, 02, 46, 13, 57
     ; Can be done using gathers, but that's terribly slow on many CPU:s
-    lea               tmp1d, [myq+deltaq*4]
-    lea               tmp2d, [myq+deltaq*1]
+    lea               tmp1d, [myq+gammaq*4]
+    lea               tmp2d, [myq+gammaq*1]
     shr                 myd, 10
     shr               tmp1d, 10
     movq                xm8, [filterq+myq  *8]
     vinserti128          m8, [filterq+tmp1q*8], 1 ; a e
-    lea               tmp1d, [tmp2q+deltaq*4]
-    lea                 myd, [tmp2q+deltaq*1]
+    lea               tmp1d, [tmp2q+gammaq*4]
+    lea                 myd, [tmp2q+gammaq*1]
     shr               tmp2d, 10
     shr               tmp1d, 10
     movq                xm0, [filterq+tmp2q*8]
     vinserti128          m0, [filterq+tmp1q*8], 1 ; b f
-    lea               tmp1d, [myq+deltaq*4]
-    lea               tmp2d, [myq+deltaq*1]
+    lea               tmp1d, [myq+gammaq*4]
+    lea               tmp2d, [myq+gammaq*1]
     shr                 myd, 10
     shr               tmp1d, 10
     movq                xm9, [filterq+myq  *8]
     vinserti128          m9, [filterq+tmp1q*8], 1 ; c g
-    lea               tmp1d, [tmp2q+deltaq*4]
-    lea                 myd, [tmp2q+gammaq]       ; my += gamma
+    lea               tmp1d, [tmp2q+gammaq*4]
+    lea                 myd, [tmp2q+deltaq]       ; my += delta
     shr               tmp2d, 10
     shr               tmp1d, 10
     punpcklwd            m8, m0
@@ -5009,7 +5009,7 @@ cglobal warp_affine_8x8t_8bpc, 0, 14, 0, tmp, ts
     jmp .loop
 
 cglobal warp_affine_8x8_8bpc, 0, 14, 0, dst, ds, src, ss, abcd, mx, tmp2, alpha, \
-                                        beta, filter, tmp1, delta, my, gamma
+                                        beta, filter, tmp1, gamma, my, delta
 %if WIN64
     %assign xmm_regs_used 16
     %assign stack_size_padded 0xa0
@@ -5074,12 +5074,12 @@ ALIGN function_align
     call .h
     psrld                m3, m2, 16
     pblendw              m3, m0, 0xaa ; 46
-    movsx            deltad, word [abcdq+2*2]
-    movsx            gammad, word [abcdq+2*3]
+    movsx            gammad, word [abcdq+2*2]
+    movsx            deltad, word [abcdq+2*3]
     add                 myd, 512+(64<<10)
     mov                 r4d, 4
-    lea               tmp1d, [deltaq*3]
-    sub              gammad, tmp1d    ; gamma -= delta*3
+    lea               tmp1d, [gammaq*3]
+    sub              deltad, tmp1d    ; delta -= gamma*3
 .main2:
     call .h
     psrld                m6, m5, 16

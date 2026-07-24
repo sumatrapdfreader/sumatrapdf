@@ -635,8 +635,7 @@ function generate_grain_rows_44_neon
         b.gt            2b
         get_grain_4     v0
         subs            w1,  w1,  #1
-        st1             {v0.4h}, [x0]
-        add             x0,  x0,  #GRAIN_WIDTH*2-80
+        str             d0,  [x0],  #GRAIN_WIDTH*2-80
         b.gt            1b
         ldr             x30, [sp], #16
         AARCH64_VALIDATE_LINK_REGISTER
@@ -693,9 +692,8 @@ function gen_grain_uv_420_lag0_4_neon
         add             x12, x19, #GRAIN_WIDTH*2
         AARCH64_SIGN_LINK_REGISTER
         str             x30, [sp, #-16]!
-        ld1             {v16.4h, v17.4h}, [x19]
+        ldp             d16, d17, [x19], #32
         ld1             {v18.4h, v19.4h}, [x12]
-        add             x19,  x19,  #32
         addp            v16.4h,  v16.4h,  v17.4h
         addp            v17.4h,  v18.4h,  v19.4h
         add             v16.4h,  v16.4h,  v17.4h
@@ -707,8 +705,7 @@ endfunc
 function gen_grain_uv_422_lag0_4_neon
         AARCH64_SIGN_LINK_REGISTER
         str             x30, [sp, #-16]!
-        ld1             {v16.4h, v17.4h}, [x19]
-        add             x19,  x19,  #32
+        ldp             d16, d17, [x19], #32
         addp            v16.4h,  v16.4h,  v17.4h
         srshr           v4.4h,   v16.4h,  #1
         get_grain_4     v0

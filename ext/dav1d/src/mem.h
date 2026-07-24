@@ -65,8 +65,8 @@ enum AllocationType {
 };
 
 typedef struct Dav1dMemPoolBuffer {
-    void *data;
     struct Dav1dMemPoolBuffer *next;
+    size_t size;
 } Dav1dMemPoolBuffer;
 
 typedef struct Dav1dMemPool {
@@ -136,8 +136,8 @@ void dav1d_log_alloc_stats(Dav1dContext *c);
 #define dav1d_free_aligned(ptr) dav1d_free_aligned_internal(ptr)
 #endif /* TRACK_HEAP_ALLOCATIONS */
 
-void dav1d_mem_pool_push(Dav1dMemPool *pool, Dav1dMemPoolBuffer *buf);
-Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *pool, size_t size);
+void dav1d_mem_pool_push(Dav1dMemPool *pool, void *ptr);
+void *dav1d_mem_pool_pop(Dav1dMemPool *pool, size_t size);
 int dav1d_mem_pool_init(enum AllocationType type, Dav1dMemPool **pool);
 void dav1d_mem_pool_end(Dav1dMemPool *pool);
 

@@ -1,4 +1,4 @@
-# Copyright © 2018-2024, VideoLAN and dav1d authors
+# Copyright © 2018-2026, VideoLAN and dav1d authors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,12 +23,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '1.5.3',
+    version: '1.5.4',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
-    meson_version: '>= 0.49.0')
+    meson_version: '>= 0.54.0')
 
 dav1d_src_root = meson.current_source_dir()
 cc = meson.get_compiler('c')
@@ -86,8 +86,6 @@ cdata.set10('TRIM_DSP_FUNCTIONS', get_option('trim_dsp') == 'true' or
 # Logging option
 cdata.set10('CONFIG_LOG', get_option('logging'))
 
-cdata.set10('CONFIG_MACOS_KPERF', get_option('macos_kperf'))
-
 #
 # OS/Compiler checks and defines
 #
@@ -104,6 +102,7 @@ if host_machine.system() in ['linux', 'gnu', 'emscripten']
 endif
 
 have_clock_gettime = false
+have_sigaction = false
 have_posix_memalign = false
 have_memalign = false
 have_aligned_alloc = false
@@ -147,7 +146,7 @@ if host_machine.system() == 'windows'
     rc_data.set('API_VERSION_MAJOR', dav1d_api_version_major)
     rc_data.set('API_VERSION_MINOR', dav1d_api_version_minor)
     rc_data.set('API_VERSION_REVISION', dav1d_api_version_revision)
-    rc_data.set('COPYRIGHT_YEARS', '2018-2025')
+    rc_data.set('COPYRIGHT_YEARS', '2018-2026')
 else
     thread_dependency = dependency('threads')
     thread_compat_dep = []
@@ -163,12 +162,14 @@ else
         have_clock_gettime = true
     endif
 
+    have_sigaction = cc.has_function('sigaction', prefix : '#include <signal.h>', args : test_args)
     have_posix_memalign = cc.has_function('posix_memalign', prefix : '#include <stdlib.h>', args : test_args)
     have_memalign = cc.has_function('memalign', prefix : '#include <malloc.h>', args : test_args)
     have_aligned_alloc = cc.has_function('aligned_alloc', prefix : '#include <stdlib.h>', args : test_args)
 endif
 
 cdata.set10('HAVE_CLOCK_GETTIME', have_clock_gettime)
+cdata.set10('HAVE_SIGACTION', have_sigaction)
 cdata.set10('HAVE_POSIX_MEMALIGN', have_posix_memalign)
 cdata.set10('HAVE_MEMALIGN', have_memalign)
 cdata.set10('HAVE_ALIGNED_ALLOC', have_aligned_alloc)
@@ -301,7 +302,8 @@ else
     optional_arguments += [
       '-wd4028', # parameter different from declaration
       '-wd4090', # broken with arrays of pointers
-      '-wd4996'  # use of POSIX functions
+      '-wd4996', # use of POSIX functions
+      '-wd5287', # operands are different enum types
     ]
 endif
 
@@ -521,7 +523,7 @@ cdata.set10('ARCH_LOONGARCH64', host_machine.cpu_family() == 'loongarch64')
 # meson's cc.symbols_have_underscore_prefix() is unfortunately unrelieably
 # when additional flags like '-fprofile-instr-generate' are passed via CFLAGS
 # see following meson issue https://github.com/mesonbuild/meson/issues/5482
-if (host_machine.system() in ['darwin', 'ios', 'tvos'] or
+if (host_machine.system() in ['darwin', 'ios', 'tvos', 'os/2'] or
    (host_machine.system() == 'windows' and host_machine.cpu_family() == 'x86'))
     cdata.set10('PREFIX', true)
     cdata_asm.set10('PREFIX', true)
@@ -557,7 +559,13 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
     else
         nasm_format = 'elf'
     endif
-    if host_machine.cpu_family() == 'x86_64'
+    if host_machine.system() == 'os/2'
+        if get_option('os2_emxomf')
+            nasm_format = 'obj2'
+        else
+            nasm_format = 'aout'
+        endif
+    elif host_machine.cpu_family() == 'x86_64'
         nasm_format += '64'
     else
         nasm_format += '32'

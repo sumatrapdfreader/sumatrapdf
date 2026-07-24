@@ -243,7 +243,7 @@ L(bottom_skip_\w\()x\h):
 
 
 .macro cdef_fn w, h
-function cdef_filter_block_\w\()x\h\()_8bpc_rvv, export=1, ext="v,zba,zbb"
+function cdef_filter_\w\()x\h\()_8bpc_rvv, export=1, ext="v,zba,zbb"
     csrw vxrm, zero
 
     addi sp, sp, -32 - 144*2

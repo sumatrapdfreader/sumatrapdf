@@ -540,7 +540,7 @@ L(ipred_dc_left_w64):
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
-        subs            r4,  r4, #4
+        subs            r4,  r4,  #4
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
@@ -692,7 +692,7 @@ L(ipred_dc_w16):
 2:
         vst1.8          {d0,  d1},  [r0,  :128], r1
         vst1.8          {d0,  d1},  [r12, :128], r1
-        subs            r4,  r4, #4
+        subs            r4,  r4,  #4
         vst1.8          {d0,  d1},  [r0,  :128], r1
         vst1.8          {d0,  d1},  [r12, :128], r1
         bgt             2b

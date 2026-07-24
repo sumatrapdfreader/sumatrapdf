@@ -181,7 +181,7 @@ static void ipred_cfl_c(pixel *dst, const ptrdiff_t stride,
                         const int16_t *ac, const int alpha
                         HIGHBD_DECL_SUFFIX)
 {
-    unsigned dc = dc_gen(topleft, width, height);
+    const unsigned dc = dc_gen(topleft, width, height);
     cfl_pred(dst, stride, width, height, dc, ac, alpha HIGHBD_TAIL_SUFFIX);
 }
 

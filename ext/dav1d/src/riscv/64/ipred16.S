@@ -27,6 +27,163 @@
 
 #include "src/riscv/asm.S"
 
+function ipred_v_16bpc_rvv, export=1, ext="v,zba,zbb"
+    addi a2, a2, 2
+    vsetvli t0, a3, e16, m1, ta, ma
+    bne t0, a3, 2f
+0:
+    // if it fits into single vector register
+
+    vle16.v v4, (a2)
+    mv  t1, a0
+    add t2, t1, a1
+    add t3, t2, a1
+    add t4, t3, a1
+1:
+    vse16.v v4, (t1)
+    sh2add t1, a1, t1
+    vse16.v v4, (t2)
+    sh2add t2, a1, t2
+    addi a4, a4, -4
+    vse16.v v4, (t3)
+    sh2add t3, a1, t3
+    vse16.v v4, (t4)
+    sh2add t4, a1, t4
+    bnez a4, 1b
+
+    ret
+2:
+    vsetvli t0, a3, e16, m2, ta, ma
+    bne t0, a3, 4f
+    vle16.v v8, (a2)
+
+    mv   t1, a0
+    add  t2, t1, a1
+    add  t3, t2, a1
+    add  t4, t3, a1
+
+    mv   t5, a4
+3:
+    vse16.v v8, (t1)
+    sh2add  t1, a1, t1
+    vse16.v v8, (t2)
+    sh2add  t2, a1, t2
+    addi t5, t5, -4
+    vse16.v v8, (t3)
+    sh2add  t3, a1, t3
+    vse16.v v8, (t4)
+    sh2add  t4, a1, t4
+    bnez t5, 3b
+
+    ret
+4:
+    vsetvli t0, a3, e16, m1, ta, ma
+    slli t0, t0, 1
+5:
+    add a7, a2, t0
+
+    mv  t1, a0
+    add t2, a0, a1
+
+    vle16.v v4, (a2)
+    vle16.v v8, (a7)
+    mv  t5, a4
+    add t3, t1, t0
+    add t4, t2, t0
+6:
+    vse16.v v4, (t1)
+    sh1add t1, a1, t1
+    vse16.v v8, (t3)
+    sh1add t3, a1, t3
+    addi t5, t5, -2
+    vse16.v v4, (t2)
+    sh1add t2, a1, t2
+    vse16.v v8, (t4)
+    sh1add t4, a1, t4
+    bnez t5, 6b
+
+    sub a3, a3, t0
+    sh1add a0, t0, a0
+    add a2, a7, t0
+    bnez a3, 5b
+
+    ret
+endfunc
+
+function ipred_h_16bpc_rvv, export=1, ext="v,zba,zbb"
+    addi a2, a2, -2
+    vsetvli t0, a3, e16, m1, ta, ma
+    bne  t0, a3, 2f
+1:
+    // if width <= VLEN/16
+
+    lh t1,  0(a2)
+    lh t2, -2(a2)
+    lh t3, -4(a2)
+    lh t4, -6(a2)
+
+    vmv.v.x v4,  t1
+    vmv.v.x v8,  t2
+    vmv.v.x v12, t3
+    vmv.v.x v16, t4
+
+    addi a4, a4, -4
+
+    vse16.v v4 , (a0)
+    add a0, a1, a0
+    vse16.v v8 , (a0)
+    add a0, a1, a0
+    vse16.v v12, (a0)
+    add a0, a1, a0
+    vse16.v v16, (a0)
+    add a0, a1, a0
+
+    addi a2, a2, -8
+    bnez a4, 1b
+
+    ret
+2:
+    vsetvli t0, a3, e16, m1, ta, ma
+3:
+    // if width > VLEN/16
+
+    lh t1,  0(a2)
+    lh t2, -2(a2)
+    lh t3, -4(a2)
+    lh t4, -6(a2)
+
+    vmv.v.x v4,  t1
+    vmv.v.x v8,  t2
+    vmv.v.x v12, t3
+    vmv.v.x v16, t4
+
+    mv  t1, a0
+    add t2, t1, a1
+    add t3, t2, a1
+    add t4, t3, a1
+    mv  t5, a3
+4:
+    vse16.v v4 , (t1)
+    vse16.v v8 , (t2)
+    vse16.v v12, (t3)
+    vse16.v v16, (t4)
+
+    sh1add t1, t0, t1
+    sh1add t2, t0, t2
+    sh1add t3, t0, t3
+    sh1add t4, t0, t4
+
+    sub t5, t5, t0
+    bnez t5, 4b
+
+    addi a4, a4, -4
+    addi a2, a2, -8
+    sh2add a0, a1, a0
+    bnez a4, 3b
+
+    ret
+endfunc
+
 function dc_gen_16bpc_rvv, export=1, ext="v,zba,zbb"
     .variant_cc dav1d_dc_gen_16bpc_rvv
     add t1, a1, a2
@@ -436,36 +593,28 @@ function ipred_smooth_h_16bpc_rvv, export=1, ext="v,zba"
 endfunc
 
 function pal_pred_16bpc_rvv, export=1, ext="v,zba"
-    csrw vxrm, zero
-    vsetivli t5, 8, e16, m1, ta, ma
+    vsetivli zero, 8, e16, m1, ta, ma
     vle16.v v30, (a2)
-    li t0, 4
     srli t1, a4, 1
-    li t2, 1
+    vsetvli t5, t1, e16, m1, ta, ma
+    slli t0, t5, 2
 1:
-    mv t4, a4
+    mv t6, a0
+    sh1add t2, a4, a0
 2:
-    vsetvli t5, t1, e8, mf2, ta, ma
     vle8.v v0, (a3)
     add a3, a3, t5
-    vand.vi v1, v0, 7
-    sub t6, a4, t4
-    vsrl.vi v2, v0, 4
-    vwmul.vx v4, v1, t2
-    vwmul.vx v6, v2, t2
-    vsetvli zero, zero, e16, m1, ta, ma
-    sh1add t6, t6, a0
-    vrgather.vv v8, v30, v4
-    addi t3, t6, 2
-    vrgather.vv v10, v30, v6
-    slli t5, t5, 1
-    vsse16.v v8, (t6), t0
-    vsse16.v v10, (t3), t0
+    vzext.vf2 v8, v0
+    vsrl.vi v11, v8, 4
+    vand.vi v10, v8, 7
+    vrgather.vv v12, v30, v10
+    vrgather.vv v13, v30, v11
+    vsseg2e16.v v12, (t6)
+    add t6, t6, t0
 
-    sub t4, t4, t5
-    bnez t4, 2b
-    add a0, a0, a1
+    bne t6, t2, 2b
     addi a5, a5, -1
+    add a0, a0, a1
     bnez a5, 1b
     ret
 endfunc

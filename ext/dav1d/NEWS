@@ -1,3 +1,21 @@
+Changes for 1.5.4 'Sonic':
+--------------------------
+
+1.5.4 is a minor release of dav1d, focused on optimizations and maintenance:
+ - Support for OS/2, including API exports and assembly
+ - Switch to external checkasm
+ - Add Armv9.3-A GCS (Guarded Control Stack) support
+ - AArch64: optimize ipred_v, ipred_h and ipred_smooth_* 8bpc functions, and
+   reduce .text size
+ - ARM32: optimize prep_neon
+ - RISC-V: ipred_(dc, h, v, pal) optimizations for 8 and 16bpc,
+   generate_grain_y for 8bpc, and optimizations (prep/put_8tap, 6-tap and copy paths)
+ - Portability improvements for non-POSIX systems (signal() fallback)
+ - Schedule tile tasks for all passes at once, improving threading
+ - Precompute the quantization matrix tables at build time
+ - Move loop-invariant computations out of hot loops
+
+
 Changes for 1.5.3 'Sonic':
 --------------------------
 

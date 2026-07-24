@@ -67,6 +67,7 @@
 
 %define FORMAT_ELF 0
 %define FORMAT_MACHO 0
+%define FORMAT_OBJ 0
 %ifidn __OUTPUT_FORMAT__,elf
     %define FORMAT_ELF 1
 %elifidn __OUTPUT_FORMAT__,elf32
@@ -79,6 +80,10 @@
     %define FORMAT_MACHO 1
 %elifidn __OUTPUT_FORMAT__,macho64
     %define FORMAT_MACHO 1
+%elifidn __OUTPUT_FORMAT__,obj
+    %define FORMAT_OBJ 1
+%elifidn __OUTPUT_FORMAT__,obj2
+    %define FORMAT_OBJ 1
 %endif
 
 %ifdef PREFIX
@@ -97,6 +102,8 @@
         SECTION .rdata align=%1
     %elif WIN64
         SECTION .rdata align=%1
+    %elifidn __OUTPUT_FORMAT__,aout
+        SECTION .text
     %else
         SECTION .rodata align=%1
     %endif
@@ -849,6 +856,8 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
         %ifdef BUILDING_DLL
             export %2
         %endif
+    %elif FORMAT_OBJ && !%1
+        export %2
     %endif
     align function_align
     %2:

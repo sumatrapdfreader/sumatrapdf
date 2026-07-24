@@ -55,11 +55,6 @@
 #include <getopt.h>
 #include <stdarg.h>
 #include <stdio.h>
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <err.h>
-#endif
 
 #define	REPLACE_GETOPT		/* use this getopt as the system getopt(3) */
 
@@ -92,7 +87,7 @@ static char EMSG[] = "";
 
 static int getopt_internal(int, char * const *, const char *,
 			   const struct option *, int *, int);
-static int parse_long_options(char * const *, const char *,
+static int parse_long_options(const char *, char * const *, const char *,
 			      const struct option *, int *, int);
 static int gcd(int, int);
 static void permute_args(int, int, int, char * const *);
@@ -111,31 +106,23 @@ static const char noarg[] = "option doesn't take an argument -- %.*s";
 static const char illoptchar[] = "unknown option -- %c";
 static const char illoptstring[] = "unknown option -- %s";
 
-#ifdef _WIN32
-#ifndef __CYGWIN__
-#define __progname __argv[0]
-#else
-extern char __declspec(dllimport) *__progname;
-#endif
-
 static void
-_vwarnx(const char *fmt,va_list ap)
+my_vwarnx(const char *progname,const char *fmt,va_list ap)
 {
-  (void)fprintf(stderr,"%s: ",__progname);
+  (void)fprintf(stderr,"%s: ",progname);
   if (fmt != NULL)
     (void)vfprintf(stderr,fmt,ap);
   (void)fprintf(stderr,"\n");
 }
 
 static void
-warnx(const char *fmt,...)
+my_warnx(const char *progname,const char *fmt,...)
 {
   va_list ap;
   va_start(ap,fmt);
-  _vwarnx(fmt,ap);
+  my_vwarnx(progname,fmt,ap);
   va_end(ap);
 }
-#endif
 
 /*
  * Compute the greatest common divisor of a and b.
@@ -198,7 +185,7 @@ permute_args(int panonopt_start, int panonopt_end, int opt_end,
  * Returns -1 if short_too is set and the option does not match long_options.
  */
 static int
-parse_long_options(char * const *nargv, const char *options,
+parse_long_options(const char *progname, char * const *nargv, const char *options,
 	const struct option *long_options, int *idx, int short_too)
 {
 	char *current_argv, *has_equal;
@@ -250,8 +237,8 @@ parse_long_options(char * const *nargv, const char *options,
 	if (ambiguous) {
 		/* ambiguous abbreviation */
 		if (PRINT_ERROR)
-			warnx(ambig, (int)current_argv_len,
-			     current_argv);
+			my_warnx(progname, ambig, (int)current_argv_len,
+			         current_argv);
 		optopt = 0;
 		return (BADCH);
 	}
@@ -259,8 +246,8 @@ parse_long_options(char * const *nargv, const char *options,
 		if (long_options[match].has_arg == no_argument
 		    && has_equal) {
 			if (PRINT_ERROR)
-				warnx(noarg, (int)current_argv_len,
-				     current_argv);
+				my_warnx(progname, noarg, (int)current_argv_len,
+				         current_argv);
 			/*
 			 * XXX: GNU sets optopt to val regardless of flag
 			 */
@@ -289,8 +276,8 @@ parse_long_options(char * const *nargv, const char *options,
 			 * should be generated.
 			 */
 			if (PRINT_ERROR)
-				warnx(recargstring,
-				    current_argv);
+				my_warnx(progname, recargstring,
+				         current_argv);
 			/*
 			 * XXX: GNU sets optopt to val regardless of flag
 			 */
@@ -307,7 +294,7 @@ parse_long_options(char * const *nargv, const char *options,
 			return (-1);
 		}
 		if (PRINT_ERROR)
-			warnx(illoptstring, current_argv);
+			my_warnx(progname, illoptstring, current_argv);
 		optopt = 0;
 		return (BADCH);
 	}
@@ -329,6 +316,7 @@ static int
 getopt_internal(int nargc, char * const *nargv, const char *options,
 	const struct option *long_options, int *idx, int flags)
 {
+	const char *progname = nargv[0];
 	char *oli;				/* option letter list index */
 	int optchar, short_too;
 	static int posixly_correct = -1;
@@ -452,7 +440,7 @@ start:
 		else if (*place != ':' && strchr(options, *place) != NULL)
 			short_too = 1;		/* could be short option too */
 
-		optchar = parse_long_options(nargv, options, long_options,
+		optchar = parse_long_options(progname, nargv, options, long_options,
 		    idx, short_too);
 		if (optchar != -1) {
 			place = EMSG;
@@ -473,7 +461,7 @@ start:
 		if (!*place)
 			++optind;
 		if (PRINT_ERROR)
-			warnx(illoptchar, optchar);
+			my_warnx(progname, illoptchar, optchar);
 		optopt = optchar;
 		return (BADCH);
 	}
@@ -484,12 +472,12 @@ start:
 		else if (++optind >= nargc) {	/* no arg */
 			place = EMSG;
 			if (PRINT_ERROR)
-				warnx(recargchar, optchar);
+				my_warnx(progname, recargchar, optchar);
 			optopt = optchar;
 			return (BADARG);
 		} else				/* white space */
 			place = nargv[optind];
-		optchar = parse_long_options(nargv, options, long_options,
+		optchar = parse_long_options(progname, nargv, options, long_options,
 		    idx, 0);
 		place = EMSG;
 		return (optchar);
@@ -505,7 +493,7 @@ start:
 			if (++optind >= nargc) {	/* no arg */
 				place = EMSG;
 				if (PRINT_ERROR)
-					warnx(recargchar, optchar);
+					my_warnx(progname, recargchar, optchar);
 				optopt = optchar;
 				return (BADARG);
 			} else

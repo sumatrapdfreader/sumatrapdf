@@ -1,10 +1,10 @@
 [binaries]
-c = 'loongarch64-unknown-linux-gnu-gcc'
-cpp = 'loongarch64-unknown-linux-gnu-c++'
-ar = 'loongarch64-unknown-linux-gnu-ar'
-strip = 'loongarch64-unknown-linux-gnu-strip'
+c = 'loongarch64-linux-gnu-gcc'
+cpp = 'loongarch64-linux-gnu-c++'
+ar = 'loongarch64-linux-gnu-ar'
+strip = 'loongarch64-linux-gnu-strip'
 pkgconfig = 'pkg-config'
-exe_wrapper = 'qemu-loongarch64'
+exe_wrapper = ['qemu-loongarch64', '-L', '/usr/loongarch64-linux-gnu/']
 
 [host_machine]
 system = 'linux'

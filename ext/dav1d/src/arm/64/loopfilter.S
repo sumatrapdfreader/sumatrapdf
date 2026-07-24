@@ -305,7 +305,7 @@ function lpf_16_wd\wd\()_neon
         rshrn2          v0.16b,  v9.8h,   #3
 
         add             v8.8h,   v8.8h,   v2.8h
-        add             v9.8h ,  v9.8h,   v3.8h
+        add             v9.8h,   v9.8h,   v3.8h
 
         bit             v21.16b, v10.16b, v14.16b
         bit             v22.16b, v11.16b, v14.16b
@@ -696,7 +696,7 @@ function lpf_v_8_16_neon
         lpf_16_wd8
 
         sub             x16, x0,  x1, lsl #1
-        sub             x16, x16,  x1
+        sub             x16, x16, x1
         st1             {v21.16b}, [x16], x1 // p2
         st1             {v24.16b}, [x0],  x1 // q0
         st1             {v22.16b}, [x16], x1 // p1
@@ -817,7 +817,7 @@ function lpf_v_16_16_neon
         lpf_16_wd16
 
         sub             x16, x0,  x1, lsl #2
-        sub             x16, x16,  x1, lsl #1
+        sub             x16, x16, x1, lsl #1
         st1             {v0.16b},  [x16], x1 // p5
         st1             {v6.16b},  [x0],  x1 // q0
         st1             {v1.16b},  [x16], x1 // p4
@@ -1051,9 +1051,8 @@ function lpf_\dir\()_sb_\type\()_8bpc_neon, export=1
         adds            x16, x16, x17
         b.eq            7f                        // if (!L) continue;
         neg             v5.16b,  v5.16b           // -sharp[0]
-        movrel          x16,  word_1248
+        ldrel           q16, x16, word_1248
         ushr            v12.16b, v1.16b,  #4      // H
-        ld1             {v16.4s}, [x16]
         sshl            v3.16b,  v1.16b,  v5.16b  // L >> sharp[0]
 .ifc \type, y
         cmtst           v15.4s,  v15.4s,  v16.4s  // if (vmask[2] & bits)
@@ -1124,6 +1123,6 @@ lpf_func h, y
 lpf_func v, uv
 lpf_func h, uv
 
-const word_1248
+const word_1248, align=4
         .word 1, 2, 4, 8
 endconst

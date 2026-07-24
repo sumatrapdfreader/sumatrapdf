@@ -776,20 +776,25 @@ static void save_tmvs_c(refmvs_temporal_block *rp, const ptrdiff_t stride,
             if (cand_b->ref.ref[1] > 0 && ref_sign[cand_b->ref.ref[1] - 1] &&
                 (abs(cand_b->mv.mv[1].y) | abs(cand_b->mv.mv[1].x)) < 4096)
             {
+                const refmvs_temporal_block tmv = {
+                    .mv = cand_b->mv.mv[1],
+                    .ref = cand_b->ref.ref[1],
+                };
                 for (int n = 0; n < bw8; n++, x++)
-                    rp[x] = (refmvs_temporal_block) { .mv = cand_b->mv.mv[1],
-                                                      .ref = cand_b->ref.ref[1] };
+                    rp[x] = tmv;
             } else if (cand_b->ref.ref[0] > 0 && ref_sign[cand_b->ref.ref[0] - 1] &&
                        (abs(cand_b->mv.mv[0].y) | abs(cand_b->mv.mv[0].x)) < 4096)
             {
+                const refmvs_temporal_block tmv = {
+                    .mv = cand_b->mv.mv[0],
+                    .ref = cand_b->ref.ref[0],
+                };
                 for (int n = 0; n < bw8; n++, x++)
-                    rp[x] = (refmvs_temporal_block) { .mv = cand_b->mv.mv[0],
-                                                      .ref = cand_b->ref.ref[0] };
+                    rp[x] = tmv;
             } else {
-                for (int n = 0; n < bw8; n++, x++) {
-                    rp[x].mv.n = 0;
-                    rp[x].ref = 0; // "invalid"
-                }
+                const refmvs_temporal_block tmv = { .mv = { .n = 0 }, .ref = 0 };
+                for (int n = 0; n < bw8; n++, x++)
+                    rp[x] = tmv;
             }
         }
         rp += stride;
