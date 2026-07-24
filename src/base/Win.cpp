@@ -1289,9 +1289,23 @@ bool CreateProcessHelper(Str exe, Str args) {
     return process != nullptr;
 }
 
+bool IsProcessRunningElevated() {
+    HANDLE token = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+        return false;
+    }
+    TOKEN_ELEVATION elevation{};
+    DWORD size = sizeof(elevation);
+    BOOL ok = GetTokenInformation(token, TokenElevation, &elevation, size, &size);
+    CloseHandle(token);
+    if (!ok) {
+        return false;
+    }
+    return elevation.TokenIsElevated != 0;
+}
+
+#if 0
 // return true if the app is running in elevated (as admin)
-// TODO: on Vista+ use GetTokenInformation:
-// https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group
 bool IsProcessRunningElevated() {
     PSID adminsGroup = nullptr;
 
@@ -1310,6 +1324,7 @@ bool IsProcessRunningElevated() {
     FreeSid(adminsGroup);
     return tobool(isAdmin);
 }
+#endif
 
 // returns the exe path of the parent process, or nullptr on failure
 // if pidOut is not nullptr, it receives the parent process ID
