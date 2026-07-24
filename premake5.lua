@@ -652,24 +652,14 @@ workspace "SumatraPDF"
     language "C"
     optimized_conf()
     defines { "_CRT_SECURE_NO_WARNINGS" }
+    -- 32-bit: C only (NASM x86 asm not worth it). x64: full SSE/AVX asm via NASM.
     filter { 'platforms:x86' }
-    defines { "ARCH_X86_32=1", "ARCH_X86_64=0", "__SSE2__" }
+      defines { "ARCH_X86_32=1", "ARCH_X86_64=0", "__SSE2__", "HAVE_ASM=0" }
     filter { 'platforms:x64 or x64_asan' }
-    defines { "ARCH_X86_32=0", "ARCH_X86_64=1" }
+      defines { "ARCH_X86_32=0", "ARCH_X86_64=1", "HAVE_ASM=1" }
     filter {}
     disablewarnings { "4057", "4090", "4100", "4152", "4200", "4201", "4244", "4245", "4389", "4456", "4457", "4701", "4703", "4706", "4819", "4996", "5287" }
     includedirs { "ext/dav1d/include/compat/msvc", "ext/dav1d", "ext/dav1d/include" }
-    -- nasm.exe -I .\ext\libjpeg-turbo\simd\
-    -- -I .\ext\libjpeg-turbo\win\ -f win32
-    -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
-    -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
-    filter { 'files:**.asm', 'platforms:x86' }
-      buildmessage '%{file.relpath}'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
-      buildcommands {
-        '..\\bin\\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
-      }
-    filter {}
     filter { 'files:**.asm', 'platforms:x64 or x64_asan' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
@@ -677,10 +667,9 @@ workspace "SumatraPDF"
         '..\\bin\\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
       }
     filter {}
-
     dav1d_files()
-    filter { 'platforms:x86 or x64 or x64_asan' }
-      dav1d_x68_files()
+    filter { 'platforms:x64 or x64_asan' }
+      dav1d_x64_files()
     filter {}
 
   project "a-zlib"

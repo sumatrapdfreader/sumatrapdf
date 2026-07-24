@@ -411,7 +411,8 @@ function libheif_files()
   })
 end
 
-function dav1d_x68_files()
+-- x64 only: NASM SIMD + x86/cpu.c (cpuid). Not used for 32-bit (HAVE_ASM=0).
+function dav1d_x64_files()
   files_in_dir("ext/dav1d/src/x86", {
     "cpu.c",
   })
