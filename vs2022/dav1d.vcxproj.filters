@@ -157,19 +157,7 @@
     <CustomBuild Include="..\ext\dav1d\src\x86\cdef16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\cdef16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\cdef16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\cdef_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\cdef_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\cdef_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\cpuid.asm">
@@ -178,106 +166,37 @@
     <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\ipred16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\ipred16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\ipred16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\ipred_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\ipred_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\ipred_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\itx16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\itx16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\itx16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\itx_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\itx_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\itx_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\mc16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\mc16_avx512.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\mc16_sse.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\mc_avx2.asm">
-      <Filter>src\x86</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\dav1d\src\x86\mc_avx512.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\mc_sse.asm">

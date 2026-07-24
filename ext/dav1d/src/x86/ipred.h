@@ -1,3 +1,6 @@
+#if 1
+#include "ipred_sumatra.h"
+#else
 /*
  * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
@@ -151,3 +154,4 @@ static ALWAYS_INLINE void intra_pred_dsp_init_x86(Dav1dIntraPredDSPContext *cons
     c->pal_pred = BF(dav1d_pal_pred, avx512icl);
 #endif
 }
+#endif

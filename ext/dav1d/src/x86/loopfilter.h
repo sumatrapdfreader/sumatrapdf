@@ -1,3 +1,6 @@
+#if 1
+#include "loopfilter_sumatra.h"
+#else
 /*
  * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
@@ -67,3 +70,4 @@ static ALWAYS_INLINE void loop_filter_dsp_init_x86(Dav1dLoopFilterDSPContext *co
     }
 #endif
 }
+#endif

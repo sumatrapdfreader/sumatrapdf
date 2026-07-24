@@ -411,7 +411,8 @@ function libheif_files()
   })
 end
 
--- x64 only: NASM SIMD + x86/cpu.c (cpuid). Not used for 32-bit (HAVE_ASM=0).
+-- x64 only: avx2 NASM SIMD + shared helpers. Not used for 32-bit (HAVE_ASM=0).
+-- SSE/AVX-512 *.asm omitted; x86/*_sumatra.h only wires avx2 symbols.
 function dav1d_x64_files()
   files_in_dir("ext/dav1d/src/x86", {
     "cpu.c",
@@ -419,47 +420,21 @@ function dav1d_x64_files()
 
   files_in_dir("ext/dav1d/src/x86", {
     "cdef16_avx2.asm",
-    "cdef16_avx512.asm",
-    "cdef16_sse.asm",
     "cdef_avx2.asm",
-    "cdef_avx512.asm",
-    "cdef_sse.asm",
     "cpuid.asm",
     "filmgrain16_avx2.asm",
-    "filmgrain16_avx512.asm",
-    "filmgrain16_sse.asm",
     "filmgrain_avx2.asm",
-    "filmgrain_avx512.asm",
-    "filmgrain_sse.asm",
     "ipred16_avx2.asm",
-    "ipred16_avx512.asm",
-    "ipred16_sse.asm",
     "ipred_avx2.asm",
-    "ipred_avx512.asm",
-    "ipred_sse.asm",
     "itx16_avx2.asm",
-    "itx16_avx512.asm",
-    "itx16_sse.asm",
     "itx_avx2.asm",
-    "itx_avx512.asm",
-    "itx_sse.asm",
     "loopfilter16_avx2.asm",
-    "loopfilter16_avx512.asm",
-    "loopfilter16_sse.asm",
     "loopfilter_avx2.asm",
-    "loopfilter_avx512.asm",
-    "loopfilter_sse.asm",
     "looprestoration16_avx2.asm",
-    "looprestoration16_avx512.asm",
-    "looprestoration16_sse.asm",
     "looprestoration_avx2.asm",
-    "looprestoration_avx512.asm",
-    "looprestoration_sse.asm",
     "mc16_avx2.asm",
-    "mc16_avx512.asm",
-    "mc16_sse.asm",
     "mc_avx2.asm",
-    "mc_avx512.asm",
+    -- mc_sse.asm: provides mc_warp_filter2 (and related RODATA) used by mc_avx2
     "mc_sse.asm",
     "msac.asm",
     "pal.asm",

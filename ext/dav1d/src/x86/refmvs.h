@@ -1,3 +1,6 @@
+#if 1
+#include "refmvs_sumatra.h"
+#else
 /*
  * Copyright © 2021, VideoLAN and dav1d authors
  * Copyright © 2021, Two Orioles, LLC
@@ -64,3 +67,4 @@ static ALWAYS_INLINE void refmvs_dsp_init_x86(Dav1dRefmvsDSPContext *const c) {
     c->splat_mv = dav1d_splat_mv_avx512icl;
 #endif
 }
+#endif
