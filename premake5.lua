@@ -1033,6 +1033,7 @@ workspace "SumatraPDF"
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/lzma/C", "ext/libarchive" }
     base_files()
+    setup_base_pch()
 
 ---- executables
 
@@ -1047,6 +1048,7 @@ workspace "SumatraPDF"
     defines { "SUMATRA_TEST_UTIL=1" }
     includedirs { "src" }
     test_util_files()
+    setup_base_pch()
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
 
   project "test_engines"

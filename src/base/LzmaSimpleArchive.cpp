@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
+#include "base/Base.h"
 #include <LzmaDec.h>
 #include <Bra.h>
 #include "ByteOrderDecoder.h"

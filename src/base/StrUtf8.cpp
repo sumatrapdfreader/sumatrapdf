@@ -1,7 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
+#include "base/Base.h"
 #include <locale.h>
 
 #if defined(_MSC_VER)
