@@ -2206,7 +2206,7 @@ static void fz_print_cb(void* user, const char* msg) {
     EngineMupdf* engine = (EngineMupdf*)user;
     if (engine && !str::Contains(msgStr, StrL("unknown epub version"))) {
         // epub 3.0 is rendered fine, so don't treat the version warning as an error
-        engine->errors.Append(msgStr);
+        engine->AppendError(msgStr);
     }
 }
 

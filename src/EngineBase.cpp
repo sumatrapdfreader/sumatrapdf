@@ -360,6 +360,23 @@ EngineBase::EngineBase() {
     arena = ArenaNew();
 }
 
+void EngineBase::AppendError(Str msg) {
+    ScopedMutex scope(&errorsLock);
+    errors.Append(msg);
+}
+
+bool EngineBase::HasErrors() {
+    ScopedMutex scope(&errorsLock);
+    return !errors.IsEmpty();
+}
+
+// internal builder buffer (no copy); valid until next AppendError or engine
+// destruction — do not free or keep beyond the current frame
+TempStr EngineBase::GetErrorsTextTemp() {
+    ScopedMutex scope(&errorsLock);
+    return ToStr(errors);
+}
+
 EngineBase::~EngineBase() {
     if (pagesText) {
         for (int i = 0; i < pageCount; i++) {

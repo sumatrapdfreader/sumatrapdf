@@ -1894,7 +1894,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
     }
 
-    if (!engine || len(engine->errors) == 0) {
+    if (!engine || !engine->HasErrors()) {
         MenuRemove(popup, CmdShowErrors);
     }
 

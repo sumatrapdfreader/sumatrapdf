@@ -447,8 +447,6 @@ class EngineBase {
     bool disableAutoLinks = false;
     int pageCount = -1;
 
-    StrVec errors;
-
     // TODO: migrate other engines to use this
     Str fileNameBase;
 
@@ -460,6 +458,11 @@ class EngineBase {
     int AddRef();
     // return true if deleted the object
     bool Release();
+
+    // document errors (mupdf warnings/errors may arrive from render threads)
+    void AppendError(Str msg);
+    bool HasErrors();
+    TempStr GetErrorsTextTemp();
 
     // number of pages the loaded document contains
     int PageCount() const;
@@ -600,6 +603,9 @@ class EngineBase {
     PageText* pagesText = nullptr;
     TextExtractionState* pagesTextState = nullptr;
     Mutex textCacheLock;
+
+    str::Builder errors;
+    Mutex errorsLock;
 };
 
 struct PasswordUI {

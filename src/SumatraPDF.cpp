@@ -1885,7 +1885,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // features notification: bottom-right, small margins, 16s timeout)
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
-    if (engineErr && len(engineErr->errors) > 0) {
+    if (engineErr && engineErr->HasErrors()) {
         TempStr msg = fmt("[%s](CmdShowErrors) %s", _TRA("Errors"), _TRA("in document"));
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
@@ -8349,8 +8349,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdShowErrors: {
             EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-            if (engine && len(engine->errors) > 0) {
-                Str text = Join(&engine->errors, "");
+            if (engine && engine->HasErrors()) {
+                // GetErrorsTextTemp is the engine's internal buffer; ShowTextInWindow
+                // copies it before returning, so it must not be kept past this frame.
+                TempStr text = engine->GetErrorsTextTemp();
                 ShowTextInWindow("Errors", text);
             }
             break;
