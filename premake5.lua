@@ -437,6 +437,14 @@ workspace "SumatraPDF"
     exceptionhandling "On"
 
     includedirs { "ext/unrar" }
+    -- every unrar .cpp includes rar.hpp first; vendor rarpch.cpp creates the PCH
+    pchheader "rar.hpp"
+    pchsource "ext/unrar/rarpch.cpp"
+    -- global.cpp defines INCLUDEGLOBAL before rar.hpp so ErrHandler is defined
+    -- rather than extern; that must not use the shared PCH
+    filter { "files:ext/unrar/global.cpp" }
+      enablepch "Off"
+    filter {}
     unrar_files()
 
   project "libdjvu"

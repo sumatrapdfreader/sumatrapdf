@@ -153,6 +153,8 @@ function unrar_files()
     "rijndael.*",
     "rs.*",
     "rs16.*",
+    -- PCH creator (see pchheader/pchsource on the unrar project)
+    "rarpch.cpp",
     "scantree.*",
     "secpassword.*",
     "sha1.*",
