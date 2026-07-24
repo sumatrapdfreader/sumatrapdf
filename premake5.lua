@@ -773,7 +773,9 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     optimized_conf()
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    -- ext/harfbuzz/src is required so /Yu"hb.hh" and forceincludes can resolve
+    -- hb.hh (sources also rely on same-dir includes for other headers).
+    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
     defines {
       "_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
@@ -795,6 +797,13 @@ workspace "SumatraPDF"
     }
     filter {}
     disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
+    -- precompiled header: hb.hh is re-parsed by every harfbuzz TU and dominates
+    -- its compile time. forceincludes so MSVC /Yu finds the PCH marker even in
+    -- TUs that include a secondary header first (which then pulls in hb.hh).
+    pchheader "hb.hh"
+    pchsource "src/HarfBuzzPch.cpp"
+    files { "src/HarfBuzzPch.cpp" }
+    forceincludes { "hb.hh" }
     harfbuzz_files()
 
   project "a-mujs"
