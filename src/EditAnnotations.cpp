@@ -351,6 +351,23 @@ static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
     return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
+// Include the document basename on the "save to existing" button so it is
+// obvious which file will be overwritten.
+static void UpdateSaveButtonLabels(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->buttonSaveToCurrentFile) {
+        return;
+    }
+    TempStr base = {};
+    if (ew->tab) {
+        base = path::GetBaseNameTemp(ew->tab->filePath);
+    }
+    if (len(base) > 0) {
+        ew->buttonSaveToCurrentFile->SetText(fmt(_TRA("Save changes to %s").s, base));
+    } else {
+        ew->buttonSaveToCurrentFile->SetText(_TRA("Save changes to existing PDF"));
+    }
+}
+
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
     bool didChange = DidAnnotationsChange(ew);
     ew->buttonSaveToCurrentFile->SetIsEnabled(didChange);
@@ -452,12 +469,16 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
     if (!ok) {
         return;
     }
+    // Path may have changed to the new file; refresh the existing-save label.
+    UpdateSaveButtonLabels(ew);
+    EnableSaveIfAnnotationsChanged(ew);
 }
 
 extern bool SaveAnnotationsToExistingFile(WindowTab* tab);
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     SaveAnnotationsToExistingFile(ew->tab);
+    EnableSaveIfAnnotationsChanged(ew);
 }
 
 constexpr int kMaxControls = 18;
@@ -1677,7 +1698,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         Button::CreateArgs args;
         args.parent = parent;
-        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
+        // text set by UpdateSaveButtonLabels once tab is attached
         args.text = _TRA("Save changes to existing PDF");
         args.font = fnt;
         args.isRtl = IsUIRtl();
@@ -1695,7 +1716,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         Button::CreateArgs args;
         args.parent = parent;
-        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
         args.text = _TRA("Save changes to a new PDF");
         args.font = fnt;
         args.isRtl = IsUIRtl();
@@ -1783,6 +1803,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     CreateMainLayout(ew);
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
+    UpdateSaveButtonLabels(ew);
 
     UpdateAnnotationsList(ew);
 
