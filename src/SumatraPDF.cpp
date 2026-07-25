@@ -6163,6 +6163,53 @@ static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot, LPA
     return annot;
 }
 
+// Map a Windows virtual key to a portable selection extend (unit, delta).
+// Returns false if the key is not a selection-extend key.
+static bool TextSelectExtendFromVk(WPARAM key, TextSelectUnit& unit, int& delta) {
+    unit = TextSelectUnit::Glyph;
+    delta = 0;
+    switch (key) {
+        case VK_LEFT:
+            delta = -1;
+            return true;
+        case VK_RIGHT:
+            delta = 1;
+            return true;
+        case VK_UP:
+            unit = TextSelectUnit::Line;
+            delta = -1;
+            return true;
+        case VK_DOWN:
+            unit = TextSelectUnit::Line;
+            delta = 1;
+            return true;
+        default:
+            return false;
+    }
+}
+
+// Shift+arrows extend an existing text selection instead of scrolling (#5814).
+static bool TryExtendTextSelectionFromKey(MainWindow* win, WPARAM key) {
+    if (!win || !IsShiftPressed() || IsCtrlPressed() || IsAltPressed()) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection || dm->textSelection->result.len <= 0) {
+        return false;
+    }
+    TextSelectUnit unit;
+    int delta = 0;
+    if (!TextSelectExtendFromVk(key, unit, delta)) {
+        return false;
+    }
+    if (!dm->textSelection->ExtendBy(unit, delta)) {
+        return true; // handled, nothing more to move
+    }
+    UpdateTextSelection(win, false);
+    ScheduleRepaint(win, 0);
+    return true;
+}
+
 static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     // TODO: how does this interact with new accelerators?
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -6209,6 +6256,10 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
         }
     }
     // lf("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
+
+    if (TryExtendTextSelectionFromKey(win, key)) {
+        return true;
+    }
 
     if (VK_MULTIPLY == key && dm) {
         // logf("VK_MULTIPLY\n");

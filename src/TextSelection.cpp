@@ -538,3 +538,210 @@ void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, in
         std::swap(*fromGlyph, *toGlyph);
     }
 }
+
+// Move free end (page, glyph) by one glyph in reading order. dir +1 / -1.
+static bool MoveFreeEndByGlyph(EngineBase* engine, int& page, int& glyph, int dir) {
+    int nPages = engine->PageCount();
+    int textLen = 0;
+    engine->GetTextForPage(page, &textLen);
+    if (dir > 0) {
+        if (glyph < textLen) {
+            glyph++;
+            return true;
+        }
+        if (page < nPages) {
+            page++;
+            glyph = 0;
+            return true;
+        }
+        return false;
+    }
+    if (glyph > 0) {
+        glyph--;
+        return true;
+    }
+    if (page > 1) {
+        page--;
+        engine->GetTextForPage(page, &textLen);
+        glyph = textLen;
+        return true;
+    }
+    return false;
+}
+
+// True if glyph i is a zero-width newline (line break in the page text stream).
+static bool IsLineBreakAt(Str text, Rect* coords, int i, int textLen) {
+    if (i < 0 || i >= textLen || !coords) {
+        return false;
+    }
+    if (coords[i].x || coords[i].dx) {
+        return false;
+    }
+    int byteIdx = Utf8CodepointToByteIndex(text, i);
+    int nextByte = byteIdx;
+    int c = Utf8CodepointNext(text, nextByte);
+    return c == '\n';
+}
+
+// Move free end by one visual line (same x when possible). dir +1 = next line.
+static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir) {
+    int nPages = engine->PageCount();
+    Rect* coords = nullptr;
+    int textLen = 0;
+    Str text = engine->GetTextForPage(page, &textLen, &coords);
+    if (textLen <= 0 || !coords) {
+        // empty page: step a page
+        if (dir > 0 && page < nPages) {
+            page++;
+            glyph = 0;
+            return true;
+        }
+        if (dir < 0 && page > 1) {
+            page--;
+            engine->GetTextForPage(page, &textLen);
+            glyph = textLen;
+            return true;
+        }
+        return false;
+    }
+
+    // reference point: center of the glyph left of the free end (or first glyph)
+    int refIx = glyph;
+    if (refIx > 0) {
+        refIx--;
+    }
+    if (refIx >= textLen) {
+        refIx = textLen - 1;
+    }
+    while (refIx > 0 && !coords[refIx].x && !coords[refIx].dx && !IsLineBreakAt(text, coords, refIx, textLen)) {
+        refIx--;
+    }
+    int refX = coords[refIx].x + coords[refIx].dx / 2;
+    int refY = coords[refIx].y + coords[refIx].dy / 2;
+    int lineH = coords[refIx].dy > 0 ? coords[refIx].dy : 12;
+    int ySlop = std::max(lineH / 2, 2);
+
+    int bestIx = -1;
+    int bestDist = INT_MAX;
+    int targetBandY = -1;
+
+    if (dir > 0) {
+        // next line: lowest y still clearly below this line
+        for (int i = 0; i < textLen; i++) {
+            if (!coords[i].x && !coords[i].dx) {
+                continue;
+            }
+            int cy = coords[i].y + coords[i].dy / 2;
+            if (cy <= refY + ySlop) {
+                continue;
+            }
+            if (targetBandY < 0 || cy < targetBandY) {
+                targetBandY = cy;
+            }
+        }
+        if (targetBandY < 0) {
+            if (page < nPages) {
+                page++;
+                glyph = 0;
+                return true;
+            }
+            return false;
+        }
+        for (int i = 0; i < textLen; i++) {
+            if (!coords[i].x && !coords[i].dx) {
+                continue;
+            }
+            int cy = coords[i].y + coords[i].dy / 2;
+            if (std::abs(cy - targetBandY) > ySlop) {
+                continue;
+            }
+            int cx = coords[i].x + coords[i].dx / 2;
+            int d = std::abs(cx - refX);
+            if (d < bestDist) {
+                bestDist = d;
+                bestIx = i;
+            }
+        }
+        if (bestIx < 0) {
+            return false;
+        }
+        // free end is exclusive past the glyph under the caret column
+        glyph = bestIx + 1;
+        return true;
+    }
+
+    // previous line: highest y still clearly above this line
+    for (int i = 0; i < textLen; i++) {
+        if (!coords[i].x && !coords[i].dx) {
+            continue;
+        }
+        int cy = coords[i].y + coords[i].dy / 2;
+        if (cy >= refY - ySlop) {
+            continue;
+        }
+        if (targetBandY < 0 || cy > targetBandY) {
+            targetBandY = cy;
+        }
+    }
+    if (targetBandY < 0) {
+        if (page > 1) {
+            page--;
+            engine->GetTextForPage(page, &textLen);
+            glyph = textLen;
+            return true;
+        }
+        return false;
+    }
+    for (int i = 0; i < textLen; i++) {
+        if (!coords[i].x && !coords[i].dx) {
+            continue;
+        }
+        int cy = coords[i].y + coords[i].dy / 2;
+        if (std::abs(cy - targetBandY) > ySlop) {
+            continue;
+        }
+        int cx = coords[i].x + coords[i].dx / 2;
+        int d = std::abs(cx - refX);
+        if (d < bestDist) {
+            bestDist = d;
+            bestIx = i;
+        }
+    }
+    if (bestIx < 0) {
+        return false;
+    }
+    glyph = bestIx + 1;
+    return true;
+}
+
+bool TextSelection::ExtendBy(TextSelectUnit unit, int delta) {
+    if (!engine || startPage < 1 || endPage < 1 || delta == 0) {
+        return false;
+    }
+    if (startGlyph < 0 || endGlyph < 0) {
+        return false;
+    }
+
+    int page = endPage;
+    int glyph = endGlyph;
+    int steps = delta > 0 ? delta : -delta;
+    int dir = delta > 0 ? 1 : -1;
+
+    for (int s = 0; s < steps; s++) {
+        bool moved = false;
+        if (unit == TextSelectUnit::Glyph) {
+            moved = MoveFreeEndByGlyph(engine, page, glyph, dir);
+        } else {
+            moved = MoveFreeEndByLine(engine, page, glyph, dir);
+        }
+        if (!moved) {
+            break;
+        }
+    }
+
+    if (page == endPage && glyph == endGlyph) {
+        return false;
+    }
+    SelectUpTo(page, glyph);
+    return true;
+}
