@@ -666,9 +666,8 @@ LRESULT FindWindowWnd::OnNotify(int, NMHDR* nmh) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindWindowButtonTooltip((int)nmh->idFrom);
         if (s) {
-            if (lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText))) {
-                di->lpszText = di->szText;
-            }
+            str::BufSet(di->szText, dimof(di->szText), s);
+            di->lpszText = di->szText;
         }
     }
     return 0;

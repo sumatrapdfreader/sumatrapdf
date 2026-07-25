@@ -430,7 +430,7 @@ class ImageDataObject : public IDataObject {
             fgd->fgd[0].dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
             fgd->fgd[0].nFileSizeLow = (DWORD)pngSize;
             fgd->fgd[0].nFileSizeHigh = 0;
-            wcscpy_s(fgd->fgd[0].cFileName, MAX_PATH, L"image.png");
+            wstr::BufSet(WStr(fgd->fgd[0].cFileName, MAX_PATH), WStrL(L"image.png"));
             GlobalUnlock(h);
             pMedium->tymed = TYMED_HGLOBAL;
             pMedium->hGlobal = h;

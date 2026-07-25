@@ -1095,7 +1095,7 @@ static void OnBrowse(ImageEditWindow* ew) {
     WCHAR dstFileName[MAX_PATH + 1]{};
     if (ew->destEdit) {
         WCHAR* dest = CWStrTemp(ew->destEdit->GetTextTemp());
-        wcsncpy_s(dstFileName, dest, _TRUNCATE);
+        wstr::BufSet(WStr(dstFileName, dimof(dstFileName)), WStr(dest));
     }
 
     OPENFILENAME ofn{};

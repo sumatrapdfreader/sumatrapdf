@@ -270,7 +270,7 @@ LRESULT FindBarWnd::OnNotify(int, NMHDR* nmh) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindBarButtonTooltip((int)nmh->idFrom);
         if (s) {
-            lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText));
+            str::BufSet(di->szText, dimof(di->szText), s);
             di->lpszText = di->szText;
         }
     }

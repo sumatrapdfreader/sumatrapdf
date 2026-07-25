@@ -61,12 +61,12 @@ static Str TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
 }
 
 static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
-    int langCmp = lstrcmpiA(TtsVoiceLangForSort(a).s, TtsVoiceLangForSort(b).s);
+    int langCmp = str::CmpI(TtsVoiceLangForSort(a), TtsVoiceLangForSort(b));
     if (langCmp != 0) {
         return langCmp < 0;
     }
 
-    return lstrcmpiA(a.name ? a.name.s : "", b.name ? b.name.s : "") < 0;
+    return str::CmpI(a.name ? a.name : StrL(""), b.name ? b.name : StrL("")) < 0;
 }
 
 static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {

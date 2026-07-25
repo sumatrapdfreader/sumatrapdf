@@ -846,10 +846,26 @@ defer { instance->Release(); };
 #include "Scoped.h"
 #include "Color.h"
 
-// lstrcpy is dangerous so forbid using it
+// Windows/MSVC string APIs: use str::/wstr:: BufSet, EqI, CmpI instead.
 #ifdef lstrcpy
 #undef lstrcpy
 #define lstrcpy dont_use_lstrcpy
+#endif
+#ifdef lstrcpyn
+#undef lstrcpyn
+#define lstrcpyn dont_use_lstrcpyn
+#endif
+#ifdef lstrcpynW
+#undef lstrcpynW
+#define lstrcpynW dont_use_lstrcpynW
+#endif
+#ifdef lstrcmpiA
+#undef lstrcmpiA
+#define lstrcmpiA dont_use_lstrcmpiA
+#endif
+#ifdef lstrcmpiW
+#undef lstrcmpiW
+#define lstrcmpiW dont_use_lstrcmpiW
 #endif
 
 #include "Log.h"

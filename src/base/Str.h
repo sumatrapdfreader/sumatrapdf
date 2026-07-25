@@ -107,6 +107,8 @@ TempStr MemToHexTemp(Str buf);
 bool HexToMem(Str s, Str buf);
 
 int CmpNatural(Str a, Str b);
+int Cmp(Str a, Str b);
+int CmpI(Str a, Str b);
 
 bool IsEmptyOrWhiteSpace(Str s);
 bool Skip(Str& s, Str toSkip);
@@ -135,6 +137,8 @@ bool Eq(WStr s1, WStr s2);
 bool EqI(WStr s1, WStr s2);
 bool EqN(WStr s1, WStr s2, int n);
 bool EqNI(WStr s1, WStr s2, int n);
+int Cmp(WStr a, WStr b);
+int CmpI(WStr a, WStr b);
 bool IsNull(const WStr& s);
 bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);

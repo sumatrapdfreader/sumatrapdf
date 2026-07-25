@@ -11,8 +11,15 @@
 #define sscanf_s sscanf
 #endif
 
-#if !OS_WIN
+// Locale-independent Unicode lowercase fold for one WCHAR.
+// On Windows, CharLowerBuffW matches FoldCaseWInPlace; on POSIX a small table
+// covers Latin/Cyrillic/Greek used by tests and falls back to towlower().
 static WCHAR FoldCaseWChar(WCHAR c) {
+#if OS_WIN
+    WCHAR ch = c;
+    CharLowerBuffW(&ch, 1);
+    return ch;
+#else
     if (c >= L'A' && c <= L'Z') {
         return c + 32;
     }
@@ -29,13 +36,10 @@ static WCHAR FoldCaseWChar(WCHAR c) {
         return c + 32;
     }
     return (WCHAR)towlower(c);
-}
 #endif
+}
 
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
-// On Windows, CharLowerBuffW folds accented / Cyrillic / Greek letters
-// regardless of the CRT locale. POSIX uses a small built-in fold for scripts
-// used by our tests and falls back to towlower().
 static void FoldCaseWInPlace(WStr s) {
 #if OS_WIN
     CharLowerBuffW(s.s, (DWORD)s.len);
@@ -203,6 +207,47 @@ bool EqI(Str s1, Str s2) {
         return false;
     }
     return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
+}
+
+// strcmp-style (<0, 0, >0). Empty/null sorts before non-empty. Prefer Eq when only equality matters.
+int Cmp(Str a, Str b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (str::IsNull(a) || a.len == 0) {
+        return (str::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (str::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    int r = memcmp(a.s, b.s, (size_t)n);
+    if (r != 0) {
+        return r;
+    }
+    return a.len - b.len;
+}
+
+// strcasecmp-style (<0, 0, >0). Prefer EqI when only equality matters.
+int CmpI(Str a, Str b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (str::IsNull(a) || a.len == 0) {
+        return (str::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (str::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        int c1 = tolower((u8)a.s[i]);
+        int c2 = tolower((u8)b.s[i]);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+    }
+    return a.len - b.len;
 }
 
 // compares two strings ignoring case and whitespace
@@ -1868,6 +1913,48 @@ bool EqI(WStr s1, WStr s2) {
     return EqNI(s1, s2, s1.len);
 }
 
+// wcscmp-style (<0, 0, >0). Empty/null sorts before non-empty.
+int Cmp(WStr a, WStr b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (wstr::IsNull(a) || a.len == 0) {
+        return (wstr::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (wstr::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        if (a.s[i] != b.s[i]) {
+            return a.s[i] < b.s[i] ? -1 : 1;
+        }
+    }
+    return a.len - b.len;
+}
+
+// case-insensitive WCHAR compare (<0, 0, >0). Prefer EqI when only equality matters.
+int CmpI(WStr a, WStr b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (wstr::IsNull(a) || a.len == 0) {
+        return (wstr::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (wstr::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        WCHAR c1 = FoldCaseWChar(a.s[i]);
+        WCHAR c2 = FoldCaseWChar(b.s[i]);
+        if (c1 != c2) {
+            return c1 < c2 ? -1 : 1;
+        }
+    }
+    return a.len - b.len;
+}
+
 bool EqN(WStr s1, WStr s2, int n) {
     if (s1.s == s2.s) {
         return true;
@@ -2057,9 +2144,10 @@ int NormalizeWSInPlace(WStr s) {
 } // namespace wstr
 namespace str {
 
-// Note: BufSet() should only be used when absolutely necessary (e.g. when
-// handling buffers in OS-defined structures)
-// returns the number of characters written (without the terminating \0)
+// Bounded null-terminated copy into a fixed buffer (replaces lstrcpyn / strcpy_s /
+// StringCchCopy). Only for OS structs with fixed fields — prefer owned Str/WStr
+// otherwise. dst.len is capacity including the terminator. Returns chars written
+// excluding the terminator.
 int BufSet(Str dst, Str src) {
     int cchDst = dst.len;
     ReportIf(0 == cchDst || !dst.s);
@@ -2079,6 +2167,7 @@ int BufSet(Str dst, Str src) {
 } // namespace str
 namespace wstr {
 
+// WCHAR overload of BufSet — replaces lstrcpynW / wcscpy_s / wcsncpy_s / StringCchCopyW.
 int BufSet(WStr dst, WStr src) {
     int cchDst = dst.len;
     ReportIf(0 == cchDst || !dst.s);
@@ -2097,6 +2186,7 @@ int BufSet(WStr dst, WStr src) {
 } // namespace wstr
 namespace str {
 
+// UTF-8 Str → fixed WCHAR buffer (converts then BufSet).
 int BufSet(WCHAR* dst, int dstCchSize, Str src) {
     return wstr::BufSet(WStr(dst, dstCchSize), ToWStrTemp(src));
 }
