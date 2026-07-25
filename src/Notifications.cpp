@@ -585,7 +585,7 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
         return;
     }
     ReportIf(kNotifTimerTimeoutId != timerId);
-    // TODO a better way to delete myself
+    // Delete off the stack of this WM_TIMER (uitask runs after dispatch).
     if (wndRemovedCb.IsValid()) {
         auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
         uitask::Post(fn, "TaskNotifOnTimerRemove");
@@ -650,7 +650,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_LBUTTONUP == msg) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (!noClose && NotificationCloseHitTest(hwnd, rClose, pt)) {
-            // TODO a better way to delete myself
+            // Delete off the stack of this message (uitask runs after dispatch).
             if (wndRemovedCb.IsValid()) {
                 auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
                 uitask::Post(fn, "TaskNotifWndProcRemove");
