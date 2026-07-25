@@ -19,8 +19,9 @@ TempStr GetThumbnailPathTemp(Str filePath) {
     // in the fingerprint (much quicker than hashing the entire file's
     // content), but that's too expensive for files on slow drives
     u8 digest[16]{};
-    // TODO: why is this happening? Seen in crash reports e.g. 35043
-    if (!filePath) {
+    // Null/empty paths show up when a FileState has no path (corrupt settings
+    // or a race while closing); never hash an empty path (crash e.g. 35043).
+    if (len(filePath) == 0) {
         return {};
     }
     TempStr path = str::DupTemp(filePath);
@@ -52,12 +53,18 @@ void DeleteThumbnailCacheDirectory() {
 
 void DeleteThumbnailForFile(Str filePath) {
     TempStr thumbPath = GetThumbnailPathTemp(filePath);
+    if (!thumbPath) {
+        return;
+    }
     bool ok = file::Delete(thumbPath);
     auto status = ok ? "ok" : "failed";
     logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, Str(status));
 }
 
 RenderedBitmap* LoadThumbnail(FileState* fs) {
+    if (!fs || len(fs->filePath) == 0) {
+        return nullptr;
+    }
     if (fs->thumbnail) {
         return fs->thumbnail;
     }
@@ -77,14 +84,17 @@ RenderedBitmap* LoadThumbnail(FileState* fs) {
 }
 
 bool HasThumbnail(FileState* fs) {
-    // TODO: optimize, LoadThumbnail() is probably not necessary
+    if (!fs || len(fs->filePath) == 0) {
+        return false;
+    }
+    // Prefer the in-memory thumbnail; only hit disk when missing.
     if (!fs->thumbnail && !LoadThumbnail(fs)) {
         return false;
     }
 
     TempStr bmpPath = GetThumbnailPathTemp(fs->filePath);
     if (!bmpPath) {
-        return true;
+        return fs->thumbnail != nullptr;
     }
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
     FILETIME fileTime = file::GetModificationTime(fs->filePath);
@@ -100,7 +110,7 @@ bool HasThumbnail(FileState* fs) {
 // takes ownership of bmp
 void SetThumbnail(FileState* fs, RenderedBitmap* bmp) {
     ReportIf(bmp && bmp->GetSize().IsEmpty());
-    if (!fs || !bmp || bmp->GetSize().IsEmpty()) {
+    if (!fs || len(fs->filePath) == 0 || !bmp || bmp->GetSize().IsEmpty()) {
         delete bmp;
         return;
     }
@@ -110,7 +120,7 @@ void SetThumbnail(FileState* fs, RenderedBitmap* bmp) {
 }
 
 void SaveThumbnail(FileState* fs) {
-    if (!fs->thumbnail) {
+    if (!fs || !fs->thumbnail || len(fs->filePath) == 0) {
         return;
     }
 
@@ -135,6 +145,9 @@ void SaveThumbnail(FileState* fs) {
 }
 
 void RemoveThumbnail(FileState* fs) {
+    if (!fs || len(fs->filePath) == 0) {
+        return;
+    }
     if (!HasThumbnail(fs)) {
         return;
     }
