@@ -800,8 +800,66 @@ static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
     }
 }
 
+// Prefer font size over tight glyph bboxes (FZ_STEXT_ACCURATE_BBOXES makes
+// line->bbox height jump between lines with/without descenders).
+static float StextLineHeight(const fz_stext_line* line) {
+    if (line->first_char && line->first_char->size > 0.5f) {
+        return line->first_char->size;
+    }
+    float h = line->bbox.y1 - line->bbox.y0;
+    if (h > 0.5f) {
+        return h;
+    }
+    return 10.f;
+}
+
+// True when nextLine is a soft wrap of the same paragraph (reflow/ebook copy
+// should join with a space, not a newline — #5793).
+// FB2/HTML reflow lines typically share a ~0.25–0.35em gap; paragraph spacing
+// is larger (~0.5em+). Mid-line soft wraps also nearly fill the block width.
+static bool IsSoftLineBreak(const fz_stext_line* line, const fz_stext_line* nextLine, const fz_stext_block* block) {
+    if (!line || !nextLine || !block) {
+        return false;
+    }
+    float h = StextLineHeight(line);
+    float gap = nextLine->bbox.y0 - line->bbox.y1;
+    // Same-paragraph wraps sit close together; larger gaps are paragraph
+    // spacing. Negative gap = overlapping/tight lines still soft.
+    // Threshold ~0.55h: observed soft gaps ~2.3–2.7 on 8–10pt body text,
+    // paragraph gaps ~4+ (see FB2 #5793 samples).
+    if (gap > h * 0.55f) {
+        return false;
+    }
+    // Soft wraps usually fill most of the block width; a short line is the
+    // end of a paragraph (or a title), so keep a hard newline after it.
+    float blockW = block->bbox.x1 - block->bbox.x0;
+    float lineW = line->bbox.x1 - line->bbox.x0;
+    if (blockW > 1.f && lineW < blockW * 0.82f) {
+        return false;
+    }
+    // New paragraphs often start with a larger left indent (text-indent).
+    float dx = nextLine->bbox.x0 - line->bbox.x0;
+    if (dx > h * 0.4f) {
+        return false;
+    }
+    return true;
+}
+
+// If the buffer ends with a hyphen used for line wrapping, drop it before a
+// soft join so "some-\nthing" becomes "something" (#5793).
+static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
+    if (s.IsEmpty()) {
+        return;
+    }
+    if (s.LastChar() == '-') {
+        s.RemoveLast();
+        rects.RemoveLast();
+    }
+}
+
 static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
-    Str lineSep = StrL("\n");
+    Str hardLineSep = StrL("\n");
+    Str softLineSep = StrL(" ");
     str::Builder content;
     Vec<Rect> rects;
     Vec<SeenGlyph> seen;
@@ -842,7 +900,15 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
                 }
                 c = c->next;
             }
-            AddLineSepUtf8(content, rects, lineSep);
+            // Soft-join reflow lines within a paragraph for better copy (#5793);
+            // keep a hard newline between paragraphs / blocks.
+            fz_stext_line* nextLine = line->next;
+            if (nextLine && IsSoftLineBreak(line, nextLine, block)) {
+                MaybeDropTrailingSoftHyphen(content, rects);
+                AddLineSepUtf8(content, rects, softLineSep);
+            } else {
+                AddLineSepUtf8(content, rects, hardLineSep);
+            }
             // each line has independent glyph positions; reset duplicate detection
             seen.Reset();
             line = line->next;
