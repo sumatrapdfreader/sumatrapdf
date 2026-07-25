@@ -2842,7 +2842,14 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // mupdf 1.28 replaced the global fz_set_user_css / fz_set_use_document_css
     // with per-document styling via fz_style_document (applied after the
     // document is opened, before fz_layout_document)
-    TempStr userCss;
+    //
+    // Default user CSS: many EPUBs (and other reflow docs) set
+    //   img { width: 100%; height: 100%; }
+    // which collapses images in MuPDF's reflow layout when the containing
+    // block has no fixed height — images vanish or sit on top of text (#5805).
+    // Force auto height and a width cap; applied after publisher CSS so it
+    // overrides with !important. User CustomCSS is appended after this.
+    TempStr userCss = StrL("img { height: auto !important; max-width: 100% !important; }\n");
     int usePublisherCss = 1; // use the document's own (publisher) CSS by default
     auto eBookUI = GetEBookUI();
     if (eBookUI) {
@@ -2859,11 +2866,11 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             ldy = eBookUI->layoutDy;
         }
         if (eBookUI->customCSS) {
-            userCss = eBookUI->customCSS;
+            userCss = str::JoinTemp(userCss, eBookUI->customCSS);
         }
         usePublisherCss = eBookUI->ignoreDocumentCSS ? 0 : 1;
     }
-    const char* userCssZ = userCss ? userCss.s : nullptr;
+    const char* userCssZ = CStrTemp(userCss);
 
     float dx, dy, fontDy;
     _doc = nullptr;
