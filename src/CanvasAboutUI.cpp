@@ -38,6 +38,7 @@ static void OnPaintAbout(MainWindow* win) {
         DrawAboutPage(win, bufDC);
     }
     win->buffer->Flush(hdc);
+    DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {

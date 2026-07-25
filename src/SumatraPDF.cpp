@@ -11003,6 +11003,19 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             break;
 
+        case WM_SETFOCUS:
+            // document keyboard focus is on the frame; repaint canvas focus ring (#4644)
+            if (win) {
+                InvalidateCanvasKeyboardFocus(win);
+            }
+            break;
+
+        case WM_KILLFOCUS:
+            if (win) {
+                InvalidateCanvasKeyboardFocus(win);
+            }
+            break;
+
         case WM_ACTIVATE:
             if (wp != WA_INACTIVE) {
                 gLastActiveFrameHwnd = hwnd;

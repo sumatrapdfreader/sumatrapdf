@@ -2252,6 +2252,39 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     return shouldPaint;
 }
 
+// Document keyboard focus lives on hwndFrame: AdvanceFocus() includes the frame
+// as the "document" tab target, and canvas clicks call HwndSetFocus(hwndFrame)
+// so arrow keys reach the frame. Without a visual cue, tabbing to the document
+// looks like focus is lost (#4644).
+static bool CanvasShouldShowKeyboardFocus(MainWindow* win) {
+    if (!win || !win->hwndFrame || !win->hwndCanvas) {
+        return false;
+    }
+    if (win->presentation || win->isFullScreen) {
+        return false;
+    }
+    return GetFocus() == win->hwndFrame;
+}
+
+void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc) {
+    if (!hdc || !CanvasShouldShowKeyboardFocus(win)) {
+        return;
+    }
+    RECT rc;
+    GetClientRect(win->hwndCanvas, &rc);
+    // inset so the dashed rect is fully inside the client area
+    InflateRect(&rc, -1, -1);
+    if (rc.right > rc.left && rc.bottom > rc.top) {
+        DrawFocusRect(hdc, &rc);
+    }
+}
+
+void InvalidateCanvasKeyboardFocus(MainWindow* win) {
+    if (win && win->hwndCanvas) {
+        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    }
+}
+
 static void OnPaintDocument(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
@@ -2266,10 +2299,14 @@ static void OnPaintDocument(MainWindow* win) {
             break;
         default:
             bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
-            if (!gNoFlickerRender || shouldPaint) {
+            // Flush when the focus ring is needed so DrawFocusRect is not XOR'd
+            // on top of a stale frame that already had a ring.
+            bool showFocus = CanvasShouldShowKeyboardFocus(win);
+            if (!gNoFlickerRender || shouldPaint || showFocus) {
                 win->buffer->Flush(hdc);
             }
     }
+    DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {
@@ -3187,6 +3224,7 @@ static void OnPaintError(MainWindow* win) {
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
     SelectObject(hdc, hPrevFont);
+    DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
 }
