@@ -697,6 +697,43 @@ static bool IsUnicodeScalar(int rune) {
     return true;
 }
 
+// Horizontal gap between the previous glyph and the next, in page units.
+// Used to drop "tracking" spaces that PDF writers insert between syllables
+// (look like word breaks to MuPDF but have near-zero visual gap) — #5627.
+static float GlyphGapX(const fz_stext_char* prev, const fz_stext_char* next) {
+    if (!prev || !next) {
+        return 1e9f;
+    }
+    fz_rect pr = fz_rect_from_quad(prev->quad);
+    // next origin vs previous glyph's right edge
+    return next->origin.x - pr.x1;
+}
+
+// True if this space is only tracking/justification between syllables, not a
+// real word break. PDFs that place space operators (or MuPDF synthetic spaces)
+// between every syllable produce "Kro nik, im mün" on copy (#5627).
+static bool IsTrackingSpace(const fz_stext_char* spaceChar, const fz_stext_char* prevNonSpace,
+                            const fz_stext_char* nextNonSpace) {
+    if (!prevNonSpace || !nextNonSpace) {
+        return false;
+    }
+    float gap = GlyphGapX(prevNonSpace, nextNonSpace);
+    float size = std::max(prevNonSpace->size, nextNonSpace->size);
+    if (size <= 0) {
+        size = 1.f;
+    }
+    // Real word gaps are typically ~0.25–0.5em; tracking spaces are ~0 (or a
+    // few percent of size). Threshold 0.2em keeps normal word spaces.
+    if (gap < size * 0.2f) {
+        return true;
+    }
+    // MuPDF-inserted synthetic spaces with only a tiny advance
+    if ((spaceChar->flags & FZ_STEXT_SYNTHETIC) && gap < size * 0.35f) {
+        return true;
+    }
+    return false;
+}
+
 static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
@@ -766,12 +803,37 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
         }
         fz_stext_line* line = block->u.t.first_line;
         while (line) {
+            // Walk each line with prev/next non-space so tracking spaces can be
+            // dropped (issue #5627: Turkish PDFs that space every syllable).
+            fz_stext_char* prevNonSpace = nullptr;
             fz_stext_char* c = line->first_char;
             while (c) {
+                int rune = c->c;
+                bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
+                if (isWs) {
+                    fz_stext_char* nextNonSpace = c->next;
+                    while (nextNonSpace) {
+                        int nr = nextNonSpace->c;
+                        bool nWs = nr > 0 && nr <= 0x7f && str::IsWs((char)nr);
+                        if (!nWs) {
+                            break;
+                        }
+                        nextNonSpace = nextNonSpace->next;
+                    }
+                    if (IsTrackingSpace(c, prevNonSpace, nextNonSpace)) {
+                        c = c->next;
+                        continue;
+                    }
+                }
                 AddCharUtf8(line, c, content, rects, seen);
+                if (!isWs) {
+                    prevNonSpace = c;
+                }
                 c = c->next;
             }
             AddLineSepUtf8(content, rects, lineSep);
+            // each line has independent glyph positions; reset duplicate detection
+            seen.Reset();
             line = line->next;
         }
         block = block->next;
