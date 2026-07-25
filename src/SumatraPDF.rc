@@ -83,13 +83,13 @@ IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
 // those old registry on install, the icon would change
 2                       ICON "..\\gfx\\SumatraPDF-smaller.ico"
 // Document-type icons (resource id = registry DefaultIcon ,-N). See RegisterForOpenWith.
-3                       ICON "..\\gfx\\new-icons\\epub-32bit.ico"
-4                       ICON "..\\gfx\\new-icons\\cbx-32bit.ico"
-5                       ICON "..\\gfx\\new-icons\\chm-32bit.ico"
-6                       ICON "..\\gfx\\new-icons\\djvu-32bit.ico"
-7                       ICON "..\\gfx\\new-icons\\img-32bit.ico"
-8                       ICON "..\\gfx\\new-icons\\pdf-32bit.ico"
-9                       ICON "..\\gfx\\new-icons\\mobi-32bit.ico"
+3                       ICON "..\\gfx\\epub-32bit.ico"
+4                       ICON "..\\gfx\\cbx-32bit.ico"
+5                       ICON "..\\gfx\\chm-32bit.ico"
+6                       ICON "..\\gfx\\djvu-32bit.ico"
+7                       ICON "..\\gfx\\img-32bit.ico"
+8                       ICON "..\\gfx\\pdf-32bit.ico"
+9                       ICON "..\\gfx\\mobi-32bit.ico"
 
     /////////////////////////////////////////////////////////////////////////////
 

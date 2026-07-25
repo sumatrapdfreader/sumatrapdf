@@ -1,4 +1,4 @@
-// Rasterize gfx/new-icons/*.svg to multi-size Windows .ico files:
+// Rasterize gfx/svg/*.svg to multi-size Windows .ico files under gfx/:
 // 256 PNG + 64/48/32/16 BMP (32bpp + AND mask). Optionally zopflipng-compresses
 // the 256 PNG frame.
 //
@@ -23,7 +23,8 @@ import { deflateSync, inflateSync } from "node:zlib";
 const ROOT = join(import.meta.dir, "..");
 const RESVG = join(ROOT, "bin", "resvg.exe");
 const ZOPFLIPNG = join(ROOT, "bin", "zopflipng.exe");
-const SRC_DIR = join(ROOT, "gfx", "new-icons");
+const SVG_DIR = join(ROOT, "gfx", "svg");
+const ICO_DIR = join(ROOT, "gfx");
 const SIZES = [256, 64, 48, 32, 16] as const;
 
 function runResvg(svg: string, png: string, size: number): void {
@@ -259,17 +260,17 @@ function main() {
     console.error(`missing ${RESVG}`);
     process.exit(1);
   }
-  const svgs = readdirSync(SRC_DIR).filter((f) => f.endsWith(".svg"));
+  const svgs = readdirSync(SVG_DIR).filter((f) => f.endsWith(".svg"));
   if (svgs.length === 0) {
-    console.error(`no SVGs in ${SRC_DIR}`);
+    console.error(`no SVGs in ${SVG_DIR}`);
     process.exit(1);
   }
   const scratchRoot = mkdtempSync(join(tmpdir(), "svg-ico-"));
-  console.log(`converting ${svgs.length} SVGs in ${SRC_DIR}`);
+  console.log(`converting ${svgs.length} SVGs in ${SVG_DIR} -> ${ICO_DIR}`);
   try {
     for (const name of svgs) {
-      const svg = join(SRC_DIR, name);
-      const ico = join(SRC_DIR, name.replace(/\.svg$/i, ".ico"));
+      const svg = join(SVG_DIR, name);
+      const ico = join(ICO_DIR, name.replace(/\.svg$/i, ".ico"));
       const scratch = join(scratchRoot, name);
       mkdirSync(scratch, { recursive: true });
       svgToIco(svg, ico, scratch);
