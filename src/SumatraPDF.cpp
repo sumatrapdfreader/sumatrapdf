@@ -3575,11 +3575,15 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
     WCHAR* fileFilterW = CWStrTemp(fileFilterStr);
 
-    // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
     TempStr srcFileName = str::Dup(engine->FilePath());
-    TempWStr srcFileNameW = ToWStrTemp(srcFileName);
-    wstr::BufSet(WStr(dstFileName, dimof(dstFileName)), srcFileNameW);
+    // Seed the dialog with "foo Copy.pdf" so Save doesn't overwrite the source
+    // unless the user deliberately picks the original name.
+    TempStr noExt = path::GetPathNoExtTemp(srcFileName);
+    TempStr ext = path::GetExtTemp(srcFileName);
+    TempStr suggested = fmt("%s Copy%s", noExt, ext);
+    TempWStr suggestedW = ToWStrTemp(suggested);
+    wstr::BufSet(WStr(dstFileName, dimof(dstFileName)), suggestedW);
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = tab->win->hwndFrame;
