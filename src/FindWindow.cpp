@@ -804,6 +804,13 @@ void HideFindWindow(MainWindow* win) {
     // that owned these matches is gone (issue #5807).
     InterlockedIncrement(&win->findWindow->pendingNavEpoch);
     ClearFindMatches(win);
+    // drop the active TextSearch hit so closing find clears the highlight;
+    // F3 still works (FindNext re-searches) and paints the new hit (#5802)
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch) {
+            dm->textSearch->Reset();
+        }
+    }
     AbortFinding(win, true);
     ShowWindow(win->findWindow->hwnd, SW_HIDE);
     HwndSetFocus(win->hwndFrame);

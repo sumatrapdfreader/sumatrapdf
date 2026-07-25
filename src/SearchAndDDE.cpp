@@ -1433,11 +1433,24 @@ static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextS
     }
 }
 
-void PaintAllFindMatches(MainWindow* win, HDC hdc) {
-    if (!win->IsDocLoaded() || !win->AsFixed()) {
+static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch* ts, HDC hdc) {
+    if (!ts || ts->result.len == 0) {
         return;
     }
-    if (!IsFindUIVisible(win)) {
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    u8 alpha = GetAlpha(parsedCol->col);
+    if (alpha == 0) {
+        alpha = kSelectionDefaultAlpha;
+    }
+    Vec<Rect> currentRects;
+    AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
+    if (len(currentRects) > 0) {
+        PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
+    }
+}
+
+void PaintAllFindMatches(MainWindow* win, HDC hdc) {
+    if (!win->IsDocLoaded() || !win->AsFixed()) {
         return;
     }
     if (!win->hwndFindEdit || HwndGetTextLen(win->hwndFindEdit) == 0) {
@@ -1458,21 +1471,16 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
         return;
     }
     TextSearch* ts = dm->textSearch;
+    // After the find UI is closed, still highlight the active match so F3 /
+    // FindNext navigation is visible (issue #5802). The full match list was
+    // cleared on hide; only paint the current TextSearch hit.
+    if (!IsFindUIVisible(win)) {
+        PaintCurrentFindMatch(win, dm, ts, hdc);
+        return;
+    }
     if (!win->findCountValid && len(win->findMatches) == 0) {
         // count still running: at least highlight the current match
-        if (!ts || ts->result.len == 0) {
-            return;
-        }
-        ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
-        u8 alpha = GetAlpha(parsedCol->col);
-        if (alpha == 0) {
-            alpha = kSelectionDefaultAlpha;
-        }
-        Vec<Rect> currentRects;
-        AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
-        if (len(currentRects) > 0) {
-            PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
-        }
+        PaintCurrentFindMatch(win, dm, ts, hdc);
         return;
     }
     if (len(win->findMatches) == 0) {
