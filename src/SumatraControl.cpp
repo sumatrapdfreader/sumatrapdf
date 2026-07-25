@@ -39,6 +39,7 @@ enum class ControlCmd : u16 {
     TestPageInfoOverlay = 28,
     TestGetToc = 29,
     TestPageLinks = 30,
+    TestWindowStateDuringLoad = 31,
 };
 
 enum class ControlArgType : u16 {
@@ -501,6 +502,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestWindowStateDuringLoad: {
+            int exitCode = 0;
+            Str res = WindowStateDuringLoadResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -639,6 +639,20 @@ void RememberDefaultWindowPosition(MainWindow* win) {
         return;
     }
 
+    // While a document is still loading, the frame may be briefly shown at the
+    // restored (non-maximized) WindowPos size before SW_MAXIMIZE/fullscreen is
+    // applied. Do not persist that transient size over a maximized/fullscreen
+    // WindowState preference (fixes #5529).
+    if (!win->IsDocLoaded()) {
+        int intended = gGlobalPrefs->windowState;
+        if (intended == WIN_STATE_MAXIMIZED && !IsZoomed(win->hwndFrame)) {
+            return;
+        }
+        if (intended == WIN_STATE_FULLSCREEN && !win->isFullScreen) {
+            return;
+        }
+    }
+
     if (win->presentation) {
         gGlobalPrefs->windowState = win->windowStateBeforePresentation;
     } else if (win->isFullScreen) {
@@ -2460,7 +2474,8 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     // ShowMainWindow shows it later with the remembered maximized/fullscreen
     // state; showing here would flash a normal-size window first)
     if (showWin) {
-        ShowWindow(win->hwndFrame, SW_SHOW);
+        // Use ShowMainWindow so SW_SHOW does not drop a pending maximize (#5529)
+        ShowMainWindow(win, gGlobalPrefs->windowState);
     }
 
     // display the notification ASAP (SaveSettings() can introduce a notable delay)
@@ -3086,7 +3101,8 @@ void LoadModelIntoTab(WindowTab* tab) {
         args.msg = fmt(_TRA("Please wait - loading...").s);
         args.warning = true;
         ShowNotification(args);
-        ShowWindow(win->hwndFrame, SW_SHOW);
+        // Use ShowMainWindow so SW_SHOW does not drop a pending maximize (#5529)
+        ShowMainWindow(win, gGlobalPrefs->windowState);
         // display the notification ASAP
         win->RedrawAll(true);
     }
@@ -11403,6 +11419,53 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
         out.Append(fmt("OK msg=%s\n", msg));
     } else {
         out.Append(fmt("FAIL after-reload msg=%s\n", msg));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// Verifies maximized WindowState is not downgraded while a document is still
+// loading (about page / unloaded tab). Used by tests/issue-5529.ts.
+TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (gWindows.IsEmpty()) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !IsWindowVisible(win->hwndFrame)) {
+        return fail(StrL("NOTREADY window-not-visible"), 2);
+    }
+    if (win->IsDocLoaded()) {
+        return fail(StrL("NOTREADY doc-already-loaded"), 2);
+    }
+
+    int prevState = gGlobalPrefs->windowState;
+    // Force a non-maximized frame so the bug path is exercised: prefs say
+    // maximized, but the visible window is still at restored size (as during
+    // slow load). Without the #5529 guard this rewrites WindowState to NORMAL.
+    if (IsZoomed(win->hwndFrame)) {
+        ShowWindow(win->hwndFrame, SW_RESTORE);
+    }
+    gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+    RememberDefaultWindowPosition(win);
+    int observed = gGlobalPrefs->windowState;
+    gGlobalPrefs->windowState = prevState;
+    bool ok = observed == WIN_STATE_MAXIMIZED;
+    if (ok) {
+        out.Append(fmt("OK windowState preserved as maximized\n"));
+    } else {
+        out.Append(fmt("FAIL windowState=%d expected=%d\n", observed, WIN_STATE_MAXIMIZED));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
