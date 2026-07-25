@@ -1490,16 +1490,21 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Left-up during middle-click / CmdStartAutoScroll mode stops auto-scroll.
+    // Also covers the crash-report case of a left-up after the down was lost
+    // (different hwnd, focus change, etc.) — just reset cleanly.
     if (MouseAction::Scrolling == ma) {
         win->mouseAction = MouseAction::None;
-        // TODO: I'm seeing this in crash reports. Can we get button up without button down?
-        // maybe when down happens on a different hwnd? How can I add more logging.
-        // logfa("OnMouseLeftButtonUp: unexpected MouseAction::Scrolling (%d)\n", ma);
-        // ReportIf(true);
+        win->xScrollSpeed = 0;
+        win->yScrollSpeed = 0;
+        win->xScrollAccum = 0;
+        win->yScrollAccum = 0;
+        KillTimer(win->hwndCanvas, kAutoScrollTimerID);
+        SetCursorCached(IDC_ARROW);
         return;
     }
 
-    // TODO: should IsDrag() ever be true here? We should get mouse move first
+    // Click without move: dragStartPending is still true, so this is a click not a drag.
     bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         if (win->annotationBeingResized) {
