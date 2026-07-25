@@ -100,7 +100,24 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
     Rect* coords;
     int textLen = 0;
     Str text = ts->engine->GetTextForPage(pageNo, &textLen, &coords);
-    ReportIf(textLen < glyph + length);
+    // Clamp ranges that outlive their page text (stale find-match coords after
+    // tab close/reload, or a multi-page match that ends past a shorter page).
+    if (glyph < 0) {
+        length += glyph;
+        glyph = 0;
+    }
+    if (length < 0) {
+        length = 0;
+    }
+    if (glyph > textLen) {
+        glyph = textLen;
+    }
+    if (glyph + length > textLen) {
+        length = textLen - glyph;
+    }
+    if (length <= 0 || !coords) {
+        return;
+    }
     Rect mediabox = ts->engine->PageMediabox(pageNo).Round();
     Rect *c = &coords[glyph], *end = c + length;
     while (c < end) {
@@ -221,7 +238,14 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
         engine->GetTextForPage(page, &textLen);
 
         int glyph = page == fromPage ? fromGlyph : 0;
-        int length = (page == toPage ? toGlyph : textLen) - glyph;
+        int end = page == toPage ? toGlyph : textLen;
+        if (glyph < 0) {
+            glyph = 0;
+        }
+        if (end > textLen) {
+            end = textLen;
+        }
+        int length = end - glyph;
         if (length > 0) {
             FillResultRects(this, page, glyph, length);
         }

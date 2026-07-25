@@ -1682,6 +1682,11 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     tab->ctrl = ctrl;
     win->ctrl = tab->ctrl;
 
+    // Drop find-match coords / match-count cache for the previous engine (reload
+    // or replace). Find UI text is kept; count restarts against the new engine
+    // if find is still open. Must run after win->ctrl points at the new document.
+    InvalidateFindForDocumentChange(win);
+
     EngineBase* engine = tab->GetEngine();
     if (engine) {
         engine->hideAnnotations = tab->hideAnnotations;
@@ -3086,6 +3091,11 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
+
+    // Find matches / count cache are for the previous tab's document. Drop them
+    // before paint (UpdateWindow below). Keeps find box text (#5308); rebuilds
+    // all-match highlights if find UI is still open.
+    InvalidateFindForDocumentChange(win);
 
     if (win->AsChm()) {
         win->AsChm()->SetParentHwnd(win->hwndCanvas);

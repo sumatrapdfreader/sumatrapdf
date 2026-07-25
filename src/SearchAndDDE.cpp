@@ -690,6 +690,40 @@ void ClearFindMatches(MainWindow* win) {
     win->browserFindTotal = -1;
 }
 
+static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWord);
+
+void InvalidateFindForDocumentChange(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    // Page/glyph coords and the match-count cache are for the previous engine.
+    // Keep the find box text so the user can re-search after close/reload (#5308).
+    ClearFindMatches(win);
+    win->findCountValid = false;
+    win->findCountCapped = false;
+    win->findCountEngine = nullptr;
+    win->findCountPositions.Reset();
+    str::FreePtr(&win->findCountText);
+    FindWindowRefreshResults(win);
+
+    if (!IsFindUIVisible(win) || !win->hwndFindEdit) {
+        return;
+    }
+    TempStr s = HwndGetTextTemp(win->hwndFindEdit);
+    if (len(s) == 0) {
+        FindBarSetStatus(win, "");
+        return;
+    }
+    if (win->AsFixed()) {
+        StartFindCount(win, s, win->findMatchCase, win->findMatchWholeWord);
+        return;
+    }
+    DocController* md = BrowserFindCtrl(win);
+    if (md) {
+        BrowserFindStartSearch(win, md);
+    }
+}
+
 // build a one-line "...context match context..." snippet (UTF-8) around a match
 static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     int textLen = 0;
@@ -762,8 +796,6 @@ struct CountEndTaskData {
         delete matches;
     }
 };
-
-static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWord);
 
 static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
@@ -1306,6 +1338,13 @@ static void GetVisiblePageRange(DisplayModel* dm, int& firstOut, int& lastOut) {
 }
 
 static void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<FindMatchPaintPageRect>& out) {
+    if (!engine) {
+        return;
+    }
+    int pageCount = engine->PageCount();
+    if (fm.startPage < 1 || fm.endPage < 1 || fm.startPage > pageCount || fm.endPage > pageCount) {
+        return;
+    }
     TextSelection ts(engine);
     ts.StartAt(fm.startPage, fm.startGlyph);
     ts.SelectUpTo(fm.endPage, fm.endGlyph);
@@ -1391,6 +1430,18 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     }
 
     DisplayModel* dm = win->AsFixed();
+    // Matches/count cache are tied to the engine they were built for. After a
+    // tab close or reload without InvalidateFindForDocumentChange, refuse to
+    // map stale page/glyph coords onto a different document.
+    void* engine = (void*)dm->GetEngine();
+    if (win->findCountEngine && win->findCountEngine != engine) {
+        ClearFindMatches(win);
+        win->findCountValid = false;
+        win->findCountEngine = nullptr;
+        win->findCountPositions.Reset();
+        str::FreePtr(&win->findCountText);
+        return;
+    }
     TextSearch* ts = dm->textSearch;
     if (!win->findCountValid && len(win->findMatches) == 0) {
         // count still running: at least highlight the current match
