@@ -3513,6 +3513,46 @@ static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
     ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, err);
 }
 
+// Identity of the selected annotation for restore after save/reload (Annotation*
+// pointers die with the engine).
+struct SavedAnnotSel {
+    bool valid = false;
+    int pageNo = -1;
+    AnnotationType type = AnnotationType::Unknown;
+    RectF bounds{};
+};
+
+static SavedAnnotSel CaptureSelectedAnnotation(WindowTab* tab) {
+    SavedAnnotSel key;
+    Annotation* a = tab ? tab->selectedAnnotation : nullptr;
+    if (!a) {
+        return key;
+    }
+    key.valid = true;
+    key.pageNo = a->pageNo;
+    key.type = a->type;
+    key.bounds = a->bounds;
+    return key;
+}
+
+static Annotation* FindMatchingAnnotation(WindowTab* tab, const SavedAnnotSel& key) {
+    if (!key.valid || !tab) {
+        return nullptr;
+    }
+    EngineBase* engine = tab->GetEngine();
+    if (!engine) {
+        return nullptr;
+    }
+    Vec<Annotation*> annots;
+    EngineMupdfGetAnnotations(engine, annots);
+    for (Annotation* a : annots) {
+        if (a->pageNo == key.pageNo && a->type == key.type && a->bounds == key.bounds) {
+            return a;
+        }
+    }
+    return nullptr;
+}
+
 bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     if (!tab) {
         return false;
@@ -3536,6 +3576,8 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     }
     ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
 
+    // Capture selection before the engine (and Annotation*) is torn down.
+    SavedAnnotSel sel = CaptureSelectedAnnotation(tab);
     // have to re-open edit annotations window because the current has
     // a reference to deleted Engine
     bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
@@ -3545,8 +3587,8 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     // the PDF twice (and race background work against a just-rewritten file).
     tab->ignoreNextAutoReload = true;
     if (hadEditAnnotations) {
-        // TODO: improve by remembering which annotation was selected and restoring it after  we reload
-        ShowEditAnnotationsWindow(tab, nullptr);
+        Annotation* match = FindMatchingAnnotation(tab, sel);
+        ShowEditAnnotationsWindow(tab, match);
     }
 
     return true;
@@ -3621,6 +3663,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return false;
     }
 
+    // Capture selection before the engine (and Annotation*) is torn down.
+    SavedAnnotSel sel = CaptureSelectedAnnotation(tab);
     // have to re-open edit annotations window because the current has
     // a reference to deleted Engine
     bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
@@ -3641,9 +3685,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     ShowSavedAnnotationsNotification(win->hwndCanvas, newPath);
     if (hadEditAnnotations) {
-        // TODO: improve by remembering which annotation was selected and restoring it after reload
-        // could do it by index
-        ShowEditAnnotationsWindow(tab, nullptr);
+        Annotation* match = FindMatchingAnnotation(tab, sel);
+        ShowEditAnnotationsWindow(tab, match);
     }
     return true;
 }
