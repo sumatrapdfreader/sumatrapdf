@@ -361,10 +361,13 @@ void MainWindow::RedrawAll(bool update) const {
 
 void MainWindow::RedrawAllIncludingNonClient() const {
     if (gRedrawLog) {
-        logf("redraw: RedrawAllIncludingNonClient canvas=0x%p\n", this->hwndCanvas);
+        logf("redraw: RedrawAllIncludingNonClient frame=0x%p\n", this->hwndFrame);
     }
-    InvalidateRect(this->hwndCanvas, nullptr, false);
-    RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+    // Full erase of frame + children + non-client so layout transitions (tabs on/off,
+    // closing last tab, menu bar) do not leave a ghost of the old toolbar/caption
+    // painted on the client area (issue #5750).
+    RedrawWindow(this->hwndFrame, nullptr, nullptr,
+                 RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
 }
 
 void MainWindow::ChangePresentationMode(PresentationMode mode) {

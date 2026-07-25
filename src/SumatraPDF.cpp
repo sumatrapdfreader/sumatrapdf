@@ -6886,6 +6886,9 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
     return nullptr;
 }
 
+// defined below; used by UseTabs transitions
+static void ApplyMenuBarVisibility(MainWindow* win);
+
 static void TransitionToNoTabs() {
     StrVec paths;
 
@@ -6906,10 +6909,9 @@ static void TransitionToNoTabs() {
         for (MainWindow* w : gWindows) {
             DestroyMenuBarRebar(w);
             SetTabsInTitlebar(w, false);
-            if (IsMenubarVisible()) {
-                SetMenu(w->hwndFrame, w->menu);
-            }
+            ApplyMenuBarVisibility(w);
             ShowOrHideToolbar(w);
+            ScheduleUiUpdate(w, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
             w->RedrawAllIncludingNonClient();
         }
         return;
@@ -6925,6 +6927,9 @@ static void TransitionToNoTabs() {
             win = surviving;
             DestroyMenuBarRebar(win);
             SetTabsInTitlebar(win, false);
+            ApplyMenuBarVisibility(win);
+            ShowOrHideToolbar(win);
+            ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
         } else {
             win = CreateAndShowMainWindow(nullptr);
             if (!win) {
@@ -6935,6 +6940,7 @@ static void TransitionToNoTabs() {
         args.showWin = true;
         args.forceReuse = true;
         LoadDocument(&args);
+        win->RedrawAllIncludingNonClient();
     }
 }
 
@@ -6956,8 +6962,12 @@ static void TransitionToTabs() {
     }
     if (!hasFiles) {
         for (MainWindow* w : gWindows) {
+            // drop native menu before switching to tabs-in-titlebar (menu becomes rebar)
+            SetMenu(w->hwndFrame, nullptr);
             SetTabsInTitlebar(w, true);
+            ApplyMenuBarVisibility(w);
             ShowOrHideToolbar(w);
+            ScheduleUiUpdate(w, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
             w->RedrawAllIncludingNonClient();
         }
         return;
@@ -6973,7 +6983,9 @@ static void TransitionToTabs() {
             return;
         }
     }
+    SetMenu(win->hwndFrame, nullptr);
     SetTabsInTitlebar(win, true);
+    ApplyMenuBarVisibility(win);
     for (int i = 0; i < len(paths); i++) {
         Str path = paths[i];
         LoadArgs args(path, win);
@@ -6981,6 +6993,8 @@ static void TransitionToTabs() {
         args.forceReuse = (i == 0);
         LoadDocument(&args);
     }
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+    win->RedrawAllIncludingNonClient();
 }
 
 // set a window's menu bar visibility to match the current showMenubar pref
