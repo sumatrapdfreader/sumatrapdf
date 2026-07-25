@@ -21,7 +21,8 @@ struct ILinkHandler {
     virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
     virtual void LaunchURL(Str) = 0;
     virtual void LaunchFile(Str path, IPageDestination*) = 0;
-    virtual IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) = 0;
+    // first ToC entry whose title (partially) matches name; nullptr if none
+    virtual TocItem* FindTocItem(TocItem* item, Str name, bool partially) = 0;
 };
 
 enum class PageInfoState {

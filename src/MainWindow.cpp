@@ -66,7 +66,7 @@ struct LinkHandler : ILinkHandler {
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     void LaunchURL(Str) override;
     void LaunchFile(Str path, IPageDestination*) override;
-    IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) override;
+    TocItem* FindTocItem(TocItem* item, Str name, bool partially) override;
 };
 
 LinkHandler::~LinkHandler() {
@@ -799,20 +799,36 @@ static bool MatchFuzzy(Str s1, Str s2, bool partially) {
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-IPageDestination* LinkHandler::FindTocItem(TocItem* item, Str name, bool partially) {
+TocItem* LinkHandler::FindTocItem(TocItem* item, Str name, bool partially) {
     for (; item; item = item->next) {
         if (item->title) {
             TempStr fuzTitle = NormalizeFuzzyTemp(item->title);
             if (MatchFuzzy(fuzTitle, name, partially)) {
-                return item->GetPageDestination();
+                return item;
             }
         }
-        IPageDestination* dest = FindTocItem(item->child, name, partially);
-        if (dest) {
-            return dest;
+        TocItem* found = FindTocItem(item->child, name, partially);
+        if (found) {
+            return found;
         }
     }
     return nullptr;
+}
+
+// Select and scroll the ToC tree to tocItem (same idea as GoToTocItem from the palette).
+static void SelectTocItemInTree(MainWindow* win, TocItem* tocItem) {
+    if (!win || !tocItem || !win->tocLoaded || !win->tocTreeView) {
+        return;
+    }
+    // prevent UpdateTocSelection from undoing the selection when the page changes
+    win->tocKeepSelection = true;
+    TreeView* treeView = win->tocTreeView;
+    HTREEITEM hi = treeView->GetHandleByTreeItem((TreeItem)tocItem);
+    if (hi) {
+        TreeView_EnsureVisible(treeView->hwnd, hi);
+    }
+    treeView->SelectItem((TreeItem)tocItem);
+    win->tocKeepSelection = false;
 }
 
 void LinkHandler::GotoNamedDest(Str name) {
@@ -836,15 +852,22 @@ void LinkHandler::GotoNamedDest(Str name) {
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
         TempStr fuzName = NormalizeFuzzyTemp(name);
-        dest = FindTocItem(root, fuzName, false);
-        if (!dest) {
-            dest = FindTocItem(root, fuzName, true);
+        TocItem* tocItem = FindTocItem(root, fuzName, false);
+        if (!tocItem) {
+            tocItem = FindTocItem(root, fuzName, true);
         }
-        // TODO: would be nice if we also selected the exact toc item
-        // currently we auto-detect based on heuristic
-        if (dest) {
-            ScrollTo(dest);
-            hasDest = true;
+        if (tocItem) {
+            dest = tocItem->GetPageDestination();
+            if (dest) {
+                ScrollTo(dest);
+                hasDest = true;
+            } else if (tocItem->pageNo > 0) {
+                ctrl->GoToPage(tocItem->pageNo, true);
+                hasDest = true;
+            }
+            if (hasDest) {
+                SelectTocItemInTree(win, tocItem);
+            }
         }
     }
     if (!hasDest && ctrl->HasPageLabels()) {
