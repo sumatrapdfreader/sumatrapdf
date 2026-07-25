@@ -722,6 +722,10 @@ Str IconName(Annotation* annot) {
 void SetIconName(Annotation* annot, Str iconName) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
+    Str curr = IconName(annot);
+    if (str::Eq(curr, iconName)) {
+        return;
+    }
     TempStr nameZ = str::DupTemp(iconName);
     {
         auto ctx = e->Ctx();
@@ -734,7 +738,6 @@ void SetIconName(Annotation* annot, Str iconName) {
             fz_report_error(ctx);
         }
     }
-    // TODO: only if the value changed
     MarkNotificationAsModified(e, annot);
 }
 
