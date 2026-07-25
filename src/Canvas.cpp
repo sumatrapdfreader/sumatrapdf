@@ -3332,7 +3332,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             auto tab = win->CurrentTab();
             if (tab && tab->reloadOnFocus) {
                 if (tab->ignoreNextAutoReload) {
+                    // consume the save-triggered watcher event; do not leave
+                    // reloadOnFocus set or a later tab focus would reload
                     tab->ignoreNextAutoReload = false;
+                    tab->reloadOnFocus = false;
                 } else {
                     ReloadDocument(win, true);
                 }

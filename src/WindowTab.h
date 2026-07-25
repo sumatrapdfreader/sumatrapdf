@@ -81,7 +81,8 @@ struct WindowTab {
     // first render is in flight
     bool everPaintedPage = false;
 
-    // TODO: arguably a hack
+    // Skip the next file-watcher auto-reload (e.g. after we save annotations
+    // and already call ReloadDocument ourselves). Consumed by AUTO_RELOAD_TIMER.
     bool ignoreNextAutoReload = false;
 
     // per-provider AI chat state, indexed by AIChatBackend

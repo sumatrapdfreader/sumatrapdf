@@ -1936,7 +1936,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
     win->annotationUnderCursor = nullptr;
-    tab->ignoreNextAutoReload = false;
+    // Do not clear ignoreNextAutoReload here: SaveAnnotationsToExistingFile sets it
+    // so the file-watcher auto-reload from that write is skipped. Clearing it on every
+    // ReloadDocument caused a second full open right after the intentional post-save
+    // reload (race with render/RefHover on a just-rewritten PDF).
 
     if (!tab->IsDocLoaded()) {
         if (!autoRefresh) {
@@ -3528,6 +3531,10 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     // a reference to deleted Engine
     bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
     ReloadDocument(tab->win, false);
+    // Re-arm: the save notifies the file watcher, which schedules an auto-reload.
+    // We already reloaded above; skip that one watcher event so we do not open
+    // the PDF twice (and race background work against a just-rewritten file).
+    tab->ignoreNextAutoReload = true;
     if (hadEditAnnotations) {
         // TODO: improve by remembering which annotation was selected and restoring it after  we reload
         ShowEditAnnotationsWindow(tab, nullptr);
