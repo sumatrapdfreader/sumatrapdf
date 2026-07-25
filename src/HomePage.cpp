@@ -1808,20 +1808,24 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
                                  nameFmt);
     }
 
-    // directory path, right-aligned and muted, in the space the file name doesn't need
+    // directory path, right-aligned and muted, in the space the file name doesn't need.
+    // Must use DrawTextW: dirPath is UTF-8; DrawTextA treated it as the system ANSI
+    // code page and mangled non-ASCII path characters (#5824).
     if (!thumb.rcListPath.IsEmpty()) {
         TempStr dirPath = path::GetDirTemp(path);
         SetTextColor(hdc, ThemeWindowTextDisabledColor());
         RECT rcPath = ToRECT(thumb.rcListPath);
         UINT pathFmt = DT_SINGLELINE | DT_VCENTER | DT_PATH_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-        DrawTextA(hdc, dirPath.s, -1, &rcPath, pathFmt);
+        TempWStr pathW = ToWStrTemp(dirPath);
+        DrawTextW(hdc, pathW.s, -1, &rcPath, pathFmt);
     }
 
     TempStr fileSize = FileSizeForHomeListTemp(path);
     SetTextColor(hdc, ThemeWindowTextColor());
     RECT rcSize = ToRECT(thumb.rcListSize);
     UINT sizeFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-    DrawTextA(hdc, fileSize.s, -1, &rcSize, sizeFmt);
+    TempWStr sizeW = ToWStrTemp(fileSize);
+    DrawTextW(hdc, sizeW.s, -1, &rcSize, sizeFmt);
 
     ImageList_Draw(l.himlOpen, (int)TbIcon::Close, hdc, thumb.rcListRemove.x, thumb.rcListRemove.y, ILD_NORMAL);
     if (fs->isPinned) {
