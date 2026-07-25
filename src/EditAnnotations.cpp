@@ -140,6 +140,8 @@ struct EditAnnotationsWindow : Wnd {
     Vec<Annotation*> annotations;
 
     bool skipGoToPage = false;
+    // True while DoContents/etc. programmatically fill the edit; ignore EN_CHANGE.
+    bool updatingControls = false;
 
     str::Builder currTextColor;
     str::Builder currCustomColor;
@@ -202,6 +204,10 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     }
 
     DeleteAnnotation(annot);
+    // Deleted annot must not remain selected (use-after-free on subsequent UI).
+    if (tab->selectedAnnotation == annot) {
+        tab->selectedAnnotation = nullptr;
+    }
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         // ew->skipGoToPage = true;
@@ -313,11 +319,14 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, int arrSize, Annotation
 }
 
 // return true if closed the window, false if there was no window to close
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
+
 bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
     if (!tab->editAnnotsWindow) {
         return false;
     }
     auto ew = tab->editAnnotsWindow;
+    FlushContentsFromEdit(ew);
     tab->editAnnotsWindow = nullptr;
     // this will trigger closing the window
     delete ew;
@@ -444,6 +453,7 @@ static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
 // DestroyWindow).
 static void OnClose(Wnd::CloseEvent* ev) {
     auto w = (EditAnnotationsWindow*)ev->e->self;
+    FlushContentsFromEdit(w);
     ScheduleDeleteEditAnnotationsWindow(w);
 }
 
@@ -464,6 +474,7 @@ void EditAnnotationsWindow::OnFocus() {
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 
 static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
+    FlushContentsFromEdit(ew);
     WindowTab* tab = ew->tab;
     bool ok = SaveAnnotationsToMaybeNewPdfFile(tab);
     if (!ok) {
@@ -477,6 +488,7 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 extern bool SaveAnnotationsToExistingFile(WindowTab* tab);
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
+    FlushContentsFromEdit(ew);
     SaveAnnotationsToExistingFile(ew->tab);
     EnableSaveIfAnnotationsChanged(ew);
 }
@@ -667,14 +679,35 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->staticPopup->SetIsVisible(true);
 }
 
+// Push the contents edit into the selected annotation. Called on switch/save/
+// close so unsaved last edits stick (plus df1b2aab8).
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->editContents || !ew->tab || ew->updatingControls) {
+        return;
+    }
+    Annotation* a = ew->tab->selectedAnnotation;
+    if (!a || !a->engine || !a->pdfannot) {
+        return;
+    }
+    if (ew->annotations.Find(a) < 0) {
+        return;
+    }
+    auto txt = ew->editContents->GetTextTemp();
+    txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
+    SetContents(a, txt);
+    EnableSaveIfAnnotationsChanged(ew);
+}
+
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
     Str s = Contents(annot);
     // don't replace if already is "\r\n"
     s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
     s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
-    ew->editContents->SetText(s);
     ew->staticContents->SetIsVisible(true);
     ew->editContents->SetIsVisible(true);
+    ew->updatingControls = true;
+    ew->editContents->SetText(s);
+    ew->updatingControls = false;
 }
 
 static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -1204,6 +1237,10 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
         ToolbarUpdateStateForWindow(win, false);
         return;
     }
+    // Commit contents of the previous selection before switching away.
+    if (ew) {
+        FlushContentsFromEdit(ew);
+    }
     tab->selectedAnnotation = annot;
     tab->didScrollToSelectedAnnotation = false;
     // go to page with a given annotations before triggering repaint
@@ -1252,11 +1289,11 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 static UINT_PTR gMainWindowRerenderTimer = 0;
 static MainWindow* gMainWindowForRender = nullptr;
 
-// Called from the contents edit onTextChanged. Can fire after the selected
-// annotation was deleted/deselected, or after the window/tab went away —
-// never assume selectedAnnotation is non-null.
+// Called from the contents edit onTextChanged (EN_CHANGE / EN_KILLFOCUS).
+// Can fire after the selected annotation was deleted/deselected, or after
+// the window/tab went away — never assume selectedAnnotation is non-null.
 static void ContentsChanged(EditAnnotationsWindow* ew) {
-    if (!ew || !ew->tab || !ew->editContents) {
+    if (!ew || !ew->tab || !ew->editContents || ew->updatingControls) {
         return;
     }
     Annotation* a = ew->tab->selectedAnnotation;

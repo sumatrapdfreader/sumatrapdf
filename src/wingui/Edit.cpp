@@ -178,9 +178,11 @@ int Edit::GetLeftTextMargin() {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
+// EN_KILLFOCUS also notifies so callers can flush the last edit before blur
+// (annotation Contents save; plus df1b2aab8).
 bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code == EN_CHANGE && onTextChanged.IsValid()) {
+    if ((code == EN_CHANGE || code == EN_KILLFOCUS) && onTextChanged.IsValid()) {
         onTextChanged.Call();
         return true;
     }
