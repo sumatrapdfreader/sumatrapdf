@@ -43,6 +43,9 @@ struct PropertiesWnd : Wnd {
     HFONT propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
+    // CloseDocumentInCurrentTab and DeleteMainWindow can both try to tear the
+    // properties window down; only one deferred delete may run.
+    bool deleteScheduled = false;
 
     bool Create(HWND parent);
     void LayoutToClient();
@@ -70,6 +73,10 @@ static void DeletePropertiesWndInstance(PropertiesWnd* w) {
 }
 
 void PropertiesWnd::ScheduleDelete() {
+    if (deleteScheduled) {
+        return;
+    }
+    deleteScheduled = true;
     auto fn = MkFunc0<PropertiesWnd>(DeletePropertiesWndInstance, this);
     uitask::Post(fn, "SafeDeletePropertiesWnd");
 }
@@ -90,17 +97,23 @@ PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
+static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd);
+
 void DeletePropertiesWindow(HWND hwndParent) {
     PropertiesWnd* w = FindPropertyWindowByHwnd(hwndParent);
     if (!w) {
         return;
     }
+    // Unregister first so a second closer cannot find this instance and schedule
+    // another delete (CloseDocumentInCurrentTab then DeleteMainWindow).
+    gPropertiesWindows.Remove(w);
     if (w->hwnd && IsWindow(w->hwnd)) {
-        w->Close();
-    } else {
-        gPropertiesWindows.Remove(w);
-        w->ScheduleDelete();
+        SavePropertiesWindowPos(w, w->hwnd);
+        // Destroy HWND now (sync). Do not use Close()/PostMessage: that left the
+        // object findable until WM_CLOSE ran and allowed a double ScheduleDelete.
+        w->Destroy();
     }
+    w->ScheduleDelete();
 }
 
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
@@ -789,7 +802,7 @@ bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
 }
 
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
-    if (!hwnd || !IsWindow(hwnd)) {
+    if (!w || !hwnd || !IsWindow(hwnd)) {
         return;
     }
     Rect rc = WindowRect(hwnd);
@@ -804,7 +817,7 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
 // the hwnd map before DestroyWindow(), so WM_DESTROY never reaches onDestroy.
 static void OnPropertiesClose(Wnd::CloseEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
-    if (!w) {
+    if (!w || w->deleteScheduled) {
         return;
     }
     SavePropertiesWindowPos(w, w->hwnd);
@@ -814,11 +827,15 @@ static void OnPropertiesClose(Wnd::CloseEvent* ev) {
 
 static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
-    if (!w || gPropertiesWindows.Find(w) < 0) {
+    // Fallback if the window was destroyed without WM_CLOSE (or Close already
+    // scheduled the deferred free — then deleteScheduled is set and we no-op).
+    if (!w || w->deleteScheduled) {
         return;
     }
-    SavePropertiesWindowPos(w, ev->e->hwnd);
-    gPropertiesWindows.Remove(w);
+    if (gPropertiesWindows.Find(w) >= 0) {
+        SavePropertiesWindowPos(w, ev->e->hwnd);
+        gPropertiesWindows.Remove(w);
+    }
     w->ScheduleDelete();
 }
 
