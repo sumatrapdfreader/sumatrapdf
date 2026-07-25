@@ -4034,15 +4034,15 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
 // returns false if no filter has been appended
 static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter) {
-    // TODO: use ctrl->GetDefaultFileExt()
     Kind type = nullptr;
     if (ctrl->AsFixed()) {
         type = ctrl->AsFixed()->engineType;
     } else if (ctrl->AsChm()) {
         type = kindEngineChm;
     }
-    // markdown has no engine kind; it falls through to the default filter below
-
+    // markdown has no engine kind; it falls through to the default filter below.
+    // Prefer GetDefaultFileExt() where it distinguishes formats (xps, epub, …);
+    // fall back to engine kind for the rest.
     auto ext = ctrl->GetDefaultFileExt();
     if (str::EqI(ext, ".xps")) {
         fileFilter.Append(_TRA("XPS documents"));
