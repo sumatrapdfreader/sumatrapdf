@@ -436,21 +436,17 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
         return text;
     }
 
-    // if user did change those colors in advanced settings, respect them
+    // Custom FixedPageUI colors: use them as recolor targets (no invert).
+    // DocumentColorsFollowTheme means "match the UI theme", not "swap black/white"
+    // — the old InvertColors path swapped here and forced white-on-black for the
+    // Light theme (#5821).
     bool userDidChange = text != kColBlack || bg != kColWhite;
     if (userDidChange) {
-        std::swap(text, bg);
         return text;
     }
 
-    // default colors
-    if (gCurrentTheme == gThemeLight) {
-        std::swap(text, bg);
-        return text;
-    }
-
-    // if we're inverting in non-default themes, the colors
-    // should match the colors of the window
+    // Defaults: page colors follow the window theme (light theme → dark text on
+    // light paper; dark theme → light text on dark paper).
     text = ThemeWindowTextColor();
     bg = ThemeMainWindowBackgroundColor();
 
