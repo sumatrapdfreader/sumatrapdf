@@ -37,13 +37,15 @@ Update this marker after every review pass.
 - G. EPUB progressive loading (full subsystem, not just post-review fixes)
 - B WordLookup (+ `35fb36269` ZH→Hans only with B)
 - Ebook annotations (`EbookAnnotations*`)
-- Markdown + Mermaid reader (`1c0601847`)
-- Pinned Home tab
 - Progressive search/ebook sync beyond master's stream-find
 
 **Skip:**
 - Version bumps, `update-check.txt`, branding (`L`)
 - `27de3e915` continuous theme selection — mostly debug `logf`
+- **Pinned Home tab** (Plus 3.7.11: always-present pinned Home tab when tabs on;
+  Ctrl+W on Home-only closes the window) — **not wanted**
+- **Markdown + Mermaid** (`1c0601847`): master already opens `.md` via MuPDF/cmark-gfm;
+  Plus swaps in md4c + offline Mermaid via WebView2 — **skip** (not wanted)
 
 ## Summary of fork changes, by feature
 
@@ -317,5 +319,7 @@ additions (we generate via premake).
 | 2026-07-26 | `3229c8b2c` selection toolbar jitter | **merged** | hide while selecting; slack + throttle position updates |
 | 2026-07-26 | `89e4edfed` text annot on selection toolbar | **merged** | `CmdCreateAnnotText` + selection-end LPARAM |
 | 2026-07-26 | `df1b2aab8` annotation Contents save | **merged** | PDF path: FlushContentsFromEdit, null guards, EN_KILLFOCUS; skipped ebook annot files |
-| 2026-07-26 | G. EPUB progressive / B / C / md-mermaid / pinned-home | **defer** | product / large ports; WordLookup plan in dict-support.md |
+| 2026-07-26 | G. EPUB progressive / B / C | **defer** | product / large ports; WordLookup plan in dict-support.md |
+| 2026-07-26 | Pinned Home tab (Plus 3.7.11) | **skip / not wanted** | permanent pinned Home tab when all docs closed; keep master's no-tabs-empty home view |
+| 2026-07-26 | Markdown + Mermaid (`1c0601847`) | **skip** | master already has MD via cmark-gfm; md4c + Mermaid/WebView2 not wanted |
 | 2026-07-26 | `27de3e915` continuous theme scroll | **skip** | commit is mostly logf |
