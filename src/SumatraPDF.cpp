@@ -6037,8 +6037,6 @@ void ExitFullScreen(MainWindow* win) {
     uint flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
     MoveWindow(win->hwndFrame, win->nonFullScreenFrameRect);
-    // TODO: this ReportIf() fires in pre-release e.g. 64011
-    // ReportIf(WindowRect(win.hwndFrame) != win.nonFullScreenFrameRect);
     // We have to relayout here, because it isn't done in the SetWindowPos nor MoveWindow,
     // if the client rectangle hasn't changed.
     if (ClientRect(win->hwndFrame) == cr) {
