@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
+#include "base/UITask.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
@@ -387,13 +388,56 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
-// TODO: this should be OnDestroy()
+// Delete off the stack of WM_CLOSE / WM_DESTROY (same pattern as
+// AdvancedSettingsDialog / CommandPalette). Destroying the window while
+// handling its own message is unsafe; uitask runs after the current
+// dispatch finishes.
+static void SafeDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
+    if (!w) {
+        return;
+    }
+    HWND toActivate = nullptr;
+    if (w->tab && w->tab->win) {
+        toActivate = w->tab->win->hwndFrame;
+    }
+    if (w->tab && w->tab->editAnnotsWindow == w) {
+        w->tab->editAnnotsWindow = nullptr;
+    }
+    delete w;
+    if (toActivate) {
+        SetActiveWindow(toActivate);
+    }
+}
+
+static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
+    if (!w) {
+        return;
+    }
+    // Clear the tab pointer immediately so re-open and other paths do not
+    // touch a window that is about to be deleted.
+    if (w->tab && w->tab->editAnnotsWindow == w) {
+        w->tab->editAnnotsWindow = nullptr;
+    }
+    auto fn = MkFunc0(SafeDeleteEditAnnotationsWindow, w);
+    uitask::Post(fn, "SafeDeleteEditAnnotationsWindow");
+}
+
+// CloseEvent::didHandle defaults to true, so the framework skips its default
+// Destroy(); we own teardown via the scheduled delete (which runs ~Wnd and
+// DestroyWindow).
 static void OnClose(Wnd::CloseEvent* ev) {
     auto w = (EditAnnotationsWindow*)ev->e->self;
-    HWND toActivate = w->tab->win->hwndFrame;
-    w->tab->editAnnotsWindow = nullptr;
-    delete w; // TODO: sketchy
-    SetActiveWindow(toActivate);
+    ScheduleDeleteEditAnnotationsWindow(w);
+}
+
+// CloseAndDeleteEditAnnotationsWindow already nulls the tab pointer and
+// deletes; only schedule if this is an unexpected destroy with the pointer
+// still set.
+static void OnDestroy(Wnd::DestroyEvent* ev) {
+    auto w = (EditAnnotationsWindow*)ev->e->self;
+    if (w->tab && w->tab->editAnnotsWindow == w) {
+        ScheduleDeleteEditAnnotationsWindow(w);
+    }
 }
 
 void EditAnnotationsWindow::OnFocus() {
@@ -1639,6 +1683,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     }
     ew = new EditAnnotationsWindow();
     ew->onClose = MkFunc1Void(OnClose);
+    ew->onDestroy = MkFunc1Void(OnDestroy);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
