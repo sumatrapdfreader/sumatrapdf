@@ -73,7 +73,7 @@ static SeqStrings gArgNames =
 // @gen-end flags
 
 #if OS_WIN
-void ShowPrintersDialog() {
+void ShowPrintersDialog(bool consoleOnly) {
     str::Builder out;
 
     gLogToConsole = true;
@@ -84,7 +84,20 @@ void ShowPrintersDialog() {
 
     gLogToConsole = false;
 #ifndef SUMATRA_TEST_UTIL
-    ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), ToStr(out));
+    // CLI (-list-printers with -console/-silent, or stdout already a console):
+    // print only. Otherwise show the text dialog (e.g. CmdListPrinters).
+    if (!consoleOnly) {
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD mode = 0;
+        if (hOut && hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &mode)) {
+            consoleOnly = true;
+        }
+    }
+    if (!consoleOnly) {
+        ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), ToStr(out));
+    }
+#else
+    (void)consoleOnly;
 #endif
 }
 #else
@@ -96,7 +109,7 @@ static TempStr ResolveLnkTemp(Str path) {
     return str::DupTemp(path);
 }
 
-void ShowPrintersDialog() {}
+void ShowPrintersDialog(bool) {}
 #endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
@@ -533,10 +546,11 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if ((arg == Arg::ArgEnumPrinters) || (arg == Arg::ListPrinters)) {
-            // defer UI until after SetCurrentLang() so _TRA resolves (issue #5697)
+            // defer UI until after SetCurrentLang() so _TRA resolves (issue #5697).
+            // Do not return early: later flags like -console / -silent must still apply.
             i.showPrintersDialog = true;
             i.exitImmediately = true;
-            return;
+            continue;
         }
         param = args.EatParam();
         // following args require at least one param

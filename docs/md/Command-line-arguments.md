@@ -101,7 +101,7 @@ With multiple files, the exit code is `0` only if all printed; otherwise it's th
 ## Developer options
 
 - `-console` : Opens a console window alongside SumatraPDF for accessing (MuPDF) debug output.
-- `-list-printers` : prints installed printers, default settings, paper sizes and input trays, then exits. This is useful when choosing `-print-to`, `paper=`, `paperkind=` or `bin=` values for command-line printing.
+- `-list-printers` : prints installed printers, default settings, paper sizes and input trays, then exits. This is useful when choosing `-print-to`, `paper=`, `paperkind=` or `bin=` values for command-line printing. With `-console` or `-silent`, output goes only to the console (no dialog window).
 - `-stress-test <path> [file-filter] [range] [cycle-count]`
   : Renders all pages of the indicated file/directory for stability and performance testing. E.g.:
 

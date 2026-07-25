@@ -2112,7 +2112,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
     if (flags.showPrintersDialog) {
-        ShowPrintersDialog();
+        // -console / -silent: list to stdout only, no dialog window (#5810)
+        ShowPrintersDialog(flags.silent || flags.showConsole);
         goto Exit;
     }
     FileWatcherInit();
