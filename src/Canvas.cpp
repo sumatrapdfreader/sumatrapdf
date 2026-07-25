@@ -2221,10 +2221,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     // (when a find match is the current selection it's cleared in GoToFindMatch
     // so it isn't drawn twice; PaintAllFindMatches no-ops unless actively
     // searching). Using "else if" here hid the normal selection highlight
-    // because gShowAllMatches defaults to true (issue #5737).
-    if (gShowAllMatches) {
-        PaintAllFindMatches(win, hdc);
-    }
+    // when all-match painting was on (issue #5737).
+    PaintAllFindMatches(win, hdc);
     if (win->showSelection) {
         PaintSelection(win, hdc);
     }

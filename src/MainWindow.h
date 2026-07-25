@@ -390,7 +390,7 @@ struct MainWindow {
     bool findCountPendingMatchCase = false;
     bool findCountPendingMatchWholeWord = false;
     // per-match positions (and optional snippets for the floating results list);
-    // also built when gShowAllMatches paints all highlights (see SearchAndDDE.cpp)
+    // also used by PaintAllFindMatches to highlight every find hit (see SearchAndDDE.cpp)
     Vec<FindMatch> findMatches;
     bool findCountHasSnippets = false;
 

@@ -243,18 +243,14 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
 }
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
-#if 0
-    // TODO: shouldn't happen but seen in crash report
+    // Seen null in crash reports (window/tab closed while edit UI still fires)
     if (!ew || !ew->tab) {
         return nullptr;
     }
-#endif
     DisplayModel* dm = ew->tab->AsFixed();
-#if 0
     if (!dm) {
         return nullptr;
     }
-#endif
     return AsEngineMupdf(dm->GetEngine());
 }
 

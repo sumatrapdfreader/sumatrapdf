@@ -38,9 +38,6 @@
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
-// TODO: expose as a setting; default true for testing
-bool gShowAllMatches = true;
-
 // Chrome-style orange for the non-active find matches. The active (current)
 // match uses the user-customizable FixedPageUI.SelectionColor instead, so it
 // stands out with the color the user finds most noticeable (issue #5740).
@@ -1046,10 +1043,10 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     }
 
     engine->AddRef(); // released in CountThread
-    // build per-match snippets only when the floating results list is showing;
-    // also build the match list (without snippets) when painting all highlights
+    // always build the match list so PaintAllFindMatches can highlight every hit;
+    // snippets only when the floating results list is showing
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
-    bool wantMatchList = wantSnippets || gShowAllMatches;
+    bool wantMatchList = true;
     LONG epoch = InterlockedIncrement(&win->findCountEpoch);
     int startPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
     auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, startPage,
@@ -1066,7 +1063,7 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
-    bool wantMatchList = wantSnippets || gShowAllMatches;
+    bool wantMatchList = true;
     bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
                     win->findCountMatchCase == win->findMatchCase &&
                     win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
@@ -1419,7 +1416,7 @@ static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextS
 }
 
 void PaintAllFindMatches(MainWindow* win, HDC hdc) {
-    if (!gShowAllMatches || !win->IsDocLoaded() || !win->AsFixed()) {
+    if (!win->IsDocLoaded() || !win->AsFixed()) {
         return;
     }
     if (!IsFindUIVisible(win)) {

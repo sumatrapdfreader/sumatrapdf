@@ -647,7 +647,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    if (WM_LBUTTONUP) {
+    if (WM_LBUTTONUP == msg) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (!noClose && NotificationCloseHitTest(hwnd, rClose, pt)) {
             // TODO a better way to delete myself

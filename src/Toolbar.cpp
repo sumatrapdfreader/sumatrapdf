@@ -1311,7 +1311,11 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     HBITMAP hbmp = BuildIconsBitmap(dx, dx, customSvgs, customCount);
     ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
-    SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    // Replace (and free) the previous list so theme / size changes do not leak
+    HIMAGELIST oldHiml = (HIMAGELIST)SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    if (oldHiml) {
+        ImageList_Destroy(oldHiml);
+    }
     return iconSize;
 }
 

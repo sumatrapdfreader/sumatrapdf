@@ -2357,7 +2357,6 @@ void UpdateAfterThemeChange() {
 
         UpdateControlsColors(win);
         RebuildMenuBarForWindow(win);
-        // TODO: probably leaking toolbar image list
         UpdateToolbarAfterThemeChange(win);
         RecreateFindBar(win);
         UpdateFindWindowTheme(win);
@@ -6293,8 +6292,8 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         args->content = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
     }
 
-    int nCreated = 0;
     Annotation* annot = nullptr;
+    Vec<Annotation*> created;
     for (auto pageNo : pageNos) {
         Vec<RectF> rects;
         for (auto& sel : *s) {
@@ -6305,11 +6304,16 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         }
         annot = EngineMupdfCreateAnnotation(engine, pageNo, PointF{}, args);
         if (!annot) {
-            // TODO: leaking if created annots before
+            // Roll back annots created earlier in this call so we do not leave
+            // partial multi-page selections as untracked annotations.
+            for (Annotation* a : created) {
+                DeleteAnnotation(a);
+            }
             return nullptr;
         }
         SetQuadPointsAsRect(annot, rects);
         annot->bounds = GetBounds(annot);
+        created.Append(annot);
     }
     UpdateAnnotationsList(tab->editAnnotsWindow);
 
