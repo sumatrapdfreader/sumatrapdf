@@ -1799,19 +1799,61 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     return next;
 }
 
+// Parse a DDE quoted string starting at off (content after the opening ").
+// Stops at an unescaped "; treats "" as a literal quote. Sets *endOff past
+// the closing quote. Returns false on missing closing quote.
+static bool ParseDdeQuoted(Str cmd, int off, TempStr* out, int* endOff) {
+    str::Builder b;
+    int i = off;
+    while (i < cmd.len) {
+        char c = cmd.s[i];
+        if (c == '"') {
+            if (i + 1 < cmd.len && cmd.s[i + 1] == '"') {
+                b.AppendChar('"');
+                i += 2;
+                continue;
+            }
+            *endOff = i + 1;
+            *out = ToStrTemp(b);
+            return true;
+        }
+        b.AppendChar(c);
+        i++;
+    }
+    return false;
+}
+
 /*
 Search DDE command
 
 [Search("<pdffile>","<search-term>")]
+Quotes inside the term/path are escaped as "" (standard DDE-style).
 */
 static Str HandleSearchCmd(Str cmd, bool* ack) {
-    TempStr pdfFile;
-    TempStr term;
-    Str next = str::Parse(cmd, "[Search(\"%s\",\"%s\")]", &pdfFile, &term);
-    // TODO: should un-quote text to allow searching text with '"' in them
-    if (str::IsNull(next)) {
+    // Manual parse so search terms may contain " via "" escapes; str::Parse
+    // stops at the first " and cannot express that.
+    Str kPrefix = StrL("[Search(\"");
+    if (!str::StartsWith(cmd, kPrefix)) {
         return {};
     }
+    int endFile = 0;
+    TempStr pdfFile;
+    if (!ParseDdeQuoted(cmd, kPrefix.len, &pdfFile, &endFile)) {
+        return {};
+    }
+    // expect "," after the closing quote of the path
+    if (endFile >= cmd.len || cmd.s[endFile] != ',' || endFile + 1 >= cmd.len || cmd.s[endFile + 1] != '"') {
+        return {};
+    }
+    int endTerm = 0;
+    TempStr term;
+    if (!ParseDdeQuoted(cmd, endFile + 2, &term, &endTerm)) {
+        return {};
+    }
+    if (endTerm >= cmd.len || cmd.s[endTerm] != ']') {
+        return {};
+    }
+    Str next = Str(cmd.s + endTerm + 1, cmd.len - endTerm - 1);
     if (len(term) == 0) {
         return next;
     }
