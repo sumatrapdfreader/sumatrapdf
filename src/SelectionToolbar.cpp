@@ -54,7 +54,7 @@ struct SelectionToolbar {
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
     DWORD tryShowBlockedUntil = 0;
     DWORD lastPositionUpdateTick = 0;
-    SelectionToolbarButton buttons[8];
+    SelectionToolbarButton buttons[9];
     int nButtons = 0;
 };
 
@@ -68,6 +68,7 @@ static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdCreateAnnotUnderline, "Underline"},
     {CmdCreateAnnotSquiggly, "Squiggly"},
     {CmdCreateAnnotStrikeOut, "Strike Out"},
+    {CmdCreateAnnotText, "Text"},
 };
 
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
@@ -275,6 +276,23 @@ static int ButtonFromPoint(SelectionToolbar* tb, int x, int y) {
     return -1;
 }
 
+// Sticky-note (Text) annots are placed at a canvas point; use the selection end.
+// Ported from dengxibo/sumatrapdf-plus 89e4edfed.
+static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection || dm->textSelection->result.len <= 0) {
+        return false;
+    }
+    TextSel& result = dm->textSelection->result;
+    int i = result.len - 1;
+    Rect r = dm->CvtToScreen(result.pages[i], ToRectF(result.rects[i]));
+    if (r.IsEmpty()) {
+        return false;
+    }
+    out = Point(r.x + r.dx, r.y + r.dy / 2);
+    return true;
+}
+
 static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
     HWND hwnd = tb->hwnd;
     Rect rc = ClientRect(hwnd);
@@ -379,8 +397,16 @@ static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, 
             if (idx >= 0 && idx == pressed && tb->buttons[idx].enabled) {
                 int cmdId = tb->buttons[idx].cmdId;
                 MainWindow* win = tb->win;
+                LPARAM commandPoint = 0;
+                if (cmdId == CmdCreateAnnotText) {
+                    Point selectionEnd;
+                    if (GetSelectionEndPoint(win, selectionEnd)) {
+                        commandPoint = MAKELPARAM(selectionEnd.x, selectionEnd.y);
+                    }
+                    DeleteOldSelectionInfo(win, true);
+                }
                 HideSelectionToolbar(win);
-                HwndPostCommand(win->hwndFrame, cmdId);
+                HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
             }
             return 0;
         }
