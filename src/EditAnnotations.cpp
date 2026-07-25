@@ -1031,10 +1031,16 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         }
     }
 
-    // TODO: get from client size
-    auto currBounds = ew->mainLayout->lastBounds;
-    int dx = currBounds.dx;
-    int dy = currBounds.dy;
+    // Prefer the live client size so re-layout matches the window after resize;
+    // fall back to last layout bounds if the window is not sized yet.
+    Rect client = ClientRect(ew->hwnd);
+    int dx = client.dx;
+    int dy = client.dy;
+    if (dx <= 0 || dy <= 0) {
+        auto currBounds = ew->mainLayout->lastBounds;
+        dx = currBounds.dx;
+        dy = currBounds.dy;
+    }
     LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->hwnd);
 
     if (!annot) {
