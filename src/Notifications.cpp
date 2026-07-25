@@ -267,8 +267,6 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;
     cargs.font = args.font;
-    // TODO: was this important?
-    // wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
     cargs.exStyle = WS_EX_TOPMOST;
     cargs.style = WS_CHILD | SS_CENTER;
     cargs.title = args.msg;
