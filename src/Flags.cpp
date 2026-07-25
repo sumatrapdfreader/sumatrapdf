@@ -761,7 +761,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         args.RewindParam();
 
     CollectFile:
-        // TODO: resolve .lnk when opening file
+        // Resolve shell shortcuts so opening a .lnk loads the target document.
         Str filePath = argName;
         if (str::EndsWithI(filePath, ".lnk")) {
             filePath = ResolveLnkTemp(argName);
