@@ -217,14 +217,28 @@ export function clientToScreen(hwnd: number, x: number, y: number): { x: number;
   return { x: buf[0], y: buf[1] };
 }
 
-// read the current scroll position (nPos) of a window's scrollbar
-export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
+// full SCROLLINFO for a window scrollbar (SIF_ALL)
+export function getScrollInfo(
+  hwnd: number,
+  bar: number = SB_VERT,
+): { min: number; max: number; page: number; pos: number; trackPos: number } {
   const buf = new Uint8Array(28);
   const dv = new DataView(buf.buffer);
   dv.setUint32(0, 28, true); // cbSize
   dv.setUint32(4, SIF_ALL, true); // fMask
   user32.symbols.GetScrollInfo(hwnd, bar, ptr(buf));
-  return dv.getInt32(20, true); // nPos
+  return {
+    min: dv.getInt32(8, true), // nMin
+    max: dv.getInt32(12, true), // nMax
+    page: dv.getUint32(16, true), // nPage
+    pos: dv.getInt32(20, true), // nPos
+    trackPos: dv.getInt32(24, true), // nTrackPos
+  };
+}
+
+// read the current scroll position (nPos) of a window's scrollbar
+export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
+  return getScrollInfo(hwnd, bar).pos;
 }
 
 export function postMessage(hwnd: number, msg: number, wParam: number, lParam: number): boolean {
