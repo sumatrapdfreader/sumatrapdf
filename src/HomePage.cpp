@@ -813,10 +813,6 @@ static void OnPaintAbout(HWND hwnd) {
     EndPaint(hwnd, &ps);
 }
 
-static void OnSizeAbout(HWND hwnd) {
-    // TODO: do I need anything here?
-}
-
 static void CopyAboutInfoToClipboard() {
     str::Builder info(512);
     TempStr ver = GetAppVersionTemp();
@@ -900,10 +896,6 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_ERASEBKGND:
             // do nothing, helps to avoid flicker
             return TRUE;
-
-        case WM_SIZE:
-            OnSizeAbout(hwnd);
-            break;
 
         case WM_PAINT:
             OnPaintAbout(hwnd);
