@@ -1799,6 +1799,22 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     return next;
 }
 
+// Prefer the MainWindow that owns hwnd when it already has pdfFile open
+// (any tab); otherwise fall back to the global FindMainWindowByFile.
+static MainWindow* FindDdeTargetWindow(HWND hwnd, Str pdfFile, bool focusTab) {
+    MainWindow* prefer = FindMainWindowByHwnd(hwnd);
+    if (prefer) {
+        WindowTab* tab = FindTabByFile(pdfFile, prefer);
+        if (tab) {
+            if (focusTab) {
+                SelectTabInWindow(tab);
+            }
+            return prefer;
+        }
+    }
+    return FindMainWindowByFile(pdfFile, focusTab);
+}
+
 // Parse a DDE quoted string starting at off (content after the opening ").
 // Stops at an unescaped "; treats "" as a literal quote. Sets *endOff past
 // the closing quote. Returns false on missing closing quote.
@@ -1829,7 +1845,7 @@ Search DDE command
 [Search("<pdffile>","<search-term>")]
 Quotes inside the term/path are escaped as "" (standard DDE-style).
 */
-static Str HandleSearchCmd(Str cmd, bool* ack) {
+static Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     // Manual parse so search terms may contain " via "" escapes; str::Parse
     // stops at the first " and cannot express that.
     Str kPrefix = StrL("[Search(\"");
@@ -1857,10 +1873,7 @@ static Str HandleSearchCmd(Str cmd, bool* ack) {
     if (len(term) == 0) {
         return next;
     }
-    // check if the PDF is already opened
-    // TODO: prioritize window with HWND so that if we have the same file
-    // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
     }
@@ -1884,7 +1897,7 @@ Go to a page and select the search term, but only if it's found on that page
 
 [GotoPageWord("<pdffile>",<page>,"<search-term>")]
 */
-static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
+static Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr pdfFile;
     TempStr term;
     int page = 0;
@@ -1892,7 +1905,7 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     if (str::IsNull(next)) {
         return {};
     }
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
     }
@@ -2075,14 +2088,14 @@ DDE command: jump to named destination in an already opened document.
 e.g.:
 [GoToNamedDest("c:\file.pdf", "chapter.1")]
 */
-static Str HandleGotoCmd(Str cmd, bool* ack) {
+static Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr pdfFile, destName;
     Str next = str::Parse(cmd, "[GotoNamedDest(\"%s\",%? \"%s\")]", &pdfFile, &destName);
     if (str::IsNull(next)) {
         return {};
     }
 
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
     }
@@ -2106,7 +2119,7 @@ DDE command: jump to a page in an already opened document.
 
 eg: [GoToPage("c:\file.pdf",37)]
 */
-static Str HandlePageCmd(HWND, Str cmd, bool* ack) {
+static Str HandlePageCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr pdfFile;
     uint page = 0;
     Str next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
@@ -2114,10 +2127,7 @@ static Str HandlePageCmd(HWND, Str cmd, bool* ack) {
         return {};
     }
 
-    // check if the PDF is already opened
-    // TODO: prioritize window with HWND so that if we have the same file
-    // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
     }
@@ -2147,7 +2157,7 @@ eg: [SetView("c:\file.pdf", "book view", -2)]
 
 use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
 */
-static Str HandleSetViewCmd(Str cmd, bool* ack) {
+static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr filePath, viewMode;
     float zoom = kInvalidZoom;
     Point scroll(-1, -1);
@@ -2160,7 +2170,7 @@ static Str HandleSetViewCmd(Str cmd, bool* ack) {
         return {};
     }
 
-    MainWindow* win = FindMainWindowByFile(filePath, true);
+    MainWindow* win = FindDdeTargetWindow(hwnd, filePath, true);
     if (!win) {
         return next;
     }
@@ -2415,19 +2425,19 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
             nextCmd = HandleOpenCmd(cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
-            nextCmd = HandleGotoCmd(cmd, &didHandle);
+            nextCmd = HandleGotoCmd(hwnd, cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
             nextCmd = HandlePageCmd(hwnd, cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
-            nextCmd = HandleSetViewCmd(cmd, &didHandle);
+            nextCmd = HandleSetViewCmd(hwnd, cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
-            nextCmd = HandleSearchCmd(cmd, &didHandle);
+            nextCmd = HandleSearchCmd(hwnd, cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
-            nextCmd = HandleGotoPageWordCmd(cmd, &didHandle);
+            nextCmd = HandleGotoPageWordCmd(hwnd, cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
             nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);
