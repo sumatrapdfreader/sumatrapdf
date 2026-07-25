@@ -610,10 +610,22 @@ static void RememberSessionState() {
             FreeSessionData(windowState);
             continue;
         }
-        windowState->tabIndex = win->GetTabIdx(win->CurrentTab()) + 1;
-        if (windowState->tabIndex < 0) {
-            windowState->tabIndex = 0;
+        // 1-based index among document tabs only (home / about tab is omitted
+        // from TabStates above). Using the UI tab index would mis-restore when
+        // the home tab was closed at save time but recreated on the next start.
+        int docOrdinal = 0;
+        int selectedDocOrdinal = 1;
+        WindowTab* cur = win->CurrentTab();
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+                continue;
+            }
+            docOrdinal++;
+            if (tab == cur) {
+                selectedDocOrdinal = docOrdinal;
+            }
         }
+        windowState->tabIndex = selectedDocOrdinal;
         // TODO: allow recording this state without changing gGlobalPrefs
         RememberDefaultWindowPosition(win);
         windowState->windowState = gGlobalPrefs->windowState;

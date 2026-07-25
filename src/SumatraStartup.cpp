@@ -2278,12 +2278,51 @@ ContinueOpenWindow:
                 }
                 RestoreTabOnStartup(win, state, gGlobalPrefs->lazyLoading);
             }
-            TabsSelect(win, data->tabIndex - 1);
+            // TabIndex is 1-based among document tabs (home tab is not in TabStates).
+            // Also accept legacy sessions that stored a UI index including home.
+            {
+                auto tabs = win->Tabs();
+                int nTabs = len(tabs);
+                int selectIdx = 0;
+                int want = data->tabIndex; // 1-based
+                int docOrdinal = 0;
+                int firstDocIdx = -1;
+                int matchDocIdx = -1;
+                for (int i = 0; i < nTabs; i++) {
+                    if (tabs[i]->IsAboutTab()) {
+                        continue;
+                    }
+                    if (firstDocIdx < 0) {
+                        firstDocIdx = i;
+                    }
+                    docOrdinal++;
+                    if (docOrdinal == want) {
+                        matchDocIdx = i;
+                    }
+                }
+                if (matchDocIdx >= 0) {
+                    selectIdx = matchDocIdx;
+                } else if (want >= 1 && want <= nTabs && !tabs[want - 1]->IsAboutTab()) {
+                    // legacy: UI index including home
+                    selectIdx = want - 1;
+                } else if (firstDocIdx >= 0) {
+                    selectIdx = firstDocIdx;
+                }
+                TabsSelect(win, selectIdx);
+            }
             if (gGlobalPrefs->lazyLoading) {
                 // trigger loading of the document
                 ReloadDocument(win, false);
             }
             ShowMainWindow(win, data->windowState);
+            // Docs were loaded while the frame was hidden (normal windowPos size).
+            // After show / maximize / fullscreen, force DisplayModel to match the
+            // final canvas so scroll isn't stuck on the pre-show viewport
+            // (related to #5753 / #5823).
+            if (win->IsDocLoaded()) {
+                win->canvasRc = {};
+                win->UpdateCanvasSize();
+            }
         }
     }
 
