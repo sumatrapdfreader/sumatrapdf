@@ -1087,10 +1087,80 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     str::Free(data);
 }
 
+// Pick a file and embed its contents into the selected FileAttachment annot.
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
-    ReportIf(!ew->tab->selectedAnnotation);
-    // TODO: implement me
-    MsgBox(ew->hwnd, _TRA("Not Yet Implemented!"), _TRA("NYI"), MB_OK | MB_ICONEXCLAMATION);
+    Annotation* annot = ew->tab ? ew->tab->selectedAnnotation : nullptr;
+    ReportIf(!annot);
+    if (!annot || annot->type != AnnotationType::FileAttachment) {
+        return;
+    }
+    if (!CanAccessDisk()) {
+        return;
+    }
+    EngineMupdf* engine = GetEngineMupdf(ew);
+    if (!engine || !engine->pdfdoc || !annot->pdfannot) {
+        return;
+    }
+
+    WCHAR pathW[MAX_PATH + 1]{};
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = ew->hwnd;
+    ofn.lpstrFile = pathW;
+    ofn.nMaxFile = dimof(pathW);
+    TempStr fileFilterA = fmt("%s\1*.*\1", _TRA("All files"));
+    TempWStr fileFilter = ToWStrTemp(fileFilterA);
+    wstr::TransCharsInPlace(fileFilter, WStrL(L"\1"), WStrL(L"\0"));
+    ofn.lpstrFilter = fileFilter.s;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+
+    TempStr path = ToUtf8Temp(pathW);
+    Str data = file::ReadFile(path);
+    if (len(data) == 0) {
+        TempStr msg = fmt(_TRA("Failed to read '%s'").s, path::GetBaseNameTemp(path));
+        MsgBox(ew->hwnd, msg, _TRA("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    TempStr baseName = path::GetBaseNameTemp(path);
+    TempStr baseNameZ = str::DupTemp(baseName);
+    fz_context* ctx = engine->Ctx();
+    bool ok = false;
+    {
+        ScopedRecursiveMutex cs(&engine->docLock);
+        pdf_obj* fs = nullptr;
+        fz_buffer* contents = nullptr;
+        fz_var(fs);
+        fz_var(contents);
+        fz_try(ctx) {
+            contents = fz_new_buffer_from_copied_data(ctx, (const u8*)data.s, (size_t)data.len);
+            // created/modified unknown (-1); no checksum (matches mupdf gl-annotate)
+            fs = pdf_add_embedded_file(ctx, engine->pdfdoc, baseNameZ.s, nullptr, contents, -1, -1, 0);
+            pdf_set_annot_filespec(ctx, annot->pdfannot, fs);
+            pdf_update_annot(ctx, annot->pdfannot);
+            ok = true;
+        }
+        fz_always(ctx) {
+            pdf_drop_obj(ctx, fs);
+            fz_drop_buffer(ctx, contents);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            ok = false;
+        }
+    }
+    str::Free(data);
+
+    if (!ok) {
+        MsgBox(ew->hwnd, _TRA("Failed to embed file"), _TRA("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+    MarkNotificationAsModified(engine, annot);
+    EnableSaveIfAnnotationsChanged(ew);
 }
 
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAnnotFocus focus) {

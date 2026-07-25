@@ -42,7 +42,9 @@ EXPORTS
 	fz_lookup_metadata
 	pdf_get_filespec_params
 	pdf_load_embedded_file_contents
+	pdf_add_embedded_file
 	pdf_annot_filespec
+	pdf_set_annot_filespec
 	pdf_drop_annot
 	pdf_is_filespec
 	pdf_set_annot_border_width
