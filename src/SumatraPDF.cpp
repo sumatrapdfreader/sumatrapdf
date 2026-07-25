@@ -12,6 +12,7 @@
 #include "base/SquareTreeParser.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "base/ScopedWin.h"
 #include "base/GdiPlus.h"
 #include "base/Archive.h"
 #include "base/Timer.h"
@@ -4458,36 +4459,6 @@ static void CreateLnkShortcut(MainWindow* win) {
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
 
-#if 0
-// code adapted from https://support.microsoft.com/kb/131462/en-us
-static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM lp)
-{
-    switch (uiMsg) {
-    case WM_INITDIALOG:
-        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lp);
-        break;
-    case WM_NOTIFY:
-        if (((LPOFNOTIFY)lp)->hdr.code == CDN_SELCHANGE) {
-            LPOPENFILENAME lpofn = (LPOPENFILENAME)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-            // make sure that the filename buffer is large enough to hold
-            // all the selected filenames
-            int cbLength = CommDlg_OpenSave_GetSpec(GetParent(hDlg), nullptr, 0) + MAX_PATH;
-            if (cbLength >= 0 && lpofn->nMaxFile < (DWORD)cbLength) {
-                WCHAR* oldBuffer = lpofn->lpstrFile;
-                lpofn->lpstrFile = (LPWSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(WCHAR));
-                if (lpofn->lpstrFile)
-                    lpofn->nMaxFile = cbLength;
-                else
-                    lpofn->lpstrFile = oldBuffer;
-            }
-        }
-        break;
-    }
-
-    return 0;
-}
-#endif
-
 static TabState* NewTabStateFromTab(WindowTab* tab) {
     if (!tab || !tab->ctrl || !tab->filePath) {
         return nullptr;
@@ -4583,28 +4554,37 @@ static void DuplicateInNewTab(MainWindow* win) {
     }
 }
 
-static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
-    WCHAR* dir = ofn->lpstrFile;
-    WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
-    // only a single file, full path
-    TempStr path;
-    if (file[-1] != 0) {
-        path = ToUtf8Temp(dir);
-        filesOut.Append(path);
-        return;
-    }
-    // the layout of lpstrFile is:
-    // <dir> 0 <file1> 0 <file2> 0 0
-    while (*file) {
-        path = ToUtf8Temp(path::JoinTemp(dir, file));
-        filesOut.Append(path);
-        file += len(file) + 1;
-    }
-}
+// File-type filters for IFileOpenDialog. Heap-owned wide strings stay alive
+// for the whole Show() call (modal dialog pumps messages / temp arena).
+struct OpenFileFilterList {
+    Vec<WStr> names;
+    Vec<WStr> patterns;
+    Vec<COMDLG_FILTERSPEC> specs;
 
-static TempWStr GetFileFilterTemp() {
+    ~OpenFileFilterList() {
+        for (int i = 0; i < len(names); i++) {
+            wstr::Free(names[i]);
+        }
+        for (int i = 0; i < len(patterns); i++) {
+            wstr::Free(patterns[i]);
+        }
+    }
+
+    void Add(Str name, Str pattern) {
+        WStr nw = ToWStr(name);
+        WStr pw = ToWStr(pattern);
+        names.Append(nw);
+        patterns.Append(pw);
+        COMDLG_FILTERSPEC s{};
+        s.pszName = nw.s;
+        s.pszSpec = pw.s;
+        specs.Append(s);
+    }
+};
+
+static void BuildOpenFileFilters(OpenFileFilterList& out) {
     const struct {
-        Str name; /* empty if only to include in "All supported documents" */
+        Str name;
         Str filter;
         bool available;
     } fileFormats[] = {
@@ -4626,33 +4606,24 @@ static TempWStr GetFileFilterTemp() {
          true},
         {_TRA("Text documents"), "*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr", true},
     };
-    // Prepare the file filters (use \1 instead of \0 so that the
-    // double-zero terminated string isn't cut by the string handling
-    // methods too early on)
-    str::Builder fileFilter;
-    fileFilter.Append(_TRA("All supported documents"));
-    fileFilter.AppendChar('\1');
+
+    str::Builder allPat;
     for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available) {
-            fileFilter.Append(fileFormats[i].filter);
-            fileFilter.AppendChar(';');
+        if (!fileFormats[i].available) {
+            continue;
         }
+        if (!allPat.IsEmpty()) {
+            allPat.AppendChar(';');
+        }
+        allPat.Append(fileFormats[i].filter);
     }
-    ReportIf(fileFilter.LastChar() != ';');
-    fileFilter.Last() = '\1';
+    out.Add(_TRA("All supported documents"), ToStr(allPat));
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available && fileFormats[i].name) {
-            fileFilter.Append(fileFormats[i].name);
-            fileFilter.AppendChar('\1');
-            fileFilter.Append(fileFormats[i].filter);
-            fileFilter.AppendChar('\1');
+            out.Add(fileFormats[i].name, fileFormats[i].filter);
         }
     }
-    fileFilter.Append(_TRA("All files"));
-    fileFilter.Append("\1*.*\1");
-    Str fileFilterStr = ToStr(fileFilter);
-    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
-    return ToWStrTemp(fileFilterStr);
+    out.Add(_TRA("All files"), StrL("*.*"));
 }
 
 static void OpenFile(MainWindow* win) {
@@ -4665,40 +4636,60 @@ static void OpenFile(MainWindow* win) {
         return;
     }
 
-    OPENFILENAMEW ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = win->hwndFrame;
-
-    ofn.lpstrFilter = GetFileFilterTemp().s;
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
-
-    // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
-    // and later, so don't use it and just allocate enough memory to contain
-    // several dozen file paths and hope that this is enough
-    // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
-    ofn.nMaxFile = MAX_PATH * 100;
-    // the `false &&` disable is deliberate; silence /analyze C6237
-#pragma warning(suppress : 6237)
-    if (false && !IsWindowsVistaOrGreater()) {
-#if 0
-        ofn.lpfnHook = FileOpenHook;
-        ofn.Flags |= OFN_ENABLEHOOK;
-        ofn.nMaxFile = MAX_PATH / 2;
-#endif
-    }
-    // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
-
-    TempWStr file = AllocArrayTemp<WCHAR>(ofn.nMaxFile);
-    ofn.lpstrFile = file.s;
-
-    if (!GetOpenFileNameW(&ofn)) {
+    ScopedComPtr<IFileOpenDialog> dlg;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg));
+    if (FAILED(hr) || !dlg) {
+        logf("OpenFile: CoCreateInstance(CLSID_FileOpenDialog) failed: 0x%x\n", (uint)hr);
         return;
     }
 
-    StrVec files;
-    GetFilesFromGetOpenFileName(&ofn, files);
-    for (Str path : files) {
+    DWORD opts = 0;
+    dlg->GetOptions(&opts);
+    dlg->SetOptions(opts | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST | FOS_ALLOWMULTISELECT);
+
+    OpenFileFilterList filters;
+    BuildOpenFileFilters(filters);
+    ReportIf(len(filters.specs) == 0);
+    dlg->SetFileTypes((UINT)len(filters.specs), filters.specs.LendData());
+    dlg->SetFileTypeIndex(1); // "All supported documents" (1-based)
+
+    hr = dlg->Show(win->hwndFrame);
+    if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+        return;
+    }
+    if (FAILED(hr)) {
+        logf("OpenFile: IFileOpenDialog::Show failed: 0x%x\n", (uint)hr);
+        return;
+    }
+
+    ScopedComPtr<IShellItemArray> results;
+    hr = dlg->GetResults(&results);
+    if (FAILED(hr) || !results) {
+        return;
+    }
+
+    DWORD count = 0;
+    hr = results->GetCount(&count);
+    if (FAILED(hr) || count == 0) {
+        return;
+    }
+
+    for (DWORD i = 0; i < count; i++) {
+        ScopedComPtr<IShellItem> item;
+        hr = results->GetItemAt(i, &item);
+        if (FAILED(hr) || !item) {
+            continue;
+        }
+        PWSTR pathW = nullptr;
+        hr = item->GetDisplayName(SIGDN_FILESYSPATH, &pathW);
+        if (FAILED(hr) || !pathW) {
+            continue;
+        }
+        TempStr path = ToUtf8Temp(WStr(pathW));
+        CoTaskMemFree(pathW);
+        if (len(path) == 0) {
+            continue;
+        }
         LoadArgs args(path, win);
         args.activateExisting = true;
         args.activateExistingInWindow = true;
