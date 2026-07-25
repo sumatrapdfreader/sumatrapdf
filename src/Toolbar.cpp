@@ -267,9 +267,24 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return NeedsFindUI(win) || IsBrowserDocController(win->ctrl);
 
         case CmdFindNext:
-        case CmdFindPrev:
-            // TODO: Update on whether there's more to find, not just on whether there is text.
-            return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
+        case CmdFindPrev: {
+            // Need non-empty find text (hwndFindEdit is the active bar or floating window edit).
+            if (!win->hwndFindEdit || HwndGetTextLen(win->hwndFindEdit) == 0) {
+                return false;
+            }
+            // When we already know there are zero matches, disable next/prev.
+            // Unknown count (scan pending / not started) still allows searching.
+            if (win->ctrl && win->ctrl->CanFindInPage()) {
+                if (win->browserFindTotal == 0) {
+                    return false;
+                }
+                return true;
+            }
+            if (win->findCountValid && len(win->findCountPositions) == 0) {
+                return false;
+            }
+            return true;
+        }
 
         case CmdGoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();

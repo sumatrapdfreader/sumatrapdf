@@ -193,6 +193,8 @@ void BrowserFindAllResultReceived(MainWindow* win, Str payload) {
     win->browserFindTotal = total;
     win->findCountHasSnippets = true;
     BrowserFindUpdateStatus(win, md, win->browserFindPageCurrent, total); // also refreshes the results list
+    // Enable/disable Find Next/Prev once we know whether any matches exist.
+    ToolbarUpdateStateForWindow(win, false);
 }
 
 // jump to the idxInPage-th match on pageNo: directly if that page is showing,
@@ -830,6 +832,8 @@ static void CountEndTask(CountEndTaskData* d) {
         }
         InvalidateFindMatchPaintCache();
         ShowMatchCount(win);
+        // Enable/disable Find Next/Prev once we know whether any matches exist.
+        ToolbarUpdateStateForWindow(win, false);
         ScheduleRepaint(win, 0);
     }
     // a newer term arrived while we were scanning: run it now (no worker running)
