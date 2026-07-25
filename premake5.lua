@@ -71,6 +71,20 @@ newoption {
 
 include("premake5.files.lua")
 
+-- MSVC runs per-file CustomBuild (our NASM .asm steps) sequentially unless the
+-- item has BuildInParallel=true. With that metadata set, Microsoft.CppCommon.targets
+-- uses ParallelCustomBuild (same idea as /MP for ClCompile). Harmless for projects
+-- that have no CustomBuild items.
+require("vstudio")
+premake.override(premake.vstudio.vc2010.elements, "itemDefinitionGroup", function(base, cfg)
+  local calls = base(cfg)
+  table.insert(calls, function(_cfg)
+    premake.push("<CustomBuild>")
+    premake.w("<BuildInParallel>true</BuildInParallel>")
+    premake.pop("</CustomBuild>")
+  end)
+  return calls
+end)
 
 -- this is meant to make the binary win7 compatible but
 -- does't seem to work
