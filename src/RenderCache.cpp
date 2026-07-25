@@ -216,8 +216,12 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     cache[idx] = nullptr;
     int lastIdx = cacheCount - 1;
     if ((lastIdx >= 0) && (idx != lastIdx)) {
-        cache[idx] = cache[lastIdx];
-        cache[idx]->cacheIdx = idx;
+        BitmapCacheEntry* moved = cache[lastIdx];
+        ReportIf(!moved);
+        if (moved) {
+            moved->cacheIdx = idx;
+            cache[idx] = moved;
+        }
         cache[lastIdx] = nullptr;
     }
     cacheCount--;
@@ -284,6 +288,11 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     bool hasSpace = FreeIfFull(this, req);
     ReportIf(!hasSpace); // TODO: FreeIfFull() might actually fail to free
     ReportIf(cacheCount > MAX_BITMAPS_CACHED);
+    if (!hasSpace || cacheCount >= MAX_BITMAPS_CACHED) {
+        // Cannot grow past the fixed cache[]; drop this bitmap rather than overrun.
+        FreePixmap(bmp);
+        return;
+    }
 
     // Copy the PageRenderRequest as it will be reused
     auto entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
@@ -781,17 +790,15 @@ int RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile)
 bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
     ScopedRecursiveMutex scope(&requestAccess);
 
-    if (requestCount == 0) {
+    if (requestCount <= 0 || requestCount > MAX_PAGE_REQUESTS) {
         return false;
     }
 
-    ReportIf(requestCount < 0);
-    ReportIf(requestCount > MAX_PAGE_REQUESTS);
-    requestCount--;
-    *req = requests[requestCount];
+    int idx = requestCount - 1;
+    requestCount = idx;
+    *req = requests[idx];
     req->darkModeEpoch = darkModeEpoch;
     curReqs[threadIdx] = req;
-    ReportIf(requestCount < 0);
     ReportIf(req->abort);
 
     UpdateRenderInfo();

@@ -799,6 +799,9 @@ static StrNode* AllocStrNode(Str s) {
     size_t n = (size_t)s.len + 1;
     size_t cbAlloc = sizeof(StrNode) + n;
     auto* node = (StrNode*)malloc(cbAlloc);
+    if (!node) {
+        return nullptr;
+    }
     u8* dst = (u8*)node + sizeof(StrNode);
     memcpy(dst, s.s, s.len);
     dst[s.len] = 0;
@@ -815,7 +818,9 @@ void MaybeDelayedWarningNotification(Str msg) {
         ShowWarningNotification(hwnd, msg, kNotifNoTimeout);
     } else {
         StrNode* node = AllocStrNode(msg);
-        ListInsertFront(&gDelayedNotifications, node);
+        if (node) {
+            ListInsertFront(&gDelayedNotifications, node);
+        }
     }
 }
 

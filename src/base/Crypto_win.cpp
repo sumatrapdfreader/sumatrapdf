@@ -22,13 +22,17 @@ static NO_INLINE void CalcDigestWin(Str d, u8* digest, DWORD digestSize, const W
     ok = CryptCreateHash(hProv, alg, 0, 0, &hHash);
     ReportIf(!ok);
 
-#ifdef _WIN64
-    for (; dataSize > DWORD_MAX; data = (const BYTE*)data + DWORD_MAX, dataSize -= DWORD_MAX) {
-        ok = CryptHashData(hHash, (const BYTE*)data, DWORD_MAX, 0);
+    // Hash in DWORD-sized chunks when the payload is larger than DWORD_MAX
+    // (only possible with size_t-sized lengths; our API uses int).
+    const BYTE* p = (const BYTE*)data;
+    size_t remaining = (size_t)(dataSize < 0 ? 0 : dataSize);
+    while (remaining > (size_t)DWORD_MAX) {
+        ok = CryptHashData(hHash, p, DWORD_MAX, 0);
         ReportIf(!ok);
+        p += DWORD_MAX;
+        remaining -= (size_t)DWORD_MAX;
     }
-#endif
-    ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)dataSize, 0);
+    ok = CryptHashData(hHash, p, (DWORD)remaining, 0);
     ReportIf(!ok);
 
     DWORD hashLen = 0;

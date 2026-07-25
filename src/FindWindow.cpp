@@ -666,8 +666,9 @@ LRESULT FindWindowWnd::OnNotify(int, NMHDR* nmh) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindWindowButtonTooltip((int)nmh->idFrom);
         if (s) {
-            lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText));
-            di->lpszText = di->szText;
+            if (lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText))) {
+                di->lpszText = di->szText;
+            }
         }
     }
     return 0;
@@ -885,9 +886,13 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
     HBITMAP hbmp = CreateCompatibleBitmap(hdcScreen, w, h);
     if (!hdcMem || !hbmp) {
+        if (hdcMem) {
+            DeleteDC(hdcMem);
+        }
+        if (hbmp) {
+            DeleteObject(hbmp);
+        }
         ReleaseDC(nullptr, hdcScreen);
-        DeleteDC(hdcMem);
-        DeleteObject(hbmp);
         return fail("ERROR no-mem-dc");
     }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);

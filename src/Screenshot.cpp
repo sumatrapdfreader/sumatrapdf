@@ -806,7 +806,14 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     int h = data->winH;
 
     HDC hdcScreen = GetDC(nullptr);
+    if (!hdcScreen) {
+        return;
+    }
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    if (!hdcMem) {
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
 
     // Create 32-bit ARGB DIB section for per-pixel alpha
     BITMAPINFO bmi{};
@@ -819,6 +826,14 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     DWORD* pixels = nullptr;
     HBITMAP hbmDib = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, (void**)&pixels, nullptr, 0);
+    if (!hbmDib || !pixels) {
+        if (hbmDib) {
+            DeleteObject(hbmDib);
+        }
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmDib);
 
     // Fill background: light blue at 93% opaque (7% transparent), premultiplied
@@ -831,6 +846,19 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     // First draw into a temp compatible DC, then copy pixels with full alpha
     HDC hdcTemp = CreateCompatibleDC(hdcScreen);
     HBITMAP hbmTemp = CreateCompatibleBitmap(hdcScreen, w, h);
+    if (!hdcTemp || !hbmTemp) {
+        if (hbmTemp) {
+            DeleteObject(hbmTemp);
+        }
+        if (hdcTemp) {
+            DeleteDC(hdcTemp);
+        }
+        SelectObject(hdcMem, oldBmp);
+        DeleteObject(hbmDib);
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     HGDIOBJ oldTemp = SelectObject(hdcTemp, hbmTemp);
 
     // select GUI font for text drawing
@@ -930,7 +958,18 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     bmiTemp.bmiHeader.biPlanes = 1;
     bmiTemp.bmiHeader.biBitCount = 32;
     bmiTemp.bmiHeader.biCompression = BI_RGB;
-    DWORD* tempPixels = (DWORD*)malloc(w * h * 4);
+    DWORD* tempPixels = (DWORD*)malloc((size_t)w * h * 4);
+    if (!tempPixels) {
+        SelectObject(hdcTemp, oldFont);
+        SelectObject(hdcTemp, oldTemp);
+        DeleteObject(hbmTemp);
+        DeleteDC(hdcTemp);
+        SelectObject(hdcMem, oldBmp);
+        DeleteObject(hbmDib);
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     GetDIBits(hdcTemp, hbmTemp, 0, h, tempPixels, &bmiTemp, DIB_RGB_COLORS);
 
     // Copy thumbnail and label regions with full opacity into the DIB

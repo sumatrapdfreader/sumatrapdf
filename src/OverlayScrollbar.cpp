@@ -208,6 +208,10 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
 
     HDC hdcScreen = GetDC(nullptr);
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    if (!hdcMem) {
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
 
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -219,6 +223,14 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
 
     void* bits = nullptr;
     HBITMAP hbmp = CreateDIBSection(hdcMem, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!hbmp || !bits) {
+        if (hbmp) {
+            DeleteObject(hbmp);
+        }
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     HBITMAP hbmpOld = (HBITMAP)SelectObject(hdcMem, hbmp);
 
     memset(bits, 0, (size_t)w * h * 4);
