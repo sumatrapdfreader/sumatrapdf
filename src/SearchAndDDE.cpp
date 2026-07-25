@@ -1262,11 +1262,25 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 // wasModified
 //   if true, starting a search for new term
 //   if false, searching for the next occurrence of previous term
-// TODO: should detect wasModified by comparing with the last search result
+// Callers may pass wasModified=false incorrectly (e.g. tab switch, DDE). If the
+// term differs from TextSearch::lastText we force wasModified=true. Callers can
+// still pass true for the same text (restart after match-case toggle, etc.).
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress) {
     AbortFinding(win, false);
     if (len(text) == 0) {
         return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->textSearch) {
+        // Match SetText()'s normalization: strip one leading space (word-start)
+        // so trailing/whole-word spaces still compare correctly.
+        Str searchText = text;
+        if (searchText && searchText.s[0] == ' ') {
+            searchText = Str(searchText.s + 1, searchText.len - 1);
+        }
+        if (!str::Eq(searchText, dm->textSearch->lastText)) {
+            wasModified = true;
+        }
     }
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);
