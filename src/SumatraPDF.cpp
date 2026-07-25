@@ -576,7 +576,7 @@ class HwndPasswordUI : public PasswordUI {
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
 Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
-    FileState* fileFromHistory = gFileHistory.FindByName(path, nullptr);
+    FileState* fileFromHistory = gFileHistory.FindByPath(path);
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {
         TempStr fingerprint = str::MemToHexTemp(Str((const char*)fileDigest, 16));
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint);
@@ -699,7 +699,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
     Str fp = tab->filePath;
-    FileState* fs = gFileHistory.FindByName(fp, nullptr);
+    FileState* fs = gFileHistory.FindByPath(fp);
     if (!fs) {
         return;
     }
@@ -2028,7 +2028,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         // we don't ask again at the next refresh
         Str decryptionKey = tab->AsFixed()->GetEngine()->decryptionKey;
         if (decryptionKey) {
-            FileState* fs2 = gFileHistory.FindByName(fs->filePath, nullptr);
+            FileState* fs2 = gFileHistory.FindByPath(fs->filePath);
             if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
                 str::ReplaceWithCopy(&fs2->decryptionKey, decryptionKey);
             }
@@ -2402,7 +2402,7 @@ static void RenameFileInHistory(Str oldPath, Str newPath) {
         }
         DeleteFileState(fs);
     }
-    fs = gFileHistory.FindByName(oldPath, nullptr);
+    fs = gFileHistory.FindByPath(oldPath);
     if (fs) {
         SetFileStatePath(fs, newPath);
         // merge Frequently Read data, so that a file

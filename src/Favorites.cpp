@@ -159,8 +159,21 @@ static FileState* GetFavByFilePath(Str filePath) {
     // it's likely that we'll ask about the info for the same
     // file as in previous call, so use one element cache
     FileState* fs = gFileHistory.Get(idxCache);
-    if (!fs || !str::Eq(fs->filePath, filePath)) {
-        fs = gFileHistory.FindByName(filePath, &idxCache);
+    if (fs && str::Eq(fs->filePath, filePath)) {
+        return fs;
+    }
+    // Full paths only: FindByPath avoids basename collisions (two files named
+    // the same in different folders must not share favorites).
+    fs = gFileHistory.FindByPath(filePath);
+    idxCache = -1;
+    if (fs && gFileHistory.states) {
+        int n = len(*gFileHistory.states);
+        for (int i = 0; i < n; i++) {
+            if ((*gFileHistory.states)[i] == fs) {
+                idxCache = i;
+                break;
+            }
+        }
     }
     return fs;
 }

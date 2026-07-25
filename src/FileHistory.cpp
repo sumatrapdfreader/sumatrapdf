@@ -94,8 +94,9 @@ FileState* FileHistory::FindByPath(Str filePath) const {
     return (*states)[idxExact];
 }
 
-// returns an exact match by path or match by just file name
-// TODO: audit the uses of FindByName and maybe convert to FindByPath
+// Exact path match first, then basename-only match (for legacy callers that
+// only have a file name). Prefer FindByPath when you have a full path — basename
+// matches can collide across folders.
 FileState* FileHistory::FindByName(Str filePath, int* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
