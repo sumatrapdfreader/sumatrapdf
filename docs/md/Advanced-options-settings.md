@@ -140,6 +140,10 @@ ShowToc = true
 ; version 3.6)
 ShowLinks = false
 
+; if true, draw a focus ring around the document when it has keyboard focus (Tab
+; to the page area) (introduced in version 3.7)
+ShowDocumentFocusIndicator = false
+
 ; if true, we show a list of frequently read documents when no document is
 ; loaded
 ShowStartPage = true

@@ -726,6 +726,12 @@ const globalPrefs: Field[] = [
     "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
   ),
   field("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").ver("3.6"),
+  field(
+    "ShowDocumentFocusIndicator",
+    Bool,
+    false,
+    "if true, draw a focus ring around the document when it has keyboard focus (Tab to the page area)",
+  ).ver("3.7"),
   field("ShowStartPage", Bool, true, "if true, we show a list of frequently read documents when no document is loaded"),
   field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)").internal(),
   field(

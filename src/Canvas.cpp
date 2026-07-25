@@ -2254,10 +2254,13 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
 
 // Document keyboard focus lives on hwndFrame: AdvanceFocus() includes the frame
 // as the "document" tab target, and canvas clicks call HwndSetFocus(hwndFrame)
-// so arrow keys reach the frame. Without a visual cue, tabbing to the document
-// looks like focus is lost (#4644).
+// so arrow keys reach the frame. Optional focus ring is gated by
+// ShowDocumentFocusIndicator (default off; #4644).
 static bool CanvasShouldShowKeyboardFocus(MainWindow* win) {
     if (!win || !win->hwndFrame || !win->hwndCanvas) {
+        return false;
+    }
+    if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
         return false;
     }
     if (win->presentation || win->isFullScreen) {
@@ -2280,9 +2283,15 @@ void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc) {
 }
 
 void InvalidateCanvasKeyboardFocus(MainWindow* win) {
-    if (win && win->hwndCanvas) {
-        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    if (!win || !win->hwndCanvas) {
+        return;
     }
+    // Still invalidate when the setting is on so the ring appears/disappears
+    // with focus; when off, skip the repaint cost.
+    if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
+        return;
+    }
+    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
 }
 
 static void OnPaintDocument(MainWindow* win) {
