@@ -1038,8 +1038,11 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
 
     auto hwndFrame = win->hwndFrame;
     auto hwndToolbar = win->hwndToolbar;
-    // TODO: this is broken, result is way too small
+    // Measure a full page number plus edit-control padding; plain measure is
+    // too tight for the right-aligned ES_NUMBER box (esp. under high DPI).
     int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
+    boxWidth += 2 * GetSystemMetrics(SM_CXEDGE);
+    boxWidth += DpiScale(hwndFrame, 12);
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto h = GetModuleHandle(nullptr);
     int dx = boxWidth;
