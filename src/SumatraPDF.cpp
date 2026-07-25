@@ -8984,7 +8984,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     // mark as selected so it can be moved / resized
-    SetSelectedAnnotation(tab, lastCreatedAnnot);
+    // isNew: page was already under the cursor/selection; do not scroll the view
+    SetSelectedAnnotation(tab, lastCreatedAnnot, true);
     return 0;
 }
 

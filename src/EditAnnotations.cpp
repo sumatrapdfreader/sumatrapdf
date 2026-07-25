@@ -1040,7 +1040,10 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
     if (!annot) {
         return;
     }
-    if (ew->skipGoToPage) {
+    // skipGoToPage: set when the edit window was opened on an annot that is
+    // already under the user's view. isNew: creating an annotation implies the
+    // page was already visible (cursor / selection / placement), so don't scroll.
+    if (ew->skipGoToPage || isNew) {
         ew->skipGoToPage = false;
         return;
     }
@@ -1059,10 +1062,6 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
     // don't switch pages if already visible. needed for cases where
     // we show more than one page at a time and GoToPage() scrolls
     // to top page
-    // TODO: this is not perfect. We should skipGoToPage if this
-    // is caused by creating an annotation. by definition the page
-    // was visible when user created an annotation.
-    // but that requires passing down more stuff
     if (!dm->PageVisible(annotPageNo)) {
         dm->GoToPage(annotPageNo, true);
     }
