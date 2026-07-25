@@ -2092,7 +2092,7 @@ static MainWindow* CreateMainWindow() {
     }
     // we don't want the windows to overlap so shift each window by a bit
     int nShift = len(gWindows);
-    windowPos.x += (nShift * 15); // TODO: DPI scale
+    windowPos.x += nShift * DpiScale((HWND) nullptr, 15);
 
     WStr clsName = WStrL(FRAME_CLASS_NAME);
     WStr title = WStr(kSumatraWindowTitleW);
