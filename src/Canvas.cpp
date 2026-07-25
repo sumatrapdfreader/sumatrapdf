@@ -1357,6 +1357,21 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Resize handles sit outside the selected annotation's rect. Check them
+    // before hit-testing other annotations: otherwise an overlapping annot
+    // steals the click, selection jumps, and we resize the wrong one (#5818).
+    ResizeHandle resizeHandle = ResizeHandle::None;
+    if (tab->selectedAnnotation && AnnotationCanBeResized(tab->selectedAnnotation->type)) {
+        resizeHandle = GetResizeHandleAt(win, pt, tab->selectedAnnotation);
+    }
+    if (resizeHandle != ResizeHandle::None) {
+        StartAnnotationResize(win, tab->selectedAnnotation, pt, resizeHandle);
+        win->dragStartPending = true;
+        win->dragStart = pt;
+        win->textDragPending = false;
+        return;
+    }
+
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type);
     if (isMoveableAnnot) {
@@ -1371,17 +1386,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         }
     }
 
-    // Check if we're clicking on a resize handle of the selected annotation
-    // must check selectedAnnotation directly (not annot) because resize handles
-    // extend beyond annotation bounds and GetAnnotationAtPos() won't find them
-    ResizeHandle resizeHandle = ResizeHandle::None;
-    if (tab->selectedAnnotation && AnnotationCanBeResized(tab->selectedAnnotation->type)) {
-        resizeHandle = GetResizeHandleAt(win, pt, tab->selectedAnnotation);
-    }
-
-    if (resizeHandle != ResizeHandle::None) {
-        StartAnnotationResize(win, tab->selectedAnnotation, pt, resizeHandle);
-    } else if (isMoveableAnnot) {
+    if (isMoveableAnnot) {
         StartAnnotationDrag(win, annot, pt);
     } else {
         ReportIf(win->linkOnLastButtonDown);
