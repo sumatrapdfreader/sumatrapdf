@@ -12,6 +12,7 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
@@ -79,10 +80,8 @@ static ExternalViewerInfo gExternalViewers[] = {
         // Command line format for version 6 and later:
         //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
-        //   /P <filename>
-        // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
-        // TODO: Also set zoom factor and scroll to current position?
-        R"(/A page=%p "%1")",
+        // zoom=%z,%x,%y : percentage zoom and upper-left view (user-space coords)
+        R"(/A "page=%p&zoom=%z,%x,%y" "%1")",
         kindEngineMupdf,
         Str{}
     },
@@ -94,10 +93,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         // Command line format for version 6 and later:
         //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
-        //   /P <filename>
-        // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
-        // TODO: Also set zoom factor and scroll to current position?
-        R"(/A page=%p "%1")",
+        R"(/A "page=%p&zoom=%z,%x,%y" "%1")",
         kindEngineMupdf,
         Str{}
     },
@@ -106,10 +102,8 @@ static ExternalViewerInfo gExternalViewers[] = {
         CmdOpenWithFoxIt,
         ".pdf",
         R"(Foxit Software\Foxit Reader\FoxitReader.exe)",
-        // Foxit cmd-line format:
-        // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
-        // TODO: Foxit allows passing password and zoom
-        R"("%1" /A page=%p)",
+        // Foxit: filename [-n page] [-z zoom]
+        R"("%1" /A page=%p -z %z)",
         kindEngineMupdf,
         Str{}
     },
@@ -118,7 +112,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         CmdOpenWithFoxItPhantom,
         ".pdf",
         R"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)",
-        R"("%1" /A page=%p)",
+        R"("%1" /A page=%p -z %z)",
         kindEngineMupdf,
         Str{}
     },
@@ -129,8 +123,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         R"(Tracker Software\PDF Editor\PDFXEdit.exe)",
         // PDFXChange cmd-line format:
         // [/A "param=value [&param2=value ..."] [PDF filename]
-        // /A params: page=<page number>
-        R"(/A page=%p "%1")",
+        R"(/A "page=%p&zoom=%z" "%1")",
         kindEngineMupdf,
         Str{}
     },
@@ -357,6 +350,9 @@ bool CouldBePDFDoc(WindowTab* tab) {
 //  %1 : file path (else the file path is appended)
 //  %d : directory in which file is
 //  %p : current page number
+//  %z : zoom as percentage (100 = 100%; fit modes → 100)
+//  %x : horizontal scroll position on the page (user-space; 0 if not scrolled)
+//  %y : vertical scroll position on the page (user-space; 0 if not scrolled)
 //  %% : a literal '%' (so e.g. "%%d" reaches the external program as "%d",
 //       useful for tools like `mutool draw -o page-%d.png` -- see #5583)
 // any other "%x" sequence is passed through unchanged.
@@ -364,6 +360,27 @@ bool CouldBePDFDoc(WindowTab* tab) {
 // re-scanned, so a '%' inside a file path can't trigger another substitution.
 static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
     Str path = tab->filePath ? tab->filePath : StrL("");
+
+    // Zoom/scroll for Adobe-style open parameters (page=%p&zoom=%z,%x,%y).
+    float zoomPct = 100.f;
+    int scrollX = 0;
+    int scrollY = 0;
+    if (tab->ctrl) {
+        float zv = tab->ctrl->GetZoomVirtual(true);
+        if (zv > 0) {
+            zoomPct = zv;
+        }
+        DisplayModel* dm = tab->AsFixed();
+        if (dm) {
+            ScrollState ss = dm->GetScrollState();
+            if (ss.x >= 0) {
+                scrollX = (int)ss.x;
+            }
+            if (ss.y >= 0) {
+                scrollY = (int)ss.y;
+            }
+        }
+    }
 
     str::Builder out;
     for (int i = 0; i < arg.len; i++) {
@@ -393,6 +410,18 @@ static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
                 break;
             case 'p':
                 out.Append(fmt("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
+                i++;
+                break;
+            case 'z':
+                out.Append(fmt("%.1f", zoomPct));
+                i++;
+                break;
+            case 'x':
+                out.Append(fmt("%d", scrollX));
+                i++;
+                break;
+            case 'y':
+                out.Append(fmt("%d", scrollY));
                 i++;
                 break;
             default:
