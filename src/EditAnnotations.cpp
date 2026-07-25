@@ -1227,22 +1227,31 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 static UINT_PTR gMainWindowRerenderTimer = 0;
 static MainWindow* gMainWindowForRender = nullptr;
 
-// TODO: there seems to be a leak
+// Called from the contents edit onTextChanged. Can fire after the selected
+// annotation was deleted/deselected, or after the window/tab went away —
+// never assume selectedAnnotation is non-null.
 static void ContentsChanged(EditAnnotationsWindow* ew) {
-    auto a = ew->tab->selectedAnnotation;
-    // TODO: saw a crash when this was null
-    ReportDebugIf(!a);
-    if (!a) {
+    if (!ew || !ew->tab || !ew->editContents) {
+        return;
+    }
+    Annotation* a = ew->tab->selectedAnnotation;
+    if (!a || !a->engine) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
     txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
-    SetContents(a, txt);
+    // SetContents returns false when the text is unchanged; skip save-enable
+    // and re-render debounce in that case.
+    if (!SetContents(a, txt)) {
+        return;
+    }
     EnableSaveIfAnnotationsChanged(ew);
 
     MainWindow* win = ew->tab->win;
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
     if (gMainWindowRerenderTimer != 0) {
-        // logf("ContentsChanged: killing existing timer for re-render of MainWindow\n");
         KillTimer(win->hwndCanvas, gMainWindowRerenderTimer);
         gMainWindowRerenderTimer = 0;
     }
@@ -1250,10 +1259,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     gMainWindowForRender = win;
     gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
         if (IsMainWindowValid(gMainWindowForRender)) {
-            // logf("ContentsChanged: re-rendering MainWindow\n");
             MainWindowRerender(gMainWindowForRender);
-        } else {
-            // logf("ContentsChanged: NOT re-rendering MainWindow because is not valid anymore\n");
         }
         gMainWindowRerenderTimer = 0;
     });
