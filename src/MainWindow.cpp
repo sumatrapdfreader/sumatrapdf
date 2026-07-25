@@ -565,6 +565,42 @@ void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
     win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
+// Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).
+// Returns false if uri is not a file: scheme.
+static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
+    if (!str::StartsWithI(uri, "file:")) {
+        return false;
+    }
+    // Skip "file:" case-insensitively (str::Skip is case-sensitive).
+    Str rest = Str(uri.s + 5, uri.len - 5);
+    // file://host/path or file:///path → drop authority (// or ///)
+    if (str::StartsWith(rest, "//")) {
+        rest = Str(rest.s + 2, rest.len - 2);
+        // empty host: next char is / of absolute path
+        if (rest && rest.s[0] == '/') {
+            // Windows drive path: /C:/foo → C:/foo
+            if (rest.len >= 3 && rest.s[1] && rest.s[2] == ':') {
+                rest = Str(rest.s + 1, rest.len - 1);
+            }
+        }
+    }
+    TempStr path = str::DupTemp(rest);
+    Str pathStr = path;
+    Str frag = str::SliceFromChar(pathStr, '#');
+    if (frag) {
+        pathStr = Str(pathStr.s, (int)(frag.s - pathStr.s));
+        frag = Str(frag.s + 1, frag.len - 1);
+    }
+    path = str::DupTemp(pathStr);
+    url::DecodeInPlace(path);
+    str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
+    *pathOut = path;
+    if (fragmentOut) {
+        *fragmentOut = frag ? str::DupTemp(frag) : Str{};
+    }
+    return true;
+}
+
 void LinkHandler::LaunchURL(Str uri) {
     if (!uri) {
         /* ignore missing URLs */;
@@ -583,11 +619,25 @@ void LinkHandler::LaunchURL(Str uri) {
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
         this->LaunchFile(path, nullptr);
-    } else {
-        // LaunchBrowser will reject unsupported URI schemes
-        // TODO: support file URIs?
-        SumatraLaunchBrowser(path);
+        return;
     }
+
+    // file://... → open as a local document (or explorer if unsupported)
+    TempStr filePath;
+    Str fragment;
+    if (PathFromFileUriTemp(uri, &filePath, &fragment)) {
+        if (len(fragment) > 0) {
+            // Carry destination name for LaunchFile scroll-to (named dest / page)
+            PageDestinationFile dest(filePath, fragment);
+            this->LaunchFile(filePath, &dest);
+        } else {
+            this->LaunchFile(filePath, nullptr);
+        }
+        return;
+    }
+
+    // LaunchBrowser will reject unsupported URI schemes
+    SumatraLaunchBrowser(path);
 }
 
 // return true if we can load the file based on sniffing file type from content
