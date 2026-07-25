@@ -373,6 +373,46 @@ void AdvancedSettingsWnd::OnSelectionChanged() {
     commentText->SetText(item ? item->comment : Str(""));
 }
 
+// Split a list-item row into non-overlapping name (left) and value (right)
+// columns so long names and long values (e.g. InverseSearchCmdLine) don't
+// draw on top of each other (#5804).
+static void AdvSettingsItemColumns(HWND hwnd, const RECT& rc, RECT& rcName, RECT& rcVal) {
+    int pad = DpiScale(hwnd, 4);
+    int gap = DpiScale(hwnd, 10);
+    int totalW = (rc.right - rc.left) - 2 * pad;
+    if (totalW < 1) {
+        rcName = rc;
+        rcVal = rc;
+        return;
+    }
+    // Value column ~45% (min 100px); name gets the rest. Both are clipped with
+    // ellipsis when the dialog is narrow.
+    int minVal = DpiScale(hwnd, 100);
+    int valW = std::max(totalW * 45 / 100, minVal);
+    if (valW > totalW * 3 / 5) {
+        valW = totalW * 3 / 5;
+    }
+    int nameW = totalW - valW - gap;
+    if (nameW < DpiScale(hwnd, 72)) {
+        nameW = totalW / 2 - gap / 2;
+        valW = totalW - nameW - gap;
+    }
+    if (nameW < 1) {
+        nameW = 1;
+    }
+    if (valW < 1) {
+        valW = 1;
+    }
+
+    rcName = rc;
+    rcName.left += pad;
+    rcName.right = rcName.left + nameW;
+
+    rcVal = rc;
+    rcVal.right -= pad;
+    rcVal.left = rcVal.right - valW;
+}
+
 void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
     auto m = (ListBoxModelSettings*)lb->model;
@@ -393,7 +433,6 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     SetBkColor(hdc, colBg);
     ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
 
-    int pad = DpiScale(hwnd, 4);
     HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
     // bold name => changed this session; bold value => differs from default.
@@ -403,25 +442,22 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     SetTextColor(hdc, colText);
 
-    // setting name on the left
-    RECT rcName = rc;
-    rcName.left += pad;
+    RECT rcName{}, rcVal{};
+    AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
+
     HGDIOBJ prevFont = SelectObject(hdc, nameFont);
     TempWStr ws = ToWStrTemp(item->name);
-    DrawTextW(hdc, ws.s, -1, &rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+    DrawTextW(hdc, ws.s, -1, &rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
-    // value on the right
     TempStr val = FormatSettingValueTemp(item);
-    RECT rcVal = rc;
-    rcVal.right -= pad;
     SelectObject(hdc, valFont);
     ws = ToWStrTemp(val);
-    DrawTextW(hdc, ws.s, -1, &rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+    DrawTextW(hdc, ws.s, -1, &rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
     SelectObject(hdc, prevFont);
 }
 
-// the value occupies the right half of the item's rect
+// in-place editor sits in the value column (same split as DrawListBoxItem)
 Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
     int lbIdx = -1;
     int n = model->ItemsCount();
@@ -439,11 +475,9 @@ Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
     if (res == LB_ERR) {
         return Rect();
     }
-    Rect r = ToRect(rc);
-    int half = r.dx / 2;
-    r.x += half;
-    r.dx -= half;
-    return r;
+    RECT rcName{}, rcVal{};
+    AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
+    return ToRect(rcVal);
 }
 
 void AdvancedSettingsWnd::BeginEditValue(int idx) {
@@ -770,6 +804,11 @@ static void OnDestroy(Wnd::DestroyEvent*) {
     }
 }
 
+// last client size chosen by the user (or initial layout); reused when the
+// dialog is reopened in the same process so a widened window sticks (#5804)
+static int gAdvSettingsLastClientDx = 0;
+static int gAdvSettingsLastClientDy = 0;
+
 // re-layout the controls when the (resizable) window is resized
 void AdvancedSettingsWnd::OnSize(UINT, UINT, SIZE size) {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
@@ -782,6 +821,8 @@ void AdvancedSettingsWnd::OnSize(UINT, UINT, SIZE size) {
     if (dx == 0 || dy == 0) {
         return;
     }
+    gAdvSettingsLastClientDx = dx;
+    gAdvSettingsLastClientDy = dy;
     // in-place editors are positioned over a specific item rect; that rect
     // moves on resize, so close them
     CancelEditValue();
@@ -940,9 +981,14 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     layout = padding;
 
     auto rc = ClientRect(win->hwndFrame);
-    int dy = limitValue(rc.dy - 72, 480, 800);
-    int dx = limitValue(rc.dx - 256, 640, 800);
+    // Default is wide enough that long setting names (e.g. InverseSearchCmdLine)
+    // and long values don't crowd each other; reuse last size if the user
+    // resized earlier this session (#5804).
+    int dy = gAdvSettingsLastClientDy > 0 ? gAdvSettingsLastClientDy : limitValue(rc.dy - 72, 480, 900);
+    int dx = gAdvSettingsLastClientDx > 0 ? gAdvSettingsLastClientDx : limitValue(rc.dx - 128, 760, 1100);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
+    gAdvSettingsLastClientDx = ClientRect(hwnd).dx;
+    gAdvSettingsLastClientDy = ClientRect(hwnd).dy;
     PositionDialog(hwnd, win->hwndFrame);
 
     SetIsVisible(true);
