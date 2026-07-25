@@ -1,6 +1,6 @@
-// Rasterize gfx/new-icons/*.svg to multi-size Windows .ico files (same layout
-// as the former gfx/gfxalt/*-32bit.ico set): 256 PNG + 64/48/32/16 BMP
-// (32bpp + AND mask). Optionally zopflipng-compresses the 256 PNG frame.
+// Rasterize gfx/new-icons/*.svg to multi-size Windows .ico files:
+// 256 PNG + 64/48/32/16 BMP (32bpp + AND mask). Optionally zopflipng-compresses
+// the 256 PNG frame.
 //
 // Usage: bun cmd/svg-to-ico.ts
 // Requires: bin/resvg.exe
@@ -250,7 +250,7 @@ function svgToIco(svgPath: string, icoPath: string, scratch: string): void {
       frames.push({ w, h, bpp: 32, data: rgbaToIcoBmp(w, h, rgba) });
     }
   }
-  // order like gfxalt: 256, 64, 48, 32, 16
+  // order: 256, 64, 48, 32, 16
   writeFileSync(icoPath, buildIco(frames));
 }
 
