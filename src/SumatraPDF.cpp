@@ -3845,6 +3845,12 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
          (int)quitIfLast, tab->AsFixed());
 
     AbortFinding(win, true);
+    // Dismiss find UI when closing the active tab so floating results from that
+    // document cannot be clicked after a different tab is shown (issue #5807).
+    // Tab switches already call HideFindBar via SaveCurrentWindowTab.
+    if (tab == win->CurrentTab()) {
+        HideFindBar(win);
+    }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView);

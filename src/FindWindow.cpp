@@ -800,6 +800,9 @@ void HideFindWindow(MainWindow* win) {
         return;
     }
     win->findWindow->SavePos();
+    // Cancel any deferred GoToFindMatch so it cannot run after the document/tab
+    // that owned these matches is gone (issue #5807).
+    InterlockedIncrement(&win->findWindow->pendingNavEpoch);
     ClearFindMatches(win);
     AbortFinding(win, true);
     ShowWindow(win->findWindow->hwnd, SW_HIDE);
