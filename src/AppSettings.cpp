@@ -288,6 +288,11 @@ static void CreateCustomShortcuts() {
 /* Caller needs to CleanUpSettings() */
 void ApplySettingsToOpenWindows() {
     for (MainWindow* win : gWindows) {
+        // LoadSettings re-creates custom commands (themes, external viewers,
+        // selection handlers, shortcuts) with fresh command ids. Menus still
+        // hold the old ids unless rebuilt — without this, e.g. "Set theme '…'"
+        // does nothing until restart (issue #5822).
+        RebuildMenuBarForWindow(win);
         ReCreateToolbar(win);
         ToolbarUpdateStateForWindow(win, true);
         UpdateFindbox(win);
