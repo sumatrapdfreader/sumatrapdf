@@ -1683,6 +1683,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     tab->ctrl = ctrl;
     win->ctrl = tab->ctrl;
 
+    // Reload/replace swaps the document; clear any tip for the previous page.
+    win->DeleteToolTip();
+
     // Drop find-match coords / match-count cache for the previous engine (reload
     // or replace). Find UI text is kept; count restarts against the new engine
     // if find is still open. Must run after win->ctrl points at the new document.
@@ -2528,14 +2531,13 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     bool openNewTab = SettingsUseTabs() && !args->forceReuse;
     ReportIf(openNewTab && args->forceReuse);
 
+    // Clear any tip from the previous document/tab (LoadModelIntoTab also does
+    // this on tab switch; cover the first open / about-page case here too).
+    win->DeleteToolTip();
+
     if (win->IsCurrentTabAbout()) {
-        // TODO: probably need to do it when switching tabs
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
-        Rect rc = {};
-        // TODO: a hack, need a way to clear tooltips
-        win->infotip->Delete();
-        win->DeleteToolTip();
         // there's no tab to reuse at this point
         args->forceReuse = false;
     } else {
@@ -3075,6 +3077,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     MainWindow* win = tab->win;
+    // Document content is about to change; drop any page-element / about-page tip
+    // so it cannot linger over the new document.
+    win->DeleteToolTip();
     if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;

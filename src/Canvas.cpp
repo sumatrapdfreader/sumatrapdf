@@ -3150,7 +3150,6 @@ def:
 static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_SETCURSOR:
-            // TODO: make (re)loading a document always clear the infotip
             win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
@@ -3192,7 +3191,6 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
             return 0;
 
         case WM_SETCURSOR:
-            // TODO: make (re)loading a document always clear the infotip
             win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
