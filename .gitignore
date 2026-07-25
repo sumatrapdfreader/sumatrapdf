@@ -49,3 +49,4 @@ tests/tmp/
 /.tmp
 /terminals
 /mcps/tasks/tools
+/bin/resvg.exe
