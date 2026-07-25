@@ -18,8 +18,32 @@ Chinese-community fork "Sumatra PDF Plus", GPLv3, same license as upstream).
   their base predates recent gen-code.ts changes, so **regenerate, never take their
   generated `Settings.h/cpp`, `Commands.h/cpp` diffs verbatim**.
 
-**Last reviewed commit on `plus/main`: `37bba7a39`** ("Release 3.7.8", 2026-07-10).
+**Last reviewed commit on `plus/main`: `c8387b1bb`** ("Bump to 3.7.18…", 2026-07-26).
 Update this marker after every review pass.
+
+### Review pass 2026-07-26 (`37bba7a39` → `c8387b1bb`, 90 commits)
+
+**Already in master:**
+- Find bar / find window polish (shared June history + master's find work)
+- Smart dark mode, CAD enhance (base), selection toolbar (base), TTS on master
+- `daf4d5575` illustrated PDF / CAD false positive → master `9a565f51a` (#5806)
+
+**Ported this pass (small, separate commits):**
+- `3229c8b2c` selection toolbar jitter (hide while selecting, throttle)
+- `89e4edfed` Text annot button on selection toolbar
+- `df1b2aab8` annotation Contents flush on switch/save/close (PDF path only)
+
+**Deferred / product decisions:**
+- G. EPUB progressive loading (full subsystem, not just post-review fixes)
+- B WordLookup (+ `35fb36269` ZH→Hans only with B)
+- Ebook annotations (`EbookAnnotations*`)
+- Markdown + Mermaid reader (`1c0601847`)
+- Pinned Home tab
+- Progressive search/ebook sync beyond master's stream-find
+
+**Skip:**
+- Version bumps, `update-check.txt`, branding (`L`)
+- `27de3e915` continuous theme selection — mostly debug `logf`
 
 ## Summary of fork changes, by feature
 
@@ -288,3 +312,10 @@ additions (we generate via premake).
 | 2026-07-10 | K: compiler warnings (`c7a20f168`) | **skip** | warnings are in fork-only code |
 | 2026-07-10 | K: dark TOC scrollbar (`2183086c1`) | **skip** | master's recursive dark-mode pass already themes nested trees |
 | 2026-07-10 | L. Branding / fork-only | **skip** | readmes, renames, versioning, translations blobs, vs2022 files |
+| 2026-07-26 | Review `37bba7a39`..`c8387b1bb` (90 commits) | **triaged** | marker → `c8387b1bb`; see "Review pass 2026-07-26" above |
+| 2026-07-26 | `daf4d5575` illustrated PDF / CAD false positive | **merged** | as `9a565f51a` (fixes #5806) |
+| 2026-07-26 | `3229c8b2c` selection toolbar jitter | **merged** | hide while selecting; slack + throttle position updates |
+| 2026-07-26 | `89e4edfed` text annot on selection toolbar | **merged** | `CmdCreateAnnotText` + selection-end LPARAM |
+| 2026-07-26 | `df1b2aab8` annotation Contents save | **merged** | PDF path: FlushContentsFromEdit, null guards, EN_KILLFOCUS; skipped ebook annot files |
+| 2026-07-26 | G. EPUB progressive / B / C / md-mermaid / pinned-home | **defer** | product / large ports; WordLookup plan in dict-support.md |
+| 2026-07-26 | `27de3e915` continuous theme scroll | **skip** | commit is mostly logf |
