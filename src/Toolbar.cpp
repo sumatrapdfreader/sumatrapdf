@@ -736,23 +736,16 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
                     case CDDS_ITEMPREPAINT: {
                         auto col = ThemeWindowTextColor();
-                        // col = RGB(255, 0, 0);
-                        // SetTextColor(custDraw->nmcd.hdc, col);
                         UINT itemState = custDraw->nmcd.uItemState;
-                        if (itemState & CDIS_DISABLED) {
-                            // TODO: this doesn't work
+                        if (itemState & (CDIS_DISABLED | CDIS_GRAYED)) {
                             col = ThemeWindowTextDisabledColor();
-                            // col = RGB(255, 0, 0);
-                            custDraw->clrText = col;
-                        } else if (false && itemState & CDIS_SELECTED) {
-                            custDraw->clrText = RGB(0, 255, 0);
-                        } else if (false && itemState & CDIS_GRAYED) {
-                            custDraw->clrText = RGB(0, 0, 255);
-                        } else {
-                            custDraw->clrText = col;
                         }
-                        return CDRF_DODEFAULT;
-                        // return CDRF_NEWFONT;
+                        // Toolbar honors text color from the DC (and clrText) when
+                        // CDRF_NEWFONT is returned; setting only clrText is ignored
+                        // under some common-control versions / themes.
+                        custDraw->clrText = col;
+                        SetTextColor(custDraw->nmcd.hdc, col);
+                        return CDRF_NEWFONT;
                     }
                 }
             }
