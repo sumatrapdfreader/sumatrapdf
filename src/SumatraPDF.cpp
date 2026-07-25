@@ -6623,11 +6623,16 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     }
 #endif
 
-    // TODO: limit the size of the selection to e.g. 1 kB?
     bool isTextOnlySelectionOut; // if false, a rectangular selection
     TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelectionOut);
     if (!selText) {
         return;
+    }
+    // Cap raw selection before URL-encoding so huge rectangular selections
+    // don't blow the URL. URLEncodeMayTruncateTemp also trims the encoded form.
+    constexpr int kMaxSelForUrl = 1024;
+    if (len(selText) > kMaxSelForUrl) {
+        selText = str::DupTemp(Str(selText.s, kMaxSelForUrl));
     }
     TempStr encodedSelection = URLEncodeMayTruncateTemp(selText);
     // ${userLang} and and ${selectin} are typed by user in settings file
