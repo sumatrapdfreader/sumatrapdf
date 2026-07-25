@@ -681,6 +681,22 @@ static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const Rect& r) {
     seen.Append({rune, r});
 }
 
+// True Unicode scalar (not surrogate, not out of range). fz_runetochar will still
+// encode surrogates as 3-byte sequences, but those are illegal UTF-8; Utf8CodepointCount
+// then counts each byte as its own codepoint while we only append one rect, tripping
+// ReportIf in FzTextPageToUtf8 (debug report 8bdec9f53000001, PIC datasheet PDF).
+static bool IsUnicodeScalar(int rune) {
+    unsigned int c = (unsigned int)rune;
+    if (c > 0x10FFFF) {
+        return false;
+    }
+    // UTF-16 surrogates are not valid Unicode scalar values
+    if (c >= 0xD800 && c <= 0xDFFF) {
+        return false;
+    }
+    return true;
+}
+
 static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
@@ -691,7 +707,9 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<R
 
     bool isWhitespace = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
     bool isNonPrintable = rune <= 32 || (rune <= 0xffff && wstr::IsNonCharacter((WCHAR)rune));
-    if (isNonPrintable && !isWhitespace) {
+    // Invalid scalars (surrogates / out of range) must not go through fz_runetochar:
+    // that produces illegal UTF-8 that Utf8CodepointCount splits into multiple units.
+    if (!IsUnicodeScalar(rune) || (isNonPrintable && !isWhitespace)) {
         s.AppendChar('?');
         rects.Append(r);
         AddSeenGlyph(seen, rune, r);
@@ -710,7 +728,10 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<R
     }
     char buf[4];
     int n = fz_runetochar(buf, rune);
-    s.Append(Str(buf, n));
+    // One Unicode scalar → one UTF-8 sequence → one rect (codepoint-aligned coords)
+    if (n <= 0 || !s.Append(Str(buf, n))) {
+        return;
+    }
     rects.Append(r);
     AddSeenGlyph(seen, rune, r);
 }
