@@ -456,7 +456,8 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     Kind kind = dest->GetKind();
 
     if (kindDestinationScrollTo == kind) {
-        // TODO: respect link->ld.gotor.new_window for PDF documents ?
+        // PDF NewWindow on internal GoTo is not exposed by MuPDF's link URIs.
+        // Ctrl+click opens the same document in a new tab/window (see Canvas).
         ScrollTo(dest);
         return;
     }
@@ -705,44 +706,62 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
-    // TODO: respect link->ld.gotor.new_window for PDF documents ?
-    MainWindow* newWin = FindMainWindowByFile(fullPath, true);
-    // TODO: don't show window until it's certain that there was no error
-    if (!newWin) {
-        LoadArgs args(fullPath, win);
-        newWin = LoadDocument(&args);
-        if (!newWin) {
-            return;
-        }
+    // Open in a new window when the PDF GoToR NewWindow flag is set (if known)
+    // or the user Ctrl+clicks. MuPDF's file: URI conversion does not preserve
+    // /NewWindow today; openInNewWindow is for when callers can set it.
+    bool wantNewWindow = IsCtrlPressed();
+    if (remoteLink && remoteLink->GetKind() == kindDestinationLaunchFile) {
+        wantNewWindow = wantNewWindow || ((PageDestinationFile*)remoteLink)->openInNewWindow;
     }
 
-    if (!newWin->IsDocLoaded()) {
+    MainWindow* targetWin = nullptr;
+    if (wantNewWindow) {
+        targetWin = CreateAndShowMainWindow(nullptr);
+        if (!targetWin) {
+            return;
+        }
+        LoadArgs args(fullPath, targetWin);
+        args.forceReuse = true;
+        args.noPlaceWindow = true;
+        targetWin = LoadDocument(&args);
+    } else {
+        targetWin = FindMainWindowByFile(fullPath, true);
+        if (!targetWin) {
+            LoadArgs args(fullPath, win);
+            targetWin = LoadDocument(&args);
+        }
+    }
+    if (!targetWin) {
+        return;
+    }
+
+    if (!targetWin->IsDocLoaded()) {
         bool quitIfLast = false;
-        CloseCurrentTab(newWin, quitIfLast);
+        CloseCurrentTab(targetWin, quitIfLast);
         // OpenFileExternally rejects files we'd otherwise
         // have to show a notification to be sure (which we
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            ShowErrorLoadingNotification(newWin, fullPath, true);
+            ShowErrorLoadingNotification(targetWin, fullPath, true);
         }
         return;
     }
 
-    newWin->Focus();
+    targetWin->Focus();
     if (!remoteLink) {
         return;
     }
 
     Str destName = PageDestGetName(remoteLink);
     if (destName) {
-        IPageDestination* dest = newWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
+        IPageDestination* dest = targetWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
         if (dest) {
-            newWin->linkHandler->ScrollTo(dest);
+            targetWin->linkHandler->ScrollTo(dest);
             delete dest;
         }
     } else {
-        newWin->linkHandler->ScrollTo(remoteLink);
+        targetWin->linkHandler->ScrollTo(remoteLink);
     }
 }
 

@@ -187,6 +187,10 @@ struct PageDestinationURL : IPageDestination {
 struct PageDestinationFile : IPageDestination {
     Str path;
     Str dest;
+    // PDF GoToR /NewWindow (when known). MuPDF's file: URI conversion does not
+    // currently preserve this flag; callers may still set it, and Ctrl+click
+    // also opens remote files in a new window.
+    bool openInNewWindow = false;
 
     PageDestinationFile() = delete;
 
