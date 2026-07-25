@@ -2486,8 +2486,7 @@ static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool s
 }
 
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
-    // TODO: same message as in Canvas.cpp to not introduce
-    // new translation. Find a better message e.g. why failed.
+    // Same translation as Canvas OnPaintError ("Error loading %s").
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.msg = fmt(_TRA("Error loading %s").s, path);

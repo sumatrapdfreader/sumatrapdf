@@ -3170,11 +3170,10 @@ static void OnPaintError(MainWindow* win) {
     auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
     FillRect(hdc, &ps.rcPaint, bgBrush);
-    // TODO: should this be "Error opening %s"?
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath));
+        TempStr msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
