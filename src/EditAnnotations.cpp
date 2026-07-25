@@ -543,16 +543,15 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
             return true;
         }
         if (key == VK_DELETE) {
-            if (IsCtrlPressed()) {
-                DeleteSelectedAnnotation(this);
-                return true;
-            }
-            // we don't want this to trigger in edit control
+            // When focus is in a text field, let the Edit control handle Delete /
+            // Ctrl+Delete (word delete). Only delete the annotation when focus is
+            // outside an edit control (issue #5815).
             HWND focused = ::GetFocus();
             TempStr cls = HwndGetClassName(focused);
             if (str::EqI(cls, "Edit")) {
                 return false;
             }
+            // Ctrl+Delete (and plain Delete) remove the selected annotation
             DeleteSelectedAnnotation(this);
             return true;
         }
