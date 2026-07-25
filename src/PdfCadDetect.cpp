@@ -415,6 +415,16 @@ static int ScoreHeuristic(fz_context* ctx, pdf_document* doc, int pageCount, flo
         score -= 30;
     }
 
+    // Illustrated books / art catalogs: prominent images with normal text (not CAD).
+    // Without this, full-bleed scanned pages look like "raster CAD" and the
+    // grayscale enhance pass ruins color (Sumatra #5806; sumatrapdf-plus 3.5.16).
+    if (stats.maxImageCoverage >= 0.15f && stats.textOps >= 40) {
+        score -= 65;
+    }
+    if (pageCount >= 80 && stats.maxImageCoverage >= 0.12f && stats.textOps >= 25) {
+        score -= 40;
+    }
+
     // Hairline vector exports (e.g. WPS "print to PDF" from a CAD screenshot):
     // dense 0.05pt strokes, almost no embedded bitmap.
     bool hairlineCad =
@@ -429,9 +439,15 @@ static int ScoreHeuristic(fz_context* ctx, pdf_document* doc, int pageCount, flo
     // Screenshot / raster CAD: one large image per page, almost no vector content.
     bool rasterCad = stats.maxImageCoverage >= 0.80f && stats.strokes + stats.fills < 50 && stats.textOps < 200;
     if (rasterCad) {
-        score += 55;
-        if (rasterDominantOut) {
-            *rasterDominantOut = true;
+        if (pageCount > 30) {
+            // Full-bleed cover art in multi-page books mimics raster CAD; do not
+            // treat as engineering scan (would gray-enhance photos/artwork).
+            score -= 70;
+        } else {
+            score += 55;
+            if (rasterDominantOut) {
+                *rasterDominantOut = true;
+            }
         }
     } else if (stats.maxImageCoverage > 0.5f) {
         score -= 40;
@@ -507,7 +523,13 @@ CadDetectResult DetectCadPdf(fz_context* ctx, pdf_document* doc) {
     res.score = heuristicScore + metadataScore;
     res.rasterDominant = rasterDominant;
     res.hairlineVector = hairlineVector;
-    if (rasterDominant && res.score >= 45) {
+    // Long multi-page books are never raster CAD screenshots (those are short
+    // exports). Clear the flag so PdfCadEnhancePixmap does not gray-blend.
+    if (rasterDominant && pageCount > 30) {
+        res.rasterDominant = false;
+        rasterDominant = false;
+    }
+    if (rasterDominant && res.score >= 45 && pageCount <= 30) {
         res.enable = true;
         res.reason = CadEnhanceReason::RasterImage;
         return res;

@@ -1849,7 +1849,10 @@ static void fz_img_collect_fill_image(fz_context* ctx, fz_device* dev, fz_image*
 
 static void fz_img_collect_fill_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
                                            fz_colorspace*, const float*, float, fz_color_params) {
-    fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), false, image);
+    (void)image;
+    // Image masks are knockouts/clip shapes, not photos — track only for clipping
+    // so dark-mode preserve does not treat them as artwork (#5806 / plus 3.5.16).
+    fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), true, nullptr);
 }
 
 static void fz_img_collect_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int, fz_matrix ctm,
@@ -4054,6 +4057,29 @@ static u32 DarkLegacySkipHash(FzPageInfo* pageInfo, float zoom, int rotation) {
     return h;
 }
 
+// Illustrated pages often contain many small content-stream images alongside
+// one main artwork. Preserving all of them leaves patchy gaps that get
+// dark-recolored. Keep only the largest preserve region per page (#5806).
+static void DarkLegacySkipKeepLargestArtwork(FzPageInfo* pageInfo) {
+    Vec<Rect>& skipRects = pageInfo->darkLegacySkipDevAbs;
+    if (len(skipRects) <= 1) {
+        return;
+    }
+    int bestIdx = 0;
+    i64 bestArea = 0;
+    for (int i = 0; i < len(skipRects); i++) {
+        i64 a = (i64)skipRects[i].dx * skipRects[i].dy;
+        if (a > bestArea) {
+            bestArea = a;
+            bestIdx = i;
+        }
+    }
+    Rect keep = skipRects[bestIdx];
+    skipRects.Clear();
+    skipRects.Append(keep);
+    pageInfo->darkLegacyArtworkPageBottom = 0.f;
+}
+
 // find the images on the page whose colors the dark-mode bitmap recolor
 // should preserve (photos, artwork) and cache their absolute device rects
 static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageInfo, float zoom, int rotation,
@@ -4140,6 +4166,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
             fz_drop_image(ctx, image);
         }
     }
+    DarkLegacySkipKeepLargestArtwork(pageInfo);
 }
 
 void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
