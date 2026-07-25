@@ -2106,13 +2106,21 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll = ToPoint(scrollD);
 
-        // default values for the coordinates mean: keep the current position
+        // Unspecified X: keep horizontal scroll.
         if (DEST_USE_DEFAULT == rect.x) {
             scroll.x = -1;
         }
+        // Unspecified Y (page-level /Fit, /XYZ with null top): land at the top
+        // of the *target* page. Reusing the current page's on-screen offset
+        // often scrolls continuous view so the next page is most visible
+        // ("bookmark lands one page ahead", #2799 / #3310).
         if (DEST_USE_DEFAULT == rect.y) {
-            PageInfo* pageInfo = GetPageInfo(CurrentPageNo());
-            scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
+            if (pageNo == CurrentPageNo()) {
+                PageInfo* pageInfo = GetPageInfo(pageNo);
+                scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
+            } else {
+                scroll.y = 0;
+            }
         }
     } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top

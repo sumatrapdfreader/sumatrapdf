@@ -120,10 +120,12 @@ struct PageDestinationMupdf : IPageDestination {
     Str value;
     Str name;
 
-    // anchor (x, y) on the destination page resolved from the link URI;
-    // -1 means "not resolved" (e.g. external URL or file launch).
-    float destX = -1.f;
-    float destY = -1.f;
+    // anchor (x, y) on the destination page resolved from the link URI.
+    // Valid after hasResolvedCoords; values may be DEST_USE_DEFAULT when the
+    // PDF destination left a coordinate unspecified (null / Fit).
+    float destX = 0.f;
+    float destY = 0.f;
+    bool hasResolvedCoords = false;
     // /XYZ zoom level requested by the link (1.0 = 100%). 0 means
     // "not specified" — caller should use document default.
     float destZoom = 0.f;
@@ -136,8 +138,13 @@ struct PageDestinationMupdf : IPageDestination {
     }
 
     RectF GetRect2() override {
+        // Prefer URI-resolved coords (page-level /Fit and /XYZ nulls become
+        // DEST_USE_DEFAULT). outline->x/y are often 0 and would scroll to the
+        // bottom of the page in PDF space.
+        if (hasResolvedCoords) {
+            return RectF{destX, destY, DEST_USE_DEFAULT, DEST_USE_DEFAULT};
+        }
         if (outline) {
-            // needed for -named-dest called from LinkHandler::ScrollTo
             RectF r{outline->x, outline->y, 0, 0};
             return r;
         }
@@ -145,11 +152,11 @@ struct PageDestinationMupdf : IPageDestination {
     }
 
     RectF GetDestPoint2() override {
+        if (hasResolvedCoords) {
+            return RectF{destX, destY, 0, 0};
+        }
         if (outline) {
             return RectF{outline->x, outline->y, 0, 0};
-        }
-        if (destY >= 0.f) {
-            return RectF{destX, destY, 0, 0};
         }
         return {};
     }
@@ -216,11 +223,15 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
     if (pageNo < 0) {
         return -1;
     }
+    // Match HandleLinkMupdf: unspecified PDF coords are NaN and must stay
+    // DEST_USE_DEFAULT so ScrollTo lands on the page top, not user-space (0,0)
+    // (bottom of the page in PDF coords) which can make continuous view report
+    // the next page as current (#2799 / page-level outline destinations).
     if (xp) {
-        *xp = isnan(ldest.x) ? 0.f : ldest.x;
+        *xp = isnan(ldest.x) ? DEST_USE_DEFAULT : ldest.x;
     }
     if (yp) {
-        *yp = isnan(ldest.y) ? 0.f : ldest.y;
+        *yp = isnan(ldest.y) ? DEST_USE_DEFAULT : ldest.y;
     }
     if (zoomp) {
         float z = isnan(ldest.zoom) ? 0.f : ldest.zoom;
@@ -354,8 +365,8 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         dest->destX = x;
         dest->destY = y;
         dest->destZoom = z;
+        dest->hasResolvedCoords = true;
     }
-    // when not resolved destX / destY keep their -1 sentinel
     return dest;
 }
 
@@ -3490,12 +3501,14 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     ScopedRecursiveMutex scope2(&docLock);
     TempStr uri = str::JoinTemp(StrL("#nameddest="), name);
     float x, y, zoom = 0;
-    int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
+    int pageNo = ResolveLink(ctx, _doc, uri, &x, &y, &zoom);
     if (pageNo < 0) {
         return nullptr;
     }
 
-    RectF r{x, y, 0, 0};
+    // DEST_USE_DEFAULT dx/dy selects the /XYZ path in DisplayModel::ScrollTo
+    // (IsEmpty would also work for 0,0 but would treat unspecified as bottom).
+    RectF r{x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT};
     pageDest = NewSimpleDest(pageNo, r, zoom);
     return pageDest;
 }

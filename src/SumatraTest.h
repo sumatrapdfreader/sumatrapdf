@@ -14,3 +14,6 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut = nullptr)
 TempStr I18nErrorStringResultTemp(int* exitCodeOut = nullptr);
 TempStr GetTocResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr);
+// Navigate to the n-th (1-based) outline destination in the open document and
+// report landed page vs destination page (issue #2799).
+TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut = nullptr);

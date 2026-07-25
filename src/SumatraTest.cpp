@@ -690,6 +690,69 @@ static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
     return nullptr;
 }
 
+// Navigate to the n-th (1-based) outline destination that has a dest, then
+// report CurrentPageNo vs the destination page. Used by tests/issue-2799.ts.
+// Expects a document already open in gWindows[0] (withControlledSumatra args).
+TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (gWindows.IsEmpty()) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return fail(StrL("NOTREADY not-fixed"), 2);
+    }
+    EngineBase* engine = dm->GetEngine();
+    TocTree* toc = engine ? engine->GetToc() : nullptr;
+    if (!toc || !toc->root) {
+        return fail(StrL("ERROR no-toc"));
+    }
+    int counter = 0;
+    IPageDestination* dest = NthDestInToc(toc->root, destNo, counter);
+    if (!dest) {
+        return fail(fmt("ERROR no-dest destNo=%d", destNo));
+    }
+    int expectPage = PageDestGetPageNo(dest);
+    if (expectPage <= 0) {
+        return fail(fmt("ERROR bad-dest-page destNo=%d page=%d", destNo, expectPage));
+    }
+
+    // Scroll away from page 1 first so a relative-Y bug would shift the land
+    // (continuous mode + mid-document start was the #2799 failure mode).
+    if (dm->PageCount() >= 2 && expectPage != 1) {
+        dm->GoToPage(1, 0, false);
+        // nudge down so CurrentPage on-screen offset is non-zero if possible
+        dm->ScrollYBy(dm->viewPort.dy / 3, false);
+    }
+
+    win->ctrl->HandleLink(dest, win->linkHandler);
+
+    int landed = dm->CurrentPageNo();
+    bool ok = landed == expectPage;
+    if (ok) {
+        out.Append(fmt("OK dest=%d expect=%d landed=%d\n", destNo, expectPage, landed));
+    } else {
+        out.Append(fmt("FAIL dest=%d expect=%d landed=%d\n", destNo, expectPage, landed));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 // Follow the first internal link on page 1 after pinning the viewport to the
 // left; used by tests/issue-5064.ts (issue #5064).
 TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
