@@ -298,17 +298,13 @@ struct GrokBuildProvider : AIChatProvider {
         checkboxLabel = "Always Approve";
     }
 
-    TempStr TitleTemp() override {
-        return str::DupTemp(_TRA("Grok chat"));
-    }
+    TempStr TitleTemp() override { return str::DupTemp(_TRA("Grok chat")); }
 
     TempStr NotInstalledInstructionTemp() override {
         return str::DupTemp(_TRA("Grok Build cli must be installed for this functionality"));
     }
 
-    TempStr FindExecutableTemp() override {
-        return FindGrokExecutableTemp();
-    }
+    TempStr FindExecutableTemp() override { return FindGrokExecutableTemp(); }
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
@@ -324,31 +320,15 @@ struct GrokBuildProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override {
-        return gGlobalPrefs->grokBuild.model;
-    }
-    void SetModel(Str model) override {
-        str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, model);
-    }
-    int GetOption() override {
-        return gGlobalPrefs->grokBuild.effort;
-    }
-    void SetOption(int option) override {
-        gGlobalPrefs->grokBuild.effort = option;
-    }
-    bool GetFlag() override {
-        return gGlobalPrefs->grokBuild.alwaysApprove;
-    }
-    void SetFlag(bool flag) override {
-        gGlobalPrefs->grokBuild.alwaysApprove = flag;
-    }
-    Str GetBgColor() override {
-        return gGlobalPrefs->grokBuild.bgColor;
-    }
+    Str GetModel() override { return gGlobalPrefs->grokBuild.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, model); }
+    int GetOption() override { return gGlobalPrefs->grokBuild.effort; }
+    void SetOption(int option) override { gGlobalPrefs->grokBuild.effort = option; }
+    bool GetFlag() override { return gGlobalPrefs->grokBuild.alwaysApprove; }
+    void SetFlag(bool flag) override { gGlobalPrefs->grokBuild.alwaysApprove = flag; }
+    Str GetBgColor() override { return gGlobalPrefs->grokBuild.bgColor; }
 
-    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
-        CollectGrokSessions(dir, sessions);
-    }
+    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectGrokSessions(dir, sessions); }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
         LoadGrokSessionHistory(win, sessionId, dir);

@@ -90,7 +90,7 @@ Str TrimSuffixWhitespace(Str s); // trims trailing whitespace in place
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 
-int TrimWSInPlace(Str s, TrimOpt opt);
+int TrimWSInPlace(Str& s, TrimOpt opt);
 
 void TransCharsInPlace(Str& str, Str oldChars, Str newChars);
 

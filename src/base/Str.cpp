@@ -712,8 +712,8 @@ void TransCharsInPlace(Str& str, Str oldChars, Str newChars) {
 }
 
 // Trim whitespace characters, in-place, inside s.
-// Returns number of trimmed characters.
-int TrimWSInPlace(Str s, TrimOpt opt) {
+// Updates s.len. Returns number of trimmed characters.
+int TrimWSInPlace(Str& s, TrimOpt opt) {
     if (str::IsNull(s)) {
         return 0;
     }
@@ -737,6 +737,7 @@ int TrimWSInPlace(Str s, TrimOpt opt) {
     if (start != 0) {
         memmove(s.s, s.s + start, (size_t)(end - start) + 1);
     }
+    s.len = end - start;
     return trimmed;
 }
 

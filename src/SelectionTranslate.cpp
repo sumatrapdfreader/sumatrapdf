@@ -424,8 +424,9 @@ static TempStr NormalizeTextForPromptTemp(Str text) {
             buf.AppendChar(c);
         }
     }
-    str::TrimWSInPlace(ToStr(buf), str::TrimOpt::Both);
-    return ToStrTemp(buf);
+    TempStr s = ToStrTemp(buf);
+    str::TrimWSInPlace(s, str::TrimOpt::Both);
+    return s;
 }
 
 static TempStr BuildTranslationPromptTemp(Str srcLang, Str dstLang, Str text) {
@@ -544,7 +545,11 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
             off++;
         }
     }
-    str::TrimWSInPlace(ToStr(translationOut), str::TrimOpt::Both);
+    {
+        Str s = ToStr(translationOut);
+        str::TrimWSInPlace(s, str::TrimOpt::Both);
+        translationOut.len = (u32)s.len;
+    }
     if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":"))) {
         TempStr trimmed = str::DupTemp(output.s);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);

@@ -318,7 +318,7 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
     if (!text || IsCodexInjectedUserText(text)) {
         return {};
     }
-    text.len -= str::TrimWSInPlace(text, str::TrimOpt::Both);
+    str::TrimWSInPlace(text, str::TrimOpt::Both);
     return len(text) > 0 ? text : nullptr;
 }
 
@@ -409,17 +409,13 @@ struct CodexBuildProvider : AIChatProvider {
         checkboxLabel = "Skip Sandbox";
     }
 
-    TempStr TitleTemp() override {
-        return str::DupTemp(_TRA("Codex chat"));
-    }
+    TempStr TitleTemp() override { return str::DupTemp(_TRA("Codex chat")); }
 
     TempStr NotInstalledInstructionTemp() override {
         return str::DupTemp(_TRA("OpenAI Codex CLI must be installed for this functionality"));
     }
 
-    TempStr FindExecutableTemp() override {
-        return FindCodexExecutableTemp();
-    }
+    TempStr FindExecutableTemp() override { return FindCodexExecutableTemp(); }
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
@@ -436,31 +432,15 @@ struct CodexBuildProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override {
-        return gGlobalPrefs->codexBuild.model;
-    }
-    void SetModel(Str model) override {
-        str::ReplaceWithCopy(&gGlobalPrefs->codexBuild.model, model);
-    }
-    int GetOption() override {
-        return gGlobalPrefs->codexBuild.sandbox;
-    }
-    void SetOption(int option) override {
-        gGlobalPrefs->codexBuild.sandbox = option;
-    }
-    bool GetFlag() override {
-        return gGlobalPrefs->codexBuild.skipSandbox;
-    }
-    void SetFlag(bool flag) override {
-        gGlobalPrefs->codexBuild.skipSandbox = flag;
-    }
-    Str GetBgColor() override {
-        return gGlobalPrefs->codexBuild.bgColor;
-    }
+    Str GetModel() override { return gGlobalPrefs->codexBuild.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->codexBuild.model, model); }
+    int GetOption() override { return gGlobalPrefs->codexBuild.sandbox; }
+    void SetOption(int option) override { gGlobalPrefs->codexBuild.sandbox = option; }
+    bool GetFlag() override { return gGlobalPrefs->codexBuild.skipSandbox; }
+    void SetFlag(bool flag) override { gGlobalPrefs->codexBuild.skipSandbox = flag; }
+    Str GetBgColor() override { return gGlobalPrefs->codexBuild.bgColor; }
 
-    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
-        CollectCodexSessions(dir, sessions);
-    }
+    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectCodexSessions(dir, sessions); }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
         LoadCodexSessionHistory(win, sessionId, dir);
