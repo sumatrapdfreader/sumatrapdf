@@ -770,8 +770,13 @@ const globalPrefs: Field[] = [
   field("Theme", Str, "", "the name of the theme to use. System picks the last used light or dark theme based on the Windows app mode")
     .ver("3.5")
     .doc("Valid themes: light, dark, darker, system"),
-  field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to").ver("3.7"),
-  field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to").ver("3.7"),
+  // remembered by the light/dark toggle and System theme; not user-facing knobs
+  field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to")
+    .internal()
+    .ver("3.7"),
+  field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to")
+    .internal()
+    .ver("3.7"),
   field(
     "DocumentColorsFollowTheme",
     Str,
@@ -886,7 +891,9 @@ const globalPrefs: Field[] = [
     Str,
     "",
     "remembered destination language for selection translation; empty uses OS UI language",
-  ).ver("3.7"),
+  )
+    .internal()
+    .ver("3.7"),
   field("TranslateFromLang", Str, "", "remembered source language for selection translation; empty means Auto")
     .internal()
     .ver("3.7"),
