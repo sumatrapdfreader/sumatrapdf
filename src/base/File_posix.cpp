@@ -11,6 +11,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
+#if OS_DARWIN
+#include <mach-o/dyld.h>
+#endif
 
 #include "base/File.h"
 
@@ -170,12 +173,47 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
     return Str(pathZ);
 }
 
-TempStr GetPathInExeDirTemp(Str fileName) {
-    char cwd[PATH_MAX];
-    if (!getcwd(cwd, sizeof(cwd))) {
-        return fileName;
+TempStr GetSelfExePathTemp() {
+#if OS_DARWIN
+    char buf[PATH_MAX];
+    uint32_t size = sizeof(buf);
+    if (_NSGetExecutablePath(buf, &size) != 0) {
+        return {};
     }
-    return path::NormalizeTemp(path::JoinTemp(Str(cwd), fileName));
+    char resolved[PATH_MAX];
+    if (realpath(buf, resolved)) {
+        return str::DupTemp(resolved);
+    }
+    return str::DupTemp(buf);
+#else
+    char buf[PATH_MAX];
+    ssize_t n = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+    if (n < 0) {
+        return {};
+    }
+    buf[n] = 0;
+    return str::DupTemp(buf);
+#endif
+}
+
+TempStr GetSelfExeDirTemp() {
+    TempStr path = GetSelfExePathTemp();
+    if (!path) {
+        return {};
+    }
+    return path::GetDirTemp(path);
+}
+
+TempStr GetPathInExeDirTemp(Str fileName) {
+    TempStr dir = GetSelfExeDirTemp();
+    if (!dir) {
+        char cwd[PATH_MAX];
+        if (!getcwd(cwd, sizeof(cwd))) {
+            return fileName;
+        }
+        dir = Str(cwd);
+    }
+    return path::NormalizeTemp(path::JoinTemp(dir, fileName));
 }
 
 namespace file {

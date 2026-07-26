@@ -3,10 +3,17 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/Win.h"
 #include "base/WinDynCalls.h"
 
 #include "base/File.h"
+
+// Defined in Win.cpp; avoid pulling all of Win.h into this file.
+void LogLastError(DWORD err = 0);
+
+// Same value as HINSTANCE in WinMain for this image (exe or DLL).
+// Using __ImageBase (not GetModuleHandle(nullptr)) so DLL builds report the
+// DLL path, not the host process path.
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 namespace path {
 
@@ -272,6 +279,27 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
         return {};
     }
     return ToUtf8Temp(path);
+}
+
+TempWStr GetSelfExePathW() {
+    WCHAR buf[MAX_PATH + 2]{};
+    DWORD nChars = dimof(buf) - 1;
+    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
+    GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
+    return wstr::Dup(buf);
+}
+
+TempStr GetSelfExePathTemp() {
+    WCHAR buf[MAX_PATH + 2]{};
+    DWORD nChars = dimof(buf) - 1;
+    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
+    GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
+    return ToUtf8Temp(buf);
+}
+
+TempStr GetSelfExeDirTemp() {
+    TempStr path = GetSelfExePathTemp();
+    return path::GetDirTemp(path);
 }
 
 TempStr GetPathInExeDirTemp(Str fileName) {

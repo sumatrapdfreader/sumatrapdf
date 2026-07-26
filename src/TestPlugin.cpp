@@ -6,6 +6,7 @@
 // Only available in debug builds.
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Win.h"
 #include "base/CmdLineArgsIter.h"
 

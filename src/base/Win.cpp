@@ -1000,31 +1000,6 @@ void WaitForConsoleClose() {
     }
 }
 
-TempWStr GetSelfExePathW() {
-    WCHAR buf[MAX_PATH + 2]{};
-    DWORD nChars = dimof(buf) - 1;
-    auto h = GetInstance();
-    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
-    GetModuleFileNameW(h, buf, nChars);
-    return wstr::Dup(buf);
-}
-
-// Return the full exe path of my own executable
-TempStr GetSelfExePathTemp() {
-    WCHAR buf[MAX_PATH + 2]{};
-    DWORD nChars = dimof(buf) - 1;
-    auto h = GetInstance();
-    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
-    GetModuleFileNameW(h, buf, nChars);
-    return ToUtf8Temp(buf);
-}
-
-// Return directory where our executable is located
-TempStr GetSelfExeDirTemp() {
-    TempStr path = GetSelfExePathTemp();
-    return path::GetDirTemp(path);
-}
-
 void ChangeCurrDirToDocuments() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
     WCHAR* dirW = CWStrTemp(dir);
