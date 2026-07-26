@@ -5,6 +5,7 @@
 #include "base/Pixmap.h"
 #include "base/WinDynCalls.h"
 #include "base/DirIter.h"
+#include <dwmapi.h>
 #include "base/Dpi.h"
 #include "base/File.h"
 #include "base/FileWatcher.h"
@@ -2096,7 +2097,25 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     win->favLabelWithClose->SetLabel(_TRA("Favorites"));
 }
 
-static void UpdateWindowFrameBorderColor(MainWindow* win);
+static COLORREF DwmFrameBorderColorForCurrentTheme() {
+    return IsCurrentThemeDefault() ? (COLORREF)DWMWA_COLOR_DEFAULT : ThemeControlBackgroundColor();
+}
+
+// Win11 DWM attributes; ignored (HRESULT failure) on older Windows.
+static void SetWindowBorderColor(HWND hwnd, COLORREF color) {
+    DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &color, sizeof(color));
+}
+
+static void SetWindowRoundedCorners(HWND hwnd, bool rounded) {
+    auto cornerPref = rounded ? DWMWCP_ROUND : DWMWCP_DONOTROUND;
+    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
+    COLORREF borderColor = rounded ? DWMWA_COLOR_DEFAULT : DWMWA_COLOR_NONE;
+    SetWindowBorderColor(hwnd, borderColor);
+}
+
+static void UpdateWindowFrameBorderColor(MainWindow* win) {
+    SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
+}
 
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
@@ -2125,7 +2144,7 @@ static MainWindow* CreateMainWindow() {
 
     // WM_NCCALCSIZE returning 0 disables DWM rounded corners; re-enable them.
     if (!IsRunningOnWine()) {
-        dwm::SetWindowRoundedCorners(hwndFrame, true);
+        SetWindowRoundedCorners(hwndFrame, true);
     }
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
@@ -2203,9 +2222,9 @@ static MainWindow* CreateMainWindow() {
     UpdateWindowRtlLayout(win);
     UpdateToolbarSidebarText(win);
 
-    if (touch::SupportsGestures()) {
+    {
         GESTURECONFIG gc = {0, GC_ALLGESTURES, 0};
-        touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
+        SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
     // Set tabsInTitlebar state without SWP_FRAMECHANGED; the frame change
@@ -2358,14 +2377,6 @@ void DeleteMainWindow(MainWindow* win) {
     }
 
     delete win;
-}
-
-static COLORREF DwmFrameBorderColorForCurrentTheme() {
-    return IsCurrentThemeDefault() ? (COLORREF)DWMWA_COLOR_DEFAULT : ThemeControlBackgroundColor();
-}
-
-static void UpdateWindowFrameBorderColor(MainWindow* win) {
-    dwm::SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
 }
 
 void UpdateAfterThemeChange() {
@@ -5972,7 +5983,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     UpdateWindowFrameBorderColor(win);
     // disable DWM rounded corners and border for true edge-to-edge fullscreen
     if (!IsRunningOnWine()) {
-        dwm::SetWindowRoundedCorners(win->hwndFrame, false);
+        SetWindowRoundedCorners(win->hwndFrame, false);
     }
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
@@ -6051,7 +6062,7 @@ void ExitFullScreen(MainWindow* win) {
 
     // restore DWM rounded corners and border
     if (!IsRunningOnWine()) {
-        dwm::SetWindowRoundedCorners(win->hwndFrame, true);
+        SetWindowRoundedCorners(win->hwndFrame, true);
     }
     UpdateWindowFrameBorderColor(win);
 

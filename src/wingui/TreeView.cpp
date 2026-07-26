@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/BitManip.h"
 #include "base/Win.h"
-#include "base/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 

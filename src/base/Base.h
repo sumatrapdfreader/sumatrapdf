@@ -122,6 +122,7 @@
 #include <tlhelp32.h>
 #include <shellapi.h>
 #include <ole2.h>
+#include <uxtheme.h>
 
 // nasty but necessary
 #if defined(min) || defined(max)

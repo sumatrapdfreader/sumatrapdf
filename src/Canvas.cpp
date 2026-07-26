@@ -2827,7 +2827,7 @@ Str GiFlagsToStr(DWORD flags) {
 
 static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !touch::SupportsGestures()) {
+    if (!dm) {
         return DefWindowProc(win->hwndFrame, msg, wp, lp);
     }
 
@@ -2836,9 +2836,9 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     gi.cbSize = sizeof(GESTUREINFO);
     TouchState& touchState = win->touchState;
 
-    BOOL ok = touch::GetGestureInfo(hgi, &gi);
+    BOOL ok = GetGestureInfo(hgi, &gi);
     if (!ok) {
-        touch::CloseGestureInfoHandle(hgi);
+        CloseGestureInfoHandle(hgi);
         return 0;
     }
 
@@ -2967,7 +2967,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             break;
     }
 
-    touch::CloseGestureInfoHandle(hgi);
+    CloseGestureInfoHandle(hgi);
     return 0;
 }
 

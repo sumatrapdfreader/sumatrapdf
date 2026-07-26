@@ -17,9 +17,8 @@ void InitDynCalls();
 #if OS_WIN
 
 // as an exception, we include system headers needed for the calls that we dynamically load
+// (and a few related headers that call sites historically got via this include)
 #include <windows.h>
-#include <dwmapi.h>
-#include <uxtheme.h>
 #include <vssym32.h>
 #include <uiautomationcore.h>
 #include <uiautomationcoreapi.h>
@@ -90,38 +89,6 @@ extern Sig_GetDpiForMonitor DynGetDpiForMonitor;
 DBGHELP_API_LIST(API_DECLARATION2)
 
 #undef API_DECLARATION2
-
-// convenience wrappers over Win7-available theming APIs
-namespace theme {
-
-bool IsAppThemed();
-HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
-HRESULT CloseThemeData(HTHEME hTheme);
-HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
-BOOL IsThemeActive();
-BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId);
-HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor);
-}; // namespace theme
-
-namespace dwm {
-
-HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset);
-HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute);
-HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute);
-void SetWindowBorderColor(HWND hwnd, COLORREF color);
-void SetWindowRoundedCorners(HWND hwnd, bool rounded);
-
-}; // namespace dwm
-
-// Touch Gesture API (Windows 7+; call Win32 directly)
-namespace touch {
-
-bool SupportsGestures();
-
-BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
-BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
-} // namespace touch
 
 void NoDllHijacking();
 void PrioritizeSystemDirectoriesForDllLoad();

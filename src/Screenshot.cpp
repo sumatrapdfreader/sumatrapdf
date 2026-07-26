@@ -3,8 +3,8 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/WinDynCalls.h"
 #include "base/File.h"
+#include <dwmapi.h>
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/Timer.h"
@@ -129,7 +129,7 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
         }
     }
     BOOL isCloaked = FALSE;
-    if (SUCCEEDED(dwm::GetWindowAttribute(hwnd, DWMWA_CLOAKED, &isCloaked, sizeof(isCloaked)))) {
+    if (SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &isCloaked, sizeof(isCloaked)))) {
         if (isCloaked) {
             return false;
         }
@@ -391,7 +391,7 @@ static HBITMAP CaptureWindowBmp(HWND hwnd, int* outW, int* outH) {
 
     // crop to visible frame bounds (excludes invisible resize/shadow border)
     RECT visibleRect;
-    HRESULT hr = dwm::GetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &visibleRect, sizeof(visibleRect));
+    HRESULT hr = DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &visibleRect, sizeof(visibleRect));
     if (SUCCEEDED(hr)) {
         int cropX = visibleRect.left - fullRect.left;
         int cropY = visibleRect.top - fullRect.top;
@@ -420,7 +420,7 @@ static HBITMAP CaptureWindowBmp(HWND hwnd, int* outW, int* outH) {
 
     // fix black corners from DWM rounded windows
     DWM_WINDOW_CORNER_PREFERENCE cornerPref = DWMWCP_DEFAULT;
-    dwm::GetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
+    DwmGetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
     if (cornerPref == DWMWCP_DEFAULT || cornerPref == DWMWCP_ROUND || cornerPref == DWMWCP_ROUNDSMALL) {
         COLORREF bgColor = GetSysColor(COLOR_WINDOW);
         // DWM corner radius is 8 logical pixels (4 for ROUNDSMALL), scale by DPI

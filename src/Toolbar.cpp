@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/WinDynCalls.h"
 #include "base/Dpi.h"
 #include "base/Win.h"
 #include "base/BitManip.h"
@@ -1458,7 +1457,7 @@ void CreateToolbar(MainWindow* win) {
     rbBand.cbSize = sizeof(REBARBANDINFOW);
     rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
     rbBand.fStyle = RBBS_FIXEDSIZE;
-    if (theme::IsAppThemed() && IsCurrentThemeDefault()) {
+    if (IsAppThemed() && IsCurrentThemeDefault()) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
     }
     rbBand.hbmBack = nullptr;
