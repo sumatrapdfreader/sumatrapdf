@@ -432,6 +432,8 @@ const uint8_t *djvu_form_find_chunk(djvu_doc *doc, uint32_t form_off,
                                     const char *id, uint32_t *out_size,
                                     uint32_t *start);
 
+const char *djvu_form_bg_iw44_id(djvu_doc *doc, uint32_t form_off);
+
 void djvu_trim_incl_id(char *s);
 
 const uint8_t *djvu_form_find_incl_chunk(djvu_doc *doc, uint32_t form_off,
@@ -1431,6 +1433,46 @@ static void bm_append_run(uint8_t **data, int count)
     }
 }
 
+static const uint8_t *bm_find_01(const uint8_t *p, const uint8_t *end, int val)
+{
+    size_t n = (size_t)(end - p);
+    size_t i = 0;
+
+    if (val == 1) {
+        while (i + 8 <= n) {
+            uint64_t w;
+            memcpy(&w, p + i, 8);
+            if (w) {
+                size_t j;
+                for (j = 0; j < 8; j++)
+                    if (p[i + j]) return p + i + j;
+            }
+            i += 8;
+        }
+        while (i < n) {
+            if (p[i]) return p + i;
+            i++;
+        }
+    } else {
+
+        while (i + 8 <= n) {
+            uint64_t w;
+            memcpy(&w, p + i, 8);
+            if (w != 0x0101010101010101ULL) {
+                size_t j;
+                for (j = 0; j < 8; j++)
+                    if (p[i + j] == 0) return p + i + j;
+            }
+            i += 8;
+        }
+        while (i < n) {
+            if (p[i] == 0) return p + i;
+            i++;
+        }
+    }
+    return NULL;
+}
+
 static void bm_append_line(uint8_t **data, const uint8_t *row, int rowlen)
 {
     const uint8_t *rowend = row + rowlen;
@@ -1438,13 +1480,13 @@ static void bm_append_line(uint8_t **data, const uint8_t *row, int rowlen)
 
     while (row < rowend) {
         const uint8_t *start;
-        const void *next;
+        const uint8_t *next;
         int count;
 
         p = !p;
         start = row;
-        next = memchr(row, p ? 0 : 1, (size_t)(rowend - row));
-        row = next ? (const uint8_t *)next : rowend;
+        next = bm_find_01(row, rowend, p ? 0 : 1);
+        row = next ? next : rowend;
         count = (int)(row - start);
         bm_append_run(data, count);
     }
@@ -1805,12 +1847,11 @@ static void bm_visit_ink_runs_bytes(const djvu_bitmap *src, int left, int bottom
         int py = bottom + rr;
 
         while (p < end) {
-            const uint8_t *start;
-            const void *next = memchr(p, 1, (size_t)(end - p));
-            if (!next) break;
-            start = (const uint8_t *)next;
-            next = memchr(start, 0, (size_t)(end - start));
-            p = next ? (const uint8_t *)next : end;
+            const uint8_t *start = bm_find_01(p, end, 1);
+            const uint8_t *next;
+            if (!start) break;
+            next = bm_find_01(start, end, 0);
+            p = next ? next : end;
             fn(user, left + (int)(start - row), left + (int)(p - row), py);
         }
     }
@@ -2232,11 +2273,29 @@ static void code_bitmap_directly(jb2_codec *c, djvu_bitmap *bm)
         while (dx < dw) {
             if (context == 0 && (bd[0] & 1) == 0) {
                 int run = dw - dx;
-                const uint8_t *z1 = (const uint8_t *)memchr(up1 + dx + 2, 1, (size_t)run);
-                const uint8_t *z2 = (const uint8_t *)memchr(up2 + dx + 1, 1, (size_t)run);
-                if (z1) run = (int)(z1 - (up1 + dx + 2));
-                if (z2 && (int)(z2 - (up2 + dx + 1)) < run)
-                    run = (int)(z2 - (up2 + dx + 1));
+
+                {
+                    const uint8_t *p1 = up1 + dx + 2;
+                    const uint8_t *p2 = up2 + dx + 1;
+                    int k = 0;
+                    while (k + 8 <= run) {
+                        uint64_t w1, w2;
+                        memcpy(&w1, p1 + k, 8);
+                        memcpy(&w2, p2 + k, 8);
+                        if (w1 | w2) {
+                            int j;
+                            for (j = 0; j < 8; j++)
+                                if (p1[k + j] | p2[k + j]) { run = k + j; break; }
+                            break;
+                        }
+                        k += 8;
+                    }
+                    if (k < run) {
+                        while (k < run && !(p1[k] | p2[k]))
+                            k++;
+                        run = k;
+                    }
+                }
                 while (run > 0 && (bd[0] & 1) == 0) {
                     uint32_t p0 = zp->p[bd[0]];
                     if (p0 != 0 && a + p0 <= fence) {
@@ -2943,9 +3002,19 @@ typedef struct {
     int16_t *buckets[64];
 } iw_block;
 
+#define IW_BUCKET_SLAB 256
+
+typedef struct iw_bucket_slab {
+    struct iw_bucket_slab *next;
+    int16_t data[IW_BUCKET_SLAB * 16];
+} iw_bucket_slab;
+
 typedef struct {
     int w, h, bw, bh, nb;
     iw_block *blocks;
+    iw_bucket_slab *slabs;
+    int slab_used;
+    int n_buckets;
 } iw_map;
 
 static const int band_start[10] = {0, 1, 2, 3, 4, 8, 12, 16, 32, 48};
@@ -2998,22 +3067,43 @@ static iw_map *map_new(djvu_ctx *ctx, int w, int h)
 
 static void map_free(djvu_ctx *ctx, iw_map *m)
 {
-    int i, b;
+    iw_bucket_slab *s;
     if (!m) return;
-    for (i = 0; i < m->nb; i++)
-        for (b = 0; b < 64; b++)
-            djvu_free(ctx, m->blocks[i].buckets[b]);
+
+    s = m->slabs;
+    while (s) {
+        iw_bucket_slab *n = s->next;
+        djvu_free(ctx, s);
+        s = n;
+    }
     djvu_free(ctx, m->blocks);
     djvu_free(ctx, m);
 }
 
-static int16_t *block_get(iw_block *blk, int n) { return blk->buckets[n]; }
+static inline int16_t *block_get(iw_block *blk, int n) { return blk->buckets[n]; }
 
-static int16_t *block_get_init(djvu_ctx *ctx, iw_block *blk, int n)
+static int16_t *map_alloc_bucket(djvu_ctx *ctx, iw_map *map)
+{
+    int16_t *p;
+    if (!map->slabs || map->slab_used >= IW_BUCKET_SLAB) {
+        iw_bucket_slab *s = (iw_bucket_slab *)djvu_alloc(ctx, sizeof(iw_bucket_slab));
+        if (!s) return NULL;
+
+        memset(s->data, 0, sizeof(s->data));
+        s->next = map->slabs;
+        map->slabs = s;
+        map->slab_used = 0;
+    }
+    p = map->slabs->data + (size_t)map->slab_used * 16;
+    map->slab_used++;
+    map->n_buckets++;
+    return p;
+}
+
+static int16_t *block_get_init(djvu_ctx *ctx, iw_map *map, iw_block *blk, int n)
 {
     if (!blk->buckets[n]) {
-        blk->buckets[n] = (int16_t *)djvu_alloc(ctx, sizeof(int16_t) * 16);
-        if (blk->buckets[n]) memset(blk->buckets[n], 0, sizeof(int16_t) * 16);
+        blk->buckets[n] = map_alloc_bucket(ctx, map);
     }
     return blk->buckets[n];
 }
@@ -3413,18 +3503,55 @@ static int is_null_slice(iw_codec *c, int bit, int band)
     return 0;
 }
 
+static inline int iw_zp_dec(djvu_zp *DJVU_RESTRICT zp,
+                            uint32_t *DJVU_RESTRICT a,
+                            uint32_t *DJVU_RESTRICT fence,
+                            uint8_t *DJVU_RESTRICT ctx)
+{
+    uint32_t z = *a + zp->p[*ctx];
+    if (DJVU_LIKELY(z <= *fence)) {
+        *a = z;
+        return *ctx & 1;
+    }
+    zp->a = *a;
+    z = (uint32_t)zp_decode_sub(zp, ctx, z);
+    *a = zp->a;
+    *fence = zp->fence;
+    return (int)z;
+}
+
+static inline int iw_zp_dec_iw(djvu_zp *DJVU_RESTRICT zp,
+                               uint32_t *DJVU_RESTRICT a,
+                               uint32_t *DJVU_RESTRICT fence)
+{
+    int bit;
+    zp->a = *a;
+    bit = djvu_zp_decode_iw(zp);
+    *a = zp->a;
+    *fence = zp->fence;
+    return bit;
+}
+
 static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                            iw_block *blk, int fbucket, int nbucket)
 {
     int thres = c->quant_high[band];
     int bbstate = 0;
-    int8_t *cstate = c->coeff_state;
+    int8_t *DJVU_RESTRICT cstate = c->coeff_state;
+    int8_t *DJVU_RESTRICT bstate = c->bucket_state;
+    int16_t *pbuck[16];
     int cidx = 0, buckno, i;
+    uint32_t a, fence;
+    const int band0 = (band == 0);
 
     (void)bit;
+
+    for (buckno = 0; buckno < nbucket; buckno++)
+        pbuck[buckno] = blk->buckets[fbucket + buckno];
+
     for (buckno = 0; buckno < nbucket; buckno++, cidx += 16) {
         int bstatetmp = 0;
-        int16_t *pcoeff = block_get(blk, fbucket + buckno);
+        int16_t *pcoeff = pbuck[buckno];
         if (pcoeff == NULL) {
             bstatetmp = 8;
         } else {
@@ -3436,24 +3563,27 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                 bstatetmp |= cstatetmp;
             }
         }
-        c->bucket_state[buckno] = (int8_t)bstatetmp;
+        bstate[buckno] = (int8_t)bstatetmp;
         bbstate |= bstatetmp;
     }
+
+    a = zp->a;
+    fence = zp->fence;
 
     if (nbucket < 16 || (bbstate & 2) != 0) {
         bbstate |= 4;
     } else if ((bbstate & 8) != 0) {
-        if (djvu_zp_decode(zp, &c->ctx_root) != 0)
+        if (iw_zp_dec(zp, &a, &fence, &c->ctx_root) != 0)
             bbstate |= 4;
     }
 
     if ((bbstate & 4) != 0) {
         for (buckno = 0; buckno < nbucket; buckno++) {
-            if ((c->bucket_state[buckno] & 8) != 0) {
+            if ((bstate[buckno] & 8) != 0) {
                 int ctx = 0;
-                if (band > 0) {
+                if (!band0) {
                     int k = (fbucket + buckno) << 2;
-                    int16_t *b = block_get(blk, k >> 4);
+                    int16_t *b = blk->buckets[k >> 4];
                     if (b != NULL) {
                         k &= 0xf;
                         if (b[k] != 0) ctx++;
@@ -3463,20 +3593,26 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                     }
                 }
                 if ((bbstate & 2) != 0) ctx |= 4;
-                if (djvu_zp_decode(zp, &c->ctx_bucket[band][ctx]) != 0)
-                    c->bucket_state[buckno] |= 4;
+                if (iw_zp_dec(zp, &a, &fence, &c->ctx_bucket[band][ctx]) != 0)
+                    bstate[buckno] |= 4;
             }
         }
     }
 
     if ((bbstate & 4) != 0) {
-        cstate = c->coeff_state; cidx = 0;
+        cidx = 0;
         for (buckno = 0; buckno < nbucket; buckno++, cidx += 16) {
-            if ((c->bucket_state[buckno] & 4) != 0) {
-                int16_t *pcoeff = block_get(blk, fbucket + buckno);
+            if ((bstate[buckno] & 4) != 0) {
+                int16_t *pcoeff = pbuck[buckno];
                 int gotcha = 0, maxgotcha = 7;
                 if (pcoeff == NULL) {
-                    pcoeff = block_get_init(c->ctx, blk, fbucket + buckno);
+                    pcoeff = block_get_init(c->ctx, c->map, blk, fbucket + buckno);
+                    pbuck[buckno] = pcoeff;
+                    if (!pcoeff) {
+                        zp->a = a;
+                        zp->fence = fence;
+                        return;
+                    }
                     for (i = 0; i < 16; i++)
                         if ((cstate[cidx + i] & 1) == 0) cstate[cidx + i] = 8;
                 }
@@ -3485,14 +3621,14 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                 for (i = 0; i < 16; i++) {
                     if ((cstate[cidx + i] & 8) != 0) {
                         int ctx, coeff, halfthres;
-                        if (band == 0) thres = c->quant_low[i];
+                        int t = band0 ? c->quant_low[i] : thres;
                         ctx = (gotcha >= maxgotcha) ? maxgotcha : gotcha;
-                        if ((c->bucket_state[buckno] & 2) != 0) ctx |= 8;
-                        if (djvu_zp_decode(zp, &c->ctx_start[ctx]) != 0) {
+                        if ((bstate[buckno] & 2) != 0) ctx |= 8;
+                        if (iw_zp_dec(zp, &a, &fence, &c->ctx_start[ctx]) != 0) {
                             cstate[cidx + i] |= 4;
-                            halfthres = thres >> 1;
-                            coeff = (thres + halfthres) - (halfthres >> 2);
-                            if (djvu_zp_decode_iw(zp) != 0)
+                            halfthres = t >> 1;
+                            coeff = (t + halfthres) - (halfthres >> 2);
+                            if (iw_zp_dec_iw(zp, &a, &fence) != 0)
                                 pcoeff[i] = (int16_t)(-coeff);
                             else
                                 pcoeff[i] = (int16_t)coeff;
@@ -3506,26 +3642,26 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
     }
 
     if ((bbstate & 2) != 0) {
-        cstate = c->coeff_state; cidx = 0;
+        cidx = 0;
         for (buckno = 0; buckno < nbucket; buckno++, cidx += 16) {
-            if ((c->bucket_state[buckno] & 2) != 0) {
-                int16_t *pcoeff = block_get(blk, fbucket + buckno);
+            if ((bstate[buckno] & 2) != 0) {
+                int16_t *pcoeff = pbuck[buckno];
                 for (i = 0; i < 16; i++) {
                     if ((cstate[cidx + i] & 2) != 0) {
                         int coeff = pcoeff[i];
+                        int t = band0 ? c->quant_low[i] : thres;
                         if (coeff < 0) coeff = -coeff;
-                        if (band == 0) thres = c->quant_low[i];
-                        if (coeff <= (3 * thres)) {
-                            coeff += (thres >> 2);
-                            if (djvu_zp_decode(zp, &c->ctx_mant) != 0)
-                                coeff += (thres >> 1);
+                        if (coeff <= (3 * t)) {
+                            coeff += (t >> 2);
+                            if (iw_zp_dec(zp, &a, &fence, &c->ctx_mant) != 0)
+                                coeff += (t >> 1);
                             else
-                                coeff = (coeff - thres) + (thres >> 1);
+                                coeff = (coeff - t) + (t >> 1);
                         } else {
-                            if (djvu_zp_decode_iw(zp) != 0)
-                                coeff += (thres >> 1);
+                            if (iw_zp_dec_iw(zp, &a, &fence) != 0)
+                                coeff += (t >> 1);
                             else
-                                coeff = (coeff - thres) + (thres >> 1);
+                                coeff = (coeff - t) + (t >> 1);
                         }
                         if (pcoeff[i] > 0) pcoeff[i] = (int16_t)coeff;
                         else pcoeff[i] = (int16_t)(-coeff);
@@ -3534,6 +3670,9 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
             }
         }
     }
+
+    zp->a = a;
+    zp->fence = fence;
 }
 
 static int code_slice(iw_codec *c, djvu_zp *zp)
@@ -3585,15 +3724,18 @@ void djvu_iw44_free(iw_pixmap *pm)
 static size_t map_mem_size(const iw_map *m)
 {
     size_t n;
-    int i, b;
+    int nslabs;
     if (!m) return 0;
     n = sizeof(iw_map);
     if (m->blocks && m->nb > 0)
         n += sizeof(iw_block) * (size_t)m->nb;
-    for (i = 0; i < m->nb; i++)
-        for (b = 0; b < 64; b++)
-            if (m->blocks[i].buckets[b])
-                n += sizeof(int16_t) * 16;
+
+    nslabs = 0;
+    {
+        const iw_bucket_slab *s = m->slabs;
+        while (s) { nslabs++; s = s->next; }
+    }
+    n += (size_t)nslabs * sizeof(iw_bucket_slab);
     return n;
 }
 
@@ -3879,6 +4021,12 @@ int djvu_iw44_render_gray(iw_pixmap *pm, uint8_t *gray)
 
 #include <string.h>
 
+#if defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || \
+    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#define DJVU_SCALER_SSE2 1
+#include <emmintrin.h>
+#endif
+
 #define FRACBITS 4
 #define FRACSIZE (1 << FRACBITS)
 #define FRACSIZE2 (FRACSIZE >> 1)
@@ -4032,7 +4180,8 @@ static void scaler_expand_row3(const uint8_t *src, int w, int outw, uint8_t *dst
         const uint8_t *a = src + (size_t)x * 3;
         const uint8_t *b = a + 3;
         int ar = a[0], ag = a[1], ab = a[2];
-        int dr = b[0] - ar, dg = b[1] - ag, db = b[2] - ab;
+        int br = b[0], bg = b[1], bb = b[2];
+        int dr = br - ar, dg = bg - ag, db = bb - ab;
 
         d[0] = (uint8_t)ar;
         d[1] = (uint8_t)ag;
@@ -4058,9 +4207,33 @@ static void scaler_expand_row3(const uint8_t *src, int w, int outw, uint8_t *dst
 static void scaler_interp_row(const uint8_t *lower, const uint8_t *upper,
                               int w, int vf, uint8_t *dst)
 {
-    int i, n = w * 3;
+    int i = 0, n = w * 3;
 
-    for (i = 0; i < n; i++) {
+#ifdef DJVU_SCALER_SSE2
+
+    if (n >= 16) {
+        const __m128i vvf = _mm_set1_epi16((short)vf);
+        const __m128i bias = _mm_set1_epi16(FRACSIZE2);
+        for (; i + 16 <= n; i += 16) {
+            __m128i lo8 = _mm_loadu_si128((const __m128i *)(lower + i));
+            __m128i up8 = _mm_loadu_si128((const __m128i *)(upper + i));
+            __m128i lo_lo = _mm_unpacklo_epi8(lo8, _mm_setzero_si128());
+            __m128i lo_hi = _mm_unpackhi_epi8(lo8, _mm_setzero_si128());
+            __m128i up_lo = _mm_unpacklo_epi8(up8, _mm_setzero_si128());
+            __m128i up_hi = _mm_unpackhi_epi8(up8, _mm_setzero_si128());
+            __m128i d_lo = _mm_sub_epi16(up_lo, lo_lo);
+            __m128i d_hi = _mm_sub_epi16(up_hi, lo_hi);
+            d_lo = _mm_srai_epi16(_mm_add_epi16(_mm_mullo_epi16(d_lo, vvf), bias),
+                                  FRACBITS);
+            d_hi = _mm_srai_epi16(_mm_add_epi16(_mm_mullo_epi16(d_hi, vvf), bias),
+                                  FRACBITS);
+            _mm_storeu_si128((__m128i *)(dst + i),
+                             _mm_packus_epi16(_mm_add_epi16(lo_lo, d_lo),
+                                              _mm_add_epi16(lo_hi, d_hi)));
+        }
+    }
+#endif
+    for (; i < n; i++) {
         int lo = lower[i];
         dst[i] = (uint8_t)(lo + (((upper[i] - lo) * vf + FRACSIZE2) >> FRACBITS));
     }
@@ -4396,13 +4569,12 @@ static int compose_bg_native_build(djvu_doc *doc, djvu_page_int *pg, int cache_l
     djvu_ctx *ctx = doc->ctx;
     iw_pixmap *pm;
     int bw, bh, w, h, pm_owned = 0;
-    uint32_t sz;
 
     if (!djvu_cache_stores_page(ctx)) return -1;
     if (!doc || !pg || pg->bg_native.d) return 0;
     if (!pg->has_info || pg->info.width <= 0 || pg->info.height <= 0)
         return -1;
-    if (!djvu_form_find_chunk(doc, pg->form_off, "BG44", &sz, NULL))
+    if (!djvu_form_bg_iw44_id(doc, pg->form_off))
         return -1;
     if (cache_locked)
         pm = djvu_doc_iw44_acquire_under_lock(doc, pg, "BG44");
@@ -4848,10 +5020,20 @@ static int compose_read_bm_run(const uint8_t **data)
 
 static void compose_fill_rgb_run(uint8_t *d, int n, int r, int g, int b)
 {
+
+    uint8_t r8 = (uint8_t)r, g8 = (uint8_t)g, b8 = (uint8_t)b;
+    while (n >= 4) {
+        d[0] = r8; d[1] = g8; d[2] = b8;
+        d[3] = r8; d[4] = g8; d[5] = b8;
+        d[6] = r8; d[7] = g8; d[8] = b8;
+        d[9] = r8; d[10] = g8; d[11] = b8;
+        d += 12;
+        n -= 4;
+    }
     while (n-- > 0) {
-        d[0] = (uint8_t)r;
-        d[1] = (uint8_t)g;
-        d[2] = (uint8_t)b;
+        d[0] = r8;
+        d[1] = g8;
+        d[2] = b8;
         d += 3;
     }
 }
@@ -4908,14 +5090,25 @@ static void compose_stamp_bitmap_topdown_rgb(const djvu_bitmap *src,
             if (py < 0 || py >= outh) continue;
             while (p < end) {
                 const uint8_t *start;
-                const void *next = memchr(p, 1, (size_t)(end - p));
+                const uint8_t *q;
+                size_t left_n;
                 int x0, x1;
-                if (!next) break;
-                start = (const uint8_t *)next;
-                next = memchr(start, 0, (size_t)(end - start));
-                p = next ? (const uint8_t *)next : end;
+
+                left_n = (size_t)(end - p);
+                while (left_n >= 8) {
+                    uint64_t w;
+                    memcpy(&w, p, 8);
+                    if (w) break;
+                    p += 8;
+                    left_n -= 8;
+                }
+                while (p < end && !*p) p++;
+                if (p >= end) break;
+                start = p;
+                while (p < end && *p) p++;
+                q = p;
                 x0 = left + (int)(start - row);
-                x1 = left + (int)(p - row);
+                x1 = left + (int)(q - row);
                 if (x0 < 0) x0 = 0;
                 if (x1 > outw) x1 = outw;
                 if (x0 < x1) {
@@ -5314,6 +5507,26 @@ static int parse_info(const uint8_t *p, size_t len, djvu_page_info *info)
     return 0;
 }
 
+static int parse_iw44_primary_info(const uint8_t *p, size_t len, djvu_page_info *info)
+{
+    int serial, major, minor, w, h;
+    if (!p || !info || len < 8) return -1;
+    serial = p[0];
+    if (serial != 0) return -1;
+    major = p[2];
+    minor = p[3];
+    if ((major & 0x7f) != 1) return -1;
+    w = (p[4] << 8) | p[5];
+    h = (p[6] << 8) | p[7];
+    if (w <= 0 || h <= 0) return -1;
+    info->width = w;
+    info->height = h;
+    info->version = (major << 8) | minor;
+    info->dpi = 100;
+    info->rotation = 0;
+    return 0;
+}
+
 static int page_load_info(djvu_doc *doc, djvu_page_int *pg)
 {
     const uint8_t *data = doc->data;
@@ -5321,6 +5534,9 @@ static int page_load_info(djvu_doc *doc, djvu_page_int *pg)
     uint32_t off = pg->form_off;
     uint32_t form_end;
     uint32_t pos;
+    const char *iw_id;
+    const uint8_t *iw;
+    uint32_t iw_sz;
 
     if (pg->has_info) return 0;
     if ((size_t)off + 12 > len) return -1;
@@ -5345,7 +5561,14 @@ static int page_load_info(djvu_doc *doc, djvu_page_int *pg)
         pos = cdata + csize;
         if (csize & 1) pos++;
     }
-    return -1;
+
+    iw_id = djvu_form_bg_iw44_id(doc, pg->form_off);
+    if (!iw_id) return -1;
+    iw = djvu_form_find_chunk(doc, pg->form_off, iw_id, &iw_sz, NULL);
+    if (!iw || parse_iw44_primary_info(iw, iw_sz, &pg->info) != 0)
+        return -1;
+    pg->has_info = 1;
+    return 0;
 }
 
 static char *dup_cstr(djvu_ctx *ctx, const char *s, size_t maxlen, size_t *consumed)
@@ -5489,7 +5712,7 @@ static void page_index_scan(djvu_doc *doc, djvu_page_int *pg)
     pg->chunk_flags = 0;
     if (djvu_form_find_chunk(doc, pg->form_off, "Sjbz", &sz, NULL))
         pg->chunk_flags |= DJVU_PG_SJBZ;
-    if (djvu_form_find_chunk(doc, pg->form_off, "BG44", &sz, NULL))
+    if (djvu_form_bg_iw44_id(doc, pg->form_off))
         pg->chunk_flags |= DJVU_PG_BG44;
     if (djvu_form_find_chunk(doc, pg->form_off, "FG44", &sz, NULL))
         pg->chunk_flags |= DJVU_PG_FG44;
@@ -5550,6 +5773,19 @@ static void free_page_bg_native(djvu_ctx *ctx, djvu_page_int *pg)
     djvu_cpix_free(ctx, &pg->bg_scaled);
 }
 
+static const char *resolve_iw_layer_id(djvu_doc *doc, djvu_page_int *pg,
+                                       const char *id)
+{
+    const char *bg;
+    if (!id) return NULL;
+    if (id[0] == 'B' && id[1] == 'G' && id[2] == '4' && id[3] == '4' &&
+        id[4] == '\0') {
+        bg = djvu_form_bg_iw44_id(doc, pg->form_off);
+        return bg ? bg : id;
+    }
+    return id;
+}
+
 static iw_pixmap *decode_iw_layer_fresh(djvu_doc *doc, djvu_page_int *pg,
                                         const char *id)
 {
@@ -5557,7 +5793,8 @@ static iw_pixmap *decode_iw_layer_fresh(djvu_doc *doc, djvu_page_int *pg,
     int maxc;
     iw_pixmap *pm;
 
-    if (!djvu_form_find_chunk(doc, pg->form_off, id, &sz, NULL))
+    id = resolve_iw_layer_id(doc, pg, id);
+    if (!id || !djvu_form_find_chunk(doc, pg->form_off, id, &sz, NULL))
         return NULL;
     pm = djvu_iw44_new(doc->ctx);
     if (!pm) return NULL;
@@ -5577,7 +5814,8 @@ static void preload_iw_layer(djvu_doc *doc, djvu_page_int *pg, const char *id,
     iw_pixmap *pm;
 
     if (!djvu_cache_stores_page(doc->ctx)) return;
-    if (*slot || !djvu_form_find_chunk(doc, pg->form_off, id, &sz, NULL))
+    id = resolve_iw_layer_id(doc, pg, id);
+    if (*slot || !id || !djvu_form_find_chunk(doc, pg->form_off, id, &sz, NULL))
         return;
     pm = djvu_iw44_new(doc->ctx);
     if (!pm) return;
@@ -6136,6 +6374,16 @@ const uint8_t *djvu_form_find_chunk(djvu_doc *doc, uint32_t form_off,
     return NULL;
 }
 
+const char *djvu_form_bg_iw44_id(djvu_doc *doc, uint32_t form_off)
+{
+    uint32_t sz;
+    if (!doc) return NULL;
+    if (djvu_form_find_chunk(doc, form_off, "BG44", &sz, NULL)) return "BG44";
+    if (djvu_form_find_chunk(doc, form_off, "PM44", &sz, NULL)) return "PM44";
+    if (djvu_form_find_chunk(doc, form_off, "BM44", &sz, NULL)) return "BM44";
+    return NULL;
+}
+
 djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len)
 {
     djvu_doc *doc;
@@ -6165,7 +6413,9 @@ djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len)
     doc->len = len;
     doc->root_form_off = pos;
 
-    if (djvu_tag_eq(form_type, "DJVU")) {
+    if (djvu_tag_eq(form_type, "DJVU") ||
+        djvu_tag_eq(form_type, "PM44") ||
+        djvu_tag_eq(form_type, "BM44")) {
 
         doc->pages = (djvu_page_int *)djvu_alloc(ctx, sizeof(djvu_page_int));
         if (!doc->pages) { djvu_free(ctx, doc); return NULL; }
@@ -6200,7 +6450,8 @@ djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len)
             return NULL;
         }
     } else {
-        djvu_errorf(ctx, DJVU_SEVERITY_ERROR, "unsupported FORM type");
+        djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                    "unsupported FORM type '%.4s'", (const char *)form_type);
         djvu_doc_close(doc);
         return NULL;
     }
@@ -6296,7 +6547,7 @@ djvu_page_type djvu_page_get_type(djvu_doc *doc, int page_no)
     if (!doc || page_no < 0 || page_no >= doc->npages) return DJVU_PAGE_UNKNOWN;
     form_off = doc->pages[page_no].form_off;
     has_mask = djvu_form_find_chunk(doc, form_off, "Sjbz", &sz, NULL) != NULL;
-    has_bg   = djvu_form_find_chunk(doc, form_off, "BG44", &sz, NULL) != NULL;
+    has_bg   = djvu_form_bg_iw44_id(doc, form_off) != NULL;
     has_fg   = djvu_form_find_chunk(doc, form_off, "FG44", &sz, NULL) != NULL ||
                djvu_form_find_chunk(doc, form_off, "FGbz", &sz, NULL) != NULL;
     if (has_mask && (has_bg || has_fg)) return DJVU_PAGE_COMPOUND;
@@ -6569,7 +6820,7 @@ static djvu_image *page_render_timed_impl(djvu_doc *doc, int page_no, int subsam
 
     if (!out && info_ok && !ctx->no_compose &&
         (type == DJVU_PAGE_COMPOUND || type == DJVU_PAGE_PHOTO) &&
-        djvu_form_find_chunk(doc, form_off, "BG44", &sz, NULL) != NULL) {
+        djvu_form_bg_iw44_id(doc, form_off) != NULL) {
         out = djvu_compose_page(doc, page_no, mask, pi.width, pi.height, subsample, t);
         if (out) goto done;
     }
@@ -6639,7 +6890,7 @@ static int render_plan(djvu_doc *doc, int page_no, int subsample,
     type = djvu_page_get_type(doc, page_no);
     info_ok = (djvu_doc_page_info(doc, page_no, &pi) == 0);
     if (!info_ok || pi.width <= 0 || pi.height <= 0) return -1;
-    has_bg = djvu_form_find_chunk(doc, form_off, "BG44", &sz, NULL) != NULL;
+    has_bg = djvu_form_bg_iw44_id(doc, form_off) != NULL;
     has_mask = djvu_form_find_chunk(doc, form_off, "Sjbz", &sz, NULL) != NULL;
 
     color = !ctx->no_compose &&

@@ -38,9 +38,9 @@ libjpeg-turbo   3.1.4.1    2026-03-27
   vendored src/ + simd/ (x86/x86-64 NASM); jconfig.h, jconfigint.h, jversion.h
   hand-generated (v8 API). See ext/libjpeg-turbo/src/jconfig.h
 
-djvudec         main       2026-07-23
+djvudec         main       2026-07-26
   https://github.com/kjk/djvudec
-  commit c10e02c651b06adbc65a09f91e07cb598193fe0f
+  commit 390c66cb56ae6e7d01263316fff64ab63bb4d8ce
   amalgamated dist/djvu.c + dist/djvu.h only
 
 libwebp         1.6.0      2025-06-30
