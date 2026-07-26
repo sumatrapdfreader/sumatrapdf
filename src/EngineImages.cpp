@@ -16,8 +16,6 @@
 #include "base/Win.h"
 #endif
 
-#include <algorithm>
-
 extern "C" {
 #include <mupdf/fitz.h>
 }
