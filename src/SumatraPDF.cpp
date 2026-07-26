@@ -12,6 +12,7 @@
 #include "base/SquareTreeParser.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "base/Crypto.h"
 #include "base/ScopedWin.h"
 #include "base/GdiPlus.h"
 #include "base/Archive.h"

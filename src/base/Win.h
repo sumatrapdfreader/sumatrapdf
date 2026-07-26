@@ -404,8 +404,6 @@ Str LatestSupportedSIMD();
 LARGE_INTEGER TimeNow();
 double TimeDiffSecs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
 double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
-bool IsPEFileSigned(Str filePath);
-TempStr GetExecutableSignerTemp(Str exePath);
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
