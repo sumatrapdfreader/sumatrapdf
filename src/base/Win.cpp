@@ -383,31 +383,33 @@ bool IsRunningOnWine() {
     // Fallback: Wine creates a Software\Wine registry key. Cheap, independent of
     // the graphics backend, available from process start, and present even when
     // the ntdll wine_* exports are hidden.
-    if (!isWine) {
-        if (RegKeyExists(HKEY_CURRENT_USER, R"(Software\Wine)") ||
-            RegKeyExists(HKEY_LOCAL_MACHINE, R"(Software\Wine)")) {
-            isWine = true;
-        }
+    if (!isWine &&
+        (RegKeyExists(HKEY_CURRENT_USER, R"(Software\Wine)") || RegKeyExists(HKEY_LOCAL_MACHINE, R"(Software\Wine)"))) {
+        isWine = true;
     }
     // Last resort: scan loaded modules for a Wine graphics driver. Covers the X11
     // (winex11.drv) and Wayland (winewayland.drv) backends. Misses headless Wine
     // and the early-startup window before a driver is loaded, hence the checks
     // above run first.
-    if (!isWine) {
-        AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-        if (snap != INVALID_HANDLE_VALUE) {
-            MODULEENTRY32 mod{};
-            mod.dwSize = sizeof(mod);
-            BOOL cont = Module32First(snap, &mod);
-            while (cont) {
-                auto nameA = ToUtf8Temp(mod.szModule);
-                if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
-                    isWine = true;
-                    break;
-                }
-                cont = Module32Next(snap, &mod);
-            }
+    if (isWine) {
+        cached = 1;
+        return true;
+    }
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap == INVALID_HANDLE_VALUE) {
+        cached = 0;
+        return false;
+    }
+    MODULEENTRY32 mod{};
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    while (cont) {
+        auto nameA = ToUtf8Temp(mod.szModule);
+        if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
+            isWine = true;
+            break;
         }
+        cont = Module32Next(snap, &mod);
     }
     cached = isWine ? 1 : 0;
     return isWine;

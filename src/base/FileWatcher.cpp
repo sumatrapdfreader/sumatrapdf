@@ -409,32 +409,36 @@ static WatchedDir* NewWatchedDir(Str dirPath) {
     return wd;
 }
 
+static WatchedDir* FindOrCreateWatchedDir(Str dirPath, bool* newDir) {
+    WatchedDir* wd = FindExistingWatchedDir(dirPath);
+    if (wd) {
+        return wd;
+    }
+    wd = NewWatchedDir(dirPath);
+    if (!wd) {
+        return nullptr;
+    }
+    wd->startMonitoring = true;
+    *newDir = true;
+    return wd;
+}
+
 static WatchedFile* NewWatchedFile(Str filePath, const Func0& onFileChangedCb, bool enableManualCheckOnNetworkDrives) {
     bool isManualCheck = !path::SupportsChangeNotifications(filePath);
     bool isNetworkDrive = path::IsOnNetworkDrive(filePath);
-    if (isManualCheck) {
-        // https://github.com/sumatrapdfreader/sumatrapdf/issues/5297#issuecomment-3810653582
-        // on network drives we don't want to do manually check if file changed
-        // because that generates network traffic
-        // unless tex has been explicitly enabled in which case we do want that
-        // for auto-reload of changed files
-        // but most people do not enable tex
-        if (isNetworkDrive && !enableManualCheckOnNetworkDrives) {
-            return nullptr;
-        }
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/5297#issuecomment-3810653582
+    // On network drives, avoid manual checks and their network traffic unless TeX
+    // support explicitly enables them for auto-reload.
+    if (isManualCheck && isNetworkDrive && !enableManualCheckOnNetworkDrives) {
+        return nullptr;
     }
     TempStr dirPath = path::GetDirTemp(filePath);
     WatchedDir* wd = nullptr;
     bool newDir = false;
     if (!isManualCheck) {
-        wd = FindExistingWatchedDir(dirPath);
+        wd = FindOrCreateWatchedDir(dirPath, &newDir);
         if (!wd) {
-            wd = NewWatchedDir(dirPath);
-            if (!wd) {
-                return nullptr;
-            }
-            wd->startMonitoring = true;
-            newDir = true;
+            return nullptr;
         }
     }
 
@@ -449,10 +453,8 @@ static WatchedFile* NewWatchedFile(Str filePath, const Func0& onFileChangedCb, b
     if (wf->isManualCheck) {
         GetFileState(filePath, &wf->fileState);
         AwakeWatcherThread();
-    } else {
-        if (newDir) {
-            StartMonitoringDirForChanges(wf->watchedDir);
-        }
+    } else if (newDir) {
+        StartMonitoringDirForChanges(wf->watchedDir);
     }
 
     return wf;

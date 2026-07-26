@@ -1035,15 +1035,12 @@ static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
             continue;
         }
         int blobLen = n - tiffOff;
-        if (i >= 4) {
-            u32 boxSize =
-                ((u32)data[i - 4] << 24) | ((u32)data[i - 3] << 16) | ((u32)data[i - 2] << 8) | (u32)data[i - 1];
-            if (boxSize >= 8 && (i - 4) + (int)boxSize <= n) {
-                int boxEnd = (i - 4) + (int)boxSize;
-                if (boxEnd > tiffOff) {
-                    blobLen = boxEnd - tiffOff;
-                }
-            }
+        u32 boxSize =
+            i >= 4 ? ((u32)data[i - 4] << 24) | ((u32)data[i - 3] << 16) | ((u32)data[i - 2] << 8) | (u32)data[i - 1]
+                   : 0;
+        i64 boxEnd = (i64)i - 4 + boxSize;
+        if (boxSize >= 8 && boxEnd <= n && boxEnd > tiffOff) {
+            blobLen = (int)boxEnd - tiffOff;
         }
         u8* copy = (u8*)malloc((size_t)blobLen);
         if (!copy) {

@@ -402,10 +402,8 @@ int IndexOfI(Str s, Str toFind) {
     if (asciiNeedle) {
         for (int off = 0; off < s.len && s.s[off]; off++) {
             char c = (char)tolower(s.s[off]);
-            if (c == first) {
-                if (str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
-                    return off;
-                }
+            if (c == first && str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
+                return off;
             }
         }
         return -1;

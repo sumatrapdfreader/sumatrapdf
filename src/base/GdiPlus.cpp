@@ -489,31 +489,37 @@ Pixmap* PixmapFromDataWin(Str bmpData) {
     return px;
 }
 
+static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
+    Vec<Pixmap*> res;
+    Gdiplus::Bitmap* bmp = DecodeWithGdiplus(bmpData);
+    if (!bmp) {
+        bmp = DecodeWithWIC(bmpData);
+    }
+    if (!bmp) {
+        return res;
+    }
+    const GUID* dim = (FileType::Tiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
+    UINT nFrames = bmp->GetFrameCount(dim);
+    for (UINT i = 0; i < nFrames; i++) {
+        if (bmp->SelectActiveFrame(dim, i) != Gdiplus::Ok) {
+            break;
+        }
+        Pixmap* px = PixmapFromGdiplus(bmp);
+        if (px) {
+            res.Append(px);
+        }
+    }
+    delete bmp;
+    return res;
+}
+
 // Decode an image to one Pixmap per frame: multi-page TIFF and animated GIF yield more
 // than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
 Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
     Vec<Pixmap*> res;
     FileType kind = GuessFileTypeFromData(bmpData);
     if (FileType::Tiff == kind || FileType::Gif == kind) {
-        // decode every frame of a multi-page TIFF / animated GIF via GDI+
-        Gdiplus::Bitmap* bmp = DecodeWithGdiplus(bmpData);
-        if (!bmp) {
-            bmp = DecodeWithWIC(bmpData);
-        }
-        if (bmp) {
-            const GUID* dim = (FileType::Tiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
-            UINT nFrames = bmp->GetFrameCount(dim);
-            for (UINT i = 0; i < nFrames; i++) {
-                if (bmp->SelectActiveFrame(dim, i) != Gdiplus::Ok) {
-                    break;
-                }
-                Pixmap* px = PixmapFromGdiplus(bmp);
-                if (px) {
-                    res.Append(px);
-                }
-            }
-            delete bmp;
-        }
+        res = PixmapsFromMultiFrameData(bmpData, kind);
         if (len(res) > 0) {
             return res;
         }
