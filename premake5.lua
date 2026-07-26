@@ -646,7 +646,7 @@ workspace "SumatraPDF"
     libjxl_files()
 
   -- HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
-  -- AV1 uses dav1d when HEIC_HAVE_DAV1D is set.
+  -- AV1 uses dav1d; unci zlib/brotli compression uses a-zlib / brotli at link.
   project "heicdec"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -654,8 +654,13 @@ workspace "SumatraPDF"
     optimized_conf()
     -- HEVC decode is CPU-bound (CABAC / transform / deblock), favor speed
     optimize "Speed"
-    defines { "_CRT_SECURE_NO_WARNINGS", "HEIC_HAVE_DAV1D" }
-    includedirs { "ext/heicdec", "ext/dav1d/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HEIC_HAVE_DAV1D",
+      "HEIC_HAVE_ZLIB",
+      "HEIC_HAVE_BROTLI",
+    }
+    includedirs { "ext/heicdec", "ext/dav1d/include", "ext/a-zlib", "ext/brotli/c/include" }
     files { "ext/heicdec/heic.c", "ext/heicdec/heic.h" }
 
   project "dav1d"

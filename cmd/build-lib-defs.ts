@@ -499,12 +499,22 @@ export const libjxl: LibDef = {
 };
 
 // HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
-// AV1 uses dav1d when HEIC_HAVE_DAV1D is set.
+// AV1 uses dav1d; unci zlib/brotli needs a-zlib / brotli at link time.
 export const heicdec: LibDef = {
   name: "heicdec",
   alwaysOptimize: true,
-  defines: ["_CRT_SECURE_NO_WARNINGS", "HEIC_HAVE_DAV1D"],
-  includes: ["ext/heicdec", "ext/dav1d/include"],
+  defines: [
+    "_CRT_SECURE_NO_WARNINGS",
+    "HEIC_HAVE_DAV1D",
+    "HEIC_HAVE_ZLIB",
+    "HEIC_HAVE_BROTLI",
+  ],
+  includes: [
+    "ext/heicdec",
+    "ext/dav1d/include",
+    "ext/a-zlib",
+    "ext/brotli/c/include",
+  ],
   files: [
     {
       dir: "ext/heicdec",

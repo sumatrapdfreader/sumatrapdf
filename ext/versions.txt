@@ -98,7 +98,9 @@ dav1d           1.5.4      2026-07-14
 
 heicdec         dist       2026-07-26
   https://github.com/kjk/heicdec (amalgamation dist/heic.c + dist/heic.h)
-  HEVC pure-C; AV1 via dav1d (HEIC_HAVE_DAV1D). Replaces libheif.
+  HEVC pure-C; AV1 via dav1d; unci via zlib/brotli when present.
+  Build flags: HEIC_HAVE_DAV1D, HEIC_HAVE_ZLIB, HEIC_HAVE_BROTLI.
+  Replaces libheif.
 
 darkmodelib     trunk      2026-01-16
   https://github.com/ozone10/darkmodelib
