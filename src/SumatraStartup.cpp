@@ -920,7 +920,7 @@ static void FreeLibmupdfDll() {
     }
 }
 
-static TempStr ExtractLibmupdfDllToBuildDir() {
+static TempStr PortableExtractLibmupdf() {
     u32 expectedSize = GetLibmupdfDllSize();
     ReportIf(0 == expectedSize);
     if (0 == expectedSize) {
@@ -937,7 +937,7 @@ static TempStr ExtractLibmupdfDllToBuildDir() {
         return path;
     }
     if (realSize >= 0) {
-        logf("ExtractLibmupdfDllToBuildDir: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize,
+        logf("PortableExtractLibmupdf: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize,
              expectedSize);
     }
     bool ok = ExtractLibmupdfDllToDir(buildDir);
@@ -958,7 +958,7 @@ static bool LoadLibmupdf(bool showErrorDialog) {
     // to the exe.
     TempStr path;
     if (gSingleExe) {
-        path = ExtractLibmupdfDllToBuildDir();
+        path = PortableExtractLibmupdf();
     } else {
         path = GetPathInExeDirTemp("libmupdf.dll");
     }
