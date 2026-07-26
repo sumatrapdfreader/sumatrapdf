@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "StrQueue.h"
+#include "base/StrQueue.h"
 
 StrQueue::StrQueue() = default;
 

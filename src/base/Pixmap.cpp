@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "Pixmap.h"
+#include "base/Pixmap.h"
 
 static void AppendLE16(str::Builder& data, u16 v) {
     data.AppendChar((char)(v & 0xff));

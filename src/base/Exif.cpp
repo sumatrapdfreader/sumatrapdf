@@ -2,9 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "ByteReader.h"
-#include "GuessFileType.h"
-#include "Exif.h"
+#include "base/ByteReader.h"
+#include "base/GuessFileType.h"
+#include "base/Exif.h"
 
 namespace {
 

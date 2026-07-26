@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "Pixmap.h"
-#include "TgaReader.h"
+#include "base/Pixmap.h"
+#include "base/TgaReader.h"
 
 namespace tga {
 

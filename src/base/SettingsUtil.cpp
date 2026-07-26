@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "SettingsUtil.h"
-#include "SquareTreeParser.h"
+#include "base/SettingsUtil.h"
+#include "base/SquareTreeParser.h"
 
 static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
     return (const StructInfo*)field.value;

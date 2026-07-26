@@ -4,7 +4,7 @@
 #include "base/Base.h"
 
 #if OS_WIN
-#include "WinDynCalls.h"
+#include "base/WinDynCalls.h"
 #else
 #include <unistd.h>
 #if OS_LINUX

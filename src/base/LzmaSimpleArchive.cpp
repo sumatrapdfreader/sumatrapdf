@@ -4,9 +4,9 @@
 #include "base/Base.h"
 #include <LzmaDec.h>
 #include <Bra.h>
-#include "ByteOrderDecoder.h"
-#include "LzmaSimpleArchive.h"
-#include "File.h"
+#include "base/ByteOrderDecoder.h"
+#include "base/LzmaSimpleArchive.h"
+#include "base/File.h"
 
 /*
 Implements extracting data from a simple archive format, made up by me.

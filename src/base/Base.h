@@ -833,17 +833,17 @@ AutoCall closeFile(fclose, f);
 defer { instance->Release(); };
 */
 
-#include "Geom.h"
-#include "Vec.h"
-#include "Str.h"
-#include "StrUtf8.h"
-#include "StrFormatParse.h"
-#include "StrVec.h"
-#include "Strconv.h"
-#include "Thread.h"
-#include "Arena.h"
-#include "Scoped.h"
-#include "Color.h"
+#include "base/Geom.h"
+#include "base/Vec.h"
+#include "base/Str.h"
+#include "base/StrUtf8.h"
+#include "base/StrFormatParse.h"
+#include "base/StrVec.h"
+#include "base/Strconv.h"
+#include "base/Thread.h"
+#include "base/Arena.h"
+#include "base/Scoped.h"
+#include "base/Color.h"
 
 // Windows/MSVC string APIs: use str::/wstr:: BufSet, EqI, CmpI instead.
 #ifdef lstrcpy
@@ -867,6 +867,6 @@ defer { instance->Release(); };
 #define lstrcmpiW dont_use_lstrcmpiW
 #endif
 
-#include "Log.h"
+#include "base/Log.h"
 
 #endif

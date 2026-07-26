@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "SquareTreeParser.h"
+#include "base/SquareTreeParser.h"
 
 /*
 A 'square tree' is a format for representing string values contained in a

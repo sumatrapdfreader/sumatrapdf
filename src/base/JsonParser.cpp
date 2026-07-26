@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "JsonParser.h"
+#include "base/JsonParser.h"
 
 namespace json {
 
