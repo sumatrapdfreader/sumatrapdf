@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 
 #ifdef _MSC_VER
@@ -13,7 +14,7 @@ extern "C" {
 #include "../mupdf/source/fitz/color-imp.h"
 }
 
-#include "FzImgReader.h"
+#include "ImageReader.h"
 
 struct MupdfContext {
     fz_locks_context fz_locks_ctx{};
@@ -143,5 +144,28 @@ Pixmap* PixmapFromDataFz(Str d) {
 
     fz_drop_context_windows(ctx);
 
+    return result;
+}
+
+// adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
+Size ImageSizeFromData(Str d) {
+    Size result;
+    FileTypeInfo fti = GuessFileInfoFromData(d);
+    if (fti.hasImageSize) {
+        result = Size(fti.imageDx, fti.imageDy);
+    } else if (fti.imageSizes) {
+        // multi-image file (animated GIF, multi-page TIFF, ...): the first image
+        result = fti.imageSizes[0];
+    }
+    FreeFileTypeInfo(&fti);
+    if (!result.IsEmpty()) {
+        return result;
+    }
+    // try expensive way of getting the info by decoding the image
+    Pixmap* px = PixmapFromData(d);
+    if (px) {
+        result = Size(px->width, px->height);
+        FreePixmap(px);
+    }
     return result;
 }

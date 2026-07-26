@@ -20,7 +20,7 @@ extern "C" {
 #include <mupdf/fitz.h>
 }
 
-#include "FzImgReader.h"
+#include "ImageReader.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "TreeModel.h"

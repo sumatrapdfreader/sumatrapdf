@@ -15,7 +15,7 @@
 #include "GumboHelpers.h"
 
 #include "DocProperties.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EbookBase.h"

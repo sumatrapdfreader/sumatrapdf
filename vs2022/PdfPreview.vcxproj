@@ -1096,11 +1096,10 @@
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\FzImgReader.h" />
-    <ClInclude Include="..\src\GdiPlusExtFormats.h" />
     <ClInclude Include="..\src\GumboHelpers.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
+    <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\JxlReader.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
@@ -1166,12 +1165,11 @@
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\FzImgReader.cpp" />
-    <ClCompile Include="..\src\FzImgReader_win.cpp" />
-    <ClCompile Include="..\src\GdiPlusExtFormats.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
+    <ClCompile Include="..\src\ImageReader.cpp" />
+    <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />

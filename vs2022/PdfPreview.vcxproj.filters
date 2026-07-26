@@ -255,12 +255,6 @@
     <ClInclude Include="..\src\EngineMupdf.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\FzImgReader.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\GdiPlusExtFormats.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\GumboHelpers.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -268,6 +262,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\HtmlFormatter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ImageReader.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\JxlReader.h">
@@ -455,15 +452,6 @@
     <ClCompile Include="..\src\EngineMupdf.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\FzImgReader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\FzImgReader_win.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\GdiPlusExtFormats.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\GumboHelpers.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -471,6 +459,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\HtmlFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ImageReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ImageReader_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\JxlReader.cpp">

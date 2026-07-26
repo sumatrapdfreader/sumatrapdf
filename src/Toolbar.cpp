@@ -20,7 +20,7 @@ extern "C" {
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"

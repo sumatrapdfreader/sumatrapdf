@@ -7,7 +7,7 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/GdiPlus.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

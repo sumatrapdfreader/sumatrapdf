@@ -8,7 +8,7 @@
 #include "base/Win.h"
 
 #include "Settings.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 
 #include "AppTools.h"
 #include "FileThumbnails.h"

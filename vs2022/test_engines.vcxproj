@@ -958,11 +958,10 @@
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\FzImgReader.cpp" />
-    <ClCompile Include="..\src\FzImgReader_win.cpp" />
-    <ClCompile Include="..\src\GdiPlusExtFormats.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
+    <ClCompile Include="..\src\ImageReader.cpp" />
+    <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />

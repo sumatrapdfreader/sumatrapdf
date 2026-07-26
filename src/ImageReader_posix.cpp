@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 
-#include "FzImgReader.h"
+#include "ImageReader.h"
 
 Pixmap* PixmapFromData(Str bmpData) {
     return PixmapFromDataFz(bmpData);

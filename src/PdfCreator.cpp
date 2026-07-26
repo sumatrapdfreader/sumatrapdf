@@ -15,7 +15,7 @@ extern "C" {
 #include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 #include "PdfCreator.h"
 
 static Str gPdfProducer;

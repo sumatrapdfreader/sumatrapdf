@@ -81,7 +81,7 @@ in isolation, or PDF engine to D2D.
 - **Device lost / DPI / session** (RDP, sleep, adapter change) must be handled carefully.
 - **Font / metric drift** if measure stays GDI and draw goes D2D (or vice versa)—breaks
   hit-testing, tab widths, selection toolbar layout.
-- **GDI+ used for more than paint:** image load/orientation/encode (`GdiPlus.cpp`,
+- **GDI+ used for more than paint:** image load/orientation/encode (`ImageReader_win.cpp`, `GdiPlus.cpp`,
   thumbs, crop tool). “All GDI+” ≠ “all paint.”
 - **Page pipeline is MuPDF**, not GDI—D2D doesn’t simplify document fidelity.
 - **darkmodelib** already subclasses and paints borders; stacking D2D parents can fight it.
