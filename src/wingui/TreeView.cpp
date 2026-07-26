@@ -60,9 +60,7 @@ HWND TreeView::Create(const CreateArgs& args) {
     if (IsWindowsVistaOrGreater()) {
         SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
     }
-    if (DynSetWindowTheme) {
-        DynSetWindowTheme(hwnd, L"Explorer", nullptr);
-    }
+    SetWindowTheme(hwnd, L"Explorer", nullptr);
 
     TreeView_SetUnicodeFormat(hwnd, true);
 

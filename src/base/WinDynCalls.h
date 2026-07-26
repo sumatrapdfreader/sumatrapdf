@@ -19,6 +19,7 @@ void InitDynCalls();
 // as an exception, we include system headers needed for the calls that we dynamically load
 #include <windows.h>
 #include <dwmapi.h>
+#include <uxtheme.h>
 #include <vssym32.h>
 #include <uiautomationcore.h>
 #include <uiautomationcoreapi.h>
@@ -33,20 +34,9 @@ void InitDynCalls();
 #include <dbghelp.h>
 #pragma warning(pop)
 
-#define API_DECLARATION(name) extern Sig_##name Dyn##name;
-
 #define API_DECLARATION2(name)          \
     typedef decltype(name)* Sig_##name; \
     extern Sig_##name Dyn##name;
-
-// normaliz.dll
-// TODO: need to rename our NormalizeString so that it doesn't conflict
-// typedef decltype(NormalizeString)* Sig_NormalizeString2;
-typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
-
-#define NORMALIZ_API_LIST(V) V(NormalizeString)
-
-NORMALIZ_API_LIST(API_DECLARATION)
 
 // kernel32.dll — only APIs not guaranteed on stock Windows 7
 #define KERNEL32_API_LIST(V)    \
@@ -80,29 +70,6 @@ extern Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi;
 typedef HRESULT(WINAPI* Sig_GetDpiForMonitor)(HMONITOR, int, UINT*, UINT*);
 extern Sig_GetDpiForMonitor DynGetDpiForMonitor;
 
-// uxtheme.dll
-#define UXTHEME_API_LIST(V)                  \
-    V(IsAppThemed)                           \
-    V(OpenThemeData)                         \
-    V(CloseThemeData)                        \
-    V(DrawThemeBackground)                   \
-    V(IsThemeActive)                         \
-    V(IsThemeBackgroundPartiallyTransparent) \
-    V(SetWindowTheme)                        \
-    V(GetThemeColor)
-
-UXTHEME_API_LIST(API_DECLARATION2)
-
-/// dwmapi.dll
-#define DWMAPI_API_LIST(V)          \
-    V(DwmIsCompositionEnabled)      \
-    V(DwmExtendFrameIntoClientArea) \
-    V(DwmDefWindowProc)             \
-    V(DwmGetWindowAttribute)        \
-    V(DwmSetWindowAttribute)
-
-DWMAPI_API_LIST(API_DECLARATION2)
-
 // dbghelp.dll, there are different versions not sure if I can rely on
 // this to be always present on every Windows version
 #define DBGHELP_API_LIST(V)     \
@@ -122,10 +89,9 @@ DWMAPI_API_LIST(API_DECLARATION2)
 
 DBGHELP_API_LIST(API_DECLARATION2)
 
-#undef API_DECLARATION
 #undef API_DECLARATION2
 
-// convenience wrappers
+// convenience wrappers over Win7-available theming APIs
 namespace theme {
 
 bool IsAppThemed();

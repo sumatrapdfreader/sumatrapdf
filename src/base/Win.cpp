@@ -2278,11 +2278,9 @@ uint GuessTextCodepage(Str data, uint defVal) {
 }
 
 TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
-    if (!DynNormalizeString) {
-        return nullptr;
-    }
     TempWStr str = ToWStrTemp(strA);
-    int sizeEst = DynNormalizeString(form, str.s, str.len, nullptr, 0);
+    // ::NormalizeString is Win32 (normaliz.dll); this function is our UTF-8 wrapper
+    int sizeEst = ::NormalizeString((NORM_FORM)form, str.s, str.len, nullptr, 0);
     if (sizeEst <= 0) {
         return nullptr;
     }
@@ -2290,7 +2288,7 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 2;
     WCHAR* res = AllocArrayTemp<WCHAR>(sizeEst);
-    sizeEst = DynNormalizeString(form, str.s, str.len, res, sizeEst);
+    sizeEst = ::NormalizeString((NORM_FORM)form, str.s, str.len, res, sizeEst);
     if (sizeEst <= 0) {
         return nullptr;
     }

@@ -9,9 +9,6 @@ License: Simplified BSD (see COPYING.BSD) */
 #define API_DECLARATION(name) Sig_##name Dyn##name = nullptr;
 
 KERNEL32_API_LIST(API_DECLARATION)
-UXTHEME_API_LIST(API_DECLARATION)
-NORMALIZ_API_LIST(API_DECLARATION)
-DWMAPI_API_LIST(API_DECLARATION)
 DBGHELP_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
@@ -66,21 +63,6 @@ void InitDynCalls() {
         DynGetDpiForMonitor = (Sig_GetDpiForMonitor)GetProcAddress(h, "GetDpiForMonitor");
     }
 
-    h = SafeLoadLibrary("uxtheme.dll");
-    if (h) {
-        UXTHEME_API_LIST(API_LOAD);
-    }
-
-    h = SafeLoadLibrary("dwmapi.dll");
-    if (h) {
-        DWMAPI_API_LIST(API_LOAD);
-    }
-
-    h = SafeLoadLibrary("normaliz.dll");
-    if (h) {
-        NORMALIZ_API_LIST(API_LOAD);
-    }
-
 #if 0
     WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
     h = LoadLibrary(dbghelpPath);
@@ -116,73 +98,46 @@ BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGe
 namespace theme {
 
 bool IsAppThemed() {
-    return DynIsAppThemed && DynIsAppThemed();
+    return ::IsAppThemed() != FALSE;
 }
 
 HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList) {
-    if (DynOpenThemeData) {
-        return DynOpenThemeData(hwnd, pszClassList);
-    }
-    return nullptr;
+    return ::OpenThemeData(hwnd, pszClassList);
 }
 
 HRESULT CloseThemeData(HTHEME hTheme) {
-    if (DynCloseThemeData) {
-        return DynCloseThemeData(hTheme);
-    }
-    return E_NOTIMPL;
+    return ::CloseThemeData(hTheme);
 }
 
 HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect) {
-    if (DynDrawThemeBackground) {
-        return DynDrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
-    }
-    return E_NOTIMPL;
+    return ::DrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
 }
 
 BOOL IsThemeActive() {
-    if (DynIsThemeActive) {
-        return DynIsThemeActive();
-    }
-    return FALSE;
+    return ::IsThemeActive();
 }
 
 BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId) {
-    if (DynIsThemeBackgroundPartiallyTransparent) {
-        return DynIsThemeBackgroundPartiallyTransparent(hTheme, iPartId, iStateId);
-    }
-    return FALSE;
+    return ::IsThemeBackgroundPartiallyTransparent(hTheme, iPartId, iStateId);
 }
 
 HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor) {
-    if (DynGetThemeColor) {
-        return DynGetThemeColor(hTheme, iPartId, iStateId, iPropId, pColor);
-    }
-    return E_NOTIMPL;
+    return ::GetThemeColor(hTheme, iPartId, iStateId, iPropId, pColor);
 }
 }; // namespace theme
 
 namespace dwm {
 
 HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset) {
-    if (!DynDwmExtendFrameIntoClientArea) {
-        return E_NOTIMPL;
-    }
-    return DynDwmExtendFrameIntoClientArea(hwnd, pMarInset);
+    return ::DwmExtendFrameIntoClientArea(hwnd, pMarInset);
 }
 
 HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {
-    if (!DynDwmGetWindowAttribute) {
-        return E_NOTIMPL;
-    }
-    return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+    return ::DwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
 
 HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {
-    if (!DynDwmSetWindowAttribute) {
-        return E_NOTIMPL;
-    }
-    return DynDwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+    return ::DwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
 
 void SetWindowBorderColor(HWND hwnd, COLORREF color) {

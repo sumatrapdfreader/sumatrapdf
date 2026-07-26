@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -217,7 +217,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -247,7 +247,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -277,7 +277,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -307,7 +307,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -343,7 +343,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -379,7 +379,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -415,7 +415,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
@@ -450,7 +450,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;version.lib;comctl32.lib;wininet.lib;crypt32.lib;wintrust.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
     <ProjectReference>
