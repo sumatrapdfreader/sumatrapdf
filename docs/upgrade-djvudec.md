@@ -177,7 +177,7 @@ Append `prompt: ...` if the change was AI-assisted (per Agents.md).
   `djvu.c` directly; include `djvu.h`.
 - `EngineDjvuDec` keeps a single shared `djvu_doc` (read-only after open);
   `djvu_page_render_into` / metadata calls are re-entrant on the same doc.
-- Thread-safety analysis lives in `ai/djvudec-threading.md` and upstream
+- Thread-safety analysis lives in `docs/djvudec-threading.md` and upstream
   `thread-safety.md`.
 - djvudec is the **only** DjVu engine (the libdjvu-based `EngineDjVu` has been
   removed; `EngineCreate.cpp` creates `EngineDjvuDec` for all DjVu files).

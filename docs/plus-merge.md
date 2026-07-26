@@ -66,7 +66,7 @@ on blank area toggles read-aloud. Recommends NaturalVoiceSAPIAdapter for natural
   `CmdReadAloudSelection`, `CmdPauseReadAloud`, `CmdContinueReadAloud`, `CmdStopReadAloud`
 - Key commits: `95812be62`, `95d695b1d`, `4aa346bf5`, `48753162f`, `b4d2fdd06`,
   `4a6a9ece3`, `5a6c285e4`, `2d3684974`, `270f677d3`, `4e5363143` (partly)
-- Note: we have our own ideas in `ai/read-aloud-ux-ideas.md` — compare before porting.
+- Note: we have our own ideas in `docs/read-aloud-ux-ideas.md` — compare before porting.
 
 ### B. Offline dictionary / word lookup
 Double-click a word (or "Look Up Selection") to show a floating dictionary popup from
