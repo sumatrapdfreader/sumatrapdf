@@ -7,6 +7,17 @@
 #include "base/File.h"
 #include "base/Win.h"
 
+// Log file path we must not reload-on-change (set by SumatraLog).
+static Str gFileWatcherSkipPath;
+
+void FileWatcherSetSkipPath(Str path) {
+    gFileWatcherSkipPath = path;
+}
+
+static Str FileWatcherGetSkipPath() {
+    return gFileWatcherSkipPath;
+}
+
 /*
 This code is tricky, so here's a high-level overview. More info at:
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
