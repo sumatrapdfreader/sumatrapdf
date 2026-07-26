@@ -4,7 +4,9 @@
 Generates a list of all exports from libmupdf.dll from the function lists
 contained in the mupdf/include/* headers (only MuPDF and MuXPS are included)
 and adds exports for the other libraries contained within libmupdf.dll but
-used by SumatraPDF-mupdf-dll.exe (djvudec, zlib, lzma, libwebp).
+used by SumatraPDF / PdfPreview / etc. (djvudec, zlib, libwebp, libjxl, heicdec).
+Image codec static libs must only be linked into libmupdf.dll — not into those
+exes/dlls — and the few needed C APIs are re-exported below.
 """
 
 import os, re, util

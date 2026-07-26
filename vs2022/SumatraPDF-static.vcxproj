@@ -1772,6 +1772,9 @@
     <ProjectReference Include="a-skcms.vcxproj">
       <Project>{F428E69F-6008-653B-6920-F011D57ECB9C}</Project>
     </ProjectReference>
+    <ProjectReference Include="brotli.vcxproj">
+      <Project>{B155C6F4-9DF7-F0CA-86B2-041F72F3771B}</Project>
+    </ProjectReference>
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>

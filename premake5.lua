@@ -1005,7 +1005,13 @@ workspace "SumatraPDF"
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
-    links { "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
+    -- image codecs + their transitive deps are part of this DLL only; consumers
+    -- (SumatraPDF, PdfPreview, …) import the few needed symbols via libmupdf.def
+    -- and must not also link libwebp/libjxl/heicdec/dav1d/highway/a-skcms/brotli.
+    -- brotli is required by freetype (via mupdf) and by libjxl/heicdec.
+    links {
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli"
+    }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -1063,8 +1069,9 @@ workspace "SumatraPDF"
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
     test_engines_files()
     links_zlib()
+    -- static link (no libmupdf.dll): same image-codec set as libmupdf.dll
     links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
-    links { "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
+    links { "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon",
@@ -1147,18 +1154,19 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
+    -- image codecs (webp/jxl/heic/dav1d) live in libmupdf.dll and are imported
+    -- via libmupdf.def; only headers are needed here to compile the readers.
     includedirs {
       "src", "src/wingui", "mupdf/include",
       "ext/djvudec", "ext/libchm",
       "ext/libarchive",
       "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include",
-      "ext/brotli/c/include",
     }
-    brotli_files()
     pdf_preview_files()
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
+    -- djvudec is also inside libmupdf.dll (djvu_* exports in libmupdf.def)
+    links { "base", "unrar", "libmupdf", "libarchive", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1234,8 +1242,11 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links_zlib()
+    -- static build has no libmupdf.dll: image codecs link in here (same set as
+    -- libmupdf.dll uses). brotli is pulled via mupdf (freetype) + needed by jxl/heic.
     links {
-      "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
+      "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli",
+      "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1272,6 +1283,7 @@ workspace "SumatraPDF"
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
+    -- headers only: webp/jxl/heic symbols come from libmupdf.dll (libmupdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
