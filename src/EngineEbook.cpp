@@ -1497,6 +1497,22 @@ static uint CharsetNameToCodepage(Str charset) {
     return 0;
 }
 
+static uint HttpCharsetFromMetaNode(const GumboNode* node) {
+    if (node->type != GUMBO_NODE_ELEMENT || !GumboTagNameIs(node, "meta")) {
+        return 0;
+    }
+    const GumboAttribute* httpEquiv = gumbo_get_attribute(&node->v.element.attributes, "http-equiv");
+    if (!httpEquiv || !str::EqI(httpEquiv->value, "Content-Type")) {
+        return 0;
+    }
+    const GumboAttribute* content = gumbo_get_attribute(&node->v.element.attributes, "content");
+    TempStr mimetype, charset;
+    if (!content || str::IsNull(str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset))) {
+        return 0;
+    }
+    return CharsetNameToCodepage(charset);
+}
+
 static uint FindHttpCharsetInNode(const GumboNode* node) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
@@ -1506,18 +1522,9 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
         if (!n) {
             continue;
         }
-        if (n->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(n, "meta")) {
-            const GumboAttribute* httpEquiv = gumbo_get_attribute(&n->v.element.attributes, "http-equiv");
-            if (httpEquiv && str::EqI(httpEquiv->value, "Content-Type")) {
-                const GumboAttribute* content = gumbo_get_attribute(&n->v.element.attributes, "content");
-                TempStr mimetype, charset;
-                if (content && !str::IsNull(str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset))) {
-                    uint cp = CharsetNameToCodepage(charset);
-                    if (cp) {
-                        return cp;
-                    }
-                }
-            }
+        uint cp = HttpCharsetFromMetaNode(n);
+        if (cp) {
+            return cp;
         }
         const GumboVector* children = nullptr;
         if (n->type == GUMBO_NODE_ELEMENT) {

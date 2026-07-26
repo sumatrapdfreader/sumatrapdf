@@ -2005,28 +2005,29 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCropImage:
         case CmdResizeImage:
         case CmdConvertImageToPdf: {
-            if (pageEl && pageEl->Is(kindPageElementImage)) {
-                RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
-                if (bmp) {
-                    TempStr dir = path::GetDirTemp(filePath);
-                    TempStr base = path::GetBaseNameTemp(filePath);
-                    TempStr noExt = path::GetPathNoExtTemp(base);
-                    TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
-                    ImageEditMode m = ImageEditMode::Save;
-                    bool selectPdf = false;
-                    if (cmdId == CmdCropImage) {
-                        m = ImageEditMode::Crop;
-                    } else if (cmdId == CmdResizeImage) {
-                        m = ImageEditMode::Resize;
-                    } else if (cmdId == CmdConvertImageToPdf) {
-                        selectPdf = true;
-                    }
-                    ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
-                    delete bmp;
-                }
-            } else {
+            if (!pageEl || !pageEl->Is(kindPageElementImage)) {
                 HwndSendCommand(win->hwndFrame, cmdId);
+                return;
             }
+            RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
+            if (!bmp) {
+                return;
+            }
+            TempStr dir = path::GetDirTemp(filePath);
+            TempStr base = path::GetBaseNameTemp(filePath);
+            TempStr noExt = path::GetPathNoExtTemp(base);
+            TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
+            ImageEditMode m = ImageEditMode::Save;
+            bool selectPdf = false;
+            if (cmdId == CmdCropImage) {
+                m = ImageEditMode::Crop;
+            } else if (cmdId == CmdResizeImage) {
+                m = ImageEditMode::Resize;
+            } else if (cmdId == CmdConvertImageToPdf) {
+                selectPdf = true;
+            }
+            ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
+            delete bmp;
             return;
         };
 
@@ -2045,22 +2046,25 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
 
         case CmdSaveAttachment: {
-            if (pageEl && pageEl->Is(kindPageElementDest)) {
-                IPageDestination* elDest = pageEl->AsLink();
-                PageDestination* pd = (PageDestination*)elDest;
-                if (pd && pd->embedObjNum > 0) {
-                    // attachments are arbitrary binary
-                    Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-                    if (len(data) > 0) {
-                        Str fileName = pd->GetValue2();
-                        TempStr dir = path::GetDirTemp(filePath);
-                        fileName = path::GetBaseNameTemp(fileName);
-                        TempStr dstPath = path::JoinTemp(dir, fileName);
-                        SaveDataToFile(win->hwndFrame, dstPath, data);
-                        str::Free(data);
-                    }
-                }
+            if (!pageEl || !pageEl->Is(kindPageElementDest)) {
+                return;
             }
+            IPageDestination* elDest = pageEl->AsLink();
+            PageDestination* pd = (PageDestination*)elDest;
+            if (!pd || pd->embedObjNum <= 0) {
+                return;
+            }
+            // attachments are arbitrary binary
+            Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+            if (len(data) == 0) {
+                return;
+            }
+            Str fileName = pd->GetValue2();
+            TempStr dir = path::GetDirTemp(filePath);
+            fileName = path::GetBaseNameTemp(fileName);
+            TempStr dstPath = path::JoinTemp(dir, fileName);
+            SaveDataToFile(win->hwndFrame, dstPath, data);
+            str::Free(data);
             return;
         }
 

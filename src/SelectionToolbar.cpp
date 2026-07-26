@@ -370,20 +370,21 @@ static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, 
             int idx = ButtonFromPoint(tb, x, y);
             int pressed = tb->pressedIndex;
             tb->pressedIndex = -1;
-            if (idx >= 0 && idx == pressed && tb->buttons[idx].enabled) {
-                int cmdId = tb->buttons[idx].cmdId;
-                MainWindow* win = tb->win;
-                LPARAM commandPoint = 0;
-                if (cmdId == CmdCreateAnnotText) {
-                    Point selectionEnd;
-                    if (GetSelectionEndPoint(win, selectionEnd)) {
-                        commandPoint = MAKELPARAM(selectionEnd.x, selectionEnd.y);
-                    }
-                    DeleteOldSelectionInfo(win, true);
-                }
-                HideSelectionToolbar(win);
-                HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
+            if (idx < 0 || idx != pressed || !tb->buttons[idx].enabled) {
+                return 0;
             }
+            int cmdId = tb->buttons[idx].cmdId;
+            MainWindow* win = tb->win;
+            LPARAM commandPoint = 0;
+            if (cmdId == CmdCreateAnnotText) {
+                Point selectionEnd;
+                if (GetSelectionEndPoint(win, selectionEnd)) {
+                    commandPoint = MAKELPARAM(selectionEnd.x, selectionEnd.y);
+                }
+                DeleteOldSelectionInfo(win, true);
+            }
+            HideSelectionToolbar(win);
+            HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
             return 0;
         }
 

@@ -450,6 +450,32 @@ bool MainWindow::CreateUIAProvider() {
     return true;
 }
 
+static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
+    if (pd->embedObjNum <= 0) {
+        return;
+    }
+    EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
+    Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+    if (len(data) == 0) {
+        return;
+    }
+    Str fileName = pd->GetValue2();
+    logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName, pd->embedObjNum,
+         (int)data.len);
+    TempStr tmpDir = GetTempDirTemp();
+    if (!tmpDir) {
+        str::Free(data);
+        return;
+    }
+    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
+    if (!file::WriteFile(tmpPath, data)) {
+        str::Free(data);
+        return;
+    }
+    SumatraLaunchBrowser(tmpPath);
+    str::Free(data);
+}
+
 void LinkHandler::GotoLink(IPageDestination* dest) {
     ReportIf(!win || win->linkHandler != this);
     if (!dest || !win || !win->IsDocLoaded()) {
@@ -475,25 +501,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
     if (kindDestinationLaunchEmbedded == kind) {
-        PageDestination* pd = (PageDestination*)dest;
-        if (pd->embedObjNum > 0) {
-            EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
-            // attachments are arbitrary binary
-            Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-            if (len(data) > 0) {
-                Str fileName = pd->GetValue2();
-                logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName,
-                     pd->embedObjNum, (int)data.len);
-                TempStr tmpDir = GetTempDirTemp();
-                if (tmpDir) {
-                    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
-                    if (file::WriteFile(tmpPath, data)) {
-                        SumatraLaunchBrowser(tmpPath);
-                    }
-                }
-                str::Free(data);
-            }
-        }
+        LaunchEmbeddedDestination(win, (PageDestination*)dest);
         return;
     }
 
