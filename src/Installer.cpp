@@ -1081,26 +1081,7 @@ static bool OpenEmbeddedFilesArchive() {
         ShowNoEmbeddedFiles("Embedded lzsa archive is corrupted");
         return false;
     }
-    log("OpenEmbeddedFilesArchive: opened archive\n");
     return true;
-}
-
-u32 GetLibmupdfDllSize() {
-    bool ok = OpenEmbeddedFilesArchive();
-    if (!ok) {
-        return 0;
-    }
-    auto archive = &gArchive;
-    int nFiles = archive->filesCount;
-    lzma::FileInfo* fi;
-    for (int i = 0; i < nFiles; i++) {
-        fi = &archive->files[i];
-        if (!str::EqI(fi->name, "libmupdf.dll")) {
-            continue;
-        }
-        return fi->uncompressedSize;
-    }
-    return 0;
 }
 
 bool ExtractLibmupdfDllToDir(Str destDir) {

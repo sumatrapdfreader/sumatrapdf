@@ -15,6 +15,7 @@
 #include "mui/Mui.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "base/LzmaSimpleArchive.h"
 
 #include "SumatraConfig.h"
 
@@ -854,26 +855,46 @@ static bool ExeHasNameOfStoreInstaller() {
     return str::ContainsI(exeName, StrL("install-store"));
 }
 
-static bool HasDataResource(int id) {
-    auto resName = MAKEINTRESOURCEW(id);
-    auto hmod = GetModuleHandleW(nullptr);
-    HRSRC resSrc = FindResourceW(hmod, resName, RT_RCDATA);
-    return resSrc != nullptr;
+// Uncompressed size of libmupdf.dll in the IDR_DLL_PAK LzSA resource, or -1 if
+// the resource / entry is missing. Cached after the first call (-2 = uncached).
+static i64 GetEmbeddedLibmupdfSize() {
+    static i64 size = -2;
+    if (size != -2) {
+        return size;
+    }
+    size = -1;
+
+    LoadedDataResource res{};
+    if (!LockDataResource(IDR_DLL_PAK, &res)) {
+        return size;
+    }
+    lzma::SimpleArchive archive{};
+    if (!lzma::ParseSimpleArchive(res.data, res.dataSize, &archive)) {
+        return size;
+    }
+    for (int i = 0; i < archive.filesCount; i++) {
+        lzma::FileInfo* fi = &archive.files[i];
+        if (str::EqI(fi->name, "libmupdf.dll")) {
+            size = (i64)fi->uncompressedSize;
+            break;
+        }
+    }
+    return size;
 }
 
-static bool ExeHasInstallerResources() {
-    return HasDataResource(IDR_DLL_PAK);
+static bool HasEmbeddedLibmupdf() {
+    return GetEmbeddedLibmupdfSize() >= 0;
 }
 
 static bool IsInstallerAndNamedAsSuch() {
-    if (!ExeHasInstallerResources()) {
+    if (!HasEmbeddedLibmupdf()) {
         return false;
     }
     return ExeHasNameOfInstaller();
 }
 
 static bool IsInstallerButNotInstalled() {
-    if (!ExeHasInstallerResources()) {
+    if (!HasEmbeddedLibmupdf()) {
         return false;
     }
     return !IsOurExeInstalled();
@@ -919,67 +940,67 @@ static void FreeLibmupdfDll() {
     }
 }
 
-static TempStr PortableExtractLibmupdf() {
-    u32 expectedSize = GetLibmupdfDllSize();
-    ReportIf(0 == expectedSize);
-    if (0 == expectedSize) {
-        return {};
-    }
-
-    TempStr buildDir = GetSumatraBuildSpecificDirTemp();
-    if (!buildDir) {
-        return {};
-    }
-    TempStr path = path::JoinTemp(buildDir, StrL("libmupdf.dll"));
+// Load libmupdf.dll from path only if the file size matches expectedSize (the
+// embedded/installer copy). Skips mismatched leftover DLLs from other builds.
+static bool LoadLibmupdfFromFile(Str path, i64 expectedSize) {
     i64 realSize = file::GetSize(path);
-    if (realSize == (i64)expectedSize) {
-        return path;
+    if (realSize != expectedSize) {
+        if (realSize >= 0) {
+            logf("LoadLibmupdfFromFile: skip '%s' (size %lld, expected %lld)\n", path, (long long)realSize,
+                 (long long)expectedSize);
+        }
+        return false;
     }
-    if (realSize >= 0) {
-        logf("PortableExtractLibmupdf: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize,
-             expectedSize);
+    gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
+    if (!gLibmupdfDll) {
+        logf("LoadLibmupdfFromFile: failed to load '%s'\n", path);
+        LogLastError();
+        return false;
     }
-    bool ok = ExtractLibmupdfDllToDir(buildDir);
-    if (!ok) {
-        return {};
-    }
-    return path;
+    logf("LoadLibmupdf: loaded '%s'\n", path);
+    return true;
 }
 
 static bool LoadLibmupdf(bool showErrorDialog) {
-    if (!ExeHasInstallerResources()) {
+    i64 expectedSize = GetEmbeddedLibmupdfSize();
+    if (expectedSize < 0) {
         // this is not a version that needs libmupdf.dll
         return true;
     }
+    DWORD err = 0;
 
     // Prefer libmupdf.dll next to the exe (installer layout, or a pre-placed
-    // copy). Fall back to extracting into the build data dir when gSingleExe.
+    // copy) when its size matches the embedded one.
     TempStr path = GetPathInExeDirTemp("libmupdf.dll");
-    gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
-    if (gLibmupdfDll) {
+    if (LoadLibmupdfFromFile(path, expectedSize)) {
         return true;
     }
-    DWORD err = GetLastError();
-    logf("LoadLibmupdf: failed to load '%s'\n", path);
-    LogLastError(err);
+    err = GetLastError();
 
+    // Portable / single-exe: extract into the build data dir if needed, then load.
     if (gSingleExe) {
-        path = PortableExtractLibmupdf();
-        if (len(path) > 0) {
-            gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
-            if (gLibmupdfDll) {
+        TempStr buildDir = GetSumatraBuildSpecificDirTemp();
+        if (buildDir) {
+            path = path::JoinTemp(buildDir, StrL("libmupdf.dll"));
+            i64 realSize = file::GetSize(path);
+            if (realSize != expectedSize) {
+                if (realSize >= 0) {
+                    logf("LoadLibmupdf: overwriting '%s' (size %lld, expected %lld)\n", path, (long long)realSize,
+                         (long long)expectedSize);
+                }
+                if (!ExtractLibmupdfDllToDir(buildDir)) {
+                    log("LoadLibmupdf: ExtractLibmupdfDllToDir failed\n");
+                }
+            }
+            if (LoadLibmupdfFromFile(path, expectedSize)) {
                 return true;
             }
             err = GetLastError();
-            logf("LoadLibmupdf: failed to load extracted '%s'\n", path);
-            LogLastError(err);
-        } else {
-            log("LoadLibmupdf: PortableExtractLibmupdf failed\n");
         }
     }
 
     ReportIfFast(true);
-    logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
+    logf("LoadLibmupdf: failed to load libmupdf.dll\n");
     if (!showErrorDialog) {
         // e.g. -print-to ... -silent invoked by another program:
         // a modal dialog would hang the caller
@@ -1034,14 +1055,14 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
 // libmupdf.dll alongside us, assume this is the installer. If it's present but a
 // different size than ours, it's a damaged installation.
 static bool ForceRunningAsInstaller() {
-    if (!ExeHasInstallerResources()) {
+    if (!HasEmbeddedLibmupdf()) {
         // this is not a version that needs libmupdf.dll
         return false;
     }
 
-    u32 expectedSize = GetLibmupdfDllSize();
-    ReportIf(0 == expectedSize);
-    if (0 == expectedSize) {
+    i64 expectedSize = GetEmbeddedLibmupdfSize();
+    ReportIf(expectedSize < 0);
+    if (expectedSize < 0) {
         // shouldn't happen
         return false;
     }
@@ -1052,7 +1073,7 @@ static bool ForceRunningAsInstaller() {
     if (realSize < 0) {
         return true;
     }
-    if (realSize == (i64)expectedSize) {
+    if (realSize == expectedSize) {
         return false;
     }
 
@@ -1660,7 +1681,7 @@ static WStr SkipFirstArg(WStr cmdLine) {
 // doesn't apply (the caller then runs the tool in-process). The static
 // SumatraPDF.exe (no embedded resources) always runs the tool in-process.
 static int MaybeDelegateToToolExe() {
-    if (!ExeHasInstallerResources()) {
+    if (!HasEmbeddedLibmupdf()) {
         return kNoMutool;
     }
     TempStr toolExe = GetPathInExeDirTemp("sumatrapdf-tool.exe");
@@ -1997,7 +2018,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (isInstaller) {
-        if (!ExeHasInstallerResources()) {
+        if (!HasEmbeddedLibmupdf()) {
             ShowNotValidInstallerError();
             return 1;
         }
@@ -2097,7 +2118,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     // -x is one of options for poster tool, so we must run MaybeRunMutool() before this
     if (flags.justExtractFiles) {
         RedirectIOToExistingConsole();
-        if (!ExeHasInstallerResources()) {
+        if (!HasEmbeddedLibmupdf()) {
             log("this is not a SumatraPDF installer, -x option not available\n");
             HandleRedirectedConsoleOnShutdown();
             return 1;
