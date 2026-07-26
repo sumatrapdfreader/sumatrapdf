@@ -172,25 +172,6 @@ function unrar_files()
   })
 end
 
-function libdjvu_files()
-  files_in_dir("ext/libdjvu", {
-    "Arrays.cpp", "atomic.cpp", "BSByteStream.cpp", "BSEncodeByteStream.cpp",
-    "ByteStream.cpp", "DataPool.cpp", "ddjvuapi.cpp", "debug.cpp",
-    "DjVmDir.cpp", "DjVmDir0.cpp", "DjVmDoc.cpp", "DjVmNav.cpp",
-    "DjVuAnno.cpp", "DjVuDocEditor.cpp", "DjVuDocument.cpp", "DjVuDumpHelper.cpp",
-    "DjVuErrorList.cpp", "DjVuFile.cpp", "DjVuFileCache.cpp", "DjVuGlobal.cpp",
-    "DjVuGlobalMemory.cpp", "DjVuImage.cpp", "DjVuInfo.cpp", "DjVuMessage.cpp",
-    "DjVuMessageLite.cpp", "DjVuNavDir.cpp", "DjVuPalette.cpp", "DjVuPort.cpp",
-    "DjVuText.cpp", "DjVuToPS.cpp", "GBitmap.cpp", "GContainer.cpp", "GException.cpp",
-    "GIFFManager.cpp", "GMapAreas.cpp", "GOS.cpp", "GPixmap.cpp", "GRect.cpp",
-    "GScaler.cpp", "GSmartPointer.cpp", "GString.cpp", "GThreads.cpp",
-    "GUnicode.cpp", "GURL.cpp", "IFFByteStream.cpp", "IW44EncodeCodec.cpp",
-    "IW44Image.cpp", "JB2EncodeCodec.cpp", "JB2Image.cpp",
-    "JPEGDecoder.cpp", "miniexp.cpp", "MMRDecoder.cpp", "MMX.cpp",
-    "UnicodeByteStream.cpp", "XMLParser.cpp", "XMLTags.cpp", "ZPCodec.cpp",
-  })
-end
-
 function libarchive_files()
   files { "ext/libarchive/libarchive/*.h" }
   removefiles { "ext/libarchive/libarchive/config_linux.h" }

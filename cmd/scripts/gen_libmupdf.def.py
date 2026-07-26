@@ -4,7 +4,7 @@
 Generates a list of all exports from libmupdf.dll from the function lists
 contained in the mupdf/include/* headers (only MuPDF and MuXPS are included)
 and adds exports for the other libraries contained within libmupdf.dll but
-used by SumatraPDF-mupdf-dll.exe (libdjvu, zlib, lzma, libwebp).
+used by SumatraPDF-mupdf-dll.exe (djvudec, zlib, lzma, libwebp).
 """
 
 import os, re, util
@@ -43,51 +43,6 @@ EXPORTS
 
 %(muxps_exports)s
 
-; djvu exports (required for DjVuEngine)
-
-	ddjvu_anno_get_hyperlinks
-	ddjvu_cache_clear
-	ddjvu_context_create
-	ddjvu_context_release
-	ddjvu_datapool_cleanup
-	ddjvu_document_create_by_data
-	ddjvu_document_create_by_filename_utf8
-	ddjvu_document_get_fileinfo_imp
-	ddjvu_document_get_filenum
-	ddjvu_document_get_outline
-	ddjvu_document_get_pageanno
-	ddjvu_document_get_pageinfo_imp
-	ddjvu_document_get_pagenum
-	ddjvu_document_get_pagetext
-	ddjvu_document_job
-	ddjvu_format_create
-	ddjvu_format_release
-	ddjvu_job_stop
-	ddjvu_format_set_row_order
-	ddjvu_free
-	ddjvu_free_portcaster
-	ddjvu_free_port_corpses
-	ddjvu_job_release
-	ddjvu_job_status
-	ddjvu_message_peek
-	ddjvu_message_pop
-	ddjvu_message_wait
-	ddjvu_miniexp_release
-	ddjvu_page_create_by_pageno
-	ddjvu_page_get_type
-	ddjvu_page_job
-	ddjvu_page_render
-	ddjvu_page_set_rotation
-	ddjvu_stream_close
-	ddjvu_stream_write
-	miniexp_caddr
-	miniexp_cadr
-	miniexp_cddr
-	miniexp_stringp
-	miniexp_symbol
-	miniexp_to_str
-	minilisp_finish
-
 ; djvudec exports (required for EngineDjvuDec, ext/djvudec)
 
 	djvu_init
@@ -105,6 +60,8 @@ EXPORTS
 	djvu_doc_close
 	djvu_doc_page_count
 	djvu_doc_page_info
+	djvu_doc_drop_page_cache
+	djvu_doc_page_cache_size
 	djvu_page_get_type
 	djvu_page_render
 	djvu_page_render_info

@@ -88,99 +88,6 @@ function resolveMacTools(): BuildTools {
   return { cc, cxx, ar, embed };
 }
 
-function makeLibdjvu(): LibDef {
-  return {
-    ...structuredClone(libdjvuBase()),
-    defines: [
-      "UNIX",
-      "NEED_JPEG_DECODER",
-      "HAVE_PTHREAD",
-      "HAS_WCHAR=1",
-      "HAS_WCTYPE=1",
-      "HAS_MBSTATE=1",
-      "DDJVUAPI=",
-      "MINILISPAPI=",
-      "DEBUGLVL=0",
-      "DISABLE_MMX",
-    ],
-  };
-}
-
-function libdjvuBase(): LibDef {
-  // inline from build-lib-defs to avoid exporting WINTHREADS version
-  return {
-    name: "libdjvu",
-    alwaysOptimize: true,
-    exceptions: true,
-    defines: [],
-    includes: ["ext/libjpeg-turbo/src"],
-    files: [
-      {
-        dir: "ext/libdjvu",
-        patterns: [
-          "Arrays.cpp",
-          "atomic.cpp",
-          "BSByteStream.cpp",
-          "BSEncodeByteStream.cpp",
-          "ByteStream.cpp",
-          "DataPool.cpp",
-          "DjVmDir0.cpp",
-          "DjVmDoc.cpp",
-          "DjVmNav.cpp",
-          "DjVuAnno.cpp",
-          "DjVuDocEditor.cpp",
-          "DjVuDocument.cpp",
-          "DjVuDumpHelper.cpp",
-          "DjVuErrorList.cpp",
-          "DjVuFile.cpp",
-          "DjVuFileCache.cpp",
-          "DjVuGlobal.cpp",
-          "DjVuGlobalMemory.cpp",
-          "DjVuImage.cpp",
-          "DjVuInfo.cpp",
-          "DjVuMessage.cpp",
-          "DjVuMessageLite.cpp",
-          "DjVuNavDir.cpp",
-          "DjVuPalette.cpp",
-          "DjVuPort.cpp",
-          "DjVuText.cpp",
-          "DjVuToPS.cpp",
-          "GBitmap.cpp",
-          "GContainer.cpp",
-          "GException.cpp",
-          "GIFFManager.cpp",
-          "GMapAreas.cpp",
-          "GOS.cpp",
-          "GPixmap.cpp",
-          "GRect.cpp",
-          "GScaler.cpp",
-          "GSmartPointer.cpp",
-          "GString.cpp",
-          "GThreads.cpp",
-          "GUnicode.cpp",
-          "GURL.cpp",
-          "IFFByteStream.cpp",
-          "IW44EncodeCodec.cpp",
-          "IW44Image.cpp",
-          "JB2EncodeCodec.cpp",
-          "DjVmDir.cpp",
-          "JB2Image.cpp",
-          "JPEGDecoder.cpp",
-          "MMRDecoder.cpp",
-          "MMX.cpp",
-          "UnicodeByteStream.cpp",
-          "XMLParser.cpp",
-          "XMLTags.cpp",
-          "ZPCodec.cpp",
-          "ddjvuapi.cpp",
-          "debug.cpp",
-          "miniexp.cpp",
-        ],
-      },
-    ],
-  };
-}
-
 function makeLibarchive(outDir: string): LibDef {
   const liblzmaConfigDir = join(outDir, "generated", "liblzma");
   return {
@@ -598,7 +505,6 @@ const DEP_LIBS_BASE = [
   zlib,
   aGumbo,
   makeUnrar,
-  makeLibdjvu,
   makeChm,
   djvudec,
   "libarchive",

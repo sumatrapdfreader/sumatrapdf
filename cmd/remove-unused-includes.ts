@@ -77,7 +77,7 @@ const clArgs = [
   "/I",
   "mupdf/include",
   "/I",
-  "ext/libdjvu",
+  "ext/djvudec",
   "/I",
   "ext/libchm",
   "/I",

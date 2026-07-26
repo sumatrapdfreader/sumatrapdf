@@ -461,29 +461,6 @@ workspace "SumatraPDF"
     filter {}
     unrar_files()
 
-  project "libdjvu"
-    dll_intermediate_dirs()
-    kind "StaticLib"
-    characterset("MBCS")
-    language "C++"
-    optimized_conf()
-    defines {
-      "_CRT_SECURE_NO_WARNINGS",
-      "NEED_JPEG_DECODER",
-      "WINTHREADS=1",
-      "DDJVUAPI=/**/",
-      "MINILISPAPI=/**/",
-      "DEBUGLVL=0"
-    }
-    filter { "platforms:x64_asan" }
-      defines { "DISABLE_MMX" }
-    filter {}
-    exceptionhandling "On"
-    disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312", "4505" }
-    disablewarnings { "4456", "4457", "4459", "4701", "4702", "4703", "4706" }
-    includedirs { "ext/libjpeg-turbo/src" }
-    libdjvu_files()
-
   project "chm"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -1028,7 +1005,7 @@ workspace "SumatraPDF"
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
-    links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
+    links { "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -1172,7 +1149,7 @@ workspace "SumatraPDF"
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
-      "ext/libdjvu", "ext/djvudec", "ext/libchm",
+      "ext/djvudec", "ext/libchm",
       "ext/libarchive",
       "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include",
       "ext/brotli/c/include",
@@ -1197,7 +1174,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
@@ -1293,7 +1270,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 

@@ -31,7 +31,6 @@ import {
 import {
   zlib,
   unrar,
-  libdjvu,
   chm,
   zopfli,
   libarchive,
@@ -413,7 +412,7 @@ async function buildSumatraExe(
     "src",
     "mupdf/include",
     "ext/synctex",
-    "ext/libdjvu",
+    "ext/djvudec",
     "ext/libchm",
     "ext/zopfli/src",
     "ext/darkmodelib/include",
@@ -612,7 +611,6 @@ void TestPreview(const WCHAR*) {}
 const ALL_LIBS: LibDef[] = [
   zlib,
   unrar,
-  libdjvu,
   chm,
   libarchive,
   libwebp,

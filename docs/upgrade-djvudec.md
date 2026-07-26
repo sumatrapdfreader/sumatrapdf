@@ -44,7 +44,7 @@ separate commands (avoid `;` chaining in the shell tool).
 
 ### 3. Update ext/versions.txt
 
-Record the import in `ext/versions.txt` (place the entry after `libdjvu`):
+Record the import in `ext/versions.txt`:
 
 ```
 djvudec         main       YYYY-MM-DD

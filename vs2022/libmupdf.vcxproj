@@ -1049,9 +1049,6 @@
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>
-    <ProjectReference Include="libdjvu.vcxproj">
-      <Project>{B5F26479-21D2-E314-2AEA-6EEB96484A76}</Project>
-    </ProjectReference>
     <ProjectReference Include="djvudec.vcxproj">
       <Project>{0A565B15-7635-DAB0-7F4D-6587EBAB4012}</Project>
     </ProjectReference>
