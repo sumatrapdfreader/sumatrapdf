@@ -905,11 +905,10 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
     return S_OK;
 }
 
-// if true, this is a single self-contained exe: we extract libmupdf.dll to the
-// build data dir and load it from there (no installer). if false, we behave like
-// before: load libmupdf.dll from next to the exe and, if it's missing, launch
-// the installer (see ForceRunningAsInstaller).
-bool gSingleExe = false;
+// if true, and libmupdf.dll is not next to the exe, extract it to the build data
+// dir and load from there (portable / single-exe). if false, only try next to
+// the exe; missing dll is handled by ForceRunningAsInstaller.
+bool gSingleExe = true;
 
 static HMODULE gLibmupdfDll = nullptr;
 
@@ -953,29 +952,33 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         return true;
     }
 
-    // gSingleExe: extract libmupdf.dll to the build data dir and load from there.
-    // otherwise (installer build) load the libmupdf.dll the installer placed next
-    // to the exe.
-    TempStr path;
-    if (gSingleExe) {
-        path = PortableExtractLibmupdf();
-    } else {
-        path = GetPathInExeDirTemp("libmupdf.dll");
-    }
-    if (len(path) == 0) {
-        log("LoadLibmupdf: failed to get path to libmupdf.dll\n");
-        ReportIfFast(true);
-        return false;
-    }
+    // Prefer libmupdf.dll next to the exe (installer layout, or a pre-placed
+    // copy). Fall back to extracting into the build data dir when gSingleExe.
+    TempStr path = GetPathInExeDirTemp("libmupdf.dll");
     gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
     if (gLibmupdfDll) {
         return true;
     }
-    logf("LoadLibmupdf: failed to load %s\n", path);
     DWORD err = GetLastError();
+    logf("LoadLibmupdf: failed to load '%s'\n", path);
     LogLastError(err);
-    ReportIfFast(true);
 
+    if (gSingleExe) {
+        path = PortableExtractLibmupdf();
+        if (len(path) > 0) {
+            gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
+            if (gLibmupdfDll) {
+                return true;
+            }
+            err = GetLastError();
+            logf("LoadLibmupdf: failed to load extracted '%s'\n", path);
+            LogLastError(err);
+        } else {
+            log("LoadLibmupdf: PortableExtractLibmupdf failed\n");
+        }
+    }
+
+    ReportIfFast(true);
     logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
     if (!showErrorDialog) {
         // e.g. -print-to ... -silent invoked by another program:
