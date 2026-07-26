@@ -308,109 +308,6 @@ function jbig2dec_files()
   })
 end
 
-function libheif_files()
-  files_in_dir("ext/libheif/libheif", {
-    "bitstream.*",
-    "box.*",
-    "brands.*",
-    "common_utils.*",
-    "context.*",
-    "error.*",
-    "file.*",
-    "file_layout.*",
-    "id_creator.*",
-    "init.*",
-    "logging.*",
-    "mini.*",
-    "nclx.*",
-    "omaf_boxes.*",
-    "plugin_registry.*",
-    "region.*",
-    "security_limits.*",
-    "text.*",
-  })
-  files_in_dir("ext/libheif/libheif/image", {
-    "image_description.*",
-    "pixelimage.*",
-  })
-  files_in_dir("ext/libheif/libheif/image-items", {
-    "avc.*",
-    "avif.*",
-    "grid.*",
-    "hevc.*",
-    "iden.*",
-    "image_item.*",
-    "jpeg.*",
-    "jpeg2000.*",
-    "mask_image.*",
-    "overlay.*",
-    "tiled.*",
-    "vvc.*",
-  })
-  files_in_dir("ext/libheif/libheif/codecs", {
-    "avc_boxes.*",
-    "avc_dec.*",
-    "avc_enc.*",
-    "avif_boxes.*",
-    "avif_dec.*",
-    "avif_enc.*",
-    "decoder.*",
-    "encoder.*",
-    "hevc_boxes.*",
-    "hevc_dec.*",
-    "hevc_enc.*",
-    "jpeg2000_boxes.*",
-    "jpeg2000_dec.*",
-    "jpeg2000_enc.*",
-    "jpeg_boxes.*",
-    "jpeg_dec.*",
-    "jpeg_enc.*",
-    "vvc_boxes.*",
-    "vvc_dec.*",
-    "vvc_enc.*",
-  })
-  files_in_dir("ext/libheif/libheif/color-conversion", {
-    "alpha.*",
-    "bayer_bilinear.*",
-    "chroma_sampling.*",
-    "colorconversion.*",
-    "hdr_sdr.*",
-    "monochrome.*",
-    "rgb2rgb.*",
-    "rgb2yuv.*",
-    "rgb2yuv_sharp.*",
-    "yuv2rgb.*",
-  })
-  files_in_dir("ext/libheif/libheif/plugins", {
-    "decoder_dav1d.*",
-    "encoder_mask.*",
-  })
-  files_in_dir("ext/libheif/libheif/sequences", {
-    "chunk.*",
-    "seq_boxes.*",
-    "track.*",
-    "track_metadata.*",
-    "track_visual.*",
-  })
-  files_in_dir("ext/libheif/libheif/api/libheif", {
-    "heif.*",
-    "heif_brands.*",
-    "heif_color.*",
-    "heif_components.*",
-    "heif_context.*",
-    "heif_decoding.*",
-    "heif_encoding.*",
-    "heif_image.*",
-    "heif_image_handle.*",
-    "heif_metadata.*",
-    "heif_omaf.*",
-    "heif_plugin.*",
-    "heif_security.*",
-    "heif_sequences.*",
-    "heif_tai_timestamps.*",
-  })
-end
-
 -- x64 only: avx2 NASM SIMD + shared helpers. Not used for 32-bit (HAVE_ASM=0).
 -- SSE/AVX-512 *.asm omitted; x86/*_sumatra.h only wires avx2 symbols.
 function dav1d_x64_files()
@@ -1464,6 +1361,7 @@ function test_util_files()
     "File.h",
     "File.cpp",
     "File_win.cpp",
+    "FileWatcher.*",
     "Geom.*",
     "GuessFileType.*",
     "HtmlTags.*",

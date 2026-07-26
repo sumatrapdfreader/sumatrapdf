@@ -1061,8 +1061,8 @@
     <ProjectReference Include="dav1d.vcxproj">
       <Project>{F5BF470F-61D4-6FC0-2A56-132096296CF1}</Project>
     </ProjectReference>
-    <ProjectReference Include="libheif.vcxproj">
-      <Project>{380D6779-A4EC-E514-AD04-71EB19634C76}</Project>
+    <ProjectReference Include="heicdec.vcxproj">
+      <Project>{8A60A53C-F63F-24D8-FF57-AFAE6BB68A39}</Project>
     </ProjectReference>
     <ProjectReference Include="libjxl.vcxproj">
       <Project>{8AC56F0B-7667-9AE1-5F22-AE354B632132}</Project>

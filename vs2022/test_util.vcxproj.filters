@@ -195,10 +195,10 @@
     <ClCompile Include="..\src\base\File.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\File_win.cpp">
+    <ClCompile Include="..\src\base\FileWatcher.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\FileWatcher.cpp">
+    <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">

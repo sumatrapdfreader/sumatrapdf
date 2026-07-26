@@ -96,9 +96,9 @@ dav1d           1.5.4      2026-07-14
   https://code.videolan.org/videolan/dav1d
   https://code.videolan.org/videolan/dav1d/-/tags/1.5.4
 
-libheif         1.23.0     2026-05-29
-  https://github.com/strukturag/libheif
-  https://github.com/strukturag/libheif/releases/tag/v1.23.0
+heicdec         dist       2026-07-26
+  https://github.com/kjk/heicdec (amalgamation dist/heic.c + dist/heic.h)
+  HEVC pure-C; AV1 via dav1d (HEIC_HAVE_DAV1D). Replaces libheif.
 
 darkmodelib     trunk      2026-01-16
   https://github.com/ozone10/darkmodelib

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -403,7 +403,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg32/obj/test_util.lib" /MAP:"../out/dbg32/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -437,7 +437,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg64/obj/test_util.lib" /MAP:"../out/dbg64/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -471,7 +471,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj/test_util.lib" /MAP:"../out/dbgarm64/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -505,7 +505,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj/test_util.lib" /MAP:"../out/dbg64_asan/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -539,7 +539,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj/test_util.lib" /MAP:"../out/dbgfull32/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -573,7 +573,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj/test_util.lib" /MAP:"../out/dbgfull64/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -607,7 +607,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj/test_util.lib" /MAP:"../out/dbgfullarm64/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -641,7 +641,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj/test_util.lib" /MAP:"../out/dbgfull64_asan/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -679,7 +679,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel32/obj/test_util.lib" /MAP:"../out/rel32/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -717,7 +717,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64/obj/test_util.lib" /MAP:"../out/rel64/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -755,7 +755,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/arm64/obj/test_util.lib" /MAP:"../out/arm64/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -792,7 +792,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj/test_util.lib" /MAP:"../out/rel64_asan/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -831,7 +831,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj/test_util.lib" /MAP:"../out/rel32_prefast/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -870,7 +870,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj/test_util.lib" /MAP:"../out/rel64_prefast/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -909,7 +909,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj/test_util.lib" /MAP:"../out/arm64_prefast/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -947,7 +947,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;wininet.lib;shcore.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj/test_util.lib" /MAP:"../out/rel64_prefast_asan/obj/test_util.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -1039,8 +1039,8 @@
     <ClCompile Include="..\src\base\DirScan_win.cpp" />
     <ClCompile Include="..\src\base\Dpi_win.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
-    <ClCompile Include="..\src\base\File_win.cpp" />
     <ClCompile Include="..\src\base\FileWatcher.cpp" />
+    <ClCompile Include="..\src\base\File_win.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\base\HtmlTags.cpp" />

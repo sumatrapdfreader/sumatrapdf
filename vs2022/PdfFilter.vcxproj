@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -406,7 +406,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg32\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbg32/PdfFilter.dll" /PDB:"../out/dbg32/PdfFilter.pdb" /IMPLIB:"../out/dbg32/obj/PdfFilter.lib" /MAP:"../out/dbg32/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -444,7 +444,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbg64/PdfFilter.dll" /PDB:"../out/dbg64/PdfFilter.pdb" /IMPLIB:"../out/dbg64/obj/PdfFilter.lib" /MAP:"../out/dbg64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -482,7 +482,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgarm64\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbgarm64/PdfFilter.dll" /PDB:"../out/dbgarm64/PdfFilter.pdb" /IMPLIB:"../out/dbgarm64/obj/PdfFilter.lib" /MAP:"../out/dbgarm64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -520,7 +520,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64_asan\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbg64_asan/PdfFilter.dll" /PDB:"../out/dbg64_asan/PdfFilter.pdb" /IMPLIB:"../out/dbg64_asan/obj/PdfFilter.lib" /MAP:"../out/dbg64_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -558,7 +558,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfull32\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbgfull32/PdfFilter.dll" /PDB:"../out/dbgfull32/PdfFilter.pdb" /IMPLIB:"../out/dbgfull32/obj/PdfFilter.lib" /MAP:"../out/dbgfull32/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -596,7 +596,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfull64\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbgfull64/PdfFilter.dll" /PDB:"../out/dbgfull64/PdfFilter.pdb" /IMPLIB:"../out/dbgfull64/obj/PdfFilter.lib" /MAP:"../out/dbgfull64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -634,7 +634,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfullarm64\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbgfullarm64/PdfFilter.dll" /PDB:"../out/dbgfullarm64/PdfFilter.pdb" /IMPLIB:"../out/dbgfullarm64/obj/PdfFilter.lib" /MAP:"../out/dbgfullarm64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -672,7 +672,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfull64_asan\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/dbgfull64_asan/PdfFilter.dll" /PDB:"../out/dbgfull64_asan/PdfFilter.pdb" /IMPLIB:"../out/dbgfull64_asan/obj/PdfFilter.lib" /MAP:"../out/dbgfull64_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -714,7 +714,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/rel32/PdfFilter.dll" /PDB:"../out/rel32/PdfFilter.pdb" /IMPLIB:"../out/rel32/obj/PdfFilter.lib" /MAP:"../out/rel32/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -756,7 +756,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/rel64/PdfFilter.dll" /PDB:"../out/rel64/PdfFilter.pdb" /IMPLIB:"../out/rel64/obj/PdfFilter.lib" /MAP:"../out/rel64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -798,7 +798,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\arm64\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/arm64/PdfFilter.dll" /PDB:"../out/arm64/PdfFilter.pdb" /IMPLIB:"../out/arm64/obj/PdfFilter.lib" /MAP:"../out/arm64/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -839,7 +839,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_asan\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/rel64_asan/PdfFilter.dll" /PDB:"../out/rel64_asan/PdfFilter.pdb" /IMPLIB:"../out/rel64_asan/obj/PdfFilter.lib" /MAP:"../out/rel64_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -882,7 +882,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32_prefast\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/rel32_prefast/PdfFilter.dll" /PDB:"../out/rel32_prefast/PdfFilter.pdb" /IMPLIB:"../out/rel32_prefast/obj/PdfFilter.lib" /MAP:"../out/rel32_prefast/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -925,7 +925,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/rel64_prefast/PdfFilter.dll" /PDB:"../out/rel64_prefast/PdfFilter.pdb" /IMPLIB:"../out/rel64_prefast/obj/PdfFilter.lib" /MAP:"../out/rel64_prefast/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -968,7 +968,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\arm64_prefast\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/arm64_prefast/PdfFilter.dll" /PDB:"../out/arm64_prefast/PdfFilter.pdb" /IMPLIB:"../out/arm64_prefast/obj/PdfFilter.lib" /MAP:"../out/arm64_prefast/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>
@@ -1010,7 +1010,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;uxtheme.lib;dwmapi.lib;Normaliz.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast_asan\obj\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/OUT:"../out/rel64_prefast_asan/PdfFilter.dll" /PDB:"../out/rel64_prefast_asan/PdfFilter.pdb" /IMPLIB:"../out/rel64_prefast_asan/obj/PdfFilter.lib" /MAP:"../out/rel64_prefast_asan/obj/PdfFilter.map" %(AdditionalOptions)</AdditionalOptions>

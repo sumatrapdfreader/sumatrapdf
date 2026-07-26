@@ -114,6 +114,9 @@
     <ClInclude Include="..\src\AvifReader.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\BuildConfig.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -406,9 +409,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\UpdateCheck.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\BuildConfig.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Version.h">

@@ -513,7 +513,6 @@ workspace "SumatraPDF"
     -- loop), so favor speed over size here (the rest of the tree uses /O1)
     optimize "Speed"
     defines { "_CRT_SECURE_NO_WARNINGS" }
-    disablewarnings { "4018", "4101", "4244", "4267", "4996" }
     files { "ext/djvudec/djvu.c", "ext/djvudec/djvu.h" }
 
   -- zopfli / zopflipng: lossless PNG recompression, used to shrink PNGs we
@@ -646,19 +645,18 @@ workspace "SumatraPDF"
     buildoptions { "/bigobj" }
     libjxl_files()
 
-  project "libheif"
+  -- HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
+  -- AV1 uses dav1d when HEIC_HAVE_DAV1D is set.
+  project "heicdec"
     static_intermediate_dirs()
     kind "StaticLib"
-    language "C++"
-    cppdialect "C++latest"
+    language "C"
     optimized_conf()
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_DAV1D", "LIBHEIF_STATIC_BUILD" }
-    includedirs { "ext/libheif/libheif", "ext/libheif/libheif/api", "ext/dav1d/include" }
-    disablewarnings { "4018", "4065", "4100", "4101", "4146", "4244", "4245", "4267", "4273", "4319", "4456", "4701", "4703", "4805", "4996" }
-    -- TODO: I don't want RTTI and /EHsc
-    rtti "On"
-    buildoptions { "/EHsc" }
-    libheif_files()
+    -- HEVC decode is CPU-bound (CABAC / transform / deblock), favor speed
+    optimize "Speed"
+    defines { "_CRT_SECURE_NO_WARNINGS", "HEIC_HAVE_DAV1D" }
+    includedirs { "ext/heicdec", "ext/dav1d/include" }
+    files { "ext/heicdec/heic.c", "ext/heicdec/heic.h" }
 
   project "dav1d"
     static_intermediate_dirs()
@@ -1025,7 +1023,7 @@ workspace "SumatraPDF"
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
-    links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms" }
+    links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -1080,12 +1078,11 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4838" }
     includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "mupdf/include" }
-    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
-    defines { "LIBHEIF_STATIC_BUILD" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
     test_engines_files()
     links_zlib()
     links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
-    links { "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms" }
+    links { "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon",
@@ -1168,19 +1165,18 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
-    defines { "LIBHEIF_STATIC_BUILD" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
       "ext/libdjvu", "ext/djvudec", "ext/libchm",
       "ext/libarchive",
-      "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include",
+      "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include",
       "ext/brotli/c/include",
     }
     brotli_files()
     pdf_preview_files()
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms" }
+    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1194,11 +1190,11 @@ workspace "SumatraPDF"
     warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     manifest("Off")
-    defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
+    defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
-    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
     -- so asan options can only come from the environment.
@@ -1257,7 +1253,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "a-skcms", "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
+      "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1290,11 +1286,11 @@ workspace "SumatraPDF"
     warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     manifest("Off")
-    defines { "LIBARCHIVE_STATIC", "LIBHEIF_STATIC_BUILD" }
+    defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
-    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/libjxl/lib/include" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
     -- so asan options can only come from the environment.
