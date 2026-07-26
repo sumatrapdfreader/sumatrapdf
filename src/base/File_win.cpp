@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/WinDynCalls.h"
 
 #include "base/File.h"
 
@@ -238,9 +237,6 @@ bool IsAbsolute(Str path) {
 }
 
 TempStr GetNonVirtualTemp(Str virtualPath) {
-    if (!DynGetFinalPathNameByHandleW) {
-        return virtualPath;
-    }
     HANDLE hFile = CreateFileW(CWStrTemp(virtualPath), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -248,7 +244,7 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
     }
 
     WCHAR realPath[MAX_PATH * 4];
-    DWORD ret = DynGetFinalPathNameByHandleW(hFile, realPath, dimof(realPath), FILE_NAME_NORMALIZED);
+    DWORD ret = GetFinalPathNameByHandleW(hFile, realPath, dimof(realPath), FILE_NAME_NORMALIZED);
 
     CloseHandle(hFile);
     if (ret <= 0) {

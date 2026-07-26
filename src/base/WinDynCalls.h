@@ -3,12 +3,13 @@ License: Simplified BSD (see COPYING.BSD) */
 
 /*
 A centrialized location for all APIs that we need to load dynamically.
-The convention is: for a function like SetProcessDEPPolicy(), we define
-a  function pointer DynSetProcessDEPPolicy() (with a signature matching SetProcessDEPPolicy()).
+The convention is: for a function like SetThreadDescription(), we define
+a function pointer DynSetThreadDescription() (with a signature matching
+SetThreadDescription()).
 
-You can test if a function is available with if (DynSetProcessDEPPolicy).
+You can test if a function is available with if (DynSetThreadDescription).
 
-The intent is to standardize how we do it.
+APIs available on our minimum OS (Windows 7) are called directly, not via Dyn*.
 */
 
 void InitDynCalls();
@@ -38,23 +39,6 @@ void InitDynCalls();
     typedef decltype(name)* Sig_##name; \
     extern Sig_##name Dyn##name;
 
-// ntdll.dll
-#define PROCESS_EXECUTE_FLAGS 0x22
-#define MEM_EXECUTE_OPTION_DISABLE 0x1
-#define MEM_EXECUTE_OPTION_ENABLE 0x2
-#define MEM_EXECUTE_OPTION_PERMANENT 0x8
-#define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
-
-/* enable "NX" execution prevention for XP, 2003
- * cf. http://www.uninformed.org/?v=2&a=4 */
-typedef HRESULT(WINAPI* Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT ProcessInformationClass,
-                                                     PVOID ProcessInformation,
-                                                     ULONG ProcessInformationLength); // NOLINT
-
-#define NTDLL_API_LIST(V) V(NtSetInformationProcess)
-
-NTDLL_API_LIST(API_DECLARATION)
-
 // normaliz.dll
 // TODO: need to rename our NormalizeString so that it doesn't conflict
 // typedef decltype(NormalizeString)* Sig_NormalizeString2;
@@ -64,16 +48,10 @@ typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 NORMALIZ_API_LIST(API_DECLARATION)
 
-// kernel32.dll
+// kernel32.dll — only APIs not guaranteed on stock Windows 7
 #define KERNEL32_API_LIST(V)    \
-    V(SetProcessDEPPolicy)      \
-    V(IsWow64Process)           \
-    V(SetDllDirectoryW)         \
     V(SetDefaultDllDirectories) \
-    V(RtlCaptureContext)        \
-    V(RtlCaptureStackBackTrace) \
-    V(SetThreadDescription)     \
-    V(GetFinalPathNameByHandleW)
+    V(SetThreadDescription)
 
 // TODO: only available in 20348, not yet present in SDK?
 // V(GetTempPath2W)
@@ -85,14 +63,6 @@ typedef BOOL(WINAPI* Sig_GetProcessInformation)(HANDLE, int, LPVOID, DWORD);
 typedef BOOL(WINAPI* Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
 extern Sig_GetProcessInformation DynGetProcessInformation;
 extern Sig_SetProcessMitigationPolicy DynSetProcessMitigationPolicy;
-
-// user32.dll
-#define USER32_API_LIST(V) \
-    V(SetGestureConfig)    \
-    V(GetGestureInfo)      \
-    V(CloseGestureInfoHandle)
-
-USER32_API_LIST(API_DECLARATION2)
 
 // not declared in SDK headers with _WIN32_WINNT=0x0601, define manually
 typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
@@ -177,7 +147,7 @@ void SetWindowRoundedCorners(HWND hwnd, bool rounded);
 
 }; // namespace dwm
 
-// Touch Gesture API, only available in Windows 7
+// Touch Gesture API (Windows 7+; call Win32 directly)
 namespace touch {
 
 bool SupportsGestures();

@@ -9,10 +9,8 @@ License: Simplified BSD (see COPYING.BSD) */
 #define API_DECLARATION(name) Sig_##name Dyn##name = nullptr;
 
 KERNEL32_API_LIST(API_DECLARATION)
-NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
-USER32_API_LIST(API_DECLARATION)
 DWMAPI_API_LIST(API_DECLARATION)
 DBGHELP_API_LIST(API_DECLARATION)
 
@@ -52,13 +50,8 @@ void InitDynCalls() {
     DynGetProcessInformation = (Sig_GetProcessInformation)GetProcAddress(h, "GetProcessInformation");
     DynSetProcessMitigationPolicy = (Sig_SetProcessMitigationPolicy)GetProcAddress(h, "SetProcessMitigationPolicy");
 
-    h = SafeLoadLibrary("ntdll.dll");
-    ReportIf(!h);
-    NTDLL_API_LIST(API_LOAD);
-
     h = SafeLoadLibrary("user32.dll");
     ReportIf(!h);
-    USER32_API_LIST(API_LOAD);
     DynGetDpiForWindow = (Sig_GetDpiForWindow)GetProcAddress(h, "GetDpiForWindow");
     DynGetThreadDpiAwarenessContext =
         (Sig_GetThreadDpiAwarenessContext)GetProcAddress(h, "GetThreadDpiAwarenessContext");
@@ -104,28 +97,19 @@ void InitDynCalls() {
 namespace touch {
 
 bool SupportsGestures() {
-    return DynGetGestureInfo && DynCloseGestureInfoHandle;
+    return true;
 }
 
 BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo) {
-    if (!DynGetGestureInfo) {
-        return FALSE;
-    }
-    return DynGetGestureInfo(hGestureInfo, pGestureInfo);
+    return ::GetGestureInfo(hGestureInfo, pGestureInfo);
 }
 
 BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo) {
-    if (!DynCloseGestureInfoHandle) {
-        return FALSE;
-    }
-    return DynCloseGestureInfoHandle(hGestureInfo);
+    return ::CloseGestureInfoHandle(hGestureInfo);
 }
 
 BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize) {
-    if (!DynSetGestureConfig) {
-        return FALSE;
-    }
-    return DynSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
+    return ::SetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
 }
 } // namespace touch
 

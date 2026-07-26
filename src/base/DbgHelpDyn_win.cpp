@@ -423,17 +423,12 @@ void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
 #pragma warning(push)
 #pragma warning(disable : 4748)
 NO_INLINE bool GetCurrentThreadCallstack(str::Builder& s) {
-    // not available under Win2000
-    if (!DynRtlCaptureContext) {
-        return false;
-    }
-
     if (!Initialize(nullptr, false)) {
         return false;
     }
 
     CONTEXT ctx;
-    DynRtlCaptureContext(&ctx);
+    RtlCaptureContext(&ctx);
     return GetCallstack(s, ctx, GetCurrentThread());
 }
 #pragma optimize("", off)

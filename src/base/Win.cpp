@@ -349,7 +349,7 @@ bool IsRunningInWow64() {
         return false;
     }
     BOOL isWow = FALSE;
-    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
+    if (IsWow64Process(GetCurrentProcess(), &isWow)) {
         return isWow == TRUE;
     }
     return false;
@@ -751,18 +751,8 @@ TempStr GetTempDirTemp() {
 }
 
 void DisableDataExecution() {
-    // first try the documented SetProcessDEPPolicy
-    if (DynSetProcessDEPPolicy) {
-        DynSetProcessDEPPolicy(PROCESS_DEP_ENABLE);
-        return;
-    }
-
-    // now try undocumented NtSetInformationProcess
-    if (DynNtSetInformationProcess) {
-        DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-        HANDLE p = GetCurrentProcess();
-        DynNtSetInformationProcess(p, PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
-    }
+    // Win7+; 32-bit only (fails with ERROR_NOT_SUPPORTED on 64-bit processes)
+    SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 }
 
 enum class ConsoleState {
@@ -2314,16 +2304,11 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
 
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
-    if (DynSetDllDirectoryW) {
-        TempStr dllDir = path::GetDirTemp(dllPath);
-        WCHAR* dllDirW = CWStrTemp(dllDir);
-        DynSetDllDirectoryW(dllDirW);
-    }
+    TempStr dllDir = path::GetDirTemp(dllPath);
+    SetDllDirectoryW(CWStrTemp(dllDir));
 
     defer {
-        if (DynSetDllDirectoryW) {
-            DynSetDllDirectoryW(L"");
-        }
+        SetDllDirectoryW(L"");
         OleUninitialize();
     };
 
