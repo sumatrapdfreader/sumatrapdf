@@ -74,6 +74,7 @@ HWND Edit::Create(const CreateArgs& args) {
         cargs.exStyle = WS_EX_CLIENTEDGE;
         createdWithBorder = true;
     }
+    createdWithBottomBorder = args.withBottomBorder && !args.withBorder;
     if (args.isMultiLine) {
         cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
     } else {
@@ -113,6 +114,34 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case UWM_DELAYED_CTRL_BACK: {
             EditImplementCtrlBack(hwnd);
             return true;
+        }
+
+        case WM_PAINT: {
+            LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
+            if (createdWithBottomBorder) {
+                // underline so borderless edits stay visible on flat dialog backgrounds
+                HDC hdc = GetDC(hwnd);
+                if (hdc) {
+                    RECT rc{};
+                    GetClientRect(hwnd, &rc);
+                    COLORREF col = IsSpecialColor(textColor) ? GetSysColor(COLOR_GRAYTEXT) : textColor;
+                    // muted line: blend text color toward background
+                    if (!IsSpecialColor(bgColor)) {
+                        u8 r, g, b, br, bg, bb;
+                        UnpackColor(col, r, g, b);
+                        UnpackColor(bgColor, br, bg, bb);
+                        col = RGB((r + br * 2) / 3, (g + bg * 2) / 3, (b + bb * 2) / 3);
+                    }
+                    HPEN pen = CreatePen(PS_SOLID, 1, col);
+                    HGDIOBJ old = SelectObject(hdc, pen);
+                    MoveToEx(hdc, rc.left, rc.bottom - 1, nullptr);
+                    LineTo(hdc, rc.right, rc.bottom - 1);
+                    SelectObject(hdc, old);
+                    DeleteObject(pen);
+                    ReleaseDC(hwnd, hdc);
+                }
+            }
+            return res;
         }
     }
     return WndProcDefault(hwnd, msg, wp, lp);

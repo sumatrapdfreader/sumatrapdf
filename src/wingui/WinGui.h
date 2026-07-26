@@ -293,6 +293,8 @@ struct Edit : Wnd {
         HWND parent = nullptr;
         bool isMultiLine = false;
         bool withBorder = false;
+        // 1px underline under the client area (no WS_EX_CLIENTEDGE)
+        bool withBottomBorder = false;
         Str cueText;
         Str text;
         int idealSizeLines = 1;
@@ -310,6 +312,7 @@ struct Edit : Wnd {
     // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, so
     // window styles can't be used to detect the border
     bool createdWithBorder = false;
+    bool createdWithBottomBorder = false;
 
     Edit();
     ~Edit() override;
