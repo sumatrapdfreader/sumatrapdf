@@ -179,7 +179,7 @@ void SetPdfPreviewLoggingEnabled(bool enable) {
 // Per-build data dir, keyed on the sha1 of the SumatraPDF.exe sitting next to
 // this module: in SumatraPDF.exe that's the running exe, in PdfPreview.dll it's
 // the sibling exe -- either way it resolves to the same directory SumatraPDF.exe
-// uses (see GetAppBuildSpecificDirTemp), so logs land next to its crashinfo/logs.
+// uses (see GetSumatraBuildSpecificDirTemp), so logs land next to its crashinfo/logs.
 TempStr GetPdfPreviewLogDirTemp() {
     TempStr exeDir = GetSelfExeDirTemp();
     if (!exeDir) {
@@ -194,7 +194,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     CalcSHA1Digest(d, sha1);
     str::Free(d);
     char id[7];
-    for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetAppBuildSpecificDirTemp
+    for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetSumatraBuildSpecificDirTemp
         sprintf_s(&id[2 * i], 3, "%02x", sha1[i]);
     }
     TempStr local = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);

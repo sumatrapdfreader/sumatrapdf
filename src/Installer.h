@@ -63,7 +63,7 @@ TempStr GetShortcutPathTemp(int csidl);
 
 bool ExtractInstallerFiles(Str dir);
 u32 GetLibmupdfDllSize();
-bool ExtractLibmupdfDll(Str destDir);
+bool ExtractLibmupdfDllToDir(Str destDir);
 
 TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);

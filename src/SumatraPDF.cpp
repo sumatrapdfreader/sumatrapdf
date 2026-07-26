@@ -6826,7 +6826,7 @@ TempStr GetSumatraDataDirTemp() {
     return path::JoinTemp(dir, StrL("SumatraPDF-data"));
 }
 
-TempStr GetAppBuildSpecificDirTemp() {
+TempStr GetSumatraBuildSpecificDirTemp() {
     TempStr dataDir = GetSumatraDataDirTemp();
     if (!dataDir) {
         return {};
@@ -6840,7 +6840,7 @@ TempStr GetAppBuildSpecificDirTemp() {
 }
 
 TempStr GetLogFilePathTemp() {
-    TempStr buildDir = GetAppBuildSpecificDirTemp();
+    TempStr buildDir = GetSumatraBuildSpecificDirTemp();
     if (!buildDir) {
         return {};
     }
@@ -6849,7 +6849,7 @@ TempStr GetLogFilePathTemp() {
 }
 
 TempStr GetCrashInfoDirTemp() {
-    TempStr buildDir = GetAppBuildSpecificDirTemp();
+    TempStr buildDir = GetSumatraBuildSpecificDirTemp();
     if (!buildDir) {
         return {};
     }

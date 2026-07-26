@@ -337,4 +337,4 @@ void SumatraOpenPathInDefaultFileManager(Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetSumatraDataDirTemp();
 TempStr GetCrashInfoDirTemp();
-TempStr GetAppBuildSpecificDirTemp();
+TempStr GetSumatraBuildSpecificDirTemp();

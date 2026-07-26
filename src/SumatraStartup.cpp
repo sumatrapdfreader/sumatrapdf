@@ -927,7 +927,7 @@ static TempStr ExtractLibmupdfDllToBuildDir() {
         return {};
     }
 
-    TempStr buildDir = GetAppBuildSpecificDirTemp();
+    TempStr buildDir = GetSumatraBuildSpecificDirTemp();
     if (!buildDir) {
         return {};
     }
@@ -940,7 +940,7 @@ static TempStr ExtractLibmupdfDllToBuildDir() {
         logf("ExtractLibmupdfDllToBuildDir: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize,
              expectedSize);
     }
-    bool ok = ExtractLibmupdfDll(buildDir);
+    bool ok = ExtractLibmupdfDllToDir(buildDir);
     if (!ok) {
         return {};
     }
