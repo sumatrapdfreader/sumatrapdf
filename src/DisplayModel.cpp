@@ -1429,8 +1429,8 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
     GoToPage(currPageNo, 0);
 }
 
-void DisplayModel::SetInPresentation(bool inPres) {
-    inPresentation = inPres;
+void DisplayModel::SetInPresentation(bool enable) {
+    inPresentation = enable;
     if (inPresentation) {
         presDisplayMode = displayMode;
         presZoomVirtual = zoomVirtual;
@@ -1879,9 +1879,9 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
     return ScrollScreenToRect(res->pages[0], extremes);
 }
 
-bool DisplayModel::ScrollScreenToRect(int pageNo, Rect extremes) {
+bool DisplayModel::ScrollScreenToRect(int pageNo, Rect rec) {
     // don't scroll if the whole result is already visible
-    if (Rect(Point(), viewPort.Size()).Intersect(extremes) == extremes) {
+    if (Rect(Point(), viewPort.Size()).Intersect(rec) == rec) {
         return false;
     }
 
@@ -1892,20 +1892,19 @@ bool DisplayModel::ScrollScreenToRect(int pageNo, Rect extremes) {
     // (scrolling up) and 60% (scrolling down) of the screen, so that
     // the search direction remains obvious and we still display some
     // context before and after the found text
-    if (extremes.y < viewPort.dy * 2 / 5) {
-        sy = extremes.y - viewPort.dy * 2 / 5;
-    } else if (extremes.y + extremes.dy > viewPort.dy * 3 / 5) {
-        sy = std::min(extremes.y + extremes.dy - viewPort.dy * 3 / 5,
-                      extremes.y + extremes.dy / 2 - viewPort.dy * 2 / 5);
+    if (rec.y < viewPort.dy * 2 / 5) {
+        sy = rec.y - viewPort.dy * 2 / 5;
+    } else if (rec.y + rec.dy > viewPort.dy * 3 / 5) {
+        sy = std::min(rec.y + rec.dy - viewPort.dy * 3 / 5, rec.y + rec.dy / 2 - viewPort.dy * 2 / 5);
     }
 
     // horizontally, we try to position the search result at the
     // center of the screen, but don't scroll further than page
     // boundaries, so that as much context as possible remains visible
-    if (extremes.x < 0) {
-        sx = std::max(extremes.x + extremes.dx / 2 - viewPort.dx / 2, pageInfo->pageOnScreen.x);
-    } else if (extremes.x + extremes.dx >= viewPort.dx) {
-        sx = std::min(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
+    if (rec.x < 0) {
+        sx = std::max(rec.x + rec.dx / 2 - viewPort.dx / 2, pageInfo->pageOnScreen.x);
+    } else if (rec.x + rec.dx >= viewPort.dx) {
+        sx = std::min(rec.x + rec.dx / 2 - viewPort.dx / 2,
                       pageInfo->pageOnScreen.x + pageInfo->pageOnScreen.dx - viewPort.dx);
     }
 

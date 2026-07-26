@@ -14,8 +14,8 @@ struct FileHistory {
     ~FileHistory() = default;
 
     void Clear(bool keepFavorites) const;
-    void Append(FileState* state) const;
-    void Remove(FileState* state) const;
+    void Append(FileState* fs) const;
+    void Remove(FileState* fs) const;
     FileState* Get(int index) const;
     FileState* FindByPath(Str filePath) const;
     FileState* FindByName(Str filePath, int* idxOut) const;

@@ -85,7 +85,7 @@ class EngineMupdf : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     Str GetFileData() override;
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
     bool TryExtractPageText(int pageNo, PageText* out) override;
     void ReleaseTextExtractionThreadContext() override;
@@ -190,7 +190,7 @@ class EngineMupdf : public EngineBase {
     bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
-    bool LoadFromStream(fz_stream* stm, Str nameHing, PasswordUI* pwdUI = nullptr);
+    bool LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 

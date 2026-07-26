@@ -1532,9 +1532,9 @@ int CmdIdFromVirtualZoom(float virtualZoom) {
     return CmdZoomCustom;
 }
 
-float ZoomMenuItemToZoom(int cmdId) {
+float ZoomMenuItemToZoom(int menuItemId) {
     for (auto&& it : gZoomMenuIds) {
-        if (cmdId == it.cmdId) {
+        if (menuItemId == it.cmdId) {
             return it.zoom;
         }
     }

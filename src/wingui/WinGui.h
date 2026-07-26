@@ -135,7 +135,7 @@ struct Wnd : ILayout {
     virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
     virtual void OnSize(UINT msg, UINT type, SIZE size);
     virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
-    virtual void OnTimer(UINT_PTR event_id);
+    virtual void OnTimer(UINT_PTR timerId);
     virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
 
     virtual void SetColors(COLORREF textColor, COLORREF bgColor);

@@ -130,7 +130,7 @@ int FontDyPx(HWND hwnd, HFONT hfont);
 
 int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr);
-int HdcDrawText(HDC hdc, Str s, const Point& pos, uint fmt, HFONT font = nullptr);
+int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, HFONT font = nullptr);

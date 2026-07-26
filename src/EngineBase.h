@@ -385,7 +385,7 @@ struct TocTree : TreeModel {
     Str Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
-    TreeItem ChildAt(TreeItem, int index) override;
+    TreeItem ChildAt(TreeItem, int idx) override;
     bool IsExpanded(TreeItem) override;
     bool IsChecked(TreeItem) override;
 
@@ -493,7 +493,7 @@ class EngineBase {
     virtual Str GetFileData() = 0;
 
     // saves a copy of the current file under a different name (overwriting an existing file)
-    virtual bool SaveFileAs(Str copyFileName) = 0;
+    virtual bool SaveFileAs(Str dstPath) = 0;
 
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
@@ -614,7 +614,7 @@ class EngineBase {
 };
 
 struct PasswordUI {
-    virtual Str GetPassword(Str fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
+    virtual Str GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
 

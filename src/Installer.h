@@ -49,7 +49,7 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-void OnPaintFrame(HWND hwnd, bool skipoMessage);
+void OnPaintFrame(HWND hwnd, bool skipMessage);
 void AnimStep();
 
 void NotifyFailed(Str msg);
@@ -94,8 +94,8 @@ void RemoveAppShortcuts();
 
 // RegistryInstaller.cpp
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installedExePat);
-bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePat);
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir);
+bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();

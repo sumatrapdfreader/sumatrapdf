@@ -149,7 +149,7 @@ class EngineDjvuDec : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     Str GetFileData() override;
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 

@@ -56,6 +56,6 @@ struct MobiDoc {
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(FileType);
-    static MobiDoc* CreateFromFile(Str fileName);
+    static MobiDoc* CreateFromFile(Str path);
     static MobiDoc* CreateFromData(Str data);
 };

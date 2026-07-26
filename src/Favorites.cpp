@@ -56,7 +56,7 @@ struct FavTreeModel : TreeModel {
     Str Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
-    TreeItem ChildAt(TreeItem, int index) override;
+    TreeItem ChildAt(TreeItem, int idx) override;
     bool IsExpanded(TreeItem) override;
     bool IsChecked(TreeItem) override;
     void SetHandle(TreeItem, HTREEITEM) override;

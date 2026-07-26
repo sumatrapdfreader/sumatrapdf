@@ -1245,14 +1245,14 @@ int TableLayout::CellIdx(int row, int col) {
     return idx;
 }
 
-void TableLayout::SetCell(int row, int col, ILayout* child) {
+void TableLayout::SetCell(int row, int col, ILayout* el) {
     int idx = CellIdx(row, col);
     auto& cell = cells[idx];
     if (cell.child) {
         // delete existing child
         delete cell.child;
     }
-    cell.child = child;
+    cell.child = el;
 }
 
 ILayout* TableLayout::GetCell(int row, int col) {

@@ -571,10 +571,10 @@ class HwndPasswordUI : public PasswordUI {
   public:
     explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {}
 
-    Str GetPassword(Str fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
+    Str GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
 };
 
-/* Get password for a given 'fileName', can be nullptr if user cancelled the
+/* Get password for a given path, can be nullptr if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
 Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
@@ -5800,11 +5800,10 @@ static void ShowViewModeNotification(MainWindow* win, int cmdId) {
 
 // if suggestedPoint is provided, it's position on canvas and we'll try to preserve that point after zoom
 // if suggestedPoint is nullptr we'll try to pick a smart point to zoom around if smartZoom is true
-void SmartZoom(MainWindow* win, float newZoom, Point* suggestedPoint, bool smartZoom) {
+void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    Point* pt = suggestedPoint;
 
     Point ptSmart;
     if (smartZoom) {
@@ -5813,15 +5812,15 @@ void SmartZoom(MainWindow* win, float newZoom, Point* suggestedPoint, bool smart
             pt = &ptSmart;
         }
     }
-    if (newZoom < 0) {
-        // if newZoom is one of kZoomFit* constants, we don't do smartZoom
+    if (factor < 0) {
+        // if factor is one of kZoomFit* constants, we don't do smartZoom
         // TODO: shouldn't happen if !smartZoom
         pt = nullptr;
     }
 
-    win->ctrl->SetZoomVirtual(newZoom, pt);
+    win->ctrl->SetZoomVirtual(factor, pt);
     UpdateToolbarState(win);
-    ShowZoomNotification(win, newZoom);
+    ShowZoomNotification(win, factor);
 }
 
 /* Zoom document in window 'hwnd' to zoom level 'zoom'.

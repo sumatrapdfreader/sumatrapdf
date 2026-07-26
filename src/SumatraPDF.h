@@ -231,7 +231,7 @@ void CopyFilePath(WindowTab*);
 // note: background tabs are only searched if focusTab is true
 // when limitWin is set, only that window's tabs are considered
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
-MainWindow* FindMainWindowBySyncFile(Str file, bool focusTab);
+MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 WindowTab* FindTabByFile(Str file, MainWindow* limitWin = nullptr);
 void SelectTabInWindow(WindowTab*);
 

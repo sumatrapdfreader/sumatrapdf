@@ -2290,23 +2290,23 @@ i64 ParseInt64(Str s) {
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
-bool IsValidProgramVersion(Str txt) {
-    if (!txt || !str::IsDigit(txt.s[0])) {
+bool IsValidProgramVersion(Str ver) {
+    if (!ver || !str::IsDigit(ver.s[0])) {
         return false;
     }
 
-    for (int i = 0; i < txt.len; i++) {
-        char c = txt.s[i];
+    for (int i = 0; i < ver.len; i++) {
+        char c = ver.s[i];
         if (str::IsDigit(c)) {
             continue;
         }
-        if (c == '.' && i + 1 < txt.len && str::IsDigit(txt.s[i + 1])) {
+        if (c == '.' && i + 1 < ver.len && str::IsDigit(ver.s[i + 1])) {
             continue;
         }
-        if (c == '\r' && i + 1 < txt.len && txt.s[i + 1] == '\n') {
+        if (c == '\r' && i + 1 < ver.len && ver.s[i + 1] == '\n') {
             continue;
         }
-        if (c == '\n' && i + 1 == txt.len) {
+        if (c == '\n' && i + 1 == ver.len) {
             continue;
         }
         return false;
@@ -2333,12 +2333,12 @@ static unsigned int ExtractNextNumber(Str txt, int& off) {
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
-int CompareProgramVersion(Str txt1, Str txt2) {
+int CompareProgramVersion(Str ver1, Str ver2) {
     int off1 = 0;
     int off2 = 0;
-    while (off1 < txt1.len || off2 < txt2.len) {
-        unsigned int v1 = ExtractNextNumber(txt1, off1);
-        unsigned int v2 = ExtractNextNumber(txt2, off2);
+    while (off1 < ver1.len || off2 < ver2.len) {
+        unsigned int v1 = ExtractNextNumber(ver1, off1);
+        unsigned int v2 = ExtractNextNumber(ver2, off2);
         if (v1 != v2) {
             return (int)v1 - (int)v2;
         }

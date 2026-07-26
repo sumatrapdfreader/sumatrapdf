@@ -888,12 +888,12 @@ void WebviewWnd::SetControllerVisible(bool visible) {
     webview3->Release();
 }
 
-void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
-    if (!ctrl) {
+void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
+    if (!controller) {
         FailInit();
         return;
     }
-    controller = ctrl;
+    this->controller = controller;
 
     auto style = GetWindowLong(hwnd, GWL_STYLE);
     style &= ~(WS_OVERLAPPEDWINDOW);

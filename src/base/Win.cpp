@@ -482,10 +482,10 @@ void DbgOutLastError(DWORD err) {
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY hkey, Str keyName) {
+bool RegKeyExists(HKEY keySub, Str keyName) {
     HKEY hKey;
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LONG res = RegOpenKeyW(hkey, keyNameW, &hKey);
+    LONG res = RegOpenKeyW(keySub, keyNameW, &hKey);
     if (ERROR_SUCCESS == res) {
         RegCloseKey(hKey);
         return true;
@@ -496,8 +496,8 @@ bool RegKeyExists(HKEY hkey, Str keyName) {
     return ERROR_ACCESS_DENIED == res;
 }
 
-TempStr ReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
-    if (!hkey) {
+TempStr ReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
+    if (!keySub) {
         return nullptr;
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
@@ -506,7 +506,7 @@ TempStr ReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
-    LONG res = RegOpenKeyEx(hkey, keyNameW, 0, access, &hKey);
+    LONG res = RegOpenKeyEx(keySub, keyNameW, 0, access, &hKey);
     if (ERROR_SUCCESS == res) {
         DWORD valLen;
         res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
@@ -519,7 +519,7 @@ TryAgainWOW64:
         }
         RegCloseKey(hKey);
     }
-    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == hkey && KEY_READ == access) {
+    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == keySub && KEY_READ == access) {
 // try the (non-)64-bit key as well, as HKLM\Software is not shared between 32-bit and
 // 64-bit applications per http://msdn.microsoft.com/en-us/library/aa384253(v=vs.85).aspx
 #ifdef _WIN64
@@ -534,9 +534,9 @@ TryAgainWOW64:
     return resv;
 }
 
-TempStr LoggedReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
-    auto res = ReadRegStrTemp(hkey, keyName, valName);
-    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey), keyName, valName, res);
+TempStr LoggedReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
+    auto res = ReadRegStrTemp(keySub, keyName, valName);
+    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(keySub), keyName, valName, res);
     return res;
 }
 
@@ -556,58 +556,58 @@ TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
     return res;
 }
 
-bool WriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
+bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     int cch;
     WCHAR* valueW = CWStrTemp(value, cch);
     DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
+bool LoggedWriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     int cch;
     WCHAR* valueW = CWStrTemp(value, cch);
     DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, value, res);
+        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(keySub), keyName, valName, value, res);
         LogLastError();
         return false;
     }
-    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(hkey), keyName, valName, value);
+    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(keySub), keyName, valName, value);
     return true;
 }
 
-bool ReadRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD& value) {
+bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     DWORD size = sizeof(DWORD);
-    LSTATUS res = SHGetValue(hkey, keyNameW, valNameW, nullptr, &value, &size);
+    LSTATUS res = SHGetValue(keySub, keyNameW, valNameW, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
+bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
+bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value,
+        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(keySub), keyName, valName, (int)value,
              res);
         LogLastError();
         return false;
     }
-    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value);
+    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(keySub), keyName, valName, (int)value);
     return true;
 }
 
@@ -619,10 +619,10 @@ bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName) {
     return (ERROR_SUCCESS == res);
 }
 
-bool CreateRegKey(HKEY hkey, Str keyName) {
+bool CreateRegKey(HKEY keySub, Str keyName) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     HKEY hKey;
-    LSTATUS res = RegCreateKeyExW(hkey, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    LSTATUS res = RegCreateKeyExW(keySub, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS) {
         return false;
     }
@@ -669,22 +669,22 @@ static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     RegCloseKey(hKey);
 }
 
-bool DeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
+bool DeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
-        ResetRegKeyAcl(hkey, keyName);
+        ResetRegKeyAcl(keySub, keyName);
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
+    LSTATUS res = SHDeleteKeyW(keySub, keyNameW);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-bool LoggedDeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
+bool LoggedDeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
-        ResetRegKeyAcl(hkey, keyName);
+        ResetRegKeyAcl(keySub, keyName);
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
-    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
+    LSTATUS res = SHDeleteKeyW(keySub, keyNameW);
+    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(keySub), keyName, resetACLFirst, res);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
     if (!ok) {
         LogLastError(res);
@@ -692,21 +692,21 @@ bool LoggedDeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
     return ok;
 }
 
-bool DeleteRegValue(HKEY hkey, Str keyName, Str value) {
+bool DeleteRegValue(HKEY keySub, Str keyName, Str val) {
     WCHAR* keyNameW = CWStrTemp(keyName);
-    WCHAR* valueW = CWStrTemp(value);
+    WCHAR* valW = CWStrTemp(val);
 
-    auto res = SHDeleteValueW(hkey, keyNameW, valueW);
+    auto res = SHDeleteValueW(keySub, keyNameW, valW);
     return res == ERROR_SUCCESS;
 }
 
-bool LoggedDeleteRegValue(HKEY hkey, Str keyName, Str valName) {
+bool LoggedDeleteRegValue(HKEY keySub, Str keyName, Str val) {
     WCHAR* keyNameW = CWStrTemp(keyName);
-    WCHAR* valNameW = CWStrTemp(valName);
+    WCHAR* valW = CWStrTemp(val);
 
-    auto res = SHDeleteValueW(hkey, keyNameW, valNameW);
+    auto res = SHDeleteValueW(keySub, keyNameW, valW);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
-    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
+    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(keySub), keyName, val, res);
     if (!ok) {
         LogLastError(res);
     }
@@ -3707,7 +3707,7 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-int HdcDrawText(HDC hdc, Str s, RECT* r, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font) {
     if (len(s) == 0) {
         return 0;
     }
@@ -3717,24 +3717,24 @@ int HdcDrawText(HDC hdc, Str s, RECT* r, uint fmt, HFONT font) {
     }
     int cch = ws.len;
     ScopedSelectFont f(hdc, font);
-    return DrawTextW(hdc, ws.s, cch, r, fmt);
+    return DrawTextW(hdc, ws.s, cch, r, format);
 }
 
-int HdcDrawText(HDC hdc, Str s, const Rect& r, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
     RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, fmt, font);
+    return HdcDrawText(hdc, s, &r2, format, font);
 }
 
-int HdcDrawText(HDC hdc, Str s, const Point& pos, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font) {
     Rect r = {pos.x, pos.y, 0, 0};
     RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, fmt, font);
+    return HdcDrawText(hdc, s, &r2, format, font);
 }
 
 // uses the same logic as HdcDrawText
 // maxDx limits the width, used when measuring text wrapped with DT_WORDBREAK
-Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
-    fmt |= DT_CALCRECT;
+Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font) {
+    format |= DT_CALCRECT;
     TempWStr ws = ToWStrTemp(s);
     if (len(ws) == 0) {
         return {};
@@ -3743,7 +3743,7 @@ Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
     ScopedSelectFont f(hdc, font);
     int sLen = ws.len;
     RECT rc{0, 0, maxDx, 4096};
-    int dy = DrawTextW(hdc, ws.s, sLen, &rc, fmt);
+    int dy = DrawTextW(hdc, ws.s, sLen, &rc, format);
     if (0 == dy) {
         return {};
     }
@@ -3755,9 +3755,9 @@ Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
     return Size(dx, dy);
 }
 
-Size HdcMeasureText(HDC hdc, Str s, uint fmt, HFONT font) {
+Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font) {
     // a very large area
-    return HdcMeasureText(hdc, s, 4096, fmt, font);
+    return HdcMeasureText(hdc, s, 4096, format, font);
 }
 
 Size HdcMeasureText(HDC hdc, Str s, HFONT font) {

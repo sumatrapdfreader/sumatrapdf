@@ -52,7 +52,7 @@ struct NotificationWnd : Wnd {
     HWND Create(const NotificationCreateArgs&);
 
     void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
-    void OnTimer(UINT_PTR event_id) override;
+    void OnTimer(UINT_PTR timerId) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     void UpdateMessage(Str msg, int timeoutMs = 0, bool highlight = false);
@@ -754,11 +754,11 @@ NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs
     return ShowNotification(args);
 }
 
-void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutMs, bool highlight) {
+void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS, bool highlight) {
     if (!wnd) {
         return;
     }
-    wnd->UpdateMessage(msg, timeoutMs, highlight);
+    wnd->UpdateMessage(msg, timeoutInMS, highlight);
 }
 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {

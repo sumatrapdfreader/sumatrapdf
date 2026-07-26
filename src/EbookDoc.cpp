@@ -1540,8 +1540,8 @@ bool HtmlDoc::IsSupportedFileType(FileType kind) {
     return kind == FileType::PalmDoc;
 }
 
-HtmlDoc* HtmlDoc::CreateFromFile(Str fileName) {
-    HtmlDoc* doc = new HtmlDoc(fileName);
+HtmlDoc* HtmlDoc::CreateFromFile(Str path) {
+    HtmlDoc* doc = new HtmlDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return {};
@@ -1895,8 +1895,8 @@ bool TxtDoc::IsSupportedFileType(FileType kind) {
     return kind == FileType::Txt;
 }
 
-TxtDoc* TxtDoc::CreateFromFile(Str fileName) {
-    TxtDoc* doc = new TxtDoc(fileName);
+TxtDoc* TxtDoc::CreateFromFile(Str path) {
+    TxtDoc* doc = new TxtDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return {};

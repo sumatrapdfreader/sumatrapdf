@@ -100,7 +100,7 @@ struct DisplayModel : DocController {
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
     IPageDestination* GetNamedDest(Str name) override;
 
-    void GetDisplayState(FileState* ds) override;
+    void GetDisplayState(FileState* fs) override;
     // asynchronously calls saveThumbnail (fails silently)
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 

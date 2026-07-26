@@ -10,7 +10,7 @@ struct TextSearch : public TextSelection {
     explicit TextSearch(EngineBase* engine);
     ~TextSearch();
 
-    void SetMatchCase(bool sensitive);
+    void SetMatchCase(bool newMatchCase);
     void SetMatchWholeWord(bool wholeWord);
     void SetDirection(Direction direction);
     void SetLastResult(TextSelection* sel);

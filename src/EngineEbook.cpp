@@ -116,7 +116,7 @@ class EngineEbook : public EngineBase {
 
     Str GetFileData() override;
 
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
@@ -788,7 +788,7 @@ class EngineEpub : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
 
   protected:
@@ -900,9 +900,9 @@ TocTree* EngineEpub::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineEpub::CreateFromFile(Str fileName) {
+EngineBase* EngineEpub::CreateFromFile(Str path) {
     EngineEpub* engine = new EngineEpub();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -958,7 +958,7 @@ class EngineFb2 : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
 
   protected:
@@ -1025,9 +1025,9 @@ TocTree* EngineFb2::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineFb2::CreateFromFile(Str fileName) {
+EngineBase* EngineFb2::CreateFromFile(Str path) {
     EngineFb2* engine = new EngineFb2();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1086,7 +1086,7 @@ class EngineMobi : public EngineEbook {
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
 
   protected:
@@ -1186,9 +1186,9 @@ TocTree* EngineMobi::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineMobi::CreateFromFile(Str fileName) {
+EngineBase* EngineMobi::CreateFromFile(Str path) {
     EngineMobi* engine = new EngineMobi();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1241,7 +1241,7 @@ class EnginePdb : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
 
   protected:
     PalmDoc* doc = nullptr;
@@ -1293,9 +1293,9 @@ TocTree* EnginePdb::GetToc() {
     return tocTree;
 }
 
-EngineBase* EnginePdb::CreateFromFile(Str fileName) {
+EngineBase* EnginePdb::CreateFromFile(Str path) {
     EnginePdb* engine = new EnginePdb();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1468,7 +1468,7 @@ class EngineChm : public EngineEbook {
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
 
   protected:
     ChmFile* doc = nullptr;
@@ -1710,9 +1710,9 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
-EngineBase* EngineChm::CreateFromFile(Str fileName) {
+EngineBase* EngineChm::CreateFromFile(Str path) {
     EngineChm* engine = new EngineChm();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1749,7 +1749,7 @@ class EngineHtml : public EngineEbook {
         return doc->GetPropertyTemp(prop);
     }
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
 
   protected:
     HtmlDoc* doc = nullptr;
@@ -1813,9 +1813,9 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
     return NewEbookLink(link, rect, dest, pageNo, true);
 }
 
-EngineBase* EngineHtml::CreateFromFile(Str fileName) {
+EngineBase* EngineHtml::CreateFromFile(Str path) {
     EngineHtml* engine = new EngineHtml();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1857,7 +1857,7 @@ class EngineTxt : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
 
   protected:
     TxtDoc* doc = nullptr;
@@ -1918,9 +1918,9 @@ TocTree* EngineTxt::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineTxt::CreateFromFile(Str fileName) {
+EngineBase* EngineTxt::CreateFromFile(Str path) {
     EngineTxt* engine = new EngineTxt();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }

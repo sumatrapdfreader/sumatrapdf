@@ -836,17 +836,17 @@ static void CopyAboutInfoToClipboard() {
     CopyTextToClipboard(ToStr(info));
 }
 
-TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticLink** linkOut) {
+TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info) {
     if (!CanAccessDisk()) {
         return {};
     }
 
     Point pt(x, y);
-    for (int i = 0; i < len(staticLinks); i++) {
-        if (staticLinks[i]->rect.Contains(pt)) {
-            auto link = staticLinks[i];
-            if (linkOut) {
-                *linkOut = link;
+    for (int i = 0; i < len(linkInfo); i++) {
+        if (linkInfo[i]->rect.Contains(pt)) {
+            auto link = linkInfo[i];
+            if (info) {
+                *info = link;
             }
             return str::DupTemp(link->target);
         }

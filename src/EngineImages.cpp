@@ -104,7 +104,7 @@ class EngineImages : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     Str GetFileData() override;
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int) override { return {}; }
     bool HasClipOptimizations(int) override { return false; }
 
@@ -904,7 +904,7 @@ class EngineImage : public EngineImages {
     void GetProperties(Props& propsOut) override;
     void GetImageProperties(int pageNo, Props& propsOut);
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
 
     // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
@@ -912,7 +912,7 @@ class EngineImage : public EngineImages {
     Vec<Pixmap*> frames;
     FileType imageFormat = FileType::Unknown;
 
-    bool LoadSingleFile(Str fileName);
+    bool LoadSingleFile(Str path);
     bool LoadFromData(Str data);
     bool FinishLoading(Size fallbackSize = {});
 
@@ -1444,7 +1444,7 @@ class EngineImageDir : public EngineImages {
     }
 
     Str GetFileData() override { return {}; }
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
 
     TempStr GetPropertyTemp(DocProp) override { return nullptr; }
 
@@ -1453,7 +1453,7 @@ class EngineImageDir : public EngineImages {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
 
     // protected:
 
@@ -1609,10 +1609,10 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-EngineBase* EngineImageDir::CreateFromFile(Str fileName) {
-    ReportIf(!dir::Exists(fileName));
+EngineBase* EngineImageDir::CreateFromFile(Str path) {
+    ReportIf(!dir::Exists(path));
     EngineImageDir* engine = new EngineImageDir();
-    if (!LoadImageDir(engine, fileName)) {
+    if (!LoadImageDir(engine, path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
