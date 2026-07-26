@@ -927,7 +927,7 @@ static TempStr ExtractLibmupdfDllToBuildDir() {
         return {};
     }
 
-    TempStr buildDir = GetBuildDirNameTemp();
+    TempStr buildDir = GetAppBuildSpecificDirTemp();
     if (!buildDir) {
         return {};
     }
@@ -1176,7 +1176,7 @@ static void ShowNotValidInstallerError() {
 // avoid slow re-reads; they're pure cache so evicting cold entries is
 // safe.
 static void DeleteStaleCbxCacheFiles() {
-    TempStr dataDir = GetNotImportantDataDirTemp();
+    TempStr dataDir = GetSumatraDataDirTemp();
     if (!dataDir) {
         return;
     }
@@ -1318,7 +1318,7 @@ static void DeleteStaleFilesAsync() {
     if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
         return;
     }
-    TempStr dataDir = GetNotImportantDataDirTemp();
+    TempStr dataDir = GetSumatraDataDirTemp();
     if (!dataDir) {
         return;
     }

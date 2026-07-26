@@ -6818,7 +6818,7 @@ static void OnMenuCustomZoom(MainWindow* win) {
 
 // this is a directory for not important data, like downloaded symbols
 // this directory is the same for installed / portable etc. versions
-TempStr GetNotImportantDataDirTemp() {
+TempStr GetSumatraDataDirTemp() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!dir) {
         return {};
@@ -6826,8 +6826,8 @@ TempStr GetNotImportantDataDirTemp() {
     return path::JoinTemp(dir, StrL("SumatraPDF-data"));
 }
 
-TempStr GetBuildDirNameTemp() {
-    TempStr dataDir = GetNotImportantDataDirTemp();
+TempStr GetAppBuildSpecificDirTemp() {
+    TempStr dataDir = GetSumatraDataDirTemp();
     if (!dataDir) {
         return {};
     }
@@ -6840,7 +6840,7 @@ TempStr GetBuildDirNameTemp() {
 }
 
 TempStr GetLogFilePathTemp() {
-    TempStr buildDir = GetBuildDirNameTemp();
+    TempStr buildDir = GetAppBuildSpecificDirTemp();
     if (!buildDir) {
         return {};
     }
@@ -6849,7 +6849,7 @@ TempStr GetLogFilePathTemp() {
 }
 
 TempStr GetCrashInfoDirTemp() {
-    TempStr buildDir = GetBuildDirNameTemp();
+    TempStr buildDir = GetAppBuildSpecificDirTemp();
     if (!buildDir) {
         return {};
     }

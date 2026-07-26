@@ -25,7 +25,7 @@ static bool gEnableEpubWithPdfEngine = true;
 // reuses the file's own extension (.cbr/.cbz/.cb7/.cbt) so tooling that
 // inspects the temp copy still sniffs the right format.
 static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
-    TempStr dataDir = GetNotImportantDataDirTemp();
+    TempStr dataDir = GetSumatraDataDirTemp();
     if (!dataDir) {
         return {};
     }
