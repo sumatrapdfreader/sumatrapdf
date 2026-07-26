@@ -221,10 +221,6 @@ struct Annotations {
     // default author for created annotations, use (none) to not add an
     // author at all. If not set will use Windows user name
     Str defaultAuthor;
-    // if true, a small floating toolbar with selection actions (copy, read
-    // aloud, highlight etc.) pops up after selecting text. Set to false to
-    // disable it
-    bool selectionToolbar;
 };
 
 // list of additional external viewers for various file types. See [docs
@@ -633,6 +629,10 @@ struct GlobalPrefs {
     bool useSysColors;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
+    // if true, a small floating toolbar with selection actions (copy, read
+    // aloud, highlight etc.) pops up after selecting text. Set to false to
+    // disable it
+    bool selectionToolbar;
     // if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most
     // recently used order instead of tab-strip order
     bool tabsMru;
@@ -908,20 +908,17 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
-    {offsetof(Annotations, selectionToolbar), SettingType::Bool, true},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 13, gAnnotationsFields,
+    sizeof(Annotations), 12, gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor\0SelectionToolbar",
+    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor",
     "highlight annotation color\0underline annotation color\0squiggly annotation color\0strike out annotation "
     "color\0text color of free text annotation\0background color of free text annotation\0opacity of free text "
     "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0size "
     "of free text annotation\0width of free text annotation border\0text icon annotation color\0type of text "
     "annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.\0default author "
-    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name\0if true, "
-    "a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. "
-    "Set to false to disable it"};
+    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name"};
 
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
@@ -1219,6 +1216,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, disableAutoLinks), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, selectionToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabsMru), SettingType::Bool, false},
     {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t)""},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t)"0"},
@@ -1285,7 +1283,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 121, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 122, gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
@@ -1294,12 +1292,12 @@ static const StructInfo gGlobalPrefsInfo = {
     "arInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0Preve"
     "ntSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize"
     "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
-    "ors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0M"
-    "arkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0Trans"
-    "lateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandler"
-    "s\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowS"
-    "tate\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0Pro"
-    "pWinPos\0CheckForUpdates\0\0",
+    "ors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Ima"
+    "geUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0Transl"
+    "ateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0"
+    "\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0Vers"
+    "ionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
+    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
@@ -1342,19 +1340,21 @@ static const StructInfo gGlobalPrefsInfo = {
     "PDF documents\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
     "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, we use Windows system colors "
     "for background/text color. Over-rides other settings\0if true, documents are opened in tabs instead of new "
-    "windows\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of "
-    "tab-strip order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0zoom "
-    "step size in percents relative to the current zoom level. if zero or negative, the values from ZoomLevels are "
-    "used instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options for "
-    "eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
-    "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
-    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
-    "available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings "
-    "for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok "
-    "Build, and OpenAI Codex (internal)\0\0remembered destination language for selection translation; empty uses OS UI "
-    "language\0remembered source language for selection translation; empty means Auto\0remembered engine for Translate "
-    "Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF "
-    "documents\0\0list of additional external viewers for various file types. See [docs for more "
+    "windows\0if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up "
+    "after selecting text. Set to false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in "
+    "most recently used order instead of tab-strip order\0sequence of zoom levels when zooming in/out; all values must "
+    "lie between 8.33 and 6400\0zoom step size in percents relative to the current zoom level. if zero or negative, "
+    "the values from ZoomLevels are used instead\0\0customization options for PDF, XPS, DjVu and PostScript "
+    "UI\0\0customization options for eBookUI\0\0customization options for Comic Book UI\0\0customization options for "
+    "image files UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
+    "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
+    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
+    "shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
+    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
+    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
+    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
+    "types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "we show forward search results (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

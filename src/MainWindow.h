@@ -443,7 +443,7 @@ struct MainWindow {
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
 
     // small floating toolbar shown after a text selection in fixed-page
-    // documents (controlled by the Annotations.SelectionToolbar setting)
+    // floating selection actions bar (controlled by the SelectionToolbar setting)
     SelectionToolbar* selectionToolbar = nullptr;
 
     // set at the beginning of CloseWindow() to prevent

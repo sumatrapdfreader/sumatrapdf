@@ -442,12 +442,6 @@ const annotations: Field[] = [
     "",
     "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name",
   ).ver("3.4"),
-  field(
-    "SelectionToolbar",
-    Bool,
-    true,
-    "if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it",
-  ).ver("3.7"),
 ];
 
 const favorite: Field[] = [
@@ -822,6 +816,12 @@ const globalPrefs: Field[] = [
     "if true, we use Windows system colors for background/text color. Over-rides other settings",
   ),
   field("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows").ver("3.0"),
+  field(
+    "SelectionToolbar",
+    Bool,
+    true,
+    "if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it",
+  ).ver("3.7"),
   field(
     "TabsMru",
     Bool,

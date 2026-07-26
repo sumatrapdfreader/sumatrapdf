@@ -511,7 +511,7 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
 // nothing if the feature is disabled (Annotations.SelectionToolbar) or there
 // is no on-screen text selection in a fixed-page document.
 void ShowSelectionToolbar(MainWindow* win) {
-    if (!win || !gGlobalPrefs->annotations.selectionToolbar) {
+    if (!win || !gGlobalPrefs->selectionToolbar) {
         return;
     }
     // Do not check IsActivelySelecting here: OnSelectionStop calls us while
