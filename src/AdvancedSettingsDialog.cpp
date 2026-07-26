@@ -186,12 +186,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
         u8* fieldPtr = base + field.offset;
         TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, name) : str::DupTemp(name);
         switch (field.type) {
-            case SettingType::Struct:
-            case SettingType::Prerelease: {
-                if (field.type == SettingType::Prerelease && !gIsPreReleaseBuild && !gIsDebugBuild) {
-                    // not written out in release builds, so not editable there
-                    break;
-                }
+            case SettingType::Struct: {
                 auto sub = (const StructInfo*)field.value;
                 CollectSettings(items, sub, fieldPtr, path);
                 break;

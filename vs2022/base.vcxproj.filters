@@ -18,9 +18,6 @@
     <ClInclude Include="..\src\base\BitReader.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\BuildConfig.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\ByteOrderDecoder.h">
       <Filter>base</Filter>
     </ClInclude>

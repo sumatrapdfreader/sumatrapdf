@@ -83,8 +83,6 @@
 // Windows headers use _unused
 #define __unused [[maybe_unused]]
 
-#include "BuildConfig.h"
-
 // C/C++ standard headers  we use often
 #include <ctype.h>
 #include <stdarg.h>

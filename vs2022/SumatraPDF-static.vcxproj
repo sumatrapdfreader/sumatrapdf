@@ -1252,6 +1252,7 @@
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\TreeModel.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />
+    <ClInclude Include="..\src\BuildConfig.h" />
     <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WebpReader.h" />
     <ClInclude Include="..\src\WindowTab.h" />

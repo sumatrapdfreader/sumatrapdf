@@ -910,7 +910,6 @@
     <ClInclude Include="..\src\base\Arena.h" />
     <ClInclude Include="..\src\base\Base.h" />
     <ClInclude Include="..\src\base\BitReader.h" />
-    <ClInclude Include="..\src\base\BuildConfig.h" />
     <ClInclude Include="..\src\base\ByteOrderDecoder.h" />
     <ClInclude Include="..\src\base\ByteReader.h" />
     <ClInclude Include="..\src\base\ByteWriter.h" />

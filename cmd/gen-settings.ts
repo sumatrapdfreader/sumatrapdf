@@ -1072,7 +1072,7 @@ function cdefault(f: Field, built: Record<string, number>): string {
     return `(intptr_t)"${f.Default}"`;
   }
   const typeName = f.Type.name;
-  if (["Struct", "Array", "Compact", "Prerelease"].includes(typeName)) {
+  if (["Struct", "Array", "Compact"].includes(typeName)) {
     let idStr = "";
     const id = built[f.StructName] || 0;
     if (id > 0) {
@@ -1162,7 +1162,7 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
     lines.push(`\t${field.Type.ctype} ${field.CName};`);
     if (field.Type.name === "Color") {
       lines.push(`\tParsedColor ${field.CName}Parsed;`);
-    } else if (["Struct", "Compact", "Array", "Prerelease"].includes(field.Type.name)) {
+    } else if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
       const name = field.Name;
       if (name === field.StructName || name === field.StructName + "s") {
         if (built[name] === undefined) {
@@ -1208,7 +1208,7 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     // per-field doc comment, aligned with names; used by the advanced settings
     // dialog to describe the selected setting
     comments.push(field.DocComment || "");
-    if (["Struct", "Prerelease", "Compact", "Array"].includes(field.Type.name)) {
+    if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
       const sublines = buildMetaData(field, built);
       lines.push(sublines, "");
       built[field.StructName] = (built[field.StructName] || 0) + 1;

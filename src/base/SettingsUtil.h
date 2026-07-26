@@ -38,8 +38,6 @@ enum class SettingType {
     IntArray,
     StringArray,
     Comment,
-    // same as Type_Struct but won't be written out in release builds
-    Prerelease,
 };
 
 struct FieldInfo {

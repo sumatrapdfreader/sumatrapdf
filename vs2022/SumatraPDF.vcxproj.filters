@@ -408,6 +408,9 @@
     <ClInclude Include="..\src\UpdateCheck.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\BuildConfig.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Version.h">
       <Filter>src</Filter>
     </ClInclude>
