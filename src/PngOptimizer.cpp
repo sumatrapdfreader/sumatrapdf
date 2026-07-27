@@ -10,8 +10,6 @@
 
 #include "PngOptimizer.h"
 
-#include "base/Log.h"
-
 // zopfli is slow (roughly a second or more per MB of PNG) so don't try to
 // optimize huge files; typical screenshots are well under this
 constexpr int kMaxPngSizeToOptimize = 16 * 1024 * 1024;

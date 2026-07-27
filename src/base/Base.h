@@ -447,6 +447,21 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #define ReportDebugIf(cond)
 #endif
 
+/* Logging macros are defined here but must be implemented by the app because different apps have different logging needs. */
+void log(Str s);
+void loga(Str s); // log always
+
+#define logf(...)                     \
+    do {                              \
+        Str s__ = ::fmt(__VA_ARGS__); \
+        ::log(s__);                   \
+    } while (0)
+#define logfa(...)                    \
+    do {                              \
+        Str s__ = ::fmt(__VA_ARGS__); \
+        ::loga(s__);                  \
+    } while (0)
+
 void* AllocZero(int count, int size);
 
 template <typename T>
@@ -823,15 +838,10 @@ Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
 
 int setMinMax(int& v, int minVal, int maxVal);
 
+/* Usage: defer { instance->Release(); }; */
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
 extern AtomicInt gAllowAllocFailure;
-
-/* How to use:
-AutoCall freeToolsFileName(free, (void*)tools_filename);
-AutoCall closeFile(fclose, f);
-defer { instance->Release(); };
-*/
 
 #include "base/Geom.h"
 #include "base/Vec.h"
@@ -866,7 +876,5 @@ defer { instance->Release(); };
 #undef lstrcmpiW
 #define lstrcmpiW dont_use_lstrcmpiW
 #endif
-
-#include "base/Log.h"
 
 #endif
