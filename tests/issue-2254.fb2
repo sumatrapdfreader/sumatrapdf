@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Minimal FB2 for issue #2254: title-info annotation must appear in Ctrl+D Subject. -->
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+ <description>
+  <title-info>
+   <genre>prose</genre>
+   <author>
+    <first-name>Test</first-name>
+    <last-name>Author</last-name>
+   </author>
+   <book-title>Annotation Prop Test</book-title>
+   <annotation>
+    <p>Unique annotation marker for issue 2254 about a book summary.</p>
+   </annotation>
+   <date value="1925-01-01">1925</date>
+   <lang>en</lang>
+  </title-info>
+  <document-info>
+   <author>
+    <nickname>tester</nickname>
+   </author>
+   <program-used>issue-2254 fixture</program-used>
+   <date value="2026-01-01">2026-01-01</date>
+   <id>issue-2254-fixture</id>
+   <version>1.0</version>
+  </document-info>
+ </description>
+ <body>
+  <title>
+   <p>Annotation Prop Test</p>
+  </title>
+  <section>
+   <p>Body text for the FB2 properties test fixture.</p>
+  </section>
+ </body>
+</FictionBook>

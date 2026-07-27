@@ -1114,6 +1114,27 @@ bool Fb2Doc::Load(Str srcData) {
                     str::ReplaceWithCopy(&coverImage, attr->val);
                 }
             }
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("annotation"), FB2_MAIN_NS())) {
+            // FB2 annotation is nested markup (often one or more <p>); collect all text for
+            // Document Properties (Ctrl+D) as Subject.
+            TempStr annotation;
+            while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
+                   !(tok->IsEndTag() && tok->NameIsNS(StrL("annotation"), FB2_MAIN_NS()))) {
+                if (tok->IsText()) {
+                    TempStr part = ResolveHtmlEntitiesTemp(tok->s);
+                    if (annotation) {
+                        annotation = str::JoinTemp(annotation, StrL(" "), part);
+                    } else {
+                        annotation = part;
+                    }
+                }
+            }
+            if (annotation) {
+                annotation.len -= str::NormalizeWSInPlace(annotation);
+                if (len(annotation) > 0) {
+                    AddPropOwned(props, DocProp::Subject, annotation);
+                }
+            }
         } else if (inTitleInfo || inDocInfo) {
             continue;
         } else if (tok->IsStartTag() && tok->NameIsNS(StrL("title-info"), FB2_MAIN_NS())) {

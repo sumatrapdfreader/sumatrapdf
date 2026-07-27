@@ -359,6 +359,9 @@ struct fz_html_s
 	float layout_w, layout_h, layout_em;
 	float page_margin[4];
 	char *title;
+	/* SumatraPDF: FB2 title-info author + annotation (pool-allocated). NULL if absent. */
+	char *author;
+	char *subject;
 };
 
 typedef enum

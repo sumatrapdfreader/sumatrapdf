@@ -56,7 +56,10 @@ const gdiplus = dlopen("gdiplus.dll", {
 });
 
 // window messages
+export const WM_CLOSE = 0x0010;
 export const WM_SETTEXT = 0x000c;
+export const WM_GETTEXT = 0x000d;
+export const WM_GETTEXTLENGTH = 0x000e;
 export const WM_KEYDOWN = 0x0100;
 export const WM_KEYUP = 0x0101;
 export const WM_CHAR = 0x0102;
@@ -316,6 +319,17 @@ export function wideZ(s: string): Uint16Array {
 export function getWindowText(hwnd: number): string {
   const buf = new Uint16Array(512);
   const n = user32.symbols.GetWindowTextW(hwnd, ptr(buf), 512);
+  let s = "";
+  for (let i = 0; i < n; i++) {
+    s += String.fromCharCode(buf[i]);
+  }
+  return s;
+}
+
+// Full window/control text (large buffer; GetWindowTextW works cross-process).
+export function getWindowTextFull(hwnd: number, maxChars = 16384): string {
+  const buf = new Uint16Array(maxChars);
+  const n = user32.symbols.GetWindowTextW(hwnd, ptr(buf), maxChars);
   let s = "";
   for (let i = 0; i < n; i++) {
     s += String.fromCharCode(buf[i]);

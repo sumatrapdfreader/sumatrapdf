@@ -2033,6 +2033,69 @@ static void parse_meta_viewport(fz_context *ctx, const char *viewport, float *me
 		*meta_h = fz_atoi(p + 7);
 }
 
+/* SumatraPDF: collect nested FB2 text (author names, annotation) into a pool string. */
+static void
+fb2_append_xml_text(fz_context *ctx, fz_buffer *buf, fz_xml *node)
+{
+	while (node)
+	{
+		const char *text = fz_xml_text(node);
+		if (text && text[0])
+		{
+			/* skip pure whitespace text nodes between elements */
+			const char *p = text;
+			while (*p && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r'))
+				p++;
+			if (*p)
+			{
+				if (fz_buffer_storage(ctx, buf, NULL) > 0)
+					fz_append_byte(ctx, buf, ' ');
+				fz_append_string(ctx, buf, text);
+			}
+		}
+		fb2_append_xml_text(ctx, buf, fz_xml_down(node));
+		node = fz_xml_next(node);
+	}
+}
+
+/* SumatraPDF */
+static char *
+fb2_collect_text(fz_context *ctx, fz_pool *pool, fz_xml *node)
+{
+	fz_buffer *buf;
+	char *s = NULL;
+	unsigned char *data = NULL;
+	size_t len;
+
+	if (!node)
+		return NULL;
+
+	buf = fz_new_buffer(ctx, 128);
+	fz_try(ctx)
+	{
+		fb2_append_xml_text(ctx, buf, fz_xml_down(node));
+		fz_terminate_buffer(ctx, buf);
+		len = fz_buffer_storage(ctx, buf, &data);
+		if (len > 0 && data)
+		{
+			char *start = (char *)data;
+			char *end;
+			while (*start == ' ' || *start == '\t' || *start == '\n' || *start == '\r')
+				start++;
+			end = start + strlen(start);
+			while (end > start && (end[-1] == ' ' || end[-1] == '\t' || end[-1] == '\n' || end[-1] == '\r'))
+				*--end = 0;
+			if (*start)
+				s = fz_pool_strdup(ctx, pool, start);
+		}
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return s;
+}
+
 static void
 xml_to_boxes(fz_context *ctx,
 	fz_html_font_set *set,
@@ -2167,15 +2230,28 @@ xml_to_boxes(fz_context *ctx,
 
 		if (g.is_fb2)
 		{
+			/* SumatraPDF: also read author + annotation from title-info */
+			fz_xml *title_info;
+			fz_html *html = (fz_html *)tree;
+
 			node = fz_xml_find(root, "FictionBook");
 			node = fz_xml_find_down(node, "description");
-			node = fz_xml_find_down(node, "title-info");
-			node = fz_xml_find_down(node, "book-title");
+			title_info = fz_xml_find_down(node, "title-info");
+			node = fz_xml_find_down(title_info, "book-title");
 			if (rtitle)
 			{
 				title = fz_xml_text(fz_xml_down(node));
 				if (title)
 					*rtitle = fz_pool_strdup(ctx, g.pool, title);
+			}
+			/* SumatraPDF: store on fz_html when parsing a document (rtitle set);
+			 * story path passes rtitle=NULL and skips this. */
+			if (rtitle && title_info)
+			{
+				fz_xml *author_el = fz_xml_find_down(title_info, "author");
+				fz_xml *annot_el = fz_xml_find_down(title_info, "annotation");
+				html->author = fb2_collect_text(ctx, g.pool, author_el);
+				html->subject = fb2_collect_text(ctx, g.pool, annot_el);
 			}
 		}
 		else
@@ -2382,6 +2458,9 @@ fz_parse_html(fz_context *ctx,
 	html->layout_w = 0;
 	html->layout_h = 0;
 	html->layout_em = 0;
+	html->title = NULL;
+	html->author = NULL; /* SumatraPDF */
+	html->subject = NULL; /* SumatraPDF */
 
 	fz_try(ctx)
 		fz_parse_html_tree(ctx, set, zip, base_uri, buf, user_css, try_xml, try_html5, &html->tree, &html->title, flavor, publisher_css,
