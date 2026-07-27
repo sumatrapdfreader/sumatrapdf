@@ -27,6 +27,7 @@
 #include "Translations.h"
 #include "Accelerators.h"
 #include "Tabs.h"
+#include "Theme.h"
 
 void RememberFavTreeExpansionStateForAllWindows();
 void LayoutFavoritesContainer(MainWindow* win);
@@ -941,6 +942,167 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
+static bool HasFavFilter(MainWindow* win) {
+    TempStr filter = GetFavFilterTemp(win);
+    return filter && len(filter) > 0;
+}
+
+// yellow (or theme accent) over matching substrings — same approach as ToC filter
+static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win) {
+    FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
+    if (!fti || !fti->text) {
+        return;
+    }
+    TempStr filter = GetFavFilterTemp(win);
+    if (!filter || len(filter) == 0) {
+        return;
+    }
+    Str title = fti->text;
+    int titleLen = title.len;
+    if (titleLen == 0) {
+        return;
+    }
+
+    u8* highlighted = AllocArrayTemp<u8>(titleLen);
+    int filterLen = filter.len;
+    Str rest = title;
+    while (len(rest) > 0) {
+        int idx = str::IndexOfI(rest, filter);
+        if (idx < 0) {
+            break;
+        }
+        int off = (int)(rest.s - title.s) + idx;
+        for (int k = 0; k < filterLen && off + k < titleLen; k++) {
+            highlighted[off + k] = 1;
+        }
+        int skip = idx + filterLen;
+        rest.s += skip;
+        rest.len -= skip;
+    }
+
+    struct ByteRange {
+        int start;
+        int end;
+    };
+    ByteRange byteRanges[16];
+    int nRanges = 0;
+    {
+        int pos = 0;
+        while (pos < titleLen && nRanges < 16) {
+            if (highlighted[pos]) {
+                int start = pos;
+                while (pos < titleLen && highlighted[pos]) {
+                    pos++;
+                }
+                byteRanges[nRanges++] = {start, pos};
+            } else {
+                pos++;
+            }
+        }
+    }
+    if (nRanges == 0) {
+        return;
+    }
+
+    RECT labelRect;
+    TreeView* tv = ev->treeView;
+    if (!tv->GetItemRect(ev->treeItem, true, labelRect)) {
+        return;
+    }
+
+    NMTVCUSTOMDRAW* tvcd = ev->nm;
+    HDC hdc = tvcd->nmcd.hdc;
+    WCHAR* titleW = CWStrTemp(title);
+
+    RECT highlightRects[16];
+    for (int i = 0; i < nRanges; i++) {
+        TempWStr prefixToStart = ToWStrTemp(Str(title.s, byteRanges[i].start));
+        int wStart = len(prefixToStart);
+        TempWStr prefixToEnd = ToWStrTemp(Str(title.s, byteRanges[i].end));
+        int wEnd = len(prefixToEnd);
+
+        SIZE szStart, szEnd;
+        GetTextExtentPoint32W(hdc, titleW, wStart, &szStart);
+        GetTextExtentPoint32W(hdc, titleW, wEnd, &szEnd);
+
+        highlightRects[i].top = labelRect.top;
+        highlightRects[i].bottom = labelRect.bottom;
+        highlightRects[i].left = labelRect.left + szStart.cx;
+        highlightRects[i].right = labelRect.left + szEnd.cx;
+    }
+
+    NMCUSTOMDRAW* cd = &tvcd->nmcd;
+    bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
+    bool hasFocus = (GetFocus() == tv->hwnd);
+    COLORREF bgCol;
+    if (isSelected) {
+        bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
+    } else {
+        bgCol = IsSpecialColor(tv->bgColor) ? GetSysColor(COLOR_WINDOW) : tv->bgColor;
+    }
+    HBRUSH hbrBg = CreateSolidBrush(bgCol);
+    FillRect(hdc, &labelRect, hbrBg);
+    DeleteObject(hbrBg);
+
+    COLORREF highlightCol;
+    if (IsCurrentThemeDefault()) {
+        highlightCol = RGB(255, 255, 0);
+    } else {
+        highlightCol = AccentColor(bgCol, 40);
+    }
+    HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
+    for (int i = 0; i < nRanges; i++) {
+        FillRect(hdc, &highlightRects[i], hbrHighlight);
+    }
+    DeleteObject(hbrHighlight);
+
+    COLORREF txtCol;
+    if (isSelected && hasFocus) {
+        txtCol = GetSysColor(COLOR_HIGHLIGHTTEXT);
+    } else {
+        txtCol = IsSpecialColor(tv->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : tv->textColor;
+    }
+    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
+    int oldBkMode = SetBkMode(hdc, TRANSPARENT);
+    DrawTextW(hdc, titleW, -1, &labelRect, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+    SetBkMode(hdc, oldBkMode);
+    SetTextColor(hdc, oldTxtCol);
+}
+
+static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
+    ev->result = CDRF_DODEFAULT;
+    NMTVCUSTOMDRAW* tvcd = ev->nm;
+    NMCUSTOMDRAW* cd = &(tvcd->nmcd);
+
+    if (cd->dwDrawStage == CDDS_PREPAINT) {
+        ev->result = CDRF_NOTIFYITEMDRAW;
+        return;
+    }
+
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
+    bool filterActive = HasFavFilter(win);
+
+    if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
+        if (!ev->treeItem) {
+            return;
+        }
+        LRESULT res = 0;
+        if (filterActive) {
+            res |= CDRF_NOTIFYPOSTPAINT;
+        }
+        ev->result = res;
+        return;
+    }
+
+    if (cd->dwDrawStage == CDDS_ITEMPOSTPAINT) {
+        if (filterActive && win) {
+            DrawFavItemHighlight(ev, win);
+        }
+        ev->result = CDRF_DODEFAULT;
+        return;
+    }
+}
+
 static void FavTreeItemClicked(TreeView::ClickEvent* ev) {
     if (ev->treeItem != ev->treeView->GetSelection()) {
         return;
@@ -1137,6 +1299,7 @@ void CreateFavorites(MainWindow* win) {
     treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
     treeView->onKeyDown = MkFunc1Void(FavTreeKeyDown);
     treeView->onClick = MkFunc1Void(FavTreeItemClicked);
+    treeView->onCustomDraw = MkFunc1Void(OnFavCustomDraw);
 
     treeView->Create(args);
     ReportIf(!treeView->hwnd);
