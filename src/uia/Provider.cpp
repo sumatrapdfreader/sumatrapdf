@@ -93,7 +93,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPropertyValue(PROPERTY
         return S_OK;
     } else if (propertyId == UIA_NativeWindowHandlePropertyId) {
         pRetVal->vt = VT_I4;
-        pRetVal->lVal = (LONG)canvasHwnd;
+        pRetVal->lVal = HandleToLong(canvasHwnd);
         return S_OK;
     }
 

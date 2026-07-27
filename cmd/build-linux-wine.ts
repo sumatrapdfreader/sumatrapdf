@@ -2,10 +2,13 @@
  * Cross-compile SumatraPDF on Linux for running under Wine.
  *
  * Usage:
- *   bun bun/build-linux-wine.ts          # debug static build -> out/dbg64-wine/SumatraPDF.exe
- *   bun bun/build-linux-wine.ts -clean   # clean out/dbg64-wine (preserve settings)
- *   bun bun/build-linux-wine.ts -run     # build, then run under Wine
- *   bun bun/build-linux-wine.ts -clean -run
+ *   bun cmd/build-linux-wine.ts          # debug static build -> out/dbg64-wine/SumatraPDF.exe
+ *   bun cmd/build-linux-wine.ts -clean   # clean out/dbg64-wine (preserve settings)
+ *   bun cmd/build-linux-wine.ts -run     # build, then run under Wine
+ *   bun cmd/build-linux-wine.ts -clean -run
+ *
+ * From Windows (WSL Ubuntu):
+ *   bun cmd/build-win-in-wsl.ts [-clean] [-run]
  *
  * Requires: gcc-mingw-w64-x86-64, g++-mingw-w64-x86-64 (and wine for -run)
  */
@@ -13,8 +16,8 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { cpus } from "node:os";
 import { join } from "node:path";
-import { clearDirPreserveSettings } from "../cmd/clean";
-import { buildMingw, type MingwTools } from "../cmd/build-with-mingw";
+import { clearDirPreserveSettings } from "./clean";
+import { buildMingw, type MingwTools } from "./build-with-mingw";
 
 const OUT_DIR = join("out", "dbg64-wine");
 const EXE_PATH = join(OUT_DIR, "SumatraPDF.exe");
@@ -47,9 +50,12 @@ function resolveTool(role: string, candidates: string[]): string {
 
 function resolveMingwTools(): MingwTools {
   const prefix = "x86_64-w64-mingw32";
+  // Prefer the posix-threads variants: Debian's default *-gcc/*-g++ are the
+  // win32-threads flavor whose libstdc++ lacks std::mutex/std::thread (needed
+  // by some C++ deps); on Ubuntu the plain names are already the posix flavor.
   return {
-    cc: resolveTool("mingw gcc", [`${prefix}-gcc`, "gcc-mingw-w64-x86-64"]),
-    cxx: resolveTool("mingw g++", [`${prefix}-g++`, "g++-mingw-w64-x86-64"]),
+    cc: resolveTool("mingw gcc", [`${prefix}-gcc-posix`, `${prefix}-gcc`, "gcc-mingw-w64-x86-64"]),
+    cxx: resolveTool("mingw g++", [`${prefix}-g++-posix`, `${prefix}-g++`, "g++-mingw-w64-x86-64"]),
     ar: resolveTool("mingw ar", [`${prefix}-ar`, "ar-mingw-w64-x86-64"]),
     windres: resolveTool("mingw windres", [`${prefix}-windres`, "windres-mingw-w64-x86-64"]),
     objcopy: resolveTool("mingw objcopy", [`${prefix}-objcopy`, "objcopy-mingw-w64-x86-64"]),
@@ -72,7 +78,7 @@ function parseArgs(argv: string[]): { doClean: boolean; doRun: boolean; runArgs:
       break;
     } else {
       console.error(`Unknown argument: ${arg}`);
-      console.error("Usage: bun bun/build-linux-wine.ts [-clean] [-run] [-- extra exe args...]");
+      console.error("Usage: bun cmd/build-linux-wine.ts [-clean] [-run] [-- extra exe args...]");
       process.exit(1);
     }
     i++;

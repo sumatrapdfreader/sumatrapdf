@@ -30,7 +30,11 @@ export const unrar: LibDef = {
   // MSVC compiles throw/catch with exceptions disabled (warning 4530);
   // GCC requires -fexceptions for code that uses throw/catch
   exceptions: true,
-  defines: ["UNRAR", "RARDLL", "SILENT"],
+  // Archive=UnrarArchive: unrar's internal C++ class collides with
+  // src/base/Archive.cpp's Archive under GNU ld (duplicate strong symbols;
+  // MSVC tolerates via COMDAT pick-any). Consumers only use the C API in
+  // dll.hpp, which doesn't mention the class, so a TU-local rename is safe.
+  defines: ["UNRAR", "RARDLL", "SILENT", "Archive=UnrarArchive"],
   includes: ["ext/unrar"],
   files: [
     {
@@ -419,9 +423,12 @@ export const libjxl: LibDef = {
 
 // HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
 // AV1 uses dav1d; unci zlib/brotli needs a-zlib / brotli at link time.
+// heic.c uses SSE4.1 intrinsics (_mm_mullo_epi32); gcc needs -msse4.1
+// (MSVC enables SSE2+ by default on x64).
 export const heicdec: LibDef = {
   name: "heicdec",
   alwaysOptimize: true,
+  extraCflags: ["-msse4.1"],
   defines: [
     "_CRT_SECURE_NO_WARNINGS",
     "HEIC_HAVE_DAV1D",
@@ -874,7 +881,7 @@ export const mujs = thirdPartyLib({
 
 export const extract = thirdPartyLib({
   name: "extract",
-  includes: ["ext/extract/include", "ext/a-zlib"],
+  includes: ["ext/extract/include", "ext/extract/src", "ext/a-zlib"],
   files: sourceFiles(9),
 });
 
@@ -955,9 +962,13 @@ export const mupdf: LibDef = {
     "FZ_ENABLE_BARCODE=0",
     "FZ_ENABLE_JS=1",
     "FZ_ENABLE_HYPHEN=0",
+    "CMARK_GFM_STATIC_DEFINE",
   ],
   includes: [
     "mupdf/include",
+    "ext/cmark-gfm/src",
+    "ext/cmark-gfm/extensions",
+    "mupdf/scripts/cmark-gfm",
     "mupdf/generated",
     "ext/jbig2dec",
     "ext/libjpeg-turbo/src",
@@ -1059,10 +1070,12 @@ export const mupdf: LibDef = {
         "load-psd.c",
         "load-tiff.c",
         "log.c",
+        "cull-device.c",
         "memento.c",
         "memory.c",
         "noto.c",
         "ocr-device.c",
+        "options.c",
         "outline.c",
         "output.c",
         "output-cbz.c",
@@ -1132,6 +1145,7 @@ export const mupdf: LibDef = {
         "css-parse.c",
         "epub-doc.c",
         "html-doc.c",
+        "md.c",
         "html-font.c",
         "html-layout.c",
         "html-outline.c",
@@ -1193,6 +1207,7 @@ export const mupdf: LibDef = {
         "pdf-signature.c",
         "pdf-store.c",
         "pdf-stream.c",
+        "pdf-struct.c",
         "pdf-subset.c",
         "pdf-type3.c",
         "pdf-unicode.c",
