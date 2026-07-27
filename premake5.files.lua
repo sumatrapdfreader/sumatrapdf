@@ -477,38 +477,39 @@ function libjpeg_turbo_files()
     "jerror.c", "jfdctflt.c", "jmemmgr.c", "jmemnobs.c", "jpeg_nbits.c",
   })
 
-  -- libjpeg-turbo 3.x: per-precision wrappers (8/12/16-bit), each #includes
-  -- the matching ../<name>.c with BITS_IN_JSAMPLE set. These provide run-time
-  -- selectable data precision.
+  -- libjpeg-turbo 3.x: 8-bit precision wrappers only. Each #includes the
+  -- matching ../<name>.c with BITS_IN_JSAMPLE=8. 12/16-bit wrappers are
+  -- omitted (MuPDF only uses the 8-bit API); jcinit/jdmaster/jdtrans reject
+  -- higher data_precision with JERR_BAD_PRECISION.
   files_in_dir("ext/libjpeg-turbo/src/wrapper", {
-    "jcapistd-8.c", "jcapistd-12.c", "jcapistd-16.c",
-    "jccoefct-8.c", "jccoefct-12.c",
-    "jccolor-8.c", "jccolor-12.c", "jccolor-16.c",
-    "jcdctmgr-8.c", "jcdctmgr-12.c",
-    "jcdiffct-8.c", "jcdiffct-12.c", "jcdiffct-16.c",
-    "jclossls-8.c", "jclossls-12.c", "jclossls-16.c",
-    "jcmainct-8.c", "jcmainct-12.c", "jcmainct-16.c",
-    "jcprepct-8.c", "jcprepct-12.c", "jcprepct-16.c",
-    "jcsample-8.c", "jcsample-12.c", "jcsample-16.c",
-    "jdapistd-8.c", "jdapistd-12.c", "jdapistd-16.c",
-    "jdcoefct-8.c", "jdcoefct-12.c",
-    "jdcolor-8.c", "jdcolor-12.c", "jdcolor-16.c",
-    "jddctmgr-8.c", "jddctmgr-12.c",
-    "jddiffct-8.c", "jddiffct-12.c", "jddiffct-16.c",
-    "jdlossls-8.c", "jdlossls-12.c", "jdlossls-16.c",
-    "jdmainct-8.c", "jdmainct-12.c", "jdmainct-16.c",
-    "jdmerge-8.c", "jdmerge-12.c",
-    "jdpostct-8.c", "jdpostct-12.c", "jdpostct-16.c",
-    "jdsample-8.c", "jdsample-12.c", "jdsample-16.c",
-    "jfdctfst-8.c", "jfdctfst-12.c",
-    "jfdctint-8.c", "jfdctint-12.c",
-    "jidctflt-8.c", "jidctflt-12.c",
-    "jidctfst-8.c", "jidctfst-12.c",
-    "jidctint-8.c", "jidctint-12.c",
-    "jidctred-8.c", "jidctred-12.c",
-    "jquant1-8.c", "jquant1-12.c",
-    "jquant2-8.c", "jquant2-12.c",
-    "jutils-8.c", "jutils-12.c", "jutils-16.c",
+    "jcapistd-8.c",
+    "jccoefct-8.c",
+    "jccolor-8.c",
+    "jcdctmgr-8.c",
+    "jcdiffct-8.c",
+    "jclossls-8.c",
+    "jcmainct-8.c",
+    "jcprepct-8.c",
+    "jcsample-8.c",
+    "jdapistd-8.c",
+    "jdcoefct-8.c",
+    "jdcolor-8.c",
+    "jddctmgr-8.c",
+    "jddiffct-8.c",
+    "jdlossls-8.c",
+    "jdmainct-8.c",
+    "jdmerge-8.c",
+    "jdpostct-8.c",
+    "jdsample-8.c",
+    "jfdctfst-8.c",
+    "jfdctint-8.c",
+    "jidctflt-8.c",
+    "jidctfst-8.c",
+    "jidctint-8.c",
+    "jidctred-8.c",
+    "jquant1-8.c",
+    "jquant2-8.c",
+    "jutils-8.c",
   })
 
   -- arm64: no SIMD (WITH_SIMD is left undefined in jconfig.h/jconfigint.h).
