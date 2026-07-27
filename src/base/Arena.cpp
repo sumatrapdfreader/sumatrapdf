@@ -3,8 +3,6 @@
 
 #include "base/Base.h"
 
-#include "base/Arena.h"
-
 u64 arena_default_reserve_size = 64ull * 1024ull * 1024ull;
 u64 arena_default_commit_size = 64ull * 1024ull;
 ArenaFlags arena_default_flags = 0;

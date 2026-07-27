@@ -5,9 +5,6 @@
 // Not self-sufficient: include after the part of utils/Base.h that defines
 // u64 and pulls in <windows.h> / <utility>. Base.h includes this header.
 
-#ifndef Arena_h
-#define Arena_h
-
 // Standalone reserve/commit arena
 // 256 (not 128) to leave room in the header for the allocation stats below
 static const u64 ARENA_HEADER_SIZE = 256;
@@ -151,5 +148,3 @@ T* New(Arena* arena, Args&&... args) {
     void* mem = Alloc(arena, (int)sizeof(T));
     return new (mem) T(std::forward<Args>(args)...);
 }
-
-#endif // Arena_h

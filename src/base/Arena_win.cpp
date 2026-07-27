@@ -3,8 +3,6 @@
 
 #include "base/Base.h"
 
-#include "base/Arena.h"
-
 u64 ArenaPageSize() {
     static u64 pageSize = 0;
     if (pageSize == 0) {
