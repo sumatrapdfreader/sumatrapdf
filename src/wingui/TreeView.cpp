@@ -211,6 +211,12 @@ LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
     }
 
+    // Swallow WM_CHAR for Enter after we handled WM_KEYDOWN so Windows does not
+    // play the default "invalid key" beep (e.g. opening a favorite with Enter).
+    if (WM_CHAR == msg && (wparam == VK_RETURN || wparam == '\r' || wparam == '\n')) {
+        return 0;
+    }
+
     res = WndProcDefault(hwnd, msg, wparam, lparam);
     return res;
 }

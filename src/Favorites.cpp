@@ -28,9 +28,11 @@
 #include "Accelerators.h"
 #include "Tabs.h"
 #include "Theme.h"
+#include "FilterHighlightDraw.h"
 
 void RememberFavTreeExpansionStateForAllWindows();
 void LayoutFavoritesContainer(MainWindow* win);
+void PopulateFavTreeIfNeeded(MainWindow* win);
 
 struct FavTreeItem {
     ~FavTreeItem();
@@ -637,10 +639,31 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
     return res;
 }
 
-// filter empty => full tree; non-empty => case-insensitive substring match on
-// display text and file base name (same idea as the ToC bookmark filter)
+// true if every filter word appears in this favorite's searchable text
+// (file base name + readable label / optional user name — same idea as palette)
+static bool FavMatchesFilter(FileState* fs, Favorite* fn, const StrVec& words) {
+    if (len(words) == 0) {
+        return true;
+    }
+    TempStr baseName = path::GetBaseNameTemp(fs->filePath);
+    TempStr rn = FavReadableNameTemp(fn);
+    TempStr compact = FavCompactReadableNameTemp(fs, fn);
+    TempStr hay = fmt("%s : %s", baseName, rn);
+    if (FilterMatches(compact, words) || FilterMatches(hay, words) || FilterMatches(rn, words) ||
+        FilterMatches(baseName, words) || (fn->name && FilterMatches(fn->name, words))) {
+        return true;
+    }
+    return false;
+}
+
+// filter empty => full tree; multi-word (command palette style): every word must
+// match. Only rows that match are shown — no "include all children of this file".
 static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
-    bool filtering = filter && len(filter) > 0;
+    StrVec words;
+    if (filter) {
+        SplitFilterToWords(filter, words);
+    }
+    bool filtering = len(words) > 0;
     auto* res = new FavTreeModel();
     res->root = new FavTreeItem();
     StrVec filePathsSorted;
@@ -653,14 +676,11 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             continue;
         }
         TempStr baseName = path::GetBaseNameTemp(fs->filePath);
-        bool fileNameMatches = filtering && str::ContainsI(baseName, filter);
         int nFavs = len(*fs->favorites);
 
         if (nFavs == 1) {
             Favorite* fn = (*fs->favorites)[0];
-            TempStr compact = FavCompactReadableNameTemp(fs, fn);
-            if (filtering && !fileNameMatches && !str::ContainsI(compact, filter) &&
-                !(fn->name && str::ContainsI(fn->name, filter))) {
+            if (filtering && !FavMatchesFilter(fs, fn, words)) {
                 continue;
             }
             FavTreeItem* ti = MakeFavTopLevelItem(fs, false);
@@ -670,36 +690,38 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             continue;
         }
 
-        // multi-favorite file: include matching children (or all if file name matches)
-        Vec<Favorite*> matched;
-        for (int j = 0; j < nFavs; j++) {
-            Favorite* fn = (*fs->favorites)[j];
-            if (!filtering || fileNameMatches) {
-                matched.Append(fn);
-                continue;
+        // multi-favorite file
+        if (!filtering) {
+            auto* parent = new FavTreeItem();
+            parent->favorite = (*fs->favorites)[0];
+            parent->text = str::Dup(baseName);
+            parent->isExpanded = win->expandedFavorites.Contains(fs);
+            for (int j = 0; j < nFavs; j++) {
+                Favorite* fn = (*fs->favorites)[j];
+                auto* ti = new FavTreeItem();
+                ti->text = str::Dup(FavReadableNameTemp(fn));
+                ti->parent = parent;
+                ti->favorite = fn;
+                parent->children.Append(ti);
             }
-            TempStr rn = FavReadableNameTemp(fn);
-            if (str::ContainsI(rn, filter) || (fn->name && str::ContainsI(fn->name, filter))) {
-                matched.Append(fn);
-            }
-        }
-        if (len(matched) == 0) {
+            res->root->children.Append(parent);
             continue;
         }
-        auto* parent = new FavTreeItem();
-        parent->favorite = matched[0];
-        parent->text = str::Dup(baseName);
-        // expand when filtering so matches are visible without extra clicks
-        parent->isExpanded = filtering || win->expandedFavorites.Contains(fs);
-        for (int j = 0; j < len(matched); j++) {
-            Favorite* fn = matched[j];
+
+        // filtering: only favorites that match every word, as top-level compact
+        // rows so each visible label itself contains all matched terms (nesting
+        // under a file parent would show child labels that often lack them).
+        for (int j = 0; j < nFavs; j++) {
+            Favorite* fn = (*fs->favorites)[j];
+            if (!FavMatchesFilter(fs, fn, words)) {
+                continue;
+            }
             auto* ti = new FavTreeItem();
-            ti->text = str::Dup(FavReadableNameTemp(fn));
-            ti->parent = parent;
             ti->favorite = fn;
-            parent->children.Append(ti);
+            ti->text = str::Dup(FavCompactReadableNameTemp(fs, fn));
+            ti->isExpanded = false;
+            res->root->children.Append(ti);
         }
-        res->root->children.Append(parent);
     }
     return res;
 }
@@ -711,6 +733,51 @@ static TempStr GetFavFilterTemp(MainWindow* win) {
     return win->favFilterEdit->GetTextTemp();
 }
 
+static bool IsFavoritesTabActive(MainWindow* win) {
+    return win && win->CurrentTab() && win->CurrentTab()->IsFavoritesTab();
+}
+
+// Expand every branch (used when the full-window Favorites tab is shown).
+static void ExpandAllFavTree(MainWindow* win) {
+    if (win && win->favTreeView && win->favTreeView->hwnd) {
+        win->favTreeView->ExpandAll();
+    }
+}
+
+static void FocusFavFilterEdit(MainWindow* win) {
+    if (!win || !win->favFilterEdit || !win->favFilterEdit->hwnd) {
+        return;
+    }
+    HwndSetFocus(win->favFilterEdit->hwnd);
+    win->favFilterEdit->SetCursorPositionAtEnd();
+}
+
+// Select first top-level item's first child when it has children; otherwise the
+// first top-level item (Down from the search box).
+static void SelectFirstFavTreeItem(MainWindow* win) {
+    TreeView* tv = win ? win->favTreeView : nullptr;
+    if (!tv || !tv->treeModel || !tv->hwnd) {
+        return;
+    }
+    TreeModel* tm = tv->treeModel;
+    TreeItem root = tm->Root();
+    if (tm->ChildCount(root) == 0) {
+        return;
+    }
+    TreeItem first = tm->ChildAt(root, 0);
+    TreeItem sel = first;
+    if (tm->ChildCount(first) > 0) {
+        // ensure the first child is visible
+        HTREEITEM hFirst = tv->GetHandleByTreeItem(first);
+        if (hFirst) {
+            TreeView_Expand(tv->hwnd, hFirst, TVE_EXPAND);
+        }
+        sel = tm->ChildAt(first, 0);
+    }
+    tv->SelectItem(sel);
+    TreeView_EnsureVisible(tv->hwnd, tv->GetHandleByTreeItem(sel));
+}
+
 static void ApplyFavFilter(MainWindow* win) {
     if (!win || !win->favTreeView) {
         return;
@@ -720,29 +787,67 @@ static void ApplyFavFilter(MainWindow* win) {
     TreeModel* newModel = BuildFavTreeModel(win, GetFavFilterTemp(win));
     treeView->SetTreeModel(newModel);
     delete prevModel;
+    if (IsFavoritesTabActive(win)) {
+        ExpandAllFavTree(win);
+    }
 }
 
 static void OnFavFilterTextChanged(MainWindow* win) {
     ApplyFavFilter(win);
 }
 
+// Favorites-tab chrome: expand all, layout, focus the search box.
+static void PrepareFavoritesTabUi(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    PopulateFavTreeIfNeeded(win);
+    ExpandAllFavTree(win);
+    LayoutFavoritesContainer(win);
+    FocusFavFilterEdit(win);
+    if (win->favTreeView) {
+        RedrawWindow(win->favTreeView->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    }
+}
+
 static LRESULT CALLBACK WndProcFavFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
                                              DWORD_PTR data) {
-    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
-        MainWindow* win = (MainWindow*)data;
-        Edit* edit = win->favFilterEdit;
-        if (edit) {
-            TempStr txt = edit->GetTextTemp();
-            if (txt && len(txt) > 0) {
-                edit->SetText("");
-                // onTextChanged restores the full tree
-                return 0;
-            }
-            if (win->favTreeView) {
-                SetFocus(win->favTreeView->hwnd);
+    MainWindow* win = (MainWindow*)data;
+    if (msg == WM_KEYDOWN) {
+        if (wp == VK_DOWN) {
+            // move into the tree: first child of the first file node (or first row)
+            if (win && win->favTreeView) {
+                SelectFirstFavTreeItem(win);
+                HwndSetFocus(win->favTreeView->hwnd);
             }
             return 0;
         }
+        if (wp == VK_ESCAPE) {
+            Edit* edit = win ? win->favFilterEdit : nullptr;
+            if (edit) {
+                TempStr txt = edit->GetTextTemp();
+                if (txt && len(txt) > 0) {
+                    edit->SetText("");
+                    // onTextChanged restores the full tree
+                    return 0;
+                }
+                // empty: stay in the edit (Favorites tab) or fall through to tree in sidebar
+                if (IsFavoritesTabActive(win)) {
+                    return 0;
+                }
+                if (win->favTreeView) {
+                    SetFocus(win->favTreeView->hwnd);
+                }
+                return 0;
+            }
+        }
+        if (wp == VK_RETURN) {
+            // prevent ding; navigation is done from the tree
+            return 0;
+        }
+    }
+    if (msg == WM_CHAR && (wp == VK_RETURN || wp == '\r' || wp == '\n')) {
+        return 0;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -780,12 +885,8 @@ void ToggleFavoritesTab(MainWindow* win) {
         if (idx >= 0 && win->CurrentTab() != favTab) {
             TabsSelect(win, idx); // LoadModelIntoTab does layout + focus
         } else {
-            // already on Favorites: re-layout and focus tree
-            PopulateFavTreeIfNeeded(win);
-            LayoutFavoritesContainer(win);
-            if (win->favTreeView) {
-                HwndSetFocus(win->favTreeView->hwnd);
-            }
+            // already on Favorites: re-layout and focus search
+            PrepareFavoritesTabUi(win);
         }
         return;
     }
@@ -942,65 +1043,29 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
-static bool HasFavFilter(MainWindow* win) {
+static void GetFavFilterWords(MainWindow* win, StrVec& wordsOut) {
+    wordsOut.Reset();
     TempStr filter = GetFavFilterTemp(win);
-    return filter && len(filter) > 0;
+    if (filter) {
+        SplitFilterToWords(filter, wordsOut);
+    }
 }
 
-// yellow (or theme accent) over matching substrings — same approach as ToC filter
+static bool HasFavFilter(MainWindow* win) {
+    StrVec words;
+    GetFavFilterWords(win, words);
+    return len(words) > 0;
+}
+
+// multi-word yellow/accent highlights via shared command-palette helpers
 static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
     if (!fti || !fti->text) {
         return;
     }
-    TempStr filter = GetFavFilterTemp(win);
-    if (!filter || len(filter) == 0) {
-        return;
-    }
-    Str title = fti->text;
-    int titleLen = title.len;
-    if (titleLen == 0) {
-        return;
-    }
-
-    u8* highlighted = AllocArrayTemp<u8>(titleLen);
-    int filterLen = filter.len;
-    Str rest = title;
-    while (len(rest) > 0) {
-        int idx = str::IndexOfI(rest, filter);
-        if (idx < 0) {
-            break;
-        }
-        int off = (int)(rest.s - title.s) + idx;
-        for (int k = 0; k < filterLen && off + k < titleLen; k++) {
-            highlighted[off + k] = 1;
-        }
-        int skip = idx + filterLen;
-        rest.s += skip;
-        rest.len -= skip;
-    }
-
-    struct ByteRange {
-        int start;
-        int end;
-    };
-    ByteRange byteRanges[16];
-    int nRanges = 0;
-    {
-        int pos = 0;
-        while (pos < titleLen && nRanges < 16) {
-            if (highlighted[pos]) {
-                int start = pos;
-                while (pos < titleLen && highlighted[pos]) {
-                    pos++;
-                }
-                byteRanges[nRanges++] = {start, pos};
-            } else {
-                pos++;
-            }
-        }
-    }
-    if (nRanges == 0) {
+    StrVec words;
+    GetFavFilterWords(win, words);
+    if (len(words) == 0) {
         return;
     }
 
@@ -1012,27 +1077,14 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
 
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
-    WCHAR* titleW = CWStrTemp(title);
-
-    RECT highlightRects[16];
-    for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(Str(title.s, byteRanges[i].start));
-        int wStart = len(prefixToStart);
-        TempWStr prefixToEnd = ToWStrTemp(Str(title.s, byteRanges[i].end));
-        int wEnd = len(prefixToEnd);
-
-        SIZE szStart, szEnd;
-        GetTextExtentPoint32W(hdc, titleW, wStart, &szStart);
-        GetTextExtentPoint32W(hdc, titleW, wEnd, &szEnd);
-
-        highlightRects[i].top = labelRect.top;
-        highlightRects[i].bottom = labelRect.bottom;
-        highlightRects[i].left = labelRect.left + szStart.cx;
-        highlightRects[i].right = labelRect.left + szEnd.cx;
-    }
-
     NMCUSTOMDRAW* cd = &tvcd->nmcd;
+    // POSTPAINT often omits CDIS_SELECTED; also check the control selection.
     bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
+    if (!isSelected) {
+        HTREEITEM hSel = TreeView_GetSelection(tv->hwnd);
+        HTREEITEM hItem = tv->GetHandleByTreeItem(ev->treeItem);
+        isSelected = hSel && hItem && hSel == hItem;
+    }
     bool hasFocus = (GetFocus() == tv->hwnd);
     COLORREF bgCol;
     if (isSelected) {
@@ -1040,33 +1092,14 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     } else {
         bgCol = IsSpecialColor(tv->bgColor) ? GetSysColor(COLOR_WINDOW) : tv->bgColor;
     }
-    HBRUSH hbrBg = CreateSolidBrush(bgCol);
-    FillRect(hdc, &labelRect, hbrBg);
-    DeleteObject(hbrBg);
-
-    COLORREF highlightCol;
-    if (IsCurrentThemeDefault()) {
-        highlightCol = RGB(255, 255, 0);
-    } else {
-        highlightCol = AccentColor(bgCol, 40);
-    }
-    HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
-    for (int i = 0; i < nRanges; i++) {
-        FillRect(hdc, &highlightRects[i], hbrHighlight);
-    }
-    DeleteObject(hbrHighlight);
-
     COLORREF txtCol;
     if (isSelected && hasFocus) {
         txtCol = GetSysColor(COLOR_HIGHLIGHTTEXT);
     } else {
         txtCol = IsSpecialColor(tv->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : tv->textColor;
     }
-    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
-    int oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    DrawTextW(hdc, titleW, -1, &labelRect, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-    SetBkMode(hdc, oldBkMode);
-    SetTextColor(hdc, oldTxtCol);
+    HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
+    DrawTreeItemFilterHighlight(hdc, labelRect, fti->text, words, bgCol, txtCol, font);
 }
 
 static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
@@ -1141,12 +1174,32 @@ static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
 extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
 
 static void FavTreeKeyDown(TreeView::KeyDownEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     // Enter opens the selected favorite (sidebar panel and Favorites tab).
     // Must set result so TreeView skips its default Enter = expand/collapse.
     if (ev->keyCode == VK_RETURN) {
-        MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
         if (win) {
             GoToFavForTreeItem(win, ev->treeView->GetSelection());
+            ev->result = 1; // also prevents the default Windows ding
+            return;
+        }
+    }
+    // Esc: clear search and focus the filter (Favorites tab and sidebar)
+    if (ev->keyCode == VK_ESCAPE) {
+        if (win && win->favFilterEdit) {
+            win->favFilterEdit->SetText("");
+            FocusFavFilterEdit(win);
+            ev->result = 1;
+            return;
+        }
+    }
+    // Up on the first top-level node: return focus to the search box
+    if (ev->keyCode == VK_UP && win && win->favFilterEdit) {
+        TreeItem sel = ev->treeView->GetSelection();
+        HTREEITEM hSel = sel ? ev->treeView->GetHandleByTreeItem(sel) : nullptr;
+        HTREEITEM hFirst = TreeView_GetRoot(ev->treeView->hwnd);
+        if (hSel && hFirst && hSel == hFirst) {
+            FocusFavFilterEdit(win);
             ev->result = 1;
             return;
         }

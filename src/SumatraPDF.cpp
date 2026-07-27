@@ -3137,10 +3137,14 @@ void LoadModelIntoTab(WindowTab* tab) {
         win->uiState.layout = {};
         RelayoutFrame(win, true, -1);
         LayoutFavoritesContainer(win);
+        // expand all file groups; start typing in the search box
         if (win->favTreeView) {
-            HwndSetFocus(win->favTreeView->hwnd);
-            // ensure tree paints and can receive mouse expand clicks
+            win->favTreeView->ExpandAll();
             RedrawWindow(win->favTreeView->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
+        if (win->favFilterEdit) {
+            HwndSetFocus(win->favFilterEdit->hwnd);
+            win->favFilterEdit->SetCursorPositionAtEnd();
         }
         return;
     }
