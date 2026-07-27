@@ -61,10 +61,9 @@ Actions that add navigation point:
 
 ## Navigating between tabs
 
-* `Ctrl + Tab` : next tab
-* `Ctrl + Shift + Tab` : previous tab
-* `Ctrl + Page Down` : next tab
-* `Ctrl + Page Up` : previous tab
+* `Ctrl + Tab` / `Ctrl + Shift + Tab` : next / previous tab. **Ver 3.6+:** **Smart Tab Switch** (tab list while Ctrl is held). To get pre-3.6 immediate strip-order switching on those keys, [rebind](Customize-keyboard-shortcuts.md) them to `CmdNextTab` / `CmdPrevTab` — see [Tabs and windows](Tabs-and-windows.md#restore-pre-36-ctrltab-no-switcher-popup)
+* `Ctrl + Page Down` : next tab (strip order, no popup)
+* `Ctrl + Page Up` : previous tab (strip order, no popup)
 
 ## Moving tabs
 

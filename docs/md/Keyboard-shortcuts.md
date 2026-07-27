@@ -127,8 +127,9 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 
 ### Tabs
 
-- `Ctrl + Tab` go to next tab
-- `Ctrl + Shift + Tab` go to previous tab
+- `Ctrl + Tab` / `Ctrl + Shift + Tab` — next / previous tab. **Ver 3.6+:** these open **Smart Tab Switch** (a tab list while Ctrl is held). For immediate tab-strip order without the list, use `Ctrl + PageDown` / `Ctrl + PageUp`, or [rebind](Customize-keyboard-shortcuts.md) `Ctrl + Tab` to `CmdNextTab` / `CmdPrevTab` (see [Tabs and windows](Tabs-and-windows.md#restore-pre-36-ctrltab-no-switcher-popup))
+- `Ctrl + PageDown` go to next tab (strip order, no popup)
+- `Ctrl + PageUp` go to previous tab (strip order, no popup)
 - `Alt + 1` go to tab 1. Use `Alt + 2`, etc. up to `Alt + 8`
 - `Alt + 9` go to last tab
 
