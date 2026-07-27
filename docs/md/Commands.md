@@ -39,9 +39,12 @@ CmdToggleCursorPosition,m,Toggle Cursor Position,
 CmdShowInFolder,,Show File In Folder...,
 CmdToggleBookmarks,F12,Toggle Bookmarks,
 CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
-CmdCollapseAll,,Collapse All,
+CmdCollapseAll,,Collapse All,"Bookmarks: collapse the outline; if there is only one top-level entry with children, expand it one level (Word-style TOC), ver 3.7+"
 CmdExpandAll,,Expand All,
 CmdExpandToCurrentPage,,Expand TOC to Current Page,"In the Bookmarks (table of contents) sidebar, expand the tree down to the entry for the current page and select it, ver 3.7+"
+CmdTocExpandToLevel1,,Bookmarks: Expand to Level 1,"Collapse the Bookmarks tree so only top-level entries are visible (context menu), ver 3.7+"
+CmdTocExpandToLevel2,,Bookmarks: Expand to Level 2,"Expand top-level Bookmarks once (context menu), ver 3.7+"
+CmdTocExpandToLevel3,,Bookmarks: Expand to Level 3,"Expand Bookmarks two levels deep (context menu), ver 3.7+"
 CmdOpenEmbeddedPDF,,Open Embedded PDF,
 CmdSaveEmbeddedFile,,Save Embedded File...,
 CmdCreateShortcutToFile,,Create .lnk Shortcut,

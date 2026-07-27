@@ -572,6 +572,51 @@ static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
     str::Free(data);
 }
 
+// Expand outline nodes whose depth is < maxDepth (depth 1 = top-level rows).
+// Call after a full collapse so the tree ends at exactly that level.
+static void TocExpandItemsToDepth(HWND hwnd, HTREEITEM item, int depth, int maxDepth) {
+    while (item) {
+        if (depth < maxDepth) {
+            TreeView_Expand(hwnd, item, TVE_EXPAND);
+            HTREEITEM child = TreeView_GetChild(hwnd, item);
+            if (child) {
+                TocExpandItemsToDepth(hwnd, child, depth + 1, maxDepth);
+            }
+        }
+        item = TreeView_GetNextSibling(hwnd, item);
+    }
+}
+
+// Expand outline only through `level` (1 = top-level rows collapsed, 2 = expand
+// top-level once, 3 = two levels deep). Issue #5239.
+static void TocExpandToLevel(TreeView* tv, int level) {
+    if (!tv || !tv->hwnd || level < 1) {
+        return;
+    }
+    HWND hwnd = tv->hwnd;
+    tv->SuspendRedraw();
+    HTREEITEM root = TreeView_GetRoot(hwnd);
+    TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
+    if (level > 1) {
+        TocExpandItemsToDepth(hwnd, root, 1, level);
+    }
+    tv->ResumeRedraw();
+}
+
+// Collapse all; if there is a single top-level entry with children (typical
+// Word-export TOC), expand it one level so Collapse All is useful (#5239).
+static void TocCollapseAll(TreeView* tv) {
+    if (!tv || !tv->hwnd) {
+        return;
+    }
+    TocExpandToLevel(tv, 1);
+    HWND hwnd = tv->hwnd;
+    HTREEITEM root = TreeView_GetRoot(hwnd);
+    if (root && !TreeView_GetNextSibling(hwnd, root) && TreeView_GetChild(hwnd, root)) {
+        TreeView_Expand(hwnd, root, TVE_EXPAND);
+    }
+}
+
 // clang-format off
 static MenuDef menuDefContextToc[] = {
     {
@@ -581,6 +626,18 @@ static MenuDef menuDefContextToc[] = {
     {
         _TRN("Collapse All"),
         CmdCollapseAll,
+    },
+    {
+        _TRN("Expand to Level 1"),
+        CmdTocExpandToLevel1,
+    },
+    {
+        _TRN("Expand to Level 2"),
+        CmdTocExpandToLevel2,
+    },
+    {
+        _TRN("Expand to Level 3"),
+        CmdTocExpandToLevel3,
     },
     {
         _TRN("Expand to Current Page"),
@@ -718,7 +775,16 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             win->tocTreeView->ExpandAll();
             break;
         case CmdCollapseAll:
-            win->tocTreeView->CollapseAll();
+            TocCollapseAll(win->tocTreeView);
+            break;
+        case CmdTocExpandToLevel1:
+            TocExpandToLevel(win->tocTreeView, 1);
+            break;
+        case CmdTocExpandToLevel2:
+            TocExpandToLevel(win->tocTreeView, 2);
+            break;
+        case CmdTocExpandToLevel3:
+            TocExpandToLevel(win->tocTreeView, 3);
             break;
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);

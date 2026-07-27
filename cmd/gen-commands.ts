@@ -257,6 +257,9 @@ export const commands = [
     "CmdChangeTheme", "Change Theme...",
     "CmdTranslateSelection", "Translate Selection...",
     "CmdFavoriteShowInTab", "Show Favorites in Tab",
+    "CmdTocExpandToLevel1", "Bookmarks: Expand to Level 1",
+    "CmdTocExpandToLevel2", "Bookmarks: Expand to Level 2",
+    "CmdTocExpandToLevel3", "Bookmarks: Expand to Level 3",
     "CmdNone", "Do nothing",
 ];
 

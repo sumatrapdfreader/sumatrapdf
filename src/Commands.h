@@ -257,7 +257,10 @@ enum {
     CmdChangeTheme = 446,
     CmdTranslateSelection = 447,
     CmdFavoriteShowInTab = 448,
-    CmdNone = 449,
+    CmdTocExpandToLevel1 = 449,
+    CmdTocExpandToLevel2 = 450,
+    CmdTocExpandToLevel3 = 451,
+    CmdNone = 452,
 
     /* range for file history */
     CmdFileHistoryFirst,
