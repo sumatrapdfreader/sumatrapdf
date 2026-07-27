@@ -62,7 +62,7 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated);
 TempStr GetShortcutPathTemp(int csidl);
 
 bool ExtractInstallerFiles(Str dir);
-bool ExtractLibmupdfDllToDir(Str destDir);
+bool ExtractLibmupdfToDir(Str destDir);
 
 TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);

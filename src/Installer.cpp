@@ -1084,24 +1084,24 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
-bool ExtractLibmupdfDllToDir(Str destDir) {
+bool ExtractLibmupdfToDir(Str destDir) {
     if (!OpenEmbeddedFilesArchive()) {
         return false;
     }
     int idx = lzma::GetIdxFromName(&gArchive, "libmupdf.dll");
     if (idx < 0) {
-        log("ExtractLibmupdfDllToDir: libmupdf.dll not found in archive\n");
+        log("ExtractLibmupdfToDir: libmupdf.dll not found in archive\n");
         return false;
     }
     lzma::FileInfo* fi = &gArchive.files[idx];
     u8* uncompressed = lzma::GetFileDataByIdx(&gArchive, idx, nullptr);
     if (!uncompressed) {
-        log("ExtractLibmupdfDllToDir: failed to decompress libmupdf.dll\n");
+        log("ExtractLibmupdfToDir: failed to decompress libmupdf.dll\n");
         return false;
     }
     if (!dir::CreateAll(destDir)) {
         free(uncompressed);
-        logf("ExtractLibmupdfDllToDir: couldn't create directory '%s'\n", destDir);
+        logf("ExtractLibmupdfToDir: couldn't create directory '%s'\n", destDir);
         return false;
     }
     TempStr filePath = path::JoinTemp(destDir, fi->name);
@@ -1109,10 +1109,10 @@ bool ExtractLibmupdfDllToDir(Str destDir) {
     bool ok = file::WriteFile(filePath, d);
     free(uncompressed);
     if (!ok) {
-        logf("ExtractLibmupdfDllToDir: failed to write '%s'\n", filePath);
+        logf("ExtractLibmupdfToDir: failed to write '%s'\n", filePath);
         return false;
     }
-    logf("ExtractLibmupdfDllToDir: extracted '%s'\n", filePath);
+    logf("ExtractLibmupdfToDir: extracted '%s'\n", filePath);
     return true;
 }
 

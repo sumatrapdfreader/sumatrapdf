@@ -942,7 +942,9 @@ static void FreeLibmupdfDll() {
 
 // Load libmupdf.dll from path only if the file size matches expectedSize (the
 // embedded/installer copy). Skips mismatched leftover DLLs from other builds.
-static bool LoadLibmupdfFromFile(Str path, i64 expectedSize) {
+// useLoadLibraryEx: LoadLibraryExW with LOAD_WITH_ALTERED_SEARCH_PATH (helps
+// when AV hooks plain LoadLibrary, and for dependency search next to the DLL).
+static bool LoadLibmupdfFromFile(Str path, i64 expectedSize, bool useLoadLibraryEx = false) {
     i64 realSize = file::GetSize(path);
     if (realSize != expectedSize) {
         if (realSize >= 0) {
@@ -951,51 +953,87 @@ static bool LoadLibmupdfFromFile(Str path, i64 expectedSize) {
         }
         return false;
     }
-    gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
+    const WCHAR* wpath = CWStrTemp(path);
+    if (useLoadLibraryEx) {
+        gLibmupdfDll = LoadLibraryExW(wpath, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+    } else {
+        gLibmupdfDll = LoadLibraryW(wpath);
+    }
     if (!gLibmupdfDll) {
-        logf("LoadLibmupdfFromFile: failed to load '%s'\n", path);
-        LogLastError();
+        // capture before logf, which can overwrite GetLastError
+        DWORD err = GetLastError();
+        if (useLoadLibraryEx) {
+            logf("LoadLibmupdfFromFile: failed to load '%s' (LoadLibraryExW)\n", path);
+        } else {
+            logf("LoadLibmupdfFromFile: failed to load '%s'\n", path);
+        }
+        LogLastError(err);
+        SetLastError(err); // so callers' GetLastError() still see LoadLibrary's error
         return false;
     }
-    logf("LoadLibmupdf: loaded '%s'\n", path);
+    if (useLoadLibraryEx) {
+        logf("LoadLibmupdf: loaded '%s' (LoadLibraryExW)\n", path);
+    } else {
+        logf("LoadLibmupdf: loaded '%s'\n", path);
+    }
     return true;
 }
 
-static bool LoadLibmupdf(bool showErrorDialog) {
-    i64 expectedSize = GetEmbeddedLibmupdfSize();
-    if (expectedSize < 0) {
-        // this is not a version that needs libmupdf.dll
-        return true;
-    }
-    DWORD err = 0;
-
-    // Prefer libmupdf.dll next to the exe (installer layout, or a pre-placed
-    // copy) when its size matches the embedded one.
-    TempStr path = GetPathInExeDirTemp("libmupdf.dll");
+// LoadLibraryW, wait 1s and retry, then LoadLibraryExW. For AV races that
+// briefly block a just-written DLL under LocalAppData (see crash reports).
+static bool LoadLibmupdfFromFileRobust(Str path, i64 expectedSize) {
     if (LoadLibmupdfFromFile(path, expectedSize)) {
         return true;
     }
-    err = GetLastError();
+    logf("LoadLibmupdfFromFileRobust: retry after 1s '%s'\n", path);
+    Sleep(1000);
+    if (LoadLibmupdfFromFile(path, expectedSize)) {
+        return true;
+    }
+    logf("LoadLibmupdfFromFileRobust: trying LoadLibraryExW '%s'\n", path);
+    return LoadLibmupdfFromFile(path, expectedSize, true);
+}
 
-    // Portable / single-exe: extract into the build data dir if needed, then load.
+// Extract embedded libmupdf.dll into dir (if size mismatches), then load with
+// retry / LoadLibraryExW. Used for single-exe portable layout.
+static bool ExtractAndLoadLibmupdfRobust(Str dir, bool extract) {
+    if (!dir) {
+        return false;
+    }
+    i64 expectedSize = GetEmbeddedLibmupdfSize();
+    if (expectedSize < 0) {
+        return false;
+    }
+    TempStr path = path::JoinTemp(dir, StrL("libmupdf.dll"));
+    i64 realSize = file::GetSize(path);
+    if (realSize != expectedSize) {
+        if (realSize >= 0) {
+            logf("ExtractAndLoadLibmupdfRobust: overwriting '%s' (size %lld, expected %lld)\n", path,
+                 (long long)realSize, (long long)expectedSize);
+        }
+        if (extract) {
+            if (!ExtractLibmupdfToDir(dir)) {
+                logf("ExtractAndLoadLibmupdfRobust: ExtractLibmupdfToDir failed for '%s'\n", dir);
+                return false;
+            }
+        }
+    }
+    return LoadLibmupdfFromFileRobust(path, expectedSize);
+}
+
+static bool LoadLibmupdf(bool showErrorDialog) {
+    // prefer existing libmupdf.dll next to the exe (installer layout)
+    Str selfDir = GetSelfExeDirTemp();
+    ExtractAndLoadLibmupdfRobust(selfDir, false);
+
+    // Portable / single-exe: extract + robust load from build data dir, then
+    // from the exe directory (in case AppData is blocked by AV).
     if (gSingleExe) {
-        TempStr buildDir = GetSumatraBuildSpecificDirTemp();
-        if (buildDir) {
-            path = path::JoinTemp(buildDir, StrL("libmupdf.dll"));
-            i64 realSize = file::GetSize(path);
-            if (realSize != expectedSize) {
-                if (realSize >= 0) {
-                    logf("LoadLibmupdf: overwriting '%s' (size %lld, expected %lld)\n", path, (long long)realSize,
-                         (long long)expectedSize);
-                }
-                if (!ExtractLibmupdfDllToDir(buildDir)) {
-                    log("LoadLibmupdf: ExtractLibmupdfDllToDir failed\n");
-                }
-            }
-            if (LoadLibmupdfFromFile(path, expectedSize)) {
-                return true;
-            }
-            err = GetLastError();
+        if (ExtractAndLoadLibmupdfRobust(GetSumatraBuildSpecificDirTemp(), true)) {
+            return true;
+        }
+        if (ExtractAndLoadLibmupdfRobust(selfDir, true)) {
+            return true;
         }
     }
 
@@ -1007,6 +1045,7 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         return false;
     }
 
+    DWORD err = GetLastError();
     TempStr msg = fmt(R"(SumatraPDF.exe failed to load libmupdf.dll.
 Error code: %d
 We can't proceed.
@@ -1020,7 +1059,7 @@ For more information see <a href="%s">SumatraPDF docs</a>.)",
     buttons[1].pszButtonText = L"Learn more";
 
     TASKDIALOGCONFIG dialogConfig{};
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    TASKDIALOG_FLAGS flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
     if (trans::IsCurrLangRtl()) {
         flags |= TDF_RTL_LAYOUT;
     }
