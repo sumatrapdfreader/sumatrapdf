@@ -1090,7 +1090,7 @@ workspace "SumatraPDF"
     bin2coff_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
-  -- Image decode microbench: native lib vs WIC vs GDI+ (-jpeg / -webp)
+  -- Image decode microbench: native lib vs WIC vs GDI+ (-jpeg / -webp / -avif / -heif)
   project "bench_image"
     static_app_objdir()
     static_linker_intermediates()
@@ -1099,10 +1099,11 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
     disablewarnings { "4611", "4838" } -- setjmp / C++ destruction; QITABENT
-    includedirs { "src", "ext/libjpeg-turbo/src", "ext/libwebp/src" }
+    includedirs { "src", "ext/libjpeg-turbo/src", "ext/libwebp/src", "ext/heicdec" }
     bench_image_files()
     setup_base_pch()
-    links { "base", "libjpeg-turbo", "libwebp" }
+    -- heicdec needs dav1d (AV1), a-zlib / brotli (unci compressed HEIC)
+    links { "base", "libjpeg-turbo", "libwebp", "heicdec", "dav1d", "a-zlib", "brotli" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version",
       "ole32", "oleAut32", "windowscodecs", "shcore", "wininet",

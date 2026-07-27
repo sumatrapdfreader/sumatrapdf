@@ -4,6 +4,8 @@
 // Benchmark image decode: native library vs WIC vs GDI+.
 // -jpeg: libjpeg-turbo vs WIC vs GDI+ on .jpg/.jpeg
 // -webp: libwebp vs WIC vs GDI+ on .webp
+// -avif: heicdec+dav1d vs WIC vs GDI+ on .avif
+// -heif: heicdec (HEVC) vs WIC vs GDI+ on .heic/.heif
 // Loads each file into memory once, times full decode (to pixels), 3 runs,
 // keeps the best time.
 
@@ -18,6 +20,8 @@
 #include <wincodec.h>
 
 #include <webp/decode.h>
+
+#include "heic.h"
 
 extern "C" {
 #include "jpeglib.h"
@@ -39,6 +43,8 @@ void _uploadDebugReport(Str, Str, bool, bool) {}
 enum class BenchFormat {
     Jpeg,
     Webp,
+    Avif,
+    Heif,
 };
 
 static bool IsJpegPath(Str path) {
@@ -51,8 +57,28 @@ static bool IsWebpPath(Str path) {
     return str::EqI(ext, StrL(".webp"));
 }
 
+static bool IsAvifPath(Str path) {
+    TempStr ext = path::GetExtTemp(path);
+    return str::EqI(ext, StrL(".avif"));
+}
+
+static bool IsHeifPath(Str path) {
+    TempStr ext = path::GetExtTemp(path);
+    return str::EqI(ext, StrL(".heic")) || str::EqI(ext, StrL(".heif"));
+}
+
 static bool MatchesFormat(Str path, BenchFormat fmt) {
-    return fmt == BenchFormat::Jpeg ? IsJpegPath(path) : IsWebpPath(path);
+    switch (fmt) {
+        case BenchFormat::Jpeg:
+            return IsJpegPath(path);
+        case BenchFormat::Webp:
+            return IsWebpPath(path);
+        case BenchFormat::Avif:
+            return IsAvifPath(path);
+        case BenchFormat::Heif:
+            return IsHeifPath(path);
+    }
+    return false;
 }
 
 static void CollectFiles(Str path, BenchFormat fmt, StrVec& out) {
@@ -170,6 +196,40 @@ static bool DecodeLibwebp(Str data, int* outW, int* outH) {
         *outH = h;
     }
     return true;
+}
+
+// --- heicdec (+ dav1d for AV1/AVIF, pure-C HEVC for HEIC) -------------------
+
+static bool DecodeHeicdec(Str data, int* outW, int* outH) {
+    if (!data) {
+        return false;
+    }
+    heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
+    if (!ctx) {
+        return false;
+    }
+    heic_doc* doc = heic_doc_open(ctx, (const u8*)data.s, (size_t)data.len);
+    if (!doc) {
+        heic_ctx_free(ctx);
+        return false;
+    }
+    // Full BGRA decode (same as AvifReader); pixels discarded after timing.
+    heic_image* img = heic_doc_decode(doc, HEIC_FORMAT_BGRA);
+    bool ok = img && img->data && img->width > 0 && img->height > 0;
+    if (ok) {
+        if (outW) {
+            *outW = (int)img->width;
+        }
+        if (outH) {
+            *outH = (int)img->height;
+        }
+    }
+    if (img) {
+        heic_image_destroy(ctx, img);
+    }
+    heic_doc_close(doc);
+    heic_ctx_free(ctx);
+    return ok;
 }
 
 // --- WIC -------------------------------------------------------------------
@@ -349,11 +409,57 @@ struct Totals {
 };
 
 static const char* NativeShortName(BenchFormat fmt) {
-    return fmt == BenchFormat::Jpeg ? "turbo" : "webp";
+    switch (fmt) {
+        case BenchFormat::Jpeg:
+            return "turbo";
+        case BenchFormat::Webp:
+            return "webp";
+        case BenchFormat::Avif:
+        case BenchFormat::Heif:
+            return "heic";
+    }
+    return "?";
 }
 
 static const char* NativeLongName(BenchFormat fmt) {
-    return fmt == BenchFormat::Jpeg ? "libjpeg" : "libwebp";
+    switch (fmt) {
+        case BenchFormat::Jpeg:
+            return "libjpeg";
+        case BenchFormat::Webp:
+            return "libwebp";
+        case BenchFormat::Avif:
+            return "heicdec"; // AV1 via dav1d
+        case BenchFormat::Heif:
+            return "heicdec"; // HEVC pure-C
+    }
+    return "?";
+}
+
+static DecodeFn NativeDecodeFn(BenchFormat fmt) {
+    switch (fmt) {
+        case BenchFormat::Jpeg:
+            return DecodeLibjpegTurbo;
+        case BenchFormat::Webp:
+            return DecodeLibwebp;
+        case BenchFormat::Avif:
+        case BenchFormat::Heif:
+            return DecodeHeicdec;
+    }
+    return DecodeLibjpegTurbo;
+}
+
+static const char* FormatExts(BenchFormat fmt) {
+    switch (fmt) {
+        case BenchFormat::Jpeg:
+            return ".jpg/.jpeg";
+        case BenchFormat::Webp:
+            return ".webp";
+        case BenchFormat::Avif:
+            return ".avif";
+        case BenchFormat::Heif:
+            return ".heic/.heif";
+    }
+    return "";
 }
 
 static const char* WinnerName(double native, bool nOk, double wic, bool wOk, double gdi, bool gOk,
@@ -389,7 +495,7 @@ static void BenchFile(Str path, BenchFormat fmt, Totals& tot) {
         return;
     }
 
-    DecodeFn nativeFn = fmt == BenchFormat::Jpeg ? DecodeLibjpegTurbo : DecodeLibwebp;
+    DecodeFn nativeFn = NativeDecodeFn(fmt);
     const char* nativeShort = NativeShortName(fmt);
 
     int w = 0, h = 0;
@@ -429,9 +535,11 @@ static void BenchFile(Str path, BenchFormat fmt, Totals& tot) {
 }
 
 static void Usage() {
-    printf("usage: bench_image -jpeg|-webp <file-or-dir>\n");
+    printf("usage: bench_image -jpeg|-webp|-avif|-heif <file-or-dir>\n");
     printf("  -jpeg  bench .jpg/.jpeg with libjpeg-turbo vs WIC vs GDI+\n");
     printf("  -webp  bench .webp with libwebp vs WIC vs GDI+\n");
+    printf("  -avif  bench .avif with heicdec+dav1d vs WIC vs GDI+\n");
+    printf("  -heif  bench .heic/.heif with heicdec vs WIC vs GDI+\n");
     printf("  Recursively finds matching files under a directory.\n");
     printf("  Loads each file into memory, decodes 3x per backend, reports best ms.\n");
 }
@@ -448,6 +556,13 @@ int main(int argc, char** argv) {
             haveFmt = true;
         } else if (str::EqI(arg, StrL("-webp")) || str::EqI(arg, StrL("--webp"))) {
             fmt = BenchFormat::Webp;
+            haveFmt = true;
+        } else if (str::EqI(arg, StrL("-avif")) || str::EqI(arg, StrL("--avif"))) {
+            fmt = BenchFormat::Avif;
+            haveFmt = true;
+        } else if (str::EqI(arg, StrL("-heif")) || str::EqI(arg, StrL("--heif")) || str::EqI(arg, StrL("-heic")) ||
+                   str::EqI(arg, StrL("--heic"))) {
+            fmt = BenchFormat::Heif;
             haveFmt = true;
         } else if (str::EqI(arg, StrL("-h")) || str::EqI(arg, StrL("--help")) || str::EqI(arg, StrL("/?"))) {
             Usage();
@@ -472,12 +587,12 @@ int main(int argc, char** argv) {
 
     ScopedCom com;
     ScopedGdiPlus gdiplus;
+    heic_init();
 
     StrVec files;
     CollectFiles(root, fmt, files);
     if (len(files) == 0) {
-        const char* exts = fmt == BenchFormat::Jpeg ? ".jpg/.jpeg" : ".webp";
-        printf("no %s files under '%.*s'\n", exts, root.len, root.s);
+        printf("no %s files under '%.*s'\n", FormatExts(fmt), root.len, root.s);
         return 1;
     }
 
