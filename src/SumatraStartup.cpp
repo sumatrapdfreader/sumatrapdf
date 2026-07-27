@@ -1022,6 +1022,14 @@ static bool ExtractAndLoadLibmupdfRobust(Str dir, bool extract) {
 }
 
 static bool LoadLibmupdf(bool showErrorDialog) {
+    // Static-linked builds (mingw wine cross-build, MSVC SumatraPDF-static) do
+    // not embed/delay-load libmupdf.dll — MuPDF is already in the exe image.
+    // HasEmbeddedLibmupdf() is false when IDR_DLL_PAK has no libmupdf.dll entry.
+    if (!HasEmbeddedLibmupdf()) {
+        logf("LoadLibmupdf: no embedded libmupdf.dll (static build); nothing to load\n");
+        return true;
+    }
+
     // prefer existing libmupdf.dll next to the exe (installer layout)
     Str selfDir = GetSelfExeDirTemp();
     ExtractAndLoadLibmupdfRobust(selfDir, false);
