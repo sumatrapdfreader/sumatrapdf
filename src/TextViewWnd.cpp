@@ -68,6 +68,8 @@ void TextViewWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
+// Returns a temp-arena string: ToStr() would be a view into the local Builder
+// and dangle as soon as this function returns (crash in HwndSetText/CWStrTemp).
 Str TextViewWnd::FormatTextForEdit(Str text) {
     str::Builder crlfText;
     for (int i = 0; i < text.len; i++) {
@@ -77,7 +79,7 @@ Str TextViewWnd::FormatTextForEdit(Str text) {
         }
         crlfText.AppendChar(c);
     }
-    return ToStr(crlfText);
+    return ToStrTemp(crlfText);
 }
 
 bool TextViewWnd::Create(Str title, Str text) {
