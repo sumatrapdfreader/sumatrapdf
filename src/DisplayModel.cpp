@@ -2090,18 +2090,29 @@ void DisplayModel::ScrollToLink(IPageDestination* dest) {
 
 void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     Point scroll(-1, 0);
+
+    // zoom: absolute fraction (1.0 = 100%) for /XYZ; virtual Fit* modes
+    // (kZoomFitPage / FitWidth / FitContent); 0 = leave zoom (issue #5828).
+    // FitContent uses CurrentPageNo() for the content box, so switch page first
+    // for virtual modes, then apply zoom, then fine-tune scroll.
+    bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitContent ||
+                         zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
+    bool isAbsZoom = zoom > 0;
+
+    if (isVirtualZoom) {
+        GoToPage(pageNo, 0, true, -1);
+        SetZoomVirtual(zoom, nullptr);
+    } else if (isAbsZoom) {
+        SetZoomVirtual(100 * zoom, nullptr);
+        CalcZoomReal(zoomVirtual);
+    }
+
     // use per-page zoom which may differ from global zoomReal
     // when pages have varying sizes in fit-width/fit-page mode
     float pageZoom = GetZoomReal(pageNo);
 
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
-        // PDF: /XYZ top left zoom
-        // scroll to rect.TL()
-        if (zoom) {
-            SetZoomVirtual(100 * zoom, nullptr);
-            CalcZoomReal(zoomVirtual);
-            pageZoom = GetZoomReal(pageNo);
-        }
+        // PDF: /XYZ, /Fit, /FitB — scroll to rect.TL() (defaults = page top)
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll = ToPoint(scrollD);
 
@@ -2130,20 +2141,18 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll.y = (int)scrollD.y;
     }
-    // else if (Fit || FitV) zoom = kZoomFitPage
-    // else if (FitB || FitBV) zoom = kZoomFitContent
-    /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-    if (zoom != kInvalidZoom) {
-        // TODO: adjust the zoom level before calculating the scrolling coordinates
-        SetZoomVirtual(zoom);
-        UpdateToolbarState(owner);
-    }
-    // */
     // TODO: prevent scroll.y from getting too large?
     if (scroll.y < 0) {
         scroll.y = 0; // Adobe Reader never shows the previous page
     }
-    GoToPage(pageNo, scroll.y, true, -1);
+    if (isVirtualZoom) {
+        // already on pageNo; only adjust scroll after fit zoom
+        if (scroll.y > 0) {
+            ScrollYTo(scroll.y);
+        }
+    } else {
+        GoToPage(pageNo, scroll.y, true, -1);
+    }
     if (rect.x != DEST_USE_DEFAULT) {
         float docY = (rect.y != DEST_USE_DEFAULT) ? rect.y : 0.f;
         Rect destScreen = CvtToScreen(pageNo, RectF(rect.x, docY, 1, 1));
