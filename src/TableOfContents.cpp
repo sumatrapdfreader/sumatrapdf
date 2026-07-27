@@ -1310,6 +1310,8 @@ void CreateToc(MainWindow* win) {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndTocBox;
         eargs.withBorder = false;
+        // underline so the filter field is visible on flat sidebar backgrounds
+        eargs.withBottomBorder = true;
         eargs.cueText = _TRA("Search Bookmarks");
         eargs.font = GetAppFont(win->hwndFrame);
         filterEdit->Create(eargs);
@@ -1338,12 +1340,13 @@ void CreateToc(MainWindow* win) {
     win->tocTreeView = treeView;
 
     // stack label, filter edit and tree vertically; the tree flexes to fill the
-    // remaining height. The VBox owns these three controls (freed in ~MainWindow).
+    // remaining height. The VBox owns these controls/spacer (freed in ~MainWindow).
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(l);
     vbox->AddChild(filterEdit);
+    vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);
     win->tocLayout = vbox;
 

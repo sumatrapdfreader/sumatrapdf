@@ -1278,6 +1278,8 @@ void CreateFavorites(MainWindow* win) {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndFavBox;
         eargs.withBorder = false;
+        // underline so the filter field is visible on flat sidebar/tab backgrounds
+        eargs.withBottomBorder = true;
         eargs.cueText = _TRA("Search Favorites");
         eargs.font = GetAppFont(win->hwndFrame);
         filterEdit->Create(eargs);
@@ -1307,12 +1309,13 @@ void CreateFavorites(MainWindow* win) {
     win->favTreeView = treeView;
 
     // stack label, filter edit and tree vertically; the tree flexes to fill
-    // the remaining height. The VBox owns these controls (freed in ~MainWindow).
+    // the remaining height. The VBox owns these controls/spacer (freed in ~MainWindow).
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(l);
     vbox->AddChild(filterEdit);
+    vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);
     win->favLayout = vbox;
 
