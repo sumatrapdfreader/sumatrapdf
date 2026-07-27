@@ -1090,6 +1090,24 @@ workspace "SumatraPDF"
     bin2coff_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
+  -- JPEG decode microbench: libjpeg-turbo vs WIC vs GDI+
+  project "bench_jpeg"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4611", "4838" } -- setjmp / C++ destruction; QITABENT
+    includedirs { "src", "ext/libjpeg-turbo/src" }
+    bench_jpeg_files()
+    setup_base_pch()
+    links { "base", "libjpeg-turbo" }
+    links {
+      "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version",
+      "ole32", "oleAut32", "windowscodecs", "shcore", "wininet",
+    }
+
   -- small console app that runs the mupdf command-line tools (draw, convert,
   -- info, ...). Console subsystem (so it works with cmd.exe / PowerShell) and
   -- links libmupdf.dll for everything, so the exe itself is tiny. It's embedded

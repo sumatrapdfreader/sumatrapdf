@@ -1423,6 +1423,12 @@ function test_engines_files()
   }
 end
 
+function bench_jpeg_files()
+  files {
+    "src/tools/bench_jpeg.cpp",
+  }
+end
+
 function pdf_preview_files()
   files_in_dir("src/previewer", {
     "PdfPreview.*",
