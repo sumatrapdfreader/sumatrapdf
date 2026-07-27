@@ -183,7 +183,7 @@ MainWindow::~MainWindow() {
     if (favTreeView) {
         delete favTreeView->treeModel;
     }
-    // favLayout (VBox) owns favLabelWithClose and favTreeView
+    // favLayout (VBox) owns favLabelWithClose, favFilterEdit and favTreeView
     delete favLayout;
 
     DestroyAIChatPanel(this);
@@ -921,6 +921,9 @@ void UpdateControlsColors(MainWindow* win) {
     if (favTreeView) {
         favTreeView->SetColors(txtCol, bgCol);
         win->favLabelWithClose->SetColors(txtCol, bgCol);
+        if (win->favFilterEdit) {
+            win->favFilterEdit->SetColors(txtCol, bgCol);
+        }
         win->favSplitter->SetColors(kColorNoChange, splitterCol);
     }
 }

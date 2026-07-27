@@ -180,8 +180,9 @@ struct MainWindow {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
+    Edit* favFilterEdit = nullptr;
     TreeView* favTreeView = nullptr;
-    // VBox(label, tree); owns those two controls and lays them out in hwndFavBox
+    // VBox(label, filter edit, tree); owns those controls and lays them out in hwndFavBox
     ILayout* favLayout = nullptr;
     Vec<FileState*> expandedFavorites;
 

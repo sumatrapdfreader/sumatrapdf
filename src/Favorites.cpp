@@ -636,19 +636,10 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
     return res;
 }
 
-static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
-    int n = len(*f->favorites);
-    for (int i = 0; i < n; i++) {
-        Favorite* fn = (*f->favorites)[i];
-        auto* ti = new FavTreeItem();
-        ti->text = str::Dup(FavReadableNameTemp(fn));
-        ti->parent = parent;
-        ti->favorite = fn;
-        parent->children.Append(ti);
-    }
-}
-
-static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
+// filter empty => full tree; non-empty => case-insensitive substring match on
+// display text and file base name (same idea as the ToC bookmark filter)
+static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
+    bool filtering = filter && len(filter) > 0;
     auto* res = new FavTreeModel();
     res->root = new FavTreeItem();
     StrVec filePathsSorted;
@@ -657,20 +648,102 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
         Str path = filePathsSorted[i];
         FileState* fs = GetFavByFilePath(path);
         ReportIf(!fs);
-        if (!fs) {
+        if (!fs || !fs->favorites || len(*fs->favorites) == 0) {
             continue;
         }
-        bool isExpanded = win->expandedFavorites.Contains(fs);
-        FavTreeItem* ti = MakeFavTopLevelItem(fs, isExpanded);
-        if (!ti) {
+        TempStr baseName = path::GetBaseNameTemp(fs->filePath);
+        bool fileNameMatches = filtering && str::ContainsI(baseName, filter);
+        int nFavs = len(*fs->favorites);
+
+        if (nFavs == 1) {
+            Favorite* fn = (*fs->favorites)[0];
+            TempStr compact = FavCompactReadableNameTemp(fs, fn);
+            if (filtering && !fileNameMatches && !str::ContainsI(compact, filter) &&
+                !(fn->name && str::ContainsI(fn->name, filter))) {
+                continue;
+            }
+            FavTreeItem* ti = MakeFavTopLevelItem(fs, false);
+            if (ti) {
+                res->root->children.Append(ti);
+            }
             continue;
         }
-        res->root->children.Append(ti);
-        if (len(*fs->favorites) > 1) {
-            MakeFavSecondLevel(ti, fs);
+
+        // multi-favorite file: include matching children (or all if file name matches)
+        Vec<Favorite*> matched;
+        for (int j = 0; j < nFavs; j++) {
+            Favorite* fn = (*fs->favorites)[j];
+            if (!filtering || fileNameMatches) {
+                matched.Append(fn);
+                continue;
+            }
+            TempStr rn = FavReadableNameTemp(fn);
+            if (str::ContainsI(rn, filter) || (fn->name && str::ContainsI(fn->name, filter))) {
+                matched.Append(fn);
+            }
         }
+        if (len(matched) == 0) {
+            continue;
+        }
+        auto* parent = new FavTreeItem();
+        parent->favorite = matched[0];
+        parent->text = str::Dup(baseName);
+        // expand when filtering so matches are visible without extra clicks
+        parent->isExpanded = filtering || win->expandedFavorites.Contains(fs);
+        for (int j = 0; j < len(matched); j++) {
+            Favorite* fn = matched[j];
+            auto* ti = new FavTreeItem();
+            ti->text = str::Dup(FavReadableNameTemp(fn));
+            ti->parent = parent;
+            ti->favorite = fn;
+            parent->children.Append(ti);
+        }
+        res->root->children.Append(parent);
     }
     return res;
+}
+
+static TempStr GetFavFilterTemp(MainWindow* win) {
+    if (!win || !win->favFilterEdit) {
+        return {};
+    }
+    return win->favFilterEdit->GetTextTemp();
+}
+
+static void ApplyFavFilter(MainWindow* win) {
+    if (!win || !win->favTreeView) {
+        return;
+    }
+    TreeView* treeView = win->favTreeView;
+    auto* prevModel = treeView->treeModel;
+    TreeModel* newModel = BuildFavTreeModel(win, GetFavFilterTemp(win));
+    treeView->SetTreeModel(newModel);
+    delete prevModel;
+}
+
+static void OnFavFilterTextChanged(MainWindow* win) {
+    ApplyFavFilter(win);
+}
+
+static LRESULT CALLBACK WndProcFavFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+                                             DWORD_PTR data) {
+    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
+        MainWindow* win = (MainWindow*)data;
+        Edit* edit = win->favFilterEdit;
+        if (edit) {
+            TempStr txt = edit->GetTextTemp();
+            if (txt && len(txt) > 0) {
+                edit->SetText("");
+                // onTextChanged restores the full tree
+                return 0;
+            }
+            if (win->favTreeView) {
+                SetFocus(win->favTreeView->hwnd);
+            }
+            return 0;
+        }
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
 void PopulateFavTreeIfNeeded(MainWindow* win) {
@@ -678,7 +751,7 @@ void PopulateFavTreeIfNeeded(MainWindow* win) {
     if (treeView->treeModel) {
         return;
     }
-    TreeModel* tm = BuildFavTreeModel(win);
+    TreeModel* tm = BuildFavTreeModel(win, GetFavFilterTemp(win));
     treeView->SetTreeModel(tm);
 }
 
@@ -727,14 +800,15 @@ void ToggleFavoritesTab(MainWindow* win) {
 
 void UpdateFavoritesTree(MainWindow* win) {
     TreeView* treeView = win->favTreeView;
-    auto* prevModel = treeView->treeModel;
-    TreeModel* newModel = BuildFavTreeModel(win);
-    treeView->SetTreeModel(newModel);
-    delete prevModel;
+    // rebuild (honors current search filter if any)
+    ApplyFavFilter(win);
+    TreeModel* newModel = treeView->treeModel;
 
     // hide favorites UI if we've removed the last favorite
-    TreeItem root = newModel->Root();
-    bool hasAny = newModel->ChildCount(root) > 0;
+    bool hasAny = false;
+    if (newModel) {
+        hasAny = newModel->ChildCount(newModel->Root()) > 0;
+    }
     if (!hasAny) {
         if (WindowTab* favTab = FindFavoritesTab(win)) {
             CloseTab(favTab, false);
@@ -972,8 +1046,8 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
 }
 
 static WNDPROC gWndProcFavBox = nullptr;
-// Position label and tree within favorites container using the wingui layout
-// engine (VBox built in CreateFavorites).
+// Position label, filter edit and tree within favorites container using the
+// wingui layout engine (VBox built in CreateFavorites).
 void LayoutFavoritesContainer(MainWindow* win) {
     if (!win || !win->favLayout || !win->hwndFavBox) {
         return;
@@ -1037,6 +1111,19 @@ void CreateFavorites(MainWindow* win) {
     l->SetPaddingXY(2, 2);
     // label is set in UpdateToolbarSidebarText()
 
+    auto filterEdit = new Edit();
+    {
+        Edit::CreateArgs eargs;
+        eargs.parent = win->hwndFavBox;
+        eargs.withBorder = false;
+        eargs.cueText = _TRA("Search Favorites");
+        eargs.font = GetAppFont(win->hwndFrame);
+        filterEdit->Create(eargs);
+    }
+    win->favFilterEdit = filterEdit;
+    filterEdit->onTextChanged = MkFunc0(OnFavFilterTextChanged, win);
+    SetWindowSubclass(filterEdit->hwnd, WndProcFavFilterEdit, NextSubclassId(), (DWORD_PTR)win);
+
     auto treeView = new TreeView();
     TreeView::CreateArgs args;
     args.parent = win->hwndFavBox;
@@ -1056,12 +1143,13 @@ void CreateFavorites(MainWindow* win) {
 
     win->favTreeView = treeView;
 
-    // stack label and tree vertically; the tree flexes to fill the remaining
-    // height. The VBox owns these two controls (freed in ~MainWindow).
+    // stack label, filter edit and tree vertically; the tree flexes to fill
+    // the remaining height. The VBox owns these controls (freed in ~MainWindow).
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(l);
+    vbox->AddChild(filterEdit);
     vbox->AddChild(treeView, 1);
     win->favLayout = vbox;
 

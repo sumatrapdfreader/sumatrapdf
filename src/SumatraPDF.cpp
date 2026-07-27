@@ -5493,6 +5493,9 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested) {
     if (win->favLabelWithClose) {
         win->favLabelWithClose->SetFont(GetAppSidebarLabelFont(hwndFrame));
     }
+    if (win->favFilterEdit) {
+        win->favFilterEdit->SetFont(GetAppFont(hwndFrame));
+    }
     if (win->favTreeView) {
         win->favTreeView->SetFont(GetAppTreeFont(hwndFrame));
     }
