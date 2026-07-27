@@ -134,6 +134,43 @@ void ListBox::SetModel(ListBoxModel* model) {
     SetCurrentSelection(-1);
 }
 
+// After LB_SETCURSEL(-1) / content rebuild, the first mouse click can
+// jump-scroll a fully visible item to the bottom of the viewport (issue
+// #5829). Default listbox handling selects the item, then "ensures" the
+// caret is visible using a bad caret index — which changes TOPINDEX even
+// though the item was already on screen. Restore the pre-click top when
+// the clicked item was fully visible.
+LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_LBUTTONDOWN) {
+        int topBefore = (int)SendMessageW(hwnd, LB_GETTOPINDEX, 0, 0);
+        int count = GetCount();
+        POINT pt{GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+        LRESULT ip = SendMessageW(hwnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
+        int idx = (int)LOWORD(ip);
+        bool outside = HIWORD(ip) != 0;
+        bool wasFullyVisible = false;
+        if (!outside && idx >= 0 && idx < count) {
+            RECT itemRc{};
+            if (SendMessageW(hwnd, LB_GETITEMRECT, (WPARAM)idx, (LPARAM)&itemRc) != LB_ERR) {
+                RECT client{};
+                GetClientRect(hwnd, &client);
+                wasFullyVisible = itemRc.top >= client.top && itemRc.bottom <= client.bottom;
+            }
+        }
+
+        LRESULT res = FinalWindowProc(msg, wparam, lparam);
+
+        if (wasFullyVisible) {
+            int topAfter = (int)SendMessageW(hwnd, LB_GETTOPINDEX, 0, 0);
+            if (topAfter != topBefore) {
+                SendMessageW(hwnd, LB_SETTOPINDEX, (WPARAM)topBefore, 0);
+            }
+        }
+        return res;
+    }
+    return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
 bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
     // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-selchange
