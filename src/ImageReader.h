@@ -15,7 +15,7 @@ struct RenderedBitmap;
 Pixmap* PixmapFromDataFz(Str);
 
 // Decode image bytes to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
-// Windows: MuPDF/libjpeg-turbo first (JPEG/JP2), then TGA/WebP/JXL/AVIF/HEIC,
+// Windows: MuPDF/libjpeg-turbo (JPEG/JP2), libwebp (WebP), then TGA/JXL/AVIF/HEIC,
 // GDI+/WIC. POSIX: MuPDF for now.
 Pixmap* PixmapFromData(Str);
 

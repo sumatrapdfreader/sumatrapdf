@@ -235,6 +235,13 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     if (len(data) == 0) {
         return nullptr;
     }
+    // Prefer dedicated libwebp (PixmapFromData / LoadPixmapForPage) over mupdf
+    // for WebP — benches show libwebp faster than WIC and mupdf is not needed
+    // for scaled-downsample benefits the way JPEG is.
+    FileType kind = GuessFileTypeFromData(data);
+    if (FileType::Webp == kind) {
+        return nullptr;
+    }
     fz_image* img = nullptr;
     fz_buffer* buf = nullptr;
     fz_var(buf);

@@ -205,19 +205,26 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
     return res;
 }
 
-// Prefer MuPDF/libjpeg-turbo for JPEG (and JPEG2000) — faster than WIC/GDI+ in
-// benches (see tools/bench_jpeg). Other formats fall through to Windows
-// decoders (TGA, WebP/JXL/AVIF/HEIC, GDI+/WIC).
+// Prefer native codecs first (see tools/bench_image): MuPDF/libjpeg-turbo for
+// JPEG/JP2, libwebp for WebP — both beat WIC/GDI+ in benches. Other formats
+// use Windows paths (TGA, JXL/AVIF/HEIC, GDI+/WIC).
 Pixmap* PixmapFromData(Str bmpData) {
     Pixmap* px = PixmapFromDataFz(bmpData);
     if (px) {
         return px;
     }
+    FileType kind = GuessFileTypeFromData(bmpData);
+    if (FileType::Webp == kind) {
+        px = webp::PixmapFromData(bmpData);
+        if (px) {
+            return px;
+        }
+    }
     return PixmapFromDataWin(bmpData);
 }
 
 // Multi-page TIFF / animated GIF: Windows multi-frame path first. Everything
-// else is a single Pixmap via PixmapFromData (turbo then Win).
+// else is a single Pixmap via PixmapFromData (native codec then Win).
 Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     FileType kind = GuessFileTypeFromData(bmpData);
     if (FileType::Tiff == kind || FileType::Gif == kind) {
