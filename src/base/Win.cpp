@@ -3564,6 +3564,32 @@ void HwndSetFont(HWND hwnd, HFONT font) {
     SetWindowFont(hwnd, font, TRUE);
 }
 
+void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
+    if (!hwndTree || !font) {
+        return;
+    }
+    if (dpi <= 0) {
+        dpi = DpiGet(hwndTree);
+    }
+    HwndSetFont(hwndTree, font);
+    HDC dc = GetDC(hwndTree);
+    if (!dc) {
+        return;
+    }
+    HFONT old = (HFONT)SelectObject(dc, font);
+    TEXTMETRICW tm{};
+    if (GetTextMetricsW(dc, &tm)) {
+        int itemH = tm.tmHeight + tm.tmExternalLeading + MulDiv(4, dpi, 96);
+        SendMessageW(hwndTree, TVM_SETITEMHEIGHT, (WPARAM)itemH, 0);
+    }
+    SelectObject(dc, old);
+    ReleaseDC(hwndTree, dc);
+}
+
+void HwndSetTreeFont(HWND hwndTree, HFONT font) {
+    HwndSetTreeFontForDpi(hwndTree, font, DpiGet(hwndTree));
+}
+
 HFONT HwndGetFont(HWND hwnd) {
     if (!hwnd) {
         return nullptr;

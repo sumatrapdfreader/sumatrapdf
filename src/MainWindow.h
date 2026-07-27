@@ -220,6 +220,15 @@ struct MainWindow {
     TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
     bool tabsInTitlebar = false;
+
+    // per-monitor DPI of hwndFrame (from WM_DPICHANGED wParam). Used so UI
+    // chrome can refresh at the destination scale even while GetDpiForWindow
+    // still lags during a cross-monitor drag.
+    int frameDpi = 0;
+    // defer expensive chrome rebuild while the user is dragging/resizing;
+    // finish on WM_EXITSIZEMOVE via a posted settle message
+    bool deferDpiChromeRefresh = false;
+    bool dpiChromeRefreshPending = false;
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
     Vec<WindowTab*>* tabSelectionHistory = nullptr;

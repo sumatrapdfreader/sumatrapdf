@@ -177,6 +177,8 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win);
 
 // message for deferred, coalesced UI updates (see ScheduleUiUpdate)
 constexpr UINT WM_UPDATE_UI = WM_APP + 0x400;
+// finish deferred DPI chrome refresh after drag/resize settles (plus multi-monitor DPI)
+constexpr UINT WM_MAIN_WINDOW_DPI_SETTLED = WM_APP + 0x422;
 
 static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
@@ -2149,6 +2151,10 @@ static MainWindow* CreateMainWindow() {
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
+    win->frameDpi = RoundUp(DpiGet(hwndFrame), 4);
+    if (win->frameDpi <= 0) {
+        win->frameDpi = 96;
+    }
     UpdateWindowFrameBorderColor(win);
 
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
@@ -5462,59 +5468,154 @@ void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
     PostMessageW(win->hwndFrame, WM_UPDATE_UI, 0, 0);
 }
 
-// WM_DPICHANGED: the frame moved to a monitor with a different DPI (or the
-// monitor's scaling changed). Resize to the rectangle Windows suggests for the
-// new DPI and rebuild the DPI-scaled chrome (menu bar fonts, toolbar icons,
-// find bar) so the UI re-scales instead of staying at the old monitor's size
-// (issue #1832). DpiScale() reads the live per-window DPI, so relaying out is
-// enough for everything else.
-static void OnDpiChanged(MainWindow* win, RECT* suggested) {
-    if (!win || !win->hwndFrame) {
+// Apply TOC/favorites fonts and TreeView row height for an explicit DPI
+// (WM_DPICHANGED wParam; may differ from GetDpiForWindow during drag).
+static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
+    if (!win || dpi <= 0) {
         return;
     }
-    // rebuild the DPI-dependent controls first so the resize below lays them out
-    // at the new DPI (GetDpiForWindow already reports the new value here)
+    HFONT treeFont = GetAppTreeFontForDpi(dpi);
+    HFONT labelFont = GetAppSidebarLabelFontForDpi(dpi);
+    HFONT appFont = GetAppFontForDpi(dpi);
+
+    if (win->tocTreeView && win->tocTreeView->hwnd) {
+        HwndSetTreeFontForDpi(win->tocTreeView->hwnd, treeFont, dpi);
+    }
+    if (win->favTreeView && win->favTreeView->hwnd) {
+        HwndSetTreeFontForDpi(win->favTreeView->hwnd, treeFont, dpi);
+    }
+    if (win->tocLabelWithClose) {
+        win->tocLabelWithClose->SetFont(labelFont);
+    }
+    if (win->favLabelWithClose) {
+        win->favLabelWithClose->SetFont(labelFont);
+    }
+    if (win->tocFilterEdit) {
+        win->tocFilterEdit->SetFont(appFont);
+        HwndSetFont(win->tocFilterEdit->hwnd, appFont);
+    }
+    if (win->favFilterEdit) {
+        win->favFilterEdit->SetFont(appFont);
+        HwndSetFont(win->favFilterEdit->hwnd, appFont);
+    }
+    // re-layout VBox children in the sidebar boxes
+    if (win->hwndTocBox) {
+        SendMessageW(win->hwndTocBox, WM_SIZE, 0, 0);
+    }
+    if (win->hwndFavBox) {
+        SendMessageW(win->hwndFavBox, WM_SIZE, 0, 0);
+    }
+}
+
+// Full chrome refresh after a DPI change (or when drag settles). Ported from
+// sumatrapdf-plus multi-monitor DPI handling: rebuild toolbar/menu fonts and
+// icons, re-apply sidebar tree metrics, relayout caption/tabs/frame.
+static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
+    if (!win || !hwnd) {
+        return;
+    }
+    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGet(hwnd);
+    win->frameDpi = dpi;
+    logf("ApplyMainWindowDpiChromeRefresh: dpi=%d\n", dpi);
+
+    HideSelectionToolbar(win);
+
+    bool menuRebarVisible = IsShowingMenuBarRebar(win);
+    if (menuRebarVisible) {
+        DestroyMenuBarRebar(win);
+    }
+
     RebuildMenuBarForWindow(win);
     ReCreateToolbar(win);
     RecreateFindBar(win);
 
-    // re-apply fonts to controls that keep an HFONT: app fonts are cached
-    // per DPI, so these get fonts sized for the new monitor
-    HWND hwndFrame = win->hwndFrame;
+    if (menuRebarVisible && IsMenubarVisible()) {
+        CreateMenuBarRebar(win);
+        ShowMenuBarRebar(win);
+    }
+
     if (win->tabsCtrl) {
-        win->tabsCtrl->SetFont(GetAppFont(hwndFrame));
+        win->tabsCtrl->SetFont(GetAppFontForDpi(dpi));
         UpdateTabWidth(win);
     }
-    if (win->tocLabelWithClose) {
-        win->tocLabelWithClose->SetFont(GetAppSidebarLabelFont(hwndFrame));
+    ApplySidebarDpiFonts(win, dpi);
+
+    win->uiState.layout = {};
+    RelayoutFrame(win, true, -1);
+    RelayoutCaption(win);
+    UpdateOverlayScrollbarPositions(win);
+    FindBarReposition(win);
+
+    MainWindowRerender(win, true);
+    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
+    RedrawWindow(hwnd, nullptr, nullptr, flags);
+    if (win->tabsInTitlebar && !win->captionRect.IsEmpty()) {
+        RECT r = ToRECT(win->captionRect);
+        RedrawWindow(hwnd, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
     }
-    if (win->tocFilterEdit) {
-        win->tocFilterEdit->SetFont(GetAppFont(hwndFrame));
+}
+
+// Lightweight preview while the user is still dragging across monitors:
+// update fonts/layout at the destination DPI without waiting for mouse-up.
+// Full toolbar recreate still runs so icons match the new scale immediately.
+static void ApplyMainWindowDpiMovePreview(MainWindow* win, HWND hwnd) {
+    ApplyMainWindowDpiChromeRefresh(win, hwnd);
+}
+
+// WM_DPICHANGED: frame moved to a different DPI (or scaling changed).
+// explicitDpi: LOWORD(wParam) from WM_DPICHANGED — trust it during cross-monitor
+// drag when GetDpiForWindow can lag (sumatrapdf-plus / issue #5827).
+// force: full refresh even when deferring (used after drag settles).
+static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, bool force = false) {
+    if (!win || !win->hwndFrame) {
+        return;
     }
-    if (win->tocTreeView) {
-        win->tocTreeView->SetFont(GetAppTreeFont(hwndFrame));
+    HWND hwnd = win->hwndFrame;
+    int dpi;
+    if (explicitDpi > 0) {
+        dpi = RoundUp(explicitDpi, 4);
+    } else {
+        dpi = DpiGet(hwnd);
     }
-    if (win->favLabelWithClose) {
-        win->favLabelWithClose->SetFont(GetAppSidebarLabelFont(hwndFrame));
-    }
-    if (win->favFilterEdit) {
-        win->favFilterEdit->SetFont(GetAppFont(hwndFrame));
-    }
-    if (win->favTreeView) {
-        win->favTreeView->SetFont(GetAppTreeFont(hwndFrame));
+    if (dpi <= 0) {
+        dpi = 96;
     }
 
     if (suggested) {
         int dx = suggested->right - suggested->left;
         int dy = suggested->bottom - suggested->top;
-        SetWindowPos(win->hwndFrame, nullptr, suggested->left, suggested->top, dx, dy, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(hwnd, nullptr, suggested->left, suggested->top, dx, dy, SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    win->uiState.layout = {};
-    ScheduleUiUpdate(win);
-    MainWindowRerender(win, true);
-    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
-    RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
+    bool dpiChanged = dpi != win->frameDpi;
+    if (!force && dpi == win->frameDpi && !suggested) {
+        return;
+    }
+    win->frameDpi = dpi;
+    logf("OnDpiChanged: dpi=%d force=%d defer=%d\n", dpi, (int)force, (int)win->deferDpiChromeRefresh);
+
+    if (win->deferDpiChromeRefresh && !force) {
+        win->dpiChromeRefreshPending = true;
+        if (dpiChanged) {
+            ApplyMainWindowDpiMovePreview(win, hwnd);
+        }
+        return;
+    }
+    ApplyMainWindowDpiChromeRefresh(win, hwnd);
+}
+
+static void FinishDeferredMainWindowDpiRefresh(MainWindow* win, HWND hwnd) {
+    if (!win) {
+        return;
+    }
+    win->deferDpiChromeRefresh = false;
+    if (!win->dpiChromeRefreshPending) {
+        return;
+    }
+    win->dpiChromeRefreshPending = false;
+    // Keep the DPI from the last WM_DPICHANGED; do not re-query the monitor.
+    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGet(hwnd);
+    OnDpiChanged(win, nullptr, dpi, true);
 }
 
 void SetCurrentLanguageAndRefreshUI(Str langCode) {
@@ -9846,13 +9947,25 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             bool isFullScreen = win->isFullScreen || win->presentation;
             if (IsZoomed(hwnd) && !isFullScreen) {
-                int frameX = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int frameY = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                r->left += frameX;
-                r->top += frameY;
-                r->right -= frameX;
-                r->bottom -= frameY;
-                r->bottom -= NON_CLIENT_BAND;
+                // The maximized outer frame extends beyond the work area. Global
+                // system metrics can still describe the old monitor during a
+                // cross-DPI move, leaving an unpainted strip at the screen edge.
+                // The proposed rect identifies the destination monitor reliably.
+                HMONITOR monitor = MonitorFromRect(r, MONITOR_DEFAULTTONEAREST);
+                MONITORINFO mi{};
+                mi.cbSize = sizeof(mi);
+                if (monitor && GetMonitorInfoW(monitor, &mi)) {
+                    *r = mi.rcWork;
+                    r->bottom -= NON_CLIENT_BAND;
+                } else {
+                    int frameX = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                    int frameY = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                    r->left += frameX;
+                    r->top += frameY;
+                    r->right -= frameX;
+                    r->bottom -= frameY;
+                    r->bottom -= NON_CLIENT_BAND;
+                }
             } else if (!isFullScreen) {
                 // keep 1px non-client area at top so DWM preserves content
                 // during resize (returning 0 makes DWM clear the surface)
@@ -11035,9 +11148,33 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_GETMINMAXINFO:
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);
 
+        case WM_ENTERSIZEMOVE:
+            if (win) {
+                win->deferDpiChromeRefresh = true;
+                win->dpiChromeRefreshPending = false;
+            }
+            return 0;
+
+        case WM_EXITSIZEMOVE:
+            if (win) {
+                if (win->dpiChromeRefreshPending) {
+                    if (!PostMessageW(hwnd, WM_MAIN_WINDOW_DPI_SETTLED, 0, 0)) {
+                        FinishDeferredMainWindowDpiRefresh(win, hwnd);
+                    }
+                } else {
+                    win->deferDpiChromeRefresh = false;
+                }
+            }
+            return 0;
+
+        case WM_MAIN_WINDOW_DPI_SETTLED:
+            FinishDeferredMainWindowDpiRefresh(win, hwnd);
+            return 0;
+
         case WM_DPICHANGED:
             if (win) {
-                OnDpiChanged(win, (RECT*)lp);
+                // Trust wParam DPI during cross-monitor drag (GetDpiForWindow can lag).
+                OnDpiChanged(win, (RECT*)lp, (int)LOWORD(wp));
                 return 0;
             }
             break;

@@ -348,6 +348,10 @@ void HwndScheduleRepaint(HWND hwnd);
 
 HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);
+// TreeView: set font and recompute TVM_SETITEMHEIGHT for the given DPI so
+// row metrics match the font after a cross-monitor DPI change.
+void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi);
+void HwndSetTreeFont(HWND hwndTree, HFONT font);
 
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
