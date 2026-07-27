@@ -6,6 +6,7 @@
 // -webp: libwebp vs WIC vs GDI+ on .webp
 // -avif: heicdec+dav1d vs WIC vs GDI+ on .avif
 // -heif: heicdec (HEVC) vs WIC vs GDI+ on .heic/.heif
+// -jxl:  libjxl vs WIC vs GDI+ on .jxl
 // Loads each file into memory once, times full decode (to pixels), 3 runs,
 // keeps the best time.
 
@@ -20,6 +21,7 @@
 #include <wincodec.h>
 
 #include <webp/decode.h>
+#include <jxl/decode.h>
 
 #include "heic.h"
 
@@ -45,6 +47,7 @@ enum class BenchFormat {
     Webp,
     Avif,
     Heif,
+    Jxl,
 };
 
 static bool IsJpegPath(Str path) {
@@ -67,6 +70,11 @@ static bool IsHeifPath(Str path) {
     return str::EqI(ext, StrL(".heic")) || str::EqI(ext, StrL(".heif"));
 }
 
+static bool IsJxlPath(Str path) {
+    TempStr ext = path::GetExtTemp(path);
+    return str::EqI(ext, StrL(".jxl"));
+}
+
 static bool MatchesFormat(Str path, BenchFormat fmt) {
     switch (fmt) {
         case BenchFormat::Jpeg:
@@ -77,6 +85,8 @@ static bool MatchesFormat(Str path, BenchFormat fmt) {
             return IsAvifPath(path);
         case BenchFormat::Heif:
             return IsHeifPath(path);
+        case BenchFormat::Jxl:
+            return IsJxlPath(path);
     }
     return false;
 }
@@ -196,6 +206,80 @@ static bool DecodeLibwebp(Str data, int* outW, int* outH) {
         *outH = h;
     }
     return true;
+}
+
+// --- libjxl -----------------------------------------------------------------
+
+static bool DecodeLibjxl(Str data, int* outW, int* outH) {
+    if (!data) {
+        return false;
+    }
+    JxlDecoder* dec = JxlDecoderCreate(nullptr);
+    if (!dec) {
+        return false;
+    }
+    u8* pixels = nullptr;
+    uint32_t w = 0, h = 0;
+    bool ok = false;
+
+    if (JxlDecoderSubscribeEvents(dec, JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE) != JXL_DEC_SUCCESS ||
+        JxlDecoderSetInput(dec, (const u8*)data.s, (size_t)data.len) != JXL_DEC_SUCCESS) {
+        JxlDecoderDestroy(dec);
+        return false;
+    }
+    JxlDecoderCloseInput(dec);
+
+    bool done = false;
+    while (!done) {
+        switch (JxlDecoderProcessInput(dec)) {
+            case JXL_DEC_BASIC_INFO: {
+                JxlBasicInfo info{};
+                if (JxlDecoderGetBasicInfo(dec, &info) != JXL_DEC_SUCCESS) {
+                    done = true;
+                    break;
+                }
+                w = info.xsize;
+                h = info.ysize;
+                if (w == 0 || h == 0) {
+                    done = true;
+                }
+                break;
+            }
+            case JXL_DEC_NEED_IMAGE_OUT_BUFFER: {
+                JxlPixelFormat fmt = {4, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
+                size_t need = 0;
+                if (JxlDecoderImageOutBufferSize(dec, &fmt, &need) != JXL_DEC_SUCCESS ||
+                    need != (size_t)w * (size_t)h * 4) {
+                    done = true;
+                    break;
+                }
+                pixels = (u8*)malloc(need);
+                if (!pixels || JxlDecoderSetImageOutBuffer(dec, &fmt, pixels, need) != JXL_DEC_SUCCESS) {
+                    done = true;
+                }
+                break;
+            }
+            case JXL_DEC_FULL_IMAGE:
+                ok = pixels != nullptr;
+                done = true;
+                break;
+            default:
+                done = true;
+                break;
+        }
+    }
+
+    free(pixels);
+    JxlDecoderDestroy(dec);
+    if (ok) {
+        if (outW) {
+            *outW = (int)w;
+        }
+        if (outH) {
+            *outH = (int)h;
+        }
+    }
+    return ok;
 }
 
 // --- heicdec (+ dav1d for AV1/AVIF, pure-C HEVC for HEIC) -------------------
@@ -417,6 +501,8 @@ static const char* NativeShortName(BenchFormat fmt) {
         case BenchFormat::Avif:
         case BenchFormat::Heif:
             return "heic";
+        case BenchFormat::Jxl:
+            return "jxl";
     }
     return "?";
 }
@@ -431,6 +517,8 @@ static const char* NativeLongName(BenchFormat fmt) {
             return "heicdec"; // AV1 via dav1d
         case BenchFormat::Heif:
             return "heicdec"; // HEVC pure-C
+        case BenchFormat::Jxl:
+            return "libjxl";
     }
     return "?";
 }
@@ -444,6 +532,8 @@ static DecodeFn NativeDecodeFn(BenchFormat fmt) {
         case BenchFormat::Avif:
         case BenchFormat::Heif:
             return DecodeHeicdec;
+        case BenchFormat::Jxl:
+            return DecodeLibjxl;
     }
     return DecodeLibjpegTurbo;
 }
@@ -458,6 +548,8 @@ static const char* FormatExts(BenchFormat fmt) {
             return ".avif";
         case BenchFormat::Heif:
             return ".heic/.heif";
+        case BenchFormat::Jxl:
+            return ".jxl";
     }
     return "";
 }
@@ -535,11 +627,12 @@ static void BenchFile(Str path, BenchFormat fmt, Totals& tot) {
 }
 
 static void Usage() {
-    printf("usage: bench_image -jpeg|-webp|-avif|-heif <file-or-dir>\n");
+    printf("usage: bench_image -jpeg|-webp|-avif|-heif|-jxl <file-or-dir>\n");
     printf("  -jpeg  bench .jpg/.jpeg with libjpeg-turbo vs WIC vs GDI+\n");
     printf("  -webp  bench .webp with libwebp vs WIC vs GDI+\n");
     printf("  -avif  bench .avif with heicdec+dav1d vs WIC vs GDI+\n");
     printf("  -heif  bench .heic/.heif with heicdec vs WIC vs GDI+\n");
+    printf("  -jxl   bench .jxl with libjxl vs WIC vs GDI+\n");
     printf("  Recursively finds matching files under a directory.\n");
     printf("  Loads each file into memory, decodes 3x per backend, reports best ms.\n");
 }
@@ -563,6 +656,9 @@ int main(int argc, char** argv) {
         } else if (str::EqI(arg, StrL("-heif")) || str::EqI(arg, StrL("--heif")) || str::EqI(arg, StrL("-heic")) ||
                    str::EqI(arg, StrL("--heic"))) {
             fmt = BenchFormat::Heif;
+            haveFmt = true;
+        } else if (str::EqI(arg, StrL("-jxl")) || str::EqI(arg, StrL("--jxl"))) {
+            fmt = BenchFormat::Jxl;
             haveFmt = true;
         } else if (str::EqI(arg, StrL("-h")) || str::EqI(arg, StrL("--help")) || str::EqI(arg, StrL("/?"))) {
             Usage();
