@@ -205,40 +205,30 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
     return res;
 }
 
-// Decode an image to one Pixmap per frame: multi-page TIFF and animated GIF yield more
-// than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
-static Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
-    Vec<Pixmap*> res;
+// Prefer MuPDF/libjpeg-turbo for JPEG (and JPEG2000) — faster than WIC/GDI+ in
+// benches (see tools/bench_jpeg). Other formats fall through to Windows
+// decoders (TGA, WebP/JXL/AVIF/HEIC, GDI+/WIC).
+Pixmap* PixmapFromData(Str bmpData) {
+    Pixmap* px = PixmapFromDataFz(bmpData);
+    if (px) {
+        return px;
+    }
+    return PixmapFromDataWin(bmpData);
+}
+
+// Multi-page TIFF / animated GIF: Windows multi-frame path first. Everything
+// else is a single Pixmap via PixmapFromData (turbo then Win).
+Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     FileType kind = GuessFileTypeFromData(bmpData);
     if (FileType::Tiff == kind || FileType::Gif == kind) {
-        res = PixmapsFromMultiFrameData(bmpData, kind);
+        Vec<Pixmap*> res = PixmapsFromMultiFrameData(bmpData, kind);
         if (len(res) > 0) {
             return res;
         }
     }
-    // single-frame (or multi-frame decode failed): exactly one Pixmap
-    Pixmap* px = PixmapFromDataWin(bmpData);
-    if (px) {
-        res.Append(px);
-    }
-    return res;
-}
 
-Pixmap* PixmapFromData(Str bmpData) {
-    Pixmap* px = PixmapFromDataWin(bmpData);
-    if (px) {
-        return px;
-    }
-    return PixmapFromDataFz(bmpData);
-}
-
-Vec<Pixmap*> PixmapsFromData(Str bmpData) {
-    Vec<Pixmap*> res = PixmapsFromDataWin(bmpData);
-    if (len(res) > 0) {
-        return res;
-    }
-
-    Pixmap* px = PixmapFromDataFz(bmpData);
+    Vec<Pixmap*> res;
+    Pixmap* px = PixmapFromData(bmpData);
     if (px) {
         res.Append(px);
     }
