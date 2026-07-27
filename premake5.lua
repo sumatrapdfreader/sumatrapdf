@@ -1090,8 +1090,8 @@ workspace "SumatraPDF"
     bin2coff_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
-  -- JPEG decode microbench: libjpeg-turbo vs WIC vs GDI+
-  project "bench_jpeg"
+  -- Image decode microbench: native lib vs WIC vs GDI+ (-jpeg / -webp)
+  project "bench_image"
     static_app_objdir()
     static_linker_intermediates()
     kind "ConsoleApp"
@@ -1099,10 +1099,10 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
     disablewarnings { "4611", "4838" } -- setjmp / C++ destruction; QITABENT
-    includedirs { "src", "ext/libjpeg-turbo/src" }
-    bench_jpeg_files()
+    includedirs { "src", "ext/libjpeg-turbo/src", "ext/libwebp/src" }
+    bench_image_files()
     setup_base_pch()
-    links { "base", "libjpeg-turbo" }
+    links { "base", "libjpeg-turbo", "libwebp" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version",
       "ole32", "oleAut32", "windowscodecs", "shcore", "wininet",

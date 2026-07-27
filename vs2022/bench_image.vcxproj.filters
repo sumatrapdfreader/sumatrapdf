@@ -7,7 +7,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
-    <ClCompile Include="..\src\tools\bench_jpeg.cpp">
+    <ClCompile Include="..\src\tools\bench_image.cpp">
       <Filter>tools</Filter>
     </ClCompile>
   </ItemGroup>

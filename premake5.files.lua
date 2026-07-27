@@ -1423,9 +1423,9 @@ function test_engines_files()
   }
 end
 
-function bench_jpeg_files()
+function bench_image_files()
   files {
-    "src/tools/bench_jpeg.cpp",
+    "src/tools/bench_image.cpp",
   }
 end
 

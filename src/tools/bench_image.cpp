@@ -1,9 +1,11 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// Benchmark JPEG decode: libjpeg-turbo vs WIC vs GDI+.
-// Loads each file into memory once, then times full decode (to pixels) for
-// each backend, 3 runs, keeps the best time.
+// Benchmark image decode: native library vs WIC vs GDI+.
+// -jpeg: libjpeg-turbo vs WIC vs GDI+ on .jpg/.jpeg
+// -webp: libwebp vs WIC vs GDI+ on .webp
+// Loads each file into memory once, times full decode (to pixels), 3 runs,
+// keeps the best time.
 
 #include "base/Base.h"
 #include "base/DirIter.h"
@@ -14,6 +16,8 @@
 
 #include <setjmp.h>
 #include <wincodec.h>
+
+#include <webp/decode.h>
 
 extern "C" {
 #include "jpeglib.h"
@@ -32,15 +36,29 @@ void loga(Str s) {
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
+enum class BenchFormat {
+    Jpeg,
+    Webp,
+};
+
 static bool IsJpegPath(Str path) {
     TempStr ext = path::GetExtTemp(path);
     return str::EqI(ext, StrL(".jpg")) || str::EqI(ext, StrL(".jpeg"));
 }
 
-static void CollectJpegFiles(Str path, StrVec& out) {
+static bool IsWebpPath(Str path) {
+    TempStr ext = path::GetExtTemp(path);
+    return str::EqI(ext, StrL(".webp"));
+}
+
+static bool MatchesFormat(Str path, BenchFormat fmt) {
+    return fmt == BenchFormat::Jpeg ? IsJpegPath(path) : IsWebpPath(path);
+}
+
+static void CollectFiles(Str path, BenchFormat fmt, StrVec& out) {
     path::Type t = path::GetType(path);
     if (t == path::Type::File) {
-        if (IsJpegPath(path)) {
+        if (MatchesFormat(path, fmt)) {
             out.Append(path);
         }
         return;
@@ -54,7 +72,7 @@ static void CollectJpegFiles(Str path, StrVec& out) {
     di.includeDirs = false;
     di.recurse = true;
     for (DirIterEntry* de : di) {
-        if (de && de->isFile && IsJpegPath(de->filePath)) {
+        if (de && de->isFile && MatchesFormat(de->filePath, fmt)) {
             out.Append(de->filePath);
         }
     }
@@ -72,8 +90,6 @@ static void JpegErrorExit(j_common_ptr cinfo) {
     longjmp(err->setjmpBuf, 1);
 }
 
-// Full decode to RGB8 scanlines; returns false on failure. Discards pixels
-// after each row so we measure decode cost, not a huge allocation retention.
 static bool DecodeLibjpegTurbo(Str data, int* outW, int* outH) {
     if (!data || data.len < 2) {
         return false;
@@ -116,6 +132,37 @@ static bool DecodeLibjpegTurbo(Str data, int* outW, int* outH) {
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
 
+    if (outW) {
+        *outW = w;
+    }
+    if (outH) {
+        *outH = h;
+    }
+    return true;
+}
+
+// --- libwebp ----------------------------------------------------------------
+
+static bool DecodeLibwebp(Str data, int* outW, int* outH) {
+    if (!data) {
+        return false;
+    }
+    int w = 0, h = 0;
+    if (!WebPGetInfo((const u8*)data.s, (size_t)data.len, &w, &h) || w <= 0 || h <= 0) {
+        return false;
+    }
+    // Full BGRA decode into a temporary buffer (discarded after timing).
+    size_t nbytes = (size_t)w * (size_t)h * 4;
+    auto* buf = (u8*)malloc(nbytes);
+    if (!buf) {
+        return false;
+    }
+    int stride = w * 4;
+    u8* out = WebPDecodeBGRAInto((const u8*)data.s, (size_t)data.len, buf, nbytes, stride);
+    free(buf);
+    if (!out) {
+        return false;
+    }
     if (outW) {
         *outW = w;
     }
@@ -169,7 +216,6 @@ static bool DecodeWic(Str data, int* outW, int* outH) {
         goto done;
     }
 
-    // Force full decode into a temporary buffer.
     stride = w * 4;
     bufSize = stride * h;
     buf = (BYTE*)malloc(bufSize);
@@ -224,7 +270,6 @@ static bool DecodeGdiplus(Str data, int* outW, int* outH) {
         return false;
     }
 
-    // FromStream is lazy; LockBits forces a full decode.
     int w = (int)bmp->GetWidth();
     int h = (int)bmp->GetHeight();
     Gdiplus::Rect rect(0, 0, w, h);
@@ -235,7 +280,6 @@ static bool DecodeGdiplus(Str data, int* outW, int* outH) {
         delete bmp;
         return false;
     }
-    // Touch first and last scanline so the compiler/CPU can't skip the read.
     volatile BYTE sink = 0;
     if (bd.Scan0 && h > 0) {
         sink = *((BYTE*)bd.Scan0);
@@ -291,26 +335,35 @@ static double BestMs(DecodeFn fn, Str data, int* outW, int* outH, bool* okOut) {
 }
 
 struct Totals {
-    double turboMs = 0;
+    double nativeMs = 0;
     double wicMs = 0;
     double gdiMs = 0;
-    int turboOk = 0;
+    int nativeOk = 0;
     int wicOk = 0;
     int gdiOk = 0;
-    int turboWins = 0;
+    int nativeWins = 0;
     int wicWins = 0;
     int gdiWins = 0;
     int ties = 0;
     int files = 0;
 };
 
-static const char* WinnerName(double turbo, bool tOk, double wic, bool wOk, double gdi, bool gOk) {
+static const char* NativeShortName(BenchFormat fmt) {
+    return fmt == BenchFormat::Jpeg ? "turbo" : "webp";
+}
+
+static const char* NativeLongName(BenchFormat fmt) {
+    return fmt == BenchFormat::Jpeg ? "libjpeg" : "libwebp";
+}
+
+static const char* WinnerName(double native, bool nOk, double wic, bool wOk, double gdi, bool gOk,
+                              const char* nativeName) {
     struct Cand {
         double ms;
         bool ok;
         const char* name;
     };
-    Cand c[3] = {{turbo, tOk, "turbo"}, {wic, wOk, "wic"}, {gdi, gOk, "gdi+"}};
+    Cand c[3] = {{native, nOk, nativeName}, {wic, wOk, "wic"}, {gdi, gOk, "gdi+"}};
     double best = 1e300;
     int nBest = 0;
     const char* name = "none";
@@ -329,24 +382,27 @@ static const char* WinnerName(double turbo, bool tOk, double wic, bool wOk, doub
     return nBest > 1 ? "tie" : name;
 }
 
-static void BenchFile(Str path, Totals& tot) {
+static void BenchFile(Str path, BenchFormat fmt, Totals& tot) {
     Str data = file::ReadFile(path);
     if (!data) {
         printf("READ FAIL  %.*s\n", path.len, path.s);
         return;
     }
 
+    DecodeFn nativeFn = fmt == BenchFormat::Jpeg ? DecodeLibjpegTurbo : DecodeLibwebp;
+    const char* nativeShort = NativeShortName(fmt);
+
     int w = 0, h = 0;
-    bool tOk = false, wOk = false, gOk = false;
-    double tMs = BestMs(DecodeLibjpegTurbo, data, &w, &h, &tOk);
+    bool nOk = false, wOk = false, gOk = false;
+    double nMs = BestMs(nativeFn, data, &w, &h, &nOk);
     double wMs = BestMs(DecodeWic, data, nullptr, nullptr, &wOk);
     double gMs = BestMs(DecodeGdiplus, data, nullptr, nullptr, &gOk);
     str::Free(data);
 
     tot.files++;
-    if (tOk) {
-        tot.turboMs += tMs;
-        tot.turboOk++;
+    if (nOk) {
+        tot.nativeMs += nMs;
+        tot.nativeOk++;
     }
     if (wOk) {
         tot.wicMs += wMs;
@@ -357,9 +413,9 @@ static void BenchFile(Str path, Totals& tot) {
         tot.gdiOk++;
     }
 
-    const char* win = WinnerName(tMs, tOk, wMs, wOk, gMs, gOk);
-    if (strcmp(win, "turbo") == 0) {
-        tot.turboWins++;
+    const char* win = WinnerName(nMs, nOk, wMs, wOk, gMs, gOk, nativeShort);
+    if (strcmp(win, nativeShort) == 0) {
+        tot.nativeWins++;
     } else if (strcmp(win, "wic") == 0) {
         tot.wicWins++;
     } else if (strcmp(win, "gdi+") == 0) {
@@ -368,19 +424,48 @@ static void BenchFile(Str path, Totals& tot) {
         tot.ties++;
     }
 
-    printf("%7.2f  %7.2f  %7.2f  %5s  %4dx%-4d  %.*s\n", tOk ? tMs : -1.0, wOk ? wMs : -1.0, gOk ? gMs : -1.0, win, w,
+    printf("%7.2f  %7.2f  %7.2f  %5s  %4dx%-4d  %.*s\n", nOk ? nMs : -1.0, wOk ? wMs : -1.0, gOk ? gMs : -1.0, win, w,
            h, path.len, path.s);
 }
 
 static void Usage() {
-    printf("usage: bench_jpeg <file-or-dir>\n");
-    printf("  Recursively finds .jpg/.jpeg under a directory.\n");
-    printf("  Loads each file into memory, decodes 3x with libjpeg-turbo / WIC / GDI+,\n");
-    printf("  reports best time (ms) per decoder, and a totals summary.\n");
+    printf("usage: bench_image -jpeg|-webp <file-or-dir>\n");
+    printf("  -jpeg  bench .jpg/.jpeg with libjpeg-turbo vs WIC vs GDI+\n");
+    printf("  -webp  bench .webp with libwebp vs WIC vs GDI+\n");
+    printf("  Recursively finds matching files under a directory.\n");
+    printf("  Loads each file into memory, decodes 3x per backend, reports best ms.\n");
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
+    BenchFormat fmt = BenchFormat::Jpeg;
+    bool haveFmt = false;
+    Str root{};
+
+    for (int i = 1; i < argc; i++) {
+        Str arg = argv[i];
+        if (str::EqI(arg, StrL("-jpeg")) || str::EqI(arg, StrL("--jpeg"))) {
+            fmt = BenchFormat::Jpeg;
+            haveFmt = true;
+        } else if (str::EqI(arg, StrL("-webp")) || str::EqI(arg, StrL("--webp"))) {
+            fmt = BenchFormat::Webp;
+            haveFmt = true;
+        } else if (str::EqI(arg, StrL("-h")) || str::EqI(arg, StrL("--help")) || str::EqI(arg, StrL("/?"))) {
+            Usage();
+            return 0;
+        } else if (arg.s && arg.s[0] == '-') {
+            printf("unknown option: %s\n", arg.s);
+            Usage();
+            return 1;
+        } else if (!root) {
+            root = arg;
+        } else {
+            printf("extra argument: %s\n", arg.s);
+            Usage();
+            return 1;
+        }
+    }
+
+    if (!haveFmt || !root) {
         Usage();
         return 1;
     }
@@ -388,34 +473,36 @@ int main(int argc, char** argv) {
     ScopedCom com;
     ScopedGdiPlus gdiplus;
 
-    Str root = Str(argv[1]);
     StrVec files;
-    CollectJpegFiles(root, files);
+    CollectFiles(root, fmt, files);
     if (len(files) == 0) {
-        printf("no .jpg/.jpeg files under '%s'\n", argv[1]);
+        const char* exts = fmt == BenchFormat::Jpeg ? ".jpg/.jpeg" : ".webp";
+        printf("no %s files under '%.*s'\n", exts, root.len, root.s);
         return 1;
     }
 
-    printf("files: %d  runs/decoder: %d (best time)\n", len(files), kRuns);
-    printf("%7s  %7s  %7s  %5s  %9s  path\n", "turbo", "wic", "gdi+", "win", "size");
+    const char* nativeShort = NativeShortName(fmt);
+    const char* nativeLong = NativeLongName(fmt);
+    printf("format: %s  files: %d  runs/decoder: %d (best time)\n", nativeLong, len(files), kRuns);
+    printf("%7s  %7s  %7s  %5s  %9s  path\n", nativeShort, "wic", "gdi+", "win", "size");
     printf("-------  -------  -------  -----  ---------  ----\n");
 
     Totals tot{};
     for (Str path : files) {
-        BenchFile(path, tot);
+        BenchFile(path, fmt, tot);
     }
 
     printf("\n=== totals (sum of best ms over files that succeeded) ===\n");
     printf("files:       %d\n", tot.files);
-    printf("libjpeg:     %.2f ms  ok=%d/%d  wins=%d\n", tot.turboMs, tot.turboOk, tot.files, tot.turboWins);
+    printf("%s:%*s%.2f ms  ok=%d/%d  wins=%d\n", nativeLong, (int)(11 - strlen(nativeLong)), "", tot.nativeMs,
+           tot.nativeOk, tot.files, tot.nativeWins);
     printf("wic:         %.2f ms  ok=%d/%d  wins=%d\n", tot.wicMs, tot.wicOk, tot.files, tot.wicWins);
     printf("gdi+:        %.2f ms  ok=%d/%d  wins=%d\n", tot.gdiMs, tot.gdiOk, tot.files, tot.gdiWins);
     printf("ties:        %d\n", tot.ties);
 
-    // Relative speed vs slowest successful total among decoders that got all files.
-    double vals[3] = {tot.turboMs, tot.wicMs, tot.gdiMs};
-    int oks[3] = {tot.turboOk, tot.wicOk, tot.gdiOk};
-    const char* names[3] = {"libjpeg", "wic", "gdi+"};
+    double vals[3] = {tot.nativeMs, tot.wicMs, tot.gdiMs};
+    int oks[3] = {tot.nativeOk, tot.wicOk, tot.gdiOk};
+    const char* names[3] = {nativeLong, "wic", "gdi+"};
     double slowest = 0;
     for (int i = 0; i < 3; i++) {
         if (oks[i] == tot.files && vals[i] > slowest) {

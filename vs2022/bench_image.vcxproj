@@ -99,10 +99,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{EA9D6CF9-D655-AE46-3F5D-87A22B344937}</ProjectGuid>
+    <ProjectGuid>{E78CEC26-5342-651C-DC36-5FF348EB5B20}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>bench_jpeg</RootNamespace>
+    <RootNamespace>bench_image</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -270,113 +270,113 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
-    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
-    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\bench_jpeg\</IntDir>
-    <TargetName>bench_jpeg</TargetName>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\bench_image\</IntDir>
+    <TargetName>bench_image</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -386,7 +386,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -405,7 +405,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbg32/obj-s/bench_jpeg.lib" /MAP:"../out/dbg32/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbg32/obj-s/bench_image.lib" /MAP:"../out/dbg32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -420,7 +420,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -439,7 +439,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbg64/obj-s/bench_jpeg.lib" /MAP:"../out/dbg64/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbg64/obj-s/bench_image.lib" /MAP:"../out/dbg64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -454,7 +454,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -473,7 +473,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj-s/bench_jpeg.lib" /MAP:"../out/dbgarm64/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj-s/bench_image.lib" /MAP:"../out/dbgarm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -488,7 +488,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -507,7 +507,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj-s/bench_jpeg.lib" /MAP:"../out/dbg64_asan/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj-s/bench_image.lib" /MAP:"../out/dbg64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -522,7 +522,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -541,7 +541,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj-s/bench_jpeg.lib" /MAP:"../out/dbgfull32/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj-s/bench_image.lib" /MAP:"../out/dbgfull32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -556,7 +556,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -575,7 +575,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj-s/bench_jpeg.lib" /MAP:"../out/dbgfull64/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj-s/bench_image.lib" /MAP:"../out/dbgfull64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -590,7 +590,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -609,7 +609,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj-s/bench_jpeg.lib" /MAP:"../out/dbgfullarm64/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj-s/bench_image.lib" /MAP:"../out/dbgfullarm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -624,7 +624,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -643,7 +643,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj-s/bench_jpeg.lib" /MAP:"../out/dbgfull64_asan/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj-s/bench_image.lib" /MAP:"../out/dbgfull64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -658,7 +658,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -681,7 +681,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel32/obj-s/bench_jpeg.lib" /MAP:"../out/rel32/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel32/obj-s/bench_image.lib" /MAP:"../out/rel32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -696,7 +696,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -719,7 +719,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64/obj-s/bench_jpeg.lib" /MAP:"../out/rel64/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64/obj-s/bench_image.lib" /MAP:"../out/rel64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -734,7 +734,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -757,7 +757,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/arm64/obj-s/bench_jpeg.lib" /MAP:"../out/arm64/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/arm64/obj-s/bench_image.lib" /MAP:"../out/arm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -772,7 +772,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -794,7 +794,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj-s/bench_jpeg.lib" /MAP:"../out/rel64_asan/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj-s/bench_image.lib" /MAP:"../out/rel64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -809,7 +809,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -833,7 +833,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj-s/bench_jpeg.lib" /MAP:"../out/rel32_prefast/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj-s/bench_image.lib" /MAP:"../out/rel32_prefast/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -848,7 +848,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -872,7 +872,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj-s/bench_jpeg.lib" /MAP:"../out/rel64_prefast/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj-s/bench_image.lib" /MAP:"../out/rel64_prefast/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -887,7 +887,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -911,7 +911,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj-s/bench_jpeg.lib" /MAP:"../out/arm64_prefast/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj-s/bench_image.lib" /MAP:"../out/arm64_prefast/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -926,7 +926,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4702;4800;6319;4611;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\ext\libjpeg-turbo\src;..\ext\libwebp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -949,7 +949,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj-s/bench_jpeg.lib" /MAP:"../out/rel64_prefast_asan/obj-s/bench_jpeg.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj-s/bench_image.lib" /MAP:"../out/rel64_prefast_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -961,7 +961,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\tools\bench_jpeg.cpp" />
+    <ClCompile Include="..\src\tools\bench_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="base.vcxproj">
@@ -969,6 +969,9 @@
     </ProjectReference>
     <ProjectReference Include="libjpeg-turbo.vcxproj">
       <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libwebp.vcxproj">
+      <Project>{0A466F79-7625-EE14-7F3D-79EBEB9B5476}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
