@@ -15,5 +15,12 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
 void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec& filterWords, COLORREF bgCol,
                                  COLORREF txtCol, HFONT font);
 
+// Colors for clearing/redrawing a TreeView label after default paint.
+// Non-selected: prefer sampling the already-painted row (theme/darkmode), not
+// COLOR_WINDOW. treeBg/treeTxt are TreeView::bgColor/textColor (may be unset).
+// itemRc is the full row rect (TreeView_GetItemRect with textOnly=FALSE).
+void ResolveTreeFilterItemColors(HDC hdc, RECT itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
+                                 bool hasFocus, COLORREF* bgOut, COLORREF* txtOut);
+
 void SplitFilterToWords(Str filter, StrVec& words);
 bool FilterMatches(Str str, const StrVec& words);

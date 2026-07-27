@@ -140,11 +140,67 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     DrawTextW(hdc, textW.s, -1, &rc, drawFmt);
 }
 
+// Ink that stays readable on a solid highlight underlay (black on yellow).
+static COLORREF TextColorContrasting(COLORREF bg) {
+    int lum = (GetRValue(bg) * 299 + GetGValue(bg) * 587 + GetBValue(bg) * 114) / 1000;
+    return lum >= 140 ? RGB(0, 0, 0) : RGB(255, 255, 255);
+}
+
+// Sample the row background the TreeView already painted (indent/icon strip).
+// Falls back to kColorUnset if GetPixel fails.
+static COLORREF SamplePaintedRowBackground(HDC hdc, RECT itemRc) {
+    if (itemRc.right <= itemRc.left || itemRc.bottom <= itemRc.top) {
+        return kColorUnset;
+    }
+    int x = itemRc.left + 2;
+    if (x >= itemRc.right) {
+        x = itemRc.left;
+    }
+    int y = (itemRc.top + itemRc.bottom) / 2;
+    COLORREF c = GetPixel(hdc, x, y);
+    if (c == CLR_INVALID) {
+        return kColorUnset;
+    }
+    return c;
+}
+
+void ResolveTreeFilterItemColors(HDC hdc, RECT itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
+                                 bool hasFocus, COLORREF* bgOut, COLORREF* txtOut) {
+    ReportIf(!bgOut || !txtOut);
+    if (isSelected && hasFocus) {
+        *bgOut = GetSysColor(COLOR_HIGHLIGHT);
+        *txtOut = GetSysColor(COLOR_HIGHLIGHTTEXT);
+        return;
+    }
+    if (isSelected) {
+        // Selected but unfocused: keep system inactive-selection face; text from
+        // the tree/theme so dark themes don't fall back to pure black on gray.
+        *bgOut = GetSysColor(COLOR_BTNFACE);
+        *txtOut = IsSpecialColor(treeTxt) ? ThemeWindowTextColor() : treeTxt;
+        return;
+    }
+
+    // Non-selected: match the already-painted themed row, not COLOR_WINDOW
+    // (white), which washed out dark/blue-ish sidebar backgrounds.
+    COLORREF sampled = SamplePaintedRowBackground(hdc, itemRc);
+    if (!IsSpecialColor(sampled)) {
+        *bgOut = sampled;
+    } else if (!IsSpecialColor(treeBg)) {
+        *bgOut = treeBg;
+    } else {
+        *bgOut = ThemeControlBackgroundColor();
+    }
+    *txtOut = IsSpecialColor(treeTxt) ? ThemeWindowTextColor() : treeTxt;
+}
+
 void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec& filterWords, COLORREF bgCol,
                                  COLORREF txtCol, HFONT font) {
     // TreeView has already painted the row. We repaint only the text label:
     // solid bg (selection or window) so themed double-draw artifacts go away,
-    // yellow/accent underlays for each match word, then the string once.
+    // yellow/accent underlays for each match word, then the string in runs so
+    // match glyphs use ink that contrasts with the underlay (black on yellow).
+    // Drawing the whole label in selection white over yellow made matches
+    // disappear on the focused selected row.
     // Use the tree's font for GetTextExtentPoint32 / DrawText or the bars
     // misalign and look oversized relative to the control's text.
     if (!text || len(text) == 0 || len(filterWords) == 0) {
@@ -251,14 +307,33 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
     }
     DeleteObject(hbrHighlight);
 
-    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
+    // Draw non-match runs in the row text color (white when selected+focused);
+    // match runs use ink that contrasts with the underlay so yellow+white does
+    // not wash out. Prefix extents keep run x positions aligned with underlays.
+    COLORREF matchTxtCol = TextColorContrasting(highlightCol);
     int oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    // DT_TOP + explicit vertical centering via textTop-sized rect: DT_VCENTER
-    // with a tall labelRect was shifting glyphs relative to our underlays
-    RECT textRc = labelRect;
-    textRc.top = textTop;
-    textRc.bottom = textBottom;
-    DrawTextW(hdc, textW.s, -1, &textRc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
+    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
+    int pos = 0;
+    while (pos < textLen) {
+        bool isHl = hl[pos] != 0;
+        int start = pos;
+        while (pos < textLen && (hl[pos] != 0) == isHl) {
+            pos++;
+        }
+        TempWStr prefixToStart = ToWStrTemp(Str(text.s, start));
+        SIZE szStart{};
+        GetTextExtentPoint32W(hdc, textW.s, len(prefixToStart), &szStart);
+        TempWStr runW = ToWStrTemp(Str(text.s + start, pos - start));
+        if (len(runW) == 0) {
+            continue;
+        }
+        RECT runRc = labelRect;
+        runRc.left = labelRect.left + szStart.cx;
+        runRc.top = textTop;
+        runRc.bottom = textBottom;
+        SetTextColor(hdc, isHl ? matchTxtCol : txtCol);
+        DrawTextW(hdc, runW.s, -1, &runRc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
+    }
     SetBkMode(hdc, oldBkMode);
     SetTextColor(hdc, oldTxtCol);
 

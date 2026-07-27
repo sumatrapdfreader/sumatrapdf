@@ -858,6 +858,8 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     if (!tv->GetItemRect(ev->treeItem, true, labelRect)) {
         return;
     }
+    RECT itemRect{};
+    tv->GetItemRect(ev->treeItem, false, itemRect);
 
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
@@ -870,19 +872,11 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
         isSelected = hSel && hItem && hSel == hItem;
     }
     bool hasFocus = (GetFocus() == tv->hwnd);
-    COLORREF bgCol;
-    if (isSelected) {
-        bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
-    } else {
-        bgCol = IsSpecialColor(tv->bgColor) ? GetSysColor(COLOR_WINDOW) : tv->bgColor;
-    }
-    COLORREF txtCol;
-    if (isSelected && hasFocus) {
-        txtCol = GetSysColor(COLOR_HIGHLIGHTTEXT);
-    } else if (tocItem->color != kColorUnset) {
+    COLORREF bgCol, txtCol;
+    ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
+    // Per-bookmark color from the document (when not the focused selection).
+    if (!(isSelected && hasFocus) && tocItem->color != kColorUnset) {
         txtCol = tocItem->color;
-    } else {
-        txtCol = IsSpecialColor(tv->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : tv->textColor;
     }
     HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
     DrawTreeItemFilterHighlight(hdc, labelRect, tocItem->title, words, bgCol, txtCol, font);
