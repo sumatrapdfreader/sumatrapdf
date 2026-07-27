@@ -1,9 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef DocumentLayout_h
-#define DocumentLayout_h
-
 enum class DisplayMode;
 
 struct DocumentLayoutMargin {
@@ -53,5 +50,3 @@ struct DocumentLayout {
     int CurrentPageNo() const;
     int FirstVisiblePageNo() const;
 };
-
-#endif

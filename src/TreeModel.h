@@ -1,9 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef TreeModel_h
-#define TreeModel_h
-
 // TreeItem represents an item in a TreeView control
 typedef UINT_PTR TreeItem;
 
@@ -45,5 +42,3 @@ struct TreeItemState {
     bool isChecked = false;
     int nChildren = 0;
 };
-
-#endif

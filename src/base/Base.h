@@ -1,9 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef BaseUtil_h
-#define BaseUtil_h
-
 /* OS_DARWIN - Any Darwin-based OS, including Mac OS X and iPhone OS */
 #ifdef __APPLE__
 #define OS_DARWIN 1
@@ -447,7 +444,8 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #define ReportDebugIf(cond)
 #endif
 
-/* Logging macros are defined here but must be implemented by the app because different apps have different logging needs. */
+/* Logging macros are defined here but must be implemented by the app because different apps have different logging
+ * needs. */
 void log(Str s);
 void loga(Str s); // log always
 
@@ -875,6 +873,4 @@ extern AtomicInt gAllowAllocFailure;
 #ifdef lstrcmpiW
 #undef lstrcmpiW
 #define lstrcmpiW dont_use_lstrcmpiW
-#endif
-
 #endif
