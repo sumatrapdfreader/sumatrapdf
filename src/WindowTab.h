@@ -25,6 +25,7 @@ struct WindowTab {
         None,
         About,
         Document,
+        Favorites, // full-window favorites list (CmdFavoriteShowInTab)
     };
     Type type = Type::None;
     Str filePath;
@@ -119,6 +120,9 @@ struct WindowTab {
     ~WindowTab();
 
     bool IsAboutTab() const;
+    bool IsFavoritesTab() const;
+    // About or Favorites: no document controller
+    bool IsNonDocumentTab() const;
 
     DisplayModel* AsFixed() const;
 

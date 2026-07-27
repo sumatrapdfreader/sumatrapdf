@@ -26,8 +26,10 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Accelerators.h"
+#include "Tabs.h"
 
 void RememberFavTreeExpansionStateForAllWindows();
+void LayoutFavoritesContainer(MainWindow* win);
 
 struct FavTreeItem {
     ~FavTreeItem();
@@ -492,13 +494,16 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
     MenuSetEnabled(menu, CmdFavoriteToggle, HasFavorites());
 }
 
-void ToggleFavorites(MainWindow* win) {
-    if (gGlobalPrefs->showFavorites) {
-        SetSidebarVisibility(win, win->uiState.tocVisible, false);
-    } else {
-        SetSidebarVisibility(win, win->uiState.tocVisible, true);
-        HwndSetFocus(win->favTreeView->hwnd);
+WindowTab* FindFavoritesTab(MainWindow* win) {
+    if (!win) {
+        return nullptr;
     }
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->IsFavoritesTab()) {
+            return tab;
+        }
+    }
+    return nullptr;
 }
 
 static void GoToFavoritePage(MainWindow* win, int pageNo) {
@@ -677,6 +682,49 @@ void PopulateFavTreeIfNeeded(MainWindow* win) {
     treeView->SetTreeModel(tm);
 }
 
+void ToggleFavorites(MainWindow* win) {
+    // Sidebar Favorites panel (independent of the Favorites tab)
+    if (gGlobalPrefs->showFavorites) {
+        SetSidebarVisibility(win, win->uiState.tocVisible, false);
+    } else {
+        SetSidebarVisibility(win, win->uiState.tocVisible, true);
+        HwndSetFocus(win->favTreeView->hwnd);
+    }
+}
+
+void ToggleFavoritesTab(MainWindow* win) {
+    // Full-window Favorites tab (independent of the sidebar Favorites panel).
+    // Always switches to / creates the tab (close with the tab's ✕).
+    // Requires tabs; falls back to sidebar toggle when tabs are off.
+    if (!SettingsUseTabs()) {
+        ToggleFavorites(win);
+        return;
+    }
+    WindowTab* favTab = FindFavoritesTab(win);
+    if (favTab) {
+        int idx = win->GetTabIdx(favTab);
+        if (idx >= 0 && win->CurrentTab() != favTab) {
+            TabsSelect(win, idx); // LoadModelIntoTab does layout + focus
+        } else {
+            // already on Favorites: re-layout and focus tree
+            PopulateFavTreeIfNeeded(win);
+            LayoutFavoritesContainer(win);
+            if (win->favTreeView) {
+                HwndSetFocus(win->favTreeView->hwnd);
+            }
+        }
+        return;
+    }
+
+    // Save the document tab first: AddTabToWindow selects via TabCtrl_SetCurSel,
+    // which does not send TCN_SELCHANGE, so we must LoadModelIntoTab ourselves.
+    SaveCurrentWindowTab(win);
+    auto* tab = new WindowTab(win);
+    tab->type = WindowTab::Type::Favorites;
+    AddTabToWindow(win, tab);
+    LoadModelIntoTab(tab);
+}
+
 void UpdateFavoritesTree(MainWindow* win) {
     TreeView* treeView = win->favTreeView;
     auto* prevModel = treeView->treeModel;
@@ -684,13 +732,26 @@ void UpdateFavoritesTree(MainWindow* win) {
     treeView->SetTreeModel(newModel);
     delete prevModel;
 
-    // hide the favorites tree if we've removed the last favorite
+    // hide favorites UI if we've removed the last favorite
     TreeItem root = newModel->Root();
-    bool show = gGlobalPrefs->showFavorites;
-    if (newModel->ChildCount(root) == 0) {
-        show = false;
+    bool hasAny = newModel->ChildCount(root) > 0;
+    if (!hasAny) {
+        if (WindowTab* favTab = FindFavoritesTab(win)) {
+            CloseTab(favTab, false);
+        }
+        if (gGlobalPrefs->showFavorites) {
+            SetSidebarVisibility(win, win->uiState.tocVisible, false);
+        } else {
+            ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
+        }
+        return;
     }
-    SetSidebarVisibility(win, win->uiState.tocVisible, show);
+    // refresh sidebar visibility only when the sidebar panel is supposed to be open
+    if (gGlobalPrefs->showFavorites) {
+        SetSidebarVisibility(win, win->uiState.tocVisible, true);
+    } else if (FindFavoritesTab(win)) {
+        ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
+    }
 }
 
 void UpdateFavoritesTreeForAllWindows() {
@@ -807,11 +868,18 @@ void RememberFavTreeExpansionStateForAllWindows() {
 }
 
 static void FavTreeItemClicked(TreeView::ClickEvent* ev) {
-    if (ev->treeItem == ev->treeView->GetSelection()) {
-        MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
-        ReportIf(!win);
-        GoToFavForTreeItem(win, ev->treeItem);
+    if (ev->treeItem != ev->treeView->GetSelection()) {
+        return;
     }
+    // Parent rows with children: leave expand/collapse to the tree; only
+    // navigate when the click is a leaf (or a single-favorite file row).
+    FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
+    if (fti && len(fti->children) > 0) {
+        return;
+    }
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
+    ReportIf(!win);
+    GoToFavForTreeItem(win, ev->treeItem);
 }
 
 static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
@@ -825,6 +893,11 @@ static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     if (!ev->byMouse) {
         return;
     }
+    FavTreeItem* fti = (FavTreeItem*)ev->selectedItem;
+    if (fti && len(fti->children) > 0) {
+        // selecting a parent to expand/collapse must not navigate away
+        return;
+    }
     GoToFavForTreeItem(win, ev->selectedItem);
 }
 
@@ -832,6 +905,8 @@ static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
 extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
 
 static void FavTreeKeyDown(TreeView::KeyDownEvent* ev) {
+    // Enter opens the selected favorite (sidebar panel and Favorites tab).
+    // Must set result so TreeView skips its default Enter = expand/collapse.
     if (ev->keyCode == VK_RETURN) {
         MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
         if (win) {
@@ -899,11 +974,15 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
 static WNDPROC gWndProcFavBox = nullptr;
 // Position label and tree within favorites container using the wingui layout
 // engine (VBox built in CreateFavorites).
-static void LayoutFavContainer(MainWindow* win) {
-    if (!win->favLayout) {
+void LayoutFavoritesContainer(MainWindow* win) {
+    if (!win || !win->favLayout || !win->hwndFavBox) {
         return;
     }
-    Rect rc = WindowRect(win->hwndFavBox);
+    // ClientRect: layout is in parent client coordinates
+    Rect rc = ClientRect(win->hwndFavBox);
+    if (rc.IsEmpty()) {
+        return;
+    }
     win->favLayout->Layout(Tight(Size{rc.dx, rc.dy}));
     win->favLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
 }
@@ -921,12 +1000,17 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     switch (msg) {
         case WM_SIZE:
-            LayoutFavContainer(win);
+            LayoutFavoritesContainer(win);
             break;
 
         case WM_COMMAND:
             if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
-                ToggleFavorites(win);
+                // Full-window Favorites tab: close the tab. Sidebar panel: hide it.
+                if (WindowTab* favTab = FindFavoritesTab(win); favTab && win->CurrentTab() == favTab) {
+                    CloseTab(favTab, false);
+                } else {
+                    ToggleFavorites(win);
+                }
             }
             break;
     }

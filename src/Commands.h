@@ -256,7 +256,8 @@ enum {
     CmdToggleLightDarkTheme = 445,
     CmdChangeTheme = 446,
     CmdTranslateSelection = 447,
-    CmdNone = 448,
+    CmdFavoriteShowInTab = 448,
+    CmdNone = 449,
 
     /* range for file history */
     CmdFileHistoryFirst,

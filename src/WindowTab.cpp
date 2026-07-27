@@ -42,6 +42,15 @@ bool WindowTab::IsAboutTab() const {
     return type == WindowTab::Type::About;
 }
 
+bool WindowTab::IsFavoritesTab() const {
+    ReportIf(type == WindowTab::Type::None);
+    return type == WindowTab::Type::Favorites;
+}
+
+bool WindowTab::IsNonDocumentTab() const {
+    return IsAboutTab() || IsFavoritesTab();
+}
+
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
     if (hwndPDFInfo) {
@@ -124,6 +133,10 @@ Str WindowTab::GetTabTitle() const {
     if (!filePath) {
         if (IsAboutTab()) {
             return StrL("Home");
+        }
+        if (IsFavoritesTab()) {
+            // same label as Favorites menu / sidebar header
+            return _TRA("Favorites");
         }
         return StrL("");
     }

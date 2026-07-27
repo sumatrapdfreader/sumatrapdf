@@ -187,11 +187,16 @@ static void CloseWindowIfNoDocuments(MainWindow* win) {
 static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt) {
     MainWindow* oldWin = tab->win;
 
+    // Home / Favorites tabs stay in their window
+    if (tab->IsNonDocumentTab()) {
+        return;
+    }
+
     // don't migrate if it's only one document tab and not
     // dragging over a window
     int nDocTabs = 0;
     for (auto& t : oldWin->Tabs()) {
-        if (t->IsAboutTab()) continue;
+        if (t->IsNonDocumentTab()) continue;
         nDocTabs++;
     }
     if (nDocTabs == 1 && !newWin) return;
@@ -606,6 +611,12 @@ void CreateTabbar(MainWindow* win) {
 // verifies that WindowTab state is consistent with MainWindow state
 static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
     ReportIf(tdata->ctrl != win->ctrl);
+    // Home / Favorites tabs have no document controller. Favorites layout
+    // intentionally leaves canvas geometry alone (hidden), so canvasRc is not
+    // kept in lockstep with win->canvasRc the way document tabs are.
+    if (tdata->IsNonDocumentTab()) {
+        return;
+    }
 #if 0
     // disabling this check. best I can tell, external apps can change window
     // title and trigger this

@@ -258,6 +258,7 @@ static SeqStrings gCommandNames =
     "CmdToggleLightDarkTheme\0"
     "CmdChangeTheme\0"
     "CmdTranslateSelection\0"
+    "CmdFavoriteShowInTab\0"
     "CmdNone\0"
     "\0";
 
@@ -509,6 +510,7 @@ static i32 gCommandIds[] = {
     CmdToggleLightDarkTheme,
     CmdChangeTheme,
     CmdTranslateSelection,
+    CmdFavoriteShowInTab,
     CmdNone,
 };
 
@@ -760,6 +762,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Light/Dark Theme\0"
     "Change Theme...\0"
     "Translate Selection...\0"
+    "Show Favorites in Tab\0"
     "Do nothing\0"
     "\0";
 // clang-format on

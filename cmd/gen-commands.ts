@@ -256,6 +256,7 @@ export const commands = [
     "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
     "CmdChangeTheme", "Change Theme...",
     "CmdTranslateSelection", "Translate Selection...",
+    "CmdFavoriteShowInTab", "Show Favorites in Tab",
     "CmdNone", "Do nothing",
 ];
 

@@ -531,6 +531,10 @@ MenuDef menuDefFavorites[] = {
         CmdFavoriteToggle,
     },
     {
+        _TRN("Show Favorites in Tab"),
+        CmdFavoriteShowInTab,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -1677,6 +1681,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdToggleBookmarks, checked);
 
     MenuSetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+    MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
     MenuSetChecked(win->menu, CmdToggleToolbar, gGlobalPrefs->showToolbar);
     MenuSetChecked(win->menu, CmdToggleMenuBar, gGlobalPrefs->showMenubar);
     // CmdChangeScrollbar doesn't need a check mark - it opens a dialog
@@ -1909,6 +1914,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+    MenuSetEnabled(popup, CmdFavoriteShowInTab, HasFavorites() && SettingsUseTabs());
+    MenuSetChecked(popup, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
 
     if (ctx->annotationUnderCursor) {
         // change from generic "Edit Annotations" to more specific

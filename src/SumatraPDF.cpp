@@ -1944,7 +1944,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
     // TODO: maybe should ensure it never is called for IsAboutTab() ?
     // This only happens if gLazyLoading is true
-    if (tab->IsAboutTab()) {
+    if (tab->IsNonDocumentTab()) {
         return;
     }
 
@@ -3107,7 +3107,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
-    if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
+    if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab()) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.msg = fmt(_TRA("Please wait - loading...").s);
@@ -3126,6 +3126,24 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
+
+    // Favorites tab: no document, no viewport — full-area tree via RelayoutFrame
+    if (tab->IsFavoritesTab()) {
+        InvalidateFindForDocumentChange(win);
+        UpdateUiForCurrentTab(win);
+        PopulateFavTreeIfNeeded(win);
+        // force layout: sidebar vs full-tab favorites share showFavorites, and a
+        // stale UILayout snapshot would skip RelayoutFrame (blank until re-select)
+        win->uiState.layout = {};
+        RelayoutFrame(win, true, -1);
+        LayoutFavoritesContainer(win);
+        if (win->favTreeView) {
+            HwndSetFocus(win->favTreeView->hwnd);
+            // ensure tree paints and can receive mouse expand clicks
+            RedrawWindow(win->favTreeView->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
+        return;
+    }
 
     // Find matches / count cache are for the previous tab's document. Drop them
     // before paint (UpdateWindow below). Keeps find box text (#5308); rebuilds
@@ -3150,10 +3168,18 @@ void LoadModelIntoTab(WindowTab* tab) {
         SetSidebarVisibility(win, tab->showToc, gGlobalPrefs->showFavorites);
     }
 
+    // Leaving Favorites tab: restore canvas size/visibility before SetViewPortSize
+    // (deferred ScheduleUiUpdate would leave canvas hidden / wrong size).
+    win->uiState.layout = {};
+    RelayoutFrame(win, true, -1);
+
     DisplayModel* dm = win->AsFixed();
     if (dm) {
-        if (tab->canvasRc != win->canvasRc) {
-            auto viewPort = win->GetViewPortSize();
+        Size viewPort = win->GetViewPortSize();
+        if (viewPort.IsEmpty()) {
+            // still no canvas (e.g. minimized); skip Relayout that asserts in CalcZoomReal
+            logf("LoadModelIntoTab: empty viewport, skipping SetViewPortSize\n");
+        } else if (tab->canvasRc != win->canvasRc) {
             win->ctrl->SetViewPortSize(viewPort);
         } else {
             // avoid double setting of scroll state -> it gets triggered by SetViewPortSize();
@@ -4943,8 +4969,9 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
     return s1->rc == s2->rc && s1->presentation == s2->presentation && s1->tabsInTitlebar == s2->tabsInTitlebar &&
            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
-           s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar &&
-           s1->aiChatVisible == s2->aiChatVisible && s1->aiChatDx == s2->aiChatDx;
+           s1->showFavorites == s2->showFavorites && s1->favoritesAsTab == s2->favoritesAsTab &&
+           s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
+           s1->aiChatDx == s2->aiChatDx;
 }
 
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
@@ -4962,7 +4989,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.tabsVisible = win->tabsVisible;
     curState.isToolbarVisible = win->isToolbarVisible;
     curState.tocVisible = win->uiState.tocVisible;
-    curState.showFavorites = win->uiState.favVisible;
+    bool favAsTabNow = win->CurrentTab() && win->CurrentTab()->IsFavoritesTab();
+    // showFavorites covers both sidebar panel and full-window tab; favoritesAsTab
+    // must differ so switching between them never skips RelayoutFrame (otherwise
+    // the tree stays at sidebar size / canvas stays hidden until another tab switch).
+    curState.showFavorites = win->uiState.favVisible || favAsTabNow;
+    curState.favoritesAsTab = favAsTabNow;
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
@@ -4984,10 +5016,14 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // skipped relayout means the windows are already in the desired state.
     {
         const MainWindow::UIState& ui = win->uiState;
-        HwndSetVisibility(win->sidebarSplitter->hwnd, ui.tocVisible || ui.favVisible);
-        HwndSetVisibility(win->hwndTocBox, ui.tocVisible);
-        HwndSetVisibility(win->favSplitter->hwnd, ui.tocVisible && ui.favVisible);
-        HwndSetVisibility(win->hwndFavBox, ui.favVisible);
+        WindowTab* cur = win->CurrentTab();
+        bool favAsTab = cur && cur->IsFavoritesTab();
+        bool favVis = favAsTab || ui.favVisible;
+        bool tocVis = !favAsTab && ui.tocVisible;
+        HwndSetVisibility(win->sidebarSplitter->hwnd, !favAsTab && (tocVis || favVis));
+        HwndSetVisibility(win->hwndTocBox, tocVis);
+        HwndSetVisibility(win->favSplitter->hwnd, tocVis && favVis);
+        HwndSetVisibility(win->hwndFavBox, favVis);
         if (win->hwndAiChatBox) {
             HwndSetVisibility(win->hwndAiChatBox, ui.aiChatVisible);
             HwndSetVisibility(win->aiChatSplitter->hwnd, ui.aiChatVisible);
@@ -5116,11 +5152,44 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
     }
 
-    // ToC and Favorites sidebars at the left
+    // ToC and Favorites sidebars at the left (or full-area Favorites tab)
     // desired state, normalized by SetSidebarVisibility
-    bool favVisible = win->uiState.favVisible;
-    bool tocVisible = win->uiState.tocVisible;
-    if (tocVisible || favVisible) {
+    WindowTab* curTab = win->CurrentTab();
+    bool favAsTab = curTab && curTab->IsFavoritesTab();
+    bool favVisible = favAsTab || win->uiState.favVisible;
+    bool tocVisible = !favAsTab && win->uiState.tocVisible;
+    // leave at least this much canvas for the document when sidebar is open
+    constexpr int kMinDocCanvasDx = 200;
+    // Canvas stays sized under a Favorites tab (only hidden) so switching back
+    // to a document does not SetViewPortSize with a 0x0 canvas (CalcZoomReal assert).
+    HwndSetVisibility(win->hwndCanvas, !favAsTab);
+
+    if (favAsTab) {
+        // Favorites tab: full client area for the favorites list (discussion #5820)
+        HwndSetVisibility(win->sidebarSplitter->hwnd, false);
+        HwndSetVisibility(win->hwndTocBox, false);
+        HwndSetVisibility(win->favSplitter->hwnd, false);
+        HwndSetVisibility(win->hwndFavBox, true);
+        // hide AI chat over the favorites tab for a clean full-width list
+        if (win->hwndAiChatBox) {
+            HwndSetVisibility(win->hwndAiChatBox, false);
+            HwndSetVisibility(win->aiChatSplitter->hwnd, false);
+        }
+        dh.MoveWindow(win->hwndFavBox, rc);
+        // leave canvas geometry unchanged (hidden above); finish without resizing it
+        dh.End();
+        // Above any sibling (e.g. hidden canvas still in z-order) so mouse hits the tree
+        SetWindowPos(win->hwndFavBox, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        // DeferWindowPos can leave child layout stale; size the tree now so it
+        // paints and accepts mouse expand clicks without a tab re-select.
+        LayoutFavoritesContainer(win);
+        if (suppressIntermediateRedraws) {
+            SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
+            RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
+        }
+        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        return true;
+    } else if (tocVisible || favVisible) {
         if (sidebarDx > 0) {
             win->sidebarDx = sidebarDx; // splitter drag
         }
@@ -5133,10 +5202,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (0 == toc.dx) {
             toc.dx = rc.dx / 4;
         }
-        // make sure that the sidebar is never too wide or too narrow
-        // note: requires that the main frame is at least 2 * kSidebarMinDx
-        //       wide (cf. OnFrameGetMinMaxInfo)
-        toc.dx = limitValue(toc.dx, kSidebarMinDx, rc.dx / 2);
+        // never too narrow; max leaves kMinDocCanvasDx for the document
+        // (was hard-capped at half the frame, which cut long favorite names)
+        int maxSidebarDx = std::max(kSidebarMinDx, rc.dx - kMinDocCanvasDx);
+        toc.dx = limitValue(toc.dx, kSidebarMinDx, maxSidebarDx);
         win->sidebarDx = toc.dx; // remember what's applied
 
         toc.dy = 0;
@@ -6591,7 +6660,9 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
     Rect rFrame = ClientRect(win->hwndFrame);
     int curDx = win->sidebarDx; // don't read the toc box rect, it can be stale
     int minDx = std::min(kSidebarMinDx, curDx);
-    int maxDx = std::max(rFrame.dx / 2, curDx);
+    // match RelayoutFrame: allow wider than half window (long Favorites names)
+    constexpr int kMinDocCanvasDx = 200;
+    int maxDx = std::max(rFrame.dx - kMinDocCanvasDx, curDx);
     if (sidebarDx < minDx || sidebarDx > maxDx) {
         ev->resizeAllowed = false;
         return;
@@ -6634,7 +6705,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
         showFavorites = false;
     }
 
-    if (!win->IsDocLoaded() || !win->ctrl->HasToc()) {
+    if (!win->IsDocLoaded() || !win->ctrl || !win->ctrl->HasToc()) {
         tocVisible = false;
     }
 
@@ -6663,8 +6734,11 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
+    // When the Favorites tab is selected, the tree is focused there — don't
+    // steal focus just because the sidebar panel is off.
+    bool favTabActive = win->CurrentTab() && win->CurrentTab()->IsFavoritesTab();
     if ((!tocVisible && HwndIsFocused(win->tocTreeView->hwnd)) ||
-        (!showFavorites && HwndIsFocused(win->favTreeView->hwnd))) {
+        (!showFavorites && !favTabActive && HwndIsFocused(win->favTreeView->hwnd))) {
         HwndSetFocus(win->hwndFrame);
     }
 
@@ -8784,6 +8858,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdFavoriteToggle:
             ToggleFavorites(win);
+            break;
+        case CmdFavoriteShowInTab:
+            ToggleFavoritesTab(win);
             break;
 
         case CmdGoToNextFavorite:

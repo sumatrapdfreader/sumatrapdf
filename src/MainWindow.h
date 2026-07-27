@@ -325,6 +325,8 @@ struct MainWindow {
             bool isToolbarVisible = false;
             bool tocVisible = false;
             bool showFavorites = false;
+            // full-window Favorites tab vs. sidebar panel: different geometry
+            bool favoritesAsTab = false;
             bool showMenuBarRebar = false;
             bool aiChatVisible = false;
             int aiChatDx = 0;
