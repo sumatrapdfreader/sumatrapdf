@@ -1836,6 +1836,22 @@ void DisplayModel::RotateBy(int newRotation) {
     GoToPage(currPageNo, 0);
 }
 
+// True when glyph i's bbox intersects region enough to count as selected.
+static bool GlyphInRegion(const Rect* coords, int textLen, int i, Rect regionI) {
+    if (i < 0 || i >= textLen || !coords) {
+        return false;
+    }
+    Rect rect = coords[i];
+    if (!rect.dx && !rect.dy) {
+        return false; // empty box (newline / soft-join space): not a hit by itself
+    }
+    Rect isect = regionI.Intersect(rect);
+    if (isect.IsEmpty()) {
+        return false;
+    }
+    return 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3;
+}
+
 /* Given <region> (in user coordinates) on page <pageNo>, returns text in that region. */
 Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
@@ -1851,14 +1867,35 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     for (int i = 0; i < textLen; i++) {
         int charStart = byteIdx;
         int c = Utf8CodepointNext(pageText, byteIdx);
-        if (c != '\n') {
-            Rect rect = coords[i];
-            Rect isect = regionI.Intersect(rect);
-            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
+        if (c == '\n') {
+            if (result.LastChar() != '\n') {
+                result.Append(StrL("\r\n"));
+            }
+            continue;
+        }
+        Rect rect = coords[i];
+        // Soft-join spaces from FzTextPageToUtf8 (#5793) use empty rects (like hard
+        // newlines). Include them when both neighboring content glyphs are selected
+        // so Select-All / rectangular copy keeps spaces at wrap points.
+        if (!rect.dx && !rect.dy) {
+            if (c != ' ' && c != '\t') {
+                continue;
+            }
+            int prev = i - 1;
+            while (prev >= 0 && !coords[prev].dx && !coords[prev].dy) {
+                prev--;
+            }
+            int next = i + 1;
+            while (next < textLen && !coords[next].dx && !coords[next].dy) {
+                next++;
+            }
+            if (GlyphInRegion(coords, textLen, prev, regionI) && GlyphInRegion(coords, textLen, next, regionI)) {
                 result.Append(Str(pageText.s + charStart, byteIdx - charStart));
             }
-        } else if (result.LastChar() != '\n') {
-            result.Append(StrL("\r\n"));
+            continue;
+        }
+        if (GlyphInRegion(coords, textLen, i, regionI)) {
+            result.Append(Str(pageText.s + charStart, byteIdx - charStart));
         }
     }
 
