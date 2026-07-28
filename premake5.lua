@@ -470,7 +470,8 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4996" }
     files { "ext/libchm/*.c", "ext/libchm/*.h" }
 
-  -- cmark-gfm for markdown browser (MarkdownToc/MarkdownModel) and mupdf md.c.
+  -- cmark-gfm: linked into mupdf → libmupdf.dll (md.c + MarkdownToc imports).
+  -- Do not also link into SumatraPDF.exe; re-export via libmupdf.def instead.
   project "cmark-gfm"
     dll_intermediate_dirs()
     kind "StaticLib"
@@ -920,8 +921,8 @@ workspace "SumatraPDF"
     -- this fixes "NAN" is not a constant in some version of msvc
     -- without this it's #define _UCRT_NAN (__ucrt_int_to_float(0x7FC00000))
     -- CMARK_GFM_STATIC_DEFINE: md.c includes cmark-gfm headers; we link the
-    -- cmark-gfm static lib. FZ_ENABLE_MD defaults to 1
-    -- in mupdf's config.h, enabling markdown support.
+    -- cmark-gfm static lib into this project so libmupdf.dll contains cmark
+    -- (and re-exports MarkdownToc's symbols via libmupdf.def).
     defines { "_UCRT_NOISY_NAN", "CMARK_GFM_STATIC_DEFINE" }
 
   project "libmupdf"
@@ -1310,11 +1311,13 @@ workspace "SumatraPDF"
 
     files { "src/MuPDF_Exports.cpp" }
 
+    -- MarkdownToc uses cmark via libmupdf.def exports (cmark lives in
+    -- libmupdf.dll, linked from the cmark-gfm project through mupdf).
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libmupdf", "unrar", "libarchive", "base", "chm", "cmark-gfm", "a-zopfli"
+      "libmupdf", "unrar", "libarchive", "base", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

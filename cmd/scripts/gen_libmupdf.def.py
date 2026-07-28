@@ -110,6 +110,30 @@ EXPORTS
 
 	WebPDecodeBGRAInto
 	WebPGetInfo
+
+; cmark-gfm exports (required for MarkdownToc; also used by mupdf md.c).
+; Keep the cmark-gfm static-lib project; link it only into mupdf/libmupdf.dll
+; and re-export these so SumatraPDF.exe does not carry a second copy.
+
+	cmark_find_syntax_extension
+	cmark_get_default_mem_allocator
+	cmark_gfm_core_extensions_ensure_registered
+	cmark_iter_free
+	cmark_iter_get_node
+	cmark_iter_new
+	cmark_iter_next
+	cmark_node_first_child
+	cmark_node_free
+	cmark_node_get_heading_level
+	cmark_node_get_type
+	cmark_node_next
+	cmark_parser_attach_syntax_extension
+	cmark_parser_feed
+	cmark_parser_finish
+	cmark_parser_free
+	cmark_parser_get_syntax_extensions
+	cmark_parser_new
+	cmark_render_html
 """
 
 def main():
