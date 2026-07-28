@@ -557,6 +557,9 @@ struct GlobalPrefs {
     // if true, draw a focus ring around the document when it has keyboard
     // focus (Tab to the page area)
     bool showDocumentFocusIndicator;
+    // if true, show a tip when hovering an annotation (e.g. "Highlight
+    // annotation. Ctrl+click to edit.")
+    bool showAnnotationNotification;
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
@@ -1191,6 +1194,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showDocumentFocusIndicator), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, showAnnotationNotification), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
@@ -1283,21 +1287,21 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 122, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 123, gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
     "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
-    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowStartPage\0SidebarDx\0Scrollbars\0Scrollb"
-    "arInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0Preve"
-    "ntSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize"
-    "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
-    "ors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Ima"
-    "geUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0Transl"
-    "ateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0"
-    "\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0Vers"
-    "ionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
-    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowStartPage\0Si"
+    "debarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0Fa"
+    "stScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFol"
+    "lowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance"
+    "\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0"
+    "EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebar"
+    "Dx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0Pr"
+    "interDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0Defau"
+    "ltPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0Reopen"
+    "Once\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
@@ -1321,21 +1325,22 @@ static const StructInfo gGlobalPrefsInfo = {
     "movable window with a results list instead of the compact toolbar overlay\0if true, we show the Favorites "
     "sidebar\0if true, we show table of contents (Bookmarks) sidebar if it's present in the document\0if true we draw "
     "a blue border around links in the document\0if true, draw a focus ring around the document when it has keyboard "
-    "focus (Tab to the page area)\0if true, we show a list of frequently read documents when no document is "
-    "loaded\0width of favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), "
-    "smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if "
-    "true, we show scrollbar in single page mode\0if true, implements smooth scrolling\0how long to hover an "
-    "internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, "
-    "footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it\0voice id for Read "
-    "Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read "
-    "Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 "
-    ".. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling "
-    "is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or "
-    "presentation mode\0maximum width of a single tab\0Valid themes: light, dark, darker, system\0the light theme the "
-    "light/dark toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme "
-    "switch to\0Valid values: off, smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this "
-    "is the height of bookmarks (table of contents) part\0height of toolbar\0font name for bookmarks and favorites "
-    "tree views. automatic means Windows default\0font size for bookmarks and favorites tree views. 0 means Windows "
+    "focus (Tab to the page area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. "
+    "Ctrl+click to edit.\")\0if true, we show a list of frequently read documents when no document is loaded\0width of "
+    "favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay "
+    "scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show "
+    "scrollbar in single page mode\0if true, implements smooth scrolling\0how long to hover an internal-document link "
+    "(in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the "
+    "default) disables the popup; set a positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; "
+    "empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT "
+    "voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal "
+    "speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling is faster when mouse "
+    "is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or presentation "
+    "mode\0maximum width of a single tab\0Valid themes: light, dark, darker, system\0the light theme the light/dark "
+    "toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0Valid "
+    "values: off, smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this is the height of "
+    "bookmarks (table of contents) part\0height of toolbar\0font name for bookmarks and favorites tree views. "
+    "automatic means Windows default\0font size for bookmarks and favorites tree views. 0 means Windows "
     "default\0over-ride application font size. 0 means Windows default\0if true, disables anti-aliasing for rendering "
     "PDF documents\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
     "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, we use Windows system colors "

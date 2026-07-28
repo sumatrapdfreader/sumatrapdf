@@ -980,8 +980,6 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
     return dy > dragDy;
 }
 
-static bool gShowAnnotationNotification = true;
-
 // Forward declaration
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
@@ -1084,7 +1082,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : StrL("none");
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
-                if (gShowAnnotationNotification && !hasInternalLink) {
+                if (gGlobalPrefs->showAnnotationNotification && !hasInternalLink) {
                     if (annot) {
                         // auto r = annot->bounds;
                         // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
@@ -1102,7 +1100,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     }
                 }
             }
-            if (!annot || hasInternalLink) {
+            if (!annot || hasInternalLink || !gGlobalPrefs->showAnnotationNotification) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;

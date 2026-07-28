@@ -144,6 +144,10 @@ ShowLinks = false
 ; to the page area) (introduced in version 3.7)
 ShowDocumentFocusIndicator = false
 
+; if true, show a tip when hovering an annotation (e.g. "Highlight annotation.
+; Ctrl+click to edit.") (introduced in version 3.7)
+ShowAnnotationNotification = true
+
 ; if true, we show a list of frequently read documents when no document is
 ; loaded
 ShowStartPage = true
@@ -246,10 +250,8 @@ UseTabs = true
 ; (introduced in version 3.7)
 SelectionToolbar = true
 
-; if true, the Smart Tab Switch list (Ctrl+Tab / Ctrl+Shift+Tab, ver 3.6+) is
-; ordered most recently used first instead of tab-strip order. Does not hide
-; the switcher; to get pre-3.6 immediate tab switching on Ctrl+Tab, rebind those
-; keys to CmdNextTab / CmdPrevTab (see Customize-keyboard-shortcuts / Tabs-and-windows)
+; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
+; used order instead of tab-strip order
 TabsMru = false
 
 ; sequence of zoom levels when zooming in/out; all values must lie between 8.33
