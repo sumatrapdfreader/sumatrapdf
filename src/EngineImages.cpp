@@ -14,6 +14,7 @@
 
 #if OS_WIN
 #include "base/Win.h"
+#include "base/GdiPlus.h"
 #endif
 
 extern "C" {
@@ -536,24 +537,55 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         }
     }
 
+    Pixmap* src = page->pixmap;
+    if (page->failedToLoad || !src || !src->data) {
+        DropPage(page, false);
+        Pixmap* blank = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
+        if (blank) {
+            FillPixmapWhite(blank);
+        }
+        return blank;
+    }
+
+#if OS_WIN
+    // High-quality scale via GDI+ bicubic. The old per-pixel nearest-neighbor
+    // path looked blocky for Pixmap-only formats (HEIC/AVIF/WebP/JXL) whenever
+    // zoom != 100%. Rotation still uses the fallback below (rare for images).
+    if (NormalizeRotation(rotation) == 0 && screen.dx > 0 && screen.dy > 0) {
+        Gdiplus::Bitmap* srcBmp = WrapPixmapGdiplus(src);
+        if (srcBmp) {
+            auto* dstBmp = new Gdiplus::Bitmap(screen.dx, screen.dy, PixelFormat32bppPARGB);
+            if (dstBmp && dstBmp->GetLastStatus() == Gdiplus::Ok) {
+                Gdiplus::Graphics g(dstBmp);
+                g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+                g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+                g.Clear(Gdiplus::Color(255, 255, 255, 255));
+                // pageRc is in page-pixel coords; screen is the zoomed dest size.
+                Gdiplus::RectF dest(0, 0, (float)screen.dx, (float)screen.dy);
+                g.DrawImage(srcBmp, dest, pageRc.x, pageRc.y, pageRc.dx, pageRc.dy, Gdiplus::UnitPixel);
+                Pixmap* result = PixmapFromGdiplus(dstBmp);
+                delete dstBmp;
+                delete srcBmp;
+                DropPage(page, false);
+                if (result) {
+                    result->premultiplied = false;
+                    return result;
+                }
+            } else {
+                delete dstBmp;
+                delete srcBmp;
+            }
+        }
+    }
+#endif
+
+    // Fallback: nearest-neighbor (rotation, non-Windows, or GDI+ failure).
     Pixmap* result = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
     if (!result) {
         DropPage(page, false);
         return nullptr;
     }
     FillPixmapWhite(result);
-
-    if (page->failedToLoad) {
-        DropPage(page, false);
-        return result;
-    }
-
-    Pixmap* src = page->pixmap;
-    if (!src || !src->data) {
-        DropPage(page, false);
-        FreePixmap(result);
-        return nullptr;
-    }
 
     RectF mediaBox = PageMediabox(pageNo);
     for (int y = 0; y < result->height; y++) {
