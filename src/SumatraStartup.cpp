@@ -932,6 +932,8 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
 bool gSingleExe = true;
 
 static HMODULE gLibmupdfDll = nullptr;
+// Last LoadLibrary(Ex) failure for libmupdf.dll (0 if none / size mismatch skip).
+static DWORD gLibmupdfLastLoadError = 0;
 
 static void FreeLibmupdfDll() {
     if (gLibmupdfDll) {
@@ -962,15 +964,17 @@ static bool LoadLibmupdfFromFile(Str path, i64 expectedSize, bool useLoadLibrary
     if (!gLibmupdfDll) {
         // capture before logf, which can overwrite GetLastError
         DWORD err = GetLastError();
+        gLibmupdfLastLoadError = err;
         if (useLoadLibraryEx) {
-            logf("LoadLibmupdfFromFile: failed to load '%s' (LoadLibraryExW)\n", path);
+            logf("LoadLibmupdfFromFile: failed to load '%s' (LoadLibraryExW) err=%u\n", path, err);
         } else {
-            logf("LoadLibmupdfFromFile: failed to load '%s'\n", path);
+            logf("LoadLibmupdfFromFile: failed to load '%s' err=%u\n", path, err);
         }
         LogLastError(err);
         SetLastError(err); // so callers' GetLastError() still see LoadLibrary's error
         return false;
     }
+    gLibmupdfLastLoadError = 0;
     if (useLoadLibraryEx) {
         logf("LoadLibmupdf: loaded '%s' (LoadLibraryExW)\n", path);
     } else {
@@ -1021,6 +1025,46 @@ static bool ExtractAndLoadLibmupdfRobust(Str dir, bool extract) {
     return LoadLibmupdfFromFileRobust(path, expectedSize);
 }
 
+// Log as much as we can about a failed load; ends up in the debug report via gLogBuf.
+static void LogLibmupdfLoadFailureDiagnostics(Str selfDir, Str buildDir, i64 expectedSize, DWORD lastErr) {
+    TempStr exePath = GetSelfExePathTemp();
+    logf("LoadLibmupdf FAILED: lastError=%u (0x%x) gSingleExe=%d expectedSize=%lld\n", lastErr, lastErr,
+         (int)gSingleExe, (long long)expectedSize);
+    logf("LoadLibmupdf FAILED: exe='%s'\n", exePath);
+    logf("LoadLibmupdf FAILED: selfDir='%s'\n", selfDir);
+    logf("LoadLibmupdf FAILED: buildDir='%s'\n", buildDir);
+    logf("LoadLibmupdf FAILED: gLibmupdfDll=%p\n", (void*)gLibmupdfDll);
+
+    auto logDllCandidate = [](Str dir, Str label) {
+        if (!dir) {
+            logf("LoadLibmupdf FAILED: %s dir is null\n", label);
+            return;
+        }
+        TempStr path = path::JoinTemp(dir, StrL("libmupdf.dll"));
+        i64 size = file::GetSize(path);
+        bool exists = file::Exists(path);
+        logf("LoadLibmupdf FAILED: %s path='%s' exists=%d size=%lld\n", label, path, (int)exists, (long long)size);
+        if (exists) {
+            DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+            logf("LoadLibmupdf FAILED: %s attrs=0x%x\n", label, attrs);
+        }
+    };
+    logDllCandidate(selfDir, StrL("selfDir"));
+    logDllCandidate(buildDir, StrL("buildDir"));
+
+    // FormatMessage for the last LoadLibrary error when available
+    if (lastErr != 0) {
+        WCHAR* msgBuf = nullptr;
+        DWORD n =
+            FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                           nullptr, lastErr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&msgBuf, 0, nullptr);
+        if (n > 0 && msgBuf) {
+            logf("LoadLibmupdf FAILED: FormatMessage: %s\n", ToUtf8Temp(WStr(msgBuf)));
+            LocalFree(msgBuf);
+        }
+    }
+}
+
 static bool LoadLibmupdf(bool showErrorDialog) {
     // Static-linked builds (mingw wine cross-build, MSVC SumatraPDF-static) do
     // not embed/delay-load libmupdf.dll — MuPDF is already in the exe image.
@@ -1030,14 +1074,21 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         return true;
     }
 
-    // prefer existing libmupdf.dll next to the exe (installer layout)
+    i64 expectedSize = GetEmbeddedLibmupdfSize();
     Str selfDir = GetSelfExeDirTemp();
-    ExtractAndLoadLibmupdfRobust(selfDir, false);
+    Str buildDir = GetSumatraBuildSpecificDirTemp();
+    logf("LoadLibmupdf: start expectedSize=%lld gSingleExe=%d selfDir='%s' buildDir='%s'\n", (long long)expectedSize,
+         (int)gSingleExe, selfDir, buildDir);
+
+    // prefer existing libmupdf.dll next to the exe (installer layout)
+    if (ExtractAndLoadLibmupdfRobust(selfDir, false)) {
+        return true;
+    }
 
     // Portable / single-exe: extract + robust load from build data dir, then
     // from the exe directory (in case AppData is blocked by AV).
     if (gSingleExe) {
-        if (ExtractAndLoadLibmupdfRobust(GetSumatraBuildSpecificDirTemp(), true)) {
+        if (ExtractAndLoadLibmupdfRobust(buildDir, true)) {
             return true;
         }
         if (ExtractAndLoadLibmupdfRobust(selfDir, true)) {
@@ -1045,15 +1096,25 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         }
     }
 
-    ReportIfFast(true);
-    logf("LoadLibmupdf: failed to load libmupdf.dll\n");
+    // A later attempt can fail while an earlier LoadLibrary still holds a handle.
+    if (gLibmupdfDll) {
+        logf("LoadLibmupdf: gLibmupdfDll already set after attempts; treating as success\n");
+        return true;
+    }
+
+    DWORD err = gLibmupdfLastLoadError ? gLibmupdfLastLoadError : GetLastError();
+    LogLibmupdfLoadFailureDiagnostics(selfDir, buildDir, expectedSize, err);
+
+    // Upload a debug report (pre-release) without requiring symbols. captureCallstack
+    // is false so we skip symbol download; the log (paths/sizes/errors) is the payload.
+    _uploadDebugReport(StrL("LoadLibmupdf failed"), FILE_LINE, false, false);
+
     if (!showErrorDialog) {
         // e.g. -print-to ... -silent invoked by another program:
         // a modal dialog would hang the caller
         return false;
     }
 
-    DWORD err = GetLastError();
     TempStr msg = fmt(R"(SumatraPDF.exe failed to load libmupdf.dll.
 Error code: %d
 We can't proceed.
