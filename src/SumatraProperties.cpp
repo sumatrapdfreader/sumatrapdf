@@ -250,10 +250,28 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
 //    return
 //}
 
-// format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
+// One "W x H unit" fragment for FormatPageSizeTemp (size.dx/dy are inches).
+static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str unit) {
+    double width = sizeInches.dx * unitsPerInch;
+    double height = sizeInches.dy * unitsPerInch;
+    if (((int)(width * 100)) % 100 == 99) {
+        width += 0.01;
+    }
+    if (((int)(height * 100)) % 100 == 99) {
+        height += 0.01;
+    }
+    TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
+    TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
+    return fmt("%s x %s %s", strWidth, strHeight, unit);
+}
+
+// Format page size in cm/mm/in (locale unit first) and pixels (issue #2186).
+// Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 px (A4)"
+// US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 px (A4)"
 static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
-    float zoom = 1.0f / engine->GetFileDPI();
+    float fileDpi = engine->GetFileDPI();
+    float zoom = 1.0f / fileDpi;
     SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
 
     Str formatName;
@@ -287,23 +305,21 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
             break;
     }
 
+    TempStr inStr = FormatPageSizeUnitTemp(size, 1.0, StrL("in"));
+    TempStr cmStr = FormatPageSizeUnitTemp(size, 2.54, StrL("cm"));
+    TempStr mmStr = FormatPageSizeUnitTemp(size, 25.4, StrL("mm"));
+
+    // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
+    int pxW = (int)(size.dx * fileDpi + 0.5f);
+    int pxH = (int)(size.dy * fileDpi + 0.5f);
+    TempStr pxStr = fmt("%d x %d px", pxW, pxH);
+
+    // Locale unit first, then the other two, then pixels (issue #2186)
     bool isMetric = GetMeasurementSystem() == 0;
-    double unitsPerInch = isMetric ? 2.54 : 1.0;
-    Str unit = isMetric ? StrL("cm") : StrL("in");
-
-    double width = size.dx * unitsPerInch;
-    double height = size.dy * unitsPerInch;
-    if (((int)(width * 100)) % 100 == 99) {
-        width += 0.01;
+    if (isMetric) {
+        return fmt("%s, %s, %s, %s%s", cmStr, mmStr, inStr, pxStr, formatName);
     }
-    if (((int)(height * 100)) % 100 == 99) {
-        height += 0.01;
-    }
-
-    TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
-    TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
-
-    return fmt("%s x %s %s%s", strWidth, strHeight, unit, formatName);
+    return fmt("%s, %s, %s, %s%s", inStr, cmStr, mmStr, pxStr, formatName);
 }
 
 // returns a list of permissions denied by this document
