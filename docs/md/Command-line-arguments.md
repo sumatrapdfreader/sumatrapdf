@@ -12,7 +12,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 - `-presentation` : start in presentation view
 - `-fullscreen` : start in full screen view
-- `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (**ver 3.2+**)
+- `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (**ver 3.2+**). With several file arguments, opens **one** new window and loads all files as tabs in that window (**ver 3.7+**, fixes #5044); previously each file opened in its own window
 - `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
 - `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. See [Configure for restricted use](Configure-for-restricted-use.md).
 - `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)

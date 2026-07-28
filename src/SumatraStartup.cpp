@@ -2363,12 +2363,18 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // open the first file in a new window so it lands on the current desktop
         // (#5630). Subsequent files then open into that (now current) window.
         bool reuseInNewWindow = openInNewWindow && (existingHwnd == existingInstanceHwnd);
+        // -new-window with several files: only the first forces a new window;
+        // the rest open as tabs in that window (issue #5044). Previously every
+        // file got its own window.
+        bool userNewWindow = flags.inNewWindow;
         for (int n = 0; n < nFiles; n++) {
             Str path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);
             bool savedInNewWindow = flags.inNewWindow;
             if (reuseInNewWindow && n == 0) {
                 flags.inNewWindow = true;
+            } else if (userNewWindow) {
+                flags.inNewWindow = (n == 0);
             }
             OpenUsingDDE(existingHwnd, path, flags, isFirstWindow);
             flags.inNewWindow = savedInNewWindow;
