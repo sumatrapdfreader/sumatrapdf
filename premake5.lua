@@ -675,16 +675,6 @@ workspace "SumatraPDF"
     disablewarnings { "4005", "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
-  project "a-gumbo"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C"
-    optimized_conf()
-    disablewarnings { "4018", "4100", "4132", "4189", "4204", "4244", "4245", "4267",
-      "4305", "4306", "4389", "4456", "4701", "4702" }
-    includedirs { "ext/a-gumbo" }
-    a_gumbo_files()
-
 -- to make Visual Studio solution smaller
 -- combine 9 libs only used by mupdf into a single project
 -- instead of having 9 projects
@@ -901,9 +891,9 @@ workspace "SumatraPDF"
     filter {}
 
     disablewarnings {
-      "4005", "4013", "4018", "4057", "4100", "4115", "4127", "4130", "4132", "4146", "4200", "4201", "4204", "4206",
-      "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4310", "4389", "4456", "4457", "4701", "4702", "4703",
-      "4706", "4819", "4996", "5286"
+      "4005", "4013", "4018", "4057", "4100", "4115", "4127", "4130", "4132", "4146", "4189", "4200", "4201", "4204",
+      "4206", "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4306", "4310", "4389", "4456", "4457", "4701",
+      "4702", "4703", "4706", "4819", "4996", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -941,14 +931,15 @@ workspace "SumatraPDF"
       "ext/a-extract/extract.c", "ext/a-extract/memento.h",
       "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
     }
+    a_gumbo_files()
     filter {
-      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/**"
+      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/**"
     }
       optimize "Size"
     filter {}
     links {
       "cmark-gfm", "harfbuzz", "freetype", "brotli",
-      "lcms2", "libjpeg-turbo", "libarchive", "a-gumbo"
+      "lcms2", "libjpeg-turbo", "libarchive"
     }
 
     -- mupdf

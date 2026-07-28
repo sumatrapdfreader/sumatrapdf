@@ -10,6 +10,9 @@
     <Filter Include="ext\a-extract\extract">
       <UniqueIdentifier>{78B76763-E423-235E-AD17-BBBB194345C6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\a-gumbo">
+      <UniqueIdentifier>{2DA6BD31-995B-3627-2250-30FE8E042D2B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\a-jbig2dec">
       <UniqueIdentifier>{0DABD594-F978-C99A-E20C-3AC1CE79A5FF}</UniqueIdentifier>
     </Filter>
@@ -104,6 +107,9 @@
     </ClInclude>
     <ClInclude Include="..\ext\a-extract\memento.h">
       <Filter>ext\a-extract</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-gumbo\gumbo.h">
+      <Filter>ext\a-gumbo</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\a-jbig2dec\jbig2.h">
       <Filter>ext\a-jbig2dec</Filter>
@@ -559,6 +565,9 @@
   <ItemGroup>
     <ClCompile Include="..\ext\a-extract\extract.c">
       <Filter>ext\a-extract</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\a-gumbo\gumbo.c">
+      <Filter>ext\a-gumbo</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\a-jbig2dec\jbig2dec.c">
       <Filter>ext\a-jbig2dec</Filter>
@@ -1344,6 +1353,9 @@
   <ItemGroup>
     <None Include="..\ext\a-extract\version.txt">
       <Filter>ext\a-extract</Filter>
+    </None>
+    <None Include="..\ext\a-gumbo\version.txt">
+      <Filter>ext\a-gumbo</Filter>
     </None>
     <None Include="..\ext\a-jbig2dec\version.txt">
       <Filter>ext\a-jbig2dec</Filter>
