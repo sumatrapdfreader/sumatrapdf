@@ -14,6 +14,9 @@
 #include "base/GdiPlus.h"
 #include "base/GuessFileType.h"
 
+#include <mmsystem.h> // timeBeginPeriod / timeEndPeriod for smooth-scroll timer
+#pragma comment(lib, "winmm.lib")
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
@@ -574,16 +577,67 @@ enum class ResizeHandle {
 // Size of resize handle hit area (in pixels)
 constexpr int kResizeHandleSize = 8;
 
-// Smooth scrolling factor. This is a value between 0 and 1.
-// Each step, we scroll the needed delta times this factor.
-// Therefore, a higher factor makes smooth scrolling faster.
-static const double gSmoothScrollingFactor = 0.2;
+// Smooth wheel scrolling: frame-rate–independent exponential chase of the
+// target offset (common browser-style "lerp toward destination").
+//
+// Why not duration + ease-out restarted each tick? Restarting ease-out on every
+// WM_MOUSEWHEEL re-peaks velocity each notch → visible stutter/pumping while
+// spinning the wheel. Updating only the target keeps velocity continuous.
+//
+// Rate k (1/s): after ~200 ms we close ~95% of remaining (1-e^(-k*0.2)≈0.95).
+static const double kSmoothScrollRate = 15.0;
+// Snap when this close (pixels) so we do not crawl forever.
+static const double kSmoothScrollSnapPx = 0.5;
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 static bool gWheelMsgRedirect = false;
 static bool gInMouseWheelScroll = false;
+
+static void StopSmoothScroll(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+    win->scrollAnimActive = false;
+    if (win->scrollAnimHiResTimer) {
+        timeEndPeriod(1);
+        win->scrollAnimHiResTimer = false;
+    }
+}
+
+// Set/update destination for smooth vertical scroll. Does not restart motion
+// from scratch — mid-flight target changes keep continuous velocity.
+static void StartOrUpdateSmoothScrollY(MainWindow* win, int targetY) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    int current = dm->yOffset();
+    if (current == targetY && !win->scrollAnimActive) {
+        return;
+    }
+    if (current == targetY && win->scrollAnimActive && fabs(win->scrollAnimY - (double)targetY) < kSmoothScrollSnapPx) {
+        StopSmoothScroll(win);
+        return;
+    }
+
+    win->scrollTargetY = targetY;
+    if (!win->scrollAnimActive) {
+        win->scrollAnimY = (double)current;
+        win->scrollAnimLastTime = TimeGet();
+        win->scrollAnimActive = true;
+        // 1 ms timer resolution while animating so WM_TIMER is less jumpy
+        // (default ~15.6 ms is a common source of stutter).
+        if (!win->scrollAnimHiResTimer) {
+            timeBeginPeriod(1);
+            win->scrollAnimHiResTimer = true;
+        }
+        SetTimer(win->hwndCanvas, kSmoothScrollTimerID, 1, nullptr);
+    }
+    // If already active: only target changes; scrollAnimY keeps going.
+}
 
 void UpdateDeltaPerLine() {
     ULONG ulScrollLines;
@@ -744,14 +798,9 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         if (gGlobalPrefs->smoothScroll && gInMouseWheelScroll) {
-            if (win->AsFixed()->yOffset() == si.nPos) {
-                win->AsFixed()->ScrollYTo(si.nPos);
-                ReadAloudOnUserViewChanged(win);
-            } else {
-                win->scrollTargetY = si.nPos;
-                SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
-            }
+            StartOrUpdateSmoothScrollY(win, si.nPos);
         } else {
+            StopSmoothScroll(win);
             win->AsFixed()->ScrollYTo(si.nPos);
             ReadAloudOnUserViewChanged(win);
         }
@@ -2454,9 +2503,8 @@ bool IsFirstWheelMsg(LARGE_INTEGER& lastTime) {
 static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     // don't show the context menu when zooming with the right mouse-button down
     win->dragStartPending = false;
-    // Kill the smooth scroll timer when zooming
-    // We don't want to move to the new updated y offset after zooming
-    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+    // Stop smooth scroll when zooming — y offsets are no longer meaningful.
+    StopSmoothScroll(win);
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -3400,30 +3448,67 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
         }
 
-        case kSmoothScrollTimerID:
+        case kSmoothScrollTimerID: {
             DisplayModel* dm = win->AsFixed();
-            // window might have been closed while the timer was running
-            if (!dm) {
-                return;
+            // Window/tab may have changed while the timer was running.
+            if (!dm || !win->scrollAnimActive) {
+                StopSmoothScroll(win);
+                break;
             }
 
-            int current = dm->yOffset();
+            // Real dt so motion is smooth even when timer delivery jitters.
+            double dtMs = TimeSinceInMs(win->scrollAnimLastTime);
+            win->scrollAnimLastTime = TimeGet();
+            // Clamp: first tick / resume after stall should not jump a full page.
+            if (dtMs < 0.5) {
+                dtMs = 0.5;
+            } else if (dtMs > 32.0) {
+                dtMs = 32.0;
+            }
+            double dt = dtMs / 1000.0;
+
             int target = win->scrollTargetY;
-            int delta = target - current;
-
-            if (delta == 0) {
-                KillTimer(hwnd, kSmoothScrollTimerID);
-            } else {
-                // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
-
-                double step = delta * gSmoothScrollingFactor;
-
-                // Round away from zero
-                int dy = step < 0 ? (int)floor(step) : (int)ceil(step);
-                dm->ScrollYTo(current + dy);
-                ReadAloudOnUserViewChanged(win);
+            // Keep anim state in sync if something else moved the view.
+            int viewY = dm->yOffset();
+            if (fabs(win->scrollAnimY - (double)viewY) > 1.5) {
+                win->scrollAnimY = (double)viewY;
             }
+
+            double remaining = (double)target - win->scrollAnimY;
+            if (fabs(remaining) < kSmoothScrollSnapPx) {
+                if (viewY != target) {
+                    dm->ScrollYTo(target);
+                }
+                ReadAloudOnUserViewChanged(win);
+                StopSmoothScroll(win);
+                break;
+            }
+
+            // Exponential approach: pos += (target-pos) * (1 - e^(-k*dt))
+            double a = 1.0 - exp(-kSmoothScrollRate * dt);
+            if (a > 1.0) {
+                a = 1.0;
+            }
+            win->scrollAnimY += remaining * a;
+
+            int y = (int)lround(win->scrollAnimY);
+            if (y != viewY) {
+                dm->ScrollYTo(y);
+                // If ScrollYTo clamped (document edge), stop chasing an
+                // unreachable target.
+                int after = dm->yOffset();
+                if (after != y) {
+                    win->scrollAnimY = (double)after;
+                    win->scrollTargetY = after;
+                    ReadAloudOnUserViewChanged(win);
+                    StopSmoothScroll(win);
+                    break;
+                }
+            }
+            // Defer ReadAloud until the animation settles — calling it every
+            // tick is work that competes with paint and adds hitchiness.
             break;
+        }
     }
 }
 

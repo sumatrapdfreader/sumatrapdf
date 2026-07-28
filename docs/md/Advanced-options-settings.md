@@ -172,7 +172,9 @@ Scrollbars = windows
 ; if true, we show scrollbar in single page mode (introduced in version 3.6)
 ScrollbarInSinglePage = false
 
-; if true, implements smooth scrolling (introduced in version 3.6)
+; if true, smooth mouse-wheel scrolling (exponential chase of the target offset;
+; continuous wheel input stays fluid without stuttering restarts)
+; (introduced in version 3.6)
 SmoothScroll = false
 
 ; if true, continuous view has extra scroll room after the last page so you can

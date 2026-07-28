@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include <uiautomationcore.h>
 #include <uiautomationcoreapi.h>
+#include <mmsystem.h>
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/GuessFileType.h"
@@ -107,6 +108,11 @@ void CreateMovePatternLazy(MainWindow* win) {
 
 MainWindow::~MainWindow() {
     KillTimer(hwndCanvas, kSmoothScrollTimerID);
+    if (scrollAnimHiResTimer) {
+        timeEndPeriod(1);
+        scrollAnimHiResTimer = false;
+    }
+    scrollAnimActive = false;
     RefHoverDestroy(refHover);
     FinishStressTest(this);
 

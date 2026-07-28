@@ -439,9 +439,13 @@ struct MainWindow {
 
     DocControllerCallback* cbHandler = nullptr;
 
-    // The target y offset for smooth scrolling.
-    // We use a timer to gradually scroll there.
+    // Smooth mouse-wheel scrolling: exponential chase of scrollTargetY.
+    // scrollAnimY is sub-pixel; only integer steps are applied to the view.
     int scrollTargetY = 0;
+    double scrollAnimY = 0;
+    LARGE_INTEGER scrollAnimLastTime{};
+    bool scrollAnimActive = false;
+    bool scrollAnimHiResTimer = false; // timeBeginPeriod(1) while animating
 
     // suppress Read Aloud user-scroll detection during programmatic follow scrolling
     mutable bool readAloudScrollFromCode = false;
