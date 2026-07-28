@@ -754,7 +754,6 @@ const globalPrefs: Field[] = [
     "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
   ).ver("3.7"),
   field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
-  field("SmoothScroll", Bool, false, "if true, implements smooth scrolling").ver("3.6"),
   field(
     "PaddingAfterLastPage",
     Bool,

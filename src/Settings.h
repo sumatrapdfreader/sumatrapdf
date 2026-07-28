@@ -580,8 +580,6 @@ struct GlobalPrefs {
     Str scrollbars;
     // if true, we show scrollbar in single page mode
     bool scrollbarInSinglePage;
-    // if true, implements smooth scrolling
-    bool smoothScroll;
     // if true, continuous view has extra scroll room after the last page
     // so you can scroll the end of the document to the top of the window
     bool paddingAfterLastPage;
@@ -1213,7 +1211,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
     {offsetof(GlobalPrefs, scrollbarInSinglePage), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
     {offsetof(GlobalPrefs, paddingAfterLastPage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, -1},
     {offsetof(GlobalPrefs, readAloudVoiceId), SettingType::String, 0},
@@ -1302,22 +1299,22 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 126, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 125, gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
     "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
     "ting\0ShowFavorites\0SortFavoritesByName\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotificati"
-    "on\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0PaddingAfterLas"
-    "tPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0Ta"
-    "bWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFon"
-    "tSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0Selection"
-    "Toolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0Markdo"
-    "wnUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateE"
-    "ngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0"
-    "Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState"
-    "\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWin"
-    "Pos\0CheckForUpdates\0\0",
+    "on\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0PaddingAfterLastPage\0Citatio"
+    "nHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme"
+    "\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFont"
+    "Size\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0Tabs"
+    "Mru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0Claud"
+    "eCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Anno"
+    "tations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0"
+    "Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0S"
+    "earchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForU"
+    "pdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1348,38 +1345,37 @@ static const StructInfo gGlobalPrefsInfo = {
     "of frequently read documents when no document is loaded\0width of favorites/bookmarks sidebar (if "
     "shown)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay "
     "(always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show scrollbar in single page mode\0if "
-    "true, implements smooth scrolling\0if true, continuous view has extra scroll room after the last page so you can "
-    "scroll the end of the document to the top of the window\0how long to hover an internal-document link (in ms) "
-    "before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the default) "
-    "disables the popup; set a positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or "
-    "unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or "
-    "SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also "
-    "be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling is faster when mouse is over a "
-    "scrollbar\0if true, prevents the screen from turning off when in fullscreen or presentation mode\0maximum width "
-    "of a single tab\0Valid themes: light, dark, darker, system\0the light theme the light/dark toggle and the System "
-    "theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0Valid values: off, smart, "
-    "legacy\0if both favorites and bookmarks parts of sidebar are visible, this is the height of bookmarks (table of "
-    "contents) part\0height of toolbar\0font name for bookmarks and favorites tree views. automatic means Windows "
-    "default\0font size for bookmarks and favorites tree views. 0 means Windows default\0over-ride application font "
-    "size. 0 means Windows default\0if true, disables anti-aliasing for rendering PDF documents\0CAD/engineering PDF "
-    "line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs "
-    "and email addresses found in PDF text\0if true, we use Windows system colors for background/text color. "
-    "Over-rides other settings\0if true, documents are opened in tabs instead of new windows\0if true, a small "
-    "floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to "
-    "false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order "
-    "instead of tab-strip order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and "
-    "6400\0zoom step size in percents relative to the current zoom level. if zero or negative, the values from "
-    "ZoomLevels are used instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization "
-    "options for eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files "
-    "UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
-    "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
-    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
-    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
-    "shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
-    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
-    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
-    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
-    "types. See [docs for more "
+    "true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the "
+    "top of the window\0how long to hover an internal-document link (in ms) before we show a popup rendering the "
+    "destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value "
+    "like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids "
+    "match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed "
+    "multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud "
+    "playback bar\0if true, mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the "
+    "screen from turning off when in fullscreen or presentation mode\0maximum width of a single tab\0Valid themes: "
+    "light, dark, darker, system\0the light theme the light/dark toggle and the System theme switch to\0the dark theme "
+    "the light/dark toggle and the System theme switch to\0Valid values: off, smart, legacy\0if both favorites and "
+    "bookmarks parts of sidebar are visible, this is the height of bookmarks (table of contents) part\0height of "
+    "toolbar\0font name for bookmarks and favorites tree views. automatic means Windows default\0font size for "
+    "bookmarks and favorites tree views. 0 means Windows default\0over-ride application font size. 0 means Windows "
+    "default\0if true, disables anti-aliasing for rendering PDF documents\0CAD/engineering PDF line rendering: off, "
+    "auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses "
+    "found in PDF text\0if true, we use Windows system colors for background/text color. Over-rides other settings\0if "
+    "true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar with selection "
+    "actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it\0if true, "
+    "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
+    "order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0zoom step size in "
+    "percents relative to the current zoom level. if zero or negative, the values from ZoomLevels are used "
+    "instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options for "
+    "eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
+    "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
+    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
+    "available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings "
+    "for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok "
+    "Build, and OpenAI Codex (internal)\0\0remembered destination language for selection translation; empty uses OS UI "
+    "language\0remembered source language for selection translation; empty means Auto\0remembered engine for Translate "
+    "Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF "
+    "documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "we show forward search results (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
