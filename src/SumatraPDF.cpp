@@ -1889,6 +1889,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
 
+    // Use `tab` (the document just loaded into this tab), not win->CurrentTab():
+    // multi-file open/session restore can finish loads out of order so another
+    // tab may already be selected by the time we get here.
     TempStr unsupported = win->ctrl->GetPropertyTemp(DocProp::UnsupportedFeatures);
     if (unsupported) {
         Str s = _TRA("%s not supported");
@@ -1899,7 +1902,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
         nargs.msg = msg;
-        nargs.tab = win->CurrentTab(); // only show while this tab is active
+        nargs.tab = tab; // only show while this tab is active
         nargs.corner = NotifCorner::BottomRight;
         nargs.xMargin = 2;
         nargs.yMargin = 2;
@@ -1920,12 +1923,19 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifDocErrors;
         nargs.msg = msg;
-        nargs.tab = win->CurrentTab(); // only show while this tab is active
+        // Bind to the tab that just loaded (not whatever is current after a
+        // later multi-file finish steals the UI).
+        nargs.tab = tab;
         nargs.corner = NotifCorner::BottomRight;
         nargs.xMargin = 2;
         nargs.yMargin = 2;
         ShowNotification(nargs);
     }
+
+    // Multi-file open / session restore: each finished load can leave tab-tied
+    // notifs from earlier loads visible on the canvas. Re-sync visibility to
+    // the active tab so "Show Errors" is not shown on the wrong document.
+    ShowNotificationsForActiveTab(win->hwndCanvas, win->CurrentTab());
 
     // This should only happen after everything else is ready
     if ((args->isNewWindow || args->placeWindow) && args->showWin && showAsFullScreen) {

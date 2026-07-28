@@ -14,6 +14,8 @@
 #include "Settings.h"
 #include "AppSettings.h"
 #include "SumatraPDF.h"
+#include "MainWindow.h"
+#include "WindowTab.h"
 
 #include "Notifications.h"
 #include "TipText.h"
@@ -664,14 +666,21 @@ DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-static int NotifsRemoveForGroup(NotificationWnd** wnds, int nWnds, Kind groupId) {
+// If onlyTab is non-null, only remove notifications in this group that are
+// tied to onlyTab (or untied). Leaves other tabs' same-group notifs alone so
+// multi-file load can keep a per-tab "Show Errors" toast.
+static int NotifsRemoveForGroup(NotificationWnd** wnds, int nWnds, Kind groupId, WindowTab* onlyTab = nullptr) {
     ReportIf(groupId == nullptr);
     NotificationWnd* toRemove[kMaxNotifs];
     int nRemove = 0;
     for (int i = 0; i < nWnds; i++) {
-        if (wnds[i]->groupId == groupId) {
-            toRemove[nRemove++] = wnds[i];
+        if (wnds[i]->groupId != groupId) {
+            continue;
         }
+        if (onlyTab && wnds[i]->tab && wnds[i]->tab != onlyTab) {
+            continue;
+        }
+        toRemove[nRemove++] = wnds[i];
     }
     for (int i = 0; i < nRemove; i++) {
         NotifsRemoveNotification(toRemove[i]);
@@ -682,7 +691,9 @@ static int NotifsRemoveForGroup(NotificationWnd** wnds, int nWnds, Kind groupId)
 static bool NotifsAdd(NotificationWnd** wnds, int nWnds, NotificationWnd* wnd, Kind groupId) {
     bool skipRemove = (groupId == nullptr) || (groupId == kNotifAdHoc);
     if (!skipRemove) {
-        NotifsRemoveForGroup(wnds, nWnds, groupId);
+        // Tab-tied notifs (e.g. document errors) replace only the same tab's
+        // previous notif of that group, not other tabs'.
+        NotifsRemoveForGroup(wnds, nWnds, groupId, wnd->tab);
     }
     if (gNotifsCount >= kMaxNotifs) {
         return false;
@@ -719,7 +730,17 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
         delete wnd;
         return nullptr;
     }
-    if (wnd->delayTimerId == 0) {
+    // Tab-tied notifs must not paint on a different active tab (common when
+    // multi-file open/session restore finishes a background load after the UI
+    // already selected another tab). Hide if this tab is not current.
+    if (args.tab && wnd->delayTimerId == 0) {
+        MainWindow* win = FindMainWindowByHwnd(args.hwndParent);
+        if (win && win->CurrentTab() != args.tab) {
+            ShowWindow(wnd->hwnd, SW_HIDE);
+        } else {
+            BringWindowToTop(wnd->hwnd);
+        }
+    } else if (wnd->delayTimerId == 0) {
         BringWindowToTop(wnd->hwnd);
     }
     bool ok = NotifsAdd(wnd, args.groupId);
@@ -727,6 +748,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
         delete wnd;
         return nullptr;
     }
+    RelayoutNotifications(args.hwndParent);
     return wnd;
 }
 
