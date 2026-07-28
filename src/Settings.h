@@ -560,6 +560,9 @@ struct GlobalPrefs {
     // if true, show a tip when hovering an annotation (e.g. "Highlight
     // annotation. Ctrl+click to edit.")
     bool showAnnotationNotification;
+    // if true, show page numbers (labels) right-aligned on bookmark /
+    // table-of-contents entries
+    bool showTocPageNumbers;
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
@@ -1195,6 +1198,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showDocumentFocusIndicator), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showAnnotationNotification), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showTocPageNumbers), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
@@ -1287,21 +1291,21 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 123, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 124, gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
     "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
-    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowStartPage\0Si"
-    "debarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0Fa"
-    "stScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFol"
-    "lowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance"
-    "\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0"
-    "EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebar"
-    "Dx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0Pr"
-    "interDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0Defau"
-    "ltPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0Reopen"
-    "Once\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowTocPageNumber"
+    "s\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId"
+    "\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkThem"
+    "e\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0Engine"
+    "eringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement"
+    "\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBui"
+    "ld\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0"
+    "ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomS"
+    "creenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0"
+    "SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
@@ -1326,7 +1330,8 @@ static const StructInfo gGlobalPrefsInfo = {
     "sidebar\0if true, we show table of contents (Bookmarks) sidebar if it's present in the document\0if true we draw "
     "a blue border around links in the document\0if true, draw a focus ring around the document when it has keyboard "
     "focus (Tab to the page area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. "
-    "Ctrl+click to edit.\")\0if true, we show a list of frequently read documents when no document is loaded\0width of "
+    "Ctrl+click to edit.\")\0if true, show page numbers (labels) right-aligned on bookmark / table-of-contents "
+    "entries\0if true, we show a list of frequently read documents when no document is loaded\0width of "
     "favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay "
     "scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show "
     "scrollbar in single page mode\0if true, implements smooth scrolling\0how long to hover an internal-document link "

@@ -148,6 +148,10 @@ ShowDocumentFocusIndicator = false
 ; Ctrl+click to edit.") (introduced in version 3.7)
 ShowAnnotationNotification = true
 
+; if true, show page numbers (labels) right-aligned on bookmark /
+; table-of-contents entries (introduced in version 3.7)
+ShowTocPageNumbers = true
+
 ; if true, we show a list of frequently read documents when no document is
 ; loaded
 ShowStartPage = true

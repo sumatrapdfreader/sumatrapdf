@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/BitManip.h"
+#include "base/Dpi.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -33,13 +34,6 @@
 #include "Accelerators.h"
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
-
-/* Define if you want page numbers to be displayed in the ToC sidebar */
-// #define DISPLAY_TOC_PAGE_NUMBERS
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-#define WM_APP_REPAINT_TOC (WM_APP + 1)
-#endif
 
 static void LayoutTocContainer(MainWindow* win);
 
@@ -100,70 +94,6 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
 
     str::BufSet(nm->pszText, nm->cchTextMax, ToStr(infotip));
 }
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
-    // code inspired by http://www.codeguru.com/cpp/controls/treeview/multiview/article.php/c3985/
-    LPNMCUSTOMDRAW ncd = &ntvcd->nmcd;
-    HWND hTV = ncd->hdr.hwndFrom;
-    HTREEITEM hItem = (HTREEITEM)ncd->dwItemSpec;
-    RECT rcItem;
-    if (0 == ncd->rc.right - ncd->rc.left || 0 == ncd->rc.bottom - ncd->rc.top) return;
-    if (!TreeView_GetItemRect(hTV, hItem, &rcItem, TRUE)) return;
-    if (rcItem.right > ncd->rc.right) rcItem.right = ncd->rc.right;
-
-    // Clear the label
-    RECT rcFullWidth = rcItem;
-    rcFullWidth.right = ncd->rc.right;
-    FillRect(ncd->hdc, &rcFullWidth, GetSysColorBrush(COLOR_WINDOW));
-
-    // Get the label's text
-    WCHAR szText[MAX_PATH];
-    TVITEM item;
-    item.hItem = hItem;
-    item.mask = TVIF_TEXT | TVIF_PARAM;
-    item.pszText = szText;
-    item.cchTextMax = MAX_PATH;
-    TreeView_GetItem(hTV, &item);
-
-    // Draw the page number right-aligned (if there is one)
-    MainWindow* win = FindMainWindowByHwnd(hTV);
-    TocItem* tocItem = (TocItem*)item.lParam;
-    TempStr label = nullptr;
-    if (tocItem->pageNo && win && win->IsDocLoaded()) {
-        label = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
-        label = str::JoinTemp(StrL("  "), label);
-    }
-    if (label && str::EndsWith(item.pszText, label)) {
-        RECT rcPageNo = rcFullWidth;
-        InflateRect(&rcPageNo, -2, -1);
-
-        SIZE txtSize;
-        GetTextExtentPoint32(ncd->hdc, label, len(label), &txtSize);
-        rcPageNo.left = rcPageNo.right - txtSize.cx;
-
-        SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
-        SetBkColor(ncd->hdc, GetSysColor(COLOR_WINDOW));
-        DrawTextW(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
-
-        // Reduce the size of the label and cut off the page number
-        rcItem.right = std::max(rcItem.right - txtSize.cx, 0);
-        szText[len(szText) - len(label)] = '\0';
-    }
-
-    SetTextColor(ncd->hdc, ntvcd->clrText);
-    SetBkColor(ncd->hdc, ntvcd->clrTextBk);
-
-    // Draw the focus rectangle (including proper background color)
-    HBRUSH brushBg = CreateSolidBrush(ntvcd->clrTextBk);
-    FillRect(ncd->hdc, &rcItem, brushBg);
-    DeleteObject(brushBg);
-    if ((ncd->uItemState & CDIS_FOCUS)) DrawFocusRect(ncd->hdc, &rcItem);
-
-    InflateRect(&rcItem, -2, -1);
-    DrawTextW(ncd->hdc, szText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
-}
-#endif
 
 struct GoToTocLinkData {
     TocItem* tocItem;
@@ -946,19 +876,16 @@ static bool HasTocFilter(MainWindow* win) {
     return len(words) > 0;
 }
 
-static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win) {
+// POSTPAINT: redraw title (optional filter highlight) and optional right-aligned
+// page label. Used when ShowTocPageNumbers is on and/or the TOC filter is active.
+static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     TocItem* tocItem = (TocItem*)ev->treeItem;
     if (!tocItem || !tocItem->title) {
         return;
     }
-    StrVec words;
-    GetTocFilterWords(win, words);
-    if (len(words) == 0) {
-        return;
-    }
 
-    RECT labelRect;
     TreeView* tv = ev->treeView;
+    RECT labelRect{};
     if (!tv->GetItemRect(ev->treeItem, true, labelRect)) {
         return;
     }
@@ -968,6 +895,10 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
     NMCUSTOMDRAW* cd = &tvcd->nmcd;
+    if (cd->rc.right <= cd->rc.left || cd->rc.bottom <= cd->rc.top) {
+        return;
+    }
+
     // POSTPAINT often omits CDIS_SELECTED; also check the control selection.
     bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
     if (!isSelected) {
@@ -982,29 +913,95 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     if (!(isSelected && hasFocus) && tocItem->color != kColorUnset) {
         txtCol = tocItem->color;
     }
+
+    bool showPage = gGlobalPrefs->showTocPageNumbers && win && win->IsDocLoaded() && win->ctrl && tocItem->pageNo > 0;
+    TempStr pageLabel{};
+    if (showPage) {
+        pageLabel = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
+        if (!pageLabel) {
+            showPage = false;
+        }
+    }
+
+    StrVec words;
+    GetTocFilterWords(win, words);
+    bool filterActive = len(words) > 0;
+
+    if (!showPage && !filterActive) {
+        return;
+    }
+
+    // Label area extends to the visible right edge so the page number stays
+    // right-aligned against the sidebar, not under a long title.
+    RECT drawRc = labelRect;
+    drawRc.right = std::min(itemRect.right, cd->rc.right);
+    if (drawRc.right <= drawRc.left) {
+        return;
+    }
+
+    if (tocItem->fontFlags != 0) {
+        UpdateFont(hdc, tv->hwnd, tocItem->fontFlags);
+    }
     HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
-    DrawTreeItemFilterHighlight(hdc, labelRect, tocItem->title, words, bgCol, txtCol, font);
+    if (tocItem->fontFlags == 0 && font) {
+        SelectObject(hdc, font);
+    }
+
+    TempWStr pageW{};
+    SIZE pageSize{};
+    int pageReserve = 0;
+    if (showPage) {
+        pageW = ToWStrTemp(pageLabel);
+        if (pageW.len > 0) {
+            GetTextExtentPoint32W(hdc, pageW.s, pageW.len, &pageSize);
+            pageReserve = pageSize.cx + DpiScale(tv->hwnd, 8);
+        } else {
+            showPage = false;
+        }
+    }
+
+    HBRUSH brushBg = CreateSolidBrush(bgCol);
+    FillRect(hdc, &drawRc, brushBg);
+    DeleteObject(brushBg);
+
+    RECT titleRc = drawRc;
+    titleRc.right = std::max(titleRc.left, drawRc.right - pageReserve);
+    InflateRect(&titleRc, -2, -1);
+
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, txtCol);
+    SetBkColor(hdc, bgCol);
+
+    if (filterActive) {
+        DrawTreeItemFilterHighlight(hdc, titleRc, tocItem->title, words, bgCol, txtCol, font);
+    } else {
+        TempWStr titleW = ToWStrTemp(tocItem->title);
+        DrawTextW(hdc, titleW.s, titleW.len, &titleRc,
+                  DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
+    }
+
+    if (showPage && pageW.len > 0) {
+        RECT pageRc = drawRc;
+        InflateRect(&pageRc, -2, -1);
+        pageRc.left = std::max(pageRc.left, pageRc.right - pageSize.cx);
+        // Slightly muted vs title when not selected (keeps numbers secondary).
+        if (!(isSelected && hasFocus)) {
+            COLORREF muted =
+                RGB((GetRValue(txtCol) * 2 + GetRValue(bgCol)) / 3, (GetGValue(txtCol) * 2 + GetGValue(bgCol)) / 3,
+                    (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
+            SetTextColor(hdc, muted);
+        }
+        DrawTextW(hdc, pageW.s, pageW.len, &pageRc, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
+    }
+
+    if ((cd->uItemState & CDIS_FOCUS) && isSelected && hasFocus) {
+        DrawFocusRect(hdc, &drawRc);
+    }
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
 void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
-#if defined(DISPLAY_TOC_PAGE_NUMBERS)
-    if (false) return CDRF_DODEFAULT;
-    switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
-        case CDDS_PREPAINT:
-            return CDRF_NOTIFYITEMDRAW;
-        case CDDS_ITEMPREPAINT:
-            return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-        case CDDS_ITEMPOSTPAINT:
-            RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
-            // fall through
-        default:
-            return CDRF_DODEFAULT;
-    }
-    break;
-#endif
-
     ev->result = CDRF_DODEFAULT;
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);
@@ -1016,6 +1013,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     bool filterActive = HasTocFilter(win);
+    bool showPageNumbers = gGlobalPrefs->showTocPageNumbers;
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         TocItem* tocItem = (TocItem*)ev->treeItem;
@@ -1030,7 +1028,8 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
             UpdateFont(cd->hdc, ev->treeView->hwnd, tocItem->fontFlags);
             res = CDRF_NEWFONT;
         }
-        if (filterActive) {
+        // POSTPAINT redraws title + optional page number / filter highlight.
+        if (filterActive || (showPageNumbers && tocItem->pageNo > 0)) {
             res |= CDRF_NOTIFYPOSTPAINT;
         }
         ev->result = res;
@@ -1038,8 +1037,8 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
     }
 
     if (cd->dwDrawStage == CDDS_ITEMPOSTPAINT) {
-        if (filterActive && win) {
-            DrawTocItemHighlight(ev, win);
+        if (win) {
+            DrawTocItemPostPaint(ev, win);
         }
         ev->result = CDRF_DODEFAULT;
         return;
@@ -1180,22 +1179,6 @@ void TocTreeKeyDown2(TreeView::KeyDownEvent* ev) {
     AdvanceFocus(win);
     ev->result = 1;
 }
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void TocTreeMsgFilter(WndEvent*) {
-    switch (msg) {
-        case WM_SIZE:
-        case WM_HSCROLL:
-            // Repaint the ToC so that RelayoutTocItem is called for all items
-            PostMessageW(hwnd, WM_APP_REPAINT_TOC, 0, 0);
-            break;
-        case WM_APP_REPAINT_TOC:
-            InvalidateRect(hwnd, nullptr, TRUE);
-            UpdateWindow(hwnd);
-            break;
-    }
-}
-#endif
 
 // Position label, filter edit, and tree window within toc container using the
 // wingui layout engine (VBox built in CreateToc).

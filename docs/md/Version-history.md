@@ -25,6 +25,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `ShowDocumentFocusIndicator` advanced setting: when true, draws a focus ring around the document when it has keyboard focus (Tab to the page area); off by default (fixes #4644)
 - add `ShowAnnotationNotification` advanced setting: when false, disables the tip shown when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit."); on by default (fixes #4501)
 - `TabWidth` advanced setting is now DPI-scaled so it takes effect on HiDPI / high-scaling displays (fixes #3850)
+- Bookmarks sidebar shows page numbers (labels) right-aligned on each entry; disable with `ShowTocPageNumbers = false` (fixes #3288)
 - fix EPUB/reflow images that vanished when publisher CSS set `img { width: 100%; height: 100%; }` (default user CSS forces `height: auto` and `max-width: 100%`) (fixes #5805)
 - the `FixedPageUI.SelectionColor` advanced setting now honors an alpha channel: set an `#aarrggbb` value (e.g. `#40f5fc0c`) to make the text-selection overlay more transparent so selected text stays crisp instead of looking washed out; `#rrggbb` keeps the previous default opacity (fixes #3209)
 - middle-click auto-scroll is now smooth: it's driven by a high-frequency timer with fractional-pixel accumulation instead of a coarse 20ms timer with integer steps, so it no longer looks choppy (also enables fine, slow scroll speeds) (fixes #2693)

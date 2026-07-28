@@ -732,6 +732,12 @@ const globalPrefs: Field[] = [
     true,
     'if true, show a tip when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit.")',
   ).ver("3.7"),
+  field(
+    "ShowTocPageNumbers",
+    Bool,
+    true,
+    "if true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries",
+  ).ver("3.7"),
   field("ShowStartPage", Bool, true, "if true, we show a list of frequently read documents when no document is loaded"),
   field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)").internal(),
   field(
