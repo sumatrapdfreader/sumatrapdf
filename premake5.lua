@@ -777,21 +777,6 @@ workspace "SumatraPDF"
     forceincludes { "hb.hh" }
     harfbuzz_files()
 
-  project "a-extract"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C"
-    optimized_conf()
-    disablewarnings {
-      "4005", "4100", "4127", "4130", "4201", "4245", "4310", "4389", "4456", "4457", "4701", "4996"
-    }
-    includedirs { "ext/a-extract" }
-    uses_zlib()
-    files {
-      "ext/a-extract/extract.c", "ext/a-extract/memento.h",
-      "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
-    }
-
   project "brotli"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -916,9 +901,9 @@ workspace "SumatraPDF"
     filter {}
 
     disablewarnings {
-      "4005", "4013", "4018", "4057", "4100", "4115", "4127", "4130", "4132", "4146", "4200", "4204", "4206", "4210",
-      "4090", "4244", "4245", "4267", "4295", "4305", "4310", "4389", "4456", "4457", "4701", "4702", "4703", "4706",
-      "4819", "5286"
+      "4005", "4013", "4018", "4057", "4100", "4115", "4127", "4130", "4132", "4146", "4200", "4201", "4204", "4206",
+      "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4310", "4389", "4456", "4457", "4701", "4702", "4703",
+      "4706", "4819", "4996", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -952,11 +937,17 @@ workspace "SumatraPDF"
     files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
     files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
     files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
-    filter { "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/**" }
+    files {
+      "ext/a-extract/extract.c", "ext/a-extract/memento.h",
+      "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
+    }
+    filter {
+      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/**"
+    }
       optimize "Size"
     filter {}
     links {
-      "cmark-gfm", "a-extract", "harfbuzz", "freetype", "brotli",
+      "cmark-gfm", "harfbuzz", "freetype", "brotli",
       "lcms2", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 

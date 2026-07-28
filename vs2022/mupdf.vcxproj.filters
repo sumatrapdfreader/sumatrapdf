@@ -4,6 +4,12 @@
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\a-extract">
+      <UniqueIdentifier>{0E295205-7AE9-CD3B-4324-17B9AFA31218}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\a-extract\extract">
+      <UniqueIdentifier>{78B76763-E423-235E-AD17-BBBB194345C6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\a-jbig2dec">
       <UniqueIdentifier>{0DABD594-F978-C99A-E20C-3AC1CE79A5FF}</UniqueIdentifier>
     </Filter>
@@ -87,6 +93,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\a-extract\extract\alloc.h">
+      <Filter>ext\a-extract\extract</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-extract\extract\buffer.h">
+      <Filter>ext\a-extract\extract</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-extract\extract\extract.h">
+      <Filter>ext\a-extract\extract</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-extract\memento.h">
+      <Filter>ext\a-extract</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\a-jbig2dec\jbig2.h">
       <Filter>ext\a-jbig2dec</Filter>
     </ClInclude>
@@ -539,6 +557,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\a-extract\extract.c">
+      <Filter>ext\a-extract</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\a-jbig2dec\jbig2dec.c">
       <Filter>ext\a-jbig2dec</Filter>
     </ClCompile>
@@ -1321,6 +1342,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-extract\version.txt">
+      <Filter>ext\a-extract</Filter>
+    </None>
     <None Include="..\ext\a-jbig2dec\version.txt">
       <Filter>ext\a-jbig2dec</Filter>
     </None>
