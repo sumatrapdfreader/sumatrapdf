@@ -29,6 +29,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `TabWidth` advanced setting is now DPI-scaled so it takes effect on HiDPI / high-scaling displays (fixes #3850)
 - Bookmarks sidebar shows page numbers (labels) right-aligned on each entry; disable with `ShowTocPageNumbers = false` (fixes #3288)
 - page-info tip (`I` key) is preserved across tab switches and visits to the Home page (fixes #4454)
+- page-info tip shows extra detail for images: comics / image folders list the current image file name and size (both pages when two are visible in facing view); a single image file shows pixel resolution, size, and DPI when it is not the default 96 (fixes #4456)
 - `-new-window` with several file arguments opens one new window containing all files as tabs, instead of a separate window per file (fixes #5044)
 - Manga mode (R2L): Left/Right arrows and horizontal swipe reverse so Left advances and Right goes back, matching right-to-left reading (fixes #3964)
 - starting a search (Ctrl+F) remembers the current page as favorite `/` so you can jump back via Favorites or the command palette `$` mode (fixes #5726)

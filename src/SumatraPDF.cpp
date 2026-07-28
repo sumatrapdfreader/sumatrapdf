@@ -1359,6 +1359,45 @@ static TempStr BuildZoomString(float zoomLevel) {
     return fmt("%s: %s", zoomStr, zoomLevelStr);
 }
 
+// Pages shown in the page-info tip: the current page, plus its facing partner
+// when that page is also visible (facing / book view with two images).
+static int CollectPageInfoPages(DocController* ctrl, int pageNo, int* pagesOut, int maxPages) {
+    int n = 0;
+    auto add = [&](int p) {
+        if (n >= maxPages || !ctrl->ValidPageNo(p)) {
+            return;
+        }
+        for (int i = 0; i < n; i++) {
+            if (pagesOut[i] == p) {
+                return;
+            }
+        }
+        pagesOut[n++] = p;
+    };
+    add(pageNo);
+    DisplayModel* dm = ctrl->AsFixed();
+    if (dm) {
+        DisplayMode mode = dm->GetDisplayMode();
+        if (IsFacing(mode) || IsBookView(mode)) {
+            if (dm->PageVisible(pageNo + 1)) {
+                add(pageNo + 1);
+            } else if (dm->PageVisible(pageNo - 1)) {
+                add(pageNo - 1);
+            }
+        }
+        // stable order for multi-page rows
+        if (n == 2 && pagesOut[0] > pagesOut[1]) {
+            int t = pagesOut[0];
+            pagesOut[0] = pagesOut[1];
+            pagesOut[1] = t;
+        }
+    }
+    return n;
+}
+
+// Light separator between page-info values: space + U+00B7 MIDDLE DOT + space.
+#define PAGE_INFO_SEP " \xC2\xB7 "
+
 static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
     if (!ctrl->ValidPageNo(pageNo)) {
         pageNo = ctrl->CurrentPageNo();
@@ -1371,7 +1410,71 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);
-    pageInfo = str::JoinTemp(pageInfo, StrL(" "), zoomStr);
+    pageInfo = str::JoinTemp(pageInfo, StrL(PAGE_INFO_SEP), zoomStr);
+
+    // Image extras (issue #4456). Document file name is already on the tab.
+    DisplayModel* dm = ctrl->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (engine && IsEngineImages(engine)) {
+        if (engine->kind == kindEngineImage) {
+            // Single image file (or multi-frame TIFF/GIF): resolution · size · non-default DPI
+            RectF box = engine->PageMediabox(pageNo);
+            int w = (int)(box.dx + 0.5f);
+            int h = (int)(box.dy + 0.5f);
+            i64 imgSize = -1;
+            EngineImagesGetPageFileInfo(engine, pageNo, nullptr, &imgSize);
+            TempStr detail{};
+            if (w > 0 && h > 0) {
+                detail = fmt("%d x %d", w, h);
+            }
+            if (imgSize >= 0) {
+                TempStr sizeStr = str::FormatSizeShortTemp(imgSize);
+                detail = detail ? fmt("%s%s%s", detail, StrL(PAGE_INFO_SEP), sizeStr) : sizeStr;
+            }
+            // fileDPI defaults to 96; only show when the image reports something else
+            float dpi = engine->GetFileDPI();
+            if (dpi > 0.5f && fabsf(dpi - 96.0f) > 0.5f) {
+                TempStr dpiStr = fmt("%.0f DPI", dpi);
+                detail = detail ? fmt("%s%s%s", detail, StrL(PAGE_INFO_SEP), dpiStr) : dpiStr;
+            }
+            if (detail) {
+                pageInfo = str::JoinTemp(pageInfo, StrL(PAGE_INFO_SEP), detail);
+            }
+        } else {
+            // Comic / image folder: per-page name · dimensions · bytes (both if facing)
+            int pages[2] = {};
+            int nShow = CollectPageInfoPages(ctrl, pageNo, pages, 2);
+            for (int i = 0; i < nShow; i++) {
+                int p = pages[i];
+                TempStr imgName{};
+                i64 imgSize = -1;
+                if (!EngineImagesGetPageFileInfo(engine, p, &imgName, &imgSize)) {
+                    continue;
+                }
+                RectF box = engine->PageMediabox(p);
+                int w = (int)(box.dx + 0.5f);
+                int h = (int)(box.dy + 0.5f);
+                TempStr detail{};
+                auto appendPart = [&](TempStr part) {
+                    if (!part) {
+                        return;
+                    }
+                    detail = detail ? fmt("%s%s%s", detail, StrL(PAGE_INFO_SEP), part) : part;
+                };
+                appendPart(imgName);
+                if (w > 0 && h > 0) {
+                    appendPart(fmt("%d x %d", w, h));
+                }
+                if (imgSize >= 0) {
+                    appendPart(str::FormatSizeShortTemp(imgSize));
+                }
+                if (detail) {
+                    pageInfo = str::JoinTemp(pageInfo, StrL(PAGE_INFO_SEP), detail);
+                }
+            }
+        }
+    }
+
     NotificationUpdateMessage(wnd, pageInfo);
 }
 

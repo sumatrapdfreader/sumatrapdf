@@ -158,6 +158,8 @@ class EngineImages : public EngineBase {
     // not free. Bytes stay valid until the engine is destroyed.
     virtual Str GetImageData(int pageNo) = 0;
     virtual TempStr GetImagePathTemp(int pageNo) { return {}; }
+    // Uncompressed image bytes for pageNo when known without decoding (-1 unknown).
+    virtual i64 GetImageByteSize(int pageNo);
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
     void DropPage(ImagePage* page, bool forceRemove);
@@ -725,6 +727,14 @@ Str EngineImages::GetFileData() {
     return str::Dup(sourceData);
 }
 
+i64 EngineImages::GetImageByteSize(int pageNo) {
+    TempStr path = GetImagePathTemp(pageNo);
+    if (path && file::Exists(path)) {
+        return file::GetSize(path);
+    }
+    return -1;
+}
+
 bool EngineImages::SaveFileAs(Str dstPath) {
     return SaveFileOrData(FilePath(), sourceData, dstPath);
 }
@@ -960,6 +970,7 @@ class EngineImage : public EngineImages {
     fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
+    i64 GetImageByteSize(int pageNo) override;
 };
 
 EngineImage::EngineImage() {
@@ -1385,6 +1396,23 @@ Str EngineImage::GetImageData(int) {
         pi->rawData = path ? file::ReadFile(path) : str::Dup(sourceData);
     }
     return pi->rawData;
+}
+
+i64 EngineImage::GetImageByteSize(int) {
+    Str path = FilePath();
+    if (path) {
+        i64 n = file::GetSize(path);
+        if (n >= 0) {
+            return n;
+        }
+    }
+    if (len(sourceData) > 0) {
+        return sourceData.len;
+    }
+    if (len(pageInfos) > 0 && len(pageInfos[0]->rawData) > 0) {
+        return pageInfos[0]->rawData.len;
+    }
+    return -1;
 }
 
 fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
@@ -1864,6 +1892,7 @@ class EngineCbx : public EngineImages {
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
+    i64 GetImageByteSize(int pageNo) override;
 
     bool LoadFromFile(Str fileName);
     bool LoadFromData(Str data);
@@ -2106,6 +2135,13 @@ Str EngineCbx::GetImageData(int pageNo) {
     return Str(fi->data, fi->fileSizeUncompressed);
 }
 
+i64 EngineCbx::GetImageByteSize(int pageNo) {
+    if ((pageNo < 1) || (pageNo > PageCount())) {
+        return -1;
+    }
+    return files[pageNo - 1]->fileSizeUncompressed;
+}
+
 TempStr EngineCbx::GetPropertyTemp(DocProp prop) {
     if (prop == DocProp::Title) {
         return cip.propTitle;
@@ -2346,4 +2382,24 @@ void EngineImagesGetImageProperties(EngineBase* engine, int pageNo, Props& props
         return;
     }
     ((EngineImages*)engine)->GetImageProperties(pageNo, propsOut);
+}
+
+bool EngineImagesGetPageFileInfo(EngineBase* engine, int pageNo, TempStr* nameOut, i64* sizeOut) {
+    if (!IsEngineImages(engine) || pageNo < 1 || pageNo > engine->PageCount()) {
+        return false;
+    }
+    auto* e = (EngineImages*)engine;
+    if (nameOut) {
+        TempStr pathOrName = e->GetImagePathTemp(pageNo);
+        *nameOut = pathOrName ? path::GetBaseNameTemp(pathOrName) : TempStr{};
+        // single-image engine: path is the document itself; still report the base name
+        if (!*nameOut) {
+            Str fp = engine->FilePath();
+            *nameOut = fp ? path::GetBaseNameTemp(fp) : TempStr{};
+        }
+    }
+    if (sizeOut) {
+        *sizeOut = e->GetImageByteSize(pageNo);
+    }
+    return true;
 }
