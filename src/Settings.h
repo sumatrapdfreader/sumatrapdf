@@ -329,6 +329,36 @@ struct Theme {
     // link color
     Str linkColor;
     ParsedColor linkColorParsed;
+    // disabled / grayed text color
+    Str disabledTextColor;
+    ParsedColor disabledTextColorParsed;
+    // secondary / muted text color
+    Str darkerTextColor;
+    ParsedColor darkerTextColorParsed;
+    // hovered control background color
+    Str hotBackgroundColor;
+    ParsedColor hotBackgroundColorParsed;
+    // control border / edge color
+    Str edgeColor;
+    ParsedColor edgeColorParsed;
+    // hovered control border color
+    Str hotEdgeColor;
+    ParsedColor hotEdgeColorParsed;
+    // disabled control border color
+    Str disabledEdgeColor;
+    ParsedColor disabledEdgeColorParsed;
+    // error background color
+    Str errorBackgroundColor;
+    ParsedColor errorBackgroundColorParsed;
+    // notification tip background color
+    Str notificationBackgroundColor;
+    ParsedColor notificationBackgroundColorParsed;
+    // notification tip highlight background color
+    Str notificationHighlightColor;
+    ParsedColor notificationHighlightColorParsed;
+    // notification tip highlight text color
+    Str notificationHighlightTextColor;
+    ParsedColor notificationHighlightTextColorParsed;
     // should we colorize Windows controls and window areas
     bool colorizeControls;
 };
@@ -1009,13 +1039,28 @@ static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, darkerTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, edgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, errorBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gThemeInfo = {
-    sizeof(Theme), 6, gThemeFields,
-    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0ColorizeControls",
-    "name of the theme\0text color\0background color\0control background color\0link color\0should we colorize Windows "
-    "controls and window areas"};
+    sizeof(Theme), 16, gThemeFields,
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
+    "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
+    "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
+    "name of the theme\0text color\0background color\0control background color\0link color\0disabled / grayed text "
+    "color\0secondary / muted text color\0hovered control background color\0control border / edge color\0hovered "
+    "control border color\0disabled control border color\0error background color\0notification tip background "
+    "color\0notification tip highlight background color\0notification tip highlight text color\0should we colorize "
+    "Windows controls and window areas"};
 
 static const FieldInfo gTabFileFields[] = {
     {offsetof(TabFile, path), SettingType::String, (intptr_t)""},
@@ -1398,13 +1443,28 @@ static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, darkerTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, edgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, errorBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gTheme_1_Info = {
-    sizeof(Theme), 6, gTheme_1_Fields,
-    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0ColorizeControls",
-    "name of the theme\0text color\0background color\0control background color\0link color\0should we colorize Windows "
-    "controls and window areas"};
+    sizeof(Theme), 16, gTheme_1_Fields,
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
+    "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
+    "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
+    "name of the theme\0text color\0background color\0control background color\0link color\0disabled / grayed text "
+    "color\0secondary / muted text color\0hovered control background color\0control border / edge color\0hovered "
+    "control border color\0disabled control border color\0error background color\0notification tip background "
+    "color\0notification tip highlight background color\0notification tip highlight text color\0should we colorize "
+    "Windows controls and window areas"};
 
 static const FieldInfo gThemesFields[] = {
     {offsetof(Themes, themes), SettingType::Array, (intptr_t)&gTheme_1_Info},

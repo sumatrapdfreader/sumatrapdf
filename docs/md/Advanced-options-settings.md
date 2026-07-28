@@ -617,6 +617,36 @@ Themes [
     ; link color
     LinkColor = 
 
+    ; disabled / grayed text color (introduced in version 3.7)
+    DisabledTextColor = 
+
+    ; secondary / muted text color (introduced in version 3.7)
+    DarkerTextColor = 
+
+    ; hovered control background color (introduced in version 3.7)
+    HotBackgroundColor = 
+
+    ; control border / edge color (introduced in version 3.7)
+    EdgeColor = 
+
+    ; hovered control border color (introduced in version 3.7)
+    HotEdgeColor = 
+
+    ; disabled control border color (introduced in version 3.7)
+    DisabledEdgeColor = 
+
+    ; error background color (introduced in version 3.7)
+    ErrorBackgroundColor = 
+
+    ; notification tip background color (introduced in version 3.7)
+    NotificationBackgroundColor = 
+
+    ; notification tip highlight background color (introduced in version 3.7)
+    NotificationHighlightColor = 
+
+    ; notification tip highlight text color (introduced in version 3.7)
+    NotificationHighlightTextColor = 
+
     ; should we colorize Windows controls and window areas
     ColorizeControls = false
   ]

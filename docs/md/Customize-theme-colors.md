@@ -19,67 +19,58 @@ Themes [
         BackgroundColor = #263238
         ControlBackgroundColor = #263238
         LinkColor = #8aa3b0
+        DisabledTextColor = #6b7c85
+        DarkerTextColor = #8aa3b0
+        HotBackgroundColor = #324047
+        EdgeColor = #37474f
+        HotEdgeColor = #546e7a
+        DisabledEdgeColor = #1e272c
+        ErrorBackgroundColor = #5c2b2b
+        NotificationBackgroundColor = #2e3c43
+        NotificationHighlightColor = #455a64
+        NotificationHighlightTextColor = #eceff1
         ColorizeControls = true
     ]
-	[
-		Name = Solarized Dark
-		TextColor = #839496
-		BackgroundColor = #002b36
-		ControlBackgroundColor = #073642
-		LinkColor = #268bd2
-		ColorizeControls = true
-	]
-	[
-		Name = Dracula
-		TextColor = #f8f8f2
-		BackgroundColor = #282a36
-		ControlBackgroundColor = #44475a
-		LinkColor = #8be9fd
-		ColorizeControls = true
-	]
-	[
-		Name = Nebula
-		TextColor = #CBE3E7
-		BackgroundColor = #100E23
-		ControlBackgroundColor = #1E1C31
-		LinkColor = #91DDFF
-		ColorizeControls = true
-	]
-	[
-		Name = Greeny
-		TextColor = #FDD085
-		BackgroundColor = #4F6232
-		ControlBackgroundColor = #1E3304
-		LinkColor = #A2E53B
-		ColorizeControls = true
-	]
-	[
-		Name = Choco
-		TextColor = #D7AD62
-		BackgroundColor = #2A1104
-		ControlBackgroundColor = #172736
-		LinkColor = #E8CD12
-		ColorizeControls = true
-	]
-	[
-		Name = Purpy
-		TextColor = #E2C3C3
-		BackgroundColor = #20222A
-		ControlBackgroundColor = #1E0126
-		LinkColor = #EFF0B8
-		ColorizeControls = true
-	]
+    [
+        Name = Dracula
+        TextColor = #f8f8f2
+        BackgroundColor = #282a36
+        ControlBackgroundColor = #44475a
+        LinkColor = #8be9fd
+        DisabledTextColor = #6272a4
+        DarkerTextColor = #6272a4
+        HotBackgroundColor = #565a73
+        EdgeColor = #6272a4
+        HotEdgeColor = #bd93f9
+        DisabledEdgeColor = #343746
+        ErrorBackgroundColor = #ff5555
+        NotificationBackgroundColor = #343746
+        NotificationHighlightColor = #bd93f9
+        NotificationHighlightTextColor = #f8f8f2
+        ColorizeControls = true
+    ]
 ]
 ```
 
-The above will provide you with a collection of themes: `My Dark Theme`, `Solarized Dark`, `Dracula` and so on.
+The above will provide you with custom themes such as `My Dark Theme` and `Dracula`. Built-in themes already ship with these colors filled in, including Solarized, Dracula, **One Dark**, **Monokai**, **Nord**, **GitHub Dark**, **Catppuccin Mocha**, **Tokyo Night**, **Gruvbox**, **Night Owl**, **Ayu**, and **Palenight**.
 
 Meaning of the parameters:
+
+**Required / base colors**
 - `TextColor` and `BackgroundColor` are for main window color and color of text.
 - **`Shift + I`** (`CmdInvertColors`) toggles `DocumentColorsFollowTheme` between `off` and `smart` for MuPDF-rendered documents (PDF, ePub, etc.). With `smart` or `legacy`, `FixedPageUI.TextColor` and `FixedPageUI.BackgroundColor` (or theme colors when those are left at default) drive page recoloring.
 - `ControlBackgroundColor` is for background of Windows controls (buttons, window frame, menus, list controls etc.).
 - `LinkColor` is a color for links. Typically it's blue.
 - `ColorizeControls` should be `true`. If `false` we won't try to change colors of standard windows controls (menu, toolbar, buttons etc.) so a lot of UI will not respect theme colors.
+
+**Optional UI colors** (leave empty to derive from the base colors; set them when a warm or tinted `TextColor` would make derived disabled/hover colors look wrong — e.g. Dracula’s near-white foreground)
+
+- `DisabledTextColor` — grayed / disabled labels and buttons
+- `DarkerTextColor` — secondary / muted text
+- `HotBackgroundColor` — hovered control background
+- `EdgeColor` / `HotEdgeColor` / `DisabledEdgeColor` — control borders
+- `ErrorBackgroundColor` — error surfaces
+- `NotificationBackgroundColor` / `NotificationHighlightColor` / `NotificationHighlightTextColor` — in-app notification tips
 
 Now, once you save the text file above, there are three main ways to choose a theme that you had created:
 1. By changing the value of `Theme = ` in the `SumatraPDF-settings.txt` which we accessed above (e.g. `Theme = Solarized Dark`). Or,

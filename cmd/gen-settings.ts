@@ -168,6 +168,17 @@ const theme: Field[] = [
   field("BackgroundColor", Color, "", "background color"),
   field("ControlBackgroundColor", Color, "", "control background color"),
   field("LinkColor", Color, "", "link color"),
+  // optional; empty = derived from TextColor/BackgroundColor/ControlBackgroundColor
+  field("DisabledTextColor", Color, "", "disabled / grayed text color").ver("3.7"),
+  field("DarkerTextColor", Color, "", "secondary / muted text color").ver("3.7"),
+  field("HotBackgroundColor", Color, "", "hovered control background color").ver("3.7"),
+  field("EdgeColor", Color, "", "control border / edge color").ver("3.7"),
+  field("HotEdgeColor", Color, "", "hovered control border color").ver("3.7"),
+  field("DisabledEdgeColor", Color, "", "disabled control border color").ver("3.7"),
+  field("ErrorBackgroundColor", Color, "", "error background color").ver("3.7"),
+  field("NotificationBackgroundColor", Color, "", "notification tip background color").ver("3.7"),
+  field("NotificationHighlightColor", Color, "", "notification tip highlight background color").ver("3.7"),
+  field("NotificationHighlightTextColor", Color, "", "notification tip highlight text color").ver("3.7"),
   field("ColorizeControls", Bool, false, "should we colorize Windows controls and window areas"),
 ];
 

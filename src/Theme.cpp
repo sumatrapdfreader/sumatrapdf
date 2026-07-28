@@ -27,14 +27,17 @@ bool UseDarkModeLib() {
 /*
 preserve those translations:
 _TRN("Dark")
-_TRN("Darker")
 _TRN("Light")
+_TRN("Charcoal")
 */
 
 constexpr COLORREF kColBlack = 0x000000;
 constexpr COLORREF kColWhite = 0xFFFFFF;
 constexpr COLORREF kRedColor = RgbToCOLORREF(0xff0000);
 
+// Optional colors (DisabledTextColor … NotificationHighlightTextColor) fix
+// muddy derived hues when TextColor is not neutral gray (e.g. Dracula #f8f8f2).
+// Empty optional fields still fall back to AccentColor / blend of the four base colors.
 static Str themesTxt = StrL(R"(Themes [
     [
         Name = Light
@@ -42,7 +45,35 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #f2f2f2
         ControlBackgroundColor = #ffffff
         LinkColor = #0020a0
+        DisabledTextColor = #808080
+        DarkerTextColor = #404040
+        HotBackgroundColor = #e8e8e8
+        EdgeColor = #c0c0c0
+        HotEdgeColor = #808080
+        DisabledEdgeColor = #d0d0d0
+        ErrorBackgroundColor = #ffe0e0
+        NotificationBackgroundColor = #fafafa
+        NotificationHighlightColor = #ffee70
+        NotificationHighlightTextColor = #8d0801
         ColorizeControls = false
+    ]
+    [
+        Name = Dark
+        TextColor = #F9FAFB
+        BackgroundColor = #000000
+        ControlBackgroundColor = #000000
+        LinkColor = #6B7280
+        DisabledTextColor = #6B7280
+        DarkerTextColor = #9CA3AF
+        HotBackgroundColor = #1F2937
+        EdgeColor = #374151
+        HotEdgeColor = #6B7280
+        DisabledEdgeColor = #1F2937
+        ErrorBackgroundColor = #7F1D1D
+        NotificationBackgroundColor = #111827
+        NotificationHighlightColor = #374151
+        NotificationHighlightTextColor = #F9FAFB
+        ColorizeControls = true
     ]
     [
         Name = Light Warm
@@ -50,6 +81,16 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #ebe6da
         ControlBackgroundColor = #f5f1e8
         LinkColor = #0020a0
+        DisabledTextColor = #8a8578
+        DarkerTextColor = #5c574c
+        HotBackgroundColor = #e8e2d4
+        EdgeColor = #c9c2b0
+        HotEdgeColor = #8a8578
+        DisabledEdgeColor = #ddd6c6
+        ErrorBackgroundColor = #f5d6d0
+        NotificationBackgroundColor = #f8f4ea
+        NotificationHighlightColor = #e8d48b
+        NotificationHighlightTextColor = #5c3a0a
         ColorizeControls = true
     ]
     [
@@ -58,30 +99,34 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #263238
         ControlBackgroundColor = #263238
         LinkColor = #8aa3b0
+        DisabledTextColor = #6b7c85
+        DarkerTextColor = #8aa3b0
+        HotBackgroundColor = #324047
+        EdgeColor = #37474f
+        HotEdgeColor = #546e7a
+        DisabledEdgeColor = #1e272c
+        ErrorBackgroundColor = #5c2b2b
+        NotificationBackgroundColor = #2e3c43
+        NotificationHighlightColor = #455a64
+        NotificationHighlightTextColor = #eceff1
         ColorizeControls = true
     ]
     [
-        Name = Darker
-        TextColor = #c3c3c6
-        BackgroundColor = #2d2d30
-        ControlBackgroundColor = #2d2d30
-        LinkColor = #9999a0
-        ColorizeControls = true
-    ]
-    [
-        Name = Dark
-        TextColor = #F9FAFB
-        BackgroundColor = #000000
-        ControlBackgroundColor = #000000
-        LinkColor = #6B7280
-        ColorizeControls = true
-    ]
-    [
-        Name = Dark background Bright text
+        Name = Charcoal
         TextColor = #ffffff
         BackgroundColor = #2d2d30
         ControlBackgroundColor = #2d2d30
         LinkColor = #9999a0
+        DisabledTextColor = #808088
+        DarkerTextColor = #b0b0b8
+        HotBackgroundColor = #3e3e42
+        EdgeColor = #505058
+        HotEdgeColor = #808088
+        DisabledEdgeColor = #252528
+        ErrorBackgroundColor = #5a1d1d
+        NotificationBackgroundColor = #38383c
+        NotificationHighlightColor = #505058
+        NotificationHighlightTextColor = #ffffff
         ColorizeControls = true
     ]
     [
@@ -89,7 +134,17 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #212323
         BackgroundColor = #fdf6e3
         ControlBackgroundColor = #eee8d5
-        LinkColor = #9999a0
+        LinkColor = #268bd2
+        DisabledTextColor = #93a1a1
+        DarkerTextColor = #586e75
+        HotBackgroundColor = #e6dfc8
+        EdgeColor = #93a1a1
+        HotEdgeColor = #657b83
+        DisabledEdgeColor = #eee8d5
+        ErrorBackgroundColor = #f8d0c8
+        NotificationBackgroundColor = #f5efdc
+        NotificationHighlightColor = #eee8d5
+        NotificationHighlightTextColor = #073642
         ColorizeControls = true
     ]
     [
@@ -98,6 +153,16 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #002b36
         ControlBackgroundColor = #073642
         LinkColor = #268bd2
+        DisabledTextColor = #586e75
+        DarkerTextColor = #657b83
+        HotBackgroundColor = #0a4a58
+        EdgeColor = #586e75
+        HotEdgeColor = #839496
+        DisabledEdgeColor = #002b36
+        ErrorBackgroundColor = #5c1a1a
+        NotificationBackgroundColor = #003543
+        NotificationHighlightColor = #073642
+        NotificationHighlightTextColor = #fdf6e3
         ColorizeControls = true
     ]
     [
@@ -106,6 +171,16 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #282a36
         ControlBackgroundColor = #44475a
         LinkColor = #8be9fd
+        DisabledTextColor = #6272a4
+        DarkerTextColor = #6272a4
+        HotBackgroundColor = #565a73
+        EdgeColor = #6272a4
+        HotEdgeColor = #bd93f9
+        DisabledEdgeColor = #343746
+        ErrorBackgroundColor = #ff5555
+        NotificationBackgroundColor = #343746
+        NotificationHighlightColor = #bd93f9
+        NotificationHighlightTextColor = #f8f8f2
         ColorizeControls = true
     ]
     [
@@ -114,6 +189,16 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #100E23
         ControlBackgroundColor = #1E1C31
         LinkColor = #91DDFF
+        DisabledTextColor = #6b6b8a
+        DarkerTextColor = #a0a0c0
+        HotBackgroundColor = #2a2745
+        EdgeColor = #3e3a5c
+        HotEdgeColor = #91DDFF
+        DisabledEdgeColor = #15132a
+        ErrorBackgroundColor = #5c1a2e
+        NotificationBackgroundColor = #1a1830
+        NotificationHighlightColor = #3e3a5c
+        NotificationHighlightTextColor = #CBE3E7
         ColorizeControls = true
     ]
     [
@@ -122,6 +207,16 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #4F6232
         ControlBackgroundColor = #1E3304
         LinkColor = #A2E53B
+        DisabledTextColor = #8a9a60
+        DarkerTextColor = #c0c878
+        HotBackgroundColor = #2a4210
+        EdgeColor = #6a7a40
+        HotEdgeColor = #A2E53B
+        DisabledEdgeColor = #152808
+        ErrorBackgroundColor = #5c2810
+        NotificationBackgroundColor = #3a4a28
+        NotificationHighlightColor = #6a7a40
+        NotificationHighlightTextColor = #FDD085
         ColorizeControls = true
     ]
     [
@@ -130,6 +225,16 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #2A1104
         ControlBackgroundColor = #172736
         LinkColor = #E8CD12
+        DisabledTextColor = #8a7040
+        DarkerTextColor = #b09050
+        HotBackgroundColor = #243848
+        EdgeColor = #3a4a58
+        HotEdgeColor = #E8CD12
+        DisabledEdgeColor = #0e1820
+        ErrorBackgroundColor = #5c2010
+        NotificationBackgroundColor = #1e2e3c
+        NotificationHighlightColor = #3a4a58
+        NotificationHighlightTextColor = #D7AD62
         ColorizeControls = true
     ]
     [
@@ -138,6 +243,196 @@ static Str themesTxt = StrL(R"(Themes [
         BackgroundColor = #20222A
         ControlBackgroundColor = #1E0126
         LinkColor = #EFF0B8
+        DisabledTextColor = #8a7088
+        DarkerTextColor = #b0a0b0
+        HotBackgroundColor = #2e1838
+        EdgeColor = #4a3060
+        HotEdgeColor = #EFF0B8
+        DisabledEdgeColor = #140018
+        ErrorBackgroundColor = #5c1a2a
+        NotificationBackgroundColor = #28203a
+        NotificationHighlightColor = #4a3060
+        NotificationHighlightTextColor = #E2C3C3
+        ColorizeControls = true
+    ]
+    [
+        Name = One Dark
+        TextColor = #abb2bf
+        BackgroundColor = #282c34
+        ControlBackgroundColor = #21252b
+        LinkColor = #61afef
+        DisabledTextColor = #5c6370
+        DarkerTextColor = #7f848e
+        HotBackgroundColor = #2c313c
+        EdgeColor = #181a1f
+        HotEdgeColor = #528bff
+        DisabledEdgeColor = #1b1d23
+        ErrorBackgroundColor = #be5046
+        NotificationBackgroundColor = #2c313a
+        NotificationHighlightColor = #3e4451
+        NotificationHighlightTextColor = #abb2bf
+        ColorizeControls = true
+    ]
+    [
+        Name = Monokai
+        TextColor = #f8f8f2
+        BackgroundColor = #272822
+        ControlBackgroundColor = #3e3d32
+        LinkColor = #66d9ef
+        DisabledTextColor = #75715e
+        DarkerTextColor = #a6a68a
+        HotBackgroundColor = #49483e
+        EdgeColor = #75715e
+        HotEdgeColor = #a6e22e
+        DisabledEdgeColor = #1e1f1c
+        ErrorBackgroundColor = #f92672
+        NotificationBackgroundColor = #34352f
+        NotificationHighlightColor = #49483e
+        NotificationHighlightTextColor = #f8f8f2
+        ColorizeControls = true
+    ]
+    [
+        Name = Nord
+        TextColor = #d8dee9
+        BackgroundColor = #2e3440
+        ControlBackgroundColor = #3b4252
+        LinkColor = #88c0d0
+        DisabledTextColor = #4c566a
+        DarkerTextColor = #81a1c1
+        HotBackgroundColor = #434c5e
+        EdgeColor = #4c566a
+        HotEdgeColor = #88c0d0
+        DisabledEdgeColor = #2e3440
+        ErrorBackgroundColor = #bf616a
+        NotificationBackgroundColor = #3b4252
+        NotificationHighlightColor = #434c5e
+        NotificationHighlightTextColor = #eceff4
+        ColorizeControls = true
+    ]
+    [
+        Name = GitHub Dark
+        TextColor = #e6edf3
+        BackgroundColor = #0d1117
+        ControlBackgroundColor = #161b22
+        LinkColor = #2f81f7
+        DisabledTextColor = #6e7681
+        DarkerTextColor = #8b949e
+        HotBackgroundColor = #21262d
+        EdgeColor = #30363d
+        HotEdgeColor = #58a6ff
+        DisabledEdgeColor = #21262d
+        ErrorBackgroundColor = #da3633
+        NotificationBackgroundColor = #161b22
+        NotificationHighlightColor = #1f6feb
+        NotificationHighlightTextColor = #ffffff
+        ColorizeControls = true
+    ]
+    [
+        Name = Catppuccin Mocha
+        TextColor = #cdd6f4
+        BackgroundColor = #1e1e2e
+        ControlBackgroundColor = #181825
+        LinkColor = #89b4fa
+        DisabledTextColor = #6c7086
+        DarkerTextColor = #a6adc8
+        HotBackgroundColor = #313244
+        EdgeColor = #45475a
+        HotEdgeColor = #cba6f7
+        DisabledEdgeColor = #11111b
+        ErrorBackgroundColor = #f38ba8
+        NotificationBackgroundColor = #181825
+        NotificationHighlightColor = #45475a
+        NotificationHighlightTextColor = #cdd6f4
+        ColorizeControls = true
+    ]
+    [
+        Name = Tokyo Night
+        TextColor = #c0caf5
+        BackgroundColor = #1a1b26
+        ControlBackgroundColor = #16161e
+        LinkColor = #7aa2f7
+        DisabledTextColor = #565f89
+        DarkerTextColor = #a9b1d6
+        HotBackgroundColor = #292e42
+        EdgeColor = #3b4261
+        HotEdgeColor = #7dcfff
+        DisabledEdgeColor = #0f0f14
+        ErrorBackgroundColor = #f7768e
+        NotificationBackgroundColor = #16161e
+        NotificationHighlightColor = #33467c
+        NotificationHighlightTextColor = #c0caf5
+        ColorizeControls = true
+    ]
+    [
+        Name = Gruvbox
+        TextColor = #ebdbb2
+        BackgroundColor = #282828
+        ControlBackgroundColor = #3c3836
+        LinkColor = #83a598
+        DisabledTextColor = #928374
+        DarkerTextColor = #a89984
+        HotBackgroundColor = #504945
+        EdgeColor = #665c54
+        HotEdgeColor = #fabd2f
+        DisabledEdgeColor = #1d2021
+        ErrorBackgroundColor = #fb4934
+        NotificationBackgroundColor = #3c3836
+        NotificationHighlightColor = #504945
+        NotificationHighlightTextColor = #ebdbb2
+        ColorizeControls = true
+    ]
+    [
+        Name = Night Owl
+        TextColor = #d6deeb
+        BackgroundColor = #011627
+        ControlBackgroundColor = #0b2942
+        LinkColor = #82aaff
+        DisabledTextColor = #5f7e97
+        DarkerTextColor = #7fdbca
+        HotBackgroundColor = #1d3b53
+        EdgeColor = #122d42
+        HotEdgeColor = #c792ea
+        DisabledEdgeColor = #01111d
+        ErrorBackgroundColor = #ef5350
+        NotificationBackgroundColor = #0b2942
+        NotificationHighlightColor = #1d3b53
+        NotificationHighlightTextColor = #d6deeb
+        ColorizeControls = true
+    ]
+    [
+        Name = Ayu
+        TextColor = #bfbdb6
+        BackgroundColor = #0b0e14
+        ControlBackgroundColor = #0d1017
+        LinkColor = #59c2ff
+        DisabledTextColor = #565b66
+        DarkerTextColor = #acb6bf
+        HotBackgroundColor = #1b2733
+        EdgeColor = #1b2733
+        HotEdgeColor = #e6b450
+        DisabledEdgeColor = #06070a
+        ErrorBackgroundColor = #f07178
+        NotificationBackgroundColor = #0d1017
+        NotificationHighlightColor = #1b2733
+        NotificationHighlightTextColor = #bfbdb6
+        ColorizeControls = true
+    ]
+    [
+        Name = Palenight
+        TextColor = #a6accd
+        BackgroundColor = #292d3e
+        ControlBackgroundColor = #1b1e2b
+        LinkColor = #82aaff
+        DisabledTextColor = #676e95
+        DarkerTextColor = #8796b0
+        HotBackgroundColor = #32374d
+        EdgeColor = #3c435e
+        HotEdgeColor = #c792ea
+        DisabledEdgeColor = #151820
+        ErrorBackgroundColor = #ff5370
+        NotificationBackgroundColor = #1b1e2b
+        NotificationHighlightColor = #32374d
+        NotificationHighlightTextColor = #a6accd
         ColorizeControls = true
     ]
 ]
@@ -262,14 +557,16 @@ void SetThemeByIndex(int themeIdx) {
         DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
         DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
         COLORREF ctrlBg = ThemeWindowControlBackgroundColor();
-        COLORREF hotBg = AccentColor(ctrlBg, 20);
-        COLORREF edgeCol = AccentColor(ctrlBg, 40);
-        DarkMode::setHotBackgroundColor(hotBg);
+        DarkMode::setHotBackgroundColor(ThemeHotBackgroundColor());
         DarkMode::setTextColor(ThemeWindowTextColor());
+        DarkMode::setDarkerTextColor(ThemeWindowDarkerTextColor());
         DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
         DarkMode::setDlgBackgroundColor(ctrlBg);
         DarkMode::setLinkTextColor(ThemeWindowLinkColor());
-        DarkMode::setEdgeColor(edgeCol);
+        DarkMode::setEdgeColor(ThemeEdgeColor());
+        DarkMode::setHotEdgeColor(ThemeHotEdgeColor());
+        DarkMode::setDisabledEdgeColor(ThemeDisabledEdgeColor());
+        DarkMode::setErrorBackgroundColor(ThemeErrorBackgroundColor());
         DarkMode::updateThemeBrushesAndPens();
 
         DarkMode::setViewTextColor(ThemeWindowTextColor());
@@ -288,8 +585,17 @@ void SetThemeByIndex(int themeIdx) {
     }
 };
 
+// Map removed / renamed themes so existing settings keep working.
+static Str ResolveThemeAlias(Str name) {
+    if (str::EqI(name, StrL("Darker")) || str::EqI(name, StrL("Dark background Bright text"))) {
+        return StrL("Charcoal");
+    }
+    return name;
+}
+
 // not case sensitive
 static int GetThemeByName(Str name) {
+    name = ResolveThemeAlias(name);
     for (int i = 0; i < gThemeCount; i++) {
         Theme* theme = (*gThemes)[i];
         if (str::EqI(theme->name, name)) {
@@ -342,6 +648,7 @@ void SetTheme(Str name) {
         str::ReplaceWithCopy(&gGlobalPrefs->theme, StrL("System"));
         return;
     }
+    name = ResolveThemeAlias(name);
     int idx = GetThemeByName(name);
     if (idx < 0) {
         // invalid name, reset to light theme
@@ -484,15 +791,24 @@ COLORREF ThemeWindowTextColor() {
     return col;
 }
 
-COLORREF ThemeWindowTextDisabledColor() {
-    // blend text color halfway toward background so disabled text
-    // is visible but clearly muted on both light and dark themes
+static COLORREF BlendTextAndBgHalfway() {
+    // fallback when DisabledTextColor is unset: mute text toward background
     COLORREF txt = ThemeWindowTextColor();
     COLORREF bg = ThemeMainWindowBackgroundColor();
     u8 r = (u8)((GetRValue(txt) + GetRValue(bg)) / 2);
     u8 g = (u8)((GetGValue(txt) + GetGValue(bg)) / 2);
     u8 b = (u8)((GetBValue(txt) + GetBValue(bg)) / 2);
     return RGB(r, g, b);
+}
+
+COLORREF ThemeWindowTextDisabledColor() {
+    return GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
+}
+
+COLORREF ThemeWindowDarkerTextColor() {
+    // fallback: slightly muted primary text (not as flat as disabled)
+    COLORREF fallback = AccentColor(ThemeWindowTextColor(), 40);
+    return GetThemeCol(gCurrentTheme->darkerTextColor, fallback);
 }
 
 COLORREF ThemeWindowControlBackgroundColor() {
@@ -505,9 +821,38 @@ COLORREF ThemeWindowLinkColor() {
     return col;
 }
 
+COLORREF ThemeHotBackgroundColor() {
+    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 20);
+    return GetThemeCol(gCurrentTheme->hotBackgroundColor, fallback);
+}
+
+COLORREF ThemeEdgeColor() {
+    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 40);
+    return GetThemeCol(gCurrentTheme->edgeColor, fallback);
+}
+
+COLORREF ThemeHotEdgeColor() {
+    COLORREF fallback = AccentColor(ThemeEdgeColor(), 30);
+    return GetThemeCol(gCurrentTheme->hotEdgeColor, fallback);
+}
+
+COLORREF ThemeDisabledEdgeColor() {
+    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 15);
+    return GetThemeCol(gCurrentTheme->disabledEdgeColor, fallback);
+}
+
+COLORREF ThemeErrorBackgroundColor() {
+    // soft red tint of control background when unset
+    COLORREF fallback = RgbToCOLORREF(0x5c1a1a);
+    if (IsLightColor(ThemeWindowControlBackgroundColor())) {
+        fallback = RgbToCOLORREF(0xffe0e0);
+    }
+    return GetThemeCol(gCurrentTheme->errorBackgroundColor, fallback);
+}
+
 COLORREF ThemeNotificationsBackgroundColor() {
-    auto col = ThemeWindowBackgroundColor();
-    return AdjustLightness2(col, 10);
+    COLORREF fallback = AdjustLightness2(ThemeWindowBackgroundColor(), 10);
+    return GetThemeCol(gCurrentTheme->notificationBackgroundColor, fallback);
 }
 
 COLORREF ThemeNotificationsTextColor() {
@@ -515,19 +860,23 @@ COLORREF ThemeNotificationsTextColor() {
 }
 
 COLORREF ThemeNotificationsHighlightColor() {
+    COLORREF fallback;
     if (gCurrentTheme->colorizeControls) {
-        auto col = ThemeWindowBackgroundColor();
-        return AccentColor(col, 20);
+        fallback = AccentColor(ThemeWindowBackgroundColor(), 20);
+    } else {
+        fallback = RgbToCOLORREF(0xFFEE70); // yellowish
     }
-    return RgbToCOLORREF(0xFFEE70); // yellowish
+    return GetThemeCol(gCurrentTheme->notificationHighlightColor, fallback);
 }
 
 COLORREF ThemeNotificationsHighlightTextColor() {
+    COLORREF fallback;
     if (gCurrentTheme->colorizeControls) {
-        auto col = ThemeWindowTextColor();
-        return AccentColor(col, 20);
+        fallback = AccentColor(ThemeWindowTextColor(), 20);
+    } else {
+        fallback = RgbToCOLORREF(0x8d0801); // reddish
     }
-    return RgbToCOLORREF(0x8d0801); // reddish
+    return GetThemeCol(gCurrentTheme->notificationHighlightTextColor, fallback);
 }
 
 COLORREF ThemeNotificationsProgressColor() {
