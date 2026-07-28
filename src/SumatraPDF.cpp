@@ -8535,6 +8535,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             if (dm && dm->NeedHScroll()) {
                 SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+            } else if (dm) {
+                // manga (R2L): Left advances (issue #3964)
+                dm->GoToPageHorizontal(false);
             } else {
                 win->ctrl->GoToPrevPage();
             }
@@ -8551,6 +8554,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             if (dm && dm->NeedHScroll()) {
                 SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+            } else if (dm) {
+                // manga (R2L): Right goes back (issue #3964)
+                dm->GoToPageHorizontal(true);
             } else {
                 win->ctrl->GoToNextPage();
             }

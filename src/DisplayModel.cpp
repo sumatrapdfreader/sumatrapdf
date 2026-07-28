@@ -214,6 +214,16 @@ bool DisplayModel::GetDisplayR2L() const {
     return displayR2L;
 }
 
+// toRight: user moved/keyed toward the right (VK_RIGHT, swipe right).
+// LTR: right = next page; manga R2L: left = next page (issue #3964).
+bool DisplayModel::GoToPageHorizontal(bool toRight) {
+    bool goNext = toRight != displayR2L;
+    if (goNext) {
+        return GoToNextPage();
+    }
+    return GoToPrevPage();
+}
+
 void DisplayModel::RepaintDisplay() {
     cb->Repaint();
 }

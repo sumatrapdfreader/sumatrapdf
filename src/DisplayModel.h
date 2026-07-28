@@ -194,6 +194,7 @@ struct DisplayModel : DocController {
     void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, Size viewPort, int screenDPI);
     void SetDisplayR2L(bool r2l);
     bool GetDisplayR2L() const;
+    bool GoToPageHorizontal(bool toRight);
 
     bool ShouldCacheRendering(int pageNo) const;
     // called when we decide that the display needs to be redrawn

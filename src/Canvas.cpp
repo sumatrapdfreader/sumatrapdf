@@ -2890,14 +2890,16 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 }
 
                 if (isFlickX && flipPage) {
+                    // deltaX < 0: finger moved left (content follows) → leftward spatial nav
+                    // In manga (R2L) mode, left advances (issue #3964)
                     if (deltaX < 0) {
-                        win->ctrl->GoToPrevPage();
+                        dm->GoToPageHorizontal(false);
                         // TODO: scroll to show the right-hand part
                         int x = dm->canvasSize.dx - dm->viewPort.dx;
                         // logf("x: %d\n");
                         dm->ScrollXTo(x);
                     } else if (deltaX > 0) {
-                        win->ctrl->GoToNextPage();
+                        dm->GoToPageHorizontal(true);
                         dm->ScrollXTo(0);
                     }
                     ReadAloudOnUserViewChanged(win);
