@@ -919,16 +919,30 @@ static bool IsSoftLineBreak(const fz_stext_line* line, const fz_stext_line* next
     return true;
 }
 
-// If the buffer ends with a hyphen used for line wrapping, drop it before a
-// soft join so "some-\nthing" becomes "something" (#5793).
+// Unicode hyphens MuPDF treats as dehyphenation candidates (fz_is_unicode_hyphen).
+static bool IsUnicodeHyphenRune(int c) {
+    return c == '-' || c == 0xAD || c == 0x2010 || c == 0x2011;
+}
+
+// Drop a trailing hyphen used for line wrapping before joining the next line
+// so "some-\\nthing" becomes "something" (#5793, #1189). Handles multi-byte
+// UTF-8 hyphens (U+00AD soft hyphen, U+2010/U+2011), not just ASCII '-'.
 static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
-    if (s.IsEmpty()) {
+    if (s.IsEmpty() || rects.IsEmpty()) {
         return;
     }
-    if (s.LastChar() == '-') {
-        s.RemoveLast();
-        rects.RemoveLast();
+    Str text = ToStr(s);
+    int byteIdx = text.len;
+    int c = Utf8CodepointPrev(text, byteIdx);
+    if (!IsUnicodeHyphenRune(c)) {
+        return;
     }
+    // Truncate builder to before the last codepoint.
+    int dropBytes = text.len - byteIdx;
+    while (dropBytes-- > 0) {
+        s.RemoveLast();
+    }
+    rects.RemoveLast();
 }
 
 static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
@@ -952,6 +966,14 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
             fz_stext_char* c = line->first_char;
             while (c) {
                 int rune = c->c;
+                // Soft hyphens (U+00AD) are never typed by the user; drop them
+                // so search for "softhyphen" matches text that contains SHY
+                // mid-word (issue #1189). End-of-line hard hyphens are dropped
+                // when joining via MaybeDropTrailingSoftHyphen below.
+                if (rune == 0xAD) {
+                    c = c->next;
+                    continue;
+                }
                 bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
                 if (isWs) {
                     fz_stext_char* nextNonSpace = c->next;
@@ -976,10 +998,30 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
             }
             // Soft-join reflow lines within a paragraph for better copy (#5793);
             // keep a hard newline between paragraphs / blocks.
+            // Dehyphenation (#1189): when MuPDF marked the line JOINED (EOL
+            // hyphen + DEHYPHENATE), or we soft-break after a trailing hyphen,
+            // drop the hyphen and join with no separator so "hyphen-\\nated"
+            // becomes searchable as "hyphenated". Plain soft wraps still get a
+            // space.
             fz_stext_line* nextLine = line->next;
-            if (nextLine && IsSoftLineBreak(line, nextLine, block)) {
-                MaybeDropTrailingSoftHyphen(content, rects);
-                AddLineSepUtf8(content, rects, softLineSep);
+            bool dehyphen = nextLine && (line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0;
+            bool soft = nextLine && IsSoftLineBreak(line, nextLine, block);
+            if (dehyphen || soft) {
+                bool hadHyphen = false;
+                {
+                    Str cur = ToStr(content);
+                    if (cur && cur.len > 0) {
+                        int bi = cur.len;
+                        int last = Utf8CodepointPrev(cur, bi);
+                        hadHyphen = IsUnicodeHyphenRune(last);
+                    }
+                }
+                if (dehyphen || hadHyphen) {
+                    MaybeDropTrailingSoftHyphen(content, rects);
+                    // no separator: dehyphenated word continues on next line
+                } else {
+                    AddLineSepUtf8(content, rects, softLineSep);
+                }
             } else {
                 AddLineSepUtf8(content, rects, hardLineSep);
             }
@@ -1006,7 +1048,10 @@ static fz_stext_options NewTextPageOptions(int flags = 0) {
     fz_stext_options opts{};
     // Use glyph outline bounds so text selection rectangles match visible text
     // instead of the looser line-height boxes from default MuPDF extraction.
-    opts.flags = flags | FZ_STEXT_ACCURATE_BBOXES;
+    // DEHYPHENATE: mark end-of-line hyphens as soft joins so FzTextPageToUtf8
+    // can drop them and stitch "hyphen-\\nated" into "hyphenated" for search
+    // (issue #1189; MuPDF FZ_STEXT_DEHYPHENATE since 2020).
+    opts.flags = flags | FZ_STEXT_ACCURATE_BBOXES | FZ_STEXT_DEHYPHENATE;
     return opts;
 }
 
