@@ -134,6 +134,30 @@ EXPORTS
 	cmark_parser_get_syntax_extensions
 	cmark_parser_new
 	cmark_render_html
+
+; libarchive exports (required for base/Archive.cpp). Keep the libarchive
+; static-lib project; link it only into mupdf/libmupdf.dll (and static EXE)
+; and re-export these so SumatraPDF.exe / PdfFilter / PdfPreview do not carry
+; a second copy.
+
+	archive_entry_filetype
+	archive_entry_mtime
+	archive_entry_pathname
+	archive_entry_pathname_utf8
+	archive_entry_size
+	archive_format
+	archive_read_add_passphrase
+	archive_read_data
+	archive_read_data_skip
+	archive_read_free
+	archive_read_has_encrypted_entries
+	archive_read_new
+	archive_read_next_header
+	archive_read_open_filename
+	archive_read_open_filename_w
+	archive_read_open_memory
+	archive_read_support_filter_all
+	archive_read_support_format_all
 """
 
 def main():

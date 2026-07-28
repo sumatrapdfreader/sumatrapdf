@@ -510,6 +510,9 @@ workspace "SumatraPDF"
       "ext/a-zopfli/zopflipng/lodepng/lodepng.h", "ext/a-zopfli/version.txt",
     }
 
+  -- libarchive: linked into mupdf → libmupdf.dll (and into static EXE).
+  -- Do not also link into SumatraPDF.exe / PdfFilter / PdfPreview; re-export
+  -- the Archive.cpp symbols via libmupdf.def instead (same as cmark-gfm).
   project "libarchive"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -1085,7 +1088,8 @@ workspace "SumatraPDF"
     filter {}
     includedirs { "src", "src/wingui", "mupdf/include", "ext/libarchive" }
     search_filter_files()
-    links { "base", "unrar", "libmupdf", "libarchive" }
+    -- libarchive lives in libmupdf.dll (re-exported); do not link a second copy
+    links { "base", "unrar", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- project "PdfFilter2"
@@ -1132,7 +1136,8 @@ workspace "SumatraPDF"
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
     -- djvudec is also inside libmupdf.dll (djvu_* exports in libmupdf.def)
-    links { "base", "unrar", "libmupdf", "libarchive", "chm" }
+    -- libarchive lives in libmupdf.dll (re-exported); do not link a second copy
+    links { "base", "unrar", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1311,13 +1316,13 @@ workspace "SumatraPDF"
 
     files { "src/MuPDF_Exports.cpp" }
 
-    -- MarkdownToc uses cmark via libmupdf.def exports (cmark lives in
-    -- libmupdf.dll, linked from the cmark-gfm project through mupdf).
+    -- MarkdownToc / Archive.cpp use cmark + libarchive via libmupdf.def
+    -- exports (both live in libmupdf.dll; do not link second copies into the EXE).
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libmupdf", "unrar", "libarchive", "base", "chm", "a-zopfli"
+      "libmupdf", "unrar", "base", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
