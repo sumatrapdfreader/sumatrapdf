@@ -260,6 +260,7 @@ export const commands = [
     "CmdTocExpandToLevel1", "Bookmarks: Expand to Level 1",
     "CmdTocExpandToLevel2", "Bookmarks: Expand to Level 2",
     "CmdTocExpandToLevel3", "Bookmarks: Expand to Level 3",
+    "CmdTocCollapseSameLevel", "Bookmarks: Collapse Same Level",
     "CmdNone", "Do nothing",
 ];
 

@@ -617,6 +617,37 @@ static void TocCollapseAll(TreeView* tv) {
     }
 }
 
+// Collapse every outline row that shares the parent of `ti` (same nesting level
+// / siblings). If `ti` is null, use the current selection; if still none, all
+// top-level rows. Issue #1895.
+static void TocCollapseSameLevel(TreeView* tv, TreeItem ti) {
+    if (!tv || !tv->hwnd) {
+        return;
+    }
+    HWND hwnd = tv->hwnd;
+    HTREEITEM hItem = TreeModel::kNullItem != ti ? tv->GetHandleByTreeItem(ti) : nullptr;
+    if (!hItem) {
+        hItem = TreeView_GetSelection(hwnd);
+    }
+    HTREEITEM first = nullptr;
+    if (hItem) {
+        HTREEITEM parent = TreeView_GetParent(hwnd, hItem);
+        first = parent ? TreeView_GetChild(hwnd, parent) : TreeView_GetRoot(hwnd);
+    } else {
+        first = TreeView_GetRoot(hwnd);
+    }
+    if (!first) {
+        return;
+    }
+    tv->SuspendRedraw();
+    for (HTREEITEM sibling = first; sibling; sibling = TreeView_GetNextSibling(hwnd, sibling)) {
+        if (TreeView_GetChild(hwnd, sibling)) {
+            TreeView_Expand(hwnd, sibling, TVE_COLLAPSE);
+        }
+    }
+    tv->ResumeRedraw();
+}
+
 // clang-format off
 static MenuDef menuDefContextToc[] = {
     {
@@ -638,6 +669,10 @@ static MenuDef menuDefContextToc[] = {
     {
         _TRN("Expand to Level 3"),
         CmdTocExpandToLevel3,
+    },
+    {
+        _TRN("Collapse Same Level"),
+        CmdTocCollapseSameLevel,
     },
     {
         _TRN("Expand to Current Page"),
@@ -785,6 +820,9 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             break;
         case CmdTocExpandToLevel3:
             TocExpandToLevel(win->tocTreeView, 3);
+            break;
+        case CmdTocCollapseSameLevel:
+            TocCollapseSameLevel(win->tocTreeView, ti);
             break;
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);

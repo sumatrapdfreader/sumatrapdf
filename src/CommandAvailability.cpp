@@ -247,6 +247,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdTocExpandToLevel1,
     CmdTocExpandToLevel2,
     CmdTocExpandToLevel3,
+    CmdTocCollapseSameLevel,
     CmdMoveFrameFocus,
     CmdFavoriteDel,
     CmdPresentationWhiteBackground,
