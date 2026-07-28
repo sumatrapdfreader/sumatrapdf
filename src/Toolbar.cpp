@@ -382,6 +382,10 @@ static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
+    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    if (bi.iImage == (int)icon) {
+        return; // TB_SETBUTTONINFOW always repaints; skip no-ops
+    }
     bi.iImage = (int)icon;
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
@@ -394,10 +398,19 @@ static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
         TempStr s2 = fmt(" (%s)", accel);
         s = str::JoinTemp(s, s2);
     }
+    // TB_GETBUTTONINFO with TBIF_TEXT needs a buffer; skip SET when equal
+    WCHAR prevBuf[256]{};
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_TEXT;
+    bi.pszText = prevBuf;
+    bi.cchText = dimof(prevBuf);
+    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    if (str::Eq(ToUtf8Temp(prevBuf), s)) {
+        return;
+    }
     bi.pszText = CWStrTemp(s);
+    bi.cchText = 0;
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
 
@@ -992,6 +1005,21 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     }
     labelDx = size2.dx;
     size2.dx = std::max(size2.dx, minSize.dx);
+
+    // Skip layout/repaint when an update-only refresh would not change anything
+    // (page-label docs used to invalidate the whole toolbar on every call).
+    TempStr prevTotal = HwndGetTextTemp(win->hwndPageTotal);
+    bool textSame = prevTotal && txt && str::Eq(prevTotal, txt);
+    if (updateOnly && textSame) {
+        TBBUTTONINFOW bi0{};
+        bi0.cbSize = sizeof(bi0);
+        bi0.dwMask = TBIF_SIZE;
+        SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, PageInfoId, (LPARAM)&bi0);
+        int wantCx = size2.dx + size.dx + pageWndRect.dx + 12;
+        if (bi0.cx == wantCx) {
+            return;
+        }
+    }
 
     HwndSetText(win->hwndPageTotal, txt);
     if (0 == size2.dx) {

@@ -3301,7 +3301,12 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case REPAINT_TIMER_ID:
             win->delayedRepaintTimer = 0;
             KillTimer(hwnd, REPAINT_TIMER_ID);
-            win->RedrawAllIncludingNonClient();
+            // Only the canvas needs a document repaint (scroll, page render,
+            // selection, etc.). RedrawAllIncludingNonClient() repaints the
+            // entire frame and all children, so the toolbar "Page:" label and
+            // page-number edit flash on every scroll even when the page is
+            // unchanged (very visible with tall comic pages).
+            InvalidateRect(hwnd, nullptr, FALSE);
             break;
 
         case SMOOTHSCROLL_TIMER_ID:

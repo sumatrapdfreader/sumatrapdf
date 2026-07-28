@@ -1537,10 +1537,15 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         return;
     }
 
-    if (kInvalidPageNo != pageNo) {
+    // GoToPage often fires PageNoChanged for the same page (e.g. GoToNextPage
+    // fully revealing the current page while the previous is still visible).
+    // Toolbar enable/state and the page-total label only need a real page change;
+    // refreshing them otherwise over-invalidates the toolbar (comics/scroll).
+    bool pageChanged = pageNo != win->currPageNo;
+
+    if (pageChanged && kInvalidPageNo != pageNo) {
         TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
-        // HwndSetText is a no-op when the text is unchanged, so this no longer
-        // repaints (flickers) the page box on e.g. Back without a page change
+        // HwndSetText is a no-op when the text is unchanged
         HwndSetText(win->hwndPageEdit, label);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
@@ -1563,7 +1568,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     }
 
     NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
-    if (pageNo == win->currPageNo) {
+    if (!pageChanged) {
         if (wnd) {
             UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
         }
