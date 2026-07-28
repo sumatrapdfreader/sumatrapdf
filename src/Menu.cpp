@@ -1536,6 +1536,28 @@ int CmdIdFromVirtualZoom(float virtualZoom) {
     return CmdZoomCustom;
 }
 
+// Custom ZoomLevels menu items use dynamically allocated command ids (not in
+// CmdZoomFirst..CmdZoomLast). Map an absolute zoom % to that custom id, or 0.
+static int CustomZoomCmdIdFromLevel(float zoomVirtual) {
+    auto prefs = gGlobalPrefs;
+    if (!prefs || !prefs->zoomLevels || !prefs->zoomLevelsCmdIds) {
+        return 0;
+    }
+    int n = len(*prefs->zoomLevels);
+    if (n <= 0 || len(*prefs->zoomLevelsCmdIds) != n) {
+        return 0;
+    }
+    // same fuzz as DisplayModel::GetNextZoomStep
+    constexpr float kZoomFuzz = 0.01f;
+    for (int i = 0; i < n; i++) {
+        float zl = (*prefs->zoomLevels)[i];
+        if (zoomVirtual + kZoomFuzz >= zl && zoomVirtual - kZoomFuzz <= zl) {
+            return (*prefs->zoomLevelsCmdIds)[i];
+        }
+    }
+    return 0;
+}
+
 float ZoomMenuItemToZoom(int menuItemId) {
     for (auto&& it : gZoomMenuIds) {
         if (menuItemId == it.cmdId) {
@@ -1547,18 +1569,51 @@ float ZoomMenuItemToZoom(int menuItemId) {
 }
 
 static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
-    ReportIf((CmdZoomFirst > cmdId) || (cmdId > CmdZoomLast));
-
     for (auto&& it : gZoomMenuIds) {
         MenuSetEnabled(m, it.cmdId, canZoom);
     }
 
-    if (CmdZoom100 == cmdId) {
-        cmdId = CmdZoomActualSize;
+    auto prefs = gGlobalPrefs;
+    Vec<int>* customIds = prefs ? prefs->zoomLevelsCmdIds : nullptr;
+    int nCustom = customIds ? len(*customIds) : 0;
+    for (int i = 0; i < nCustom; i++) {
+        MenuSetEnabled(m, (*customIds)[i], canZoom);
     }
-    CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, cmdId, MF_BYCOMMAND);
-    if (CmdZoomActualSize == cmdId) {
-        CheckMenuRadioItem(m, CmdZoom100, CmdZoom100, CmdZoom100, MF_BYCOMMAND);
+
+    // Uncheck all fixed zoom menu commands in the radio range
+    for (auto&& it : gZoomMenuIds) {
+        MenuSetChecked(m, it.cmdId, false);
+    }
+    // Uncheck all custom ZoomLevels commands (ids are not a contiguous radio range)
+    for (int i = 0; i < nCustom; i++) {
+        MenuSetChecked(m, (*customIds)[i], false);
+    }
+
+    if (!canZoom || cmdId == 0) {
+        return;
+    }
+
+    // Fixed Fit*/Actual Size / built-in percentage commands
+    if (cmdId >= CmdZoomFirst && cmdId <= CmdZoomLast) {
+        if (CmdZoom100 == cmdId) {
+            cmdId = CmdZoomActualSize;
+        }
+        CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, cmdId, MF_BYCOMMAND);
+        if (CmdZoomActualSize == cmdId) {
+            // also mark 100% when present in the default menu
+            CheckMenuRadioItem(m, CmdZoom100, CmdZoom100, CmdZoom100, MF_BYCOMMAND);
+        }
+        return;
+    }
+
+    // Custom ZoomLevels percentage entry (issue #5832)
+    MenuSetChecked(m, cmdId, true);
+    // When at 100%, also mark "Actual Size" if present
+    if (nCustom > 0) {
+        int id100 = CustomZoomCmdIdFromLevel(100.0f);
+        if (id100 != 0 && id100 == cmdId) {
+            MenuSetChecked(m, CmdZoomActualSize, true);
+        }
     }
 }
 
@@ -1567,7 +1622,16 @@ void MenuUpdateZoom(MainWindow* win) {
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
     }
-    int menuId = CmdIdFromVirtualZoom(zoomVirtual);
+
+    int menuId = 0;
+    // Prefer custom ZoomLevels command ids when that menu is active (issue #5832).
+    // Fit/virtual zooms still use fixed CmdZoomFit* ids.
+    if (zoomVirtual > 0) {
+        menuId = CustomZoomCmdIdFromLevel(zoomVirtual);
+    }
+    if (menuId == 0) {
+        menuId = CmdIdFromVirtualZoom(zoomVirtual);
+    }
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
 

@@ -33,6 +33,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - PDFs with a Catalog `/OpenAction` GoTo destination open at that page on first load (when there is no remembered view); URI/Launch/JavaScript open actions are ignored (fixes #1631)
 - add `PaddingAfterLastPage` advanced setting: when true, continuous view has extra scroll room after the last page so you can bring the end of the document up (e.g. when the window is partly covered); off by default (fixes #411)
 - document properties page size shows cm, mm, in (locale unit first) and pixels, e.g. `21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 px` (fixes #2186)
+- Zoom menu shows the current level (radio/check mark) when using custom `ZoomLevels` and zooming with +/- (fixes #5832)
 - fix EPUB/reflow images that vanished when publisher CSS set `img { width: 100%; height: 100%; }` (default user CSS forces `height: auto` and `max-width: 100%`) (fixes #5805)
 - the `FixedPageUI.SelectionColor` advanced setting now honors an alpha channel: set an `#aarrggbb` value (e.g. `#40f5fc0c`) to make the text-selection overlay more transparent so selected text stays crisp instead of looking washed out; `#rrggbb` keeps the previous default opacity (fixes #3209)
 - middle-click auto-scroll is now smooth: it's driven by a high-frequency timer with fractional-pixel accumulation instead of a coarse 20ms timer with integer steps, so it no longer looks choppy (also enables fine, slow scroll speeds) (fixes #2693)
