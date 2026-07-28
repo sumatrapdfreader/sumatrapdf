@@ -7,6 +7,9 @@
     <Filter Include="ext\a-jbig2dec">
       <UniqueIdentifier>{0DABD594-F978-C99A-E20C-3AC1CE79A5FF}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\a-openjpeg">
+      <UniqueIdentifier>{4B17175F-37E5-0A65-2079-7B8B0CE6E6C9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mupdf">
       <UniqueIdentifier>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</UniqueIdentifier>
     </Filter>
@@ -83,6 +86,105 @@
   <ItemGroup>
     <ClInclude Include="..\ext\a-jbig2dec\jbig2.h">
       <Filter>ext\a-jbig2dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\bio.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\cidx_manager.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\cio.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\dwt.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\event.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\function_list.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\image.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\indexbox_manager.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\invert.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\j2k.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\jp2.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\mct.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\mqc.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\mqc_inl.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\openjpeg.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_clock.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_codec.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_common.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_config.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_config_private.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_includes.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_intmath.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\opj_malloc.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\pi.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\sparse_array.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\t1.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\t1_ht_luts.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\t1_luts.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\t2.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\tcd.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\tgt.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\thread.h">
+      <Filter>ext\a-openjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-openjpeg\tls_keys.h">
+      <Filter>ext\a-openjpeg</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\fitz.h">
       <Filter>mupdf\include\mupdf</Filter>
@@ -433,6 +535,9 @@
   <ItemGroup>
     <ClCompile Include="..\ext\a-jbig2dec\jbig2dec.c">
       <Filter>ext\a-jbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\a-openjpeg\openjpeg.c">
+      <Filter>ext\a-openjpeg</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf_load_system_font.c">
       <Filter>ext</Filter>
@@ -1209,6 +1314,9 @@
   <ItemGroup>
     <None Include="..\ext\a-jbig2dec\version.txt">
       <Filter>ext\a-jbig2dec</Filter>
+    </None>
+    <None Include="..\ext\a-openjpeg\version.txt">
+      <Filter>ext\a-openjpeg</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
