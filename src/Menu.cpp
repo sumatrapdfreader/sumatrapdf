@@ -782,7 +782,7 @@ static MenuDef menuDefMenubar[] = {
         (UINT_PTR)menuDefMainSelection,
     },
     {
-        _TRN("Read Aloud (TTS)"),
+        _TRN("Read Aloud"),
         (UINT_PTR)menuDefReadAloud,
     },
     {
@@ -1056,7 +1056,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefDocumentOperations,
     },
     {
-        _TRN("Read Aloud (TTS)"),
+        _TRN("Read Aloud"),
         (UINT_PTR)menuDefContextReadAloud,
     },
     {
