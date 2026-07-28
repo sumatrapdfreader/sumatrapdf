@@ -67,7 +67,7 @@ END
 IDR_DLL_PAK             RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
 
-IDR_TRANSLATIONS        RCDATA "..\\translations\\translations.txt.lzsa"
+IDR_TRANSLATIONS        RCDATA "..\\.work\\translations.txt.lzsa"
 
 IDR_MANUAL_PAK          RCDATA               "..\\.work\\manual.dat"
 

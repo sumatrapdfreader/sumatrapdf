@@ -31,7 +31,6 @@ bin/zopflipng.exe
 cmd/tmp/
 
 .work/
-translations/translations.txt.lzsa
 log.txt
 sumlog.txt
 vs2022/enc_temp_folder

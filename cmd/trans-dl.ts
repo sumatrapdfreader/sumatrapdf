@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync, appendFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, extname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { commands } from "./gen-commands";
@@ -501,8 +501,9 @@ async function main() {
 
   printBadTranslations(badTranslations);
 
-  // compress translations-good.txt into .lzsa archive
-  const lzsaPath = join(translationsDir, "translations.txt.lzsa");
+  // compress translations-good.txt into .lzsa archive under .work/
+  mkdirSync(".work", { recursive: true });
+  const lzsaPath = join(".work", "translations.txt.lzsa");
   const goodPath = join(translationsDir, "translations-good.txt");
   const makeLzsa = join("bin", "MakeLZSA.exe");
   const lzsaArgs = [lzsaPath, `${goodPath}:translations-good.txt`];
