@@ -294,6 +294,10 @@ static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
 static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
+    // Explorer multi-open with reuseInstance can deliver the same path via both
+    // the cmdline and a DDE/COPYDATA open (and password dialogs keep gIsStartup
+    // true long enough for both). Prefer the existing tab over a duplicate.
+    args.activateExisting = true;
     MainWindow* win = LoadDocument(&args);
     if (!win) {
         return win;
@@ -2495,6 +2499,16 @@ ContinueOpenWindow:
                 continue;
             }
         }
+        // Same path can appear twice on the cmdline (Directory Opus "%1" "%2" …)
+        // or already be mid-load from a reuseInstance open that arrived during
+        // an earlier password dialog.
+        if (IsDocumentOpenOrLoading(path)) {
+            if (auto existing = FindMainWindowByFile(path, true)) {
+                win = existing;
+                tabToSelect = FindTabByFile(path);
+            }
+            continue;
+        }
         win = LoadOnStartup(path, flags, !win);
         if (!win) {
             exitCode++;
@@ -2514,7 +2528,11 @@ ContinueOpenWindow:
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
         for (Str path : gDdeOpenOnStartup) {
-            if (restoreSession && FindMainWindowByFile(path, false)) {
+            // Always skip paths already open or mid-load (not only when restoring a
+            // session). Multi-select of password PDFs from Explorer commonly queues
+            // a DDE open for a file that was also already started (fixes #4576).
+            if (IsDocumentOpenOrLoading(path)) {
+                logf("LoadOnStartup/dde: skipping already open/loading '%s'\n", path);
                 continue;
             }
             win = LoadOnStartup(path, flags, !win);

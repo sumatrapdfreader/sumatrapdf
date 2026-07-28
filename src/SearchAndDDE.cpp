@@ -2006,6 +2006,18 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
+        // Dedupe: Explorer multi-open / password dialog reentrancy can deliver
+        // the same path more than once before we drain the queue (fixes #4576).
+        if (IsDocumentOpenOrLoading(filePath)) {
+            logf("HandleOpenCmd: gIsStartup, already open/loading '%s', skip queue\n", filePath);
+            return next;
+        }
+        for (Str queued : gDdeOpenOnStartup) {
+            if (path::IsSame(queued, filePath)) {
+                logf("HandleOpenCmd: gIsStartup, already queued '%s'\n", filePath);
+                return next;
+            }
+        }
         logf("HandleOpenCmd: gIsStartup, appending to gDdeOpenOnStartup\n");
         gDdeOpenOnStartup.Append(filePath);
         return next;
@@ -2628,9 +2640,22 @@ static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
         win = emptyExistingWin ? emptyExistingWin : CreateAndShowMainWindow(nullptr);
     } else {
         win = FindMainWindowByFile(d->path, true);
-        if (!win) {
-            win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+        if (win) {
+            // Already open: just focus (matches activateExisting).
+            win->Focus();
+            str::Free(d->path);
+            delete d;
+            return;
         }
+        // Mid-load (e.g. password dialog): do not start a second load of the
+        // same path — that is what produced the 2N-1 tabs in #4576.
+        if (IsDocumentOpenOrLoading(d->path)) {
+            logf("OpenCopyDataAsyncRun: skipping already open/loading '%s'\n", d->path);
+            str::Free(d->path);
+            delete d;
+            return;
+        }
+        win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
         if (!win && len(gWindows) > 0) {
             win = gWindows[0];
         }
@@ -2669,6 +2694,26 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         // require null-terminator within bounds
         if (strnlen_s(pathZ.s, pathMax) >= pathMax) {
             return FALSE;
+        }
+        // During startup (cmdline load, often blocked on a password dialog) the
+        // message pump can deliver COPYDATA opens. Match HandleOpenCmd: queue
+        // them so they load after the current LoadDocument finishes, instead of
+        // racing a second async load of the same path (fixes #4576).
+        if (gIsStartup) {
+            TempStr path = path::NormalizeTemp(pathZ);
+            if (IsDocumentOpenOrLoading(path)) {
+                logf("OnCopyData/Open: gIsStartup, already open/loading '%s'\n", path);
+                return TRUE;
+            }
+            for (Str queued : gDdeOpenOnStartup) {
+                if (path::IsSame(queued, path)) {
+                    logf("OnCopyData/Open: gIsStartup, already queued '%s'\n", path);
+                    return TRUE;
+                }
+            }
+            logf("OnCopyData/Open: gIsStartup, queueing '%s'\n", path);
+            gDdeOpenOnStartup.Append(path);
+            return TRUE;
         }
         auto* d = new OpenCopyDataAsync;
         d->path = str::Dup(pathZ);

@@ -538,6 +538,53 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
     return tab->win;
 }
 
+// Paths currently being loaded. Tabs are only created in LoadDocumentFinish, so
+// without this set a second open for the same path (common when Explorer multi-
+// opens password PDFs: cmdline load + reuseInstance DDE/COPYDATA during the
+// password dialog message pump) would create a duplicate tab. UI thread only.
+static StrVec gFilesLoading;
+
+static int IndexOfLoadingFile(Str file) {
+    if (!file) {
+        return -1;
+    }
+    TempStr norm = path::NormalizeTemp(file);
+    int n = len(gFilesLoading);
+    for (int i = 0; i < n; i++) {
+        if (path::IsSame(gFilesLoading[i], norm)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool IsDocumentOpenOrLoading(Str file) {
+    if (!file) {
+        return false;
+    }
+    if (FindTabByFile(file)) {
+        return true;
+    }
+    return IndexOfLoadingFile(file) >= 0;
+}
+
+void BeginDocumentLoad(Str file) {
+    if (!file) {
+        return;
+    }
+    if (IndexOfLoadingFile(file) >= 0) {
+        return;
+    }
+    gFilesLoading.Append(path::NormalizeTemp(file));
+}
+
+void EndDocumentLoad(Str file) {
+    int idx = IndexOfLoadingFile(file);
+    if (idx >= 0) {
+        gFilesLoading.RemoveAt(idx);
+    }
+}
+
 // Find the first window that has been produced from <file>
 MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab) {
     for (MainWindow* win : gWindows) {
@@ -2820,6 +2867,7 @@ static void OnLoadDocumentThreadFinished() {
             // all windows were deleted). Starting the load would leak it: its
             // finish task would be posted to the already-destroyed dispatch
             // window and never run.
+            EndDocumentLoad(next->args->FilePath());
             next->args->onFinished.Call(false);
             delete next;
             continue;
@@ -2835,13 +2883,14 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
 
     auto args = d->args;
     RemoveNotification(d->wndNotif);
+    Str path = args->FilePath();
+    EndDocumentLoad(path);
     MainWindow* win = args->win;
     if (!IsMainWindowValid(win) || win->isBeingClosed) {
         DeleteOrphanedController(win, args->ctrl);
         args->onFinished.Call(false);
         return;
     }
-    Str path = args->FilePath();
     if (!args->ctrl) {
         ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
         // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
@@ -3017,6 +3066,13 @@ void StartLoadDocument(LoadArgs* argsIn) {
             argsIn->onFinished.Call(true);
             return;
         }
+        // Tab is created only after load finishes; without this, a second open of
+        // the same path while a password dialog is up creates a duplicate tab.
+        if (IndexOfLoadingFile(path) >= 0) {
+            logf("StartLoadDocument: skipping in-flight load of '%s'\n", path);
+            argsIn->onFinished.Call(true);
+            return;
+        }
     }
 
     win = MaybeCreateWindowForFileLoad(argsIn);
@@ -3026,6 +3082,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     }
 
     LoadArgs* args = argsIn->Clone();
+    BeginDocumentLoad(path);
 
     // when using mshtml to display CHM files, we can't load in a thread
     // TODO: that's because we create web control on a thread which
@@ -3043,6 +3100,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
             EngineBase* engine = args->engine;
             args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
             RemoveNotification(wndNotif);
+            EndDocumentLoad(path);
             if (!args->ctrl) {
                 ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
                 // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
@@ -3084,6 +3142,12 @@ MainWindow* LoadDocument(LoadArgs* args) {
             existing->Focus();
             return existing;
         }
+        // Tab is created only after load finishes; without this, a second open of
+        // the same path while a password dialog is up creates a duplicate tab.
+        if (IndexOfLoadingFile(path) >= 0) {
+            logf("LoadDocument: skipping in-flight load of '%s'\n", path);
+            return args->win;
+        }
     }
 
     MainWindow* win = args->win;
@@ -3101,6 +3165,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
         return nullptr;
     }
 
+    BeginDocumentLoad(path);
     auto timeStart = TimeGet();
     HwndPasswordUI pwdUI(win->hwndFrame);
     DocController* ctrl = nullptr;
@@ -3118,6 +3183,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
         }
 
         if (!ctrl) {
+            EndDocumentLoad(path);
             // ensure window is visible even if loading failed
             // (it may have been created hidden during startup)
             if (!IsWindowVisible(win->hwndFrame)) {
@@ -3132,7 +3198,9 @@ MainWindow* LoadDocument(LoadArgs* args) {
         }
     }
     args->ctrl = ctrl;
-    return LoadDocumentFinish(args);
+    MainWindow* result = LoadDocumentFinish(args);
+    EndDocumentLoad(path);
+    return result;
 }
 
 // Loads document data into the MainWindow.

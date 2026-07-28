@@ -235,6 +235,13 @@ MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 WindowTab* FindTabByFile(Str file, MainWindow* limitWin = nullptr);
 void SelectTabInWindow(WindowTab*);
 
+// True if a tab already shows this file, or a load for it is already in progress
+// (tab is only created when load finishes, so mid-password / async loads need this).
+bool IsDocumentOpenOrLoading(Str file);
+// Mark/unmark a path as currently loading. Call from the UI thread only.
+void BeginDocumentLoad(Str file);
+void EndDocumentLoad(Str file);
+
 class EngineBase;
 struct DocController;
 struct FileArgs;
