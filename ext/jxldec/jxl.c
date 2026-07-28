@@ -257,9 +257,18 @@ static JXL_INLINE_HINT uint32_t jxl_br_read(jxl_br *br, int n) {
 }
 
 static inline uint32_t jxl_floor_log2_u64(uint64_t v) {
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_WIN64)
     unsigned long idx;
     _BitScanReverse64(&idx, v);
+    return (uint32_t)idx;
+#elif defined(_MSC_VER) && !defined(__clang__)
+
+    unsigned long idx;
+    if ((uint32_t)(v >> 32)) {
+        _BitScanReverse(&idx, (unsigned long)(v >> 32));
+        return (uint32_t)idx + 32u;
+    }
+    _BitScanReverse(&idx, (unsigned long)v);
     return (uint32_t)idx;
 #elif defined(__clang__) || defined(__GNUC__)
     return 63u - (uint32_t)__builtin_clzll(v);
@@ -1117,7 +1126,17 @@ static int jxl_detect_avx2(void) {
     __cpuidex(r, 1, 0);
     if (!(r[2] & (1 << 27))) return 0;
     if (!(r[2] & (1 << 28))) return 0;
+
+#if defined(__GNUC__) || defined(__clang__)
+    {
+        unsigned lo, hi;
+        __asm__ volatile("xgetbv" : "=a"(lo), "=d"(hi) : "c"(0));
+        (void)hi;
+        if ((lo & 0x6u) != 0x6u) return 0;
+    }
+#else
     if ((_xgetbv(0) & 0x6u) != 0x6u) return 0;
+#endif
     __cpuidex(r, 7, 0);
     return (r[1] & (1 << 5)) != 0;
 #elif defined(__x86_64__) || defined(__i386__)
