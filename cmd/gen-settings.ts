@@ -766,6 +766,12 @@ const globalPrefs: Field[] = [
   ).ver("3.7"),
   field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
   field(
+    "SmoothScroll",
+    Bool,
+    true,
+    "if true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)",
+  ).ver("3.6"),
+  field(
     "PaddingAfterLastPage",
     Bool,
     false,

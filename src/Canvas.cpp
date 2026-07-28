@@ -797,10 +797,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        if (gInMouseWheelScroll) {
+        if (gGlobalPrefs->smoothScroll && gInMouseWheelScroll) {
             StartOrUpdateSmoothScrollY(win, si.nPos);
         } else {
-            // Keyboard / scrollbar / programmatic scroll: apply immediately.
+            // Keyboard / scrollbar / programmatic scroll, or SmoothScroll off: apply immediately.
             StopSmoothScroll(win);
             win->AsFixed()->ScrollYTo(si.nPos);
             ReadAloudOnUserViewChanged(win);
