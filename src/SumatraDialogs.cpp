@@ -1193,6 +1193,67 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
     return FALSE;
 }
 
+struct Dialog_PartitionName_Data {
+    Str title;
+    Str prompt;
+    Str name;
+    ~Dialog_PartitionName_Data() {
+        str::Free(title);
+        str::Free(prompt);
+        str::Free(name);
+    }
+};
+
+static INT_PTR CALLBACK Dialog_PartitionName_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+    if (WM_INITDIALOG == msg) {
+        auto data = (Dialog_PartitionName_Data*)lp;
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
+        if (UseDarkModeLib()) {
+            DarkMode::setDarkWndSafe(hDlg);
+        }
+        HwndSetText(hDlg, data->title);
+        HwndSetDlgItemText(hDlg, IDC_PARTITION_NAME_LABEL, data->prompt);
+        HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
+        HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
+        if (len(data->name) > 0) {
+            HwndSetDlgItemText(hDlg, IDC_PARTITION_NAME_EDIT, data->name);
+            EditSelectAll(GetDlgItem(hDlg, IDC_PARTITION_NAME_EDIT));
+        }
+        CenterDialog(hDlg);
+        HwndSetFocus(GetDlgItem(hDlg, IDC_PARTITION_NAME_EDIT));
+        return FALSE;
+    }
+    if (WM_COMMAND == msg) {
+        auto data = (Dialog_PartitionName_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+        WORD cmd = LOWORD(wp);
+        if (IDOK == cmd) {
+            TempStr name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_PARTITION_NAME_EDIT));
+            str::TrimWSInPlace(name, str::TrimOpt::Both);
+            str::ReplaceWithCopy(&data->name, name);
+            EndDialog(hDlg, IDOK);
+            return TRUE;
+        }
+        if (IDCANCEL == cmd) {
+            EndDialog(hDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+bool Dialog_PartitionName(HWND hwnd, Str title, Str prompt, Str& name) {
+    Dialog_PartitionName_Data data;
+    data.title = str::Dup(title);
+    data.prompt = str::Dup(prompt);
+    data.name = str::Dup(name);
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_PARTITION_NAME, hwnd, Dialog_PartitionName_Proc, (LPARAM)&data);
+    if (IDCANCEL == res || len(data.name) == 0) {
+        return false;
+    }
+    str::ReplaceWithCopy(&name, data.name);
+    return true;
+}
+
 // pageNo is the page we're adding to favorites
 // returns true if the user wants to add a favorite.
 // favName is the name the user wants the favorite to have
@@ -1315,8 +1376,7 @@ static void PaintColorArea(HDC hdc, RECT* rc) {
     }
     // rows must be DWORD-aligned; each pixel is 3 bytes (BGR)
     int stride = (w * 3 + 3) & ~3;
-    // cast before multiply so the product cannot overflow int→size_t
-    u8* bits = (u8*)malloc((size_t)stride * (size_t)h);
+    u8* bits = (u8*)malloc(stride * h);
     if (!bits) {
         return;
     }
