@@ -701,45 +701,6 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-  project "harfbuzz"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++latest"
-    optimized_conf()
-    -- ext/harfbuzz/src is required so /Yu"hb.hh" and forceincludes can resolve
-    -- hb.hh (sources also rely on same-dir includes for other headers).
-    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
-    defines {
-      "_CRT_SECURE_NO_WARNINGS",
-      "HAVE_FALLBACK=1",
-      "HAVE_OT",
-      "HAVE_UCDN",
-      "HAVE_FREETYPE",
-      -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
-      -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
-      -- context being set (it's NULL during atexit and when fz_hb_lock/unlock
-      -- pairs nest via store scavenging)
-      "hb_malloc_impl=sumatra_hb_malloc",
-      "hb_calloc_impl=sumatra_hb_calloc",
-      "hb_realloc_impl=sumatra_hb_realloc",
-      "hb_free_impl=sumatra_hb_free"
-    }
-    filter "configurations:Debug or DebugFull"
-    defines {
-      "HAVE_ATEXIT",
-    }
-    filter {}
-    disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
-    -- precompiled header: hb.hh is re-parsed by every harfbuzz TU and dominates
-    -- its compile time. forceincludes so MSVC /Yu finds the PCH marker even in
-    -- TUs that include a secondary header first (which then pulls in hb.hh).
-    pchheader "hb.hh"
-    pchsource "src/HarfBuzzPch.cpp"
-    files { "src/HarfBuzzPch.cpp" }
-    forceincludes { "hb.hh" }
-    harfbuzz_files()
-
   project "brotli"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -845,7 +806,9 @@ workspace "SumatraPDF"
   project "mupdf"
     static_intermediate_dirs()
     kind "StaticLib"
-    language "C"
+    -- C++ for harfbuzz; C sources still compile as C
+    language "C++"
+    cppdialect "C++latest"
     mixed_dbg_rel_conf()
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
@@ -862,7 +825,18 @@ workspace "SumatraPDF"
       "FT2_BUILD_LIBRARY",
       "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+      -- harfbuzz
+      "HAVE_FALLBACK=1", "HAVE_OT", "HAVE_UCDN", "HAVE_FREETYPE",
+      -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
+      -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
+      "hb_malloc_impl=sumatra_hb_malloc",
+      "hb_calloc_impl=sumatra_hb_calloc",
+      "hb_realloc_impl=sumatra_hb_realloc",
+      "hb_free_impl=sumatra_hb_free",
     }
+    filter "configurations:Debug or DebugFull"
+      defines { "HAVE_ATEXIT" }
+    filter {}
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }
@@ -871,7 +845,7 @@ workspace "SumatraPDF"
     disablewarnings {
       "4005", "4013", "4018", "4057", "4100", "4101", "4115", "4127", "4130", "4132", "4146", "4189", "4200", "4201",
       "4204", "4206", "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4306", "4310", "4312", "4389", "4456",
-      "4457", "4701", "4702", "4703", "4706", "4819", "4996", "5286"
+      "4457", "4459", "4505", "4701", "4702", "4703", "4706", "4805", "4819", "4996", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -914,6 +888,7 @@ workspace "SumatraPDF"
     -- libjpeg-turbo (also kept as its own project for bench_image only)
     libjpeg_turbo_files()
     freetype_files()
+    harfbuzz_files()
     filter { 'files:**.asm', 'platforms:x86' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
@@ -929,12 +904,12 @@ workspace "SumatraPDF"
       }
     filter {}
     filter {
-      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/** or files:ext/libjpeg-turbo/** or files:ext/freetype/**"
+      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/** or files:ext/libjpeg-turbo/** or files:ext/freetype/** or files:ext/harfbuzz/**"
     }
       optimize "Size"
     filter {}
     links {
-      "cmark-gfm", "harfbuzz", "brotli", "libarchive"
+      "cmark-gfm", "brotli", "libarchive"
     }
 
     -- mupdf
