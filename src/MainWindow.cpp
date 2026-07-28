@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/GuessFileType.h"
@@ -125,13 +126,25 @@ MainWindow::~MainWindow() {
     DeleteObject(bmpMovePattern);
     DeleteObject(brControlBgColor);
 
-    // release our copy of UIA provider
-    // the UI automation still might have a copy somewhere
+    // Disconnect UIA clients and release our provider. Clients that still hold
+    // refs get UIA_E_ELEMENTNOTAVAILABLE after FreeDocument.
     if (uiaProvider) {
-        if (AsFixed()) {
-            uiaProvider->OnDocumentUnload();
+        uiaProvider->OnDocumentUnload();
+        // Clears UIA's cached link for this hwnd (pairs with WM_GETOBJECT).
+        UiaReturnRawElementProvider(hwndCanvas, 0, 0, nullptr);
+        // Windows 8+: drop client-side caches (delay-loaded; absent on Win7).
+        {
+            HMODULE uiaDll = GetModuleHandleW(L"UIAutomationCore.dll");
+            if (uiaDll) {
+                using PFN = HRESULT(WINAPI*)(IRawElementProviderSimple*);
+                auto disconnect = (PFN)GetProcAddress(uiaDll, "UiaDisconnectProvider");
+                if (disconnect) {
+                    disconnect(uiaProvider);
+                }
+            }
         }
         uiaProvider->Release();
+        uiaProvider = nullptr;
     }
 
     DeleteFindBar(this);

@@ -77,6 +77,7 @@ void SumatraUIAutomationDocumentProvider::FreeDocument() {
         it = it->sibling_next;
 
         current->released = true; // disallow DisplayModel access
+        current->dm = nullptr;
         current->Release();
     }
 
@@ -91,8 +92,7 @@ bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const {
 }
 
 DisplayModel* SumatraUIAutomationDocumentProvider::GetDM() {
-    ReportIf(!IsDocumentLoaded());
-    ReportIf(!dm);
+    // May be null after FreeDocument while UIA clients still hold COM refs.
     return dm;
 }
 

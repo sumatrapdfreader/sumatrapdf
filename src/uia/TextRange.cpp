@@ -85,18 +85,29 @@ bool SumatraUIAutomationTextRange::IsEmptyRange() const {
     return (startPage == endPage && startGlyph == endGlyph);
 }
 
-int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum) {
-    ReportIf(!document->IsDocumentLoaded());
-    ReportIf(pageNum <= 0);
+// UIA may call into a text range after the document was unloaded (tab switch /
+// close). Prefer a soft failure over ReportIf/AV.
+static HRESULT EnsureDocumentLoaded(SumatraUIAutomationDocumentProvider* document) {
+    if (!document || !document->IsDocumentLoaded() || !document->GetDM()) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    return S_OK;
+}
 
-    int pageLen;
+int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum) {
+    if (FAILED(EnsureDocumentLoaded(document)) || pageNum <= 0) {
+        return 0;
+    }
+
+    int pageLen = 0;
     document->GetDM()->GetEngine()->GetTextForPage(pageNum, &pageLen);
     return pageLen;
 }
 
 int SumatraUIAutomationTextRange::GetPageCount() {
-    ReportIf(!document->IsDocumentLoaded());
-
+    if (FAILED(EnsureDocumentLoaded(document))) {
+        return 0;
+    }
     return document->GetDM()->PageCount();
 }
 
@@ -260,6 +271,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Clone(ITextRangeProvider
     if (clonedRange == nullptr) {
         return E_POINTER;
     }
+    HRESULT hr = EnsureDocumentLoaded(document);
+    if (FAILED(hr)) {
+        return hr;
+    }
     *clonedRange = new SumatraUIAutomationTextRange(*this);
     return S_OK;
 }
@@ -327,9 +342,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::CompareEndpoints(enum Te
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(enum TextUnit textUnit) {
-    // if document is closed, don't do anything
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // if not set, don't do anything
@@ -389,8 +404,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(__unused T
     if (found == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // raw text doesn't have attributes so just don't find anything
@@ -403,8 +419,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(__unused BSTR t
     if (found == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // TODO: Support text searching
@@ -416,8 +433,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(__unus
     if (value == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // text doesn't have attributes, we don't support those
@@ -436,8 +454,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetBoundingRectangles(SA
     if (boundingRects == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     if (IsNullRange()) {
@@ -459,8 +478,9 @@ SumatraUIAutomationTextRange::GetEnclosingElement(IRawElementProviderSimple** en
     if (enclosingElement == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     *enclosingElement = document;
@@ -472,8 +492,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     if (text == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     if (IsNullRange() || IsEmptyRange()) {
@@ -509,8 +530,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit,
     }
 
     // if document is closed, don't do anything
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // Just move the endpoints using other methods
@@ -555,8 +577,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
     }
 
     // if document is closed, don't do anything
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // if not set, don't do anything
@@ -793,8 +816,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Select() {
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     if (IsNullRange() || IsEmptyRange()) {
@@ -817,8 +841,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::RemoveFromSelection() {
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alignToTop) {
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
 #if 0
@@ -845,8 +870,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetChildren(SAFEARRAY** 
     if (children == nullptr) {
         return E_POINTER;
     }
-    if (!document->IsDocumentLoaded()) {
-        return E_FAIL;
+    HRESULT hrDoc = EnsureDocumentLoaded(document);
+    if (FAILED(hrDoc)) {
+        return hrDoc;
     }
 
     // return all children in range

@@ -3900,32 +3900,22 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
 
         case WM_GETOBJECT:
-            // TODO: should we check for UiaRootObjectId, as in
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
-            // On the other hand
-            // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // says that UiaReturnRawElementProvider() should be called regardless of lParam
-            // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
+            // UI Automation root for screen readers (Narrator, NVDA, …).
+            // Not exposed in the browser plugin. Document text is available for
+            // fixed-page engines that implement GetTextForPage (PDF/XPS/DjVu).
             if (gPluginMode) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
-            // disable UIAutomation in release builds until concurrency issues and
-            // memory leaks have been figured out and fixed
-            if (!gIsDebugBuild) {
+            // Only the root object id requests our fragment root; other
+            // accessibility ids fall through to the default handler.
+            if ((long)lp != (long)UiaRootObjectId) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
             if (!win->CreateUIAProvider()) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
-            // TODO: should win->uiaProvider->Release() as in
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
-            // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
-            // Maybe instead of having a single provider per win, we should always create a new one
-            // like in this sample:
-            // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // currently win->uiaProvider refCount is really out of wack in MainWindow::~MainWindow
-            // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
-            // and since WM_GETOBJECT is called many times, it accumulates
+            // UiaReturnRawElementProvider AddRefs for the client; MainWindow holds
+            // one ref for the window lifetime. Disconnect on window destroy.
             return UiaReturnRawElementProvider(hwnd, wp, lp, win->uiaProvider);
 
         default:

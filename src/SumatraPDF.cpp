@@ -2564,10 +2564,7 @@ void DeleteMainWindow(MainWindow* win) {
     ReportIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
     ReportIf(win->printThread && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT);
 
-    if (win->uiaProvider) {
-        // tell UIA to release all objects cached in its store
-        UiaReturnRawElementProvider(win->hwndCanvas, 0, 0, nullptr);
-    }
+    // UIA disconnect/release is in ~MainWindow
 
     delete win;
 }

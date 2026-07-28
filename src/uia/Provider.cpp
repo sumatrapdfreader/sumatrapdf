@@ -25,7 +25,9 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider() {
 }
 
 void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel* dm) {
-    ReportIf(document);
+    // Tab switches and reloads can load while a previous document is still
+    // attached; drop it first so we never hold a stale DisplayModel*.
+    OnDocumentUnload();
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(dm);
@@ -34,8 +36,12 @@ void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel* dm) {
 
 void SumatraUIAutomationProvider::OnDocumentUnload() {
     if (document) {
-        document->FreeDocument(); // tell that the dm is now invalid
-        document->Release();      // release our hooks
+        // Invalidate dm pointers before clients call back into text ranges /
+        // pages that still hold COM refs to the document provider.
+        document->FreeDocument();
+        // Drop our ownership; UIA clients that still hold refs get
+        // UIA_E_ELEMENTNOTAVAILABLE from methods that check released.
+        document->Release();
         document = nullptr;
         UiaRaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
     }
