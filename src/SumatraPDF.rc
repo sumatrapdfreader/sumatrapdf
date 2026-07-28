@@ -82,14 +82,10 @@ IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
 // have icon as ,1, which is index of this icon. unless we delete
 // those old registry on install, the icon would change
 2                       ICON "..\\gfx\\SumatraPDF-smaller.ico"
-// Document-type icons (resource id = registry DefaultIcon ,-N). See RegisterForOpenWith.
-3                       ICON "..\\gfx\\epub-32bit.ico"
-4                       ICON "..\\gfx\\cbx-32bit.ico"
-5                       ICON "..\\gfx\\chm-32bit.ico"
-6                       ICON "..\\gfx\\djvu-32bit.ico"
-7                       ICON "..\\gfx\\img-32bit.ico"
-8                       ICON "..\\gfx\\pdf-32bit.ico"
-9                       ICON "..\\gfx\\mobi-32bit.ico"
+3                       ICON "..\\gfx\\gfxalt\\epub-32bit.ico"
+4                       ICON "..\\gfx\\gfxalt\\cbx-32bit.ico"
+5                       ICON "..\\gfx\\gfxalt\\chm-32bit.ico"
+6                       ICON "..\\gfx\\gfxalt\\djvu-32bit.ico"
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -174,6 +170,17 @@ BEGIN
     COMBOBOX        IDC_CMDLINE,12,177,216,13,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | WS_TABSTOP
     DEFPUSHBUTTON   "OK",IDOK,128,203,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,184,203,50,14
+END
+
+IDD_DIALOG_PARTITION_NAME DIALOGEX 0, 0, 220, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Partition"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "&Name this partition:",IDC_PARTITION_NAME_LABEL,6,7,208,18
+    EDITTEXT        IDC_PARTITION_NAME_EDIT,6,28,208,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,110,44,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,164,44,50,14
 END
 
 IDD_DIALOG_CUSTOM_ZOOM DIALOGEX 0, 0, 116, 60
