@@ -151,6 +151,70 @@ struct ClaudeCode {
     ParsedColor bgColorParsed;
 };
 
+// settings for the Chatterbox audiobook Read Aloud engine
+struct Audiobook {
+    // if true, the Read Aloud button reads the document with the
+    // Chatterbox audiobook engine (per-character voices and word
+    // highlighting) instead of the built-in Windows TTS
+    bool useChatterbox;
+    // folder of the Chatterbox-TTS-Extended install (contains
+    // tts_server.py and audiobook\engine.py); found automatically, only
+    // set this if auto-detection fails
+    Str chatterboxDir;
+    // python for the Chatterbox virtualenv; if empty,
+    // <ChatterboxDir>\.venv-amd\Scripts\pythonw.exe is used
+    Str pythonExe;
+    // port of the Chatterbox headless TTS server
+    int ttsServerPort;
+    // local LLM used once per book to work out who speaks each line (LM
+    // Studio, Ollama, or anything OpenAI-compatible); if unreachable the
+    // whole book is read in the narrator voice
+    Str lmStudioUrl;
+    // default narrator voice name; empty = first available trained voice
+    Str narratorVoice;
+    // local LLM used to work out who speaks each line; empty = pick it
+    // automatically (the only chat model the server has, or the one
+    // already loaded). Chosen in the Audiobook Characters panel
+    Str lmModel;
+    // extra LLM servers to analyse with, comma-separated, e.g.
+    // http://192.168.1.20:11434,http://192.168.1.21:11434 . The book's
+    // chunks are shared out across LmStudioUrl and these, so a second
+    // machine roughly halves the time. LM Studio and Ollama both work, and
+    // one computer running both counts as two. Unreachable ones are
+    // skipped. The Audiobook Characters panel can find these for you
+    // rather than requiring them typed here
+    Str lmUrls;
+    // who works out who speaks each line: "llm" (a local LLM, per chunk)
+    // or "booknlp" (a local BookNLP model, one pass, no LLM server
+    // needed). BookNLP is faster and needs nothing running, but the LLM
+    // handles the hardest untagged lines a little better. Chosen in the
+    // Audiobook Characters panel
+    Str analyzer;
+    // how the Audiobook Characters panel orders the cast: "appearance"
+    // (first appearance first), "appearance-desc", "lines" (most lines
+    // first), "lines-asc", "name" (A to Z) or "name-desc". Chosen in the
+    // panel
+    Str charSort;
+    // width of the Audiobook Characters panel docked on the left
+    int sidebarDx;
+    // if true, the start page is the library: a wall of book covers
+    // grouped by series, with a page per book showing its metadata, the
+    // characters/family/places BookNLP found in it, and its film and TV
+    // adaptations. If false, the classic Frequently Read page is shown
+    // instead
+    bool libraryHome;
+    // folders to look for books in, separated by ; . Empty means work them
+    // out: the folders already analysed, then Documents/Downloads/Desktop,
+    // then a bounded scan of every fixed drive
+    Str libraryRoots;
+    // port of the Chatterbox library service (audiobook\library)
+    int libraryPort;
+    // how the library start page orders the series list: "alpha" (A to Z),
+    // "genre" (grouped under genre headings), "most" (most books first) or
+    // "fewest" (fewest books first). Chosen on the page
+    Str librarySort;
+};
+
 // settings for the Grok Build chat sidebar
 struct GrokBuild {
     // Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)
@@ -221,6 +285,10 @@ struct Annotations {
     // default author for created annotations, use (none) to not add an
     // author at all. If not set will use Windows user name
     Str defaultAuthor;
+    // if true, a small floating toolbar with selection actions (copy, read
+    // aloud, highlight etc.) pops up after selecting text. Set to false to
+    // disable it
+    bool selectionToolbar;
 };
 
 // list of additional external viewers for various file types. See [docs
@@ -554,15 +622,6 @@ struct GlobalPrefs {
     bool showToc;
     // if true we draw a blue border around links in the document
     bool showLinks;
-    // if true, draw a focus ring around the document when it has keyboard
-    // focus (Tab to the page area)
-    bool showDocumentFocusIndicator;
-    // if true, show a tip when hovering an annotation (e.g. "Highlight
-    // annotation. Ctrl+click to edit.")
-    bool showAnnotationNotification;
-    // if true, show page numbers (labels) right-aligned on bookmark /
-    // table-of-contents entries
-    bool showTocPageNumbers;
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
@@ -576,9 +635,6 @@ struct GlobalPrefs {
     bool scrollbarInSinglePage;
     // if true, implements smooth scrolling
     bool smoothScroll;
-    // if true, continuous view has extra scroll room after the last page
-    // so you can scroll the end of the document to the top of the window
-    bool paddingAfterLastPage;
     // how long to hover an internal-document link (in ms) before we show a
     // popup rendering the destination region (citation entry, figure,
     // footnote). -1 (the default) disables the popup; set a positive value
@@ -638,10 +694,6 @@ struct GlobalPrefs {
     bool useSysColors;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
-    // if true, a small floating toolbar with selection actions (copy, read
-    // aloud, highlight etc.) pops up after selecting text. Set to false to
-    // disable it
-    bool selectionToolbar;
     // if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most
     // recently used order instead of tab-strip order
     bool tabsMru;
@@ -670,6 +722,8 @@ struct GlobalPrefs {
     MarkdownUI markdownUI;
     // settings for the Claude Code chat sidebar
     ClaudeCode claudeCode;
+    // settings for the Chatterbox audiobook Read Aloud engine
+    Audiobook audiobook;
     // settings for the Grok Build chat sidebar
     GrokBuild grokBuild;
     // settings for the OpenAI Codex chat sidebar
@@ -876,6 +930,52 @@ static const StructInfo gClaudeCodeInfo = {
     "0=Low, 1=Medium, 2=High, 3=Max\0if true, pass --dangerously-skip-permissions to Claude Code\0background color of "
     "the Claude Code chat panel"};
 
+static const FieldInfo gAudiobookFields[] = {
+    {offsetof(Audiobook, useChatterbox), SettingType::Bool, false},
+    {offsetof(Audiobook, chatterboxDir), SettingType::String, (intptr_t)""},
+    {offsetof(Audiobook, pythonExe), SettingType::String, (intptr_t)""},
+    {offsetof(Audiobook, ttsServerPort), SettingType::Int, 7861},
+    {offsetof(Audiobook, lmStudioUrl), SettingType::String, (intptr_t)"http://127.0.0.1:11434"},
+    {offsetof(Audiobook, narratorVoice), SettingType::String, (intptr_t)""},
+    {offsetof(Audiobook, lmModel), SettingType::String, (intptr_t)""},
+    {offsetof(Audiobook, lmUrls), SettingType::String, (intptr_t)""},
+    {offsetof(Audiobook, analyzer), SettingType::String, (intptr_t)"llm"},
+    {offsetof(Audiobook, charSort), SettingType::String, (intptr_t)"appearance"},
+    {offsetof(Audiobook, sidebarDx), SettingType::Int, 0, true},
+    {offsetof(Audiobook, libraryHome), SettingType::Bool, true},
+    {offsetof(Audiobook, libraryRoots), SettingType::String, (intptr_t)""},
+    {offsetof(Audiobook, libraryPort), SettingType::Int, 7863},
+    {offsetof(Audiobook, librarySort), SettingType::String, (intptr_t)"alpha"},
+};
+static const StructInfo gAudiobookInfo = {
+    sizeof(Audiobook), 15, gAudiobookFields,
+    "UseChatterbox\0ChatterboxDir\0PythonExe\0TtsServerPort\0LmStudioUrl\0NarratorVoice\0LmModel\0LmUrls\0Analyzer\0Cha"
+    "rSort\0SidebarDx\0LibraryHome\0LibraryRoots\0LibraryPort\0LibrarySort",
+    "if true, the Read Aloud button reads the document with the Chatterbox audiobook engine (per-character voices and "
+    "word highlighting) instead of the built-in Windows TTS\0folder of the Chatterbox-TTS-Extended install (contains "
+    "tts_server.py and audiobook\\engine.py); found automatically, only set this if auto-detection fails\0python for "
+    "the Chatterbox virtualenv; if empty, <ChatterboxDir>\\.venv-amd\\Scripts\\pythonw.exe is used\0port of the "
+    "Chatterbox headless TTS server\0local LLM used once per book to work out who speaks each line (LM Studio, Ollama, "
+    "or anything OpenAI-compatible); if unreachable the whole book is read in the narrator voice\0default narrator "
+    "voice name; empty = first available trained voice\0local LLM used to work out who speaks each line; empty = pick "
+    "it automatically (the only chat model the server has, or the one already loaded). Chosen in the Audiobook "
+    "Characters panel\0extra LLM servers to analyse with, comma-separated, e.g. "
+    "http://192.168.1.20:11434,http://192.168.1.21:11434 . The book's chunks are shared out across LmStudioUrl and "
+    "these, so a second machine roughly halves the time. LM Studio and Ollama both work, and one computer running both "
+    "counts as two. Unreachable ones are skipped. The Audiobook Characters panel can find these for you rather than "
+    "requiring them typed here\0who works out who speaks each line: \"llm\" (a local LLM, per chunk) or \"booknlp\" (a "
+    "local BookNLP model, one pass, no LLM server needed). BookNLP is faster and needs nothing running, but the LLM "
+    "handles the hardest untagged lines a little better. Chosen in the Audiobook Characters panel\0how the Audiobook "
+    "Characters panel orders the cast: \"appearance\" (first appearance first), \"appearance-desc\", \"lines\" (most "
+    "lines first), \"lines-asc\", \"name\" (A to Z) or \"name-desc\". Chosen in the panel\0width of the Audiobook "
+    "Characters panel docked on the left\0if true, the start page is the library: a wall of book covers grouped by "
+    "series, with a page per book showing its metadata, the characters/family/places BookNLP found in it, and its film "
+    "and TV adaptations. If false, the classic Frequently Read page is shown instead\0folders to look for books in, "
+    "separated by ; . Empty means work them out: the folders already analysed, then Documents/Downloads/Desktop, then "
+    "a bounded scan of every fixed drive\0port of the Chatterbox library service (audiobook\\library)\0how the library "
+    "start page orders the series list: \"alpha\" (A to Z), \"genre\" (grouped under genre headings), \"most\" (most "
+    "books first) or \"fewest\" (fewest books first). Chosen on the page"};
+
 static const FieldInfo gGrokBuildFields[] = {
     {offsetof(GrokBuild, model), SettingType::String, (intptr_t)"grok-composer-2.5-fast"},
     {offsetof(GrokBuild, models), SettingType::String, (intptr_t)""},
@@ -917,17 +1017,20 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
+    {offsetof(Annotations, selectionToolbar), SettingType::Bool, true},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 12, gAnnotationsFields,
+    sizeof(Annotations), 13, gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor",
+    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor\0SelectionToolbar",
     "highlight annotation color\0underline annotation color\0squiggly annotation color\0strike out annotation "
     "color\0text color of free text annotation\0background color of free text annotation\0opacity of free text "
     "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0size "
     "of free text annotation\0width of free text annotation border\0text icon annotation color\0type of text "
     "annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.\0default author "
-    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name"};
+    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name\0if true, "
+    "a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. "
+    "Set to false to disable it"};
 
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
@@ -1199,15 +1302,11 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, showDocumentFocusIndicator), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, showAnnotationNotification), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, showTocPageNumbers), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
     {offsetof(GlobalPrefs, scrollbarInSinglePage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, paddingAfterLastPage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, -1},
     {offsetof(GlobalPrefs, readAloudVoiceId), SettingType::String, 0},
     {offsetof(GlobalPrefs, readAloudSpeed), SettingType::Float, (intptr_t)"1"},
@@ -1215,8 +1314,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, preventSleepInFullscreen), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t)""},
-    {offsetof(GlobalPrefs, lastLightTheme), SettingType::String, (intptr_t)"", true},
-    {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)"", true},
+    {offsetof(GlobalPrefs, lastLightTheme), SettingType::String, (intptr_t)""},
+    {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)""},
     {offsetof(GlobalPrefs, documentColorsFollowTheme), SettingType::String, (intptr_t)"off"},
     {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
@@ -1228,7 +1327,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, disableAutoLinks), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, selectionToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabsMru), SettingType::Bool, false},
     {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t)""},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t)"0"},
@@ -1247,13 +1345,15 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, claudeCode), SettingType::Struct, (intptr_t)&gClaudeCodeInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, audiobook), SettingType::Struct, (intptr_t)&gAudiobookInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, grokBuild), SettingType::Struct, (intptr_t)&gGrokBuildInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, codexBuild), SettingType::Struct, (intptr_t)&gCodexBuildInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, aiChatSidebarDx), SettingType::Int, 0, true},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)"", true},
+    {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)""},
     {offsetof(GlobalPrefs, translateFromLang), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, translateEngine), SettingType::String, (intptr_t)"", true},
     {(size_t)-1, SettingType::Comment, 0},
@@ -1295,22 +1395,21 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 125, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 122, gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
     "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
-    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowTocPageNumber"
-    "s\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0PaddingAfterLastPage\0CitationHoverD"
-    "elay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLi"
-    "ghtTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0Di"
-    "sableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0Zoo"
-    "mLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0"
-    "\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations"
-    "\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes"
-    "\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchU"
-    "IWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates"
-    "\0\0",
+    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll"
+    "\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidt"
+    "h\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize"
+    "\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomL"
+    "evels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0A"
+    "udiobook\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0A"
+    "nnotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts"
+    "\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPo"
+    "s\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0Check"
+    "ForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
@@ -1333,14 +1432,10 @@ static const StructInfo gGlobalPrefsInfo = {
     "toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the find UI is a floating, "
     "movable window with a results list instead of the compact toolbar overlay\0if true, we show the Favorites "
     "sidebar\0if true, we show table of contents (Bookmarks) sidebar if it's present in the document\0if true we draw "
-    "a blue border around links in the document\0if true, draw a focus ring around the document when it has keyboard "
-    "focus (Tab to the page area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. "
-    "Ctrl+click to edit.\")\0if true, show page numbers (labels) right-aligned on bookmark / table-of-contents "
-    "entries\0if true, we show a list of frequently read documents when no document is loaded\0width of "
-    "favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay "
-    "scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show "
-    "scrollbar in single page mode\0if true, implements smooth scrolling\0if true, continuous view has extra scroll "
-    "room after the last page so you can scroll the end of the document to the top of the window\0how long to hover an "
+    "a blue border around links in the document\0if true, we show a list of frequently read documents when no document "
+    "is loaded\0width of favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), "
+    "smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if "
+    "true, we show scrollbar in single page mode\0if true, implements smooth scrolling\0how long to hover an "
     "internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, "
     "footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it\0voice id for Read "
     "Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read "
@@ -1356,21 +1451,20 @@ static const StructInfo gGlobalPrefsInfo = {
     "PDF documents\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
     "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, we use Windows system colors "
     "for background/text color. Over-rides other settings\0if true, documents are opened in tabs instead of new "
-    "windows\0if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up "
-    "after selecting text. Set to false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in "
-    "most recently used order instead of tab-strip order\0sequence of zoom levels when zooming in/out; all values must "
-    "lie between 8.33 and 6400\0zoom step size in percents relative to the current zoom level. if zero or negative, "
-    "the values from ZoomLevels are used instead\0\0customization options for PDF, XPS, DjVu and PostScript "
-    "UI\0\0customization options for eBookUI\0\0customization options for Comic Book UI\0\0customization options for "
-    "image files UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
-    "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
-    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
-    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
-    "shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
-    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
-    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
-    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
-    "types. See [docs for more "
+    "windows\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of "
+    "tab-strip order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0zoom "
+    "step size in percents relative to the current zoom level. if zero or negative, the values from ZoomLevels are "
+    "used instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options for "
+    "eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
+    "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
+    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
+    "available\0\0settings for the Claude Code chat sidebar\0\0settings for the Chatterbox audiobook Read Aloud "
+    "engine\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the "
+    "AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered "
+    "destination language for selection translation; empty uses OS UI language\0remembered source language for "
+    "selection translation; empty means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, "
+    "Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of additional external "
+    "viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "we show forward search results (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
