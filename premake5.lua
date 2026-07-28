@@ -719,15 +719,6 @@ workspace "SumatraPDF"
     includedirs { "mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
     freetype_files()
 
-  project "lcms2"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C"
-    optimized_conf()
-    disablewarnings { "4100", "4244" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
-
   project "harfbuzz"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -932,14 +923,15 @@ workspace "SumatraPDF"
       "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
     }
     a_gumbo_files()
+    lcms2_files()
     filter {
-      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/**"
+      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/**"
     }
       optimize "Size"
     filter {}
     links {
       "cmark-gfm", "harfbuzz", "freetype", "brotli",
-      "lcms2", "libjpeg-turbo", "libarchive"
+      "libjpeg-turbo", "libarchive"
     }
 
     -- mupdf

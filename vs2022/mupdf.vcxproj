@@ -902,6 +902,8 @@
     <ClInclude Include="..\ext\a-openjpeg\tgt.h" />
     <ClInclude Include="..\ext\a-openjpeg\thread.h" />
     <ClInclude Include="..\ext\a-openjpeg\tls_keys.h" />
+    <ClInclude Include="..\ext\lcms2\src\extra_xform.h" />
+    <ClInclude Include="..\ext\lcms2\src\lcms2_internal.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\archive.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\band-writer.h" />
@@ -1032,6 +1034,84 @@
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <ClCompile Include="..\ext\a-openjpeg\openjpeg.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsalpha.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmscam02.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmscgats.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmscnvrt.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmserr.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsgamma.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsgmt.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmshalf.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsintrp.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsio0.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsio1.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmslut.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsmd5.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsmtrx.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsnamed.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsopt.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmspack.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmspcs.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsplugin.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsps2.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmssamp.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmssm.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmstypes.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsvirt.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmswtpnt.c">
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\ext\lcms2\src\cmsxform.c">
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf_load_system_font.c" />
@@ -2639,9 +2719,6 @@
     </ProjectReference>
     <ProjectReference Include="brotli.vcxproj">
       <Project>{B155C6F4-9DF7-F0CA-86B2-041F72F3771B}</Project>
-    </ProjectReference>
-    <ProjectReference Include="lcms2.vcxproj">
-      <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>
     </ProjectReference>
     <ProjectReference Include="libjpeg-turbo.vcxproj">
       <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
