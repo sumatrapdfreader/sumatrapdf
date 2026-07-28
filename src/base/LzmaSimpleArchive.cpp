@@ -14,10 +14,10 @@ For the description of the format, see comment below, above ParseSimpleArchive()
 Archives are simple to create (in SumatraPDF, we used to use lzma.exe and a python script)
 there's a tool for creating them in ../MakeLzSA.cpp
 
-LzmaDecode / x86_Convert come from ext/lzma/C (LzmaDec.c, Bra*.c) compiled into
-base and thus into SumatraPDF.exe. Do not rely on those symbols from libmupdf.dll:
-the installer must be able to decompress IDR_DLL_PAK (which contains libmupdf.dll)
-while libmupdf is missing, renamed, or a mismatched version.
+LzmaDecode / x86_Convert come from ext/lzma/C (LzmaDec.c, Bra86.c) compiled into
+base and SumatraPDF.exe — not from libmupdf.dll (libarchive uses liblzma instead).
+The installer must decompress IDR_DLL_PAK (which contains libmupdf.dll) without
+calling into that DLL.
 */
 
 // 'LzSA' for "Lzma Simple Archive"

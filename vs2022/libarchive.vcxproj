@@ -1074,9 +1074,6 @@
     <ClCompile Include="..\ext\liblzma\simple\simple_coder.c" />
     <ClCompile Include="..\ext\liblzma\simple\simple_decoder.c" />
     <ClCompile Include="..\ext\liblzma\simple\x86.c" />
-    <ClCompile Include="..\ext\lzma\C\Bra.c" />
-    <ClCompile Include="..\ext\lzma\C\Bra86.c" />
-    <ClCompile Include="..\ext\lzma\C\LzmaDec.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\ext\a-bzip2\version.txt" />

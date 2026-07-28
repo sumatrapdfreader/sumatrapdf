@@ -104,7 +104,6 @@ function makeLibarchive(outDir: string): LibDef {
       "ext/libarchive",
       "ext/a-zlib",
       "ext/a-bzip2",
-      "ext/lzma/C",
       "ext/liblzma/api",
       "ext/liblzma/common",
       "ext/liblzma/check",
@@ -204,7 +203,7 @@ function makeLibarchive(outDir: string): LibDef {
         dir: "ext/a-bzip2",
         patterns: ["bzip2.c"],
       },
-      { dir: "ext/lzma/C", patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"] },
+      // LzmaDec/Bra* live in base/exe for LzSA (not in libmupdf/libarchive)
       {
         dir: "ext/liblzma",
         patterns: [

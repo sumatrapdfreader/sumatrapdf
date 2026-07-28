@@ -178,10 +178,10 @@ const utils: LibDef = {
         "Zip.*",
       ],
     },
-    // LZMA decoder in base/exe so installer extract does not call into libmupdf.dll
+    // LzSA decoder (LzmaDecode + x86 BCJ). Bra.c not needed.
     {
       dir: "ext/lzma/C",
-      patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"],
+      patterns: ["LzmaDec.c", "Bra86.c"],
     },
   ],
 };
