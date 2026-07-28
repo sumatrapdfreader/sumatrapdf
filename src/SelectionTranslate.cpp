@@ -112,9 +112,12 @@ struct SelectionTranslateWnd : Wnd {
     AIChatBackend backend = AIChatBackend::Grok;
     bool translating = false;
     bool resultVisible = false;
+    // true after the first size-to-content layout (ignore WM_SIZE before that)
+    bool sizeInitialized = false;
 
     bool Create(HWND owner, Str selText, Str title);
-    void Relayout();
+    // initial: size to content and center; later: reflow keeping (or growing) current size
+    void Relayout(bool initial = false);
     void UpdateTheme();
     void UpdateTranslateButtonState();
     void ShowTranslationResult(Str text, bool isError);
@@ -122,6 +125,9 @@ struct SelectionTranslateWnd : Wnd {
     void OnTranslationFinished(bool ok, Str msg);
     void OnCloseClicked();
     void ScheduleDelete();
+
+    void OnSize(UINT msg, UINT type, SIZE size) override;
+    void OnGetMinMaxInfo(MINMAXINFO* mmi) override;
 };
 
 static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
@@ -869,13 +875,53 @@ void SelectionTranslateWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-void SelectionTranslateWnd::Relayout() {
+void SelectionTranslateWnd::Relayout(bool initial) {
     if (!layout) {
         return;
     }
-    int minDx = DpiScale(hwnd, 500);
-    LayoutAndSizeToContent(layout, minDx, 0, hwnd);
-    CenterDialog(hwnd, hwndOwner);
+    if (initial || !sizeInitialized) {
+        LayoutAndSizeToContent(layout, 0, 0, hwnd);
+        CenterDialog(hwnd, hwndOwner);
+        sizeInitialized = true;
+        return;
+    }
+    // keep current client size (or grow if new content needs more space, e.g. result)
+    Rect rc = ClientRect(hwnd);
+    LayoutAndSizeToContent(layout, rc.dx, rc.dy, hwnd);
+}
+
+// reflow controls when the user resizes the window
+void SelectionTranslateWnd::OnSize(UINT msg, UINT, SIZE size) {
+    if (msg != WM_SIZE) {
+        return;
+    }
+    // WS_THICKFRAME windows get WM_SIZE during CreateCustom before children exist
+    if (!layout || !sizeInitialized) {
+        return;
+    }
+    int dx = (int)size.cx;
+    int dy = (int)size.cy;
+    if (dx == 0 || dy == 0) {
+        return;
+    }
+    LayoutToSize(layout, {dx, dy});
+    InvalidateRect(hwnd, nullptr, false);
+}
+
+void SelectionTranslateWnd::OnGetMinMaxInfo(MINMAXINFO* mmi) {
+    if (!hwnd || !layout) {
+        return;
+    }
+    int clientMinDx = layout->MinIntrinsicWidth(Inf);
+    int clientMinDy = layout->MinIntrinsicHeight(Inf);
+    clientMinDx = std::max(clientMinDx, DpiScale(hwnd, 200));
+    clientMinDy = std::max(clientMinDy, DpiScale(hwnd, 150));
+    RECT r{0, 0, clientMinDx, clientMinDy};
+    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
+    DWORD exStyle = (DWORD)GetWindowLongW(hwnd, GWL_EXSTYLE);
+    AdjustWindowRectEx(&r, style, FALSE, exStyle);
+    mmi->ptMinTrackSize.x = r.right - r.left;
+    mmi->ptMinTrackSize.y = r.bottom - r.top;
 }
 
 void SelectionTranslateWnd::UpdateTranslateButtonState() {
@@ -1054,8 +1100,8 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         CreateCustomArgs args;
         args.title = title;
         args.visible = false;
-        args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-        args.exStyle = WS_EX_DLGMODALFRAME;
+        // resizable: thick frame; CLIPCHILDREN avoids flicker while resizing
+        args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
         args.font = font;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
@@ -1076,6 +1122,9 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         args.isMultiLine = true;
         args.withBorder = true;
         args.idealSizeLines = 7;
+        // prefer ~40 chars wide; cap so long selection text does not widen the dialog
+        args.idealWidthChars = 40;
+        args.maxWidthChars = 120;
         args.isRtl = isRtl;
         editSrcText = new Edit();
         editSrcText->Create(args);
@@ -1113,7 +1162,8 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         vbox->AddChild(new Padding(engineRow, DpiScaledInsets(hwnd, 0, 0, 8, 0)));
     }
 
-    vbox->AddChild(editSrcText);
+    // flex so source/result edits absorb extra height when the window is resized
+    vbox->AddChild(editSrcText, 1);
 
     {
         auto* langRow = new HBox();
@@ -1219,17 +1269,19 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         args.isMultiLine = true;
         args.withBorder = true;
         args.idealSizeLines = 6;
+        args.idealWidthChars = 40;
+        args.maxWidthChars = 120;
         args.isRtl = isRtl;
         editResult = new Edit();
         editResult->Create(args);
         SendMessageW(editResult->hwnd, EM_SETREADONLY, TRUE, 0);
         editResult->SetVisibility(Visibility::Collapse);
         editResult->SetInsetsPt(4, 0, 0, 0);
-        vbox->AddChild(editResult);
+        vbox->AddChild(editResult, 1);
     }
 
     layout = new Padding(vbox, DpiScaledInsets(hwnd, 12, 12));
-    Relayout();
+    Relayout(true);
     UpdateTheme();
     UpdateTranslateButtonState();
     SetIsVisible(true);

@@ -34,6 +34,23 @@ static bool EditSetCueText(HWND hwnd, Str s) {
     return ok;
 }
 
+// average character width for sizing edits by character count
+static int EditAverageCharDx(HWND hwnd, HFONT font) {
+    Size s = HwndMeasureText(hwnd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", font);
+    int ave = (s.dx + 25) / 52;
+    if (ave < 1) {
+        ave = DpiScale(hwnd, 7);
+    }
+    return ave;
+}
+
+static int EditWidthForChars(HWND hwnd, HFONT font, int nChars) {
+    if (nChars <= 0) {
+        return 0;
+    }
+    return EditAverageCharDx(hwnd, font) * nChars;
+}
+
 Edit::Edit() {
     kind = kindEdit;
 }
@@ -62,6 +79,24 @@ void Edit::SetCursorPositionAtEnd() {
     SetCursorPosition(pos);
 }
 
+// preferred GetIdealSize width ≈ nChars average character widths (0 clears)
+void Edit::SetIdealWidthChars(int nChars) {
+    if (!hwnd || nChars <= 0) {
+        idealDx = 0;
+        return;
+    }
+    idealDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
+}
+
+// cap GetIdealSize width at ≈ nChars average character widths (0 clears)
+void Edit::SetMaxWidthChars(int nChars) {
+    if (!hwnd || nChars <= 0) {
+        maxDx = 0;
+        return;
+    }
+    maxDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
+}
+
 HWND Edit::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     CreateControlArgs cargs;
@@ -88,6 +123,13 @@ HWND Edit::Create(const CreateArgs& args) {
     Wnd::CreateControl(cargs);
     if (!hwnd) {
         return nullptr;
+    }
+    // character-based ideal/max width (needs hwnd + font for measurement)
+    if (args.idealWidthChars > 0) {
+        SetIdealWidthChars(args.idealWidthChars);
+    }
+    if (args.maxWidthChars > 0) {
+        SetMaxWidthChars(args.maxWidthChars);
     }
     SizeToIdealSize(this);
 
@@ -164,6 +206,11 @@ Size Edit::GetIdealSize() {
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.dx, s2.dx);
+    // preferred width in characters (or pixels via idealDx)
+    if (idealDx > 0 && dx < idealDx) {
+        dx = idealDx;
+    }
+    // max width in characters (or pixels via maxDx)
     if (maxDx > 0 && dx > maxDx) {
         dx = maxDx;
     }

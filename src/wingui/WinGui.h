@@ -298,14 +298,19 @@ struct Edit : Wnd {
         Str cueText;
         Str text;
         int idealSizeLines = 1;
+        // if > 0: ideal width is at least ~N average character widths
+        int idealWidthChars = 0;
+        // if > 0: ideal width is capped at ~N average character widths
+        int maxWidthChars = 0;
         HFONT font = nullptr;
         bool isRtl = false;
     };
 
     TextChangedHandler onTextChanged;
 
-    // set before Create()
+    // set before Create() (pixels); or use idealWidthChars / maxWidthChars
     int idealSizeLines = 1;
+    int idealDx = 0;
     int maxDx = 0;
 
     // remembers CreateArgs.withBorder: with themes darkmodelib strips
@@ -323,6 +328,10 @@ struct Edit : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 
     Size GetIdealSize() override;
+
+    // set preferred / max width to ~nChars average character widths (0 clears)
+    void SetIdealWidthChars(int nChars);
+    void SetMaxWidthChars(int nChars);
 
     // horizontal offset of the text from the control's left edge (border +
     // internal margin); used to align a borderless label with the edit's text
