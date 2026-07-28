@@ -715,16 +715,6 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-  project "a-jbig2dec"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C"
-    optimized_conf()
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
-    includedirs { "ext/a-jbig2dec" }
-    files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
-
   project "a-openjpeg"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -937,6 +927,8 @@ workspace "SumatraPDF"
     defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
+    -- third-party libs compiled into this project (was separate a-* static libs)
+    defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }
@@ -944,7 +936,7 @@ workspace "SumatraPDF"
 
     disablewarnings {
       "4005", "4013", "4018", "4057", "4100", "4115", "4130", "4132", "4146", "4200", "4204", "4206", "4210",
-      "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819", "5286"
+      "4244", "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4701", "4703", "4706", "4819", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -953,6 +945,7 @@ workspace "SumatraPDF"
     includedirs {
       "mupdf/include",
       "mupdf/generated",
+      "ext/a-jbig2dec",
       "ext/jbig2dec",
       "ext/libjpeg-turbo/src",
       "ext/a-openjpeg",
@@ -972,9 +965,15 @@ workspace "SumatraPDF"
     fonts()
 
     mupdf_files()
+    -- Third-party code that only mupdf/libmupdf needs is compiled into this
+    -- static lib (smaller VS solution; was separate a-* projects).
+    files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
+    filter { "files:ext/a-jbig2dec/**" }
+      optimize "Size"
+    filter {}
     links {
       "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "brotli",
-      "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo"
+      "lcms2", "a-openjpeg", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 
     -- mupdf
