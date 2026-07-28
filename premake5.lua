@@ -777,15 +777,6 @@ workspace "SumatraPDF"
     forceincludes { "hb.hh" }
     harfbuzz_files()
 
-  project "a-mujs"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C"
-    optimized_conf()
-    includedirs { "ext/a-mujs" }
-    disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
-    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
-
   project "a-extract"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -926,8 +917,8 @@ workspace "SumatraPDF"
 
     disablewarnings {
       "4005", "4013", "4018", "4057", "4100", "4115", "4127", "4130", "4132", "4146", "4200", "4204", "4206", "4210",
-      "4244", "4245", "4267", "4295", "4305", "4310", "4389", "4456", "4457", "4701", "4702", "4703", "4706", "4819",
-      "5286"
+      "4090", "4244", "4245", "4267", "4295", "4305", "4310", "4389", "4456", "4457", "4701", "4702", "4703", "4706",
+      "4819", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -960,11 +951,12 @@ workspace "SumatraPDF"
     -- static lib (smaller VS solution; was separate a-* projects).
     files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
     files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
-    filter { "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/**" }
+    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
+    filter { "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/**" }
       optimize "Size"
     filter {}
     links {
-      "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "brotli",
+      "cmark-gfm", "a-extract", "harfbuzz", "freetype", "brotli",
       "lcms2", "libjpeg-turbo", "libarchive", "a-gumbo"
     }
 
