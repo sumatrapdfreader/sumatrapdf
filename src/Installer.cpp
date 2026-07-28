@@ -100,8 +100,116 @@ Str GetInstallerLogPath() {
     return path::Join(dir, kLogFileName);
 }
 
+// Write a file during install/upgrade. libmupdf.dll is often locked by
+// SumatraPDF.exe, dllhost/prevhost (preview), or PdfFilter; a plain
+// CreateFile(CREATE_ALWAYS) then fails and leaves the old DLL (size mismatch
+// with the new exe). Retry: direct write, temp+rename, kill holders, delete.
+static bool WriteInstallerFileRobust(Str path, Str data) {
+    if (!path || !data.s) {
+        log("WriteInstallerFileRobust: null path or data\n");
+        return false;
+    }
+    int expected = data.len;
+    logf("WriteInstallerFileRobust: path='%s' bytes=%d\n", path, expected);
+    i64 existing = file::GetSize(path);
+    if (existing >= 0) {
+        DWORD attrs = file::GetAttributes(path);
+        logf("  existing size=%lld attrs=0x%x\n", (long long)existing, attrs);
+    } else {
+        logf("  no existing file (GetSize failed)\n");
+    }
+
+    auto clearReadonly = [](Str p) {
+        DWORD attrs = file::GetAttributes(p);
+        if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
+            logf("  clearing READONLY on '%s'\n", p);
+            file::SetAttributes(p, attrs & ~FILE_ATTRIBUTE_READONLY);
+        }
+    };
+
+    auto verifySize = [&](Str p) -> bool {
+        i64 sz = file::GetSize(p);
+        if (sz != (i64)expected) {
+            logf("  size check failed path='%s' size=%lld expected=%d\n", p, (long long)sz, expected);
+            return false;
+        }
+        return true;
+    };
+
+    auto tryDirect = [&]() -> bool {
+        clearReadonly(path);
+        if (!file::WriteFile(path, data)) {
+            DWORD err = GetLastError();
+            logf("  direct WriteFile failed lastError=%u\n", err);
+            LogLastError(err);
+            return false;
+        }
+        return verifySize(path);
+    };
+
+    auto tryTempRename = [&]() -> bool {
+        TempStr tmp = str::JoinTemp(path, ".tmp");
+        logf("  trying write via temp '%s'\n", tmp);
+        clearReadonly(tmp);
+        file::Delete(tmp);
+        if (!file::WriteFile(tmp, data)) {
+            DWORD err = GetLastError();
+            logf("  temp WriteFile failed lastError=%u\n", err);
+            LogLastError(err);
+            file::Delete(tmp);
+            return false;
+        }
+        if (!verifySize(tmp)) {
+            file::Delete(tmp);
+            return false;
+        }
+        clearReadonly(path);
+        if (!MoveFileExW(CWStrTemp(tmp), CWStrTemp(path), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+            DWORD err = GetLastError();
+            logf("  MoveFileExW(REPLACE) failed lastError=%u\n", err);
+            LogLastError(err);
+            file::Delete(tmp);
+            return false;
+        }
+        return verifySize(path);
+    };
+
+    for (int attempt = 1; attempt <= 4; attempt++) {
+        logf("  attempt %d/4\n", attempt);
+        if (tryDirect()) {
+            logf("WriteInstallerFileRobust: ok (direct) '%s'\n", path);
+            return true;
+        }
+        if (tryTempRename()) {
+            logf("WriteInstallerFileRobust: ok (temp+rename) '%s'\n", path);
+            return true;
+        }
+
+        int killed = KillProcessesWithModule(path, true);
+        logf("  KillProcessesWithModule('%s') killed=%d\n", path, killed);
+        if (file::Exists(path)) {
+            clearReadonly(path);
+            bool delOk = file::Delete(path);
+            logf("  Delete('%s') => %d\n", path, (int)delOk);
+            if (!delOk) {
+                LogLastError();
+            }
+        }
+        if (attempt < 4) {
+            DWORD sleepMs = 300u * (DWORD)attempt;
+            logf("  sleep %u ms before retry\n", sleepMs);
+            Sleep(sleepMs);
+        }
+    }
+
+    existing = file::GetSize(path);
+    logf("WriteInstallerFileRobust: FAILED path='%s' finalSize=%lld expected=%d\n", path, (long long)existing,
+         expected);
+    return false;
+}
+
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
-    logf("ExtractFiles(): dir '%s'\n", destDir);
+    logf("ExtractFiles(): dir '%s' filesCount=%d\n", destDir, archive->filesCount);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
@@ -109,9 +217,12 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
 
     for (int i = 0; i < nFiles; i++) {
         fi = &archive->files[i];
+        logf("  decompress [%d/%d] '%s' compressed=%u uncompressed=%u\n", i + 1, nFiles, fi->name,
+             (unsigned)fi->compressedSize, (unsigned)fi->uncompressedSize);
         uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
 
         if (!uncompressed) {
+            logf("  GetFileDataByIdx failed for '%s'\n", fi->name);
             NotifyFailed(
                 _TRA("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
@@ -119,7 +230,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         TempStr filePath = path::JoinTemp(destDir, fi->name);
 
         Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
-        bool ok = file::WriteFile(filePath, d);
+        bool ok = WriteInstallerFileRobust(filePath, d);
         free(uncompressed);
 
         if (!ok) {
@@ -331,6 +442,13 @@ static void InstallerThread(Flags* cli) {
     ProgressStep();
     log("Installer thread finished\n");
 Exit:
+    // Pre-release debug report (no symbols download) so we learn about failed
+    // upgrades (e.g. locked libmupdf.dll) with the install log attached.
+    if (gInstallFailed) {
+        TempStr cond = fmt("Installation failed: %s", gFirstError ? gFirstError : StrL("(no details)"));
+        logf("InstallerThread: upload debug report: %s\n", cond);
+        _uploadDebugReport(cond, FILE_LINE, false, false);
+    }
     if (gWnd && gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
@@ -1085,7 +1203,9 @@ static bool OpenEmbeddedFilesArchive() {
 }
 
 bool ExtractLibmupdfToDir(Str destDir) {
+    logf("ExtractLibmupdfToDir: destDir='%s'\n", destDir);
     if (!OpenEmbeddedFilesArchive()) {
+        log("ExtractLibmupdfToDir: OpenEmbeddedFilesArchive failed\n");
         return false;
     }
     int idx = lzma::GetIdxFromName(&gArchive, "libmupdf.dll");
@@ -1094,6 +1214,8 @@ bool ExtractLibmupdfToDir(Str destDir) {
         return false;
     }
     lzma::FileInfo* fi = &gArchive.files[idx];
+    logf("ExtractLibmupdfToDir: archive entry uncompressed=%u compressed=%u\n", (unsigned)fi->uncompressedSize,
+         (unsigned)fi->compressedSize);
     u8* uncompressed = lzma::GetFileDataByIdx(&gArchive, idx, nullptr);
     if (!uncompressed) {
         log("ExtractLibmupdfToDir: failed to decompress libmupdf.dll\n");
@@ -1102,17 +1224,18 @@ bool ExtractLibmupdfToDir(Str destDir) {
     if (!dir::CreateAll(destDir)) {
         free(uncompressed);
         logf("ExtractLibmupdfToDir: couldn't create directory '%s'\n", destDir);
+        LogLastError();
         return false;
     }
     TempStr filePath = path::JoinTemp(destDir, fi->name);
     Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
-    bool ok = file::WriteFile(filePath, d);
+    bool ok = WriteInstallerFileRobust(filePath, d);
     free(uncompressed);
     if (!ok) {
         logf("ExtractLibmupdfToDir: failed to write '%s'\n", filePath);
         return false;
     }
-    logf("ExtractLibmupdfToDir: extracted '%s'\n", filePath);
+    logf("ExtractLibmupdfToDir: extracted '%s' size=%lld\n", filePath, (long long)file::GetSize(filePath));
     return true;
 }
 

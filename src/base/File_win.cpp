@@ -321,14 +321,24 @@ bool WriteFile(Str path, Str d) {
     HANDLE fh = CreateFileW(CWStrTemp(path), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
                             FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == fh) {
+        // keep GetLastError for callers; also log for diagnostics (installer upgrades)
+        DWORD err = GetLastError();
+        logf("file::WriteFile: CreateFileW failed for '%s' lastError=%u\n", path, err);
+        SetLastError(err);
         return false;
     }
     AutoCloseHandle h(fh);
 
     DWORD size = 0;
     BOOL ok = ::WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
-    ReportIf(ok && (dataLen != (size_t)size));
-    return ok && dataLen == (size_t)size;
+    if (!ok || dataLen != (size_t)size) {
+        DWORD err = GetLastError();
+        logf("file::WriteFile: WriteFile failed for '%s' ok=%d wrote=%u want=%zu lastError=%u\n", path, (int)ok, size,
+             dataLen, err);
+        SetLastError(err);
+        return false;
+    }
+    return true;
 }
 
 FileHandle OpenReadOnly(Str path) {
