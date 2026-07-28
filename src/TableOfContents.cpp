@@ -37,6 +37,10 @@
 
 static void LayoutTocContainer(MainWindow* win);
 
+// When true, multi-highlight every TOC item that matches the current page
+// (issue #4642). Easy to flip for comparison with single-selection behavior.
+bool gShowAllMatchingTOC = true;
+
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
 static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
@@ -202,6 +206,7 @@ void ClearTocBox(MainWindow* win) {
     win->tocLoaded = false;
 
     win->tocTreeView->Clear();
+    win->tocMatchingItems.Reset();
 
     // clear filter state
     delete win->tocFilteredTree;
@@ -275,6 +280,71 @@ static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
     return d.bestMatch;
 }
 
+struct CollectSamePageData {
+    int pageNo = 0;
+    Vec<TocItem*>* out = nullptr;
+};
+
+static void visitCollectSamePage(CollectSamePageData* d, TreeItemVisitorData* vd) {
+    auto tocItem = (TocItem*)vd->item;
+    if (!tocItem || tocItem->pageNo < 1) {
+        return;
+    }
+    if (tocItem->pageNo == d->pageNo) {
+        d->out->Append(tocItem);
+    }
+}
+
+static bool TocMatchingItemsContains(const Vec<TocItem*>& items, TocItem* item) {
+    for (TocItem* t : items) {
+        if (t == item) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Fill win->tocMatchingItems with every entry that should look "current" for
+// bestMatch: all TOC items on the same page, plus the ancestor chain (so a
+// nested 6 / 6.1 / 6.1.1 path all highlight together). TreeView still has only
+// one selection; extras are painted in OnTocCustomDraw when gShowAllMatchingTOC.
+static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* bestMatch) {
+    win->tocMatchingItems.Reset();
+    if (!gShowAllMatchingTOC || !bestMatch || !treeView) {
+        return;
+    }
+
+    // All bookmarks that point at the same page as the best match (the issue's
+    // "subsequent" same-page entries that TreeView single-select cannot show).
+    if (bestMatch->pageNo >= 1 && treeView->treeModel) {
+        CollectSamePageData d;
+        d.pageNo = bestMatch->pageNo;
+        d.out = &win->tocMatchingItems;
+        auto fn = MkFunc1<CollectSamePageData, TreeItemVisitorData*>(visitCollectSamePage, &d);
+        VisitTreeModelItems(treeView->treeModel, fn);
+    }
+
+    // Ancestor chain (chapter → section → subsection), including bestMatch.
+    for (TocItem* p = bestMatch; p; p = p->parent) {
+        if (!TocMatchingItemsContains(win->tocMatchingItems, p)) {
+            win->tocMatchingItems.Append(p);
+        }
+    }
+
+    // TreeView selection paint won't cover the extra matches; repaint so
+    // OnTocCustomDraw can draw them.
+    if (treeView->hwnd) {
+        InvalidateRect(treeView->hwnd, nullptr, TRUE);
+    }
+}
+
+static bool TocItemIsMultiHighlight(MainWindow* win, TocItem* item) {
+    if (!gShowAllMatchingTOC || !win || !item) {
+        return false;
+    }
+    return TocMatchingItemsContains(win->tocMatchingItems, item);
+}
+
 // TODO: I can't use TreeItem->IsExpanded() because it's not in sync with
 // the changes user makes to TreeCtrl
 static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
@@ -306,6 +376,7 @@ void UpdateTocSelection(MainWindow* win, int currPageNo) {
     // children of expanded node
     TreeItem toSelect = (TreeItem)FindVisibleParentTreeItem(treeView, item);
     treeView->SelectItem(toSelect);
+    SetTocMultiHighlight(win, treeView, item);
 }
 
 // expand the table of contents tree down to the entry matching the current
@@ -336,6 +407,7 @@ void ExpandTocToCurrentPage(MainWindow* win) {
     // item into view, which is exactly the "expand to current page" behavior
     TreeView_EnsureVisible(treeView->hwnd, hi);
     treeView->SelectItem((TreeItem)item);
+    SetTocMultiHighlight(win, treeView, item);
     HwndSetFocus(treeView->hwnd);
 }
 
@@ -876,8 +948,8 @@ static bool HasTocFilter(MainWindow* win) {
     return len(words) > 0;
 }
 
-// POSTPAINT: redraw title (optional filter highlight) and optional right-aligned
-// page label. Used when ShowTocPageNumbers is on and/or the TOC filter is active.
+// POSTPAINT: redraw title (optional filter highlight), optional right-aligned
+// page label, and multi-match "current page" highlight (issue #4642).
 static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     TocItem* tocItem = (TocItem*)ev->treeItem;
     if (!tocItem || !tocItem->title) {
@@ -900,17 +972,22 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
 
     // POSTPAINT often omits CDIS_SELECTED; also check the control selection.
-    bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
-    if (!isSelected) {
+    bool isTreeSelected = (cd->uItemState & CDIS_SELECTED) != 0;
+    if (!isTreeSelected) {
         HTREEITEM hSel = TreeView_GetSelection(tv->hwnd);
         HTREEITEM hItem = tv->GetHandleByTreeItem(ev->treeItem);
-        isSelected = hSel && hItem && hSel == hItem;
+        isTreeSelected = hSel && hItem && hSel == hItem;
     }
-    bool hasFocus = (GetFocus() == tv->hwnd);
+    bool isMultiMatch = TocItemIsMultiHighlight(win, tocItem);
+    // Treat multi-match rows like selected for fill/text colors so every
+    // current bookmark is visible, not only the TreeView selection.
+    bool isSelected = isTreeSelected || isMultiMatch;
+    // Focus ring / highlight-text only for the real tree selection.
+    bool hasFocus = isTreeSelected && (GetFocus() == tv->hwnd);
     COLORREF bgCol, txtCol;
     ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     // Per-bookmark color from the document (when not the focused selection).
-    if (!(isSelected && hasFocus) && tocItem->color != kColorUnset) {
+    if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {
         txtCol = tocItem->color;
     }
 
@@ -927,7 +1004,9 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     GetTocFilterWords(win, words);
     bool filterActive = len(words) > 0;
 
-    if (!showPage && !filterActive) {
+    // Nothing to repaint unless we need page numbers, filter bars, or a
+    // secondary multi-match highlight (the real selection is already painted).
+    if (!showPage && !filterActive && !(isMultiMatch && !isTreeSelected)) {
         return;
     }
 
@@ -985,7 +1064,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         InflateRect(&pageRc, -2, -1);
         pageRc.left = std::max(pageRc.left, pageRc.right - pageSize.cx);
         // Slightly muted vs title when not selected (keeps numbers secondary).
-        if (!(isSelected && hasFocus)) {
+        if (!(isTreeSelected && hasFocus)) {
             COLORREF muted =
                 RGB((GetRValue(txtCol) * 2 + GetRValue(bgCol)) / 3, (GetGValue(txtCol) * 2 + GetGValue(bgCol)) / 3,
                     (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
@@ -994,7 +1073,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         DrawTextW(hdc, pageW.s, pageW.len, &pageRc, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
     }
 
-    if ((cd->uItemState & CDIS_FOCUS) && isSelected && hasFocus) {
+    if ((cd->uItemState & CDIS_FOCUS) && isTreeSelected && hasFocus) {
         DrawFocusRect(hdc, &drawRc);
     }
 }
@@ -1014,6 +1093,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     bool filterActive = HasTocFilter(win);
     bool showPageNumbers = gGlobalPrefs->showTocPageNumbers;
+    bool multiHighlight = gShowAllMatchingTOC && win && len(win->tocMatchingItems) > 0;
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         TocItem* tocItem = (TocItem*)ev->treeItem;
@@ -1028,8 +1108,10 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
             UpdateFont(cd->hdc, ev->treeView->hwnd, tocItem->fontFlags);
             res = CDRF_NEWFONT;
         }
-        // POSTPAINT redraws title + optional page number / filter highlight.
-        if (filterActive || (showPageNumbers && tocItem->pageNo > 0)) {
+        // POSTPAINT redraws title + optional page number / filter / multi-match.
+        bool needPost = filterActive || (showPageNumbers && tocItem->pageNo > 0) ||
+                        (multiHighlight && TocItemIsMultiHighlight(win, tocItem));
+        if (needPost) {
             res |= CDRF_NOTIFYPOSTPAINT;
         }
         ev->result = res;

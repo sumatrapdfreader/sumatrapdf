@@ -21,6 +21,7 @@ struct Checkbox;
 struct Button;
 struct TabsCtrl;
 struct TocTree;
+struct TocItem;
 struct FindBarWnd;
 struct FindWindowWnd;
 
@@ -172,6 +173,10 @@ struct MainWindow {
     // whether the ToC sidebar is currently visible
     // set to temporarily disable UpdateTocSelection
     bool tocKeepSelection = false;
+    // Non-owning TOC items that match the current page (same page as best match
+    // plus ancestors). Used when gShowAllMatchingTOC to multi-highlight; the
+    // tree still has a single selection (the best match). Cleared with the TOC.
+    Vec<TocItem*> tocMatchingItems;
     // width of the toc/favorites sidebar; the source of truth for layout
     // (the toc box window can be hidden and its rect stale, e.g. when only
     // favorites are showing). 0 = not laid out yet

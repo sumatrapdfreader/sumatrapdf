@@ -11,6 +11,12 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
 void UnsubclassToc(MainWindow*);
 void TocFilterChanged(MainWindow*);
 
+// When true (default), the bookmarks pane highlights every TOC entry that
+// matches the current page (same page number as the best match, plus the
+// ancestor chain), not only the single TreeView selection (issue #4642).
+// Flip to false to restore single-highlight-only behavior.
+extern bool gShowAllMatchingTOC;
+
 // navigate to a TocItem (used by the command palette's TOC mode)
 void GoToTocItem(MainWindow*, TocItem*);
 
