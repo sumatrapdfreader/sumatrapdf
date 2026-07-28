@@ -361,6 +361,11 @@ struct MainWindow {
 
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
+    // User wants the page-info tip (I key / CmdTogglePageInfo). Survives tab
+    // switches and visits to Home/About where the notification cannot show
+    // (issue #4454); restored when a document tab is active again.
+    bool pageInfoWanted = false;
+
     // overlay scrollbars (used when scrollbars mode is "smart" or "overlay")
     struct OverlayScrollbar* overlayScrollV = nullptr;
     struct OverlayScrollbar* overlayScrollH = nullptr;

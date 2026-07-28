@@ -1328,13 +1328,15 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     NotificationUpdateMessage(wnd, pageInfo);
 }
 
-static void TogglePageInfoHelper(MainWindow* win) {
-    if (!win || !win->IsDocLoaded()) {
+// Show or refresh the page-info tip when the user wants it and a document is loaded.
+// CloseDocumentInCurrentTab / About / Favorites remove the notification; this restores it.
+static void ShowPageInfoIfWanted(MainWindow* win) {
+    if (!win || !win->pageInfoWanted || !win->IsDocLoaded() || !win->ctrl) {
         return;
     }
     NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (wnd) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
+        UpdatePageInfoHelper(win->ctrl, wnd, -1);
         return;
     }
     NotificationCreateArgs args;
@@ -1344,6 +1346,19 @@ static void TogglePageInfoHelper(MainWindow* win) {
     args.groupId = kNotifPageInfo;
     wnd = ShowNotification(args);
     UpdatePageInfoHelper(win->ctrl, wnd, -1);
+}
+
+static void TogglePageInfoHelper(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    if (win->pageInfoWanted) {
+        win->pageInfoWanted = false;
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
+        return;
+    }
+    win->pageInfoWanted = true;
+    ShowPageInfoIfWanted(win);
 }
 
 void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float zoomVirtual) {
@@ -1598,10 +1613,8 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     UpdateToolbarPageText(win, pageCount);
     UpdateToolbarFindText(win);
 
-    NotificationWnd* pageInfoWnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
-    if (pageInfoWnd) {
-        UpdatePageInfoHelper(win->ctrl, pageInfoWnd, -1);
-    }
+    // Keep / restore page-info tip after reload or tab switch (issue #4454)
+    ShowPageInfoIfWanted(win);
 
     UpdateFindbox(win);
 
@@ -3239,6 +3252,8 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     // show/hide notifications that are tied to a specific tab
     ShowNotificationsForActiveTab(win->hwndCanvas, tab);
+    // CloseDocumentInCurrentTab cleared page-info; restore if still wanted
+    ShowPageInfoIfWanted(win);
 
     if (IsMainWindowValid(win)) {
         bool aiChatWas = win->uiState.aiChatVisible;
@@ -6508,6 +6523,7 @@ static void OnFrameKeyEsc(MainWindow* win) {
         return;
     }
     if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo)) {
+        win->pageInfoWanted = false;
         return;
     }
     if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos)) {
