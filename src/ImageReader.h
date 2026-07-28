@@ -15,8 +15,8 @@ struct RenderedBitmap;
 Pixmap* PixmapFromDataFz(Str);
 
 // Decode image bytes to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
-// Windows order (fastest first per tools/bench_image): JPEG→turbo, WebP→libwebp,
-// HEIC/AVIF→WIC then heicdec; else TGA/JXL/GDI+/WIC. POSIX: MuPDF for now.
+// Windows: JPEG→turbo, WebP→libwebp, JXL→libjxl; HEIC/AVIF→heicdec then WIC in
+// Debug, WIC then heicdec in Release; else TGA/GDI+/WIC. POSIX: MuPDF for now.
 Pixmap* PixmapFromData(Str);
 
 // One Pixmap per frame (multi-page TIFF / animated GIF yield >1); caller owns each.

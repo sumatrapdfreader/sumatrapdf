@@ -238,8 +238,7 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     // Prefer PixmapFromData / LoadPixmapForPage over mupdf for formats where a
     // dedicated path is faster and we do not need mupdf's scaled JPEG decode:
     //   WebP     → libwebp (bench_image: faster than WIC)
-    //   HEIC/AVIF→ WIC then heicdec (bench_image: WIC faster than heicdec when
-    //              the OS HEIF codec is present)
+    //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
     FileType kind = GuessFileTypeFromData(data);
     if (FileType::Webp == kind || FileType::Heic == kind || FileType::Avif == kind) {
         return nullptr;

@@ -24,8 +24,7 @@ using Gdiplus::BitmapData;
 using Gdiplus::Ok;
 using Gdiplus::Status;
 
-// WebP / JXL via dedicated decoders (not GDI+/WIC). HEIC/AVIF are handled
-// separately in PixmapFromDataWin so WIC can run first on Windows.
+// WebP / JXL / HEIC/AVIF via our dedicated decoders (not GDI+/WIC).
 static Pixmap* PixmapFromExtFormatsData(Str bmpData, FileType kind) {
     if (FileType::Webp == kind) {
         Pixmap* px = webp::PixmapFromData(bmpData);
@@ -38,6 +37,9 @@ static Pixmap* PixmapFromExtFormatsData(Str bmpData, FileType kind) {
         if (px) {
             return px;
         }
+    }
+    if (FileType::Heic == kind || FileType::Avif == kind) {
+        return PixmapFromAvifData(bmpData);
     }
     return nullptr;
 }
@@ -140,6 +142,16 @@ static Bitmap* DecodeWithGdiplus(Str bmpData) {
     return bmp;
 }
 
+static Pixmap* PixmapFromWic(Str bmpData) {
+    Gdiplus::Bitmap* bmp = DecodeWithWIC(bmpData);
+    if (!bmp) {
+        return nullptr;
+    }
+    Pixmap* px = PixmapFromGdiplus(bmp);
+    delete bmp;
+    return px;
+}
+
 // Decode an image to a single (first-frame) Pixmap via Windows paths (TGA, ext formats, GDI+/WIC).
 static Pixmap* PixmapFromDataWin(Str bmpData) {
     FileType kind = GuessFileTypeFromData(bmpData);
@@ -150,20 +162,24 @@ static Pixmap* PixmapFromDataWin(Str bmpData) {
         }
     }
 
-    // HEIC/AVIF: try WIC first on Windows. tools/bench_image (Release x64) found
-    // the OS HEIF codec via WIC faster than heicdec — roughly ~1.2x for AVIF
-    // (dav1d) and ~2x for HEIC (pure-C HEVC) on a machine with the Windows
-    // codec installed. Fall back to heicdec when WIC has no codec or fails.
+    // HEIC/AVIF: in Debug, prefer heicdec so we exercise our decoder; fall back
+    // to WIC. In Release, try WIC first — tools/bench_image (Release x64) found
+    // the OS HEIF codec via WIC faster than heicdec (~1.2x AVIF / ~2x HEIC when
+    // the Windows codec is installed), then fall back to heicdec.
     if (FileType::Heic == kind || FileType::Avif == kind) {
-        Gdiplus::Bitmap* bmp = DecodeWithWIC(bmpData);
-        if (bmp) {
-            Pixmap* px = PixmapFromGdiplus(bmp);
-            delete bmp;
-            if (px) {
-                return px;
-            }
+#if defined(DEBUG)
+        Pixmap* px = PixmapFromAvifData(bmpData);
+        if (px) {
+            return px;
+        }
+        return PixmapFromWic(bmpData);
+#else
+        Pixmap* px = PixmapFromWic(bmpData);
+        if (px) {
+            return px;
         }
         return PixmapFromAvifData(bmpData);
+#endif
     }
 
     Pixmap* px = PixmapFromExtFormatsData(bmpData, kind);
@@ -220,7 +236,7 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
 // Prefer the fastest decoder per format (see tools/bench_image, Release x64):
 //   JPEG/JP2 → MuPDF/libjpeg-turbo (beats WIC/GDI+)
 //   WebP     → libwebp (beats WIC; GDI+ often missing)
-//   HEIC/AVIF→ WIC first on Windows (OS codec beats heicdec), heicdec fallback
+//   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
 // Other formats: TGA / JXL / GDI+/WIC via PixmapFromDataWin.
 Pixmap* PixmapFromData(Str bmpData) {
     Pixmap* px = PixmapFromDataFz(bmpData);
