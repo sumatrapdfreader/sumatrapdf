@@ -1729,6 +1729,15 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         if (engine->kind == kindEngineImage && imageZoom != 0) {
             zoomVirtual = imageZoom;
         }
+        // First open without per-file remembered state: honor PDF Catalog
+        // /OpenAction when it is a safe internal GoTo (issue #1631). Does not
+        // override history, -page / -named-dest (applied later), or reloads.
+        if (!fs && ss.page == 1) {
+            int openPage = engine->GetOpenActionPageNo();
+            if (openPage >= 1) {
+                ss.page = openPage;
+            }
+        }
     }
 
     // ToC items might hold a reference to an Engine, so make sure to

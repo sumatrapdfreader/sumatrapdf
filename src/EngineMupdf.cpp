@@ -3663,6 +3663,75 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     return pageDest;
 }
 
+// Resolve a PDF destination (array, name, or string) to a 1-based page number.
+// Returns 0 if the dest is missing or cannot be resolved safely.
+static int PageNoFromPdfDest(fz_context* ctx, pdf_document* doc, pdf_obj* dest) {
+    if (!dest) {
+        return 0;
+    }
+    dest = pdf_resolve_indirect(ctx, dest);
+    if (pdf_is_name(ctx, dest) || pdf_is_string(ctx, dest)) {
+        dest = pdf_lookup_dest(ctx, doc, dest);
+        dest = pdf_resolve_indirect(ctx, dest);
+    }
+    if (!pdf_is_array(ctx, dest) || pdf_array_len(ctx, dest) < 1) {
+        return 0;
+    }
+    pdf_obj* pageObj = pdf_array_get(ctx, dest, 0);
+    if (pdf_is_int(ctx, pageObj)) {
+        // PDF destination integers are zero-based page indices
+        int n = pdf_to_int(ctx, pageObj);
+        return n >= 0 ? n + 1 : 0;
+    }
+    int n = pdf_lookup_page_number(ctx, doc, pageObj);
+    return n >= 0 ? n + 1 : 0;
+}
+
+// Catalog /OpenAction → 1-based page, only for safe internal GoTo (issue #1631).
+// Rejects URI/Launch/GoToR/JavaScript and other action types that could leave the PDF.
+int EngineMupdf::GetOpenActionPageNo() {
+    if (!pdfdoc) {
+        return 0;
+    }
+    auto ctx = Ctx();
+    ScopedRecursiveMutex scope(&docLock);
+
+    int pageNo = 0;
+    fz_var(pageNo);
+    fz_try(ctx) {
+        pdf_obj* root = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Root");
+        pdf_obj* open = pdf_dict_gets(ctx, root, "OpenAction");
+        if (!open) {
+            // no open action
+        } else if (pdf_is_array(ctx, open)) {
+            // legacy: OpenAction is a destination array
+            pageNo = PageNoFromPdfDest(ctx, pdfdoc, open);
+        } else if (pdf_is_dict(ctx, open)) {
+            pdf_obj* s = pdf_dict_get(ctx, open, PDF_NAME(S));
+            if (pdf_name_eq(ctx, s, PDF_NAME(GoTo))) {
+                pageNo = PageNoFromPdfDest(ctx, pdfdoc, pdf_dict_get(ctx, open, PDF_NAME(D)));
+            } else if (pdf_name_eq(ctx, s, PDF_NAME(Named))) {
+                // Only absolute page jumps at open; Next/Prev need a current page.
+                pdf_obj* n = pdf_dict_get(ctx, open, PDF_NAME(N));
+                if (pdf_name_eq(ctx, n, PDF_NAME(FirstPage))) {
+                    pageNo = 1;
+                } else if (pdf_name_eq(ctx, n, PDF_NAME(LastPage))) {
+                    pageNo = pageCount > 0 ? pageCount : 0;
+                }
+            }
+            // deliberately ignore URI, Launch, GoToR, JavaScript, etc.
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        pageNo = 0;
+    }
+    if (pageNo < 1 || (pageCount > 0 && pageNo > pageCount)) {
+        return 0;
+    }
+    return pageNo;
+}
+
 #if 0
 IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     if (!pdfdoc) {

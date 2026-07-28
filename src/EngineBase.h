@@ -551,6 +551,9 @@ class EngineBase {
     // caller must delete the result
     virtual IPageDestination* GetNamedDest(Str name);
 
+    // 1-based page from safe PDF /OpenAction GoTo, or 0 (issue #1631)
+    virtual int GetOpenActionPageNo() { return 0; }
+
     // checks whether this document has an associated Table of Contents
     bool HasToc();
 

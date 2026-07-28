@@ -103,6 +103,7 @@ class EngineMupdf : public EngineBase {
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     IPageDestination* GetNamedDest(Str name) override;
+    int GetOpenActionPageNo() override;
     TocTree* GetToc() override;
 
     TempStr GetPageLabeTemp(int pageNo) const override;
