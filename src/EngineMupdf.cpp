@@ -120,12 +120,10 @@ struct PageDestinationMupdf : IPageDestination {
     Str value;
     Str name;
 
-    // anchor (x, y) on the destination page resolved from the link URI.
-    // Valid after hasResolvedCoords; values may be DEST_USE_DEFAULT when the
-    // PDF destination left a coordinate unspecified (null / Fit).
-    float destX = 0.f;
-    float destY = 0.f;
-    bool hasResolvedCoords = false;
+    // anchor (x, y) on the destination page resolved from the link URI;
+    // -1 means "not resolved" (e.g. external URL or file launch).
+    float destX = -1.f;
+    float destY = -1.f;
     // /XYZ zoom level requested by the link (1.0 = 100%). 0 means
     // "not specified" — caller should use document default.
     float destZoom = 0.f;
@@ -138,16 +136,8 @@ struct PageDestinationMupdf : IPageDestination {
     }
 
     RectF GetRect2() override {
-        // Prefer URI-resolved coords (page-level /Fit and /XYZ nulls become
-        // DEST_USE_DEFAULT). outline->x/y are often 0 and would scroll to the
-        // bottom of the page in PDF space. FitR keeps width/height on `rect`.
-        if (hasResolvedCoords) {
-            if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT && rect.dx > 0 && rect.dy > 0) {
-                return rect;
-            }
-            return RectF{destX, destY, DEST_USE_DEFAULT, DEST_USE_DEFAULT};
-        }
         if (outline) {
+            // needed for -named-dest called from LinkHandler::ScrollTo
             RectF r{outline->x, outline->y, 0, 0};
             return r;
         }
@@ -155,11 +145,11 @@ struct PageDestinationMupdf : IPageDestination {
     }
 
     RectF GetDestPoint2() override {
-        if (hasResolvedCoords) {
-            return RectF{destX, destY, 0, 0};
-        }
         if (outline) {
             return RectF{outline->x, outline->y, 0, 0};
+        }
+        if (destY >= 0.f) {
+            return RectF{destX, destY, 0, 0};
         }
         return {};
     }
@@ -205,69 +195,7 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
-// Map a MuPDF/Adobe link destination to Sumatra rect + zoom for ScrollTo.
-// zoomOut: 0 = leave zoom; >0 absolute fraction (1 = 100%); negative =
-// virtual modes (kZoomFitPage / FitWidth / FitContent). (issue #5828)
-static void DestFromFzLinkDest(const fz_link_dest& ldest, RectF* rectOut, float* zoomOut) {
-    float x = isnan(ldest.x) ? DEST_USE_DEFAULT : ldest.x;
-    float y = isnan(ldest.y) ? DEST_USE_DEFAULT : ldest.y;
-    float w = isnan(ldest.w) ? DEST_USE_DEFAULT : ldest.w;
-    float h = isnan(ldest.h) ? DEST_USE_DEFAULT : ldest.h;
-    float zoom = 0.f;
-
-    switch (ldest.type) {
-        case FZ_LINK_DEST_XYZ:
-            w = h = DEST_USE_DEFAULT;
-            // mupdf reports zoom as percentage (100 = 100%); we use 1.0 as 100%.
-            if (!isnan(ldest.zoom) && ldest.zoom > 0) {
-                zoom = ldest.zoom / 100.f;
-            }
-            break;
-        case FZ_LINK_DEST_FIT:
-            zoom = kZoomFitPage;
-            x = y = w = h = DEST_USE_DEFAULT;
-            break;
-        case FZ_LINK_DEST_FIT_H:
-            // Fit page width; optional top (y)
-            zoom = kZoomFitWidth;
-            x = w = h = DEST_USE_DEFAULT;
-            break;
-        case FZ_LINK_DEST_FIT_V:
-            // Fit page height (no dedicated mode → Fit Page); optional left (x)
-            zoom = kZoomFitPage;
-            y = w = h = DEST_USE_DEFAULT;
-            break;
-        case FZ_LINK_DEST_FIT_B:
-            zoom = kZoomFitContent;
-            x = y = w = h = DEST_USE_DEFAULT;
-            break;
-        case FZ_LINK_DEST_FIT_BH:
-            // Fit content width; optional top (y)
-            zoom = kZoomFitContent;
-            x = w = h = DEST_USE_DEFAULT;
-            break;
-        case FZ_LINK_DEST_FIT_BV:
-            // Fit content height; optional left (x)
-            zoom = kZoomFitContent;
-            y = w = h = DEST_USE_DEFAULT;
-            break;
-        case FZ_LINK_DEST_FIT_R:
-            // rectangle in x,y,w,h — scroll/zoom handled by ScrollTo FitR path
-            break;
-        default:
-            w = h = DEST_USE_DEFAULT;
-            break;
-    }
-    if (rectOut) {
-        *rectOut = RectF{x, y, w, h};
-    }
-    if (zoomOut) {
-        *zoomOut = zoom;
-    }
-}
-
-static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, float* yp, float* zoomp = nullptr,
-                       RectF* rectp = nullptr) {
+static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, float* yp, float* zoomp = nullptr) {
     if (!uri) {
         return -1;
     }
@@ -288,24 +216,16 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
     if (pageNo < 0) {
         return -1;
     }
-    // Match HandleLinkMupdf: unspecified PDF coords are NaN and must stay
-    // DEST_USE_DEFAULT so ScrollTo lands on the page top, not user-space (0,0)
-    // (bottom of the page in PDF coords) which can make continuous view report
-    // the next page as current (#2799 / page-level outline destinations).
-    RectF rect;
-    float zoom = 0.f;
-    DestFromFzLinkDest(ldest, &rect, &zoom);
     if (xp) {
-        *xp = rect.x;
+        *xp = isnan(ldest.x) ? 0.f : ldest.x;
     }
     if (yp) {
-        *yp = rect.y;
+        *yp = isnan(ldest.y) ? 0.f : ldest.y;
     }
     if (zoomp) {
-        *zoomp = zoom;
-    }
-    if (rectp) {
-        *rectp = rect;
+        float z = isnan(ldest.zoom) ? 0.f : ldest.zoom;
+        // mupdf reports zoom as percentage (100 = 100%); we use 1.0 as 100%.
+        *zoomp = z / 100.f;
     }
     return pageNo + 1;
 }
@@ -415,8 +335,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     // doesn't resolve internally do we treat a relative href to a supported file
     // as a sibling file to launch (e.g. markdown "[other](other.md)").
     float x = 0, y = 0, z = 0;
-    RectF destRect{};
-    int pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z, &destRect);
+    int pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z);
 
     if (pageNo <= 0) {
         TempStr localPath;
@@ -432,15 +351,11 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     dest->rect = FzGetRectF(link, outline);
     dest->pageNo = pageNo;
     if (pageNo > 0) {
-        dest->destX = destRect.x;
-        dest->destY = destRect.y;
+        dest->destX = x;
+        dest->destY = y;
         dest->destZoom = z;
-        dest->hasResolvedCoords = true;
-        // For FitR, w/h must reach ScrollTo; store on base rect as well.
-        if (destRect.dx != DEST_USE_DEFAULT || destRect.dy != DEST_USE_DEFAULT) {
-            dest->rect = destRect;
-        }
     }
+    // when not resolved destX / destY keep their -1 sentinel
     return dest;
 }
 
@@ -766,59 +681,6 @@ static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const Rect& r) {
     seen.Append({rune, r});
 }
 
-// True Unicode scalar (not surrogate, not out of range). fz_runetochar will still
-// encode surrogates as 3-byte sequences, but those are illegal UTF-8; Utf8CodepointCount
-// then counts each byte as its own codepoint while we only append one rect, tripping
-// ReportIf in FzTextPageToUtf8 (debug report 8bdec9f53000001, PIC datasheet PDF).
-static bool IsUnicodeScalar(int rune) {
-    unsigned int c = (unsigned int)rune;
-    if (c > 0x10FFFF) {
-        return false;
-    }
-    // UTF-16 surrogates are not valid Unicode scalar values
-    if (c >= 0xD800 && c <= 0xDFFF) {
-        return false;
-    }
-    return true;
-}
-
-// Horizontal gap between the previous glyph and the next, in page units.
-// Used to drop "tracking" spaces that PDF writers insert between syllables
-// (look like word breaks to MuPDF but have near-zero visual gap) — #5627.
-static float GlyphGapX(const fz_stext_char* prev, const fz_stext_char* next) {
-    if (!prev || !next) {
-        return 1e9f;
-    }
-    fz_rect pr = fz_rect_from_quad(prev->quad);
-    // next origin vs previous glyph's right edge
-    return next->origin.x - pr.x1;
-}
-
-// True if this space is only tracking/justification between syllables, not a
-// real word break. PDFs that place space operators (or MuPDF synthetic spaces)
-// between every syllable produce "Kro nik, im mün" on copy (#5627).
-static bool IsTrackingSpace(const fz_stext_char* spaceChar, const fz_stext_char* prevNonSpace,
-                            const fz_stext_char* nextNonSpace) {
-    if (!prevNonSpace || !nextNonSpace) {
-        return false;
-    }
-    float gap = GlyphGapX(prevNonSpace, nextNonSpace);
-    float size = std::max(prevNonSpace->size, nextNonSpace->size);
-    if (size <= 0) {
-        size = 1.f;
-    }
-    // Real word gaps are typically ~0.25–0.5em; tracking spaces are ~0 (or a
-    // few percent of size). Threshold 0.2em keeps normal word spaces.
-    if (gap < size * 0.2f) {
-        return true;
-    }
-    // MuPDF-inserted synthetic spaces with only a tiny advance
-    if ((spaceChar->flags & FZ_STEXT_SYNTHETIC) && gap < size * 0.35f) {
-        return true;
-    }
-    return false;
-}
-
 static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
@@ -829,9 +691,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<R
 
     bool isWhitespace = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
     bool isNonPrintable = rune <= 32 || (rune <= 0xffff && wstr::IsNonCharacter((WCHAR)rune));
-    // Invalid scalars (surrogates / out of range) must not go through fz_runetochar:
-    // that produces illegal UTF-8 that Utf8CodepointCount splits into multiple units.
-    if (!IsUnicodeScalar(rune) || (isNonPrintable && !isWhitespace)) {
+    if (isNonPrintable && !isWhitespace) {
         s.AppendChar('?');
         rects.Append(r);
         AddSeenGlyph(seen, rune, r);
@@ -850,10 +710,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<R
     }
     char buf[4];
     int n = fz_runetochar(buf, rune);
-    // One Unicode scalar → one UTF-8 sequence → one rect (codepoint-aligned coords)
-    if (n <= 0 || !s.Append(Str(buf, n))) {
-        return;
-    }
+    s.Append(Str(buf, n));
     rects.Append(r);
     AddSeenGlyph(seen, rune, r);
 }
@@ -874,66 +731,8 @@ static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
     }
 }
 
-// Prefer font size over tight glyph bboxes (FZ_STEXT_ACCURATE_BBOXES makes
-// line->bbox height jump between lines with/without descenders).
-static float StextLineHeight(const fz_stext_line* line) {
-    if (line->first_char && line->first_char->size > 0.5f) {
-        return line->first_char->size;
-    }
-    float h = line->bbox.y1 - line->bbox.y0;
-    if (h > 0.5f) {
-        return h;
-    }
-    return 10.f;
-}
-
-// True when nextLine is a soft wrap of the same paragraph (reflow/ebook copy
-// should join with a space, not a newline — #5793).
-// FB2/HTML reflow lines typically share a ~0.25–0.35em gap; paragraph spacing
-// is larger (~0.5em+). Mid-line soft wraps also nearly fill the block width.
-static bool IsSoftLineBreak(const fz_stext_line* line, const fz_stext_line* nextLine, const fz_stext_block* block) {
-    if (!line || !nextLine || !block) {
-        return false;
-    }
-    float h = StextLineHeight(line);
-    float gap = nextLine->bbox.y0 - line->bbox.y1;
-    // Same-paragraph wraps sit close together; larger gaps are paragraph
-    // spacing. Negative gap = overlapping/tight lines still soft.
-    // Threshold ~0.55h: observed soft gaps ~2.3–2.7 on 8–10pt body text,
-    // paragraph gaps ~4+ (see FB2 #5793 samples).
-    if (gap > h * 0.55f) {
-        return false;
-    }
-    // Soft wraps usually fill most of the block width; a short line is the
-    // end of a paragraph (or a title), so keep a hard newline after it.
-    float blockW = block->bbox.x1 - block->bbox.x0;
-    float lineW = line->bbox.x1 - line->bbox.x0;
-    if (blockW > 1.f && lineW < blockW * 0.82f) {
-        return false;
-    }
-    // New paragraphs often start with a larger left indent (text-indent).
-    float dx = nextLine->bbox.x0 - line->bbox.x0;
-    if (dx > h * 0.4f) {
-        return false;
-    }
-    return true;
-}
-
-// If the buffer ends with a hyphen used for line wrapping, drop it before a
-// soft join so "some-\nthing" becomes "something" (#5793).
-static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
-    if (s.IsEmpty()) {
-        return;
-    }
-    if (s.LastChar() == '-') {
-        s.RemoveLast();
-        rects.RemoveLast();
-    }
-}
-
 static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
-    Str hardLineSep = StrL("\n");
-    Str softLineSep = StrL(" ");
+    Str lineSep = StrL("\n");
     str::Builder content;
     Vec<Rect> rects;
     Vec<SeenGlyph> seen;
@@ -946,45 +745,12 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
         }
         fz_stext_line* line = block->u.t.first_line;
         while (line) {
-            // Walk each line with prev/next non-space so tracking spaces can be
-            // dropped (issue #5627: Turkish PDFs that space every syllable).
-            fz_stext_char* prevNonSpace = nullptr;
             fz_stext_char* c = line->first_char;
             while (c) {
-                int rune = c->c;
-                bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
-                if (isWs) {
-                    fz_stext_char* nextNonSpace = c->next;
-                    while (nextNonSpace) {
-                        int nr = nextNonSpace->c;
-                        bool nWs = nr > 0 && nr <= 0x7f && str::IsWs((char)nr);
-                        if (!nWs) {
-                            break;
-                        }
-                        nextNonSpace = nextNonSpace->next;
-                    }
-                    if (IsTrackingSpace(c, prevNonSpace, nextNonSpace)) {
-                        c = c->next;
-                        continue;
-                    }
-                }
                 AddCharUtf8(line, c, content, rects, seen);
-                if (!isWs) {
-                    prevNonSpace = c;
-                }
                 c = c->next;
             }
-            // Soft-join reflow lines within a paragraph for better copy (#5793);
-            // keep a hard newline between paragraphs / blocks.
-            fz_stext_line* nextLine = line->next;
-            if (nextLine && IsSoftLineBreak(line, nextLine, block)) {
-                MaybeDropTrailingSoftHyphen(content, rects);
-                AddLineSepUtf8(content, rects, softLineSep);
-            } else {
-                AddLineSepUtf8(content, rects, hardLineSep);
-            }
-            // each line has independent glyph positions; reset duplicate detection
-            seen.Reset();
+            AddLineSepUtf8(content, rects, lineSep);
             line = line->next;
         }
         block = block->next;
@@ -1923,10 +1689,7 @@ static void fz_img_collect_fill_image(fz_context* ctx, fz_device* dev, fz_image*
 
 static void fz_img_collect_fill_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
                                            fz_colorspace*, const float*, float, fz_color_params) {
-    (void)image;
-    // Image masks are knockouts/clip shapes, not photos — track only for clipping
-    // so dark-mode preserve does not treat them as artwork (#5806 / plus 3.5.16).
-    fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), true, nullptr);
+    fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), false, image);
 }
 
 static void fz_img_collect_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int, fz_matrix ctm,
@@ -2443,7 +2206,7 @@ static void fz_print_cb(void* user, const char* msg) {
     EngineMupdf* engine = (EngineMupdf*)user;
     if (engine && !str::Contains(msgStr, StrL("unknown epub version"))) {
         // epub 3.0 is rendered fine, so don't treat the version warning as an error
-        engine->AppendError(msgStr);
+        engine->errors.Append(msgStr);
     }
 }
 
@@ -2985,14 +2748,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // mupdf 1.28 replaced the global fz_set_user_css / fz_set_use_document_css
     // with per-document styling via fz_style_document (applied after the
     // document is opened, before fz_layout_document)
-    //
-    // Default user CSS: many EPUBs (and other reflow docs) set
-    //   img { width: 100%; height: 100%; }
-    // which collapses images in MuPDF's reflow layout when the containing
-    // block has no fixed height — images vanish or sit on top of text (#5805).
-    // Force auto height and a width cap; applied after publisher CSS so it
-    // overrides with !important. User CustomCSS is appended after this.
-    TempStr userCss = StrL("img { height: auto !important; max-width: 100% !important; }\n");
+    TempStr userCss;
     int usePublisherCss = 1; // use the document's own (publisher) CSS by default
     auto eBookUI = GetEBookUI();
     if (eBookUI) {
@@ -3009,11 +2765,11 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             ldy = eBookUI->layoutDy;
         }
         if (eBookUI->customCSS) {
-            userCss = str::JoinTemp(userCss, eBookUI->customCSS);
+            userCss = eBookUI->customCSS;
         }
         usePublisherCss = eBookUI->ignoreDocumentCSS ? 0 : 1;
     }
-    const char* userCssZ = CStrTemp(userCss);
+    const char* userCssZ = userCss ? userCss.s : nullptr;
 
     float dx, dy, fontDy;
     _doc = nullptr;
@@ -3650,86 +3406,15 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     IPageDestination* pageDest = nullptr;
     ScopedRecursiveMutex scope2(&docLock);
     TempStr uri = str::JoinTemp(StrL("#nameddest="), name);
-    float zoom = 0;
-    RectF r;
-    int pageNo = ResolveLink(ctx, _doc, uri, nullptr, nullptr, &zoom, &r);
+    float x, y, zoom = 0;
+    int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
     if (pageNo < 0) {
         return nullptr;
     }
 
-    // DEST_USE_DEFAULT dx/dy selects the /XYZ path in DisplayModel::ScrollTo
-    // (IsEmpty would also work for 0,0 but would treat unspecified as bottom).
+    RectF r{x, y, 0, 0};
     pageDest = NewSimpleDest(pageNo, r, zoom);
     return pageDest;
-}
-
-// Resolve a PDF destination (array, name, or string) to a 1-based page number.
-// Returns 0 if the dest is missing or cannot be resolved safely.
-static int PageNoFromPdfDest(fz_context* ctx, pdf_document* doc, pdf_obj* dest) {
-    if (!dest) {
-        return 0;
-    }
-    dest = pdf_resolve_indirect(ctx, dest);
-    if (pdf_is_name(ctx, dest) || pdf_is_string(ctx, dest)) {
-        dest = pdf_lookup_dest(ctx, doc, dest);
-        dest = pdf_resolve_indirect(ctx, dest);
-    }
-    if (!pdf_is_array(ctx, dest) || pdf_array_len(ctx, dest) < 1) {
-        return 0;
-    }
-    pdf_obj* pageObj = pdf_array_get(ctx, dest, 0);
-    if (pdf_is_int(ctx, pageObj)) {
-        // PDF destination integers are zero-based page indices
-        int n = pdf_to_int(ctx, pageObj);
-        return n >= 0 ? n + 1 : 0;
-    }
-    int n = pdf_lookup_page_number(ctx, doc, pageObj);
-    return n >= 0 ? n + 1 : 0;
-}
-
-// Catalog /OpenAction → 1-based page, only for safe internal GoTo (issue #1631).
-// Rejects URI/Launch/GoToR/JavaScript and other action types that could leave the PDF.
-int EngineMupdf::GetOpenActionPageNo() {
-    if (!pdfdoc) {
-        return 0;
-    }
-    auto ctx = Ctx();
-    ScopedRecursiveMutex scope(&docLock);
-
-    int pageNo = 0;
-    fz_var(pageNo);
-    fz_try(ctx) {
-        pdf_obj* root = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Root");
-        pdf_obj* open = pdf_dict_gets(ctx, root, "OpenAction");
-        if (!open) {
-            // no open action
-        } else if (pdf_is_array(ctx, open)) {
-            // legacy: OpenAction is a destination array
-            pageNo = PageNoFromPdfDest(ctx, pdfdoc, open);
-        } else if (pdf_is_dict(ctx, open)) {
-            pdf_obj* s = pdf_dict_get(ctx, open, PDF_NAME(S));
-            if (pdf_name_eq(ctx, s, PDF_NAME(GoTo))) {
-                pageNo = PageNoFromPdfDest(ctx, pdfdoc, pdf_dict_get(ctx, open, PDF_NAME(D)));
-            } else if (pdf_name_eq(ctx, s, PDF_NAME(Named))) {
-                // Only absolute page jumps at open; Next/Prev need a current page.
-                pdf_obj* n = pdf_dict_get(ctx, open, PDF_NAME(N));
-                if (pdf_name_eq(ctx, n, PDF_NAME(FirstPage))) {
-                    pageNo = 1;
-                } else if (pdf_name_eq(ctx, n, PDF_NAME(LastPage))) {
-                    pageNo = pageCount > 0 ? pageCount : 0;
-                }
-            }
-            // deliberately ignore URI, Launch, GoToR, JavaScript, etc.
-        }
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        pageNo = 0;
-    }
-    if (pageNo < 1 || (pageCount > 0 && pageNo > pageCount)) {
-        return 0;
-    }
-    return pageNo;
 }
 
 #if 0
@@ -4200,29 +3885,6 @@ static u32 DarkLegacySkipHash(FzPageInfo* pageInfo, float zoom, int rotation) {
     return h;
 }
 
-// Illustrated pages often contain many small content-stream images alongside
-// one main artwork. Preserving all of them leaves patchy gaps that get
-// dark-recolored. Keep only the largest preserve region per page (#5806).
-static void DarkLegacySkipKeepLargestArtwork(FzPageInfo* pageInfo) {
-    Vec<Rect>& skipRects = pageInfo->darkLegacySkipDevAbs;
-    if (len(skipRects) <= 1) {
-        return;
-    }
-    int bestIdx = 0;
-    i64 bestArea = 0;
-    for (int i = 0; i < len(skipRects); i++) {
-        i64 a = (i64)skipRects[i].dx * skipRects[i].dy;
-        if (a > bestArea) {
-            bestArea = a;
-            bestIdx = i;
-        }
-    }
-    Rect keep = skipRects[bestIdx];
-    skipRects.Clear();
-    skipRects.Append(keep);
-    pageInfo->darkLegacyArtworkPageBottom = 0.f;
-}
-
 // find the images on the page whose colors the dark-mode bitmap recolor
 // should preserve (photos, artwork) and cache their absolute device rects
 static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageInfo, float zoom, int rotation,
@@ -4309,7 +3971,6 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
             fz_drop_image(ctx, image);
         }
     }
-    DarkLegacySkipKeepLargestArtwork(pageInfo);
 }
 
 void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
@@ -4665,10 +4326,15 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         return;
     }
 
-    // Adobe /Fit, /FitH, /FitV, /FitB*, /XYZ, /FitR → zoom modes + scroll (issue #5828)
-    RectF r;
-    float zoom = 0.f;
-    DestFromFzLinkDest(ldest, &r, &zoom);
+    // TODO: handle ldest.type like FZ_LINK_DEST_FIT_H ?
+    float x = isnan(ldest.x) ? DEST_USE_DEFAULT : ldest.x;
+    float y = isnan(ldest.y) ? DEST_USE_DEFAULT : ldest.y;
+    float zoom = isnan(ldest.zoom) ? 0.f : ldest.zoom;
+    zoom = zoom / 100; // mupdf uses 100 as 100% zoom, we use 1
+    float w = isnan(ldest.w) ? DEST_USE_DEFAULT : ldest.w;
+    float h = isnan(ldest.h) ? DEST_USE_DEFAULT : ldest.h;
+
+    RectF r(x, y, w, h);
     linkHandler->ScrollTo(pageNo + 1, r, zoom);
 }
 
