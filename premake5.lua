@@ -675,10 +675,8 @@ workspace "SumatraPDF"
     disablewarnings { "4005", "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
--- to make Visual Studio solution smaller
--- combine 9 libs only used by mupdf into a single project
--- instead of having 9 projects
-
+  -- Kept for bench_image only; mupdf compiles the same sources into its static
+  -- lib for libmupdf / SumatraPDF-static (see project "mupdf").
   project "libjpeg-turbo"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -687,8 +685,6 @@ workspace "SumatraPDF"
     defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4013", "4018", "4100", "4244", "4245", "4819" }
     includedirs { "ext/libjpeg-turbo/src" }
-    -- libjpeg-turbo 3.x NASM SIMD: include dirs are simd/nasm (shared macros)
-    -- and the per-arch dir (simd/i386 or simd/x86_64).
     filter { 'files:**.asm', 'platforms:x86' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
@@ -924,14 +920,29 @@ workspace "SumatraPDF"
     }
     a_gumbo_files()
     lcms2_files()
+    -- libjpeg-turbo (also kept as its own project for bench_image only)
+    libjpeg_turbo_files()
+    filter { 'files:**.asm', 'platforms:x86' }
+      buildmessage '%{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+      buildcommands {
+        '..\\bin\\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+      }
+    filter {}
+    filter { 'files:**.asm', 'platforms:x64 or x64_asan' }
+      buildmessage '%{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+      buildcommands {
+        '..\\bin\\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+      }
+    filter {}
     filter {
-      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/**"
+      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/** or files:ext/libjpeg-turbo/**"
     }
       optimize "Size"
     filter {}
     links {
-      "cmark-gfm", "harfbuzz", "freetype", "brotli",
-      "libjpeg-turbo", "libarchive"
+      "cmark-gfm", "harfbuzz", "freetype", "brotli", "libarchive"
     }
 
     -- mupdf
