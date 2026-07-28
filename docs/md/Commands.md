@@ -39,13 +39,9 @@ CmdToggleCursorPosition,m,Toggle Cursor Position,
 CmdShowInFolder,,Show File In Folder...,
 CmdToggleBookmarks,F12,Toggle Bookmarks,
 CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
-CmdCollapseAll,,Collapse All,"Bookmarks: collapse the outline; if there is only one top-level entry with children, expand it one level (Word-style TOC), ver 3.7+"
+CmdCollapseAll,,Collapse All,
 CmdExpandAll,,Expand All,
 CmdExpandToCurrentPage,,Expand TOC to Current Page,"In the Bookmarks (table of contents) sidebar, expand the tree down to the entry for the current page and select it, ver 3.7+"
-CmdTocExpandToLevel1,,Bookmarks: Expand to Level 1,"Collapse the Bookmarks tree so only top-level entries are visible (context menu), ver 3.7+"
-CmdTocExpandToLevel2,,Bookmarks: Expand to Level 2,"Expand top-level Bookmarks once (context menu), ver 3.7+"
-CmdTocExpandToLevel3,,Bookmarks: Expand to Level 3,"Expand Bookmarks two levels deep (context menu), ver 3.7+"
-CmdTocCollapseSameLevel,,Bookmarks: Collapse Same Level,"Collapse all Bookmarks siblings of the selected/clicked entry (same nesting level), ver 3.7+"
 CmdOpenEmbeddedPDF,,Open Embedded PDF,
 CmdSaveEmbeddedFile,,Save Embedded File...,
 CmdCreateShortcutToFile,,Create .lnk Shortcut,
@@ -99,6 +95,8 @@ CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 
 CmdSetDocumentColorsFollowTheme,,Set Document Colors Follow Theme,"ver 3.7+, opens a dialog to pick how MuPDF-rendered documents follow the UI theme (`DocumentColorsFollowTheme`: off, smart, legacy)"
 CmdTogglePreservePdfImages,,Toggle Preserve PDF Image Colors in Dark Mode,"ver 3.7+, session-only toggle of image preservation on inverted pages"
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
+CmdToggleLibraryHome,,Toggle Library Start Page,"ver 3.7+, switch the start page between the library of your books (cover art, series, per-book page) and the classic Frequently Read page. Books are found under the `Audiobook.LibraryRoots` advanced setting"
+CmdLibraryRescan,,Rescan the Library,"ver 3.7+, look for newly added books under the library roots. Only enabled while the library start page is on"
 ```
 
 ## Tabs
@@ -150,7 +148,6 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdFavoriteAdd,Ctrl + B,Add Favorite,
 CmdFavoriteDel,,Delete Favorite,
 CmdFavoriteToggle,,Toggle Favorites,
-CmdFavoriteShowInTab,,Show Favorites in Tab,"Full-window Favorites tab (independent of sidebar), ver 3.7+"
 CmdGoToNextFavorite,,Go to Next Favorite,
 CmdGoToPrevFavorite,,Go to Previous Favorite,
 ```
