@@ -4782,6 +4782,8 @@ static void CreateLnkShortcut(MainWindow* win) {
         zoomVirtual = "fitpage";
     } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
         zoomVirtual = "fitwidth";
+    } else if (kZoomFitHeight == ctrl->GetZoomVirtual()) {
+        zoomVirtual = "fitheight";
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
         zoomVirtual = "fitcontent";
     }
@@ -8407,6 +8409,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdZoom8_33:
         case CmdZoomFitPage:
         case CmdZoomFitWidth:
+        case CmdZoomFitHeight:
         case CmdZoomFitByOrientation:
         case CmdZoomFitContent:
         case CmdZoomShrinkToFit:

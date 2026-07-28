@@ -62,7 +62,7 @@ static SizeF PageSizeAfterRotation(const DocumentLayoutPage* page, int rotation)
 
 static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoomVirtual, int pageNo) {
     const DocumentLayoutParams& params = layout.params;
-    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitPage) {
+    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage) {
         return zoomVirtual * 0.01f * params.dpiFactor;
     }
 
@@ -83,7 +83,13 @@ static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoom
 
     float zoomX = areaForPagesDx / row.dx;
     float zoomY = areaForPagesDy / row.dy;
-    return (zoomX < zoomY || zoomVirtual == kZoomFitWidth) ? zoomX : zoomY;
+    if (zoomVirtual == kZoomFitWidth) {
+        return zoomX;
+    }
+    if (zoomVirtual == kZoomFitHeight) {
+        return zoomY;
+    }
+    return (zoomX < zoomY) ? zoomX : zoomY;
 }
 
 static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
@@ -103,7 +109,7 @@ static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
         return;
     }
 
-    if (zoomVirtual == kZoomFitWidth || zoomVirtual == kZoomFitPage) {
+    if (zoomVirtual == kZoomFitWidth || zoomVirtual == kZoomFitHeight || zoomVirtual == kZoomFitPage) {
         float minZoom = (float)HUGE_VAL;
         for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);

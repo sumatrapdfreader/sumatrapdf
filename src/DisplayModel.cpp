@@ -678,7 +678,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     if (isShrinkToFit) {
         zoomVirtual = kZoomFitPage;
     }
-    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitPage && zoomVirtual != kZoomFitContent) {
+    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage &&
+        zoomVirtual != kZoomFitContent) {
         return zoomVirtual * 0.01f * dpiFactor;
     }
 
@@ -729,8 +730,12 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     float zoomX = areaForPagesDx / row.dx;
     float zoomY = areaForPagesDy / row.dy;
     float zoom;
-    if (zoomX < zoomY || kZoomFitWidth == zoomVirtual) {
+    if (kZoomFitWidth == zoomVirtual) {
         zoom = zoomX;
+    } else if (kZoomFitHeight == zoomVirtual) {
+        zoom = zoomY; // issue #1714
+    } else if (zoomX < zoomY) {
+        zoom = zoomX; // Fit Page / Fit Content: fit both axes
     } else {
         zoom = zoomY;
     }
@@ -800,8 +805,8 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     ReportIf(!IsValidZoom(newZoomVirtual));
     zoomVirtual = newZoomVirtual;
     int nPages = PageCount();
-    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) || (kZoomShrinkToFit == newZoomVirtual) ||
-        (kZoomFitByOrientation == newZoomVirtual)) {
+    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitHeight == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) ||
+        (kZoomShrinkToFit == newZoomVirtual) || (kZoomFitByOrientation == newZoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most documents
            all pages are the same size anyway */
@@ -1677,7 +1682,8 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
         return;
     }
 
-    bool scrollToFitPage = kZoomFitPage == zoomLevel || kZoomFitContent == zoomLevel || kZoomShrinkToFit == zoomLevel;
+    bool scrollToFitPage = kZoomFitPage == zoomLevel || kZoomFitHeight == zoomLevel || kZoomFitContent == zoomLevel ||
+                           kZoomShrinkToFit == zoomLevel;
     if (zoomVirtual == zoomLevel && (fixPt || !scrollToFitPage)) {
         return;
     }
@@ -2143,8 +2149,8 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     // (kZoomFitPage / FitWidth / FitContent); 0 = leave zoom (issue #5828).
     // FitContent uses CurrentPageNo() for the content box, so switch page first
     // for virtual modes, then apply zoom, then fine-tune scroll.
-    bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitContent ||
-                         zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
+    bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitHeight ||
+                         zoom == kZoomFitContent || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
     bool isAbsZoom = zoom > 0;
 
     if (isVirtualZoom) {

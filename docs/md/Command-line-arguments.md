@@ -36,7 +36,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
   Combine with `-reuse-instance` if the document is already open.
 
-- `-zoom <zoom-level>` : Sets the zoom level for the first indicated file. Alternatives are "fit page", "fit width", "fit content" or any percentage value. Combine with -reuse-instance if the document is already open.
+- `-zoom <zoom-level>` : Sets the zoom level for the first indicated file. Alternatives are "fit page", "fit width", "fit height", "fit content" or any percentage value. Combine with -reuse-instance if the document is already open.
 - `-scroll <x,y>` : Scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
 - `search <term>` : Start a search for a given term when opening a document e.g. `SumatraPDF -search "foo" bar.pdf`. **Ver 3.4+**
 

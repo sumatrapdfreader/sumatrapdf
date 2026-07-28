@@ -2197,7 +2197,7 @@ Set view mode and zoom level DDE command
 
 eg: [SetView("c:\file.pdf", "book view", -2)]
 
-use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
+use -1 for kZoomFitPage, -2 for kZoomFitWidth, -3 for kZoomFitContent, -6 for kZoomFitHeight
 */
 static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr filePath, viewMode;
@@ -2277,7 +2277,7 @@ zoom: 120
 view: continuous
 sumver: 3.7
 
-zoom is a percentage, or -1 = fit page, -2 = fit width, -3 = fit content
+zoom is a percentage, or -1 = fit page, -2 = fit width, -3 = fit content, -6 = fit height
 (the same convention as the SetView command).
 i.e. multiple lines, each line is
 key: value
@@ -2330,7 +2330,7 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& re
     DocController* ctrl = win->ctrl;
     Str docPath = ctrl->GetFilePath();
     // zoom uses the same convention as SetView: a percentage, or -1 = fit page,
-    // -2 = fit width, -3 = fit content
+    // -2 = fit width, -3 = fit content, -6 = fit height
     float zoom = ctrl->GetZoomVirtual();
     Str view = DisplayModeToString(ctrl->GetDisplayMode());
     res.Append(fmt("path: %s\n", docPath));

@@ -88,7 +88,7 @@ Go to a specific page and select the search term **only if it is found on that p
         - `"continuous"`
         - `"continuous facing"`
         - `"continuous book view"`
-    - `zoom level` : either a zoom factor between 8 and 6400 (in percent) or one of -1 (Fit Page), -2 (Fit Width) or -3 (Fit Content). Use `0` to keep the current zoom unchanged — useful when scrolling with the scroll arguments, since re-applying a Fit zoom on every call re-fits the page and would reset the scroll position
+    - `zoom level` : either a zoom factor between 8 and 6400 (in percent) or one of -1 (Fit Page), -2 (Fit Width), -3 (Fit Content) or -6 (Fit Height). Use `0` to keep the current zoom unchanged — useful when scrolling with the scroll arguments, since re-applying a Fit zoom on every call re-fits the page and would reset the scroll position
     - `scrollX, scrollY` : PDF document (user) coordinates of the point to be visible in the top-left of the window
 - example: `[SetView("c:\file.pdf","continuous",-3)]`
 - note: the pdf file must already be opened
@@ -110,7 +110,7 @@ Unlike the commands above (which are sent as DDE *execute* requests), this is a 
     ```
 
     - `page` : the current page number; `pageCount` : the total number of pages
-    - `zoom` : a zoom factor in percent, or -1 (Fit Page), -2 (Fit Width), -3 (Fit Content) — the same convention as `SetView`
+    - `zoom` : a zoom factor in percent, or -1 (Fit Page), -2 (Fit Width), -3 (Fit Content), -6 (Fit Height) — the same convention as `SetView`
     - on error (no such open file) it returns `error: <message>`
 - example: `[GetFileState()]`
 

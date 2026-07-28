@@ -561,6 +561,9 @@ TempStr ZoomLevelStr(float zoom) {
     if (zoom == kZoomFitWidth) {
         return _TRA("Fit Width");
     }
+    if (zoom == kZoomFitHeight) {
+        return _TRA("Fit Height");
+    }
     if (zoom == kZoomFitContent) {
         return _TRA("Fit Content");
     }
@@ -581,6 +584,7 @@ TempStr ZoomLevelStr(float zoom) {
 static float gZoomLevels[] = {
     kZoomFitPage,
     kZoomFitWidth,
+    kZoomFitHeight,
     kZoomFitByOrientation,
     kZoomFitContent,
     kZoomShrinkToFit,

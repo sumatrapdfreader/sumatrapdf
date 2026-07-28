@@ -264,6 +264,7 @@ static SeqStrings gCommandNames =
     "CmdTocExpandToLevel3\0"
     "CmdTocCollapseSameLevel\0"
     "CmdToggleFavoritesSort\0"
+    "CmdZoomFitHeight\0"
     "CmdNone\0"
     "\0";
 
@@ -521,6 +522,7 @@ static i32 gCommandIds[] = {
     CmdTocExpandToLevel3,
     CmdTocCollapseSameLevel,
     CmdToggleFavoritesSort,
+    CmdZoomFitHeight,
     CmdNone,
 };
 
@@ -778,6 +780,7 @@ SeqStrings gCommandDescriptions =
     "Bookmarks: Expand to Level 3\0"
     "Bookmarks: Collapse Same Level\0"
     "Sort Favorites By Name\0"
+    "Zoom: Fit Height\0"
     "Do nothing\0"
     "\0";
 // clang-format on

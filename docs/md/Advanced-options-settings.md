@@ -36,8 +36,8 @@ If you add or remove lines with square brackets, **make sure to always add/remov
 ; view, continuous, continuous facing, continuous book view
 DefaultDisplayMode = automatic
 
-; default zoom. valid values: fit page, fit width, fit content or percent like
-; 100%
+; default zoom. valid values: fit page, fit width, fit height, fit content or
+; percent like 100%
 DefaultZoom = fit page
 
 ; if true, JavaScript in PDF documents is disabled (e.g. form-field calculations
@@ -358,7 +358,8 @@ ImageUI [
     WindowBgCol = 
 
     ; default zoom for image files. valid values: fit page, fit width, fit
-    ; content, shrink to fit or percent like 100% (introduced in version 3.7)
+    ; height, fit content, shrink to fit or percent like 100% (introduced in
+    ; version 3.7)
     DefaultZoom = shrink to fit
 ]
 
@@ -714,7 +715,8 @@ FileStates [
     ; number of the last read page
     PageNo = 1
 
-    ; zoom (in %) or one of those values: fit page, fit width, fit content
+    ; zoom (in %) or one of those values: fit page, fit width, fit height, fit
+    ; content
     Zoom = fit page
 
     ; how far pages have been rotated as a multiple of 90 degrees

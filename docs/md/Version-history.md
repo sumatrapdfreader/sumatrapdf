@@ -49,6 +49,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - hovering a thumbnail on the Frequently Read home page now shows a ✕ button in its top-right corner to remove that document from the list, without going through the right-click menu (fixes #283)
 - the home page document history can be shown as a list instead of thumbnails (toggle buttons next to the header, or the `HomePageViewMode = thumbnails | list` advanced setting). Each list row shows a small preview, the file name, the file's directory (right-aligned, muted), the file size, and remove/pin buttons (fixes #4909)
 - new zoom mode `Fit by Orientation` (in the View / Zoom menu) that automatically fits width when the view is landscape and fits page when portrait, updating as you resize the window or rotate the screen (fixes #702)
+- new zoom mode `Fit Height` (View / Zoom menu and command palette): scales the page so its height fills the window (width may require horizontal scrolling) — useful for landscape pages on portrait screens and for mixed page widths with a stable vertical size; also accepted as `-zoom fitheight` / advanced setting `fit height` and DDE zoom `-6` (fixes #1714)
 - add `sumatrapdf-tool.exe` command-line tools for PDF manipulation (see [Tools](Tools.md))
 - [command palette](Command-Palette.md) has a new `*` mode that jumps to a table of contents entry of the current document (`Shift + F12`). Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
 - [command palette](Command-Palette.md) has a new `$` mode that jumps to a favorite, listing the current document's favorites first, then favorites of other documents
@@ -143,6 +144,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdContinueReadAloud` : "Continue Reading"
 - `CmdFavoriteShowInTab` : "Show Favorites in Tab" — full-window Favorites tab (sidebar Favorites still works)
 - `CmdToggleFavoritesSort` : "Sort Favorites By Name" — Favorites tree context menu checkbox; toggles `SortFavoritesByName` (fixes #2277)
+- `CmdZoomFitHeight` : "Zoom: Fit Height" — scale page height to the window (fixes #1714)
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"
 - `CmdNavigateFilesInFolder` : "Navigate Files in Folder" — floating directory browser for openable files (Enter/double-click opens a file or enters a directory, `..` goes up, Esc closes)

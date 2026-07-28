@@ -262,6 +262,7 @@ export const commands = [
     "CmdTocExpandToLevel3", "Bookmarks: Expand to Level 3",
     "CmdTocCollapseSameLevel", "Bookmarks: Collapse Same Level",
     "CmdToggleFavoritesSort", "Sort Favorites By Name",
+    "CmdZoomFitHeight", "Zoom: Fit Height",
     "CmdNone", "Do nothing",
 ];
 

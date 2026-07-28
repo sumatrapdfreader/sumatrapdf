@@ -310,7 +310,7 @@ const imageUI: Field[] = [
     "DefaultZoom",
     Str,
     "shrink to fit",
-    "default zoom for image files. valid values: fit page, fit width, fit content, shrink to fit or percent like 100%",
+    "default zoom for image files. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
 ];
@@ -509,7 +509,7 @@ const fileSettings: Field[] = [
     "PointF",
   ),
   field("PageNo", Int, 1, "number of the last read page"),
-  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit content"),
+  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   field(
     "WindowState",
@@ -606,7 +606,7 @@ const globalPrefs: Field[] = [
     "DefaultZoom",
     Str,
     "fit page",
-    "default zoom. valid values: fit page, fit width, fit content or percent like 100%",
+    "default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%",
   ),
   field(
     "DisableJavaScript",
@@ -1281,6 +1281,7 @@ constexpr float kZoomFitWidth = -2.F;
 constexpr float kZoomFitContent = -3.F;
 constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
+constexpr float kZoomFitHeight = -6.F;
 constexpr float kZoomActualSize = 100.0F;
 constexpr float kZoomMax = 6400.F; /* max zoom in % */
 constexpr float kZoomMin = 8.33F;  /* min zoom in % */
