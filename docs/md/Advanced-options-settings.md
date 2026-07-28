@@ -132,6 +132,11 @@ SearchUIFloating = false
 ; if true, we show the Favorites sidebar
 ShowFavorites = false
 
+; if true, favorites within each file are sorted alphabetically by name (or page
+; label); if false (the default), they are sorted by page number (introduced in
+; version 3.7)
+SortFavoritesByName = false
+
 ; if true, we show table of contents (Bookmarks) sidebar if it's present in the
 ; document
 ShowToc = true

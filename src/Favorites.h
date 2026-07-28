@@ -50,3 +50,6 @@ TempStr FavReadableNameTemp(Favorite* fn);
 void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);
 
 void SetSearchStartFavorite(MainWindow* win);
+
+// toggle SortFavoritesByName, re-sort, refresh trees, and save settings
+void ToggleSortFavoritesByName();

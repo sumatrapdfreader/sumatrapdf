@@ -257,6 +257,60 @@ static int SortByPageNo(const void* a, const void* b) {
     return na->pageNo - nb->pageNo;
 }
 
+// Sort by user name if set, else page label; page number breaks ties and is
+// the only key when neither favorite has a name/label (issue #2277).
+static int SortByName(const void* a, const void* b) {
+    Favorite* na = *(Favorite**)a;
+    Favorite* nb = *(Favorite**)b;
+    Str sa = na->name;
+    if (!sa) {
+        sa = na->pageLabel;
+    }
+    Str sb = nb->name;
+    if (!sb) {
+        sb = nb->pageLabel;
+    }
+    if (sa || sb) {
+        if (!sa) {
+            return 1;
+        }
+        if (!sb) {
+            return -1;
+        }
+        int n = str::CmpNatural(sa, sb);
+        if (n != 0) {
+            return n;
+        }
+    }
+    return na->pageNo - nb->pageNo;
+}
+
+static void SortFileFavorites(FileState* fs) {
+    if (!fs || !fs->favorites || len(*fs->favorites) < 2) {
+        return;
+    }
+    if (gGlobalPrefs->sortFavoritesByName) {
+        fs->favorites->Sort(SortByName);
+    } else {
+        fs->favorites->Sort(SortByPageNo);
+    }
+}
+
+static void SortAllFavorites() {
+    FileState* fs;
+    for (int i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
+        SortFileFavorites(fs);
+    }
+}
+
+void ToggleSortFavoritesByName() {
+    gGlobalPrefs->sortFavoritesByName = !gGlobalPrefs->sortFavoritesByName;
+    SortAllFavorites();
+    RememberFavTreeExpansionStateForAllWindows();
+    UpdateFavoritesTreeForAllWindows();
+    SaveSettings();
+}
+
 static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
@@ -270,10 +324,11 @@ static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel) {
     if (fn) {
         str::ReplaceWithCopy(&fn->name, name);
         ReportIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
+        SortFileFavorites(fav);
     } else {
         fn = NewFavorite(pageNo, name, pageLabel);
         fav->favorites->Append(fn);
-        fav->favorites->Sort(SortByPageNo);
+        SortFileFavorites(fav);
     }
 }
 
@@ -332,11 +387,11 @@ void SetSearchStartFavorite(MainWindow* win) {
         }
         fn->pageNo = pageNo;
         str::ReplaceWithCopy(&fn->pageLabel, pl);
-        fs->favorites->Sort(SortByPageNo);
+        SortFileFavorites(fs);
     } else {
         fn = NewFavorite(pageNo, markName, pl);
         fs->favorites->Append(fn);
-        fs->favorites->Sort(SortByPageNo);
+        SortFileFavorites(fs);
     }
     UpdateFavoritesTreeForAllWindows();
     // Settings are written on normal save/exit; no need to flush on every Ctrl+F.
@@ -741,6 +796,8 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
         if (!fs || !fs->favorites || len(*fs->favorites) == 0) {
             continue;
         }
+        // keep in-file order aligned with SortFavoritesByName (issue #2277)
+        SortFileFavorites(fs);
         TempStr baseName = path::GetBaseNameTemp(fs->filePath);
         int nFavs = len(*fs->favorites);
 
@@ -1269,28 +1326,41 @@ static void FavTreeKeyDown(TreeView::KeyDownEvent* ev) {
 // clang-format off
 static MenuDef menuDefContextFav[] = {
     {
+        _TRN("Sort By Name"),
+        CmdToggleFavoritesSort,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
         _TRN("Remove from favorites"),
-        CmdFavoriteDel
+        CmdFavoriteDel,
     },
     {
         nullptr,
         0,
-    }
+    },
 };
 // clang-format on
 
 static void FavTreeContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    // TreeView* treeView = (TreeView*)ev->w;
-    // HWND hwnd = treeView->hwnd;
-    // MainWindow* win = FindMainWindowByHwnd(hwnd);
+    if (!win) {
+        return;
+    }
 
     POINT pt{};
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (!ti) {
-        return;
+        pt = {ev->mouseScreen.x, ev->mouseScreen.y};
     }
     HMENU popup = BuildMenuFromDef(menuDefContextFav, CreatePopupMenu(), nullptr);
+    MenuSetChecked(popup, CmdToggleFavoritesSort, gGlobalPrefs->sortFavoritesByName);
+    if (!ti) {
+        // Sort By Name works with no selection; Remove needs a favorite row.
+        MenuRemove(popup, CmdFavoriteDel);
+    }
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
@@ -1301,7 +1371,11 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     // so that we can do destructive operations without asking for permission via
     // invasive model dialog boxes but also allow reverting them if were done
     // by mistake
-    if (CmdFavoriteDel == cmd) {
+    if (CmdToggleFavoritesSort == cmd) {
+        ToggleSortFavoritesByName();
+        return;
+    }
+    if (CmdFavoriteDel == cmd && ti) {
         RememberFavTreeExpansionStateForAllWindows();
         FavTreeItem* fti = (FavTreeItem*)ti;
         Favorite* toDelete = fti->favorite;

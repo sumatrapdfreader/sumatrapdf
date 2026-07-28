@@ -261,6 +261,7 @@ export const commands = [
     "CmdTocExpandToLevel2", "Bookmarks: Expand to Level 2",
     "CmdTocExpandToLevel3", "Bookmarks: Expand to Level 3",
     "CmdTocCollapseSameLevel", "Bookmarks: Collapse Same Level",
+    "CmdToggleFavoritesSort", "Sort Favorites By Name",
     "CmdNone", "Do nothing",
 ];
 

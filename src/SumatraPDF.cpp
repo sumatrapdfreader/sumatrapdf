@@ -9088,6 +9088,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFavoritesTab(win);
             break;
 
+        case CmdToggleFavoritesSort:
+            ToggleSortFavoritesByName();
+            break;
+
         case CmdGoToNextFavorite:
             GoToNextFavorite(win, true);
             break;

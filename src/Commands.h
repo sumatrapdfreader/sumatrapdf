@@ -261,7 +261,8 @@ enum {
     CmdTocExpandToLevel2 = 450,
     CmdTocExpandToLevel3 = 451,
     CmdTocCollapseSameLevel = 452,
-    CmdNone = 453,
+    CmdToggleFavoritesSort = 453,
+    CmdNone = 454,
 
     /* range for file history */
     CmdFileHistoryFirst,

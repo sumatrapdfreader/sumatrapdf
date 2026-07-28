@@ -151,6 +151,7 @@ CmdFavoriteAdd,Ctrl + B,Add Favorite,
 CmdFavoriteDel,,Delete Favorite,
 CmdFavoriteToggle,,Toggle Favorites,
 CmdFavoriteShowInTab,,Show Favorites in Tab,"Full-window Favorites tab (independent of sidebar), ver 3.7+"
+CmdToggleFavoritesSort,,Sort Favorites By Name,"Toggle alphabetical order within each file (also Favorites tree context menu checkbox); maps to `SortFavoritesByName`, ver 3.7+"
 CmdGoToNextFavorite,,Go to Next Favorite,
 CmdGoToPrevFavorite,,Go to Previous Favorite,
 ```
