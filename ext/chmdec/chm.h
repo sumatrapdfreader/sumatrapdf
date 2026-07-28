@@ -47,7 +47,6 @@ void chm_close(chm_ctx *ctx);
 
 /* methods for setting tuning parameters for particular file */
 
-
 /* ----- entries (files/directories inside the archive) ----- */
 
 /* content-section index stored in a directory entry's "space" field */

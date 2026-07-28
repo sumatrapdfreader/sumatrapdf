@@ -76,8 +76,7 @@ Current integration points:
 |------|------|
 | `src/EngineDjvuDec.cpp` | Engine using the djvu_* API |
 | `src/EngineCreate.cpp` | Creates the djvudec engine for DjVu files |
-| `cmd/scripts/gen_libmupdf.def.py` | Source of truth for djvudec DLL exports |
-| `src/libmupdf.def` | Generated/auto-synced export list for `libmupdf.dll` |
+| `src/libmupdf.def` | Hand-maintained export list for `libmupdf.dll` |
 | `premake5.lua` | `djvudec` static lib project |
 | `ext/versions.txt` | Vendored dependency version log |
 
@@ -87,19 +86,7 @@ djvudec is statically linked into `libmupdf.dll`; `SumatraPDF.exe` imports
 `djvu_*` symbols from that DLL via `src/libmupdf.def`.
 
 When new public functions are added, append them to the `; djvudec exports`
-section in **both**:
-
-- `cmd/scripts/gen_libmupdf.def.py`
-- `src/libmupdf.def`
-
-Try regenerating the def file:
-
-```bash
-cd cmd/scripts && python gen_libmupdf.def.py
-```
-
-If that fails (`ModuleNotFoundError: util`), edit `src/libmupdf.def` manually
-to match `gen_libmupdf.def.py`.
+section in `src/libmupdf.def`.
 
 Current djvudec exports:
 
@@ -187,7 +174,7 @@ Append `prompt: ...` if the change was AI-assisted (per Agents.md).
 - [ ] Copied `dist/djvu.c` and `dist/djvu.h` from kjk/djvudec
 - [ ] Updated `ext/versions.txt` with import date and upstream commit hash
 - [ ] Checked `djvu.h` for API changes
-- [ ] Updated `gen_libmupdf.def.py` + `src/libmupdf.def` if exports changed
+- [ ] Updated `src/libmupdf.def` if exports changed
 - [ ] Updated `EngineDjvuDec.cpp` if integration changed
 - [ ] Did **not** clang-format `ext/djvudec/`
 - [ ] `bun ./cmd/build.ts` succeeds

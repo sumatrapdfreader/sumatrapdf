@@ -315,14 +315,14 @@ function makeDav1d(arch: MacArch, generatedDir: string): LibDef {
   };
 }
 
-function makeChm(): LibDef {
+function makeChmdec(): LibDef {
   return {
-    name: "chm",
+    name: "chmdec",
     alwaysOptimize: true,
     defines: ["_stricmp=strcasecmp", "_strnicmp=strncasecmp"],
     includes: [],
     extraCflags: ["-include", "limits.h"],
-    files: [{ dir: "ext/libchm", patterns: ["chm.c"] }],
+    files: [{ dir: "ext/chmdec", patterns: ["chm.c"] }],
   };
 }
 
@@ -505,7 +505,7 @@ const DEP_LIBS_BASE = [
   zlib,
   aGumbo,
   makeUnrar,
-  makeChm,
+  makeChmdec,
   djvudec,
   "libarchive",
   libwebp,

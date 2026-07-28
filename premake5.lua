@@ -461,14 +461,16 @@ workspace "SumatraPDF"
     filter {}
     unrar_files()
 
-  project "chm"
+  -- chmdec: linked into libmupdf.dll (and static EXE). SumatraPDF.exe /
+  -- PdfFilter / PdfPreview import chm_* via libmupdf.def; do not also link here.
+  project "chmdec"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
     defines { "_CRT_SECURE_NO_WARNINGS" }
-    disablewarnings { "4018", "4244", "4267", "4996" }
-    files { "ext/libchm/*.c", "ext/libchm/*.h" }
+    disablewarnings { "4018", "4244", "4267", "4456", "4996" }
+    files { "ext/chmdec/*.c", "ext/chmdec/*.h" }
 
   -- cmark-gfm: linked into mupdf → libmupdf.dll (md.c + MarkdownToc imports).
   -- Do not also link into SumatraPDF.exe; re-export via libmupdf.def instead.
@@ -955,10 +957,11 @@ workspace "SumatraPDF"
     -- unrar: static lib kept as its own project; linked only into this DLL (and
     -- static EXE). Archive.cpp RAR* APIs are re-exported via libmupdf.def so
     -- SumatraPDF / PdfFilter / PdfPreview do not carry a second copy.
+    -- chmdec: same pattern — ChmFile / -dump-chm import chm_* via libmupdf.def.
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli", "unrar"
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli", "unrar", "chmdec"
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1117,8 +1120,6 @@ workspace "SumatraPDF"
   --     "src", "src/wingui"
   --   }
   --   pdf_preview2_files()
-  --   -- TODO: "chm" should only be for Debug config but doing links { "chm" }
-  --   -- in the filter breaks linking by setting LinkLibraryDependencies to false
   --   links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   project "PdfPreview"
@@ -1133,16 +1134,14 @@ workspace "SumatraPDF"
     -- via libmupdf.def; only headers are needed here to compile the readers.
     includedirs {
       "src", "src/wingui", "mupdf/include",
-      "ext/djvudec", "ext/libchm",
+      "ext/djvudec", "ext/chmdec",
       "ext/libarchive",
       "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include",
     }
     pdf_preview_files()
-    -- TODO: "chm" should only be for Debug config but doing links { "chm" }
-    -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    -- djvudec is also inside libmupdf.dll (djvu_* exports in libmupdf.def)
-    -- libarchive + unrar live in libmupdf.dll (re-exported); do not link second copies
-    links { "base", "libmupdf", "chm" }
+    -- djvudec / chmdec / libarchive / unrar live in libmupdf.dll (re-exported);
+    -- do not link second copies
+    links { "base", "libmupdf" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1158,7 +1157,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
@@ -1218,11 +1217,12 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links_zlib()
-    -- static build has no libmupdf.dll: image codecs link in here (same set as
-    -- libmupdf.dll uses). brotli is pulled via mupdf (freetype) + needed by jxl/heic.
+    -- static build has no libmupdf.dll: image codecs + chmdec/unrar/libarchive
+    -- link in here (same set as libmupdf.dll uses). brotli is pulled via mupdf
+    -- (freetype) + needed by jxl/heic.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli",
-      "mupdf", "libarchive", "base", "unrar", "chm", "a-zopfli"
+      "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1257,9 +1257,9 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/libchm", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
-    -- headers only: webp/jxl/heic symbols come from libmupdf.dll (libmupdf.def)
+    -- headers only: webp/jxl/heic/chm symbols come from libmupdf.dll (libmupdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
@@ -1321,13 +1321,14 @@ workspace "SumatraPDF"
 
     files { "src/MuPDF_Exports.cpp" }
 
-    -- MarkdownToc / Archive.cpp use cmark + libarchive + unrar via libmupdf.def
-    -- exports (all live in libmupdf.dll; do not link second copies into the EXE).
+    -- MarkdownToc / Archive.cpp / ChmFile use cmark + libarchive + unrar +
+    -- chmdec via libmupdf.def exports (all live in libmupdf.dll; do not link
+    -- second copies into the EXE).
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libmupdf", "base", "chm", "a-zopfli"
+      "libmupdf", "base", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

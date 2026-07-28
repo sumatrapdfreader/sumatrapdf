@@ -95,12 +95,12 @@ export const unrar: LibDef = {
   ],
 };
 
-export const chm: LibDef = {
-  name: "chm",
+export const chmdec: LibDef = {
+  name: "chmdec",
   alwaysOptimize: true,
   defines: ["_CRT_SECURE_NO_WARNINGS"],
   includes: [],
-  files: [{ dir: "ext/libchm", patterns: ["chm.c"] }],
+  files: [{ dir: "ext/chmdec", patterns: ["chm.c"] }],
 };
 
 export const zopfli: LibDef = {

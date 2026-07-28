@@ -1,4 +1,4 @@
-// Test for libchm LZX make_decode_table PRETREE overflow (CC-0010 class advisory).
+// Test for chmdec LZX make_decode_table PRETREE overflow (CC-0010 class advisory).
 //
 // Builds SumatraPDF-static.exe with ASan (cmd/build-asan.ts), generates a minimal
 // malicious CHM (issue-chm-lzx-make.ts), and runs the control pipe CHM test command.

@@ -1076,6 +1076,9 @@
     <ProjectReference Include="unrar.vcxproj">
       <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
     </ProjectReference>
+    <ProjectReference Include="chmdec.vcxproj">
+      <Project>{892B65F6-75CD-8FCC-5E88-A3204AC9161D}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

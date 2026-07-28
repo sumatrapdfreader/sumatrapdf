@@ -1,5 +1,3 @@
-
-
 #ifndef CHM_H
 #define CHM_H
 
@@ -69,6 +67,16 @@ int chm_get_entries(chm_ctx *ctx, struct chm_entry ***outEntries);
 #endif
 #endif
 
+#ifndef CHM_LIKELY
+#if defined(__GNUC__) || defined(__clang__)
+#define CHM_LIKELY(x) __builtin_expect(!!(x), 1)
+#define CHM_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define CHM_LIKELY(x) (x)
+#define CHM_UNLIKELY(x) (x)
+#endif
+#endif
+
 #define DECR_OK (0)
 #define DECR_DATAFORMAT (1)
 #define DECR_ILLEGALDATA (2)
@@ -89,7 +97,8 @@ int chm_get_entries(chm_ctx *ctx, struct chm_entry ***outEntries);
 #define LZX_PRETREE_MAXSYMBOLS (LZX_PRETREE_NUM_ELEMENTS)
 #define LZX_PRETREE_TABLEBITS (6)
 #define LZX_MAINTREE_MAXSYMBOLS (LZX_NUM_CHARS + 50 * 8)
-#define LZX_MAINTREE_TABLEBITS (12)
+
+#define LZX_MAINTREE_TABLEBITS (13)
 #define LZX_LENGTH_MAXSYMBOLS (LZX_NUM_SECONDARY_LENGTHS + 1)
 #define LZX_LENGTH_TABLEBITS (12)
 #define LZX_ALIGNED_MAXSYMBOLS (LZX_ALIGNED_NUM_ELEMENTS)
@@ -97,8 +106,14 @@ int chm_get_entries(chm_ctx *ctx, struct chm_entry ***outEntries);
 
 #define LZX_LENTABLE_SAFETY (64)
 
+#define LZX_HUFF_NODE ((uint32_t)0x80000000u)
+#define LZX_HUFF_NODE_MASK ((uint32_t)0x7fffffffu)
+#define LZX_HUFF_ENTRY(sym, len) (((uint32_t)(len) << 16) | (uint32_t)(sym))
+#define LZX_HUFF_SYM(e) ((uint32_t)(e) & 0xffffu)
+#define LZX_HUFF_LEN(e) (((uint32_t)(e) >> 16) & 0xffu)
+
 #define LZX_DECLARE_TABLE(tbl) \
-    uint16_t tbl##_table[(1 << LZX_##tbl##_TABLEBITS) + (LZX_##tbl##_MAXSYMBOLS << 1)]; \
+    uint32_t tbl##_table[(1 << LZX_##tbl##_TABLEBITS) + (LZX_##tbl##_MAXSYMBOLS << 1)]; \
     uint8_t tbl##_len[LZX_##tbl##_MAXSYMBOLS + LZX_LENTABLE_SAFETY]
 
 struct LZXstate {
@@ -129,7 +144,11 @@ int LZXreset(struct LZXstate *pState);
 int LZXdecompress(struct LZXstate *pState, uint8_t *inpos, uint8_t *outpos, int inlen, int outlen);
 int LZX_test_pretree_make_decode_table(void);
 
-#define CHM_MAX_BLOCKS_CACHED 5
+#define LZX_INPUT_PAD 64
+
+#define CHM_MAX_BLOCKS_CACHED 2048
+#define CHM_FULL_CACHE_MAX_BLOCKS 1536
+#define CHM_RING_CACHE_BLOCKS 64
 #define CHM_MAX_DIR_PAGES 65536
 #define CHM_DIR_SEEN_BITMAP_BITS CHM_MAX_DIR_PAGES
 #define CHM_DIR_SEEN_BITMAP_WORDS (CHM_DIR_SEEN_BITMAP_BITS / 32)
@@ -264,6 +283,10 @@ struct chm_ctx {
     uint8_t *cache_blocks[CHM_MAX_BLOCKS_CACHED];
     int64_t cache_block_indices[CHM_MAX_BLOCKS_CACHED];
     int cache_num_blocks;
+    uint32_t cache_block_alloc_len;
+
+    uint8_t *lzx_cbuffer;
+    uint64_t lzx_cbuffer_len;
 
     uint64_t dir_page_count;
     uint64_t dir_pages_seen;
@@ -336,8 +359,6 @@ void LZXteardown(struct LZXstate* pState) {
 }
 
 int LZXreset(struct LZXstate* pState) {
-    int i;
-
     pState->R0 = pState->R1 = pState->R2 = 1;
     pState->header_read = 0;
     pState->frames_read = 0;
@@ -348,13 +369,13 @@ int LZXreset(struct LZXstate* pState) {
     pState->window_posn = 0;
     memset(pState->window, 0, pState->window_size);
 
-    for (i = 0; i < LZX_MAINTREE_MAXSYMBOLS + LZX_LENTABLE_SAFETY; i++) pState->MAINTREE_len[i] = 0;
-    for (i = 0; i < LZX_LENGTH_MAXSYMBOLS + LZX_LENTABLE_SAFETY; i++) pState->LENGTH_len[i] = 0;
+    memset(pState->MAINTREE_len, 0, sizeof(pState->MAINTREE_len));
+    memset(pState->LENGTH_len, 0, sizeof(pState->LENGTH_len));
 
     return DECR_OK;
 }
 
-#define BITBUF_WIDTH (sizeof(uint32_t) << 3)
+#define BITBUF_WIDTH 64
 
 #define INIT_BITSTREAM \
     do {               \
@@ -362,15 +383,12 @@ int LZXreset(struct LZXstate* pState) {
         bitbuf = 0;    \
     } while (0)
 
-#define ENSURE_BITS(n)                                                             \
-    while (bitsleft < (n)) {                                                       \
-        uint32_t next_bits = 0;                                                       \
-        if ((uint8_t*)inpos < (uint8_t*)endinp) next_bits = inpos[0];                  \
-        if ((uint8_t*)inpos + 1 < (uint8_t*)endinp) next_bits |= (uint32_t)inpos[1] << 8; \
-        if ((uint8_t*)inpos > (uint8_t*)endinp + 2) return DECR_ILLEGALDATA;           \
-        bitbuf |= next_bits << (BITBUF_WIDTH - 16 - bitsleft);                       \
-        bitsleft += 16;                                                            \
-        inpos += 2;                                                                \
+#define ENSURE_BITS(n)                                                                   \
+    while (bitsleft < (n)) {                                                             \
+        bitbuf |= (uint64_t)((uint32_t)inpos[0] | ((uint32_t)inpos[1] << 8))              \
+                  << (BITBUF_WIDTH - 16 - bitsleft);                                      \
+        bitsleft += 16;                                                                  \
+        inpos += 2;                                                                      \
     }
 
 #define PEEK_BITS(n) (bitbuf >> (BITBUF_WIDTH - (n)))
@@ -393,24 +411,84 @@ int LZXreset(struct LZXstate* pState) {
         return DECR_ILLEGALDATA;                                                            \
     }
 
-#define READ_HUFFSYM(tbl, var)                                             \
-    do {                                                                   \
-        ENSURE_BITS(16);                                                   \
-        hufftbl = SYMTABLE(tbl);                                           \
-        if ((i = hufftbl[PEEK_BITS(TABLEBITS(tbl))]) >= MAXSYMBOLS(tbl)) { \
-            j = 1 << (BITBUF_WIDTH - TABLEBITS(tbl));                        \
-            do {                                                           \
-                j >>= 1;                                                   \
-                i <<= 1;                                                   \
-                i |= (bitbuf & j) ? 1 : 0;                                 \
-                if (!j) {                                                  \
-                    return DECR_ILLEGALDATA;                               \
-                }                                                          \
-            } while ((i = hufftbl[i]) >= MAXSYMBOLS(tbl));                 \
-        }                                                                  \
-        j = LENTABLE(tbl)[(var) = i];                                      \
-        REMOVE_BITS(j);                                                    \
+#define BUILD_TABLE_NSYMS(tbl, nsyms)                                              \
+    if (make_decode_table((nsyms), TABLEBITS(tbl), LENTABLE(tbl), SYMTABLE(tbl))) { \
+        return DECR_ILLEGALDATA;                                                   \
+    }
+
+#define READ_HUFFSYM(tbl, var)                                                      \
+    do {                                                                            \
+        uint32_t _e;                                                                \
+        ENSURE_BITS(16);                                                            \
+        hufftbl = SYMTABLE(tbl);                                                    \
+        _e = hufftbl[PEEK_BITS(TABLEBITS(tbl))];                                    \
+        if (CHM_UNLIKELY(_e & LZX_HUFF_NODE)) {                                     \
+            uint64_t jb = 1ull << (BITBUF_WIDTH - TABLEBITS(tbl));                   \
+            do {                                                                    \
+                uint32_t node = _e & LZX_HUFF_NODE_MASK;                             \
+                jb >>= 1;                                                           \
+                node = (node << 1) | ((bitbuf & jb) ? 1u : 0u);                     \
+                if (!jb) {                                                          \
+                    return DECR_ILLEGALDATA;                                        \
+                }                                                                   \
+                _e = hufftbl[node];                                                 \
+            } while (_e & LZX_HUFF_NODE);                                           \
+        }                                                                           \
+        (var) = (int)LZX_HUFF_SYM(_e);                                              \
+        j = LZX_HUFF_LEN(_e);                                                       \
+        if (CHM_UNLIKELY(j == 0)) {                                                 \
+            return DECR_ILLEGALDATA;                                                \
+        }                                                                           \
+        REMOVE_BITS(j);                                                             \
     } while (0)
+
+#define READ_HUFFSYM_LOCAL(table, tablebits, var)                                   \
+    do {                                                                            \
+        uint32_t _e;                                                                \
+        ENSURE_BITS(16);                                                            \
+        _e = (table)[PEEK_BITS(tablebits)];                                         \
+        if (CHM_UNLIKELY(_e & LZX_HUFF_NODE)) {                                     \
+            uint64_t jb = 1ull << (BITBUF_WIDTH - (tablebits));                      \
+            do {                                                                    \
+                uint32_t node = _e & LZX_HUFF_NODE_MASK;                             \
+                jb >>= 1;                                                           \
+                node = (node << 1) | ((bitbuf & jb) ? 1u : 0u);                     \
+                if (!jb) {                                                          \
+                    return DECR_ILLEGALDATA;                                        \
+                }                                                                   \
+                _e = (table)[node];                                                 \
+            } while (_e & LZX_HUFF_NODE);                                           \
+        }                                                                           \
+        (var) = (int)LZX_HUFF_SYM(_e);                                              \
+        j = LZX_HUFF_LEN(_e);                                                       \
+        if (CHM_UNLIKELY(j == 0)) {                                                 \
+            return DECR_ILLEGALDATA;                                                \
+        }                                                                           \
+        REMOVE_BITS(j);                                                             \
+    } while (0)
+
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((always_inline))
+#endif
+static inline void lzx_copy_match(uint8_t* CHM_RESTRICT dest, const uint8_t* CHM_RESTRICT src,
+                                  int match_length) {
+    uint32_t n = (uint32_t)match_length;
+    if (n <= 8) {
+        while (n--)
+            *dest++ = *src++;
+        return;
+    }
+    while (n >= 8) {
+        uint64_t v;
+        memcpy(&v, src, 8);
+        memcpy(dest, &v, 8);
+        src += 8;
+        dest += 8;
+        n -= 8;
+    }
+    while (n--)
+        *dest++ = *src++;
+}
 
 #define READ_LENGTHS(tbl, first, last)                                    \
     do {                                                                  \
@@ -426,10 +504,10 @@ int LZXreset(struct LZXstate* pState) {
         inpos = lb.ip;                                                    \
     } while (0)
 
-static int make_decode_table(uint32_t nsyms, uint32_t nbits, uint8_t* length, uint16_t* table) {
-    register uint16_t sym;
-    register uint32_t leaf;
-    register uint8_t bit_num = 1;
+static int make_decode_table(uint32_t nsyms, uint32_t nbits, uint8_t* length, uint32_t* table) {
+    uint16_t sym;
+    uint32_t leaf;
+    uint8_t bit_num;
     uint32_t fill;
     uint32_t pos = 0;
     uint32_t table_mask = 1 << nbits;
@@ -437,16 +515,53 @@ static int make_decode_table(uint32_t nsyms, uint32_t nbits, uint8_t* length, ui
     uint32_t bit_mask = table_mask >> 1;
     uint32_t next_symbol = bit_mask;
 
+    uint16_t list[LZX_MAINTREE_MAXSYMBOLS];
+    uint16_t count[17];
+    uint16_t start[18];
+    uint16_t cursor[17];
+    uint32_t si;
+
+    if (nsyms > LZX_MAINTREE_MAXSYMBOLS) return 1;
+    memset(count, 0, sizeof(count));
+    for (si = 0; si < nsyms; si++) {
+        uint8_t L = length[si];
+        if (L > 16) return 1;
+        if (L > 0) count[L]++;
+    }
+    start[1] = 0;
+    for (si = 1; si <= 16; si++)
+        start[si + 1] = (uint16_t)(start[si] + count[si]);
+    memcpy(cursor, start, sizeof(cursor));
+    for (si = 0; si < nsyms; si++) {
+        uint8_t L = length[si];
+        if (L > 0) list[cursor[L]++] = (uint16_t)si;
+    }
+
+    bit_num = 1;
     while (bit_num <= nbits) {
-        for (sym = 0; sym < nsyms; sym++) {
-            if (length[sym] == bit_num) {
-                leaf = pos;
+        uint16_t k, end = start[bit_num + 1];
+        for (k = start[bit_num]; k < end; k++) {
+            uint32_t* d;
+            uint32_t* e;
+            uint32_t v;
 
-                if ((pos += bit_mask) > table_mask) return 1;
+            sym = list[k];
+            leaf = pos;
 
-                fill = bit_mask;
-                while (fill-- > 0) table[leaf++] = sym;
+            if ((pos += bit_mask) > table_mask) return 1;
+
+            fill = bit_mask;
+            d = table + leaf;
+            e = d + fill;
+            v = LZX_HUFF_ENTRY(sym, bit_num);
+            while (d + 4 <= e) {
+                d[0] = v;
+                d[1] = v;
+                d[2] = v;
+                d[3] = v;
+                d += 4;
             }
+            while (d < e) *d++ = v;
         }
         bit_mask >>= 1;
         bit_num++;
@@ -454,34 +569,34 @@ static int make_decode_table(uint32_t nsyms, uint32_t nbits, uint8_t* length, ui
 
     if (pos != table_mask) {
 
-        for (sym = pos; sym < table_mask; sym++) table[sym] = 0;
+        for (si = pos; si < table_mask; si++) table[si] = 0;
 
         pos <<= 16;
         table_mask <<= 16;
         bit_mask = 1 << 15;
 
         while (bit_num <= 16) {
-            for (sym = 0; sym < nsyms; sym++) {
-                if (length[sym] == bit_num) {
-                    leaf = pos >> 16;
-                    for (fill = 0; fill < bit_num - nbits; fill++) {
+            uint16_t k, end = start[bit_num + 1];
+            for (k = start[bit_num]; k < end; k++) {
+                sym = list[k];
+                leaf = pos >> 16;
+                for (fill = 0; fill < bit_num - nbits; fill++) {
 
-                        if (table[leaf] == 0) {
-                            if ((next_symbol << 1) + 1 >= table_elems) {
-                                return 1;
-                            }
-                            table[(next_symbol << 1)] = 0;
-                            table[(next_symbol << 1) + 1] = 0;
-                            table[leaf] = next_symbol++;
+                    if (table[leaf] == 0) {
+                        if ((next_symbol << 1) + 1 >= table_elems) {
+                            return 1;
                         }
-
-                        leaf = table[leaf] << 1;
-                        if ((pos >> (15 - fill)) & 1) leaf++;
+                        table[(next_symbol << 1)] = 0;
+                        table[(next_symbol << 1) + 1] = 0;
+                        table[leaf] = LZX_HUFF_NODE | next_symbol++;
                     }
-                    table[leaf] = sym;
 
-                    if ((pos += bit_mask) > table_mask) return 1;
+                    leaf = (table[leaf] & LZX_HUFF_NODE_MASK) << 1;
+                    if ((pos >> (15 - fill)) & 1) leaf++;
                 }
+                table[leaf] = LZX_HUFF_ENTRY(sym, length[sym]);
+
+                if ((pos += bit_mask) > table_mask) return 1;
             }
             bit_mask >>= 1;
             bit_num++;
@@ -490,8 +605,8 @@ static int make_decode_table(uint32_t nsyms, uint32_t nbits, uint8_t* length, ui
 
     if (pos == table_mask) return 0;
 
-    for (sym = 0; sym < nsyms; sym++)
-        if (length[sym]) return 1;
+    for (si = 1; si <= 16; si++)
+        if (count[si]) return 1;
     return 0;
 }
 
@@ -499,7 +614,7 @@ int LZX_test_pretree_make_decode_table(void) {
     uint32_t nsyms = LZX_PRETREE_MAXSYMBOLS;
     uint32_t nbits = LZX_PRETREE_TABLEBITS;
     uint32_t table_elems = (1 << nbits) + (nsyms << 1);
-    uint16_t* table = (uint16_t*)calloc(table_elems, sizeof(uint16_t));
+    uint32_t* table = (uint32_t*)calloc(table_elems, sizeof(uint32_t));
     uint8_t* length = (uint8_t*)malloc(nsyms);
     uint32_t i;
 
@@ -520,21 +635,21 @@ int LZX_test_pretree_make_decode_table(void) {
 }
 
 struct lzx_bits {
-    uint32_t bb;
+    uint64_t bb;
     int bl;
     uint8_t* ip;
     uint8_t* end;
 };
 
 static int lzx_read_lens(struct LZXstate* pState, uint8_t* lens, uint32_t first, uint32_t last, struct lzx_bits* lb) {
-    uint32_t i, j, x, y;
+    uint32_t j, x, y;
     int z;
 
-    register uint32_t bitbuf = lb->bb;
-    register int bitsleft = lb->bl;
+    uint64_t bitbuf = lb->bb;
+    int bitsleft = lb->bl;
     uint8_t* inpos = lb->ip;
-    uint8_t* endinp = lb->end;
-    uint16_t* hufftbl;
+    uint32_t* hufftbl;
+    (void)lb->end;
 
     for (x = 0; x < 20; x++) {
         READ_BITS(y, 4);
@@ -579,7 +694,6 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
     uint8_t* endinp = inpos + inlen;
     uint8_t* window = pState->window;
     uint8_t *runsrc, *rundest;
-    uint16_t* hufftbl;
 
     uint32_t window_posn = pState->window_posn;
     uint32_t window_size = pState->window_size;
@@ -587,8 +701,8 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
     uint32_t R1 = pState->R1;
     uint32_t R2 = pState->R2;
 
-    register uint32_t bitbuf;
-    register int bitsleft;
+    uint64_t bitbuf;
+    int bitsleft;
     uint32_t match_offset, i, j, k;
     struct lzx_bits lb;
 
@@ -632,7 +746,8 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                 case LZX_BLOCKTYPE_VERBATIM:
                     READ_LENGTHS(MAINTREE, 0, 256);
                     READ_LENGTHS(MAINTREE, 256, pState->main_elements);
-                    BUILD_TABLE(MAINTREE);
+
+                    BUILD_TABLE_NSYMS(MAINTREE, pState->main_elements);
                     if (LENTABLE(MAINTREE)[0xE8] != 0) pState->intel_started = 1;
 
                     READ_LENGTHS(LENGTH, 0, LZX_NUM_SECONDARY_LENGTHS);
@@ -643,11 +758,14 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                     pState->intel_started = 1;
                     ENSURE_BITS(16);
                     if (bitsleft > 16) inpos -= 2;
-                    R0 = inpos[0] | (inpos[1] << 8) | (inpos[2] << 16) | (inpos[3] << 24);
+                    R0 = (uint32_t)inpos[0] | ((uint32_t)inpos[1] << 8)
+                       | ((uint32_t)inpos[2] << 16) | ((uint32_t)inpos[3] << 24);
                     inpos += 4;
-                    R1 = inpos[0] | (inpos[1] << 8) | (inpos[2] << 16) | (inpos[3] << 24);
+                    R1 = (uint32_t)inpos[0] | ((uint32_t)inpos[1] << 8)
+                       | ((uint32_t)inpos[2] << 16) | ((uint32_t)inpos[3] << 24);
                     inpos += 4;
-                    R2 = inpos[0] | (inpos[1] << 8) | (inpos[2] << 16) | (inpos[3] << 24);
+                    R2 = (uint32_t)inpos[0] | ((uint32_t)inpos[1] << 8)
+                       | ((uint32_t)inpos[2] << 16) | ((uint32_t)inpos[3] << 24);
                     inpos += 4;
                     break;
 
@@ -671,60 +789,38 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
             if ((window_posn + this_run) > window_size) return DECR_DATAFORMAT;
 
             switch (pState->block_type) {
-                case LZX_BLOCKTYPE_VERBATIM:
-                case LZX_BLOCKTYPE_ALIGNED:
+                case LZX_BLOCKTYPE_VERBATIM: {
+
+                    uint32_t* main_table = SYMTABLE(MAINTREE);
+                    uint32_t* length_table = SYMTABLE(LENGTH);
                     while (this_run > 0) {
-                        READ_HUFFSYM(MAINTREE, main_element);
+                        READ_HUFFSYM_LOCAL(main_table, LZX_MAINTREE_TABLEBITS, main_element);
 
-                        if (main_element < LZX_NUM_CHARS) {
-
-                            window[window_posn++] = main_element;
+                        if (CHM_LIKELY(main_element < LZX_NUM_CHARS)) {
+                            window[window_posn++] = (uint8_t)main_element;
                             this_run--;
                         } else {
-
                             main_element -= LZX_NUM_CHARS;
 
                             match_length = main_element & LZX_NUM_PRIMARY_LENGTHS;
                             if (match_length == LZX_NUM_PRIMARY_LENGTHS) {
-                                READ_HUFFSYM(LENGTH, length_footer);
+                                READ_HUFFSYM_LOCAL(length_table, LZX_LENGTH_TABLEBITS,
+                                                   length_footer);
                                 match_length += length_footer;
                             }
                             match_length += LZX_MIN_MATCH;
 
-                            match_offset = main_element >> 3;
+                            match_offset = (uint32_t)main_element >> 3;
 
                             if (match_offset > 2) {
-
-                                if (pState->block_type == LZX_BLOCKTYPE_ALIGNED) {
-                                    extra = extra_bits[match_offset];
-                                    match_offset = position_base[match_offset] - 2;
-                                    if (extra > 3) {
-
-                                        extra -= 3;
-                                        READ_BITS(verbatim_bits, extra);
-                                        match_offset += (verbatim_bits << 3);
-                                        READ_HUFFSYM(ALIGNED, aligned_bits);
-                                        match_offset += aligned_bits;
-                                    } else if (extra == 3) {
-
-                                        READ_HUFFSYM(ALIGNED, aligned_bits);
-                                        match_offset += aligned_bits;
-                                    } else if (extra > 0) {
-
-                                        READ_BITS(verbatim_bits, extra);
-                                        match_offset += verbatim_bits;
-                                    } else  {
-
-                                        match_offset = 1;
-                                    }
-                                } else if (match_offset != 3) {
+                                if (match_offset != 3) {
                                     extra = extra_bits[match_offset];
                                     READ_BITS(verbatim_bits, extra);
-                                    match_offset = position_base[match_offset] - 2 + verbatim_bits;
+                                    match_offset =
+                                        position_base[match_offset] - 2 + (uint32_t)verbatim_bits;
                                 } else {
                                     match_offset = 1;
                                 }
-
                                 R2 = R1;
                                 R1 = R0;
                                 R0 = match_offset;
@@ -734,7 +830,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                                 match_offset = R1;
                                 R1 = R0;
                                 R0 = match_offset;
-                            } else  {
+                            } else {
                                 match_offset = R2;
                                 R2 = R0;
                                 R0 = match_offset;
@@ -742,7 +838,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
 
                             rundest = window + window_posn;
                             runsrc = rundest - match_offset;
-                            window_posn += match_length;
+                            window_posn += (uint32_t)match_length;
                             if (window_posn > window_size) return DECR_ILLEGALDATA;
                             this_run -= match_length;
 
@@ -750,11 +846,99 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                                 *rundest++ = window[window_size - (size_t)(window - runsrc)];
                                 runsrc++;
                             }
-
-                            while (match_length-- > 0) *rundest++ = *runsrc++;
+                            if (match_length > 0) {
+                                if (match_offset >= (uint32_t)match_length)
+                                    lzx_copy_match(rundest, runsrc, match_length);
+                                else {
+                                    while (match_length-- > 0)
+                                        *rundest++ = *runsrc++;
+                                }
+                            }
                         }
                     }
                     break;
+                }
+
+                case LZX_BLOCKTYPE_ALIGNED: {
+                    uint32_t* main_table = SYMTABLE(MAINTREE);
+                    uint32_t* length_table = SYMTABLE(LENGTH);
+                    uint32_t* aligned_table = SYMTABLE(ALIGNED);
+                    while (this_run > 0) {
+                        READ_HUFFSYM_LOCAL(main_table, LZX_MAINTREE_TABLEBITS, main_element);
+
+                        if (CHM_LIKELY(main_element < LZX_NUM_CHARS)) {
+                            window[window_posn++] = (uint8_t)main_element;
+                            this_run--;
+                        } else {
+                            main_element -= LZX_NUM_CHARS;
+
+                            match_length = main_element & LZX_NUM_PRIMARY_LENGTHS;
+                            if (match_length == LZX_NUM_PRIMARY_LENGTHS) {
+                                READ_HUFFSYM_LOCAL(length_table, LZX_LENGTH_TABLEBITS,
+                                                   length_footer);
+                                match_length += length_footer;
+                            }
+                            match_length += LZX_MIN_MATCH;
+
+                            match_offset = (uint32_t)main_element >> 3;
+
+                            if (match_offset > 2) {
+                                extra = extra_bits[match_offset];
+                                match_offset = position_base[match_offset] - 2;
+                                if (extra > 3) {
+                                    extra -= 3;
+                                    READ_BITS(verbatim_bits, extra);
+                                    match_offset += ((uint32_t)verbatim_bits << 3);
+                                    READ_HUFFSYM_LOCAL(aligned_table, LZX_ALIGNED_TABLEBITS,
+                                                       aligned_bits);
+                                    match_offset += (uint32_t)aligned_bits;
+                                } else if (extra == 3) {
+                                    READ_HUFFSYM_LOCAL(aligned_table, LZX_ALIGNED_TABLEBITS,
+                                                       aligned_bits);
+                                    match_offset += (uint32_t)aligned_bits;
+                                } else if (extra > 0) {
+                                    READ_BITS(verbatim_bits, extra);
+                                    match_offset += (uint32_t)verbatim_bits;
+                                } else {
+                                    match_offset = 1;
+                                }
+                                R2 = R1;
+                                R1 = R0;
+                                R0 = match_offset;
+                            } else if (match_offset == 0) {
+                                match_offset = R0;
+                            } else if (match_offset == 1) {
+                                match_offset = R1;
+                                R1 = R0;
+                                R0 = match_offset;
+                            } else {
+                                match_offset = R2;
+                                R2 = R0;
+                                R0 = match_offset;
+                            }
+
+                            rundest = window + window_posn;
+                            runsrc = rundest - match_offset;
+                            window_posn += (uint32_t)match_length;
+                            if (window_posn > window_size) return DECR_ILLEGALDATA;
+                            this_run -= match_length;
+
+                            while ((runsrc < window) && (match_length-- > 0)) {
+                                *rundest++ = window[window_size - (size_t)(window - runsrc)];
+                                runsrc++;
+                            }
+                            if (match_length > 0) {
+                                if (match_offset >= (uint32_t)match_length)
+                                    lzx_copy_match(rundest, runsrc, match_length);
+                                else {
+                                    while (match_length-- > 0)
+                                        *rundest++ = *runsrc++;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
 
                 case LZX_BLOCKTYPE_UNCOMPRESSED:
                     if ((inpos + this_run) > endinp) return DECR_ILLEGALDATA;
@@ -794,7 +978,8 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                     curpos++;
                     continue;
                 }
-                abs_off = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+                abs_off = (int32_t)((uint32_t)data[0] | ((uint32_t)data[1] << 8)
+                                  | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24));
                 if ((abs_off >= -curpos) && (abs_off < filesize)) {
                     rel_off = (abs_off >= 0) ? abs_off - curpos : abs_off + filesize;
                     data[0] = (uint8_t)rel_off;
@@ -884,8 +1069,14 @@ static int read_uchar_array(uint8_t **pData, unsigned int *pLenRemain, uint8_t *
 
 static int read_i32(uint8_t **pData, unsigned int *pLenRemain, int32_t *dest)
 {
+    uint32_t v;
     if (4 > *pLenRemain) return 0;
-    *dest = (*pData)[0] | ((*pData)[1] << 8) | ((*pData)[2] << 16) | ((*pData)[3] << 24);
+
+    v = (uint32_t)(*pData)[0]
+      | ((uint32_t)(*pData)[1] << 8)
+      | ((uint32_t)(*pData)[2] << 16)
+      | ((uint32_t)(*pData)[3] << 24);
+    *dest = (int32_t)v;
     *pData += 4;
     *pLenRemain -= 4;
     return 1;
@@ -894,7 +1085,10 @@ static int read_i32(uint8_t **pData, unsigned int *pLenRemain, int32_t *dest)
 static int read_u32(uint8_t **pData, unsigned int *pLenRemain, uint32_t *dest)
 {
     if (4 > *pLenRemain) return 0;
-    *dest = (*pData)[0] | ((*pData)[1] << 8) | ((*pData)[2] << 16) | ((*pData)[3] << 24);
+    *dest = (uint32_t)(*pData)[0]
+          | ((uint32_t)(*pData)[1] << 8)
+          | ((uint32_t)(*pData)[2] << 16)
+          | ((uint32_t)(*pData)[3] << 24);
     *pData += 4;
     *pLenRemain -= 4;
     return 1;
@@ -1090,10 +1284,30 @@ chm_ctx *chm_ctx_new(chm_alloc_cb alloc, chm_free_cb free_cb,
     return ctx;
 }
 
+static void chm_release_decode_resources(chm_ctx *ctx)
+{
+    int i;
+    if (ctx->lzx_state) {
+        LZXteardown(ctx->lzx_state);
+        ctx->lzx_state = NULL;
+    }
+    for (i = 0; i < CHM_MAX_BLOCKS_CACHED; i++) {
+        chm_free(ctx, ctx->cache_blocks[i]);
+        ctx->cache_blocks[i] = NULL;
+        ctx->cache_block_indices[i] = -1;
+    }
+    ctx->cache_num_blocks = CHM_MAX_BLOCKS_CACHED;
+    ctx->cache_block_alloc_len = 0;
+    chm_free(ctx, ctx->lzx_cbuffer);
+    ctx->lzx_cbuffer = NULL;
+    ctx->lzx_cbuffer_len = 0;
+}
+
 void chm_ctx_free(chm_ctx *ctx)
 {
     if (ctx) {
         chm_close(ctx);
+        chm_release_decode_resources(ctx);
         ctx->free(ctx->user, NULL, ctx);
     }
 }
@@ -1310,18 +1524,19 @@ static int parse_PMGL_entry(chm_ctx *ctx, uint8_t** pEntry, uint8_t* end, struct
 
     entry->path = (char *)chm_alloc(ctx, (size_t)strLen + 1);
     if (!entry->path) return 0;
-    if (!parse_UTF8(pEntry, end, strLen, entry->path)) {
-        chm_free(ctx, entry->path);
-        entry->path = NULL;
-        return 0;
-    }
+    if (!parse_UTF8(pEntry, end, strLen, entry->path)) goto fail;
 
-    if (!parse_cword(pEntry, end, &strLen)) return 0;
+    if (!parse_cword(pEntry, end, &strLen)) goto fail;
     entry->space = (uint32_t)strLen;
     entry->is_compressed = (strLen == CHM_COMPRESSED);
-    if (!parse_cword(pEntry, end, &entry->start)) return 0;
-    if (!parse_cword(pEntry, end, &entry->length)) return 0;
+    if (!parse_cword(pEntry, end, &entry->start)) goto fail;
+    if (!parse_cword(pEntry, end, &entry->length)) goto fail;
     return 1;
+
+fail:
+    chm_free(ctx, entry->path);
+    entry->path = NULL;
+    return 0;
 }
 
 static int collect_entries(chm_ctx *ctx) {
@@ -1601,6 +1816,45 @@ static int get_cmpblock_bounds(chm_ctx *ctx, uint64_t block, uint64_t* start, in
     return 1;
 }
 
+static uint8_t *lzx_cbuffer_ensure(chm_ctx *ctx, uint64_t need)
+{
+    uint8_t *p;
+    if (ctx->lzx_cbuffer && ctx->lzx_cbuffer_len >= need)
+        return ctx->lzx_cbuffer;
+    p = (uint8_t *)chm_alloc(ctx, (size_t)need);
+    if (!p)
+        return NULL;
+    chm_free(ctx, ctx->lzx_cbuffer);
+    ctx->lzx_cbuffer = p;
+    ctx->lzx_cbuffer_len = need;
+    return p;
+}
+
+static void cache_slots_ensure_size(chm_ctx *ctx, uint32_t block_len)
+{
+    int s;
+    if (ctx->cache_block_alloc_len == 0 || ctx->cache_block_alloc_len == block_len)
+        return;
+    for (s = 0; s < CHM_MAX_BLOCKS_CACHED; s++) {
+        chm_free(ctx, ctx->cache_blocks[s]);
+        ctx->cache_blocks[s] = NULL;
+        ctx->cache_block_indices[s] = -1;
+    }
+    ctx->cache_block_alloc_len = 0;
+}
+
+static uint8_t *cache_slot_get(chm_ctx *ctx, int indexSlot, uint32_t block_len)
+{
+    cache_slots_ensure_size(ctx, block_len);
+    if (!ctx->cache_blocks[indexSlot]) {
+        ctx->cache_blocks[indexSlot] = (uint8_t *)chm_alloc(ctx, (size_t)block_len);
+        if (!ctx->cache_blocks[indexSlot])
+            return NULL;
+        ctx->cache_block_alloc_len = block_len;
+    }
+    return ctx->cache_blocks[indexSlot];
+}
+
 static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer) {
     uint8_t* cbuffer;
     uint64_t cbufferLen;
@@ -1613,7 +1867,7 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
     int ok;
 
     cbufferLen = ctx->reset_table.block_len + 6144;
-    cbuffer = (uint8_t *)chm_alloc(ctx, (size_t)cbufferLen);
+    cbuffer = lzx_cbuffer_ensure(ctx, cbufferLen);
     if (!cbuffer) return -1;
 
     if (block - blockAlign <= ctx->lzx_last_block && block >= ctx->lzx_last_block) blockAlign = (block - ctx->lzx_last_block);
@@ -1629,22 +1883,22 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
                 }
 
                 indexSlot = (int)(curBlockIdx % ctx->cache_num_blocks);
-                if (!ctx->cache_blocks[indexSlot]) {
-                    ctx->cache_blocks[indexSlot] = (uint8_t *)chm_alloc(ctx, (size_t)ctx->reset_table.block_len);
-                    if (!ctx->cache_blocks[indexSlot]) {
-                        chm_free(ctx, cbuffer);
-                        return -1;
-                    }
-
-                    memset(ctx->cache_blocks[indexSlot], 0, (size_t)ctx->reset_table.block_len);
-                }
+                lbuffer = cache_slot_get(ctx, indexSlot, (uint32_t)ctx->reset_table.block_len);
+                if (!lbuffer)
+                    return -1;
                 ctx->cache_block_indices[indexSlot] = curBlockIdx;
-                lbuffer = ctx->cache_blocks[indexSlot];
 
                 if (!get_cmpblock_bounds(ctx, curBlockIdx, &cmpStart, &cmpLen) || cmpLen < 0 ||
-                    cmpLen > cbufferLen || fetch_bytes(ctx, cbuffer, cmpStart, cmpLen) != cmpLen ||
-                    LZXdecompress(ctx->lzx_state, cbuffer, lbuffer, (int)cmpLen, (int)ctx->reset_table.block_len) != DECR_OK) {
-                    chm_free(ctx, cbuffer);
+                    (uint64_t)cmpLen + LZX_INPUT_PAD > cbufferLen ||
+                    fetch_bytes(ctx, cbuffer, cmpStart, cmpLen) != cmpLen) {
+                    memset(lbuffer, 0, (size_t)ctx->reset_table.block_len);
+                    return (int64_t)0;
+                }
+                memset(cbuffer + cmpLen, 0, LZX_INPUT_PAD);
+                if (LZXdecompress(ctx->lzx_state, cbuffer, lbuffer, (int)cmpLen,
+                                  (int)ctx->reset_table.block_len) != DECR_OK) {
+
+                    memset(lbuffer, 0, (size_t)ctx->reset_table.block_len);
                     return (int64_t)0;
                 }
 
@@ -1658,33 +1912,31 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
     }
 
     if (ctx->cache_num_blocks == 0) {
-        chm_free(ctx, cbuffer);
         return -1;
     }
 
     indexSlot = (int)(block % ctx->cache_num_blocks);
-    if (!ctx->cache_blocks[indexSlot]) {
-        ctx->cache_blocks[indexSlot] = (uint8_t *)chm_alloc(ctx, (size_t)ctx->reset_table.block_len);
-        if (!ctx->cache_blocks[indexSlot]) {
-            chm_free(ctx, cbuffer);
-            return -1;
-        }
-
-        memset(ctx->cache_blocks[indexSlot], 0, (size_t)ctx->reset_table.block_len);
-    }
+    lbuffer = cache_slot_get(ctx, indexSlot, (uint32_t)ctx->reset_table.block_len);
+    if (!lbuffer)
+        return -1;
     ctx->cache_block_indices[indexSlot] = block;
-    lbuffer = ctx->cache_blocks[indexSlot];
     *ubuffer = lbuffer;
 
     ok = get_cmpblock_bounds(ctx, block, &cmpStart, &cmpLen);
-    if (!ok || cmpLen > cbufferLen || fetch_bytes(ctx, cbuffer, cmpStart, cmpLen) != cmpLen ||
-        LZXdecompress(ctx->lzx_state, cbuffer, lbuffer, (int)cmpLen, (int)ctx->reset_table.block_len) != DECR_OK) {
-        chm_free(ctx, cbuffer);
+    if (!ok || cmpLen < 0 || (uint64_t)cmpLen + LZX_INPUT_PAD > cbufferLen ||
+        fetch_bytes(ctx, cbuffer, cmpStart, cmpLen) != cmpLen) {
+        memset(lbuffer, 0, (size_t)ctx->reset_table.block_len);
+        return (int64_t)0;
+    }
+    memset(cbuffer + cmpLen, 0, LZX_INPUT_PAD);
+    if (LZXdecompress(ctx->lzx_state, cbuffer, lbuffer, (int)cmpLen,
+                      (int)ctx->reset_table.block_len) != DECR_OK) {
+
+        memset(lbuffer, 0, (size_t)ctx->reset_table.block_len);
         return (int64_t)0;
     }
     ctx->lzx_last_block = (int)block;
 
-    chm_free(ctx, cbuffer);
     return ctx->reset_table.block_len;
 }
 
@@ -1713,18 +1965,27 @@ static int64_t decompress_region(chm_ctx *ctx, uint8_t* buf, uint64_t start, int
         }
     }
 
-    if (!ctx->lzx_state) {
+    {
 
-        int window_size = 0;
+        int window_bits = 0;
+        uint32_t want_wnd;
         {
             uint32_t w = ctx->window_size;
             while (w > 1) {
                 w >>= 1;
-                window_size++;
+                window_bits++;
             }
         }
-        ctx->lzx_last_block = -1;
-        ctx->lzx_state = LZXinit(window_size);
+        want_wnd = (window_bits > 0) ? (1u << window_bits) : 0;
+        if (!ctx->lzx_state) {
+            ctx->lzx_last_block = -1;
+            ctx->lzx_state = LZXinit(window_bits);
+        } else if (ctx->lzx_state->window_size != want_wnd) {
+
+            LZXteardown(ctx->lzx_state);
+            ctx->lzx_last_block = -1;
+            ctx->lzx_state = LZXinit(window_bits);
+        }
     }
 
     if (ctx->reset_blkcount == 0) {
@@ -1889,12 +2150,22 @@ bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
         }
         if (!ok) {
             ctx->compression_enabled = 0;
+        } else {
+
+            uint32_t bc = ctx->reset_table.block_count;
+            if (bc > 0 && bc <= (uint32_t)CHM_FULL_CACHE_MAX_BLOCKS)
+                ctx->cache_num_blocks = (int)bc;
+            else if (bc > (uint32_t)CHM_FULL_CACHE_MAX_BLOCKS)
+                ctx->cache_num_blocks = CHM_RING_CACHE_BLOCKS;
+            else
+                ctx->cache_num_blocks = CHM_MAX_BLOCKS_CACHED;
         }
     }
 
     if (ctx->compression_enabled) {
         sremain = (unsigned int)uiLzxc.length;
         if (uiLzxc.length > sizeof(sbuffer)) {
+            chm_free(ctx, uiLzxc.path);
             chm_close(ctx);
             return false;
         }
@@ -1918,21 +2189,19 @@ bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
         }
     }
 
+    chm_free(ctx, uiLzxc.path);
     return true;
 }
 
 void chm_close(chm_ctx *ctx)
 {
+    int i;
     if (!ctx) return;
-    if (ctx->lzx_state) LZXteardown(ctx->lzx_state);
-    ctx->lzx_state = NULL;
 
-    for (int i = 0; i < CHM_MAX_BLOCKS_CACHED; i++) {
-        chm_free(ctx, ctx->cache_blocks[i]);
-        ctx->cache_blocks[i] = NULL;
+    for (i = 0; i < CHM_MAX_BLOCKS_CACHED; i++)
         ctx->cache_block_indices[i] = -1;
-    }
     ctx->cache_num_blocks = CHM_MAX_BLOCKS_CACHED;
+    ctx->lzx_last_block = -1;
 
     if (ctx->entries) {
         for (int i = 0; i < ctx->entry_count; i++) {
@@ -1955,6 +2224,9 @@ void chm_close(chm_ctx *ctx)
     ctx->index_head = 0;
     ctx->block_len = 0;
     ctx->span = 0;
+
+    chm_free(ctx, ctx->rt_entry.path);
+    chm_free(ctx, ctx->cn_entry.path);
     memset(&ctx->rt_entry, 0, sizeof(ctx->rt_entry));
     memset(&ctx->cn_entry, 0, sizeof(ctx->cn_entry));
     memset(&ctx->reset_table, 0, sizeof(ctx->reset_table));
@@ -1972,4 +2244,3 @@ int64_t chm_read_entry(chm_ctx *ctx, struct chm_entry *entry, uint8_t *buf) {
     if (!entry) return 0;
     return read_entry_range(ctx, entry, buf, 0, entry->length);
 }
-
