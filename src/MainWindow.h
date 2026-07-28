@@ -84,6 +84,21 @@ enum class MouseAction {
     SelectingText
 };
 
+// Edge / corner / interior of a rectangular selection for move/resize
+// (mirrors crop handles in the save-crop-resize image dialog).
+enum class SelectionDragEdge {
+    None = 0,
+    Left,
+    Right,
+    Top,
+    Bottom,
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+    Move,
+};
+
 enum PresentationMode {
     PM_DISABLED = 0,
     PM_ENABLED,
@@ -292,6 +307,10 @@ struct MainWindow {
     Rect selectionRect;
     // size of the current rectangular selection in document units
     SizeF selectionMeasure;
+    // move/resize of an existing rectangular selection (Ctrl+drag region)
+    SelectionDragEdge selectionDragEdge = SelectionDragEdge::None;
+    // screen rect when the move/resize started (normalized)
+    Rect selectionEditOrig;
 
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLink*> staticLinks;

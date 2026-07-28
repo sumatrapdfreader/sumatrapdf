@@ -1173,9 +1173,16 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             [[fallthrough]];
         case MouseAction::Selecting: {
             win->annotationUnderCursor = nullptr;
-            win->selectionRect.dx = x - win->selectionRect.x;
-            win->selectionRect.dy = y - win->selectionRect.y;
-            win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
+            if (win->selectionDragEdge != SelectionDragEdge::None) {
+                // move / resize existing rectangular selection
+                UpdateRectangularSelectionEdit(win, x, y);
+                SetCursorCached(CursorIdForSelectionEdge(win->selectionDragEdge));
+            } else {
+                // creating a new selection from the start corner
+                win->selectionRect.dx = x - win->selectionRect.x;
+                win->selectionRect.dy = y - win->selectionRect.y;
+                win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
+            }
             OnSelectionEdgeAutoscroll(win, x, y);
             ScheduleRepaint(win, 0);
             break;
@@ -1489,6 +1496,17 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         win->linkOnLastButtonDown = nullptr;
         SetCapture(win->hwndCanvas);
         return;
+    }
+
+    // move / resize an existing rectangular (Ctrl+drag) selection, like the
+    // crop rectangle in the save-crop-resize image dialog
+    if (canCopy && !isShift && !isCtrl && IsRectangularSelection(win)) {
+        SelectionDragEdge edge = HitTestRectangularSelection(win, x, y);
+        if (edge != SelectionDragEdge::None) {
+            if (StartRectangularSelectionEdit(win, x, y, edge)) {
+                return;
+            }
+        }
     }
 
     // if clicking on an image, prepare for image drag-out. skip full-page
@@ -2471,9 +2489,24 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
             SetCursorCached(IDC_IBEAM);
             return TRUE;
         case MouseAction::Selecting:
+            if (win->selectionDragEdge != SelectionDragEdge::None) {
+                SetCursorCached(CursorIdForSelectionEdge(win->selectionDragEdge));
+                return TRUE;
+            }
             break;
-        case MouseAction::None:
+        case MouseAction::None: {
+            // resize / move cursors over an existing rectangular selection
+            if (IsRectangularSelection(win)) {
+                Point pt = HwndGetCursorPos(hwnd);
+                SelectionDragEdge edge = HitTestRectangularSelection(win, pt.x, pt.y);
+                if (edge != SelectionDragEdge::None) {
+                    SetCursorCached(CursorIdForSelectionEdge(edge));
+                    win->DeleteToolTip();
+                    return TRUE;
+                }
+            }
             return OnSetCursorMouseNone(win, hwnd);
+        }
     }
     return win->presentation ? TRUE : FALSE;
 }

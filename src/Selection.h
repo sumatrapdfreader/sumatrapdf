@@ -37,3 +37,11 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
 void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key);
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted);
 TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut);
+
+// Rectangular (Ctrl+drag) selection: move/resize after it exists.
+bool IsRectangularSelection(MainWindow* win);
+Rect GetRectangularSelectionScreenRect(MainWindow* win);
+SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int x, int y);
+LPWSTR CursorIdForSelectionEdge(SelectionDragEdge edge);
+bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragEdge edge);
+void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y);
