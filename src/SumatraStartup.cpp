@@ -1999,6 +1999,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         gLogToConsole = true;
     }
     logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
+    logf("elevated: %d\n", (int)IsProcessRunningElevated());
     LogWineDpiInfo();
 
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
@@ -2056,6 +2057,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
             StartLogToFile(logFilePath, true);
             LogCommandLine();
             logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
+            logf("elevated: %d\n", (int)IsProcessRunningElevated());
         }
         // gRedrawLog = true;
     }

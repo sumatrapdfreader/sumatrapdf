@@ -455,13 +455,24 @@ static void InstallerThread(Flags* cli) {
          (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
     HKEY key = cli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
+    // Unregister shell extensions and kill holders BEFORE extract. PdfFilter.dll
+    // stays locked by SearchFilterHost/dllhost while the filter is registered;
+    // the elevated -run-install-now path also skips CheckInstallUninstallPossible.
+    // Prefer previous install's allUsers when restoring after a failed extract.
+    bool freeAllUsers = gPrevInstall.allUsers || allUsers;
+    ShellExtInstallState removedExts{};
+    FreeInstallationFilesInUse(cli->installDir, freeAllUsers, &removedExts);
+
     if (!ExtractInstallerFiles(cli->installDir)) {
         log("ExtractInstallerFiles() failed\n");
+        // Put shell extensions back so the user keeps search/preview until they retry.
+        RestoreShellExtensions(removedExts);
         goto Exit;
     }
 
     // for cleaner upgrades, remove registry entries and shortcuts from previous installations
     // doing it unconditionally, because deleting non-existing things doesn't hurt
+    // (filter/preview/plugin already unregistered in FreeInstallationFilesInUse)
     UninstallBrowserPlugin();
     UninstallPreviewDll();
     UninstallSearchFilter();
@@ -508,6 +519,7 @@ static void InstallerThread(Flags* cli) {
     ProgressStep();
     log("Installer thread finished\n");
 Exit:
+    str::Free(removedExts.installDir);
     // Pre-release debug report (no symbols download) so we learn about failed
     // upgrades (e.g. locked libmupdf.dll) with the install log attached.
     if (gInstallFailed) {
@@ -1539,21 +1551,8 @@ int RunInstaller() {
         (int)gCliNew.silent, (int)gCliNew.allUsers, (int)gCliNew.runInstallNow, (int)gCliNew.withFilter,
         (int)gCliNew.withPreview, (int)gCliNew.fastInstall);
 
-    // TODO: either tighten condition for doing it or remove
-    // with prev install we might need to elevate first
-    bool earlyUninstall = false;
-    if (earlyUninstall) {
-        // unregister search filter and previewer to reduce
-        // possibility of blocking the installation because the dlls are loaded
-        if (gPrevInstall.searchFilterInstalled) {
-            UninstallSearchFilter();
-            log("After UninstallSearchFilter\n");
-        }
-        if (gPrevInstall.previewInstalled) {
-            UninstallPreviewDll();
-            log("After UninstallPreviewDll\n");
-        }
-    }
+    // Shell-extension unregister + process kill happens inside InstallerThread
+    // (FreeInstallationFilesInUse) before extract — including elevated -run-install-now.
 
     if (gCli->silent) {
         gInstallStarted = true;
@@ -1572,17 +1571,6 @@ int RunInstaller() {
         logfa("RunApp() returned %d\n", ret);
     }
 
-    if (earlyUninstall) {
-        // re-register if we un-registered but installation was cancelled
-        if (gPrevInstall.searchFilterInstalled) {
-            log("re-registering search filter\n");
-            RegisterSearchFilter(gPrevInstall.allUsers, gPrevInstall.installationDir);
-        }
-        if (gPrevInstall.previewInstalled) {
-            log("re-registering previewer\n");
-            RegisterPreviewer(gPrevInstall.allUsers, gPrevInstall.installationDir);
-        }
-    }
     log("Installer finished\n");
 Exit:
     if (installerLogPath && gInstallStarted) {

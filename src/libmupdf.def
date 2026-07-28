@@ -1722,7 +1722,7 @@ EXPORTS
 
 
 
-; zlib exports (required for ZipUtil, PsEngine, PdfCreator, LzmaSimpleArchive)
+; zlib exports (required for ZipUtil, PsEngine, PdfCreator)
 
 
 
@@ -1766,15 +1766,9 @@ EXPORTS
 
 
 
-; lzma exports (needed for LzmaSimpleArchive)
-
-
-
-	LzmaDecode
-
-	x86_Convert
-
-
+; LzmaDecode / x86_Convert are NOT exported: LzmaSimpleArchive links them into
+; SumatraPDF.exe (and base) so the installer can extract libmupdf.dll without
+; calling into the delay-loaded DLL.
 
 ; libwebp exports (needed for WebpReader)
 

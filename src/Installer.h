@@ -78,6 +78,19 @@ void UnRegisterSearchFilter();
 
 void UninstallBrowserPlugin();
 
+// Unregister shell extensions and kill processes holding install-dir files
+// so ExtractInstallerFiles can overwrite PdfFilter.dll / PdfPreview.dll / etc.
+// Call before extracting over an existing install. removedOut (optional) is
+// filled for RestoreShellExtensions if install fails later.
+struct ShellExtInstallState {
+    bool searchFilter = false;
+    bool preview = false;
+    bool allUsers = false;
+    Str installDir{};
+};
+void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallState* removedOut = nullptr);
+void RestoreShellExtensions(const ShellExtInstallState& state);
+
 bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
 Str GetInstallerLogPath();
 

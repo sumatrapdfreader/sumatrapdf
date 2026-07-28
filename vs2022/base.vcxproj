@@ -990,6 +990,17 @@
     <ClCompile Include="..\src\base\Http_win.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
+    <!-- LZMA decoder in base (MakeLZSA/tools). SumatraPDF.exe also compiles these
+         directly so delay-loaded libmupdf.dll does not own LzmaDecode at install time. -->
+    <ClCompile Include="..\ext\lzma\C\Bra.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bra86.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzmaDec.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\base\Pixmap.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
     <ClCompile Include="..\src\base\SquareTreeParser.cpp" />
