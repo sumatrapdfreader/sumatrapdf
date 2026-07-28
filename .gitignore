@@ -22,12 +22,6 @@ cppcheck.out.txt
 clangtidy.out.txt
 node_modules
 
-# https://stackoverflow.com/questions/10755655/git-ignore-tracked-files
-# git update-index --assume-unchanged .\docs\manual.dat    : stop tracking changes
-# git update-index --no-assume-unchanged .\docs\manual.dat : re-start tracking changes
-# must be done in every checkout
-#docs/manual.dat
-
 .claude/settings.local.json
 pipe-preview-results
 nul
@@ -36,8 +30,7 @@ bin/zopflipng.exe
 
 cmd/tmp/
 
-docs-www/
-docs-manual/
+.work/
 translations/translations.txt.lzsa
 log.txt
 sumlog.txt

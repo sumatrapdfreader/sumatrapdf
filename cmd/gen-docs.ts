@@ -20,8 +20,8 @@ import { copyFileNormalized } from "./util.js";
 
 const docsDir = "docs";
 const mdDir = join(docsDir, "md");
-const manualOutDir = "docs-manual";
-const previewOutDir = "docs-www";
+const manualOutDir = join(".work", "docs");
+const previewOutDir = join(".work", "www");
 
 const mdProcessed = new Map<string, string>();
 const mdToProcess: string[] = [];
@@ -675,7 +675,8 @@ export async function main() {
   if (!existsSync(makeLzsa)) {
     throw new Error(`'${makeLzsa}' doesn't exist`);
   }
-  const archive = join("docs", "manual.dat");
+  mkdirSync(".work", { recursive: true });
+  const archive = join(".work", "manual.dat");
   rmSync(archive, { force: true });
   const proc = Bun.spawn([makeLzsa, archive, manualOutDir], {
     stdout: "inherit",
