@@ -140,18 +140,6 @@ ShowToc = true
 ; version 3.6)
 ShowLinks = false
 
-; if true, draw a focus ring around the document when it has keyboard focus (Tab
-; to the page area) (introduced in version 3.7)
-ShowDocumentFocusIndicator = false
-
-; if true, show a tip when hovering an annotation (e.g. "Highlight annotation.
-; Ctrl+click to edit.") (introduced in version 3.7)
-ShowAnnotationNotification = true
-
-; if true, show page numbers (labels) right-aligned on bookmark /
-; table-of-contents entries (introduced in version 3.7)
-ShowTocPageNumbers = true
-
 ; if true, we show a list of frequently read documents when no document is
 ; loaded
 ShowStartPage = true
@@ -169,11 +157,6 @@ ScrollbarInSinglePage = false
 
 ; if true, implements smooth scrolling (introduced in version 3.6)
 SmoothScroll = false
-
-; if true, continuous view has extra scroll room after the last page so you can
-; scroll the end of the document to the top of the window (introduced in version
-; 3.7)
-PaddingAfterLastPage = false
 
 ; how long to hover an internal-document link (in ms) before we show a popup
 ; rendering the destination region (citation entry, figure, footnote). -1 (the
@@ -253,11 +236,6 @@ UseSysColors = false
 ; if true, documents are opened in tabs instead of new windows (introduced in
 ; version 3.0)
 UseTabs = true
-
-; if true, a small floating toolbar with selection actions (copy, read aloud,
-; highlight etc.) pops up after selecting text. Set to false to disable it
-; (introduced in version 3.7)
-SelectionToolbar = true
 
 ; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
 ; used order instead of tab-strip order
@@ -393,6 +371,81 @@ ClaudeCode [
     BgColor = #ffffff
 ]
 
+; settings for the Chatterbox audiobook Read Aloud engine (introduced in version
+; 3.7)
+Audiobook [
+    ; if true, the Read Aloud button reads the document with the Chatterbox
+    ; audiobook engine (per-character voices and word highlighting) instead of
+    ; the built-in Windows TTS
+    UseChatterbox = false
+
+    ; folder of the Chatterbox-TTS-Extended install (contains tts_server.py and
+    ; audiobook\engine.py); found automatically, only set this if auto-detection
+    ; fails
+    ChatterboxDir = 
+
+    ; python for the Chatterbox virtualenv; if empty,
+    ; <ChatterboxDir>\.venv-amd\Scripts\pythonw.exe is used
+    PythonExe = 
+
+    ; port of the Chatterbox headless TTS server
+    TtsServerPort = 7861
+
+    ; local LLM used once per book to work out who speaks each line (LM Studio,
+    ; Ollama, or anything OpenAI-compatible); if unreachable the whole book is
+    ; read in the narrator voice
+    LmStudioUrl = http://127.0.0.1:11434
+
+    ; default narrator voice name; empty = first available trained voice
+    NarratorVoice = 
+
+    ; local LLM used to work out who speaks each line; empty = pick it
+    ; automatically (the only chat model the server has, or the one already
+    ; loaded). Chosen in the Audiobook Characters panel
+    LmModel = 
+
+    ; extra LLM servers to analyse with, comma-separated, e.g.
+    ; http://192.168.1.20:11434,http://192.168.1.21:11434 . The book's chunks
+    ; are shared out across LmStudioUrl and these, so a second machine roughly
+    ; halves the time. LM Studio and Ollama both work, and one computer running
+    ; both counts as two. Unreachable ones are skipped. The Audiobook Characters
+    ; panel can find these for you rather than requiring them typed here
+    LmUrls = 
+
+    ; who works out who speaks each line: "llm" (a local LLM, per chunk) or
+    ; "booknlp" (a local BookNLP model, one pass, no LLM server needed). BookNLP
+    ; is faster and needs nothing running, but the LLM handles the hardest
+    ; untagged lines a little better. Chosen in the Audiobook Characters panel
+    Analyzer = llm
+
+    ; how the Audiobook Characters panel orders the cast: "appearance" (first
+    ; appearance first), "appearance-desc", "lines" (most lines first),
+    ; "lines-asc", "name" (A to Z) or "name-desc". Chosen in the panel
+    CharSort = appearance
+
+    ; width of the Audiobook Characters panel docked on the left
+    SidebarDx = 0
+
+    ; if true, the start page is the library: a wall of book covers grouped by
+    ; series, with a page per book showing its metadata, the
+    ; characters/family/places BookNLP found in it, and its film and TV
+    ; adaptations. If false, the classic Frequently Read page is shown instead
+    LibraryHome = true
+
+    ; folders to look for books in, separated by ; . Empty means work them out:
+    ; the folders already analysed, then Documents/Downloads/Desktop, then a
+    ; bounded scan of every fixed drive
+    LibraryRoots = 
+
+    ; port of the Chatterbox library service (audiobook\library)
+    LibraryPort = 7863
+
+    ; how the library start page orders the series list: "alpha" (A to Z),
+    ; "genre" (grouped under genre headings), "most" (most books first) or
+    ; "fewest" (fewest books first). Chosen on the page
+    LibrarySort = alpha
+]
+
 ; settings for the Grok Build chat sidebar (introduced in version 3.7)
 GrokBuild [
     ; Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)
@@ -489,6 +542,11 @@ Annotations [
     ; default author for created annotations, use (none) to not add an author at
     ; all. If not set will use Windows user name (introduced in version 3.4)
     DefaultAuthor = 
+
+    ; if true, a small floating toolbar with selection actions (copy, read
+    ; aloud, highlight etc.) pops up after selecting text. Set to false to
+    ; disable it (introduced in version 3.7)
+    SelectionToolbar = true
 ]
 
 ; list of additional external viewers for various file types. See docs for more information (https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
