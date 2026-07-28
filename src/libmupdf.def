@@ -1815,20 +1815,14 @@ EXPORTS
 ; heicdec exports (needed for AvifReader)
 
 	heic_ctx_new
-
 	heic_ctx_free
-
 	heic_doc_open
-
 	heic_doc_close
-
 	heic_doc_info
-
 	heic_doc_decode
-
 	heic_image_destroy
-
 	heic_doc_exif
+	heic_free
 
 	; gumbo-parser (used by EngineImages for ComicInfo.xml,
 

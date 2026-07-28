@@ -53,6 +53,7 @@ void heic_abort_request(heic_abort *ab);
 
 typedef struct heic_ctx heic_ctx;
 typedef struct heic_doc heic_doc;
+typedef struct heic_sequence_decoder heic_sequence_decoder;
 
 /* Idempotent process-wide setup. Call once from the main thread before
    concurrent decode. Safe to call again; also invoked by heic_doc_open. */
@@ -88,7 +89,7 @@ typedef enum {
     HEIC_KIND_HEIC,     /* HEVC still (heic/heix/…) */
     HEIC_KIND_AVIF,     /* AV1 still */
     HEIC_KIND_HEIF,     /* generic HEIF (mif1 without heic brand) */
-    HEIC_KIND_SEQUENCE  /* image sequence (msf1/avis) — first frame only */
+    HEIC_KIND_SEQUENCE  /* HEVC/AV1 image sequence (msf1/avis) */
 } heic_kind;
 
 heic_kind heic_doc_kind(const heic_doc *doc);
@@ -129,6 +130,51 @@ typedef struct {
     uint8_t    *data;     /* owned; free with heic_image_destroy */
 } heic_image;
 
+/* ----- image sequences ----- */
+
+/* Sequence timing uses timescale ticks. repetition_count is 1 without an
+   edit-list loop, 0 for an unrecognized edit pattern, or UINT32_MAX for an
+   indefinite loop. frame_count describes one bounded presentation pass;
+   callers repeat that pass according to repetition_count. */
+typedef struct {
+    uint32_t frame_count;
+    uint32_t timescale;
+    uint64_t duration;
+    uint32_t repetition_count;
+} heic_sequence_info;
+
+typedef struct {
+    uint64_t presentation_time;
+    uint32_t duration;
+    int      is_sync;
+} heic_sequence_frame_info;
+
+/* Return 0 for a sequence document, -1 for a still image or malformed
+   sequence timeline. Frame indices are in presentation order after applying
+   supported edit-list entries and composition offsets. */
+int heic_doc_sequence_info(const heic_doc *doc, heic_sequence_info *info);
+int heic_doc_sequence_frame_info(const heic_doc *doc, uint32_t frame_index,
+                                 heic_sequence_frame_info *info);
+
+/* Decode one presentation frame. Inter frames are decoded from the nearest
+   preceding sync sample. */
+heic_image *heic_doc_decode_sequence_frame(heic_doc *doc, uint32_t frame_index,
+                                           heic_format format);
+heic_image *heic_doc_decode_sequence_frame_abortable(
+    heic_doc *doc, uint32_t frame_index, heic_format format, heic_abort *ab);
+
+/* Stateful sequence playback. The decoder caches reconstructed coded pictures,
+   so increasing frame indices do not repeatedly decode from the sync sample.
+   The document and its input buffer must outlive the decoder. */
+heic_sequence_decoder *heic_sequence_decoder_new(heic_doc *doc,
+                                                 heic_format format);
+void heic_sequence_decoder_destroy(heic_sequence_decoder *decoder);
+void heic_sequence_decoder_reset(heic_sequence_decoder *decoder);
+heic_image *heic_sequence_decoder_decode_frame(
+    heic_sequence_decoder *decoder, uint32_t frame_index);
+heic_image *heic_sequence_decoder_decode_frame_abortable(
+    heic_sequence_decoder *decoder, uint32_t frame_index, heic_abort *ab);
+
 /* Decode the primary image. Returns NULL on error; free with
    heic_image_destroy(ctx, img). 8-bit output; 10/12-bit sources are
    right-shifted (no EOTF / tone-map). */
@@ -146,11 +192,18 @@ int heic_doc_decode_into(heic_doc *doc, heic_format format,
 /* Decode embedded thumbnail if present. Returns NULL if none. */
 heic_image *heic_doc_decode_thumbnail(heic_doc *doc, heic_format format);
 
+/* Decode an Apple HDR auxiliary gain map as an independent 8-bit image.
+   No gain-map reconstruction or tone mapping is applied. Returns NULL when
+   the primary image has no supported gain-map auxiliary. */
+heic_image *heic_doc_decode_gain_map(heic_doc *doc, heic_format format);
+heic_image *heic_doc_decode_gain_map_abortable(
+    heic_doc *doc, heic_format format, heic_abort *ab);
+
 /* ----- metadata ----- */
 
 /* EXIF: returns 1 and sets out/out_len to a freshly allocated TIFF
-   payload (HEIF 4-byte prefix stripped). Caller frees with
-   heic_free(ctx, *out) or free() if default allocator. Returns 0 if none. */
+   payload (HEIF 4-byte prefix stripped). Caller must free with
+   heic_free(ctx, *out). Returns 0 if none. */
 int heic_doc_exif(heic_doc *doc, uint8_t **out, size_t *out_len);
 
 /* XMP: raw XML bytes. Same ownership as EXIF. */
@@ -159,7 +212,8 @@ int heic_doc_xmp(heic_doc *doc, uint8_t **out, size_t *out_len);
 /* ICC profile bytes, or 0 if none / nclx-only. */
 int heic_doc_icc(heic_doc *doc, uint8_t **out, size_t *out_len);
 
-/* Free a buffer returned by heic_doc_exif/xmp/icc (uses ctx allocator). */
+/* Free a buffer returned by heic_doc_exif/xmp/icc (uses ctx allocator).
+   Required: allocations are size-tracked for max_memory_bytes. */
 void heic_free(heic_ctx *ctx, void *p);
 
 /* Library version string (static). */

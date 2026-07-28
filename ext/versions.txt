@@ -93,8 +93,10 @@ dav1d           1.5.4      2026-07-14
   https://code.videolan.org/videolan/dav1d
   https://code.videolan.org/videolan/dav1d/-/tags/1.5.4
 
-heicdec         dist       2026-07-26
-  https://github.com/kjk/heicdec (amalgamation dist/heic.c + dist/heic.h)
+heicdec         dist       2026-07-28
+  https://github.com/kjk/heicdec
+  commit c0aa68eb43de852706069755b0132ac2ec951dc2
+  amalgamated dist/heic.c + dist/heic.h only
   HEVC pure-C; AV1 via dav1d; unci via zlib/brotli when present.
   Build flags: HEIC_HAVE_DAV1D, HEIC_HAVE_ZLIB, HEIC_HAVE_BROTLI.
   Replaces libheif.

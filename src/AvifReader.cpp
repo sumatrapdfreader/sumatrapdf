@@ -84,14 +84,22 @@ bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
         return false;
     }
 
-    // TIFF payload; HEIF 4-byte prefix already stripped by heic_doc_exif
+    // TIFF payload; HEIF 4-byte prefix already stripped by heic_doc_exif.
+    // heic allocates with a size header (must free via heic_free); copy out so
+    // callers can free() with the ordinary allocator.
     u8* exif = nullptr;
     size_t n = 0;
     bool ok = heic_doc_exif(doc, &exif, &n) != 0 && exif && n > 0;
     if (ok) {
-        // heic default allocator is malloc/free; callers free with free()
-        *outData = exif;
-        *outSize = n;
+        u8* copy = (u8*)malloc(n);
+        if (copy) {
+            memcpy(copy, exif, n);
+            *outData = copy;
+            *outSize = n;
+        } else {
+            ok = false;
+        }
+        heic_free(ctx, exif);
     }
 
     heic_doc_close(doc);
