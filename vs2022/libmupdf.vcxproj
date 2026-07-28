@@ -384,7 +384,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -393,14 +393,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -425,7 +425,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -434,14 +434,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -466,7 +466,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -475,14 +475,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -507,7 +507,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -516,14 +516,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -548,7 +548,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -556,14 +556,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -588,7 +588,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -596,14 +596,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -628,7 +628,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -636,14 +636,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -668,7 +668,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -676,14 +676,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -708,7 +708,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -717,14 +717,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -749,7 +749,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -758,14 +758,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -790,7 +790,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -799,14 +799,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -831,7 +831,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -840,14 +840,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -871,7 +871,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -880,14 +880,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -913,7 +913,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -922,14 +922,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -955,7 +955,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -964,14 +964,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;ARCH_HAS_NEON=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -997,7 +997,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -1006,14 +1006,14 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1072,6 +1072,9 @@
     </ProjectReference>
     <ProjectReference Include="brotli.vcxproj">
       <Project>{B155C6F4-9DF7-F0CA-86B2-041F72F3771B}</Project>
+    </ProjectReference>
+    <ProjectReference Include="unrar.vcxproj">
+      <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

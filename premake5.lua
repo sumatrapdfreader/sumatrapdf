@@ -952,8 +952,13 @@ workspace "SumatraPDF"
     -- (SumatraPDF, PdfPreview, …) import the few needed symbols via libmupdf.def
     -- and must not also link libwebp/libjxl/heicdec/dav1d/highway/a-skcms/brotli.
     -- brotli is required by freetype (via mupdf) and by libjxl/heicdec.
+    -- unrar: static lib kept as its own project; linked only into this DLL (and
+    -- static EXE). Archive.cpp RAR* APIs are re-exported via libmupdf.def so
+    -- SumatraPDF / PdfFilter / PdfPreview do not carry a second copy.
+    -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
+    exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli"
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli", "unrar"
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1088,8 +1093,8 @@ workspace "SumatraPDF"
     filter {}
     includedirs { "src", "src/wingui", "mupdf/include", "ext/libarchive" }
     search_filter_files()
-    -- libarchive lives in libmupdf.dll (re-exported); do not link a second copy
-    links { "base", "unrar", "libmupdf" }
+    -- libarchive + unrar live in libmupdf.dll (re-exported); do not link second copies
+    links { "base", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- project "PdfFilter2"
@@ -1136,8 +1141,8 @@ workspace "SumatraPDF"
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
     -- djvudec is also inside libmupdf.dll (djvu_* exports in libmupdf.def)
-    -- libarchive lives in libmupdf.dll (re-exported); do not link a second copy
-    links { "base", "unrar", "libmupdf", "chm" }
+    -- libarchive + unrar live in libmupdf.dll (re-exported); do not link second copies
+    links { "base", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1316,13 +1321,13 @@ workspace "SumatraPDF"
 
     files { "src/MuPDF_Exports.cpp" }
 
-    -- MarkdownToc / Archive.cpp use cmark + libarchive via libmupdf.def
-    -- exports (both live in libmupdf.dll; do not link second copies into the EXE).
+    -- MarkdownToc / Archive.cpp use cmark + libarchive + unrar via libmupdf.def
+    -- exports (all live in libmupdf.dll; do not link second copies into the EXE).
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libmupdf", "unrar", "base", "chm", "a-zopfli"
+      "libmupdf", "base", "chm", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

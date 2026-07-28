@@ -1972,3 +1972,13 @@ EXPORTS
 	archive_read_open_memory
 	archive_read_support_filter_all
 	archive_read_support_format_all
+
+; unrar exports (required for base/Archive.cpp RAR fallback). Keep the unrar
+; static-lib project; link it only into libmupdf.dll (and static EXE) and
+; re-export these so SumatraPDF.exe / PdfFilter / PdfPreview do not carry a
+; second copy. Functions are PASCAL (stdcall); .def names stay undecorated.
+
+	RAROpenArchiveEx
+	RARCloseArchive
+	RARReadHeaderEx
+	RARProcessFile
