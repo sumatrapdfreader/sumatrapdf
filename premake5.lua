@@ -701,20 +701,6 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-  project "freetype"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C"
-    optimized_conf()
-    defines {
-      "FT2_BUILD_LIBRARY",
-      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-    }
-    disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
-    freetype_files()
-
   project "harfbuzz"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -871,16 +857,21 @@ workspace "SumatraPDF"
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
     -- third-party libs compiled into this project (was separate a-* static libs)
-    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO",
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }
     filter {}
 
     disablewarnings {
-      "4005", "4013", "4018", "4057", "4100", "4115", "4127", "4130", "4132", "4146", "4189", "4200", "4201", "4204",
-      "4206", "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4306", "4310", "4389", "4456", "4457", "4701",
-      "4702", "4703", "4706", "4819", "4996", "5286"
+      "4005", "4013", "4018", "4057", "4100", "4101", "4115", "4127", "4130", "4132", "4146", "4189", "4200", "4201",
+      "4204", "4206", "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4306", "4310", "4312", "4389", "4456",
+      "4457", "4701", "4702", "4703", "4706", "4819", "4996", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -922,6 +913,7 @@ workspace "SumatraPDF"
     lcms2_files()
     -- libjpeg-turbo (also kept as its own project for bench_image only)
     libjpeg_turbo_files()
+    freetype_files()
     filter { 'files:**.asm', 'platforms:x86' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
@@ -937,12 +929,12 @@ workspace "SumatraPDF"
       }
     filter {}
     filter {
-      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/** or files:ext/libjpeg-turbo/**"
+      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/** or files:ext/libjpeg-turbo/** or files:ext/freetype/**"
     }
       optimize "Size"
     filter {}
     links {
-      "cmark-gfm", "harfbuzz", "freetype", "brotli", "libarchive"
+      "cmark-gfm", "harfbuzz", "brotli", "libarchive"
     }
 
     -- mupdf
