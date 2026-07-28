@@ -198,6 +198,13 @@ void djvu_page_links_destroy(djvu_ctx *ctx, djvu_page_links *links);
 #else
 #include <time.h>
 #include <stdatomic.h>
+
+#if !defined(CLOCK_MONOTONIC)
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
+#endif
+int clock_gettime(int clock_id, struct timespec *tp);
+#endif
 #endif
 
 #ifndef DJVU_RESTRICT
@@ -660,11 +667,6 @@ static inline int zp_decode_sub_simple(djvu_zp *zp, int mps, uint32_t z)
 static inline int djvu_zp_decode_pass(djvu_zp *zp)
 {
     return zp_decode_sub_simple(zp, 0, 0x8000u + (zp->a >> 1));
-}
-
-static inline int djvu_zp_decode_iw(djvu_zp *zp)
-{
-    return zp_decode_sub_simple(zp, 0, 0x8000u + ((zp->a + zp->a + zp->a) >> 3));
 }
 
 typedef struct {
@@ -2994,6 +2996,9 @@ const int16_t djvu_iw44_zigzag[1024] = {
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define DJVU_IW44_SSE2 1
 #include <emmintrin.h>
+#elif defined(__ARM_NEON) || defined(__ARM_NEON__) || defined(__aarch64__)
+#define DJVU_IW44_NEON 1
+#include <arm_neon.h>
 #endif
 
 extern const int16_t djvu_iw44_zigzag[1024];
@@ -3051,17 +3056,17 @@ struct iw_pixmap {
 static iw_map *map_new(djvu_ctx *ctx, int w, int h)
 {
     iw_map *m = (iw_map *)djvu_alloc(ctx, sizeof(iw_map));
-    int i;
+    size_t blocks_bytes;
     if (!m) return NULL;
     memset(m, 0, sizeof(*m));
     m->w = w; m->h = h;
     m->bw = (w + 0x20 - 1) & ~0x1f;
     m->bh = (h + 0x20 - 1) & ~0x1f;
     m->nb = (m->bw * m->bh) / 1024;
-    m->blocks = (iw_block *)djvu_alloc(ctx, sizeof(iw_block) * m->nb);
+    blocks_bytes = sizeof(iw_block) * (size_t)m->nb;
+    m->blocks = (iw_block *)djvu_alloc(ctx, blocks_bytes);
     if (!m->blocks) { djvu_free(ctx, m); return NULL; }
-    for (i = 0; i < m->nb; i++)
-        memset(&m->blocks[i], 0, sizeof(iw_block));
+    memset(m->blocks, 0, blocks_bytes);
     return m;
 }
 
@@ -3079,8 +3084,6 @@ static void map_free(djvu_ctx *ctx, iw_map *m)
     djvu_free(ctx, m->blocks);
     djvu_free(ctx, m);
 }
-
-static inline int16_t *block_get(iw_block *blk, int n) { return blk->buckets[n]; }
 
 static int16_t *map_alloc_bucket(djvu_ctx *ctx, iw_map *map)
 {
@@ -3108,15 +3111,16 @@ static int16_t *block_get_init(djvu_ctx *ctx, iw_map *map, iw_block *blk, int n)
     return blk->buckets[n];
 }
 
-static void write_lift_block(iw_block *blk, int16_t *coeff)
+static void scatter_lift_block(iw_block *blk, int16_t *data16, int base, int bw)
 {
     int n = 0, n1, n2;
-    memset(coeff, 0, sizeof(int16_t) * 1024);
     for (n1 = 0; n1 < 64; n1++) {
-        int16_t *d = block_get(blk, n1);
+        int16_t *d = blk->buckets[n1];
         if (d) {
-            for (n2 = 0; n2 < 16; n2++, n++)
-                coeff[djvu_iw44_zigzag[n]] = d[n2];
+            for (n2 = 0; n2 < 16; n2++, n++) {
+                int zi = djvu_iw44_zigzag[n];
+                data16[base + (zi >> 5) * bw + (zi & 31)] = d[n2];
+            }
         } else {
             n += 16;
         }
@@ -3203,6 +3207,71 @@ static void filter_bv_interp_interior_s1(int16_t *q, int w, int s, int s3)
 }
 #endif
 
+#ifdef DJVU_IW44_NEON
+
+static void filter_bv_apply8_s1(int16_t *q, int i, int s, int s3, int lift)
+{
+    int16x8_t qv = vld1q_s16(q + i);
+    int16x8_t ms = vld1q_s16(q + i - s);
+    int16x8_t ps = vld1q_s16(q + i + s);
+    int16x8_t ms3 = vld1q_s16(q + i - s3);
+    int16x8_t ps3 = vld1q_s16(q + i + s3);
+    int32x4_t a_lo = vaddl_s16(vget_low_s16(ms), vget_low_s16(ps));
+    int32x4_t a_hi = vaddl_s16(vget_high_s16(ms), vget_high_s16(ps));
+    int32x4_t b_lo = vaddl_s16(vget_low_s16(ms3), vget_low_s16(ps3));
+    int32x4_t b_hi = vaddl_s16(vget_high_s16(ms3), vget_high_s16(ps3));
+
+    int32x4_t t_lo = vaddq_s32(vshlq_n_s32(a_lo, 3), a_lo);
+    int32x4_t t_hi = vaddq_s32(vshlq_n_s32(a_hi, 3), a_hi);
+    t_lo = vsubq_s32(t_lo, b_lo);
+    t_hi = vsubq_s32(t_hi, b_hi);
+    if (lift) {
+        t_lo = vshrq_n_s32(vaddq_s32(t_lo, vdupq_n_s32(16)), 5);
+        t_hi = vshrq_n_s32(vaddq_s32(t_hi, vdupq_n_s32(16)), 5);
+        t_lo = vsubq_s32(vmovl_s16(vget_low_s16(qv)), t_lo);
+        t_hi = vsubq_s32(vmovl_s16(vget_high_s16(qv)), t_hi);
+    } else {
+        t_lo = vshrq_n_s32(vaddq_s32(t_lo, vdupq_n_s32(8)), 4);
+        t_hi = vshrq_n_s32(vaddq_s32(t_hi, vdupq_n_s32(8)), 4);
+        t_lo = vaddq_s32(vmovl_s16(vget_low_s16(qv)), t_lo);
+        t_hi = vaddq_s32(vmovl_s16(vget_high_s16(qv)), t_hi);
+    }
+    vst1q_s16(q + i, vcombine_s16(vmovn_s32(t_lo), vmovn_s32(t_hi)));
+}
+
+static void filter_bv_lift_interior_s1(int16_t *q, int w, int s, int s3)
+{
+    int i = 0;
+    for (; i + 16 <= w; i += 16) {
+        filter_bv_apply8_s1(q, i, s, s3, 1);
+        filter_bv_apply8_s1(q, i + 8, s, s3, 1);
+    }
+    for (; i + 8 <= w; i += 8)
+        filter_bv_apply8_s1(q, i, s, s3, 1);
+    for (; i < w; i++) {
+        int a = (int)q[i - s] + (int)q[i + s];
+        int b = (int)q[i - s3] + (int)q[i + s3];
+        q[i] = (int16_t)(q[i] - (((a << 3) + a - b + 16) >> 5));
+    }
+}
+
+static void filter_bv_interp_interior_s1(int16_t *q, int w, int s, int s3)
+{
+    int i = 0;
+    for (; i + 16 <= w; i += 16) {
+        filter_bv_apply8_s1(q, i, s, s3, 0);
+        filter_bv_apply8_s1(q, i + 8, s, s3, 0);
+    }
+    for (; i + 8 <= w; i += 8)
+        filter_bv_apply8_s1(q, i, s, s3, 0);
+    for (; i < w; i++) {
+        int a = (int)q[i - s] + (int)q[i + s];
+        int b = (int)q[i - s3] + (int)q[i + s3];
+        q[i] = (int16_t)(q[i] + (((a << 3) + a - b + 8) >> 4));
+    }
+}
+#endif
+
 static void filter_bv(int16_t *p, int w, int h, int rowsize, int scale)
 {
     int y = 0;
@@ -3215,7 +3284,7 @@ static void filter_bv(int16_t *p, int w, int h, int rowsize, int scale)
             int16_t *q = p;
             int16_t *e = q + w;
             if (y >= 3 && y + 3 < h) {
-#ifdef DJVU_IW44_SSE2
+#if defined(DJVU_IW44_SSE2) || defined(DJVU_IW44_NEON)
                 if (scale == 1) {
                     filter_bv_lift_interior_s1(q, w, s, s3);
                 } else
@@ -3260,7 +3329,7 @@ static void filter_bv(int16_t *p, int w, int h, int rowsize, int scale)
             int16_t *q = p - s3;
             int16_t *e = q + w;
             if (y >= 6 && y < h) {
-#ifdef DJVU_IW44_SSE2
+#if defined(DJVU_IW44_SSE2) || defined(DJVU_IW44_NEON)
                 if (scale == 1) {
                     filter_bv_interp_interior_s1(q, w, s, s3);
                 } else
@@ -3287,64 +3356,156 @@ static void filter_bv(int16_t *p, int w, int h, int rowsize, int scale)
     }
 }
 
+static void filter_bh_row(int16_t *p, int w, int s, int s3)
+{
+    int16_t *q = p;
+    int16_t *e = p + w;
+    int a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+    int b0 = 0, b1 = 0, b2 = 0, b3 = 0;
+    if (q < e) {
+        if (q + s < e) a2 = q[s];
+        if (q + s3 < e) a3 = q[s3];
+        b2 = b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+        q[0] = (int16_t)b3;
+        q += s + s;
+    }
+    if (q < e) {
+        a0 = a1; a1 = a2; a2 = a3;
+        if (q + s3 < e) a3 = q[s3];
+        b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+        q[0] = (int16_t)b3;
+        q += s + s;
+    }
+    if (q < e) {
+        b1 = b2; b2 = b3; a0 = a1; a1 = a2; a2 = a3;
+        if (q + s3 < e) a3 = q[s3];
+        b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+        q[0] = (int16_t)b3;
+        q[-s3] = (int16_t)(q[-s3] + ((b1 + b2 + 1) >> 1));
+        q += s + s;
+    }
+    while (q + s3 < e) {
+        a0 = a1; a1 = a2; a2 = a3; a3 = q[s3];
+        b0 = b1; b1 = b2; b2 = b3;
+        b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+        q[0] = (int16_t)b3;
+        q[-s3] = (int16_t)(q[-s3] + ((((b1 + b2) << 3) + (b1 + b2) - b0 - b3 + 8) >> 4));
+        q += s + s;
+    }
+    while (q < e) {
+        a0 = a1; a1 = a2; a2 = a3; a3 = 0;
+        b0 = b1; b1 = b2; b2 = b3;
+        b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+        q[0] = (int16_t)b3;
+        q[-s3] = (int16_t)(q[-s3] + ((((b1 + b2) << 3) + (b1 + b2) - b0 - b3 + 8) >> 4));
+        q += s + s;
+    }
+    while (q - s3 < e) {
+        b0 = b1; b1 = b2; b2 = b3;
+        if (q - s3 >= p)
+            q[-s3] = (int16_t)(q[-s3] + ((b1 + b2 + 1) >> 1));
+        q += s + s;
+    }
+    (void)b0;
+}
+
+static void filter_bh_two_rows_s1(int16_t *p0, int16_t *p1, int w)
+{
+    const int s = 1, s3 = 3;
+    int16_t *q0 = p0, *q1 = p1;
+    int16_t *e0 = p0 + w;
+    int a0_0 = 0, a1_0 = 0, a2_0 = 0, a3_0 = 0;
+    int b0_0 = 0, b1_0 = 0, b2_0 = 0, b3_0 = 0;
+    int a0_1 = 0, a1_1 = 0, a2_1 = 0, a3_1 = 0;
+    int b0_1 = 0, b1_1 = 0, b2_1 = 0, b3_1 = 0;
+
+    if (q0 < e0) {
+        if (q0 + s < e0) { a2_0 = q0[s]; a2_1 = q1[s]; }
+        if (q0 + s3 < e0) { a3_0 = q0[s3]; a3_1 = q1[s3]; }
+        b2_0 = b3_0 = q0[0] - ((((a1_0 + a2_0) << 3) + (a1_0 + a2_0) - a0_0 - a3_0 + 16) >> 5);
+        b2_1 = b3_1 = q1[0] - ((((a1_1 + a2_1) << 3) + (a1_1 + a2_1) - a0_1 - a3_1 + 16) >> 5);
+        q0[0] = (int16_t)b3_0; q1[0] = (int16_t)b3_1;
+        q0 += 2; q1 += 2;
+    }
+
+    if (q0 < e0) {
+        a0_0 = a1_0; a1_0 = a2_0; a2_0 = a3_0;
+        a0_1 = a1_1; a1_1 = a2_1; a2_1 = a3_1;
+        if (q0 + s3 < e0) { a3_0 = q0[s3]; a3_1 = q1[s3]; }
+        b3_0 = q0[0] - ((((a1_0 + a2_0) << 3) + (a1_0 + a2_0) - a0_0 - a3_0 + 16) >> 5);
+        b3_1 = q1[0] - ((((a1_1 + a2_1) << 3) + (a1_1 + a2_1) - a0_1 - a3_1 + 16) >> 5);
+        q0[0] = (int16_t)b3_0; q1[0] = (int16_t)b3_1;
+        q0 += 2; q1 += 2;
+    }
+
+    if (q0 < e0) {
+        b1_0 = b2_0; b2_0 = b3_0; a0_0 = a1_0; a1_0 = a2_0; a2_0 = a3_0;
+        b1_1 = b2_1; b2_1 = b3_1; a0_1 = a1_1; a1_1 = a2_1; a2_1 = a3_1;
+        if (q0 + s3 < e0) { a3_0 = q0[s3]; a3_1 = q1[s3]; }
+        b3_0 = q0[0] - ((((a1_0 + a2_0) << 3) + (a1_0 + a2_0) - a0_0 - a3_0 + 16) >> 5);
+        b3_1 = q1[0] - ((((a1_1 + a2_1) << 3) + (a1_1 + a2_1) - a0_1 - a3_1 + 16) >> 5);
+        q0[0] = (int16_t)b3_0; q1[0] = (int16_t)b3_1;
+        q0[-s3] = (int16_t)(q0[-s3] + ((b1_0 + b2_0 + 1) >> 1));
+        q1[-s3] = (int16_t)(q1[-s3] + ((b1_1 + b2_1 + 1) >> 1));
+        q0 += 2; q1 += 2;
+    }
+    while (q0 + s3 < e0) {
+        a0_0 = a1_0; a1_0 = a2_0; a2_0 = a3_0; a3_0 = q0[s3];
+        a0_1 = a1_1; a1_1 = a2_1; a2_1 = a3_1; a3_1 = q1[s3];
+        b0_0 = b1_0; b1_0 = b2_0; b2_0 = b3_0;
+        b0_1 = b1_1; b1_1 = b2_1; b2_1 = b3_1;
+        b3_0 = q0[0] - ((((a1_0 + a2_0) << 3) + (a1_0 + a2_0) - a0_0 - a3_0 + 16) >> 5);
+        b3_1 = q1[0] - ((((a1_1 + a2_1) << 3) + (a1_1 + a2_1) - a0_1 - a3_1 + 16) >> 5);
+        q0[0] = (int16_t)b3_0; q1[0] = (int16_t)b3_1;
+        q0[-s3] = (int16_t)(q0[-s3] + ((((b1_0 + b2_0) << 3) + (b1_0 + b2_0) - b0_0 - b3_0 + 8) >> 4));
+        q1[-s3] = (int16_t)(q1[-s3] + ((((b1_1 + b2_1) << 3) + (b1_1 + b2_1) - b0_1 - b3_1 + 8) >> 4));
+        q0 += 2; q1 += 2;
+    }
+    while (q0 < e0) {
+        a0_0 = a1_0; a1_0 = a2_0; a2_0 = a3_0; a3_0 = 0;
+        a0_1 = a1_1; a1_1 = a2_1; a2_1 = a3_1; a3_1 = 0;
+        b0_0 = b1_0; b1_0 = b2_0; b2_0 = b3_0;
+        b0_1 = b1_1; b1_1 = b2_1; b2_1 = b3_1;
+        b3_0 = q0[0] - ((((a1_0 + a2_0) << 3) + (a1_0 + a2_0) - a0_0 - a3_0 + 16) >> 5);
+        b3_1 = q1[0] - ((((a1_1 + a2_1) << 3) + (a1_1 + a2_1) - a0_1 - a3_1 + 16) >> 5);
+        q0[0] = (int16_t)b3_0; q1[0] = (int16_t)b3_1;
+        q0[-s3] = (int16_t)(q0[-s3] + ((((b1_0 + b2_0) << 3) + (b1_0 + b2_0) - b0_0 - b3_0 + 8) >> 4));
+        q1[-s3] = (int16_t)(q1[-s3] + ((((b1_1 + b2_1) << 3) + (b1_1 + b2_1) - b0_1 - b3_1 + 8) >> 4));
+        q0 += 2; q1 += 2;
+    }
+    while (q0 - s3 < e0) {
+        b0_0 = b1_0; b1_0 = b2_0; b2_0 = b3_0;
+        b0_1 = b1_1; b1_1 = b2_1; b2_1 = b3_1;
+        if (q0 - s3 >= p0)
+            q0[-s3] = (int16_t)(q0[-s3] + ((b1_0 + b2_0 + 1) >> 1));
+        if (q1 - s3 >= p1)
+            q1[-s3] = (int16_t)(q1[-s3] + ((b1_1 + b2_1 + 1) >> 1));
+        q0 += 2; q1 += 2;
+    }
+    (void)b0_0; (void)b0_1;
+}
+
 static void filter_bh(int16_t *p, int w, int h, int rowsize, int scale)
 {
     int y = 0;
     int s = scale;
     int s3 = s + s + s;
-    rowsize *= scale;
+    int step = scale * rowsize;
+    if (scale == 1) {
+
+        while (y + 1 < h) {
+            filter_bh_two_rows_s1(p, p + rowsize, w);
+            y += 2;
+            p += 2 * rowsize;
+        }
+        if (y < h)
+            filter_bh_row(p, w, s, s3);
+        return;
+    }
     while (y < h) {
-        int16_t *q = p;
-        int16_t *e = p + w;
-        int a0 = 0, a1 = 0, a2 = 0, a3 = 0;
-        int b0 = 0, b1 = 0, b2 = 0, b3 = 0;
-        if (q < e) {
-            if (q + s < e) a2 = q[s];
-            if (q + s3 < e) a3 = q[s3];
-            b2 = b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
-            q[0] = (int16_t)b3;
-            q += s + s;
-        }
-        if (q < e) {
-            a0 = a1; a1 = a2; a2 = a3;
-            if (q + s3 < e) a3 = q[s3];
-            b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
-            q[0] = (int16_t)b3;
-            q += s + s;
-        }
-        if (q < e) {
-            b1 = b2; b2 = b3; a0 = a1; a1 = a2; a2 = a3;
-            if (q + s3 < e) a3 = q[s3];
-            b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
-            q[0] = (int16_t)b3;
-            q[-s3] = (int16_t)(q[-s3] + ((b1 + b2 + 1) >> 1));
-            q += s + s;
-        }
-        while (q + s3 < e) {
-            a0 = a1; a1 = a2; a2 = a3; a3 = q[s3];
-            b0 = b1; b1 = b2; b2 = b3;
-            b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
-            q[0] = (int16_t)b3;
-            q[-s3] = (int16_t)(q[-s3] + ((((b1 + b2) << 3) + (b1 + b2) - b0 - b3 + 8) >> 4));
-            q += s + s;
-        }
-        while (q < e) {
-            a0 = a1; a1 = a2; a2 = a3; a3 = 0;
-            b0 = b1; b1 = b2; b2 = b3;
-            b3 = q[0] - ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
-            q[0] = (int16_t)b3;
-            q[-s3] = (int16_t)(q[-s3] + ((((b1 + b2) << 3) + (b1 + b2) - b0 - b3 + 8) >> 4));
-            q += s + s;
-        }
-        while (q - s3 < e) {
-            b0 = b1; b1 = b2; b2 = b3;
-            if (q - s3 >= p)
-                q[-s3] = (int16_t)(q[-s3] + ((b1 + b2 + 1) >> 1));
-            q += s + s;
-        }
-        (void)b0;
+        filter_bh_row(p, w, s, s3);
         y += scale;
-        p += rowsize;
+        p += step;
     }
 }
 
@@ -3362,18 +3523,15 @@ static int16_t *build_unified(djvu_ctx *ctx, iw_map *m)
 
     size_t n = (size_t)m->bw * m->bh + (size_t)m->bw * 4 + 16;
     int16_t *data16 = (int16_t *)djvu_alloc(ctx, sizeof(int16_t) * n);
-    int16_t liftblock[1024];
-    int blockidx = 0, i, j, ii, p1idx, ppidx, pidx = 0;
+    int blockidx = 0, i, j, pidx = 0;
     if (!data16) return NULL;
+
     memset(data16, 0, sizeof(int16_t) * n);
 
     for (i = 0; i < m->bh; i += 32, pidx += 32 * m->bw) {
         for (j = 0; j < m->bw; j += 32) {
-            write_lift_block(&m->blocks[blockidx], liftblock);
+            scatter_lift_block(&m->blocks[blockidx], data16, pidx + j, m->bw);
             blockidx++;
-            ppidx = pidx + j;
-            for (ii = 0, p1idx = 0; ii < 32; ii++, p1idx += 32, ppidx += m->bw)
-                memcpy(data16 + ppidx, liftblock + p1idx, sizeof(int16_t) * 32);
         }
     }
     return data16;
@@ -3399,6 +3557,33 @@ static void map_image_clamp_row(const int16_t *src, int8_t *dst, int w)
                 __m128i p8 = _mm_packs_epi16(p16, p16);
                 _mm_storel_epi64((__m128i *)(dst + j), p8);
             }
+        }
+    }
+#endif
+#ifdef DJVU_IW44_NEON
+    {
+        const int32x4_t thirty_two = vdupq_n_s32(32);
+        for (; j + 16 <= w; j += 16) {
+            int16x8_t v0 = vld1q_s16(src + j);
+            int16x8_t v1 = vld1q_s16(src + j + 8);
+            int32x4_t lo0 = vaddq_s32(vmovl_s16(vget_low_s16(v0)), thirty_two);
+            int32x4_t hi0 = vaddq_s32(vmovl_s16(vget_high_s16(v0)), thirty_two);
+            int32x4_t lo1 = vaddq_s32(vmovl_s16(vget_low_s16(v1)), thirty_two);
+            int32x4_t hi1 = vaddq_s32(vmovl_s16(vget_high_s16(v1)), thirty_two);
+
+            int16x8_t p0 = vcombine_s16(vqmovn_s32(vshrq_n_s32(lo0, 6)),
+                                        vqmovn_s32(vshrq_n_s32(hi0, 6)));
+            int16x8_t p1 = vcombine_s16(vqmovn_s32(vshrq_n_s32(lo1, 6)),
+                                        vqmovn_s32(vshrq_n_s32(hi1, 6)));
+            vst1q_s8(dst + j, vcombine_s8(vqmovn_s16(p0), vqmovn_s16(p1)));
+        }
+        for (; j + 8 <= w; j += 8) {
+            int16x8_t v = vld1q_s16(src + j);
+            int32x4_t lo = vaddq_s32(vmovl_s16(vget_low_s16(v)), thirty_two);
+            int32x4_t hi = vaddq_s32(vmovl_s16(vget_high_s16(v)), thirty_two);
+            int16x8_t p16 = vcombine_s16(vqmovn_s32(vshrq_n_s32(lo, 6)),
+                                         vqmovn_s32(vshrq_n_s32(hi, 6)));
+            vst1_s8(dst + j, vqmovn_s16(p16));
         }
     }
 #endif
@@ -3503,33 +3688,77 @@ static int is_null_slice(iw_codec *c, int bit, int band)
     return 0;
 }
 
+static inline void iw_zp_renorm_lps(djvu_zp *DJVU_RESTRICT zp,
+                                    uint32_t *DJVU_RESTRICT a,
+                                    uint32_t *DJVU_RESTRICT fence,
+                                    uint32_t z)
+{
+    int shift;
+    z = 0x10000u - z;
+    *a += z;
+    zp->code += z;
+    shift = zp_ffz(zp, *a);
+    zp->scount -= (uint8_t)shift;
+    *a = (*a << shift) & 0xffff;
+    zp->code = ((zp->code << shift) & 0xffff)
+             | ((zp->buffer >> zp->scount) & ((1u << shift) - 1));
+    if (zp->scount < 16)
+        zp_preload(zp);
+    *fence = zp->code < 0x8000 ? zp->code : 0x7fff;
+}
+
+static inline void iw_zp_renorm_mps(djvu_zp *DJVU_RESTRICT zp,
+                                    uint32_t *DJVU_RESTRICT a,
+                                    uint32_t *DJVU_RESTRICT fence,
+                                    uint32_t z)
+{
+    zp->scount -= 1;
+    *a = (z << 1) & 0xffff;
+    zp->code = ((zp->code << 1) & 0xffff)
+             | ((zp->buffer >> zp->scount) & 1);
+    if (zp->scount < 16)
+        zp_preload(zp);
+    *fence = zp->code < 0x8000 ? zp->code : 0x7fff;
+}
+
 static inline int iw_zp_dec(djvu_zp *DJVU_RESTRICT zp,
                             uint32_t *DJVU_RESTRICT a,
                             uint32_t *DJVU_RESTRICT fence,
                             uint8_t *DJVU_RESTRICT ctx)
 {
     uint32_t z = *a + zp->p[*ctx];
+    int mps;
     if (DJVU_LIKELY(z <= *fence)) {
         *a = z;
         return *ctx & 1;
     }
-    zp->a = *a;
-    z = (uint32_t)zp_decode_sub(zp, ctx, z);
-    *a = zp->a;
-    *fence = zp->fence;
-    return (int)z;
+    mps = *ctx & 1;
+    {
+        uint32_t d = 0x6000u + ((z + *a) >> 2);
+        if (z > d) z = d;
+    }
+    if (z > zp->code) {
+        *ctx = zp->dn[*ctx];
+        iw_zp_renorm_lps(zp, a, fence, z);
+        return mps ^ 1;
+    }
+    if (*a >= zp->m[*ctx])
+        *ctx = zp->up[*ctx];
+    iw_zp_renorm_mps(zp, a, fence, z);
+    return mps;
 }
 
 static inline int iw_zp_dec_iw(djvu_zp *DJVU_RESTRICT zp,
                                uint32_t *DJVU_RESTRICT a,
                                uint32_t *DJVU_RESTRICT fence)
 {
-    int bit;
-    zp->a = *a;
-    bit = djvu_zp_decode_iw(zp);
-    *a = zp->a;
-    *fence = zp->fence;
-    return bit;
+    uint32_t z = 0x8000u + ((*a + *a + *a) >> 3);
+    if (z > zp->code) {
+        iw_zp_renorm_lps(zp, a, fence, z);
+        return 1;
+    }
+    iw_zp_renorm_mps(zp, a, fence, z);
+    return 0;
 }
 
 static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
@@ -3554,6 +3783,13 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
         int16_t *pcoeff = pbuck[buckno];
         if (pcoeff == NULL) {
             bstatetmp = 8;
+        } else if (!band0) {
+
+            for (i = 0; i < 16; i++) {
+                int cstatetmp = pcoeff[i] != 0 ? 2 : 8;
+                cstate[cidx + i] = (int8_t)cstatetmp;
+                bstatetmp |= cstatetmp;
+            }
         } else {
             for (i = 0; i < 16; i++) {
                 int cstatetmp = cstate[cidx + i] & 1;
@@ -3586,10 +3822,9 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                     int16_t *b = blk->buckets[k >> 4];
                     if (b != NULL) {
                         k &= 0xf;
-                        if (b[k] != 0) ctx++;
-                        if (b[k + 1] != 0) ctx++;
-                        if (b[k + 2] != 0) ctx++;
-                        if (ctx < 3 && b[k + 3] != 0) ctx++;
+                        ctx = (b[k] != 0) + (b[k + 1] != 0)
+                            + (b[k + 2] != 0) + (b[k + 3] != 0);
+                        if (ctx > 3) ctx = 3;
                     }
                 }
                 if ((bbstate & 2) != 0) ctx |= 4;
@@ -3628,10 +3863,10 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                             cstate[cidx + i] |= 4;
                             halfthres = t >> 1;
                             coeff = (t + halfthres) - (halfthres >> 2);
-                            if (iw_zp_dec_iw(zp, &a, &fence) != 0)
-                                pcoeff[i] = (int16_t)(-coeff);
-                            else
-                                pcoeff[i] = (int16_t)coeff;
+                            {
+                                int neg = -iw_zp_dec_iw(zp, &a, &fence);
+                                pcoeff[i] = (int16_t)((coeff ^ neg) - neg);
+                            }
                         }
                         if ((cstate[cidx + i] & 4) != 0) gotcha = 0;
                         else if (gotcha > 0) gotcha--;
@@ -3663,8 +3898,10 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                             else
                                 coeff = (coeff - t) + (t >> 1);
                         }
-                        if (pcoeff[i] > 0) pcoeff[i] = (int16_t)coeff;
-                        else pcoeff[i] = (int16_t)(-coeff);
+                        {
+                            int neg = -(pcoeff[i] < 0);
+                            pcoeff[i] = (int16_t)((coeff ^ neg) - neg);
+                        }
                     }
                 }
             }
@@ -3903,6 +4140,36 @@ static void ycbcr_row_to_rgb(const int8_t *y, const int8_t *b, const int8_t *r,
         }
     }
 #endif
+#ifdef DJVU_IW44_NEON
+    {
+        const int16x8_t c128 = vdupq_n_s16(128);
+        for (; x + 8 <= w; x += 8) {
+            int16x8_t yv = vmovl_s8(vld1_s8(y + x));
+            int16x8_t bv = vmovl_s8(vld1_s8(b + x));
+            int16x8_t rv = vmovl_s8(vld1_s8(r + x));
+            int16x8_t t1 = vshrq_n_s16(bv, 2);
+            int16x8_t t2 = vaddq_s16(rv, vshrq_n_s16(rv, 1));
+            int16x8_t y128 = vaddq_s16(yv, c128);
+            int16x8_t t3 = vsubq_s16(y128, t1);
+            int16x8_t tr = vaddq_s16(y128, t2);
+            int16x8_t tg = vsubq_s16(t3, vshrq_n_s16(t2, 1));
+            int16x8_t tb = vaddq_s16(t3, vshlq_n_s16(bv, 1));
+
+            uint8x8_t ru = vqmovun_s16(tr);
+            uint8x8_t gu = vqmovun_s16(tg);
+            uint8x8_t bu = vqmovun_s16(tb);
+
+            {
+                uint8x8x3_t rgb;
+                rgb.val[0] = ru;
+                rgb.val[1] = gu;
+                rgb.val[2] = bu;
+                vst3_u8(dst, rgb);
+                dst += 24;
+            }
+        }
+    }
+#endif
     for (; x < w; x++) {
         int yv = y[x], bv = b[x], rv = r[x];
         int t1 = bv >> 2;
@@ -4025,6 +4292,9 @@ int djvu_iw44_render_gray(iw_pixmap *pm, uint8_t *gray)
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define DJVU_SCALER_SSE2 1
 #include <emmintrin.h>
+#elif defined(__ARM_NEON) || defined(__ARM_NEON__) || defined(__aarch64__)
+#define DJVU_SCALER_NEON 1
+#include <arm_neon.h>
 #endif
 
 #define FRACBITS 4
@@ -4033,6 +4303,7 @@ int djvu_iw44_render_gray(iw_pixmap *pm, uint8_t *gray)
 #define FRACMASK (FRACSIZE - 1)
 
 static short s_interp[FRACSIZE][512];
+static uint32_t s_interp3_delta[512];
 static int s_interp_ready = 0;
 
 static void prepare_interp(void)
@@ -4043,6 +4314,11 @@ static void prepare_interp(void)
         short *d = &s_interp[i][256];
         for (j = -256; j < 256; j++)
             d[j] = (short)((j * i + FRACSIZE2) >> FRACBITS);
+    }
+    for (j = -255; j <= 255; j++) {
+        uint16_t d6 = (uint16_t)s_interp[6][256 + j];
+        uint16_t d11 = (uint16_t)s_interp[11][256 + j];
+        s_interp3_delta[255 + j] = (uint32_t)d6 | ((uint32_t)d11 << 16);
     }
     s_interp_ready = 1;
 }
@@ -4176,22 +4452,73 @@ static void scaler_expand_row3(const uint8_t *src, int w, int outw, uint8_t *dst
     d[2] = src[2];
     d += 3;
 
-    for (x = 0; x < w - 1; x++) {
+    x = 0;
+#ifdef DJVU_SCALER_NEON
+
+    for (; x + 8 <= w - 1; x += 8) {
+        uint8x8x3_t pa = vld3_u8(src + (size_t)x * 3);
+        uint8x8x3_t pb = vld3_u8(src + (size_t)(x + 1) * 3);
+        uint8x8_t ar = pa.val[0], ag = pa.val[1], ab = pa.val[2];
+        int16x8_t ars = vreinterpretq_s16_u16(vmovl_u8(ar));
+        int16x8_t ags = vreinterpretq_s16_u16(vmovl_u8(ag));
+        int16x8_t abs16 = vreinterpretq_s16_u16(vmovl_u8(ab));
+        int16x8_t dr = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(pb.val[0])), ars);
+        int16x8_t dg = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(pb.val[1])), ags);
+        int16x8_t db = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(pb.val[2])), abs16);
+        int16x8_t bias = vdupq_n_s16(FRACSIZE2);
+        int16x8_t d6r = vshrq_n_s16(vaddq_s16(vmulq_n_s16(dr, 6), bias), FRACBITS);
+        int16x8_t d6g = vshrq_n_s16(vaddq_s16(vmulq_n_s16(dg, 6), bias), FRACBITS);
+        int16x8_t d6b = vshrq_n_s16(vaddq_s16(vmulq_n_s16(db, 6), bias), FRACBITS);
+        int16x8_t d11r = vshrq_n_s16(vaddq_s16(vmulq_n_s16(dr, 11), bias), FRACBITS);
+        int16x8_t d11g = vshrq_n_s16(vaddq_s16(vmulq_n_s16(dg, 11), bias), FRACBITS);
+        int16x8_t d11b = vshrq_n_s16(vaddq_s16(vmulq_n_s16(db, 11), bias), FRACBITS);
+
+        uint8x8_t mr = vqmovun_s16(vaddq_s16(ars, d6r));
+        uint8x8_t mg = vqmovun_s16(vaddq_s16(ags, d6g));
+        uint8x8_t mb = vqmovun_s16(vaddq_s16(abs16, d6b));
+        uint8x8_t fr = vqmovun_s16(vaddq_s16(ars, d11r));
+        uint8x8_t fg = vqmovun_s16(vaddq_s16(ags, d11g));
+        uint8x8_t fb = vqmovun_s16(vaddq_s16(abs16, d11b));
+        {
+
+            uint8_t abuf[24], mbuf[24], fbuf[24];
+            uint8x8x3_t va, vm, vf3;
+            int i;
+            va.val[0] = ar; va.val[1] = ag; va.val[2] = ab;
+            vm.val[0] = mr; vm.val[1] = mg; vm.val[2] = mb;
+            vf3.val[0] = fr; vf3.val[1] = fg; vf3.val[2] = fb;
+            vst3_u8(abuf, va);
+            vst3_u8(mbuf, vm);
+            vst3_u8(fbuf, vf3);
+            for (i = 0; i < 8; i++) {
+                const uint8_t *aa = abuf + i * 3;
+                const uint8_t *mm = mbuf + i * 3;
+                const uint8_t *ff = fbuf + i * 3;
+                d[0] = aa[0]; d[1] = aa[1]; d[2] = aa[2];
+                d[3] = mm[0]; d[4] = mm[1]; d[5] = mm[2];
+                d[6] = ff[0]; d[7] = ff[1]; d[8] = ff[2];
+                d += 9;
+            }
+        }
+    }
+#endif
+    for (; x < w - 1; x++) {
         const uint8_t *a = src + (size_t)x * 3;
         const uint8_t *b = a + 3;
         int ar = a[0], ag = a[1], ab = a[2];
-        int br = b[0], bg = b[1], bb = b[2];
-        int dr = br - ar, dg = bg - ag, db = bb - ab;
+        uint32_t ir = s_interp3_delta[255 + b[0] - ar];
+        uint32_t ig = s_interp3_delta[255 + b[1] - ag];
+        uint32_t ib = s_interp3_delta[255 + b[2] - ab];
 
         d[0] = (uint8_t)ar;
         d[1] = (uint8_t)ag;
         d[2] = (uint8_t)ab;
-        d[3] = (uint8_t)(ar + ((dr * 6 + FRACSIZE2) >> FRACBITS));
-        d[4] = (uint8_t)(ag + ((dg * 6 + FRACSIZE2) >> FRACBITS));
-        d[5] = (uint8_t)(ab + ((db * 6 + FRACSIZE2) >> FRACBITS));
-        d[6] = (uint8_t)(ar + ((dr * 11 + FRACSIZE2) >> FRACBITS));
-        d[7] = (uint8_t)(ag + ((dg * 11 + FRACSIZE2) >> FRACBITS));
-        d[8] = (uint8_t)(ab + ((db * 11 + FRACSIZE2) >> FRACBITS));
+        d[3] = (uint8_t)(ar + (int16_t)ir);
+        d[4] = (uint8_t)(ag + (int16_t)ig);
+        d[5] = (uint8_t)(ab + (int16_t)ib);
+        d[6] = (uint8_t)(ar + (int16_t)(ir >> 16));
+        d[7] = (uint8_t)(ag + (int16_t)(ig >> 16));
+        d[8] = (uint8_t)(ab + (int16_t)(ib >> 16));
         d += 9;
     }
 
@@ -4230,6 +4557,26 @@ static void scaler_interp_row(const uint8_t *lower, const uint8_t *upper,
             _mm_storeu_si128((__m128i *)(dst + i),
                              _mm_packus_epi16(_mm_add_epi16(lo_lo, d_lo),
                                               _mm_add_epi16(lo_hi, d_hi)));
+        }
+    }
+#endif
+#ifdef DJVU_SCALER_NEON
+    if (n >= 16) {
+        const int16x8_t vvf = vdupq_n_s16((int16_t)vf);
+        const int16x8_t bias = vdupq_n_s16(FRACSIZE2);
+        for (; i + 16 <= n; i += 16) {
+            uint8x16_t lo8 = vld1q_u8(lower + i);
+            uint8x16_t up8 = vld1q_u8(upper + i);
+            int16x8_t lo_lo = vreinterpretq_s16_u16(vmovl_u8(vget_low_u8(lo8)));
+            int16x8_t lo_hi = vreinterpretq_s16_u16(vmovl_u8(vget_high_u8(lo8)));
+            int16x8_t up_lo = vreinterpretq_s16_u16(vmovl_u8(vget_low_u8(up8)));
+            int16x8_t up_hi = vreinterpretq_s16_u16(vmovl_u8(vget_high_u8(up8)));
+            int16x8_t d_lo = vsubq_s16(up_lo, lo_lo);
+            int16x8_t d_hi = vsubq_s16(up_hi, lo_hi);
+            d_lo = vshrq_n_s16(vmlaq_s16(bias, d_lo, vvf), FRACBITS);
+            d_hi = vshrq_n_s16(vmlaq_s16(bias, d_hi, vvf), FRACBITS);
+            vst1q_u8(dst + i, vcombine_u8(vqmovun_s16(vaddq_s16(lo_lo, d_lo)),
+                                          vqmovun_s16(vaddq_s16(lo_hi, d_hi))));
         }
     }
 #endif
@@ -4280,11 +4627,137 @@ static int scaler_scale_red3_into(scaler *s, const djvu_cpix *in,
     return 0;
 }
 
+static void scaler_expand_row_grouped(const uint8_t *src, int w,
+                                      const int *coord, int outw, uint8_t *dst)
+{
+    int x = 0, sx;
+    const uint8_t *last = src + (size_t)(w - 1) * 3;
+
+    while (x < outw && coord[x] < 0) {
+        dst[0] = src[0]; dst[1] = src[1]; dst[2] = src[2];
+        dst += 3;
+        x++;
+    }
+    for (sx = 0; sx < w - 1 && x < outw; sx++) {
+        const uint8_t *a = src + (size_t)sx * 3;
+        const uint8_t *b = a + 3;
+        int ar = a[0], ag = a[1], ab = a[2];
+        int dr = b[0] - ar, dg = b[1] - ag, db = b[2] - ab;
+
+        while (x < outw && (coord[x] >> FRACBITS) == sx) {
+            int hf = coord[x] & FRACMASK;
+            dst[0] = (uint8_t)(ar + ((dr * hf + FRACSIZE2) >> FRACBITS));
+            dst[1] = (uint8_t)(ag + ((dg * hf + FRACSIZE2) >> FRACBITS));
+            dst[2] = (uint8_t)(ab + ((db * hf + FRACSIZE2) >> FRACBITS));
+            dst += 3;
+            x++;
+        }
+    }
+    while (x < outw) {
+        dst[0] = last[0]; dst[1] = last[1]; dst[2] = last[2];
+        dst += 3;
+        x++;
+    }
+}
+
+static void scaler_expand_row4(const uint8_t *src, int w, int outw, uint8_t *dst)
+{
+    static const uint8_t phase[4] = { 2, 6, 10, 14 };
+    int x = 0, sx, k, groups;
+    const uint8_t *last = src + (size_t)(w - 1) * 3;
+
+    while (x < outw && x < 2) {
+        dst[0] = src[0]; dst[1] = src[1]; dst[2] = src[2];
+        dst += 3; x++;
+    }
+    groups = (outw - x) / 4;
+    if (groups > w - 1) groups = w - 1;
+    for (sx = 0; sx < groups; sx++) {
+        const uint8_t *a = src + (size_t)sx * 3;
+        const uint8_t *b = a + 3;
+        int ar = a[0], ag = a[1], ab = a[2];
+        int dr = b[0] - ar, dg = b[1] - ag, db = b[2] - ab;
+#define EMIT4(F) \
+        dst[0] = (uint8_t)(ar + ((dr * (F) + FRACSIZE2) >> FRACBITS)); \
+        dst[1] = (uint8_t)(ag + ((dg * (F) + FRACSIZE2) >> FRACBITS)); \
+        dst[2] = (uint8_t)(ab + ((db * (F) + FRACSIZE2) >> FRACBITS)); \
+        dst += 3
+        EMIT4(2); EMIT4(6); EMIT4(10); EMIT4(14);
+#undef EMIT4
+    }
+    x += groups * 4;
+    if (groups < w - 1) {
+        const uint8_t *a = src + (size_t)groups * 3;
+        const uint8_t *b = a + 3;
+        int ar = a[0], ag = a[1], ab = a[2];
+        int dr = b[0] - ar, dg = b[1] - ag, db = b[2] - ab;
+        for (k = 0; k < 4 && x < outw; k++, x++) {
+            int hf = phase[k];
+            dst[0] = (uint8_t)(ar + ((dr * hf + FRACSIZE2) >> FRACBITS));
+            dst[1] = (uint8_t)(ag + ((dg * hf + FRACSIZE2) >> FRACBITS));
+            dst[2] = (uint8_t)(ab + ((db * hf + FRACSIZE2) >> FRACBITS));
+            dst += 3;
+        }
+    }
+    while (x++ < outw) {
+        dst[0] = last[0]; dst[1] = last[1]; dst[2] = last[2];
+        dst += 3;
+    }
+}
+
+static void scaler_expand_row12(const uint8_t *src, int w, int outw, uint8_t *dst)
+{
+    static const uint8_t phase[12] =
+        { 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14 };
+    int x = 0, sx, k, groups;
+    const uint8_t *last = src + (size_t)(w - 1) * 3;
+
+    while (x < outw && x < 5) {
+        dst[0] = src[0]; dst[1] = src[1]; dst[2] = src[2];
+        dst += 3; x++;
+    }
+    groups = (outw - x) / 12;
+    if (groups > w - 1) groups = w - 1;
+    for (sx = 0; sx < groups; sx++) {
+        const uint8_t *a = src + (size_t)sx * 3;
+        const uint8_t *b = a + 3;
+        int ar = a[0], ag = a[1], ab = a[2];
+        int dr = b[0] - ar, dg = b[1] - ag, db = b[2] - ab;
+#define EMIT12(F) \
+        dst[0] = (uint8_t)(ar + ((dr * (F) + FRACSIZE2) >> FRACBITS)); \
+        dst[1] = (uint8_t)(ag + ((dg * (F) + FRACSIZE2) >> FRACBITS)); \
+        dst[2] = (uint8_t)(ab + ((db * (F) + FRACSIZE2) >> FRACBITS)); \
+        dst += 3
+        EMIT12(0);  EMIT12(1);  EMIT12(2);  EMIT12(4);
+        EMIT12(5);  EMIT12(6);  EMIT12(8);  EMIT12(9);
+        EMIT12(10); EMIT12(12); EMIT12(13); EMIT12(14);
+#undef EMIT12
+    }
+    x += groups * 12;
+    if (groups < w - 1) {
+        const uint8_t *a = src + (size_t)groups * 3;
+        const uint8_t *b = a + 3;
+        int ar = a[0], ag = a[1], ab = a[2];
+        int dr = b[0] - ar, dg = b[1] - ag, db = b[2] - ab;
+        for (k = 0; k < 12 && x < outw; k++, x++) {
+            int hf = phase[k];
+            dst[0] = (uint8_t)(ar + ((dr * hf + FRACSIZE2) >> FRACBITS));
+            dst[1] = (uint8_t)(ag + ((dg * hf + FRACSIZE2) >> FRACBITS));
+            dst[2] = (uint8_t)(ab + ((db * hf + FRACSIZE2) >> FRACBITS));
+            dst += 3;
+        }
+    }
+    while (x++ < outw) {
+        dst[0] = last[0]; dst[1] = last[1]; dst[2] = last[2];
+        dst += 3;
+    }
+}
+
 static int scaler_scale_into(scaler *s, const djvu_cpix *in,
                              uint8_t *dst0, int stride, int topdown)
 {
     djvu_ctx *ctx = s->ctx;
-    int bufw, y;
+    int bufw, y, grouped;
     uint8_t *lbuf;
 
     if (!in || !in->d || in->w <= 0 || in->h <= 0 ||
@@ -4306,6 +4779,7 @@ static int scaler_scale_into(scaler *s, const djvu_cpix *in,
         s->outh >= 3 * s->inh - 2 && s->outh <= 3 * s->inh &&
         in->w == s->inw && in->h == s->inh)
         return scaler_scale_red3_into(s, in, dst0, stride, topdown);
+    grouped = s->xshift == 0 && s->hden == 1 && s->hnum >= 4;
     bufw = s->redw;
     lbuf = (uint8_t *)djvu_alloc(ctx, (size_t)(bufw + 2) * 3);
     if (!lbuf) return -1;
@@ -4314,7 +4788,7 @@ static int scaler_scale_into(scaler *s, const djvu_cpix *in,
         p2 = (uint8_t *)djvu_alloc(ctx, (size_t)bufw * 3);
         if (!p1 || !p2) { djvu_free(ctx, lbuf); djvu_free(ctx, p1); djvu_free(ctx, p2); return -1; }
     }
-    if (red_xmin == 0) {
+    if (red_xmin == 0 && !grouped) {
         int x;
         int use16 = (s->redw * 3) <= 0x0fff;
         if (use16)
@@ -4381,7 +4855,15 @@ static int scaler_scale_into(scaler *s, const djvu_cpix *in,
         lbuf[0]=lbuf[3]; lbuf[1]=lbuf[4]; lbuf[2]=lbuf[5];
         lbuf[(bufw+1)*3+0]=lbuf[bufw*3+0]; lbuf[(bufw+1)*3+1]=lbuf[bufw*3+1]; lbuf[(bufw+1)*3+2]=lbuf[bufw*3+2];
         dest = dst0 + (size_t)(topdown ? (s->outh - 1 - y) : y) * stride;
-        if (hinfo16) {
+        if (grouped) {
+            if (s->hnum == 12)
+                scaler_expand_row12(lbuf + 3, bufw, s->outw, dest);
+            else if (s->hnum == 4)
+                scaler_expand_row4(lbuf + 3, bufw, s->outw, dest);
+            else
+                scaler_expand_row_grouped(lbuf + 3, bufw, s->hcoord,
+                                          s->outw, dest);
+        } else if (hinfo16) {
             uint8_t *dp = dest;
             for (x = 0; x < s->outw; x++) {
                 int n = hinfo16[x];
@@ -5018,10 +5500,29 @@ static int compose_read_bm_run(const uint8_t **data)
     return z;
 }
 
+#if defined(__ARM_NEON) || defined(__ARM_NEON__) || defined(__aarch64__)
+#define DJVU_COMPOSE_NEON 1
+#include <arm_neon.h>
+#endif
+
 static void compose_fill_rgb_run(uint8_t *d, int n, int r, int g, int b)
 {
 
     uint8_t r8 = (uint8_t)r, g8 = (uint8_t)g, b8 = (uint8_t)b;
+#ifdef DJVU_COMPOSE_NEON
+
+    if (n >= 16) {
+        uint8x16x3_t rgb;
+        rgb.val[0] = vdupq_n_u8(r8);
+        rgb.val[1] = vdupq_n_u8(g8);
+        rgb.val[2] = vdupq_n_u8(b8);
+        while (n >= 16) {
+            vst3q_u8(d, rgb);
+            d += 48;
+            n -= 16;
+        }
+    }
+#endif
     while (n >= 4) {
         d[0] = r8; d[1] = g8; d[2] = b8;
         d[3] = r8; d[4] = g8; d[5] = b8;
@@ -5148,6 +5649,70 @@ static int compose_fgbz_stencil_topdown_rgb(jb2_image *mask,
     return 0;
 }
 
+typedef struct {
+    const djvu_cpix *fg;
+    uint8_t *dst;
+    int stride;
+    int width, height, red;
+} compose_fg44_topdown_ctx;
+
+static void compose_stamp_fg_run_topdown(void *user, int x0, int x1, int py)
+{
+    compose_fg44_topdown_ctx *ink = (compose_fg44_topdown_ctx *)user;
+    int fy;
+    uint8_t *d;
+
+    if (py < 0 || py >= ink->height) return;
+    if (x0 < 0) x0 = 0;
+    if (x1 > ink->width) x1 = ink->width;
+    if (x0 >= x1) return;
+    fy = py / ink->red;
+    if (fy >= ink->fg->h) fy = ink->fg->h - 1;
+    d = ink->dst + (size_t)(ink->height - 1 - py) * ink->stride
+                 + (size_t)x0 * 3;
+    while (x0 < x1) {
+        int fx = x0 / ink->red;
+        int x_end;
+        const uint8_t *f;
+        if (fx >= ink->fg->w) fx = ink->fg->w - 1;
+        if (fx >= ink->fg->w - 1)
+            x_end = x1;
+        else {
+            x_end = (fx + 1) * ink->red;
+            if (x_end > x1) x_end = x1;
+        }
+        f = ink->fg->d + ((size_t)fy * ink->fg->w + fx) * 3;
+        compose_fill_rgb_run(d, x_end - x0, f[0], f[1], f[2]);
+        d += (size_t)(x_end - x0) * 3;
+        x0 = x_end;
+    }
+}
+
+static int compose_fg44_stencil_topdown_rgb(jb2_image *mask,
+                                            const djvu_cpix *fg, int red,
+                                            int width, int height,
+                                            uint8_t *dst, int stride)
+{
+    compose_fg44_topdown_ctx ink;
+    int i;
+
+    if (!fg || !fg->d || red < 1) return -1;
+    ink.fg = fg;
+    ink.dst = dst;
+    ink.stride = stride;
+    ink.width = width;
+    ink.height = height;
+    ink.red = red;
+    for (i = 0; mask && i < mask->nblits; i++) {
+        jb2_blit *b = &mask->blits[i];
+        jb2_shape *s = djvu_jb2_get_shape(mask, b->shapeno);
+        if (!s || !djvu_bm_has_pixels(&s->bm)) continue;
+        djvu_bm_visit_ink_runs(&s->bm, b->left, b->bottom,
+                               compose_stamp_fg_run_topdown, &ink);
+    }
+    return 0;
+}
+
 static int compose_to_bg(djvu_doc *doc, int page_no, jb2_image *mask,
                          int width, int height, int subsample,
                          djvu_render_timings *t, djvu_cpix *bgout)
@@ -5270,40 +5835,67 @@ static int compose_gamma_lut(djvu_doc *doc, uint32_t form_off, unsigned char *lu
     return build_gamma_lut(2.2 / page_gamma(doc, form_off), lut);
 }
 
-static int compose_page_fgbz_direct_rgb(djvu_doc *doc, int page_no,
-                                        jb2_image *mask,
-                                        int width, int height,
-                                        uint8_t *dst, int stride,
-                                        djvu_render_timings *t)
+static int compose_page_direct_rgb(djvu_doc *doc, int page_no,
+                                   jb2_image *mask,
+                                   int width, int height,
+                                   uint8_t *dst, int stride,
+                                   djvu_render_timings *t)
 {
     djvu_ctx *ctx = doc->ctx;
     uint32_t form_off = doc->pages[page_no].form_off;
     uint32_t sz;
     const uint8_t *fgbz;
+    iw_pixmap *fgpm = NULL;
+    djvu_cpix fgnat;
     unsigned char lut[256];
     fgbz_palette fg;
     double t0 = 0.0;
-    int rc = -1;
+    int fgred = 0, fg_owned = 0, rc = -1;
 
     memset(&fg, 0, sizeof(fg));
+    memset(&fgnat, 0, sizeof(fgnat));
     if (!mask || ctx->bgr) return -1;
     if (compose_gamma_lut(doc, form_off, lut)) return -1;
-    if (djvu_form_find_chunk(doc, form_off, "FG44", &sz, NULL) != NULL)
-        return -1;
     fgbz = djvu_form_find_chunk(doc, form_off, "FGbz", &sz, NULL);
-    if (fgbz_palette_parse(ctx, fgbz, sz, &fg) != 0)
-        return -1;
+
+    if (!fgbz && djvu_cache_stores_page(ctx)) return -1;
+    if (fgbz) {
+        if (fgbz_palette_parse(ctx, fgbz, sz, &fg) != 0)
+            goto done;
+    } else {
+        int fw, fh;
+        if (t) t0 = djvu_bench_now_ms();
+        fgpm = djvu_doc_iw44_acquire(doc, page_no, "FG44", &fg_owned);
+        if (!fgpm) goto done;
+        fw = djvu_iw44_width(fgpm);
+        fh = djvu_iw44_height(fgpm);
+        fgred = djvu_compute_red(width, height, fw, fh);
+        if (fgred < 1 || djvu_cpix_init(ctx, &fgnat, fw, fh) != 0 ||
+            djvu_iw44_render_rgb_raw(fgpm, fgnat.d) != 0)
+            goto done;
+        if (t) {
+            t->iw44_ms += djvu_bench_now_ms() - t0;
+            t0 = 0.0;
+        }
+    }
 
     if (compose_background_topdown_rgb(doc, form_off, width, height,
                                        dst, stride, t) != 0)
         goto done;
 
     if (t) t0 = djvu_bench_now_ms();
-    rc = compose_fgbz_stencil_topdown_rgb(mask, &fg, width, height, dst, stride);
+    if (fgbz)
+        rc = compose_fgbz_stencil_topdown_rgb(mask, &fg, width, height,
+                                              dst, stride);
+    else
+        rc = compose_fg44_stencil_topdown_rgb(mask, &fgnat, fgred,
+                                              width, height, dst, stride);
     if (t) t->composite_ms += djvu_bench_now_ms() - t0;
 
 done:
     fgbz_palette_free(ctx, &fg);
+    djvu_cpix_free(ctx, &fgnat);
+    djvu_doc_iw44_release(ctx, fgpm, fg_owned);
     return rc;
 }
 
@@ -5320,8 +5912,9 @@ djvu_image *djvu_compose_page(djvu_doc *doc, int page_no, jb2_image *mask,
     memset(&bg, 0, sizeof(bg));
 
     if (subsample == 1 && mask && !ctx->bgr &&
-        djvu_form_find_chunk(doc, form_off, "FGbz", NULL, NULL) != NULL &&
-        djvu_form_find_chunk(doc, form_off, "FG44", NULL, NULL) == NULL &&
+        (djvu_form_find_chunk(doc, form_off, "FGbz", NULL, NULL) != NULL ||
+         (!djvu_cache_stores_page(ctx) &&
+          djvu_form_find_chunk(doc, form_off, "FG44", NULL, NULL) != NULL)) &&
         !compose_gamma_lut(doc, form_off, lut)) {
         out = (djvu_image *)djvu_alloc(ctx, sizeof(djvu_image));
         if (out) {
@@ -5333,8 +5926,8 @@ djvu_image *djvu_compose_page(djvu_doc *doc, int page_no, jb2_image *mask,
             if (!out->data) {
                 djvu_free(ctx, out);
                 out = NULL;
-            } else if (compose_page_fgbz_direct_rgb(doc, page_no, mask, width, height,
-                                                    out->data, out->stride, t) == 0) {
+            } else if (compose_page_direct_rgb(doc, page_no, mask, width, height,
+                                               out->data, out->stride, t) == 0) {
                 return out;
             } else {
                 djvu_image_destroy(ctx, out);
@@ -5373,8 +5966,8 @@ int djvu_compose_page_into(djvu_doc *doc, int page_no, jb2_image *mask,
     if (subsample < 1) subsample = 1;
     memset(&bg, 0, sizeof(bg));
     if (subsample == 1 &&
-        compose_page_fgbz_direct_rgb(doc, page_no, mask, width, height,
-                                     dst, stride, NULL) == 0)
+        compose_page_direct_rgb(doc, page_no, mask, width, height,
+                                dst, stride, NULL) == 0)
         return 0;
     if (compose_to_bg(doc, page_no, mask, width, height, subsample, NULL, &bg) != 0)
         return -1;
