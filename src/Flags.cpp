@@ -73,7 +73,7 @@ static SeqStrings gArgNames =
 // @gen-end flags
 
 #if OS_WIN
-void ShowPrintersDialog(bool consoleOnly) {
+void ShowPrintersDialog() {
     str::Builder out;
 
     gLogToConsole = true;
@@ -84,20 +84,7 @@ void ShowPrintersDialog(bool consoleOnly) {
 
     gLogToConsole = false;
 #ifndef SUMATRA_TEST_UTIL
-    // CLI (-list-printers with -console/-silent, or stdout already a console):
-    // print only. Otherwise show the text dialog (e.g. CmdListPrinters).
-    if (!consoleOnly) {
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD mode = 0;
-        if (hOut && hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &mode)) {
-            consoleOnly = true;
-        }
-    }
-    if (!consoleOnly) {
-        ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), ToStr(out));
-    }
-#else
-    (void)consoleOnly;
+    ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), ToStr(out));
 #endif
 }
 #else
@@ -109,7 +96,7 @@ static TempStr ResolveLnkTemp(Str path) {
     return str::DupTemp(path);
 }
 
-void ShowPrintersDialog(bool) {}
+void ShowPrintersDialog() {}
 #endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
@@ -546,11 +533,10 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if ((arg == Arg::ArgEnumPrinters) || (arg == Arg::ListPrinters)) {
-            // defer UI until after SetCurrentLang() so _TRA resolves (issue #5697).
-            // Do not return early: later flags like -console / -silent must still apply.
+            // defer UI until after SetCurrentLang() so _TRA resolves (issue #5697)
             i.showPrintersDialog = true;
             i.exitImmediately = true;
-            continue;
+            return;
         }
         param = args.EatParam();
         // following args require at least one param
@@ -775,7 +761,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         args.RewindParam();
 
     CollectFile:
-        // Resolve shell shortcuts so opening a .lnk loads the target document.
+        // TODO: resolve .lnk when opening file
         Str filePath = argName;
         if (str::EndsWithI(filePath, ".lnk")) {
             filePath = ResolveLnkTemp(argName);
