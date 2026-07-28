@@ -20,7 +20,7 @@ Starting with **3.7**, the **same** `SumatraPDF.exe` binary can:
 - act as the **installer** (register associations, write files into an install directory, etc.), or  
 - run as the **application** in portable or installed form.
 
-**Benefit:** we only need to **build and ship one executable** for the main app (plus optional tools). Installer and portable are no longer two fundamentally different EXE layouts.
+**Benefit:** we only need to **build and ship one executable** for the main app (plus optional tools). Installer and portable are no longer two different executables.
 
 ### Why `libmupdf.dll` still appears on disk
 
@@ -87,7 +87,7 @@ Settings still follow portable vs installed rules separately (settings next to t
 | **3.7+** | Same EXE is installer *and* app; MuPDF still needs a real `libmupdf.dll` file on disk |
 | **Installer trigger** | Name contains `install` (not `uninstall`), and/or `-install` (etc.) |
 | **DLL extract** | Embedded DLL → preferably next to EXE if already installed; else `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\` |
-| **Why** | One binary to build and distribute; Windows requires loading the delay-load DLL from a path |
+| **Why** | One binary to build and distribute; Windows requires loading DLL from disk |
 
 ## Related
 
