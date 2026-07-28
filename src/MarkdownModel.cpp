@@ -623,6 +623,10 @@ void MarkdownModel::OnDocumentComplete(Str url) {
     }
     currentPageNo = pageNo;
     str::ReplaceWithCopy(&currentPageUrl, plainUrl);
+    // Keep GetFilePath() on the currently shown .md (folder multi-file model).
+    if (ValidPageNo(pageNo)) {
+        str::ReplaceWithCopy(&this->fileName, pages[pageNo - 1]);
+    }
 
     if (GetSavedHtmlScrollPosForUrl(plainUrl, &htmlScrollPos)) {
         restoreHtmlScrollPos = true;

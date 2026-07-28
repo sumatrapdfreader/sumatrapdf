@@ -1553,17 +1553,20 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         }
     }
 
+    // Markdown multi-file: each .md is a "page". Keep tab path/title/tooltip and
+    // ctrl path in sync so Show in folder / Copy path / Properties match the
+    // file currently displayed (not only the one first opened).
     MarkdownModel* md = ctrl->AsMarkdown();
     if (md && kInvalidPageNo != pageNo && md->ValidPageNo(pageNo)) {
         WindowTab* tab = win->CurrentTab();
-        if (tab) {
-            TempStr name = path::GetBaseNameTemp(md->pages[pageNo - 1]);
-            if (name && !str::Eq(tab->displayName, name)) {
-                tab->SetDisplayName(name);
-                TabsOnChangedDoc(win);
-                SetFrameTitleForTab(tab, true);
-                HwndSetText(win->hwndFrame, tab->frameTitle);
-            }
+        Str pagePath = md->GetFilePath();
+        if (tab && pagePath && !path::IsSame(tab->filePath, pagePath)) {
+            tab->SetFilePath(pagePath);
+            // Prefer filePath for titles so FullPathInTitle applies.
+            tab->SetDisplayName({});
+            TabsOnChangedDoc(win);
+            SetFrameTitleForTab(tab, false);
+            HwndSetText(win->hwndFrame, tab->frameTitle);
         }
     }
 
@@ -1930,23 +1933,25 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
             }
             win->ctrl->SetDisplayMode(displayMode);
-            ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
-            if (fs) {
-                RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
-                if (win->AsChm()) {
-                    win->AsChm()->ScrollTo(ss.page, r, kInvalidZoom);
-                } else {
-                    win->AsMarkdown()->ScrollTo(ss.page, r, kInvalidZoom);
-                }
-            } else {
-                // No per-file state: default ss.page is 1. Markdown treats each
-                // .md in the directory as a "page"; Load() already set
-                // CurrentPageNo to the file the user opened — use that.
+            // Markdown treats each .md in the directory as a "page". When the
+            // user opens a specific file (File/Open, drag&drop, home thumbnail),
+            // always start on that file — FileState page/scroll would jump to
+            // whichever .md was last viewed in the folder. CHM still restores.
+            if (win->AsMarkdown()) {
                 int page = win->ctrl->CurrentPageNo();
                 if (page < 1 || page > win->ctrl->PageCount()) {
-                    page = ss.page;
+                    page = 1;
                 }
+                ss.page = page;
                 win->ctrl->GoToPage(page, false);
+            } else {
+                ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
+                if (fs) {
+                    RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
+                    win->AsChm()->ScrollTo(ss.page, r, kInvalidZoom);
+                } else {
+                    win->ctrl->GoToPage(ss.page, false);
+                }
             }
         } else {
             ReportIf(true);
