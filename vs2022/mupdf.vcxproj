@@ -1038,6 +1038,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\a-extract\extract.c">
+      <PreprocessorDefinitions>EXTRACT_NO_OWN_MEMENTO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <ClCompile Include="..\ext\a-gumbo\gumbo.c">

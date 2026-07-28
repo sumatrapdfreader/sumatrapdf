@@ -255,7 +255,14 @@ function generateAmalgamation(root: string): {
     '#include "extract/extract.h"\n#include "extract/buffer.h"\n#include "memento.h"\n',
   ];
   for (const name of sourceFiles) {
-    chunks.push(prepareChunk(join(root, "src", name), includedIncludes));
+    let chunk = prepareChunk(join(root, "src", name), includedIncludes);
+    // mupdf already ships memento.c; when extract is compiled into the mupdf
+    // static lib we define EXTRACT_NO_OWN_MEMENTO to avoid LNK4006 duplicates.
+    if (name === "memento.c") {
+      chunk =
+        "#ifndef EXTRACT_NO_OWN_MEMENTO\n" + chunk + "\n#endif /* EXTRACT_NO_OWN_MEMENTO */\n";
+    }
+    chunks.push(chunk);
   }
   return { headers, source: normalizeBlankLines(chunks.join("\n")) };
 }

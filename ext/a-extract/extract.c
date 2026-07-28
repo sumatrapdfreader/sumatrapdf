@@ -9492,6 +9492,10 @@ int extract_strdup(extract_alloc_t *alloc, const char *s, char **o_out)
 	return 0;
 }
 
+// When extract is compiled into the mupdf static lib, mupdf already provides
+// memento.obj. Skip this amalgamated memento.c body to avoid LNK4006.
+#ifndef EXTRACT_NO_OWN_MEMENTO
+
 #define MEMENTO_DETAILS
 
 #define MEMENTO_FREELIST_MAX_SINGLE_BLOCK (MEMENTO_FREELIST_MAX/4)
@@ -12887,6 +12891,8 @@ int (Memento_squeezing)(void)
 }
 
 #endif
+
+#endif /* EXTRACT_NO_OWN_MEMENTO */
 
 const odt_template_item_t odt_template_items[] =
 {

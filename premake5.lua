@@ -883,6 +883,10 @@ workspace "SumatraPDF"
       "ext/a-extract/extract.c", "ext/a-extract/memento.h",
       "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
     }
+    -- mupdf provides memento.obj; skip extract's amalgamated memento body
+    filter { "files:ext/a-extract/extract.c" }
+      defines { "EXTRACT_NO_OWN_MEMENTO" }
+    filter {}
     a_gumbo_files()
     lcms2_files()
     -- libjpeg-turbo (also kept as its own project for bench_image only)
