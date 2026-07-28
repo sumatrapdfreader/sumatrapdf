@@ -424,6 +424,8 @@ const SYSTEM_LIBS = [
   "dwmapi",
   "powrprof",
   "wbemuuid",
+  // smooth-scroll timer resolution (timeBeginPeriod / timeEndPeriod in Canvas.cpp)
+  "winmm",
 ];
 
 // ── Build SumatraPDF main executable sources ────────────────────────────────
