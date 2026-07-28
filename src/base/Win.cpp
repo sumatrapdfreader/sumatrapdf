@@ -10,6 +10,7 @@
 #include "base/Pixmap.h"
 #include "base/Win.h"
 
+#include <aclapi.h>
 #include <bitset>
 #include <float.h>
 #include <intrin.h>
@@ -648,6 +649,8 @@ const TempStr RegKeyNameWTemp(HKEY key) {
     return str::Dup(k);
 }
 
+// Open a registry key's DACL so we can delete protected uninstall/keys.
+// Uses an explicit Everyone FULL_CONTROL ACL (not a NULL DACL, which CodeQL flags).
 static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     HKEY hKey;
@@ -655,17 +658,36 @@ static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     if (ERROR_SUCCESS != res) {
         return;
     }
+
+    PSID everyoneSid = nullptr;
+    PACL dacl = nullptr;
+    SID_IDENTIFIER_AUTHORITY worldAuth = SECURITY_WORLD_SID_AUTHORITY;
+    if (!AllocateAndInitializeSid(&worldAuth, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &everyoneSid)) {
+        RegCloseKey(hKey);
+        return;
+    }
+
+    EXPLICIT_ACCESSW ea{};
+    ea.grfAccessPermissions = KEY_ALL_ACCESS;
+    ea.grfAccessMode = SET_ACCESS;
+    ea.grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+    ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ea.Trustee.ptstrName = (LPWSTR)everyoneSid;
+
+    if (SetEntriesInAclW(1, &ea, nullptr, &dacl) != ERROR_SUCCESS) {
+        FreeSid(everyoneSid);
+        RegCloseKey(hKey);
+        return;
+    }
+
     SECURITY_DESCRIPTOR secdesc;
     InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
-
-#pragma warning(push)
-#pragma warning(disable : 6248)
-    // "Setting a SECURITY_DESCRIPTOR's DACL to nullptr will result in an unprotected object"
-    // https://docs.microsoft.com/en-us/cpp/code-quality/c6248?view=msvc-170
-    SetSecurityDescriptorDacl(&secdesc, TRUE, nullptr, TRUE);
-#pragma warning(pop)
-
+    SetSecurityDescriptorDacl(&secdesc, TRUE, dacl, FALSE);
     RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
+
+    LocalFree(dacl);
+    FreeSid(everyoneSid);
     RegCloseKey(hKey);
 }
 

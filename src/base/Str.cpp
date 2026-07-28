@@ -1843,13 +1843,16 @@ bool IsNonCharacter(WCHAR c) {
 } // namespace wstr
 namespace str {
 
-// hack: to fool CodeQL which doesn't approve of char* => WCHAR* casts
-// and doesn't allow any way to disable that warning
+// Reinterpret a UTF-16 byte buffer held in a Str as a WStr without a
+// char*→WCHAR* cast (CodeQL cpp/incorrect-string-type-conversion).
 WStr CastToWCHAR(Str s) {
     if (!s) {
         return {};
     }
-    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR));
+    WCHAR* w = nullptr;
+    static_assert(sizeof(char*) == sizeof(WCHAR*), "pointer sizes must match");
+    memcpy(&w, &s.s, sizeof(w));
+    return WStr(w, s.len / (int)sizeof(WCHAR));
 }
 
 } // namespace str

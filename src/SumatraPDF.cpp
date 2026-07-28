@@ -7303,21 +7303,29 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
 }
 
 struct ListPrintersResult {
-    HWND hwndParent;
-    Str text;
+    HWND hwndParent = nullptr;
+    Str text; // owned; freed in ListPrintersShowResult
 };
 
 static void ListPrintersShowResult(ListPrintersResult* d) {
-    RemoveNotificationsForGroup(d->hwndParent, kNotifActionResponse);
-    ShowTextInWindow("SumatraPDF - Printers", d->text);
-    str::Free(d->text);
+    HWND parent = d->hwndParent;
+    Str text = d->text;
+    d->text = {};
+    d->hwndParent = nullptr;
     delete d;
+
+    RemoveNotificationsForGroup(parent, kNotifActionResponse);
+    // ShowTextInWindow copies text into the edit control before returning.
+    ShowTextInWindow("SumatraPDF - Printers", text);
+    str::Free(text);
 }
 
 static void ListPrintersThread(HWND* hwndPtr) {
     str::Builder out;
     GetPrintersInfo(out);
-    auto d = new ListPrintersResult{*hwndPtr, str::Dup(ToStr(out))};
+    auto d = new ListPrintersResult;
+    d->hwndParent = *hwndPtr;
+    d->text = str::Dup(ToStr(out));
     delete hwndPtr;
     uitask::Post(MkFunc0<ListPrintersResult>(ListPrintersShowResult, d));
 }
