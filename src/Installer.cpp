@@ -208,6 +208,62 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
     return false;
 }
 
+// If installDir already has libmupdf.dll (upgrade), rename it out of the way
+// first. If rename fails the file is locked (explorer preview, filter, etc.)
+// — abort before we copy a new exe that won't match the old DLL.
+static bool MoveAsideExistingLibmupdf(Str installDir) {
+    TempStr dllPath = path::JoinTemp(installDir, StrL("libmupdf.dll"));
+    if (!file::Exists(dllPath)) {
+        logf("MoveAsideExistingLibmupdf: no existing '%s'\n", dllPath);
+        return true;
+    }
+    TempStr copyPath = path::JoinTemp(installDir, StrL("libmupdf.dll.copy"));
+    i64 existingSize = file::GetSize(dllPath);
+    logf("MoveAsideExistingLibmupdf: '%s' (size=%lld) -> '%s'\n", dllPath, (long long)existingSize, copyPath);
+
+    DWORD attrs = file::GetAttributes(dllPath);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
+        logf("  clearing READONLY on existing dll\n");
+        file::SetAttributes(dllPath, attrs & ~FILE_ATTRIBUTE_READONLY);
+    }
+
+    if (file::Exists(copyPath)) {
+        logf("  removing previous '%s'\n", copyPath);
+        if (!file::Delete(copyPath)) {
+            logf("  failed to delete previous .copy\n");
+            LogLastError();
+            // try replace via MoveFileEx below
+        }
+    }
+
+    // free locks before rename
+    int killed = KillProcessesWithModule(dllPath, true);
+    logf("  KillProcessesWithModule killed=%d\n", killed);
+
+    for (int attempt = 1; attempt <= 3; attempt++) {
+        logf("  rename attempt %d/3\n", attempt);
+        // Prefer atomic replace if .copy still exists
+        if (MoveFileExW(CWStrTemp(dllPath), CWStrTemp(copyPath), MOVEFILE_REPLACE_EXISTING)) {
+            logf("MoveAsideExistingLibmupdf: rename ok\n");
+            return true;
+        }
+        DWORD err = GetLastError();
+        logf("  MoveFileEx failed lastError=%u\n", err);
+        LogLastError(err);
+        KillProcessesWithModule(dllPath, true);
+        if (attempt < 3) {
+            Sleep(250u * (DWORD)attempt);
+        }
+    }
+
+    logf("MoveAsideExistingLibmupdf: FAILED — file in use\n");
+    NotifyFailed(
+        _TRA("Could not update libmupdf.dll because it is in use by another program "
+             "(SumatraPDF, Windows Explorer preview, or search).\n"
+             "Close those programs and try again."));
+    return false;
+}
+
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
     logf("ExtractFiles(): dir '%s' filesCount=%d\n", destDir, archive->filesCount);
     lzma::FileInfo* fi;
@@ -240,6 +296,16 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         }
         logf("  extracted '%s'\n", filePath);
         ProgressStep();
+    }
+
+    // leftover from MoveAsideExistingLibmupdf after a successful upgrade
+    TempStr copyPath = path::JoinTemp(destDir, StrL("libmupdf.dll.copy"));
+    if (file::Exists(copyPath)) {
+        if (file::Delete(copyPath)) {
+            logf("  deleted leftover '%s'\n", copyPath);
+        } else {
+            logf("  could not delete leftover '%s' (ok to ignore)\n", copyPath);
+        }
     }
 
     return true;
@@ -622,8 +688,78 @@ static void OnButtonStartSumatra() {
     OnButtonExit();
 }
 
+constexpr int kBtnIdShowInstallLog = 100;
+
+static HRESULT CALLBACK InstallationFailedDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                                                         LONG_PTR /*lpRefData*/) {
+    switch (msg) {
+        case TDN_BUTTON_CLICKED:
+            if ((int)wParam == kBtnIdShowInstallLog) {
+                Str logText = gLogBuf ? ToStr(*gLogBuf) : StrL("(no log available)");
+                ShowTextInWindowDialog(_TRA("SumatraPDF installation log"), logText);
+                return S_FALSE; // keep TaskDialog open
+            }
+            break;
+        case TDN_HYPERLINK_CLICKED:
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
+            break;
+    }
+    return S_OK;
+}
+
+// Close the installer UI and show a TaskDialog with details + "Show log".
+static void ShowInstallationFailedUi(HWND hwndParent) {
+    log("ShowInstallationFailedUi\n");
+    Str firstErr = gFirstError ? gFirstError : StrL("(no details)");
+    TempStr content =
+        fmt("%s\n\n%s\n\n%s", firstErr, _TRA("Installation could not be completed."),
+            _TRA("If a previous version is running or Windows Explorer is previewing a PDF, close it and try again."));
+
+    TASKDIALOG_BUTTON buttons[2];
+    buttons[0].nButtonID = kBtnIdShowInstallLog;
+    buttons[0].pszButtonText = L"Show log";
+    buttons[1].nButtonID = IDOK;
+    buttons[1].pszButtonText = L"Close";
+
+    TASKDIALOGCONFIG dialogConfig{};
+    TASKDIALOG_FLAGS flags = TDF_SIZE_TO_CONTENT | TDF_ALLOW_DIALOG_CANCELLATION | TDF_ENABLE_HYPERLINKS;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.hwndParent = hwndParent;
+    dialogConfig.pszWindowTitle = L"SumatraPDF";
+    dialogConfig.pszMainInstruction = L"Installation failed";
+    dialogConfig.pszContent = CWStrTemp(content);
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.pfCallback = InstallationFailedDialogCallback;
+    dialogConfig.pButtons = buttons;
+    dialogConfig.cButtons = 2;
+    dialogConfig.pszMainIcon = TD_ERROR_ICON;
+
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+}
+
 static void OnInstallationFinished(Flags* cli) {
-    logf("OnInstallationFinished: cli->fastInstall: %d\n", (int)cli->fastInstall);
+    logf("OnInstallationFinished: cli->fastInstall: %d gInstallFailed: %d\n", (int)cli->fastInstall,
+         (int)gInstallFailed);
+
+    SafeCloseThreadHandle(&gWnd->hThread);
+
+    if (gInstallFailed) {
+        HWND hwnd = gWnd->hwnd;
+        // Hide installer chrome; detailed error is the TaskDialog.
+        if (hwnd) {
+            ShowWindow(hwnd, SW_HIDE);
+        }
+        gMsgError = gFirstError;
+        ShowInstallationFailedUi(nullptr);
+        if (hwnd) {
+            DestroyWindow(hwnd); // ends RunApp() message loop
+        }
+        return;
+    }
 
     if (gWnd->btnRunSumatra) {
         HwndSetFocus(gWnd->btnRunSumatra->hwnd);
@@ -636,23 +772,15 @@ static void OnInstallationFinished(Flags* cli) {
     DeleteWnd(&gWnd->btnInstall);
     DeleteWnd(&gWnd->progressBar);
     auto isRtl = IsUIRtl();
-    if (gInstallFailed) {
-        gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"), isRtl);
-        gWnd->btnExit->onClick = MkFunc0Void(OnButtonExit);
-        SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
-    } else {
-        if (!cli->fastInstall) {
-            gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"), isRtl);
-            gWnd->btnRunSumatra->onClick = MkFunc0Void(OnButtonStartSumatra);
-        }
-        SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
+    if (!cli->fastInstall) {
+        gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"), isRtl);
+        gWnd->btnRunSumatra->onClick = MkFunc0Void(OnButtonStartSumatra);
     }
+    SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     gMsgError = gFirstError;
     HwndRepaintNow(gWnd->hwnd);
 
-    SafeCloseThreadHandle(&gWnd->hThread);
-
-    if (cli->fastInstall && !gInstallFailed) {
+    if (cli->fastInstall) {
         StartSumatra();
         ::ExitProcess(0);
     }
@@ -1249,8 +1377,16 @@ bool ExtractInstallerFiles(Str dir) {
         return false;
     }
 
+    // First: move any existing libmupdf.dll aside. If it's locked, abort before
+    // overwriting SumatraPDF.exe (which would leave a new exe + old DLL).
+    if (!MoveAsideExistingLibmupdf(dir)) {
+        log("ExtractInstallerFiles: MoveAsideExistingLibmupdf failed\n");
+        return false;
+    }
+
     ok = CopySelfToDir(dir);
     if (!ok) {
+        NotifyFailed(_TRA("Couldn't copy SumatraPDF.exe to the installation directory"));
         return false;
     }
     ProgressStep();
