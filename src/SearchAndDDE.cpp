@@ -32,6 +32,7 @@
 #include "Toolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
+#include "Favorites.h"
 #include "Translations.h"
 #include "Version.h"
 
@@ -252,6 +253,14 @@ bool NeedsFindUI(MainWindow* win) {
 }
 
 void FindFirst(MainWindow* win) {
+    // When starting a search from the document (not re-focusing an already-active
+    // find box), remember the current page as favorite "/" so the user can jump
+    // back after navigating matches (Sioyek-style mark, issue #5726).
+    bool hadFindFocus = win && win->hwndFindEdit && HwndIsFocused(win->hwndFindEdit);
+    if (!hadFindFocus) {
+        SetSearchStartFavorite(win);
+    }
+
     if (BrowserFindCtrl(win)) {
         // chm / markdown in a webview: our own find bar drives the search
         // inside the webview
@@ -275,7 +284,6 @@ void FindFirst(MainWindow* win) {
     }
 
     DisplayModel* dm = win->AsFixed();
-    bool hadFindFocus = HwndIsFocused(win->hwndFindEdit);
 
     // show the floating Chrome-style find bar (creates it lazily if needed)
     ShowFindBar(win);

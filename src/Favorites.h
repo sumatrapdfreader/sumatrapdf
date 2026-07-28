@@ -48,3 +48,5 @@ void GoToNextFavorite(MainWindow* win, bool forward);
 // shared with CommandPalette.cpp (favorites mode)
 TempStr FavReadableNameTemp(Favorite* fn);
 void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);
+
+void SetSearchStartFavorite(MainWindow* win);

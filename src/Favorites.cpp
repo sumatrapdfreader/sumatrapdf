@@ -33,6 +33,7 @@
 void RememberFavTreeExpansionStateForAllWindows();
 void LayoutFavoritesContainer(MainWindow* win);
 void PopulateFavTreeIfNeeded(MainWindow* win);
+void UpdateFavoritesTreeForAllWindows();
 
 struct FavTreeItem {
     ~FavTreeItem();
@@ -274,6 +275,71 @@ static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel) {
         fav->favorites->Append(fn);
         fav->favorites->Sort(SortByPageNo);
     }
+}
+
+// Name used for the Sioyek-style "search start" mark (issue #5726).
+static Str SearchStartFavName() {
+    return StrL("/");
+}
+
+static Favorite* FindByName(FileState* ds, Str name) {
+    if (!ds || !ds->favorites || !name) {
+        return nullptr;
+    }
+    for (Favorite* fav : *ds->favorites) {
+        if (str::Eq(fav->name, name)) {
+            return fav;
+        }
+    }
+    return nullptr;
+}
+
+// Silently set/update favorite "/" to the current page so the user can jump
+// back after searching (command palette $ Favorites, or the Favorites sidebar).
+void SetSearchStartFavorite(MainWindow* win) {
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return;
+    }
+    int pageNo = win->currPageNo;
+    if (pageNo < 1) {
+        pageNo = win->ctrl->CurrentPageNo();
+    }
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        return;
+    }
+
+    Str path = tab->filePath;
+    TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
+    TempStr plainLabel = fmt("%d", pageNo);
+    bool needsLabel = pageLabel && !str::Eq(plainLabel, pageLabel);
+    Str pl = needsLabel ? pageLabel : Str{};
+
+    FileState* fs = GetFavByFilePath(path);
+    if (!fs) {
+        fs = NewFileState(path);
+        gFileHistory.Append(fs);
+    }
+
+    Str markName = SearchStartFavName();
+    Favorite* fn = FindByName(fs, markName);
+    if (fn) {
+        if (fn->pageNo == pageNo && str::Eq(fn->pageLabel, pl)) {
+            return; // already marks this page
+        }
+        fn->pageNo = pageNo;
+        str::ReplaceWithCopy(&fn->pageLabel, pl);
+        fs->favorites->Sort(SortByPageNo);
+    } else {
+        fn = NewFavorite(pageNo, markName, pl);
+        fs->favorites->Append(fn);
+        fs->favorites->Sort(SortByPageNo);
+    }
+    UpdateFavoritesTreeForAllWindows();
+    // Settings are written on normal save/exit; no need to flush on every Ctrl+F.
 }
 
 static void RemoveFav(Str filePath, int pageNo) {
