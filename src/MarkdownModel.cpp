@@ -816,7 +816,15 @@ bool MarkdownModel::Load(Str fileName) {
         tocTree = new TocTree(realRoot);
     }
 
-    int openedIdx = pages.Find(fileName);
+    // Prefer path::IsSame: DirIter paths may differ from the open path in
+    // case, separators, or long/short form, so StrVec::Find can miss.
+    int openedIdx = -1;
+    for (int i = 0; i < len(pages); i++) {
+        if (path::IsSame(pages[i], fileName)) {
+            openedIdx = i;
+            break;
+        }
+    }
     currentPageNo = openedIdx >= 0 ? openedIdx + 1 : 1;
     currentPageUrl = nullptr;
     return true;

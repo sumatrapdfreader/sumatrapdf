@@ -1939,7 +1939,14 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                     win->AsMarkdown()->ScrollTo(ss.page, r, kInvalidZoom);
                 }
             } else {
-                win->ctrl->GoToPage(ss.page, false);
+                // No per-file state: default ss.page is 1. Markdown treats each
+                // .md in the directory as a "page"; Load() already set
+                // CurrentPageNo to the file the user opened — use that.
+                int page = win->ctrl->CurrentPageNo();
+                if (page < 1 || page > win->ctrl->PageCount()) {
+                    page = ss.page;
+                }
+                win->ctrl->GoToPage(page, false);
             }
         } else {
             ReportIf(true);
