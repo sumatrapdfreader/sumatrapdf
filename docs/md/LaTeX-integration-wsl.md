@@ -5,6 +5,9 @@ you edit and compile inside WSL (Windows Subsystem for Linux). It fully
 supports source-to-PDF and PDF-to-source navigation, just as it does in
 an all-Windows setup.
 
+For general SyncTeX concepts, inverse-search command-line placeholders,
+and Windows-native editor setup, see [LaTeX integration](LaTeX-integration.md).
+
 ## How Previewing Works
 
 When you compile a `.tex` file, most LaTeX tools can also generate a
