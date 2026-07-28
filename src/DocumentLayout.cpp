@@ -273,6 +273,29 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         canvasDy = std::min(canvasDy, viewPort.dy);
         canvasDx = std::min(canvasDx, viewPort.dx);
     }
+
+    // Continuous mode: extra space after the last page so it can be scrolled
+    // up (e.g. last lines to the top of the window when the frame is partly
+    // covered by another app) (issue #411). Need canvas tall enough that
+    // max scroll (canvasDy - viewPort.dy) can place the last page's top at y=0.
+    // Controlled by advanced setting PaddingAfterLastPage (default off).
+    if (params.paddingAfterLastPage && IsContinuous(params.displayMode) && viewPort.dy > 0) {
+        int lastPageTop = -1;
+        for (int pageNo = pages.len; pageNo >= 1; pageNo--) {
+            DocumentLayoutPage* page = GetPage(pageNo);
+            if (page->isShown) {
+                lastPageTop = page->pos.y;
+                break;
+            }
+        }
+        if (lastPageTop >= 0) {
+            int minCanvasDy = lastPageTop + viewPort.dy;
+            if (canvasDy < minCanvasDy) {
+                canvasDy = minCanvasDy;
+            }
+        }
+    }
+
     canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
     if (viewPort.x > canvasSize.dx - viewPort.dx) {
         viewPort.x = std::max(0, canvasSize.dx - viewPort.dx);

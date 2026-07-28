@@ -916,6 +916,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.usePageZooms = true;
         params.windowMargin = ToDocumentLayoutMargin(windowMargin);
         params.pageSpacing = pageSpacing;
+        params.paddingAfterLastPage = gGlobalPrefs->paddingAfterLastPage;
         layout.Relayout(params);
 
         if (!hideScrollbars && !useOverlayScrollbar && !needVScroll && layout.canvasSize.dy > layout.viewPort.dy) {

@@ -170,6 +170,11 @@ ScrollbarInSinglePage = false
 ; if true, implements smooth scrolling (introduced in version 3.6)
 SmoothScroll = false
 
+; if true, continuous view has extra scroll room after the last page so you can
+; scroll the end of the document to the top of the window (introduced in version
+; 3.7)
+PaddingAfterLastPage = false
+
 ; how long to hover an internal-document link (in ms) before we show a popup
 ; rendering the destination region (citation entry, figure, footnote). -1 (the
 ; default) disables the popup; set a positive value like 300 to enable it

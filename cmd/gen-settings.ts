@@ -749,6 +749,12 @@ const globalPrefs: Field[] = [
   field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
   field("SmoothScroll", Bool, false, "if true, implements smooth scrolling").ver("3.6"),
   field(
+    "PaddingAfterLastPage",
+    Bool,
+    false,
+    "if true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the top of the window",
+  ).ver("3.7"),
+  field(
     "CitationHoverDelay",
     Int,
     -1,

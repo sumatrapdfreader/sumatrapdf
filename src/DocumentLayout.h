@@ -29,6 +29,8 @@ struct DocumentLayoutParams {
     int rotation = 0;
     bool displayR2L = false;
     bool usePageZooms = false;
+    // extra scroll room after last page in continuous view (issue #411)
+    bool paddingAfterLastPage = false;
     DocumentLayoutMargin windowMargin{};
     Size pageSpacing{};
 };
