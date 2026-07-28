@@ -4,7 +4,7 @@ SumatraPDF provides several accessibility-related features. Maturity varies by f
 
 ## Read Aloud
 
-**Read Aloud (TTS)** — read document text with Windows text-to-speech, word highlight, playback bar, and pause / continue / stop — is documented in [Read Aloud (TTS)](Read-Aloud-TTS.md).
+**Read Aloud (TTS)** — read document text with Windows text-to-speech, word highlight, playback bar, and pause / continue / stop — is documented in [Read Aloud (TTS)](Read-Aloud.md).
 
 ## Screen readers (UI Automation)
 
@@ -28,7 +28,7 @@ Any client that uses Windows UI Automation can query the same document tree. NVD
 
 - Prefer documents with real text (not scan-only image PDFs). Scanned pages need OCR elsewhere.
 - Standard UI (menus, toolbar, TOC, bookmarks) uses native Windows controls and is generally readable by screen readers even without canvas UIA.
-- Built-in [Read Aloud](Read-Aloud-TTS.md) is a separate, app-driven TTS path — useful when you want continuous reading with word highlight, but it is not a full screen-reader substitute.
+- Built-in [Read Aloud](Read-Aloud.md) is a separate, app-driven TTS path — useful when you want continuous reading with word highlight, but it is not a full screen-reader substitute.
 
 ### Plugin
 
@@ -40,7 +40,7 @@ Many actions are available without a mouse — see [Keyboard shortcuts](Keyboard
 
 ## See also
 
-- [Read Aloud (TTS)](Read-Aloud-TTS.md)
+- [Read Aloud (TTS)](Read-Aloud.md)
 - [FAQ](FAQ.md)
 - [Commands](Commands.md)
 

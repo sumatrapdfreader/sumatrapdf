@@ -57,7 +57,7 @@ presets 0.25×–2.0×; separate Chinese/English rates; "smart bilingual" voice 
 SAPI and online voices; toolbar button with dropdown, menu, context menu; double-click
 on blank area toggles read-aloud. Recommends NaturalVoiceSAPIAdapter for natural voices.
 - New files: `src/TextToSpeech.{cpp,h}`, `src/ReadAloudHighlight.{cpp,h}`,
-  `docs/md/Read-Aloud-TTS.md`, `tools/gen_read_aloud_trans.py`
+  `docs/md/Read-Aloud.md`, `tools/gen_read_aloud_trans.py`
 - Integration spread through `SumatraPDF.cpp`, `Toolbar.cpp`, `Menu.cpp`, `Canvas.cpp`,
   `DisplayModel.cpp`, `TextSelection.cpp`
 - Settings: `ReadAloudVoiceId`, `ReadAloudSpeakingRate` (legacy),
