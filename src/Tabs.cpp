@@ -109,9 +109,13 @@ void UpdateTabWidth(MainWindow* win) {
     int nTabs = win->TabCount();
     bool showSingleTab = SettingsUseTabs() || win->tabsInTitlebar;
     bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
-    int tabWidth = gGlobalPrefs->tabWidth;
+    // TabWidth is stored in logical (96-DPI) units, same as other layout
+    // settings; convert to physical pixels so HiDPI monitors honor the value
+    // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
     if (win->tabsCtrl) {
-        win->tabsCtrl->tabDefaultDx = tabWidth;
+        HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
+        win->tabsCtrl->tabDefaultDx = DpiScale(hwnd, gGlobalPrefs->tabWidth);
+        win->tabsCtrl->LayoutTabs();
     }
     if (!showTabs) {
         ShowTabBar(win, false);
@@ -593,8 +597,8 @@ void CreateTabbar(MainWindow* win) {
     args.parent = win->hwndFrame;
     args.withToolTips = true;
     args.font = GetAppFont(win->hwndFrame);
-    int tabWidth = gGlobalPrefs->tabWidth;
-    args.tabDefaultDx = tabWidth;
+    // logical TabWidth → physical (see UpdateTabWidth / issue #3850)
+    args.tabDefaultDx = DpiScale(win->hwndFrame, gGlobalPrefs->tabWidth);
     args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)
 
     TabsCtrl* tabsCtrl = new TabsCtrl();
