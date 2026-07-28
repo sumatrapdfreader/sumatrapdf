@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/ScopedWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -564,10 +565,12 @@ static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "grok-composer-2.5-fast";
     }
-    TempStr escapedPrompt = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
-    return fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort low %s", exePath,
-               escapedPrompt, cwd, model, permsFlag);
+    // QuoteCmdLineArgTemp: full Windows argv quoting (not just " -> \") so
+    // prompt text ending in \" cannot inject extra CLI flags (CWE-88 / GHSA).
+    return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort low %s",
+               QuoteCmdLineArgTemp(exePath), QuoteCmdLineArgTemp(prompt), QuoteCmdLineArgTemp(cwd),
+               QuoteCmdLineArgTemp(model), permsFlag);
 }
 
 static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
@@ -575,31 +578,32 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "claude-sonnet-4-20250514";
     }
-    TempStr escapedPrompt = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
     Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? StrL("--dangerously-skip-permissions") : Str{};
     TempStr sessionId = AIChatGenerateSessionIdTemp();
-    return fmt("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"", exePath, model,
-               permsFlag, sessionId, escapedPrompt);
+    return fmt("%s -p --verbose --output-format stream-json --model %s %s --session-id %s %s",
+               QuoteCmdLineArgTemp(exePath), QuoteCmdLineArgTemp(model), permsFlag, sessionId,
+               QuoteCmdLineArgTemp(prompt));
 }
 
 static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     Str model = gGlobalPrefs->codexBuild.model;
     bool hasModel = !str::IsEmptyOrWhiteSpace(model);
-    TempStr escapedPrompt = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
     Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
     if (skipFlag) {
         if (hasModel) {
-            return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only %s \"%s\"", exePath, cwd,
-                       model, skipFlag, escapedPrompt);
+            return fmt("%s exec --json -C %s --skip-git-repo-check -m %s -s read-only %s %s",
+                       QuoteCmdLineArgTemp(exePath), QuoteCmdLineArgTemp(cwd), QuoteCmdLineArgTemp(model), skipFlag,
+                       QuoteCmdLineArgTemp(prompt));
         }
-        return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only %s \"%s\"", exePath, cwd, skipFlag,
-                   escapedPrompt);
+        return fmt("%s exec --json -C %s --skip-git-repo-check -s read-only %s %s", QuoteCmdLineArgTemp(exePath),
+                   QuoteCmdLineArgTemp(cwd), skipFlag, QuoteCmdLineArgTemp(prompt));
     }
     if (hasModel) {
-        return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only \"%s\"", exePath, cwd, model,
-                   escapedPrompt);
+        return fmt("%s exec --json -C %s --skip-git-repo-check -m %s -s read-only %s", QuoteCmdLineArgTemp(exePath),
+                   QuoteCmdLineArgTemp(cwd), QuoteCmdLineArgTemp(model), QuoteCmdLineArgTemp(prompt));
     }
-    return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only \"%s\"", exePath, cwd, escapedPrompt);
+    return fmt("%s exec --json -C %s --skip-git-repo-check -s read-only %s", QuoteCmdLineArgTemp(exePath),
+               QuoteCmdLineArgTemp(cwd), QuoteCmdLineArgTemp(prompt));
 }
 
 static TempStr FindBackendExecutableTemp(AIChatBackend backend) {

@@ -7,6 +7,7 @@
 // process/stream plumbing.
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/UITask.h"
@@ -703,7 +704,9 @@ static void SendAIChatMessage(MainWindow* win) {
     args.sessionId = st->sessionId;
     args.filePath = filePath;
     args.dir = dir;
-    args.escapedInput = str::ReplaceTemp(input, StrL("\""), StrL("\\\""));
+    // Raw user text; providers quote with QuoteCmdLineArgTemp when building the
+    // CreateProcessW command line (naive " -> \" is not enough on Windows).
+    args.escapedInput = input;
     args.option = optionIdx;
     args.flag = p->GetFlag();
     args.isNewSession = isNewSession;

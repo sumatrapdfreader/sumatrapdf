@@ -4,6 +4,7 @@
 // Claude Code provider for the AI chat sidebar (see AIChatPanel.cpp)
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -293,21 +294,20 @@ struct ClaudeCodeProvider : AIChatProvider {
         Str efforts[] = {"low", "medium", "high", "max"};
         Str permsFlag = args.flag ? "--dangerously-skip-permissions" : "";
         TempStr sessionName = path::GetBaseNameTemp(args.filePath);
+        TempStr sysPrompt = fmt("The user is currently reading the file: %s", args.filePath);
         if (args.isNewSession) {
             return fmt(
-                "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --session-id %s "
-                "--name \"%s\" "
-                "--append-system-prompt \"The user is currently reading the file: %s\" "
-                "\"%s\"",
-                args.exePath, args.model, efforts[args.option], permsFlag, args.sessionId, sessionName, args.filePath,
-                args.escapedInput);
+                "%s -p --verbose --model %s --effort %s --output-format stream-json %s --session-id %s "
+                "--name %s --append-system-prompt %s %s",
+                QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+                args.sessionId, QuoteCmdLineArgTemp(sessionName), QuoteCmdLineArgTemp(sysPrompt),
+                QuoteCmdLineArgTemp(args.escapedInput));
         }
         return fmt(
-            "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
-            "--append-system-prompt \"The user is currently reading the file: %s\" "
-            "\"%s\"",
-            args.exePath, args.model, efforts[args.option], permsFlag, args.sessionId, args.filePath,
-            args.escapedInput);
+            "%s -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
+            "--append-system-prompt %s %s",
+            QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+            args.sessionId, QuoteCmdLineArgTemp(sysPrompt), QuoteCmdLineArgTemp(args.escapedInput));
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {

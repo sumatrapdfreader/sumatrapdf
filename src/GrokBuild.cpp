@@ -4,6 +4,7 @@
 // Grok Build provider for the AI chat sidebar (see AIChatPanel.cpp)
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -339,16 +340,15 @@ struct GrokBuildProvider : AIChatProvider {
         Str permsFlag = args.flag ? StrL("--always-approve") : Str{};
         TempStr rules = fmt("The user is currently reading the file: %s", args.filePath);
         if (args.isNewSession) {
-            return fmt(
-                "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s --rules "
-                "\"%s\"",
-                args.exePath, args.escapedInput, args.dir, args.model, efforts[args.option], permsFlag, rules);
+            return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort %s %s --rules %s",
+                       QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.escapedInput),
+                       QuoteCmdLineArgTemp(args.dir), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+                       QuoteCmdLineArgTemp(rules));
         }
-        return fmt(
-            "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules "
-            "\"%s\"",
-            args.exePath, args.escapedInput, args.dir, args.model, efforts[args.option], permsFlag, args.sessionId,
-            rules);
+        return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort %s %s -r %s --rules %s",
+                   QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.escapedInput),
+                   QuoteCmdLineArgTemp(args.dir), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+                   args.sessionId, QuoteCmdLineArgTemp(rules));
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {

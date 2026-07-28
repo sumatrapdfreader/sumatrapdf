@@ -2,14 +2,62 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
+// Round-trip QuoteCmdLineArgTemp through CommandLineToArgvW (ParseCmdLine).
+// The GHSA-xvxg-cwmx-hr7j breakout payload must stay a single argv element.
+static void QuoteCmdLineArgTest() {
+    auto roundTripOne = [](Str input) {
+        TempStr quoted = QuoteCmdLineArgTemp(input);
+        utassert(quoted.s != nullptr);
+        // ParseCmdLine uses CommandLineToArgvW; prefix a dummy argv[0].
+        TempStr cmdLine = fmt("exe %s", quoted);
+        StrVec args;
+        ParseCmdLine(cmdLine, args);
+        utassert(len(args) >= 1);
+        utassert(str::Eq(args[0], "exe"));
+        if (len(input) == 0) {
+            // `exe ""` → only "exe" after empty-token skip in ParseCmdLine
+            utassert(len(args) == 1);
+            return;
+        }
+        utassert(len(args) == 2);
+        utassert(str::Eq(args[1], input));
+    };
+
+    roundTripOne(StrL("hello"));
+    roundTripOne(StrL("hello world"));
+    roundTripOne(StrL("say \"hi\""));
+    roundTripOne(StrL("path\\with\\backslashes"));
+    roundTripOne(StrL("trailing\\"));
+    roundTripOne(StrL("trailing\\\\"));
+    // PoC from the advisory: naive " -> \" turns this into a breakout.
+    roundTripOne(StrL("X\\\" --always-approve "));
+    roundTripOne(StrL("some text \\\" --dangerously-skip-permissions "));
+    roundTripOne(StrL("Text: X\\\" --model evil"));
+    roundTripOne(StrL(""));
+    roundTripOne(StrL("a\\\"b\\\"c"));
+    roundTripOne(StrL("ends with quote\""));
+    roundTripOne(StrL("\\"));
+    roundTripOne(StrL("\\\""));
+
+    // Explicit expected encodings for the breakout cases
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("X\\\" --always-approve ")), StrL("\"X\\\\\\\" --always-approve \"")));
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("trailing\\")), StrL("\"trailing\\\\\"")));
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("a b")), StrL("\"a b\"")));
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("")), StrL("\"\"")));
+    utassert(QuoteCmdLineArgTemp({}).s == nullptr);
+}
+
 void WinUtilTest() {
     ScopedCom comScope;
+
+    QuoteCmdLineArgTest();
 
     {
         Str string = "abcde";

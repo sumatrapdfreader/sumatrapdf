@@ -70,6 +70,8 @@ struct AIChatCmdArgs {
     Str sessionId;
     Str filePath; // document the user is reading
     Str dir;      // cwd for the process
+    // Raw user input (not pre-escaped). Providers must pass it through
+    // QuoteCmdLineArgTemp when embedding it in a CreateProcessW command line.
     Str escapedInput;
     int option = 0;    // effort / sandbox index
     bool flag = false; // skip permissions / always approve / skip sandbox
