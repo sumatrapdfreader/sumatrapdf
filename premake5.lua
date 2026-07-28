@@ -589,44 +589,17 @@ workspace "SumatraPDF"
     -- build src/libdav1d.a.p/looprestoration_avx2.obj: CUSTOM_COMMAND_DEP ../src/x86/looprestoration_avx2.asm | C$:/Users/kjk/AppData/Local/bin/NASM/nasm.EXE
     -- COMMAND = "C:\Users\kjk\AppData\Local\bin\NASM\nasm.EXE" "-f" "win64" "-I" "C:/Users/kjk/src/dav1d/src/" "-I" "C:/Users/kjk/src/dav1d/build/" "-MQ" "src/libdav1d.a.p/looprestoration_avx2.obj" "-MF" "src/libdav1d.a.p/looprestoration_avx2.obj.ndep" "../src/x86/looprestoration_avx2.asm" "-o" "src/libdav1d.a.p/looprestoration_avx2.obj"
 
-  -- highway: SIMD dispatch library used by libjxl (ext/highway, v1.2.0)
-  project "highway"
+  -- jxldec: JPEG XL decoder amalgamation (replaces libjxl + highway + skcms).
+  project "jxldec"
     static_intermediate_dirs()
     kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
+    language "C"
     optimized_conf()
-    includedirs { "ext/highway" }
-    disablewarnings { "4100", "4127", "4244", "4245", "4267", "4324", "4456", "4457", "4701", "4702", "4723", "5054", "4146", "4458" }
-    highway_files()
-
-  -- skcms: color management used by libjxl. Baseline only.
-  project "a-skcms"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
-    optimized_conf()
-    defines { "SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX" }
-    includedirs { "ext/a-skcms" }
-    disablewarnings { "4100", "4201", "4244", "4245", "4267", "4310", "4456", "4701", "4702" }
-    files { "ext/a-skcms/skcms.cpp", "ext/a-skcms/skcms.h", "ext/a-skcms/version.txt" }
-
-  -- libjxl decoder (ext/libjxl, v0.11.2). Decoder subset only; uses skcms for
-  -- color management and brotli for compressed metadata.
-  project "libjxl"
-    static_intermediate_dirs()
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
-    optimized_conf()
-    exceptionhandling "On"
-    rtti "On"
-    defines { "JPEGXL_ENABLE_SKCMS=1", "JPEGXL_ENABLE_TRANSCODE_JPEG=0", "JPEGXL_BUNDLING_LIBJXL=1", "_CRT_SECURE_NO_WARNINGS" }
-    includedirs { "ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/a-skcms", "ext/brotli/c/include" }
-    disablewarnings { "4018", "4100", "4127", "4146", "4201", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4505", "4806", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
-    buildoptions { "/bigobj" }
-    libjxl_files()
+    -- decode is CPU-bound; favor speed over size
+    optimize "Speed"
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4018", "4100", "4127", "4204", "4244", "4245", "4267", "4389", "4456", "4701", "4702", "4996" }
+    files { "ext/jxldec/jxl.c", "ext/jxldec/jxl.h" }
 
   -- HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
   -- AV1 uses dav1d; unci zlib/brotli compression uses a-zlib / brotli at link.
@@ -952,8 +925,8 @@ workspace "SumatraPDF"
     links_zlib()
     -- image codecs + their transitive deps are part of this DLL only; consumers
     -- (SumatraPDF, PdfPreview, …) import the few needed symbols via libmupdf.def
-    -- and must not also link libwebp/libjxl/heicdec/dav1d/highway/a-skcms/brotli.
-    -- brotli is required by freetype (via mupdf) and by libjxl/heicdec.
+    -- and must not also link libwebp/jxldec/heicdec/dav1d/brotli.
+    -- brotli is required by freetype (via mupdf) and by heicdec.
     -- unrar: static lib kept as its own project; linked only into this DLL (and
     -- static EXE). Archive.cpp RAR* APIs are re-exported via libmupdf.def so
     -- SumatraPDF / PdfFilter / PdfPreview do not carry a second copy.
@@ -961,7 +934,7 @@ workspace "SumatraPDF"
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli", "unrar", "chmdec"
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec"
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1017,12 +990,12 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4838" }
     includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "mupdf/include" }
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
     test_engines_files()
     links_zlib()
     -- static link (no libmupdf.dll): same image-codec set as libmupdf.dll
     links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
-    links { "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli" }
+    links { "libwebp", "dav1d", "heicdec", "jxldec", "brotli" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon",
@@ -1052,15 +1025,14 @@ workspace "SumatraPDF"
     disablewarnings { "4611", "4838" } -- setjmp / C++ destruction; QITABENT
     includedirs {
       "src", "ext/libjpeg-turbo/src", "ext/libwebp/src", "ext/heicdec",
-      "ext/libjxl/lib/include",
+      "ext/jxldec",
     }
     bench_image_files()
     setup_base_pch()
-    -- heicdec needs dav1d (AV1), a-zlib / brotli (unci compressed HEIC);
-    -- libjxl needs highway, a-skcms, brotli
+    -- heicdec needs dav1d (AV1), a-zlib / brotli (unci compressed HEIC)
     links {
       "base", "libjpeg-turbo", "libwebp", "heicdec", "dav1d", "a-zlib",
-      "libjxl", "highway", "a-skcms", "brotli",
+      "jxldec", "brotli",
     }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version",
@@ -1136,7 +1108,7 @@ workspace "SumatraPDF"
       "src", "src/wingui", "mupdf/include",
       "ext/djvudec", "ext/chmdec",
       "ext/libarchive",
-      "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include",
+      "ext/heicdec", "ext/libwebp/src", "ext/jxldec",
     }
     pdf_preview_files()
     -- djvudec / chmdec / libarchive / unrar live in libmupdf.dll (re-exported);
@@ -1159,7 +1131,7 @@ workspace "SumatraPDF"
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
     -- so asan options can only come from the environment.
@@ -1219,9 +1191,9 @@ workspace "SumatraPDF"
     links_zlib()
     -- static build has no libmupdf.dll: image codecs + chmdec/unrar/libarchive
     -- link in here (same set as libmupdf.dll uses). brotli is pulled via mupdf
-    -- (freetype) + needed by jxl/heic.
+    -- (freetype) + needed by heic.
     links {
-      "djvudec", "libwebp", "dav1d", "heicdec", "libjxl", "highway", "a-skcms", "brotli",
+      "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
       "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli"
     }
     links {
@@ -1260,7 +1232,7 @@ workspace "SumatraPDF"
     includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
     includedirs { "ext/darkmodelib/include" }
     -- headers only: webp/jxl/heic/chm symbols come from libmupdf.dll (libmupdf.def)
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/libjxl/lib/include" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
     -- so asan options can only come from the environment.

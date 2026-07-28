@@ -1786,29 +1786,15 @@ EXPORTS
 
 
 
-; libjxl exports (needed for JxlReader)
+; jxldec exports (needed for JxlReader)
 
-
-
-	JxlSignatureCheck
-
-	JxlDecoderCreate
-
-	JxlDecoderDestroy
-
-	JxlDecoderSubscribeEvents
-
-	JxlDecoderSetInput
-
-	JxlDecoderCloseInput
-
-	JxlDecoderProcessInput
-
-	JxlDecoderGetBasicInfo
-
-	JxlDecoderImageOutBufferSize
-
-	JxlDecoderSetImageOutBuffer
+	jxl_signature_check
+	jxl_ctx_new
+	jxl_ctx_free
+	jxl_ctx_set_bgr
+	jxl_decode
+	jxl_decode_size
+	jxl_image_destroy
 
 
 

@@ -379,46 +379,12 @@ export const dav1d: LibDef = {
   ],
 };
 
-export const skcms: LibDef = {
-  name: "skcms",
+export const jxldec: LibDef = {
+  name: "jxldec",
   alwaysOptimize: true,
-  defines: ["SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX"],
-  includes: ["ext/skcms"],
-  files: [
-    { dir: "ext/skcms", patterns: ["skcms.cc"] },
-    { dir: "ext/skcms/src", patterns: ["skcms_TransformBaseline.cc"] },
-  ],
-};
-
-export const highway: LibDef = {
-  name: "highway",
-  alwaysOptimize: true,
-  defines: [],
-  includes: ["ext/highway"],
-  rtti: true,
-  exceptions: true,
-  files: [{ dir: "ext/highway/hwy", patterns: ["*.cc"] }],
-};
-
-export const libjxl: LibDef = {
-  name: "libjxl",
-  alwaysOptimize: true,
-  rtti: true,
-  exceptions: true,
-  defines: [
-    "JPEGXL_ENABLE_SKCMS=1",
-    "JPEGXL_ENABLE_TRANSCODE_JPEG=0",
-    "JPEGXL_BUNDLING_LIBJXL=1",
-    "_CRT_SECURE_NO_WARNINGS",
-  ],
-  includes: [
-    "ext/libjxl",
-    "ext/libjxl/lib/include",
-    "ext/highway",
-    "ext/skcms",
-    "ext/brotli/c/include",
-  ],
-  files: [{ dir: "ext/libjxl/lib/jxl", patterns: ["**/*.cc"] }],
+  defines: ["_CRT_SECURE_NO_WARNINGS"],
+  includes: [],
+  files: [{ dir: "ext/jxldec", patterns: ["jxl.c"] }],
 };
 
 // HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
