@@ -54,7 +54,7 @@ starts on demand, on `Audiobook.LibraryPort` (7863).
 ### The Chatterbox audiobook engine
 
 This build adds a second Read Aloud engine. Instead of the built-in Windows TTS, 
-it hands the document to a local [Chatterbox TTS](../Chatterbox-TTS-Extended-main) 
+it hands the document to a local [Chatterbox TTS](https://github.com/nokel/Chatterbox-TTS-Extended) 
 install, which reads the book in **per-character voices** — a local LLM works out 
 who speaks each line once per book, each character is cast to a trained voice, and 
 the narrator reads everything else. The reading is highlighted in the window as it goes.
