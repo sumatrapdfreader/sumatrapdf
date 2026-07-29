@@ -602,103 +602,168 @@ async function submitMany(
 // Prefer small batches: long UI strings + non-Latin output often truncate at max_tokens.
 const kAiBatchSize = 12;
 
+// Marker format avoids JSON breakage when translations contain unescaped " or newlines
+// (e.g. Chinese 按"取消" …). Models routinely emit invalid JSON for those.
+const kTransMarker = (i: number) => `<<<${i}>>>`;
+
 function buildTranslatePrompt(stringsToTranslate: string[], langCode: string): string {
-  // Array-in / array-out: same order, no English keys (avoids escape/match bugs
-  // with ·, quotes, HTML, etc. that break object-map responses).
+  const n = stringsToTranslate.length;
+  const inputBlocks = stringsToTranslate
+    .map((s, i) => `${kTransMarker(i)}\n${s}`)
+    .join("\n");
   return `Translate each English UI string to the language for locale code "${langCode}".
-Input is a JSON array of English strings.
-Return ONLY a JSON array of translated strings, same length and same order as the input.
-Keep placeholders like %s, %d, %1, etc. unchanged.
+
+There are exactly ${n} strings, numbered 0..${n - 1}.
+For each index i, output the marker <<<i>>> on its own line, then the translation on the following line(s).
+Do not put the marker inside the translation. Do not renumber. Do not skip indices.
+You may use quotes, newlines, and HTML freely inside translations — only the <<<i>>> lines are special.
+Keep placeholders like %s, %d, %1 unchanged.
 Keep access-key ampersands if present (e.g. "&File" → localized with & before the hotkey letter).
-Do not wrap in markdown. No explanation.
+No markdown fences. No explanation before or after.
 
 Input:
-${JSON.stringify(stringsToTranslate)}`;
+${inputBlocks}
+
+Output (example for 2 strings):
+<<<0>>>
+first translation
+<<<1>>>
+second translation`;
 }
 
-/** Extract a JSON value from model text (strips fences; tolerates leading prose). */
-function extractJsonText(text: string): string {
+/** Parse <<<i>>>…<<<i+1>>> marker blocks into translations[i]. */
+function parseMarkerTranslations(text: string, n: number): string[] | null {
+  // strip optional markdown fences
   let s = text.trim();
-  // full fence
+  const fence = s.match(/```(?:\w*)?\s*([\s\S]*?)```/);
+  if (fence) {
+    s = fence[1].trim();
+  }
+
+  const re = /<<<(\d+)>>>/g;
+  const matches: { idx: number; start: number; end: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    matches.push({ idx: parseInt(m[1], 10), start: m.index, end: m.index + m[0].length });
+  }
+  if (matches.length === 0) {
+    return null;
+  }
+
+  const out: (string | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < matches.length; i++) {
+    const { idx, end } = matches[i];
+    if (idx < 0 || idx >= n) continue;
+    const nextStart = i + 1 < matches.length ? matches[i + 1].start : s.length;
+    let body = s.slice(end, nextStart);
+    // drop leading newline after marker
+    if (body.startsWith("\r\n")) body = body.slice(2);
+    else if (body.startsWith("\n")) body = body.slice(1);
+    // trim trailing whitespace/newlines between blocks
+    body = body.replace(/\s+$/, "");
+    if (body.length > 0) {
+      out[idx] = body;
+    }
+  }
+
+  const filled = out.filter((x) => x !== null).length;
+  if (filled === 0) return null;
+  return out.map((x) => x ?? "");
+}
+
+/** Legacy JSON array/object parse (may fail on unescaped quotes inside values). */
+function parseJsonTranslations(
+  text: string,
+  strings: string[],
+  stringsToTranslate: string[],
+): Map<string, string> | null {
+  let s = text.trim();
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fence) {
     s = fence[1].trim();
   } else if (s.startsWith("```")) {
-    // truncated fence opening only
-    s = s.replace(/^```(?:json)?\s*/i, "");
-    s = s.replace(/```\s*$/, "").trim();
+    s = s.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
   }
-  // Claude sometimes emits \xHH (not valid JSON); convert to \u00HH
   s = s.replace(/\\x([0-9a-fA-F]{2})/g, (_m, hex: string) => `\\u00${hex}`);
-  // prefer array (our prompt); fall back to object for older responses
+
   const arrStart = s.indexOf("[");
   const objStart = s.indexOf("{");
+  let jsonStr = s;
   if (arrStart >= 0 && (objStart < 0 || arrStart < objStart)) {
     const end = s.lastIndexOf("]");
-    if (end > arrStart) return s.slice(arrStart, end + 1);
-  }
-  if (objStart >= 0) {
+    if (end > arrStart) jsonStr = s.slice(arrStart, end + 1);
+  } else if (objStart >= 0) {
     const end = s.lastIndexOf("}");
-    if (end > objStart) return s.slice(objStart, end + 1);
+    if (end > objStart) jsonStr = s.slice(objStart, end + 1);
   }
-  return s;
-}
 
-function parseTranslationJson(
-  text: string,
-  strings: string[],
-  stringsToTranslate: string[],
-  langCode: string,
-): Map<string, string> {
-  const jsonStr = extractJsonText(text);
   let parsed: unknown;
   try {
     parsed = JSON.parse(jsonStr);
-  } catch (e) {
-    console.log(`AI response (invalid JSON, first 500 chars): ${text.slice(0, 500)}`);
-    throw new Error(`Invalid JSON in AI response for lang ${langCode}: ${e}`);
+  } catch {
+    return null;
   }
 
   const result = new Map<string, string>();
-
   if (Array.isArray(parsed)) {
-    if (parsed.length !== strings.length) {
-      throw new Error(
-        `AI array length ${parsed.length} != input ${strings.length} for lang ${langCode}`,
-      );
-    }
+    if (parsed.length !== strings.length) return null;
     for (let i = 0; i < strings.length; i++) {
       const v = parsed[i];
-      if (typeof v !== "string" || v.length === 0) {
-        console.log(`  skip empty/non-string translation at index ${i}`);
-        continue;
+      if (typeof v === "string" && v.length > 0) {
+        result.set(strings[i], v);
       }
-      result.set(strings[i], v);
     }
-    return result;
+    return result.size > 0 ? result : null;
   }
-
-  // legacy object map fallback
   if (parsed && typeof parsed === "object") {
     for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
       if (typeof value !== "string") continue;
       let idx = stringsToTranslate.indexOf(key);
       if (idx < 0) idx = strings.indexOf(key);
       if (idx < 0) {
-        // keys may have had & stripped or \\x decoded differently
         const keyNorm = key.replaceAll("&", "");
-        idx = stringsToTranslate.findIndex((s) => s === keyNorm || s.replaceAll("&", "") === keyNorm);
+        idx = stringsToTranslate.findIndex((t) => t === keyNorm || t.replaceAll("&", "") === keyNorm);
       }
-      if (idx < 0) {
-        console.log(`  skip unexpected key: '${key.slice(0, 60)}'`);
-        continue;
-      }
-      result.set(strings[idx], value);
+      if (idx >= 0) result.set(strings[idx], value);
     }
-    return result;
+    return result.size > 0 ? result : null;
+  }
+  return null;
+}
+
+function parseAiTranslations(
+  text: string,
+  strings: string[],
+  stringsToTranslate: string[],
+  langCode: string,
+): Map<string, string> {
+  // 1) preferred: marker blocks (safe with " and newlines in values)
+  const marked = parseMarkerTranslations(text, strings.length);
+  if (marked) {
+    const result = new Map<string, string>();
+    let nOk = 0;
+    for (let i = 0; i < strings.length; i++) {
+      if (marked[i] && marked[i].length > 0) {
+        result.set(strings[i], marked[i]);
+        nOk++;
+      }
+    }
+    if (nOk > 0) {
+      if (nOk < strings.length) {
+        console.log(`  marker parse: ${nOk}/${strings.length} translations for ${langCode}`);
+      }
+      return result;
+    }
   }
 
-  throw new Error(`AI response is neither array nor object for lang ${langCode}`);
+  // 2) fallback: JSON array/object
+  const fromJson = parseJsonTranslations(text, strings, stringsToTranslate);
+  if (fromJson && fromJson.size > 0) {
+    return fromJson;
+  }
+
+  console.log(`AI response (unparseable, first 500 chars): ${text.slice(0, 500)}`);
+  throw new Error(`Could not parse AI translations for lang ${langCode}`);
 }
 
 async function translateWithClaude(
@@ -736,7 +801,7 @@ async function translateWithClaude(
     throw new Error(`Claude truncated response (max_tokens) for lang ${langCode}, batch ${strings.length}`);
   }
   const text = data.content?.find((c) => c.type === "text")?.text ?? data.content?.[0]?.text ?? "";
-  return parseTranslationJson(text, strings, stringsToTranslate, langCode);
+  return parseAiTranslations(text, strings, stringsToTranslate, langCode);
 }
 
 async function translateWithGrok(
@@ -773,7 +838,7 @@ async function translateWithGrok(
     throw new Error(`Grok truncated response (length) for lang ${langCode}, batch ${strings.length}`);
   }
   const text = data.choices?.[0]?.message?.content ?? "";
-  return parseTranslationJson(text, strings, stringsToTranslate, langCode);
+  return parseAiTranslations(text, strings, stringsToTranslate, langCode);
 }
 
 /** Translate a batch; on truncation/parse failure, split and retry. */
