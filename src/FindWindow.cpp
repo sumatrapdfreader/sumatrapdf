@@ -210,12 +210,12 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         // drop the visual-style button background so the flat toolbar shows the
         // window's themed background instead of a light box in dark themes
         SetWindowTheme(hwndBtns, L"", L"");
-        SendMessageW(hwndBtns, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+        TbSetButtonStructSize(hwndBtns, (int)sizeof(TBBUTTON));
 
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
         himl = BuildStdToolbarImageList(isz);
-        SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
-        SendMessageW(hwndBtns, TB_SETBUTTONSIZE, 0, MAKELONG(isz, isz));
+        TbSetImageList(hwndBtns, himl);
+        TbSetButtonSize(hwndBtns, Size(isz, isz));
 
         TBBUTTON b[5]{};
         b[0].iBitmap = (int)TbIcon::ChevronUp;
@@ -238,8 +238,8 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         b[4].idCommand = kFindWinPinCmdId;
         b[4].fsState = TBSTATE_ENABLED;
         b[4].fsStyle = BTNS_BUTTON;
-        SendMessageW(hwndBtns, TB_ADDBUTTONS, 5, (LPARAM)&b);
-        SendMessageW(hwndBtns, TB_AUTOSIZE, 0, 0);
+        TbAddButtons(hwndBtns, 5, b);
+        TbAutosIZE(hwndBtns);
     }
 
     {
@@ -271,10 +271,9 @@ void FindWindowWnd::Layout() {
     int minEditDx = DpiScale(hwnd, 48);
 
     int editDy = edit->GetIdealSize().dy;
-    SIZE tbSz{};
-    SendMessageW(hwndBtns, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
-    int tbW = (int)tbSz.cx;
-    int tbH = (int)tbSz.cy;
+    Size tbSz = TbGetMaxSize(hwndBtns);
+    int tbW = tbSz.dx;
+    int tbH = tbSz.dy;
 
     int contentDx = std::max(0, rc.dx - 2 * pad);
     // minimum width for [edit][status][toolbar] on one row without overlap
@@ -600,7 +599,7 @@ void FindWindowWnd::UpdateTheme() {
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
         HIMAGELIST oldHiml = himl;
         himl = BuildStdToolbarImageList(isz);
-        SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
+        TbSetImageList(hwndBtns, himl);
         if (oldHiml) {
             ImageList_Destroy(oldHiml);
         }
@@ -651,10 +650,9 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             int tbH = DpiScale(h, 24);
             int tbW = DpiScale(h, 120);
             if (hwndBtns) {
-                SIZE tbSz{};
-                SendMessageW(hwndBtns, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
-                tbW = (int)tbSz.cx;
-                tbH = (int)tbSz.cy;
+                Size tbSz = TbGetMaxSize(hwndBtns);
+                tbW = tbSz.dx;
+                tbH = tbSz.dy;
             }
             int row2Dy = std::max(editDy, tbH);
             // narrow two-row header: edit, then status+toolbar
@@ -878,14 +876,13 @@ void FindWindowSetStatus(MainWindow* win, Str s) {
 
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked) {
     if (win->findWindow && win->findWindow->hwndBtns) {
-        SendMessageW(win->findWindow->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchCase, MAKELONG(checked ? 1 : 0, 0));
+        TbSetButtonChecked(win->findWindow->hwndBtns, CmdFindToggleMatchCase, checked);
     }
 }
 
 void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked) {
     if (win->findWindow && win->findWindow->hwndBtns) {
-        SendMessageW(win->findWindow->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchWholeWord,
-                     MAKELONG(checked ? 1 : 0, 0));
+        TbSetButtonChecked(win->findWindow->hwndBtns, CmdFindToggleMatchWholeWord, checked);
     }
 }
 

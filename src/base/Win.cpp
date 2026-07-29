@@ -3326,9 +3326,74 @@ void HwndDestroyWindowSafe(HWND* hwndPtr) {
 
 //--- toolbar / GDI handles / tree view / HGLOBAL / timing
 
-void TbSetButtonInfoById(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
-    auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
+int TbGetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
+    int res = (int)SendMessageW(hwnd, TB_GETBUTTONINFOW, buttonId, (LPARAM)info);
+    ReportDebugIf(res < 0);
+    return res;
+}
+
+void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
+    auto res = SendMessageW(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)info);
     ReportDebugIf(0 == res);
+}
+
+void TbSetButtonChecked(HWND hwnd, int buttonId, bool checked) {
+    auto res = SendMessageW(hwnd, TB_CHECKBUTTON, buttonId, MAKELONG(checked ? 1 : 0, 0));
+    ReportDebugIf(0 == res);
+}
+
+void TbSetButtonStructSize(HWND hwnd, int size) {
+    SendMessageW(hwnd, TB_BUTTONSTRUCTSIZE, (WPARAM)size, 0);
+}
+
+void TbSetButtonSize(HWND hwnd, Size size) {
+    auto res = SendMessageW(hwnd, TB_SETBUTTONSIZE, 0, MAKELONG(size.dx, size.dy));
+    ReportDebugIf(0 == res);
+}
+
+void TbSetBitmapSize(HWND hwnd, Size size) {
+    auto res = SendMessageW(hwnd, TB_SETBITMAPSIZE, 0, MAKELONG(size.dx, size.dy));
+    ReportDebugIf(0 == res);
+}
+
+void TbAddButtons(HWND hwnd, int count, const TBBUTTON* buttons) {
+    auto res = SendMessageW(hwnd, TB_ADDBUTTONS, count, (LPARAM)buttons);
+    ReportDebugIf(0 == res);
+}
+
+void TbAutosIZE(HWND hwnd) {
+    SendMessageW(hwnd, TB_AUTOSIZE, 0, 0);
+}
+
+HIMAGELIST TbSetImageList(HWND hwnd, HIMAGELIST imageList) {
+    return (HIMAGELIST)SendMessageW(hwnd, TB_SETIMAGELIST, 0, (LPARAM)imageList);
+}
+
+HIMAGELIST TbGetImageList(HWND hwnd) {
+    return (HIMAGELIST)SendMessageW(hwnd, TB_GETIMAGELIST, 0, 0);
+}
+
+int TbGetButtonCount(HWND hwnd) {
+    return (int)SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0);
+}
+
+int TbHitTest(HWND hwnd, Point point) {
+    POINT pt = ToPOINT(point);
+    return (int)SendMessageW(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
+}
+
+DWORD TbGetExtendedStyle(HWND hwnd) {
+    return (DWORD)SendMessageW(hwnd, TB_GETEXTENDEDSTYLE, 0, 0);
+}
+
+void TbSetExtendedStyle(HWND hwnd, DWORD style) {
+    SendMessageW(hwnd, TB_SETEXTENDEDSTYLE, 0, style);
+}
+
+Size TbGetMaxSize(HWND hwnd) {
+    SIZE size{};
+    SendMessageW(hwnd, TB_GETMAXSIZE, 0, (LPARAM)&size);
+    return Size((int)size.cx, (int)size.cy);
 }
 
 void TbGetPadding(HWND hwnd, int* padX, int* padY) {
@@ -3344,29 +3409,33 @@ void TbSetPadding(HWND hwnd, int padX, int padY) {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/tb-getrect
-void TbGetRectById(HWND hwnd, int buttonId, RECT* r) {
+Rect TbGetRect(HWND hwnd, int buttonId) {
     if (!hwnd) {
-        return;
+        return {};
     }
-    auto res = SendMessageW(hwnd, TB_GETRECT, buttonId, (LPARAM)r);
+    RECT r{};
+    auto res = SendMessageW(hwnd, TB_GETRECT, buttonId, (LPARAM)&r);
     if (res == 0) {
-        logf("TbGetRect: hwnd=0x%p, buttonId: %d pos: (%d, %d) size: (%d, %d)\n", hwnd, buttonId, r->left, r->top,
-             RectDx(*r), RectDy(*r));
+        logf("TbGetRect: hwnd=0x%p, buttonId: %d pos: (%d, %d) size: (%d, %d)\n", hwnd, buttonId, r.left, r.top,
+             RectDx(r), RectDy(r));
         LogLastError();
         ReportIf(res == 0);
     }
+    return Rect(r);
 }
 
-void TbGetRectByIdx(HWND hwnd, int buttonIdx, RECT* rc) {
+Rect TbGetItemRect(HWND hwnd, int buttonIdx) {
     if (!hwnd) {
-        return;
+        return {};
     }
-    auto res = SendMessageW(hwnd, TB_GETITEMRECT, buttonIdx, (LPARAM)rc);
+    RECT rc{};
+    auto res = SendMessageW(hwnd, TB_GETITEMRECT, buttonIdx, (LPARAM)&rc);
     if (res == 0) {
-        logf("TbGetRectByIdx: hwnd=0x%p, buttonId: %d\n", hwnd, buttonIdx);
+        logf("TbGetItemRect: hwnd=0x%p, buttonIdx: %d\n", hwnd, buttonIdx);
         LogLastError();
         ReportIf(res == 0);
     }
+    return Rect(rc);
 }
 
 void TbGetMetrics(HWND hwnd, TBMETRICS* metrics) {

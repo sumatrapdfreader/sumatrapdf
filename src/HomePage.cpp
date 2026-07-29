@@ -1246,7 +1246,7 @@ void LayoutHomePage(HomePageLayout& l) {
     int thumbsContentWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
 
     // --- Step 1: layout header at the top ---
-    l.himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    l.himlOpen = TbGetImageList(win->hwndToolbar);
     Rect rcIconView(0, 0, 0, 0);
     ImageList_GetIconSize(l.himlOpen, &rcIconView.dx, &rcIconView.dy);
 

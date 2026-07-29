@@ -106,7 +106,7 @@ static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE fla
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
-    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    TbGetButtonInfo(hwnd, idx, &bi);
     BYTE newState = (BYTE)(set ? bi.fsState | flag : bi.fsState & ~flag);
     if (newState == bi.fsState) {
         // TB_SETBUTTONINFOW repaints the button even when nothing changes, which
@@ -115,7 +115,7 @@ static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE fla
         return;
     }
     bi.fsState = newState;
-    SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+    TbSetButtonInfo(hwnd, idx, &bi);
 }
 
 static int TotalButtonsCount() {
@@ -162,7 +162,7 @@ static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
     bi.cx = (WORD)dx;
-    TbSetButtonInfoById(hwndToolbar, cmd, &bi);
+    TbSetButtonInfo(hwndToolbar, cmd, &bi);
 }
 
 // which documents support rotation
@@ -352,7 +352,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
         binfo.pszText = CWStrTemp(s);
         WPARAM buttonId = (WPARAM)i;
-        TbSetButtonInfoById(hwnd, buttonId, &binfo);
+        TbSetButtonInfo(hwnd, buttonId, &binfo);
     }
     // TODO: need an explicit tooltip window https://chatgpt.com/c/18fb77c8-761c-4314-a1ac-e55b93edfeef
 #if 0
@@ -372,7 +372,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
             binfo.pszText = CWStrTemp(s);
             WPARAM buttonId = (WPARAM)(kButtonsCount + i);
-            TbSetButtonInfoById(hwnd, buttonId, &binfo);
+            TbSetButtonInfo(hwnd, buttonId, &binfo);
         }
     }
 #endif
@@ -382,12 +382,12 @@ static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
-    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    TbGetButtonInfo(hwnd, idx, &bi);
     if (bi.iImage == (int)icon) {
         return; // TB_SETBUTTONINFOW always repaints; skip no-ops
     }
     bi.iImage = (int)icon;
-    SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+    TbSetButtonInfo(hwnd, idx, &bi);
 }
 
 // sets button text, which the toolbar shows as its tooltip
@@ -405,13 +405,13 @@ static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
     bi.dwMask = TBIF_BYINDEX | TBIF_TEXT;
     bi.pszText = prevBuf;
     bi.cchText = dimof(prevBuf);
-    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    TbGetButtonInfo(hwnd, idx, &bi);
     if (str::Eq(ToUtf8Temp(prevBuf), s)) {
         return;
     }
     bi.pszText = CWStrTemp(s);
     bi.cchText = 0;
-    SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+    TbSetButtonInfo(hwnd, idx, &bi);
 }
 
 // TODO: this is called too often
@@ -533,9 +533,8 @@ static int ToolbarNaturalWidth(MainWindow* win) {
     Rect rRebar = HwndWindowRect(win->hwndReBar);
     Rect rTb = HwndWindowRect(win->hwndToolbar);
     int contentRight = rTb.x; // screen x of the rightmost content edge
-    SIZE tbSz{};
-    SendMessageW(win->hwndToolbar, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
-    contentRight = std::max(contentRight, rTb.x + (int)tbSz.cx);
+    Size tbSz = TbGetMaxSize(win->hwndToolbar);
+    contentRight = std::max(contentRight, rTb.x + tbSz.dx);
     if (win->hwndPageTotal && HwndIsVisible(win->hwndPageTotal)) {
         Rect rpt = HwndWindowRect(win->hwndPageTotal);
         contentRight = std::max(contentRight, rpt.x + rpt.dx);
@@ -843,13 +842,13 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     if (WM_LBUTTONDOWN == msg || WM_LBUTTONDBLCLK == msg) {
         MainWindow* win = FindMainWindowByHwnd(hwnd);
         if (win && win->tabsInTitlebar) {
-            POINT pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-            int idx = (int)SendMessageW(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
+            Point pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            int idx = TbHitTest(hwnd, pt);
             if (idx < 0) {
                 // also check we're not over a child control (find box, page box)
-                POINT ptScreen = pt;
+                POINT ptScreen = ToPOINT(pt);
                 ClientToScreen(hwnd, &ptScreen);
-                HWND childAtPoint = ChildWindowFromPoint(hwnd, pt);
+                HWND childAtPoint = ChildWindowFromPoint(hwnd, ToPOINT(pt));
                 if (!childAtPoint || childAtPoint == hwnd) {
                     HWND hwndFrame = GetAncestor(hwnd, GA_ROOT);
                     if (WM_LBUTTONDBLCLK == msg) {
@@ -966,11 +965,10 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     // TB_GETRECT fails for hidden buttons, so anchor on a button that's still
     // visible. CmdPrint is hidden when PrinterAccess is revoked via
     // sumatrapdfrestrict.ini (issue #5563); fall back to CmdOpenFile in that case.
-    RECT r{};
     int anchorCmd = HasPermission(Perm::PrinterAccess) ? CmdPrint : CmdOpenFile;
-    SendMessageW(win->hwndToolbar, TB_GETRECT, anchorCmd, (LPARAM)&r);
-    int currX = r.right + DpiScale(win->hwndFrame, 10);
-    int currY = (r.bottom - pageWndRect.dy) / 2;
+    Rect r = TbGetRect(win->hwndToolbar, anchorCmd);
+    int currX = r.x + r.dx + DpiScale(win->hwndFrame, 10);
+    int currY = (r.y + r.dy - pageWndRect.dy) / 2;
 
     TempStr txt = nullptr;
     Size size2;
@@ -1014,7 +1012,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         TBBUTTONINFOW bi0{};
         bi0.cbSize = sizeof(bi0);
         bi0.dwMask = TBIF_SIZE;
-        SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, PageInfoId, (LPARAM)&bi0);
+        TbGetButtonInfo(win->hwndToolbar, PageInfoId, &bi0);
         int wantCx = size2.dx + size.dx + pageWndRect.dx + 12;
         if (bi0.cx == wantCx) {
             return;
@@ -1060,7 +1058,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, PageInfoId, (LPARAM)&bi);
+    TbGetButtonInfo(win->hwndToolbar, PageInfoId, &bi);
     size2.dx += size.dx + pageWndRect.dx + 12;
     if (bi.cx != size2.dx || !updateOnly) {
         TbSetButtonDx(win->hwndToolbar, PageInfoId, size2.dx);
@@ -1330,7 +1328,7 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     int dx = iconSize;
     // this doesn't seem to be required and doesn't help with weird sizes like 22
     // but the docs say to do it
-    SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
+    TbSetBitmapSize(hwndToolbar, Size(dx, dx));
 
     Str customSvgs[kMaxCustomButtons];
     int customCount = 0;
@@ -1350,7 +1348,7 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
     // Replace (and free) the previous list so theme / size changes do not leak
-    HIMAGELIST oldHiml = (HIMAGELIST)SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    HIMAGELIST oldHiml = TbSetImageList(hwndToolbar, himl);
     if (oldHiml) {
         ImageList_Destroy(oldHiml);
     }
@@ -1377,13 +1375,11 @@ HIMAGELIST BuildStdToolbarImageList(int dx) {
 // returns an empty rect when the toolbar isn't visible (e.g. fullscreen /
 // presentation) so the caller can fall back to a different anchor.
 Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
-    RECT r{};
     if (!win->hwndToolbar || !HwndIsVisible(win->hwndToolbar)) {
         return {};
     }
-    TbGetRectById(win->hwndToolbar, cmdId, &r);
-    MapWindowPoints(win->hwndToolbar, HWND_DESKTOP, (POINT*)&r, 2);
-    return Rect{r.left, r.top, r.right - r.left, r.bottom - r.top};
+    Rect r = TbGetRect(win->hwndToolbar, cmdId);
+    return HwndMapRectToWindow(r, win->hwndToolbar, HWND_DESKTOP);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
@@ -1425,7 +1421,7 @@ void CreateToolbar(MainWindow* win) {
     HWND hwndToolbar =
         CreateWindowExW(exStyle, TOOLBARCLASSNAME, nullptr, style, 0, 0, 0, 0, win->hwndReBar, cmd, hinst, nullptr);
     win->hwndToolbar = hwndToolbar;
-    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+    TbSetButtonStructSize(hwndToolbar, (int)sizeof(TBBUTTON));
 
     if (!UseDarkModeLib() || !DarkMode::isEnabled()) {
         if (!IsCurrentThemeDefault()) {
@@ -1453,31 +1449,27 @@ void CreateToolbar(MainWindow* win) {
     // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
     TbSetMetrics(hwndToolbar, &tbMetrics);
 
-    LRESULT exstyle = SendMessageW(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
+    DWORD exstyle = TbGetExtendedStyle(hwndToolbar);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     exstyle |= TBSTYLE_EX_DRAWDDARROWS;
-    SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
+    TbSetExtendedStyle(hwndToolbar, exstyle);
 
     TBBUTTON tbButtons[kButtonsCount];
     for (int i = 0; i < kButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gToolbarButtons[i];
         tbButtons[i] = TbButtonFromButtonInfo(bi);
     }
-    SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
+    TbAddButtons(hwndToolbar, kButtonsCount, tbButtons);
 
     TBBUTTON* buttons = AllocArrayTemp<TBBUTTON>(gCustomButtonsCount);
     for (int i = 0; i < gCustomButtonsCount; i++) {
         ToolbarButtonInfo& tbi = gCustomButtons[i];
         buttons[i] = TbButtonFromButtonInfo(tbi, true);
     }
-    SendMessageW(hwndToolbar, TB_ADDBUTTONS, gCustomButtonsCount, (LPARAM)buttons);
-    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
+    TbAddButtons(hwndToolbar, gCustomButtonsCount, buttons);
+    TbSetButtonSize(hwndToolbar, Size(iconSize, iconSize));
 
-    RECT rc;
-    LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
-    if (!res) {
-        rc.left = rc.right = rc.top = rc.bottom = 0;
-    }
+    Rect rc = TbGetItemRect(hwndToolbar, 0);
 
     ShowWindow(hwndToolbar, SW_SHOW);
 
@@ -1491,8 +1483,8 @@ void CreateToolbar(MainWindow* win) {
     rbBand.hbmBack = nullptr;
     rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
     rbBand.hwndChild = hwndToolbar;
-    rbBand.cxMinChild = (rc.right - rc.left) * kButtonsCount;
-    rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;
+    rbBand.cxMinChild = rc.dx * kButtonsCount;
+    rbBand.cyMinChild = rc.dy + 2 * rc.y;
     rbBand.cx = 0;
     SendMessageW(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -1676,11 +1668,10 @@ static bool ShouldSwitchMenuBarOnMouseMove() {
     ScreenToClient(hwndTb, &pt);
 
     // hit-test the toolbar
-    int btnCount = (int)SendMessageW(hwndTb, TB_BUTTONCOUNT, 0, 0);
+    int btnCount = TbGetButtonCount(hwndTb);
     for (int i = 0; i < btnCount; i++) {
-        RECT rc;
-        SendMessageW(hwndTb, TB_GETITEMRECT, i, (LPARAM)&rc);
-        if (PtInRect(&rc, pt)) {
+        Rect rc = TbGetItemRect(hwndTb, i);
+        if (rc.Contains(pt.x, pt.y)) {
             TBBUTTON tb{};
             SendMessageW(hwndTb, TB_GETBUTTON, i, (LPARAM)&tb);
             int menuIdx = tb.idCommand - kMenuBarCmdFirst;
@@ -1765,17 +1756,16 @@ void RebuildMenuBarButtons(MainWindow* win) {
         b.fsState = TBSTATE_ENABLED;
         b.fsStyle = BTNS_AUTOSIZE | BTNS_SHOWTEXT;
         b.iString = (INT_PTR)name;
-        SendMessageW(hwndMb, TB_ADDBUTTONS, 1, (LPARAM)&b);
+        TbAddButtons(hwndMb, 1, &b);
     }
 
-    SendMessageW(hwndMb, TB_AUTOSIZE, 0, 0);
+    TbAutosIZE(hwndMb);
 
     if (win->hwndMenuReBar) {
-        RECT rc;
-        LRESULT res = SendMessageW(hwndMb, TB_GETITEMRECT, 0, (LPARAM)&rc);
+        Rect rc = TbGetItemRect(hwndMb, 0);
         int menuBarDy = MenuBarToolbarIdealDy(win);
-        if (res && rc.bottom > rc.top) {
-            menuBarDy = (rc.bottom - rc.top) + 2 * rc.top;
+        if (rc.dy > 0) {
+            menuBarDy = rc.dy + 2 * rc.y;
         }
         REBARBANDINFOW rbBand{};
         rbBand.cbSize = sizeof(REBARBANDINFOW);
@@ -1823,7 +1813,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     win->hwndMenuToolbar = CreateWindowExW(exStyle, TOOLBARCLASSNAME, nullptr, style, 0, 0, 0, 0, win->hwndMenuReBar,
                                            (HMENU)IDC_MENUBAR, hinst, nullptr);
     SetWindowSubclass(win->hwndMenuToolbar, MenuBarToolbarWndProc, 0, 0);
-    SendMessageW(win->hwndMenuToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+    TbSetButtonStructSize(win->hwndMenuToolbar, (int)sizeof(TBBUTTON));
 
     if (!UseDarkModeLib() || !DarkMode::isEnabled()) {
         if (!IsCurrentThemeDefault()) {
@@ -1834,16 +1824,15 @@ void CreateMenuBarRebar(MainWindow* win) {
     HFONT font = GetAppMenuFont(win->hwndFrame);
     HwndSetFont(win->hwndMenuToolbar, font);
 
-    LRESULT tbExStyle = SendMessageW(win->hwndMenuToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
+    DWORD tbExStyle = TbGetExtendedStyle(win->hwndMenuToolbar);
     tbExStyle |= TBSTYLE_EX_MIXEDBUTTONS;
-    SendMessageW(win->hwndMenuToolbar, TB_SETEXTENDEDSTYLE, 0, tbExStyle);
+    TbSetExtendedStyle(win->hwndMenuToolbar, tbExStyle);
 
     RebuildMenuBarButtons(win);
 
-    RECT rc;
-    LRESULT res = SendMessageW(win->hwndMenuToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
-    int menuBarDy = (rc.bottom - rc.top) + 2 * rc.top;
-    if (!res || menuBarDy <= 0) {
+    Rect rc = TbGetItemRect(win->hwndMenuToolbar, 0);
+    int menuBarDy = rc.dy + 2 * rc.y;
+    if (menuBarDy <= 0) {
         menuBarDy = MenuBarToolbarIdealDy(win);
     }
 
@@ -1916,11 +1905,10 @@ bool HandleMenuBarCommand(MainWindow* win, int cmdId) {
         }
 
         // get button rect in screen coordinates
-        RECT btnRect;
         int btnCmdId = kMenuBarCmdFirst + menuIdx;
         int btnIdx = (int)SendMessageW(win->hwndMenuToolbar, TB_COMMANDTOINDEX, btnCmdId, 0);
-        SendMessageW(win->hwndMenuToolbar, TB_GETITEMRECT, btnIdx, (LPARAM)&btnRect);
-        MapWindowPoints(win->hwndMenuToolbar, HWND_DESKTOP, (POINT*)&btnRect, 2);
+        Rect btnRect = TbGetItemRect(win->hwndMenuToolbar, btnIdx);
+        btnRect = HwndMapRectToWindow(btnRect, win->hwndMenuToolbar, HWND_DESKTOP);
 
         gMenuBarPopupNav.win = win;
         gMenuBarPopupNav.rootMenu = subMenu;
@@ -1929,7 +1917,7 @@ bool HandleMenuBarCommand(MainWindow* win, int cmdId) {
         gMenuBarPopupNav.nextMenuIdx = menuIdx;
 
         HHOOK hook = SetWindowsHookExW(WH_MSGFILTER, MenuBarMsgFilterHook, nullptr, GetCurrentThreadId());
-        TrackPopupMenu(subMenu, flags, btnRect.left, btnRect.bottom, 0, win->hwndFrame, nullptr);
+        TrackPopupMenu(subMenu, flags, btnRect.x, btnRect.y + btnRect.dy, 0, win->hwndFrame, nullptr);
         if (hook) {
             UnhookWindowsHookEx(hook);
         }

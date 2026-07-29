@@ -164,12 +164,12 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         // bar's themed background instead of a light box in dark themes (the
         // background is painted from NM_CUSTOMDRAW in WndProc)
         SetWindowTheme(hwndBtns, L"", L"");
-        SendMessageW(hwndBtns, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+        TbSetButtonStructSize(hwndBtns, (int)sizeof(TBBUTTON));
 
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
         himl = BuildStdToolbarImageList(isz);
-        SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
-        SendMessageW(hwndBtns, TB_SETBUTTONSIZE, 0, MAKELONG(isz, isz));
+        TbSetImageList(hwndBtns, himl);
+        TbSetButtonSize(hwndBtns, Size(isz, isz));
 
         TBBUTTON b[6]{};
         b[0].iBitmap = (int)TbIcon::ChevronUp;
@@ -196,8 +196,8 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         b[5].idCommand = kFindBarCloseCmdId;
         b[5].fsState = TBSTATE_ENABLED;
         b[5].fsStyle = BTNS_BUTTON;
-        SendMessageW(hwndBtns, TB_ADDBUTTONS, 6, (LPARAM)&b);
-        SendMessageW(hwndBtns, TB_AUTOSIZE, 0, 0);
+        TbAddButtons(hwndBtns, 6, b);
+        TbAutosIZE(hwndBtns);
     }
 
     Layout();
@@ -212,19 +212,18 @@ void FindBarWnd::Layout() {
 
     int editDy = edit->GetIdealSize().dy;
 
-    SIZE tbSz{};
-    SendMessageW(hwndBtns, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
+    Size tbSz = TbGetMaxSize(hwndBtns);
 
-    int innerDy = std::max(editDy, (int)tbSz.cy);
+    int innerDy = std::max(editDy, tbSz.dy);
     barDy = innerDy + 2 * p;
-    barDx = p + editDx + gap + statusDx + gap + (int)tbSz.cx + p;
+    barDx = p + editDx + gap + statusDx + gap + tbSz.dx + p;
 
     int x = p;
     MoveWindow(edit->hwnd, x, (barDy - editDy) / 2, editDx, editDy, TRUE);
     x += editDx + gap;
     MoveWindow(status->hwnd, x, (barDy - editDy) / 2, statusDx, editDy, TRUE);
     x += statusDx + gap;
-    MoveWindow(hwndBtns, x, (barDy - (int)tbSz.cy) / 2, (int)tbSz.cx, (int)tbSz.cy, TRUE);
+    MoveWindow(hwndBtns, x, (barDy - tbSz.dy) / 2, tbSz.dx, tbSz.dy, TRUE);
 
     SetWindowPos(hwnd, nullptr, 0, 0, barDx, barDy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
@@ -532,7 +531,7 @@ void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
         return;
     }
     if (win->findBar && win->findBar->hwndBtns) {
-        SendMessageW(win->findBar->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchCase, MAKELONG(checked ? 1 : 0, 0));
+        TbSetButtonChecked(win->findBar->hwndBtns, CmdFindToggleMatchCase, checked);
     }
 }
 
@@ -542,6 +541,6 @@ void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked) {
         return;
     }
     if (win->findBar && win->findBar->hwndBtns) {
-        SendMessageW(win->findBar->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchWholeWord, MAKELONG(checked ? 1 : 0, 0));
+        TbSetButtonChecked(win->findBar->hwndBtns, CmdFindToggleMatchWholeWord, checked);
     }
 }

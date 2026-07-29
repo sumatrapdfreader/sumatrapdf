@@ -2570,7 +2570,7 @@ void DeleteMainWindow(MainWindow* win) {
     }
 
     DeletePropertiesWindow(win->hwndFrame);
-    ImageList_Destroy((HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
+    ImageList_Destroy(TbGetImageList(win->hwndToolbar));
     RevokeCanvasDropTarget(win->hwndCanvas);
 
     ReportIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
@@ -9812,11 +9812,10 @@ void RelayoutCaption(MainWindow* win) {
         // Menu bar rebar in row 1 after system menu, natural width
         int menuBarWidth = row1Dx; // default: fill available
         if (win->hwndMenuToolbar) {
-            int btnCount = (int)SendMessageW(win->hwndMenuToolbar, TB_BUTTONCOUNT, 0, 0);
+            int btnCount = TbGetButtonCount(win->hwndMenuToolbar);
             if (btnCount > 0) {
-                RECT lastBtn;
-                SendMessageW(win->hwndMenuToolbar, TB_GETITEMRECT, btnCount - 1, (LPARAM)&lastBtn);
-                int naturalWidth = lastBtn.right + GetSystemMetrics(SM_CXBORDER) * 2;
+                Rect lastBtn = TbGetItemRect(win->hwndMenuToolbar, btnCount - 1);
+                int naturalWidth = lastBtn.x + lastBtn.dx + GetSystemMetrics(SM_CXBORDER) * 2;
                 if (naturalWidth < row1Dx) {
                     menuBarWidth = naturalWidth;
                 }
@@ -11315,9 +11314,8 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         return;
     }
 
-    RECT rc{};
-    SendMessageW(nmtb->hdr.hwndFrom, TB_GETRECT, CmdReadAloud, (LPARAM)&rc);
-    MapWindowPoints(nmtb->hdr.hwndFrom, HWND_DESKTOP, (POINT*)&rc, 2);
+    Rect rect = TbGetRect(nmtb->hdr.hwndFrom, CmdReadAloud);
+    RECT rc = ToRECT(HwndMapRectToWindow(rect, nmtb->hdr.hwndFrom, HWND_DESKTOP));
 
     HMENU menu = CreatePopupMenu();
     if (!menu) {
