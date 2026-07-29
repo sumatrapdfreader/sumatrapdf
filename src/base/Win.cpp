@@ -257,7 +257,9 @@ Rect HwndWindowRect(HWND hwnd) {
 }
 
 void HwndInvalidateRect(HWND hwnd, Rect rect, bool erase) {
-    ReportIf(rect.IsEmpty());
+    if (rect.IsEmpty()) {
+        return;
+    }
     RECT r = ToRECT(rect);
     InvalidateRect(hwnd, &r, toBOOL(erase));
 }
