@@ -11,6 +11,10 @@
 
 #include <aclapi.h>
 #include <bitset>
+#if COMPILER_MINGW
+#include <cpuid.h>
+#endif
+#include <float.h>
 #include <mlang.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2
@@ -3783,15 +3787,27 @@ u32 CpuID() {
 
     u32 res = 0;
     int cpuInfo[4]{};
+#if COMPILER_MINGW
+    __cpuid(0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#else
     __cpuid(cpuInfo, 0);
+#endif
     int nIds = cpuInfo[0];
     if (nIds >= 1) {
+#if COMPILER_MINGW
+        __cpuid(1, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#else
         __cpuid(cpuInfo, 1);
+#endif
         f_1_ECX_ = cpuInfo[2];
         f_1_EDX_ = cpuInfo[3];
     }
     if (nIds >= 7) {
+#if COMPILER_MINGW
+        __cpuid_count(7, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#else
         __cpuid(cpuInfo, 7);
+#endif
         f_7_EBX_ = cpuInfo[1];
         f_7_ECX_ = cpuInfo[2];
     }
