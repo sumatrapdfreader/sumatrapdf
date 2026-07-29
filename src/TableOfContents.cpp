@@ -99,21 +99,127 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     str::BufSet(nm->pszText, nm->cchTextMax, ToStr(infotip));
 }
 
+// Deferred TOC navigation must not hold raw TocItem* / IPageDestination*
+// pointers: the TOC tree can be rebuilt or freed before the uitask runs
+// (while tab->ctrl still matches), which caused UAF in HandleLink
+// (crash 8bfe7adb1000001: EngineMupdf::HandleLink / dest->GetKind).
+
+// Own a stable copy of the destination at post time. Engine-private kinds
+// that hold fz_outline/fz_link (mupdf) are converted to scrollTo with
+// page/rect/zoom already resolved on the TocItem/dest.
+static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int tocPageNo) {
+    if (!dest) {
+        return nullptr;
+    }
+    Kind k = dest->GetKind();
+    if (k == kindDestinationLaunchURL) {
+        Str url = ((PageDestinationURL*)dest)->url;
+        if (!url) {
+            url = PageDestGetValue(dest);
+        }
+        return url ? new PageDestinationURL(url) : nullptr;
+    }
+    if (k == kindDestinationLaunchFile) {
+        auto* f = (PageDestinationFile*)dest;
+        auto* copy = new PageDestinationFile(f->path, f->dest);
+        copy->openInNewWindow = f->openInNewWindow;
+        copy->rect = f->rect;
+        return copy;
+    }
+    if (k == kindDestinationLaunchEmbedded || k == kindDestinationAttachment) {
+        auto* p = (PageDestination*)dest;
+        auto* copy = new PageDestination();
+        copy->kind = k;
+        copy->pageNo = p->pageNo;
+        copy->rect = p->rect;
+        copy->zoom = p->zoom;
+        copy->value = str::Dup(p->value);
+        copy->name = str::Dup(p->name);
+        copy->embedObjNum = p->embedObjNum;
+        return copy;
+    }
+    // scrollTo, mupdf, djvu, none → page navigation snapshot
+    int pageNo = PageDestGetPageNo(dest);
+    if (pageNo <= 0) {
+        pageNo = tocPageNo;
+    }
+    if (pageNo <= 0) {
+        Str val = PageDestGetValue(dest);
+        if (val && IsExternalUrl(val)) {
+            return new PageDestinationURL(val);
+        }
+        return nullptr;
+    }
+    RectF r = PageDestGetRect(dest);
+    float zoom = PageDestGetZoom(dest);
+    if (k == kindDestinationMupdf) {
+        // Prefer resolved anchor; outline x/y can be 0 and scroll to the wrong place
+        RectF pt = PageDestGetDestPoint(dest);
+        if ((r.dx == 0 && r.dy == 0) || (r.dx == DEST_USE_DEFAULT && r.dy == DEST_USE_DEFAULT)) {
+            if (pt.x != 0 || pt.y != 0 || r.IsEmpty()) {
+                r = RectF{pt.x, pt.y, DEST_USE_DEFAULT, DEST_USE_DEFAULT};
+            }
+        }
+        zoom = dest->GetZoom2();
+    }
+    return NewSimpleDest(pageNo, r, zoom);
+}
+
+static TocItem* FindTocItemByTitlePage(TocItem* item, Str title, int pageNo) {
+    for (; item; item = item->next) {
+        if (pageNo > 0 && item->pageNo != pageNo) {
+            // keep searching children; same page can nest under different titles
+        } else if (title && item->title && str::Eq(title, item->title)) {
+            if (pageNo <= 0 || item->pageNo == pageNo) {
+                return item;
+            }
+        } else if (!title && pageNo > 0 && item->pageNo == pageNo) {
+            return item;
+        }
+        TocItem* found = FindTocItemByTitlePage(item->child, title, pageNo);
+        if (found) {
+            return found;
+        }
+    }
+    return nullptr;
+}
+
 struct GoToTocLinkData {
-    TocItem* tocItem;
-    WindowTab* tab;
-    DocController* ctrl;
+    WindowTab* tab = nullptr;
+    DocController* ctrl = nullptr;
+    // owned snapshot; may be null (then pageNo alone is used)
+    IPageDestination* dest = nullptr;
+    int pageNo = 0;
+    // owned; used to re-select in tree after palette-driven nav
+    Str title;
     // true when the navigation was driven from outside the tree (e.g. the
     // command palette), so afterwards we must move the tree's selection to the
     // item ourselves. For tree-driven navigation the tree is already selected.
     bool selectInTree = false;
+
+    ~GoToTocLinkData() {
+        delete dest;
+        str::Free(title);
+    }
 };
+
+static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree) {
+    auto* data = new GoToTocLinkData;
+    data->ctrl = win->ctrl;
+    data->tab = win->CurrentTab();
+    data->pageNo = tocItem->pageNo;
+    data->dest = SnapshotDestForDeferredNav(tocItem->GetPageDestination(), tocItem->pageNo);
+    data->selectInTree = selectInTree;
+    if (selectInTree && tocItem->title) {
+        data->title = str::Dup(tocItem->title);
+    }
+    return data;
+}
 
 static void GoToTocLink(GoToTocLinkData* d) {
     AutoDelete delData(d);
 
     auto tab = d->tab;
-    auto tocItem = d->tocItem;
     auto ctrl = d->ctrl;
 
     // validate tab before dereferencing — it may have been freed
@@ -122,7 +228,7 @@ static void GoToTocLink(GoToTocLinkData* d) {
         return;
     }
     MainWindow* win = tab->win;
-    // tocItem is invalid if the DocController has been replaced
+    // destination snapshot is invalid if the DocController has been replaced
     if (!IsMainWindowValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
         return;
     }
@@ -130,12 +236,10 @@ static void GoToTocLink(GoToTocLinkData* d) {
     // make sure that the tree item that the user selected
     // isn't unselected in UpdateTocSelection right again
     win->tocKeepSelection = true;
-    int pageNo = tocItem->pageNo;
-    IPageDestination* dest = tocItem->GetPageDestination();
-    if (dest) {
-        ctrl->HandleLink(dest, win->linkHandler);
-    } else if (pageNo) {
-        ctrl->GoToPage(pageNo, true);
+    if (d->dest) {
+        ctrl->HandleLink(d->dest, win->linkHandler);
+    } else if (d->pageNo) {
+        ctrl->GoToPage(d->pageNo, true);
     }
     win->tocKeepSelection = false;
 
@@ -144,12 +248,19 @@ static void GoToTocLink(GoToTocLinkData* d) {
     // the tree still shows the old item. Move the selection to this item now
     // (programmatic SelectItem doesn't re-navigate -- see TocTreeSelectionChanged).
     if (d->selectInTree && win->tocLoaded && win->tocTreeView) {
-        TreeView* treeView = win->tocTreeView;
-        HTREEITEM hi = treeView->GetHandleByTreeItem((TreeItem)tocItem);
-        if (hi) {
-            TreeView_EnsureVisible(treeView->hwnd, hi);
+        TocTree* tree = tab->currToc;
+        TocItem* tocItem = nullptr;
+        if (tree && tree->root) {
+            tocItem = FindTocItemByTitlePage(tree->root, d->title, d->pageNo);
         }
-        treeView->SelectItem((TreeItem)tocItem);
+        if (tocItem) {
+            TreeView* treeView = win->tocTreeView;
+            HTREEITEM hi = treeView->GetHandleByTreeItem((TreeItem)tocItem);
+            if (hi) {
+                TreeView_EnsureVisible(treeView->hwnd, hi);
+            }
+            treeView->SelectItem((TreeItem)tocItem);
+        }
     }
 }
 
@@ -160,11 +271,7 @@ void GoToTocItem(MainWindow* win, TocItem* tocItem) {
     if (!win || !tocItem) {
         return;
     }
-    auto data = new GoToTocLinkData;
-    data->ctrl = win->ctrl;
-    data->tocItem = tocItem;
-    data->tab = win->CurrentTab();
-    data->selectInTree = true; // palette-driven: sync the tree selection too
+    auto data = NewGoToTocLinkData(win, tocItem, true);
     auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
     uitask::Post(fn, "TaskGoToTocFromPalette");
 }
@@ -186,10 +293,7 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
-        auto data = new GoToTocLinkData;
-        data->ctrl = win->ctrl;
-        data->tocItem = tocItem;
-        data->tab = win->CurrentTab();
+        auto data = NewGoToTocLinkData(win, tocItem, false);
         auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
         uitask::Post(fn, "TaskGoToTocTreeItem");
     }

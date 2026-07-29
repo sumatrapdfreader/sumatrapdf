@@ -4718,6 +4718,9 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
 }
 
 bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
+    if (!dest || !linkHandler) {
+        return false;
+    }
     Kind k = dest->GetKind();
     if (k == kindDestinationMupdf) {
         HandleLinkMupdf(this, dest, linkHandler);
