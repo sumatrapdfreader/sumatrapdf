@@ -509,6 +509,13 @@ static bool PrepareInstallDirByRenaming(Str installDir, bool silent) {
             return false;
         }
     }
+    // The exe itself: a just-killed (TerminateProcess is async) or relaunched
+    // instance can still map SumatraPDF.exe, which would make CopySelfToDir's
+    // overwrite fail with a sharing violation. Rename it aside too - renaming a
+    // mapped image is allowed even though overwriting/deleting it is not.
+    if (!MoveAsideInstallFile(installDir, Str(kExeName), silent)) {
+        return false;
+    }
     // Older installs: move libmupdf.dll out of the way without blocking on it.
     MoveAsideOrDeleteLegacyLibmupdf(installDir);
     return true;
@@ -516,10 +523,8 @@ static bool PrepareInstallDirByRenaming(Str installDir, bool silent) {
 
 static void DeleteInstallCopyLeftovers(Str destDir) {
     static const Str kCopies[] = {
-        StrL("libsumatrapdf.dll.copy"),
-        StrL("libmupdf.dll.copy"),
-        StrL("PdfFilter.dll.copy"),
-        StrL("PdfPreview.dll.copy"),
+        StrL("libsumatrapdf.dll.copy"), StrL("libmupdf.dll.copy"),   StrL("PdfFilter.dll.copy"),
+        StrL("PdfPreview.dll.copy"),    StrL("SumatraPDF.exe.copy"),
     };
     for (Str name : kCopies) {
         TempStr copyPath = path::JoinTemp(destDir, name);
