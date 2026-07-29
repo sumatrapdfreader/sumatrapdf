@@ -452,7 +452,7 @@ static TempStr TrimmedAsciiTemp(ByteReader r, int off, u32 count) {
     if (off + n > r.len) {
         n = r.len - off;
     }
-    while (n > 0 && r.Byte(off + n - 1) == 0) {
+    while (n > 0 && r.UInt8(off + n - 1) == 0) {
         n--;
     }
     return strconv::AnsiToUtf8Temp(Str((char*)(r.d + off), n));
@@ -469,11 +469,11 @@ static const ExifEntry* FindEntry(const ExifParser& parser, ExifProp prop) {
 }
 
 static u16 ReadWord(const ExifParser& parser, int off) {
-    return ByteReader(parser.exifBlob).Word(off, parser.isBE);
+    return ByteReader(parser.exifBlob).UInt16(off, parser.isBE);
 }
 
 static u32 ReadDWord(const ExifParser& parser, int off) {
-    return ByteReader(parser.exifBlob).DWord(off, parser.isBE);
+    return ByteReader(parser.exifBlob).UInt32(off, parser.isBE);
 }
 
 static bool EntryBoundsOk(const ExifParser& parser, const ExifEntry& entry, int bytes) {
@@ -524,7 +524,7 @@ static TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
     static SeqStrings compNames = "Y\0Cb\0Cr\0R\0G\0B\0";
     str::Builder s;
     for (u32 i = 0; i < count && off + (int)i < r.len; i++) {
-        u8 c = r.Byte(off + i);
+        u8 c = r.UInt8(off + i);
         if (c == 0) {
             break;
         }
@@ -551,7 +551,7 @@ static TempStr FormatUndefinedBytesTemp(ByteReader r, int off, u32 count, bool a
     }
     bool isAscii = true;
     for (u32 i = 0; i < count; i++) {
-        u8 b = r.Byte(off + i);
+        u8 b = r.UInt8(off + i);
         if (b == 0) {
             break;
         }
@@ -573,7 +573,7 @@ static TempStr FormatUndefinedBytesTemp(ByteReader r, int off, u32 count, bool a
         if (i > 0) {
             s.Append(", ");
         }
-        s.Append(fmt("%u", r.Byte(off + i)));
+        s.Append(fmt("%u", r.UInt8(off + i)));
     }
     if (count > show) {
         s.Append(", ... ");
@@ -655,13 +655,13 @@ static TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u
             return FormatComponentsConfig(r, off, count);
         }
         if (tag == (u16)ExifProp::FileSource && count >= 1) {
-            Str s = FormatFileSource(r.Byte(off));
+            Str s = FormatFileSource(r.UInt8(off));
             if (s) {
                 return s;
             }
         }
         if (tag == (u16)ExifProp::SceneType && count >= 1) {
-            Str s = FormatSceneType(r.Byte(off));
+            Str s = FormatSceneType(r.UInt8(off));
             if (s) {
                 return s;
             }
@@ -764,7 +764,7 @@ static TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u
             if (i > 0) {
                 s.Append(", ");
             }
-            s.Append(fmt("%u", r.Byte(off + i)));
+            s.Append(fmt("%u", r.UInt8(off + i)));
         }
         s.Append("]");
         return ToStrTemp(s);
@@ -796,13 +796,13 @@ static void ParseMakerNote(ExifParser& parser, int dataOff, u32 count) {
     int mnBase = dataOff;
     int mnOff = 8;
     int makerNoteEndian = 0;
-    if (count > 10 && (r.Byte(dataOff) == 'I' || r.Byte(dataOff) == 'M')) {
+    if (count > 10 && (r.UInt8(dataOff) == 'I' || r.UInt8(dataOff) == 'M')) {
         mnOff = 0;
-        makerNoteEndian = r.Byte(dataOff);
-    } else if (count > 10 && r.Byte(dataOff + 6) == 'I' && r.Byte(dataOff + 7) == 'I') {
+        makerNoteEndian = r.UInt8(dataOff);
+    } else if (count > 10 && r.UInt8(dataOff + 6) == 'I' && r.UInt8(dataOff + 7) == 'I') {
         mnOff = 8;
         makerNoteEndian = 'I';
-    } else if (count > 10 && r.Byte(dataOff + 6) == 'M' && r.Byte(dataOff + 7) == 'M') {
+    } else if (count > 10 && r.UInt8(dataOff + 6) == 'M' && r.UInt8(dataOff + 7) == 'M') {
         mnOff = 8;
         makerNoteEndian = 'M';
     }
@@ -898,14 +898,14 @@ static bool ParseTiff(ExifParser& parser) {
     if (r.len < 8) {
         return false;
     }
-    char b0 = (char)r.Byte(0);
-    char b1 = (char)r.Byte(1);
+    char b0 = (char)r.UInt8(0);
+    char b1 = (char)r.UInt8(1);
     if ((b0 == 'I' && b1 == 'I') || (b0 == 'M' && b1 == 'M')) {
         parser.isBE = b0 == 'M';
         parser.tiffBase = 0;
     } else if (r.len >= 6 && memcmp(r.d, "Exif\0\0", 6) == 0) {
         parser.tiffBase = 6;
-        parser.isBE = r.Byte(parser.tiffBase) == 'M';
+        parser.isBE = r.UInt8(parser.tiffBase) == 'M';
     } else {
         return false;
     }
@@ -919,19 +919,19 @@ static bool ParseTiff(ExifParser& parser) {
 
 static bool ExtractJpegExif(Str d, Str& out) {
     ByteReader r(d);
-    if (r.len < 4 || r.Byte(0) != 0xFF || r.Byte(1) != 0xD8) {
+    if (r.len < 4 || r.UInt8(0) != 0xFF || r.UInt8(1) != 0xD8) {
         return false;
     }
     int idx = 2;
     for (;;) {
-        if (idx + 4 > r.len || r.Byte(idx) != 0xFF) {
+        if (idx + 4 > r.len || r.UInt8(idx) != 0xFF) {
             return false;
         }
-        u8 marker = r.Byte(idx + 1);
+        u8 marker = r.UInt8(idx + 1);
         if (marker == 0xDA) {
             return false;
         }
-        int segLen = r.WordBE(idx + 2);
+        int segLen = r.UInt16BE(idx + 2);
         if (marker == 0xE1 && idx + 10 <= r.len && memcmp(r.d + idx + 4, "Exif\0\0", 6) == 0) {
             int payload = idx + 4;
             int total = segLen + 2;
@@ -960,15 +960,15 @@ static bool ExtractWebpExif(Str d, Str& out) {
     ByteReader r(d);
     int idx = 12;
     while (idx + 8 <= r.len) {
-        if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
-            int size = (int)r.DWordLE(idx + 4);
+        if (r.UInt8(idx) == 'E' && r.UInt8(idx + 1) == 'X' && r.UInt8(idx + 2) == 'I' && r.UInt8(idx + 3) == 'F') {
+            int size = (int)r.UInt32LE(idx + 4);
             int payload = idx + 8;
             if (payload + size <= r.len && size >= 8) {
                 out = Str((char*)(r.d + payload), size);
                 return true;
             }
         }
-        int size = (int)r.DWordLE(idx + 4);
+        int size = (int)r.UInt32LE(idx + 4);
         int chunkSize = size + (size & 1);
         if (chunkSize < size) {
             return false;
@@ -1176,7 +1176,7 @@ bool ExifParser::GetIntProp(ExifProp prop, i64* valOut) const {
         if (!EntryBoundsOk(*this, *entry, 1)) {
             return false;
         }
-        u8 v = ByteReader(exifBlob).Byte(entry->dataOff);
+        u8 v = ByteReader(exifBlob).UInt8(entry->dataOff);
         *valOut = entry->type == TiffSByte ? (i8)v : v;
         return true;
     }

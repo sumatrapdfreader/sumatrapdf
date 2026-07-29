@@ -953,7 +953,7 @@
     <ClCompile Include="..\src\base\tests\Base_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\tests\ByteOrderDecoder_ut.cpp">
+    <ClCompile Include="..\src\base\tests\ByteReaderWriter_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Crypto_ut.cpp">

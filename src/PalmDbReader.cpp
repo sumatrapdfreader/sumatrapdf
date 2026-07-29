@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/ByteOrderDecoder.h"
+#include "base/ByteReaderWriter.h"
 
 #include "PalmDbReader.h"
 
@@ -23,31 +23,31 @@ PdbReader::~PdbReader() {
     free((void*)data);
 }
 
-static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {
+static bool DecodePdbHeader(ByteReader& dec, PdbHeader* hdr) {
     dec.Bytes(hdr->name, 32);
     // the spec says it should be zero-terminated anyway, but this
     // comes from untrusted source, so we do our own termination
     hdr->name[31] = 0;
-    hdr->attributes = dec.UInt16();
-    hdr->version = dec.UInt16();
-    hdr->createTime = dec.UInt32();
-    hdr->modifyTime = dec.UInt32();
-    hdr->backupTime = dec.UInt32();
-    hdr->modificationNumber = dec.UInt32();
-    hdr->appInfoID = dec.UInt32();
-    hdr->sortInfoID = dec.UInt32();
+    hdr->attributes = dec.UInt16BE();
+    hdr->version = dec.UInt16BE();
+    hdr->createTime = dec.UInt32BE();
+    hdr->modifyTime = dec.UInt32BE();
+    hdr->backupTime = dec.UInt32BE();
+    hdr->modificationNumber = dec.UInt32BE();
+    hdr->appInfoID = dec.UInt32BE();
+    hdr->sortInfoID = dec.UInt32BE();
     ZeroMemory(hdr->typeCreator, dimof(hdr->typeCreator));
     dec.Bytes(hdr->typeCreator, 8);
-    hdr->idSeed = dec.UInt32();
-    hdr->nextRecordList = dec.UInt32();
-    hdr->numRecords = dec.UInt16();
+    hdr->idSeed = dec.UInt32BE();
+    hdr->nextRecordList = dec.UInt32BE();
+    hdr->numRecords = dec.UInt16BE();
     return dec.IsOk();
 }
 
 bool PdbReader::ParseHeader() {
     ReportIf(len(recInfos) > 0);
 
-    ByteOrderDecoder dec(data, dataSize, ByteOrderDecoder::BigEndian);
+    ByteReader dec(data, dataSize);
     bool ok = DecodePdbHeader(dec, &hdr);
     if (!ok) {
         return false;
@@ -63,7 +63,7 @@ bool PdbReader::ParseHeader() {
 
     for (int i = 0; i < nRecs; i++) {
         PdbRecordHeader recHdr;
-        recHdr.offset = dec.UInt32();
+        recHdr.offset = dec.UInt32BE();
         recHdr.flags = dec.UInt8();
         dec.Bytes(recHdr.uniqueID, dimof(recHdr.uniqueID));
         int off = (int)recHdr.offset;

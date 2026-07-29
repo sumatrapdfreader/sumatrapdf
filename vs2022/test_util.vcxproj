@@ -970,7 +970,6 @@
     <ClInclude Include="..\src\base\Arena.h" />
     <ClInclude Include="..\src\base\Base.h" />
     <ClInclude Include="..\src\base\BitManip.h" />
-    <ClInclude Include="..\src\base\ByteOrderDecoder.h" />
     <ClInclude Include="..\src\base\ByteReaderWriter.h" />
     <ClInclude Include="..\src\base\CmdLineArgsIter.h" />
     <ClInclude Include="..\src\base\Color.h" />
@@ -1026,7 +1025,6 @@
     <ClCompile Include="..\src\base\Arena_win.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\Base_win.cpp" />
-    <ClCompile Include="..\src\base\ByteOrderDecoder.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />
@@ -1060,7 +1058,7 @@
     <ClCompile Include="..\src\base\Win.cpp" />
     <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />
     <ClCompile Include="..\src\base\tests\Base_ut.cpp" />
-    <ClCompile Include="..\src\base\tests\ByteOrderDecoder_ut.cpp" />
+    <ClCompile Include="..\src\base\tests\ByteReaderWriter_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Crypto_ut.cpp" />
     <ClCompile Include="..\src\base\tests\CssParser_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Dict_ut.cpp" />

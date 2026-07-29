@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include <LzmaDec.h>
 #include <Bra.h>
-#include "base/ByteOrderDecoder.h"
+#include "base/ByteReaderWriter.h"
 #include "base/LzmaSimpleArchive.h"
 #include "base/File.h"
 
@@ -151,13 +151,13 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
         return false;
     }
 
-    ByteOrderDecoder br(archiveHeader, dataLen, ByteOrderDecoder::LittleEndian);
-    u32 magic_id = br.UInt32();
+    ByteReader br(archiveHeader, dataLen);
+    u32 magic_id = br.UInt32LE();
     if (magic_id != LZMA_MAGIC_ID) {
         return false;
     }
 
-    u32 filesCount = br.UInt32();
+    u32 filesCount = br.UInt32LE();
     archiveOut->filesCount = filesCount;
     if (filesCount > dimof(archiveOut->files)) {
         return false;
@@ -169,7 +169,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
             return false;
         }
 
-        u32 fileHeaderSize = br.UInt32();
+        u32 fileHeaderSize = br.UInt32LE();
         if (fileHeaderSize < FILE_ENTRY_MIN_SIZE || fileHeaderSize > 1024) {
             return false;
         }
@@ -179,11 +179,11 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
         }
 
         fi = &archiveOut->files[i];
-        fi->compressedSize = br.UInt32();
-        fi->uncompressedSize = br.UInt32();
-        fi->uncompressedCrc32 = br.UInt32();
-        fi->ftModified.dwLowDateTime = br.UInt32();
-        fi->ftModified.dwHighDateTime = br.UInt32();
+        fi->compressedSize = br.UInt32LE();
+        fi->uncompressedSize = br.UInt32LE();
+        fi->uncompressedCrc32 = br.UInt32LE();
+        fi->ftModified.dwLowDateTime = br.UInt32LE();
+        fi->ftModified.dwHighDateTime = br.UInt32LE();
         fi->name = Str((char*)archiveHeader + br.Offset());
         br.Skip(fileHdrSize - FILE_ENTRY_MIN_SIZE);
         if (br.Char() != '\0') {
@@ -196,7 +196,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
     }
 
     int headerSize = br.Offset();
-    u32 headerCrc32 = br.UInt32();
+    u32 headerCrc32 = br.UInt32LE();
     u32 realCrc = lzma_crc32(0, archiveHeader, (u32)headerSize);
     if (headerCrc32 != realCrc) {
         return false;

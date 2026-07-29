@@ -207,7 +207,7 @@ static bool IsPSFileContent(Str d) {
     }
     // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
     if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
-        DWORD psStart = ByteReader(d).DWordLE(4);
+        DWORD psStart = ByteReader(d).UInt32LE(4);
         if ((int)psStart >= n - 12) {
             return true;
         }
@@ -423,8 +423,8 @@ static void ParsePng(ByteReader r, FileTypeInfo& res) {
     if (r.len < 24 || !memeq(r.d + 12, "IHDR", 4)) {
         return;
     }
-    res.imageDx = (int)r.DWordBE(16);
-    res.imageDy = (int)r.DWordBE(20);
+    res.imageDx = (int)r.UInt32BE(16);
+    res.imageDy = (int)r.UInt32BE(20);
     int nDeclared = 0; // frame count from acTL
     int nFcTL = 0;
     int cap = 0;
@@ -433,13 +433,13 @@ static void ParsePng(ByteReader r, FileTypeInfo& res) {
         if (idx + 8 > r.len) {
             break;
         }
-        u32 chunkLen = r.DWordBE(idx);
+        u32 chunkLen = r.UInt32BE(idx);
         const u8* type = r.d + idx + 4;
         if (memeq(type, "acTL", 4)) {
-            nDeclared = (int)r.DWordBE(idx + 8);
+            nDeclared = (int)r.UInt32BE(idx + 8);
         } else if (memeq(type, "fcTL", 4) && chunkLen >= 12) {
             // sequence number, then u32 width and height
-            AppendImageSize(res, nFcTL, cap, (int)r.DWordBE(idx + 12), (int)r.DWordBE(idx + 16));
+            AppendImageSize(res, nFcTL, cap, (int)r.UInt32BE(idx + 12), (int)r.UInt32BE(idx + 16));
             nFcTL++;
         } else if (memeq(type, "IEND", 4)) {
             break;
@@ -466,14 +466,14 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
     if (tiffBase + 8 > n) {
         return false;
     }
-    bool isBE = r.Byte(tiffBase) == 'M';
+    bool isBE = r.UInt8(tiffBase) == 'M';
     // read IFD0 offset
-    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
+    int ifdOff = (int)r.UInt32(tiffBase + 4, isBE);
     int ifdAbs = tiffBase + ifdOff;
     if (ifdAbs + 2 > n) {
         return false;
     }
-    u16 count = r.Word(ifdAbs, isBE);
+    u16 count = r.UInt16(ifdAbs, isBE);
     int exifIfdOff = 0;
     // scan IFD0 for ExifIFD pointer (tag 0x8769)
     for (u16 i = 0; i < count; i++) {
@@ -481,9 +481,9 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
         if (entryOff + 12 > n) {
             break;
         }
-        u16 tag = r.Word(entryOff, isBE);
+        u16 tag = r.UInt16(entryOff, isBE);
         if (tag == 0x8769) {
-            exifIfdOff = (int)r.DWord(entryOff + 8, isBE);
+            exifIfdOff = (int)r.UInt32(entryOff + 8, isBE);
             break;
         }
     }
@@ -495,27 +495,27 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
     if (exifAbs + 2 > n) {
         return false;
     }
-    count = r.Word(exifAbs, isBE);
+    count = r.UInt16(exifAbs, isBE);
     for (u16 i = 0; i < count; i++) {
         int entryOff = exifAbs + 2 + i * 12;
         if (entryOff + 12 > n) {
             break;
         }
-        u16 tag = r.Word(entryOff, isBE);
-        u16 type = r.Word(entryOff + 2, isBE);
+        u16 tag = r.UInt16(entryOff, isBE);
+        u16 type = r.UInt16(entryOff + 2, isBE);
         if (tag == 0xA002) {
             // PixelXDimension
             if (type == 4) {
-                res.imageDx = (int)r.DWord(entryOff + 8, isBE);
+                res.imageDx = (int)r.UInt32(entryOff + 8, isBE);
             } else if (type == 3) {
-                res.imageDx = r.Word(entryOff + 8, isBE);
+                res.imageDx = r.UInt16(entryOff + 8, isBE);
             }
         } else if (tag == 0xA003) {
             // PixelYDimension
             if (type == 4) {
-                res.imageDy = (int)r.DWord(entryOff + 8, isBE);
+                res.imageDy = (int)r.UInt32(entryOff + 8, isBE);
             } else if (type == 3) {
-                res.imageDy = r.Word(entryOff + 8, isBE);
+                res.imageDy = r.UInt16(entryOff + 8, isBE);
             }
         }
     }
@@ -528,16 +528,16 @@ static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
     int idx = 2;
     for (;;) {
         // resync to the next marker, skipping garbage and 0xff fill bytes
-        while (idx < n && r.Byte(idx) != 0xff) {
+        while (idx < n && r.UInt8(idx) != 0xff) {
             idx++;
         }
-        while (idx < n && r.Byte(idx) == 0xff) {
+        while (idx < n && r.UInt8(idx) == 0xff) {
             idx++;
         }
         if (idx >= n) {
             return;
         }
-        u8 marker = r.Byte(idx);
+        u8 marker = r.UInt8(idx);
         idx++;
         if (0xC0 <= marker && marker <= 0xC3 || 0xC9 <= marker && marker <= 0xCB) {
             // start of frame for non-differential Huffman/arithmetic coding:
@@ -545,8 +545,8 @@ static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
             if (idx + 7 > n) {
                 return;
             }
-            res.imageDy = r.WordBE(idx + 3);
-            res.imageDx = r.WordBE(idx + 5);
+            res.imageDy = r.UInt16BE(idx + 3);
+            res.imageDx = r.UInt16BE(idx + 5);
             return;
         }
         if (marker == 0xDA || marker == 0xD9) {
@@ -557,7 +557,7 @@ static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
             // standalone marker without a segment
             continue;
         }
-        int segLen = r.WordBE(idx);
+        int segLen = r.UInt16BE(idx);
         if (segLen < 2) {
             return;
         }
@@ -565,8 +565,8 @@ static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
             // APP1: if it's EXIF, opportunistically parse dimensions from it;
             // a start of frame later in the buffer overwrites them, but for a
             // truncated buffer this may be the only size available
-            if (r.Byte(idx + 2) == 'E' && r.Byte(idx + 3) == 'x' && r.Byte(idx + 4) == 'i' && r.Byte(idx + 5) == 'f' &&
-                r.Byte(idx + 6) == 0 && r.Byte(idx + 7) == 0) {
+            if (r.UInt8(idx + 2) == 'E' && r.UInt8(idx + 3) == 'x' && r.UInt8(idx + 4) == 'i' &&
+                r.UInt8(idx + 5) == 'f' && r.UInt8(idx + 6) == 0 && r.UInt8(idx + 7) == 0) {
                 JpegSizeFromExif(r, idx + 8, res);
             }
         }
@@ -585,26 +585,26 @@ static void ParseGif(ByteReader r, FileTypeInfo& res) {
     }
     int idx = 13;
     // skip the global color table
-    if (r.Byte(10) & 0x80) {
-        idx += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
+    if (r.UInt8(10) & 0x80) {
+        idx += 3 * (1 << ((r.UInt8(10) & 0x07) + 1));
     }
     int nFrames = 0;
     int cap = 0;
     while (idx < n) {
-        u8 b = r.Byte(idx);
+        u8 b = r.UInt8(idx);
         if (b == 0x2C) { // image descriptor
             if (idx + 10 > n) {
                 break;
             }
-            int w = r.WordLE(idx + 5);
-            int h = r.WordLE(idx + 7);
+            int w = r.UInt16LE(idx + 5);
+            int h = r.UInt16LE(idx + 7);
             if (nFrames == 0) {
                 res.imageDx = w;
                 res.imageDy = h;
             }
             AppendImageSize(res, nFrames, cap, w, h);
             nFrames++;
-            u8 flags = r.Byte(idx + 9);
+            u8 flags = r.UInt8(idx + 9);
             idx += 10;
             // skip the local color table
             if (flags & 0x80) {
@@ -612,14 +612,14 @@ static void ParseGif(ByteReader r, FileTypeInfo& res) {
             }
             idx += 1; // LZW minimum code size
             // skip image data sub-blocks
-            while (idx < n && r.Byte(idx) != 0) {
-                idx += r.Byte(idx) + 1;
+            while (idx < n && r.UInt8(idx) != 0) {
+                idx += r.UInt8(idx) + 1;
             }
             idx++;              // block terminator
         } else if (b == 0x21) { // extension: introducer, label, then sub-blocks
             idx += 2;
-            while (idx < n && r.Byte(idx) != 0) {
-                idx += r.Byte(idx) + 1;
+            while (idx < n && r.UInt8(idx) != 0) {
+                idx += r.UInt8(idx) + 1;
             }
             idx++; // block terminator
         } else {
@@ -629,8 +629,8 @@ static void ParseGif(ByteReader r, FileTypeInfo& res) {
     res.nImages = nFrames > 0 ? nFrames : 1;
     if (res.imageDx == 0 && res.imageDy == 0) {
         // no image descriptor seen: fall back to the logical screen size
-        res.imageDx = r.WordLE(6);
-        res.imageDy = r.WordLE(8);
+        res.imageDx = r.UInt16LE(6);
+        res.imageDy = r.UInt16LE(8);
     }
 }
 
@@ -639,15 +639,15 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
     const u16 wTag = isJxr ? 0xBC80 : 0x0100;
     const u16 hTag = isJxr ? 0xBC81 : 0x0101;
     Size res;
-    u16 count = off <= r.len - 2 ? r.Word(off, isBE) : 0;
+    u16 count = off <= r.len - 2 ? r.UInt16(off, isBE) : 0;
     for (int idx = off + 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
-        u16 tag = r.Word(idx, isBE);
+        u16 tag = r.UInt16(idx, isBE);
         if (tag != wTag && tag != hTag) {
             continue;
         }
-        u16 type = r.Word(idx + 2, isBE);
+        u16 type = r.UInt16(idx + 2, isBE);
         int typeSize = type == 1 ? 1 : type == 3 ? 2 : type == 4 ? 4 : 0;
-        u32 nVals = r.DWord(idx + 4, isBE);
+        u32 nVals = r.UInt32(idx + 4, isBE);
         if (typeSize == 0 || nVals == 0) {
             continue;
         }
@@ -655,18 +655,18 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
         // field holds the offset of the value; either way read the first one
         int valOff = idx + 8;
         if (nVals > 4u / typeSize) {
-            valOff = (int)r.DWord(idx + 8, isBE);
+            valOff = (int)r.UInt32(idx + 8, isBE);
             if (valOff < 0 || valOff + typeSize > r.len) {
                 continue;
             }
         }
         int val;
         if (typeSize == 4) {
-            val = (int)r.DWord(valOff, isBE);
+            val = (int)r.UInt32(valOff, isBE);
         } else if (typeSize == 2) {
-            val = r.Word(valOff, isBE);
+            val = r.UInt16(valOff, isBE);
         } else {
-            val = r.Byte(valOff);
+            val = r.UInt8(valOff);
         }
         if (tag == wTag) {
             res.dx = val;
@@ -684,10 +684,10 @@ static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
     if (r.len < 10) {
         return;
     }
-    bool isBE = r.Byte(0) == 'M';
+    bool isBE = r.UInt8(0) == 'M';
     int nIfds = 0;
     int cap = 0;
-    u32 off = r.DWord(4, isBE);
+    u32 off = r.UInt32(4, isBE);
     // 4096 iterations bound protects against cycles in corrupt data
     while (off > 0 && (int)off + 2 <= r.len && nIfds < 4096) {
         Size size = TiffIfdSize(r, (int)off, isBE, isJxr);
@@ -697,12 +697,12 @@ static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
         }
         AppendImageSize(res, nIfds, cap, size.dx, size.dy);
         nIfds++;
-        u16 nEntries = r.Word((int)off, isBE);
+        u16 nEntries = r.UInt16((int)off, isBE);
         int nextOff = (int)off + 2 + nEntries * 12;
         if (nextOff + 4 > r.len) {
             break;
         }
-        off = r.DWord(nextOff, isBE);
+        off = r.UInt32(nextOff, isBE);
     }
     if (nIfds > 0) {
         res.nImages = nIfds;
@@ -714,33 +714,33 @@ static void ParseBmp(ByteReader r, FileTypeInfo& res) {
     int off = 0;
     // "BA" is an OS/2 bitmap array: a 14-byte array header followed by the
     // first bitmap's regular "BM" file header
-    if (r.Byte(0) == 'B' && r.Byte(1) == 'A') {
+    if (r.UInt8(0) == 'B' && r.UInt8(1) == 'A') {
         off = 14;
-        if (r.Byte(off) != 'B' || r.Byte(off + 1) != 'M') {
+        if (r.UInt8(off) != 'B' || r.UInt8(off + 1) != 'M') {
             return;
         }
     }
     // 14-byte file header followed by the info header, whose first field is
     // its own size: 12 for an OS/2 BITMAPCOREHEADER with u16 dimensions,
     // otherwise BITMAPINFOHEADER or later with i32 dimensions
-    if (r.DWordLE(off + 14) == 12) {
-        res.imageDx = r.WordLE(off + 18);
-        res.imageDy = r.WordLE(off + 20);
+    if (r.UInt32LE(off + 14) == 12) {
+        res.imageDx = r.UInt16LE(off + 18);
+        res.imageDy = r.UInt16LE(off + 20);
         return;
     }
     if (r.len < off + 26) {
         return;
     }
-    res.imageDx = (int)r.DWordLE(off + 18);
-    int dy = (int)r.DWordLE(off + 22);
+    res.imageDx = (int)r.UInt32LE(off + 18);
+    int dy = (int)r.UInt32LE(off + 22);
     res.imageDy = dy >= 0 ? dy : -dy; // negative height means a top-down bitmap
 }
 
 static void ParseTga(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     if (r.len >= 16) {
-        res.imageDx = r.WordLE(12);
-        res.imageDy = r.WordLE(14);
+        res.imageDx = r.UInt16LE(12);
+        res.imageDy = r.UInt16LE(14);
     }
 }
 
@@ -753,23 +753,23 @@ static void ParseWebp(ByteReader r, FileTypeInfo& res) {
     int idx = 12;
     while (idx + 8 <= r.len) {
         const u8* fourcc = r.d + idx;
-        u32 size = r.DWordLE(idx + 4);
+        u32 size = r.UInt32LE(idx + 4);
         int payload = idx + 8;
         if (memeq(fourcc, "VP8X", 4) && size >= 10) {
             // 4 flag bytes, then 24-bit little-endian width-1 and height-1
-            res.imageDx = 1 + (r.Byte(payload + 4) | (r.Byte(payload + 5) << 8) | (r.Byte(payload + 6) << 16));
-            res.imageDy = 1 + (r.Byte(payload + 7) | (r.Byte(payload + 8) << 8) | (r.Byte(payload + 9) << 16));
+            res.imageDx = 1 + (r.UInt8(payload + 4) | (r.UInt8(payload + 5) << 8) | (r.UInt8(payload + 6) << 16));
+            res.imageDy = 1 + (r.UInt8(payload + 7) | (r.UInt8(payload + 8) << 8) | (r.UInt8(payload + 9) << 16));
         } else if (memeq(fourcc, "VP8 ", 4) && res.imageDx == 0 && size >= 10) {
-            res.imageDx = r.WordLE(payload + 6) & 0x3fff;
-            res.imageDy = r.WordLE(payload + 8) & 0x3fff;
-        } else if (memeq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.Byte(payload) == 0x2f) {
-            u32 bits = r.DWordLE(payload + 1);
+            res.imageDx = r.UInt16LE(payload + 6) & 0x3fff;
+            res.imageDy = r.UInt16LE(payload + 8) & 0x3fff;
+        } else if (memeq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.UInt8(payload) == 0x2f) {
+            u32 bits = r.UInt32LE(payload + 1);
             res.imageDx = (int)(bits & 0x3FFF) + 1;
             res.imageDy = (int)((bits >> 14) & 0x3FFF) + 1;
         } else if (memeq(fourcc, "ANMF", 4) && size >= 12) {
             // 24-bit little-endian frame x, y, then width-1 and height-1
-            int w = 1 + (r.Byte(payload + 6) | (r.Byte(payload + 7) << 8) | (r.Byte(payload + 8) << 16));
-            int h = 1 + (r.Byte(payload + 9) | (r.Byte(payload + 10) << 8) | (r.Byte(payload + 11) << 16));
+            int w = 1 + (r.UInt8(payload + 6) | (r.UInt8(payload + 7) << 8) | (r.UInt8(payload + 8) << 16));
+            int h = 1 + (r.UInt8(payload + 9) | (r.UInt8(payload + 10) << 8) | (r.UInt8(payload + 11) << 16));
             AppendImageSize(res, nFrames, cap, w, h);
             nFrames++;
         }
@@ -796,21 +796,21 @@ static int ExifOrientationFromTiff(ByteReader r, int tiffBase) {
     if (tiffBase + 8 > n) {
         return 0;
     }
-    bool isBE = r.Byte(tiffBase) == 'M';
-    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
+    bool isBE = r.UInt8(tiffBase) == 'M';
+    int ifdOff = (int)r.UInt32(tiffBase + 4, isBE);
     int ifdAbs = tiffBase + ifdOff;
     if (ifdAbs + 2 > n) {
         return 0;
     }
-    u16 count = r.Word(ifdAbs, isBE);
+    u16 count = r.UInt16(ifdAbs, isBE);
     for (u16 i = 0; i < count; i++) {
         int entryOff = ifdAbs + 2 + i * 12;
         if (entryOff + 12 > n) {
             break;
         }
-        u16 tag = r.Word(entryOff, isBE);
+        u16 tag = r.UInt16(entryOff, isBE);
         if (tag == 0x0112) { // Orientation tag
-            return r.Word(entryOff + 8, isBE);
+            return r.UInt16(entryOff + 8, isBE);
         }
     }
     return 0;
@@ -822,16 +822,16 @@ static int JpegExifOrientation(ByteReader r) {
     int idx = 2;
     for (;;) {
         // resync to the next marker, skipping garbage and 0xff fill bytes
-        while (idx < n && r.Byte(idx) != 0xff) {
+        while (idx < n && r.UInt8(idx) != 0xff) {
             idx++;
         }
-        while (idx < n && r.Byte(idx) == 0xff) {
+        while (idx < n && r.UInt8(idx) == 0xff) {
             idx++;
         }
         if (idx >= n) {
             return 0;
         }
-        u8 marker = r.Byte(idx);
+        u8 marker = r.UInt8(idx);
         idx++;
         if (marker == 0xDA || marker == 0xD9) { // start of scan / end of image, stop
             return 0;
@@ -842,12 +842,12 @@ static int JpegExifOrientation(ByteReader r) {
         }
         if (marker == 0xE1 && idx + 8 <= n) {
             // APP1 - check for EXIF
-            if (r.Byte(idx + 2) == 'E' && r.Byte(idx + 3) == 'x' && r.Byte(idx + 4) == 'i' && r.Byte(idx + 5) == 'f' &&
-                r.Byte(idx + 6) == 0 && r.Byte(idx + 7) == 0) {
+            if (r.UInt8(idx + 2) == 'E' && r.UInt8(idx + 3) == 'x' && r.UInt8(idx + 4) == 'i' &&
+                r.UInt8(idx + 5) == 'f' && r.UInt8(idx + 6) == 0 && r.UInt8(idx + 7) == 0) {
                 return ExifOrientationFromTiff(r, idx + 8);
             }
         }
-        int segLen = r.WordBE(idx);
+        int segLen = r.UInt16BE(idx);
         if (segLen < 2) {
             return 0;
         }
@@ -863,8 +863,8 @@ int WebpExifOrientation(Str d) {
     ByteReader r(d);
     int idx = 12;
     while (idx + 8 <= r.len) {
-        if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
-            int size = (int)r.DWordLE(idx + 4);
+        if (r.UInt8(idx) == 'E' && r.UInt8(idx + 1) == 'X' && r.UInt8(idx + 2) == 'I' && r.UInt8(idx + 3) == 'F') {
+            int size = (int)r.UInt32LE(idx + 4);
             int payload = idx + 8;
             if (payload + size <= r.len && size >= 8) {
                 int orient = ExifOrientationFromTiff(r, payload);
@@ -873,7 +873,7 @@ int WebpExifOrientation(Str d) {
                 }
             }
         }
-        int size = (int)r.DWordLE(idx + 4);
+        int size = (int)r.UInt32LE(idx + 4);
         int chunkSize = size + (size & 1);
         if (chunkSize < size) {
             return 0;
@@ -891,14 +891,14 @@ int WebpExifOrientation(Str d) {
 // end, or returns -1 if not found
 static int FindIsoBmffBox(ByteReader r, int idx, int end, const char* type, int* boxEndOut) {
     while (idx + 8 <= end) {
-        i64 size = (i64)r.DWordBE(idx);
+        i64 size = (i64)r.UInt32BE(idx);
         int hdr = 8;
         if (size == 1) {
             // 64-bit size follows the type
             if (idx + 16 > end) {
                 return -1;
             }
-            u64 size64 = r.QWordBE(idx + 8);
+            u64 size64 = r.UInt64BE(idx + 8);
             if (size64 > (u64)(end - idx)) {
                 return -1;
             }
@@ -922,14 +922,14 @@ static int FindIsoBmffBox(ByteReader r, int idx, int end, const char* type, int*
 // dimensions from the SIZ marker segment of a JPEG 2000 codestream
 // starting at idx: the image grid size minus the image offset
 static void Jp2SizeFromSIZ(ByteReader r, int idx, FileTypeInfo& res) {
-    if (idx + 24 > r.len || r.Byte(idx) != 0xff || r.Byte(idx + 1) != 0x4f || r.Byte(idx + 2) != 0xff ||
-        r.Byte(idx + 3) != 0x51) {
+    if (idx + 24 > r.len || r.UInt8(idx) != 0xff || r.UInt8(idx + 1) != 0x4f || r.UInt8(idx + 2) != 0xff ||
+        r.UInt8(idx + 3) != 0x51) {
         return;
     }
-    u32 xsiz = r.DWordBE(idx + 8);
-    u32 ysiz = r.DWordBE(idx + 12);
-    u32 xosiz = r.DWordBE(idx + 16);
-    u32 yosiz = r.DWordBE(idx + 20);
+    u32 xsiz = r.UInt32BE(idx + 8);
+    u32 ysiz = r.UInt32BE(idx + 12);
+    u32 xosiz = r.UInt32BE(idx + 16);
+    u32 yosiz = r.UInt32BE(idx + 20);
     if (xsiz <= xosiz || ysiz <= yosiz || xsiz > (u32)INT_MAX || ysiz > (u32)INT_MAX) {
         return;
     }
@@ -942,7 +942,7 @@ static void Jp2SizeFromSIZ(ByteReader r, int idx, FileTypeInfo& res) {
 // no ihdr, from the SIZ segment of the codestream in the jp2c box
 static void ParseJp2(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
-    if (r.Byte(0) == 0xff) {
+    if (r.UInt8(0) == 0xff) {
         Jp2SizeFromSIZ(r, 0, res);
         return;
     }
@@ -952,8 +952,8 @@ static void ParseJp2(ByteReader r, FileTypeInfo& res) {
         int ihdrEnd;
         int ihdr = FindIsoBmffBox(r, idx, boxEnd, "ihdr", &ihdrEnd);
         if (ihdr >= 0 && ihdr + 8 <= ihdrEnd) {
-            res.imageDy = (int)r.DWordBE(ihdr);
-            res.imageDx = (int)r.DWordBE(ihdr + 4);
+            res.imageDy = (int)r.UInt32BE(ihdr);
+            res.imageDx = (int)r.UInt32BE(ihdr + 4);
             return;
         }
     }
@@ -986,22 +986,22 @@ static void ParseHeif(ByteReader r, FileTypeInfo& res) {
     int dx = 0, dy = 0;
     bool swapDims = false;
     while (idx + 8 <= boxEnd) {
-        i64 size = (i64)r.DWordBE(idx);
+        i64 size = (i64)r.UInt32BE(idx);
         if (size < 8 || size > boxEnd - idx) {
             break;
         }
         const u8* type = r.d + idx + 4;
         if (memeq(type, "ispe", 4) && size >= 20) {
             // version/flags, then u32 width and height
-            int w = (int)r.DWordBE(idx + 12);
-            int h = (int)r.DWordBE(idx + 16);
+            int w = (int)r.UInt32BE(idx + 12);
+            int h = (int)r.UInt32BE(idx + 16);
             if ((i64)w * h > (i64)dx * dy) {
                 dx = w;
                 dy = h;
             }
         } else if (memeq(type, "irot", 4) && size >= 9) {
             // one byte: rotation in 90-degree counter-clockwise units
-            swapDims = (r.Byte(idx + 8) & 1) != 0;
+            swapDims = (r.UInt8(idx + 8) & 1) != 0;
         }
         idx += (int)size;
     }
@@ -1023,7 +1023,7 @@ struct JxlBitReader {
     u32 Bits(int n) {
         u32 res = 0;
         for (int i = 0; i < n; i++) {
-            u32 bit = (r.Byte(pos >> 3) >> (pos & 7)) & 1;
+            u32 bit = (r.UInt8(pos >> 3) >> (pos & 7)) & 1;
             res |= bit << i;
             pos++;
         }
@@ -1043,7 +1043,7 @@ static u32 JxlU32(JxlBitReader& br) {
 // jxl/src/headers/size.rs). Reads past the end of a truncated buffer as 0
 // bits, which yields 0-sized dimensions.
 static void JxlSizeFromCodestream(ByteReader r, FileTypeInfo& res) {
-    if (r.len < 4 || r.Byte(0) != 0xff || r.Byte(1) != 0x0a) {
+    if (r.len < 4 || r.UInt8(0) != 0xff || r.UInt8(1) != 0x0a) {
         return;
     }
     JxlBitReader br(r, 2);
@@ -1085,7 +1085,7 @@ static void JxlSizeFromCodestream(ByteReader r, FileTypeInfo& res) {
 
 static void ParseJxl(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
-    if (r.Byte(0) == 0xff && r.Byte(1) == 0x0a) {
+    if (r.UInt8(0) == 0xff && r.UInt8(1) == 0x0a) {
         JxlSizeFromCodestream(r, res);
         return;
     }

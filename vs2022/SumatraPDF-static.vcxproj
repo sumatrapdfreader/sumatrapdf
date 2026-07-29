@@ -1556,7 +1556,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\base\tests\ByteOrderDecoder_ut.cpp">
+    <ClCompile Include="..\src\base\tests\ByteReaderWriter_ut.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>

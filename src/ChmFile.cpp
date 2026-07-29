@@ -130,8 +130,8 @@ void ChmFile::ParseWindowsData() {
     }
 
     ByteReader rw(windowsData);
-    int entries = (int)rw.DWordLE(0);
-    int entrySize = (int)rw.DWordLE(4);
+    int entries = (int)rw.UInt32LE(0);
+    int entrySize = (int)rw.UInt32LE(4);
     if (entrySize < 188) {
         return;
     }
@@ -139,19 +139,19 @@ void ChmFile::ParseWindowsData() {
     for (int i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
         int off = 8 + i * entrySize;
         if (str::IsNull(title)) {
-            DWORD strOff = rw.DWordLE(off + 0x14);
+            DWORD strOff = rw.UInt32LE(off + 0x14);
             title = GetCharZ(stringsData, (int)strOff);
         }
         if (str::IsNull(tocPath)) {
-            DWORD strOff = rw.DWordLE(off + 0x60);
+            DWORD strOff = rw.UInt32LE(off + 0x60);
             tocPath = GetCharZ(stringsData, (int)strOff);
         }
         if (str::IsNull(indexPath)) {
-            DWORD strOff = rw.DWordLE(off + 0x64);
+            DWORD strOff = rw.UInt32LE(off + 0x64);
             indexPath = GetCharZ(stringsData, (int)strOff);
         }
         if (str::IsNull(homePath)) {
-            DWORD strOff = rw.DWordLE(off + 0x68);
+            DWORD strOff = rw.UInt32LE(off + 0x68);
             homePath = GetCharZ(stringsData, (int)strOff);
         }
     }
@@ -241,11 +241,11 @@ bool ChmFile::ParseSystemData() {
     for (int off = 4; off + 4 < d.len; off += (int)n + 4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
         // many entries with type == 0 and length == 0. Seems harmless.
-        n = r.WordLE(off + 2);
+        n = r.UInt16LE(off + 2);
         if (n == 0) {
             continue;
         }
-        WORD type = r.WordLE(off);
+        WORD type = r.UInt16LE(off);
         switch (type) {
             case 0:
                 if (str::IsNull(tocPath)) {
@@ -269,7 +269,7 @@ bool ChmFile::ParseSystemData() {
                 break;
             case 4:
                 if (!codepage && n >= 4) {
-                    codepage = LcidToCodepage(r.DWordLE(off + 4));
+                    codepage = LcidToCodepage(r.UInt32LE(off + 4));
                 }
                 break;
             case 6:
@@ -293,14 +293,14 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     TempStr ivbData = GetDataTemp("/#IVB");
     int ivbLen = ivbData.len;
     ByteReader br(ivbData);
-    if ((ivbLen % 8) != 4 || ivbLen - 4 != (int)br.DWordLE(0)) {
+    if ((ivbLen % 8) != 4 || ivbLen - 4 != (int)br.UInt32LE(0)) {
         return {};
     }
 
     for (int off = 4; off < ivbLen; off += 8) {
-        if (br.DWordLE(off) == id) {
+        if (br.UInt32LE(off) == id) {
             TempStr stringsData = GetDataTemp("/#STRINGS");
-            Str res = GetCharZ(stringsData, (int)br.DWordLE(off + 4));
+            Str res = GetCharZ(stringsData, (int)br.UInt32LE(off + 4));
             if (!res) {
                 return {};
             }
@@ -354,7 +354,7 @@ bool ChmFile::Load(Str path) {
     int n = file::ReadN(path, (u8*)header, sizeof(header));
     if (n < (int)sizeof(header)) {
         ByteReader r(Str(header, sizeof(header)));
-        DWORD lcid = r.DWordLE(20);
+        DWORD lcid = r.UInt32LE(20);
         fileCodepage = LcidToCodepage(lcid);
     }
     if (!codepage) {

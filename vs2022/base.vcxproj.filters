@@ -30,9 +30,6 @@
     <ClInclude Include="..\src\base\BitReader.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\ByteOrderDecoder.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\ByteReaderWriter.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -177,9 +174,6 @@
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\BitReader.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\ByteOrderDecoder.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp">
