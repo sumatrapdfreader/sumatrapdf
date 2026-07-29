@@ -39,8 +39,7 @@ static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT&) {
 
 static void PositionWindow(FrameRateWnd* w, Size s) {
     Rect rc = HwndClientRect(w->hwndAssociatedWith);
-    POINT p = {rc.x + rc.dx - s.dx, rc.y};
-    ClientToScreen(w->hwndAssociatedWith, &p);
+    Point p = HwndClientToScreen(w->hwndAssociatedWith, Point(rc.x + rc.dx - s.dx, rc.y));
     MoveWindow(w->hwnd, p.x, p.y, s.dx, s.dy, TRUE);
 }
 

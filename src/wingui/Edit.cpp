@@ -242,8 +242,7 @@ Size Edit::GetIdealSize() {
 int Edit::GetLeftTextMargin() {
     int border = 0;
     if (HasBorder()) {
-        POINT clientOrigin{0, 0};
-        ClientToScreen(hwnd, &clientOrigin);
+        Point clientOrigin = HwndClientToScreen(hwnd, Point());
         RECT wr{};
         GetWindowRect(hwnd, &wr);
         border = clientOrigin.x - wr.left;

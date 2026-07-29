@@ -38,8 +38,7 @@ static Rect PageScreenRectToScreen(HWND hwndCanvas, DisplayModel* dm, int srcPag
     PageInfo* pi = (srcPage > 0) ? dm->GetPageInfo(srcPage) : nullptr;
     if (pi && !pi->pageOnScreen.IsEmpty()) {
         pageScreenRect = pi->pageOnScreen;
-        POINT topLeft = {pageScreenRect.x, pageScreenRect.y};
-        ClientToScreen(hwndCanvas, &topLeft);
+        Point topLeft = HwndClientToScreen(hwndCanvas, Point(pageScreenRect.x, pageScreenRect.y));
         pageScreenRect.x = topLeft.x;
         pageScreenRect.y = topLeft.y;
     }
@@ -71,8 +70,7 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController
         int destPage = PageDestGetPageNo(dest);
         RectF destPt = PageDestGetDestPoint(dest);
         float destZoom = PageDestGetZoom(dest);
-        Point screenPt = {x, y};
-        ClientToScreen(hwndCanvas, (POINT*)&screenPt);
+        Point screenPt = HwndClientToScreen(hwndCanvas, Point(x, y));
         int srcPage = el->GetPageNo();
         RectF srcRect = el->GetRect();
         Rect pageScreenRect = PageScreenRectToScreen(hwndCanvas, dm, srcPage);
@@ -87,8 +85,7 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController
         RectF citationSrcRect{};
         if (RefHoverTryPlainText(s, dm->GetEngine(), srcPageNo, pagePt, destPage, destX, destY, citationSrcRect)) {
             TrackMouseLeave(hwndCanvas);
-            Point screenPt = {x, y};
-            ClientToScreen(hwndCanvas, (POINT*)&screenPt);
+            Point screenPt = HwndClientToScreen(hwndCanvas, Point(x, y));
             Rect pageScreenRect = PageScreenRectToScreen(hwndCanvas, dm, srcPageNo);
             RefHoverSchedule(s, hwndCanvas, hoverDelayMs, screenPt, destPage, destX, destY, 0.f, srcPageNo,
                              citationSrcRect, pageScreenRect);

@@ -234,6 +234,12 @@ int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
     return res;
 }
 
+Point HwndClientToScreen(HWND hwnd, Point p) {
+    POINT pt = ToPOINT(p);
+    ClientToScreen(hwnd, &pt);
+    return Point(pt.x, pt.y);
+}
+
 void HwndScreenToClient(HWND hwnd, Point& p) {
     POINT pt = {p.x, p.y};
     ScreenToClient(hwnd, &pt);
@@ -1893,8 +1899,7 @@ void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
 //--- HWND: geometry (relative)
 
 Rect ChildPosWithinParent(HWND hwnd) {
-    POINT pt = {0, 0};
-    ClientToScreen(GetParent(hwnd), &pt);
+    Point pt = HwndClientToScreen(GetParent(hwnd), Point());
     Rect rc = HwndWindowRect(hwnd);
     rc.Offset(-pt.x, -pt.y);
     return rc;

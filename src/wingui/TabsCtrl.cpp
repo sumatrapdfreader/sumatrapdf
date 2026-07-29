@@ -694,9 +694,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int selectedTab = GetSelected();
             if (tabUnderMouse < 0) {
                 // migrate to new/different window
-                POINT p(mousePos.x, mousePos.y);
-                ClientToScreen(hwnd, &p);
-                Point scPoint(p.x, p.y);
+                Point scPoint = HwndClientToScreen(hwnd, mousePos);
                 TriggerTabMigration(this, selectedTab, scPoint);
                 return 0;
             }

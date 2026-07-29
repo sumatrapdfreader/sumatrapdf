@@ -56,6 +56,7 @@ void HwndCenterDialog(HWND hDlg, HWND hParent = nullptr);
 //--- HWND: coordinates
 
 int MapWindowPoints(HWND, HWND, Point*, int);
+Point HwndClientToScreen(HWND, Point);
 void HwndScreenToClient(HWND, Point&);
 Point HwndGetCursorPos(HWND hwnd);
 Point& UnmirrorRtl(HWND hwnd, Point& p);

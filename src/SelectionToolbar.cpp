@@ -474,8 +474,7 @@ static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
         y = canvas.y;
     }
 
-    POINT p{x, y};
-    ClientToScreen(win->hwndCanvas, &p);
+    Point p = HwndClientToScreen(win->hwndCanvas, Point(x, y));
     Rect placed(p.x, p.y, w, h);
     if (placed == tb->lastPlaced) {
         return false;
