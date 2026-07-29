@@ -45,7 +45,7 @@ Rect ChildPosWithinParent(HWND);
 
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd = nullptr, bool bFully = false);
 Rect GetWorkAreaRect(Rect rect, HWND hwnd);
-void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
+Size HwndLimitSizeToScreen(HWND hwnd, Size size);
 void HwndEnsureOnScreen(HWND hwnd);
 Rect HwndGetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();

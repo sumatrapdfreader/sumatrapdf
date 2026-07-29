@@ -1782,12 +1782,12 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HidePerAnnotControls(ew);
 }
 
-static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative, SIZE& size) {
+static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative, Size& size) {
     Rect work = GetWorkAreaRect(HwndWindowRect(hwndRelative), hwndRelative);
     WINDOWINFO wi{};
     wi.cbSize = sizeof(wi);
     if (!GetWindowInfo(hwnd, &wi)) {
-        LimitWindowSizeToScreen(hwndRelative, size);
+        size = HwndLimitSizeToScreen(hwndRelative, size);
         return;
     }
 
@@ -1795,11 +1795,11 @@ static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative,
     int nonClientDy = RectDy(wi.rcWindow) - RectDy(wi.rcClient);
     int maxClientDx = work.dx - nonClientDx;
     int maxClientDy = work.dy - nonClientDy;
-    if (size.cx > maxClientDx) {
-        size.cx = maxClientDx;
+    if (size.dx > maxClientDx) {
+        size.dx = maxClientDx;
     }
-    if (size.cy > maxClientDy) {
-        size.cy = maxClientDy;
+    if (size.dy > maxClientDy) {
+        size.dy = maxClientDy;
     }
 }
 
@@ -1841,9 +1841,9 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     args.font = GetAppFont(tab->win ? tab->win->hwndFrame : nullptr);
 
     // PositionCloseTo(w, args->hwndRelatedTo);
-    // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
-    // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
-    // w->initialSize = {winSize.cx, winSize.cy};
+    // Size winSize = {w->initialSize.dx, w->initialSize.Height};
+    // winSize = HwndLimitSizeToScreen(args->hwndRelatedTo, winSize);
+    // w->initialSize = {winSize.dx, winSize.dy};
     ew->CreateCustom(args);
 
     CreateMainLayout(ew);
@@ -1873,14 +1873,14 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     }
 
     if (lastPos.IsEmpty()) {
-        SIZE size = {520, minDy};
+        Size size = {520, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        LayoutAndSizeToContent(ew->mainLayout, size.cx, size.cy, ew->hwnd);
+        LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     } else {
-        SIZE size = {lastPos.dx, minDy};
+        Size size = {lastPos.dx, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        LayoutAndSizeToContent(ew->mainLayout, size.cx, size.cy, ew->hwnd);
+        LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
         Rect r = HwndWindowRect(ew->hwnd);

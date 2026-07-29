@@ -1515,7 +1515,7 @@ Rect ShiftRectToWorkArea(Rect rect, HWND hwnd, bool bFully) {
 }
 
 // Limits size to max available work area (screen size - taskbar)
-void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
+Size HwndLimitSizeToScreen(HWND hwnd, Size size) {
     HMONITOR hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi{};
     mi.cbSize = sizeof mi;
@@ -1524,13 +1524,14 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
     }
     int dx = RectDx(mi.rcWork);
-    if (size.cx > dx) {
-        size.cx = dx;
+    if (size.dx > dx) {
+        size.dx = dx;
     }
     int dy = RectDy(mi.rcWork);
-    if (size.cy > dy) {
-        size.cy = dy;
+    if (size.dy > dy) {
+        size.dy = dy;
     }
+    return size;
 }
 
 // If the window is off-screen (e.g. a monitor was disconnected),
