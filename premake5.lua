@@ -1103,6 +1103,25 @@ workspace "SumatraPDF"
       "ole32", "oleAut32", "windowscodecs", "shcore", "wininet",
     }
 
+  -- native log viewer: the pipe server side of src/SumatraLog.cpp. GUI app,
+  -- links the base static lib for its string / container / win helpers.
+  project "logview"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "WindowedApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4838" }
+    includedirs { "src" }
+    logview_files()
+    setup_base_pch()
+    links { "base" }
+    links {
+      "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
+      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32",
+    }
+
   -- small console app that runs the mupdf command-line tools (draw, convert,
   -- info, ...). Console subsystem (so it works with cmd.exe / PowerShell) and
   -- links libsumatrapdf.dll for everything, so the exe itself is tiny. It's embedded
@@ -1426,7 +1445,7 @@ workspace "SumatraPDF"
       "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "libwebp", "unrar",
     })
     set_group("tools", {
-      "bench_image", "bin2coff", "test_engines", "test_util",
+      "bench_image", "bin2coff", "logview", "test_engines", "test_util",
     })
   end
 

@@ -1429,6 +1429,12 @@ function bench_image_files()
   }
 end
 
+function logview_files()
+  files {
+    "tools/logview/logview.cpp",
+  }
+end
+
 function pdf_preview_files()
   files_in_dir("src/previewer", {
     "PdfPreview.*",
