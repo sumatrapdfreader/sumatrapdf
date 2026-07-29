@@ -4,6 +4,8 @@
 // TODO: not quite happy how those functions are split among
 // Annotation.cpp, EngineMupdf.cpp and EditAnnotations.cpp
 
+struct Pixmap;
+
 // for fast conversions, must match the order of pdf_annot_type enum in annot.h
 enum class AnnotationType {
     Text,
@@ -85,9 +87,7 @@ struct AnnotCreateArgs {
     int borderWidth = -1;
     bool setContentToSelection = false;
     Str content;
-    // for Stamp annotations: encoded image bytes (e.g. BMP from the clipboard).
-    // when set, the Stamp is created as an image stamp sized to the image.
-    Str stampImage;
+    Pixmap* stampImage = nullptr;
 };
 
 int PageNo(Annotation*);

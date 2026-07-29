@@ -49,10 +49,21 @@ struct Pixmap {
 };
 
 Str PixmapToBmpFormat(const Pixmap* pixmap);
+Pixmap* GetClipboardImageAsPixmap();
 
 #if defined(_WIN32)
-// frees a DIB-section-backed Pixmap's native handles (and its pixels). implemented in
-// Win.cpp where <windows.h> is available. Does nothing if not DIB-backed.
+struct RenderedBitmap;
+
+Pixmap* AllocPixmapDIB(int w, int h);
+bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
+bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source);
+Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
+Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
+RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
+void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
+                   Vec<Rect>* skipRects = nullptr);
+
+// frees a DIB-section-backed Pixmap's native handles (and its pixels).
 void FreePixmapNativeBitmap(Pixmap* p);
 #endif
 

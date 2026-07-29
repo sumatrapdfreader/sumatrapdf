@@ -263,6 +263,9 @@
     <ClCompile Include="..\src\base\Pixmap.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Pixmap_win.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\SettingsUtil.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

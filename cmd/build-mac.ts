@@ -483,6 +483,7 @@ const DEP_LIBS_BASE = [
           "Http_mac.cpp",
           "JsonParser.cpp",
           "Pixmap.cpp",
+          "Pixmap_mac.cpp",
           "SettingsUtil.cpp",
           "SquareTreeParser.cpp",
           "StrQueue.cpp",

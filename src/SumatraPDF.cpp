@@ -9464,8 +9464,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!engine || !EngineSupportsAnnotations(engine)) {
                 return 0;
             }
-            Str img = GetClipboardImageBmp();
-            if (len(img) == 0) {
+            Pixmap* image = GetClipboardImageAsPixmap();
+            if (!image) {
                 NotificationCreateArgs nargs;
                 nargs.hwndParent = win->hwndCanvas;
                 nargs.timeoutMs = 3000;
@@ -9488,14 +9488,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 pageNoUnderCursor = dm->GetPageNoByPoint(pt);
             }
             if (pageNoUnderCursor < 0) {
-                str::Free(img);
+                FreePixmap(image);
                 return 0;
             }
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             AnnotCreateArgs args{AnnotationType::Stamp};
-            args.stampImage = img;
+            args.stampImage = image;
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
-            str::Free(img);
+            FreePixmap(image);
         } break;
 
         case CmdToggleLightDarkTheme:

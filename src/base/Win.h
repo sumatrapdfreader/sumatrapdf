@@ -195,14 +195,7 @@ struct BitmapPixels {
     HDC hdc;
 };
 
-struct Pixmap;
 struct RenderedBitmap;
-Pixmap* AllocPixmapDIB(int w, int h);
-bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
-bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source);
-Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
-Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
-RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 
 // A Windows present-layer bitmap handle: an HBITMAP (+ optional file mapping) that can be
 // blitted to an HDC. Concrete and Windows-only by design - portable pixel data lives in
@@ -230,10 +223,6 @@ void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
                         Vec<Rect>* skipRects = nullptr);
-void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
-                   Vec<Rect>* skipRects = nullptr);
-Str HBITMAPToBmpFormat(HBITMAP hbmp);
-Str GetClipboardImageBmp();
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 

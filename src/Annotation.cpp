@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 
 extern "C" {
@@ -1416,16 +1417,23 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     pdf_set_annot_line(ctx, annot, a, b);
                 } break;
             }
-            if (typ == AnnotationType::Stamp && len(args->stampImage) > 0) {
+            if (typ == AnnotationType::Stamp && args->stampImage) {
                 // image stamp (e.g. pasted from the clipboard): embed the image
                 // and size the rect to the image's natural size, anchored at pos
+                Pixmap* stamp = args->stampImage;
                 fz_image* img = nullptr;
-                fz_buffer* buf = nullptr;
+                fz_pixmap* pix = nullptr;
                 fz_var(img);
-                fz_var(buf);
+                fz_var(pix);
                 fz_try(ctx) {
-                    buf = fz_new_buffer_from_copied_data(ctx, (u8*)args->stampImage.s, (size_t)args->stampImage.len);
-                    img = fz_new_image_from_buffer(ctx, buf);
+                    int alpha = stamp->format == PixmapFormat::BGR8 ? 0 : 1;
+                    fz_colorspace* colorSpace =
+                        stamp->format == PixmapFormat::RGBA8 ? fz_device_rgb(ctx) : fz_device_bgr(ctx);
+                    pix = fz_new_pixmap_with_data(ctx, colorSpace, stamp->width, stamp->height, nullptr, alpha,
+                                                  stamp->stride, stamp->data);
+                    pix->xres = (int)stamp->xres;
+                    pix->yres = (int)stamp->yres;
+                    img = fz_new_image_from_pixmap(ctx, pix, nullptr);
                     pdf_set_annot_stamp_image(ctx, annot, img);
                     int xres = img->xres > 0 ? img->xres : 96;
                     int yres = img->yres > 0 ? img->yres : 96;
@@ -1436,7 +1444,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 }
                 fz_always(ctx) {
                     fz_drop_image(ctx, img);
-                    fz_drop_buffer(ctx, buf);
+                    fz_drop_pixmap(ctx, pix);
                 }
                 fz_catch(ctx) {
                     fz_rethrow(ctx);

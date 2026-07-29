@@ -995,6 +995,7 @@
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\base\Pixmap.cpp" />
+    <ClCompile Include="..\src\base\Pixmap_win.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
     <ClCompile Include="..\src\base\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\base\Str.cpp" />
