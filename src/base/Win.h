@@ -57,7 +57,7 @@ void HwndCenterDialog(HWND hDlg, HWND hParent = nullptr);
 
 //--- HWND: coordinates
 
-int MapWindowPoints(HWND, HWND, Point*, int);
+Point HwndMapWindowPoint(HWND, HWND, Point);
 Point HwndClientToScreen(HWND, Point);
 Point HwndScreenToClient(HWND, Point);
 HWND HwndWindowFromPoint(Point);

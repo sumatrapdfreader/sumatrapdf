@@ -221,12 +221,11 @@ void Wnd::OnContextMenu(Point ptScreen) {
     ev.w = this;
     ev.mouseScreen = ptScreen;
 
-    POINT ptW = ToPOINT(ptScreen);
+    Point ptW = ptScreen;
     if (ptScreen.x != -1) {
-        MapWindowPoints(HWND_DESKTOP, hwnd, &ptW, 1);
+        ptW = HwndMapWindowPoint(HWND_DESKTOP, hwnd, ptW);
     }
-    ev.mouseWindow.x = ptW.x;
-    ev.mouseWindow.y = ptW.y;
+    ev.mouseWindow = ptW;
     onContextMenu.Call(&ev);
 }
 

@@ -1817,8 +1817,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     ctx.filePath = path;
     HMENU popup = BuildMenuFromDef(menuDefContextStart, CreatePopupMenu(), &ctx);
     MenuSetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
-    POINT pt = {x, y};
-    MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
     MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
@@ -2038,8 +2037,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         HwndRepaintNow(win->hwndCanvas);
     }
 
-    POINT pt = {x, y};
-    MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmdId = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);

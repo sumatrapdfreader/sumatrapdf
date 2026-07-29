@@ -516,10 +516,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (draggingTab && msg == WM_MOUSEMOVE) {
-        POINT p;
-        p.x = mousePos.x;
-        p.y = mousePos.y;
-        MapWindowPoints(hwnd, NULL, &p, 1);
+        Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
         // logfa("%s moving to: %d %d\n", WinMsgNameTemp(msg), p.x, p.y);
         ImageList_DragMove(p.x, p.y);
         return 0;
@@ -590,9 +587,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
                 DeleteObject(hbmp);
                 DeleteObject(himl);
-                POINT p(mousePos.x, mousePos.y);
-                MapWindowPoints(hwnd, NULL, &p, 1);
-                ImageList_DragEnter(NULL, p.x, p.y);
+                Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
+                ImageList_DragEnter(nullptr, p.x, p.y);
                 return 0;
             }
 

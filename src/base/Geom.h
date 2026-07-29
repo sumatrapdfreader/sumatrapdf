@@ -132,9 +132,7 @@ int RectDx(const RECT& r);
 int RectDy(const RECT& r);
 
 PointF ToPointFl(Point p);
-Gdiplus::Point ToGdipPoint(Point p);
 Point ToPoint(PointF p);
-Gdiplus::PointF ToGdipPointF(PointF p);
 POINT ToPOINT(const Point& p);
 
 SizeF ToSizeFl(Size s);

@@ -484,10 +484,9 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, Point& pt) {
         Rect rcItem;
         if (treeView->GetItemRect(ti, true, rcItem)) {
             // rcItem is local to window, map to global screen position
-            POINT pts[2] = {{rcItem.x, rcItem.y}, {rcItem.x + rcItem.dx, rcItem.y + rcItem.dy}};
-            MapWindowPoints(hwnd, HWND_DESKTOP, pts, 2);
-            pt.x = pts[0].x;
-            pt.y = pts[1].y;
+            Rect screenRect = HwndMapRectToWindow(rcItem, hwnd, HWND_DESKTOP);
+            pt.x = screenRect.x;
+            pt.y = screenRect.y + screenRect.dy;
         }
     } else {
         ti = treeView->GetItemAt(pt.x, pt.y);
@@ -583,12 +582,11 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         DWORD pos = GetMessagePos();
         ev.mouseScreen.x = GET_X_LPARAM(pos);
         ev.mouseScreen.y = GET_Y_LPARAM(pos);
-        POINT pt = ToPOINT(ev.mouseScreen);
+        Point pt = ev.mouseScreen;
         if (pt.x != -1) {
-            MapWindowPoints(HWND_DESKTOP, nmhdr->hwndFrom, &pt, 1);
+            pt = HwndMapWindowPoint(HWND_DESKTOP, nmhdr->hwndFrom, pt);
         }
-        ev.mouseWindow.x = pt.x;
-        ev.mouseWindow.y = pt.y;
+        ev.mouseWindow = pt;
 
         // determine which item has been clicked (if any)
         TVHITTESTINFO ht{};

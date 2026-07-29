@@ -9313,7 +9313,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // when sending from Menu.cpp mouse position is encoded as LPARAM
                 pt.x = GET_X_LPARAM(lp);
                 pt.y = GET_Y_LPARAM(lp);
-                // MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+                // pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             }
             int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
             if (pageNoUnderCursor > 0) {
@@ -9448,7 +9448,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 if (pageNoUnderCursor < 0) return 0;
             }
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
-            MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+            pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             AnnotCreateArgs args{annotType};
             SetAnnotCreateArgs(args, cmd);
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);

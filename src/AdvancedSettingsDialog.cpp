@@ -524,9 +524,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     }
     // ValueRectForItem is in listBox client coords; the drop-down is parented
     // to the dialog (see below), so map the rect into dialog client coords
-    RECT rr = {r.x, r.y, r.x + r.dx, r.y + r.dy};
-    MapWindowPoints(listBox->hwnd, hwnd, (POINT*)&rr, 2);
-    r = ToRect(rr);
+    r = HwndMapRectToWindow(r, listBox->hwnd, hwnd);
 
     DropDown::CreateArgs args;
     // parent to the dialog, not the listBox: a subclassed control (the listBox)

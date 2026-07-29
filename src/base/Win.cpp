@@ -268,22 +268,17 @@ void HwndInvalidate(HWND hwnd, bool erase) {
 
 Rect HwndMapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     RECT rc = ToRECT(rect);
-    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
+    ::MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
     return ToRect(rc);
 }
 
 // map client coords where x=0 is the physical left edge (even on WS_EX_LAYOUTRTL windows)
 Rect HwndMapLtrClientRectToScreen(HWND hwnd, Rect r) {
-    RECT rc = ToRECT(r);
     if (HwndIsRtl(hwnd)) {
         int w = HwndClientRect(hwnd).dx;
-        int left = w - rc.right;
-        int right = w - rc.left;
-        rc.left = left;
-        rc.right = right;
+        r.x = w - r.x - r.dx;
     }
-    MapWindowPoints(hwnd, nullptr, (POINT*)&rc, 2);
-    return ToRect(rc);
+    return HwndMapRectToWindow(r, hwnd, nullptr);
 }
 
 // for SetWindowPos on a WS_EX_LAYOUTRTL parent: child x as offset from physical left
@@ -296,19 +291,10 @@ int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
 
 //--- HWND: coordinates
 
-int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
-    ReportIf(nPoints > 64);
-    POINT pnts[64];
-    for (int i = 0; i < nPoints; i++) {
-        pnts[i].x = points[i].x;
-        pnts[i].y = points[i].y;
-    }
-    int res = MapWindowPoints(hwndFrom, hwndTo, &pnts[0], (uint)nPoints);
-    for (int i = 0; i < nPoints; i++) {
-        points[i].x = pnts[i].x;
-        points[i].y = pnts[i].y;
-    }
-    return res;
+Point HwndMapWindowPoint(HWND hwndFrom, HWND hwndTo, Point p) {
+    POINT pt = ToPOINT(p);
+    ::MapWindowPoints(hwndFrom, hwndTo, &pt, 1);
+    return Point(pt.x, pt.y);
 }
 
 Point HwndClientToScreen(HWND hwnd, Point p) {
