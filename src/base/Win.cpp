@@ -20,6 +20,8 @@
 __CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0xC0, 0x4F, 0x8F, 0x5D, 0x9A)
 #endif
 
+//--- subclass ids
+
 static LONG gSubclassId = 0;
 
 UINT_PTR NextSubclassId() {
@@ -27,9 +29,13 @@ UINT_PTR NextSubclassId() {
     return (UINT_PTR)res;
 }
 
+//--- bool / BOOL
+
 bool ToBool(BOOL b) {
     return b ? true : false;
 }
+
+//--- GDI: bitmaps / pixmaps (RenderedBitmap)
 
 Size RenderedBitmap::GetSize() {
     return size;
@@ -78,6 +84,8 @@ bool RenderedBitmap::Blit(HDC hdc, Rect target) {
 HBITMAP RenderedBitmap::GetBitmap() const {
     return hbmp;
 }
+
+//--- edit control
 
 void EditSelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
@@ -129,6 +137,8 @@ void EditImplementCtrlBack(HWND hwnd) {
     SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
 }
 
+//--- list box
+
 void ListBox_AppendString_NoSort(HWND hwnd, WStr txt) {
     // LB_INSERTSTRING reads a NUL-terminated string; txt may be a
     // non-terminated view, so use a terminated copy
@@ -147,6 +157,8 @@ bool ListBoxSetTopIndex(HWND hwnd, int idx) {
     return res != LB_ERR;
 }
 
+//--- resources / instance / common controls
+
 void InitAllCommonControls() {
     INITCOMMONCONTROLSEX cex{};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -163,6 +175,8 @@ void FillWndClassEx(WNDCLASSEX& wcex, WStr clsName, WNDPROC wndproc) {
     wcex.lpszClassName = clsName.s;
     wcex.lpfnWndProc = wndproc;
 }
+
+//--- HWND: geometry
 
 Rect HwndClientRect(HWND hwnd) {
     RECT rc{};
@@ -206,6 +220,8 @@ int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
     return HwndClientRect(parent).dx - ltrX - childDx;
 }
 
+//--- HWND: coordinates
+
 int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
     ReportIf(nPoints > 64);
     POINT pnts[64];
@@ -228,15 +244,21 @@ void HwndScreenToClient(HWND hwnd, Point& p) {
     p.y = pt.y;
 }
 
+//--- HWND: focus / visibility / Z-order
+
 // move window to top of Z order (i.e. make it visible to the user)
 // but without activation (i.e. capturing focus)
 void HwndShowWithoutActivate(HWND hwnd) {
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 
+//--- HWND: geometry (move)
+
 void HwndMoveWindow(HWND hwnd, Rect* r) {
     MoveWindow(hwnd, r->x, r->y, r->dx, r->dy, TRUE);
 }
+
+//--- OS / process / CPU
 
 bool GetOsVersion(OSVERSIONINFOEX& ver) {
     ZeroMemory(&ver, sizeof(ver));
@@ -471,6 +493,8 @@ void DbgOutLastError(DWORD err) {
     TempStr msg = GetLastErrorStrTemp(err);
     OutputDebugStringA(msg.s);
 }
+
+//--- registry
 
 // return true if a given registry key (path) exists
 bool RegKeyExists(HKEY keySub, Str keyName) {
@@ -730,6 +754,8 @@ HRESULT CLSIDFromString(Str lpsz, LPCLSID pclsid) {
     return CLSIDFromString(ws, pclsid);
 }
 
+//--- environment / errors / paths
+
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
     if (createIfMissing) {
         csidl = csidl | CSIDL_FLAG_CREATE;
@@ -763,6 +789,8 @@ TempStr GetTempDirTemp() {
     ReportIf(cch >= dimof(dir));
     return ToUtf8Temp(WStr(dir, (int)cch));
 }
+
+//--- OS / process (misc)
 
 void DisableDataExecution() {
     // Win7+; 32-bit only (fails with ERROR_NOT_SUPPORTED on 64-bit processes)
@@ -899,6 +927,8 @@ bool RedirectIOToExistingConsole() {
 
 // returns true if had to allocate new console (i.e. show console window)
 // false if redirected to existing console, which means it was launched from a shell
+//--- console
+
 bool RedirectIOToConsole() {
     return AttachOrAllocateConsole();
 }
@@ -1003,6 +1033,8 @@ void WaitForConsoleClose() {
         ReadConsoleA(hInput, &c, 1, &read, nullptr);
     }
 }
+
+//--- environment / paths (shell helpers)
 
 void ChangeCurrDirToDocuments() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
@@ -1119,6 +1151,8 @@ IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
     }
     return pDataObject;
 }
+
+//--- keyboard state
 
 bool IsKeyPressed(int key) {
     SHORT state = GetKeyState(key);
@@ -1456,6 +1490,8 @@ bool LaunchElevated(Str path, Str cmdline) {
 
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
+//--- HWND: screen / work area / placement
+
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd, bool bFully) {
     Rect monitor = GetWorkAreaRect(rect, hwnd);
 
@@ -1569,6 +1605,8 @@ Rect GetVirtualScreenRect() {
     return result;
 }
 
+//--- GDI: draw / measure (primitives)
+
 void HdcDrawRect(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
@@ -1594,6 +1632,8 @@ void HdcDrawLine(HDC hdc, const Rect& rect) {
 }
 
 // returns previously focused window
+//--- HWND: focus / identity / cursor
+
 HWND HwndSetFocus(HWND hwnd) {
     return SetFocus(hwnd);
 }
@@ -1700,6 +1740,8 @@ static HWND GetClipboardOwnerWnd() {
         CreateWindowExW(0, className, L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, GetModuleHandle(nullptr), nullptr);
     return gClipboardOwnerWnd;
 }
+
+//--- clipboard
 
 bool OpenClipboardForUpdate() {
     HWND owner = GetClipboardOwnerWnd();
@@ -1808,6 +1850,8 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     return ok;
 }
 
+//--- HWND: styles / RTL
+
 static void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     DWORD style = GetWindowLongW(hwnd, type);
     DWORD newStyle;
@@ -1847,6 +1891,8 @@ void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable) {
 void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
     HwndSetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
 }
+
+//--- HWND: geometry (relative)
 
 Rect ChildPosWithinParent(HWND hwnd) {
     POINT pt = {0, 0};
@@ -1913,6 +1959,8 @@ static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags, u16 
          (int)weightOffset);  */
     return font;
 }
+
+//--- GDI: fonts
 
 HFONT GetMenuFont() {
     if (!gMenuFont) {
@@ -2366,6 +2414,8 @@ bool UnRegisterServerDLL(Str dllPath, Str args) {
     return RegisterOrUnregisterServerDLL(dllPath, false, args);
 }
 
+//--- HWND: text / visibility / chrome / Z-order
+
 void HwndToForeground(HWND hwnd) {
     if (IsIconic(hwnd)) {
         ShowWindow(hwnd, SW_RESTORE);
@@ -2426,6 +2476,8 @@ void HwndShow(HWND hwnd) {
 void HwndHide(HWND hwnd) {
     HwndSetVisible(hwnd, false);
 }
+
+//--- GDI: bitmaps / pixmaps
 
 Size GetBitmapSize(HBITMAP hbmp) {
     BITMAP bmpInfo;
@@ -3482,6 +3534,8 @@ bool IsValidDelayType(int type) {
     return false;
 }
 
+//--- HWND: text / font / icon / paint / position / messages
+
 void HwndSetText(HWND hwnd, Str sv) {
     // can be called before a window is created
     if (!hwnd) {
@@ -3654,6 +3708,8 @@ void HwndDestroyWindowSafe(HWND* hwndPtr) {
     ::DestroyWindow(hwnd);
 }
 
+//--- toolbar / GDI handles / tree view / HGLOBAL / timing
+
 void TbSetButtonInfoById(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
     auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
     ReportDebugIf(0 == res);
@@ -3728,6 +3784,8 @@ bool DestroyIconSafe(HICON* h) {
     *h = nullptr;
     return ToBool(res);
 }
+
+//--- GDI: draw / measure (text)
 
 int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
     if (len(s) == 0) {
@@ -3925,6 +3983,8 @@ void MaskFpExceptions() {
     _controlfp_s(&unused, _MCW_EM, _MCW_EM);
 }
 
+//--- OS / process / CPU (SIMD)
+
 u32 CpuID() {
 #if IS_ARM_64
     // https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-isprocessorfeaturepresent
@@ -4029,6 +4089,8 @@ Str LatestSupportedSIMD() {
     return StrL("none");
 }
 
+//--- timing
+
 LARGE_INTEGER TimeNow() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -4050,6 +4112,8 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
     double res = (double)(diff) / (double)(freq.QuadPart);
     return res * 1000;
 }
+
+//--- GDI: draw (misc) / DC state
 
 void PaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
     constexpr int kCheckerSize = 8;
@@ -4073,6 +4137,8 @@ void PaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
 }
 
 // --- begin: merged from former src/common/win_util.cpp ---
+
+//--- DC state
 
 SavedDCState SaveDCState(HWND hwnd) {
     SavedDCState state = {};
