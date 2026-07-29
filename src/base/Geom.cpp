@@ -417,9 +417,7 @@ SizeF ToSizeFl(const Size s) {
     return {(float)s.dx, (float)s.dy};
 }
 
-SIZE ToSIZE(const Size s) {
-    return {s.dx, s.dy};
-}
+
 
 Size ToSize(const SizeF s) {
     int dx = (int)floor(s.dx + 0.5);
