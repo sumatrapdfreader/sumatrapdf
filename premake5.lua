@@ -1122,6 +1122,25 @@ workspace "SumatraPDF"
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32",
     }
 
+  -- LzSA archive tool (packs installer payloads / PDBs, see LzmaSimpleArchive.cpp).
+  -- Self-contained: compiles its own base + LZMA + zlib rather than linking them.
+  project "MakeLZSA"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    -- 4456/4457: shadowing; 4005/4131/4244/4245/4267/4996: third-party LZMA/zlib C
+    disablewarnings { "4005", "4131", "4244", "4245", "4267", "4456", "4457", "4838", "4996" }
+    includedirs { "src", "ext/lzma/C" }
+    -- build the LZMA encoder single-threaded (avoids LzFindMt/MtCoder/Threads)
+    defines { "_7ZIP_ST" }
+    makelzsa_files()
+    zlib_files()
+    uses_zlib()
+    links { "shlwapi", "version", "comctl32", "wininet", "crypt32", "wintrust" }
+
   -- small console app that runs the mupdf command-line tools (draw, convert,
   -- info, ...). Console subsystem (so it works with cmd.exe / PowerShell) and
   -- links libsumatrapdf.dll for everything, so the exe itself is tiny. It's embedded
@@ -1445,91 +1464,6 @@ workspace "SumatraPDF"
       "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "libwebp", "unrar",
     })
     set_group("tools", {
-      "bench_image", "bin2coff", "logview", "test_engines", "test_util",
+      "bench_image", "bin2coff", "logview", "MakeLZSA", "test_engines", "test_util",
     })
   end
-
-workspace "MakeLZSA"
-  configurations { "Debug", "Release" }
-  platforms { "x86", "x64", "arm64", "x64_asan" }
-  startproject "MakeLZSA"
-
-  filter "platforms:x86"
-  architecture "x86"
-  filter {}
-
-  filter "platforms:x64_asan"
-    sanitize { "Address" }
-    incrementallink("Off")
-    editandcontinue "Off"
-  filter {}
-
-  filter "platforms:x64 or x64_asan"
-  architecture "x86_64"
-  -- strangely this is not set by default for rc.exe
-  resdefines { "_WIN64" }
-  filter {}
-
-  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
-  buildoptions { "/we4840" }
-
-  location "this_is_invalid_location"
-
-  filter "action:vs2022"
-    location "vs2022"
-  filter {}
-
-  clang_conf()
-
-  filter { "platforms:x86", "configurations:Release" }
-    targetdir "out/rel32"
-  filter { "platforms:x86", "configurations:Debug" }
-    targetdir "out/dbg32"
-  filter {}
-
-  filter { "platforms:x64", "configurations:Release" }
-    targetdir "out/rel64"
-  filter { "platforms:x64", "configurations:Debug" }
-    targetdir "out/dbg64"
-  filter {}
-
-  filter { "platforms:x64_asan", "configurations:Release" }
-    targetdir "out/rel64_asan"
-  filter { "platforms:x64_asan", "configurations:Debug" }
-    targetdir "out/dbg64_asan"
-  filter {}
-
-  objdir "!%{cfg.targetdir}/obj/%{prj.name}"
-
-  -- https://github.com/premake/premake-core/wiki/symbols
-  -- https://blogs.msdn.microsoft.com/vcblog/2016/10/05/faster-c-build-cycle-in-vs-15-with-debugfastlink/
-  symbols "Full"
-  staticruntime "On"
-  -- https://github.com/premake/premake-core/wiki/flags
-
-  fatalwarnings { "All" }
-  multiprocessorcompile("On")
-  mapfile("On")
-
-  winver_defines()
-
-  project "MakeLZSA"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    mixed_dbg_rel_conf()
-
-    makelzsa_files()
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    -- 4456/4457: local/param shadowing in third-party LZMA C sources
-    disablewarnings { "4456", "4457" }
-    includedirs { "src", "ext/lzma/C" }
-    -- build the LZMA encoder single-threaded (avoids LzFindMt/MtCoder/Threads)
-    defines { "_7ZIP_ST" }
-
-    -- for zlib
-    disablewarnings { "4005", "4131", "4244", "4245", "4267", "4996" }
-    zlib_files()
-    uses_zlib()
-
-    links { "shlwapi", "version", "comctl32", "wininet", "crypt32", "wintrust" }

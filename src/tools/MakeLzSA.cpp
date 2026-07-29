@@ -127,7 +127,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     data.Append(meta.AsByteSlice());
     data.Append(inArchiveName);
     data.AppendChar('\0');
-    return content.Append(Str(compressed.Get(), (int)compressedSize));
+    return content.Append(Str(compressed, (int)compressedSize));
 }
 
 // creates an archive from files (starting at index skipFiles);
@@ -147,11 +147,11 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     constexpr int kBufSize = 8;
     ByteWriterLE lzsaHeader(kBufSize);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
-    lzsaHeader.Write32((u32)(files.Size() - skipFiles));
+    lzsaHeader.Write32((u32)(len(files) - (int)skipFiles));
     ReportIf(lzsaHeader.Size() != kBufSize);
     data.Append(lzsaHeader.AsByteSlice());
 
-    for (int i = skipFiles; i < files.Size(); i++) {
+    for (int i = (int)skipFiles; i < len(files); i++) {
         TempStr filePath = str::DupTemp(files[i]);
         Str sep = str::SliceFromCharLast(filePath, ':');
         TempStr utf8Name;
@@ -269,7 +269,7 @@ int main(__unused int argc, __unused char** argv) {
 
     auto exeName = path::GetBaseNameTemp(args[0]);
 
-    int nArgs = args.Size();
+    int nArgs = len(args);
     // first arg is exe path, the rest is
     if (nArgs < 2) {
         return printUsage(exeName);

@@ -63,6 +63,9 @@
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\Pixmap.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Str.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -159,6 +162,9 @@
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\Pixmap.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Str.cpp">

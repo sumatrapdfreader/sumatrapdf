@@ -294,8 +294,16 @@ async function buildPreRelease(
       await runLogged(testUtil, [], outDir);
     }
 
-    // build all targets
-    const targets = ["PdfFilter", "PdfPreview", "SumatraPDF", "SumatraPDF-static"];
+    // build all targets. The tools\* utilities (nested under the "tools" solution
+    // folder) are built too so CI catches breakage in them (e.g. bit-rot).
+    const targets = [
+      "PdfFilter",
+      "PdfPreview",
+      "SumatraPDF",
+      "SumatraPDF-static",
+      String.raw`tools\logview`,
+      String.raw`tools\MakeLZSA`,
+    ];
     const t = `/t:${targets.map((t) => t + ":Rebuild").join(";")}`;
     await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
   } finally {

@@ -33,6 +33,7 @@ function makelzsa_files()
     "Log.h",
     "LogNoOp.cpp",
     "LzmaSimpleArchive.*",
+    "Pixmap.*",
     "Strconv.*",
     "StrFormatParse.*",
     "StrQueue.*",
