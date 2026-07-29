@@ -269,7 +269,7 @@ function cdef_filter\w\()_\bpc\()bpc_neon, export=1
 endfunc
 .endm
 
-const div_table
+const div_table, align=4
         .short         840, 420, 280, 210, 168, 140, 120, 105
 endconst
 
@@ -447,8 +447,7 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         str             s4,  [sp, #2*4]               // cost[2]
         str             s5,  [sp, #6*4]               // cost[6]
 
-        movrel          x4,  div_table
-        ld1             {v31.8h}, [x4]
+        ldrel           q31, x4,  div_table
 
         smull           v22.4s,  v0.4h,   v0.4h       // sum_diag[0]*sum_diag[0]
         smull2          v23.4s,  v0.8h,   v0.8h

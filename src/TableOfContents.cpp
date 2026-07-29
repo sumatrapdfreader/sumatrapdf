@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/BitManip.h"
+#include "base/Dpi.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -32,15 +33,13 @@
 #include "Menu.h"
 #include "Accelerators.h"
 #include "Theme.h"
-
-/* Define if you want page numbers to be displayed in the ToC sidebar */
-// #define DISPLAY_TOC_PAGE_NUMBERS
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-#define WM_APP_REPAINT_TOC (WM_APP + 1)
-#endif
+#include "FilterHighlightDraw.h"
 
 static void LayoutTocContainer(MainWindow* win);
+
+// When true, multi-highlight every TOC item that matches the current page
+// (issue #4642). Easy to flip for comparison with single-selection behavior.
+bool gShowAllMatchingTOC = true;
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
@@ -99,70 +98,6 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
 
     str::BufSet(nm->pszText, nm->cchTextMax, ToStr(infotip));
 }
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
-    // code inspired by http://www.codeguru.com/cpp/controls/treeview/multiview/article.php/c3985/
-    LPNMCUSTOMDRAW ncd = &ntvcd->nmcd;
-    HWND hTV = ncd->hdr.hwndFrom;
-    HTREEITEM hItem = (HTREEITEM)ncd->dwItemSpec;
-    RECT rcItem;
-    if (0 == ncd->rc.right - ncd->rc.left || 0 == ncd->rc.bottom - ncd->rc.top) return;
-    if (!TreeView_GetItemRect(hTV, hItem, &rcItem, TRUE)) return;
-    if (rcItem.right > ncd->rc.right) rcItem.right = ncd->rc.right;
-
-    // Clear the label
-    RECT rcFullWidth = rcItem;
-    rcFullWidth.right = ncd->rc.right;
-    FillRect(ncd->hdc, &rcFullWidth, GetSysColorBrush(COLOR_WINDOW));
-
-    // Get the label's text
-    WCHAR szText[MAX_PATH];
-    TVITEM item;
-    item.hItem = hItem;
-    item.mask = TVIF_TEXT | TVIF_PARAM;
-    item.pszText = szText;
-    item.cchTextMax = MAX_PATH;
-    TreeView_GetItem(hTV, &item);
-
-    // Draw the page number right-aligned (if there is one)
-    MainWindow* win = FindMainWindowByHwnd(hTV);
-    TocItem* tocItem = (TocItem*)item.lParam;
-    TempStr label = nullptr;
-    if (tocItem->pageNo && win && win->IsDocLoaded()) {
-        label = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
-        label = str::JoinTemp(StrL("  "), label);
-    }
-    if (label && str::EndsWith(item.pszText, label)) {
-        RECT rcPageNo = rcFullWidth;
-        InflateRect(&rcPageNo, -2, -1);
-
-        SIZE txtSize;
-        GetTextExtentPoint32(ncd->hdc, label, len(label), &txtSize);
-        rcPageNo.left = rcPageNo.right - txtSize.cx;
-
-        SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
-        SetBkColor(ncd->hdc, GetSysColor(COLOR_WINDOW));
-        DrawTextW(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
-
-        // Reduce the size of the label and cut off the page number
-        rcItem.right = std::max(rcItem.right - txtSize.cx, 0);
-        szText[len(szText) - len(label)] = '\0';
-    }
-
-    SetTextColor(ncd->hdc, ntvcd->clrText);
-    SetBkColor(ncd->hdc, ntvcd->clrTextBk);
-
-    // Draw the focus rectangle (including proper background color)
-    HBRUSH brushBg = CreateSolidBrush(ntvcd->clrTextBk);
-    FillRect(ncd->hdc, &rcItem, brushBg);
-    DeleteObject(brushBg);
-    if ((ncd->uItemState & CDIS_FOCUS)) DrawFocusRect(ncd->hdc, &rcItem);
-
-    InflateRect(&rcItem, -2, -1);
-    DrawTextW(ncd->hdc, szText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
-}
-#endif
 
 struct GoToTocLinkData {
     TocItem* tocItem;
@@ -271,6 +206,7 @@ void ClearTocBox(MainWindow* win) {
     win->tocLoaded = false;
 
     win->tocTreeView->Clear();
+    win->tocMatchingItems.Reset();
 
     // clear filter state
     delete win->tocFilteredTree;
@@ -344,6 +280,71 @@ static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
     return d.bestMatch;
 }
 
+struct CollectSamePageData {
+    int pageNo = 0;
+    Vec<TocItem*>* out = nullptr;
+};
+
+static void visitCollectSamePage(CollectSamePageData* d, TreeItemVisitorData* vd) {
+    auto tocItem = (TocItem*)vd->item;
+    if (!tocItem || tocItem->pageNo < 1) {
+        return;
+    }
+    if (tocItem->pageNo == d->pageNo) {
+        d->out->Append(tocItem);
+    }
+}
+
+static bool TocMatchingItemsContains(const Vec<TocItem*>& items, TocItem* item) {
+    for (TocItem* t : items) {
+        if (t == item) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Fill win->tocMatchingItems with every entry that should look "current" for
+// bestMatch: all TOC items on the same page, plus the ancestor chain (so a
+// nested 6 / 6.1 / 6.1.1 path all highlight together). TreeView still has only
+// one selection; extras are painted in OnTocCustomDraw when gShowAllMatchingTOC.
+static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* bestMatch) {
+    win->tocMatchingItems.Reset();
+    if (!gShowAllMatchingTOC || !bestMatch || !treeView) {
+        return;
+    }
+
+    // All bookmarks that point at the same page as the best match (the issue's
+    // "subsequent" same-page entries that TreeView single-select cannot show).
+    if (bestMatch->pageNo >= 1 && treeView->treeModel) {
+        CollectSamePageData d;
+        d.pageNo = bestMatch->pageNo;
+        d.out = &win->tocMatchingItems;
+        auto fn = MkFunc1<CollectSamePageData, TreeItemVisitorData*>(visitCollectSamePage, &d);
+        VisitTreeModelItems(treeView->treeModel, fn);
+    }
+
+    // Ancestor chain (chapter → section → subsection), including bestMatch.
+    for (TocItem* p = bestMatch; p; p = p->parent) {
+        if (!TocMatchingItemsContains(win->tocMatchingItems, p)) {
+            win->tocMatchingItems.Append(p);
+        }
+    }
+
+    // TreeView selection paint won't cover the extra matches; repaint so
+    // OnTocCustomDraw can draw them.
+    if (treeView->hwnd) {
+        InvalidateRect(treeView->hwnd, nullptr, TRUE);
+    }
+}
+
+static bool TocItemIsMultiHighlight(MainWindow* win, TocItem* item) {
+    if (!gShowAllMatchingTOC || !win || !item) {
+        return false;
+    }
+    return TocMatchingItemsContains(win->tocMatchingItems, item);
+}
+
 // TODO: I can't use TreeItem->IsExpanded() because it's not in sync with
 // the changes user makes to TreeCtrl
 static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
@@ -375,6 +376,7 @@ void UpdateTocSelection(MainWindow* win, int currPageNo) {
     // children of expanded node
     TreeItem toSelect = (TreeItem)FindVisibleParentTreeItem(treeView, item);
     treeView->SelectItem(toSelect);
+    SetTocMultiHighlight(win, treeView, item);
 }
 
 // expand the table of contents tree down to the entry matching the current
@@ -405,6 +407,7 @@ void ExpandTocToCurrentPage(MainWindow* win) {
     // item into view, which is exactly the "expand to current page" behavior
     TreeView_EnsureVisible(treeView->hwnd, hi);
     treeView->SelectItem((TreeItem)item);
+    SetTocMultiHighlight(win, treeView, item);
     HwndSetFocus(treeView->hwnd);
 }
 
@@ -571,6 +574,82 @@ static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
     str::Free(data);
 }
 
+// Expand outline nodes whose depth is < maxDepth (depth 1 = top-level rows).
+// Call after a full collapse so the tree ends at exactly that level.
+static void TocExpandItemsToDepth(HWND hwnd, HTREEITEM item, int depth, int maxDepth) {
+    while (item) {
+        if (depth < maxDepth) {
+            TreeView_Expand(hwnd, item, TVE_EXPAND);
+            HTREEITEM child = TreeView_GetChild(hwnd, item);
+            if (child) {
+                TocExpandItemsToDepth(hwnd, child, depth + 1, maxDepth);
+            }
+        }
+        item = TreeView_GetNextSibling(hwnd, item);
+    }
+}
+
+// Expand outline only through `level` (1 = top-level rows collapsed, 2 = expand
+// top-level once, 3 = two levels deep). Issue #5239.
+static void TocExpandToLevel(TreeView* tv, int level) {
+    if (!tv || !tv->hwnd || level < 1) {
+        return;
+    }
+    HWND hwnd = tv->hwnd;
+    tv->SuspendRedraw();
+    HTREEITEM root = TreeView_GetRoot(hwnd);
+    TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
+    if (level > 1) {
+        TocExpandItemsToDepth(hwnd, root, 1, level);
+    }
+    tv->ResumeRedraw();
+}
+
+// Collapse all; if there is a single top-level entry with children (typical
+// Word-export TOC), expand it one level so Collapse All is useful (#5239).
+static void TocCollapseAll(TreeView* tv) {
+    if (!tv || !tv->hwnd) {
+        return;
+    }
+    TocExpandToLevel(tv, 1);
+    HWND hwnd = tv->hwnd;
+    HTREEITEM root = TreeView_GetRoot(hwnd);
+    if (root && !TreeView_GetNextSibling(hwnd, root) && TreeView_GetChild(hwnd, root)) {
+        TreeView_Expand(hwnd, root, TVE_EXPAND);
+    }
+}
+
+// Collapse every outline row that shares the parent of `ti` (same nesting level
+// / siblings). If `ti` is null, use the current selection; if still none, all
+// top-level rows. Issue #1895.
+static void TocCollapseSameLevel(TreeView* tv, TreeItem ti) {
+    if (!tv || !tv->hwnd) {
+        return;
+    }
+    HWND hwnd = tv->hwnd;
+    HTREEITEM hItem = TreeModel::kNullItem != ti ? tv->GetHandleByTreeItem(ti) : nullptr;
+    if (!hItem) {
+        hItem = TreeView_GetSelection(hwnd);
+    }
+    HTREEITEM first = nullptr;
+    if (hItem) {
+        HTREEITEM parent = TreeView_GetParent(hwnd, hItem);
+        first = parent ? TreeView_GetChild(hwnd, parent) : TreeView_GetRoot(hwnd);
+    } else {
+        first = TreeView_GetRoot(hwnd);
+    }
+    if (!first) {
+        return;
+    }
+    tv->SuspendRedraw();
+    for (HTREEITEM sibling = first; sibling; sibling = TreeView_GetNextSibling(hwnd, sibling)) {
+        if (TreeView_GetChild(hwnd, sibling)) {
+            TreeView_Expand(hwnd, sibling, TVE_COLLAPSE);
+        }
+    }
+    tv->ResumeRedraw();
+}
+
 // clang-format off
 static MenuDef menuDefContextToc[] = {
     {
@@ -580,6 +659,22 @@ static MenuDef menuDefContextToc[] = {
     {
         _TRN("Collapse All"),
         CmdCollapseAll,
+    },
+    {
+        _TRN("Expand to Level 1"),
+        CmdTocExpandToLevel1,
+    },
+    {
+        _TRN("Expand to Level 2"),
+        CmdTocExpandToLevel2,
+    },
+    {
+        _TRN("Expand to Level 3"),
+        CmdTocExpandToLevel3,
+    },
+    {
+        _TRN("Collapse Same Level"),
+        CmdTocCollapseSameLevel,
     },
     {
         _TRN("Expand to Current Page"),
@@ -717,7 +812,19 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             win->tocTreeView->ExpandAll();
             break;
         case CmdCollapseAll:
-            win->tocTreeView->CollapseAll();
+            TocCollapseAll(win->tocTreeView);
+            break;
+        case CmdTocExpandToLevel1:
+            TocExpandToLevel(win->tocTreeView, 1);
+            break;
+        case CmdTocExpandToLevel2:
+            TocExpandToLevel(win->tocTreeView, 2);
+            break;
+        case CmdTocExpandToLevel3:
+            TocExpandToLevel(win->tocTreeView, 3);
+            break;
+        case CmdTocCollapseSameLevel:
+            TocCollapseSameLevel(win->tocTreeView, ti);
             break;
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);
@@ -824,169 +931,156 @@ static void UpdateFont(HDC hdc, HWND hwnd, int fontFlags) {
     SelectObject(hdc, hfont);
 }
 
-static bool HasTocFilter(MainWindow* win) {
+static void GetTocFilterWords(MainWindow* win, StrVec& wordsOut) {
+    wordsOut.Reset();
     if (!win || !win->tocFilterEdit) {
-        return false;
+        return;
     }
     TempStr filter = win->tocFilterEdit->GetTextTemp();
-    return filter && len(filter) > 0;
+    if (filter) {
+        SplitFilterToWords(filter, wordsOut);
+    }
 }
 
-static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win) {
+static bool HasTocFilter(MainWindow* win) {
+    StrVec words;
+    GetTocFilterWords(win, words);
+    return len(words) > 0;
+}
+
+// POSTPAINT: redraw title (optional filter highlight), optional right-aligned
+// page label, and multi-match "current page" highlight (issue #4642).
+static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     TocItem* tocItem = (TocItem*)ev->treeItem;
     if (!tocItem || !tocItem->title) {
         return;
     }
-    Edit* edit = win->tocFilterEdit;
-    if (!edit) {
-        return;
-    }
-    TempStr filter = edit->GetTextTemp();
-    if (!filter || len(filter) == 0) {
-        return;
-    }
-    Str title = tocItem->title;
-    int titleLen = title.len;
-    if (titleLen == 0) {
-        return;
-    }
 
-    // mark which bytes are part of a match
-    u8* highlighted = AllocArrayTemp<u8>(titleLen);
-    int filterLen = filter.len;
-    Str rest = title;
-    while (len(rest) > 0) {
-        int idx = str::IndexOfI(rest, filter);
-        if (idx < 0) {
-            break;
-        }
-        int off = (int)(rest.s - title.s) + idx;
-        for (int k = 0; k < filterLen && off + k < titleLen; k++) {
-            highlighted[off + k] = 1;
-        }
-        int skip = idx + filterLen;
-        rest.s += skip;
-        rest.len -= skip;
-    }
-
-    // collect contiguous highlighted ranges (up to 16)
-    struct ByteRange {
-        int start;
-        int end;
-    };
-    ByteRange byteRanges[16];
-    int nRanges = 0;
-    {
-        int pos = 0;
-        while (pos < titleLen && nRanges < 16) {
-            if (highlighted[pos]) {
-                int start = pos;
-                while (pos < titleLen && highlighted[pos]) {
-                    pos++;
-                }
-                byteRanges[nRanges++] = {start, pos};
-            } else {
-                pos++;
-            }
-        }
-    }
-    if (nRanges == 0) {
-        return;
-    }
-
-    // get the label rect for this tree item
-    RECT labelRect;
     TreeView* tv = ev->treeView;
+    RECT labelRect{};
     if (!tv->GetItemRect(ev->treeItem, true, labelRect)) {
         return;
     }
+    RECT itemRect{};
+    tv->GetItemRect(ev->treeItem, false, itemRect);
 
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
-
-    WCHAR* titleW = CWStrTemp(title);
-
-    // compute pixel rectangles for each highlighted range
-    RECT highlightRects[16];
-    for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(Str(title.s, byteRanges[i].start));
-        int wStart = len(prefixToStart);
-        TempWStr prefixToEnd = ToWStrTemp(Str(title.s, byteRanges[i].end));
-        int wEnd = len(prefixToEnd);
-
-        SIZE szStart, szEnd;
-        GetTextExtentPoint32W(hdc, titleW, wStart, &szStart);
-        GetTextExtentPoint32W(hdc, titleW, wEnd, &szEnd);
-
-        highlightRects[i].top = labelRect.top;
-        highlightRects[i].bottom = labelRect.bottom;
-        highlightRects[i].left = labelRect.left + szStart.cx;
-        highlightRects[i].right = labelRect.left + szEnd.cx;
-    }
-
-    // erase the label area with the correct background color
-    // so we can redraw text cleanly without double-draw artifacts
     NMCUSTOMDRAW* cd = &tvcd->nmcd;
-    bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
-    bool hasFocus = (GetFocus() == tv->hwnd);
-    COLORREF bgCol;
-    if (isSelected) {
-        bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
-    } else {
-        bgCol = IsSpecialColor(tv->bgColor) ? GetSysColor(COLOR_WINDOW) : tv->bgColor;
+    if (cd->rc.right <= cd->rc.left || cd->rc.bottom <= cd->rc.top) {
+        return;
     }
-    HBRUSH hbrBg = CreateSolidBrush(bgCol);
-    FillRect(hdc, &labelRect, hbrBg);
-    DeleteObject(hbrBg);
 
-    // draw highlight background rectangles
-    COLORREF highlightCol;
-    if (IsCurrentThemeDefault()) {
-        highlightCol = RGB(255, 255, 0);
-    } else {
-        highlightCol = AccentColor(bgCol, 40);
+    // POSTPAINT often omits CDIS_SELECTED; also check the control selection.
+    bool isTreeSelected = (cd->uItemState & CDIS_SELECTED) != 0;
+    if (!isTreeSelected) {
+        HTREEITEM hSel = TreeView_GetSelection(tv->hwnd);
+        HTREEITEM hItem = tv->GetHandleByTreeItem(ev->treeItem);
+        isTreeSelected = hSel && hItem && hSel == hItem;
     }
-    HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
-    for (int i = 0; i < nRanges; i++) {
-        FillRect(hdc, &highlightRects[i], hbrHighlight);
-    }
-    DeleteObject(hbrHighlight);
-
-    // draw the text on top
-    COLORREF txtCol;
-    if (isSelected && hasFocus) {
-        txtCol = GetSysColor(COLOR_HIGHLIGHTTEXT);
-    } else if (tocItem->color != kColorUnset) {
+    bool isMultiMatch = TocItemIsMultiHighlight(win, tocItem);
+    // Treat multi-match rows like selected for fill/text colors so every
+    // current bookmark is visible, not only the TreeView selection.
+    bool isSelected = isTreeSelected || isMultiMatch;
+    // Focus ring / highlight-text only for the real tree selection.
+    bool hasFocus = isTreeSelected && (GetFocus() == tv->hwnd);
+    COLORREF bgCol, txtCol;
+    ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
+    // Per-bookmark color from the document (when not the focused selection).
+    if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {
         txtCol = tocItem->color;
-    } else {
-        txtCol = IsSpecialColor(tv->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : tv->textColor;
     }
-    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
-    int oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    DrawTextW(hdc, titleW, -1, &labelRect, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-    SetBkMode(hdc, oldBkMode);
-    SetTextColor(hdc, oldTxtCol);
+
+    bool showPage = gGlobalPrefs->showTocPageNumbers && win && win->IsDocLoaded() && win->ctrl && tocItem->pageNo > 0;
+    TempStr pageLabel{};
+    if (showPage) {
+        pageLabel = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
+        if (!pageLabel) {
+            showPage = false;
+        }
+    }
+
+    StrVec words;
+    GetTocFilterWords(win, words);
+    bool filterActive = len(words) > 0;
+
+    // Nothing to repaint unless we need page numbers, filter bars, or a
+    // secondary multi-match highlight (the real selection is already painted).
+    if (!showPage && !filterActive && !(isMultiMatch && !isTreeSelected)) {
+        return;
+    }
+
+    // Label area extends to the visible right edge so the page number stays
+    // right-aligned against the sidebar, not under a long title.
+    RECT drawRc = labelRect;
+    drawRc.right = std::min(itemRect.right, cd->rc.right);
+    if (drawRc.right <= drawRc.left) {
+        return;
+    }
+
+    if (tocItem->fontFlags != 0) {
+        UpdateFont(hdc, tv->hwnd, tocItem->fontFlags);
+    }
+    HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
+    if (tocItem->fontFlags == 0 && font) {
+        SelectObject(hdc, font);
+    }
+
+    TempWStr pageW{};
+    SIZE pageSize{};
+    int pageReserve = 0;
+    if (showPage) {
+        pageW = ToWStrTemp(pageLabel);
+        if (pageW.len > 0) {
+            GetTextExtentPoint32W(hdc, pageW.s, pageW.len, &pageSize);
+            pageReserve = pageSize.cx + DpiScale(tv->hwnd, 8);
+        } else {
+            showPage = false;
+        }
+    }
+
+    HBRUSH brushBg = CreateSolidBrush(bgCol);
+    FillRect(hdc, &drawRc, brushBg);
+    DeleteObject(brushBg);
+
+    RECT titleRc = drawRc;
+    titleRc.right = std::max(titleRc.left, drawRc.right - pageReserve);
+    InflateRect(&titleRc, -2, -1);
+
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, txtCol);
+    SetBkColor(hdc, bgCol);
+
+    if (filterActive) {
+        DrawTreeItemFilterHighlight(hdc, titleRc, tocItem->title, words, bgCol, txtCol, font);
+    } else {
+        TempWStr titleW = ToWStrTemp(tocItem->title);
+        DrawTextW(hdc, titleW.s, titleW.len, &titleRc,
+                  DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
+    }
+
+    if (showPage && pageW.len > 0) {
+        RECT pageRc = drawRc;
+        InflateRect(&pageRc, -2, -1);
+        pageRc.left = std::max(pageRc.left, pageRc.right - pageSize.cx);
+        // Slightly muted vs title when not selected (keeps numbers secondary).
+        if (!(isTreeSelected && hasFocus)) {
+            COLORREF muted =
+                RGB((GetRValue(txtCol) * 2 + GetRValue(bgCol)) / 3, (GetGValue(txtCol) * 2 + GetGValue(bgCol)) / 3,
+                    (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
+            SetTextColor(hdc, muted);
+        }
+        DrawTextW(hdc, pageW.s, pageW.len, &pageRc, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
+    }
+
+    if ((cd->uItemState & CDIS_FOCUS) && isTreeSelected && hasFocus) {
+        DrawFocusRect(hdc, &drawRc);
+    }
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
 void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
-#if defined(DISPLAY_TOC_PAGE_NUMBERS)
-    if (false) return CDRF_DODEFAULT;
-    switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
-        case CDDS_PREPAINT:
-            return CDRF_NOTIFYITEMDRAW;
-        case CDDS_ITEMPREPAINT:
-            return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-        case CDDS_ITEMPOSTPAINT:
-            RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
-            // fall through
-        default:
-            return CDRF_DODEFAULT;
-    }
-    break;
-#endif
-
     ev->result = CDRF_DODEFAULT;
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);
@@ -998,6 +1092,8 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     bool filterActive = HasTocFilter(win);
+    bool showPageNumbers = gGlobalPrefs->showTocPageNumbers;
+    bool multiHighlight = gShowAllMatchingTOC && win && len(win->tocMatchingItems) > 0;
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         TocItem* tocItem = (TocItem*)ev->treeItem;
@@ -1012,7 +1108,10 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
             UpdateFont(cd->hdc, ev->treeView->hwnd, tocItem->fontFlags);
             res = CDRF_NEWFONT;
         }
-        if (filterActive) {
+        // POSTPAINT redraws title + optional page number / filter / multi-match.
+        bool needPost = filterActive || (showPageNumbers && tocItem->pageNo > 0) ||
+                        (multiHighlight && TocItemIsMultiHighlight(win, tocItem));
+        if (needPost) {
             res |= CDRF_NOTIFYPOSTPAINT;
         }
         ev->result = res;
@@ -1020,8 +1119,8 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
     }
 
     if (cd->dwDrawStage == CDDS_ITEMPOSTPAINT) {
-        if (filterActive && win) {
-            DrawTocItemHighlight(ev, win);
+        if (win) {
+            DrawTocItemPostPaint(ev, win);
         }
         ev->result = CDRF_DODEFAULT;
         return;
@@ -1076,6 +1175,62 @@ static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     GoToTocTreeItem(win, ev->selectedItem, allowExternal);
 }
 
+// Tab / Ctrl+Tab focus movement (also reused by Favorites tree)
+void TocTreeKeyDown2(TreeView::KeyDownEvent* ev);
+
+static void FocusTocFilterEdit(MainWindow* win) {
+    if (!win || !win->tocFilterEdit || !win->tocFilterEdit->hwnd) {
+        return;
+    }
+    HwndSetFocus(win->tocFilterEdit->hwnd);
+    win->tocFilterEdit->SetCursorPositionAtEnd();
+}
+
+// Select the first top-level bookmark (Down from the search box).
+static void SelectFirstTocTreeItem(MainWindow* win) {
+    TreeView* tv = win ? win->tocTreeView : nullptr;
+    if (!tv || !tv->treeModel || !tv->hwnd) {
+        return;
+    }
+    TreeModel* tm = tv->treeModel;
+    TreeItem root = tm->Root();
+    if (tm->ChildCount(root) == 0) {
+        return;
+    }
+    TreeItem first = tm->ChildAt(root, 0);
+    tv->SelectItem(first);
+    HTREEITEM h = tv->GetHandleByTreeItem(first);
+    if (h) {
+        TreeView_EnsureVisible(tv->hwnd, h);
+    }
+}
+
+// TOC tree keyboard: Esc clears filter / focuses search; Up on first row returns
+// to the search box. Tab (and Ctrl+Tab) stay in TocTreeKeyDown2 so Favorites can
+// reuse that path.
+static void TocTreeKeyDown(TreeView::KeyDownEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
+    if (ev->keyCode == VK_ESCAPE) {
+        if (win && win->tocFilterEdit) {
+            win->tocFilterEdit->SetText("");
+            FocusTocFilterEdit(win);
+            ev->result = 1;
+            return;
+        }
+    }
+    if (ev->keyCode == VK_UP && win && win->tocFilterEdit) {
+        TreeItem sel = ev->treeView->GetSelection();
+        HTREEITEM hSel = sel ? ev->treeView->GetHandleByTreeItem(sel) : nullptr;
+        HTREEITEM hFirst = TreeView_GetRoot(ev->treeView->hwnd);
+        if (hSel && hFirst && hSel == hFirst) {
+            FocusTocFilterEdit(win);
+            ev->result = 1;
+            return;
+        }
+    }
+    TocTreeKeyDown2(ev);
+}
+
 void TocTreeKeyDown2(TreeView::KeyDownEvent* ev) {
     // TODO: trying to fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1841
     // doesn't work i.e. page up / page down seems to be processed anyway by TreeCtrl
@@ -1106,22 +1261,6 @@ void TocTreeKeyDown2(TreeView::KeyDownEvent* ev) {
     AdvanceFocus(win);
     ev->result = 1;
 }
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void TocTreeMsgFilter(WndEvent*) {
-    switch (msg) {
-        case WM_SIZE:
-        case WM_HSCROLL:
-            // Repaint the ToC so that RelayoutTocItem is called for all items
-            PostMessageW(hwnd, WM_APP_REPAINT_TOC, 0, 0);
-            break;
-        case WM_APP_REPAINT_TOC:
-            InvalidateRect(hwnd, nullptr, TRUE);
-            UpdateWindow(hwnd);
-            break;
-    }
-}
-#endif
 
 // Position label, filter edit, and tree window within toc container using the
 // wingui layout engine (VBox built in CreateToc).
@@ -1177,44 +1316,59 @@ void UnsubclassToc(MainWindow* win) {
     }
 }
 
+// Append a TocItem linked list onto resultFirst/resultLast (updates last).
+static void AppendTocSiblingList(TocItem*& resultFirst, TocItem*& resultLast, TocItem* list) {
+    if (!list) {
+        return;
+    }
+    if (!resultFirst) {
+        resultFirst = list;
+    } else {
+        resultLast->next = list;
+    }
+    resultLast = list;
+    while (resultLast->next) {
+        resultLast = resultLast->next;
+    }
+}
+
 // Recursively build a filtered copy of the TocItem tree.
-// Includes items whose title matches the filter, plus ancestors needed to reach them.
+// Multi-word filter (command palette style): every word must appear in the
+// item's own title to keep that node. Non-matching ancestors are omitted and
+// matching descendants are promoted so only fully-matching rows are shown.
 // Returns nullptr if nothing matches.
-static TocItem* FilterTocItemRec(TocItem* item, Str filter) {
+static TocItem* FilterTocItemRec(TocItem* item, const StrVec& words) {
     if (!item) {
         return nullptr;
     }
     TocItem* resultFirst = nullptr;
     TocItem* resultLast = nullptr;
     for (TocItem* si = item; si; si = si->next) {
-        // recursively filter children
-        TocItem* filteredChildren = FilterTocItemRec(si->child, filter);
-        bool titleMatches = si->title && str::ContainsI(si->title, filter);
-        if (!titleMatches && !filteredChildren) {
-            continue;
-        }
-        // create a copy of this item
-        auto* copy = new TocItem();
-        copy->title = str::Dup(si->title);
-        copy->pageNo = si->pageNo;
-        copy->id = si->id;
-        copy->fontFlags = si->fontFlags;
-        copy->color = si->color;
-        copy->dest = si->dest;
-        copy->destNotOwned = true;
-        copy->isOpenDefault = true;
-        copy->isOpenToggled = false;
-        copy->child = filteredChildren;
-        // set parent pointers on children
-        for (TocItem* c = copy->child; c; c = c->next) {
-            c->parent = copy;
-        }
-        if (!resultFirst) {
-            resultFirst = copy;
-            resultLast = copy;
-        } else {
-            resultLast->next = copy;
-            resultLast = copy;
+        TocItem* filteredChildren = FilterTocItemRec(si->child, words);
+        bool titleMatches = si->title && FilterMatches(si->title, words);
+        if (titleMatches) {
+            // keep this node; only fully-matching children stay nested under it
+            auto* copy = new TocItem();
+            copy->title = str::Dup(si->title);
+            copy->pageNo = si->pageNo;
+            copy->id = si->id;
+            copy->fontFlags = si->fontFlags;
+            copy->color = si->color;
+            copy->dest = si->dest;
+            copy->destNotOwned = true;
+            copy->isOpenDefault = true;
+            copy->isOpenToggled = false;
+            copy->child = filteredChildren;
+            for (TocItem* c = copy->child; c; c = c->next) {
+                c->parent = copy;
+            }
+            AppendTocSiblingList(resultFirst, resultLast, copy);
+        } else if (filteredChildren) {
+            // title does not match every word: drop this node, promote children
+            for (TocItem* c = filteredChildren; c; c = c->next) {
+                c->parent = nullptr;
+            }
+            AppendTocSiblingList(resultFirst, resultLast, filteredChildren);
         }
     }
     return resultFirst;
@@ -1235,19 +1389,31 @@ static void ApplyTocFilter(MainWindow* win, Str filter) {
     TreeView* treeView = win->tocTreeView;
     TocTree* origTree = tab->currToc;
 
-    if (!filter || len(filter) == 0) {
+    StrVec words;
+    if (filter) {
+        SplitFilterToWords(filter, words);
+    }
+    if (len(words) == 0) {
         // restore original tree
         SetInitialExpandState(origTree->root, tab->tocState);
         treeView->SetTreeModel(origTree);
         return;
     }
 
-    TocItem* filteredRoot = FilterTocItemRec(origTree->root, filter);
-    if (!filteredRoot) {
+    TocItem* filteredItems = FilterTocItemRec(origTree->root, words);
+    if (!filteredItems) {
         treeView->Clear();
         return;
     }
-    auto* filteredTree = new TocTree(filteredRoot);
+    // TreeView populates Root()'s children only (the root itself is invisible).
+    // Promote-filter returns a sibling list of matching items, so wrap them in
+    // a dummy root — same shape every engine uses for the unfiltered TocTree.
+    auto* wrapRoot = new TocItem();
+    wrapRoot->child = filteredItems;
+    for (TocItem* c = filteredItems; c; c = c->next) {
+        c->parent = wrapRoot;
+    }
+    auto* filteredTree = new TocTree(wrapRoot);
     win->tocFilteredTree = filteredTree;
     treeView->SetTreeModel(filteredTree);
 }
@@ -1267,20 +1433,39 @@ static void OnTocFilterTextChanged(MainWindow* win) {
 
 static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
                                              DWORD_PTR data) {
-    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
-        MainWindow* win = (MainWindow*)data;
-        Edit* edit = win->tocFilterEdit;
-        if (edit) {
-            TempStr txt = edit->GetTextTemp();
-            if (txt && len(txt) > 0) {
-                edit->SetText("");
-                // onTextChanged will fire and restore the tree
-                return 0;
+    MainWindow* win = (MainWindow*)data;
+    if (msg == WM_KEYDOWN) {
+        if (wp == VK_DOWN) {
+            // move into the tree: first top-level bookmark
+            if (win && win->tocTreeView) {
+                SelectFirstTocTreeItem(win);
+                HwndSetFocus(win->tocTreeView->hwnd);
             }
-            // if already empty, move focus to tree
-            SetFocus(win->tocTreeView->hwnd);
             return 0;
         }
+        if (wp == VK_ESCAPE) {
+            Edit* edit = win ? win->tocFilterEdit : nullptr;
+            if (edit) {
+                TempStr txt = edit->GetTextTemp();
+                if (txt && len(txt) > 0) {
+                    edit->SetText("");
+                    // onTextChanged will fire and restore the tree
+                    return 0;
+                }
+                // empty: move focus to the tree
+                if (win->tocTreeView) {
+                    SetFocus(win->tocTreeView->hwnd);
+                }
+                return 0;
+            }
+        }
+        if (wp == VK_RETURN) {
+            // prevent ding; navigation is done from the tree
+            return 0;
+        }
+    }
+    if (msg == WM_CHAR && (wp == VK_RETURN || wp == '\r' || wp == '\n')) {
+        return 0;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -1310,6 +1495,8 @@ void CreateToc(MainWindow* win) {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndTocBox;
         eargs.withBorder = false;
+        // underline so the filter field is visible on flat sidebar backgrounds
+        eargs.withBottomBorder = true;
         eargs.cueText = _TRA("Search Bookmarks");
         eargs.font = GetAppFont(win->hwndFrame);
         filterEdit->Create(eargs);
@@ -1329,7 +1516,7 @@ void CreateToc(MainWindow* win) {
     auto fn = MkFunc1Void(TocContextMenu);
     treeView->onContextMenu = fn;
     treeView->onSelectionChanged = MkFunc1Void(TocTreeSelectionChanged);
-    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
+    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown);
     treeView->onGetTooltip = MkFunc1Void(TocCustomizeTooltip);
     treeView->onClick = MkFunc1Void(TocTreeClick);
 
@@ -1338,12 +1525,13 @@ void CreateToc(MainWindow* win) {
     win->tocTreeView = treeView;
 
     // stack label, filter edit and tree vertically; the tree flexes to fill the
-    // remaining height. The VBox owns these three controls (freed in ~MainWindow).
+    // remaining height. The VBox owns these controls/spacer (freed in ~MainWindow).
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(l);
     vbox->AddChild(filterEdit);
+    vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);
     win->tocLayout = vbox;
 

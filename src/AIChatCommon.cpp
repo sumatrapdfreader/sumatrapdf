@@ -178,7 +178,7 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
         logfa("%s %s: %s", logger->logTag, direction, text);
     }
 
-    TempStr dir = GetNotImportantDataDirTemp();
+    TempStr dir = GetSumatraDataDirTemp();
     if (!dir || !logger->logFileName) {
         return;
     }

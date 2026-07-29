@@ -4,6 +4,7 @@
 // Grok Build provider for the AI chat sidebar (see AIChatPanel.cpp)
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -298,17 +299,13 @@ struct GrokBuildProvider : AIChatProvider {
         checkboxLabel = "Always Approve";
     }
 
-    TempStr TitleTemp() override {
-        return str::DupTemp(_TRA("Grok chat"));
-    }
+    TempStr TitleTemp() override { return str::DupTemp(_TRA("Grok chat")); }
 
     TempStr NotInstalledInstructionTemp() override {
         return str::DupTemp(_TRA("Grok Build cli must be installed for this functionality"));
     }
 
-    TempStr FindExecutableTemp() override {
-        return FindGrokExecutableTemp();
-    }
+    TempStr FindExecutableTemp() override { return FindGrokExecutableTemp(); }
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
@@ -324,31 +321,15 @@ struct GrokBuildProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override {
-        return gGlobalPrefs->grokBuild.model;
-    }
-    void SetModel(Str model) override {
-        str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, model);
-    }
-    int GetOption() override {
-        return gGlobalPrefs->grokBuild.effort;
-    }
-    void SetOption(int option) override {
-        gGlobalPrefs->grokBuild.effort = option;
-    }
-    bool GetFlag() override {
-        return gGlobalPrefs->grokBuild.alwaysApprove;
-    }
-    void SetFlag(bool flag) override {
-        gGlobalPrefs->grokBuild.alwaysApprove = flag;
-    }
-    Str GetBgColor() override {
-        return gGlobalPrefs->grokBuild.bgColor;
-    }
+    Str GetModel() override { return gGlobalPrefs->grokBuild.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, model); }
+    int GetOption() override { return gGlobalPrefs->grokBuild.effort; }
+    void SetOption(int option) override { gGlobalPrefs->grokBuild.effort = option; }
+    bool GetFlag() override { return gGlobalPrefs->grokBuild.alwaysApprove; }
+    void SetFlag(bool flag) override { gGlobalPrefs->grokBuild.alwaysApprove = flag; }
+    Str GetBgColor() override { return gGlobalPrefs->grokBuild.bgColor; }
 
-    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
-        CollectGrokSessions(dir, sessions);
-    }
+    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectGrokSessions(dir, sessions); }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
         LoadGrokSessionHistory(win, sessionId, dir);
@@ -359,16 +340,15 @@ struct GrokBuildProvider : AIChatProvider {
         Str permsFlag = args.flag ? StrL("--always-approve") : Str{};
         TempStr rules = fmt("The user is currently reading the file: %s", args.filePath);
         if (args.isNewSession) {
-            return fmt(
-                "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s --rules "
-                "\"%s\"",
-                args.exePath, args.escapedInput, args.dir, args.model, efforts[args.option], permsFlag, rules);
+            return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort %s %s --rules %s",
+                       QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.escapedInput),
+                       QuoteCmdLineArgTemp(args.dir), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+                       QuoteCmdLineArgTemp(rules));
         }
-        return fmt(
-            "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules "
-            "\"%s\"",
-            args.exePath, args.escapedInput, args.dir, args.model, efforts[args.option], permsFlag, args.sessionId,
-            rules);
+        return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort %s %s -r %s --rules %s",
+                   QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.escapedInput),
+                   QuoteCmdLineArgTemp(args.dir), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+                   args.sessionId, QuoteCmdLineArgTemp(rules));
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {

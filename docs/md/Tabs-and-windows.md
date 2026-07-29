@@ -32,7 +32,7 @@ You can also change `ReuseInstance` and `UseTabs` at runtime (**ver 3.7+**) via 
 
 | Flag | Effect |
 | --- | --- |
-| `-new-window` | Open the file in a **new window** even when `UseTabs = true` (**ver 3.2+**) |
+| `-new-window` | Open in a **new window** even when `UseTabs = true` (**ver 3.2+**). With several files: one new window, all files as tabs (**ver 3.7+**) |
 | `-reuse-instance` | Send the file to an already running instance (mainly for [DDE](DDE-Commands.md) and scripts). For normal use, prefer the `ReuseInstance` setting |
 
 `-reuse-instance` is **not** needed for everyday double-click opening when `ReuseInstance = true`.
@@ -53,12 +53,37 @@ With `RestoreSession = true`, SumatraPDF reopens tabs (and window positions) fro
 
 See [Keyboard shortcuts](Keyboard-shortcuts.md):
 
-- `Ctrl + Tab` / `Ctrl + Shift + Tab` — next / previous tab
+- `Ctrl + Tab` / `Ctrl + Shift + Tab` — next / previous tab (**ver 3.6+**: opens the **Smart Tab Switch** list while you hold Ctrl; release to switch). Same idea as the browser tab switcher
+- `Ctrl + PageDown` / `Ctrl + PageUp` — next / previous tab in **tab-strip order**, immediately, without the switcher popup (`CmdNextTab` / `CmdPrevTab`)
 - `Ctrl + W` or `q` — close current tab
 - `Ctrl + Shift + N` — open current document in a new window
 - `Alt + 1` … `Alt + 8`, `Alt + 9` (last tab) — jump to tab by number
 
 Use the [command palette](Command-Palette.md): type `@` to switch tabs by name.
+
+### Restore pre-3.6 Ctrl+Tab (no switcher popup)
+
+In **3.5 and earlier**, `Ctrl + Tab` / `Ctrl + Shift + Tab` switched tabs immediately in tab-strip order (no overlay list). In **3.6+** those keys run **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held.
+
+If you prefer the old behavior (useful when flicking quickly between two documents), either:
+
+1. Use **`Ctrl + PageDown` / `Ctrl + PageUp`** instead, or
+2. [Rebind the keys](Customize-keyboard-shortcuts.md) in advanced settings so `Ctrl + Tab` runs plain next/prev tab again:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdNextTab
+        Key = Ctrl + Tab
+    ]
+    [
+        Cmd = CmdPrevTab
+        Key = Ctrl + Shift + Tab
+    ]
+]
+```
+
+Note: the advanced setting `TabsMru` only changes the **order** of tabs inside the Smart Tab Switch list (most-recently-used vs strip order). It does **not** hide the switcher; use the shortcut rebind above for that.
 
 ## Home tab
 

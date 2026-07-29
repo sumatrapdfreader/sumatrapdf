@@ -144,7 +144,7 @@ struct HtmlDoc {
     Str GetFileName() const;
 
     static bool IsSupportedFileType(FileType kind);
-    static HtmlDoc* CreateFromFile(Str fileName);
+    static HtmlDoc* CreateFromFile(Str path);
 };
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
@@ -169,5 +169,5 @@ struct TxtDoc {
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(FileType kind);
-    static TxtDoc* CreateFromFile(Str fileName);
+    static TxtDoc* CreateFromFile(Str path);
 };

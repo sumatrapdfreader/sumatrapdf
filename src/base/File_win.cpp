@@ -3,10 +3,16 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/Win.h"
-#include "base/WinDynCalls.h"
 
 #include "base/File.h"
+
+// Defined in Win.cpp; avoid pulling all of Win.h into this file.
+void LogLastError(DWORD err = 0);
+
+// Same value as HINSTANCE in WinMain for this image (exe or DLL).
+// Using __ImageBase (not GetModuleHandle(nullptr)) so DLL builds report the
+// DLL path, not the host process path.
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 namespace path {
 
@@ -231,9 +237,6 @@ bool IsAbsolute(Str path) {
 }
 
 TempStr GetNonVirtualTemp(Str virtualPath) {
-    if (!DynGetFinalPathNameByHandleW) {
-        return virtualPath;
-    }
     HANDLE hFile = CreateFileW(CWStrTemp(virtualPath), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -241,7 +244,7 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
     }
 
     WCHAR realPath[MAX_PATH * 4];
-    DWORD ret = DynGetFinalPathNameByHandleW(hFile, realPath, dimof(realPath), FILE_NAME_NORMALIZED);
+    DWORD ret = GetFinalPathNameByHandleW(hFile, realPath, dimof(realPath), FILE_NAME_NORMALIZED);
 
     CloseHandle(hFile);
     if (ret <= 0) {
@@ -274,6 +277,27 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
     return ToUtf8Temp(path);
 }
 
+TempWStr GetSelfExePathW() {
+    WCHAR buf[MAX_PATH + 2]{};
+    DWORD nChars = dimof(buf) - 1;
+    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
+    GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
+    return wstr::Dup(buf);
+}
+
+TempStr GetSelfExePathTemp() {
+    WCHAR buf[MAX_PATH + 2]{};
+    DWORD nChars = dimof(buf) - 1;
+    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
+    GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
+    return ToUtf8Temp(buf);
+}
+
+TempStr GetSelfExeDirTemp() {
+    TempStr path = GetSelfExePathTemp();
+    return path::GetDirTemp(path);
+}
+
 TempStr GetPathInExeDirTemp(Str fileName) {
     TempStr dir = GetSelfExeDirTemp();
     TempStr path = path::JoinTemp(dir, fileName);
@@ -297,14 +321,24 @@ bool WriteFile(Str path, Str d) {
     HANDLE fh = CreateFileW(CWStrTemp(path), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
                             FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == fh) {
+        // keep GetLastError for callers; also log for diagnostics (installer upgrades)
+        DWORD err = GetLastError();
+        logf("file::WriteFile: CreateFileW failed for '%s' lastError=%u\n", path, err);
+        SetLastError(err);
         return false;
     }
     AutoCloseHandle h(fh);
 
     DWORD size = 0;
     BOOL ok = ::WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
-    ReportIf(ok && (dataLen != (size_t)size));
-    return ok && dataLen == (size_t)size;
+    if (!ok || dataLen != (size_t)size) {
+        DWORD err = GetLastError();
+        logf("file::WriteFile: WriteFile failed for '%s' ok=%d wrote=%u want=%zu lastError=%u\n", path, (int)ok, size,
+             dataLen, err);
+        SetLastError(err);
+        return false;
+    }
+    return true;
 }
 
 FileHandle OpenReadOnly(Str path) {

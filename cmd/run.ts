@@ -6,7 +6,6 @@ import { clearDirPreserveSettings } from "./clean";
 let clean = false;
 
 let t = `/t:SumatraPDF`;
-t = `/t:SumatraPDF-dll`;
 
 async function main() {
   const timeStart = performance.now();
@@ -27,7 +26,7 @@ async function main() {
   const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
   console.log(`build took ${elapsed}s`);
 
-  const path = join("out", "dbg64", "SumatraPDF-dll.exe");
+  const path = join("out", "dbg64", "SumatraPDF.exe");
   // launch fully detached so SumatraPDF keeps running after this script exits.
   // Bun.spawn isn't enough here: it kills its children when the parent exits, so
   // unref() alone would let the script return but immediately kill SumatraPDF.

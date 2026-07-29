@@ -424,15 +424,13 @@ endfunc
 
 function inv_dct_4s_x4_neon
         AARCH64_VALID_CALL_TARGET
-        movrel          x16, idct_coeffs
-        ld1             {v0.4s}, [x16]
+        ldrel           q0,  x16, idct_coeffs
         idct_4          v16, v17, v18, v19
         ret
 endfunc
 
 .macro iadst_4x4 o0, o1, o2, o3
-        movrel          x16, iadst4_coeffs
-        ld1             {v0.4s}, [x16]
+        ldrel           q0,  x16, iadst4_coeffs
 
         sub             v3.4s,   v16.4s,  v18.4s
         mul             v4.4s,   v16.4s,  v0.s[0]
@@ -1016,8 +1014,7 @@ function inv_dct_4s_x16_neon
         smax            \r\().4s,  \r\().4s,  v4.4s
 .endr
 
-        ld1             {v0.4s, v1.4s}, [x16]
-        sub             x16, x16, #32
+        ldp             q0,  q1,  [x16], #-32
 
         mul_mls         v2,  v17, v31, v0.s[0], v0.s[1] // -> t8a
         mul_mla         v3,  v17, v31, v0.s[1], v0.s[0] // -> t15a
@@ -2036,8 +2033,7 @@ function inv_dct32_odd_4s_x16_neon
         srshr           v20.4s, v4.4s,  #12             // t18a
         srshr           v27.4s, v6.4s,  #12             // t29a
         mul_mla         v4,  v28, v19, v1.s[3], v1.s[2] // -> t28a
-        ld1             {v0.4s, v1.4s}, [x16]
-        sub             x16, x16, #4*24
+        ldp             q0,  q1,  [x16], #-4*24
         mul_mls         v6,  v18, v29, v0.s[0], v0.s[1] // -> t20a
         srshr           v28.4s, v2.4s,  #12             // t19a
         srshr           v19.4s, v4.4s,  #12             // t28a
@@ -2971,8 +2967,7 @@ function inv_dct64_step1_neon
 endfunc
 
 function inv_dct64_step2_neon
-        movrel          x16, idct_coeffs
-        ld1             {v0.4s}, [x16]
+        ldrel           q0,  x16, idct_coeffs
 1:
         // t32a/33/34a/35/60/61a/62/63a
         // t56a/57/58a/59/36/37a/38/39a

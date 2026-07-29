@@ -4,6 +4,7 @@
 // OpenAI Codex provider for the AI chat sidebar (see AIChatPanel.cpp)
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -318,7 +319,7 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
     if (!text || IsCodexInjectedUserText(text)) {
         return {};
     }
-    text.len -= str::TrimWSInPlace(text, str::TrimOpt::Both);
+    str::TrimWSInPlace(text, str::TrimOpt::Both);
     return len(text) > 0 ? text : nullptr;
 }
 
@@ -409,17 +410,13 @@ struct CodexBuildProvider : AIChatProvider {
         checkboxLabel = "Skip Sandbox";
     }
 
-    TempStr TitleTemp() override {
-        return str::DupTemp(_TRA("Codex chat"));
-    }
+    TempStr TitleTemp() override { return str::DupTemp(_TRA("Codex chat")); }
 
     TempStr NotInstalledInstructionTemp() override {
         return str::DupTemp(_TRA("OpenAI Codex CLI must be installed for this functionality"));
     }
 
-    TempStr FindExecutableTemp() override {
-        return FindCodexExecutableTemp();
-    }
+    TempStr FindExecutableTemp() override { return FindCodexExecutableTemp(); }
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
@@ -436,31 +433,15 @@ struct CodexBuildProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override {
-        return gGlobalPrefs->codexBuild.model;
-    }
-    void SetModel(Str model) override {
-        str::ReplaceWithCopy(&gGlobalPrefs->codexBuild.model, model);
-    }
-    int GetOption() override {
-        return gGlobalPrefs->codexBuild.sandbox;
-    }
-    void SetOption(int option) override {
-        gGlobalPrefs->codexBuild.sandbox = option;
-    }
-    bool GetFlag() override {
-        return gGlobalPrefs->codexBuild.skipSandbox;
-    }
-    void SetFlag(bool flag) override {
-        gGlobalPrefs->codexBuild.skipSandbox = flag;
-    }
-    Str GetBgColor() override {
-        return gGlobalPrefs->codexBuild.bgColor;
-    }
+    Str GetModel() override { return gGlobalPrefs->codexBuild.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->codexBuild.model, model); }
+    int GetOption() override { return gGlobalPrefs->codexBuild.sandbox; }
+    void SetOption(int option) override { gGlobalPrefs->codexBuild.sandbox = option; }
+    bool GetFlag() override { return gGlobalPrefs->codexBuild.skipSandbox; }
+    void SetFlag(bool flag) override { gGlobalPrefs->codexBuild.skipSandbox = flag; }
+    Str GetBgColor() override { return gGlobalPrefs->codexBuild.bgColor; }
 
-    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
-        CollectCodexSessions(dir, sessions);
-    }
+    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectCodexSessions(dir, sessions); }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
         LoadCodexSessionHistory(win, sessionId, dir);
@@ -469,23 +450,26 @@ struct CodexBuildProvider : AIChatProvider {
     TempStr BuildCmdLineTemp(const AIChatCmdArgs& args) override {
         Str sandboxes[] = {StrL("read-only"), StrL("workspace-write"), StrL("danger-full-access")};
         Str skipFlag = args.flag ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
-        // the input already contains the escaped user text; codex has no
-        // system-prompt flag so the file context is folded into the prompt
+        // Codex has no system-prompt flag; fold file context into the prompt,
+        // then quote the whole prompt as one Windows argv element.
         TempStr prompt = fmt("The user is currently reading the file: %s\n\n%s", args.filePath, args.escapedInput);
         if (args.isNewSession) {
             if (skipFlag) {
-                return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s %s %s \"%s\"", args.exePath,
-                           args.dir, args.model, sandboxes[args.option], skipFlag, prompt);
+                return fmt("%s exec --json -C %s --skip-git-repo-check -m %s -s %s %s %s",
+                           QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.dir),
+                           QuoteCmdLineArgTemp(args.model), sandboxes[args.option], skipFlag,
+                           QuoteCmdLineArgTemp(prompt));
             }
-            return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s %s \"%s\"", args.exePath, args.dir,
-                       args.model, sandboxes[args.option], prompt);
+            return fmt("%s exec --json -C %s --skip-git-repo-check -m %s -s %s %s", QuoteCmdLineArgTemp(args.exePath),
+                       QuoteCmdLineArgTemp(args.dir), QuoteCmdLineArgTemp(args.model), sandboxes[args.option],
+                       QuoteCmdLineArgTemp(prompt));
         }
         if (skipFlag) {
-            return fmt("\"%s\" exec resume --json --skip-git-repo-check -m %s %s %s \"%s\"", args.exePath, args.model,
-                       skipFlag, args.sessionId, prompt);
+            return fmt("%s exec resume --json --skip-git-repo-check -m %s %s %s %s", QuoteCmdLineArgTemp(args.exePath),
+                       QuoteCmdLineArgTemp(args.model), skipFlag, args.sessionId, QuoteCmdLineArgTemp(prompt));
         }
-        return fmt("\"%s\" exec resume --json --skip-git-repo-check -m %s %s \"%s\"", args.exePath, args.model,
-                   args.sessionId, prompt);
+        return fmt("%s exec resume --json --skip-git-repo-check -m %s %s %s", QuoteCmdLineArgTemp(args.exePath),
+                   QuoteCmdLineArgTemp(args.model), args.sessionId, QuoteCmdLineArgTemp(prompt));
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {

@@ -13,7 +13,9 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
-#include "SumatraPdf.h"
+#include "SumatraPDF.h"
+#include "MainWindow.h"
+#include "WindowTab.h"
 
 #include "Notifications.h"
 #include "TipText.h"
@@ -52,7 +54,7 @@ struct NotificationWnd : Wnd {
     HWND Create(const NotificationCreateArgs&);
 
     void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
-    void OnTimer(UINT_PTR event_id) override;
+    void OnTimer(UINT_PTR timerId) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     void UpdateMessage(Str msg, int timeoutMs = 0, bool highlight = false);
@@ -267,8 +269,6 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;
     cargs.font = args.font;
-    // TODO: was this important?
-    // wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
     cargs.exStyle = WS_EX_TOPMOST;
     cargs.style = WS_CHILD | SS_CENTER;
     cargs.title = args.msg;
@@ -585,7 +585,7 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
         return;
     }
     ReportIf(kNotifTimerTimeoutId != timerId);
-    // TODO a better way to delete myself
+    // Delete off the stack of this WM_TIMER (uitask runs after dispatch).
     if (wndRemovedCb.IsValid()) {
         auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
         uitask::Post(fn, "TaskNotifOnTimerRemove");
@@ -647,10 +647,10 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    if (WM_LBUTTONUP) {
+    if (WM_LBUTTONUP == msg) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (!noClose && NotificationCloseHitTest(hwnd, rClose, pt)) {
-            // TODO a better way to delete myself
+            // Delete off the stack of this message (uitask runs after dispatch).
             if (wndRemovedCb.IsValid()) {
                 auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
                 uitask::Post(fn, "TaskNotifWndProcRemove");
@@ -666,14 +666,21 @@ DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-static int NotifsRemoveForGroup(NotificationWnd** wnds, int nWnds, Kind groupId) {
+// If onlyTab is non-null, only remove notifications in this group that are
+// tied to onlyTab (or untied). Leaves other tabs' same-group notifs alone so
+// multi-file load can keep a per-tab "Show Errors" toast.
+static int NotifsRemoveForGroup(NotificationWnd** wnds, int nWnds, Kind groupId, WindowTab* onlyTab = nullptr) {
     ReportIf(groupId == nullptr);
     NotificationWnd* toRemove[kMaxNotifs];
     int nRemove = 0;
     for (int i = 0; i < nWnds; i++) {
-        if (wnds[i]->groupId == groupId) {
-            toRemove[nRemove++] = wnds[i];
+        if (wnds[i]->groupId != groupId) {
+            continue;
         }
+        if (onlyTab && wnds[i]->tab && wnds[i]->tab != onlyTab) {
+            continue;
+        }
+        toRemove[nRemove++] = wnds[i];
     }
     for (int i = 0; i < nRemove; i++) {
         NotifsRemoveNotification(toRemove[i]);
@@ -684,7 +691,9 @@ static int NotifsRemoveForGroup(NotificationWnd** wnds, int nWnds, Kind groupId)
 static bool NotifsAdd(NotificationWnd** wnds, int nWnds, NotificationWnd* wnd, Kind groupId) {
     bool skipRemove = (groupId == nullptr) || (groupId == kNotifAdHoc);
     if (!skipRemove) {
-        NotifsRemoveForGroup(wnds, nWnds, groupId);
+        // Tab-tied notifs (e.g. document errors) replace only the same tab's
+        // previous notif of that group, not other tabs'.
+        NotifsRemoveForGroup(wnds, nWnds, groupId, wnd->tab);
     }
     if (gNotifsCount >= kMaxNotifs) {
         return false;
@@ -721,7 +730,17 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
         delete wnd;
         return nullptr;
     }
-    if (wnd->delayTimerId == 0) {
+    // Tab-tied notifs must not paint on a different active tab (common when
+    // multi-file open/session restore finishes a background load after the UI
+    // already selected another tab). Hide if this tab is not current.
+    if (args.tab && wnd->delayTimerId == 0) {
+        MainWindow* win = FindMainWindowByHwnd(args.hwndParent);
+        if (win && win->CurrentTab() != args.tab) {
+            ShowWindow(wnd->hwnd, SW_HIDE);
+        } else {
+            BringWindowToTop(wnd->hwnd);
+        }
+    } else if (wnd->delayTimerId == 0) {
         BringWindowToTop(wnd->hwnd);
     }
     bool ok = NotifsAdd(wnd, args.groupId);
@@ -729,6 +748,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
         delete wnd;
         return nullptr;
     }
+    RelayoutNotifications(args.hwndParent);
     return wnd;
 }
 
@@ -756,11 +776,11 @@ NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs
     return ShowNotification(args);
 }
 
-void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutMs, bool highlight) {
+void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS, bool highlight) {
     if (!wnd) {
         return;
     }
-    wnd->UpdateMessage(msg, timeoutMs, highlight);
+    wnd->UpdateMessage(msg, timeoutInMS, highlight);
 }
 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {
@@ -799,6 +819,9 @@ static StrNode* AllocStrNode(Str s) {
     size_t n = (size_t)s.len + 1;
     size_t cbAlloc = sizeof(StrNode) + n;
     auto* node = (StrNode*)malloc(cbAlloc);
+    if (!node) {
+        return nullptr;
+    }
     u8* dst = (u8*)node + sizeof(StrNode);
     memcpy(dst, s.s, s.len);
     dst[s.len] = 0;
@@ -815,7 +838,9 @@ void MaybeDelayedWarningNotification(Str msg) {
         ShowWarningNotification(hwnd, msg, kNotifNoTimeout);
     } else {
         StrNode* node = AllocStrNode(msg);
-        ListInsertFront(&gDelayedNotifications, node);
+        if (node) {
+            ListInsertFront(&gDelayedNotifications, node);
+        }
     }
 }
 

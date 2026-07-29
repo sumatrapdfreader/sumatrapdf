@@ -43,8 +43,6 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc);
 void PaintAllFindMatches(MainWindow* win, HDC hdc);
 void InvalidateFindMatchPaintCache();
 
-// when true, paint every visible search match (current match in orange)
-extern bool gShowAllMatches;
 void FindPrev(MainWindow* win);
 void FindNext(MainWindow* win);
 void FindFirst(MainWindow* win);
@@ -61,6 +59,10 @@ bool FindFlushPendingSearch(MainWindow* win);
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph);
 // free the cached per-match snippets (win->findMatches)
 void ClearFindMatches(MainWindow* win);
+// Drop find-match / match-count state that only applies to the previous document
+// (tab switch, close-current, reload). Keeps find box text (#5308). If the find
+// UI is still open, starts a new count so all-match highlights rebuild.
+void InvalidateFindForDocumentChange(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearch::Direction direction);
 // in-page find result posted by a chm / markdown webview: update the find bar status
 void BrowserFindResultReceived(MainWindow* win, int gen, int current, int total);

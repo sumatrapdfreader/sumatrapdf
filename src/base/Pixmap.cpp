@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
-#include "Pixmap.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
 
 static void AppendLE16(str::Builder& data, u16 v) {
     data.AppendChar((char)(v & 0xff));

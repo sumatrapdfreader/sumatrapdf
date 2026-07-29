@@ -652,28 +652,30 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
             break;
         }
         findIndex = pageTextLen;
-        if (pageText) {
-            if (forward) {
-                findIndex = 0;
-            }
-            PageAndOffset r;
-            if (FindTextInPage(pageNo, &r)) {
-                if (forward) {
-                    if (findPage != r.page) {
-                        findPage = r.page;
-                        pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
-                        if (abortSearch) {
-                            break;
-                        }
-                    }
-                    findIndex = r.offset;
-                }
-                return true;
-            }
-            pagesToSkip[pageNo - 1] = true;
+        if (!pageText) {
+            pageNo += next;
+            continue;
         }
-
-        pageNo += next;
+        if (forward) {
+            findIndex = 0;
+        }
+        PageAndOffset r;
+        if (!FindTextInPage(pageNo, &r)) {
+            pagesToSkip[pageNo - 1] = true;
+            pageNo += next;
+            continue;
+        }
+        if (forward) {
+            if (findPage != r.page) {
+                findPage = r.page;
+                pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+                if (abortSearch) {
+                    break;
+                }
+            }
+            findIndex = r.offset;
+        }
+        return true;
     }
 
     // allow for the first/last page to be included in the next search

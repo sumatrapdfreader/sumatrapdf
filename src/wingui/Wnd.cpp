@@ -293,7 +293,7 @@ void Wnd::OnSize(UINT msg, UINT type, SIZE size) {}
 
 void Wnd::OnTaskbarCallback(UINT msg, LPARAM lparam) {}
 
-void Wnd::OnTimer(UINT_PTR event_id) {}
+void Wnd::OnTimer(UINT_PTR timerId) {}
 
 void Wnd::OnWindowPosChanging(WINDOWPOS* window_pos) {}
 

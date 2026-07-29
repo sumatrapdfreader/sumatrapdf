@@ -44,3 +44,11 @@ bool VerifySHA1Signature(Str, Str, Str) {
 Str ExtractP7m(Str) {
     return {};
 }
+
+bool IsPEFileSigned(Str) {
+    return false;
+}
+
+TempStr GetExecutableSignerTemp(Str) {
+    return {};
+}

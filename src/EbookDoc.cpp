@@ -664,17 +664,18 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
         // format specific state such as hiddenDepth and titleCount) and store it
         // in every HtmlPage, but this should work well enough for now
         for (ImageData& img : images) {
-            if (str::EndsWithI(img.fileName, fileName)) {
-                if (len(img.base) == 0) {
-                    auto* fi = archive->GetFileDataById(img.fileId);
-                    if (fi && fi->data) {
-                        img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-                        fi->data = nullptr;
-                    }
+            if (!str::EndsWithI(img.fileName, fileName)) {
+                continue;
+            }
+            if (len(img.base) == 0) {
+                auto* fi = archive->GetFileDataById(img.fileId);
+                if (fi && fi->data) {
+                    img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
+                    fi->data = nullptr;
                 }
-                if (len(img.base) > 0) {
-                    return img.base;
-                }
+            }
+            if (len(img.base) > 0) {
+                return img.base;
             }
         }
         return {};
@@ -686,17 +687,18 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
         str::TransCharsInPlace(url, StrL("\\"), StrL("/"));
     }
     for (ImageData& img : images) {
-        if (str::Eq(img.fileName, url)) {
-            if (len(img.base) == 0) {
-                auto* fi = archive->GetFileDataById(img.fileId);
-                if (fi && fi->data) {
-                    img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-                    fi->data = nullptr;
-                }
+        if (!str::Eq(img.fileName, url)) {
+            continue;
+        }
+        if (len(img.base) == 0) {
+            auto* fi = archive->GetFileDataById(img.fileId);
+            if (fi && fi->data) {
+                img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
+                fi->data = nullptr;
             }
-            if (len(img.base) > 0) {
-                return img.base;
-            }
+        }
+        if (len(img.base) > 0) {
+            return img.base;
         }
     }
 
@@ -774,37 +776,38 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         } else if (tok->IsEndTag() && Tag_Ol == tok->tag && level > 0) {
             level--;
         }
-        if (tok->IsStartTag() && (Tag_A == tok->tag || Tag_Span == tok->tag)) {
-            HtmlTag itemTag = tok->tag;
-            TempStr text, href;
-            if (Tag_A == tok->tag) {
-                AttrInfo* attrInfo = tok->GetAttrByName(StrL("href"));
-                if (attrInfo) {
-                    href = str::DupTemp(attrInfo->val);
-                }
-            }
-            while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
-                if (tok->IsText()) {
-                    TempStr part = str::DupTemp(tok->s);
-                    if (!text) {
-                        text = part;
-                    } else {
-                        text = str::JoinTemp(text, part);
-                    }
-                }
-            }
-            if (!text) {
-                continue;
-            }
-            TempStr itemText = str::DupTemp(text);
-            itemText.len -= str::NormalizeWSInPlace(itemText);
-            TempStr itemSrc;
-            if (href) {
-                TempStr normHref = NormalizeURLTemp(href, pagePath);
-                itemSrc = strconv::HtmlUtf8ToStrTemp(normHref);
-            }
-            visitor->Visit(itemText, itemSrc, level);
+        if (!tok->IsStartTag() || (Tag_A != tok->tag && Tag_Span != tok->tag)) {
+            continue;
         }
+        HtmlTag itemTag = tok->tag;
+        TempStr text, href;
+        if (Tag_A == tok->tag) {
+            AttrInfo* attrInfo = tok->GetAttrByName(StrL("href"));
+            if (attrInfo) {
+                href = str::DupTemp(attrInfo->val);
+            }
+        }
+        while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
+            if (tok->IsText()) {
+                TempStr part = str::DupTemp(tok->s);
+                if (!text) {
+                    text = part;
+                } else {
+                    text = str::JoinTemp(text, part);
+                }
+            }
+        }
+        if (!text) {
+            continue;
+        }
+        TempStr itemText = str::DupTemp(text);
+        itemText.len -= str::NormalizeWSInPlace(itemText);
+        TempStr itemSrc;
+        if (href) {
+            TempStr normHref = NormalizeURLTemp(href, pagePath);
+            itemSrc = strconv::HtmlUtf8ToStrTemp(normHref);
+        }
+        visitor->Visit(itemText, itemSrc, level);
     }
 
     return true;
@@ -1106,6 +1109,27 @@ bool Fb2Doc::Load(Str srcData) {
                 AttrInfo* attr = tok->GetAttrByNameNS(StrL("href"), FB2_XLINK_NS());
                 if (attr) {
                     str::ReplaceWithCopy(&coverImage, attr->val);
+                }
+            }
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("annotation"), FB2_MAIN_NS())) {
+            // FB2 annotation is nested markup (often one or more <p>); collect all text for
+            // Document Properties (Ctrl+D) as Subject.
+            TempStr annotation;
+            while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
+                   !(tok->IsEndTag() && tok->NameIsNS(StrL("annotation"), FB2_MAIN_NS()))) {
+                if (tok->IsText()) {
+                    TempStr part = ResolveHtmlEntitiesTemp(tok->s);
+                    if (annotation) {
+                        annotation = str::JoinTemp(annotation, StrL(" "), part);
+                    } else {
+                        annotation = part;
+                    }
+                }
+            }
+            if (annotation) {
+                annotation.len -= str::NormalizeWSInPlace(annotation);
+                if (len(annotation) > 0) {
+                    AddPropOwned(props, DocProp::Subject, annotation);
                 }
             }
         } else if (inTitleInfo || inDocInfo) {
@@ -1534,8 +1558,8 @@ bool HtmlDoc::IsSupportedFileType(FileType kind) {
     return kind == FileType::PalmDoc;
 }
 
-HtmlDoc* HtmlDoc::CreateFromFile(Str fileName) {
-    HtmlDoc* doc = new HtmlDoc(fileName);
+HtmlDoc* HtmlDoc::CreateFromFile(Str path) {
+    HtmlDoc* doc = new HtmlDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return {};
@@ -1889,8 +1913,8 @@ bool TxtDoc::IsSupportedFileType(FileType kind) {
     return kind == FileType::Txt;
 }
 
-TxtDoc* TxtDoc::CreateFromFile(Str fileName) {
-    TxtDoc* doc = new TxtDoc(fileName);
+TxtDoc* TxtDoc::CreateFromFile(Str path) {
+    TxtDoc* doc = new TxtDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return {};

@@ -168,6 +168,17 @@ const theme: Field[] = [
   field("BackgroundColor", Color, "", "background color"),
   field("ControlBackgroundColor", Color, "", "control background color"),
   field("LinkColor", Color, "", "link color"),
+  // optional; empty = derived from TextColor/BackgroundColor/ControlBackgroundColor
+  field("DisabledTextColor", Color, "", "disabled / grayed text color").ver("3.7"),
+  field("DarkerTextColor", Color, "", "secondary / muted text color").ver("3.7"),
+  field("HotBackgroundColor", Color, "", "hovered control background color").ver("3.7"),
+  field("EdgeColor", Color, "", "control border / edge color").ver("3.7"),
+  field("HotEdgeColor", Color, "", "hovered control border color").ver("3.7"),
+  field("DisabledEdgeColor", Color, "", "disabled control border color").ver("3.7"),
+  field("ErrorBackgroundColor", Color, "", "error background color").ver("3.7"),
+  field("NotificationBackgroundColor", Color, "", "notification tip background color").ver("3.7"),
+  field("NotificationHighlightColor", Color, "", "notification tip highlight background color").ver("3.7"),
+  field("NotificationHighlightTextColor", Color, "", "notification tip highlight text color").ver("3.7"),
   field("ColorizeControls", Bool, false, "should we colorize Windows controls and window areas"),
 ];
 
@@ -310,7 +321,7 @@ const imageUI: Field[] = [
     "DefaultZoom",
     Str,
     "shrink to fit",
-    "default zoom for image files. valid values: fit page, fit width, fit content, shrink to fit or percent like 100%",
+    "default zoom for image files. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
 ];
@@ -535,12 +546,6 @@ const annotations: Field[] = [
     "",
     "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name",
   ).ver("3.4"),
-  field(
-    "SelectionToolbar",
-    Bool,
-    true,
-    "if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it",
-  ).ver("3.7"),
 ];
 
 const favorite: Field[] = [
@@ -608,7 +613,7 @@ const fileSettings: Field[] = [
     "PointF",
   ),
   field("PageNo", Int, 1, "number of the last read page"),
-  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit content"),
+  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   field(
     "WindowState",
@@ -705,7 +710,7 @@ const globalPrefs: Field[] = [
     "DefaultZoom",
     Str,
     "fit page",
-    "default zoom. valid values: fit page, fit width, fit content or percent like 100%",
+    "default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%",
   ),
   field(
     "DisableJavaScript",
@@ -813,12 +818,37 @@ const globalPrefs: Field[] = [
   ).ver("3.7"),
   field("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
   field(
+    "SortFavoritesByName",
+    Bool,
+    false,
+    "if true, favorites within each file are sorted alphabetically by name " +
+      "(or page label); if false (the default), they are sorted by page number",
+  ).ver("3.7"),
+  field(
     "ShowToc",
     Bool,
     true,
     "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
   ),
   field("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").ver("3.6"),
+  field(
+    "ShowDocumentFocusIndicator",
+    Bool,
+    false,
+    "if true, draw a focus ring around the document when it has keyboard focus (Tab to the page area)",
+  ).ver("3.7"),
+  field(
+    "ShowAnnotationNotification",
+    Bool,
+    true,
+    'if true, show a tip when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit.")',
+  ).ver("3.7"),
+  field(
+    "ShowTocPageNumbers",
+    Bool,
+    true,
+    "if true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries",
+  ).ver("3.7"),
   field("ShowStartPage", Bool, true, "if true, we show a list of frequently read documents when no document is loaded"),
   field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)").internal(),
   field(
@@ -828,7 +858,18 @@ const globalPrefs: Field[] = [
     "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
   ).ver("3.7"),
   field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
-  field("SmoothScroll", Bool, false, "if true, implements smooth scrolling").ver("3.6"),
+  field(
+    "SmoothScroll",
+    Bool,
+    true,
+    "if true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)",
+  ).ver("3.6"),
+  field(
+    "PaddingAfterLastPage",
+    Bool,
+    false,
+    "if true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the top of the window",
+  ).ver("3.7"),
   field(
     "CitationHoverDelay",
     Int,
@@ -863,8 +904,13 @@ const globalPrefs: Field[] = [
   field("Theme", Str, "", "the name of the theme to use. System picks the last used light or dark theme based on the Windows app mode")
     .ver("3.5")
     .doc("Valid themes: light, dark, darker, system"),
-  field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to").ver("3.7"),
-  field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to").ver("3.7"),
+  // remembered by the light/dark toggle and System theme; not user-facing knobs
+  field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to")
+    .internal()
+    .ver("3.7"),
+  field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to")
+    .internal()
+    .ver("3.7"),
   field(
     "DocumentColorsFollowTheme",
     Str,
@@ -909,6 +955,12 @@ const globalPrefs: Field[] = [
     "if true, we use Windows system colors for background/text color. Over-rides other settings",
   ),
   field("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows").ver("3.0"),
+  field(
+    "SelectionToolbar",
+    Bool,
+    true,
+    "if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it",
+  ).ver("3.7"),
   field(
     "TabsMru",
     Bool,
@@ -975,7 +1027,9 @@ const globalPrefs: Field[] = [
     Str,
     "",
     "remembered destination language for selection translation; empty uses OS UI language",
-  ).ver("3.7"),
+  )
+    .internal()
+    .ver("3.7"),
   field("TranslateFromLang", Str, "", "remembered source language for selection translation; empty means Auto")
     .internal()
     .ver("3.7"),
@@ -1154,7 +1208,7 @@ function cdefault(f: Field, built: Record<string, number>): string {
     return `(intptr_t)"${f.Default}"`;
   }
   const typeName = f.Type.name;
-  if (["Struct", "Array", "Compact", "Prerelease"].includes(typeName)) {
+  if (["Struct", "Array", "Compact"].includes(typeName)) {
     let idStr = "";
     const id = built[f.StructName] || 0;
     if (id > 0) {
@@ -1244,7 +1298,7 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
     lines.push(`\t${field.Type.ctype} ${field.CName};`);
     if (field.Type.name === "Color") {
       lines.push(`\tParsedColor ${field.CName}Parsed;`);
-    } else if (["Struct", "Compact", "Array", "Prerelease"].includes(field.Type.name)) {
+    } else if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
       const name = field.Name;
       if (name === field.StructName || name === field.StructName + "s") {
         if (built[name] === undefined) {
@@ -1290,7 +1344,7 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     // per-field doc comment, aligned with names; used by the advanced settings
     // dialog to describe the selected setting
     comments.push(field.DocComment || "");
-    if (["Struct", "Prerelease", "Compact", "Array"].includes(field.Type.name)) {
+    if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
       const sublines = buildMetaData(field, built);
       lines.push(sublines, "");
       built[field.StructName] = (built[field.StructName] || 0) + 1;
@@ -1338,6 +1392,7 @@ constexpr float kZoomFitWidth = -2.F;
 constexpr float kZoomFitContent = -3.F;
 constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
+constexpr float kZoomFitHeight = -6.F;
 constexpr float kZoomActualSize = 100.0F;
 constexpr float kZoomMax = 6400.F; /* max zoom in % */
 constexpr float kZoomMin = 8.33F;  /* min zoom in % */

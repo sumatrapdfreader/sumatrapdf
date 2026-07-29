@@ -1,8 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
-#include <algorithm>
+#include "base/Base.h"
 
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;
@@ -830,16 +829,16 @@ static void JoinInner(const StrVec* v, Str joint, str::Builder& res) {
     }
 }
 
-Str Join(StrVec* v, Str joint) {
-    int capHint = CalcCapForJoin(v, joint);
+Str Join(StrVec* v, Str sep) {
+    int capHint = CalcCapForJoin(v, sep);
     str::Builder tmp(capHint);
-    JoinInner(v, joint, tmp);
+    JoinInner(v, sep, tmp);
     return tmp.TakeStr();
 }
 
-TempStr JoinTemp(StrVec* v, Str joint) {
-    int capHint = CalcCapForJoin(v, joint);
+TempStr JoinTemp(StrVec* v, Str sep) {
+    int capHint = CalcCapForJoin(v, sep);
     str::Builder tmp(capHint, GetTempArena());
-    JoinInner(v, joint, tmp);
+    JoinInner(v, sep, tmp);
     return ToStrTemp(tmp);
 }

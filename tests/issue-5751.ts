@@ -103,7 +103,7 @@ export async function testit(): Promise<void> {
   const pdf = join(dir, "issue-5751.pdf");
   writeFileSync(pdf, makePdf(5));
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
 
   const page1 = await captureCanvas(dir, pdf, "page1");

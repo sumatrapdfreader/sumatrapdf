@@ -34,7 +34,26 @@ Shortcuts [
 ]
 ```
 
-Explanation:
+### Restore pre-3.6 Ctrl+Tab (no Smart Tab Switch popup)
+
+**Ver 3.6+** binds `Ctrl + Tab` / `Ctrl + Shift + Tab` to **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held. In 3.5 those keys switched tabs immediately in strip order (`CmdNextTab` / `CmdPrevTab`). To get the old behavior back:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdNextTab
+        Key = Ctrl + Tab
+    ]
+    [
+        Cmd = CmdPrevTab
+        Key = Ctrl + Shift + Tab
+    ]
+]
+```
+
+`Ctrl + PageDown` / `Ctrl + PageUp` already run next/prev tab without the popup. More detail: [Tabs and windows](Tabs-and-windows.md#restore-pre-36-ctrltab-no-switcher-popup).
+
+Explanation of the first example:
 
 - by default SumatraPDF has `Ctrl + O` shortcut for `CmdOpen` (open a file) command. This changes the shortcut to `Alt + o`
 - by default `q` closes the document. By binding it to `CmdNone` we can disable a built-in shortcut

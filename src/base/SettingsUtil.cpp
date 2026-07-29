@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
-#include "SettingsUtil.h"
-#include "SquareTreeParser.h"
+#include "base/Base.h"
+#include "base/SettingsUtil.h"
+#include "base/SquareTreeParser.h"
 
 static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
     return (const StructInfo*)field.value;
@@ -435,7 +435,7 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
         return;
     }
     size_t off = 0;
-    if (SettingType::Struct == type || SettingType::Prerelease == type) {
+    if (SettingType::Struct == type) {
         if (node->GetChild(fieldName, &off)) {
             RemoveDataItemAt(node, off - 1);
         }
@@ -483,12 +483,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
         ReportIf(str::ContainsChar(fieldNameStr, '=') || str::ContainsChar(fieldNameStr, ':') ||
                  str::ContainsChar(fieldNameStr, '[') || str::ContainsChar(fieldNameStr, ']') ||
                  NeedsEscaping(fieldNameStr));
-        if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
-#if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
-            if (SettingType::Prerelease == field.type) {
-                continue;
-            }
-#endif
+        if (SettingType::Struct == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
             out.Append(" [\r\n");
@@ -546,13 +541,8 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;
         Str fieldNameStr = Str(fieldName);
-        if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
+        if (SettingType::Struct == field.type) {
             SquareTreeNode* child = node ? node->GetChild(fieldNameStr) : nullptr;
-#if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
-            if (SettingType::Prerelease == field.type) {
-                child = nullptr;
-            }
-#endif
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
         } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
@@ -609,8 +599,7 @@ static void FreeStructData(const StructInfo* info, u8* base) {
             case SettingType::Comment:
                 // nothing to free
                 break;
-            case SettingType::Struct:
-            case SettingType::Prerelease: {
+            case SettingType::Struct: {
                 const StructInfo* substruct = GetSubstruct(field);
                 FreeStructData(substruct, fieldPtr);
                 break;

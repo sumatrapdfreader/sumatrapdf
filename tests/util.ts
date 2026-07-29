@@ -8,7 +8,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const ROOT = join(import.meta.dir, "..");
-export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
+export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 
 // Command ids (sent with WM_COMMAND) live in src/Commands.h, but they're
 // generated and renumber whenever a command is added or removed -- so tests must
@@ -100,10 +100,10 @@ export function isSilentArg(argv: string[] = process.argv): boolean {
   return argv.includes("-silent") || argv.includes("--silent");
 }
 
-// build SumatraPDF-dll.exe the same way cmd/build.ts does
+// build SumatraPDF.exe the same way cmd/build.ts does
 export function buildApp(opts?: { silent?: boolean }): void {
   if (!opts?.silent) {
-    console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
+    console.log("• building SumatraPDF.exe (cmd/build.ts) ...");
   }
   const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
   if (p.exitCode !== 0) {

@@ -39,6 +39,8 @@ enum class ControlCmd : u16 {
     TestPageInfoOverlay = 28,
     TestGetToc = 29,
     TestPageLinks = 30,
+    TestWindowStateDuringLoad = 31,
+    TestTocNavigate = 32,
 };
 
 enum class ControlArgType : u16 {
@@ -501,6 +503,25 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestWindowStateDuringLoad: {
+            int exitCode = 0;
+            Str res = WindowStateDuringLoadResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTocNavigate: {
+            i32 destNo = 1;
+            if (!IntArg(req, 0, destNo)) {
+                AppendError(req, "TestTocNavigate expects int destNo (1-based)");
+                break;
+            }
+            int exitCode = 0;
+            Str res = TocNavigateResultTemp(destNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

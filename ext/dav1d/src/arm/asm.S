@@ -147,7 +147,7 @@ DISABLE_SVE2
  *
  * References:
  * - "ELF for the Arm® 64-bit Architecture"
- *   https: *github.com/ARM-software/abi-aa/blob/master/aaelf64/aaelf64.rst
+ *   https://github.com/ARM-software/abi-aa/blob/master/aaelf64/aaelf64.rst
  * - "Providing protection for complex software"
  *   https://developer.arm.com/architectures/learn-the-architecture/providing-protection-for-complex-software
  */
@@ -193,8 +193,14 @@ DISABLE_SVE2
 
 #endif /* !__ARM_FEATURE_PAC_DEFAULT */
 
+#if defined(__ARM_FEATURE_GCS_DEFAULT) && __ARM_FEATURE_GCS_DEFAULT == 1
+#define GNU_PROPERTY_AARCH64_GCS (1 << 2)
+#else
+#define GNU_PROPERTY_AARCH64_GCS 0 /* No GCS */
+#endif
 
-#if (GNU_PROPERTY_AARCH64_BTI != 0 || GNU_PROPERTY_AARCH64_PAC != 0) && defined(__ELF__)
+
+#if (GNU_PROPERTY_AARCH64_BTI != 0 || GNU_PROPERTY_AARCH64_PAC != 0 || GNU_PROPERTY_AARCH64_GCS != 0) && defined(__ELF__)
         .pushsection .note.gnu.property, "a"
         .balign 8
         .long 4
@@ -203,10 +209,10 @@ DISABLE_SVE2
         .asciz "GNU"
         .long 0xc0000000 /* GNU_PROPERTY_AARCH64_FEATURE_1_AND */
         .long 4
-        .long (GNU_PROPERTY_AARCH64_BTI | GNU_PROPERTY_AARCH64_PAC)
+        .long (GNU_PROPERTY_AARCH64_BTI | GNU_PROPERTY_AARCH64_PAC | GNU_PROPERTY_AARCH64_GCS)
         .long 0
         .popsection
-#endif /* (GNU_PROPERTY_AARCH64_BTI != 0 || GNU_PROPERTY_AARCH64_PAC != 0) && defined(__ELF__) */
+#endif /* (GNU_PROPERTY_AARCH64_BTI != 0 || GNU_PROPERTY_AARCH64_PAC != 0 || GNU_PROPERTY_AARCH64_GCS != 0) && defined(__ELF__) */
 #endif /* ARCH_AARCH64 */
 
 #if ARCH_ARM
@@ -291,7 +297,7 @@ EXTERN\name:
 \name:
 #if ARCH_AARCH64
     .if \export
-         AARCH64_VALID_CALL_TARGET
+        AARCH64_VALID_CALL_TARGET
     .endif
 #endif
 .endm
@@ -333,11 +339,11 @@ EXTERN\name:
 // for reference. (LLVM can create such relocations, but checking for _WIN32
 // for simplicity, as execute-only memory isn't relevant on Windows at the
 // moment.)
-        function \name
+        function        \name
 #else
 // For other platforms, write jump tables in a const data section, to allow
 // working in environments where executable memory isn't readable.
-        const \name
+        const           \name
 #endif
 .endm
 

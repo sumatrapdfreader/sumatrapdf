@@ -653,61 +653,73 @@ void StrTest() {
     }
 
     {
-        size_t trimmed;
+        int trimmed;
         Str s = str::Dup(StrL(""));
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 0);
+        utassert(s.len == 0);
         utassert(str::Eq(s, ""));
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
+        utassert(s.len == 0);
         utassert(str::Eq(s, ""));
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
+        utassert(s.len == 0);
         utassert(str::Eq(s, ""));
 
         str::ReplaceWithCopy(&s, "  \n\t  ");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 6);
+        utassert(s.len == 0);
         utassert(str::Eq(s, ""));
 
         str::ReplaceWithCopy(&s, "  \n\t  ");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 6);
+        utassert(s.len == 0);
         utassert(str::Eq(s, ""));
 
         str::ReplaceWithCopy(&s, "  \n\t  ");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 6);
+        utassert(s.len == 0);
         utassert(str::Eq(s, ""));
 
         str::ReplaceWithCopy(&s, "  lola");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
+        utassert(s.len == 4);
         utassert(str::Eq(s, "lola"));
 
         str::ReplaceWithCopy(&s, "  lola");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 2);
+        utassert(s.len == 4);
         utassert(str::Eq(s, "lola"));
 
         str::ReplaceWithCopy(&s, "  lola");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
+        utassert(s.len == 6);
         utassert(str::Eq(s, "  lola"));
 
         str::ReplaceWithCopy(&s, "lola\r\t");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
+        utassert(s.len == 4);
         utassert(str::Eq(s, "lola"));
 
         str::ReplaceWithCopy(&s, "lola\r\t");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 2);
+        utassert(s.len == 4);
         utassert(str::Eq(s, "lola"));
 
         str::ReplaceWithCopy(&s, "lola\r\t");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
+        utassert(s.len == 6);
         utassert(str::Eq(s, "lola\r\t"));
 
         str::Free(s);

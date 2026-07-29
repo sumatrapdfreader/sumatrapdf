@@ -620,6 +620,7 @@ static void xml_emit_cdata(fz_context *ctx, struct parser *parser, const char *a
 	xml_emit_close_tag(ctx, parser);
 }
 
+#if 0
 static int close_tag(fz_context *ctx, struct parser *parser, const char *mark, const char *p)
 {
 	const char *ns, *tag;
@@ -637,6 +638,39 @@ static int close_tag(fz_context *ctx, struct parser *parser, const char *mark, c
 	}
 	return 1;
 }
+#else /* SumatraPDF: recover from mismatched closers (FB2 #5792) */
+static int close_tag(fz_context *ctx, struct parser *parser, const char *mark, const char *p)
+{
+	const char *ns, *tag;
+	fz_xml *node;
+
+	/* skip namespace prefix */
+	for (ns = mark; ns < p - 1; ++ns)
+		if (*ns == ':')
+			mark = ns + 1;
+
+	/* Well-formed: current open tag matches. Mismatched closers (common in
+	 * real-world FB2/HTML, e.g. <b><i>x</b></i>) used to abort the parse;
+	 * recover by closing intermediate open tags until a match.
+	 * A closer with no matching open tag is ignored (HTML-style recovery)
+	 * so the leftover </i> after fixing </b> does not kill the document. */
+	for (node = parser->head; node; node = node->up)
+	{
+		tag = fz_xml_tag(node);
+		if (tag && strncmp(tag, mark, p-mark) == 0 && tag[p-mark] == 0)
+		{
+			while (parser->head && parser->head != node)
+				xml_emit_close_tag(ctx, parser);
+			xml_emit_close_tag(ctx, parser);
+			return 0;
+		}
+		/* Do not walk past the document root into the sentinel head. */
+		if (!node->up || !fz_xml_tag(node->up))
+			break;
+	}
+	return 0; /* ignore unmatched closer */
+}
+#endif
 
 static char *xml_parse_document_imp(fz_context *ctx, struct parser *parser, const char *p) /* lgtm [cpp/use-of-goto] */
 {

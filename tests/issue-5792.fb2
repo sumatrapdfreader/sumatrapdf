@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Minimal FB2 for #5792 (mismatched inline tags) and #5793 (soft-join copy).
+     incorrect.fb2 from the issue used <b><i>…</b></i>; that used to abort XML
+     parse and produce giant fonts / many pages. After the fix, this must load
+     with normal body text and soft-joined paragraphs on copy. -->
+<FictionBook xmlns:l="http://www.w3.org/1999/xlink" xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+  <description>
+    <title-info>
+      <genre>sf</genre>
+      <author>
+        <first-name>Test</first-name>
+        <last-name>Author</last-name>
+      </author>
+      <book-title>Soft Join Sample</book-title>
+    </title-info>
+    <document-info>
+      <author>
+        <nickname>sumatra-test</nickname>
+      </author>
+      <date value="2026-01-01">2026</date>
+      <id>sumatra-issue-5792</id>
+      <version>1.0</version>
+    </document-info>
+  </description>
+  <body>
+    <title>
+      <!-- intentional mismatch: open b then i, close b then i (#5792) -->
+      <p><b><i>Chapter One</b></i></p>
+    </title>
+    <p>Alpha paragraph starts here and continues with enough words so the reflow engine wraps it across several visual lines on a typical page width. Soft join should turn those wraps into spaces when the user copies text, not hard newlines in the middle of the sentence.</p>
+    <p>Bravo paragraph is a second block. Soft join must keep a real newline between Alpha and Bravo so paragraphs stay separate, while still joining wraps inside this second paragraph itself across multiple visual lines of body text on the page.</p>
+    <p>Charlie paragraph ends the sample. More filler words pad the line so reflow wraps: one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty.</p>
+  </body>
+</FictionBook>

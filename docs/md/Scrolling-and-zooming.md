@@ -35,6 +35,7 @@ There are many ways to navigate around the document.
 * `Ctrl + 1` : set 100% zoom
 * `Ctrl + 2` : set zoom to fit width of page (or pages in multi-column view)
 * `Ctrl + 3` : set zoom to fit content (like fit whole page but we auto-remove borders)
+* Fit Height (View / Zoom menu or command palette): scale so the page fills the window height (may scroll horizontally)
 * `Ctrl + 6` : single page view i.e. single column
 * `Ctrl + 7` : facing view i.e. 2 columns (pages)
 * `Ctrl + 8` : 2 columns (pages) but offset by one page
@@ -61,10 +62,9 @@ Actions that add navigation point:
 
 ## Navigating between tabs
 
-* `Ctrl + Tab` : next tab
-* `Ctrl + Shift + Tab` : previous tab
-* `Ctrl + Page Down` : next tab
-* `Ctrl + Page Up` : previous tab
+* `Ctrl + Tab` / `Ctrl + Shift + Tab` : next / previous tab. **Ver 3.6+:** **Smart Tab Switch** (tab list while Ctrl is held). To get pre-3.6 immediate strip-order switching on those keys, [rebind](Customize-keyboard-shortcuts.md) them to `CmdNextTab` / `CmdPrevTab` — see [Tabs and windows](Tabs-and-windows.md#restore-pre-36-ctrltab-no-switcher-popup)
+* `Ctrl + Page Down` : next tab (strip order, no popup)
+* `Ctrl + Page Up` : previous tab (strip order, no popup)
 
 ## Moving tabs
 

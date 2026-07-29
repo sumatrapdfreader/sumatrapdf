@@ -10,9 +10,7 @@
 #include "base/Pixmap.h"
 #include "base/Win.h"
 
-#include <wintrust.h>
-#include <softpub.h>
-#include <wincrypt.h>
+#include <aclapi.h>
 #include <bitset>
 #include <float.h>
 #include <intrin.h>
@@ -352,7 +350,7 @@ bool IsRunningInWow64() {
         return false;
     }
     BOOL isWow = FALSE;
-    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
+    if (IsWow64Process(GetCurrentProcess(), &isWow)) {
         return isWow == TRUE;
     }
     return false;
@@ -386,31 +384,33 @@ bool IsRunningOnWine() {
     // Fallback: Wine creates a Software\Wine registry key. Cheap, independent of
     // the graphics backend, available from process start, and present even when
     // the ntdll wine_* exports are hidden.
-    if (!isWine) {
-        if (RegKeyExists(HKEY_CURRENT_USER, R"(Software\Wine)") ||
-            RegKeyExists(HKEY_LOCAL_MACHINE, R"(Software\Wine)")) {
-            isWine = true;
-        }
+    if (!isWine &&
+        (RegKeyExists(HKEY_CURRENT_USER, R"(Software\Wine)") || RegKeyExists(HKEY_LOCAL_MACHINE, R"(Software\Wine)"))) {
+        isWine = true;
     }
     // Last resort: scan loaded modules for a Wine graphics driver. Covers the X11
     // (winex11.drv) and Wayland (winewayland.drv) backends. Misses headless Wine
     // and the early-startup window before a driver is loaded, hence the checks
     // above run first.
-    if (!isWine) {
-        AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-        if (snap != INVALID_HANDLE_VALUE) {
-            MODULEENTRY32 mod{};
-            mod.dwSize = sizeof(mod);
-            BOOL cont = Module32First(snap, &mod);
-            while (cont) {
-                auto nameA = ToUtf8Temp(mod.szModule);
-                if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
-                    isWine = true;
-                    break;
-                }
-                cont = Module32Next(snap, &mod);
-            }
+    if (isWine) {
+        cached = 1;
+        return true;
+    }
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap == INVALID_HANDLE_VALUE) {
+        cached = 0;
+        return false;
+    }
+    MODULEENTRY32 mod{};
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    while (cont) {
+        auto nameA = ToUtf8Temp(mod.szModule);
+        if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
+            isWine = true;
+            break;
         }
+        cont = Module32Next(snap, &mod);
     }
     cached = isWine ? 1 : 0;
     return isWine;
@@ -483,10 +483,10 @@ void DbgOutLastError(DWORD err) {
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY hkey, Str keyName) {
+bool RegKeyExists(HKEY keySub, Str keyName) {
     HKEY hKey;
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LONG res = RegOpenKeyW(hkey, keyNameW, &hKey);
+    LONG res = RegOpenKeyW(keySub, keyNameW, &hKey);
     if (ERROR_SUCCESS == res) {
         RegCloseKey(hKey);
         return true;
@@ -497,8 +497,8 @@ bool RegKeyExists(HKEY hkey, Str keyName) {
     return ERROR_ACCESS_DENIED == res;
 }
 
-TempStr ReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
-    if (!hkey) {
+TempStr ReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
+    if (!keySub) {
         return nullptr;
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
@@ -507,7 +507,7 @@ TempStr ReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
-    LONG res = RegOpenKeyEx(hkey, keyNameW, 0, access, &hKey);
+    LONG res = RegOpenKeyEx(keySub, keyNameW, 0, access, &hKey);
     if (ERROR_SUCCESS == res) {
         DWORD valLen;
         res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
@@ -520,7 +520,7 @@ TryAgainWOW64:
         }
         RegCloseKey(hKey);
     }
-    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == hkey && KEY_READ == access) {
+    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == keySub && KEY_READ == access) {
 // try the (non-)64-bit key as well, as HKLM\Software is not shared between 32-bit and
 // 64-bit applications per http://msdn.microsoft.com/en-us/library/aa384253(v=vs.85).aspx
 #ifdef _WIN64
@@ -535,9 +535,9 @@ TryAgainWOW64:
     return resv;
 }
 
-TempStr LoggedReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
-    auto res = ReadRegStrTemp(hkey, keyName, valName);
-    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey), keyName, valName, res);
+TempStr LoggedReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
+    auto res = ReadRegStrTemp(keySub, keyName, valName);
+    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(keySub), keyName, valName, res);
     return res;
 }
 
@@ -557,58 +557,58 @@ TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
     return res;
 }
 
-bool WriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
+bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     int cch;
     WCHAR* valueW = CWStrTemp(value, cch);
     DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
+bool LoggedWriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     int cch;
     WCHAR* valueW = CWStrTemp(value, cch);
     DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, value, res);
+        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(keySub), keyName, valName, value, res);
         LogLastError();
         return false;
     }
-    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(hkey), keyName, valName, value);
+    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(keySub), keyName, valName, value);
     return true;
 }
 
-bool ReadRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD& value) {
+bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     DWORD size = sizeof(DWORD);
-    LSTATUS res = SHGetValue(hkey, keyNameW, valNameW, nullptr, &value, &size);
+    LSTATUS res = SHGetValue(keySub, keyNameW, valNameW, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
+bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
+bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
+    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value,
+        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(keySub), keyName, valName, (int)value,
              res);
         LogLastError();
         return false;
     }
-    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value);
+    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(keySub), keyName, valName, (int)value);
     return true;
 }
 
@@ -620,10 +620,10 @@ bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName) {
     return (ERROR_SUCCESS == res);
 }
 
-bool CreateRegKey(HKEY hkey, Str keyName) {
+bool CreateRegKey(HKEY keySub, Str keyName) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     HKEY hKey;
-    LSTATUS res = RegCreateKeyExW(hkey, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    LSTATUS res = RegCreateKeyExW(keySub, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS) {
         return false;
     }
@@ -649,6 +649,8 @@ const TempStr RegKeyNameWTemp(HKEY key) {
     return str::Dup(k);
 }
 
+// Open a registry key's DACL so we can delete protected uninstall/keys.
+// Uses an explicit Everyone FULL_CONTROL ACL (not a NULL DACL, which CodeQL flags).
 static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     HKEY hKey;
@@ -656,36 +658,55 @@ static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     if (ERROR_SUCCESS != res) {
         return;
     }
+
+    PSID everyoneSid = nullptr;
+    PACL dacl = nullptr;
+    SID_IDENTIFIER_AUTHORITY worldAuth = SECURITY_WORLD_SID_AUTHORITY;
+    if (!AllocateAndInitializeSid(&worldAuth, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &everyoneSid)) {
+        RegCloseKey(hKey);
+        return;
+    }
+
+    EXPLICIT_ACCESSW ea{};
+    ea.grfAccessPermissions = KEY_ALL_ACCESS;
+    ea.grfAccessMode = SET_ACCESS;
+    ea.grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+    ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ea.Trustee.ptstrName = (LPWSTR)everyoneSid;
+
+    if (SetEntriesInAclW(1, &ea, nullptr, &dacl) != ERROR_SUCCESS) {
+        FreeSid(everyoneSid);
+        RegCloseKey(hKey);
+        return;
+    }
+
     SECURITY_DESCRIPTOR secdesc;
     InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
-
-#pragma warning(push)
-#pragma warning(disable : 6248)
-    // "Setting a SECURITY_DESCRIPTOR's DACL to nullptr will result in an unprotected object"
-    // https://docs.microsoft.com/en-us/cpp/code-quality/c6248?view=msvc-170
-    SetSecurityDescriptorDacl(&secdesc, TRUE, nullptr, TRUE);
-#pragma warning(pop)
-
+    SetSecurityDescriptorDacl(&secdesc, TRUE, dacl, FALSE);
     RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
+
+    LocalFree(dacl);
+    FreeSid(everyoneSid);
     RegCloseKey(hKey);
 }
 
-bool DeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
+bool DeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
-        ResetRegKeyAcl(hkey, keyName);
+        ResetRegKeyAcl(keySub, keyName);
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
+    LSTATUS res = SHDeleteKeyW(keySub, keyNameW);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-bool LoggedDeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
+bool LoggedDeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
-        ResetRegKeyAcl(hkey, keyName);
+        ResetRegKeyAcl(keySub, keyName);
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
-    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
+    LSTATUS res = SHDeleteKeyW(keySub, keyNameW);
+    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(keySub), keyName, resetACLFirst, res);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
     if (!ok) {
         LogLastError(res);
@@ -693,21 +714,21 @@ bool LoggedDeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
     return ok;
 }
 
-bool DeleteRegValue(HKEY hkey, Str keyName, Str value) {
+bool DeleteRegValue(HKEY keySub, Str keyName, Str val) {
     WCHAR* keyNameW = CWStrTemp(keyName);
-    WCHAR* valueW = CWStrTemp(value);
+    WCHAR* valW = CWStrTemp(val);
 
-    auto res = SHDeleteValueW(hkey, keyNameW, valueW);
+    auto res = SHDeleteValueW(keySub, keyNameW, valW);
     return res == ERROR_SUCCESS;
 }
 
-bool LoggedDeleteRegValue(HKEY hkey, Str keyName, Str valName) {
+bool LoggedDeleteRegValue(HKEY keySub, Str keyName, Str val) {
     WCHAR* keyNameW = CWStrTemp(keyName);
-    WCHAR* valNameW = CWStrTemp(valName);
+    WCHAR* valW = CWStrTemp(val);
 
-    auto res = SHDeleteValueW(hkey, keyNameW, valNameW);
+    auto res = SHDeleteValueW(keySub, keyNameW, valW);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
-    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
+    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(keySub), keyName, val, res);
     if (!ok) {
         LogLastError(res);
     }
@@ -754,18 +775,8 @@ TempStr GetTempDirTemp() {
 }
 
 void DisableDataExecution() {
-    // first try the documented SetProcessDEPPolicy
-    if (DynSetProcessDEPPolicy) {
-        DynSetProcessDEPPolicy(PROCESS_DEP_ENABLE);
-        return;
-    }
-
-    // now try undocumented NtSetInformationProcess
-    if (DynNtSetInformationProcess) {
-        DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-        HANDLE p = GetCurrentProcess();
-        DynNtSetInformationProcess(p, PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
-    }
+    // Win7+; 32-bit only (fails with ERROR_NOT_SUPPORTED on 64-bit processes)
+    SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 }
 
 enum class ConsoleState {
@@ -1001,31 +1012,6 @@ void WaitForConsoleClose() {
         DWORD read;
         ReadConsoleA(hInput, &c, 1, &read, nullptr);
     }
-}
-
-TempWStr GetSelfExePathW() {
-    WCHAR buf[MAX_PATH + 2]{};
-    DWORD nChars = dimof(buf) - 1;
-    auto h = GetInstance();
-    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
-    GetModuleFileNameW(h, buf, nChars);
-    return wstr::Dup(buf);
-}
-
-// Return the full exe path of my own executable
-TempStr GetSelfExePathTemp() {
-    WCHAR buf[MAX_PATH + 2]{};
-    DWORD nChars = dimof(buf) - 1;
-    auto h = GetInstance();
-    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
-    GetModuleFileNameW(h, buf, nChars);
-    return ToUtf8Temp(buf);
-}
-
-// Return directory where our executable is located
-TempStr GetSelfExeDirTemp() {
-    TempStr path = GetSelfExePathTemp();
-    return path::GetDirTemp(path);
 }
 
 void ChangeCurrDirToDocuments() {
@@ -1289,9 +1275,23 @@ bool CreateProcessHelper(Str exe, Str args) {
     return process != nullptr;
 }
 
+bool IsProcessRunningElevated() {
+    HANDLE token = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+        return false;
+    }
+    TOKEN_ELEVATION elevation{};
+    DWORD size = sizeof(elevation);
+    BOOL ok = GetTokenInformation(token, TokenElevation, &elevation, size, &size);
+    CloseHandle(token);
+    if (!ok) {
+        return false;
+    }
+    return elevation.TokenIsElevated != 0;
+}
+
+#if 0
 // return true if the app is running in elevated (as admin)
-// TODO: on Vista+ use GetTokenInformation:
-// https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group
 bool IsProcessRunningElevated() {
     PSID adminsGroup = nullptr;
 
@@ -1310,6 +1310,7 @@ bool IsProcessRunningElevated() {
     FreeSid(adminsGroup);
     return tobool(isAdmin);
 }
+#endif
 
 // returns the exe path of the parent process, or nullptr on failure
 // if pidOut is not nullptr, it receives the parent process ID
@@ -2301,11 +2302,9 @@ uint GuessTextCodepage(Str data, uint defVal) {
 }
 
 TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
-    if (!DynNormalizeString) {
-        return nullptr;
-    }
     TempWStr str = ToWStrTemp(strA);
-    int sizeEst = DynNormalizeString(form, str.s, str.len, nullptr, 0);
+    // ::NormalizeString is Win32 (normaliz.dll); this function is our UTF-8 wrapper
+    int sizeEst = ::NormalizeString((NORM_FORM)form, str.s, str.len, nullptr, 0);
     if (sizeEst <= 0) {
         return nullptr;
     }
@@ -2313,7 +2312,7 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 2;
     WCHAR* res = AllocArrayTemp<WCHAR>(sizeEst);
-    sizeEst = DynNormalizeString(form, str.s, str.len, res, sizeEst);
+    sizeEst = ::NormalizeString((NORM_FORM)form, str.s, str.len, res, sizeEst);
     if (sizeEst <= 0) {
         return nullptr;
     }
@@ -2327,16 +2326,11 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
 
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
-    if (DynSetDllDirectoryW) {
-        TempStr dllDir = path::GetDirTemp(dllPath);
-        WCHAR* dllDirW = CWStrTemp(dllDir);
-        DynSetDllDirectoryW(dllDirW);
-    }
+    TempStr dllDir = path::GetDirTemp(dllPath);
+    SetDllDirectoryW(CWStrTemp(dllDir));
 
     defer {
-        if (DynSetDllDirectoryW) {
-            DynSetDllDirectoryW(L"");
-        }
+        SetDllDirectoryW(L"");
         OleUninitialize();
     };
 
@@ -3592,6 +3586,32 @@ void HwndSetFont(HWND hwnd, HFONT font) {
     SetWindowFont(hwnd, font, TRUE);
 }
 
+void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
+    if (!hwndTree || !font) {
+        return;
+    }
+    if (dpi <= 0) {
+        dpi = DpiGet(hwndTree);
+    }
+    HwndSetFont(hwndTree, font);
+    HDC dc = GetDC(hwndTree);
+    if (!dc) {
+        return;
+    }
+    HFONT old = (HFONT)SelectObject(dc, font);
+    TEXTMETRICW tm{};
+    if (GetTextMetricsW(dc, &tm)) {
+        int itemH = tm.tmHeight + tm.tmExternalLeading + MulDiv(4, dpi, 96);
+        SendMessageW(hwndTree, TVM_SETITEMHEIGHT, (WPARAM)itemH, 0);
+    }
+    SelectObject(dc, old);
+    ReleaseDC(hwndTree, dc);
+}
+
+void HwndSetTreeFont(HWND hwndTree, HFONT font) {
+    HwndSetTreeFontForDpi(hwndTree, font, DpiGet(hwndTree));
+}
+
 HFONT HwndGetFont(HWND hwnd) {
     if (!hwnd) {
         return nullptr;
@@ -3735,7 +3755,7 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-int HdcDrawText(HDC hdc, Str s, RECT* r, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font) {
     if (len(s) == 0) {
         return 0;
     }
@@ -3745,24 +3765,24 @@ int HdcDrawText(HDC hdc, Str s, RECT* r, uint fmt, HFONT font) {
     }
     int cch = ws.len;
     ScopedSelectFont f(hdc, font);
-    return DrawTextW(hdc, ws.s, cch, r, fmt);
+    return DrawTextW(hdc, ws.s, cch, r, format);
 }
 
-int HdcDrawText(HDC hdc, Str s, const Rect& r, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
     RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, fmt, font);
+    return HdcDrawText(hdc, s, &r2, format, font);
 }
 
-int HdcDrawText(HDC hdc, Str s, const Point& pos, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font) {
     Rect r = {pos.x, pos.y, 0, 0};
     RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, fmt, font);
+    return HdcDrawText(hdc, s, &r2, format, font);
 }
 
 // uses the same logic as HdcDrawText
 // maxDx limits the width, used when measuring text wrapped with DT_WORDBREAK
-Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
-    fmt |= DT_CALCRECT;
+Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font) {
+    format |= DT_CALCRECT;
     TempWStr ws = ToWStrTemp(s);
     if (len(ws) == 0) {
         return {};
@@ -3771,7 +3791,7 @@ Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
     ScopedSelectFont f(hdc, font);
     int sLen = ws.len;
     RECT rc{0, 0, maxDx, 4096};
-    int dy = DrawTextW(hdc, ws.s, sLen, &rc, fmt);
+    int dy = DrawTextW(hdc, ws.s, sLen, &rc, format);
     if (0 == dy) {
         return {};
     }
@@ -3783,9 +3803,9 @@ Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
     return Size(dx, dy);
 }
 
-Size HdcMeasureText(HDC hdc, Str s, uint fmt, HFONT font) {
+Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font) {
     // a very large area
-    return HdcMeasureText(hdc, s, 4096, fmt, font);
+    return HdcMeasureText(hdc, s, 4096, format, font);
 }
 
 Size HdcMeasureText(HDC hdc, Str s, HFONT font) {
@@ -4060,87 +4080,6 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
     auto diff = end.QuadPart - start.QuadPart;
     double res = (double)(diff) / (double)(freq.QuadPart);
     return res * 1000;
-}
-
-bool IsPEFileSigned(Str filePath) {
-    WCHAR* ws = CWStrTemp(filePath);
-    WINTRUST_FILE_INFO fileInfo = {};
-    fileInfo.cbStruct = sizeof(WINTRUST_FILE_INFO);
-    fileInfo.pcwszFilePath = ws;
-    fileInfo.hFile = NULL;
-    fileInfo.pgKnownSubject = NULL;
-
-    GUID actionGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
-    WINTRUST_DATA trustData = {};
-
-    trustData.cbStruct = sizeof(WINTRUST_DATA);
-    trustData.pPolicyCallbackData = NULL;
-    trustData.pSIPClientData = NULL;
-    trustData.dwUIChoice = WTD_UI_NONE;
-    trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
-    trustData.dwUnionChoice = WTD_CHOICE_FILE;
-    trustData.dwStateAction = WTD_STATEACTION_IGNORE;
-    trustData.hWVTStateData = NULL;
-    trustData.pwszURLReference = NULL;
-    trustData.dwProvFlags = WTD_SAFER_FLAG;
-    trustData.dwUIContext = 0;
-    trustData.pFile = &fileInfo;
-
-    LONG status = WinVerifyTrust(NULL, &actionGUID, &trustData);
-
-    if (status == ERROR_SUCCESS) {
-        return true; // File is signed and signature is valid
-    } else {
-        return false; // File is not signed or signature is not valid
-    }
-}
-
-TempStr GetExecutableSignerTemp(Str exePath) {
-    WCHAR* ws = CWStrTemp(exePath);
-
-    HCERTSTORE hStore = nullptr;
-    HCRYPTMSG hMsg = nullptr;
-    BOOL ok = CryptQueryObject(CERT_QUERY_OBJECT_FILE, ws, CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED,
-                               CERT_QUERY_FORMAT_FLAG_BINARY, 0, nullptr, nullptr, nullptr, &hStore, &hMsg, nullptr);
-    if (!ok) {
-        return {};
-    }
-
-    DWORD signerInfoSize = 0;
-    CryptMsgGetParam(hMsg, CMSG_SIGNER_INFO_PARAM, 0, nullptr, &signerInfoSize);
-    if (signerInfoSize == 0) {
-        CryptMsgClose(hMsg);
-        CertCloseStore(hStore, 0);
-        return {};
-    }
-
-    auto signerInfo = (CMSG_SIGNER_INFO*)AllocZero(GetTempArena(), signerInfoSize);
-    ok = CryptMsgGetParam(hMsg, CMSG_SIGNER_INFO_PARAM, 0, signerInfo, &signerInfoSize);
-    if (!ok) {
-        CryptMsgClose(hMsg);
-        CertCloseStore(hStore, 0);
-        return {};
-    }
-
-    CERT_INFO certInfo = {};
-    certInfo.Issuer = signerInfo->Issuer;
-    certInfo.SerialNumber = signerInfo->SerialNumber;
-
-    PCCERT_CONTEXT certCtx = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0,
-                                                        CERT_FIND_SUBJECT_CERT, &certInfo, nullptr);
-    TempStr res = nullptr;
-    if (certCtx) {
-        char buf[512];
-        DWORD n = CertGetNameStringA(certCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, buf, dimof(buf));
-        if (n > 1) {
-            res = str::DupTemp(buf);
-        }
-        CertFreeCertificateContext(certCtx);
-    }
-
-    CryptMsgClose(hMsg);
-    CertCloseStore(hStore, 0);
-    return res;
 }
 
 void PaintCheckerboard(HDC hdc, int x, int y, int w, int h) {

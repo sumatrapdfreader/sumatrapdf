@@ -75,22 +75,24 @@ FileType GuessFileTypeFromFile(Str path) {
 
     Str d = Str((char*)buf, n);
     auto res = GuessFileTypeFromData(d);
-    if (res == FileType::Zip) {
-        ArchiveExtractProgressCb emptyCb;
-        Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
-        if (archive) {
-            if (IsXpsArchive(archive)) {
-                res = FileType::Xps;
-            }
-            if (IsEpubArchive(archive)) {
-                res = FileType::Epub;
-            }
-            if (IsFb2Archive(archive)) {
-                res = FileType::Fb2z;
-            }
-            delete archive;
-        }
+    if (res != FileType::Zip) {
+        return res;
     }
+    ArchiveExtractProgressCb emptyCb;
+    Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
+    if (!archive) {
+        return res;
+    }
+    if (IsXpsArchive(archive)) {
+        res = FileType::Xps;
+    }
+    if (IsEpubArchive(archive)) {
+        res = FileType::Epub;
+    }
+    if (IsFb2Archive(archive)) {
+        res = FileType::Fb2z;
+    }
+    delete archive;
     return res;
 }
 

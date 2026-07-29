@@ -288,6 +288,11 @@ static void CreateCustomShortcuts() {
 /* Caller needs to CleanUpSettings() */
 void ApplySettingsToOpenWindows() {
     for (MainWindow* win : gWindows) {
+        // LoadSettings re-creates custom commands (themes, external viewers,
+        // selection handlers, shortcuts) with fresh command ids. Menus still
+        // hold the old ids unless rebuilt — without this, e.g. "Set theme '…'"
+        // does nothing until restart (issue #5822).
+        RebuildMenuBarForWindow(win);
         ReCreateToolbar(win);
         ToolbarUpdateStateForWindow(win, true);
         UpdateFindbox(win);
@@ -605,10 +610,22 @@ static void RememberSessionState() {
             FreeSessionData(windowState);
             continue;
         }
-        windowState->tabIndex = win->GetTabIdx(win->CurrentTab()) + 1;
-        if (windowState->tabIndex < 0) {
-            windowState->tabIndex = 0;
+        // 1-based index among document tabs only (home / about tab is omitted
+        // from TabStates above). Using the UI tab index would mis-restore when
+        // the home tab was closed at save time but recreated on the next start.
+        int docOrdinal = 0;
+        int selectedDocOrdinal = 1;
+        WindowTab* cur = win->CurrentTab();
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+                continue;
+            }
+            docOrdinal++;
+            if (tab == cur) {
+                selectedDocOrdinal = docOrdinal;
+            }
         }
+        windowState->tabIndex = selectedDocOrdinal;
         // TODO: allow recording this state without changing gGlobalPrefs
         RememberDefaultWindowPosition(win);
         windowState->windowState = gGlobalPrefs->windowState;
@@ -787,9 +804,12 @@ void UnregisterSettingsForFileChanges() {
 
 constexpr int kMinFontSize = 9;
 
-// fills ncm with metrics for the monitor hwnd is on (system dpi for null hwnd)
-static void GetNonClientMetricsForHwnd(HWND hwnd, NONCLIENTMETRICS* ncm) {
-    if (!GetNonClientMetricsForDpi(DpiGet(hwnd), ncm)) {
+// metrics for an explicit DPI (system dpi when GetNonClientMetricsForDpi fails)
+static void GetNonClientMetricsForDpiValue(int dpi, NONCLIENTMETRICS* ncm) {
+    if (dpi <= 0) {
+        dpi = 96;
+    }
+    if (!GetNonClientMetricsForDpi(dpi, ncm)) {
         ncm->cbSize = sizeof(*ncm);
         SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(*ncm), ncm, 0);
     }
@@ -798,33 +818,53 @@ static void GetNonClientMetricsForHwnd(HWND hwnd, NONCLIENTMETRICS* ncm) {
 // the size of the fonts follows the dpi of the monitor hwnd is on, so that
 // UI text scales when a window is moved to a monitor with a different scale
 // factor (a user-set UIFontSize is used as-is at every dpi)
-int GetAppFontSize(HWND hwnd) {
+int GetAppMenuFontSizeForDpi(int dpi) {
+    if (gGlobalPrefs->uIFontSize >= kMinFontSize) {
+        return gGlobalPrefs->uIFontSize;
+    }
+    NONCLIENTMETRICS ncm{};
+    GetNonClientMetricsForDpiValue(dpi, &ncm);
+    return std::abs(ncm.lfMenuFont.lfHeight);
+}
+
+int GetAppMenuFontSize(HWND hwnd) {
+    return GetAppMenuFontSizeForDpi(DpiGet(hwnd));
+}
+
+int GetAppFontSizeForDpi(int dpi) {
     auto fntSize = gGlobalPrefs->uIFontSize;
     if (fntSize < kMinFontSize) {
         // match the menu font so tabs/toolbar text scale like native menus
-        fntSize = GetAppMenuFontSize(hwnd);
+        fntSize = GetAppMenuFontSizeForDpi(dpi);
     }
     return fntSize;
 }
 
-HFONT GetAppFont(HWND hwnd) {
-    UiFontsAtDpi* fonts = GetUiFontsAtDpi(DpiGet(hwnd));
+int GetAppFontSize(HWND hwnd) {
+    return GetAppFontSizeForDpi(DpiGet(hwnd));
+}
+
+HFONT GetAppFontForDpi(int dpi) {
+    UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->appFont) {
         return fonts->appFont;
     }
-    auto fntSize = GetAppFontSize(hwnd);
-    fonts->appFont = GetUserGuiFont("auto", fntSize);
+    fonts->appFont = GetUserGuiFont("auto", GetAppFontSizeForDpi(dpi));
     return fonts->appFont;
+}
+
+HFONT GetAppFont(HWND hwnd) {
+    return GetAppFontForDpi(DpiGet(hwnd));
 }
 
 constexpr int kMinBiggerFontSize = 14;
 
 // if user provided font size, we use that
 // otherwise we return 1.2x of default font size but no smaller than 14
-static int GetAppBiggerFontSize(HWND hwnd) {
+static int GetAppBiggerFontSizeForDpi(int dpi) {
     int fntSize = gGlobalPrefs->uIFontSize;
     if (fntSize < kMinFontSize) {
-        fntSize = GetAppMenuFontSize(hwnd);
+        fntSize = GetAppMenuFontSizeForDpi(dpi);
         fntSize = (fntSize * 12) / 10;
         if (fntSize < kMinBiggerFontSize) {
             fntSize = kMinBiggerFontSize;
@@ -833,22 +873,22 @@ static int GetAppBiggerFontSize(HWND hwnd) {
     return fntSize;
 }
 
-HFONT GetAppBiggerFont(HWND hwnd) {
-    UiFontsAtDpi* fonts = GetUiFontsAtDpi(DpiGet(hwnd));
+HFONT GetAppBiggerFontForDpi(int dpi) {
+    UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->biggerAppFont) {
         return fonts->biggerAppFont;
     }
-    fonts->biggerAppFont = GetDefaultGuiFontOfSize(GetAppBiggerFontSize(hwnd));
+    fonts->biggerAppFont = GetDefaultGuiFontOfSize(GetAppBiggerFontSizeForDpi(dpi));
     return fonts->biggerAppFont;
 }
 
-HFONT GetAppTreeFont(HWND hwnd) {
-    return GetAppTreeFontEx(hwnd, false, false);
+HFONT GetAppBiggerFont(HWND hwnd) {
+    return GetAppBiggerFontForDpi(DpiGet(hwnd));
 }
 
-HFONT GetAppTreeFontEx(HWND hwnd, bool bold, bool italic) {
+HFONT GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {
     int idx = (bold ? 1 : 0) | (italic ? 2 : 0);
-    UiFontsAtDpi* fonts = GetUiFontsAtDpi(DpiGet(hwnd));
+    UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->treeFontEx[idx]) {
         return fonts->treeFontEx[idx];
     }
@@ -857,42 +897,53 @@ HFONT GetAppTreeFontEx(HWND hwnd, bool bold, bool italic) {
         fntSize = gGlobalPrefs->uIFontSize;
     }
     if (fntSize < kMinFontSize) {
-        fntSize = GetAppMenuFontSize(hwnd);
+        fntSize = GetAppMenuFontSizeForDpi(dpi);
     }
     Str fntNameUser = gGlobalPrefs->treeFontName;
     fonts->treeFontEx[idx] = GetUserGuiFontEx(fntNameUser, fntSize, bold, italic);
     return fonts->treeFontEx[idx];
 }
 
-HFONT GetAppSidebarLabelFont(HWND hwnd) {
-    UiFontsAtDpi* fonts = GetUiFontsAtDpi(DpiGet(hwnd));
+HFONT GetAppTreeFontForDpi(int dpi) {
+    return GetAppTreeFontExForDpi(dpi, false, false);
+}
+
+HFONT GetAppTreeFont(HWND hwnd) {
+    return GetAppTreeFontEx(hwnd, false, false);
+}
+
+HFONT GetAppTreeFontEx(HWND hwnd, bool bold, bool italic) {
+    return GetAppTreeFontExForDpi(DpiGet(hwnd), bold, italic);
+}
+
+HFONT GetAppSidebarLabelFontForDpi(int dpi) {
+    UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->sidebarLabelFont) {
         return fonts->sidebarLabelFont;
     }
-    fonts->sidebarLabelFont = GetUserGuiFontEx(nullptr, GetAppBiggerFontSize(hwnd), true, false);
+    fonts->sidebarLabelFont = GetUserGuiFontEx(nullptr, GetAppBiggerFontSizeForDpi(dpi), true, false);
     return fonts->sidebarLabelFont;
 }
 
-int GetAppMenuFontSize(HWND hwnd) {
-    if (gGlobalPrefs->uIFontSize >= kMinFontSize) {
-        return gGlobalPrefs->uIFontSize;
-    }
-    NONCLIENTMETRICS ncm{};
-    GetNonClientMetricsForHwnd(hwnd, &ncm);
-    return std::abs(ncm.lfMenuFont.lfHeight);
+HFONT GetAppSidebarLabelFont(HWND hwnd) {
+    return GetAppSidebarLabelFontForDpi(DpiGet(hwnd));
 }
 
-HFONT GetAppMenuFont(HWND hwnd) {
-    UiFontsAtDpi* fonts = GetUiFontsAtDpi(DpiGet(hwnd));
+HFONT GetAppMenuFontForDpi(int dpi) {
+    UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->appMenuFont) {
         return fonts->appMenuFont;
     }
     NONCLIENTMETRICS ncm{};
-    GetNonClientMetricsForHwnd(hwnd, &ncm);
-    int fntSize = GetAppMenuFontSize(hwnd);
+    GetNonClientMetricsForDpiValue(dpi, &ncm);
+    int fntSize = GetAppMenuFontSizeForDpi(dpi);
     ncm.lfMenuFont.lfHeight = -fntSize;
     fonts->appMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     return fonts->appMenuFont;
+}
+
+HFONT GetAppMenuFont(HWND hwnd) {
+    return GetAppMenuFontForDpi(DpiGet(hwnd));
 }
 
 bool IsMenuFontSizeDefault() {

@@ -1,3 +1,6 @@
+#if 1
+#include "cdef_sumatra.h"
+#else
 /*
  * Copyright © 2018, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
@@ -85,3 +88,4 @@ static ALWAYS_INLINE void cdef_dsp_init_x86(Dav1dCdefDSPContext *const c) {
     c->fb[2] = BF(dav1d_cdef_filter_4x4, avx512icl);
 #endif
 }
+#endif

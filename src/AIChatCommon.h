@@ -70,6 +70,8 @@ struct AIChatCmdArgs {
     Str sessionId;
     Str filePath; // document the user is reading
     Str dir;      // cwd for the process
+    // Raw user input (not pre-escaped). Providers must pass it through
+    // QuoteCmdLineArgTemp when embedding it in a CreateProcessW command line.
     Str escapedInput;
     int option = 0;    // effort / sandbox index
     bool flag = false; // skip permissions / always approve / skip sandbox
@@ -85,9 +87,9 @@ struct AIChatProvider {
     Str exeName; // "claude", used in error messages
     Str virtualHost;
     const WCHAR* virtualHostW = nullptr;
-    Str webViewDataDirPrefix; // e.g. "ClaudeWebView"
-    Str docUri;               // documentation anchor for the not-installed dialog
-    Str defaultModel;         // fallback when the saved model isn't in the list
+    Str webViewDataDirPrefix;         // e.g. "ClaudeWebView"
+    Str docUri;                       // documentation anchor for the not-installed dialog
+    Str defaultModel;                 // fallback when the saved model isn't in the list
     SeqStrings optionItems = nullptr; // items of the effort / sandbox combo
     int optionCount = 0;
     int optionDefault = 1;
@@ -122,9 +124,7 @@ struct AIChatProvider {
     // via AIChatPostUpdate / AIChatStreamSetSessionId
     virtual void ParseStreamLine(Str line, AIChatStreamCtx* ctx) = 0;
 
-    bool IsInstalled() {
-        return len(FindExecutableTemp()) > 0;
-    }
+    bool IsInstalled() { return len(FindExecutableTemp()) > 0; }
 };
 
 bool IsAIChatAvailable();

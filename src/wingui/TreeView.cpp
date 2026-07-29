@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/BitManip.h"
 #include "base/Win.h"
-#include "base/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 
@@ -60,9 +59,7 @@ HWND TreeView::Create(const CreateArgs& args) {
     if (IsWindowsVistaOrGreater()) {
         SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
     }
-    if (DynSetWindowTheme) {
-        DynSetWindowTheme(hwnd, L"Explorer", nullptr);
-    }
+    SetWindowTheme(hwnd, L"Explorer", nullptr);
 
     TreeView_SetUnicodeFormat(hwnd, true);
 
@@ -196,9 +193,28 @@ LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 
     if (WM_KEYDOWN == msg) {
+        // Enter is handled here (expand/collapse) before DefWindowProc, so TVN_KEYDOWN
+        // never fires for it. Let onKeyDown run first — Favorites uses Enter to open
+        // the selected item (sidebar and full-window tab); Toc leaves result 0 so
+        // the default toggle still applies.
+        if (wparam == VK_RETURN && onKeyDown.IsValid()) {
+            KeyDownEvent ev{};
+            ev.treeView = w;
+            ev.keyCode = (int)wparam;
+            onKeyDown.Call(&ev);
+            if (ev.result != 0) {
+                return 0;
+            }
+        }
         if (HandleKey(w, wparam)) {
             return 0;
         }
+    }
+
+    // Swallow WM_CHAR for Enter after we handled WM_KEYDOWN so Windows does not
+    // play the default "invalid key" beep (e.g. opening a favorite with Enter).
+    if (WM_CHAR == msg && (wparam == VK_RETURN || wparam == '\r' || wparam == '\n')) {
+        return 0;
     }
 
     res = WndProcDefault(hwnd, msg, wparam, lparam);
@@ -593,7 +609,8 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         ev.keyCode = nmkd->wVKey;
         ev.flags = nmkd->flags;
         onKeyDown.Call(&ev);
-        return 0;
+        // non-zero: prevent default tree handling (e.g. type-ahead) when requested
+        return ev.result;
     }
 
     return 0;

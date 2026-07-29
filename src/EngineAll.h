@@ -46,6 +46,9 @@ EngineBase* CreateEngineCbxFromData(Str data);
 
 bool IsEngineImages(EngineBase*);
 void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);
+// Image base name and uncompressed size for page-info tip; does not decode.
+// Returns false when engine is not an image collection or pageNo is invalid.
+bool EngineImagesGetPageFileInfo(EngineBase*, int pageNo, TempStr* nameOut, i64* sizeOut);
 
 /* EngineMupdf.cpp */
 

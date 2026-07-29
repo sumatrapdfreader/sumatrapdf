@@ -561,6 +561,9 @@ TempStr ZoomLevelStr(float zoom) {
     if (zoom == kZoomFitWidth) {
         return _TRA("Fit Width");
     }
+    if (zoom == kZoomFitHeight) {
+        return _TRA("Fit Height");
+    }
     if (zoom == kZoomFitContent) {
         return _TRA("Fit Content");
     }
@@ -581,6 +584,7 @@ TempStr ZoomLevelStr(float zoom) {
 static float gZoomLevels[] = {
     kZoomFitPage,
     kZoomFitWidth,
+    kZoomFitHeight,
     kZoomFitByOrientation,
     kZoomFitContent,
     kZoomShrinkToFit,
@@ -1376,7 +1380,8 @@ static void PaintColorArea(HDC hdc, RECT* rc) {
     }
     // rows must be DWORD-aligned; each pixel is 3 bytes (BGR)
     int stride = (w * 3 + 3) & ~3;
-    u8* bits = (u8*)malloc(stride * h);
+    // cast before multiply so the product cannot overflow int→size_t
+    u8* bits = (u8*)malloc((size_t)stride * (size_t)h);
     if (!bits) {
         return;
     }

@@ -168,9 +168,9 @@ static void error(const char *const app, const char *const optarg,
             break;
     assert(long_opts[n].name);
     if (long_opts[n].val < 256) {
-        sprintf(optname, "-%c/--%s", long_opts[n].val, long_opts[n].name);
+        snprintf(optname, sizeof(optname), "-%c/--%s", long_opts[n].val, long_opts[n].name);
     } else {
-        sprintf(optname, "--%s", long_opts[n].name);
+        snprintf(optname, sizeof(optname), "--%s", long_opts[n].name);
     }
 
     usage(app, "Invalid argument \"%s\" for option %s; should be %s",

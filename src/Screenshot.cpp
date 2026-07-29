@@ -3,8 +3,9 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/WinDynCalls.h"
 #include "base/File.h"
+#include "base/WinDynCalls.h" // DWM corner prefs shim for mingw-w64 < 12
+#include <dwmapi.h>
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/Timer.h"
@@ -129,7 +130,7 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
         }
     }
     BOOL isCloaked = FALSE;
-    if (SUCCEEDED(dwm::GetWindowAttribute(hwnd, DWMWA_CLOAKED, &isCloaked, sizeof(isCloaked)))) {
+    if (SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &isCloaked, sizeof(isCloaked)))) {
         if (isCloaked) {
             return false;
         }
@@ -321,7 +322,8 @@ static void FixRoundedCorners(HBITMAP hbm, int w, int h, COLORREF bgColor, int r
     InitBitmapInfo32(bmi, w, h);
 
     HDC hdc = GetDC(nullptr);
-    DWORD* pixels = (DWORD*)malloc(w * h * 4);
+    // cast before multiply so the product cannot overflow int→size_t
+    DWORD* pixels = (DWORD*)malloc((size_t)w * (size_t)h * 4u);
     if (!pixels) {
         ReleaseDC(nullptr, hdc);
         return;
@@ -391,7 +393,7 @@ static HBITMAP CaptureWindowBmp(HWND hwnd, int* outW, int* outH) {
 
     // crop to visible frame bounds (excludes invisible resize/shadow border)
     RECT visibleRect;
-    HRESULT hr = dwm::GetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &visibleRect, sizeof(visibleRect));
+    HRESULT hr = DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &visibleRect, sizeof(visibleRect));
     if (SUCCEEDED(hr)) {
         int cropX = visibleRect.left - fullRect.left;
         int cropY = visibleRect.top - fullRect.top;
@@ -420,7 +422,7 @@ static HBITMAP CaptureWindowBmp(HWND hwnd, int* outW, int* outH) {
 
     // fix black corners from DWM rounded windows
     DWM_WINDOW_CORNER_PREFERENCE cornerPref = DWMWCP_DEFAULT;
-    dwm::GetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
+    DwmGetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
     if (cornerPref == DWMWCP_DEFAULT || cornerPref == DWMWCP_ROUND || cornerPref == DWMWCP_ROUNDSMALL) {
         COLORREF bgColor = GetSysColor(COLOR_WINDOW);
         // DWM corner radius is 8 logical pixels (4 for ROUNDSMALL), scale by DPI
@@ -806,7 +808,14 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     int h = data->winH;
 
     HDC hdcScreen = GetDC(nullptr);
+    if (!hdcScreen) {
+        return;
+    }
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    if (!hdcMem) {
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
 
     // Create 32-bit ARGB DIB section for per-pixel alpha
     BITMAPINFO bmi{};
@@ -819,6 +828,14 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     DWORD* pixels = nullptr;
     HBITMAP hbmDib = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, (void**)&pixels, nullptr, 0);
+    if (!hbmDib || !pixels) {
+        if (hbmDib) {
+            DeleteObject(hbmDib);
+        }
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmDib);
 
     // Fill background: light blue at 93% opaque (7% transparent), premultiplied
@@ -831,6 +848,19 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     // First draw into a temp compatible DC, then copy pixels with full alpha
     HDC hdcTemp = CreateCompatibleDC(hdcScreen);
     HBITMAP hbmTemp = CreateCompatibleBitmap(hdcScreen, w, h);
+    if (!hdcTemp || !hbmTemp) {
+        if (hbmTemp) {
+            DeleteObject(hbmTemp);
+        }
+        if (hdcTemp) {
+            DeleteDC(hdcTemp);
+        }
+        SelectObject(hdcMem, oldBmp);
+        DeleteObject(hbmDib);
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     HGDIOBJ oldTemp = SelectObject(hdcTemp, hbmTemp);
 
     // select GUI font for text drawing
@@ -930,7 +960,18 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     bmiTemp.bmiHeader.biPlanes = 1;
     bmiTemp.bmiHeader.biBitCount = 32;
     bmiTemp.bmiHeader.biCompression = BI_RGB;
-    DWORD* tempPixels = (DWORD*)malloc(w * h * 4);
+    DWORD* tempPixels = (DWORD*)malloc((size_t)w * h * 4);
+    if (!tempPixels) {
+        SelectObject(hdcTemp, oldFont);
+        SelectObject(hdcTemp, oldTemp);
+        DeleteObject(hbmTemp);
+        DeleteDC(hdcTemp);
+        SelectObject(hdcMem, oldBmp);
+        DeleteObject(hbmDib);
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return;
+    }
     GetDIBits(hdcTemp, hbmTemp, 0, h, tempPixels, &bmiTemp, DIB_RGB_COLORS);
 
     // Copy thumbnail and label regions with full opacity into the DIB

@@ -20,7 +20,6 @@
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "SumatraProperties.h"
-#include "Notifications.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Commands.h"
@@ -109,9 +108,13 @@ void UpdateTabWidth(MainWindow* win) {
     int nTabs = win->TabCount();
     bool showSingleTab = SettingsUseTabs() || win->tabsInTitlebar;
     bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
-    int tabWidth = gGlobalPrefs->tabWidth;
+    // TabWidth is stored in logical (96-DPI) units, same as other layout
+    // settings; convert to physical pixels so HiDPI monitors honor the value
+    // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
     if (win->tabsCtrl) {
-        win->tabsCtrl->tabDefaultDx = tabWidth;
+        HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
+        win->tabsCtrl->tabDefaultDx = DpiScale(hwnd, gGlobalPrefs->tabWidth);
+        win->tabsCtrl->LayoutTabs();
     }
     if (!showTabs) {
         ShowTabBar(win, false);
@@ -187,11 +190,16 @@ static void CloseWindowIfNoDocuments(MainWindow* win) {
 static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt) {
     MainWindow* oldWin = tab->win;
 
+    // Home / Favorites tabs stay in their window
+    if (tab->IsNonDocumentTab()) {
+        return;
+    }
+
     // don't migrate if it's only one document tab and not
     // dragging over a window
     int nDocTabs = 0;
     for (auto& t : oldWin->Tabs()) {
-        if (t->IsAboutTab()) continue;
+        if (t->IsNonDocumentTab()) continue;
         nDocTabs++;
     }
     if (nDocTabs == 1 && !newWin) return;
@@ -278,8 +286,6 @@ void TabsSelect(MainWindow* win, int tabIndex) {
         return;
     }
 
-    bool isShowingPageInfo = (GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo) != nullptr);
-
     // same work as in onSelectionChanging and onSelectionChanged
     SaveCurrentWindowTab(win);
     int prevIdx = tabsCtrl->SetSelected(tabIndex);
@@ -287,10 +293,8 @@ void TabsSelect(MainWindow* win, int tabIndex) {
         return;
     }
     WindowTab* tab = tabs[tabIndex];
+    // page-info tip is restored via MainWindow::pageInfoWanted in LoadModelIntoTab
     LoadModelIntoTab(tab);
-    if (isShowingPageInfo) {
-        PostMessageW(win->hwndFrame, WM_COMMAND, CmdTogglePageInfo, 0);
-    }
 }
 
 // clang-format off
@@ -557,13 +561,10 @@ static void MainWindowTabSelectionChanging(MainWindow* win, TabsCtrl::SelectionC
 }
 
 static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionChangedEvent* ev) {
-    bool isShowingPageInfo = (GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo) != nullptr);
     int currentIdx = win->tabsCtrl->GetSelected();
     WindowTab* tab = win->Tabs()[currentIdx];
+    // page-info tip is restored via MainWindow::pageInfoWanted in LoadModelIntoTab
     LoadModelIntoTab(tab);
-    if (isShowingPageInfo) {
-        PostMessageW(win->hwndFrame, WM_COMMAND, CmdTogglePageInfo, 0);
-    }
 }
 
 static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev) {
@@ -588,8 +589,8 @@ void CreateTabbar(MainWindow* win) {
     args.parent = win->hwndFrame;
     args.withToolTips = true;
     args.font = GetAppFont(win->hwndFrame);
-    int tabWidth = gGlobalPrefs->tabWidth;
-    args.tabDefaultDx = tabWidth;
+    // logical TabWidth → physical (see UpdateTabWidth / issue #3850)
+    args.tabDefaultDx = DpiScale(win->hwndFrame, gGlobalPrefs->tabWidth);
     args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)
 
     TabsCtrl* tabsCtrl = new TabsCtrl();
@@ -606,6 +607,12 @@ void CreateTabbar(MainWindow* win) {
 // verifies that WindowTab state is consistent with MainWindow state
 static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
     ReportIf(tdata->ctrl != win->ctrl);
+    // Home / Favorites tabs have no document controller. Favorites layout
+    // intentionally leaves canvas geometry alone (hidden), so canvasRc is not
+    // kept in lockstep with win->canvasRc the way document tabs are.
+    if (tdata->IsNonDocumentTab()) {
+        return;
+    }
 #if 0
     // disabling this check. best I can tell, external apps can change window
     // title and trigger this

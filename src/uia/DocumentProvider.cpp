@@ -77,6 +77,7 @@ void SumatraUIAutomationDocumentProvider::FreeDocument() {
         it = it->sibling_next;
 
         current->released = true; // disallow DisplayModel access
+        current->dm = nullptr;
         current->Release();
     }
 
@@ -91,8 +92,7 @@ bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const {
 }
 
 DisplayModel* SumatraUIAutomationDocumentProvider::GetDM() {
-    ReportIf(!IsDocumentLoaded());
-    ReportIf(!dm);
+    // May be null after FreeDocument while UIA clients still hold COM refs.
     return dm;
 }
 
@@ -171,7 +171,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     }
 
     // RuntimeID magic, use hwnd to differentiate providers of different windows
-    LONG rId[] = {(LONG)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID};
+    LONG rId[] = {HandleToLong(canvasHwnd), SUMATRA_UIA_DOCUMENT_RUNTIME_ID};
     for (LONG i = 0; i < 2; i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
         ReportIf(FAILED(hr));

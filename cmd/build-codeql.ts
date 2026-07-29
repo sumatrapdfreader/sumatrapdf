@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { detectVisualStudio, runLogged } from "./util";
 
 function buildConfigPath(): string {
-  return join("src", "base", "BuildConfig.h");
+  return join("src", "BuildConfig.h");
 }
 
 async function revertBuildConfig(): Promise<void> {
@@ -22,7 +22,7 @@ async function main() {
   const { msbuildPath } = detectVisualStudio();
   const slnPath = join("vs2022", "SumatraPDF.sln");
 
-  await runLogged(msbuildPath, [slnPath, `/t:SumatraPDF:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`]);
+  await runLogged(msbuildPath, [slnPath, `/t:SumatraPDF-static:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`]);
 
   await revertBuildConfig();
 

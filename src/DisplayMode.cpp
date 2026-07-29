@@ -38,6 +38,9 @@ bool IsValidZoom(float zoom) {
     if (kZoomFitWidth == zoom) {
         return true;
     }
+    if (kZoomFitHeight == zoom) {
+        return true;
+    }
     if (kZoomFitContent == zoom) {
         return true;
     }
@@ -89,6 +92,9 @@ float ZoomFromString(Str s, float defVal) {
     if (str::EqIS(s, StrL("fit width"))) {
         return kZoomFitWidth;
     }
+    if (str::EqIS(s, StrL("fit height"))) {
+        return kZoomFitHeight;
+    }
     if (str::EqIS(s, StrL("fit content"))) {
         return kZoomFitContent;
     }
@@ -124,6 +130,8 @@ void ZoomToString(Str* dst, float zoom, FileState* fileState) {
         str::ReplaceWithCopy(dst, "fit page");
     } else if (kZoomFitWidth == zoom) {
         str::ReplaceWithCopy(dst, "fit width");
+    } else if (kZoomFitHeight == zoom) {
+        str::ReplaceWithCopy(dst, "fit height");
     } else if (kZoomFitContent == zoom) {
         str::ReplaceWithCopy(dst, "fit content");
     } else if (kZoomShrinkToFit == zoom) {

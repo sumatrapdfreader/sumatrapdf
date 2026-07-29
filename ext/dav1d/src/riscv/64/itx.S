@@ -1911,7 +1911,8 @@ function inv_txfm_\variant\()add_8x16_rvv, export=1, ext=v
 .endr
 
 L(itx_8x16_epilog):
-  addi t4, sp, -8*32
+  addi sp, sp, -8*32
+  mv t4, sp
   vsseg8e16.v v0, (t4)
   addi t0, t4, 8*16
   vsseg8e16.v v8, (t0)
@@ -1920,6 +1921,7 @@ L(itx_8x16_epilog):
   li t6, 16
   jal a7, inv_txfm_add_vert_8x16_rvv
 
+  addi sp, sp, 8*32
   ret
 .endif
 endfunc

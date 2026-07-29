@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
+#include "base/Base.h"
 
 #if !defined(_MSC_VER)
 #define _strdup strdup
@@ -11,8 +11,15 @@
 #define sscanf_s sscanf
 #endif
 
-#if !OS_WIN
+// Locale-independent Unicode lowercase fold for one WCHAR.
+// On Windows, CharLowerBuffW matches FoldCaseWInPlace; on POSIX a small table
+// covers Latin/Cyrillic/Greek used by tests and falls back to towlower().
 static WCHAR FoldCaseWChar(WCHAR c) {
+#if OS_WIN
+    WCHAR ch = c;
+    CharLowerBuffW(&ch, 1);
+    return ch;
+#else
     if (c >= L'A' && c <= L'Z') {
         return c + 32;
     }
@@ -29,13 +36,10 @@ static WCHAR FoldCaseWChar(WCHAR c) {
         return c + 32;
     }
     return (WCHAR)towlower(c);
-}
 #endif
+}
 
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
-// On Windows, CharLowerBuffW folds accented / Cyrillic / Greek letters
-// regardless of the CRT locale. POSIX uses a small built-in fold for scripts
-// used by our tests and falls back to towlower().
 static void FoldCaseWInPlace(WStr s) {
 #if OS_WIN
     CharLowerBuffW(s.s, (DWORD)s.len);
@@ -205,6 +209,47 @@ bool EqI(Str s1, Str s2) {
     return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
 }
 
+// strcmp-style (<0, 0, >0). Empty/null sorts before non-empty. Prefer Eq when only equality matters.
+int Cmp(Str a, Str b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (str::IsNull(a) || a.len == 0) {
+        return (str::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (str::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    int r = memcmp(a.s, b.s, (size_t)n);
+    if (r != 0) {
+        return r;
+    }
+    return a.len - b.len;
+}
+
+// strcasecmp-style (<0, 0, >0). Prefer EqI when only equality matters.
+int CmpI(Str a, Str b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (str::IsNull(a) || a.len == 0) {
+        return (str::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (str::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        int c1 = tolower((u8)a.s[i]);
+        int c2 = tolower((u8)b.s[i]);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+    }
+    return a.len - b.len;
+}
+
 // compares two strings ignoring case and whitespace
 bool EqIS(Str s1, Str s2) {
     if (s1.s == s2.s) {
@@ -357,10 +402,8 @@ int IndexOfI(Str s, Str toFind) {
     if (asciiNeedle) {
         for (int off = 0; off < s.len && s.s[off]; off++) {
             char c = (char)tolower(s.s[off]);
-            if (c == first) {
-                if (str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
-                    return off;
-                }
+            if (c == first && str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
+                return off;
             }
         }
         return -1;
@@ -669,8 +712,8 @@ void TransCharsInPlace(Str& str, Str oldChars, Str newChars) {
 }
 
 // Trim whitespace characters, in-place, inside s.
-// Returns number of trimmed characters.
-int TrimWSInPlace(Str s, TrimOpt opt) {
+// Updates s.len. Returns number of trimmed characters.
+int TrimWSInPlace(Str& s, TrimOpt opt) {
     if (str::IsNull(s)) {
         return 0;
     }
@@ -694,6 +737,7 @@ int TrimWSInPlace(Str s, TrimOpt opt) {
     if (start != 0) {
         memmove(s.s, s.s + start, (size_t)(end - start) + 1);
     }
+    s.len = end - start;
     return trimmed;
 }
 
@@ -1799,13 +1843,16 @@ bool IsNonCharacter(WCHAR c) {
 } // namespace wstr
 namespace str {
 
-// hack: to fool CodeQL which doesn't approve of char* => WCHAR* casts
-// and doesn't allow any way to disable that warning
+// Reinterpret a UTF-16 byte buffer held in a Str as a WStr without a
+// char*→WCHAR* cast (CodeQL cpp/incorrect-string-type-conversion).
 WStr CastToWCHAR(Str s) {
     if (!s) {
         return {};
     }
-    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR));
+    WCHAR* w = nullptr;
+    static_assert(sizeof(char*) == sizeof(WCHAR*), "pointer sizes must match");
+    memcpy(&w, &s.s, sizeof(w));
+    return WStr(w, s.len / (int)sizeof(WCHAR));
 }
 
 } // namespace str
@@ -1866,6 +1913,48 @@ bool EqI(WStr s1, WStr s2) {
         return false;
     }
     return EqNI(s1, s2, s1.len);
+}
+
+// wcscmp-style (<0, 0, >0). Empty/null sorts before non-empty.
+int Cmp(WStr a, WStr b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (wstr::IsNull(a) || a.len == 0) {
+        return (wstr::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (wstr::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        if (a.s[i] != b.s[i]) {
+            return a.s[i] < b.s[i] ? -1 : 1;
+        }
+    }
+    return a.len - b.len;
+}
+
+// case-insensitive WCHAR compare (<0, 0, >0). Prefer EqI when only equality matters.
+int CmpI(WStr a, WStr b) {
+    if (a.s == b.s) {
+        return 0;
+    }
+    if (wstr::IsNull(a) || a.len == 0) {
+        return (wstr::IsNull(b) || b.len == 0) ? 0 : -1;
+    }
+    if (wstr::IsNull(b) || b.len == 0) {
+        return 1;
+    }
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        WCHAR c1 = FoldCaseWChar(a.s[i]);
+        WCHAR c2 = FoldCaseWChar(b.s[i]);
+        if (c1 != c2) {
+            return c1 < c2 ? -1 : 1;
+        }
+    }
+    return a.len - b.len;
 }
 
 bool EqN(WStr s1, WStr s2, int n) {
@@ -2057,9 +2146,10 @@ int NormalizeWSInPlace(WStr s) {
 } // namespace wstr
 namespace str {
 
-// Note: BufSet() should only be used when absolutely necessary (e.g. when
-// handling buffers in OS-defined structures)
-// returns the number of characters written (without the terminating \0)
+// Bounded null-terminated copy into a fixed buffer (replaces lstrcpyn / strcpy_s /
+// StringCchCopy). Only for OS structs with fixed fields — prefer owned Str/WStr
+// otherwise. dst.len is capacity including the terminator. Returns chars written
+// excluding the terminator.
 int BufSet(Str dst, Str src) {
     int cchDst = dst.len;
     ReportIf(0 == cchDst || !dst.s);
@@ -2079,6 +2169,7 @@ int BufSet(Str dst, Str src) {
 } // namespace str
 namespace wstr {
 
+// WCHAR overload of BufSet — replaces lstrcpynW / wcscpy_s / wcsncpy_s / StringCchCopyW.
 int BufSet(WStr dst, WStr src) {
     int cchDst = dst.len;
     ReportIf(0 == cchDst || !dst.s);
@@ -2097,6 +2188,7 @@ int BufSet(WStr dst, WStr src) {
 } // namespace wstr
 namespace str {
 
+// UTF-8 Str → fixed WCHAR buffer (converts then BufSet).
 int BufSet(WCHAR* dst, int dstCchSize, Str src) {
     return wstr::BufSet(WStr(dst, dstCchSize), ToWStrTemp(src));
 }
@@ -2202,23 +2294,23 @@ i64 ParseInt64(Str s) {
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
-bool IsValidProgramVersion(Str txt) {
-    if (!txt || !str::IsDigit(txt.s[0])) {
+bool IsValidProgramVersion(Str ver) {
+    if (!ver || !str::IsDigit(ver.s[0])) {
         return false;
     }
 
-    for (int i = 0; i < txt.len; i++) {
-        char c = txt.s[i];
+    for (int i = 0; i < ver.len; i++) {
+        char c = ver.s[i];
         if (str::IsDigit(c)) {
             continue;
         }
-        if (c == '.' && i + 1 < txt.len && str::IsDigit(txt.s[i + 1])) {
+        if (c == '.' && i + 1 < ver.len && str::IsDigit(ver.s[i + 1])) {
             continue;
         }
-        if (c == '\r' && i + 1 < txt.len && txt.s[i + 1] == '\n') {
+        if (c == '\r' && i + 1 < ver.len && ver.s[i + 1] == '\n') {
             continue;
         }
-        if (c == '\n' && i + 1 == txt.len) {
+        if (c == '\n' && i + 1 == ver.len) {
             continue;
         }
         return false;
@@ -2245,12 +2337,12 @@ static unsigned int ExtractNextNumber(Str txt, int& off) {
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
-int CompareProgramVersion(Str txt1, Str txt2) {
+int CompareProgramVersion(Str ver1, Str ver2) {
     int off1 = 0;
     int off2 = 0;
-    while (off1 < txt1.len || off2 < txt2.len) {
-        unsigned int v1 = ExtractNextNumber(txt1, off1);
-        unsigned int v2 = ExtractNextNumber(txt2, off2);
+    while (off1 < ver1.len || off2 < ver2.len) {
+        unsigned int v1 = ExtractNextNumber(ver1, off1);
+        unsigned int v2 = ExtractNextNumber(ver2, off2);
         if (v1 != v2) {
             return (int)v1 - (int)v2;
         }

@@ -9,6 +9,8 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 [Installation](Installation.md)
 
+[Portable vs installer / libmupdf.dll](SumatraPDF-portable.md)
+
 [Command Palette](Command-Palette.md)
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
@@ -31,7 +33,7 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 [Printing](Printing.md)
 
-[Read Aloud (TTS)](Read-Aloud-TTS.md)
+[Read Aloud (TTS)](Read-Aloud.md)
 
 [Commands](Commands.md)
 

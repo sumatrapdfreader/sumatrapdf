@@ -258,6 +258,13 @@ static SeqStrings gCommandNames =
     "CmdToggleLightDarkTheme\0"
     "CmdChangeTheme\0"
     "CmdTranslateSelection\0"
+    "CmdFavoriteShowInTab\0"
+    "CmdTocExpandToLevel1\0"
+    "CmdTocExpandToLevel2\0"
+    "CmdTocExpandToLevel3\0"
+    "CmdTocCollapseSameLevel\0"
+    "CmdToggleFavoritesSort\0"
+    "CmdZoomFitHeight\0"
     "CmdToggleAudiobookVoices\0"
     "CmdAudiobookCharacters\0"
     "CmdToggleLibraryHome\0"
@@ -513,6 +520,13 @@ static i32 gCommandIds[] = {
     CmdToggleLightDarkTheme,
     CmdChangeTheme,
     CmdTranslateSelection,
+    CmdFavoriteShowInTab,
+    CmdTocExpandToLevel1,
+    CmdTocExpandToLevel2,
+    CmdTocExpandToLevel3,
+    CmdTocCollapseSameLevel,
+    CmdToggleFavoritesSort,
+    CmdZoomFitHeight,
     CmdToggleAudiobookVoices,
     CmdAudiobookCharacters,
     CmdToggleLibraryHome,
@@ -768,6 +782,13 @@ SeqStrings gCommandDescriptions =
     "Toggle Light/Dark Theme\0"
     "Change Theme...\0"
     "Translate Selection...\0"
+    "Show Favorites in Tab\0"
+    "Bookmarks: Expand to Level 1\0"
+    "Bookmarks: Expand to Level 2\0"
+    "Bookmarks: Expand to Level 3\0"
+    "Bookmarks: Collapse Same Level\0"
+    "Sort Favorites By Name\0"
+    "Zoom: Fit Height\0"
     "Read Aloud with Chatterbox Voices\0"
     "Audiobook Characters\0"
     "Toggle Library Start Page\0"

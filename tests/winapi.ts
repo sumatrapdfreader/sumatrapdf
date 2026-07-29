@@ -58,7 +58,10 @@ const gdiplus = dlopen("gdiplus.dll", {
 });
 
 // window messages
+export const WM_CLOSE = 0x0010;
 export const WM_SETTEXT = 0x000c;
+export const WM_GETTEXT = 0x000d;
+export const WM_GETTEXTLENGTH = 0x000e;
 export const WM_KEYDOWN = 0x0100;
 export const WM_KEYUP = 0x0101;
 export const WM_CHAR = 0x0102;
@@ -219,14 +222,28 @@ export function clientToScreen(hwnd: number, x: number, y: number): { x: number;
   return { x: buf[0], y: buf[1] };
 }
 
-// read the current scroll position (nPos) of a window's scrollbar
-export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
+// full SCROLLINFO for a window scrollbar (SIF_ALL)
+export function getScrollInfo(
+  hwnd: number,
+  bar: number = SB_VERT,
+): { min: number; max: number; page: number; pos: number; trackPos: number } {
   const buf = new Uint8Array(28);
   const dv = new DataView(buf.buffer);
   dv.setUint32(0, 28, true); // cbSize
   dv.setUint32(4, SIF_ALL, true); // fMask
   user32.symbols.GetScrollInfo(hwnd, bar, ptr(buf));
-  return dv.getInt32(20, true); // nPos
+  return {
+    min: dv.getInt32(8, true), // nMin
+    max: dv.getInt32(12, true), // nMax
+    page: dv.getUint32(16, true), // nPage
+    pos: dv.getInt32(20, true), // nPos
+    trackPos: dv.getInt32(24, true), // nTrackPos
+  };
+}
+
+// read the current scroll position (nPos) of a window's scrollbar
+export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
+  return getScrollInfo(hwnd, bar).pos;
 }
 
 // full scrollbar state of a window's scrollbar: range, page size and position
@@ -327,6 +344,17 @@ export function getParent(hwnd: number): number {
 
 export function isWindow(hwnd: number): boolean {
   return user32.symbols.IsWindow(hwnd);
+}
+
+// Full window/control text (large buffer; GetWindowTextW works cross-process).
+export function getWindowTextFull(hwnd: number, maxChars = 16384): string {
+  const buf = new Uint16Array(maxChars);
+  const n = user32.symbols.GetWindowTextW(hwnd, ptr(buf), maxChars);
+  let s = "";
+  for (let i = 0; i < n; i++) {
+    s += String.fromCharCode(buf[i]);
+  }
+  return s;
 }
 
 // window rectangle in screen coordinates (vs getClientRect's client-relative one)

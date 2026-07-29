@@ -21,6 +21,7 @@ struct Checkbox;
 struct Button;
 struct TabsCtrl;
 struct TocTree;
+struct TocItem;
 struct FindBarWnd;
 struct FindWindowWnd;
 
@@ -81,6 +82,21 @@ enum class MouseAction {
     Selecting,
     Scrolling,
     SelectingText
+};
+
+// Edge / corner / interior of a rectangular selection for move/resize
+// (mirrors crop handles in the save-crop-resize image dialog).
+enum class SelectionDragEdge {
+    None = 0,
+    Left,
+    Right,
+    Top,
+    Bottom,
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+    Move,
 };
 
 enum PresentationMode {
@@ -172,6 +188,10 @@ struct MainWindow {
     // whether the ToC sidebar is currently visible
     // set to temporarily disable UpdateTocSelection
     bool tocKeepSelection = false;
+    // Non-owning TOC items that match the current page (same page as best match
+    // plus ancestors). Used when gShowAllMatchingTOC to multi-highlight; the
+    // tree still has a single selection (the best match). Cleared with the TOC.
+    Vec<TocItem*> tocMatchingItems;
     // width of the toc/favorites sidebar; the source of truth for layout
     // (the toc box window can be hidden and its rect stale, e.g. when only
     // favorites are showing). 0 = not laid out yet
@@ -180,8 +200,9 @@ struct MainWindow {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
+    Edit* favFilterEdit = nullptr;
     TreeView* favTreeView = nullptr;
-    // VBox(label, tree); owns those two controls and lays them out in hwndFavBox
+    // VBox(label, filter edit, tree); owns those controls and lays them out in hwndFavBox
     ILayout* favLayout = nullptr;
     Vec<FileState*> expandedFavorites;
 
@@ -227,6 +248,15 @@ struct MainWindow {
     TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
     bool tabsInTitlebar = false;
+
+    // per-monitor DPI of hwndFrame (from WM_DPICHANGED wParam). Used so UI
+    // chrome can refresh at the destination scale even while GetDpiForWindow
+    // still lags during a cross-monitor drag.
+    int frameDpi = 0;
+    // defer expensive chrome rebuild while the user is dragging/resizing;
+    // finish on WM_EXITSIZEMOVE via a posted settle message
+    bool deferDpiChromeRefresh = false;
+    bool dpiChromeRefreshPending = false;
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
     Vec<WindowTab*>* tabSelectionHistory = nullptr;
@@ -285,6 +315,10 @@ struct MainWindow {
     Rect selectionRect;
     // size of the current rectangular selection in document units
     SizeF selectionMeasure;
+    // move/resize of an existing rectangular selection (Ctrl+drag region)
+    SelectionDragEdge selectionDragEdge = SelectionDragEdge::None;
+    // screen rect when the move/resize started (normalized)
+    Rect selectionEditOrig;
 
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLink*> staticLinks;
@@ -333,6 +367,8 @@ struct MainWindow {
             bool isToolbarVisible = false;
             bool tocVisible = false;
             bool showFavorites = false;
+            // full-window Favorites tab vs. sidebar panel: different geometry
+            bool favoritesAsTab = false;
             bool showMenuBarRebar = false;
             bool aiChatVisible = false;
             int aiChatDx = 0;
@@ -359,6 +395,11 @@ struct MainWindow {
     UIState uiState;
 
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
+
+    // User wants the page-info tip (I key / CmdTogglePageInfo). Survives tab
+    // switches and visits to Home/About where the notification cannot show
+    // (issue #4454); restored when a document tab is active again.
+    bool pageInfoWanted = false;
 
     // overlay scrollbars (used when scrollbars mode is "smart" or "overlay")
     struct OverlayScrollbar* overlayScrollV = nullptr;
@@ -401,7 +442,7 @@ struct MainWindow {
     bool findCountPendingMatchCase = false;
     bool findCountPendingMatchWholeWord = false;
     // per-match positions (and optional snippets for the floating results list);
-    // also built when gShowAllMatches paints all highlights (see SearchAndDDE.cpp)
+    // also used by PaintAllFindMatches to highlight every find hit (see SearchAndDDE.cpp)
     Vec<FindMatch> findMatches;
     bool findCountHasSnippets = false;
 
@@ -428,9 +469,13 @@ struct MainWindow {
 
     DocControllerCallback* cbHandler = nullptr;
 
-    // The target y offset for smooth scrolling.
-    // We use a timer to gradually scroll there.
+    // Smooth mouse-wheel scrolling: exponential chase of scrollTargetY.
+    // scrollAnimY is sub-pixel; only integer steps are applied to the view.
     int scrollTargetY = 0;
+    double scrollAnimY = 0;
+    LARGE_INTEGER scrollAnimLastTime{};
+    bool scrollAnimActive = false;
+    bool scrollAnimHiResTimer = false; // timeBeginPeriod(1) while animating
 
     // suppress Read Aloud user-scroll detection during programmatic follow scrolling
     mutable bool readAloudScrollFromCode = false;
@@ -454,7 +499,7 @@ struct MainWindow {
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
 
     // small floating toolbar shown after a text selection in fixed-page
-    // documents (controlled by the Annotations.SelectionToolbar setting)
+    // floating selection actions bar (controlled by the SelectionToolbar setting)
     SelectionToolbar* selectionToolbar = nullptr;
 
     // set at the beginning of CloseWindow() to prevent

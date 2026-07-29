@@ -4,19 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 
-#include "base/ScopedWin.h"
-#include "base/File.h"
-#include "base/GuessFileType.h"
-#include "base/ByteReader.h"
-#include "base/TgaReader.h"
-#include "base/Win.h"
-#include "GdiPlusExtFormats.h"
 #include "base/GdiPlus.h"
-
-#if COMPILER_MSVC
-#pragma warning(disable : 4668)
-#endif
-#include <wincodec.h>
 
 using Gdiplus::Bitmap;
 using Gdiplus::BitmapData;
@@ -230,62 +218,6 @@ static Gdiplus::RotateFlipType rfts[] = {
     Gdiplus::Rotate90FlipNone, Gdiplus::Rotate270FlipX,    Gdiplus::Rotate270FlipNone,
 };
 
-static Bitmap* WICDecodeImageFromStream(IStream* stream) {
-    ScopedCom com;
-    HRESULT hr;
-    int iRot = -1;
-
-#define HR(hr) \
-    if (FAILED(hr)) return nullptr;
-    ScopedComPtr<IWICImagingFactory> pFactory;
-    if (!pFactory.Create(CLSID_WICImagingFactory)) {
-        return nullptr;
-    }
-    ScopedComPtr<IWICBitmapDecoder> pDecoder;
-    HR(pFactory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &pDecoder));
-    ScopedComPtr<IWICBitmapFrameDecode> srcFrame;
-    HR(pDecoder->GetFrame(0, &srcFrame));
-    ScopedComPtr<IWICFormatConverter> pConverter;
-
-    ScopedComPtr<IWICMetadataQueryReader> pMetadataReader;
-
-    hr = srcFrame->GetMetadataQueryReader(&pMetadataReader);
-    if (SUCCEEDED(hr)) {
-        PROPVARIANT variant;
-        PropVariantInit(&variant);
-        // hr = pMetadataReader->GetMetadataByName(L"/app1/ifd/exif/{ushort=274}", &variant);
-        hr = pMetadataReader->GetMetadataByName(L"/app1/ifd/{ushort=274}", &variant);
-        if (SUCCEEDED(hr)) {
-            iRot = (int)variant.uintVal - 2;
-        }
-    }
-
-    HR(pFactory->CreateFormatConverter(&pConverter));
-    HR(pConverter->Initialize(srcFrame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, nullptr, 0.f,
-                              WICBitmapPaletteTypeCustom));
-
-    uint w, h;
-    HR(pConverter->GetSize(&w, &h));
-    double xres, yres;
-    HR(pConverter->GetResolution(&xres, &yres));
-    Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Gdiplus::Rect bmpRect(0, 0, w, h);
-    BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
-    if (ok != Ok) {
-        return nullptr;
-    }
-    HR(pConverter->CopyPixels(nullptr, bmpData.Stride, bmpData.Stride * h, (BYTE*)bmpData.Scan0));
-    bmp.UnlockBits(&bmpData);
-    bmp.SetResolution((float)xres, (float)yres);
-#undef HR
-    // TODO: maybe use IWICBitmapFlipRotator
-    if (iRot >= 0 && iRot < dimof(rfts)) {
-        bmp.RotateFlip(rfts[iRot]);
-    }
-    return bmp.Clone(0, 0, bmp.GetWidth(), bmp.GetHeight(), PixelFormat32bppARGB);
-}
-
 void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
     if (!bmp || exifOrientation < 2 || exifOrientation > 8) {
         return;
@@ -294,54 +226,6 @@ void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
     if (iRot < (int)dimof(rfts)) {
         bmp->RotateFlip(rfts[iRot]);
     }
-}
-
-static void MaybeFlipBitmap(Bitmap* bmp) {
-    u8 buf[64] = {}; // empirically is 26
-
-    UINT propSize = bmp->GetPropertyItemSize(PropertyTagOrientation);
-    if (propSize == 0) {
-        bmp->GetLastStatus(); // clear last status
-        return;
-    }
-    ReportIf(propSize > dimof(buf));
-
-    auto status = bmp->GetPropertyItem(PropertyTagOrientation, propSize, (Gdiplus::PropertyItem*)buf);
-    if (status != Status::Ok) {
-        bmp->GetLastStatus(); // clear last status
-        return;
-    }
-    auto propItem = (Gdiplus::PropertyItem*)buf;
-    u16* propValPtr = (u16*)propItem->value;
-    ApplyExifOrientation(bmp, propValPtr[0]);
-}
-
-static Bitmap* DecodeWithWIC(Str bmpData) {
-    auto strm = CreateStreamFromData(bmpData);
-    ScopedComPtr<IStream> stream(strm);
-    if (!stream) {
-        return nullptr;
-    }
-    auto bmp = WICDecodeImageFromStream(stream);
-    return bmp;
-}
-
-static Bitmap* DecodeWithGdiplus(Str bmpData) {
-    auto strm = CreateStreamFromData(bmpData);
-    ScopedComPtr<IStream> stream(strm);
-    if (!stream) {
-        return nullptr;
-    }
-    Bitmap* bmp = Gdiplus::Bitmap::FromStream(stream);
-    if (!bmp) {
-        return nullptr;
-    }
-    if (bmp->GetLastStatus() != Gdiplus::Ok) {
-        delete bmp;
-        return nullptr;
-    }
-    MaybeFlipBitmap(bmp);
-    return bmp;
 }
 
 static Gdiplus::PixelFormat PixmapToGdiplusPixelFormat(const Pixmap* px) {
@@ -453,102 +337,6 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
     return bmp;
 }
 
-// Decode an image to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
-Pixmap* PixmapFromDataWin(Str bmpData) {
-    FileType kind = GuessFileTypeFromData(bmpData);
-    if (FileType::Tga == kind) {
-        Pixmap* px = tga::PixmapFromData(bmpData);
-        if (px) {
-            return px;
-        }
-    }
-    Pixmap* px = PixmapFromExtFormatsData(bmpData, kind);
-    if (px) {
-        return px;
-    }
-
-    // remaining formats (png, bmp, jxr, tiff, gif, ...) decode via GDI+/WIC. tryGdiplusFirst
-    // for potentially multi-image formats (WICDecodeImageFromStream is single-frame). The
-    // (first) frame is copied out into a uniform Pixmap.
-    bool tryGdiplusFirst = (FileType::Tiff == kind) || (FileType::Gif == kind);
-    Gdiplus::Bitmap* bmp = nullptr;
-    if (tryGdiplusFirst) {
-        bmp = DecodeWithGdiplus(bmpData);
-    }
-    if (!bmp) {
-        bmp = DecodeWithWIC(bmpData);
-    }
-    if (!bmp && !tryGdiplusFirst) {
-        bmp = DecodeWithGdiplus(bmpData);
-    }
-    if (!bmp) {
-        return nullptr;
-    }
-    px = PixmapFromGdiplus(bmp);
-    delete bmp;
-    return px;
-}
-
-// Decode an image to one Pixmap per frame: multi-page TIFF and animated GIF yield more
-// than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
-Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
-    Vec<Pixmap*> res;
-    FileType kind = GuessFileTypeFromData(bmpData);
-    if (FileType::Tiff == kind || FileType::Gif == kind) {
-        // decode every frame of a multi-page TIFF / animated GIF via GDI+
-        Gdiplus::Bitmap* bmp = DecodeWithGdiplus(bmpData);
-        if (!bmp) {
-            bmp = DecodeWithWIC(bmpData);
-        }
-        if (bmp) {
-            const GUID* dim = (FileType::Tiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
-            UINT nFrames = bmp->GetFrameCount(dim);
-            for (UINT i = 0; i < nFrames; i++) {
-                if (bmp->SelectActiveFrame(dim, i) != Gdiplus::Ok) {
-                    break;
-                }
-                Pixmap* px = PixmapFromGdiplus(bmp);
-                if (px) {
-                    res.Append(px);
-                }
-            }
-            delete bmp;
-        }
-        if (len(res) > 0) {
-            return res;
-        }
-    }
-    // single-frame (or multi-frame decode failed): exactly one Pixmap
-    Pixmap* px = PixmapFromDataWin(bmpData);
-    if (px) {
-        res.Append(px);
-    }
-    return res;
-}
-
-// adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Size ImageSizeFromData(Str d) {
-    Size result;
-    FileTypeInfo fti = GuessFileInfoFromData(d);
-    if (fti.hasImageSize) {
-        result = Size(fti.imageDx, fti.imageDy);
-    } else if (fti.imageSizes) {
-        // multi-image file (animated GIF, multi-page TIFF, ...): the first image
-        result = fti.imageSizes[0];
-    }
-    FreeFileTypeInfo(&fti);
-    if (!result.IsEmpty()) {
-        return result;
-    }
-    // try expensive way of getting the info by decoding the image
-    Pixmap* px = PixmapFromDataWin(d);
-    if (px) {
-        result = Size(px->width, px->height);
-        FreePixmap(px);
-    }
-    return result;
-}
-
 CLSID GetGdiPlusEncoderClsid(WStr format) {
     CLSID null{};
     uint numEncoders, size;
@@ -567,29 +355,4 @@ CLSID GetGdiPlusEncoderClsid(WStr format) {
         }
     }
     return null;
-}
-
-RenderedBitmap* LoadRenderedBitmapWin(Str path) {
-    if (!path) {
-        return nullptr;
-    }
-    Str data = file::ReadFile(path);
-    if (!data) {
-        return nullptr;
-    }
-    Gdiplus::Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromDataWin(data));
-    str::Free(data);
-
-    if (!bmp) {
-        return nullptr;
-    }
-
-    HBITMAP hbmp;
-    RenderedBitmap* rendered = nullptr;
-    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
-        rendered = new RenderedBitmap(hbmp, Size(bmp->GetWidth(), bmp->GetHeight()));
-    }
-    delete bmp;
-
-    return rendered;
 }

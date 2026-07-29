@@ -1,3 +1,6 @@
+#if 1
+#include "msac_sumatra.h"
+#else
 /*
  * Copyright © 2019, VideoLAN and dav1d authors
  * Copyright © 2019, Two Orioles, LLC
@@ -73,3 +76,4 @@ static ALWAYS_INLINE void msac_init_x86(MsacContext *const s) {
 #endif
 
 #endif /* DAV1D_SRC_X86_MSAC_H */
+#endif

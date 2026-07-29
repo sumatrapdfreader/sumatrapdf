@@ -78,7 +78,7 @@ export async function testit(): Promise<void> {
     "# Find test\n\nzebra one\n\nsome ze**br**a bold\n\nlast Zebra here\n\nnothing else\n",
   );
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
   const proc = Bun.spawn([EXE, "-for-testing", md], { stdout: "ignore", stderr: "ignore" });
   try {

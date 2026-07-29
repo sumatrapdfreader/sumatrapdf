@@ -68,8 +68,3 @@ option('trim_dsp',
     choices: ['true', 'false', 'if-release'],
     value: 'if-release',
     description: 'Eliminate redundant DSP functions where possible')
-
-option('macos_kperf',
-    type: 'boolean',
-    value: false,
-    description: 'Use the private macOS kperf API for benchmarking')

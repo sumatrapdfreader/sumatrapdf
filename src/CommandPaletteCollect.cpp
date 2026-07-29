@@ -118,9 +118,8 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             // TODO: this toggles 3 states
         } break;
         case CmdTogglePageInfo: {
-            auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
             isToggle = true;
-            newIsOn = !wnd;
+            newIsOn = !win->pageInfoWanted;
         } break;
     }
 

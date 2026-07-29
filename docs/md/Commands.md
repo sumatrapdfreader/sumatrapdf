@@ -39,9 +39,13 @@ CmdToggleCursorPosition,m,Toggle Cursor Position,
 CmdShowInFolder,,Show File In Folder...,
 CmdToggleBookmarks,F12,Toggle Bookmarks,
 CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
-CmdCollapseAll,,Collapse All,
+CmdCollapseAll,,Collapse All,"Bookmarks: collapse the outline; if there is only one top-level entry with children, expand it one level (Word-style TOC), ver 3.7+"
 CmdExpandAll,,Expand All,
 CmdExpandToCurrentPage,,Expand TOC to Current Page,"In the Bookmarks (table of contents) sidebar, expand the tree down to the entry for the current page and select it, ver 3.7+"
+CmdTocExpandToLevel1,,Bookmarks: Expand to Level 1,"Collapse the Bookmarks tree so only top-level entries are visible (context menu), ver 3.7+"
+CmdTocExpandToLevel2,,Bookmarks: Expand to Level 2,"Expand top-level Bookmarks once (context menu), ver 3.7+"
+CmdTocExpandToLevel3,,Bookmarks: Expand to Level 3,"Expand Bookmarks two levels deep (context menu), ver 3.7+"
+CmdTocCollapseSameLevel,,Bookmarks: Collapse Same Level,"Collapse all Bookmarks siblings of the selected/clicked entry (same nesting level), ver 3.7+"
 CmdOpenEmbeddedPDF,,Open Embedded PDF,
 CmdSaveEmbeddedFile,,Save Embedded File...,
 CmdCreateShortcutToFile,,Create .lnk Shortcut,
@@ -148,6 +152,8 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdFavoriteAdd,Ctrl + B,Add Favorite,
 CmdFavoriteDel,,Delete Favorite,
 CmdFavoriteToggle,,Toggle Favorites,
+CmdFavoriteShowInTab,,Show Favorites in Tab,"Full-window Favorites tab (independent of sidebar), ver 3.7+"
+CmdToggleFavoritesSort,,Sort Favorites By Name,"Toggle alphabetical order within each file (also Favorites tree context menu checkbox); maps to `SortFavoritesByName`, ver 3.7+"
 CmdGoToNextFavorite,,Go to Next Favorite,
 CmdGoToPrevFavorite,,Go to Previous Favorite,
 ```
@@ -205,6 +211,7 @@ CmdZoomShrinkToFit,,Zoom: Shrink To Fit,"Shows at 100% if page is smaller than v
 CmdZoomFitPage,Ctrl + 0,Zoom: Fit Page,
 CmdZoomFitPageAndSinglePage,,Zoom: Fit Page and Single Page,
 CmdZoomFitWidth,Ctrl + 2,Zoom: Fit Width,
+CmdZoomFitHeight,,Zoom: Fit Height,"Scale so the page fills the window height (may scroll horizontally); useful for landscape pages on portrait screens (fixes #1714), ver 3.7+"
 CmdZoomFitByOrientation,,Zoom: Fit Page or Width by Orientation,"Fit width when the view is wider than tall (landscape), fit page otherwise (portrait); re-evaluated as the window/screen is resized or rotated"
 CmdZoomFitWidthAndContinuous,,Zoom: Fit Width And Continuous,
 CmdZoomIn,Ctrl + Add,Zoom In,
@@ -320,6 +327,8 @@ CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where i
 CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position, ver 3.7+"
 CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
+CmdToggleAudiobookVoices,,Read Aloud with Chatterbox Voices,"Switch Read Aloud between Windows text-to-speech and the Chatterbox engine, which gives each character in the book its own voice. Needs the Chatterbox paths in the `Audiobook` advanced settings, ver 3.7+"
+CmdAudiobookCharacters,,Audiobook Characters,"Open the Audiobook Characters panel for the current book: who speaks, how many lines each has, and which voice is cast for them, ver 3.7+"
 ```
 
 ## Debug

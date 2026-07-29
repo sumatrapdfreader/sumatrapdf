@@ -23,6 +23,8 @@ export enum ControlCommand {
   TestPageInfoOverlay = 28,
   TestGetToc = 29,
   TestPageLinks = 30,
+  TestWindowStateDuringLoad = 31,
+  TestTocNavigate = 32,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -393,7 +395,7 @@ export async function runControlCommand(
 if (import.meta.main) {
   const [exe, cmdName, ...args] = process.argv.slice(2);
   if (!exe || !cmdName) {
-    console.log("Usage: bun cmd/control.ts <SumatraPDF-dll.exe> <ping|test-search> [args...]");
+    console.log("Usage: bun cmd/control.ts <SumatraPDF.exe> <ping|test-search> [args...]");
     process.exit(1);
   }
   const cmd = cmdName === "ping" ? ControlCommand.Ping : cmdName === "test-search" ? ControlCommand.TestSearch : 0;

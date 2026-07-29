@@ -52,7 +52,8 @@ struct SelectionToolbar {
     Size size;
     Rect lastPlaced;    // last screen rect we moved the window to (avoids redundant SetWindowPos)
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
-    SelectionToolbarButton buttons[8];
+    DWORD lastPositionUpdateTick = 0;
+    SelectionToolbarButton buttons[9];
     int nButtons = 0;
 };
 
@@ -66,6 +67,7 @@ static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdCreateAnnotUnderline, "Underline"},
     {CmdCreateAnnotSquiggly, "Squiggly"},
     {CmdCreateAnnotStrikeOut, "Strike Out"},
+    {CmdCreateAnnotText, "Text"},
 };
 
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
@@ -90,6 +92,24 @@ constexpr int kBtnGap = 2;  // gap between buttons
 constexpr int kCornerRadius = 10;
 constexpr int kButtonRadius = 6;
 constexpr int kToolbarFontPct = 108;
+// Throttle position moves during frequent canvas paints (plus 3229c8b2c).
+constexpr DWORD kSelTbPositionUpdateMinMs = 32;
+
+static bool IsActivelySelecting(MainWindow* win) {
+    MouseAction ma = win->mouseAction;
+    return ma == MouseAction::Selecting || ma == MouseAction::SelectingText;
+}
+
+static int SelectionBoundsSlack(HWND hwnd) {
+    return DpiScale(hwnd, 3);
+}
+
+static bool SelectionBoundsChanged(Rect a, Rect b, int slack) {
+    if (slack <= 0) {
+        return a != b;
+    }
+    return abs(a.x - b.x) > slack || abs(a.y - b.y) > slack || abs(a.dx - b.dx) > slack || abs(a.dy - b.dy) > slack;
+}
 
 // theme-derived colors for the floating card; light mode tints the page
 // render background so the card sits naturally over the document
@@ -164,18 +184,18 @@ static void StrokeRoundedRect(HDC hdc, const Rect& rc, int radius, COLORREF col)
     g.DrawPath(&pen, &path);
 }
 
-// clip the popup window to a rounded rect so the corners don't show as
-// opaque squares over the document
-static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius) {
-    Rect card = ClientRect(hwnd);
-    if (card.dx < 1) {
-        card.dx = 1;
+// Clip the popup to a rounded rect. Use the intended layout size — not
+// ClientRect — because CreateWindow starts at 0x0 and ClientRect is still empty
+// until after SetWindowPos (a 1x1 region left the toolbar invisible).
+static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius, int dx, int dy) {
+    if (dx < 1) {
+        dx = 1;
     }
-    if (card.dy < 1) {
-        card.dy = 1;
+    if (dy < 1) {
+        dy = 1;
     }
     int radius = DpiScale(hwnd, cornerRadius);
-    HRGN rgn = CreateRoundRectRgn(card.x, card.y, card.x + card.dx + 1, card.y + card.dy + 1, radius, radius);
+    HRGN rgn = CreateRoundRectRgn(0, 0, dx + 1, dy + 1, radius, radius);
     if (!SetWindowRgn(hwnd, rgn, TRUE)) {
         DeleteObject(rgn);
     }
@@ -191,6 +211,7 @@ static HFONT CreateScaledFontFrom(HFONT base, int pct) {
     return CreateFontIndirectW(&lf);
 }
 
+// Compute button layout and tb->size only (region applied after SetWindowPos).
 static void LayoutToolbar(SelectionToolbar* tb) {
     HWND hwnd = tb->hwnd;
     int padX = DpiScale(hwnd, kBtnPadX);
@@ -219,7 +240,6 @@ static void LayoutToolbar(SelectionToolbar* tb) {
         tb->buttons[i].rc.dy = maxDy;
     }
     tb->size = Size(x + margin, maxDy + 2 * margin);
-    UpdateToolbarWindowRgn(hwnd, kCornerRadius);
 }
 
 static int ButtonFromPoint(SelectionToolbar* tb, int x, int y) {
@@ -230,6 +250,23 @@ static int ButtonFromPoint(SelectionToolbar* tb, int x, int y) {
         }
     }
     return -1;
+}
+
+// Sticky-note (Text) annots are placed at a canvas point; use the selection end.
+// Ported from dengxibo/sumatrapdf-plus 89e4edfed.
+static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection || dm->textSelection->result.len <= 0) {
+        return false;
+    }
+    TextSel& result = dm->textSelection->result;
+    int i = result.len - 1;
+    Rect r = dm->CvtToScreen(result.pages[i], ToRectF(result.rects[i]));
+    if (r.IsEmpty()) {
+        return false;
+    }
+    out = Point(r.x + r.dx, r.y + r.dy / 2);
+    return true;
 }
 
 static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
@@ -333,12 +370,21 @@ static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, 
             int idx = ButtonFromPoint(tb, x, y);
             int pressed = tb->pressedIndex;
             tb->pressedIndex = -1;
-            if (idx >= 0 && idx == pressed && tb->buttons[idx].enabled) {
-                int cmdId = tb->buttons[idx].cmdId;
-                MainWindow* win = tb->win;
-                HideSelectionToolbar(win);
-                HwndPostCommand(win->hwndFrame, cmdId);
+            if (idx < 0 || idx != pressed || !tb->buttons[idx].enabled) {
+                return 0;
             }
+            int cmdId = tb->buttons[idx].cmdId;
+            MainWindow* win = tb->win;
+            LPARAM commandPoint = 0;
+            if (cmdId == CmdCreateAnnotText) {
+                Point selectionEnd;
+                if (GetSelectionEndPoint(win, selectionEnd)) {
+                    commandPoint = MAKELPARAM(selectionEnd.x, selectionEnd.y);
+                }
+                DeleteOldSelectionInfo(win, true);
+            }
+            HideSelectionToolbar(win);
+            HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
             return 0;
         }
 
@@ -398,8 +444,9 @@ static bool GetSelectionBounds(MainWindow* win, Rect& out) {
     return true;
 }
 
-// prefer above the selection, fall back to below; always clamp to the canvas
-static void PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
+// Prefer above the selection, fall back to below; clamp to the canvas.
+// Returns true if the window was moved/resized (caller may need a repaint).
+static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
     MainWindow* win = tb->win;
     Rect canvas = win->canvasRc;
     int gap = DpiScale(tb->hwnd, 6);
@@ -431,10 +478,13 @@ static void PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
     ClientToScreen(win->hwndCanvas, &p);
     Rect placed(p.x, p.y, w, h);
     if (placed == tb->lastPlaced) {
-        return;
+        return false;
     }
     tb->lastPlaced = placed;
     SetWindowPos(tb->hwnd, nullptr, p.x, p.y, w, h, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+    // Region must match layout size after SetWindowPos (window may have been 0x0).
+    UpdateToolbarWindowRgn(tb->hwnd, kCornerRadius, w, h);
+    return true;
 }
 
 static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
@@ -462,9 +512,12 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
 // nothing if the feature is disabled (Annotations.SelectionToolbar) or there
 // is no on-screen text selection in a fixed-page document.
 void ShowSelectionToolbar(MainWindow* win) {
-    if (!win || !gGlobalPrefs->annotations.selectionToolbar) {
+    if (!win || !gGlobalPrefs->selectionToolbar) {
         return;
     }
+    // Do not check IsActivelySelecting here: OnSelectionStop calls us while
+    // mouseAction is still SelectingText (cleared only after we return). Hide-
+    // during-drag is handled in UpdateSelectionToolbarPosition instead.
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -483,12 +536,15 @@ void ShowSelectionToolbar(MainWindow* win) {
     tb->tab = win->CurrentTab();
     tb->hotIndex = -1;
     tb->pressedIndex = -1;
+    tb->lastPositionUpdateTick = GetTickCount();
     tb->lastSelBounds = sel;
     InitButtons(tb, win);
     if (tb->nButtons == 0) {
         return;
     }
     LayoutToolbar(tb);
+    // Force SetWindowPos + region even if lastPlaced matched (e.g. after hide).
+    tb->lastPlaced = Rect();
     PositionToolbar(tb, sel);
     ShowWindow(tb->hwnd, SW_SHOWNOACTIVATE);
     HwndScheduleRepaint(tb->hwnd);
@@ -499,6 +555,14 @@ void ShowSelectionToolbar(MainWindow* win) {
 // current tab changed; re-shows it after e.g. a repaint restored the selection.
 void UpdateSelectionToolbarPosition(MainWindow* win) {
     if (!win) {
+        return;
+    }
+    // Hide during drag so the bar does not chase the rubber-band selection.
+    if (IsActivelySelecting(win)) {
+        SelectionToolbar* activeTb = win->selectionToolbar;
+        if (activeTb && activeTb->hwnd && IsWindowVisible(activeTb->hwnd)) {
+            HideSelectionToolbar(win);
+        }
         return;
     }
     SelectionToolbar* tb = win->selectionToolbar;
@@ -520,19 +584,22 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
         HideSelectionToolbar(win);
         return;
     }
-    // the canvas repaints often (e.g. read-aloud highlight updates); skip all
-    // toolbar work when the selection has not moved, otherwise SetWindowRgn /
-    // ScheduleRepaint makes the floating bar jitter
-    if (sel == tb->lastSelBounds) {
+    // Canvas repaints often (e.g. read-aloud); skip work when the selection has
+    // not moved, otherwise SetWindowRgn / ScheduleRepaint jitter the bar.
+    int slack = SelectionBoundsSlack(win->hwndFrame);
+    if (!SelectionBoundsChanged(sel, tb->lastSelBounds, slack)) {
         return;
     }
+    DWORD now = GetTickCount();
+    if (tb->lastPositionUpdateTick != 0 && now - tb->lastPositionUpdateTick < kSelTbPositionUpdateMinMs) {
+        return;
+    }
+    tb->lastPositionUpdateTick = now;
     tb->lastSelBounds = sel;
 
-    Rect prevPlaced = tb->lastPlaced;
     InitButtons(tb, win);
     LayoutToolbar(tb);
-    PositionToolbar(tb, sel);
-    if (tb->lastPlaced != prevPlaced) {
+    if (PositionToolbar(tb, sel)) {
         HwndScheduleRepaint(tb->hwnd);
     }
 }

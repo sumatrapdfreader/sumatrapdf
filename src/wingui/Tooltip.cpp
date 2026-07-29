@@ -17,6 +17,13 @@ Kind kindTooltip = "tooltip";
 
 LONG gTolltipID = 0;
 
+// Canvas infotips (home thumbnails, page elements) are shown from WM_SETCURSOR
+// via SetSingle. TTF_SUBCLASS on the canvas breaks after open→close→home
+// (tooltip control subclasses the canvas; document UI / UIA / child edit
+// churn leaves mouse tracking dead). Track mode shows/hides under our control
+// and never subclasses the canvas.
+static constexpr UINT kTrackToolFlags = TTF_TRACK | TTF_ABSOLUTE | TTF_TRANSPARENT;
+
 static int GetNextTooltipID() {
     LONG res = InterlockedIncrement(&gTolltipID);
     return (int)res;
@@ -28,13 +35,16 @@ int TooltipGetCount(HWND hwnd) {
 }
 
 void TooltipRemoveAll(HWND hwnd) {
+    if (!hwnd) {
+        return;
+    }
     int n = TooltipGetCount(hwnd);
     for (int i = n - 1; i >= 0; i--) {
         TOOLINFOW ti{};
         ti.cbSize = sizeof(ti);
-        BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ENUMTOOLS, i, (LPARAM)&ti);
+        BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ENUMTOOLSW, i, (LPARAM)&ti);
         if (ok) {
-            SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+            SendMessageW(hwnd, TTM_DELTOOLW, 0, (LPARAM)&ti);
         }
     }
 }
@@ -57,7 +67,8 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
         ti.uId = (UINT_PTR)tti.id;
         ti.lpszText = (WCHAR*)ws.s;
         ti.rect = ToRECT(tti.r);
-        ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
+        // Tab control and similar multi-tool hosts still use subclass tracking.
+        ti.uFlags = TTF_SUBCLASS;
         BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
         ReportIfFast(!ok);
     }
@@ -101,7 +112,7 @@ static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, Str s, bool multili
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
     ti.lpszText = (WCHAR*)ws.s;
-    ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
+    ti.uFlags = kTrackToolFlags;
     SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
     bool isRtl = IsTextRtl(ws);
     HwndSetRtl(hwnd, isRtl);
@@ -117,6 +128,36 @@ void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
     SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&ti);
 }
 
+static void TooltipTrackDeactivate(HWND hwndTT, HWND owner, int id) {
+    if (!hwndTT || !owner || id == 0) {
+        return;
+    }
+    TOOLINFOW ti = {};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.uFlags = kTrackToolFlags;
+    SendMessageW(hwndTT, TTM_TRACKACTIVATE, FALSE, (LPARAM)&ti);
+}
+
+static void TooltipTrackActivateAtCursor(HWND hwndTT, HWND owner, int id) {
+    if (!hwndTT || !owner || id == 0) {
+        return;
+    }
+    POINT pt;
+    if (!GetCursorPos(&pt)) {
+        return;
+    }
+    // Slight offset so the tip is not under the cursor hot-spot.
+    SendMessageW(hwndTT, TTM_TRACKPOSITION, 0, MAKELPARAM(pt.x + 12, pt.y + 18));
+    TOOLINFOW ti = {};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.uFlags = kTrackToolFlags;
+    SendMessageW(hwndTT, TTM_TRACKACTIVATE, TRUE, (LPARAM)&ti);
+}
+
 Tooltip::Tooltip() {
     kind = kindTooltip;
 }
@@ -126,8 +167,10 @@ HWND Tooltip::Create(const CreateArgs& args) {
     cargs.className = TOOLTIPS_CLASS;
     cargs.font = args.font;
     cargs.isRtl = args.isRtl;
+    // Popup tip window; do not set cargs.parent (that would force WS_CHILD).
     cargs.style = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
     cargs.exStyle = WS_EX_TOPMOST;
+    cargs.visible = false;
 
     parent = args.parent;
 
@@ -152,7 +195,7 @@ int Tooltip::Add(Str s, const Rect& rc, bool multiline) {
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
     ti.uId = (UINT_PTR)id;
-    ti.uFlags = TTF_SUBCLASS;
+    ti.uFlags = kTrackToolFlags;
     ti.rect = ToRECT(rc);
     ti.lpszText = (WCHAR*)ws.s;
     BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
@@ -177,54 +220,54 @@ void Tooltip::Update(int id, Str s, const Rect& rc, bool multiline) {
 
 // this assumes we only have at most one tool per this tooltip
 int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
+    if (!hwnd || !parent) {
+        return -1;
+    }
     if (len(s) > 256) {
         // pathological cases make for tooltips that take too long to display
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2814
         s = Str(ShortenStringUtf8InTheMiddleTemp(s, 250));
     }
-    int n = Count();
-    // if want to use more tooltips, use Add() and Update()
-    ReportIf(n > 1);
-    if (n == 0) {
-        return Add(s, rc, multiline);
+
+    // Same tip text: keep the tool, only follow the cursor (avoids flicker).
+    if (len(tooltipIds) == 1) {
+        TempStr cur = GetTextTemp(tooltipIds[0]);
+        if (str::Eq(s, cur)) {
+            TooltipUpdateRect(hwnd, parent, tooltipIds[0], rc);
+            TooltipTrackActivateAtCursor(hwnd, parent, tooltipIds[0]);
+            return tooltipIds[0];
+        }
     }
-    int id = tooltipIds[0];
-    Update(id, s, rc, multiline);
+
+    // Different text or no tool: replace.
+    Delete();
+    int id = Add(s, rc, multiline);
+    if (id < 0) {
+        return -1;
+    }
+    TooltipTrackActivateAtCursor(hwnd, parent, id);
     return id;
 }
 
 int Tooltip::Count() {
-    int n = TooltipGetCount(hwnd);
-    int n2 = len(tooltipIds);
-    ReportIf(n != n2);
-    return n;
+    if (!hwnd) {
+        return 0;
+    }
+    return TooltipGetCount(hwnd);
 }
 
 void Tooltip::Delete(int id) {
-    if (Count() == 0) {
+    (void)id;
+    if (!hwnd) {
+        tooltipIds.Reset();
         return;
     }
-
-    int removeIdx = 0;
-    if (id == 0) {
-        // 0 means delete a single tool
-        // should only be used if we only have single tool
-        ReportIf(Count() > 1);
-        id = tooltipIds[0];
-    } else {
-        removeIdx = tooltipIds.Find(id);
-        ReportIf(removeIdx < 0);
+    if (len(tooltipIds) > 0) {
+        TooltipTrackDeactivate(hwnd, parent, tooltipIds[0]);
     }
-
-    TOOLINFOW ti{};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = parent;
-    ti.uId = (UINT_PTR)id;
-    int n1 = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
-    SendMessageW(hwnd, TTM_DELTOOLW, 0, (LPARAM)&ti);
-    int n2 = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
-    ReportIf(n1 != n2 + 1);
-    tooltipIds.RemoveAt(removeIdx);
+    SendMessageW(hwnd, TTM_POP, 0, 0);
+    TooltipRemoveAll(hwnd);
+    tooltipIds.Reset();
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime

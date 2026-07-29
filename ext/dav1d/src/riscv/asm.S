@@ -146,4 +146,6 @@ EXTERN\name:
 #define MF4     6
 #define MF8     5
 
+#define X(x) CONCAT(EXTERN, x)
+
 #endif /* DAV1D_SRC_RISCV_ASM_S */

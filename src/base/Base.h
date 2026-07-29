@@ -1,9 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef BaseUtil_h
-#define BaseUtil_h
-
 /* OS_DARWIN - Any Darwin-based OS, including Mac OS X and iPhone OS */
 #ifdef __APPLE__
 #define OS_DARWIN 1
@@ -83,10 +80,9 @@
 // Windows headers use _unused
 #define __unused [[maybe_unused]]
 
-#include "BuildConfig.h"
-
 // C/C++ standard headers  we use often
 #include <ctype.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -122,6 +118,7 @@
 #include <tlhelp32.h>
 #include <shellapi.h>
 #include <ole2.h>
+#include <uxtheme.h>
 
 // nasty but necessary
 #if defined(min) || defined(max)
@@ -447,6 +444,22 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #else
 #define ReportDebugIf(cond)
 #endif
+
+/* Logging macros are defined here but must be implemented by the app because different apps have different logging
+ * needs. */
+void log(Str s);
+void loga(Str s); // log always
+
+#define logf(...)                     \
+    do {                              \
+        Str s__ = ::fmt(__VA_ARGS__); \
+        ::log(s__);                   \
+    } while (0)
+#define logfa(...)                    \
+    do {                              \
+        Str s__ = ::fmt(__VA_ARGS__); \
+        ::loga(s__);                  \
+    } while (0)
 
 void* AllocZero(int count, int size);
 
@@ -824,34 +837,41 @@ Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
 
 int setMinMax(int& v, int minVal, int maxVal);
 
+/* Usage: defer { instance->Release(); }; */
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
 extern AtomicInt gAllowAllocFailure;
 
-/* How to use:
-AutoCall freeToolsFileName(free, (void*)tools_filename);
-AutoCall closeFile(fclose, f);
-defer { instance->Release(); };
-*/
+#include "base/Geom.h"
+#include "base/Vec.h"
+#include "base/Str.h"
+#include "base/StrUtf8.h"
+#include "base/StrFormatParse.h"
+#include "base/StrVec.h"
+#include "base/Strconv.h"
+#include "base/Thread.h"
+#include "base/Arena.h"
+#include "base/Scoped.h"
+#include "base/Color.h"
 
-#include "Geom.h"
-#include "Vec.h"
-#include "Str.h"
-#include "StrUtf8.h"
-#include "StrFormatParse.h"
-#include "StrVec.h"
-#include "Strconv.h"
-#include "Thread.h"
-#include "Arena.h"
-#include "Scoped.h"
-#include "Color.h"
-
-// lstrcpy is dangerous so forbid using it
+// Windows/MSVC string APIs: use str::/wstr:: BufSet, EqI, CmpI instead.
 #ifdef lstrcpy
 #undef lstrcpy
 #define lstrcpy dont_use_lstrcpy
 #endif
-
-#include "Log.h"
-
+#ifdef lstrcpyn
+#undef lstrcpyn
+#define lstrcpyn dont_use_lstrcpyn
+#endif
+#ifdef lstrcpynW
+#undef lstrcpynW
+#define lstrcpynW dont_use_lstrcpynW
+#endif
+#ifdef lstrcmpiA
+#undef lstrcmpiA
+#define lstrcmpiA dont_use_lstrcmpiA
+#endif
+#ifdef lstrcmpiW
+#undef lstrcmpiW
+#define lstrcmpiW dont_use_lstrcmpiW
 #endif

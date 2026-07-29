@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
+#include "base/UITask.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
@@ -31,7 +32,7 @@ extern "C" {
 #include "SumatraPDF.h"
 #include "DarkModeSubclass.h"
 
-#include "theme.h"
+#include "Theme.h"
 
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
@@ -139,6 +140,8 @@ struct EditAnnotationsWindow : Wnd {
     Vec<Annotation*> annotations;
 
     bool skipGoToPage = false;
+    // True while DoContents/etc. programmatically fill the edit; ignore EN_CHANGE.
+    bool updatingControls = false;
 
     str::Builder currTextColor;
     str::Builder currCustomColor;
@@ -201,6 +204,10 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     }
 
     DeleteAnnotation(annot);
+    // Deleted annot must not remain selected (use-after-free on subsequent UI).
+    if (tab->selectedAnnotation == annot) {
+        tab->selectedAnnotation = nullptr;
+    }
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         // ew->skipGoToPage = true;
@@ -243,18 +250,14 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
 }
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
-#if 0
-    // TODO: shouldn't happen but seen in crash report
+    // Seen null in crash reports (window/tab closed while edit UI still fires)
     if (!ew || !ew->tab) {
         return nullptr;
     }
-#endif
     DisplayModel* dm = ew->tab->AsFixed();
-#if 0
     if (!dm) {
         return nullptr;
     }
-#endif
     return AsEngineMupdf(dm->GetEngine());
 }
 
@@ -316,11 +319,14 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, int arrSize, Annotation
 }
 
 // return true if closed the window, false if there was no window to close
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
+
 bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
     if (!tab->editAnnotsWindow) {
         return false;
     }
     auto ew = tab->editAnnotsWindow;
+    FlushContentsFromEdit(ew);
     tab->editAnnotsWindow = nullptr;
     // this will trigger closing the window
     delete ew;
@@ -352,6 +358,23 @@ static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
         return false;
     }
     return EngineMupdfHasUnsavedAnnotations(engine);
+}
+
+// Include the document basename on the "save to existing" button so it is
+// obvious which file will be overwritten.
+static void UpdateSaveButtonLabels(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->buttonSaveToCurrentFile) {
+        return;
+    }
+    TempStr base = {};
+    if (ew->tab) {
+        base = path::GetBaseNameTemp(ew->tab->filePath);
+    }
+    if (len(base) > 0) {
+        ew->buttonSaveToCurrentFile->SetText(fmt(_TRA("Save changes to %s").s, base));
+    } else {
+        ew->buttonSaveToCurrentFile->SetText(_TRA("Save changes to existing PDF"));
+    }
 }
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
@@ -391,13 +414,57 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
-// TODO: this should be OnDestroy()
+// Delete off the stack of WM_CLOSE / WM_DESTROY (same pattern as
+// AdvancedSettingsDialog / CommandPalette). Destroying the window while
+// handling its own message is unsafe; uitask runs after the current
+// dispatch finishes.
+static void SafeDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
+    if (!w) {
+        return;
+    }
+    HWND toActivate = nullptr;
+    if (w->tab && w->tab->win) {
+        toActivate = w->tab->win->hwndFrame;
+    }
+    if (w->tab && w->tab->editAnnotsWindow == w) {
+        w->tab->editAnnotsWindow = nullptr;
+    }
+    delete w;
+    if (toActivate) {
+        SetActiveWindow(toActivate);
+    }
+}
+
+static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
+    if (!w) {
+        return;
+    }
+    // Clear the tab pointer immediately so re-open and other paths do not
+    // touch a window that is about to be deleted.
+    if (w->tab && w->tab->editAnnotsWindow == w) {
+        w->tab->editAnnotsWindow = nullptr;
+    }
+    auto fn = MkFunc0(SafeDeleteEditAnnotationsWindow, w);
+    uitask::Post(fn, "SafeDeleteEditAnnotationsWindow");
+}
+
+// CloseEvent::didHandle defaults to true, so the framework skips its default
+// Destroy(); we own teardown via the scheduled delete (which runs ~Wnd and
+// DestroyWindow).
 static void OnClose(Wnd::CloseEvent* ev) {
     auto w = (EditAnnotationsWindow*)ev->e->self;
-    HWND toActivate = w->tab->win->hwndFrame;
-    w->tab->editAnnotsWindow = nullptr;
-    delete w; // TODO: sketchy
-    SetActiveWindow(toActivate);
+    FlushContentsFromEdit(w);
+    ScheduleDeleteEditAnnotationsWindow(w);
+}
+
+// CloseAndDeleteEditAnnotationsWindow already nulls the tab pointer and
+// deletes; only schedule if this is an unexpected destroy with the pointer
+// still set.
+static void OnDestroy(Wnd::DestroyEvent* ev) {
+    auto w = (EditAnnotationsWindow*)ev->e->self;
+    if (w->tab && w->tab->editAnnotsWindow == w) {
+        ScheduleDeleteEditAnnotationsWindow(w);
+    }
 }
 
 void EditAnnotationsWindow::OnFocus() {
@@ -407,17 +474,23 @@ void EditAnnotationsWindow::OnFocus() {
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 
 static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
+    FlushContentsFromEdit(ew);
     WindowTab* tab = ew->tab;
     bool ok = SaveAnnotationsToMaybeNewPdfFile(tab);
     if (!ok) {
         return;
     }
+    // Path may have changed to the new file; refresh the existing-save label.
+    UpdateSaveButtonLabels(ew);
+    EnableSaveIfAnnotationsChanged(ew);
 }
 
 extern bool SaveAnnotationsToExistingFile(WindowTab* tab);
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
+    FlushContentsFromEdit(ew);
     SaveAnnotationsToExistingFile(ew->tab);
+    EnableSaveIfAnnotationsChanged(ew);
 }
 
 constexpr int kMaxControls = 18;
@@ -482,16 +555,15 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
             return true;
         }
         if (key == VK_DELETE) {
-            if (IsCtrlPressed()) {
-                DeleteSelectedAnnotation(this);
-                return true;
-            }
-            // we don't want this to trigger in edit control
+            // When focus is in a text field, let the Edit control handle Delete /
+            // Ctrl+Delete (word delete). Only delete the annotation when focus is
+            // outside an edit control (issue #5815).
             HWND focused = ::GetFocus();
             TempStr cls = HwndGetClassName(focused);
             if (str::EqI(cls, "Edit")) {
                 return false;
             }
+            // Ctrl+Delete (and plain Delete) remove the selected annotation
             DeleteSelectedAnnotation(this);
             return true;
         }
@@ -607,14 +679,35 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->staticPopup->SetIsVisible(true);
 }
 
+// Push the contents edit into the selected annotation. Called on switch/save/
+// close so unsaved last edits stick (plus df1b2aab8).
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->editContents || !ew->tab || ew->updatingControls) {
+        return;
+    }
+    Annotation* a = ew->tab->selectedAnnotation;
+    if (!a || !a->engine || !a->pdfannot) {
+        return;
+    }
+    if (ew->annotations.Find(a) < 0) {
+        return;
+    }
+    auto txt = ew->editContents->GetTextTemp();
+    txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
+    SetContents(a, txt);
+    EnableSaveIfAnnotationsChanged(ew);
+}
+
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
     Str s = Contents(annot);
     // don't replace if already is "\r\n"
     s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
     s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
-    ew->editContents->SetText(s);
     ew->staticContents->SetIsVisible(true);
     ew->editContents->SetIsVisible(true);
+    ew->updatingControls = true;
+    ew->editContents->SetText(s);
+    ew->updatingControls = false;
 }
 
 static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -970,16 +1063,25 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         }
     }
 
-    // TODO: get from client size
-    auto currBounds = ew->mainLayout->lastBounds;
-    int dx = currBounds.dx;
-    int dy = currBounds.dy;
+    // Prefer the live client size so re-layout matches the window after resize;
+    // fall back to last layout bounds if the window is not sized yet.
+    Rect client = ClientRect(ew->hwnd);
+    int dx = client.dx;
+    int dy = client.dy;
+    if (dx <= 0 || dy <= 0) {
+        auto currBounds = ew->mainLayout->lastBounds;
+        dx = currBounds.dx;
+        dy = currBounds.dy;
+    }
     LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->hwnd);
 
     if (!annot) {
         return;
     }
-    if (ew->skipGoToPage) {
+    // skipGoToPage: set when the edit window was opened on an annot that is
+    // already under the user's view. isNew: creating an annotation implies the
+    // page was already visible (cursor / selection / placement), so don't scroll.
+    if (ew->skipGoToPage || isNew) {
         ew->skipGoToPage = false;
         return;
     }
@@ -998,10 +1100,6 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
     // don't switch pages if already visible. needed for cases where
     // we show more than one page at a time and GoToPage() scrolls
     // to top page
-    // TODO: this is not perfect. We should skipGoToPage if this
-    // is caused by creating an annotation. by definition the page
-    // was visible when user created an annotation.
-    // but that requires passing down more stuff
     if (!dm->PageVisible(annotPageNo)) {
         dm->GoToPage(annotPageNo, true);
     }
@@ -1047,10 +1145,80 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     str::Free(data);
 }
 
+// Pick a file and embed its contents into the selected FileAttachment annot.
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
-    ReportIf(!ew->tab->selectedAnnotation);
-    // TODO: implement me
-    MsgBox(ew->hwnd, _TRA("Not Yet Implemented!"), _TRA("NYI"), MB_OK | MB_ICONEXCLAMATION);
+    Annotation* annot = ew->tab ? ew->tab->selectedAnnotation : nullptr;
+    ReportIf(!annot);
+    if (!annot || annot->type != AnnotationType::FileAttachment) {
+        return;
+    }
+    if (!CanAccessDisk()) {
+        return;
+    }
+    EngineMupdf* engine = GetEngineMupdf(ew);
+    if (!engine || !engine->pdfdoc || !annot->pdfannot) {
+        return;
+    }
+
+    WCHAR pathW[MAX_PATH + 1]{};
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = ew->hwnd;
+    ofn.lpstrFile = pathW;
+    ofn.nMaxFile = dimof(pathW);
+    TempStr fileFilterA = fmt("%s\1*.*\1", _TRA("All files"));
+    TempWStr fileFilter = ToWStrTemp(fileFilterA);
+    wstr::TransCharsInPlace(fileFilter, WStrL(L"\1"), WStrL(L"\0"));
+    ofn.lpstrFilter = fileFilter.s;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+
+    TempStr path = ToUtf8Temp(pathW);
+    Str data = file::ReadFile(path);
+    if (len(data) == 0) {
+        TempStr msg = fmt(_TRA("Failed to read '%s'").s, path::GetBaseNameTemp(path));
+        MsgBox(ew->hwnd, msg, _TRA("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    TempStr baseName = path::GetBaseNameTemp(path);
+    TempStr baseNameZ = str::DupTemp(baseName);
+    fz_context* ctx = engine->Ctx();
+    bool ok = false;
+    {
+        ScopedRecursiveMutex cs(&engine->docLock);
+        pdf_obj* fs = nullptr;
+        fz_buffer* contents = nullptr;
+        fz_var(fs);
+        fz_var(contents);
+        fz_try(ctx) {
+            contents = fz_new_buffer_from_copied_data(ctx, (const u8*)data.s, (size_t)data.len);
+            // created/modified unknown (-1); no checksum (matches mupdf gl-annotate)
+            fs = pdf_add_embedded_file(ctx, engine->pdfdoc, baseNameZ.s, nullptr, contents, -1, -1, 0);
+            pdf_set_annot_filespec(ctx, annot->pdfannot, fs);
+            pdf_update_annot(ctx, annot->pdfannot);
+            ok = true;
+        }
+        fz_always(ctx) {
+            pdf_drop_obj(ctx, fs);
+            fz_drop_buffer(ctx, contents);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            ok = false;
+        }
+    }
+    str::Free(data);
+
+    if (!ok) {
+        MsgBox(ew->hwnd, _TRA("Failed to embed file"), _TRA("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+    MarkNotificationAsModified(engine, annot);
+    EnableSaveIfAnnotationsChanged(ew);
 }
 
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAnnotFocus focus) {
@@ -1068,6 +1236,10 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
         }
         ToolbarUpdateStateForWindow(win, false);
         return;
+    }
+    // Commit contents of the previous selection before switching away.
+    if (ew) {
+        FlushContentsFromEdit(ew);
     }
     tab->selectedAnnotation = annot;
     tab->didScrollToSelectedAnnotation = false;
@@ -1117,22 +1289,31 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 static UINT_PTR gMainWindowRerenderTimer = 0;
 static MainWindow* gMainWindowForRender = nullptr;
 
-// TODO: there seems to be a leak
+// Called from the contents edit onTextChanged (EN_CHANGE / EN_KILLFOCUS).
+// Can fire after the selected annotation was deleted/deselected, or after
+// the window/tab went away — never assume selectedAnnotation is non-null.
 static void ContentsChanged(EditAnnotationsWindow* ew) {
-    auto a = ew->tab->selectedAnnotation;
-    // TODO: saw a crash when this was null
-    ReportDebugIf(!a);
-    if (!a) {
+    if (!ew || !ew->tab || !ew->editContents || ew->updatingControls) {
+        return;
+    }
+    Annotation* a = ew->tab->selectedAnnotation;
+    if (!a || !a->engine) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
     txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
-    SetContents(a, txt);
+    // SetContents returns false when the text is unchanged; skip save-enable
+    // and re-render debounce in that case.
+    if (!SetContents(a, txt)) {
+        return;
+    }
     EnableSaveIfAnnotationsChanged(ew);
 
     MainWindow* win = ew->tab->win;
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
     if (gMainWindowRerenderTimer != 0) {
-        // logf("ContentsChanged: killing existing timer for re-render of MainWindow\n");
         KillTimer(win->hwndCanvas, gMainWindowRerenderTimer);
         gMainWindowRerenderTimer = 0;
     }
@@ -1140,10 +1321,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     gMainWindowForRender = win;
     gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
         if (IsMainWindowValid(gMainWindowForRender)) {
-            // logf("ContentsChanged: re-rendering MainWindow\n");
             MainWindowRerender(gMainWindowForRender);
-        } else {
-            // logf("ContentsChanged: NOT re-rendering MainWindow because is not valid anymore\n");
         }
         gMainWindowRerenderTimer = 0;
     });
@@ -1561,7 +1739,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         Button::CreateArgs args;
         args.parent = parent;
-        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
+        // text set by UpdateSaveButtonLabels once tab is attached
         args.text = _TRA("Save changes to existing PDF");
         args.font = fnt;
         args.isRtl = IsUIRtl();
@@ -1579,7 +1757,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         Button::CreateArgs args;
         args.parent = parent;
-        // TODO: maybe  file name e.g. "Save changes to foo.pdf"
         args.text = _TRA("Save changes to a new PDF");
         args.font = fnt;
         args.isRtl = IsUIRtl();
@@ -1643,6 +1820,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     }
     ew = new EditAnnotationsWindow();
     ew->onClose = MkFunc1Void(OnClose);
+    ew->onDestroy = MkFunc1Void(OnDestroy);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
@@ -1666,6 +1844,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     CreateMainLayout(ew);
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
+    UpdateSaveButtonLabels(ew);
 
     UpdateAnnotationsList(ew);
 

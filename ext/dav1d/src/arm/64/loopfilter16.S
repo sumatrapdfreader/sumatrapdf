@@ -550,7 +550,7 @@ function lpf_v_8_8_neon
         lpf_8_wd8
 
         sub             x16, x0,  x1, lsl #1
-        sub             x16, x16,  x1
+        sub             x16, x16, x1
         st1             {v21.8h}, [x16], x1 // p2
         st1             {v24.8h}, [x0],  x1 // q0
         st1             {v22.8h}, [x16], x1 // p1
@@ -781,7 +781,7 @@ function lpf_\dir\()_sb_\type\()_16bpc_neon, export=1
         mov             w8,  w7  // bitdepth_max
         clz             w9,  w8
         mov             w10, #24
-        sub             w9,  w10,  w9 // bitdepth_min_8
+        sub             w9,  w10, w9 // bitdepth_min_8
         stp             d8,  d9,  [sp, #-0x40]!
         stp             d10, d11, [sp, #0x10]
         stp             d12, d13, [sp, #0x20]
@@ -836,9 +836,8 @@ function lpf_\dir\()_sb_\type\()_16bpc_neon, export=1
         cmp             x16, #0
         b.eq            7f                        // if (!L) continue;
         neg             v5.8b,   v5.8b            // -sharp[0]
-        movrel          x16,  word_12
+        ldrel           d16, x16, word_12
         ushr            v12.8b,  v1.8b,   #4      // H
-        ld1             {v16.2s}, [x16]
         sshl            v3.8b,   v1.8b,   v5.8b   // L >> sharp[0]
 .ifc \type, y
         cmtst           v15.2s,  v15.2s,  v16.2s  // if (vmask[2] & bits)
@@ -920,6 +919,6 @@ lpf_func h, y
 lpf_func v, uv
 lpf_func h, uv
 
-const word_12
+const word_12, align=3
         .word 1, 2
 endconst

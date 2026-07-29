@@ -359,6 +359,10 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomFitWidth,
     },
     {
+        _TRN("Fit &Height"),
+        CmdZoomFitHeight,
+    },
+    {
         _TRN("Fit by &Orientation"),
         CmdZoomFitByOrientation,
     },
@@ -397,6 +401,10 @@ static MenuDef menuDefZoom[] = {
     {
         _TRN("Fit &Width"),
         CmdZoomFitWidth,
+    },
+    {
+        _TRN("Fit &Height"),
+        CmdZoomFitHeight,
     },
     {
         _TRN("Fit by &Orientation"),
@@ -546,6 +554,10 @@ MenuDef menuDefFavorites[] = {
     {
         _TRN("Show Favorites"),
         CmdFavoriteToggle,
+    },
+    {
+        _TRN("Show Favorites in Tab"),
+        CmdFavoriteShowInTab,
     },
     {
         kMenuSeparator,
@@ -787,7 +799,7 @@ static MenuDef menuDefMenubar[] = {
         (UINT_PTR)menuDefMainSelection,
     },
     {
-        _TRN("Read Aloud (TTS)"),
+        _TRN("Read Aloud"),
         (UINT_PTR)menuDefReadAloud,
     },
     {
@@ -1061,7 +1073,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefDocumentOperations,
     },
     {
-        _TRN("Read Aloud (TTS)"),
+        _TRN("Read Aloud"),
         (UINT_PTR)menuDefContextReadAloud,
     },
     {
@@ -1510,6 +1522,7 @@ static struct {
     { CmdZoomCustom,      0      },
     { CmdZoomFitPage,    kZoomFitPage    },
     { CmdZoomFitWidth,   kZoomFitWidth   },
+    { CmdZoomFitHeight,  kZoomFitHeight  },
     { CmdZoomFitByOrientation, kZoomFitByOrientation },
     { CmdZoomFitContent, kZoomFitContent },
     { CmdZoomShrinkToFit, kZoomShrinkToFit },
@@ -1549,9 +1562,31 @@ int CmdIdFromVirtualZoom(float virtualZoom) {
     return CmdZoomCustom;
 }
 
-float ZoomMenuItemToZoom(int cmdId) {
+// Custom ZoomLevels menu items use dynamically allocated command ids (not in
+// CmdZoomFirst..CmdZoomLast). Map an absolute zoom % to that custom id, or 0.
+static int CustomZoomCmdIdFromLevel(float zoomVirtual) {
+    auto prefs = gGlobalPrefs;
+    if (!prefs || !prefs->zoomLevels || !prefs->zoomLevelsCmdIds) {
+        return 0;
+    }
+    int n = len(*prefs->zoomLevels);
+    if (n <= 0 || len(*prefs->zoomLevelsCmdIds) != n) {
+        return 0;
+    }
+    // same fuzz as DisplayModel::GetNextZoomStep
+    constexpr float kZoomFuzz = 0.01f;
+    for (int i = 0; i < n; i++) {
+        float zl = (*prefs->zoomLevels)[i];
+        if (zoomVirtual + kZoomFuzz >= zl && zoomVirtual - kZoomFuzz <= zl) {
+            return (*prefs->zoomLevelsCmdIds)[i];
+        }
+    }
+    return 0;
+}
+
+float ZoomMenuItemToZoom(int menuItemId) {
     for (auto&& it : gZoomMenuIds) {
-        if (cmdId == it.cmdId) {
+        if (menuItemId == it.cmdId) {
             return it.zoom;
         }
     }
@@ -1560,18 +1595,51 @@ float ZoomMenuItemToZoom(int cmdId) {
 }
 
 static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
-    ReportIf((CmdZoomFirst > cmdId) || (cmdId > CmdZoomLast));
-
     for (auto&& it : gZoomMenuIds) {
         MenuSetEnabled(m, it.cmdId, canZoom);
     }
 
-    if (CmdZoom100 == cmdId) {
-        cmdId = CmdZoomActualSize;
+    auto prefs = gGlobalPrefs;
+    Vec<int>* customIds = prefs ? prefs->zoomLevelsCmdIds : nullptr;
+    int nCustom = customIds ? len(*customIds) : 0;
+    for (int i = 0; i < nCustom; i++) {
+        MenuSetEnabled(m, (*customIds)[i], canZoom);
     }
-    CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, cmdId, MF_BYCOMMAND);
-    if (CmdZoomActualSize == cmdId) {
-        CheckMenuRadioItem(m, CmdZoom100, CmdZoom100, CmdZoom100, MF_BYCOMMAND);
+
+    // Uncheck all fixed zoom menu commands in the radio range
+    for (auto&& it : gZoomMenuIds) {
+        MenuSetChecked(m, it.cmdId, false);
+    }
+    // Uncheck all custom ZoomLevels commands (ids are not a contiguous radio range)
+    for (int i = 0; i < nCustom; i++) {
+        MenuSetChecked(m, (*customIds)[i], false);
+    }
+
+    if (!canZoom || cmdId == 0) {
+        return;
+    }
+
+    // Fixed Fit*/Actual Size / built-in percentage commands
+    if (cmdId >= CmdZoomFirst && cmdId <= CmdZoomLast) {
+        if (CmdZoom100 == cmdId) {
+            cmdId = CmdZoomActualSize;
+        }
+        CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, cmdId, MF_BYCOMMAND);
+        if (CmdZoomActualSize == cmdId) {
+            // also mark 100% when present in the default menu
+            CheckMenuRadioItem(m, CmdZoom100, CmdZoom100, CmdZoom100, MF_BYCOMMAND);
+        }
+        return;
+    }
+
+    // Custom ZoomLevels percentage entry (issue #5832)
+    MenuSetChecked(m, cmdId, true);
+    // When at 100%, also mark "Actual Size" if present
+    if (nCustom > 0) {
+        int id100 = CustomZoomCmdIdFromLevel(100.0f);
+        if (id100 != 0 && id100 == cmdId) {
+            MenuSetChecked(m, CmdZoomActualSize, true);
+        }
     }
 }
 
@@ -1580,7 +1648,16 @@ void MenuUpdateZoom(MainWindow* win) {
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
     }
-    int menuId = CmdIdFromVirtualZoom(zoomVirtual);
+
+    int menuId = 0;
+    // Prefer custom ZoomLevels command ids when that menu is active (issue #5832).
+    // Fit/virtual zooms still use fixed CmdZoomFit* ids.
+    if (zoomVirtual > 0) {
+        menuId = CustomZoomCmdIdFromLevel(zoomVirtual);
+    }
+    if (menuId == 0) {
+        menuId = CmdIdFromVirtualZoom(zoomVirtual);
+    }
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
 
@@ -1696,6 +1773,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdToggleBookmarks, checked);
 
     MenuSetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+    MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
     MenuSetChecked(win->menu, CmdToggleToolbar, gGlobalPrefs->showToolbar);
     MenuSetChecked(win->menu, CmdToggleMenuBar, gGlobalPrefs->showMenubar);
     MenuSetChecked(win->menu, CmdToggleLibraryHome, LibraryHomeEnabled());
@@ -1915,7 +1993,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
     }
 
-    if (!engine || len(engine->errors) == 0) {
+    if (!engine || !engine->HasErrors()) {
         MenuRemove(popup, CmdShowErrors);
     }
 
@@ -1930,6 +2008,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+    MenuSetEnabled(popup, CmdFavoriteShowInTab, HasFavorites() && SettingsUseTabs());
+    MenuSetChecked(popup, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
 
     if (ctx->annotationUnderCursor) {
         // change from generic "Edit Annotations" to more specific
@@ -2026,28 +2106,29 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCropImage:
         case CmdResizeImage:
         case CmdConvertImageToPdf: {
-            if (pageEl && pageEl->Is(kindPageElementImage)) {
-                RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
-                if (bmp) {
-                    TempStr dir = path::GetDirTemp(filePath);
-                    TempStr base = path::GetBaseNameTemp(filePath);
-                    TempStr noExt = path::GetPathNoExtTemp(base);
-                    TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
-                    ImageEditMode m = ImageEditMode::Save;
-                    bool selectPdf = false;
-                    if (cmdId == CmdCropImage) {
-                        m = ImageEditMode::Crop;
-                    } else if (cmdId == CmdResizeImage) {
-                        m = ImageEditMode::Resize;
-                    } else if (cmdId == CmdConvertImageToPdf) {
-                        selectPdf = true;
-                    }
-                    ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
-                    delete bmp;
-                }
-            } else {
+            if (!pageEl || !pageEl->Is(kindPageElementImage)) {
                 HwndSendCommand(win->hwndFrame, cmdId);
+                return;
             }
+            RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
+            if (!bmp) {
+                return;
+            }
+            TempStr dir = path::GetDirTemp(filePath);
+            TempStr base = path::GetBaseNameTemp(filePath);
+            TempStr noExt = path::GetPathNoExtTemp(base);
+            TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
+            ImageEditMode m = ImageEditMode::Save;
+            bool selectPdf = false;
+            if (cmdId == CmdCropImage) {
+                m = ImageEditMode::Crop;
+            } else if (cmdId == CmdResizeImage) {
+                m = ImageEditMode::Resize;
+            } else if (cmdId == CmdConvertImageToPdf) {
+                selectPdf = true;
+            }
+            ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
+            delete bmp;
             return;
         };
 
@@ -2066,22 +2147,25 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
 
         case CmdSaveAttachment: {
-            if (pageEl && pageEl->Is(kindPageElementDest)) {
-                IPageDestination* elDest = pageEl->AsLink();
-                PageDestination* pd = (PageDestination*)elDest;
-                if (pd && pd->embedObjNum > 0) {
-                    // attachments are arbitrary binary
-                    Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-                    if (len(data) > 0) {
-                        Str fileName = pd->GetValue2();
-                        TempStr dir = path::GetDirTemp(filePath);
-                        fileName = path::GetBaseNameTemp(fileName);
-                        TempStr dstPath = path::JoinTemp(dir, fileName);
-                        SaveDataToFile(win->hwndFrame, dstPath, data);
-                        str::Free(data);
-                    }
-                }
+            if (!pageEl || !pageEl->Is(kindPageElementDest)) {
+                return;
             }
+            IPageDestination* elDest = pageEl->AsLink();
+            PageDestination* pd = (PageDestination*)elDest;
+            if (!pd || pd->embedObjNum <= 0) {
+                return;
+            }
+            // attachments are arbitrary binary
+            Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+            if (len(data) == 0) {
+                return;
+            }
+            Str fileName = pd->GetValue2();
+            TempStr dir = path::GetDirTemp(filePath);
+            fileName = path::GetBaseNameTemp(fileName);
+            TempStr dstPath = path::JoinTemp(dir, fileName);
+            SaveDataToFile(win->hwndFrame, dstPath, data);
+            str::Free(data);
             return;
         }
 

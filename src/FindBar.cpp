@@ -18,6 +18,7 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Commands.h"
@@ -270,7 +271,7 @@ LRESULT FindBarWnd::OnNotify(int, NMHDR* nmh) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindBarButtonTooltip((int)nmh->idFrom);
         if (s) {
-            lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText));
+            str::BufSet(di->szText, dimof(di->szText), s);
             di->lpszText = di->szText;
         }
     }
@@ -440,6 +441,13 @@ void HideFindBar(MainWindow* win) {
         // remove in-page find highlights in a chm / markdown webview
         // (no-op for other document types and the IE backend)
         win->ctrl->FindClear();
+    }
+    // drop the active TextSearch hit so closing find clears the highlight;
+    // F3 still works (FindNext re-searches) and paints the new hit (#5802)
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch) {
+            dm->textSearch->Reset();
+        }
     }
     if (IsFindWindowVisible(win)) {
         HideFindWindow(win);

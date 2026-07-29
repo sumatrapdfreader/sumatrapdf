@@ -14,15 +14,14 @@
 
 #if OS_WIN
 #include "base/Win.h"
+#include "base/GdiPlus.h"
 #endif
-
-#include <algorithm>
 
 extern "C" {
 #include <mupdf/fitz.h>
 }
 
-#include "FzImgReader.h"
+#include "ImageReader.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "TreeModel.h"
@@ -106,7 +105,7 @@ class EngineImages : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     Str GetFileData() override;
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int) override { return {}; }
     bool HasClipOptimizations(int) override { return false; }
 
@@ -159,6 +158,8 @@ class EngineImages : public EngineBase {
     // not free. Bytes stay valid until the engine is destroyed.
     virtual Str GetImageData(int pageNo) = 0;
     virtual TempStr GetImagePathTemp(int pageNo) { return {}; }
+    // Uncompressed image bytes for pageNo when known without decoding (-1 unknown).
+    virtual i64 GetImageByteSize(int pageNo);
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
     void DropPage(ImagePage* page, bool forceRemove);
@@ -235,6 +236,14 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     // these are binary bytes and formats like JP2 legitimately start with a 0 byte
     Str data = GetImageData(pageNo);
     if (len(data) == 0) {
+        return nullptr;
+    }
+    // Prefer PixmapFromData / LoadPixmapForPage over mupdf for formats where a
+    // dedicated path is faster and we do not need mupdf's scaled JPEG decode:
+    //   WebP     → libwebp (bench_image: faster than WIC)
+    //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
+    FileType kind = GuessFileTypeFromData(data);
+    if (FileType::Webp == kind || FileType::Heic == kind || FileType::Avif == kind) {
         return nullptr;
     }
     fz_image* img = nullptr;
@@ -530,24 +539,55 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         }
     }
 
+    Pixmap* src = page->pixmap;
+    if (page->failedToLoad || !src || !src->data) {
+        DropPage(page, false);
+        Pixmap* blank = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
+        if (blank) {
+            FillPixmapWhite(blank);
+        }
+        return blank;
+    }
+
+#if OS_WIN
+    // High-quality scale via GDI+ bicubic. The old per-pixel nearest-neighbor
+    // path looked blocky for Pixmap-only formats (HEIC/AVIF/WebP/JXL) whenever
+    // zoom != 100%. Rotation still uses the fallback below (rare for images).
+    if (NormalizeRotation(rotation) == 0 && screen.dx > 0 && screen.dy > 0) {
+        Gdiplus::Bitmap* srcBmp = WrapPixmapGdiplus(src);
+        if (srcBmp) {
+            auto* dstBmp = new Gdiplus::Bitmap(screen.dx, screen.dy, PixelFormat32bppPARGB);
+            if (dstBmp && dstBmp->GetLastStatus() == Gdiplus::Ok) {
+                Gdiplus::Graphics g(dstBmp);
+                g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+                g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+                g.Clear(Gdiplus::Color(255, 255, 255, 255));
+                // pageRc is in page-pixel coords; screen is the zoomed dest size.
+                Gdiplus::RectF dest(0, 0, (float)screen.dx, (float)screen.dy);
+                g.DrawImage(srcBmp, dest, pageRc.x, pageRc.y, pageRc.dx, pageRc.dy, Gdiplus::UnitPixel);
+                Pixmap* result = PixmapFromGdiplus(dstBmp);
+                delete dstBmp;
+                delete srcBmp;
+                DropPage(page, false);
+                if (result) {
+                    result->premultiplied = false;
+                    return result;
+                }
+            } else {
+                delete dstBmp;
+                delete srcBmp;
+            }
+        }
+    }
+#endif
+
+    // Fallback: nearest-neighbor (rotation, non-Windows, or GDI+ failure).
     Pixmap* result = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
     if (!result) {
         DropPage(page, false);
         return nullptr;
     }
     FillPixmapWhite(result);
-
-    if (page->failedToLoad) {
-        DropPage(page, false);
-        return result;
-    }
-
-    Pixmap* src = page->pixmap;
-    if (!src || !src->data) {
-        DropPage(page, false);
-        FreePixmap(result);
-        return nullptr;
-    }
 
     RectF mediaBox = PageMediabox(pageNo);
     for (int y = 0; y < result->height; y++) {
@@ -685,6 +725,14 @@ Str EngineImages::GetFileData() {
         return file::ReadFile(path);
     }
     return str::Dup(sourceData);
+}
+
+i64 EngineImages::GetImageByteSize(int pageNo) {
+    TempStr path = GetImagePathTemp(pageNo);
+    if (path && file::Exists(path)) {
+        return file::GetSize(path);
+    }
+    return -1;
 }
 
 bool EngineImages::SaveFileAs(Str dstPath) {
@@ -906,7 +954,7 @@ class EngineImage : public EngineImages {
     void GetProperties(Props& propsOut) override;
     void GetImageProperties(int pageNo, Props& propsOut);
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
 
     // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
@@ -914,7 +962,7 @@ class EngineImage : public EngineImages {
     Vec<Pixmap*> frames;
     FileType imageFormat = FileType::Unknown;
 
-    bool LoadSingleFile(Str fileName);
+    bool LoadSingleFile(Str path);
     bool LoadFromData(Str data);
     bool FinishLoading(Size fallbackSize = {});
 
@@ -922,6 +970,7 @@ class EngineImage : public EngineImages {
     fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
+    i64 GetImageByteSize(int pageNo) override;
 };
 
 EngineImage::EngineImage() {
@@ -1349,6 +1398,23 @@ Str EngineImage::GetImageData(int) {
     return pi->rawData;
 }
 
+i64 EngineImage::GetImageByteSize(int) {
+    Str path = FilePath();
+    if (path) {
+        i64 n = file::GetSize(path);
+        if (n >= 0) {
+            return n;
+        }
+    }
+    if (len(sourceData) > 0) {
+        return sourceData.len;
+    }
+    if (len(pageInfos) > 0 && len(pageInfos[0]->rawData) > 0) {
+        return pageInfos[0]->rawData.len;
+    }
+    return -1;
+}
+
 fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     // mupdf decodes the file's first frame lazily at render scale. Additional
     // frames of multi-page TIFFs / animated GIFs come from the pre-decoded
@@ -1446,7 +1512,7 @@ class EngineImageDir : public EngineImages {
     }
 
     Str GetFileData() override { return {}; }
-    bool SaveFileAs(Str copyFileName) override;
+    bool SaveFileAs(Str dstPath) override;
 
     TempStr GetPropertyTemp(DocProp) override { return nullptr; }
 
@@ -1455,7 +1521,7 @@ class EngineImageDir : public EngineImages {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(Str fileName);
+    static EngineBase* CreateFromFile(Str path);
 
     // protected:
 
@@ -1611,10 +1677,10 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-EngineBase* EngineImageDir::CreateFromFile(Str fileName) {
-    ReportIf(!dir::Exists(fileName));
+EngineBase* EngineImageDir::CreateFromFile(Str path) {
+    ReportIf(!dir::Exists(path));
     EngineImageDir* engine = new EngineImageDir();
-    if (!LoadImageDir(engine, fileName)) {
+    if (!LoadImageDir(engine, path)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1826,6 +1892,7 @@ class EngineCbx : public EngineImages {
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
+    i64 GetImageByteSize(int pageNo) override;
 
     bool LoadFromFile(Str fileName);
     bool LoadFromData(Str data);
@@ -2068,6 +2135,13 @@ Str EngineCbx::GetImageData(int pageNo) {
     return Str(fi->data, fi->fileSizeUncompressed);
 }
 
+i64 EngineCbx::GetImageByteSize(int pageNo) {
+    if ((pageNo < 1) || (pageNo > PageCount())) {
+        return -1;
+    }
+    return files[pageNo - 1]->fileSizeUncompressed;
+}
+
 TempStr EngineCbx::GetPropertyTemp(DocProp prop) {
     if (prop == DocProp::Title) {
         return cip.propTitle;
@@ -2308,4 +2382,24 @@ void EngineImagesGetImageProperties(EngineBase* engine, int pageNo, Props& props
         return;
     }
     ((EngineImages*)engine)->GetImageProperties(pageNo, propsOut);
+}
+
+bool EngineImagesGetPageFileInfo(EngineBase* engine, int pageNo, TempStr* nameOut, i64* sizeOut) {
+    if (!IsEngineImages(engine) || pageNo < 1 || pageNo > engine->PageCount()) {
+        return false;
+    }
+    auto* e = (EngineImages*)engine;
+    if (nameOut) {
+        TempStr pathOrName = e->GetImagePathTemp(pageNo);
+        *nameOut = pathOrName ? path::GetBaseNameTemp(pathOrName) : TempStr{};
+        // single-image engine: path is the document itself; still report the base name
+        if (!*nameOut) {
+            Str fp = engine->FilePath();
+            *nameOut = fp ? path::GetBaseNameTemp(fp) : TempStr{};
+        }
+    }
+    if (sizeOut) {
+        *sizeOut = e->GetImageByteSize(pageNo);
+    }
+    return true;
 }

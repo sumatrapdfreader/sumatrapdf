@@ -1,8 +1,8 @@
 -Isrc
 -Isrc/base
 -Imupdf/include
--Iext/libdjvu
--Iext/libchm
+-Iext/djvudec
+-Iext/chmdec
 -Iext/libarchive
 -Iext/darkmodelib/include
 -Iext/zlib

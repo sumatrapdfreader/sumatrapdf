@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
-#include "SquareTreeParser.h"
+#include "base/Base.h"
+#include "base/SquareTreeParser.h"
 
 /*
 A 'square tree' is a format for representing string values contained in a

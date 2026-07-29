@@ -68,7 +68,7 @@ export async function testit(): Promise<void> {
 
   // kill stale dev-build instances so reuse-instance can't forward our launch
   // to an old window (which would leave our process window-less)
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
 
   const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });

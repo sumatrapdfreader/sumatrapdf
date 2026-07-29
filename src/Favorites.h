@@ -19,6 +19,8 @@ they are for navigation only. Presentation settings are remembered on a
 per-file basis in FileHistory.
 */
 
+struct WindowTab;
+
 bool HasFavorites();
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn);
 void AddFavoriteForPage(MainWindow* win, int pageNo);
@@ -26,8 +28,14 @@ void AddFavoriteForCurrentPage(MainWindow* win);
 void DelFavorite(Str filePath, int pageNo);
 void RebuildFavMenu(MainWindow* win, HMENU menu);
 void CreateFavorites(MainWindow* win);
-void ToggleFavorites(MainWindow* win);
+void ToggleFavorites(MainWindow* win); // sidebar
+// open/select full-window Favorites tab (can use with sidebar Favorites)
+void ToggleFavoritesTab(MainWindow* win);
+// find the Favorites tab in this window, or nullptr
+WindowTab* FindFavoritesTab(MainWindow* win);
 void PopulateFavTreeIfNeeded(MainWindow* win);
+// layout label + tree inside hwndFavBox (call after resizing the box)
+void LayoutFavoritesContainer(MainWindow* win);
 void GoToFavoriteByMenuId(MainWindow* win, int cmdId);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
@@ -40,3 +48,8 @@ void GoToNextFavorite(MainWindow* win, bool forward);
 // shared with CommandPalette.cpp (favorites mode)
 TempStr FavReadableNameTemp(Favorite* fn);
 void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);
+
+void SetSearchStartFavorite(MainWindow* win);
+
+// toggle SortFavoritesByName, re-sort, refresh trees, and save settings
+void ToggleSortFavoritesByName();

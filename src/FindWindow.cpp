@@ -307,6 +307,11 @@ void FindWindowWnd::Layout() {
     int listTop = pad + headerDy + pad;
     int listDy = std::max(0, rc.dy - listTop - pad);
     MoveWindow(results->hwnd, pad, listTop, contentDx, listDy, TRUE);
+
+    // Erase margins (and any area the list just vacated when shrinking) so
+    // snippet/page-number pixels don't ghost at the bottom/side of the window
+    // when the dialog is resized narrower than the previous text (#5796).
+    InvalidateRect(hwnd, nullptr, TRUE);
 }
 
 void FindWindowWnd::RefreshResults(bool allowNavigation) {
@@ -354,6 +359,11 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     HDC hdc = ev->hdc;
     RECT rc = ev->itemRect;
 
+    // clip the whole row so a partially visible last item (LBS_NOINTEGRALHEIGHT)
+    // and highlight fill cannot paint outside the item / list client (#5796)
+    int rowDC = SaveDC(hdc);
+    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
     if (ev->selected) {
@@ -369,16 +379,20 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     rcText.left += pad;
     rcText.right -= pad;
 
-    // page number in a fixed right column so it can't overlap the snippet while
-    // the window is being resized (issue #5692)
+    // Fixed-width page column (room for multi-digit labels) so the right edge
+    // stays stable while the window is resized; long snippets ellipsize into it
+    // instead of fighting a per-row measured width (#5692 / #5796).
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
     int pageCch;
     WCHAR* pageW = CWStrTemp(pageStr, pageCch);
+    int pageGap = DpiScale(lb->hwnd, 10);
+    int pageColDx = DpiScale(lb->hwnd, 40);
     SIZE pSz{};
     GetTextExtentPoint32W(hdc, pageW, pageCch, &pSz);
-    int pageGap = DpiScale(lb->hwnd, 10);
-    int pageColDx = std::max((int)pSz.cx, DpiScale(lb->hwnd, 32));
+    if ((int)pSz.cx + DpiScale(lb->hwnd, 4) > pageColDx) {
+        pageColDx = (int)pSz.cx + DpiScale(lb->hwnd, 4);
+    }
     RECT rcPage = rcText;
     rcPage.left = std::max(rcText.left, (LONG)(rcText.right - pageColDx));
 
@@ -409,6 +423,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     if (oldFont) {
         SelectFont(hdc, oldFont);
     }
+    RestoreDC(hdc, rowDC);
 }
 
 void FindWindowWnd::OnResultSelected() {
@@ -516,6 +531,12 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
         case VK_UP:
             idx = (cur < 0) ? n - 1 : (cur - 1 + n) % n;
             break;
+        case VK_HOME:
+            idx = 0;
+            break;
+        case VK_END:
+            idx = n - 1;
+            break;
         case VK_NEXT: // Page Down
             // unlike the arrow keys, paging doesn't wrap around; it clamps to the
             // last match (issue #5742)
@@ -612,8 +633,13 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             inSizeMove = false;
             if (results && listRedrawPaused) {
                 SendMessageW(results->hwnd, WM_SETREDRAW, TRUE, 0);
-                InvalidateRect(results->hwnd, nullptr, TRUE);
                 listRedrawPaused = false;
+            }
+            // full client erase: margins + list, so nothing left over from the
+            // pre-resize layout at the bottom of the window (#5796)
+            InvalidateRect(h, nullptr, TRUE);
+            if (results) {
+                InvalidateRect(results->hwnd, nullptr, TRUE);
             }
             SavePos();
             break;
@@ -666,7 +692,7 @@ LRESULT FindWindowWnd::OnNotify(int, NMHDR* nmh) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindWindowButtonTooltip((int)nmh->idFrom);
         if (s) {
-            lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText));
+            str::BufSet(di->szText, dimof(di->szText), s);
             di->lpszText = di->szText;
         }
     }
@@ -708,6 +734,29 @@ bool FindWindowWnd::PreTranslateMessage(MSG& msg) {
         case VK_PRIOR:
             // walk the results list from the search edit
             return MoveResultSelection(msg.wParam);
+        case VK_HOME:
+        case VK_END: {
+            // Ctrl+Home / Ctrl+End: always jump to first/last result (#5797)
+            if (IsCtrlPressed()) {
+                return MoveResultSelection(msg.wParam);
+            }
+            // Home / End: if the caret is already at the start/end of the search
+            // text, move the results list; otherwise let the Edit control move
+            // the caret (same idea as the two-press pattern in the request).
+            if (!edit || msg.hwnd != edit->hwnd) {
+                // focus is on the list itself: Home/End jump first/last
+                return MoveResultSelection(msg.wParam);
+            }
+            DWORD selStart = 0, selEnd = 0;
+            SendMessageW(edit->hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+            int textLen = Edit_GetTextLength(edit->hwnd);
+            bool toEnd = (msg.wParam == VK_END);
+            bool caretAtBound = (selStart == selEnd) && (toEnd ? (int)selEnd == textLen : (int)selStart == 0);
+            if (caretAtBound) {
+                return MoveResultSelection(msg.wParam);
+            }
+            return false; // Edit moves the caret
+        }
     }
     return false;
 }
@@ -800,7 +849,17 @@ void HideFindWindow(MainWindow* win) {
         return;
     }
     win->findWindow->SavePos();
+    // Cancel any deferred GoToFindMatch so it cannot run after the document/tab
+    // that owned these matches is gone (issue #5807).
+    InterlockedIncrement(&win->findWindow->pendingNavEpoch);
     ClearFindMatches(win);
+    // drop the active TextSearch hit so closing find clears the highlight;
+    // F3 still works (FindNext re-searches) and paints the new hit (#5802)
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch) {
+            dm->textSearch->Reset();
+        }
+    }
     AbortFinding(win, true);
     ShowWindow(win->findWindow->hwnd, SW_HIDE);
     HwndSetFocus(win->hwndFrame);
@@ -885,9 +944,13 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
     HBITMAP hbmp = CreateCompatibleBitmap(hdcScreen, w, h);
     if (!hdcMem || !hbmp) {
+        if (hdcMem) {
+            DeleteDC(hdcMem);
+        }
+        if (hbmp) {
+            DeleteObject(hbmp);
+        }
         ReleaseDC(nullptr, hdcScreen);
-        DeleteDC(hdcMem);
-        DeleteObject(hbmp);
         return fail("ERROR no-mem-dc");
     }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);

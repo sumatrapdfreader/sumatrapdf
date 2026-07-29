@@ -9,6 +9,13 @@ struct TextSel {
     Rect* rects = nullptr;
 };
 
+// Unit for keyboard/accessibility selection extension (platform-neutral).
+// Callers map input (e.g. Shift+arrow keys) to unit + signed delta.
+enum class TextSelectUnit {
+    Glyph, // one glyph / character
+    Line,  // one visual line of text
+};
+
 struct TextSelection {
     int startPage = -1;
     int endPage = -1;
@@ -42,6 +49,10 @@ struct TextSelection {
     // extend the selection so it spans whole words from the anchor word (set by
     // the last SelectWordAt) to the word at (x, y)
     void SelectWordsUpTo(int pageNo, double x, double y);
+    // Move the free end (endPage/endGlyph) by delta units in reading order.
+    // delta > 0 toward document end, delta < 0 toward document start.
+    // Returns true if the free end moved. Platform code maps keys to unit+delta.
+    bool ExtendBy(TextSelectUnit unit, int delta);
     void CopySelection(TextSelection* orig);
     Str ExtractText(Str lineSep);
     void Reset();

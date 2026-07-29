@@ -65,8 +65,9 @@ struct Flags {
     bool invertColors = false;
     bool regress = false;
     bool tester = false;
-    // -new-window, if true and we're using tabs, opens
-    // the document in new window
+    // -new-window: open in a new window (not a tab of an existing one).
+    // With several file args, only the first file forces a new window; the
+    // rest open as tabs in that window (issue #5044).
     bool inNewWindow = false;
     Str search;
     Str password;
@@ -136,7 +137,8 @@ struct Flags {
 #if OS_WIN
 void ParseFlags(Arena* a, WStr cmdLine, Flags&, Str toolNames = {});
 #endif
-void ShowPrintersDialog();
+// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
+void ShowPrintersDialog(bool consoleOnly = false);
 
 bool IsValidPageRange(Str ranges);
 bool IsBenchPagesInfo(Str s);

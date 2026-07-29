@@ -79,7 +79,7 @@ function distinctColors(png: string): number {
 }
 
 async function renderDistinctColors(pdf: string, appdata: string, label: string): Promise<number> {
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
   const proc = launchSumatra(["-appdata", appdata, pdf]);
   try {

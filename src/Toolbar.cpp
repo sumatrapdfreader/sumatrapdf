@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/WinDynCalls.h"
 #include "base/Dpi.h"
 #include "base/Win.h"
 #include "base/BitManip.h"
@@ -21,7 +20,7 @@ extern "C" {
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
@@ -267,9 +266,24 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return NeedsFindUI(win) || IsBrowserDocController(win->ctrl);
 
         case CmdFindNext:
-        case CmdFindPrev:
-            // TODO: Update on whether there's more to find, not just on whether there is text.
-            return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
+        case CmdFindPrev: {
+            // Need non-empty find text (hwndFindEdit is the active bar or floating window edit).
+            if (!win->hwndFindEdit || HwndGetTextLen(win->hwndFindEdit) == 0) {
+                return false;
+            }
+            // When we already know there are zero matches, disable next/prev.
+            // Unknown count (scan pending / not started) still allows searching.
+            if (win->ctrl && win->ctrl->CanFindInPage()) {
+                if (win->browserFindTotal == 0) {
+                    return false;
+                }
+                return true;
+            }
+            if (win->findCountValid && len(win->findCountPositions) == 0) {
+                return false;
+            }
+            return true;
+        }
 
         case CmdGoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
@@ -368,6 +382,10 @@ static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
+    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    if (bi.iImage == (int)icon) {
+        return; // TB_SETBUTTONINFOW always repaints; skip no-ops
+    }
     bi.iImage = (int)icon;
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
@@ -380,10 +398,19 @@ static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
         TempStr s2 = fmt(" (%s)", accel);
         s = str::JoinTemp(s, s2);
     }
+    // TB_GETBUTTONINFO with TBIF_TEXT needs a buffer; skip SET when equal
+    WCHAR prevBuf[256]{};
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_TEXT;
+    bi.pszText = prevBuf;
+    bi.cchText = dimof(prevBuf);
+    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+    if (str::Eq(ToUtf8Temp(prevBuf), s)) {
+        return;
+    }
     bi.pszText = CWStrTemp(s);
+    bi.cchText = 0;
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
 
@@ -721,23 +748,16 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
                     case CDDS_ITEMPREPAINT: {
                         auto col = ThemeWindowTextColor();
-                        // col = RGB(255, 0, 0);
-                        // SetTextColor(custDraw->nmcd.hdc, col);
                         UINT itemState = custDraw->nmcd.uItemState;
-                        if (itemState & CDIS_DISABLED) {
-                            // TODO: this doesn't work
+                        if (itemState & (CDIS_DISABLED | CDIS_GRAYED)) {
                             col = ThemeWindowTextDisabledColor();
-                            // col = RGB(255, 0, 0);
-                            custDraw->clrText = col;
-                        } else if (false && itemState & CDIS_SELECTED) {
-                            custDraw->clrText = RGB(0, 255, 0);
-                        } else if (false && itemState & CDIS_GRAYED) {
-                            custDraw->clrText = RGB(0, 0, 255);
-                        } else {
-                            custDraw->clrText = col;
                         }
-                        return CDRF_DODEFAULT;
-                        // return CDRF_NEWFONT;
+                        // Toolbar honors text color from the DC (and clrText) when
+                        // CDRF_NEWFONT is returned; setting only clrText is ignored
+                        // under some common-control versions / themes.
+                        custDraw->clrText = col;
+                        SetTextColor(custDraw->nmcd.hdc, col);
+                        return CDRF_NEWFONT;
                     }
                 }
             }
@@ -986,6 +1006,21 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     labelDx = size2.dx;
     size2.dx = std::max(size2.dx, minSize.dx);
 
+    // Skip layout/repaint when an update-only refresh would not change anything
+    // (page-label docs used to invalidate the whole toolbar on every call).
+    TempStr prevTotal = HwndGetTextTemp(win->hwndPageTotal);
+    bool textSame = prevTotal && txt && str::Eq(prevTotal, txt);
+    if (updateOnly && textSame) {
+        TBBUTTONINFOW bi0{};
+        bi0.cbSize = sizeof(bi0);
+        bi0.dwMask = TBIF_SIZE;
+        SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, PageInfoId, (LPARAM)&bi0);
+        int wantCx = size2.dx + size.dx + pageWndRect.dx + 12;
+        if (bi0.cx == wantCx) {
+            return;
+        }
+    }
+
     HwndSetText(win->hwndPageTotal, txt);
     if (0 == size2.dx) {
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
@@ -1038,8 +1073,11 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
 
     auto hwndFrame = win->hwndFrame;
     auto hwndToolbar = win->hwndToolbar;
-    // TODO: this is broken, result is way too small
+    // Measure a full page number plus edit-control padding; plain measure is
+    // too tight for the right-aligned ES_NUMBER box (esp. under high DPI).
     int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
+    boxWidth += 2 * GetSystemMetrics(SM_CXEDGE);
+    boxWidth += DpiScale(hwndFrame, 12);
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto h = GetModuleHandle(nullptr);
     int dx = boxWidth;
@@ -1311,7 +1349,11 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     HBITMAP hbmp = BuildIconsBitmap(dx, dx, customSvgs, customCount);
     ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
-    SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    // Replace (and free) the previous list so theme / size changes do not leak
+    HIMAGELIST oldHiml = (HIMAGELIST)SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    if (oldHiml) {
+        ImageList_Destroy(oldHiml);
+    }
     return iconSize;
 }
 
@@ -1443,7 +1485,7 @@ void CreateToolbar(MainWindow* win) {
     rbBand.cbSize = sizeof(REBARBANDINFOW);
     rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
     rbBand.fStyle = RBBS_FIXEDSIZE;
-    if (theme::IsAppThemed() && IsCurrentThemeDefault()) {
+    if (IsAppThemed() && IsCurrentThemeDefault()) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
     }
     rbBand.hbmBack = nullptr;

@@ -5174,26 +5174,26 @@ PREP_8TAP_SCALED_FN regular,        REGULAR, REGULAR
 MC_8TAP_SCALED prep
 
 %macro WARP_V 5 ; dst, 01, 23, 45, 67
-    lea               tmp1d, [myq+deltaq*4]
-    lea               tmp2d, [myq+deltaq*1]
+    lea               tmp1d, [myq+gammaq*4]
+    lea               tmp2d, [myq+gammaq*1]
     shr                 myd, 10
     shr               tmp1d, 10
     movq                xm8, [filterq+myq  *8]
     vinserti128          m8, [filterq+tmp1q*8], 1 ; a e
-    lea               tmp1d, [tmp2q+deltaq*4]
-    lea                 myd, [tmp2q+deltaq*1]
+    lea               tmp1d, [tmp2q+gammaq*4]
+    lea                 myd, [tmp2q+gammaq*1]
     shr               tmp2d, 10
     shr               tmp1d, 10
     movq                xm0, [filterq+tmp2q*8]
     vinserti128          m0, [filterq+tmp1q*8], 1 ; b f
-    lea               tmp1d, [myq+deltaq*4]
-    lea               tmp2d, [myq+deltaq*1]
+    lea               tmp1d, [myq+gammaq*4]
+    lea               tmp2d, [myq+gammaq*1]
     shr                 myd, 10
     shr               tmp1d, 10
     movq                xm9, [filterq+myq  *8]
     vinserti128          m9, [filterq+tmp1q*8], 1 ; c g
-    lea               tmp1d, [tmp2q+deltaq*4]
-    lea                 myd, [tmp2q+gammaq]       ; my += gamma
+    lea               tmp1d, [tmp2q+gammaq*4]
+    lea                 myd, [tmp2q+deltaq]       ; my += delta
     punpcklwd            m8, m0
     shr               tmp2d, 10
     shr               tmp1d, 10
@@ -5244,8 +5244,8 @@ cglobal warp_affine_8x8t_16bpc, 4, 14, 16, tmp, ts
     RET
 
 cglobal warp_affine_8x8_16bpc, 4, 14, 16, dst, ds, src, ss, abcd, mx, tmp2, \
-                                          alpha, beta, filter, tmp1, delta, \
-                                          my, gamma
+                                          alpha, beta, filter, tmp1, gamma, \
+                                          my, delta
     mov                 r6d, r7m
     lea             filterq, [$$]
     shr                 r6d, 11
@@ -5307,12 +5307,12 @@ ALIGN function_align
     psrld                m6, m0, 16
     call .h
     pblendw              m6, m0, 0xaa ; 56
-    movsx            deltad, word [abcdq+2*2]
-    movsx            gammad, word [abcdq+2*3]
+    movsx            gammad, word [abcdq+2*2]
+    movsx            deltad, word [abcdq+2*3]
     add                 myd, 512+(64<<10)
     mov                 r4d, 4
-    lea               tmp1d, [deltaq*3]
-    sub              gammad, tmp1d    ; gamma -= delta*3
+    lea               tmp1d, [gammaq*3]
+    sub              deltad, tmp1d    ; delta -= gamma*3
 .main2:
     call .h
     psrld                m7, m6, 16

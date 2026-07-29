@@ -76,9 +76,6 @@ HRESULT CLSIDFromString(Str lpsz, LPCLSID pclsid);
 // file and directory operations
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 TempStr GetTempDirTemp();
-TempStr GetSelfExePathTemp();
-TempWStr GetSelfExePathW();
-TempStr GetSelfExeDirTemp();
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 TempStr ResolveLnkTemp(Str path);
@@ -133,7 +130,7 @@ int FontDyPx(HWND hwnd, HFONT hfont);
 
 int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr);
-int HdcDrawText(HDC hdc, Str s, const Point& pos, uint fmt, HFONT font = nullptr);
+int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, HFONT font = nullptr);
@@ -351,6 +348,10 @@ void HwndScheduleRepaint(HWND hwnd);
 
 HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);
+// TreeView: set font and recompute TVM_SETITEMHEIGHT for the given DPI so
+// row metrics match the font after a cross-monitor DPI change.
+void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi);
+void HwndSetTreeFont(HWND hwndTree, HFONT font);
 
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
@@ -404,8 +405,6 @@ Str LatestSupportedSIMD();
 LARGE_INTEGER TimeNow();
 double TimeDiffSecs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
 double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
-bool IsPEFileSigned(Str filePath);
-TempStr GetExecutableSignerTemp(Str exePath);
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

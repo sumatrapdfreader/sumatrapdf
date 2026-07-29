@@ -120,6 +120,23 @@ typedef struct {
 /* page_no is 0-based. Returns 0 on success, -1 on error. */
 int djvu_doc_page_info(djvu_doc *doc, int page_no, djvu_page_info *info);
 
+/* ----- per-page decoded-layer cache (djvu_ctx_set_cache_per_page) -----
+   When caching is enabled, the first render (or layer acquire) of a page
+   stores Sjbz / IW44 / composited background on the document; later renders
+   of that page reuse them. Shared Djbz dictionaries are doc-wide and are
+   not part of this page cache. */
+
+/* Free all page-local cached layers for page_no (Sjbz mask, BG44/FG44,
+   composited backgrounds). No-op if caching is off or the page has nothing
+   cached. Safe with concurrent renders when lock/unlock are set. */
+void djvu_doc_drop_page_cache(djvu_doc *doc, int page_no);
+
+/* Heap bytes currently held in page-local cache for page_no (0 if none /
+   invalid page / caching off). Approximate: walks live structures (bitmap
+   payloads, shape/blit tables, IW44 coefficient buckets, RGB pixmaps).
+   Does not include shared Djbz dicts or the caller's document buffer. */
+size_t djvu_doc_page_cache_size(djvu_doc *doc, int page_no);
+
 /* ----- rendering ----- */
 
 typedef enum {

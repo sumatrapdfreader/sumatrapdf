@@ -36,9 +36,15 @@ import { testit as issue5734 } from "./issue-5734.ts";
 import { testit as issue5736 } from "./issue-5736.ts";
 import { testit as issue5751 } from "./issue-5751.ts";
 import { testit as issue5780 } from "./issue-5780.ts";
+import { testit as issue5529 } from "./issue-5529.ts";
+import { testit as issue2799 } from "./issue-2799.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as issue2252 } from "./issue-2252.ts";
+import { testit as issue2254 } from "./issue-2254.ts";
 import { testit as issue1201 } from "./issue-1201.ts";
+import { testit as issue1189 } from "./issue-1189.ts";
+import { testit as issue5792 } from "./issue-5792.ts";
+import { testit as issue4576 } from "./issue-4576.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
@@ -68,9 +74,15 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5736", issue5736],
   ["issue-5751", issue5751],
   ["issue-5780", issue5780],
+  ["issue-5529", issue5529],
+  ["issue-2799", issue2799],
   ["issue-find-match-select", findMatchSelect],
   ["issue-2252", issue2252],
+  ["issue-2254", issue2254],
   ["issue-1201", issue1201],
+  ["issue-1189", issue1189],
+  ["issue-5792", issue5792],
+  ["issue-4576", issue4576],
   ["parse-tip-brackets", parseTipBrackets],
 ];
 

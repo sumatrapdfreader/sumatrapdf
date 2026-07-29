@@ -21,7 +21,24 @@ static SeqStrings gSupportedExts =
     ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
     ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
     ".jfif\0.webp\0.jxl\0.bmp\0.jxr\0.hdp\0.wdp\0";
+
+// Image extensions share icon resource id 7 (img-32bit.ico) — #5274
+static SeqStrings gImageExts =
+    ".tif\0.tiff\0.jp2\0.png\0.jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
+    ".jfif\0.webp\0.jxl\0.bmp\0.jxr\0.hdp\0.wdp\0";
 // clang-format on
+
+static bool ExtInList(SeqStrings list, Str ext) {
+    for (int off = 0; SeqStrAt(list, off);) {
+        if (str::EqI(ext, SeqStrAt(list, off))) {
+            return true;
+        }
+        if (!SeqStrAdvance(list, off)) {
+            break;
+        }
+    }
+    return false;
+}
 
 // notifies Shell that file associations changed.
 // Invalidates the icon and thumbnail cache.
@@ -206,16 +223,24 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
 
         // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
         // ",${n}" => n is 0-based index of the icon
-        // ",-${n}" => n is icon with resource id
+        // ",-${n}" => n is icon with resource id (see SumatraPDF.rc)
+        // 2=app, 3=epub, 4=cbx, 5=chm, 6=djvu, 7=img, 8=pdf, 9=mobi
         TempStr iconPath;
-        if (str::Eq(ext, ".epub")) {
+        if (str::EqI(ext, ".epub")) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-3"));
-        } else if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
+        } else if (str::EqI(ext, ".cbr") || str::EqI(ext, ".cbz") || str::EqI(ext, ".cbt") || str::EqI(ext, ".cb7")) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-4"));
-        } else if (str::Eq(ext, ".chm")) {
+        } else if (str::EqI(ext, ".chm")) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-5"));
-        } else if (str::Eq(ext, ".djvu")) {
+        } else if (str::EqI(ext, ".djvu")) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-6"));
+        } else if (ExtInList(gImageExts, ext)) {
+            iconPath = str::JoinTemp(exePathQuoted, StrL(",-7"));
+        } else if (str::EqI(ext, ".pdf")) {
+            iconPath = str::JoinTemp(exePathQuoted, StrL(",-8"));
+        } else if (str::EqI(ext, ".mobi") || str::EqI(ext, ".azw") || str::EqI(ext, ".azw3") ||
+                   str::EqI(ext, ".azw4") || str::EqI(ext, ".prc")) {
+            iconPath = str::JoinTemp(exePathQuoted, StrL(",-9"));
         } else {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-2"));
         }

@@ -231,9 +231,16 @@ void CopyFilePath(WindowTab*);
 // note: background tabs are only searched if focusTab is true
 // when limitWin is set, only that window's tabs are considered
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
-MainWindow* FindMainWindowBySyncFile(Str file, bool focusTab);
+MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 WindowTab* FindTabByFile(Str file, MainWindow* limitWin = nullptr);
 void SelectTabInWindow(WindowTab*);
+
+// True if a tab already shows this file, or a load for it is already in progress
+// (tab is only created when load finishes, so mid-password / async loads need this).
+bool IsDocumentOpenOrLoading(Str file);
+// Mark/unmark a path as currently loading. Call from the UI thread only.
+void BeginDocumentLoad(Str file);
+void EndDocumentLoad(Str file);
 
 class EngineBase;
 struct DocController;
@@ -329,11 +336,12 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);
+TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 bool DocIsSupportedFileType(FileType);
 TempStr GetLogFilePathTemp();
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin = true);
 void SumatraOpenPathInDefaultFileManager(Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
-TempStr GetNotImportantDataDirTemp();
+TempStr GetSumatraDataDirTemp();
 TempStr GetCrashInfoDirTemp();
-TempStr GetBuildDirNameTemp();
+TempStr GetSumatraBuildSpecificDirTemp();

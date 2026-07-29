@@ -69,6 +69,25 @@ Archive::~Archive() {
     ArenaDelete(a);
 }
 
+static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
+    int size = fileInfo->fileSizeUncompressed;
+    if (size <= 0) {
+        return;
+    }
+    fileInfo->data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+    if (!fileInfo->data) {
+        fileInfo->failed = true; // OOM
+        return;
+    }
+    la_ssize_t n = archive_read_data(a, (void*)fileInfo->data, (size_t)size);
+    if (n >= 0 && (int)n == size) {
+        return;
+    }
+    free(fileInfo->data);
+    fileInfo->data = nullptr;
+    fileInfo->failed = true;
+}
+
 bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive_entry* entry;
     int fileId = 0;
@@ -93,23 +112,10 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
         i->data = nullptr;
         fileInfos_.Append(i);
 
-        if (eagerLoad) {
-            int size = i->fileSizeUncompressed;
-            if (size > 0) {
-                i->data = AllocArray<char>(size + ZERO_PADDING_COUNT);
-                if (i->data) {
-                    la_ssize_t n = archive_read_data(a, (void*)i->data, (size_t)size);
-                    if (n < 0 || (int)n != size) {
-                        free(i->data);
-                        i->data = nullptr;
-                        i->failed = true;
-                    }
-                } else {
-                    i->failed = true; // OOM
-                }
-            }
-        } else {
+        if (!eagerLoad) {
             archive_read_data_skip(a);
+        } else {
+            EagerLoadEntry(a, i);
         }
         fileId++;
         prog.fileInfo = i;
@@ -344,31 +350,32 @@ void Archive::LoadFileDataByIdLibarchive(int fileId) {
     struct archive_entry* entry;
     int idx = 0;
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-        if (idx == fileId) {
-            int size = fileInfo->fileSizeUncompressed;
-            if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
-                archive_read_free(a);
-                fileInfo->failed = true;
-                return;
-            }
-            u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
-            if (!data) {
-                archive_read_free(a);
-                fileInfo->failed = true;
-                return;
-            }
-            la_ssize_t n = archive_read_data(a, data, (size_t)size);
+        if (idx != fileId) {
+            archive_read_data_skip(a);
+            idx++;
+            continue;
+        }
+        int size = fileInfo->fileSizeUncompressed;
+        if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
             archive_read_free(a);
-            if (n < 0 || (int)n != size) {
-                free(data);
-                fileInfo->failed = true;
-                return;
-            }
-            fileInfo->data = (char*)data;
+            fileInfo->failed = true;
             return;
         }
-        archive_read_data_skip(a);
-        idx++;
+        u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
+        if (!data) {
+            archive_read_free(a);
+            fileInfo->failed = true;
+            return;
+        }
+        la_ssize_t n = archive_read_data(a, data, (size_t)size);
+        archive_read_free(a);
+        if (n < 0 || (int)n != size) {
+            free(data);
+            fileInfo->failed = true;
+            return;
+        }
+        fileInfo->data = (char*)data;
+        return;
     }
     archive_read_free(a);
     fileInfo->failed = true;

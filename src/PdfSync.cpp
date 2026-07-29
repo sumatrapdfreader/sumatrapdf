@@ -86,9 +86,9 @@ static i64 GetSyncFileTimestamp(Str path) {
     return (i64)uli.QuadPart;
 }
 
-Synchronizer::Synchronizer(Str syncFilePathIn, Str pdfPathIn) {
+Synchronizer::Synchronizer(Str syncFilePathIn, Str pdffilename) {
     syncFilePath = str::Dup(syncFilePathIn);
-    pdfPath = str::Dup(pdfPathIn);
+    pdfPath = str::Dup(pdffilename);
     syncfileTimestamp = GetSyncFileTimestamp(syncFilePath);
 }
 
@@ -133,21 +133,21 @@ TempStr Synchronizer::PrependDirTemp(Str filename) const {
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
+int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** sync) {
     if (!sync || !engine) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    if (!str::EndsWithI(path, ".pdf")) {
+    if (!str::EndsWithI(pdffilename, ".pdf")) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    TempStr basePath = path::GetPathNoExtTemp(path);
+    TempStr basePath = path::GetPathNoExtTemp(pdffilename);
 
     // Check if a PDFSYNC file is present
     TempStr syncFile = str::JoinTemp(basePath, StrL(".pdfsync"));
     if (file::Exists(syncFile)) {
-        *sync = new Pdfsync(syncFile, path, engine);
+        *sync = new Pdfsync(syncFile, pdffilename, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
@@ -157,8 +157,8 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
-        // the path to the .synctex file (even if a .synctex.gz file is used instead)
-        *sync = new SyncTex(texFile, path, engine);
+        // the pdffilename to the .synctex file (even if a .synctex.gz file is used instead)
+        *sync = new SyncTex(texFile, pdffilename, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 

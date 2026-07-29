@@ -34,14 +34,16 @@ static Kind kNotifUpdateCheckInProgress = StrL("notifUpdateCheckInProgress").s;
 // (doesn't have the ciphers they understand) so we have a backup on backblaze
 
 // clang-format off
+// tried in order; later entries are backups if earlier HTTP gets fail
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
-static const Str kUpdateInfoURL = StrL("https://www.sumatrapdfreader.org/updatecheck-pre-release.txt");
-static const Str kUpdateInfoURL2 =
-    StrL("https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt");
+static const Str updateInfoURLs[] = {
+    StrL("https://www.sumatrapdfreader.org/updatecheck-pre-release.txt"),
+    StrL("https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt"),
+};
 #else
-static const Str kUpdateInfoURL = StrL("https://www.sumatrapdfreader.org/update-check-rel.txt");
-// Note: I don't have backup for this
-static const Str kUpdateInfoURL2 = StrL("https://www.sumatrapdfreader.org/update-check-rel.txt");
+static const Str updateInfoURLs[] = {
+    StrL("https://www.sumatrapdfreader.org/update-check-rel.txt"),
+};
 #endif
 
 #ifndef kWebisteDownloadPageURL
@@ -567,7 +569,13 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         return ERROR_INTERNET_INVALID_URL;
     }
 
-    bool isValidURL = str::StartsWith(url, kUpdateInfoURL) || str::StartsWith(url, kUpdateInfoURL2);
+    bool isValidURL = false;
+    for (int i = 0; i < dimof(updateInfoURLs); i++) {
+        if (str::StartsWith(url, updateInfoURLs[i])) {
+            isValidURL = true;
+            break;
+        }
+    }
     if (!isValidURL) {
         logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
         return ERROR_INTERNET_INVALID_URL;
@@ -713,19 +721,19 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
 
 static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
-    str::Builder url;
-    BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
-    Str uri = ToStr(url);
-    HttpRsp* rsp = new HttpRsp;
-    str::ReplaceWithCopy(&rsp->url, uri);
-    bool ok = HttpGet(uri, rsp);
-    if (!ok) {
-        delete rsp;
-        BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
-        uri = ToStr(url);
+    HttpRsp* rsp = nullptr;
+    for (int i = 0; i < dimof(updateInfoURLs); i++) {
+        if (rsp) {
+            delete rsp;
+        }
+        str::Builder url;
+        BuildUpdateURL(url, updateInfoURLs[i], updateCheckType);
+        Str uri = ToStr(url);
         rsp = new HttpRsp;
         str::ReplaceWithCopy(&rsp->url, uri);
-        HttpGet(uri, rsp);
+        if (HttpGet(uri, rsp)) {
+            break;
+        }
     }
     data->rsp = rsp;
     auto fn = MkFunc0<UpdateCheckAsyncData>(UpdateCheckFinish, data);

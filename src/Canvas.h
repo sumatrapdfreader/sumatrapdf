@@ -8,6 +8,11 @@ LRESULT WndProcCanvasAbout(MainWindow*, HWND, UINT, WPARAM, LPARAM);
 bool IsDragDistance(int x1, int x2, int y1, int y2);
 void CancelDrag(MainWindow*);
 void StartAutoScrollAtCursor(MainWindow*);
+// Draw a keyboard-focus ring on the canvas when document focus is on the frame
+// (AdvanceFocus tab target). Call after painting the canvas client area (#4644).
+void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
+// Invalidate the canvas so the focus ring is shown/hidden after focus changes.
+void InvalidateCanvasKeyboardFocus(MainWindow* win);
 
 extern Kind kNotifAnnotation;
 

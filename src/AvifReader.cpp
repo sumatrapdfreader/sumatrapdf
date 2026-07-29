@@ -2,155 +2,162 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Exif.h"
 #include "base/Pixmap.h"
 #include "AvifReader.h"
 
+#if OS_WIN
+#include "base/GdiPlus.h"
+#endif
+
 #ifndef NO_AVIF
 
-#include <libheif/heif.h>
+#include "heic.h"
+
+// Set pixmap xres/yres from EXIF density. DisplayModel uses xres as fileDPI:
+// zoomReal at 100% is screenDPI/fileDPI, so a missing density (default 96)
+// makes photos with EXIF 72 or 300 DPI look the wrong physical size.
+static void ApplyExifDensity(Pixmap* px, const ExifParser& parser) {
+    if (!px) {
+        return;
+    }
+    double dpiX = 0, dpiY = 0;
+    if (!parser.GetFloatProp(ExifProp::XResolution, &dpiX) || !parser.GetFloatProp(ExifProp::YResolution, &dpiY) ||
+        dpiX <= 0 || dpiY <= 0) {
+        return;
+    }
+    // ResolutionUnit: 2 = inches (default), 3 = cm → convert to dpi.
+    i64 unit = 2;
+    parser.GetIntProp(ExifProp::ResolutionUnit, &unit);
+    if (unit == 3) {
+        dpiX *= 2.54;
+        dpiY *= 2.54;
+    }
+    if (dpiX >= 1.0 && dpiX <= 10000.0) {
+        px->xres = (float)dpiX;
+    }
+    if (dpiY >= 1.0 && dpiY <= 10000.0) {
+        px->yres = (float)dpiY;
+    }
+}
 
 Size AvifSizeFromData(Str d) {
     Size res;
-    struct heif_image_handle* hdl = nullptr;
 
-    heif_context* ctx = heif_context_alloc();
-
-    // TODO: can I provide a subset of the image?
-    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)(u8*)d.s, (size_t)d.len, nullptr);
-    if (err.code != heif_error_Ok) {
-        goto Exit;
+    heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
+    if (!ctx) {
+        return res;
     }
-    err = heif_context_get_primary_image_handle(ctx, &hdl);
-    if (err.code != heif_error_Ok) {
-        goto Exit;
+    heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
+    if (doc) {
+        heic_image_info info{};
+        if (heic_doc_info(doc, &info) == 0) {
+            res.dx = (int)info.width;
+            res.dy = (int)info.height;
+        }
+        heic_doc_close(doc);
     }
-    res.dx = heif_image_handle_get_width(hdl);
-    res.dy = heif_image_handle_get_height(hdl);
-
-Exit:
-    if (hdl) {
-        heif_image_handle_release(hdl);
-    }
-    heif_context_free(ctx);
+    heic_ctx_free(ctx);
     return res;
 }
 
 Pixmap* PixmapFromAvifData(Str d) {
     Pixmap* px = nullptr;
-    struct heif_image_handle* hdl = nullptr;
-    struct heif_image* img = nullptr;
-    int dx, dy, srcStride;
-    // int hasAlpha;
-    const u8* data = nullptr;
-    heif_chroma chroma;
-    heif_colorspace cs;
 
-    heif_context* ctx = heif_context_alloc();
-    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)(u8*)d.s, (size_t)d.len, nullptr);
-
-    if (err.code != heif_error_Ok) {
-        goto Exit;
+    heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
+    if (!ctx) {
+        return nullptr;
+    }
+    heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
+    if (!doc) {
+        heic_ctx_free(ctx);
+        return nullptr;
     }
 
-    err = heif_context_get_primary_image_handle(ctx, &hdl);
-    if (err.code != heif_error_Ok) {
-        goto Exit;
-    }
-
-    dx = heif_image_handle_get_width(hdl);
-    dy = heif_image_handle_get_height(hdl);
-
-    // hasAlpha = heif_image_handle_has_alpha_channel(hdl);
-    // chroma = hasAlpha ? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RGB;
-    chroma = heif_chroma_interleaved_RGB;
-    cs = heif_colorspace_RGB; // TODO: can I do it or do I have to match alpha?
-    err = heif_decode_image(hdl, &img, cs, chroma, nullptr);
-
-    if (err.code != heif_error_Ok) {
-        goto Exit;
-    }
-
-    data = heif_image_get_plane_readonly(img, heif_channel_interleaved, &srcStride);
-    if (!data) {
-        goto Exit;
-    }
-
-    // expand interleaved RGB into a BGRA8 Pixmap (opaque alpha)
-    px = AllocPixmap(dx, dy, PixmapFormat::BGRA8);
-    if (px) {
-        int dstStride = px->stride;
-        u8* src = (u8*)data;
-        u8* dst = px->data;
-        for (int i = 0; i < dy; i++) {
-            u8* srcTmp = src;
-            u8* dstTmp = dst;
-            for (int j = 0; j < dx; j++) {
-                *dst++ = src[2]; // B
-                *dst++ = src[1]; // G
-                *dst++ = src[0]; // R
-                *dst++ = 255;    // A (opaque)
-                src += 3;
+    // decode straight to BGRA for PixmapFormat::BGRA8
+    heic_image* img = heic_doc_decode(doc, HEIC_FORMAT_BGRA);
+    if (img && img->data) {
+        int dx = (int)img->width;
+        int dy = (int)img->height;
+        px = AllocPixmap(dx, dy, PixmapFormat::BGRA8);
+        if (px) {
+            int srcStride = img->stride;
+            int dstStride = px->stride;
+            u8* src = img->data;
+            u8* dst = px->data;
+            int rowBytes = dx * 4;
+            for (int y = 0; y < dy; y++) {
+                memcpy(dst, src, (size_t)rowBytes);
+                src += srcStride;
+                dst += dstStride;
             }
-            src = srcTmp + srcStride;
-            dst = dstTmp + dstStride;
         }
     }
 
-Exit:
     if (img) {
-        heif_image_release(img);
+        heic_image_destroy(ctx, img);
     }
-    if (hdl) {
-        heif_image_handle_release(hdl);
+
+    // EXIF density + orientation. heicdec returns decoded pixels without
+    // applying density (defaults to 96 dpi); WIC/GDI+ honor EXIF resolution,
+    // which is what DisplayModel uses for 100% zoom size.
+    if (px) {
+        u8* exif = nullptr;
+        size_t n = 0;
+        if (heic_doc_exif(doc, &exif, &n) != 0 && exif && n > 0) {
+            ExifParser parser;
+            if (parser.Parse(Str((const char*)exif, (int)n))) {
+                ApplyExifDensity(px, parser);
+#if OS_WIN
+                i64 orient = 0;
+                if (parser.GetIntProp(ExifProp::Orientation, &orient)) {
+                    px = PixmapApplyExifOrientation(px, (int)orient);
+                }
+#endif
+            }
+            heic_free(ctx, exif);
+        }
     }
-    if (ctx) {
-        heif_context_free(ctx);
-    }
+
+    heic_doc_close(doc);
+    heic_ctx_free(ctx);
     return px;
 }
 
 bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
     *outData = nullptr;
     *outSize = 0;
-    heif_context* ctx = heif_context_alloc();
+
+    heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
     if (!ctx) {
         return false;
     }
-    bool ok = false;
-    heif_image_handle* hdl = nullptr;
-    u8* buf = nullptr;
-    auto err = heif_context_read_from_memory_without_copy(ctx, (u8*)d.s, (size_t)d.len, nullptr);
-    if (err.code == heif_error_Ok) {
-        err = heif_context_get_primary_image_handle(ctx, &hdl);
+    heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
+    if (!doc) {
+        heic_ctx_free(ctx);
+        return false;
     }
-    if (err.code == heif_error_Ok && hdl) {
-        int n = heif_image_handle_get_number_of_metadata_blocks(hdl, "Exif");
-        heif_item_id id = 0;
-        if (n > 0 && heif_image_handle_get_list_of_metadata_block_IDs(hdl, "Exif", &id, 1) == 1) {
-            size_t sz = heif_image_handle_get_metadata_size(hdl, id);
-            if (sz > 4) {
-                buf = (u8*)malloc(sz);
-                if (buf) {
-                    err = heif_image_handle_get_metadata(hdl, id, buf);
-                    if (err.code == heif_error_Ok) {
-                        size_t payload = sz - 4;
-                        u8* copy = (u8*)malloc(payload);
-                        if (copy) {
-                            memcpy(copy, buf + 4, payload);
-                            *outData = copy;
-                            *outSize = payload;
-                            ok = true;
-                        }
-                    }
-                }
-            }
+
+    // TIFF payload; HEIF 4-byte prefix already stripped by heic_doc_exif.
+    // heic allocates with a size header (must free via heic_free); copy out so
+    // callers can free() with the ordinary allocator.
+    u8* exif = nullptr;
+    size_t n = 0;
+    bool ok = heic_doc_exif(doc, &exif, &n) != 0 && exif && n > 0;
+    if (ok) {
+        u8* copy = (u8*)malloc(n);
+        if (copy) {
+            memcpy(copy, exif, n);
+            *outData = copy;
+            *outSize = n;
+        } else {
+            ok = false;
         }
+        heic_free(ctx, exif);
     }
-    free(buf);
-    if (hdl) {
-        heif_image_handle_release(hdl);
-    }
-    heif_context_free(ctx);
+
+    heic_doc_close(doc);
+    heic_ctx_free(ctx);
     return ok;
 }
 #else

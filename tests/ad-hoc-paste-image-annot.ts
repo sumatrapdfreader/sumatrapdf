@@ -76,7 +76,7 @@ export async function testit(): Promise<void> {
     throw new Error(`failed to set clipboard image: ${set.stderr.toString()}`);
   }
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
   await sleep(300);
   const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
   try {

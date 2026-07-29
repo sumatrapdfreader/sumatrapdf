@@ -4,6 +4,7 @@
 // Claude Code provider for the AI chat sidebar (see AIChatPanel.cpp)
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -185,40 +186,46 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
-        if (len(lineRaw) > 0) {
-            TempStr line = str::DupTemp(lineRaw);
-
-            // Session JSONL format:
-            // User messages: content can be string or array
-            // Assistant messages: content is always array
-
-            TempStr userText = ExtractUserTextTemp(line);
-            if (userText) {
-                AIChatHistoryAddUser(win, userText);
-            } else if (str::Contains(line, StrL("\"role\":\"assistant\""))) {
-                // assistant message
-                if (str::Contains(line, StrL("\"type\":\"thinking\""))) {
-                    // skip thinking blocks
-                } else if (str::Contains(line, StrL("\"type\":\"text\""))) {
-                    TempStr text = AIChatJsonStrTemp(line, "text");
-                    if (len(text) > 0) {
-                        AIChatHistoryAppendText(win, text);
-                        AIChatHistoryFlushBlock(win);
-                    }
-                } else if (str::Contains(line, StrL("\"type\":\"tool_use\""))) {
-                    TempStr toolName = AIChatJsonStrTemp(line, "name");
-                    if (toolName) {
-                        TempStr fp = AIChatJsonStrTemp(line, "file_path");
-                        str::Builder desc;
-                        desc.Append(fmt("Tool: %s", toolName));
-                        if (fp) {
-                            desc.Append(fmt(" (%s)", fp));
-                        }
-                        AIChatHistoryAddTool(win, ToStr(desc));
-                    }
-                }
-            }
+        if (len(lineRaw) == 0) {
+            continue;
         }
+        TempStr line = str::DupTemp(lineRaw);
+
+        // Session JSONL format:
+        // User messages: content can be string or array
+        // Assistant messages: content is always array
+
+        TempStr userText = ExtractUserTextTemp(line);
+        if (userText) {
+            AIChatHistoryAddUser(win, userText);
+            continue;
+        }
+        if (!str::Contains(line, StrL("\"role\":\"assistant\"")) ||
+            str::Contains(line, StrL("\"type\":\"thinking\""))) {
+            continue;
+        }
+        if (str::Contains(line, StrL("\"type\":\"text\""))) {
+            TempStr text = AIChatJsonStrTemp(line, "text");
+            if (len(text) > 0) {
+                AIChatHistoryAppendText(win, text);
+                AIChatHistoryFlushBlock(win);
+            }
+            continue;
+        }
+        if (!str::Contains(line, StrL("\"type\":\"tool_use\""))) {
+            continue;
+        }
+        TempStr toolName = AIChatJsonStrTemp(line, "name");
+        if (!toolName) {
+            continue;
+        }
+        TempStr fp = AIChatJsonStrTemp(line, "file_path");
+        str::Builder desc;
+        desc.Append(fmt("Tool: %s", toolName));
+        if (fp) {
+            desc.Append(fmt(" (%s)", fp));
+        }
+        AIChatHistoryAddTool(win, ToStr(desc));
     }
 
     str::Free(data);
@@ -246,17 +253,13 @@ struct ClaudeCodeProvider : AIChatProvider {
         terminateOnFinish = true;
     }
 
-    TempStr TitleTemp() override {
-        return str::DupTemp(_TRA("Claude chat"));
-    }
+    TempStr TitleTemp() override { return str::DupTemp(_TRA("Claude chat")); }
 
     TempStr NotInstalledInstructionTemp() override {
         return str::DupTemp(_TRA("Claude Code cli must be installed for this functionality"));
     }
 
-    TempStr FindExecutableTemp() override {
-        return FindClaudeExecutableTemp();
-    }
+    TempStr FindExecutableTemp() override { return FindClaudeExecutableTemp(); }
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
@@ -273,31 +276,15 @@ struct ClaudeCodeProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override {
-        return gGlobalPrefs->claudeCode.model;
-    }
-    void SetModel(Str model) override {
-        str::ReplaceWithCopy(&gGlobalPrefs->claudeCode.model, model);
-    }
-    int GetOption() override {
-        return gGlobalPrefs->claudeCode.effort;
-    }
-    void SetOption(int option) override {
-        gGlobalPrefs->claudeCode.effort = option;
-    }
-    bool GetFlag() override {
-        return gGlobalPrefs->claudeCode.skipPermissions;
-    }
-    void SetFlag(bool flag) override {
-        gGlobalPrefs->claudeCode.skipPermissions = flag;
-    }
-    Str GetBgColor() override {
-        return gGlobalPrefs->claudeCode.bgColor;
-    }
+    Str GetModel() override { return gGlobalPrefs->claudeCode.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->claudeCode.model, model); }
+    int GetOption() override { return gGlobalPrefs->claudeCode.effort; }
+    void SetOption(int option) override { gGlobalPrefs->claudeCode.effort = option; }
+    bool GetFlag() override { return gGlobalPrefs->claudeCode.skipPermissions; }
+    void SetFlag(bool flag) override { gGlobalPrefs->claudeCode.skipPermissions = flag; }
+    Str GetBgColor() override { return gGlobalPrefs->claudeCode.bgColor; }
 
-    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
-        CollectClaudeSessions(dir, sessions);
-    }
+    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectClaudeSessions(dir, sessions); }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
         LoadClaudeSessionHistory(win, sessionId, dir);
@@ -307,56 +294,61 @@ struct ClaudeCodeProvider : AIChatProvider {
         Str efforts[] = {"low", "medium", "high", "max"};
         Str permsFlag = args.flag ? "--dangerously-skip-permissions" : "";
         TempStr sessionName = path::GetBaseNameTemp(args.filePath);
+        TempStr sysPrompt = fmt("The user is currently reading the file: %s", args.filePath);
         if (args.isNewSession) {
             return fmt(
-                "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --session-id %s "
-                "--name \"%s\" "
-                "--append-system-prompt \"The user is currently reading the file: %s\" "
-                "\"%s\"",
-                args.exePath, args.model, efforts[args.option], permsFlag, args.sessionId, sessionName, args.filePath,
-                args.escapedInput);
+                "%s -p --verbose --model %s --effort %s --output-format stream-json %s --session-id %s "
+                "--name %s --append-system-prompt %s %s",
+                QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+                args.sessionId, QuoteCmdLineArgTemp(sessionName), QuoteCmdLineArgTemp(sysPrompt),
+                QuoteCmdLineArgTemp(args.escapedInput));
         }
         return fmt(
-            "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
-            "--append-system-prompt \"The user is currently reading the file: %s\" "
-            "\"%s\"",
-            args.exePath, args.model, efforts[args.option], permsFlag, args.sessionId, args.filePath,
-            args.escapedInput);
+            "%s -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
+            "--append-system-prompt %s %s",
+            QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
+            args.sessionId, QuoteCmdLineArgTemp(sysPrompt), QuoteCmdLineArgTemp(args.escapedInput));
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
         TempStr eventType = AIChatJsonStrTemp(line, "type");
-
-        if (eventType && str::Eq(eventType, "assistant")) {
+        if (!eventType) {
+            return;
+        }
+        if (str::Eq(eventType, "assistant")) {
             if (str::Contains(line, StrL("\"type\":\"text\""))) {
                 TempStr text = AIChatJsonStrTemp(line, "text");
                 if (len(text) > 0) {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Text, text);
                 }
             }
-            if (str::Contains(line, StrL("\"type\":\"tool_use\""))) {
-                TempStr toolName = AIChatJsonStrTemp(line, "name");
-                if (toolName) {
-                    TempStr fp = AIChatJsonStrTemp(line, "file_path");
-                    TempStr cmd = AIChatJsonStrTemp(line, "command");
-                    TempStr pat = AIChatJsonStrTemp(line, "pattern");
-                    str::Builder desc;
-                    desc.Append(fmt("Tool: %s", toolName));
-                    if (fp) {
-                        desc.Append(fmt(" (%s)", fp));
-                    } else if (cmd) {
-                        if (len(cmd) > 60) {
-                            desc.Append(fmt(" $ %.60s...", cmd));
-                        } else {
-                            desc.Append(fmt(" $ %s", cmd));
-                        }
-                    } else if (pat) {
-                        desc.Append(fmt(" /%s/", pat));
-                    }
-                    AIChatPostUpdate(ctx, AIChatUpdateType::Tool, ToStr(desc));
-                }
+            if (!str::Contains(line, StrL("\"type\":\"tool_use\""))) {
+                return;
             }
-        } else if (eventType && str::Eq(eventType, "user")) {
+            TempStr toolName = AIChatJsonStrTemp(line, "name");
+            if (!toolName) {
+                return;
+            }
+            TempStr fp = AIChatJsonStrTemp(line, "file_path");
+            TempStr cmd = AIChatJsonStrTemp(line, "command");
+            TempStr pat = AIChatJsonStrTemp(line, "pattern");
+            str::Builder desc;
+            desc.Append(fmt("Tool: %s", toolName));
+            if (fp) {
+                desc.Append(fmt(" (%s)", fp));
+            } else if (cmd) {
+                if (len(cmd) > 60) {
+                    desc.Append(fmt(" $ %.60s...", cmd));
+                } else {
+                    desc.Append(fmt(" $ %s", cmd));
+                }
+            } else if (pat) {
+                desc.Append(fmt(" /%s/", pat));
+            }
+            AIChatPostUpdate(ctx, AIChatUpdateType::Tool, ToStr(desc));
+            return;
+        }
+        if (str::Eq(eventType, "user")) {
             if (str::Contains(line, StrL("\"tool_use_result\""))) {
                 TempStr fp = AIChatJsonStrTemp(line, "filePath");
                 if (fp) {
@@ -365,7 +357,9 @@ struct ClaudeCodeProvider : AIChatProvider {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Tool, ToStr(desc));
                 }
             }
-        } else if (eventType && str::Eq(eventType, "result")) {
+            return;
+        }
+        if (str::Eq(eventType, "result")) {
             TempStr sub = AIChatJsonStrTemp(line, "subtype");
             if (sub && str::Eq(sub, "error")) {
                 TempStr err = AIChatJsonStrTemp(line, "error");

@@ -214,6 +214,16 @@ bool DisplayModel::GetDisplayR2L() const {
     return displayR2L;
 }
 
+// toRight: user moved/keyed toward the right (VK_RIGHT, swipe right).
+// LTR: right = next page; manga R2L: left = next page (issue #3964).
+bool DisplayModel::GoToPageHorizontal(bool toRight) {
+    bool goNext = toRight != displayR2L;
+    if (goNext) {
+        return GoToNextPage();
+    }
+    return GoToPrevPage();
+}
+
 void DisplayModel::RepaintDisplay() {
     cb->Repaint();
 }
@@ -668,7 +678,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     if (isShrinkToFit) {
         zoomVirtual = kZoomFitPage;
     }
-    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitPage && zoomVirtual != kZoomFitContent) {
+    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage &&
+        zoomVirtual != kZoomFitContent) {
         return zoomVirtual * 0.01f * dpiFactor;
     }
 
@@ -719,8 +730,12 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     float zoomX = areaForPagesDx / row.dx;
     float zoomY = areaForPagesDy / row.dy;
     float zoom;
-    if (zoomX < zoomY || kZoomFitWidth == zoomVirtual) {
+    if (kZoomFitWidth == zoomVirtual) {
         zoom = zoomX;
+    } else if (kZoomFitHeight == zoomVirtual) {
+        zoom = zoomY; // issue #1714
+    } else if (zoomX < zoomY) {
+        zoom = zoomX; // Fit Page / Fit Content: fit both axes
     } else {
         zoom = zoomY;
     }
@@ -790,8 +805,8 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     ReportIf(!IsValidZoom(newZoomVirtual));
     zoomVirtual = newZoomVirtual;
     int nPages = PageCount();
-    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) || (kZoomShrinkToFit == newZoomVirtual) ||
-        (kZoomFitByOrientation == newZoomVirtual)) {
+    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitHeight == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) ||
+        (kZoomShrinkToFit == newZoomVirtual) || (kZoomFitByOrientation == newZoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most documents
            all pages are the same size anyway */
@@ -906,6 +921,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.usePageZooms = true;
         params.windowMargin = ToDocumentLayoutMargin(windowMargin);
         params.pageSpacing = pageSpacing;
+        params.paddingAfterLastPage = gGlobalPrefs->paddingAfterLastPage;
         layout.Relayout(params);
 
         if (!hideScrollbars && !useOverlayScrollbar && !needVScroll && layout.canvasSize.dy > layout.viewPort.dy) {
@@ -1429,8 +1445,8 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
     GoToPage(currPageNo, 0);
 }
 
-void DisplayModel::SetInPresentation(bool inPres) {
-    inPresentation = inPres;
+void DisplayModel::SetInPresentation(bool enable) {
+    inPresentation = enable;
     if (inPresentation) {
         presDisplayMode = displayMode;
         presZoomVirtual = zoomVirtual;
@@ -1666,7 +1682,8 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
         return;
     }
 
-    bool scrollToFitPage = kZoomFitPage == zoomLevel || kZoomFitContent == zoomLevel || kZoomShrinkToFit == zoomLevel;
+    bool scrollToFitPage = kZoomFitPage == zoomLevel || kZoomFitHeight == zoomLevel || kZoomFitContent == zoomLevel ||
+                           kZoomShrinkToFit == zoomLevel;
     if (zoomVirtual == zoomLevel && (fixPt || !scrollToFitPage)) {
         return;
     }
@@ -1836,6 +1853,22 @@ void DisplayModel::RotateBy(int newRotation) {
     GoToPage(currPageNo, 0);
 }
 
+// True when glyph i's bbox intersects region enough to count as selected.
+static bool GlyphInRegion(const Rect* coords, int textLen, int i, Rect regionI) {
+    if (i < 0 || i >= textLen || !coords) {
+        return false;
+    }
+    Rect rect = coords[i];
+    if (!rect.dx && !rect.dy) {
+        return false; // empty box (newline / soft-join space): not a hit by itself
+    }
+    Rect isect = regionI.Intersect(rect);
+    if (isect.IsEmpty()) {
+        return false;
+    }
+    return 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3;
+}
+
 /* Given <region> (in user coordinates) on page <pageNo>, returns text in that region. */
 Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
@@ -1851,14 +1884,35 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     for (int i = 0; i < textLen; i++) {
         int charStart = byteIdx;
         int c = Utf8CodepointNext(pageText, byteIdx);
-        if (c != '\n') {
-            Rect rect = coords[i];
-            Rect isect = regionI.Intersect(rect);
-            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
+        if (c == '\n') {
+            if (result.LastChar() != '\n') {
+                result.Append(StrL("\r\n"));
+            }
+            continue;
+        }
+        Rect rect = coords[i];
+        // Soft-join spaces from FzTextPageToUtf8 (#5793) use empty rects (like hard
+        // newlines). Include them when both neighboring content glyphs are selected
+        // so Select-All / rectangular copy keeps spaces at wrap points.
+        if (!rect.dx && !rect.dy) {
+            if (c != ' ' && c != '\t') {
+                continue;
+            }
+            int prev = i - 1;
+            while (prev >= 0 && !coords[prev].dx && !coords[prev].dy) {
+                prev--;
+            }
+            int next = i + 1;
+            while (next < textLen && !coords[next].dx && !coords[next].dy) {
+                next++;
+            }
+            if (GlyphInRegion(coords, textLen, prev, regionI) && GlyphInRegion(coords, textLen, next, regionI)) {
                 result.Append(Str(pageText.s + charStart, byteIdx - charStart));
             }
-        } else if (result.LastChar() != '\n') {
-            result.Append(StrL("\r\n"));
+            continue;
+        }
+        if (GlyphInRegion(coords, textLen, i, regionI)) {
+            result.Append(Str(pageText.s + charStart, byteIdx - charStart));
         }
     }
 
@@ -1879,9 +1933,9 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
     return ScrollScreenToRect(res->pages[0], extremes);
 }
 
-bool DisplayModel::ScrollScreenToRect(int pageNo, Rect extremes) {
+bool DisplayModel::ScrollScreenToRect(int pageNo, Rect rec) {
     // don't scroll if the whole result is already visible
-    if (Rect(Point(), viewPort.Size()).Intersect(extremes) == extremes) {
+    if (Rect(Point(), viewPort.Size()).Intersect(rec) == rec) {
         return false;
     }
 
@@ -1892,20 +1946,19 @@ bool DisplayModel::ScrollScreenToRect(int pageNo, Rect extremes) {
     // (scrolling up) and 60% (scrolling down) of the screen, so that
     // the search direction remains obvious and we still display some
     // context before and after the found text
-    if (extremes.y < viewPort.dy * 2 / 5) {
-        sy = extremes.y - viewPort.dy * 2 / 5;
-    } else if (extremes.y + extremes.dy > viewPort.dy * 3 / 5) {
-        sy = std::min(extremes.y + extremes.dy - viewPort.dy * 3 / 5,
-                      extremes.y + extremes.dy / 2 - viewPort.dy * 2 / 5);
+    if (rec.y < viewPort.dy * 2 / 5) {
+        sy = rec.y - viewPort.dy * 2 / 5;
+    } else if (rec.y + rec.dy > viewPort.dy * 3 / 5) {
+        sy = std::min(rec.y + rec.dy - viewPort.dy * 3 / 5, rec.y + rec.dy / 2 - viewPort.dy * 2 / 5);
     }
 
     // horizontally, we try to position the search result at the
     // center of the screen, but don't scroll further than page
     // boundaries, so that as much context as possible remains visible
-    if (extremes.x < 0) {
-        sx = std::max(extremes.x + extremes.dx / 2 - viewPort.dx / 2, pageInfo->pageOnScreen.x);
-    } else if (extremes.x + extremes.dx >= viewPort.dx) {
-        sx = std::min(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
+    if (rec.x < 0) {
+        sx = std::max(rec.x + rec.dx / 2 - viewPort.dx / 2, pageInfo->pageOnScreen.x);
+    } else if (rec.x + rec.dx >= viewPort.dx) {
+        sx = std::min(rec.x + rec.dx / 2 - viewPort.dx / 2,
                       pageInfo->pageOnScreen.x + pageInfo->pageOnScreen.dx - viewPort.dx);
     }
 
@@ -2091,28 +2144,47 @@ void DisplayModel::ScrollToLink(IPageDestination* dest) {
 
 void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     Point scroll(-1, 0);
+
+    // zoom: absolute fraction (1.0 = 100%) for /XYZ; virtual Fit* modes
+    // (kZoomFitPage / FitWidth / FitContent); 0 = leave zoom (issue #5828).
+    // FitContent uses CurrentPageNo() for the content box, so switch page first
+    // for virtual modes, then apply zoom, then fine-tune scroll.
+    bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitHeight ||
+                         zoom == kZoomFitContent || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
+    bool isAbsZoom = zoom > 0;
+
+    if (isVirtualZoom) {
+        GoToPage(pageNo, 0, true, -1);
+        SetZoomVirtual(zoom, nullptr);
+    } else if (isAbsZoom) {
+        SetZoomVirtual(100 * zoom, nullptr);
+        CalcZoomReal(zoomVirtual);
+    }
+
     // use per-page zoom which may differ from global zoomReal
     // when pages have varying sizes in fit-width/fit-page mode
     float pageZoom = GetZoomReal(pageNo);
 
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
-        // PDF: /XYZ top left zoom
-        // scroll to rect.TL()
-        if (zoom) {
-            SetZoomVirtual(100 * zoom, nullptr);
-            CalcZoomReal(zoomVirtual);
-            pageZoom = GetZoomReal(pageNo);
-        }
+        // PDF: /XYZ, /Fit, /FitB — scroll to rect.TL() (defaults = page top)
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll = ToPoint(scrollD);
 
-        // default values for the coordinates mean: keep the current position
+        // Unspecified X: keep horizontal scroll.
         if (DEST_USE_DEFAULT == rect.x) {
             scroll.x = -1;
         }
+        // Unspecified Y (page-level /Fit, /XYZ with null top): land at the top
+        // of the *target* page. Reusing the current page's on-screen offset
+        // often scrolls continuous view so the next page is most visible
+        // ("bookmark lands one page ahead", #2799 / #3310).
         if (DEST_USE_DEFAULT == rect.y) {
-            PageInfo* pageInfo = GetPageInfo(CurrentPageNo());
-            scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
+            if (pageNo == CurrentPageNo()) {
+                PageInfo* pageInfo = GetPageInfo(pageNo);
+                scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
+            } else {
+                scroll.y = 0;
+            }
         }
     } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
@@ -2123,20 +2195,18 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll.y = (int)scrollD.y;
     }
-    // else if (Fit || FitV) zoom = kZoomFitPage
-    // else if (FitB || FitBV) zoom = kZoomFitContent
-    /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-    if (zoom != kInvalidZoom) {
-        // TODO: adjust the zoom level before calculating the scrolling coordinates
-        SetZoomVirtual(zoom);
-        UpdateToolbarState(owner);
-    }
-    // */
     // TODO: prevent scroll.y from getting too large?
     if (scroll.y < 0) {
         scroll.y = 0; // Adobe Reader never shows the previous page
     }
-    GoToPage(pageNo, scroll.y, true, -1);
+    if (isVirtualZoom) {
+        // already on pageNo; only adjust scroll after fit zoom
+        if (scroll.y > 0) {
+            ScrollYTo(scroll.y);
+        }
+    } else {
+        GoToPage(pageNo, scroll.y, true, -1);
+    }
     if (rect.x != DEST_USE_DEFAULT) {
         float docY = (rect.y != DEST_USE_DEFAULT) ? rect.y : 0.f;
         Rect destScreen = CvtToScreen(pageNo, RectF(rect.x, docY, 1, 1));

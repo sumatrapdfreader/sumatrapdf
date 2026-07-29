@@ -405,8 +405,13 @@ static FileType DetectFileTypeFromData(Str d) {
 // n is the number of sizes appended so far, cap the current capacity
 static void AppendImageSize(FileTypeInfo& res, int n, int& cap, int dx, int dy) {
     if (n >= cap) {
-        cap = cap ? cap * 2 : 4;
-        res.imageSizes = (Size*)realloc(res.imageSizes, (size_t)cap * sizeof(Size));
+        int newCap = cap ? cap * 2 : 4;
+        Size* p = (Size*)realloc(res.imageSizes, (size_t)newCap * sizeof(Size));
+        if (!p) {
+            return;
+        }
+        res.imageSizes = p;
+        cap = newCap;
     }
     res.imageSizes[n] = Size(dx, dy);
 }

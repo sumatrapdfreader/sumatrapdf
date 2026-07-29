@@ -63,6 +63,13 @@ Type GetType(Str path);
 } // namespace path
 
 TempStr GetTempFilePathTemp(Str filePrefix = Str());
+// Path of this process image (exe or DLL that contains this code).
+TempStr GetSelfExePathTemp();
+#if OS_WIN
+TempWStr GetSelfExePathW();
+#endif
+// Directory containing GetSelfExePathTemp().
+TempStr GetSelfExeDirTemp();
 TempStr GetPathInExeDirTemp(Str fileName = Str());
 TempStr MakeUniqueFilePathTemp(Str path);
 

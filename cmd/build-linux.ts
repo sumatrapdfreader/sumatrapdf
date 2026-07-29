@@ -33,10 +33,8 @@ import {
   zlib,
   unrar,
   libwebp,
-  skcms,
-  highway,
-  libjxl,
-  libheif,
+  jxldec,
+  heicdec,
   libjpegTurbo,
   jbig2dec,
   openjpeg,
@@ -90,98 +88,6 @@ function resolveLinuxTools(arch: LinuxArch): BuildTools {
   return { cc, cxx, ar, embed };
 }
 
-function makeLibdjvu(): LibDef {
-  return {
-    ...structuredClone(libdjvuBase()),
-    defines: [
-      "UNIX",
-      "NEED_JPEG_DECODER",
-      "HAVE_PTHREAD",
-      "HAS_WCHAR=1",
-      "HAS_WCTYPE=1",
-      "HAS_MBSTATE=1",
-      "DDJVUAPI=",
-      "MINILISPAPI=",
-      "DEBUGLVL=0",
-      "DISABLE_MMX",
-    ],
-  };
-}
-
-function libdjvuBase(): LibDef {
-  return {
-    name: "libdjvu",
-    alwaysOptimize: true,
-    exceptions: true,
-    defines: [],
-    includes: ["ext/libjpeg-turbo/src"],
-    files: [
-      {
-        dir: "ext/libdjvu",
-        patterns: [
-          "Arrays.cpp",
-          "atomic.cpp",
-          "BSByteStream.cpp",
-          "BSEncodeByteStream.cpp",
-          "ByteStream.cpp",
-          "DataPool.cpp",
-          "DjVmDir0.cpp",
-          "DjVmDoc.cpp",
-          "DjVmNav.cpp",
-          "DjVuAnno.cpp",
-          "DjVuDocEditor.cpp",
-          "DjVuDocument.cpp",
-          "DjVuDumpHelper.cpp",
-          "DjVuErrorList.cpp",
-          "DjVuFile.cpp",
-          "DjVuFileCache.cpp",
-          "DjVuGlobal.cpp",
-          "DjVuGlobalMemory.cpp",
-          "DjVuImage.cpp",
-          "DjVuInfo.cpp",
-          "DjVuMessage.cpp",
-          "DjVuMessageLite.cpp",
-          "DjVuNavDir.cpp",
-          "DjVuPalette.cpp",
-          "DjVuPort.cpp",
-          "DjVuText.cpp",
-          "DjVuToPS.cpp",
-          "GBitmap.cpp",
-          "GContainer.cpp",
-          "GException.cpp",
-          "GIFFManager.cpp",
-          "GMapAreas.cpp",
-          "GOS.cpp",
-          "GPixmap.cpp",
-          "GRect.cpp",
-          "GScaler.cpp",
-          "GSmartPointer.cpp",
-          "GString.cpp",
-          "GThreads.cpp",
-          "GUnicode.cpp",
-          "GURL.cpp",
-          "IFFByteStream.cpp",
-          "IW44EncodeCodec.cpp",
-          "IW44Image.cpp",
-          "JB2EncodeCodec.cpp",
-          "DjVmDir.cpp",
-          "JB2Image.cpp",
-          "JPEGDecoder.cpp",
-          "MMRDecoder.cpp",
-          "MMX.cpp",
-          "UnicodeByteStream.cpp",
-          "XMLParser.cpp",
-          "XMLTags.cpp",
-          "ZPCodec.cpp",
-          "ddjvuapi.cpp",
-          "debug.cpp",
-          "miniexp.cpp",
-        ],
-      },
-    ],
-  };
-}
-
 function makeLibarchive(outDir: string): LibDef {
   const liblzmaConfigDir = join(outDir, "generated", "liblzma");
   return {
@@ -200,7 +106,6 @@ function makeLibarchive(outDir: string): LibDef {
       "ext/libarchive",
       "ext/a-zlib",
       "ext/a-bzip2",
-      "ext/lzma/C",
       "ext/liblzma/api",
       "ext/liblzma/common",
       "ext/liblzma/check",
@@ -300,7 +205,7 @@ function makeLibarchive(outDir: string): LibDef {
         dir: "ext/a-bzip2",
         patterns: ["bzip2.c"],
       },
-      { dir: "ext/lzma/C", patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"] },
+      // LzmaDec/Bra* live in base/exe for LzSA (not in libmupdf/libarchive)
       {
         dir: "ext/liblzma",
         patterns: [
@@ -408,14 +313,14 @@ function makeDav1d(arch: LinuxArch, generatedDir: string): LibDef {
   };
 }
 
-function makeChm(): LibDef {
+function makeChmdec(): LibDef {
   return {
-    name: "chm",
+    name: "chmdec",
     alwaysOptimize: true,
     defines: ["_stricmp=strcasecmp", "_strnicmp=strncasecmp"],
     includes: [],
     extraCflags: ["-include", "limits.h"],
-    files: [{ dir: "ext/libchm", patterns: ["chm.c"] }],
+    files: [{ dir: "ext/chmdec", patterns: ["chm.c"] }],
   };
 }
 
@@ -596,16 +501,13 @@ const DEP_LIBS_BASE = [
   },
   zlib,
   makeUnrar,
-  makeLibdjvu,
-  makeChm,
+  makeChmdec,
   djvudec,
   "libarchive",
   libwebp,
   makeDav1d,
-  libheif,
-  skcms,
-  highway,
-  libjxl,
+  heicdec,
+  jxldec,
   libjpegTurbo,
   jbig2dec,
   openjpeg,
@@ -657,8 +559,8 @@ const TEST_ENGINES_SOURCES = [
   "src/EngineDjvuDec.cpp",
   "src/EngineImages.cpp",
   "src/EngineMupdf.cpp",
-  "src/FzImgReader.cpp",
-  "src/FzImgReader_posix.cpp",
+  "src/ImageReader.cpp",
+  "src/ImageReader_posix.cpp",
   "src/GumboHtmlParser.cpp",
   "src/GumboHelpers.cpp",
   "src/MobiDoc.cpp",

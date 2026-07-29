@@ -250,7 +250,7 @@ function msac_decode_symbol_adapt4_neon, export=1
         ret
 1:
         lsr             w15, w15, #4
-        b L(refill)
+        b               L(refill)
 .elseif \n == 8
         ldr             w6,  [x0, #CNT]
         tbl             v30.8b, {v30.16b}, v31.8b
@@ -275,7 +275,7 @@ function msac_decode_symbol_adapt4_neon, export=1
 1:
         lsr             w15, w15, #1           // ret
         mov             x7, v28.d[0]
-        b L(refill)
+        b               L(refill)
 .elseif \n == 16
         add             x8,  sp,  w15, sxtw #1
         ldrh            w3,  [x8, #48]         // v
@@ -298,7 +298,7 @@ function msac_decode_symbol_adapt4_neon, export=1
         ret
 1:
         add             w15, w15, #\n          // ret
-        b L(refill)
+        b               L(refill)
 .endif
 .endm
 

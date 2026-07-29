@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="ext">
@@ -111,7 +111,13 @@
     <ClInclude Include="..\src\AppTools.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AudiobookCharacters.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\AvifReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BuildConfig.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
@@ -207,12 +213,6 @@
     <ClInclude Include="..\src\FormFields.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\FzImgReader.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\GdiPlusExtFormats.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -228,6 +228,9 @@
     <ClInclude Include="..\src\HtmlFormatter.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ImageReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ImageSaveCropResize.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -235,6 +238,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\JxlReader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LibraryPage.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\MainWindow.h">
@@ -539,6 +545,9 @@
     <ClCompile Include="..\src\AppUnitTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\AudiobookCharacters.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\AvifReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -668,15 +677,6 @@
     <ClCompile Include="..\src\FormFields.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\FzImgReader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\FzImgReader_win.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\GdiPlusExtFormats.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -695,6 +695,12 @@
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ImageReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ImageReader_win.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ImageSaveCropResize.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -705,6 +711,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\JxlReader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LibraryPage.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">
@@ -720,6 +729,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MobiDoc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MuPDF_Exports.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\NavFilesInFolder.cpp">

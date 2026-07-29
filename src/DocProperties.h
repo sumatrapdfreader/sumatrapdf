@@ -1,9 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef DocProperties_h
-#define DocProperties_h
-
 enum class DocProp : u8 {
     None = 0,
     Title = 1,
@@ -81,5 +78,3 @@ void FreeProps(Props& props);
 
 TempStr PropNameTemp(DocProp prop);
 DocProp PropFromName(Str name);
-
-#endif

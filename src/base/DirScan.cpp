@@ -167,6 +167,11 @@ void DirScanThread(DirScanCtx* ctx) {
             break;
         }
         DirEntriesNode* node = ctx->dirsToVisit;
+        if (!node) {
+            // Spurious wake with empty queue: wait again.
+            ctx->cs.Unlock();
+            continue;
+        }
         ctx->dirsToVisit = node->next;
         ctx->inFlightCount++;
         DirEntries* dv = node->dv;

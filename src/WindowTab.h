@@ -25,6 +25,7 @@ struct WindowTab {
         None,
         About,
         Document,
+        Favorites, // full-window favorites list (CmdFavoriteShowInTab)
     };
     Type type = Type::None;
     Str filePath;
@@ -81,7 +82,8 @@ struct WindowTab {
     // first render is in flight
     bool everPaintedPage = false;
 
-    // TODO: arguably a hack
+    // Skip the next file-watcher auto-reload (e.g. after we save annotations
+    // and already call ReloadDocument ourselves). Consumed by AUTO_RELOAD_TIMER.
     bool ignoreNextAutoReload = false;
 
     // per-provider AI chat state, indexed by AIChatBackend
@@ -118,6 +120,9 @@ struct WindowTab {
     ~WindowTab();
 
     bool IsAboutTab() const;
+    bool IsFavoritesTab() const;
+    // About or Favorites: no document controller
+    bool IsNonDocumentTab() const;
 
     DisplayModel* AsFixed() const;
 

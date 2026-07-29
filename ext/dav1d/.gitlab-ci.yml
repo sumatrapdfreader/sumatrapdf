@@ -4,56 +4,56 @@ stages:
     - test
 
 .debian-amd64-common:
-    image: registry.videolan.org/dav1d-debian-unstable:20250207200301
+    image: registry.videolan.org/dav1d-debian-unstable:20260622120900
     stage: build
     tags:
         - docker
         - amd64
 
 .debian-amd64-minimum:
-    image: registry.videolan.org/dav1d-debian-minimum:20250207200301
+    image: registry.videolan.org/dav1d-debian-minimum:20260422185248
     stage: build
     tags:
         - docker
         - amd64
 
 .debian-llvm-mingw-common:
-    image: registry.videolan.org/vlc-debian-llvm-msvcrt:20250305204125
+    image: registry.videolan.org/vlc-debian-llvm-ucrt:20260121170706
     stage: build
     tags:
         - docker
         - amd64
 
 .debian-aarch64-common:
-    image: registry.videolan.org/dav1d-debian-bookworm-aarch64:20250215002814
+    image: registry.videolan.org/dav1d-debian-bookworm-aarch64:20260228141555
     stage: build
     tags:
         - docker
         - aarch64
 
 .debian-armv7-common:
-    image: registry.videolan.org/dav1d-debian-bookworm-armv7:20250215014239
+    image: registry.videolan.org/dav1d-debian-bookworm-armv7:20260217211228
     stage: build
     tags:
         - docker
         - armv7
 
 .debian-ppc64le-common:
-    image: registry.videolan.org/dav1d-debian-unstable-ppc64le:20250215003029
+    image: registry.videolan.org/dav1d-debian-unstable-ppc64le:20260210052452
     stage: build
     tags:
         - docker
         - ppc64le
 
 .android-common:
-    image: registry.videolan.org/vlc-debian-android:20241118101328
+    image: registry.videolan.org/vlc-debian-android:20260120134731
     stage: build
     tags:
         - docker
         - amd64
 
 .debian-wasm-emscripten-common:
-    image: registry.videolan.org/vlc-debian-wasm-emscripten:20250207201514
+    image: registry.videolan.org/vlc-debian-wasm-emscripten:20260120134731
     stage: build
     tags:
         - docker
@@ -342,6 +342,7 @@ build-debian-aarch64:
     extends: .debian-aarch64-common
     script:
         - meson setup build --buildtype debugoptimized
+                            -Dtrim_dsp=false
                             --werror
         - ninja -C build
         - cd build && meson test -v
@@ -353,13 +354,12 @@ build-debian-aarch64-clang-5:
         CFLAGS: '-integrated-as'
     script:
         - meson setup build --buildtype release
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && meson test -v
 
-build-debian-aarch64-clang-18:
+build-debian-aarch64-clang:
     extends: .debian-amd64-common
-    variables:
-        QEMU_LD_PREFIX: /usr/aarch64-linux-gnu/
     script:
         - meson setup build --buildtype release
                             -Dtrim_dsp=false
@@ -368,11 +368,8 @@ build-debian-aarch64-clang-18:
         - ninja -C build
         - cd build && meson test -v
 
-build-macos:
+.build-macos-common:
     stage: build
-    tags:
-        - amd64
-        - macos
     script:
         - meson setup build --buildtype release
                             -Ddefault_library=both
@@ -380,6 +377,17 @@ build-macos:
                             --werror
         - ninja -C build
         - cd build && meson test -v
+
+build-macos-x86_64:
+    extends: .build-macos-common
+    tags:
+        - amd64
+        - macos
+
+build-macos-arm64:
+    extends: .build-macos-common
+    tags:
+        - macos-xcode26
 
 build-debian-werror:
     extends: .debian-aarch64-common
@@ -394,6 +402,7 @@ build-debian-armv7:
     extends: .debian-armv7-common
     script:
         - linux32 meson setup build --buildtype debugoptimized
+                                    -Dtrim_dsp=false
                                     --werror
         - ninja -C build
         - cd build && meson test -v
@@ -405,6 +414,7 @@ build-debian-armv7-clang-5:
         CFLAGS: '-integrated-as'
     script:
         - linux32 meson setup build --buildtype release
+                                    -Dtrim_dsp=false
         - ninja -C build
         - cd build && meson test -v
 
@@ -437,7 +447,6 @@ build-debian-riscv64:
     extends: .debian-amd64-common
     variables:
         QEMU_CPU: rv64,v=true,vext_spec=v1.0,vlen=256,elen=64
-        QEMU_LD_PREFIX: /usr/riscv64-linux-gnu/
     script:
         - meson setup build --buildtype release
                             -Dtrim_dsp=false
@@ -452,8 +461,7 @@ build-debian-riscv64:
 build-debian-loongarch64:
     extends: .debian-amd64-common
     variables:
-        QEMU_CPU: max-loongarch-cpu
-        QEMU_LD_PREFIX: /opt/cross-tools/target/
+        QEMU_CPU: max
     script:
         - meson setup build --buildtype release
                             -Dtrim_dsp=false
@@ -749,8 +757,6 @@ test-debian-riscv64:
                             --cross-file package/crossfiles/riscv64-linux.meson
         - ninja -C build
         - cd build && time meson test -v --timeout-multiplier 10
-    variables:
-        QEMU_LD_PREFIX: /usr/riscv64-linux-gnu/
     parallel:
       matrix:
         - QEMU_CPU: [ "rv64,v=true,vext_spec=v1.0,vlen=128,elen=64",
@@ -771,8 +777,6 @@ test-debian-aarch64-qemu:
                             --cross-file package/crossfiles/aarch64-linux.meson
         - ninja -C build
         - cd build && time meson test -v --timeout-multiplier 10
-    variables:
-        QEMU_LD_PREFIX: /usr/aarch64-linux-gnu/
     parallel:
       matrix:
         # sve-default-vector-length sets the max vector length in bytes;
@@ -807,8 +811,7 @@ test-debian-loongarch64:
         - .test-common
     needs: ["build-debian-loongarch64"]
     variables:
-        QEMU_CPU: max-loongarch-cpu
-        QEMU_LD_PREFIX: /opt/cross-tools/target/
+        QEMU_CPU: max
     script:
         - meson setup build --buildtype release
                             -Dtestdata_tests=true

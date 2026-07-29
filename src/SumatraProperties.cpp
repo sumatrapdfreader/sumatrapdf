@@ -43,6 +43,9 @@ struct PropertiesWnd : Wnd {
     HFONT propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
+    // CloseDocumentInCurrentTab and DeleteMainWindow can both try to tear the
+    // properties window down; only one deferred delete may run.
+    bool deleteScheduled = false;
 
     bool Create(HWND parent);
     void LayoutToClient();
@@ -70,6 +73,10 @@ static void DeletePropertiesWndInstance(PropertiesWnd* w) {
 }
 
 void PropertiesWnd::ScheduleDelete() {
+    if (deleteScheduled) {
+        return;
+    }
+    deleteScheduled = true;
     auto fn = MkFunc0<PropertiesWnd>(DeletePropertiesWndInstance, this);
     uitask::Post(fn, "SafeDeletePropertiesWnd");
 }
@@ -90,17 +97,23 @@ PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
+static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd);
+
 void DeletePropertiesWindow(HWND hwndParent) {
     PropertiesWnd* w = FindPropertyWindowByHwnd(hwndParent);
     if (!w) {
         return;
     }
+    // Unregister first so a second closer cannot find this instance and schedule
+    // another delete (CloseDocumentInCurrentTab then DeleteMainWindow).
+    gPropertiesWindows.Remove(w);
     if (w->hwnd && IsWindow(w->hwnd)) {
-        w->Close();
-    } else {
-        gPropertiesWindows.Remove(w);
-        w->ScheduleDelete();
+        SavePropertiesWindowPos(w, w->hwnd);
+        // Destroy HWND now (sync). Do not use Close()/PostMessage: that left the
+        // object findable until WM_CLOSE ran and allowed a double ScheduleDelete.
+        w->Destroy();
     }
+    w->ScheduleDelete();
 }
 
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
@@ -237,10 +250,28 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
 //    return
 //}
 
-// format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
+// One "W x H unit" fragment for FormatPageSizeTemp (size.dx/dy are inches).
+static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str unit) {
+    double width = sizeInches.dx * unitsPerInch;
+    double height = sizeInches.dy * unitsPerInch;
+    if (((int)(width * 100)) % 100 == 99) {
+        width += 0.01;
+    }
+    if (((int)(height * 100)) % 100 == 99) {
+        height += 0.01;
+    }
+    TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
+    TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
+    return fmt("%s x %s %s", strWidth, strHeight, unit);
+}
+
+// Format page size in cm/mm/in (locale unit first) and pixels (issue #2186).
+// Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 px (A4)"
+// US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 px (A4)"
 static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
-    float zoom = 1.0f / engine->GetFileDPI();
+    float fileDpi = engine->GetFileDPI();
+    float zoom = 1.0f / fileDpi;
     SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
 
     Str formatName;
@@ -274,23 +305,21 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
             break;
     }
 
+    TempStr inStr = FormatPageSizeUnitTemp(size, 1.0, StrL("in"));
+    TempStr cmStr = FormatPageSizeUnitTemp(size, 2.54, StrL("cm"));
+    TempStr mmStr = FormatPageSizeUnitTemp(size, 25.4, StrL("mm"));
+
+    // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
+    int pxW = (int)(size.dx * fileDpi + 0.5f);
+    int pxH = (int)(size.dy * fileDpi + 0.5f);
+    TempStr pxStr = fmt("%d x %d px", pxW, pxH);
+
+    // Locale unit first, then the other two, then pixels (issue #2186)
     bool isMetric = GetMeasurementSystem() == 0;
-    double unitsPerInch = isMetric ? 2.54 : 1.0;
-    Str unit = isMetric ? StrL("cm") : StrL("in");
-
-    double width = size.dx * unitsPerInch;
-    double height = size.dy * unitsPerInch;
-    if (((int)(width * 100)) % 100 == 99) {
-        width += 0.01;
+    if (isMetric) {
+        return fmt("%s, %s, %s, %s%s", cmStr, mmStr, inStr, pxStr, formatName);
     }
-    if (((int)(height * 100)) % 100 == 99) {
-        height += 0.01;
-    }
-
-    TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
-    TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
-
-    return fmt("%s x %s %s%s", strWidth, strHeight, unit, formatName);
+    return fmt("%s, %s, %s, %s%s", inStr, cmStr, mmStr, pxStr, formatName);
 }
 
 // returns a list of permissions denied by this document
@@ -789,7 +818,7 @@ bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
 }
 
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
-    if (!hwnd || !IsWindow(hwnd)) {
+    if (!w || !hwnd || !IsWindow(hwnd)) {
         return;
     }
     Rect rc = WindowRect(hwnd);
@@ -804,7 +833,7 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
 // the hwnd map before DestroyWindow(), so WM_DESTROY never reaches onDestroy.
 static void OnPropertiesClose(Wnd::CloseEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
-    if (!w) {
+    if (!w || w->deleteScheduled) {
         return;
     }
     SavePropertiesWindowPos(w, w->hwnd);
@@ -814,11 +843,15 @@ static void OnPropertiesClose(Wnd::CloseEvent* ev) {
 
 static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
-    if (!w || gPropertiesWindows.Find(w) < 0) {
+    // Fallback if the window was destroyed without WM_CLOSE (or Close already
+    // scheduled the deferred free — then deleteScheduled is set and we no-op).
+    if (!w || w->deleteScheduled) {
         return;
     }
-    SavePropertiesWindowPos(w, ev->e->hwnd);
-    gPropertiesWindows.Remove(w);
+    if (gPropertiesWindows.Find(w) >= 0) {
+        SavePropertiesWindowPos(w, ev->e->hwnd);
+        gPropertiesWindows.Remove(w);
+    }
     w->ScheduleDelete();
 }
 

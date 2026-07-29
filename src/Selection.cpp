@@ -96,6 +96,7 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     HideSelectionToolbar(win);
     win->showSelection = false;
     win->selectionMeasure = SizeF();
+    win->selectionDragEdge = SelectionDragEdge::None;
     WindowTab* tab = win->CurrentTab();
     if (!tab) {
         return;
@@ -106,6 +107,214 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     if (alsoTextSel && tab->AsFixed()) {
         tab->AsFixed()->textSelection->Reset();
     }
+}
+
+bool IsRectangularSelection(MainWindow* win) {
+    if (!win || !win->showSelection) {
+        return false;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->selectionOnPage || len(*tab->selectionOnPage) == 0) {
+        return false;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm || !dm->textSelection) {
+        return false;
+    }
+    // text selection has glyphs; rectangular (Ctrl+drag) does not
+    return dm->textSelection->result.len == 0;
+}
+
+Rect GetRectangularSelectionScreenRect(MainWindow* win) {
+    Rect bounds;
+    if (!IsRectangularSelection(win)) {
+        return bounds;
+    }
+    DisplayModel* dm = win->AsFixed();
+    bool first = true;
+    for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
+        Rect r = sel.GetRect(dm);
+        if (r.IsEmpty()) {
+            continue;
+        }
+        if (first) {
+            bounds = r;
+            first = false;
+        } else {
+            bounds = bounds.Union(r);
+        }
+    }
+    return bounds;
+}
+
+static Rect NormalizeScreenRect(Rect r) {
+    if (r.dx < 0) {
+        r.x += r.dx;
+        r.dx = -r.dx;
+    }
+    if (r.dy < 0) {
+        r.y += r.dy;
+        r.dy = -r.dy;
+    }
+    return r;
+}
+
+// Apply edge/corner/move drag to an original normalized rect (screen coords).
+static Rect ApplySelectionEdgeDrag(Rect orig, SelectionDragEdge edge, int dx, int dy) {
+    int x = orig.x;
+    int y = orig.y;
+    int w = orig.dx;
+    int h = orig.dy;
+
+    if (edge == SelectionDragEdge::Move) {
+        return Rect(x + dx, y + dy, w, h);
+    }
+
+    if (edge == SelectionDragEdge::Left || edge == SelectionDragEdge::TopLeft ||
+        edge == SelectionDragEdge::BottomLeft) {
+        x = orig.x + dx;
+        w = orig.dx - dx;
+    }
+    if (edge == SelectionDragEdge::Right || edge == SelectionDragEdge::TopRight ||
+        edge == SelectionDragEdge::BottomRight) {
+        w = orig.dx + dx;
+    }
+    if (edge == SelectionDragEdge::Top || edge == SelectionDragEdge::TopLeft || edge == SelectionDragEdge::TopRight) {
+        y = orig.y + dy;
+        h = orig.dy - dy;
+    }
+    if (edge == SelectionDragEdge::Bottom || edge == SelectionDragEdge::BottomLeft ||
+        edge == SelectionDragEdge::BottomRight) {
+        h = orig.dy + dy;
+    }
+
+    // minimum 1px (same idea as crop dialog)
+    if (w < 1) {
+        w = 1;
+        if (edge == SelectionDragEdge::Left || edge == SelectionDragEdge::TopLeft ||
+            edge == SelectionDragEdge::BottomLeft) {
+            x = orig.x + orig.dx - 1;
+        } else {
+            x = orig.x;
+        }
+    }
+    if (h < 1) {
+        h = 1;
+        if (edge == SelectionDragEdge::Top || edge == SelectionDragEdge::TopLeft ||
+            edge == SelectionDragEdge::TopRight) {
+            y = orig.y + orig.dy - 1;
+        } else {
+            y = orig.y;
+        }
+    }
+    return Rect(x, y, w, h);
+}
+
+SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int mx, int my) {
+    if (!IsRectangularSelection(win)) {
+        return SelectionDragEdge::None;
+    }
+    Rect r = GetRectangularSelectionScreenRect(win);
+    if (r.IsEmpty()) {
+        return SelectionDragEdge::None;
+    }
+    int t = DpiScale(win->hwndCanvas, 6);
+    int left = r.x;
+    int right = r.x + r.dx;
+    int top = r.y;
+    int bottom = r.y + r.dy;
+
+    bool onLeft = (mx >= left - t && mx <= left + t);
+    bool onRight = (mx >= right - t && mx <= right + t);
+    bool onTop = (my >= top - t && my <= top + t);
+    bool onBottom = (my >= bottom - t && my <= bottom + t);
+    bool inVertRange = (my >= top - t && my <= bottom + t);
+    bool inHorzRange = (mx >= left - t && mx <= right + t);
+
+    if (onLeft && onTop) {
+        return SelectionDragEdge::TopLeft;
+    }
+    if (onRight && onTop) {
+        return SelectionDragEdge::TopRight;
+    }
+    if (onLeft && onBottom) {
+        return SelectionDragEdge::BottomLeft;
+    }
+    if (onRight && onBottom) {
+        return SelectionDragEdge::BottomRight;
+    }
+    if (onLeft && inVertRange) {
+        return SelectionDragEdge::Left;
+    }
+    if (onRight && inVertRange) {
+        return SelectionDragEdge::Right;
+    }
+    if (onTop && inHorzRange) {
+        return SelectionDragEdge::Top;
+    }
+    if (onBottom && inHorzRange) {
+        return SelectionDragEdge::Bottom;
+    }
+    if (mx > left + t && mx < right - t && my > top + t && my < bottom - t) {
+        return SelectionDragEdge::Move;
+    }
+    return SelectionDragEdge::None;
+}
+
+LPWSTR CursorIdForSelectionEdge(SelectionDragEdge edge) {
+    switch (edge) {
+        case SelectionDragEdge::Left:
+        case SelectionDragEdge::Right:
+            return IDC_SIZEWE;
+        case SelectionDragEdge::Top:
+        case SelectionDragEdge::Bottom:
+            return IDC_SIZENS;
+        case SelectionDragEdge::TopLeft:
+        case SelectionDragEdge::BottomRight:
+            return IDC_SIZENWSE;
+        case SelectionDragEdge::TopRight:
+        case SelectionDragEdge::BottomLeft:
+            return IDC_SIZENESW;
+        case SelectionDragEdge::Move:
+            return IDC_SIZEALL;
+        default:
+            return IDC_ARROW;
+    }
+}
+
+bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragEdge edge) {
+    if (!win || edge == SelectionDragEdge::None || !IsRectangularSelection(win)) {
+        return false;
+    }
+    Rect bounds = GetRectangularSelectionScreenRect(win);
+    if (bounds.IsEmpty()) {
+        return false;
+    }
+    win->selectionDragEdge = edge;
+    win->selectionEditOrig = NormalizeScreenRect(bounds);
+    win->selectionRect = win->selectionEditOrig;
+    win->dragStart = Point(x, y);
+    win->dragStartPending = true;
+    win->showSelection = true;
+    win->selectingByWord = false;
+    win->mouseAction = MouseAction::Selecting;
+    win->linkOnLastButtonDown = nullptr;
+    win->textDragPending = false;
+    win->imageDragPending = false;
+    SetCapture(win->hwndCanvas);
+    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+    ScheduleRepaint(win, 0);
+    return true;
+}
+
+void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y) {
+    if (!win || win->selectionDragEdge == SelectionDragEdge::None) {
+        return;
+    }
+    int dx = x - win->dragStart.x;
+    int dy = y - win->dragStart.y;
+    win->selectionRect = ApplySelectionEdgeDrag(win->selectionEditOrig, win->selectionDragEdge, dx, dy);
+    win->selectionMeasure = win->AsFixed() ? win->AsFixed()->CvtFromScreen(win->selectionRect).Size() : SizeF();
 }
 
 void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha, int pad,
@@ -390,10 +599,21 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
 
         dx = dm->GetViewPort().x - oldOffset.x;
         dy = dm->GetViewPort().y - oldOffset.y;
-        win->selectionRect.x -= dx;
-        win->selectionRect.y -= dy;
-        win->selectionRect.dx += dx;
-        win->selectionRect.dy += dy;
+        if (win->selectionDragEdge != SelectionDragEdge::None) {
+            // move/resize: keep the selection fixed on the document as the view pans
+            win->selectionEditOrig.x -= dx;
+            win->selectionEditOrig.y -= dy;
+            win->dragStart.x -= dx;
+            win->dragStart.y -= dy;
+            win->selectionRect.x -= dx;
+            win->selectionRect.y -= dy;
+        } else {
+            // new selection: keep the start corner fixed on the document
+            win->selectionRect.x -= dx;
+            win->selectionRect.y -= dy;
+            win->selectionRect.dx += dx;
+            win->selectionRect.dy += dy;
+        }
     }
 }
 
@@ -401,6 +621,7 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
     ReportIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 
+    win->selectionDragEdge = SelectionDragEdge::None;
     win->selectionRect = Rect(x, y, 0, 0);
     win->showSelection = true;
     win->selectingByWord = false;
@@ -431,6 +652,8 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     }
     KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
 
+    bool editingRect = win->selectionDragEdge != SelectionDragEdge::None && win->mouseAction == MouseAction::Selecting;
+
     // update the text selection before changing the selectionRect
     if (MouseAction::SelectingText == win->mouseAction) {
         // double/triple-click set the glyph range immediately; a tiny mouse jitter
@@ -440,13 +663,34 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
         UpdateTextSelection(win, dragged);
     }
 
-    win->selectionRect = Rect::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
-    if (aborted || (MouseAction::Selecting == win->mouseAction ? win->selectionRect.IsEmpty()
-                                                               : !win->CurrentTab()->selectionOnPage)) {
-        DeleteOldSelectionInfo(win, true);
-    } else if (win->mouseAction == MouseAction::Selecting) {
+    if (editingRect) {
+        if (aborted) {
+            // click without drag on a handle: keep previous selection
+            win->selectionRect = win->selectionEditOrig;
+        } else {
+            UpdateRectangularSelectionEdit(win, x, y);
+            win->selectionRect = NormalizeScreenRect(win->selectionRect);
+        }
+        delete win->CurrentTab()->selectionOnPage;
         win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
         win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
+        if (win->showSelection) {
+            win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
+        } else {
+            win->selectionMeasure = SizeF();
+        }
+        win->selectionDragEdge = SelectionDragEdge::None;
+    } else {
+        win->selectionRect = Rect::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
+        if (aborted || (MouseAction::Selecting == win->mouseAction ? win->selectionRect.IsEmpty()
+                                                                   : !win->CurrentTab()->selectionOnPage)) {
+            DeleteOldSelectionInfo(win, true);
+        } else if (win->mouseAction == MouseAction::Selecting) {
+            win->selectionRect = NormalizeScreenRect(win->selectionRect);
+            win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
+            win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
+        }
+        win->selectionDragEdge = SelectionDragEdge::None;
     }
     win->selectingByWord = false;
     // refresh selection-dependent toolbar buttons once, when the selection is
@@ -457,7 +701,7 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
 
     // show the floating selection toolbar for a finished text selection
     // (self-guards: needs a non-empty on-screen text selection)
-    if (!aborted) {
+    if (!aborted || editingRect) {
         ShowSelectionToolbar(win);
     }
 }

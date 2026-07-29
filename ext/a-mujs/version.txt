@@ -1,0 +1,6 @@
+project_homepage: https://mujs.com/
+repo_url: https://github.com/ArtifexSoftware/mujs
+revision: e892c9fdbbddba94e52f656ccb378ed4885e30cc
+commit_sha1: e892c9fdbbddba94e52f656ccb378ed4885e30cc
+github_url: https://github.com/ArtifexSoftware/mujs
+github_commit_url: https://github.com/ArtifexSoftware/mujs/commit/e892c9fdbbddba94e52f656ccb378ed4885e30cc

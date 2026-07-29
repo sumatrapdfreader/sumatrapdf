@@ -17,6 +17,7 @@ extern "C" {
 #include "EngineMupdf.h"
 #include "GlobalPrefs.h"
 #include "Commands.h"
+#include "Translations.h"
 
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
@@ -32,43 +33,85 @@ SeqStrings AnnotationTextIcons() {
     return gAnnotationTextIcons;
 }
 
-static SeqStrings gAnnotReadableNames =
-    "Text\0"
-    "Link\0"
-    "Free Text\0"
-    "Line\0"
-    "Square\0"
-    "Circle\0"
-    "Polygon\0"
-    "Poly Line\0"
-    "Highlight\0"
-    "Underline\0"
-    "Squiggly\0"
-    "StrikeOut\0"
-    "Redact\0"
-    "Stamp\0"
-    "Caret\0"
-    "Ink\0"
-    "Popup\0"
-    "File Attachment\0"
-    "Sound\0"
-    "Movie\0"
-    "RichMedia\0"
-    "Widget\0"
-    "Screen\0"
-    "Printer Mark\0"
-    "Trap Net\0"
-    "Watermark\0"
-    "3D\0"
-    "Projection\0";
-Str AnnotationReadableNameTemp(AnnotationType tp) {
-    int n = (int)tp;
-    if (n < 0) {
-        return StrL("Unknown");
+// Translate an English annotation type label for the UI.
+// When menuKey is set (e.g. "&Highlight"), use that key — those strings are
+// already translated for context menus. Otherwise use english (already in
+// translations.txt for Circle/Line/…). _TRN at the call site marks bare names
+// for future extraction. Strip '&' access-key markers for non-menu display.
+static Str TranslateAnnotTypeNameTemp(Str english, Str menuKey = {}) {
+    Str key = menuKey ? menuKey : english;
+    Str tr = trans::GetTranslation(key);
+    if (str::Contains(tr, StrL("&"))) {
+        return str::ReplaceTemp(tr, StrL("&"), Str{});
     }
-    Str s = SeqStrByIndex(gAnnotReadableNames, n);
-    ReportIf(!s);
-    return s;
+    return tr;
+}
+
+// Human-readable annotation type names for UI (list box, hover tip, menus).
+// _TRN marks strings for extraction; TranslateAnnotTypeNameTemp localizes.
+// Order matches AnnotationType / pdf_annot_type.
+Str AnnotationReadableNameTemp(AnnotationType tp) {
+    switch (tp) {
+        case AnnotationType::Text:
+            return TranslateAnnotTypeNameTemp(_TRN("Text"), StrL("&Text"));
+        case AnnotationType::Link:
+            return TranslateAnnotTypeNameTemp(_TRN("Link"));
+        case AnnotationType::FreeText:
+            return TranslateAnnotTypeNameTemp(_TRN("Free Text"), StrL("&Free Text"));
+        case AnnotationType::Line:
+            return TranslateAnnotTypeNameTemp(_TRN("Line"));
+        case AnnotationType::Square:
+            return TranslateAnnotTypeNameTemp(_TRN("Square"));
+        case AnnotationType::Circle:
+            return TranslateAnnotTypeNameTemp(_TRN("Circle"));
+        case AnnotationType::Polygon:
+            return TranslateAnnotTypeNameTemp(_TRN("Polygon"));
+        case AnnotationType::PolyLine:
+            return TranslateAnnotTypeNameTemp(_TRN("Poly Line"));
+        case AnnotationType::Highlight:
+            return TranslateAnnotTypeNameTemp(_TRN("Highlight"), StrL("&Highlight"));
+        case AnnotationType::Underline:
+            return TranslateAnnotTypeNameTemp(_TRN("Underline"), StrL("&Underline"));
+        case AnnotationType::Squiggly:
+            return TranslateAnnotTypeNameTemp(_TRN("Squiggly"), StrL("S&quiggly"));
+        case AnnotationType::StrikeOut:
+            return TranslateAnnotTypeNameTemp(_TRN("Strike Out"), StrL("&Strike Out"));
+        case AnnotationType::Redact:
+            return TranslateAnnotTypeNameTemp(_TRN("Redact"));
+        case AnnotationType::Stamp:
+            return TranslateAnnotTypeNameTemp(_TRN("Stamp"), StrL("&Stamp"));
+        case AnnotationType::Caret:
+            return TranslateAnnotTypeNameTemp(_TRN("Caret"), StrL("&Caret"));
+        case AnnotationType::Ink:
+            return TranslateAnnotTypeNameTemp(_TRN("Ink"));
+        case AnnotationType::Popup:
+            return TranslateAnnotTypeNameTemp(_TRN("Popup"));
+        case AnnotationType::FileAttachment:
+            return TranslateAnnotTypeNameTemp(_TRN("File Attachment"));
+        case AnnotationType::Sound:
+            return TranslateAnnotTypeNameTemp(_TRN("Sound"));
+        case AnnotationType::Movie:
+            return TranslateAnnotTypeNameTemp(_TRN("Movie"));
+        case AnnotationType::RichMedia:
+            return TranslateAnnotTypeNameTemp(_TRN("RichMedia"));
+        case AnnotationType::Widget:
+            return TranslateAnnotTypeNameTemp(_TRN("Widget"));
+        case AnnotationType::Screen:
+            return TranslateAnnotTypeNameTemp(_TRN("Screen"));
+        case AnnotationType::PrinterMark:
+            return TranslateAnnotTypeNameTemp(_TRN("Printer Mark"));
+        case AnnotationType::TrapNet:
+            return TranslateAnnotTypeNameTemp(_TRN("Trap Net"));
+        case AnnotationType::Watermark:
+            return TranslateAnnotTypeNameTemp(_TRN("Watermark"));
+        case AnnotationType::ThreeD:
+            return TranslateAnnotTypeNameTemp(_TRN("3D"));
+        case AnnotationType::Projection:
+            return TranslateAnnotTypeNameTemp(_TRN("Projection"));
+        case AnnotationType::Unknown:
+        default:
+            return TranslateAnnotTypeNameTemp(_TRN("Unknown"));
+    }
 }
 
 AnnotationType Type(Annotation* annot) {
@@ -552,6 +595,9 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
 */
 
 Str Contents(Annotation* annot) {
+    if (!annot || !annot->engine || !annot->pdfannot) {
+        return {};
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -570,7 +616,7 @@ Str Contents(Annotation* annot) {
 
 bool SetContents(Annotation* annot, Str sv) {
     ReportIf(!annot);
-    if (!annot) {
+    if (!annot || !annot->engine || !annot->pdfannot) {
         return false;
     }
     EngineMupdf* e = annot->engine;
@@ -722,6 +768,10 @@ Str IconName(Annotation* annot) {
 void SetIconName(Annotation* annot, Str iconName) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
+    Str curr = IconName(annot);
+    if (str::Eq(curr, iconName)) {
+        return;
+    }
     TempStr nameZ = str::DupTemp(iconName);
     {
         auto ctx = e->Ctx();
@@ -734,7 +784,6 @@ void SetIconName(Annotation* annot, Str iconName) {
             fz_report_error(ctx);
         }
     }
-    // TODO: only if the value changed
     MarkNotificationAsModified(e, annot);
 }
 

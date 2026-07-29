@@ -27,12 +27,12 @@
 
 #define HAVE_ALIGNED_MALLOC 1
 
-/* SumatraPDF */
+/* SumatraPDF: set per-platform in premake (x86=0, x64=1). Fallback: x64 on, else off. */
 #ifndef HAVE_ASM
-#if defined(_M_ARM64)
-#define HAVE_ASM 0
-#else
+#if defined(_M_X64) || defined(__x86_64__)
 #define HAVE_ASM 1
+#else
+#define HAVE_ASM 0
 #endif
 #endif
 

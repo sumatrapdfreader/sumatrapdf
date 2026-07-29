@@ -1,3 +1,6 @@
+#if 1
+#include "looprestoration_sumatra.h"
+#else
 /*
  * Copyright © 2018, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
@@ -92,3 +95,4 @@ static ALWAYS_INLINE void loop_restoration_dsp_init_x86(Dav1dLoopRestorationDSPC
     }
 #endif
 }
+#endif

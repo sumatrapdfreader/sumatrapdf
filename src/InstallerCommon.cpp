@@ -428,21 +428,21 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
     return killCount;
 }
 
-// In order to install over existing installation or uninstall
-// we need to kill all processes that that use files from
-// installation directory. We only need to check processes that
-// have libmupdf.dll from installation directory loaded
-// because that covers SumatraPDF.exe and processes like dllhost.exe
-// that load PdfPreview.dll or PdfFilter.dll (which link to libmupdf.dll)
+// Kill processes that have any of our install-dir modules loaded:
+// libmupdf.dll, PdfFilter.dll, PdfPreview.dll, browser plugin, SumatraPDF.exe.
+// dllhost/prevhost/SearchFilterHost load the shell-extension DLLs; they may
+// keep PdfFilter.dll locked even after libmupdf.dll was renamed aside.
 // returns false if there are processes and we failed to kill them
-static bool KillProcessesUsingInstallation() {
-    log("KillProcessesUsingInstallation()\n");
-    TempStr dir = GetExistingInstallationDirTemp();
+static bool KillProcessesUsingInstallationDir(Str dir) {
+    logf("KillProcessesUsingInstallationDir('%s')\n", dir);
     if (!dir) {
         return true;
     }
     TempStr libmupdf = path::JoinTemp(dir, StrL("libmupdf.dll"));
     TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
+    TempStr filterDll = path::JoinTemp(dir, kSearchFilterDllName);
+    TempStr previewDll = path::JoinTemp(dir, kPreviewDllName);
+    TempStr exePath = path::JoinTemp(dir, kExeName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -455,11 +455,13 @@ static bool KillProcessesUsingInstallation() {
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
         DWORD procID = proc.th32ProcessID;
-        if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
+        bool uses = IsProcessUsingFiles(procID, libmupdf, browserPlugin) ||
+                    IsProcessUsingFiles(procID, filterDll, previewDll) || IsProcessUsingFiles(procID, exePath, nullptr);
+        if (uses) {
             TempStr s = ToUtf8Temp(proc.szExeFile);
             logf("  attempting to kill process %d '%s'\n", (int)procID, s);
             bool didKill = KillProcWithId(procID, true);
-            logf("  KillProcWithId(%d) returned %d\n", procID, (int)didKill);
+            logf("  KillProcWithId(%d) returned %d\n", (int)procID, (int)didKill);
             if (!didKill) {
                 killedAllProcesses = false;
             }
@@ -467,11 +469,89 @@ static bool KillProcessesUsingInstallation() {
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);
     }
+
+    // Also target by module path (covers short-lived filter hosts).
+    const TempStr modulePaths[] = {libmupdf, filterDll, previewDll, exePath, browserPlugin};
+    for (TempStr mod : modulePaths) {
+        if (file::Exists(mod)) {
+            int n = KillProcessesWithModule(mod, true);
+            if (n > 0) {
+                logf("  KillProcessesWithModule('%s') killed=%d\n", mod, n);
+            }
+        }
+    }
     return killedAllProcesses;
 }
 
+static bool KillProcessesUsingInstallation() {
+    TempStr dir = GetExistingInstallationDirTemp();
+    return KillProcessesUsingInstallationDir(dir);
+}
+
+// Unregister PdfFilter/PdfPreview (so Windows Search / Explorer stop loading
+// them) and kill processes still holding install-dir files. Must run before
+// overwriting those DLLs — especially on elevated -run-install-now, which
+// skips the GUI path's CheckInstallUninstallPossible().
+// removedOut (optional): state to pass to RestoreShellExtensions if install fails.
+void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallState* removedOut) {
+    logf("FreeInstallationFilesInUse('%s' allUsers=%d)\n", installDir, (int)allUsers);
+
+    ShellExtInstallState removed{};
+    removed.searchFilter = IsSearchFilterInstalled();
+    removed.preview = IsPreviewInstalled();
+    removed.allUsers = allUsers;
+    if (installDir) {
+        removed.installDir = str::Dup(installDir);
+    }
+
+    if (removed.searchFilter) {
+        log("  unregistering search filter before file overwrite\n");
+        UninstallSearchFilter();
+    }
+    if (removed.preview) {
+        log("  unregistering previewer before file overwrite\n");
+        UninstallPreviewDll();
+    }
+    UninstallBrowserPlugin();
+
+    if (installDir) {
+        KillProcessesUsingInstallationDir(installDir);
+    }
+    TempStr existing = GetExistingInstallationDirTemp();
+    if (existing && (!installDir || !str::EqI(existing, installDir))) {
+        KillProcessesUsingInstallationDir(existing);
+    }
+
+    // Brief pause so terminated SearchFilterHost / dllhost release file handles.
+    Sleep(250);
+
+    if (removedOut) {
+        str::Free(removedOut->installDir);
+        *removedOut = removed;
+        // ownership of installDir transferred to caller
+        removed.installDir = {};
+    } else {
+        str::Free(removed.installDir);
+    }
+}
+
+void RestoreShellExtensions(const ShellExtInstallState& state) {
+    if (!state.installDir) {
+        log("RestoreShellExtensions: no installDir, skip\n");
+        return;
+    }
+    logf("RestoreShellExtensions: filter=%d preview=%d allUsers=%d dir='%s'\n", (int)state.searchFilter,
+         (int)state.preview, (int)state.allUsers, state.installDir);
+    if (state.searchFilter) {
+        RegisterSearchFilter(state.allUsers, state.installDir);
+    }
+    if (state.preview) {
+        RegisterPreviewer(state.allUsers, state.installDir);
+    }
+}
+
 // return names of processes that are running part of the installation
-// (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
+// (i.e. have libmupdf.dll, PdfFilter.dll, PdfPreview.dll, or plugin loaded)
 static void ProcessesUsingInstallation(StrVec& names) {
     log("ProcessesUsingInstallation()\n");
     TempStr dir = GetExistingInstallationDirTemp();
@@ -480,6 +560,9 @@ static void ProcessesUsingInstallation(StrVec& names) {
     }
     TempStr libmupdf = path::JoinTemp(dir, StrL("libmupdf.dll"));
     TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
+    TempStr filterDll = path::JoinTemp(dir, kSearchFilterDllName);
+    TempStr previewDll = path::JoinTemp(dir, kPreviewDllName);
+    TempStr exePath = path::JoinTemp(dir, kExeName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -491,7 +574,9 @@ static void ProcessesUsingInstallation(StrVec& names) {
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
         DWORD procID = proc.th32ProcessID;
-        if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
+        bool uses = IsProcessUsingFiles(procID, libmupdf, browserPlugin) ||
+                    IsProcessUsingFiles(procID, filterDll, previewDll) || IsProcessUsingFiles(procID, exePath, nullptr);
+        if (uses) {
             // TODO: this kils ReadableProcName logic
             TempStr s = ToUtf8Temp(proc.szExeFile);
             TempStr name = fmt("%s (%d)", s, (int)procID);

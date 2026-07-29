@@ -14,6 +14,9 @@
 #include "base/GdiPlus.h"
 #include "base/GuessFileType.h"
 
+#include <mmsystem.h> // timeBeginPeriod / timeEndPeriod for smooth-scroll timer
+#pragma comment(lib, "winmm.lib")
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
@@ -430,7 +433,7 @@ class ImageDataObject : public IDataObject {
             fgd->fgd[0].dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
             fgd->fgd[0].nFileSizeLow = (DWORD)pngSize;
             fgd->fgd[0].nFileSizeHigh = 0;
-            wcscpy_s(fgd->fgd[0].cFileName, MAX_PATH, L"image.png");
+            wstr::BufSet(WStr(fgd->fgd[0].cFileName, MAX_PATH), WStrL(L"image.png"));
             GlobalUnlock(h);
             pMedium->tymed = TYMED_HGLOBAL;
             pMedium->hGlobal = h;
@@ -574,16 +577,67 @@ enum class ResizeHandle {
 // Size of resize handle hit area (in pixels)
 constexpr int kResizeHandleSize = 8;
 
-// Smooth scrolling factor. This is a value between 0 and 1.
-// Each step, we scroll the needed delta times this factor.
-// Therefore, a higher factor makes smooth scrolling faster.
-static const double gSmoothScrollingFactor = 0.2;
+// Smooth wheel scrolling: frame-rate–independent exponential chase of the
+// target offset (common browser-style "lerp toward destination").
+//
+// Why not duration + ease-out restarted each tick? Restarting ease-out on every
+// WM_MOUSEWHEEL re-peaks velocity each notch → visible stutter/pumping while
+// spinning the wheel. Updating only the target keeps velocity continuous.
+//
+// Rate k (1/s): after ~200 ms we close ~95% of remaining (1-e^(-k*0.2)≈0.95).
+static const double kSmoothScrollRate = 15.0;
+// Snap when this close (pixels) so we do not crawl forever.
+static const double kSmoothScrollSnapPx = 0.5;
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 static bool gWheelMsgRedirect = false;
 static bool gInMouseWheelScroll = false;
+
+static void StopSmoothScroll(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+    win->scrollAnimActive = false;
+    if (win->scrollAnimHiResTimer) {
+        timeEndPeriod(1);
+        win->scrollAnimHiResTimer = false;
+    }
+}
+
+// Set/update destination for smooth vertical scroll. Does not restart motion
+// from scratch — mid-flight target changes keep continuous velocity.
+static void StartOrUpdateSmoothScrollY(MainWindow* win, int targetY) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    int current = dm->yOffset();
+    if (current == targetY && !win->scrollAnimActive) {
+        return;
+    }
+    if (current == targetY && win->scrollAnimActive && fabs(win->scrollAnimY - (double)targetY) < kSmoothScrollSnapPx) {
+        StopSmoothScroll(win);
+        return;
+    }
+
+    win->scrollTargetY = targetY;
+    if (!win->scrollAnimActive) {
+        win->scrollAnimY = (double)current;
+        win->scrollAnimLastTime = TimeGet();
+        win->scrollAnimActive = true;
+        // 1 ms timer resolution while animating so WM_TIMER is less jumpy
+        // (default ~15.6 ms is a common source of stutter).
+        if (!win->scrollAnimHiResTimer) {
+            timeBeginPeriod(1);
+            win->scrollAnimHiResTimer = true;
+        }
+        SetTimer(win->hwndCanvas, kSmoothScrollTimerID, 1, nullptr);
+    }
+    // If already active: only target changes; scrollAnimY keeps going.
+}
 
 void UpdateDeltaPerLine() {
     ULONG ulScrollLines;
@@ -744,14 +798,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         if (gGlobalPrefs->smoothScroll && gInMouseWheelScroll) {
-            if (win->AsFixed()->yOffset() == si.nPos) {
-                win->AsFixed()->ScrollYTo(si.nPos);
-                ReadAloudOnUserViewChanged(win);
-            } else {
-                win->scrollTargetY = si.nPos;
-                SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
-            }
+            StartOrUpdateSmoothScrollY(win, si.nPos);
         } else {
+            // Keyboard / scrollbar / programmatic scroll, or SmoothScroll off: apply immediately.
+            StopSmoothScroll(win);
             win->AsFixed()->ScrollYTo(si.nPos);
             ReadAloudOnUserViewChanged(win);
         }
@@ -980,8 +1030,6 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
     return dy > dragDy;
 }
 
-static bool gShowAnnotationNotification = true;
-
 // Forward declaration
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
@@ -1084,7 +1132,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : StrL("none");
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
-                if (gShowAnnotationNotification && !hasInternalLink) {
+                if (gGlobalPrefs->showAnnotationNotification && !hasInternalLink) {
                     if (annot) {
                         // auto r = annot->bounds;
                         // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
@@ -1102,7 +1150,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     }
                 }
             }
-            if (!annot || hasInternalLink) {
+            if (!annot || hasInternalLink || !gGlobalPrefs->showAnnotationNotification) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;
@@ -1125,9 +1173,16 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             [[fallthrough]];
         case MouseAction::Selecting: {
             win->annotationUnderCursor = nullptr;
-            win->selectionRect.dx = x - win->selectionRect.x;
-            win->selectionRect.dy = y - win->selectionRect.y;
-            win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
+            if (win->selectionDragEdge != SelectionDragEdge::None) {
+                // move / resize existing rectangular selection
+                UpdateRectangularSelectionEdit(win, x, y);
+                SetCursorCached(CursorIdForSelectionEdge(win->selectionDragEdge));
+            } else {
+                // creating a new selection from the start corner
+                win->selectionRect.dx = x - win->selectionRect.x;
+                win->selectionRect.dy = y - win->selectionRect.y;
+                win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
+            }
             OnSelectionEdgeAutoscroll(win, x, y);
             ScheduleRepaint(win, 0);
             break;
@@ -1357,6 +1412,21 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Resize handles sit outside the selected annotation's rect. Check them
+    // before hit-testing other annotations: otherwise an overlapping annot
+    // steals the click, selection jumps, and we resize the wrong one (#5818).
+    ResizeHandle resizeHandle = ResizeHandle::None;
+    if (tab->selectedAnnotation && AnnotationCanBeResized(tab->selectedAnnotation->type)) {
+        resizeHandle = GetResizeHandleAt(win, pt, tab->selectedAnnotation);
+    }
+    if (resizeHandle != ResizeHandle::None) {
+        StartAnnotationResize(win, tab->selectedAnnotation, pt, resizeHandle);
+        win->dragStartPending = true;
+        win->dragStart = pt;
+        win->textDragPending = false;
+        return;
+    }
+
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type);
     if (isMoveableAnnot) {
@@ -1371,17 +1441,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         }
     }
 
-    // Check if we're clicking on a resize handle of the selected annotation
-    // must check selectedAnnotation directly (not annot) because resize handles
-    // extend beyond annotation bounds and GetAnnotationAtPos() won't find them
-    ResizeHandle resizeHandle = ResizeHandle::None;
-    if (tab->selectedAnnotation && AnnotationCanBeResized(tab->selectedAnnotation->type)) {
-        resizeHandle = GetResizeHandleAt(win, pt, tab->selectedAnnotation);
-    }
-
-    if (resizeHandle != ResizeHandle::None) {
-        StartAnnotationResize(win, tab->selectedAnnotation, pt, resizeHandle);
-    } else if (isMoveableAnnot) {
+    if (isMoveableAnnot) {
         StartAnnotationDrag(win, annot, pt);
     } else {
         ReportIf(win->linkOnLastButtonDown);
@@ -1438,6 +1498,17 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // move / resize an existing rectangular (Ctrl+drag) selection, like the
+    // crop rectangle in the save-crop-resize image dialog
+    if (canCopy && !isShift && !isCtrl && IsRectangularSelection(win)) {
+        SelectionDragEdge edge = HitTestRectangularSelection(win, x, y);
+        if (edge != SelectionDragEdge::None) {
+            if (StartRectangularSelectionEdit(win, x, y, edge)) {
+                return;
+            }
+        }
+    }
+
     // if clicking on an image, prepare for image drag-out. skip full-page
     // images (e.g. scanned pages), where click-and-drag should pan instead.
     if (canCopy && !isShift && !isCtrl && !isOverText) {
@@ -1490,16 +1561,21 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Left-up during middle-click / CmdStartAutoScroll mode stops auto-scroll.
+    // Also covers the crash-report case of a left-up after the down was lost
+    // (different hwnd, focus change, etc.) — just reset cleanly.
     if (MouseAction::Scrolling == ma) {
         win->mouseAction = MouseAction::None;
-        // TODO: I'm seeing this in crash reports. Can we get button up without button down?
-        // maybe when down happens on a different hwnd? How can I add more logging.
-        // logfa("OnMouseLeftButtonUp: unexpected MouseAction::Scrolling (%d)\n", ma);
-        // ReportIf(true);
+        win->xScrollSpeed = 0;
+        win->yScrollSpeed = 0;
+        win->xScrollAccum = 0;
+        win->yScrollAccum = 0;
+        KillTimer(win->hwndCanvas, kAutoScrollTimerID);
+        SetCursorCached(IDC_ARROW);
         return;
     }
 
-    // TODO: should IsDrag() ever be true here? We should get mouse move first
+    // Click without move: dragStartPending is still true, so this is a click not a drag.
     bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         if (win->annotationBeingResized) {
@@ -2221,10 +2297,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     // (when a find match is the current selection it's cleared in GoToFindMatch
     // so it isn't drawn twice; PaintAllFindMatches no-ops unless actively
     // searching). Using "else if" here hid the normal selection highlight
-    // because gShowAllMatches defaults to true (issue #5737).
-    if (gShowAllMatches) {
-        PaintAllFindMatches(win, hdc);
-    }
+    // when all-match painting was on (issue #5737).
+    PaintAllFindMatches(win, hdc);
     if (win->showSelection) {
         PaintSelection(win, hdc);
     }
@@ -2244,6 +2318,48 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     return shouldPaint;
 }
 
+// Document keyboard focus lives on hwndFrame: AdvanceFocus() includes the frame
+// as the "document" tab target, and canvas clicks call HwndSetFocus(hwndFrame)
+// so arrow keys reach the frame. Optional focus ring is gated by
+// ShowDocumentFocusIndicator (default off; #4644).
+static bool CanvasShouldShowKeyboardFocus(MainWindow* win) {
+    if (!win || !win->hwndFrame || !win->hwndCanvas) {
+        return false;
+    }
+    if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
+        return false;
+    }
+    if (win->presentation || win->isFullScreen) {
+        return false;
+    }
+    return GetFocus() == win->hwndFrame;
+}
+
+void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc) {
+    if (!hdc || !CanvasShouldShowKeyboardFocus(win)) {
+        return;
+    }
+    RECT rc;
+    GetClientRect(win->hwndCanvas, &rc);
+    // inset so the dashed rect is fully inside the client area
+    InflateRect(&rc, -1, -1);
+    if (rc.right > rc.left && rc.bottom > rc.top) {
+        DrawFocusRect(hdc, &rc);
+    }
+}
+
+void InvalidateCanvasKeyboardFocus(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    // Still invalidate when the setting is on so the ring appears/disappears
+    // with focus; when off, skip the repaint cost.
+    if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
+        return;
+    }
+    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+}
+
 static void OnPaintDocument(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
@@ -2258,10 +2374,14 @@ static void OnPaintDocument(MainWindow* win) {
             break;
         default:
             bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
-            if (!gNoFlickerRender || shouldPaint) {
+            // Flush when the focus ring is needed so DrawFocusRect is not XOR'd
+            // on top of a stale frame that already had a ring.
+            bool showFocus = CanvasShouldShowKeyboardFocus(win);
+            if (!gNoFlickerRender || shouldPaint || showFocus) {
                 win->buffer->Flush(hdc);
             }
     }
+    DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {
@@ -2369,9 +2489,24 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
             SetCursorCached(IDC_IBEAM);
             return TRUE;
         case MouseAction::Selecting:
+            if (win->selectionDragEdge != SelectionDragEdge::None) {
+                SetCursorCached(CursorIdForSelectionEdge(win->selectionDragEdge));
+                return TRUE;
+            }
             break;
-        case MouseAction::None:
+        case MouseAction::None: {
+            // resize / move cursors over an existing rectangular selection
+            if (IsRectangularSelection(win)) {
+                Point pt = HwndGetCursorPos(hwnd);
+                SelectionDragEdge edge = HitTestRectangularSelection(win, pt.x, pt.y);
+                if (edge != SelectionDragEdge::None) {
+                    SetCursorCached(CursorIdForSelectionEdge(edge));
+                    win->DeleteToolTip();
+                    return TRUE;
+                }
+            }
             return OnSetCursorMouseNone(win, hwnd);
+        }
     }
     return win->presentation ? TRUE : FALSE;
 }
@@ -2402,9 +2537,8 @@ bool IsFirstWheelMsg(LARGE_INTEGER& lastTime) {
 static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     // don't show the context menu when zooming with the right mouse-button down
     win->dragStartPending = false;
-    // Kill the smooth scroll timer when zooming
-    // We don't want to move to the new updated y offset after zooming
-    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+    // Stop smooth scroll when zooming — y offsets are no longer meaningful.
+    StopSmoothScroll(win);
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -2773,7 +2907,7 @@ Str GiFlagsToStr(DWORD flags) {
 
 static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !touch::SupportsGestures()) {
+    if (!dm) {
         return DefWindowProc(win->hwndFrame, msg, wp, lp);
     }
 
@@ -2782,9 +2916,9 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     gi.cbSize = sizeof(GESTUREINFO);
     TouchState& touchState = win->touchState;
 
-    BOOL ok = touch::GetGestureInfo(hgi, &gi);
+    BOOL ok = GetGestureInfo(hgi, &gi);
     if (!ok) {
-        touch::CloseGestureInfoHandle(hgi);
+        CloseGestureInfoHandle(hgi);
         return 0;
     }
 
@@ -2838,14 +2972,16 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 }
 
                 if (isFlickX && flipPage) {
+                    // deltaX < 0: finger moved left (content follows) → leftward spatial nav
+                    // In manga (R2L) mode, left advances (issue #3964)
                     if (deltaX < 0) {
-                        win->ctrl->GoToPrevPage();
+                        dm->GoToPageHorizontal(false);
                         // TODO: scroll to show the right-hand part
                         int x = dm->canvasSize.dx - dm->viewPort.dx;
                         // logf("x: %d\n");
                         dm->ScrollXTo(x);
                     } else if (deltaX > 0) {
-                        win->ctrl->GoToNextPage();
+                        dm->GoToPageHorizontal(true);
                         dm->ScrollXTo(0);
                     }
                     ReadAloudOnUserViewChanged(win);
@@ -2913,7 +3049,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             break;
     }
 
-    touch::CloseGestureInfoHandle(hgi);
+    CloseGestureInfoHandle(hgi);
     return 0;
 }
 
@@ -3152,7 +3288,6 @@ def:
 static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_SETCURSOR:
-            // TODO: make (re)loading a document always clear the infotip
             win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
@@ -3172,15 +3307,15 @@ static void OnPaintError(MainWindow* win) {
     auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
     FillRect(hdc, &ps.rcPaint, bgBrush);
-    // TODO: should this be "Error opening %s"?
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath));
+        TempStr msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
     SelectObject(hdc, hPrevFont);
+    DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
 }
@@ -3195,7 +3330,6 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
             return 0;
 
         case WM_SETCURSOR:
-            // TODO: make (re)loading a document always clear the infotip
             win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
@@ -3249,7 +3383,12 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case REPAINT_TIMER_ID:
             win->delayedRepaintTimer = 0;
             KillTimer(hwnd, REPAINT_TIMER_ID);
-            win->RedrawAllIncludingNonClient();
+            // Only the canvas needs a document repaint (scroll, page render,
+            // selection, etc.). RedrawAllIncludingNonClient() repaints the
+            // entire frame and all children, so the toolbar "Page:" label and
+            // page-number edit flash on every scroll even when the page is
+            // unchanged (very visible with tall comic pages).
+            InvalidateRect(hwnd, nullptr, FALSE);
             break;
 
         case SMOOTHSCROLL_TIMER_ID:
@@ -3332,7 +3471,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             auto tab = win->CurrentTab();
             if (tab && tab->reloadOnFocus) {
                 if (tab->ignoreNextAutoReload) {
+                    // consume the save-triggered watcher event; do not leave
+                    // reloadOnFocus set or a later tab focus would reload
                     tab->ignoreNextAutoReload = false;
+                    tab->reloadOnFocus = false;
                 } else {
                     ReloadDocument(win, true);
                 }
@@ -3340,30 +3482,67 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
         }
 
-        case kSmoothScrollTimerID:
+        case kSmoothScrollTimerID: {
             DisplayModel* dm = win->AsFixed();
-            // window might have been closed while the timer was running
-            if (!dm) {
-                return;
+            // Window/tab may have changed while the timer was running.
+            if (!dm || !win->scrollAnimActive) {
+                StopSmoothScroll(win);
+                break;
             }
 
-            int current = dm->yOffset();
+            // Real dt so motion is smooth even when timer delivery jitters.
+            double dtMs = TimeSinceInMs(win->scrollAnimLastTime);
+            win->scrollAnimLastTime = TimeGet();
+            // Clamp: first tick / resume after stall should not jump a full page.
+            if (dtMs < 0.5) {
+                dtMs = 0.5;
+            } else if (dtMs > 32.0) {
+                dtMs = 32.0;
+            }
+            double dt = dtMs / 1000.0;
+
             int target = win->scrollTargetY;
-            int delta = target - current;
-
-            if (delta == 0) {
-                KillTimer(hwnd, kSmoothScrollTimerID);
-            } else {
-                // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
-
-                double step = delta * gSmoothScrollingFactor;
-
-                // Round away from zero
-                int dy = step < 0 ? (int)floor(step) : (int)ceil(step);
-                dm->ScrollYTo(current + dy);
-                ReadAloudOnUserViewChanged(win);
+            // Keep anim state in sync if something else moved the view.
+            int viewY = dm->yOffset();
+            if (fabs(win->scrollAnimY - (double)viewY) > 1.5) {
+                win->scrollAnimY = (double)viewY;
             }
+
+            double remaining = (double)target - win->scrollAnimY;
+            if (fabs(remaining) < kSmoothScrollSnapPx) {
+                if (viewY != target) {
+                    dm->ScrollYTo(target);
+                }
+                ReadAloudOnUserViewChanged(win);
+                StopSmoothScroll(win);
+                break;
+            }
+
+            // Exponential approach: pos += (target-pos) * (1 - e^(-k*dt))
+            double a = 1.0 - exp(-kSmoothScrollRate * dt);
+            if (a > 1.0) {
+                a = 1.0;
+            }
+            win->scrollAnimY += remaining * a;
+
+            int y = (int)lround(win->scrollAnimY);
+            if (y != viewY) {
+                dm->ScrollYTo(y);
+                // If ScrollYTo clamped (document edge), stop chasing an
+                // unreachable target.
+                int after = dm->yOffset();
+                if (after != y) {
+                    win->scrollAnimY = (double)after;
+                    win->scrollTargetY = after;
+                    ReadAloudOnUserViewChanged(win);
+                    StopSmoothScroll(win);
+                    break;
+                }
+            }
+            // Defer ReadAloud until the animation settles — calling it every
+            // tick is work that competes with paint and adds hitchiness.
             break;
+        }
     }
 }
 
@@ -3840,32 +4019,22 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
 
         case WM_GETOBJECT:
-            // TODO: should we check for UiaRootObjectId, as in
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
-            // On the other hand
-            // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // says that UiaReturnRawElementProvider() should be called regardless of lParam
-            // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
+            // UI Automation root for screen readers (Narrator, NVDA, …).
+            // Not exposed in the browser plugin. Document text is available for
+            // fixed-page engines that implement GetTextForPage (PDF/XPS/DjVu).
             if (gPluginMode) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
-            // disable UIAutomation in release builds until concurrency issues and
-            // memory leaks have been figured out and fixed
-            if (!gIsDebugBuild) {
+            // Only the root object id requests our fragment root; other
+            // accessibility ids fall through to the default handler.
+            if ((long)lp != (long)UiaRootObjectId) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
             if (!win->CreateUIAProvider()) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
-            // TODO: should win->uiaProvider->Release() as in
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
-            // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
-            // Maybe instead of having a single provider per win, we should always create a new one
-            // like in this sample:
-            // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // currently win->uiaProvider refCount is really out of wack in MainWindow::~MainWindow
-            // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
-            // and since WM_GETOBJECT is called many times, it accumulates
+            // UiaReturnRawElementProvider AddRefs for the client; MainWindow holds
+            // one ref for the window lifetime. Disconnect on window destroy.
             return UiaReturnRawElementProvider(hwnd, wp, lp, win->uiaProvider);
 
         default:

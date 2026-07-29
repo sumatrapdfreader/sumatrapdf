@@ -1,0 +1,59 @@
+name: Linux
+on:
+  push:
+  pull_request:
+jobs:
+  wine:
+    name: Cross-compile and test under Wine
+    # ubuntu-24.04 ships mingw-w64 v11; the pre-v12 header gaps
+    # (SetThreadDescription, Win11 DWM enums) are shimmed in
+    # src/base/WinDynCalls.h
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
+
+      # Plain apt is more reliable than cache-apt-pkgs-action here: that action
+      # can report success without leaving mingw tools on PATH (update-alternatives
+      # / multi-package g++-mingw-w64 layout).
+      - name: Install mingw-w64 and Wine
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            gcc-mingw-w64-x86-64 \
+            g++-mingw-w64-x86-64 \
+            binutils-mingw-w64-x86-64 \
+            wine \
+            wine64 \
+            xvfb \
+            xauth
+          # Prefer posix-threads flavor (Debian default is win32-threads).
+          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix || true
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix || true
+          x86_64-w64-mingw32-g++ --version
+          x86_64-w64-mingw32-gcc --version
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cross-compile SumatraPDF.exe
+        run: bun cmd/build-linux-wine.ts
+
+      - name: Run unit tests under Wine
+        env:
+          WINEDEBUG: "-all"
+        run: xvfb-run -a wine out/dbg64-wine/SumatraPDF.exe -for-testing -unit-tests
+
+      # -bench does not return 0 on success, so gate on its output instead
+      - name: Render smoke test under Wine
+        env:
+          WINEDEBUG: "-all"
+        run: |
+          xvfb-run -a wine out/dbg64-wine/SumatraPDF.exe -for-testing -bench tests/issue-3219.pdf 2>&1 | tee bench.log || true
+          grep -q "Finished" bench.log
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v6
+        with:
+          name: SumatraPDF-linux-wine-debug
+          path: out/dbg64-wine/SumatraPDF.exe

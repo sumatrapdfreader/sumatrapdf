@@ -34,7 +34,7 @@ struct MarkdownModel : DocController {
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
     IPageDestination* GetNamedDest(Str name) override;
 
-    void GetDisplayState(FileState* ds) override;
+    void GetDisplayState(FileState* fs) override;
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
     MarkdownModel* AsMarkdown() override;

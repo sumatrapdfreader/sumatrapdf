@@ -1,9 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SumatraMacEngine_h
-#define SumatraMacEngine_h
-
 // Plain C bridge between the Cocoa app (SumatraMac.mm) and the C++ engine/base
 // layer. Cocoa files must not include base/Base.h (Apple headers define names
 // like Size that clash with Sumatra types), so all engine access goes through
@@ -74,5 +71,3 @@ void MacFreeDocumentLayout(MacDocumentLayout* layout);
 void MacFreeRenderedPage(MacRenderedPage* page);
 void MacCloseDocument(void* document);
 void MacShutdown();
-
-#endif

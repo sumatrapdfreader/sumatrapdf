@@ -23,9 +23,5 @@ RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s, TextMeasureAlg
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-Pixmap* PixmapFromDataWin(Str bmpData);
-Vec<Pixmap*> PixmapsFromDataWin(Str bmpData);
-Size ImageSizeFromData(Str);
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
 CLSID GetGdiPlusEncoderClsid(WStr format);
-RenderedBitmap* LoadRenderedBitmapWin(Str path);

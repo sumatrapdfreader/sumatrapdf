@@ -108,9 +108,9 @@ function checkCore(): Dep[] {
   const deps: Dep[] = [];
   deps.push(
     existsSync(EXE)
-      ? { name: "SumatraPDF-dll.exe (dbg64)", ok: true, detail: EXE }
+      ? { name: "SumatraPDF.exe (dbg64)", ok: true, detail: EXE }
       : {
-          name: "SumatraPDF-dll.exe (dbg64)",
+          name: "SumatraPDF.exe (dbg64)",
           ok: false,
           install: "bun ./cmd/build.ts",
         },
@@ -169,14 +169,14 @@ function checkLatex(): Dep[] {
 }
 
 function checkAdHocOptional(): Dep[] {
-  const asanExe = join(ROOT, "out", "dbg64_asan", "SumatraPDF.exe");
+  const asanExe = join(ROOT, "out", "dbg64_asan", "SumatraPDF-static.exe");
   const deps: Dep[] = [];
 
   deps.push(
     existsSync(asanExe)
-      ? { name: "SumatraPDF.exe (ASan, issue-chm-lzx)", ok: true, detail: asanExe }
+      ? { name: "SumatraPDF-static.exe (ASan, issue-chm-lzx)", ok: true, detail: asanExe }
       : {
-          name: "SumatraPDF.exe (ASan, issue-chm-lzx)",
+          name: "SumatraPDF-static.exe (ASan, issue-chm-lzx)",
           ok: false,
           install: "bun ./cmd/build-asan.ts",
         },

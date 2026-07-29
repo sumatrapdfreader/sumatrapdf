@@ -49,7 +49,7 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-void OnPaintFrame(HWND hwnd, bool skipoMessage);
+void OnPaintFrame(HWND hwnd, bool skipMessage);
 void AnimStep();
 
 void NotifyFailed(Str msg);
@@ -62,8 +62,7 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated);
 TempStr GetShortcutPathTemp(int csidl);
 
 bool ExtractInstallerFiles(Str dir);
-u32 GetLibmupdfDllSize();
-bool ExtractLibmupdfDll(Str destDir);
+bool ExtractLibmupdfToDir(Str destDir);
 
 TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
@@ -78,6 +77,19 @@ void RegisterSearchFilter(bool allUsers, Str installDir);
 void UnRegisterSearchFilter();
 
 void UninstallBrowserPlugin();
+
+// Unregister shell extensions and kill processes holding install-dir files
+// so ExtractInstallerFiles can overwrite PdfFilter.dll / PdfPreview.dll / etc.
+// Call before extracting over an existing install. removedOut (optional) is
+// filled for RestoreShellExtensions if install fails later.
+struct ShellExtInstallState {
+    bool searchFilter = false;
+    bool preview = false;
+    bool allUsers = false;
+    Str installDir{};
+};
+void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallState* removedOut = nullptr);
+void RestoreShellExtensions(const ShellExtInstallState& state);
 
 bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
 Str GetInstallerLogPath();
@@ -94,8 +106,8 @@ void RemoveAppShortcuts();
 
 // RegistryInstaller.cpp
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installedExePat);
-bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePat);
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir);
+bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();

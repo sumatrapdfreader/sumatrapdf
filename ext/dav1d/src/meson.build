@@ -277,6 +277,7 @@ if is_asm_enabled
             if dav1d_bitdepths.contains('8')
                 libdav1d_sources += files(
                     'riscv/64/cdef.S',
+                    'riscv/64/filmgrain.S',
                     'riscv/64/ipred.S',
                     'riscv/64/itx.S',
                     'riscv/64/mc.S',
@@ -286,6 +287,7 @@ if is_asm_enabled
             if dav1d_bitdepths.contains('16')
                 libdav1d_sources += files(
                     'riscv/64/cdef16.S',
+                    'riscv/64/filmgrain16.S',
                     'riscv/64/ipred16.S',
                     'riscv/64/mc16.S',
                 )

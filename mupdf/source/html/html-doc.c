@@ -175,6 +175,11 @@ htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char 
 		return 1 + (int)fz_strlcpy(buf, doc->format->format_name, size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
 		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
+	/* SumatraPDF: FB2 author + annotation as Subject for Document Properties */
+	if (!strcmp(key, FZ_META_INFO_AUTHOR) && doc->html->author)
+		return 1 + (int)fz_strlcpy(buf, doc->html->author, size);
+	if (!strcmp(key, FZ_META_INFO_SUBJECT) && doc->html->subject)
+		return 1 + (int)fz_strlcpy(buf, doc->html->subject, size);
 	return -1;
 }
 

@@ -1,3 +1,6 @@
+#if 1
+#include "itx_sumatra.h"
+#else
 /*
  * Copyright © 2018-2023, VideoLAN and dav1d authors
  * Copyright © 2018-2023, Two Orioles, LLC
@@ -305,3 +308,4 @@ static ALWAYS_INLINE void itx_dsp_init_x86(Dav1dInvTxfmDSPContext *const c,
 #endif
 #endif
 }
+#endif

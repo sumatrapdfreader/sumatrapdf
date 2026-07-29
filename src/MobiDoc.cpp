@@ -993,7 +993,7 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
 struct MobiTocWalker {
     EbookTocVisitor* visitor = nullptr;
 
-    void Walk(const GumboNode* node);
+    void Walk(const GumboNode* root);
 };
 
 // (node, level) pair for the iterative walk below
@@ -1079,9 +1079,9 @@ bool MobiDoc::IsSupportedFileType(FileType kind) {
     return kind == FileType::Mobi;
 }
 
-MobiDoc* MobiDoc::CreateFromFile(Str fileName) {
-    MobiDoc* mb = new MobiDoc(fileName);
-    PdbReader* pdbReader = PdbReader::CreateFromFile(fileName);
+MobiDoc* MobiDoc::CreateFromFile(Str path) {
+    MobiDoc* mb = new MobiDoc(path);
+    PdbReader* pdbReader = PdbReader::CreateFromFile(path);
     if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
         delete mb;
         return nullptr;

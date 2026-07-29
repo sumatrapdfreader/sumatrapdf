@@ -8002,9 +8002,9 @@ MC_8TAP_SCALED prep
     mov               betam, betad
  %endmacro
 
- %macro SAVE_DELTA_GAMMA 0
-    mov              deltam, deltad
+ %macro SAVE_GAMMA_DELTA 0
     mov              gammam, gammad
+    mov              deltam, deltad
  %endmacro
 
  %macro LOAD_ALPHA_BETA_MX 0
@@ -8014,10 +8014,10 @@ MC_8TAP_SCALED prep
     mov                 mxd, mxm
  %endmacro
 
- %macro LOAD_DELTA_GAMMA_MY 0
+ %macro LOAD_GAMMA_DELTA_MY 0
     mov                 mxm, mxd
-    mov              deltad, deltam
     mov              gammad, gammam
+    mov              deltad, deltam
     mov                 myd, mym
  %endmacro
 
@@ -8026,7 +8026,7 @@ MC_8TAP_SCALED prep
  %define PIC_sym(sym) (PIC_reg+(sym)-PIC_base_offset)
 %else
  %define SAVE_ALPHA_BETA
- %define SAVE_DELTA_GAMMA
+ %define SAVE_GAMMA_DELTA
  %define PIC_sym(sym) sym
 %endif
 
@@ -8075,28 +8075,28 @@ MC_8TAP_SCALED prep
  %if ARCH_X86_32
     pxor                m11, m11
  %endif
-    lea               tmp1d, [myq+deltaq*4]
-    lea               tmp2d, [myq+deltaq*1]
+    lea               tmp1d, [myq+gammaq*4]
+    lea               tmp2d, [myq+gammaq*1]
     shr                 myd, 10
     shr               tmp1d, 10
     movq                 m2, [filterq+myq  *8] ; a
     movq                 m8, [filterq+tmp1q*8] ; e
-    lea               tmp1d, [tmp2q+deltaq*4]
-    lea                 myd, [tmp2q+deltaq*1]
+    lea               tmp1d, [tmp2q+gammaq*4]
+    lea                 myd, [tmp2q+gammaq*1]
     shr               tmp2d, 10
     shr               tmp1d, 10
     movq                 m3, [filterq+tmp2q*8] ; b
     movq                 m0, [filterq+tmp1q*8] ; f
     punpcklwd            m2, m3
     punpcklwd            m8, m0
-    lea               tmp1d, [myq+deltaq*4]
-    lea               tmp2d, [myq+deltaq*1]
+    lea               tmp1d, [myq+gammaq*4]
+    lea               tmp2d, [myq+gammaq*1]
     shr                 myd, 10
     shr               tmp1d, 10
     movq                 m0, [filterq+myq  *8] ; c
     movq                 m9, [filterq+tmp1q*8] ; g
-    lea               tmp1d, [tmp2q+deltaq*4]
-    lea                 myd, [tmp2q+gammaq]       ; my += gamma
+    lea               tmp1d, [tmp2q+gammaq*4]
+    lea                 myd, [tmp2q+deltaq]       ; my += delta
     shr               tmp2d, 10
     shr               tmp1d, 10
     movq                 m3, [filterq+tmp2q*8] ; d
@@ -8196,23 +8196,23 @@ cglobal warp_affine_8x8t_8bpc, 0, 7, 16, -0x130-copy_args, tmp, ts
 %if ARCH_X86_64
 cglobal warp_affine_8x8_8bpc, 6, 14, 16, 0x90, \
                               dst, ds, src, ss, abcd, mx, tmp2, alpha, beta, \
-                              filter, tmp1, delta, my, gamma
+                              filter, tmp1, gamma, my, delta
 %else
 cglobal warp_affine_8x8_8bpc, 0, 7, 16, -0x130-copy_args, \
                               dst, ds, src, ss, abcd, mx, tmp2, alpha, beta, \
-                              filter, tmp1, delta, my, gamma
+                              filter, tmp1, gamma, my, delta
  %define alphaq     r0
  %define alphad     r0
  %define alpham     [esp+gprsize+0x100]
  %define betaq      r1
  %define betad      r1
  %define betam      [esp+gprsize+0x104]
- %define deltaq     r0
- %define deltad     r0
- %define deltam     [esp+gprsize+0x108]
- %define gammaq     r1
- %define gammad     r1
- %define gammam     [esp+gprsize+0x10C]
+ %define gammaq     r0
+ %define gammad     r0
+ %define gammam     [esp+gprsize+0x108]
+ %define deltaq     r1
+ %define deltad     r1
+ %define deltam     [esp+gprsize+0x10C]
  %define filterq    r3
  %define tmp1q      r4
  %define tmp1d      r4
@@ -8312,11 +8312,11 @@ ALIGN function_align
     mov             PIC_mem, PIC_reg
     mov                srcd, srcm
 %endif
-    movsx            deltad, word [abcdq+2*2]
-    movsx            gammad, word [abcdq+2*3]
-    lea               tmp1d, [deltaq*3]
-    sub              gammad, tmp1d    ; gamma -= delta*3
-    SAVE_DELTA_GAMMA
+    movsx            gammad, word [abcdq+2*2]
+    movsx            deltad, word [abcdq+2*3]
+    lea               tmp1d, [gammaq*3]
+    sub              deltad, tmp1d    ; delta -= gamma*3
+    SAVE_GAMMA_DELTA
 %if ARCH_X86_32
     mov               abcdd, abcdm
 %endif
@@ -8440,7 +8440,7 @@ ALIGN function_align
 %else
     mova [esp+gprsize+0xA0], m6
     mova [esp+gprsize+0xB0], m7
-    LOAD_DELTA_GAMMA_MY
+    LOAD_GAMMA_DELTA_MY
     WARP_V [esp+gprsize+0xC0], [esp+gprsize+0xD0], \
            [esp+gprsize+0x00], [esp+gprsize+0x10], \
            [esp+gprsize+0x80], [esp+gprsize+0x90], \
@@ -8473,7 +8473,7 @@ ALIGN function_align
 %else
     mova [esp+gprsize+0x80], m4
     mova [esp+gprsize+0x90], m5
-    LOAD_DELTA_GAMMA_MY
+    LOAD_GAMMA_DELTA_MY
     WARP_V [esp+gprsize+0xE0], [esp+gprsize+0xF0], \
            [esp+gprsize+0x20], [esp+gprsize+0x30], \
            [esp+gprsize+0xA0], [esp+gprsize+0xB0], \

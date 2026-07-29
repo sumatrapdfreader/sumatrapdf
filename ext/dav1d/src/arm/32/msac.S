@@ -366,7 +366,7 @@ function msac_decode_hi_tok_neon, export=1
         add             r5,  r0,  #DIF + 2
         vld1.16         {q8}, [r4, :128]
         mov             r2,  #-24
-        vand            d20, d0, d30           // cdf & 0xffc0
+        vand            d20, d0,  d30          // cdf & 0xffc0
         ldr             r10, [r0, #ALLOW_UPDATE_CDF]
         vld1.16         {d2[]}, [r5, :16]      // dif >> (EC_WIN_SIZE - 16)
         sub             sp,  sp,  #48

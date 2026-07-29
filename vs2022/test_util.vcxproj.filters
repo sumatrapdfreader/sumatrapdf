@@ -63,6 +63,9 @@
     <ClInclude Include="..\src\base\File.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\FileWatcher.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Geom.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -125,6 +128,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\BasePch.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
@@ -189,6 +193,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\FileWatcher.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\File_win.cpp">

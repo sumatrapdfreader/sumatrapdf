@@ -24,10 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "tests/checkasm/checkasm.h"
+#include "tests/checkasm/internal.h"
 #include "src/pal.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static void check_pal_idx_finish(const Dav1dPalDSPContext *const c) {
     ALIGN_STK_64(uint8_t, src, 64 * 64,);

@@ -32,8 +32,8 @@
 #define PREP_BIAS 8192
 
 .macro avg d0, d1, t0, t1, t2, t3
-        ld1             {\t0\().8h,\t1\().8h},  [x2],  32
-        ld1             {\t2\().8h,\t3\().8h},  [x3],  32
+        ld1             {\t0\().8h,\t1\().8h},  [x2],  #32
+        ld1             {\t2\().8h,\t3\().8h},  [x3],  #32
         sqadd           \t0\().8h,  \t0\().8h,  \t2\().8h
         sqadd           \t1\().8h,  \t1\().8h,  \t3\().8h
         smax            \t0\().8h,  \t0\().8h,  v28.8h // -2*PREP_BIAS - 1 << intermediate_bits
@@ -45,8 +45,8 @@
 .endm
 
 .macro w_avg d0, d1, t0, t1, t2, t3
-        ld1             {\t0\().8h,\t1\().8h},  [x2],  32
-        ld1             {\t2\().8h,\t3\().8h},  [x3],  32
+        ld1             {\t0\().8h,\t1\().8h},  [x2],  #32
+        ld1             {\t2\().8h,\t3\().8h},  [x3],  #32
         // This difference requires a 17 bit range, and all bits are
         // significant for the following multiplication.
         ssubl           \d0\().4s,  \t2\().4h,  \t0\().4h
@@ -78,10 +78,10 @@
 .endm
 
 .macro mask d0, d1, t0, t1, t2, t3
-        ld1             {v27.16b}, [x6],  16
-        ld1             {\t0\().8h,\t1\().8h},  [x2],  32
+        ld1             {v27.16b}, [x6],  #16
+        ld1             {\t0\().8h,\t1\().8h},  [x2],  #32
         neg             v27.16b, v27.16b
-        ld1             {\t2\().8h,\t3\().8h},  [x3],  32
+        ld1             {\t2\().8h,\t3\().8h},  [x3],  #32
         sxtl            v26.8h,  v27.8b
         sxtl2           v27.8h,  v27.16b
         sxtl            v24.4s,  v26.4h

@@ -279,16 +279,16 @@ int main(const int argc, char *const *const argv) {
     }
     tfirst = get_time_nanos();
 
-#ifdef _WIN32
-    signal(SIGINT,  signal_handler);
-    signal(SIGTERM, signal_handler);
-#else
+#if HAVE_SIGACTION && defined(SA_RESETHAND)
     static const struct sigaction sa = {
         .sa_handler = signal_handler,
         .sa_flags = SA_RESETHAND,
     };
     sigaction(SIGINT,  &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+#else
+    signal(SIGINT,  signal_handler);
+    signal(SIGTERM, signal_handler);
 #endif
 
     do {

@@ -2,17 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/FileWatcher.h"
-
-static Str gFileWatcherSkipPath;
-
-void FileWatcherSetSkipPath(Str path) {
-    gFileWatcherSkipPath = path;
-}
-
-Str FileWatcherGetSkipPath() {
-    return gFileWatcherSkipPath;
-}
 
 Kind kindNone = "none";
 

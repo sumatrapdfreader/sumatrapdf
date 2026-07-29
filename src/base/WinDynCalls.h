@@ -3,12 +3,13 @@ License: Simplified BSD (see COPYING.BSD) */
 
 /*
 A centrialized location for all APIs that we need to load dynamically.
-The convention is: for a function like SetProcessDEPPolicy(), we define
-a  function pointer DynSetProcessDEPPolicy() (with a signature matching SetProcessDEPPolicy()).
+The convention is: for a function like SetThreadDescription(), we define
+a function pointer DynSetThreadDescription() (with a signature matching
+SetThreadDescription()).
 
-You can test if a function is available with if (DynSetProcessDEPPolicy).
+You can test if a function is available with if (DynSetThreadDescription).
 
-The intent is to standardize how we do it.
+APIs available on our minimum OS (Windows 7) are called directly, not via Dyn*.
 */
 
 void InitDynCalls();
@@ -16,8 +17,8 @@ void InitDynCalls();
 #if OS_WIN
 
 // as an exception, we include system headers needed for the calls that we dynamically load
+// (and a few related headers that call sites historically got via this include)
 #include <windows.h>
-#include <dwmapi.h>
 #include <vssym32.h>
 #include <uiautomationcore.h>
 #include <uiautomationcoreapi.h>
@@ -32,48 +33,36 @@ void InitDynCalls();
 #include <dbghelp.h>
 #pragma warning(pop)
 
-#define API_DECLARATION(name) extern Sig_##name Dyn##name;
-
 #define API_DECLARATION2(name)          \
     typedef decltype(name)* Sig_##name; \
     extern Sig_##name Dyn##name;
 
-// ntdll.dll
-#define PROCESS_EXECUTE_FLAGS 0x22
-#define MEM_EXECUTE_OPTION_DISABLE 0x1
-#define MEM_EXECUTE_OPTION_ENABLE 0x2
-#define MEM_EXECUTE_OPTION_PERMANENT 0x8
-#define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
+// mingw-w64 headers before v12 (e.g. Debian's 10.0.0) don't declare
+// SetThreadDescription; the decltype in API_DECLARATION2 needs a declaration.
+// An identical redeclaration is harmless on newer headers.
+#ifdef __MINGW32__
+extern "C" WINBASEAPI HRESULT WINAPI SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
+#endif
 
-/* enable "NX" execution prevention for XP, 2003
- * cf. http://www.uninformed.org/?v=2&a=4 */
-typedef HRESULT(WINAPI* Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT ProcessInformationClass,
-                                                     PVOID ProcessInformation,
-                                                     ULONG ProcessInformationLength); // NOLINT
+// mingw-w64 headers before v12 (e.g. Ubuntu 24.04's 11.0.1) also predate the
+// Windows 11 DWM additions; the dwm:: wrappers pass attributes as DWORD.
+#if defined(__MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR < 12
+typedef enum {
+    DWMWCP_DEFAULT = 0,
+    DWMWCP_DONOTROUND = 1,
+    DWMWCP_ROUND = 2,
+    DWMWCP_ROUNDSMALL = 3,
+} DWM_WINDOW_CORNER_PREFERENCE;
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#define DWMWA_BORDER_COLOR 34
+#define DWMWA_COLOR_DEFAULT 0xFFFFFFFF
+#define DWMWA_COLOR_NONE 0xFFFFFFFE
+#endif
 
-#define NTDLL_API_LIST(V) V(NtSetInformationProcess)
-
-NTDLL_API_LIST(API_DECLARATION)
-
-// normaliz.dll
-// TODO: need to rename our NormalizeString so that it doesn't conflict
-// typedef decltype(NormalizeString)* Sig_NormalizeString2;
-typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
-
-#define NORMALIZ_API_LIST(V) V(NormalizeString)
-
-NORMALIZ_API_LIST(API_DECLARATION)
-
-// kernel32.dll
+// kernel32.dll — only APIs not guaranteed on stock Windows 7
 #define KERNEL32_API_LIST(V)    \
-    V(SetProcessDEPPolicy)      \
-    V(IsWow64Process)           \
-    V(SetDllDirectoryW)         \
     V(SetDefaultDllDirectories) \
-    V(RtlCaptureContext)        \
-    V(RtlCaptureStackBackTrace) \
-    V(SetThreadDescription)     \
-    V(GetFinalPathNameByHandleW)
+    V(SetThreadDescription)
 
 // TODO: only available in 20348, not yet present in SDK?
 // V(GetTempPath2W)
@@ -85,14 +74,6 @@ typedef BOOL(WINAPI* Sig_GetProcessInformation)(HANDLE, int, LPVOID, DWORD);
 typedef BOOL(WINAPI* Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
 extern Sig_GetProcessInformation DynGetProcessInformation;
 extern Sig_SetProcessMitigationPolicy DynSetProcessMitigationPolicy;
-
-// user32.dll
-#define USER32_API_LIST(V) \
-    V(SetGestureConfig)    \
-    V(GetGestureInfo)      \
-    V(CloseGestureInfoHandle)
-
-USER32_API_LIST(API_DECLARATION2)
 
 // not declared in SDK headers with _WIN32_WINNT=0x0601, define manually
 typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
@@ -109,29 +90,6 @@ extern Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi;
 // shcore.dll
 typedef HRESULT(WINAPI* Sig_GetDpiForMonitor)(HMONITOR, int, UINT*, UINT*);
 extern Sig_GetDpiForMonitor DynGetDpiForMonitor;
-
-// uxtheme.dll
-#define UXTHEME_API_LIST(V)                  \
-    V(IsAppThemed)                           \
-    V(OpenThemeData)                         \
-    V(CloseThemeData)                        \
-    V(DrawThemeBackground)                   \
-    V(IsThemeActive)                         \
-    V(IsThemeBackgroundPartiallyTransparent) \
-    V(SetWindowTheme)                        \
-    V(GetThemeColor)
-
-UXTHEME_API_LIST(API_DECLARATION2)
-
-/// dwmapi.dll
-#define DWMAPI_API_LIST(V)          \
-    V(DwmIsCompositionEnabled)      \
-    V(DwmExtendFrameIntoClientArea) \
-    V(DwmDefWindowProc)             \
-    V(DwmGetWindowAttribute)        \
-    V(DwmSetWindowAttribute)
-
-DWMAPI_API_LIST(API_DECLARATION2)
 
 // dbghelp.dll, there are different versions not sure if I can rely on
 // this to be always present on every Windows version
@@ -152,42 +110,7 @@ DWMAPI_API_LIST(API_DECLARATION2)
 
 DBGHELP_API_LIST(API_DECLARATION2)
 
-#undef API_DECLARATION
 #undef API_DECLARATION2
-
-// convenience wrappers
-namespace theme {
-
-bool IsAppThemed();
-HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
-HRESULT CloseThemeData(HTHEME hTheme);
-HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
-BOOL IsThemeActive();
-BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId);
-HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor);
-}; // namespace theme
-
-namespace dwm {
-
-BOOL IsCompositionEnabled();
-BOOL DefaultWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT* plResult);
-HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset);
-HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute);
-HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute);
-void SetWindowBorderColor(HWND hwnd, COLORREF color);
-void SetWindowRoundedCorners(HWND hwnd, bool rounded);
-
-}; // namespace dwm
-
-// Touch Gesture API, only available in Windows 7
-namespace touch {
-
-bool SupportsGestures();
-
-BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
-BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
-} // namespace touch
 
 void NoDllHijacking();
 void PrioritizeSystemDirectoriesForDllLoad();

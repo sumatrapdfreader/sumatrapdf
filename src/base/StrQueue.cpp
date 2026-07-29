@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
-#include "StrQueue.h"
+#include "base/Base.h"
+#include "base/StrQueue.h"
 
 StrQueue::StrQueue() = default;
 

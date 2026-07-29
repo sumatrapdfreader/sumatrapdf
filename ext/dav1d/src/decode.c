@@ -783,15 +783,17 @@ static int decode_b(Dav1dTaskContext *const t,
 
             if (IS_INTER_OR_SWITCH(f->frame_hdr)) {
                 refmvs_block *const r = &t->rt.r[(t->by & 31) + 5 + bh4 - 1][t->bx];
+                const int ref1 = b->ref[0] + 1;
+                const union mv mv1 = b->mv[0];
                 for (int x = 0; x < bw4; x++) {
-                    r[x].ref.ref[0] = b->ref[0] + 1;
-                    r[x].mv.mv[0] = b->mv[0];
+                    r[x].ref.ref[0] = ref1;
+                    r[x].mv.mv[0] = mv1;
                     r[x].bs = bs;
                 }
                 refmvs_block *const *rr = &t->rt.r[(t->by & 31) + 5];
                 for (int y = 0; y < bh4 - 1; y++) {
-                    rr[y][t->bx + bw4 - 1].ref.ref[0] = b->ref[0] + 1;
-                    rr[y][t->bx + bw4 - 1].mv.mv[0] = b->mv[0];
+                    rr[y][t->bx + bw4 - 1].ref.ref[0] = ref1;
+                    rr[y][t->bx + bw4 - 1].mv.mv[0] = mv1;
                     rr[y][t->bx + bw4 - 1].bs = bs;
                 }
             }
@@ -2514,6 +2516,7 @@ static void read_restoration_info(Dav1dTaskContext *const t,
 {
     const Dav1dFrameContext *const f = t->f;
     Dav1dTileState *const ts = t->ts;
+    const Av1RestorationUnit *const lr_ref = ts->lr_ref[p];
 
     if (frame_type == DAV1D_RESTORATION_SWITCHABLE) {
         const int filter = dav1d_msac_decode_symbol_adapt4(&ts->msac,
@@ -2530,24 +2533,24 @@ static void read_restoration_info(Dav1dTaskContext *const t,
     if (lr->type == DAV1D_RESTORATION_WIENER) {
         lr->filter_v[0] = p ? 0 :
             dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->filter_v[0] + 5, 16, 1) - 5;
+                lr_ref->filter_v[0] + 5, 16, 1) - 5;
         lr->filter_v[1] =
             dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->filter_v[1] + 23, 32, 2) - 23;
+                lr_ref->filter_v[1] + 23, 32, 2) - 23;
         lr->filter_v[2] =
             dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->filter_v[2] + 17, 64, 3) - 17;
+                lr_ref->filter_v[2] + 17, 64, 3) - 17;
 
         lr->filter_h[0] = p ? 0 :
             dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->filter_h[0] + 5, 16, 1) - 5;
+                lr_ref->filter_h[0] + 5, 16, 1) - 5;
         lr->filter_h[1] =
             dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->filter_h[1] + 23, 32, 2) - 23;
+                lr_ref->filter_h[1] + 23, 32, 2) - 23;
         lr->filter_h[2] =
             dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->filter_h[2] + 17, 64, 3) - 17;
-        memcpy(lr->sgr_weights, ts->lr_ref[p]->sgr_weights, sizeof(lr->sgr_weights));
+                lr_ref->filter_h[2] + 17, 64, 3) - 17;
+        memcpy(lr->sgr_weights, lr_ref->sgr_weights, sizeof(lr->sgr_weights));
         ts->lr_ref[p] = lr;
         if (DEBUG_BLOCK_INFO)
             printf("Post-lr_wiener[pl=%d,v[%d,%d,%d],h[%d,%d,%d]]: r=%d\n",
@@ -2559,11 +2562,11 @@ static void read_restoration_info(Dav1dTaskContext *const t,
         const uint16_t *const sgr_params = dav1d_sgr_params[idx];
         lr->type += idx;
         lr->sgr_weights[0] = sgr_params[0] ? dav1d_msac_decode_subexp(&ts->msac,
-            ts->lr_ref[p]->sgr_weights[0] + 96, 128, 4) - 96 : 0;
+            lr_ref->sgr_weights[0] + 96, 128, 4) - 96 : 0;
         lr->sgr_weights[1] = sgr_params[1] ? dav1d_msac_decode_subexp(&ts->msac,
-            ts->lr_ref[p]->sgr_weights[1] + 32, 128, 4) - 32 : 95;
-        memcpy(lr->filter_v, ts->lr_ref[p]->filter_v, sizeof(lr->filter_v));
-        memcpy(lr->filter_h, ts->lr_ref[p]->filter_h, sizeof(lr->filter_h));
+            lr_ref->sgr_weights[1] + 32, 128, 4) - 32 : 95;
+        memcpy(lr->filter_v, lr_ref->filter_v, sizeof(lr->filter_v));
+        memcpy(lr->filter_h, lr_ref->filter_h, sizeof(lr->filter_h));
         ts->lr_ref[p] = lr;
         if (DEBUG_BLOCK_INFO)
             printf("Post-lr_sgrproj[pl=%d,idx=%d,w[%d,%d]]: r=%d\n",

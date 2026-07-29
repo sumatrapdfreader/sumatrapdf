@@ -36,8 +36,8 @@ If you add or remove lines with square brackets, **make sure to always add/remov
 ; view, continuous, continuous facing, continuous book view
 DefaultDisplayMode = automatic
 
-; default zoom. valid values: fit page, fit width, fit content or percent like
-; 100%
+; default zoom. valid values: fit page, fit width, fit height, fit content or
+; percent like 100%
 DefaultZoom = fit page
 
 ; if true, JavaScript in PDF documents is disabled (e.g. form-field calculations
@@ -132,6 +132,11 @@ SearchUIFloating = false
 ; if true, we show the Favorites sidebar
 ShowFavorites = false
 
+; if true, favorites within each file are sorted alphabetically by name (or page
+; label); if false (the default), they are sorted by page number (introduced in
+; version 3.7)
+SortFavoritesByName = false
+
 ; if true, we show table of contents (Bookmarks) sidebar if it's present in the
 ; document
 ShowToc = true
@@ -139,6 +144,18 @@ ShowToc = true
 ; if true we draw a blue border around links in the document (introduced in
 ; version 3.6)
 ShowLinks = false
+
+; if true, draw a focus ring around the document when it has keyboard focus (Tab
+; to the page area) (introduced in version 3.7)
+ShowDocumentFocusIndicator = false
+
+; if true, show a tip when hovering an annotation (e.g. "Highlight annotation.
+; Ctrl+click to edit.") (introduced in version 3.7)
+ShowAnnotationNotification = true
+
+; if true, show page numbers (labels) right-aligned on bookmark /
+; table-of-contents entries (introduced in version 3.7)
+ShowTocPageNumbers = true
 
 ; if true, we show a list of frequently read documents when no document is
 ; loaded
@@ -155,8 +172,14 @@ Scrollbars = windows
 ; if true, we show scrollbar in single page mode (introduced in version 3.6)
 ScrollbarInSinglePage = false
 
-; if true, implements smooth scrolling (introduced in version 3.6)
-SmoothScroll = false
+; if true, smooth mouse-wheel scrolling (exponential chase of the target;
+; continuous wheel input stays fluid) (introduced in version 3.6)
+SmoothScroll = true
+
+; if true, continuous view has extra scroll room after the last page so you can
+; scroll the end of the document to the top of the window (introduced in version
+; 3.7)
+PaddingAfterLastPage = false
 
 ; how long to hover an internal-document link (in ms) before we show a popup
 ; rendering the destination region (citation entry, figure, footnote). -1 (the
@@ -236,6 +259,11 @@ UseSysColors = false
 ; if true, documents are opened in tabs instead of new windows (introduced in
 ; version 3.0)
 UseTabs = true
+
+; if true, a small floating toolbar with selection actions (copy, read aloud,
+; highlight etc.) pops up after selecting text. Set to false to disable it
+; (introduced in version 3.7)
+SelectionToolbar = true
 
 ; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
 ; used order instead of tab-strip order
@@ -331,7 +359,8 @@ ImageUI [
     WindowBgCol = 
 
     ; default zoom for image files. valid values: fit page, fit width, fit
-    ; content, shrink to fit or percent like 100% (introduced in version 3.7)
+    ; height, fit content, shrink to fit or percent like 100% (introduced in
+    ; version 3.7)
     DefaultZoom = shrink to fit
 ]
 
@@ -542,11 +571,6 @@ Annotations [
     ; default author for created annotations, use (none) to not add an author at
     ; all. If not set will use Windows user name (introduced in version 3.4)
     DefaultAuthor = 
-
-    ; if true, a small floating toolbar with selection actions (copy, read
-    ; aloud, highlight etc.) pops up after selecting text. Set to false to
-    ; disable it (introduced in version 3.7)
-    SelectionToolbar = true
 ]
 
 ; list of additional external viewers for various file types. See docs for more information (https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
@@ -672,6 +696,36 @@ Themes [
     ; link color
     LinkColor = 
 
+    ; disabled / grayed text color (introduced in version 3.7)
+    DisabledTextColor = 
+
+    ; secondary / muted text color (introduced in version 3.7)
+    DarkerTextColor = 
+
+    ; hovered control background color (introduced in version 3.7)
+    HotBackgroundColor = 
+
+    ; control border / edge color (introduced in version 3.7)
+    EdgeColor = 
+
+    ; hovered control border color (introduced in version 3.7)
+    HotEdgeColor = 
+
+    ; disabled control border color (introduced in version 3.7)
+    DisabledEdgeColor = 
+
+    ; error background color (introduced in version 3.7)
+    ErrorBackgroundColor = 
+
+    ; notification tip background color (introduced in version 3.7)
+    NotificationBackgroundColor = 
+
+    ; notification tip highlight background color (introduced in version 3.7)
+    NotificationHighlightColor = 
+
+    ; notification tip highlight text color (introduced in version 3.7)
+    NotificationHighlightTextColor = 
+
     ; should we colorize Windows controls and window areas
     ColorizeControls = false
   ]
@@ -767,7 +821,8 @@ FileStates [
     ; number of the last read page
     PageNo = 1
 
-    ; zoom (in %) or one of those values: fit page, fit width, fit content
+    ; zoom (in %) or one of those values: fit page, fit width, fit height, fit
+    ; content
     Zoom = fit page
 
     ; how far pages have been rotated as a multiple of 90 degrees

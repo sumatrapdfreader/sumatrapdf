@@ -8,7 +8,6 @@
 #ifndef __FILTERBASE_H__
 #define __FILTERBASE_H__
 
-#include <strsafe.h>
 #include <propkey.h>
 #include <propsys.h>
 #include <filter.h>
@@ -73,7 +72,7 @@ class ChunkValue {
         PWSTR pszCoTaskValue = static_cast<PWSTR>(CoTaskMemAlloc(cch * sizeof(WCHAR)));
         if (!pszCoTaskValue) return E_OUTOFMEMORY;
 
-        StringCchCopyW(pszCoTaskValue, cch, pszValue);
+        wstr::BufSet(WStr(pszCoTaskValue, (int)cch), WStr(pszValue));
         m_fIsValid = true;
         if (chunkType == CHUNK_VALUE) {
             m_propVariant.vt = VT_LPWSTR;
@@ -205,8 +204,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
         if (!cchToCopy) return FILTER_E_NO_MORE_TEXT;
 
         PCWSTR psz = m_currentChunk.GetString() + m_iText;
-        StringCchCopyNW(awcBuffer, *pcwcBuffer, psz, cchToCopy);
-        awcBuffer[cchToCopy] = '\0';
+        wstr::BufSet(WStr(awcBuffer, (int)*pcwcBuffer), WStr(psz, (int)cchToCopy));
 
         *pcwcBuffer = cchToCopy;
         m_iText += cchToCopy;

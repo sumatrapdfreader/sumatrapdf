@@ -15,6 +15,10 @@
 #include <shellapi.h>
 #include <stdio.h>
 #include <string.h>
+#if !defined(_MSC_VER)
+#include <strings.h>
+#define _stricmp strcasecmp
+#endif
 
 // implemented in (and exported from) libmupdf.dll - see src/libmupdf.def
 extern "C" {

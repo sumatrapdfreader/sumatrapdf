@@ -1,3 +1,6 @@
+#if 1
+#include "filmgrain_sumatra.h"
+#else
 /*
  * Copyright © 2018-2022, VideoLAN and dav1d authors
  * Copyright © 2018-2022, Two Orioles, LLC
@@ -81,3 +84,4 @@ static ALWAYS_INLINE void film_grain_dsp_init_x86(Dav1dFilmGrainDSPContext *cons
     }
 #endif
 }
+#endif

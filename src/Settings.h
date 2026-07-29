@@ -22,6 +22,7 @@ constexpr float kZoomFitWidth = -2.F;
 constexpr float kZoomFitContent = -3.F;
 constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
+constexpr float kZoomFitHeight = -6.F;
 constexpr float kZoomActualSize = 100.0F;
 constexpr float kZoomMax = 6400.F; /* max zoom in % */
 constexpr float kZoomMin = 8.33F;  /* min zoom in % */
@@ -112,7 +113,7 @@ struct ImageUI {
     Str windowBgCol;
     ParsedColor windowBgColParsed;
     // default zoom for image files. valid values: fit page, fit width, fit
-    // content, shrink to fit or percent like 100%
+    // height, fit content, shrink to fit or percent like 100%
     Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
@@ -285,10 +286,6 @@ struct Annotations {
     // default author for created annotations, use (none) to not add an
     // author at all. If not set will use Windows user name
     Str defaultAuthor;
-    // if true, a small floating toolbar with selection actions (copy, read
-    // aloud, highlight etc.) pops up after selecting text. Set to false to
-    // disable it
-    bool selectionToolbar;
 };
 
 // list of additional external viewers for various file types. See [docs
@@ -396,6 +393,36 @@ struct Theme {
     // link color
     Str linkColor;
     ParsedColor linkColorParsed;
+    // disabled / grayed text color
+    Str disabledTextColor;
+    ParsedColor disabledTextColorParsed;
+    // secondary / muted text color
+    Str darkerTextColor;
+    ParsedColor darkerTextColorParsed;
+    // hovered control background color
+    Str hotBackgroundColor;
+    ParsedColor hotBackgroundColorParsed;
+    // control border / edge color
+    Str edgeColor;
+    ParsedColor edgeColorParsed;
+    // hovered control border color
+    Str hotEdgeColor;
+    ParsedColor hotEdgeColorParsed;
+    // disabled control border color
+    Str disabledEdgeColor;
+    ParsedColor disabledEdgeColorParsed;
+    // error background color
+    Str errorBackgroundColor;
+    ParsedColor errorBackgroundColorParsed;
+    // notification tip background color
+    Str notificationBackgroundColor;
+    ParsedColor notificationBackgroundColorParsed;
+    // notification tip highlight background color
+    Str notificationHighlightColor;
+    ParsedColor notificationHighlightColorParsed;
+    // notification tip highlight text color
+    Str notificationHighlightTextColor;
+    ParsedColor notificationHighlightTextColorParsed;
     // should we colorize Windows controls and window areas
     bool colorizeControls;
 };
@@ -460,7 +487,8 @@ struct FileState {
     PointF scrollPos;
     // number of the last read page
     int pageNo;
-    // zoom (in %) or one of those values: fit page, fit width, fit content
+    // zoom (in %) or one of those values: fit page, fit width, fit height,
+    // fit content
     Str zoom;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
@@ -546,8 +574,8 @@ struct GlobalPrefs {
     // with DefaultDisplayMode after deserialization and before
     // serialization
     Str defaultDisplayMode;
-    // default zoom. valid values: fit page, fit width, fit content or
-    // percent like 100%
+    // default zoom. valid values: fit page, fit width, fit height, fit
+    // content or percent like 100%
     Str defaultZoom;
     // if true, JavaScript in PDF documents is disabled (e.g. form-field
     // calculations won't run)
@@ -617,11 +645,24 @@ struct GlobalPrefs {
     bool searchUIFloating;
     // if true, we show the Favorites sidebar
     bool showFavorites;
+    // if true, favorites within each file are sorted alphabetically by
+    // name (or page label); if false (the default), they are sorted by
+    // page number
+    bool sortFavoritesByName;
     // if true, we show table of contents (Bookmarks) sidebar if it's
     // present in the document
     bool showToc;
     // if true we draw a blue border around links in the document
     bool showLinks;
+    // if true, draw a focus ring around the document when it has keyboard
+    // focus (Tab to the page area)
+    bool showDocumentFocusIndicator;
+    // if true, show a tip when hovering an annotation (e.g. "Highlight
+    // annotation. Ctrl+click to edit.")
+    bool showAnnotationNotification;
+    // if true, show page numbers (labels) right-aligned on bookmark /
+    // table-of-contents entries
+    bool showTocPageNumbers;
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
@@ -633,8 +674,12 @@ struct GlobalPrefs {
     Str scrollbars;
     // if true, we show scrollbar in single page mode
     bool scrollbarInSinglePage;
-    // if true, implements smooth scrolling
+    // if true, smooth mouse-wheel scrolling (exponential chase of the
+    // target; continuous wheel input stays fluid)
     bool smoothScroll;
+    // if true, continuous view has extra scroll room after the last page
+    // so you can scroll the end of the document to the top of the window
+    bool paddingAfterLastPage;
     // how long to hover an internal-document link (in ms) before we show a
     // popup rendering the destination region (citation entry, figure,
     // footnote). -1 (the default) disables the popup; set a positive value
@@ -694,6 +739,10 @@ struct GlobalPrefs {
     bool useSysColors;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
+    // if true, a small floating toolbar with selection actions (copy, read
+    // aloud, highlight etc.) pops up after selecting text. Set to false to
+    // disable it
+    bool selectionToolbar;
     // if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most
     // recently used order instead of tab-strip order
     bool tabsMru;
@@ -901,7 +950,7 @@ static const FieldInfo gImageUIFields[] = {
 static const StructInfo gImageUIInfo = {
     sizeof(ImageUI), 2, gImageUIFields, "WindowBgCol\0DefaultZoom",
     "if given, sets the canvas background color for image files\0default zoom for image files. valid values: fit page, "
-    "fit width, fit content, shrink to fit or percent like 100%"};
+    "fit width, fit height, fit content, shrink to fit or percent like 100%"};
 
 static const FieldInfo gChmUIFields[] = {
     {offsetof(ChmUI, useFixedPageUI), SettingType::Bool, false},
@@ -1017,20 +1066,17 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
-    {offsetof(Annotations, selectionToolbar), SettingType::Bool, true},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 13, gAnnotationsFields,
+    sizeof(Annotations), 12, gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor\0SelectionToolbar",
+    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor",
     "highlight annotation color\0underline annotation color\0squiggly annotation color\0strike out annotation "
     "color\0text color of free text annotation\0background color of free text annotation\0opacity of free text "
     "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0size "
     "of free text annotation\0width of free text annotation border\0text icon annotation color\0type of text "
     "annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.\0default author "
-    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name\0if true, "
-    "a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. "
-    "Set to false to disable it"};
+    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name"};
 
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
@@ -1108,13 +1154,28 @@ static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, darkerTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, edgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, errorBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gThemeInfo = {
-    sizeof(Theme), 6, gThemeFields,
-    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0ColorizeControls",
-    "name of the theme\0text color\0background color\0control background color\0link color\0should we colorize Windows "
-    "controls and window areas"};
+    sizeof(Theme), 16, gThemeFields,
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
+    "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
+    "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
+    "name of the theme\0text color\0background color\0control background color\0link color\0disabled / grayed text "
+    "color\0secondary / muted text color\0hovered control background color\0control border / edge color\0hovered "
+    "control border color\0disabled control border color\0error background color\0notification tip background "
+    "color\0notification tip highlight background color\0notification tip highlight text color\0should we colorize "
+    "Windows controls and window areas"};
 
 static const FieldInfo gTabFileFields[] = {
     {offsetof(TabFile, path), SettingType::String, (intptr_t)""},
@@ -1205,13 +1266,13 @@ static StructInfo gFileStateInfo = {
     "when opening this file (instead of the values below)\0layout of pages. valid values: automatic, single page, "
     "facing, book view, continuous, continuous facing, continuous book view\0how far this document has been scrolled "
     "(in x and y direction)\0number of the last read page\0zoom (in %) or one of those values: fit page, fit width, "
-    "fit content\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is normal, 2 is "
-    "maximized, 3 is fullscreen, 4 is minimized\0default position (can be on any monitor)\0if true, we show table of "
-    "contents (Bookmarks) sidebar if it's present in the document\0width of the left sidebar panel containing the "
-    "table of contents\0if true, the document is displayed right-to-left in facing and book view modes (only used for "
-    "comic book documents)\0if given, overrides the background color for this document\0if given, overrides the tab "
-    "color for this document\0data required to restore the last read page in the ebook UI\0data required to determine "
-    "which parts of the table of contents have been expanded"};
+    "fit height, fit content\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is "
+    "normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0default position (can be on any monitor)\0if true, we "
+    "show table of contents (Bookmarks) sidebar if it's present in the document\0width of the left sidebar panel "
+    "containing the table of contents\0if true, the document is displayed right-to-left in facing and book view modes "
+    "(only used for comic book documents)\0if given, overrides the background color for this document\0if given, "
+    "overrides the tab color for this document\0data required to restore the last read page in the ebook UI\0data "
+    "required to determine which parts of the table of contents have been expanded"};
 
 static const FieldInfo gPointF_1_Fields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
@@ -1300,13 +1361,18 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, toolbarPosition), SettingType::String, (intptr_t)"top"},
     {offsetof(GlobalPrefs, searchUIFloating), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, sortFavoritesByName), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, showDocumentFocusIndicator), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, showAnnotationNotification), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showTocPageNumbers), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
     {offsetof(GlobalPrefs, scrollbarInSinglePage), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, paddingAfterLastPage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, -1},
     {offsetof(GlobalPrefs, readAloudVoiceId), SettingType::String, 0},
     {offsetof(GlobalPrefs, readAloudSpeed), SettingType::Float, (intptr_t)"1"},
@@ -1314,8 +1380,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, preventSleepInFullscreen), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t)""},
-    {offsetof(GlobalPrefs, lastLightTheme), SettingType::String, (intptr_t)""},
-    {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)""},
+    {offsetof(GlobalPrefs, lastLightTheme), SettingType::String, (intptr_t)"", true},
+    {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, documentColorsFollowTheme), SettingType::String, (intptr_t)"off"},
     {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0, true},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
@@ -1327,6 +1393,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, disableAutoLinks), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, selectionToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabsMru), SettingType::Bool, false},
     {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t)""},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t)"0"},
@@ -1353,7 +1420,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, aiChatSidebarDx), SettingType::Int, 0, true},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)""},
+    {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, translateFromLang), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, translateEngine), SettingType::String, (intptr_t)"", true},
     {(size_t)-1, SettingType::Comment, 0},
@@ -1395,66 +1462,75 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 122, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 128, gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
     "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
-    "ting\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll"
-    "\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidt"
-    "h\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize"
-    "\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomL"
-    "evels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0A"
-    "udiobook\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0A"
-    "nnotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts"
-    "\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPo"
-    "s\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0Check"
-    "ForUpdates\0\0",
+    "ting\0ShowFavorites\0SortFavoritesByName\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotificati"
+    "on\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0PaddingAfterLas"
+    "tPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0Ta"
+    "bWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFon"
+    "tSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0Selection"
+    "Toolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0Markdo"
+    "wnUI\0\0ClaudeCode\0\0Audiobook\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLan"
+    "g\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0Selectio"
+    "nHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip"
+    "\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCount"
+    "Week\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
-    "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit content or percent like "
-    "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
-    "may load an image stored in a separate file referenced by name (an external image stream); the file must sit next "
-    "to the PDF. Off by default for security (matches Acrobat)\0if true, we expose the SyncTeX inverse search command "
-    "line in Settings -> Options\0if true, Esc key closes SumatraPDF\0if true, we show the full path to a file in the "
-    "title bar\0pattern used to launch the LaTeX editor when doing inverse search\0when restoring session, delay "
-    "loading of documents until their tab is selected\0background color of the non-document windows, traditionally "
-    "yellow\0if true, doesn't open Home tab\0if true implements pre-3.6 behavior of showing opened files by frequently "
-    "used count. If false, shows most recently opened first\0Valid values: thumbnails, list\0if true, a document will "
-    "be reloaded automatically whenever it's changed (currently doesn't work for documents shown in the ebook UI)\0if "
-    "true, we remember which files we opened and their display settings\0if true, we store display settings for each "
-    "document separately (i.e. everything after UseDefaultState in FileStates)\0if true and SessionData isn't empty, "
-    "that session will be restored at startup\0if true, we'll always open files using existing SumatraPDF process\0if "
-    "false, the menu bar will be hidden (use F9 to toggle, persisted across sessions)\0if true, show the menu bar when "
-    "using tabs (useTabs = true)\0if true, we show tips on the home page\0up to 13 custom colors for the background "
-    "color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')\0if true, we show the toolbar at the top of the "
-    "window\0toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over the page, sized to its "
-    "natural width and centered, only shown when the mouse is near it). if empty, derived from ShowToolbar\0where the "
-    "toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the find UI is a floating, "
-    "movable window with a results list instead of the compact toolbar overlay\0if true, we show the Favorites "
-    "sidebar\0if true, we show table of contents (Bookmarks) sidebar if it's present in the document\0if true we draw "
-    "a blue border around links in the document\0if true, we show a list of frequently read documents when no document "
-    "is loaded\0width of favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), "
-    "smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if "
-    "true, we show scrollbar in single page mode\0if true, implements smooth scrolling\0how long to hover an "
-    "internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, "
-    "footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it\0voice id for Read "
-    "Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read "
-    "Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 "
-    ".. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling "
-    "is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or "
-    "presentation mode\0maximum width of a single tab\0Valid themes: light, dark, darker, system\0the light theme the "
-    "light/dark toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme "
-    "switch to\0Valid values: off, smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this "
-    "is the height of bookmarks (table of contents) part\0height of toolbar\0font name for bookmarks and favorites "
-    "tree views. automatic means Windows default\0font size for bookmarks and favorites tree views. 0 means Windows "
-    "default\0over-ride application font size. 0 means Windows default\0if true, disables anti-aliasing for rendering "
-    "PDF documents\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
-    "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, we use Windows system colors "
-    "for background/text color. Over-rides other settings\0if true, documents are opened in tabs instead of new "
-    "windows\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of "
-    "tab-strip order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0zoom "
-    "step size in percents relative to the current zoom level. if zero or negative, the values from ZoomLevels are "
-    "used instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options for "
+    "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
+    "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
+    "PDF may load an image stored in a separate file referenced by name (an external image stream); the file must sit "
+    "next to the PDF. Off by default for security (matches Acrobat)\0if true, we expose the SyncTeX inverse search "
+    "command line in Settings -> Options\0if true, Esc key closes SumatraPDF\0if true, we show the full path to a file "
+    "in the title bar\0pattern used to launch the LaTeX editor when doing inverse search\0when restoring session, "
+    "delay loading of documents until their tab is selected\0background color of the non-document windows, "
+    "traditionally yellow\0if true, doesn't open Home tab\0if true implements pre-3.6 behavior of showing opened files "
+    "by frequently used count. If false, shows most recently opened first\0Valid values: thumbnails, list\0if true, a "
+    "document will be reloaded automatically whenever it's changed (currently doesn't work for documents shown in the "
+    "ebook UI)\0if true, we remember which files we opened and their display settings\0if true, we store display "
+    "settings for each document separately (i.e. everything after UseDefaultState in FileStates)\0if true and "
+    "SessionData isn't empty, that session will be restored at startup\0if true, we'll always open files using "
+    "existing SumatraPDF process\0if false, the menu bar will be hidden (use F9 to toggle, persisted across "
+    "sessions)\0if true, show the menu bar when using tabs (useTabs = true)\0if true, we show tips on the home "
+    "page\0up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 "
+    "#0000ff')\0if true, we show the toolbar at the top of the window\0toolbar mode: show (pinned), hide (no toolbar), "
+    "overlay (toolbar floats over the page, sized to its natural width and centered, only shown when the mouse is near "
+    "it). if empty, derived from ShowToolbar\0where the toolbar is placed: top or bottom (applies to both show and "
+    "overlay modes)\0if true, the find UI is a floating, movable window with a results list instead of the compact "
+    "toolbar overlay\0if true, we show the Favorites sidebar\0if true, favorites within each file are sorted "
+    "alphabetically by name (or page label); if false (the default), they are sorted by page number\0if true, we show "
+    "table of contents (Bookmarks) sidebar if it's present in the document\0if true we draw a blue border around links "
+    "in the document\0if true, draw a focus ring around the document when it has keyboard focus (Tab to the page "
+    "area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if "
+    "true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries\0if true, we show a list "
+    "of frequently read documents when no document is loaded\0width of favorites/bookmarks sidebar (if "
+    "shown)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay "
+    "(always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show scrollbar in single page mode\0if "
+    "true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)\0if "
+    "true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the "
+    "top of the window\0how long to hover an internal-document link (in ms) before we show a popup rendering the "
+    "destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value "
+    "like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids "
+    "match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed "
+    "multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud "
+    "playback bar\0if true, mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the "
+    "screen from turning off when in fullscreen or presentation mode\0maximum width of a single tab\0Valid themes: "
+    "light, dark, darker, system\0the light theme the light/dark toggle and the System theme switch to\0the dark theme "
+    "the light/dark toggle and the System theme switch to\0Valid values: off, smart, legacy\0if both favorites and "
+    "bookmarks parts of sidebar are visible, this is the height of bookmarks (table of contents) part\0height of "
+    "toolbar\0font name for bookmarks and favorites tree views. automatic means Windows default\0font size for "
+    "bookmarks and favorites tree views. 0 means Windows default\0over-ride application font size. 0 means Windows "
+    "default\0if true, disables anti-aliasing for rendering PDF documents\0CAD/engineering PDF line rendering: off, "
+    "auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses "
+    "found in PDF text\0if true, we use Windows system colors for background/text color. Over-rides other settings\0if "
+    "true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar with selection "
+    "actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it\0if true, "
+    "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
+    "order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0zoom step size in "
+    "percents relative to the current zoom level. if zero or negative, the values from ZoomLevels are used "
+    "instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options for "
     "eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
     "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
     "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
@@ -1487,13 +1563,28 @@ static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, darkerTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, edgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hotEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, disabledEdgeColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, errorBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, notificationHighlightTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gTheme_1_Info = {
-    sizeof(Theme), 6, gTheme_1_Fields,
-    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0ColorizeControls",
-    "name of the theme\0text color\0background color\0control background color\0link color\0should we colorize Windows "
-    "controls and window areas"};
+    sizeof(Theme), 16, gTheme_1_Fields,
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
+    "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
+    "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
+    "name of the theme\0text color\0background color\0control background color\0link color\0disabled / grayed text "
+    "color\0secondary / muted text color\0hovered control background color\0control border / edge color\0hovered "
+    "control border color\0disabled control border color\0error background color\0notification tip background "
+    "color\0notification tip highlight background color\0notification tip highlight text color\0should we colorize "
+    "Windows controls and window areas"};
 
 static const FieldInfo gThemesFields[] = {
     {offsetof(Themes, themes), SettingType::Array, (intptr_t)&gTheme_1_Info},

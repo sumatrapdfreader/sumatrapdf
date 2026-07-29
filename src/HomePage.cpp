@@ -813,10 +813,6 @@ static void OnPaintAbout(HWND hwnd) {
     EndPaint(hwnd, &ps);
 }
 
-static void OnSizeAbout(HWND hwnd) {
-    // TODO: do I need anything here?
-}
-
 static void CopyAboutInfoToClipboard() {
     str::Builder info(512);
     TempStr ver = GetAppVersionTemp();
@@ -840,17 +836,17 @@ static void CopyAboutInfoToClipboard() {
     CopyTextToClipboard(ToStr(info));
 }
 
-TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticLink** linkOut) {
+TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info) {
     if (!CanAccessDisk()) {
         return {};
     }
 
     Point pt(x, y);
-    for (int i = 0; i < len(staticLinks); i++) {
-        if (staticLinks[i]->rect.Contains(pt)) {
-            auto link = staticLinks[i];
-            if (linkOut) {
-                *linkOut = link;
+    for (int i = 0; i < len(linkInfo); i++) {
+        if (linkInfo[i]->rect.Contains(pt)) {
+            auto link = linkInfo[i];
+            if (info) {
+                *info = link;
             }
             return str::DupTemp(link->target);
         }
@@ -900,10 +896,6 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_ERASEBKGND:
             // do nothing, helps to avoid flicker
             return TRUE;
-
-        case WM_SIZE:
-            OnSizeAbout(hwnd);
-            break;
 
         case WM_PAINT:
             OnPaintAbout(hwnd);
@@ -1816,20 +1808,24 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
                                  nameFmt);
     }
 
-    // directory path, right-aligned and muted, in the space the file name doesn't need
+    // directory path, right-aligned and muted, in the space the file name doesn't need.
+    // Must use DrawTextW: dirPath is UTF-8; DrawTextA treated it as the system ANSI
+    // code page and mangled non-ASCII path characters (#5824).
     if (!thumb.rcListPath.IsEmpty()) {
         TempStr dirPath = path::GetDirTemp(path);
         SetTextColor(hdc, ThemeWindowTextDisabledColor());
         RECT rcPath = ToRECT(thumb.rcListPath);
         UINT pathFmt = DT_SINGLELINE | DT_VCENTER | DT_PATH_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-        DrawTextA(hdc, dirPath.s, -1, &rcPath, pathFmt);
+        TempWStr pathW = ToWStrTemp(dirPath);
+        DrawTextW(hdc, pathW.s, -1, &rcPath, pathFmt);
     }
 
     TempStr fileSize = FileSizeForHomeListTemp(path);
     SetTextColor(hdc, ThemeWindowTextColor());
     RECT rcSize = ToRECT(thumb.rcListSize);
     UINT sizeFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-    DrawTextA(hdc, fileSize.s, -1, &rcSize, sizeFmt);
+    TempWStr sizeW = ToWStrTemp(fileSize);
+    DrawTextW(hdc, sizeW.s, -1, &rcSize, sizeFmt);
 
     ImageList_Draw(l.himlOpen, (int)TbIcon::Close, hdc, thumb.rcListRemove.x, thumb.rcListRemove.y, ILD_NORMAL);
     if (fs->isPinned) {

@@ -34,6 +34,23 @@ static bool EditSetCueText(HWND hwnd, Str s) {
     return ok;
 }
 
+// average character width for sizing edits by character count
+static int EditAverageCharDx(HWND hwnd, HFONT font) {
+    Size s = HwndMeasureText(hwnd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", font);
+    int ave = (s.dx + 25) / 52;
+    if (ave < 1) {
+        ave = DpiScale(hwnd, 7);
+    }
+    return ave;
+}
+
+static int EditWidthForChars(HWND hwnd, HFONT font, int nChars) {
+    if (nChars <= 0) {
+        return 0;
+    }
+    return EditAverageCharDx(hwnd, font) * nChars;
+}
+
 Edit::Edit() {
     kind = kindEdit;
 }
@@ -62,6 +79,24 @@ void Edit::SetCursorPositionAtEnd() {
     SetCursorPosition(pos);
 }
 
+// preferred GetIdealSize width ≈ nChars average character widths (0 clears)
+void Edit::SetIdealWidthChars(int nChars) {
+    if (!hwnd || nChars <= 0) {
+        idealDx = 0;
+        return;
+    }
+    idealDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
+}
+
+// cap GetIdealSize width at ≈ nChars average character widths (0 clears)
+void Edit::SetMaxWidthChars(int nChars) {
+    if (!hwnd || nChars <= 0) {
+        maxDx = 0;
+        return;
+    }
+    maxDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
+}
+
 HWND Edit::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     CreateControlArgs cargs;
@@ -74,6 +109,7 @@ HWND Edit::Create(const CreateArgs& args) {
         cargs.exStyle = WS_EX_CLIENTEDGE;
         createdWithBorder = true;
     }
+    createdWithBottomBorder = args.withBottomBorder && !args.withBorder;
     if (args.isMultiLine) {
         cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
     } else {
@@ -87,6 +123,13 @@ HWND Edit::Create(const CreateArgs& args) {
     Wnd::CreateControl(cargs);
     if (!hwnd) {
         return nullptr;
+    }
+    // character-based ideal/max width (needs hwnd + font for measurement)
+    if (args.idealWidthChars > 0) {
+        SetIdealWidthChars(args.idealWidthChars);
+    }
+    if (args.maxWidthChars > 0) {
+        SetMaxWidthChars(args.maxWidthChars);
     }
     SizeToIdealSize(this);
 
@@ -114,6 +157,34 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             EditImplementCtrlBack(hwnd);
             return true;
         }
+
+        case WM_PAINT: {
+            LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
+            if (createdWithBottomBorder) {
+                // underline so borderless edits stay visible on flat dialog backgrounds
+                HDC hdc = GetDC(hwnd);
+                if (hdc) {
+                    RECT rc{};
+                    GetClientRect(hwnd, &rc);
+                    COLORREF col = IsSpecialColor(textColor) ? GetSysColor(COLOR_GRAYTEXT) : textColor;
+                    // muted line: blend text color toward background
+                    if (!IsSpecialColor(bgColor)) {
+                        u8 r, g, b, br, bg, bb;
+                        UnpackColor(col, r, g, b);
+                        UnpackColor(bgColor, br, bg, bb);
+                        col = RGB((r + br * 2) / 3, (g + bg * 2) / 3, (b + bb * 2) / 3);
+                    }
+                    HPEN pen = CreatePen(PS_SOLID, 1, col);
+                    HGDIOBJ old = SelectObject(hdc, pen);
+                    MoveToEx(hdc, rc.left, rc.bottom - 1, nullptr);
+                    LineTo(hdc, rc.right, rc.bottom - 1);
+                    SelectObject(hdc, old);
+                    DeleteObject(pen);
+                    ReleaseDC(hwnd, hdc);
+                }
+            }
+            return res;
+        }
     }
     return WndProcDefault(hwnd, msg, wp, lp);
     // return FinalWindowProc(msg, wp, lp);
@@ -135,6 +206,11 @@ Size Edit::GetIdealSize() {
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.dx, s2.dx);
+    // preferred width in characters (or pixels via idealDx)
+    if (idealDx > 0 && dx < idealDx) {
+        dx = idealDx;
+    }
+    // max width in characters (or pixels via maxDx)
     if (maxDx > 0 && dx > maxDx) {
         dx = maxDx;
     }
@@ -178,9 +254,11 @@ int Edit::GetLeftTextMargin() {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
+// EN_KILLFOCUS also notifies so callers can flush the last edit before blur
+// (annotation Contents save; plus df1b2aab8).
 bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code == EN_CHANGE && onTextChanged.IsValid()) {
+    if ((code == EN_CHANGE || code == EN_KILLFOCUS) && onTextChanged.IsValid()) {
         onTextChanged.Call();
         return true;
     }

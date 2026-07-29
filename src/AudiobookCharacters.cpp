@@ -45,8 +45,6 @@
 #include "SumatraPDF.h"
 #include "AudiobookCharacters.h"
 
-#include "base/Log.h"
-
 constexpr const WCHAR* kCharsClassName = L"SUMATRA_AUDIOBOOK_CHARS";
 
 constexpr UINT kMsgRefreshRows = WM_APP + 0x40;

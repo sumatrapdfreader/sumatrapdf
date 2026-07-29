@@ -7,7 +7,7 @@
 #include "base/Pixmap.h"
 #include "base/CssParser.h"
 #include "GumboHtmlParser.h"
-#include "FzImgReader.h"
+#include "ImageReader.h"
 
 #include "HtmlFormatter.h"
 

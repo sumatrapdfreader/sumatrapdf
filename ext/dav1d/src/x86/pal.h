@@ -1,3 +1,6 @@
+#if 1
+#include "pal_sumatra.h"
+#else
 /*
  * Copyright © 2023, VideoLAN and dav1d authors
  * Copyright © 2023, Two Orioles, LLC
@@ -48,3 +51,4 @@ static ALWAYS_INLINE void pal_dsp_init_x86(Dav1dPalDSPContext *const c) {
     c->pal_idx_finish = dav1d_pal_idx_finish_avx512icl;
 #endif
 }
+#endif

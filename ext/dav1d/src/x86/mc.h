@@ -1,3 +1,6 @@
+#if 1
+#include "mc_sumatra.h"
+#else
 /*
  * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018-2021, Two Orioles, LLC
@@ -214,3 +217,4 @@ static ALWAYS_INLINE void mc_dsp_init_x86(Dav1dMCDSPContext *const c) {
     }
 #endif
 }
+#endif

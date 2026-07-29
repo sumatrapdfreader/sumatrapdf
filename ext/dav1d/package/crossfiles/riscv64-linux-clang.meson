@@ -3,7 +3,7 @@ c = 'clang'
 cpp = 'clang++'
 ar = 'riscv64-linux-gnu-ar'
 strip = 'riscv64-linux-gnu-strip'
-exe_wrapper = 'qemu-riscv64'
+exe_wrapper = ['qemu-riscv64', '-L', '/usr/riscv64-linux-gnu/']
 
 [properties]
 c_args = '-target riscv64-linux-gnu'

@@ -28,9 +28,8 @@
 #include "FileHistory.h"
 #include "Toolbar.h"
 #include "HomePage.h"
+#include "ImageReader.h"
 #include "LibraryPage.h"
-
-#include "base/Log.h"
 
 constexpr int kMaxBooks = 4096;
 constexpr int kMaxSeries = 256;
@@ -1309,7 +1308,7 @@ static RenderedBitmap* CoverBitmap(Str key) {
 
     EnterLib();
     Str raw = s->bytes;
-    Pixmap* px = PixmapFromDataWin(raw);
+    Pixmap* px = PixmapFromData(raw);
     s->decoded = true;
     if (px) {
         s->bmp = RenderedBitmapFromPixmap(px);

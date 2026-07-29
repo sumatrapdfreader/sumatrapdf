@@ -1,9 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef TreeModel_h
-#define TreeModel_h
-
 // TreeItem represents an item in a TreeView control
 typedef UINT_PTR TreeItem;
 
@@ -18,7 +15,7 @@ struct TreeModel {
     virtual Str Text(TreeItem) = 0;
     virtual TreeItem Parent(TreeItem) = 0;
     virtual int ChildCount(TreeItem) = 0;
-    virtual TreeItem ChildAt(TreeItem, int index) = 0;
+    virtual TreeItem ChildAt(TreeItem, int idx) = 0;
     // true if this tree item should be expanded i.e. showing children
     virtual bool IsExpanded(TreeItem) = 0;
     // when showing checkboxes
@@ -45,5 +42,3 @@ struct TreeItemState {
     bool isChecked = false;
     int nChildren = 0;
 };
-
-#endif

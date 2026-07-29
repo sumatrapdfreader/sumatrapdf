@@ -1,5 +1,6 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { basename, join, normalize } from "node:path";
+import { detectVisualStudio2026, runLogged } from "./util";
 
 type ModuleInfo = {
   id: number;
@@ -39,8 +40,8 @@ type Bucket = {
   symbols: SymbolInfo[];
 };
 
-const defaultPdb = join("out", "rel64", "SumatraPDF.pdb");
-const defaultExe = join("out", "rel64", "SumatraPDF.exe");
+const defaultPdb = join("out", "rel64", "SumatraPDF-static.pdb");
+const defaultExe = join("out", "rel64", "SumatraPDF-static.exe");
 
 const stlSymbolPattern =
   /\bstd::|stdext::|`eh vector |std::(vector|basic_string|string|wstring|shared_ptr|unique_ptr|weak_ptr|optional|variant|function|map|set|unordered_map|unordered_set|deque|list|array|span|tuple|pair|allocator|char_traits|exception|ios|locale|mutex|thread|chrono)\b|\?\$?(vector|basic_string|shared_ptr|unique_ptr|weak_ptr|optional|variant|function|map|set|unordered_map|unordered_set|deque|list)@/i;
@@ -48,7 +49,7 @@ const stlSymbolPattern =
 function usage(exitCode = 1): never {
   console.error(`Usage: bun cmd/stl-pollution.ts [options]
 
-Analyzes STL-looking symbols in the static x64 release SumatraPDF PDB.
+Builds release x64 SumatraPDF-static, then analyzes STL-looking symbols in its PDB.
 
 Options:
   -pdb <path>       PDB to analyze (default: ${defaultPdb})
@@ -59,6 +60,18 @@ Options:
   -h, --help        Show this help
 `);
   process.exit(exitCode);
+}
+
+async function buildStaticRelease(): Promise<void> {
+  const { msbuildPath } = detectVisualStudio2026();
+  const sln = String.raw`vs2022\SumatraPDF.sln`;
+  const t = `/t:SumatraPDF-static`;
+  const p = `/p:Configuration=Release;Platform=x64`;
+  console.log("Building Release|x64 SumatraPDF-static...");
+  const timeStart = performance.now();
+  await runLogged(msbuildPath, [sln, t, p, `/m`]);
+  const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
+  console.log(`Build took ${elapsed}s`);
 }
 
 function parseArgs() {
@@ -518,15 +531,14 @@ function renderReport(
 
 async function main() {
   const { pdb, exe, out, top, raw } = parseArgs();
+
+  await buildStaticRelease();
+
   if (!existsSync(exe)) {
-    throw new Error(
-      `expected static release exe at ${exe}; build SumatraPDF Release|x64 first`,
-    );
+    throw new Error(`expected static release exe at ${exe} after build`);
   }
   if (!existsSync(pdb)) {
-    throw new Error(
-      `expected PDB at ${pdb}; build SumatraPDF Release|x64 first`,
-    );
+    throw new Error(`expected PDB at ${pdb} after build`);
   }
 
   await checkLlvmPdbutil();

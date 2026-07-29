@@ -2,7 +2,6 @@
 License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/DirIter.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -95,8 +94,9 @@ FileState* FileHistory::FindByPath(Str filePath) const {
     return (*states)[idxExact];
 }
 
-// returns an exact match by path or match by just file name
-// TODO: audit the uses of FindByName and maybe convert to FindByPath
+// Exact path match first, then basename-only match (for legacy callers that
+// only have a file name). Prefer FindByPath when you have a full path — basename
+// matches can collide across folders.
 FileState* FileHistory::FindByName(Str filePath, int* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
@@ -301,56 +301,26 @@ Str PopRecentlyClosedDocument() {
 
 // --- thumbnail cache delete
 
-static bool shouldDeleteThumbnail = false;
-
-// TODO: https://github.com/sumatrapdfreader/sumatrapdf/issues/4286
-// Not sure why the behavior started changing after I re-wrote StrVec
-// is the issue that files are marked as isMissing in FileExistenceCheckerThread?
-// is it because we don't return enough itms if GetFrequencyOrder()? Is it a bug
-// in StrVec::Remove()?
-// either way, I just disabled deleting of stale thumbnail because it seems fishy
-// Should probably change the logic to: remove thumbnails for files marked as missing
-
-// removes thumbnails that don't belong to any frequently used item in file history
+// Delete cached thumbnails for file-history entries marked missing (issue #4286).
+// The old "delete any thumb not in the frequent list" logic was disabled after
+// a StrVec rewrite: missing files in GetFrequencyOrder and Remove() behavior
+// made it too aggressive. Only purge thumbs for states we already know are gone.
 void CleanUpThumbnailCache() {
-    const FileHistory& fileHistory = gFileHistory;
-    TempStr thumbsDir = GetThumbnailCacheDirTemp();
-
-    StrVec filePaths;
-    DirIter di{thumbsDir};
-    for (DirIterEntry* de : di) {
-        if (path::Match(de->filePath, "*.png")) {
-            filePaths.Append(de->filePath);
-        }
-    }
-    if (filePaths.IsEmpty()) {
+    if (!gFileHistory.states) {
         return;
     }
-
-    bool ok;
-    // remove files that should not be deleted
-    Vec<FileState*> list;
-    fileHistory.GetFrequencyOrder(list);
-    int n = 0;
-    for (auto& fs : list) {
-        if (n++ > kFileHistoryMaxFrequent * 2) {
-            break;
-        }
-        TempStr path = GetThumbnailPathTemp(fs->filePath);
-        if (!path) {
+    for (FileState* fs : *gFileHistory.states) {
+        if (!fs || !fs->isMissing || len(fs->filePath) == 0) {
             continue;
         }
-        ok = filePaths.Remove(path);
-        if (!ok) {
-            logf("CleanUpThumbnailCache: failed to remove '%s'\n", path);
+        // Keep pinned entries' thumbs; they still show on the home page.
+        if (fs->isPinned) {
+            continue;
         }
-    }
-
-    for (Str path : filePaths) {
-        if (shouldDeleteThumbnail) {
-            logf("CleanUpThumbnailCache: deleting '%s'\n", path);
-            file::Delete(path);
-        }
+        logf("CleanUpThumbnailCache: deleting thumb for missing '%s'\n", fs->filePath);
+        DeleteThumbnailForFile(fs->filePath);
+        delete fs->thumbnail;
+        fs->thumbnail = nullptr;
     }
 }
 

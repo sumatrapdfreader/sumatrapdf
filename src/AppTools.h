@@ -31,7 +31,7 @@ bool IsInstallerOrUninstallerExe();
 
 void DeleteAppTools();
 
-void SetAppDataDir(Str path);
+void SetAppDataDir(Str dir);
 TempStr GetAppDataDirTemp();
 TempStr GetPathInAppDataDirTemp(Str fileName);
 

@@ -3,6 +3,8 @@
 
 #include "base/Base.h"
 #include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
+#include <mmsystem.h>
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/GuessFileType.h"
@@ -67,7 +69,7 @@ struct LinkHandler : ILinkHandler {
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     void LaunchURL(Str) override;
     void LaunchFile(Str path, IPageDestination*) override;
-    IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) override;
+    TocItem* FindTocItem(TocItem* item, Str name, bool partially) override;
 };
 
 LinkHandler::~LinkHandler() {
@@ -107,6 +109,11 @@ void CreateMovePatternLazy(MainWindow* win) {
 
 MainWindow::~MainWindow() {
     KillTimer(hwndCanvas, kSmoothScrollTimerID);
+    if (scrollAnimHiResTimer) {
+        timeEndPeriod(1);
+        scrollAnimHiResTimer = false;
+    }
+    scrollAnimActive = false;
     RefHoverDestroy(refHover);
     FinishStressTest(this);
 
@@ -126,13 +133,25 @@ MainWindow::~MainWindow() {
     DeleteObject(bmpMovePattern);
     DeleteObject(brControlBgColor);
 
-    // release our copy of UIA provider
-    // the UI automation still might have a copy somewhere
+    // Disconnect UIA clients and release our provider. Clients that still hold
+    // refs get UIA_E_ELEMENTNOTAVAILABLE after FreeDocument.
     if (uiaProvider) {
-        if (AsFixed()) {
-            uiaProvider->OnDocumentUnload();
+        uiaProvider->OnDocumentUnload();
+        // Clears UIA's cached link for this hwnd (pairs with WM_GETOBJECT).
+        UiaReturnRawElementProvider(hwndCanvas, 0, 0, nullptr);
+        // Windows 8+: drop client-side caches (delay-loaded; absent on Win7).
+        {
+            HMODULE uiaDll = GetModuleHandleW(L"UIAutomationCore.dll");
+            if (uiaDll) {
+                using PFN = HRESULT(WINAPI*)(IRawElementProviderSimple*);
+                auto disconnect = (PFN)GetProcAddress(uiaDll, "UiaDisconnectProvider");
+                if (disconnect) {
+                    disconnect(uiaProvider);
+                }
+            }
         }
         uiaProvider->Release();
+        uiaProvider = nullptr;
     }
 
     DeleteFindBar(this);
@@ -184,7 +203,7 @@ MainWindow::~MainWindow() {
     if (favTreeView) {
         delete favTreeView->treeModel;
     }
-    // favLayout (VBox) owns favLabelWithClose and favTreeView
+    // favLayout (VBox) owns favLabelWithClose, favFilterEdit and favTreeView
     delete favLayout;
 
     DestroyAIChatPanel(this);
@@ -363,10 +382,13 @@ void MainWindow::RedrawAll(bool update) const {
 
 void MainWindow::RedrawAllIncludingNonClient() const {
     if (gRedrawLog) {
-        logf("redraw: RedrawAllIncludingNonClient canvas=0x%p\n", this->hwndCanvas);
+        logf("redraw: RedrawAllIncludingNonClient frame=0x%p\n", this->hwndFrame);
     }
-    InvalidateRect(this->hwndCanvas, nullptr, false);
-    RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+    // Full erase of frame + children + non-client so layout transitions (tabs on/off,
+    // closing last tab, menu bar) do not leave a ghost of the old toolbar/caption
+    // painted on the client area (issue #5750).
+    RedrawWindow(this->hwndFrame, nullptr, nullptr,
+                 RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
 }
 
 void MainWindow::ChangePresentationMode(PresentationMode mode) {
@@ -449,6 +471,32 @@ bool MainWindow::CreateUIAProvider() {
     return true;
 }
 
+static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
+    if (pd->embedObjNum <= 0) {
+        return;
+    }
+    EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
+    Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+    if (len(data) == 0) {
+        return;
+    }
+    Str fileName = pd->GetValue2();
+    logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName, pd->embedObjNum,
+         (int)data.len);
+    TempStr tmpDir = GetTempDirTemp();
+    if (!tmpDir) {
+        str::Free(data);
+        return;
+    }
+    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
+    if (!file::WriteFile(tmpPath, data)) {
+        str::Free(data);
+        return;
+    }
+    SumatraLaunchBrowser(tmpPath);
+    str::Free(data);
+}
+
 void LinkHandler::GotoLink(IPageDestination* dest) {
     ReportIf(!win || win->linkHandler != this);
     if (!dest || !win || !win->IsDocLoaded()) {
@@ -458,7 +506,8 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     Kind kind = dest->GetKind();
 
     if (kindDestinationScrollTo == kind) {
-        // TODO: respect link->ld.gotor.new_window for PDF documents ?
+        // PDF NewWindow on internal GoTo is not exposed by MuPDF's link URIs.
+        // Ctrl+click opens the same document in a new tab/window (see Canvas).
         ScrollTo(dest);
         return;
     }
@@ -473,25 +522,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
     if (kindDestinationLaunchEmbedded == kind) {
-        PageDestination* pd = (PageDestination*)dest;
-        if (pd->embedObjNum > 0) {
-            EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
-            // attachments are arbitrary binary
-            Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-            if (len(data) > 0) {
-                Str fileName = pd->GetValue2();
-                logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName,
-                     pd->embedObjNum, (int)data.len);
-                TempStr tmpDir = GetTempDirTemp();
-                if (tmpDir) {
-                    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
-                    if (file::WriteFile(tmpPath, data)) {
-                        SumatraLaunchBrowser(tmpPath);
-                    }
-                }
-                str::Free(data);
-            }
-        }
+        LaunchEmbeddedDestination(win, (PageDestination*)dest);
         return;
     }
 
@@ -567,6 +598,42 @@ void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
     win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
+// Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).
+// Returns false if uri is not a file: scheme.
+static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
+    if (!str::StartsWithI(uri, "file:")) {
+        return false;
+    }
+    // Skip "file:" case-insensitively (str::Skip is case-sensitive).
+    Str rest = Str(uri.s + 5, uri.len - 5);
+    // file://host/path or file:///path → drop authority (// or ///)
+    if (str::StartsWith(rest, "//")) {
+        rest = Str(rest.s + 2, rest.len - 2);
+        // empty host: next char is / of absolute path
+        if (rest && rest.s[0] == '/') {
+            // Windows drive path: /C:/foo → C:/foo
+            if (rest.len >= 3 && rest.s[1] && rest.s[2] == ':') {
+                rest = Str(rest.s + 1, rest.len - 1);
+            }
+        }
+    }
+    TempStr path = str::DupTemp(rest);
+    Str pathStr = path;
+    Str frag = str::SliceFromChar(pathStr, '#');
+    if (frag) {
+        pathStr = Str(pathStr.s, (int)(frag.s - pathStr.s));
+        frag = Str(frag.s + 1, frag.len - 1);
+    }
+    path = str::DupTemp(pathStr);
+    url::DecodeInPlace(path);
+    str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
+    *pathOut = path;
+    if (fragmentOut) {
+        *fragmentOut = frag ? str::DupTemp(frag) : Str{};
+    }
+    return true;
+}
+
 void LinkHandler::LaunchURL(Str uri) {
     if (!uri) {
         /* ignore missing URLs */;
@@ -585,11 +652,25 @@ void LinkHandler::LaunchURL(Str uri) {
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
         this->LaunchFile(path, nullptr);
-    } else {
-        // LaunchBrowser will reject unsupported URI schemes
-        // TODO: support file URIs?
-        SumatraLaunchBrowser(path);
+        return;
     }
+
+    // file://... → open as a local document (or explorer if unsupported)
+    TempStr filePath;
+    Str fragment;
+    if (PathFromFileUriTemp(uri, &filePath, &fragment)) {
+        if (len(fragment) > 0) {
+            // Carry destination name for LaunchFile scroll-to (named dest / page)
+            PageDestinationFile dest(filePath, fragment);
+            this->LaunchFile(filePath, &dest);
+        } else {
+            this->LaunchFile(filePath, nullptr);
+        }
+        return;
+    }
+
+    // LaunchBrowser will reject unsupported URI schemes
+    SumatraLaunchBrowser(path);
 }
 
 // return true if we can load the file based on sniffing file type from content
@@ -657,44 +738,62 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
-    // TODO: respect link->ld.gotor.new_window for PDF documents ?
-    MainWindow* newWin = FindMainWindowByFile(fullPath, true);
-    // TODO: don't show window until it's certain that there was no error
-    if (!newWin) {
-        LoadArgs args(fullPath, win);
-        newWin = LoadDocument(&args);
-        if (!newWin) {
-            return;
-        }
+    // Open in a new window when the PDF GoToR NewWindow flag is set (if known)
+    // or the user Ctrl+clicks. MuPDF's file: URI conversion does not preserve
+    // /NewWindow today; openInNewWindow is for when callers can set it.
+    bool wantNewWindow = IsCtrlPressed();
+    if (remoteLink && remoteLink->GetKind() == kindDestinationLaunchFile) {
+        wantNewWindow = wantNewWindow || ((PageDestinationFile*)remoteLink)->openInNewWindow;
     }
 
-    if (!newWin->IsDocLoaded()) {
+    MainWindow* targetWin = nullptr;
+    if (wantNewWindow) {
+        targetWin = CreateAndShowMainWindow(nullptr);
+        if (!targetWin) {
+            return;
+        }
+        LoadArgs args(fullPath, targetWin);
+        args.forceReuse = true;
+        args.noPlaceWindow = true;
+        targetWin = LoadDocument(&args);
+    } else {
+        targetWin = FindMainWindowByFile(fullPath, true);
+        if (!targetWin) {
+            LoadArgs args(fullPath, win);
+            targetWin = LoadDocument(&args);
+        }
+    }
+    if (!targetWin) {
+        return;
+    }
+
+    if (!targetWin->IsDocLoaded()) {
         bool quitIfLast = false;
-        CloseCurrentTab(newWin, quitIfLast);
+        CloseCurrentTab(targetWin, quitIfLast);
         // OpenFileExternally rejects files we'd otherwise
         // have to show a notification to be sure (which we
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            ShowErrorLoadingNotification(newWin, fullPath, true);
+            ShowErrorLoadingNotification(targetWin, fullPath, true);
         }
         return;
     }
 
-    newWin->Focus();
+    targetWin->Focus();
     if (!remoteLink) {
         return;
     }
 
     Str destName = PageDestGetName(remoteLink);
     if (destName) {
-        IPageDestination* dest = newWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
+        IPageDestination* dest = targetWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
         if (dest) {
-            newWin->linkHandler->ScrollTo(dest);
+            targetWin->linkHandler->ScrollTo(dest);
             delete dest;
         }
     } else {
-        newWin->linkHandler->ScrollTo(remoteLink);
+        targetWin->linkHandler->ScrollTo(remoteLink);
     }
 }
 
@@ -732,20 +831,36 @@ static bool MatchFuzzy(Str s1, Str s2, bool partially) {
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-IPageDestination* LinkHandler::FindTocItem(TocItem* item, Str name, bool partially) {
+TocItem* LinkHandler::FindTocItem(TocItem* item, Str name, bool partially) {
     for (; item; item = item->next) {
         if (item->title) {
             TempStr fuzTitle = NormalizeFuzzyTemp(item->title);
             if (MatchFuzzy(fuzTitle, name, partially)) {
-                return item->GetPageDestination();
+                return item;
             }
         }
-        IPageDestination* dest = FindTocItem(item->child, name, partially);
-        if (dest) {
-            return dest;
+        TocItem* found = FindTocItem(item->child, name, partially);
+        if (found) {
+            return found;
         }
     }
     return nullptr;
+}
+
+// Select and scroll the ToC tree to tocItem (same idea as GoToTocItem from the palette).
+static void SelectTocItemInTree(MainWindow* win, TocItem* tocItem) {
+    if (!win || !tocItem || !win->tocLoaded || !win->tocTreeView) {
+        return;
+    }
+    // prevent UpdateTocSelection from undoing the selection when the page changes
+    win->tocKeepSelection = true;
+    TreeView* treeView = win->tocTreeView;
+    HTREEITEM hi = treeView->GetHandleByTreeItem((TreeItem)tocItem);
+    if (hi) {
+        TreeView_EnsureVisible(treeView->hwnd, hi);
+    }
+    treeView->SelectItem((TreeItem)tocItem);
+    win->tocKeepSelection = false;
 }
 
 void LinkHandler::GotoNamedDest(Str name) {
@@ -769,15 +884,22 @@ void LinkHandler::GotoNamedDest(Str name) {
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
         TempStr fuzName = NormalizeFuzzyTemp(name);
-        dest = FindTocItem(root, fuzName, false);
-        if (!dest) {
-            dest = FindTocItem(root, fuzName, true);
+        TocItem* tocItem = FindTocItem(root, fuzName, false);
+        if (!tocItem) {
+            tocItem = FindTocItem(root, fuzName, true);
         }
-        // TODO: would be nice if we also selected the exact toc item
-        // currently we auto-detect based on heuristic
-        if (dest) {
-            ScrollTo(dest);
-            hasDest = true;
+        if (tocItem) {
+            dest = tocItem->GetPageDestination();
+            if (dest) {
+                ScrollTo(dest);
+                hasDest = true;
+            } else if (tocItem->pageNo > 0) {
+                ctrl->GoToPage(tocItem->pageNo, true);
+                hasDest = true;
+            }
+            if (hasDest) {
+                SelectTocItemInTree(win, tocItem);
+            }
         }
     }
     if (!hasDest && ctrl->HasPageLabels()) {
@@ -820,6 +942,9 @@ void UpdateControlsColors(MainWindow* win) {
     if (favTreeView) {
         favTreeView->SetColors(txtCol, bgCol);
         win->favLabelWithClose->SetColors(txtCol, bgCol);
+        if (win->favFilterEdit) {
+            win->favFilterEdit->SetColors(txtCol, bgCol);
+        }
         win->favSplitter->SetColors(kColorNoChange, splitterCol);
     }
 }

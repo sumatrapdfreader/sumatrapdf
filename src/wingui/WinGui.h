@@ -135,7 +135,7 @@ struct Wnd : ILayout {
     virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
     virtual void OnSize(UINT msg, UINT type, SIZE size);
     virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
-    virtual void OnTimer(UINT_PTR event_id);
+    virtual void OnTimer(UINT_PTR timerId);
     virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
 
     virtual void SetColors(COLORREF textColor, COLORREF bgColor);
@@ -293,23 +293,31 @@ struct Edit : Wnd {
         HWND parent = nullptr;
         bool isMultiLine = false;
         bool withBorder = false;
+        // 1px underline under the client area (no WS_EX_CLIENTEDGE)
+        bool withBottomBorder = false;
         Str cueText;
         Str text;
         int idealSizeLines = 1;
+        // if > 0: ideal width is at least ~N average character widths
+        int idealWidthChars = 0;
+        // if > 0: ideal width is capped at ~N average character widths
+        int maxWidthChars = 0;
         HFONT font = nullptr;
         bool isRtl = false;
     };
 
     TextChangedHandler onTextChanged;
 
-    // set before Create()
+    // set before Create() (pixels); or use idealWidthChars / maxWidthChars
     int idealSizeLines = 1;
+    int idealDx = 0;
     int maxDx = 0;
 
     // remembers CreateArgs.withBorder: with themes darkmodelib strips
     // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, so
     // window styles can't be used to detect the border
     bool createdWithBorder = false;
+    bool createdWithBottomBorder = false;
 
     Edit();
     ~Edit() override;
@@ -320,6 +328,10 @@ struct Edit : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 
     Size GetIdealSize() override;
+
+    // set preferred / max width to ~nChars average character widths (0 clears)
+    void SetIdealWidthChars(int nChars);
+    void SetMaxWidthChars(int nChars);
 
     // horizontal offset of the text from the control's left edge (border +
     // internal margin); used to align a borderless label with the edit's text
@@ -367,6 +379,7 @@ struct ListBox : Wnd {
 
     HWND Create(const CreateArgs&);
 
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 

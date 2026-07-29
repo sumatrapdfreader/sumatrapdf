@@ -109,7 +109,7 @@ L(\type\()_tbl):
         vst1.32         {d17[0]},  [r0, :32], r1
         vst1.32         {d17[1]},  [r6, :32], r1
         beq             0f
-        \type           d18, d19,  q0,  q1,  q2,  q3
+        \type           d18, d19, q0,  q1,  q2,  q3
         cmp             r5,  #8
         vst1.32         {d18[0]},  [r0, :32], r1
         vst1.32         {d18[1]},  [r6, :32], r1
@@ -119,7 +119,7 @@ L(\type\()_tbl):
         \type           d16, d17, q0,  q1,  q2,  q3
         vst1.32         {d16[0]},  [r0, :32], r1
         vst1.32         {d16[1]},  [r6, :32], r1
-        \type           d18, d19,  q0,  q1,  q2,  q3
+        \type           d18, d19, q0,  q1,  q2,  q3
         vst1.32         {d17[0]},  [r0, :32], r1
         vst1.32         {d17[1]},  [r6, :32], r1
         vst1.32         {d18[0]},  [r0, :32], r1
@@ -288,7 +288,7 @@ L(w_mask_\type\()_tbl):
         vadd.s16        d21, d22, d23
         vpadd.s16       d20, d20, d21   // (128 - m) + (128 - n) (column wise addition)
         vsub.s16        d20, d30, d20   // (256 - sign) - ((128 - m) + (128 - n))
-        vrshrn.u16      d20, q10,  #2   // ((256 - sign) - ((128 - m) + (128 - n)) + 2) >> 2
+        vrshrn.u16      d20, q10, #2    // ((256 - sign) - ((128 - m) + (128 - n)) + 2) >> 2
         vst1.32         {d20[0]}, [r6,  :32]!
 .endif
         vst1.32         {d24[0]}, [r0,  :32], r1
@@ -611,7 +611,7 @@ L(blend_h_tbl):
         vld2.u8         {d2[],  d3[]},   [r5,  :16]!
         vld1.u8         {d1},     [r2,  :64]!
         subs            r4,  r4,  #2
-        vext.u8         d2,  d2,  d3,   #4
+        vext.u8         d2,  d2,  d3,  #4
         vld1.32         {d0[]},   [r0,  :32]
         vsub.i8         d6,  d22, d2
         vld1.32         {d0[1]},  [r12, :32]
@@ -623,7 +623,7 @@ L(blend_h_tbl):
         bgt             4b
         pop             {r4-r5,pc}
 80:
-        vmov.i8         q8, #64
+        vmov.i8         q8,  #64
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
 8:
@@ -933,7 +933,7 @@ L(put_tbl):
 endfunc
 
 
-// This has got the same signature as the put_8tap functions,
+// This has got the same signature as the prep_8tap functions,
 // assumes that the caller has loaded the h argument into r4,
 // and assumes that r8 is set to (clz(w)-24), and r7 to w*2.
 function prep_neon
@@ -948,21 +948,26 @@ L(prep_tbl):
         .word 640f  - L(prep_tbl) + CONFIG_THUMB
         .word 320f  - L(prep_tbl) + CONFIG_THUMB
         .word 160f  - L(prep_tbl) + CONFIG_THUMB
-        .word 8f    - L(prep_tbl) + CONFIG_THUMB
-        .word 4f    - L(prep_tbl) + CONFIG_THUMB
+        .word 80f   - L(prep_tbl) + CONFIG_THUMB
+        .word 40f   - L(prep_tbl) + CONFIG_THUMB
 
+40:
+        add             r9,  r1,  r2
+        lsl             r2,  r2,  #1
 4:
-        vld1.32         {d0[]}, [r1], r2
-        vld1.32         {d2[]}, [r1], r2
+        vld1.32         {d0[]},  [r1], r2
+        vld1.32         {d0[1]}, [r9], r2
         subs            r4,  r4,  #2
         vshll.u8        q0,  d0,  #4
-        vshll.u8        q1,  d2,  #4
-        vst1.16         {d1, d2}, [r0, :64]!
+        vst1.16         {d0, d1}, [r0, :64]!
         bgt             4b
         pop             {r4-r11,pc}
+80:
+        add             r9,  r1,  r2
+        lsl             r2,  r2,  #1
 8:
         vld1.8          {d0}, [r1], r2
-        vld1.8          {d2}, [r1], r2
+        vld1.8          {d2}, [r9], r2
         subs            r4,  r4,  #2
         vshll.u8        q0,  d0,  #4
         vshll.u8        q1,  d2,  #4
@@ -1671,7 +1676,7 @@ L(\type\()_8tap_v_tbl):
 .endif
 
 40:
-        bgt            480f
+        bgt             480f
 
         // 4x2, 4x4 v
         cmp             \h,  #2
@@ -2493,8 +2498,8 @@ L(\type\()_bilin_h_tbl):
 2:
         vld1.32         {d4[]},  [\src], \s_strd
         vld1.32         {d6[]},  [\sr2], \s_strd
-        vext.8          d5,  d4,  d4, #1
-        vext.8          d7,  d6,  d6, #1
+        vext.8          d5,  d4,  d4,  #1
+        vext.8          d7,  d6,  d6,  #1
         vtrn.16         q2,  q3
         subs            \h,  \h,  #2
         vmull.u8        q3,  d4,  d0
@@ -2514,8 +2519,8 @@ L(\type\()_bilin_h_tbl):
 4:
         vld1.8          {d4}, [\src], \s_strd
         vld1.8          {d6}, [\sr2], \s_strd
-        vext.8          d5,  d4,  d4, #1
-        vext.8          d7,  d6,  d6, #1
+        vext.8          d5,  d4,  d4,  #1
+        vext.8          d7,  d6,  d6,  #1
         vtrn.32         q2,  q3
         subs            \h,  \h,  #2
         vmull.u8        q3,  d4,  d0
@@ -2547,8 +2552,8 @@ L(\type\()_bilin_h_tbl):
         vmlal.u8        q8,  d18, d1
         vmlal.u8        q10, d22, d1
 .ifc \type, put
-        vqrshrn.u16     d16,  q8,  #4
-        vqrshrn.u16     d18,  q10, #4
+        vqrshrn.u16     d16, q8,  #4
+        vqrshrn.u16     d18, q10, #4
         vst1.8          {d16}, [\dst, :64], \d_strd
         vst1.8          {d18}, [\ds2, :64], \d_strd
 .else
@@ -2707,7 +2712,7 @@ L(\type\()_bilin_v_tbl):
         vst1.16         {d5}, [\ds2, :64], \d_strd
 .endif
         ble             0f
-        vmov            d16,  d18
+        vmov            d16, d18
         b               4b
 0:
         pop             {r4-r11,pc}
@@ -2876,8 +2881,8 @@ L(\type\()_bilin_hv_tbl):
 
         vmov            d17, d18
 
-        vmul.u16        q10, q8, q2
-        vmla.u16        q10, q9, q3
+        vmul.u16        q10, q8,  q2
+        vmla.u16        q10, q9,  q3
         subs            \h,  \h,  #2
 .ifc \type, put
         vqrshrn.u16     d20, q10, #8
@@ -3049,8 +3054,8 @@ function warp_affine_8x8\t\()_8bpc_neon, export=1
         ldr             r6,  [sp, #108]
         ldrd            r8,  r9,  [r4]
         sxth            r7,  r8
-        asr             r8,  r8, #16
-        asr             r4,  r9, #16
+        asr             r8,  r8,  #16
+        asr             r4,  r9,  #16
         sxth            r9,  r9
         mov             r10, #8
         sub             r2,  r2,  r3, lsl #1
@@ -3102,26 +3107,26 @@ function warp_affine_8x8\t\()_8bpc_neon, export=1
 
         // This ordering of vmull/vmlal is highly beneficial for
         // Cortex A8/A9/A53 here, but harmful for Cortex A7.
-        vmull.s16       q0,  d16,  d2
-        vmlal.s16       q0,  d18,  d4
-        vmlal.s16       q0,  d20,  d6
-        vmlal.s16       q0,  d22,  d8
-        vmlal.s16       q0,  d24,  d10
-        vmlal.s16       q0,  d26,  d12
-        vmull.s16       q1,  d17,  d3
-        vmlal.s16       q1,  d19,  d5
-        vmlal.s16       q1,  d21,  d7
-        vmlal.s16       q1,  d23,  d9
-        vmlal.s16       q1,  d25,  d11
-        vmlal.s16       q1,  d27,  d13
+        vmull.s16       q0,  d16, d2
+        vmlal.s16       q0,  d18, d4
+        vmlal.s16       q0,  d20, d6
+        vmlal.s16       q0,  d22, d8
+        vmlal.s16       q0,  d24, d10
+        vmlal.s16       q0,  d26, d12
+        vmull.s16       q1,  d17, d3
+        vmlal.s16       q1,  d19, d5
+        vmlal.s16       q1,  d21, d7
+        vmlal.s16       q1,  d23, d9
+        vmlal.s16       q1,  d25, d11
+        vmlal.s16       q1,  d27, d13
 
         vmovl.s8        q2,  d14
         vmovl.s8        q3,  d15
 
-        vmlal.s16       q0,  d28,  d4
-        vmlal.s16       q0,  d30,  d6
-        vmlal.s16       q1,  d29,  d5
-        vmlal.s16       q1,  d31,  d7
+        vmlal.s16       q0,  d28, d4
+        vmlal.s16       q0,  d30, d6
+        vmlal.s16       q1,  d29, d5
+        vmlal.s16       q1,  d31, d7
 
 .ifb \t
         vmov.i16        q7,  #128
@@ -3313,7 +3318,7 @@ function emu_edge_8bpc_neon, export=1
         subs            r3,  r3,  #1
         vst1.8          {q0, q1}, [r6, :128], r7
         bgt             2b
-        mls             r6,  r7,  r10,  r6     // dst -= bottom_ext * stride
+        mls             r6,  r7,  r10, r6      // dst -= bottom_ext * stride
         subs            r4,  r4,  #32          // bw -= 32
         add             r6,  r6,  #32          // dst += 32
         bgt             1b

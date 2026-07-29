@@ -100,7 +100,7 @@ struct DisplayModel : DocController {
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
     IPageDestination* GetNamedDest(Str name) override;
 
-    void GetDisplayState(FileState* ds) override;
+    void GetDisplayState(FileState* fs) override;
     // asynchronously calls saveThumbnail (fails silently)
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
@@ -194,6 +194,7 @@ struct DisplayModel : DocController {
     void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, Size viewPort, int screenDPI);
     void SetDisplayR2L(bool r2l);
     bool GetDisplayR2L() const;
+    bool GoToPageHorizontal(bool toRight);
 
     bool ShouldCacheRendering(int pageNo) const;
     // called when we decide that the display needs to be redrawn

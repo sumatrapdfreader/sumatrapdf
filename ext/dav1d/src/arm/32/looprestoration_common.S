@@ -47,8 +47,8 @@ function sgr_box3_row_v_neon, export=1
         vld1.16         {q15},      [r9]!
         subs            r4,  r4,  #8
 
-        vadd.i32        q8, q8, q10
-        vadd.i32        q9, q9, q11
+        vadd.i32        q8,  q8,  q10
+        vadd.i32        q9,  q9,  q11
 
         vld1.32         {q12, q13}, [r0]!
 

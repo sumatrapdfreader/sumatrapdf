@@ -44,7 +44,6 @@
 #include "src/thread_task.h"
 
 int dav1d_default_picture_alloc(Dav1dPicture *const p, void *const cookie) {
-    assert(sizeof(Dav1dMemPoolBuffer) <= DAV1D_PICTURE_ALIGNMENT);
     const int hbd = p->p.bpc > 8;
     const int aligned_w = (p->p.w + 127) & ~127;
     const int aligned_h = (p->p.h + 127) & ~127;
@@ -68,16 +67,12 @@ int dav1d_default_picture_alloc(Dav1dPicture *const p, void *const cookie) {
     const size_t uv_sz = uv_stride * (aligned_h >> ss_ver);
     const size_t pic_size = y_sz + 2 * uv_sz;
 
-    Dav1dMemPoolBuffer *const buf = dav1d_mem_pool_pop(cookie, pic_size +
-                                                       DAV1D_PICTURE_ALIGNMENT -
-                                                       sizeof(Dav1dMemPoolBuffer));
+    uint8_t *const buf = dav1d_mem_pool_pop(cookie, pic_size + DAV1D_PICTURE_ALIGNMENT);
     if (!buf) return DAV1D_ERR(ENOMEM);
     p->allocator_data = buf;
-
-    uint8_t *const data = buf->data;
-    p->data[0] = data;
-    p->data[1] = has_chroma ? data + y_sz : NULL;
-    p->data[2] = has_chroma ? data + y_sz + uv_sz : NULL;
+    p->data[0] = buf;
+    p->data[1] = has_chroma ? buf + y_sz : NULL;
+    p->data[2] = has_chroma ? buf + y_sz + uv_sz : NULL;
 
     return 0;
 }
@@ -94,12 +89,11 @@ struct pic_ctx_context {
 };
 
 static void free_buffer(const uint8_t *const data, void *const user_data) {
-    Dav1dMemPoolBuffer *buf = (Dav1dMemPoolBuffer *)data;
-    struct pic_ctx_context *pic_ctx = buf->data;
+    struct pic_ctx_context *pic_ctx = (struct pic_ctx_context*)data;
 
     pic_ctx->allocator.release_picture_callback(&pic_ctx->pic,
                                                 pic_ctx->allocator.cookie);
-    dav1d_mem_pool_push(user_data, buf);
+    dav1d_mem_pool_push(user_data, pic_ctx);
 }
 
 void dav1d_picture_free_itut_t35(const uint8_t *const data, void *const user_data) {
@@ -128,12 +122,10 @@ static int picture_alloc(Dav1dContext *const c,
     assert(bpc > 0 && bpc <= 16);
 
     size_t extra = c->n_fc > 1 ? sizeof(atomic_int) * 2 : 0;
-    Dav1dMemPoolBuffer *buf = dav1d_mem_pool_pop(c->pic_ctx_pool,
-                                                 extra + sizeof(struct pic_ctx_context));
-    if (buf == NULL)
+    struct pic_ctx_context *pic_ctx = dav1d_mem_pool_pop(c->pic_ctx_pool, extra +
+                                                         sizeof(struct pic_ctx_context));
+    if (!pic_ctx)
         return DAV1D_ERR(ENOMEM);
-
-    struct pic_ctx_context *pic_ctx = buf->data;
 
     p->p.w = w;
     p->p.h = h;
@@ -144,13 +136,13 @@ static int picture_alloc(Dav1dContext *const c,
     dav1d_data_props_set_defaults(&p->m);
     const int res = p_allocator->alloc_picture_callback(p, p_allocator->cookie);
     if (res < 0) {
-        dav1d_mem_pool_push(c->pic_ctx_pool, buf);
+        dav1d_mem_pool_push(c->pic_ctx_pool, pic_ctx);
         return res;
     }
 
     pic_ctx->allocator = *p_allocator;
     pic_ctx->pic = *p;
-    p->ref = dav1d_ref_init(&pic_ctx->ref, buf, free_buffer, c->pic_ctx_pool, 0);
+    p->ref = dav1d_ref_init(&pic_ctx->ref, pic_ctx, free_buffer, c->pic_ctx_pool, 0);
 
     p->seq_hdr_ref = seq_hdr_ref;
     if (seq_hdr_ref) dav1d_ref_inc(seq_hdr_ref);
@@ -237,8 +229,7 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
 int dav1d_picture_alloc_copy(Dav1dContext *const c, Dav1dPicture *const dst, const int w,
                              const Dav1dPicture *const src)
 {
-    Dav1dMemPoolBuffer *const buf = (Dav1dMemPoolBuffer *)src->ref->const_data;
-    struct pic_ctx_context *const pic_ctx = buf->data;
+    struct pic_ctx_context *const pic_ctx = (struct pic_ctx_context*)src->ref->const_data;
     const int res = picture_alloc(c, dst, w, src->p.h,
                                   src->seq_hdr, src->seq_hdr_ref,
                                   src->frame_hdr, src->frame_hdr_ref,

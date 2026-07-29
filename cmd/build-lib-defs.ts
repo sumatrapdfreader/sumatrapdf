@@ -4,7 +4,7 @@ import type { FileGroup, LibDef } from "./build-deps-common.ts";
 // Each matches a project in premake5.lua / premake5.files.lua
 
 export const zlib: LibDef = {
-  name: "zlib",
+  name: "a-zlib",
   alwaysOptimize: true,
   defines: [],
   includes: [],
@@ -30,7 +30,11 @@ export const unrar: LibDef = {
   // MSVC compiles throw/catch with exceptions disabled (warning 4530);
   // GCC requires -fexceptions for code that uses throw/catch
   exceptions: true,
-  defines: ["UNRAR", "RARDLL", "SILENT"],
+  // Archive=UnrarArchive: unrar's internal C++ class collides with
+  // src/base/Archive.cpp's Archive under GNU ld (duplicate strong symbols;
+  // MSVC tolerates via COMDAT pick-any). Consumers only use the C API in
+  // dll.hpp, which doesn't mention the class, so a TU-local rename is safe.
+  defines: ["UNRAR", "RARDLL", "SILENT", "Archive=UnrarArchive"],
   includes: ["ext/unrar"],
   files: [
     {
@@ -91,93 +95,12 @@ export const unrar: LibDef = {
   ],
 };
 
-export const libdjvu: LibDef = {
-  name: "libdjvu",
-  alwaysOptimize: true,
-  // libdjvu uses exceptions (GException.cpp, etc.)
-  exceptions: true,
-  defines: [
-    "_CRT_SECURE_NO_WARNINGS",
-    "NEED_JPEG_DECODER",
-    "WINTHREADS=1",
-    "DDJVUAPI=",
-    "MINILISPAPI=",
-    "DEBUGLVL=0",
-    "DISABLE_MMX",
-  ],
-  includes: ["ext/libjpeg-turbo/src"],
-  files: [
-    {
-      dir: "ext/libdjvu",
-      patterns: [
-        "Arrays.cpp",
-        "atomic.cpp",
-        "BSByteStream.cpp",
-        "BSEncodeByteStream.cpp",
-        "ByteStream.cpp",
-        "DataPool.cpp",
-        "DjVmDir0.cpp",
-        "DjVmDoc.cpp",
-        "DjVmNav.cpp",
-        "DjVuAnno.cpp",
-        "DjVuDocEditor.cpp",
-        "DjVuDocument.cpp",
-        "DjVuDumpHelper.cpp",
-        "DjVuErrorList.cpp",
-        "DjVuFile.cpp",
-        "DjVuFileCache.cpp",
-        "DjVuGlobal.cpp",
-        "DjVuGlobalMemory.cpp",
-        "DjVuImage.cpp",
-        "DjVuInfo.cpp",
-        "DjVuMessage.cpp",
-        "DjVuMessageLite.cpp",
-        "DjVuNavDir.cpp",
-        "DjVuPalette.cpp",
-        "DjVuPort.cpp",
-        "DjVuText.cpp",
-        "DjVuToPS.cpp",
-        "GBitmap.cpp",
-        "GContainer.cpp",
-        "GException.cpp",
-        "GIFFManager.cpp",
-        "GMapAreas.cpp",
-        "GOS.cpp",
-        "GPixmap.cpp",
-        "GRect.cpp",
-        "GScaler.cpp",
-        "GSmartPointer.cpp",
-        "GString.cpp",
-        "GThreads.cpp",
-        "GUnicode.cpp",
-        "GURL.cpp",
-        "IFFByteStream.cpp",
-        "IW44EncodeCodec.cpp",
-        "IW44Image.cpp",
-        "JB2EncodeCodec.cpp",
-        "DjVmDir.cpp",
-        "JB2Image.cpp",
-        "JPEGDecoder.cpp",
-        "MMRDecoder.cpp",
-        "MMX.cpp",
-        "UnicodeByteStream.cpp",
-        "XMLParser.cpp",
-        "XMLTags.cpp",
-        "ZPCodec.cpp",
-        "ddjvuapi.cpp",
-        "debug.cpp",
-        "miniexp.cpp",
-      ],
-    },
-  ],
-};
-
-export const chm: LibDef = {
-  name: "chm",
+export const chmdec: LibDef = {
+  name: "chmdec",
   alwaysOptimize: true,
   defines: ["_CRT_SECURE_NO_WARNINGS"],
   includes: [],
-  files: [{ dir: "ext/libchm", patterns: ["chm.c"] }],
+  files: [{ dir: "ext/chmdec", patterns: ["chm.c"] }],
 };
 
 export const zopfli: LibDef = {
@@ -208,7 +131,6 @@ export const libarchive: LibDef = {
     "ext/libarchive",
     "ext/a-zlib",
     "ext/a-bzip2",
-    "ext/lzma/C",
     "ext/liblzma/api",
     "ext/liblzma/common",
     "ext/liblzma/check",
@@ -309,10 +231,7 @@ export const libarchive: LibDef = {
       dir: "ext/a-bzip2",
       patterns: ["bzip2.c"],
     },
-    {
-      dir: "ext/lzma/C",
-      patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"],
-    },
+    // LzmaDec/Bra* live in base/exe for LzSA (not in libmupdf/libarchive)
     {
       dir: "ext/liblzma",
       patterns: [
@@ -456,174 +375,38 @@ export const dav1d: LibDef = {
   ],
 };
 
-export const skcms: LibDef = {
-  name: "skcms",
+export const jxldec: LibDef = {
+  name: "jxldec",
   alwaysOptimize: true,
-  defines: ["SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX"],
-  includes: ["ext/skcms"],
-  files: [
-    { dir: "ext/skcms", patterns: ["skcms.cc"] },
-    { dir: "ext/skcms/src", patterns: ["skcms_TransformBaseline.cc"] },
-  ],
+  defines: ["_CRT_SECURE_NO_WARNINGS"],
+  includes: [],
+  files: [{ dir: "ext/jxldec", patterns: ["jxl.c"] }],
 };
 
-export const highway: LibDef = {
-  name: "highway",
+// HEIC/HEIF/AVIF decoder amalgamation (replaces libheif). HEVC is pure-C;
+// AV1 uses dav1d; unci zlib/brotli needs a-zlib / brotli at link time.
+// heic.c uses SSE4.1 intrinsics (_mm_mullo_epi32); gcc needs -msse4.1
+// (MSVC enables SSE2+ by default on x64).
+export const heicdec: LibDef = {
+  name: "heicdec",
   alwaysOptimize: true,
-  defines: [],
-  includes: ["ext/highway"],
-  rtti: true,
-  exceptions: true,
-  files: [{ dir: "ext/highway/hwy", patterns: ["*.cc"] }],
-};
-
-export const libjxl: LibDef = {
-  name: "libjxl",
-  alwaysOptimize: true,
-  rtti: true,
-  exceptions: true,
+  extraCflags: ["-msse4.1"],
   defines: [
-    "JPEGXL_ENABLE_SKCMS=1",
-    "JPEGXL_ENABLE_TRANSCODE_JPEG=0",
-    "JPEGXL_BUNDLING_LIBJXL=1",
     "_CRT_SECURE_NO_WARNINGS",
+    "HEIC_HAVE_DAV1D",
+    "HEIC_HAVE_ZLIB",
+    "HEIC_HAVE_BROTLI",
   ],
   includes: [
-    "ext/libjxl",
-    "ext/libjxl/lib/include",
-    "ext/highway",
-    "ext/skcms",
+    "ext/heicdec",
+    "ext/dav1d/include",
+    "ext/a-zlib",
     "ext/brotli/c/include",
   ],
-  files: [{ dir: "ext/libjxl/lib/jxl", patterns: ["**/*.cc"] }],
-};
-
-export const libheif: LibDef = {
-  name: "libheif",
-  alwaysOptimize: true,
-  rtti: true,
-  exceptions: true,
-  defines: ["_CRT_SECURE_NO_WARNINGS", "HAVE_DAV1D", "LIBHEIF_STATIC_BUILD"],
-  includes: [
-    "ext/libheif/libheif",
-    "ext/libheif/libheif/api",
-    "ext/dav1d/include",
-  ],
   files: [
     {
-      dir: "ext/libheif/libheif",
-      patterns: [
-        "bitstream.*",
-        "box.*",
-        "brands.*",
-        "common_utils.*",
-        "context.*",
-        "error.*",
-        "file.*",
-        "file_layout.*",
-        "id_creator.*",
-        "init.*",
-        "logging.*",
-        "mini.*",
-        "nclx.*",
-        "omaf_boxes.*",
-        "plugin_registry.*",
-        "region.*",
-        "security_limits.*",
-        "text.*",
-      ],
-    },
-    {
-      dir: "ext/libheif/libheif/image",
-      patterns: ["image_description.*", "pixelimage.*"],
-    },
-    {
-      dir: "ext/libheif/libheif/image-items",
-      patterns: [
-        "avc.*",
-        "avif.*",
-        "grid.*",
-        "hevc.*",
-        "iden.*",
-        "image_item.*",
-        "jpeg.*",
-        "jpeg2000.*",
-        "mask_image.*",
-        "overlay.*",
-        "tiled.*",
-        "vvc.*",
-      ],
-    },
-    {
-      dir: "ext/libheif/libheif/codecs",
-      patterns: [
-        "avif_boxes.*",
-        "avif_dec.*",
-        "avif_enc.*",
-        "avc_boxes.*",
-        "avc_dec.*",
-        "avc_enc.*",
-        "decoder.*",
-        "encoder.*",
-        "hevc_boxes.*",
-        "hevc_dec.*",
-        "hevc_enc.*",
-        "jpeg_boxes.*",
-        "jpeg_dec.*",
-        "jpeg_enc.*",
-        "jpeg2000_boxes.*",
-        "jpeg2000_dec.*",
-        "jpeg2000_enc.*",
-        "vvc_boxes.*",
-        "vvc_enc.*",
-        "vvc_dec.*",
-      ],
-    },
-    {
-      dir: "ext/libheif/libheif/color-conversion",
-      patterns: [
-        "alpha.*",
-        "bayer_bilinear.*",
-        "chroma_sampling.*",
-        "colorconversion.*",
-        "hdr_sdr.*",
-        "monochrome.*",
-        "rgb2yuv.*",
-        "rgb2yuv_sharp.*",
-        "rgb2rgb.*",
-        "yuv2rgb.*",
-      ],
-    },
-    {
-      dir: "ext/libheif/libheif/plugins",
-      patterns: ["decoder_dav1d.*", "encoder_mask.*"],
-    },
-    {
-      dir: "ext/libheif/libheif/sequences",
-      patterns: [
-        "chunk.*",
-        "seq_boxes.*",
-        "track.*",
-        "track_metadata.*",
-        "track_visual.*",
-      ],
-    },
-    {
-      dir: "ext/libheif/libheif/api/libheif",
-      patterns: [
-        "heif.*",
-        "heif_brands.*",
-        "heif_color.*",
-        "heif_context.*",
-        "heif_decoding.*",
-        "heif_encoding.*",
-        "heif_image.*",
-        "heif_image_handle.*",
-        "heif_plugin.*",
-        "heif_security.*",
-        "heif_sequences.*",
-        "heif_tai_timestamps.*",
-      ],
+      dir: "ext/heicdec",
+      patterns: ["heic.c", "heic.h"],
     },
   ],
 };
@@ -650,8 +433,6 @@ const mupdfThirdPartySources: LibDef = {
     "HAVE_OT",
     "HAVE_UCDN",
     "HAVE_FREETYPE",
-    // libheif interop
-    "LIBHEIF_STATIC_BUILD",
     // libjpeg-turbo: this build does not assemble the NASM SIMD sources, so
     // force the pure-C code path (no jsimd_* references).
     "WITHOUT_SIMD",
@@ -723,81 +504,38 @@ const mupdfThirdPartySources: LibDef = {
         "jpeg_nbits.c",
       ],
     },
-    // ── libjpeg-turbo 3.x: per-precision wrappers (8/12/16-bit) ──
+    // ── libjpeg-turbo 3.x: 8-bit precision wrappers only (no 12/16-bit) ──
     {
       dir: "ext/libjpeg-turbo/src/wrapper",
       patterns: [
         "jcapistd-8.c",
-        "jcapistd-12.c",
-        "jcapistd-16.c",
         "jccoefct-8.c",
-        "jccoefct-12.c",
         "jccolor-8.c",
-        "jccolor-12.c",
-        "jccolor-16.c",
         "jcdctmgr-8.c",
-        "jcdctmgr-12.c",
         "jcdiffct-8.c",
-        "jcdiffct-12.c",
-        "jcdiffct-16.c",
         "jclossls-8.c",
-        "jclossls-12.c",
-        "jclossls-16.c",
         "jcmainct-8.c",
-        "jcmainct-12.c",
-        "jcmainct-16.c",
         "jcprepct-8.c",
-        "jcprepct-12.c",
-        "jcprepct-16.c",
         "jcsample-8.c",
-        "jcsample-12.c",
-        "jcsample-16.c",
         "jdapistd-8.c",
-        "jdapistd-12.c",
-        "jdapistd-16.c",
         "jdcoefct-8.c",
-        "jdcoefct-12.c",
         "jdcolor-8.c",
-        "jdcolor-12.c",
-        "jdcolor-16.c",
         "jddctmgr-8.c",
-        "jddctmgr-12.c",
         "jddiffct-8.c",
-        "jddiffct-12.c",
-        "jddiffct-16.c",
         "jdlossls-8.c",
-        "jdlossls-12.c",
-        "jdlossls-16.c",
         "jdmainct-8.c",
-        "jdmainct-12.c",
-        "jdmainct-16.c",
         "jdmerge-8.c",
-        "jdmerge-12.c",
         "jdpostct-8.c",
-        "jdpostct-12.c",
-        "jdpostct-16.c",
         "jdsample-8.c",
-        "jdsample-12.c",
-        "jdsample-16.c",
         "jfdctfst-8.c",
-        "jfdctfst-12.c",
         "jfdctint-8.c",
-        "jfdctint-12.c",
         "jidctflt-8.c",
-        "jidctflt-12.c",
         "jidctfst-8.c",
-        "jidctfst-12.c",
         "jidctint-8.c",
-        "jidctint-12.c",
         "jidctred-8.c",
-        "jidctred-12.c",
         "jquant1-8.c",
-        "jquant1-12.c",
         "jquant2-8.c",
-        "jquant2-12.c",
         "jutils-8.c",
-        "jutils-12.c",
-        "jutils-16.c",
       ],
     },
     // ── jbig2dec ──
@@ -1044,9 +782,10 @@ export const jbig2dec = thirdPartyLib({
 });
 
 export const openjpeg = thirdPartyLib({
-  name: "openjpeg",
+  name: "a-openjpeg",
   defines: ["_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"],
-  files: sourceFiles(3),
+  includes: ["ext/a-openjpeg"],
+  files: [{ dir: "ext/a-openjpeg", patterns: ["openjpeg.c"] }],
 });
 
 export const freetype = thirdPartyLib({
@@ -1104,7 +843,7 @@ export const mujs = thirdPartyLib({
 
 export const extract = thirdPartyLib({
   name: "extract",
-  includes: ["ext/extract/include", "ext/a-zlib"],
+  includes: ["ext/extract/include", "ext/extract/src", "ext/a-zlib"],
   files: sourceFiles(9),
 });
 
@@ -1185,13 +924,17 @@ export const mupdf: LibDef = {
     "FZ_ENABLE_BARCODE=0",
     "FZ_ENABLE_JS=1",
     "FZ_ENABLE_HYPHEN=0",
+    "CMARK_GFM_STATIC_DEFINE",
   ],
   includes: [
     "mupdf/include",
+    "ext/cmark-gfm/src",
+    "ext/cmark-gfm/extensions",
+    "mupdf/scripts/cmark-gfm",
     "mupdf/generated",
     "ext/jbig2dec",
     "ext/libjpeg-turbo/src",
-    "ext/openjpeg/src/lib/openjp2",
+    "ext/a-openjpeg",
     "mupdf/scripts/freetype",
     "ext/freetype/include",
     "ext/mujs",
@@ -1289,10 +1032,12 @@ export const mupdf: LibDef = {
         "load-psd.c",
         "load-tiff.c",
         "log.c",
+        "cull-device.c",
         "memento.c",
         "memory.c",
         "noto.c",
         "ocr-device.c",
+        "options.c",
         "outline.c",
         "output.c",
         "output-cbz.c",
@@ -1362,6 +1107,7 @@ export const mupdf: LibDef = {
         "css-parse.c",
         "epub-doc.c",
         "html-doc.c",
+        "md.c",
         "html-font.c",
         "html-layout.c",
         "html-outline.c",
@@ -1423,6 +1169,7 @@ export const mupdf: LibDef = {
         "pdf-signature.c",
         "pdf-store.c",
         "pdf-stream.c",
+        "pdf-struct.c",
         "pdf-subset.c",
         "pdf-type3.c",
         "pdf-unicode.c",

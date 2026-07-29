@@ -1,9 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Exif_h
-#define Exif_h
-
 enum class ExifProp : u16 {
     None = 0,
     ImageWidth = 0x0100,
@@ -110,5 +107,3 @@ struct ExifParser {
     TempStr GetFormattedPropTemp(ExifProp prop) const;
     void GetDumpLines(StrVec& linesOut) const;
 };
-
-#endif

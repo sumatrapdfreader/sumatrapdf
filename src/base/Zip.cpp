@@ -1,7 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define __STDC_LIMIT_MACROS
 #include "base/Base.h"
 #include "base/Zip.h"
 

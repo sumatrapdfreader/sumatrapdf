@@ -4,7 +4,6 @@
 #include "base/Win.h"
 #include "DialogSizer.h"
 
-#include <uxtheme.h>
 #include <vssym32.h>
 
 #define DIALOG_DATA_PROPERTY L"GipsySoftDialogSizerData"

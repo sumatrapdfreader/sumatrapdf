@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
-#include "Pixmap.h"
-#include "TgaReader.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/TgaReader.h"
 
 namespace tga {
 

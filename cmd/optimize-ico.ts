@@ -7,7 +7,7 @@
 //   - leave the 16/32/48/64 BMP frames untouched (real/near system sizes, and
 //     small-size PNG-in-ICO isn't reliably supported everywhere).
 //
-// Usage: bun cmd/optimize-ico.ts <file.ico|dir> [...]   (defaults to gfx/gfxalt)
+// Usage: bun cmd/optimize-ico.ts <file.ico|dir> [...]   (defaults to gfx/*.ico)
 
 import { readFileSync, writeFileSync, readdirSync, statSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -85,10 +85,11 @@ function optimizeIco(path: string, scratch: string): boolean {
 
 function main() {
   const args = process.argv.slice(2);
-  const targets = args.length ? args : [join(import.meta.dir, "..", "gfx", "gfxalt")];
+  const targets = args.length ? args : [join(import.meta.dir, "..", "gfx")];
   const icos: string[] = [];
   for (const t of targets) {
     if (statSync(t).isDirectory()) {
+      // only top-level .ico (not nested dirs)
       for (const f of readdirSync(t)) if (f.toLowerCase().endsWith(".ico")) icos.push(join(t, f));
     } else if (t.toLowerCase().endsWith(".ico")) icos.push(t);
   }

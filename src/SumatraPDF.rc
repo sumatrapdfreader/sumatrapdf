@@ -67,9 +67,9 @@ END
 IDR_DLL_PAK             RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
 
-IDR_TRANSLATIONS        RCDATA "..\\translations\\translations.txt.lzsa"
+IDR_TRANSLATIONS        RCDATA "..\\.work\\translations.txt.lzsa"
 
-IDR_MANUAL_PAK          RCDATA               "..\\docs\\manual.dat"
+IDR_MANUAL_PAK          RCDATA               "..\\.work\\manual.dat"
 
 IDR_CLAUDE_MARKED_JS    RCDATA               "..\\ext\\marked\\marked.min.js"
 
@@ -82,10 +82,14 @@ IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
 // have icon as ,1, which is index of this icon. unless we delete
 // those old registry on install, the icon would change
 2                       ICON "..\\gfx\\SumatraPDF-smaller.ico"
-3                       ICON "..\\gfx\\gfxalt\\epub-32bit.ico"
-4                       ICON "..\\gfx\\gfxalt\\cbx-32bit.ico"
-5                       ICON "..\\gfx\\gfxalt\\chm-32bit.ico"
-6                       ICON "..\\gfx\\gfxalt\\djvu-32bit.ico"
+// Document-type icons (resource id = registry DefaultIcon ,-N). See RegisterForOpenWith.
+3                       ICON "..\\gfx\\epub-32bit.ico"
+4                       ICON "..\\gfx\\cbx-32bit.ico"
+5                       ICON "..\\gfx\\chm-32bit.ico"
+6                       ICON "..\\gfx\\djvu-32bit.ico"
+7                       ICON "..\\gfx\\img-32bit.ico"
+8                       ICON "..\\gfx\\pdf-32bit.ico"
+9                       ICON "..\\gfx\\mobi-32bit.ico"
 
     /////////////////////////////////////////////////////////////////////////////
 

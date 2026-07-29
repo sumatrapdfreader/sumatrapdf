@@ -100,8 +100,172 @@ Str GetInstallerLogPath() {
     return path::Join(dir, kLogFileName);
 }
 
+// Write a file during install/upgrade. libmupdf.dll is often locked by
+// SumatraPDF.exe, dllhost/prevhost (preview), or PdfFilter; a plain
+// CreateFile(CREATE_ALWAYS) then fails and leaves the old DLL (size mismatch
+// with the new exe). Retry: direct write, temp+rename, kill holders, delete.
+static bool WriteInstallerFileRobust(Str path, Str data) {
+    if (!path || !data.s) {
+        log("WriteInstallerFileRobust: null path or data\n");
+        return false;
+    }
+    int expected = data.len;
+    logf("WriteInstallerFileRobust: path='%s' bytes=%d\n", path, expected);
+    i64 existing = file::GetSize(path);
+    if (existing >= 0) {
+        DWORD attrs = file::GetAttributes(path);
+        logf("  existing size=%lld attrs=0x%x\n", (long long)existing, attrs);
+    } else {
+        logf("  no existing file (GetSize failed)\n");
+    }
+
+    auto clearReadonly = [](Str p) {
+        DWORD attrs = file::GetAttributes(p);
+        if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
+            logf("  clearing READONLY on '%s'\n", p);
+            file::SetAttributes(p, attrs & ~FILE_ATTRIBUTE_READONLY);
+        }
+    };
+
+    auto verifySize = [&](Str p) -> bool {
+        i64 sz = file::GetSize(p);
+        if (sz != (i64)expected) {
+            logf("  size check failed path='%s' size=%lld expected=%d\n", p, (long long)sz, expected);
+            return false;
+        }
+        return true;
+    };
+
+    auto tryDirect = [&]() -> bool {
+        clearReadonly(path);
+        if (!file::WriteFile(path, data)) {
+            DWORD err = GetLastError();
+            logf("  direct WriteFile failed lastError=%u\n", err);
+            LogLastError(err);
+            return false;
+        }
+        return verifySize(path);
+    };
+
+    auto tryTempRename = [&]() -> bool {
+        TempStr tmp = str::JoinTemp(path, ".tmp");
+        logf("  trying write via temp '%s'\n", tmp);
+        clearReadonly(tmp);
+        file::Delete(tmp);
+        if (!file::WriteFile(tmp, data)) {
+            DWORD err = GetLastError();
+            logf("  temp WriteFile failed lastError=%u\n", err);
+            LogLastError(err);
+            file::Delete(tmp);
+            return false;
+        }
+        if (!verifySize(tmp)) {
+            file::Delete(tmp);
+            return false;
+        }
+        clearReadonly(path);
+        if (!MoveFileExW(CWStrTemp(tmp), CWStrTemp(path), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+            DWORD err = GetLastError();
+            logf("  MoveFileExW(REPLACE) failed lastError=%u\n", err);
+            LogLastError(err);
+            file::Delete(tmp);
+            return false;
+        }
+        return verifySize(path);
+    };
+
+    for (int attempt = 1; attempt <= 4; attempt++) {
+        logf("  attempt %d/4\n", attempt);
+        if (tryDirect()) {
+            logf("WriteInstallerFileRobust: ok (direct) '%s'\n", path);
+            return true;
+        }
+        if (tryTempRename()) {
+            logf("WriteInstallerFileRobust: ok (temp+rename) '%s'\n", path);
+            return true;
+        }
+
+        int killed = KillProcessesWithModule(path, true);
+        logf("  KillProcessesWithModule('%s') killed=%d\n", path, killed);
+        if (file::Exists(path)) {
+            clearReadonly(path);
+            bool delOk = file::Delete(path);
+            logf("  Delete('%s') => %d\n", path, (int)delOk);
+            if (!delOk) {
+                LogLastError();
+            }
+        }
+        if (attempt < 4) {
+            DWORD sleepMs = 300u * (DWORD)attempt;
+            logf("  sleep %u ms before retry\n", sleepMs);
+            Sleep(sleepMs);
+        }
+    }
+
+    existing = file::GetSize(path);
+    logf("WriteInstallerFileRobust: FAILED path='%s' finalSize=%lld expected=%d\n", path, (long long)existing,
+         expected);
+    return false;
+}
+
+// If installDir already has libmupdf.dll (upgrade), rename it out of the way
+// first. If rename fails the file is locked (explorer preview, filter, etc.)
+// — abort before we copy a new exe that won't match the old DLL.
+static bool MoveAsideExistingLibmupdf(Str installDir) {
+    TempStr dllPath = path::JoinTemp(installDir, StrL("libmupdf.dll"));
+    if (!file::Exists(dllPath)) {
+        logf("MoveAsideExistingLibmupdf: no existing '%s'\n", dllPath);
+        return true;
+    }
+    TempStr copyPath = path::JoinTemp(installDir, StrL("libmupdf.dll.copy"));
+    i64 existingSize = file::GetSize(dllPath);
+    logf("MoveAsideExistingLibmupdf: '%s' (size=%lld) -> '%s'\n", dllPath, (long long)existingSize, copyPath);
+
+    DWORD attrs = file::GetAttributes(dllPath);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
+        logf("  clearing READONLY on existing dll\n");
+        file::SetAttributes(dllPath, attrs & ~FILE_ATTRIBUTE_READONLY);
+    }
+
+    if (file::Exists(copyPath)) {
+        logf("  removing previous '%s'\n", copyPath);
+        if (!file::Delete(copyPath)) {
+            logf("  failed to delete previous .copy\n");
+            LogLastError();
+            // try replace via MoveFileEx below
+        }
+    }
+
+    // free locks before rename
+    int killed = KillProcessesWithModule(dllPath, true);
+    logf("  KillProcessesWithModule killed=%d\n", killed);
+
+    for (int attempt = 1; attempt <= 3; attempt++) {
+        logf("  rename attempt %d/3\n", attempt);
+        // Prefer atomic replace if .copy still exists
+        if (MoveFileExW(CWStrTemp(dllPath), CWStrTemp(copyPath), MOVEFILE_REPLACE_EXISTING)) {
+            logf("MoveAsideExistingLibmupdf: rename ok\n");
+            return true;
+        }
+        DWORD err = GetLastError();
+        logf("  MoveFileEx failed lastError=%u\n", err);
+        LogLastError(err);
+        KillProcessesWithModule(dllPath, true);
+        if (attempt < 3) {
+            Sleep(250u * (DWORD)attempt);
+        }
+    }
+
+    logf("MoveAsideExistingLibmupdf: FAILED — file in use\n");
+    NotifyFailed(
+        _TRA("Could not update libmupdf.dll because it is in use by another program "
+             "(SumatraPDF, Windows Explorer preview, or search).\n"
+             "Close those programs and try again."));
+    return false;
+}
+
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
-    logf("ExtractFiles(): dir '%s'\n", destDir);
+    logf("ExtractFiles(): dir '%s' filesCount=%d\n", destDir, archive->filesCount);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
@@ -109,9 +273,12 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
 
     for (int i = 0; i < nFiles; i++) {
         fi = &archive->files[i];
+        logf("  decompress [%d/%d] '%s' compressed=%u uncompressed=%u\n", i + 1, nFiles, fi->name,
+             (unsigned)fi->compressedSize, (unsigned)fi->uncompressedSize);
         uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
 
         if (!uncompressed) {
+            logf("  GetFileDataByIdx failed for '%s'\n", fi->name);
             NotifyFailed(
                 _TRA("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
@@ -119,7 +286,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         TempStr filePath = path::JoinTemp(destDir, fi->name);
 
         Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
-        bool ok = file::WriteFile(filePath, d);
+        bool ok = WriteInstallerFileRobust(filePath, d);
         free(uncompressed);
 
         if (!ok) {
@@ -129,6 +296,16 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         }
         logf("  extracted '%s'\n", filePath);
         ProgressStep();
+    }
+
+    // leftover from MoveAsideExistingLibmupdf after a successful upgrade
+    TempStr copyPath = path::JoinTemp(destDir, StrL("libmupdf.dll.copy"));
+    if (file::Exists(copyPath)) {
+        if (file::Delete(copyPath)) {
+            logf("  deleted leftover '%s'\n", copyPath);
+        } else {
+            logf("  could not delete leftover '%s' (ok to ignore)\n", copyPath);
+        }
     }
 
     return true;
@@ -278,13 +455,24 @@ static void InstallerThread(Flags* cli) {
          (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
     HKEY key = cli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
+    // Unregister shell extensions and kill holders BEFORE extract. PdfFilter.dll
+    // stays locked by SearchFilterHost/dllhost while the filter is registered;
+    // the elevated -run-install-now path also skips CheckInstallUninstallPossible.
+    // Prefer previous install's allUsers when restoring after a failed extract.
+    bool freeAllUsers = gPrevInstall.allUsers || allUsers;
+    ShellExtInstallState removedExts{};
+    FreeInstallationFilesInUse(cli->installDir, freeAllUsers, &removedExts);
+
     if (!ExtractInstallerFiles(cli->installDir)) {
         log("ExtractInstallerFiles() failed\n");
+        // Put shell extensions back so the user keeps search/preview until they retry.
+        RestoreShellExtensions(removedExts);
         goto Exit;
     }
 
     // for cleaner upgrades, remove registry entries and shortcuts from previous installations
     // doing it unconditionally, because deleting non-existing things doesn't hurt
+    // (filter/preview/plugin already unregistered in FreeInstallationFilesInUse)
     UninstallBrowserPlugin();
     UninstallPreviewDll();
     UninstallSearchFilter();
@@ -331,6 +519,14 @@ static void InstallerThread(Flags* cli) {
     ProgressStep();
     log("Installer thread finished\n");
 Exit:
+    str::Free(removedExts.installDir);
+    // Pre-release debug report (no symbols download) so we learn about failed
+    // upgrades (e.g. locked libmupdf.dll) with the install log attached.
+    if (gInstallFailed) {
+        TempStr cond = fmt("Installation failed: %s", gFirstError ? gFirstError : StrL("(no details)"));
+        logf("InstallerThread: upload debug report: %s\n", cond);
+        _uploadDebugReport(cond, FILE_LINE, false, false);
+    }
     if (gWnd && gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
@@ -504,8 +700,78 @@ static void OnButtonStartSumatra() {
     OnButtonExit();
 }
 
+constexpr int kBtnIdShowInstallLog = 100;
+
+static HRESULT CALLBACK InstallationFailedDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                                                         LONG_PTR /*lpRefData*/) {
+    switch (msg) {
+        case TDN_BUTTON_CLICKED:
+            if ((int)wParam == kBtnIdShowInstallLog) {
+                Str logText = gLogBuf ? ToStr(*gLogBuf) : StrL("(no log available)");
+                ShowTextInWindowDialog(_TRA("SumatraPDF installation log"), logText);
+                return S_FALSE; // keep TaskDialog open
+            }
+            break;
+        case TDN_HYPERLINK_CLICKED:
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
+            break;
+    }
+    return S_OK;
+}
+
+// Close the installer UI and show a TaskDialog with details + "Show log".
+static void ShowInstallationFailedUi(HWND hwndParent) {
+    log("ShowInstallationFailedUi\n");
+    Str firstErr = gFirstError ? gFirstError : StrL("(no details)");
+    TempStr content =
+        fmt("%s\n\n%s\n\n%s", firstErr, _TRA("Installation could not be completed."),
+            _TRA("If a previous version is running or Windows Explorer is previewing a PDF, close it and try again."));
+
+    TASKDIALOG_BUTTON buttons[2];
+    buttons[0].nButtonID = kBtnIdShowInstallLog;
+    buttons[0].pszButtonText = L"Show log";
+    buttons[1].nButtonID = IDOK;
+    buttons[1].pszButtonText = L"Close";
+
+    TASKDIALOGCONFIG dialogConfig{};
+    TASKDIALOG_FLAGS flags = TDF_SIZE_TO_CONTENT | TDF_ALLOW_DIALOG_CANCELLATION | TDF_ENABLE_HYPERLINKS;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.hwndParent = hwndParent;
+    dialogConfig.pszWindowTitle = L"SumatraPDF";
+    dialogConfig.pszMainInstruction = L"Installation failed";
+    dialogConfig.pszContent = CWStrTemp(content);
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.pfCallback = InstallationFailedDialogCallback;
+    dialogConfig.pButtons = buttons;
+    dialogConfig.cButtons = 2;
+    dialogConfig.pszMainIcon = TD_ERROR_ICON;
+
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+}
+
 static void OnInstallationFinished(Flags* cli) {
-    logf("OnInstallationFinished: cli->fastInstall: %d\n", (int)cli->fastInstall);
+    logf("OnInstallationFinished: cli->fastInstall: %d gInstallFailed: %d\n", (int)cli->fastInstall,
+         (int)gInstallFailed);
+
+    SafeCloseThreadHandle(&gWnd->hThread);
+
+    if (gInstallFailed) {
+        HWND hwnd = gWnd->hwnd;
+        // Hide installer chrome; detailed error is the TaskDialog.
+        if (hwnd) {
+            ShowWindow(hwnd, SW_HIDE);
+        }
+        gMsgError = gFirstError;
+        ShowInstallationFailedUi(nullptr);
+        if (hwnd) {
+            DestroyWindow(hwnd); // ends RunApp() message loop
+        }
+        return;
+    }
 
     if (gWnd->btnRunSumatra) {
         HwndSetFocus(gWnd->btnRunSumatra->hwnd);
@@ -518,23 +784,15 @@ static void OnInstallationFinished(Flags* cli) {
     DeleteWnd(&gWnd->btnInstall);
     DeleteWnd(&gWnd->progressBar);
     auto isRtl = IsUIRtl();
-    if (gInstallFailed) {
-        gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"), isRtl);
-        gWnd->btnExit->onClick = MkFunc0Void(OnButtonExit);
-        SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
-    } else {
-        if (!cli->fastInstall) {
-            gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"), isRtl);
-            gWnd->btnRunSumatra->onClick = MkFunc0Void(OnButtonStartSumatra);
-        }
-        SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
+    if (!cli->fastInstall) {
+        gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"), isRtl);
+        gWnd->btnRunSumatra->onClick = MkFunc0Void(OnButtonStartSumatra);
     }
+    SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     gMsgError = gFirstError;
     HwndRepaintNow(gWnd->hwnd);
 
-    SafeCloseThreadHandle(&gWnd->hThread);
-
-    if (cli->fastInstall && !gInstallFailed) {
+    if (cli->fastInstall) {
         StartSumatra();
         ::ExitProcess(0);
     }
@@ -1081,57 +1339,43 @@ static bool OpenEmbeddedFilesArchive() {
         ShowNoEmbeddedFiles("Embedded lzsa archive is corrupted");
         return false;
     }
-    log("OpenEmbeddedFilesArchive: opened archive\n");
     return true;
 }
 
-u32 GetLibmupdfDllSize() {
-    bool ok = OpenEmbeddedFilesArchive();
-    if (!ok) {
-        return 0;
-    }
-    auto archive = &gArchive;
-    int nFiles = archive->filesCount;
-    lzma::FileInfo* fi;
-    for (int i = 0; i < nFiles; i++) {
-        fi = &archive->files[i];
-        if (!str::EqI(fi->name, "libmupdf.dll")) {
-            continue;
-        }
-        return fi->uncompressedSize;
-    }
-    return 0;
-}
-
-bool ExtractLibmupdfDll(Str destDir) {
+bool ExtractLibmupdfToDir(Str destDir) {
+    logf("ExtractLibmupdfToDir: destDir='%s'\n", destDir);
     if (!OpenEmbeddedFilesArchive()) {
+        log("ExtractLibmupdfToDir: OpenEmbeddedFilesArchive failed\n");
         return false;
     }
     int idx = lzma::GetIdxFromName(&gArchive, "libmupdf.dll");
     if (idx < 0) {
-        log("ExtractLibmupdfDll: libmupdf.dll not found in archive\n");
+        log("ExtractLibmupdfToDir: libmupdf.dll not found in archive\n");
         return false;
     }
     lzma::FileInfo* fi = &gArchive.files[idx];
+    logf("ExtractLibmupdfToDir: archive entry uncompressed=%u compressed=%u\n", (unsigned)fi->uncompressedSize,
+         (unsigned)fi->compressedSize);
     u8* uncompressed = lzma::GetFileDataByIdx(&gArchive, idx, nullptr);
     if (!uncompressed) {
-        log("ExtractLibmupdfDll: failed to decompress libmupdf.dll\n");
+        log("ExtractLibmupdfToDir: failed to decompress libmupdf.dll\n");
         return false;
     }
     if (!dir::CreateAll(destDir)) {
         free(uncompressed);
-        logf("ExtractLibmupdfDll: couldn't create directory '%s'\n", destDir);
+        logf("ExtractLibmupdfToDir: couldn't create directory '%s'\n", destDir);
+        LogLastError();
         return false;
     }
     TempStr filePath = path::JoinTemp(destDir, fi->name);
     Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
-    bool ok = file::WriteFile(filePath, d);
+    bool ok = WriteInstallerFileRobust(filePath, d);
     free(uncompressed);
     if (!ok) {
-        logf("ExtractLibmupdfDll: failed to write '%s'\n", filePath);
+        logf("ExtractLibmupdfToDir: failed to write '%s'\n", filePath);
         return false;
     }
-    logf("ExtractLibmupdfDll: extracted '%s'\n", filePath);
+    logf("ExtractLibmupdfToDir: extracted '%s' size=%lld\n", filePath, (long long)file::GetSize(filePath));
     return true;
 }
 
@@ -1145,8 +1389,16 @@ bool ExtractInstallerFiles(Str dir) {
         return false;
     }
 
+    // First: move any existing libmupdf.dll aside. If it's locked, abort before
+    // overwriting SumatraPDF.exe (which would leave a new exe + old DLL).
+    if (!MoveAsideExistingLibmupdf(dir)) {
+        log("ExtractInstallerFiles: MoveAsideExistingLibmupdf failed\n");
+        return false;
+    }
+
     ok = CopySelfToDir(dir);
     if (!ok) {
+        NotifyFailed(_TRA("Couldn't copy SumatraPDF.exe to the installation directory"));
         return false;
     }
     ProgressStep();
@@ -1299,21 +1551,8 @@ int RunInstaller() {
         (int)gCliNew.silent, (int)gCliNew.allUsers, (int)gCliNew.runInstallNow, (int)gCliNew.withFilter,
         (int)gCliNew.withPreview, (int)gCliNew.fastInstall);
 
-    // TODO: either tighten condition for doing it or remove
-    // with prev install we might need to elevate first
-    bool earlyUninstall = false;
-    if (earlyUninstall) {
-        // unregister search filter and previewer to reduce
-        // possibility of blocking the installation because the dlls are loaded
-        if (gPrevInstall.searchFilterInstalled) {
-            UninstallSearchFilter();
-            log("After UninstallSearchFilter\n");
-        }
-        if (gPrevInstall.previewInstalled) {
-            UninstallPreviewDll();
-            log("After UninstallPreviewDll\n");
-        }
-    }
+    // Shell-extension unregister + process kill happens inside InstallerThread
+    // (FreeInstallationFilesInUse) before extract — including elevated -run-install-now.
 
     if (gCli->silent) {
         gInstallStarted = true;
@@ -1332,17 +1571,6 @@ int RunInstaller() {
         logfa("RunApp() returned %d\n", ret);
     }
 
-    if (earlyUninstall) {
-        // re-register if we un-registered but installation was cancelled
-        if (gPrevInstall.searchFilterInstalled) {
-            log("re-registering search filter\n");
-            RegisterSearchFilter(gPrevInstall.allUsers, gPrevInstall.installationDir);
-        }
-        if (gPrevInstall.previewInstalled) {
-            log("re-registering previewer\n");
-            RegisterPreviewer(gPrevInstall.allUsers, gPrevInstall.installationDir);
-        }
-    }
     log("Installer finished\n");
 Exit:
     if (installerLogPath && gInstallStarted) {

@@ -1,18 +1,23 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "Base.h"
+#include "base/Base.h"
 #include <LzmaDec.h>
 #include <Bra.h>
-#include "ByteOrderDecoder.h"
-#include "LzmaSimpleArchive.h"
-#include "File.h"
+#include "base/ByteOrderDecoder.h"
+#include "base/LzmaSimpleArchive.h"
+#include "base/File.h"
 
 /*
 Implements extracting data from a simple archive format, made up by me.
 For the description of the format, see comment below, above ParseSimpleArchive().
 Archives are simple to create (in SumatraPDF, we used to use lzma.exe and a python script)
 there's a tool for creating them in ../MakeLzSA.cpp
+
+LzmaDecode / x86_Convert come from ext/lzma/C (LzmaDec.c, Bra86.c) compiled into
+base and SumatraPDF.exe — not from libmupdf.dll (libarchive uses liblzma instead).
+The installer must decompress IDR_DLL_PAK (which contains libmupdf.dll) without
+calling into that DLL.
 */
 
 // 'LzSA' for "Lzma Simple Archive"

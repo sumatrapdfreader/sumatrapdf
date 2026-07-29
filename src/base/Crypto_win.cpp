@@ -5,6 +5,8 @@
 #include "base/Crypto.h"
 
 #include <wincrypt.h>
+#include <wintrust.h>
+#include <softpub.h>
 
 #ifndef DWORD_MAX
 #define DWORD_MAX 0xffffffffUL
@@ -22,13 +24,17 @@ static NO_INLINE void CalcDigestWin(Str d, u8* digest, DWORD digestSize, const W
     ok = CryptCreateHash(hProv, alg, 0, 0, &hHash);
     ReportIf(!ok);
 
-#ifdef _WIN64
-    for (; dataSize > DWORD_MAX; data = (const BYTE*)data + DWORD_MAX, dataSize -= DWORD_MAX) {
-        ok = CryptHashData(hHash, (const BYTE*)data, DWORD_MAX, 0);
+    // Hash in DWORD-sized chunks when the payload is larger than DWORD_MAX
+    // (only possible with size_t-sized lengths; our API uses int).
+    const BYTE* p = (const BYTE*)data;
+    size_t remaining = (size_t)(dataSize < 0 ? 0 : dataSize);
+    while (remaining > (size_t)DWORD_MAX) {
+        ok = CryptHashData(hHash, p, DWORD_MAX, 0);
         ReportIf(!ok);
+        p += DWORD_MAX;
+        remaining -= (size_t)DWORD_MAX;
     }
-#endif
-    ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)dataSize, 0);
+    ok = CryptHashData(hHash, p, (DWORD)remaining, 0);
     ReportIf(!ok);
 
     DWORD hashLen = 0;
@@ -166,4 +172,85 @@ Str ExtractP7m(Str d) {
         return {};
     }
     return Str((char*)(content), (int)(cbContent));
+}
+
+bool IsPEFileSigned(Str filePath) {
+    WCHAR* ws = CWStrTemp(filePath);
+    WINTRUST_FILE_INFO fileInfo = {};
+    fileInfo.cbStruct = sizeof(WINTRUST_FILE_INFO);
+    fileInfo.pcwszFilePath = ws;
+    fileInfo.hFile = NULL;
+    fileInfo.pgKnownSubject = NULL;
+
+    GUID actionGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+    WINTRUST_DATA trustData = {};
+
+    trustData.cbStruct = sizeof(WINTRUST_DATA);
+    trustData.pPolicyCallbackData = NULL;
+    trustData.pSIPClientData = NULL;
+    trustData.dwUIChoice = WTD_UI_NONE;
+    trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
+    trustData.dwUnionChoice = WTD_CHOICE_FILE;
+    trustData.dwStateAction = WTD_STATEACTION_IGNORE;
+    trustData.hWVTStateData = NULL;
+    trustData.pwszURLReference = NULL;
+    trustData.dwProvFlags = WTD_SAFER_FLAG;
+    trustData.dwUIContext = 0;
+    trustData.pFile = &fileInfo;
+
+    LONG status = WinVerifyTrust(NULL, &actionGUID, &trustData);
+
+    if (status == ERROR_SUCCESS) {
+        return true; // File is signed and signature is valid
+    } else {
+        return false; // File is not signed or signature is not valid
+    }
+}
+
+TempStr GetExecutableSignerTemp(Str exePath) {
+    WCHAR* ws = CWStrTemp(exePath);
+
+    HCERTSTORE hStore = nullptr;
+    HCRYPTMSG hMsg = nullptr;
+    BOOL ok = CryptQueryObject(CERT_QUERY_OBJECT_FILE, ws, CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED,
+                               CERT_QUERY_FORMAT_FLAG_BINARY, 0, nullptr, nullptr, nullptr, &hStore, &hMsg, nullptr);
+    if (!ok) {
+        return {};
+    }
+
+    DWORD signerInfoSize = 0;
+    CryptMsgGetParam(hMsg, CMSG_SIGNER_INFO_PARAM, 0, nullptr, &signerInfoSize);
+    if (signerInfoSize == 0) {
+        CryptMsgClose(hMsg);
+        CertCloseStore(hStore, 0);
+        return {};
+    }
+
+    auto signerInfo = (CMSG_SIGNER_INFO*)AllocZero(GetTempArena(), signerInfoSize);
+    ok = CryptMsgGetParam(hMsg, CMSG_SIGNER_INFO_PARAM, 0, signerInfo, &signerInfoSize);
+    if (!ok) {
+        CryptMsgClose(hMsg);
+        CertCloseStore(hStore, 0);
+        return {};
+    }
+
+    CERT_INFO certInfo = {};
+    certInfo.Issuer = signerInfo->Issuer;
+    certInfo.SerialNumber = signerInfo->SerialNumber;
+
+    PCCERT_CONTEXT certCtx = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0,
+                                                        CERT_FIND_SUBJECT_CERT, &certInfo, nullptr);
+    TempStr res = nullptr;
+    if (certCtx) {
+        char buf[512];
+        DWORD n = CertGetNameStringA(certCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, buf, dimof(buf));
+        if (n > 1) {
+            res = str::DupTemp(buf);
+        }
+        CertFreeCertificateContext(certCtx);
+    }
+
+    CryptMsgClose(hMsg);
+    CertCloseStore(hStore, 0);
+    return res;
 }
