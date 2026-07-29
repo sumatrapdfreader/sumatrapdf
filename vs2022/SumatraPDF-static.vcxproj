@@ -434,6 +434,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -479,6 +480,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -524,6 +526,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -569,6 +572,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -614,6 +618,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -659,6 +664,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -704,6 +710,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -749,6 +756,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -798,6 +806,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -847,6 +856,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -896,6 +906,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -944,6 +955,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -993,6 +1005,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -1042,6 +1055,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -1091,6 +1105,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -1139,6 +1154,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul > ..\.work\translations.txt
 ..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
