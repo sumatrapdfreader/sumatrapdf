@@ -18,7 +18,10 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
     DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
     WCHAR* url = CWStrTemp(urlA);
-    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_IGNORE_CERT_CN_INVALID;
+    // NB: do NOT add INTERNET_FLAG_IGNORE_CERT_CN_INVALID here - it disables TLS
+    // hostname validation, letting a network attacker with any trusted cert
+    // impersonate our update-check / crash-symbol hosts (GHSA-mjwr-9w29-jp96).
+    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
     if (str::StartsWithI(urlA, "https")) {
         flags |= INTERNET_FLAG_SECURE;

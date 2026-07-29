@@ -550,6 +550,50 @@ Visit <a href="%s">%s</a> to download the latest version.)",
     }
 }
 
+// Shown only for a user-initiated update check that couldn't download/parse the
+// update info. Tells the user and points them at the download page so they can
+// update manually (e.g. if TLS validation or the network failed).
+static void NotifyUpdateCheckFailed(HWND hwndParent, DWORD err) {
+    logf("NotifyUpdateCheckFailed: err=%#x\n", (unsigned)err);
+    auto title = _TRA("SumatraPDF Update");
+    auto mainInstr = _TRA("Couldn't check for updates");
+    TempStr msg = fmt(_TRA("Couldn't download update information (error %#x).").s, err);
+    TempStr content = fmt(R"(%s
+
+Visit <a href="%s">%s</a> to download the latest version.)",
+                          msg, StrL(kWebisteDownloadPageURL), StrL(kWebisteDownloadPageURL));
+
+    TASKDIALOGCONFIG dialogConfig{};
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+
+    constexpr int kBtnIdVisitWebsite = 100;
+    TASKDIALOG_BUTTON buttons[1];
+    buttons[0].nButtonID = kBtnIdVisitWebsite;
+    buttons[0].pszButtonText = CWStrTemp(_TRA("Visit &Website"));
+
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = CWStrTemp(title);
+    dialogConfig.pszMainInstruction = CWStrTemp(mainInstr);
+    dialogConfig.pszContent = CWStrTemp(content);
+    dialogConfig.dwFlags = flags;
+    dialogConfig.dwCommonButtons = TDCBF_CLOSE_BUTTON;
+    dialogConfig.cButtons = dimof(buttons);
+    dialogConfig.pButtons = buttons;
+    dialogConfig.nDefaultButton = kBtnIdVisitWebsite;
+    dialogConfig.pszMainIcon = TD_WARNING_ICON;
+    dialogConfig.hwndParent = hwndParent;
+    dialogConfig.pfCallback = TaskDialogHyperlinkCallback;
+    int buttonPressedId = 0;
+    TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
+    if (buttonPressedId == kBtnIdVisitWebsite) {
+        SumatraLaunchBrowser(kWebisteDownloadPageURL);
+    }
+}
+
 static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
     // for store builds we do update check but ignore the result
 #if 0
@@ -713,9 +757,9 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     DWORD err = MaybeStartUpdateDownload(hwnd, rsp, updateCheckType);
     if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
-        // notify the user about network error during a manual update check
-        TempStr msg = fmt(_TRA("Can't connect to the Internet (error %#x).").s, err);
-        MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
+        // a manual check that couldn't fetch update info: tell the user and point
+        // them at the website so they can update manually
+        NotifyUpdateCheckFailed(hwnd, err);
     }
 }
 
