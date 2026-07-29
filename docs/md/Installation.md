@@ -57,6 +57,38 @@ SumatraPDF.exe -appdata "D:\Shared\SumatraSettings"
 
 All users sharing that path use the same `SumatraPDF-settings.txt`. Ensure the directory is writable by every account that runs SumatraPDF.
 
+## Upgrade fails: file in use (PdfFilter.dll / PdfPreview.dll / libmupdf.dll)
+
+When upgrading, the installer renames existing DLLs aside before writing new ones. That can fail if Windows still has the old file open:
+
+| File | Often locked by |
+| --- | --- |
+| **PdfFilter.dll** | **Windows Search** (`SearchIndexer.exe`, `SearchFilterHost.exe`) after PDF IFilter registration |
+| **PdfPreview.dll** | **File Explorer** preview pane / `dllhost.exe` / `prevhost.exe` |
+| **libmupdf.dll** | Running **SumatraPDF**, Explorer preview, or Search filter hosts |
+
+Typical Windows errors during install: **32** (sharing violation / file in use), **5** (access denied on replace/delete).
+
+### What the installer does
+
+1. Unregisters the search filter and preview handler (if installed)
+2. Stops the **Windows Search** service (`WSearch`) when possible
+3. Kills processes that still load install-dir modules
+4. Renames `PdfFilter.dll`, `PdfPreview.dll`, and `libmupdf.dll` to `*.copy`
+5. If a rename stays blocked, shows a dialog and **retries every few seconds** until success or you abort
+
+### What you can do
+
+1. **Close** all SumatraPDF windows and other PDF apps  
+2. **Close** Explorer windows that show a **PDF preview** pane (or turn off the preview pane)  
+3. Temporarily **stop Windows Search**:
+   - `Win+R` → `services.msc` → **Windows Search** → Stop  
+   - Or elevated: `net stop WSearch`  
+4. Run the installer again (as admin for “all users” under Program Files)  
+5. After install, start Windows Search again if you stopped it (`net start WSearch`)
+
+If the install still fails, reboot and run the installer **before** opening PDFs or browsing folders with preview enabled.
+
 ## Corrupted or incomplete installation
 
 If SumatraPDF reports a [corrupted installation](Corrupted-installation.md):
@@ -65,6 +97,8 @@ If SumatraPDF reports a [corrupted installation](Corrupted-installation.md):
 - `libmupdf.dll` version does not match `SumatraPDF.exe`
 
 **Fix:** run the official installer, use the portable exe, or extract with `-x` so both files match.
+
+Also see [Failed to load libmupdf.dll](Failed-to-load-libmupdf.md) if the app starts but cannot load the DLL (often antivirus).
 
 ## Installer runs when I open a PDF
 

@@ -208,60 +208,298 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
     return false;
 }
 
-// If installDir already has libmupdf.dll (upgrade), rename it out of the way
-// first. If rename fails the file is locked (explorer preview, filter, etc.)
-// — abort before we copy a new exe that won't match the old DLL.
-static bool MoveAsideExistingLibmupdf(Str installDir) {
-    TempStr dllPath = path::JoinTemp(installDir, StrL("libmupdf.dll"));
-    if (!file::Exists(dllPath)) {
-        logf("MoveAsideExistingLibmupdf: no existing '%s'\n", dllPath);
+// --- Rename locked install files aside before extract ----------------------------
+// Upgrades rename libmupdf.dll / PdfFilter.dll / PdfPreview.dll to *.copy so we
+// can write new files even when the old DLL is still mapped. If rename stays
+// blocked, show a dialog that retries every 3s (or silent retries for ~60s).
+
+static Str kInstallDocsURL() {
+    return StrL("https://www.sumatrapdfreader.org/docs/Installation");
+}
+
+// Stop Windows Search so SearchIndexer / SearchFilterHost release PdfFilter.dll.
+// Best-effort: fails quietly if the service is absent or stop is denied.
+static void StopWindowsSearchService() {
+    SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (!scm) {
+        logf("StopWindowsSearchService: OpenSCManager failed err=%u\n", GetLastError());
+        return;
+    }
+    SC_HANDLE svc = OpenServiceW(scm, L"WSearch", SERVICE_STOP | SERVICE_QUERY_STATUS);
+    if (!svc) {
+        logf("StopWindowsSearchService: OpenService(WSearch) failed err=%u\n", GetLastError());
+        CloseServiceHandle(scm);
+        return;
+    }
+    SERVICE_STATUS st{};
+    if (QueryServiceStatus(svc, &st) && st.dwCurrentState == SERVICE_STOPPED) {
+        log("StopWindowsSearchService: already stopped\n");
+        CloseServiceHandle(svc);
+        CloseServiceHandle(scm);
+        return;
+    }
+    if (!ControlService(svc, SERVICE_CONTROL_STOP, &st)) {
+        logf("StopWindowsSearchService: ControlService(STOP) failed err=%u\n", GetLastError());
+    } else {
+        log("StopWindowsSearchService: stop requested\n");
+        for (int i = 0; i < 30; i++) { // up to ~15s
+            if (!QueryServiceStatus(svc, &st)) {
+                break;
+            }
+            if (st.dwCurrentState == SERVICE_STOPPED) {
+                log("StopWindowsSearchService: stopped\n");
+                break;
+            }
+            Sleep(500);
+        }
+    }
+    CloseServiceHandle(svc);
+    CloseServiceHandle(scm);
+}
+
+static void StartWindowsSearchService() {
+    SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (!scm) {
+        return;
+    }
+    SC_HANDLE svc = OpenServiceW(scm, L"WSearch", SERVICE_START | SERVICE_QUERY_STATUS);
+    if (!svc) {
+        CloseServiceHandle(scm);
+        return;
+    }
+    SERVICE_STATUS st{};
+    if (QueryServiceStatus(svc, &st) && st.dwCurrentState == SERVICE_RUNNING) {
+        CloseServiceHandle(svc);
+        CloseServiceHandle(scm);
+        return;
+    }
+    if (StartServiceW(svc, 0, nullptr)) {
+        log("StartWindowsSearchService: start requested\n");
+    } else {
+        DWORD err = GetLastError();
+        if (err != ERROR_SERVICE_ALREADY_RUNNING) {
+            logf("StartWindowsSearchService: StartService failed err=%u\n", err);
+        }
+    }
+    CloseServiceHandle(svc);
+    CloseServiceHandle(scm);
+}
+
+// One rename attempt: clear RO, delete stale .copy, kill holders, MoveFileEx.
+static bool TryRenameAsideOnce(Str path, Str copyPath) {
+    if (!file::Exists(path)) {
         return true;
     }
-    TempStr copyPath = path::JoinTemp(installDir, StrL("libmupdf.dll.copy"));
-    i64 existingSize = file::GetSize(dllPath);
-    logf("MoveAsideExistingLibmupdf: '%s' (size=%lld) -> '%s'\n", dllPath, (long long)existingSize, copyPath);
-
-    DWORD attrs = file::GetAttributes(dllPath);
+    DWORD attrs = file::GetAttributes(path);
     if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
-        logf("  clearing READONLY on existing dll\n");
-        file::SetAttributes(dllPath, attrs & ~FILE_ATTRIBUTE_READONLY);
+        file::SetAttributes(path, attrs & ~FILE_ATTRIBUTE_READONLY);
     }
-
     if (file::Exists(copyPath)) {
-        logf("  removing previous '%s'\n", copyPath);
-        if (!file::Delete(copyPath)) {
-            logf("  failed to delete previous .copy\n");
-            LogLastError();
-            // try replace via MoveFileEx below
-        }
+        file::Delete(copyPath);
     }
+    KillProcessesWithModule(path, true);
+    if (MoveFileExW(CWStrTemp(path), CWStrTemp(copyPath), MOVEFILE_REPLACE_EXISTING)) {
+        logf("TryRenameAsideOnce: ok '%s' -> '%s'\n", path, copyPath);
+        return true;
+    }
+    DWORD err = GetLastError();
+    logf("TryRenameAsideOnce: MoveFileEx failed for '%s' lastError=%u\n", path, err);
+    LogLastError(err);
+    return false;
+}
 
-    // free locks before rename
-    int killed = KillProcessesWithModule(dllPath, true);
-    logf("  KillProcessesWithModule killed=%d\n", killed);
+struct MoveAsideDlgCtx {
+    Str path;
+    Str copyPath;
+    Str fileName;
+    bool success = false;
+    bool aborted = false;
+    DWORD lastTryTick = 0;
+};
 
+static HRESULT CALLBACK MoveAsideBlockedDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                                                       LONG_PTR lpRefData) {
+    auto* ctx = (MoveAsideDlgCtx*)lpRefData;
+    switch (msg) {
+        case TDN_CREATED:
+            ctx->lastTryTick = GetTickCount();
+            break;
+        case TDN_TIMER: {
+            // Auto-retry rename every 3 seconds while the dialog is open.
+            DWORD now = GetTickCount();
+            if (now - ctx->lastTryTick >= 3000) {
+                ctx->lastTryTick = now;
+                logf("MoveAside dialog: retry rename '%s'\n", ctx->path);
+                // Search hosts often re-grab PdfFilter; stop again before retry.
+                if (str::EqI(ctx->fileName, StrL("PdfFilter.dll")) || str::EqI(ctx->fileName, StrL("PdfPreview.dll"))) {
+                    StopWindowsSearchService();
+                }
+                if (TryRenameAsideOnce(ctx->path, ctx->copyPath)) {
+                    ctx->success = true;
+                    // Close dialog (IDCANCEL button); success is recorded in ctx.
+                    SendMessageW(hwnd, TDM_CLICK_BUTTON, IDCANCEL, 0);
+                }
+            }
+            return S_FALSE; // keep timer running
+        }
+        case TDN_HYPERLINK_CLICKED:
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
+            break;
+        case TDN_BUTTON_CLICKED:
+            if (ctx->success) {
+                return S_OK; // close after auto-success
+            }
+            if ((int)wParam == IDCANCEL) {
+                ctx->aborted = true;
+                return S_OK; // abort install
+            }
+            return S_FALSE;
+    }
+    return S_OK;
+}
+
+// Blocking dialog: retries rename every 3s until success or user aborts.
+// Returns true if renamed (or file gone), false if user aborted.
+static bool ShowMoveAsideBlockedDialog(Str path, Str copyPath, Str fileName) {
+    MoveAsideDlgCtx ctx{};
+    ctx.path = path;
+    ctx.copyPath = copyPath;
+    ctx.fileName = fileName;
+
+    TempStr content = fmt(_TRA("Could not update %s because another program still has the file open.\n\n"
+                               "Common causes:\n"
+                               "• Windows Search Indexer (loads PdfFilter.dll for PDF search)\n"
+                               "• File Explorer PDF preview (loads PdfPreview.dll / libmupdf.dll)\n"
+                               "• Another SumatraPDF window or PDF application\n\n"
+                               "What to try:\n"
+                               "• Close Explorer windows that show a PDF preview pane\n"
+                               "• Stop the \"Windows Search\" service temporarily (services.msc)\n"
+                               "• Close all SumatraPDF and other PDF apps\n\n"
+                               "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
+                               "More help: <a href=\"%s\">Installation documentation</a>")
+                              .s,
+                          fileName, kInstallDocsURL());
+
+    TASKDIALOG_BUTTON buttons[1];
+    buttons[0].nButtonID = IDCANCEL;
+    buttons[0].pszButtonText = CWStrTemp(_TRA("Abort installation"));
+
+    TASKDIALOGCONFIG cfg{};
+    DWORD flags = TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_CALLBACK_TIMER | TDF_ALLOW_DIALOG_CANCELLATION |
+                  TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    cfg.cbSize = sizeof(cfg);
+    cfg.hwndParent = gWnd ? gWnd->hwnd : nullptr;
+    cfg.pszWindowTitle = L"SumatraPDF";
+    cfg.pszMainInstruction = CWStrTemp(fmt(_TRA("Cannot update %s").s, fileName));
+    cfg.pszContent = CWStrTemp(content);
+    cfg.dwFlags = flags;
+    cfg.pfCallback = MoveAsideBlockedDialogCallback;
+    cfg.lpCallbackData = (LONG_PTR)&ctx;
+    cfg.pButtons = buttons;
+    cfg.cButtons = 1;
+    cfg.nDefaultButton = IDCANCEL;
+    cfg.pszMainIcon = TD_WARNING_ICON;
+
+    logf("ShowMoveAsideBlockedDialog: '%s'\n", path);
+    TaskDialogIndirect(&cfg, nullptr, nullptr, nullptr);
+    logf("ShowMoveAsideBlockedDialog: done success=%d aborted=%d\n", (int)ctx.success, (int)ctx.aborted);
+    return ctx.success;
+}
+
+// Rename path to path+".copy" so a new file can be written. Returns false only
+// if the user aborts (interactive) or silent retries are exhausted.
+static bool MoveAsideInstallFile(Str installDir, Str fileName, bool silent) {
+    TempStr path = path::JoinTemp(installDir, fileName);
+    if (!file::Exists(path)) {
+        logf("MoveAsideInstallFile: no existing '%s'\n", path);
+        return true;
+    }
+    TempStr copyPath = str::JoinTemp(path, ".copy");
+    i64 existingSize = file::GetSize(path);
+    logf("MoveAsideInstallFile: '%s' (size=%lld) -> '%s' silent=%d\n", path, (long long)existingSize, copyPath,
+         (int)silent);
+
+    // Quick attempts without UI
     for (int attempt = 1; attempt <= 3; attempt++) {
-        logf("  rename attempt %d/3\n", attempt);
-        // Prefer atomic replace if .copy still exists
-        if (MoveFileExW(CWStrTemp(dllPath), CWStrTemp(copyPath), MOVEFILE_REPLACE_EXISTING)) {
-            logf("MoveAsideExistingLibmupdf: rename ok\n");
+        logf("  quick rename attempt %d/3\n", attempt);
+        if (str::EqI(fileName, StrL("PdfFilter.dll")) || str::EqI(fileName, StrL("PdfPreview.dll"))) {
+            StopWindowsSearchService();
+        }
+        if (TryRenameAsideOnce(path, copyPath)) {
             return true;
         }
-        DWORD err = GetLastError();
-        logf("  MoveFileEx failed lastError=%u\n", err);
-        LogLastError(err);
-        KillProcessesWithModule(dllPath, true);
-        if (attempt < 3) {
-            Sleep(250u * (DWORD)attempt);
-        }
+        KillProcessesWithModule(path, true);
+        Sleep(300u * (DWORD)attempt);
     }
 
-    logf("MoveAsideExistingLibmupdf: FAILED — file in use\n");
-    NotifyFailed(
-        _TRA("Could not update libmupdf.dll because it is in use by another program "
-             "(SumatraPDF, Windows Explorer preview, or search).\n"
-             "Close those programs and try again."));
-    return false;
+    if (silent) {
+        // Silent install: retry every 3s for ~60s, then fail.
+        for (int i = 0; i < 20; i++) {
+            logf("  silent rename retry %d/20 after 3s\n", i + 1);
+            Sleep(3000);
+            if (str::EqI(fileName, StrL("PdfFilter.dll")) || str::EqI(fileName, StrL("PdfPreview.dll"))) {
+                StopWindowsSearchService();
+            }
+            if (TryRenameAsideOnce(path, copyPath)) {
+                return true;
+            }
+        }
+        logf("MoveAsideInstallFile: silent FAILED for '%s'\n", path);
+        NotifyFailed(fmt(_TRA("Could not update %s because it is in use by another program. "
+                              "Stop Windows Search / close Explorer previews and try again. "
+                              "See https://www.sumatrapdfreader.org/docs/Installation")
+                             .s,
+                         fileName));
+        return false;
+    }
+
+    // Interactive: blocking dialog that retries every 3s until success or abort.
+    if (!ShowMoveAsideBlockedDialog(path, copyPath, fileName)) {
+        logf("MoveAsideInstallFile: user aborted for '%s'\n", path);
+        NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (file in use).").s, fileName));
+        return false;
+    }
+    return true;
+}
+
+// Rename lockable DLLs aside before extract so new files can be written freely.
+static bool PrepareInstallDirByRenaming(Str installDir, bool silent) {
+    logf("PrepareInstallDirByRenaming('%s' silent=%d)\n", installDir, (int)silent);
+    StopWindowsSearchService();
+    // Order: filter/preview first (often locked by Search/Explorer), then libmupdf.
+    static const Str kFiles[] = {
+        StrL("PdfFilter.dll"),
+        StrL("PdfPreview.dll"),
+        StrL("libmupdf.dll"),
+    };
+    for (Str name : kFiles) {
+        if (!MoveAsideInstallFile(installDir, name, silent)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void DeleteInstallCopyLeftovers(Str destDir) {
+    static const Str kCopies[] = {
+        StrL("libmupdf.dll.copy"),
+        StrL("PdfFilter.dll.copy"),
+        StrL("PdfPreview.dll.copy"),
+    };
+    for (Str name : kCopies) {
+        TempStr copyPath = path::JoinTemp(destDir, name);
+        if (!file::Exists(copyPath)) {
+            continue;
+        }
+        if (file::Delete(copyPath)) {
+            logf("  deleted leftover '%s'\n", copyPath);
+        } else {
+            logf("  could not delete leftover '%s' (ok to ignore)\n", copyPath);
+        }
+    }
 }
 
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
@@ -298,16 +536,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         ProgressStep();
     }
 
-    // leftover from MoveAsideExistingLibmupdf after a successful upgrade
-    TempStr copyPath = path::JoinTemp(destDir, StrL("libmupdf.dll.copy"));
-    if (file::Exists(copyPath)) {
-        if (file::Delete(copyPath)) {
-            logf("  deleted leftover '%s'\n", copyPath);
-        } else {
-            logf("  could not delete leftover '%s' (ok to ignore)\n", copyPath);
-        }
-    }
-
+    DeleteInstallCopyLeftovers(destDir);
     return true;
 }
 
@@ -462,6 +691,9 @@ static void InstallerThread(Flags* cli) {
     bool freeAllUsers = gPrevInstall.allUsers || allUsers;
     ShellExtInstallState removedExts{};
     FreeInstallationFilesInUse(cli->installDir, freeAllUsers, &removedExts);
+    // SearchIndexer often keeps PdfFilter.dll mapped after unregister; stop it
+    // before renames (started again in Exit).
+    StopWindowsSearchService();
 
     if (!ExtractInstallerFiles(cli->installDir)) {
         log("ExtractInstallerFiles() failed\n");
@@ -520,6 +752,8 @@ static void InstallerThread(Flags* cli) {
     log("Installer thread finished\n");
 Exit:
     str::Free(removedExts.installDir);
+    // Best-effort: restore search indexing after we may have stopped WSearch.
+    StartWindowsSearchService();
     // Pre-release debug report (no symbols download) so we learn about failed
     // upgrades (e.g. locked libmupdf.dll) with the install log attached.
     if (gInstallFailed) {
@@ -1389,10 +1623,11 @@ bool ExtractInstallerFiles(Str dir) {
         return false;
     }
 
-    // First: move any existing libmupdf.dll aside. If it's locked, abort before
-    // overwriting SumatraPDF.exe (which would leave a new exe + old DLL).
-    if (!MoveAsideExistingLibmupdf(dir)) {
-        log("ExtractInstallerFiles: MoveAsideExistingLibmupdf failed\n");
+    // Rename lockable DLLs aside (PdfFilter / PdfPreview / libmupdf) before
+    // extract. Dialog retries every 3s if a file stays locked; user can abort.
+    bool silent = gCliNew.silent || (gCli && gCli->silent);
+    if (!PrepareInstallDirByRenaming(dir, silent)) {
+        log("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n");
         return false;
     }
 
