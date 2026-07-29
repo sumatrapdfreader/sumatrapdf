@@ -30,6 +30,6 @@ TempStr GumboTextContentTemp(const GumboNode* node);
 
 // Returns a GumboOptions struct configured with our malloc/free wrappers
 // and otherwise-default values. We avoid the kGumboDefaultOptions data
-// extern because it's awkward to import across the libmupdf.dll boundary.
+// extern because it's awkward to import across the libsumatrapdf.dll boundary.
 GumboOptions GumboMakeOptions();
 GumboOptions GumboMakeXmlFragmentOptions();

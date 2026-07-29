@@ -11756,7 +11756,7 @@ void GetProgramInfo(str::Builder& s) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         TempStr dir = path::GetDirTemp(exePath);
-        TempStr dllPath = path::JoinTemp(dir, StrL("libmupdf.dll"));
+        TempStr dllPath = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
         s.Append(fmt("Dll: %s %s\r\n", dllPath, fileSizeDll));
     }

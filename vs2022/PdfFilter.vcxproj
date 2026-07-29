@@ -1089,8 +1089,8 @@
     <ProjectReference Include="base.vcxproj">
       <Project>{8078947C-6CAF-950D-159C-7B1001B2110F}</Project>
     </ProjectReference>
-    <ProjectReference Include="libmupdf.vcxproj">
-      <Project>{B812ACA6-A4DF-06B2-CDF8-F459B9243C40}</Project>
+    <ProjectReference Include="libsumatrapdf.vcxproj">
+      <Project>{53F4B5F1-BFB4-3128-88EF-7AA5F46E7604}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

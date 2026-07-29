@@ -1,5 +1,5 @@
 // this file is compiled as part of mupdf library and ends up
-// in libmupdf.dll, to avoid issues related to crossing .dll boundaries
+// in libsumatrapdf.dll, to avoid issues related to crossing .dll boundaries
 // It implements loading of Fonts included in windows
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"

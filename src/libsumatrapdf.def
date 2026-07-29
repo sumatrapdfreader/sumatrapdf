@@ -1,8 +1,8 @@
-; libmupdf.dll export list (hand-maintained)
+; libsumatrapdf.dll export list (hand-maintained)
 
 
 
-LIBRARY libmupdf
+LIBRARY libsumatrapdf
 
 EXPORTS
 
@@ -1767,7 +1767,7 @@ EXPORTS
 
 
 ; LzmaDecode / x86_Convert are NOT exported: LzmaSimpleArchive links them into
-; SumatraPDF.exe (and base) so the installer can extract libmupdf.dll without
+; SumatraPDF.exe (and base) so the installer can extract libsumatrapdf.dll without
 ; calling into the delay-loaded DLL.
 
 ; libwebp exports (needed for WebpReader)
@@ -1900,7 +1900,7 @@ EXPORTS
 	pkcs7_windows_distinguished_name
 
 ; cmark-gfm exports (required for MarkdownToc; also used by mupdf md.c).
-; Keep the cmark-gfm static-lib project; link it only into mupdf/libmupdf.dll
+; Keep the cmark-gfm static-lib project; link it only into mupdf/libsumatrapdf.dll
 ; and re-export these so SumatraPDF.exe does not carry a second copy.
 
 	cmark_find_syntax_extension
@@ -1924,7 +1924,7 @@ EXPORTS
 	cmark_render_html
 
 ; libarchive exports (required for base/Archive.cpp). Keep the libarchive
-; static-lib project; link it only into mupdf/libmupdf.dll (and static EXE)
+; static-lib project; link it only into mupdf/libsumatrapdf.dll (and static EXE)
 ; and re-export these so SumatraPDF.exe / PdfFilter / PdfPreview do not carry
 ; a second copy.
 
@@ -1948,7 +1948,7 @@ EXPORTS
 	archive_read_support_format_all
 
 ; unrar exports (required for base/Archive.cpp RAR fallback). Keep the unrar
-; static-lib project; link it only into libmupdf.dll (and static EXE) and
+; static-lib project; link it only into libsumatrapdf.dll (and static EXE) and
 ; re-export these so SumatraPDF.exe / PdfFilter / PdfPreview do not carry a
 ; second copy. Functions are PASCAL (stdcall); .def names stay undecorated.
 
@@ -1958,7 +1958,7 @@ EXPORTS
 	RARProcessFile
 
 ; chmdec exports (required for ChmFile / -dump-chm). Keep the chmdec static-lib
-; project; link it only into libmupdf.dll (and static EXE) and re-export these
+; project; link it only into libsumatrapdf.dll (and static EXE) and re-export these
 ; so SumatraPDF.exe / PdfFilter / PdfPreview do not carry a second copy.
 
 	chm_ctx_new

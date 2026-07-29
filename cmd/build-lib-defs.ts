@@ -231,7 +231,7 @@ export const libarchive: LibDef = {
       dir: "ext/a-bzip2",
       patterns: ["bzip2.c"],
     },
-    // LzmaDec/Bra* live in base/exe for LzSA (not in libmupdf/libarchive)
+    // LzmaDec/Bra* live in base/exe for LzSA (not in libsumatrapdf/libarchive)
     {
       dir: "ext/liblzma",
       patterns: [

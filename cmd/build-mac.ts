@@ -203,7 +203,7 @@ function makeLibarchive(outDir: string): LibDef {
         dir: "ext/a-bzip2",
         patterns: ["bzip2.c"],
       },
-      // LzmaDec/Bra* live in base/exe for LzSA (not in libmupdf/libarchive)
+      // LzmaDec/Bra* live in base/exe for LzSA (not in libsumatrapdf/libarchive)
       {
         dir: "ext/liblzma",
         patterns: [
@@ -913,7 +913,7 @@ async function buildMacApp(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "libsumatrapdf.a"),
     join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
     join(outDir, "lib", "libmujs.a"),
@@ -1015,7 +1015,7 @@ async function buildTestEngines(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "libsumatrapdf.a"),
     join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
     join(outDir, "lib", "libmujs.a"),

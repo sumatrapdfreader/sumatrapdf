@@ -7,7 +7,7 @@ SumatraPDF is distributed in several forms. Pick the one that matches how you wa
 | Flavor | What you get | Best for |
 | --- | --- | --- |
 | **Installer** (`SumatraPDF-<ver>-install.exe`) | Installs to `%LOCALAPPDATA%\SumatraPDF` (or `%PROGRAMFILES%` with `-all-users`), registers file associations, optional preview handler | Most users |
-| **Portable** (`SumatraPDF-<ver>.exe` downloaded as `SumatraPDF-<ver>.zip`) | Single self-contained `.exe` — no separate `libmupdf.dll`, settings live next to the exe | USB stick, custom folder, no installer |
+| **Portable** (`SumatraPDF-<ver>.exe` downloaded as `SumatraPDF-<ver>.zip`) | Single self-contained `.exe` — no separate `libsumatrapdf.dll`, settings live next to the exe | USB stick, custom folder, no installer |
 | **Extract only** (`-x`) | Unpack files without installing | IT scripts, inspection |
 
 Download from [sumatrapdfreader.org](https://www.sumatrapdfreader.org/download-free-pdf-viewer) or [pre-release](https://www.sumatrapdfreader.org/prerelease).
@@ -36,7 +36,7 @@ Common options — full list in [Installer cmd-line arguments](Installer-cmd-lin
 SumatraPDF-64-install.exe -x -d "C:\Temp\Sumatra"
 ```
 
-Extracts `SumatraPDF.exe`, `libmupdf.dll`, `sumatrapdf-tool.exe`, etc. into the target directory. Does **not** register file associations. Recent builds do not create Start Menu / desktop shortcuts when extracting only.
+Extracts `SumatraPDF.exe`, `libsumatrapdf.dll`, `sumatrapdf-tool.exe`, etc. into the target directory. Does **not** register file associations. Recent builds do not create Start Menu / desktop shortcuts when extracting only.
 
 ## Portable vs installed settings
 
@@ -57,7 +57,9 @@ SumatraPDF.exe -appdata "D:\Shared\SumatraSettings"
 
 All users sharing that path use the same `SumatraPDF-settings.txt`. Ensure the directory is writable by every account that runs SumatraPDF.
 
-## Upgrade fails: file in use (PdfFilter.dll / PdfPreview.dll / libmupdf.dll)
+## Upgrade fails: file in use (PdfFilter.dll / PdfPreview.dll / libsumatrapdf.dll)
+
+Through **3.6** the engine DLL was named `libmupdf.dll`; from **3.7** it is `libsumatrapdf.dll`.
 
 When upgrading, the installer renames existing DLLs aside before writing new ones. That can fail if Windows still has the old file open:
 
@@ -65,7 +67,7 @@ When upgrading, the installer renames existing DLLs aside before writing new one
 | --- | --- |
 | **PdfFilter.dll** | **Windows Search** (`SearchIndexer.exe`, `SearchFilterHost.exe`) after PDF IFilter registration |
 | **PdfPreview.dll** | **File Explorer** preview pane / `dllhost.exe` / `prevhost.exe` |
-| **libmupdf.dll** | Running **SumatraPDF**, Explorer preview, or Search filter hosts |
+| **libsumatrapdf.dll** | Running **SumatraPDF**, Explorer preview, or Search filter hosts |
 
 Typical Windows errors during install: **32** (sharing violation / file in use), **5** (access denied on replace/delete).
 
@@ -74,7 +76,7 @@ Typical Windows errors during install: **32** (sharing violation / file in use),
 1. Unregisters the search filter and preview handler (if installed)
 2. Stops the **Windows Search** service (`WSearch`) when possible
 3. Kills processes that still load install-dir modules
-4. Renames `PdfFilter.dll`, `PdfPreview.dll`, and `libmupdf.dll` to `*.copy`
+4. Renames `PdfFilter.dll`, `PdfPreview.dll`, and `libsumatrapdf.dll` to `*.copy`
 5. If a rename stays blocked, shows a dialog and **retries every few seconds** until success or you abort
 
 ### What you can do
@@ -93,12 +95,12 @@ If the install still fails, reboot and run the installer **before** opening PDFs
 
 If SumatraPDF reports a [corrupted installation](Corrupted-installation.md):
 
-- `libmupdf.dll` is missing next to `SumatraPDF.exe`, or
-- `libmupdf.dll` version does not match `SumatraPDF.exe`
+- `libsumatrapdf.dll` is missing next to `SumatraPDF.exe`, or
+- `libsumatrapdf.dll` version does not match `SumatraPDF.exe`
 
 **Fix:** run the official installer, use the portable exe, or extract with `-x` so both files match.
 
-Also see [Failed to load libmupdf.dll](Failed-to-load-libmupdf.md) if the app starts but cannot load the DLL (often antivirus).
+Also see [Failed to load libsumatrapdf.dll](Failed-to-load-libmupdf.md) if the app starts but cannot load the DLL (often antivirus).
 
 ## Installer runs when I open a PDF
 
@@ -127,7 +129,7 @@ After installing, follow [Set as default PDF viewer](Set-as-default-pdf-viewer.m
 
 ## See also
 
-- [Portable vs installer / libmupdf.dll](SumatraPDF-portable.md) — pre-3.7 vs 3.7 single-EXE layout, where the DLL is extracted, installer name / `-install` flag
+- [Portable vs installer / libsumatrapdf.dll](SumatraPDF-portable.md) — pre-3.7 vs 3.7 single-EXE layout, where the DLL is extracted, installer name / `-install` flag
 - [FAQ](FAQ.md)
 - [Corrupted installation](Corrupted-installation.md)
 - [Uninstalling SumatraPDF](Uninstalling-SumatraPDF.md)

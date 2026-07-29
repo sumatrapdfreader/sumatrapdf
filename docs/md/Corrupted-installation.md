@@ -10,12 +10,12 @@ SumatraPDF comes in two flavors: a portable version and an installer.
 
 A portable version is a self-contained executable and cannot be corrupted.
 
-An installer needs to be run to be properly installed. Part of it is extracting `libmupdf.dll` library.
+An installer needs to be run to be properly installed. Part of it is extracting the engine library (`libsumatrapdf.dll` from **3.7**; through **3.6** it was named `libmupdf.dll`).
 
 There are 2 possible problems:
 
-- `libmupdf.dll` is missing
-- `libmupdf.dll` is there but its version doesn't match the version of `SumatraPDF.exe`
+- `libsumatrapdf.dll` is missing
+- `libsumatrapdf.dll` is there but its version doesn't match the version of `SumatraPDF.exe`
 
 **How to solve the problem?**
 
@@ -25,4 +25,4 @@ If you insist on using the installable version, just install it. The installer w
 
 If you rename the `.exe`, you can force running the installer with `-install` option.
 
-Alternatively, you can extract `libmupdf.dll` and all other files with `-x` option.
+Alternatively, you can extract `libsumatrapdf.dll` and all other files with `-x` option.

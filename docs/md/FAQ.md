@@ -14,7 +14,7 @@ Use `-new-window` on the command line, or `Ctrl + Shift + N` in the app. See [Ta
 
 **SumatraPDF asks to install when I double-click a PDF**
 
-This usually means the `.exe` you are running has `-install` in its name (the installer renames itself that way) or `libmupdf.dll` is missing next to the executable. Download the [official build](https://www.sumatrapdfreader.org/download-free-pdf-viewer) and run the installer, or use the portable (self-contained) version. See [Installation](Installation.md) and [Corrupted installation](Corrupted-installation.md).
+This usually means the `.exe` you are running has `-install` in its name (the installer renames itself that way) or `libsumatrapdf.dll` is missing next to the executable. Download the [official build](https://www.sumatrapdfreader.org/download-free-pdf-viewer) and run the installer, or use the portable (self-contained) version. See [Installation](Installation.md) and [Corrupted installation](Corrupted-installation.md).
 
 **SumatraPDF is running as admin and cannot open files from a non-admin process**
 

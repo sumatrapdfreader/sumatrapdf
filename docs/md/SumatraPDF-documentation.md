@@ -9,7 +9,7 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 [Installation](Installation.md)
 
-[Portable vs installer / libmupdf.dll](SumatraPDF-portable.md)
+[Portable vs installer / libsumatrapdf.dll](SumatraPDF-portable.md) (through 3.6: `libmupdf.dll`)
 
 [Command Palette](Command-Palette.md)
 
@@ -151,7 +151,7 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 [Update check doesnt work?](Update-check-doesnt-work.md)
 
-[Failed to load libmupdf](Failed-to-load-libmupdf.md)
+[Failed to load libsumatrapdf.dll](Failed-to-load-libmupdf.md)
 
 [Corrupted installation](Corrupted-installation.md)
 

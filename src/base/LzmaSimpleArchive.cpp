@@ -15,8 +15,8 @@ Archives are simple to create (in SumatraPDF, we used to use lzma.exe and a pyth
 there's a tool for creating them in ../MakeLzSA.cpp
 
 LzmaDecode / x86_Convert come from ext/lzma/C (LzmaDec.c, Bra86.c) compiled into
-base and SumatraPDF.exe — not from libmupdf.dll (libarchive uses liblzma instead).
-The installer must decompress IDR_DLL_PAK (which contains libmupdf.dll) without
+base and SumatraPDF.exe — not from libsumatrapdf.dll (libarchive uses liblzma instead).
+The installer must decompress IDR_DLL_PAK (which contains libsumatrapdf.dll) without
 calling into that DLL.
 */
 

@@ -18,7 +18,7 @@ fills fine) plus a synthetic `formtest.pdf` for the field types the 1040 lacks.
 
 | Phase | Commit | What shipped |
 |-------|--------|--------------|
-| 0 | `1949ffa8a` | Click a checkbox / radio to toggle it in place. Needed: export the mupdf form-mutation APIs from `libmupdf.def`; make widgets hit-testable (mupdf 1.27 keeps them in a separate `page->widgets` list, so walk `pdf_first_widget` in `GetFzPageInfo`). |
+| 0 | `1949ffa8a` | Click a checkbox / radio to toggle it in place. Needed: export the mupdf form-mutation APIs from `libsumatrapdf.def`; make widgets hit-testable (mupdf 1.27 keeps them in a separate `page->widgets` list, so walk `pdf_first_widget` in `GetFzPageInfo`). |
 | 1 | `082faf66d` | Click a text field → floating Win32 `Edit` over the field (positioned via `CvtToScreen`), commit on Enter/blur via `pdf_set_text_field_value`. New `src/FormFields.cpp`. |
 | 2 | `627848a9f` | Combobox/listbox dropdown (`pdf_choice_widget_*`); radio groups with proper mutual exclusion. Two mupdf gotchas: regenerate the whole page (`pdf_update_page`) so radio siblings / calc fields refresh; `pdf_toggle_widget` mishandles distinct-on-state radios, so radios go through `pdf_set_field_value` instead. |
 | cleanup | `053e23d46` | Move widgets out of the shared annotation list into `FzPageInfo::widgets` + `GetWidgetAtPos`, so form fields stop polluting comment hovers / the edit-annotations panel. |

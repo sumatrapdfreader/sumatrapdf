@@ -80,19 +80,19 @@ Current integration points:
 | `src/ChmFile.cpp` / `src/ChmFile.h` | CHM document open / entry read |
 | `src/ChmDump.cpp` | `-dump-chm` diagnostics |
 | `src/SumatraTest.cpp` | `-test-chm` LZX / open regression |
-| `src/libmupdf.def` | Hand-maintained export list for `libmupdf.dll` |
+| `src/libsumatrapdf.def` | Hand-maintained export list for `libsumatrapdf.dll` |
 | `premake5.lua` | `chmdec` static lib project |
 | `ext/versions.txt` | Vendored dependency version log |
 
 ### 5. Update DLL exports (if API changed)
 
-chmdec is linked into `libmupdf.dll` (and into the static EXE). The DLL build of
+chmdec is linked into `libsumatrapdf.dll` (and into the static EXE). The DLL build of
 `SumatraPDF.exe`, `PdfFilter`, and `PdfPreview` must **not** also link the
-`chmdec` static lib — they import `chm_*` from `libmupdf.dll` via
-`src/libmupdf.def`.
+`chmdec` static lib — they import `chm_*` from `libsumatrapdf.dll` via
+`src/libsumatrapdf.def`.
 
 When new public functions are added, append them to the `; chmdec exports`
-section in `src/libmupdf.def`.
+section in `src/libsumatrapdf.def`.
 
 Current chmdec exports:
 
@@ -135,4 +135,4 @@ Imported dist/chm.c and dist/chm.h from https://github.com/kjk/chmdec @ <full-ha
 - The static library project is named `chmdec` in premake / MSBuild; sources
   keep the historical `chm_*` C API names.
 - Static `SumatraPDF-static` and `test_engines` still link `chmdec` directly
-  (no `libmupdf.dll`). The DLL-split products import via def exports only.
+  (no `libsumatrapdf.dll`). The DLL-split products import via def exports only.

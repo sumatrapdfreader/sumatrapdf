@@ -571,7 +571,7 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
 static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
     fz_stream* stm = nullptr;
     // TODO: we copy so that the memory ends up in chunk allocated
-    // by libmupdf so that it works across dll boundaries.
+    // by libsumatrapdf so that it works across dll boundaries.
     // We can either use  fz_new_buffer_from_shared_data
     // and free the data on the side or create Allocator that
     // uses fz_malloc_no_throw and pass it to ReadFileWithArena

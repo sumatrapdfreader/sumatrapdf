@@ -429,16 +429,17 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
 }
 
 // Kill processes that have any of our install-dir modules loaded:
-// libmupdf.dll, PdfFilter.dll, PdfPreview.dll, browser plugin, SumatraPDF.exe.
+// libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, browser plugin, SumatraPDF.exe.
 // dllhost/prevhost/SearchFilterHost load the shell-extension DLLs; they may
-// keep PdfFilter.dll locked even after libmupdf.dll was renamed aside.
+// keep PdfFilter.dll locked even after libsumatrapdf.dll was renamed aside.
 // returns false if there are processes and we failed to kill them
 static bool KillProcessesUsingInstallationDir(Str dir) {
     logf("KillProcessesUsingInstallationDir('%s')\n", dir);
     if (!dir) {
         return true;
     }
-    TempStr libmupdf = path::JoinTemp(dir, StrL("libmupdf.dll"));
+    TempStr libsumatrapdf = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
+    TempStr libmupdfLegacy = path::JoinTemp(dir, StrL("libmupdf.dll")); // through 3.6
     TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
     TempStr filterDll = path::JoinTemp(dir, kSearchFilterDllName);
     TempStr previewDll = path::JoinTemp(dir, kPreviewDllName);
@@ -455,8 +456,9 @@ static bool KillProcessesUsingInstallationDir(Str dir) {
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
         DWORD procID = proc.th32ProcessID;
-        bool uses = IsProcessUsingFiles(procID, libmupdf, browserPlugin) ||
-                    IsProcessUsingFiles(procID, filterDll, previewDll) || IsProcessUsingFiles(procID, exePath, nullptr);
+        bool uses = IsProcessUsingFiles(procID, libsumatrapdf, libmupdfLegacy) ||
+                    IsProcessUsingFiles(procID, browserPlugin, filterDll) ||
+                    IsProcessUsingFiles(procID, previewDll, exePath);
         if (uses) {
             TempStr s = ToUtf8Temp(proc.szExeFile);
             logf("  attempting to kill process %d '%s'\n", (int)procID, s);
@@ -471,7 +473,7 @@ static bool KillProcessesUsingInstallationDir(Str dir) {
     }
 
     // Also target by module path (covers short-lived filter hosts).
-    const TempStr modulePaths[] = {libmupdf, filterDll, previewDll, exePath, browserPlugin};
+    const TempStr modulePaths[] = {libsumatrapdf, libmupdfLegacy, filterDll, previewDll, exePath, browserPlugin};
     for (TempStr mod : modulePaths) {
         if (file::Exists(mod)) {
             int n = KillProcessesWithModule(mod, true);
@@ -551,14 +553,15 @@ void RestoreShellExtensions(const ShellExtInstallState& state) {
 }
 
 // return names of processes that are running part of the installation
-// (i.e. have libmupdf.dll, PdfFilter.dll, PdfPreview.dll, or plugin loaded)
+// (i.e. have libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, or plugin loaded)
 static void ProcessesUsingInstallation(StrVec& names) {
     log("ProcessesUsingInstallation()\n");
     TempStr dir = GetExistingInstallationDirTemp();
     if (!dir) {
         return;
     }
-    TempStr libmupdf = path::JoinTemp(dir, StrL("libmupdf.dll"));
+    TempStr libsumatrapdf = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
+    TempStr libmupdfLegacy = path::JoinTemp(dir, StrL("libmupdf.dll")); // through 3.6
     TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
     TempStr filterDll = path::JoinTemp(dir, kSearchFilterDllName);
     TempStr previewDll = path::JoinTemp(dir, kPreviewDllName);
@@ -574,8 +577,9 @@ static void ProcessesUsingInstallation(StrVec& names) {
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
         DWORD procID = proc.th32ProcessID;
-        bool uses = IsProcessUsingFiles(procID, libmupdf, browserPlugin) ||
-                    IsProcessUsingFiles(procID, filterDll, previewDll) || IsProcessUsingFiles(procID, exePath, nullptr);
+        bool uses = IsProcessUsingFiles(procID, libsumatrapdf, libmupdfLegacy) ||
+                    IsProcessUsingFiles(procID, browserPlugin, filterDll) ||
+                    IsProcessUsingFiles(procID, previewDll, exePath);
         if (uses) {
             // TODO: this kils ReadableProcName logic
             TempStr s = ToUtf8Temp(proc.szExeFile);

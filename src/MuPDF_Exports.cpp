@@ -1,10 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Re-declare variables for when building libmupdf.dll,
+// Re-declare variables for when building libsumatrapdf.dll,
 // as exporting/importing them prevents sharing of .obj
 // files for all files using them - instead we can just
-// link this file along libmupdf.lib and omit it when
+// link this file along libsumatrapdf.lib and omit it when
 // building a static SumatraPDF.exe.
 
 #include "base/Base.h"
@@ -22,7 +22,7 @@ extern "C" {
 
 // copied from mupdf/source/fitz/geometry.c
 // Values MUST match upstream exactly: in DLL builds these symbols shadow
-// the ones in libmupdf.dll for the EXE side, but the DLL's own code keeps
+// the ones in libsumatrapdf.dll for the EXE side, but the DLL's own code keeps
 // using its internal values. A stale value here means EXE-side code passes
 // a different "constant" than the DLL expects, which silently corrupts
 // behavior (e.g. fz_infinite_rect as scissor culls every draw call).

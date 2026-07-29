@@ -1,15 +1,17 @@
-# Portable vs installer (and how `libmupdf.dll` is loaded)
+# Portable vs installer (and how `libsumatrapdf.dll` is loaded)
 
-This page explains how SumatraPDF’s **portable** and **installable** layouts work, what changed in **3.7**, and why you sometimes see `libmupdf.dll` on disk even with a “single” executable.
+This page explains how SumatraPDF’s **portable** and **installable** layouts work, what changed in **3.7**, and why you sometimes see `libsumatrapdf.dll` on disk even with a “single” executable.
 
-See also [Installation](Installation.md), [Corrupted installation](Corrupted-installation.md), and [Failed to load libmupdf](Failed-to-load-libmupdf.md).
+**DLL name:** through **3.6** the companion engine DLL was **`libmupdf.dll`**. From **3.7** it is **`libsumatrapdf.dll`**. This page uses the 3.7+ name; older installs and logs may still show `libmupdf.dll`.
+
+See also [Installation](Installation.md), [Corrupted installation](Corrupted-installation.md), and [Failed to load libsumatrapdf.dll](Failed-to-load-libmupdf.md).
 
 ## Before 3.7: two different product shapes
 
 | Flavor | What users got | Layout |
 |--------|----------------|--------|
-| **Installer** | Run an installer; files under Program Files or `%LOCALAPPDATA%` | Multiple files on disk: `SumatraPDF.exe`, **`libmupdf.dll`**, and optional helpers such as **`PdfPreview.dll`** (Explorer preview) and the **search filter** (ifilter) DLL when registered |
-| **Portable** | Download a zip / single program | **One self-contained `.exe`** — no separate `libmupdf.dll` next to the app for normal use |
+| **Installer** | Run an installer; files under Program Files or `%LOCALAPPDATA%` | Multiple files on disk: `SumatraPDF.exe`, **`libsumatrapdf.dll`**, and optional helpers such as **`PdfPreview.dll`** (Explorer preview) and the **search filter** (ifilter) DLL when registered |
+| **Portable** | Download a zip / single program | **One self-contained `.exe`** — no separate `libsumatrapdf.dll` next to the app for normal use |
 
 That meant two build/distribution artifacts: an installable multi-file executable and a portable single-file executable.
 
@@ -22,13 +24,13 @@ Starting with **3.7**, the **same** `SumatraPDF.exe` binary can:
 
 **Benefit:** we only need to **build and ship one executable** for the main app (plus optional tools). Installer and portable are no longer two different executables.
 
-### Why `libmupdf.dll` still appears on disk
+### Why `libsumatrapdf.dll` still appears on disk
 
-MuPDF lives in **`libmupdf.dll`**, which is **delay-loaded** and also **embedded** inside the EXE (compressed resource). Windows can only load a normal DLL from a **file path** with `LoadLibrary` — not straight out of the EXE’s resources.
+MuPDF lives in **`libsumatrapdf.dll`**, which is **delay-loaded** and also **embedded** inside the EXE (compressed resource). Windows can only load a normal DLL from a **file path** with `LoadLibrary` — not straight out of the EXE’s resources.
 
-So for the unified single-EXE design to work, SumatraPDF must **extract** `libmupdf.dll` to disk at least once, then load it. That is the cost of merging portable and installer into one binary.
+So for the unified single-EXE design to work, SumatraPDF must **extract** `libsumatrapdf.dll` to disk at least once, then load it. That is the cost of merging portable and installer into one binary.
 
-(Static-linked special builds that bake MuPDF into the EXE do not embed/extract `libmupdf.dll`; the public downloads use the DLL model.)
+(Static-linked special builds that bake MuPDF into the EXE do not embed/extract `libsumatrapdf.dll`; the public downloads use the DLL model.)
 
 ## How we choose installer mode vs app mode
 
@@ -45,21 +47,21 @@ So:
 - Running without that name as a normal app → viewer mode (portable or already-installed layout).  
 - You can force install with `-install` even if you renamed the EXE.
 
-If the name looks like an installed app but `libmupdf.dll` next to the EXE is **missing** or the **wrong size** (does not match the copy embedded in this EXE), Sumatra may treat the layout as a **corrupted installation** and stop — see [Corrupted installation](Corrupted-installation.md). Use the installer, portable load path, or **`-x`** extract so EXE and DLL match.
+If the name looks like an installed app but `libsumatrapdf.dll` next to the EXE is **missing** or the **wrong size** (does not match the copy embedded in this EXE), Sumatra may treat the layout as a **corrupted installation** and stop — see [Corrupted installation](Corrupted-installation.md). Use the installer, portable load path, or **`-x`** extract so EXE and DLL match.
 
-## Where `libmupdf.dll` is extracted / loaded
+## Where `libsumatrapdf.dll` is extracted / loaded
 
-On startup, SumatraPDF tries to load a DLL whose **file size matches** the embedded `libmupdf.dll` (avoids using a leftover DLL from another build).
+On startup, SumatraPDF tries to load a DLL whose **file size matches** the embedded `libsumatrapdf.dll` (avoids using a leftover DLL from another build).
 
 Order of attempts (simplified):
 
 1. **Next to the executable**  
-   `…\libmupdf.dll` beside `SumatraPDF.exe`  
+   `…\libsumatrapdf.dll` beside `SumatraPDF.exe`  
    - Typical **after a full install** or after **`-x` extract**.  
    - Load only (no extract) if the size already matches.
 
 2. **Build-specific data directory under Local AppData** (portable / single-exe path when the DLL is not already beside the EXE):  
-   `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\libmupdf.dll`  
+   `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\libsumatrapdf.dll`  
    - `<build-id>` is a short hex id derived from a hash of **this** EXE (so different builds do not share one DLL).  
    - Sumatra **extracts** the embedded DLL here if needed, then loads it.  
    - Same tree is used for other non-settings data (logs, crash info, caches) for that build.
@@ -68,7 +70,7 @@ Order of attempts (simplified):
 
 So:
 
-| Situation | Typical `libmupdf.dll` location |
+| Situation | Typical `libsumatrapdf.dll` location |
 |-----------|----------------------------------|
 | Installed via installer / extracted with `-x` | Same folder as `SumatraPDF.exe` |
 | Portable / single-exe first run | `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\` |
@@ -77,14 +79,14 @@ Settings still follow portable vs installed rules separately (settings next to t
 
 ## Portable mode (settings / data next to the EXE)
 
-“Portable mode” for **settings** means: not considered an installed copy (not under Program Files / known install location). Then settings and some caches prefer the directory of the executable (if writable). That is separate from “single EXE that still extracts `libmupdf.dll` to AppData.”
+“Portable mode” for **settings** means: not considered an installed copy (not under Program Files / known install location). Then settings and some caches prefer the directory of the executable (if writable). That is separate from “single EXE that still extracts `libsumatrapdf.dll` to AppData.”
 
 ## Summary
 
 | Topic | Detail |
 |-------|--------|
-| **Pre-3.7** | Installer = multi-file (`SumatraPDF.exe` + `libmupdf.dll` + preview/ifilter DLLs as installed); portable = single self-contained EXE |
-| **3.7+** | Same EXE is installer *and* app; MuPDF still needs a real `libmupdf.dll` file on disk |
+| **Through 3.6** | Installer = multi-file (`SumatraPDF.exe` + **`libmupdf.dll`** + preview/ifilter DLLs as installed); portable = single self-contained EXE |
+| **3.7+** | Same EXE is installer *and* app; engine DLL is **`libsumatrapdf.dll`** (renamed from `libmupdf.dll`); still needs a real DLL file on disk |
 | **Installer trigger** | Name contains `install` (not `uninstall`), and/or `-install` (etc.) |
 | **DLL extract** | Embedded DLL → preferably next to EXE if already installed; else `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\` |
 | **Why** | One binary to build and distribute; Windows requires loading DLL from disk |
@@ -94,5 +96,5 @@ Settings still follow portable vs installed rules separately (settings next to t
 - [Installation](Installation.md)  
 - [Installer cmd-line arguments](Installer-cmd-line-arguments.md)  
 - [Corrupted installation](Corrupted-installation.md)  
-- [Failed to load libmupdf](Failed-to-load-libmupdf.md)  
+- [Failed to load libsumatrapdf.dll](Failed-to-load-libmupdf.md)  
 - [How we store settings](How-we-store-settings.md)

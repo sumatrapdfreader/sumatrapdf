@@ -333,7 +333,7 @@ async function buildSmoke(): Promise<void> {
     makeLzsa,
     [
       "SumatraPDF.pdb.lzsa",
-      "libmupdf.pdb:libmupdf.pdb",
+      "libsumatrapdf.pdb:libsumatrapdf.pdb",
       "SumatraPDF.pdb:SumatraPDF.pdb",
     ],
     outDir,
