@@ -48,7 +48,7 @@ Open the panel with **View → Codex chat** (`CmdAIChatWithOpenAICodex`), or sea
 
 Codex settings are in the `CodexBuild` section of [advanced settings](Advanced-options-settings.md). The **Skip Sandbox** checkbox passes `--dangerously-bypass-approvals-and-sandbox` to Codex — use only if you understand the security implications.
 
-In the chat panel you can pick a model (default `gpt-5.5`; `gpt-5.4` and `o3` are also available) and a sandbox mode: **Read-only**, **Workspace write**, or **Full access**.
+The first time you open the Codex chat panel in an app session, SumatraPDF asks the signed-in Codex CLI which models are available and uses them in the model picker. If that query fails, the picker falls back to `gpt-5.5`, `gpt-5.4`, and `o3`. You can also pick a sandbox mode: **Read-only**, **Workspace write**, or **Full access**.
 
 ## How to use
 

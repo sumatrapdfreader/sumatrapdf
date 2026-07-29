@@ -345,7 +345,7 @@ const codexBuild: Field[] = [
     "Models",
     Str,
     "",
-    "extra Codex model IDs for the dropdown, comma-separated; gpt-5.5, gpt-5.4, and o3 are always included",
+    "extra Codex model IDs for the dropdown, comma-separated; used in addition to models reported by Codex",
   ),
   field("Sandbox", Int, 1, "Codex sandbox mode: 0=read-only, 1=workspace-write, 2=danger-full-access"),
   field("SkipSandbox", Bool, false, "if true, pass --dangerously-bypass-approvals-and-sandbox to Codex"),

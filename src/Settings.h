@@ -173,8 +173,8 @@ struct GrokBuild {
 struct CodexBuild {
     // Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)
     Str model;
-    // extra Codex model IDs for the dropdown, comma-separated; gpt-5.5,
-    // gpt-5.4, and o3 are always included
+    // extra Codex model IDs for the dropdown, comma-separated; used in
+    // addition to models reported by Codex
     Str models;
     // Codex sandbox mode: 0=read-only, 1=workspace-write,
     // 2=danger-full-access
@@ -936,8 +936,8 @@ static const FieldInfo gCodexBuildFields[] = {
 };
 static const StructInfo gCodexBuildInfo = {
     sizeof(CodexBuild), 5, gCodexBuildFields, "Model\0Models\0Sandbox\0SkipSandbox\0BgColor",
-    "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)\0extra Codex model IDs for the dropdown, comma-separated; "
-    "gpt-5.5, gpt-5.4, and o3 are always included\0Codex sandbox mode: 0=read-only, 1=workspace-write, "
+    "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)\0extra Codex model IDs for the dropdown, comma-separated; used "
+    "in addition to models reported by Codex\0Codex sandbox mode: 0=read-only, 1=workspace-write, "
     "2=danger-full-access\0if true, pass --dangerously-bypass-approvals-and-sandbox to Codex\0background color of the "
     "OpenAI Codex chat panel"};
 

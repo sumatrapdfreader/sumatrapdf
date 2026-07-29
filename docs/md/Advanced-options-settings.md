@@ -425,8 +425,8 @@ CodexBuild [
     ; Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)
     Model = gpt-5.5
 
-    ; extra Codex model IDs for the dropdown, comma-separated; gpt-5.5, gpt-5.4,
-    ; and o3 are always included
+    ; extra Codex model IDs for the dropdown, comma-separated; used in addition
+    ; to models reported by Codex
     Models = 
 
     ; Codex sandbox mode: 0=read-only, 1=workspace-write, 2=danger-full-access

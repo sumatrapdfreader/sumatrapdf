@@ -6,6 +6,7 @@
 #include "base/Base.h"
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
+#include "base/JsonParser.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -40,6 +41,134 @@ TempStr CodexBuildExecutablePathTemp() {
 
 static Mutex gCodexBuildLogMutex;
 static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, "gpt-5.5-log.txt", "gpt-5.5"};
+static bool gTriedCodexModels = false;
+static StrVec gCodexModels;
+
+struct CodexModelsVisitor : json::ValueVisitor {
+    bool isModelListResponse = false;
+    StrVec models;
+
+    bool Visit(Str path, Str value, json::Type type) override {
+        if (str::Eq(path, "/id") && type == json::Type::Number && str::Eq(value, "2")) {
+            isModelListResponse = true;
+        } else if (str::StartsWith(path, "/result/data[") && str::EndsWith(path, "]/model") &&
+                   type == json::Type::String) {
+            AIChatAppendModelUnique(models, value);
+        }
+        return true;
+    }
+};
+
+static bool ParseCodexModelsResponse(Str output, StrVec& models) {
+    Str rest = output;
+    Str line;
+    while (str::NextLine(rest, line, rest)) {
+        CodexModelsVisitor visitor;
+        if (json::Parse(line, &visitor) && visitor.isModelListResponse && len(visitor.models) > 0) {
+            models = visitor.models;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Ask the authenticated Codex CLI for the same model catalog used by its picker.
+// The app-server API is experimental, so every failure leaves the built-in list in use.
+static bool QueryCodexModels(Str exePath, StrVec& models) {
+    SECURITY_ATTRIBUTES sa = {sizeof(sa), nullptr, TRUE};
+    HANDLE hStdoutRead = nullptr;
+    HANDLE hStdoutWrite = nullptr;
+    HANDLE hStdinRead = nullptr;
+    HANDLE hStdinWrite = nullptr;
+    auto closeHandle = [](HANDLE& h) {
+        if (h) {
+            CloseHandle(h);
+            h = nullptr;
+        }
+    };
+    if (!CreatePipe(&hStdoutRead, &hStdoutWrite, &sa, 0) ||
+        !SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0) || !CreatePipe(&hStdinRead, &hStdinWrite, &sa, 0) ||
+        !SetHandleInformation(hStdinWrite, HANDLE_FLAG_INHERIT, 0)) {
+        closeHandle(hStdinRead);
+        closeHandle(hStdinWrite);
+        closeHandle(hStdoutRead);
+        closeHandle(hStdoutWrite);
+        return false;
+    }
+
+    STARTUPINFOW si = {};
+    si.cb = sizeof(si);
+    si.hStdInput = hStdinRead;
+    si.hStdOutput = hStdoutWrite;
+    si.hStdError = hStdoutWrite;
+    si.dwFlags = STARTF_USESTDHANDLES;
+
+    PROCESS_INFORMATION pi = {};
+    TempStr cmdLine = fmt("%s app-server --stdio", QuoteCmdLineArgTemp(exePath));
+    if (!CreateProcessW(nullptr, CWStrTemp(cmdLine), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, nullptr, &si,
+                        &pi)) {
+        closeHandle(hStdinRead);
+        closeHandle(hStdinWrite);
+        closeHandle(hStdoutRead);
+        closeHandle(hStdoutWrite);
+        return false;
+    }
+    CloseHandle(pi.hThread);
+    closeHandle(hStdinRead);
+    closeHandle(hStdoutWrite);
+
+    Str request = StrL(
+        "{\"method\":\"initialize\",\"id\":1,\"params\":{\"clientInfo\":{\"name\":\"SumatraPDF\",\"version\":\"3.7\"}}}"
+        "\n"
+        "{\"method\":\"model/list\",\"id\":2,\"params\":{\"limit\":100,\"includeHidden\":false}}\n");
+    DWORD nWritten = 0;
+    bool wroteRequest =
+        WriteFile(hStdinWrite, request.s, (DWORD)request.len, &nWritten, nullptr) && nWritten == (DWORD)request.len;
+    if (!wroteRequest) {
+        closeHandle(hStdinWrite);
+        TerminateProcess(pi.hProcess, 0);
+        CloseHandle(pi.hProcess);
+        closeHandle(hStdoutRead);
+        return false;
+    }
+
+    str::Builder output;
+    ULONGLONG deadline = GetTickCount64() + 3000;
+    while (GetTickCount64() < deadline && output.len < 1024 * 1024) {
+        DWORD available = 0;
+        if (!PeekNamedPipe(hStdoutRead, nullptr, 0, nullptr, &available, nullptr)) {
+            break;
+        }
+        if (available > 0) {
+            char buf[4096];
+            DWORD nRead = 0;
+            DWORD toRead = std::min<DWORD>(available, dimof(buf));
+            if (!ReadFile(hStdoutRead, buf, toRead, &nRead, nullptr) || nRead == 0) {
+                break;
+            }
+            output.Append(Str(buf, (int)nRead));
+            if (ParseCodexModelsResponse(ToStr(output), models)) {
+                closeHandle(hStdinWrite);
+                TerminateProcess(pi.hProcess, 0);
+                CloseHandle(pi.hProcess);
+                closeHandle(hStdoutRead);
+                return true;
+            }
+            continue;
+        }
+        if (WaitForSingleObject(pi.hProcess, 10) != WAIT_TIMEOUT) {
+            break;
+        }
+        Sleep(10);
+    }
+    closeHandle(hStdinWrite);
+    if (WaitForSingleObject(pi.hProcess, 0) == WAIT_TIMEOUT) {
+        TerminateProcess(pi.hProcess, 0);
+    }
+    CloseHandle(pi.hProcess);
+    closeHandle(hStdoutRead);
+    return false;
+}
 
 // --- Session history ---
 
@@ -420,9 +549,22 @@ struct CodexBuildProvider : AIChatProvider {
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
-        AIChatAppendModelUnique(models, "gpt-5.5");
-        AIChatAppendModelUnique(models, "gpt-5.4");
-        AIChatAppendModelUnique(models, "o3");
+        if (!gTriedCodexModels) {
+            gTriedCodexModels = true;
+            TempStr exePath = FindCodexExecutableTemp();
+            if (exePath && QueryCodexModels(exePath, gCodexModels)) {
+                defaultModel = gCodexModels[0];
+            }
+        }
+        if (len(gCodexModels) > 0) {
+            for (int i = 0; i < len(gCodexModels); i++) {
+                AIChatAppendModelUnique(models, gCodexModels[i]);
+            }
+        } else {
+            AIChatAppendModelUnique(models, "gpt-5.5");
+            AIChatAppendModelUnique(models, "gpt-5.4");
+            AIChatAppendModelUnique(models, "o3");
+        }
         Str extra = gGlobalPrefs->codexBuild.models;
         if (len(extra) > 0) {
             StrVec parts;
