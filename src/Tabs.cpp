@@ -128,6 +128,14 @@ void RemoveTab(WindowTab* tab) {
     MainWindow* win = tab->win;
     win->tabSelectionHistory->Remove(tab);
     int idx = win->GetTabIdx(tab);
+    bool leavesOnlyHome = false;
+    if (win->TabCount() == 2) {
+        WindowTab* other = win->GetTab(idx == 0 ? 1 : 0);
+        leavesOnlyHome = other->IsAboutTab();
+    }
+    if (leavesOnlyHome) {
+        ShowTabBar(win, false);
+    }
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
     bool closedCurrentTab = (tab == win->CurrentTab());
@@ -135,7 +143,9 @@ void RemoveTab(WindowTab* tab) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
     }
-    UpdateTabWidth(win);
+    if (!leavesOnlyHome) {
+        UpdateTabWidth(win);
+    }
 
     int nTabs = win->TabCount();
     if (nTabs < 1) {
