@@ -1735,7 +1735,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
         args.msg = _TRA("Synchronization file cannot be opened");
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        buf = fmt(_TRA("Page number %u nonexistent").s, page);
+        buf = fmt(_TRA("Page %u does not exist").s, page);
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
         args.msg = _TRA("No synchronization info at this position");
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {

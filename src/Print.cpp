@@ -457,9 +457,6 @@ Printer* NewPrinter(Str printerName) {
     /* ask for the size of DEVMODE struct */
     structSize = DocumentPropertiesW(nullptr, hPrinter, printerNameW, nullptr, nullptr, 0);
     if (structSize < sizeof(DEVMODEW)) {
-        // if (displayErrors) {
-        //    MessageBoxWarning(nullptr, _TRA("Could not obtain Printer properties"), _TRA("Printing problem."));
-        //}
         goto Exit;
     }
     devMode = (DEVMODEW*)AllocZero(nullptr, structSize);
@@ -467,9 +464,6 @@ Printer* NewPrinter(Str printerName) {
     // Get the default DevMode for the printer and modify it for your needs.
     ret = DocumentPropertiesW(nullptr, hPrinter, printerNameW, devMode, nullptr, DM_OUT_BUFFER);
     if (IDOK != ret) {
-        // if (displayErrors) {
-        //    MessageBoxWarning(nullptr, _TRA("Could not obtain Printer properties"), _TRA("Printing problem."));
-        //}
         goto Exit;
     }
 

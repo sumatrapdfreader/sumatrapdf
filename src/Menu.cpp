@@ -873,7 +873,7 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
     //    CmdCreateAnnotPolygon,
     //},
     //{
-    //    _TRN("Poly Line"),
+    //    _TRN("Polyline"),
     //    CmdCreateAnnotPolyLine,
     //},
     //{ _TRN("Ink"), CmdCreateAnnotInk, },

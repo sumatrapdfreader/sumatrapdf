@@ -898,9 +898,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             HwndSetDlgItemText(hDlg, IDC_USE_TABS, _TRA("Use &tabs"));
             HwndSetDlgItemText(hDlg, IDC_CHECK_FOR_UPDATES, _TRA("Automatically check for &updates"));
             HwndSetDlgItemText(hDlg, IDC_REMEMBER_OPENED_FILES, _TRA("Remember &opened files"));
-            HwndSetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TRA("Set inverse search command-line"));
+            HwndSetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TRA("Set inverse search command line"));
             HwndSetDlgItemText(hDlg, IDC_CMDLINE_LABEL,
-                               _TRA("Enter the command-line to invoke when you double-click on the PDF document:"));
+                               _TRA("Enter the command line to invoke when you double-click on the PDF document:"));
             HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
@@ -971,10 +971,10 @@ static INT_PTR CALLBACK Dialog_SetInverseSearch_Proc(HWND hDlg, UINT msg, WPARAM
             if (UseDarkModeLib()) {
                 DarkMode::setDarkWndSafe(hDlg);
             }
-            HwndSetText(hDlg, _TRA("Set inverse search command-line"));
-            HwndSetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TRA("Set inverse search command-line"));
+            HwndSetText(hDlg, _TRA("Set inverse search command line"));
+            HwndSetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TRA("Set inverse search command line"));
             HwndSetDlgItemText(hDlg, IDC_CMDLINE_LABEL,
-                               _TRA("Enter the command-line to invoke when you double-click on the PDF document:"));
+                               _TRA("Enter the command line to invoke when you double-click on the PDF document:"));
             HwndSetDlgItemText(hDlg, IDC_INVERSE_SEARCH_HELP, _TRA("Help"));
             HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
@@ -1519,8 +1519,8 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
                 int idx = ctlId - IDC_BGCOL_PRESET_FIRST;
                 COLORREF col = kBgPresetColors[idx];
                 if (col == kColorUnset) {
-                    HdcPaintCheckerboard(dis->hDC, dis->rcItem.left, dis->rcItem.top, dis->rcItem.right - dis->rcItem.left,
-                                      dis->rcItem.bottom - dis->rcItem.top);
+                    HdcPaintCheckerboard(dis->hDC, dis->rcItem.left, dis->rcItem.top,
+                                         dis->rcItem.right - dis->rcItem.left, dis->rcItem.bottom - dis->rcItem.top);
                 } else {
                     HBRUSH br = CreateSolidBrush(col);
                     FillRect(dis->hDC, &dis->rcItem, br);

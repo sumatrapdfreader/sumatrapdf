@@ -366,7 +366,7 @@ struct GrokBuildProvider : AIChatProvider {
     TempStr TitleTemp() override { return str::DupTemp(_TRA("Grok chat")); }
 
     TempStr NotInstalledInstructionTemp() override {
-        return str::DupTemp(_TRA("Grok Build cli must be installed for this functionality"));
+        return str::DupTemp(_TRA("Install Grok Build to use this feature."));
     }
 
     TempStr FindExecutableTemp() override { return FindGrokExecutableTemp(); }

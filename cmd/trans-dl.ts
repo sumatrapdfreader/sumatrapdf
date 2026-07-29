@@ -41,6 +41,7 @@ import { commands } from "./gen-commands";
 // strings that should not be sent for translation
 // (e.g. command names whose display text is set dynamically)
 const translationBlacklist: string[] = [
+  "don't use",
   "Toggle Windows Previewer",
   "Toggle Windows Search Filter",
 ];

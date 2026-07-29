@@ -67,7 +67,7 @@ Str AnnotationReadableNameTemp(AnnotationType tp) {
         case AnnotationType::Polygon:
             return TranslateAnnotTypeNameTemp(_TRN("Polygon"));
         case AnnotationType::PolyLine:
-            return TranslateAnnotTypeNameTemp(_TRN("Poly Line"));
+            return TranslateAnnotTypeNameTemp(_TRN("Polyline"));
         case AnnotationType::Highlight:
             return TranslateAnnotTypeNameTemp(_TRN("Highlight"), StrL("&Highlight"));
         case AnnotationType::Underline:

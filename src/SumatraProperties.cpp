@@ -923,7 +923,7 @@ struct GetFontsResult {
 static void OnGetFontsFinished(GetFontsResult* result) {
     PropertiesWnd* w = FindPropertyWindowByHwnd(result->hwnd);
     if (w) {
-        Str marker = _TRA("Getting fonts information...");
+        Str marker = _TRA("Getting font information...");
         Str props = ToStr(w->propsText);
         int pos = str::IndexOf(props, marker);
         if (pos >= 0) {
@@ -976,7 +976,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     GetPropsText(ctrl, wnd->propsText);
     AlignPropertiesText(wnd->propsText);
     wnd->propsText.Append("\n");
-    wnd->propsText.Append(_TRA("Getting fonts information..."));
+    wnd->propsText.Append(_TRA("Getting font information..."));
 
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnPropertiesClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnPropertiesDestroy);

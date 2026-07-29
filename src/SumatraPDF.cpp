@@ -3781,7 +3781,7 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     str::Builder msg;
-    msg.Append(fmt(_TRA("Saving of '%s' failed with: '%s'").s, path, mupdfErr));
+    msg.Append(fmt(_TRA("Failed to save '%s': %s").s, path, mupdfErr));
     ShowWarningNotification(hwndParent, ToStr(msg), 0);
 }
 
@@ -4394,7 +4394,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
-        fileFilter.Append(_TRA("Postscript documents"));
+        fileFilter.Append(_TRA("PostScript documents"));
     } else if (type == kindEngineChm) {
         fileFilter.Append(_TRA("CHM documents"));
     } else if (type == kindEngineEpub) {
@@ -4937,7 +4937,7 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
         {_TRA("PDF documents"), "*.pdf;*.p7m", true},
         {_TRA("XPS documents"), "*.xps;*.oxps", true},
         {_TRA("DjVu documents"), "*.djvu", true},
-        {_TRA("Postscript documents"), "*.ps;*.eps", IsEnginePsAvailable()},
+        {_TRA("PostScript documents"), "*.ps;*.eps", IsEnginePsAvailable()},
         {_TRA("Comic books"), "*.cbz;*.cbr;*.cb7;*.cbt", true},
         {_TRA("CHM documents"), "*.chm", true},
         {_TRA("SVG documents"), "*.svg", true},
