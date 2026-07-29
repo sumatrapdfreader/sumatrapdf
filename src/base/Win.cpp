@@ -11,8 +11,6 @@
 
 #include <aclapi.h>
 #include <bitset>
-#include <float.h>
-#include <intrin.h>
 #include <mlang.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2
