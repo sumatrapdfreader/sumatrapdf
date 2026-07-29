@@ -676,7 +676,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     win->tabSelectionHistory->Append(tab);
 }
 
-WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
+WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     ReportIf(!win);
     if (!win) {
         return nullptr;
@@ -700,7 +700,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
         newTab->isPinned = true;
         newTab->canClose = true;
         newTab->userData = (UINT_PTR)homeTab;
-        int insertedIdx = tabs->InsertTab(idx, newTab);
+        int insertedIdx = tabs->InsertTab(idx, newTab, !deferUpdate);
         ReportIf(insertedIdx != 0);
         idx++;
     }
@@ -712,10 +712,12 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
     newTab->userData = (UINT_PTR)tab;
     newTab->tabColor = tab->tabColor;
 
-    int insertedIdx = tabs->InsertTab(idx, newTab);
+    int insertedIdx = tabs->InsertTab(idx, newTab, !deferUpdate);
     ReportIf(insertedIdx == -1);
-    tabs->SetSelected(insertedIdx);
-    UpdateTabWidth(win);
+    if (!deferUpdate) {
+        tabs->SetSelected(insertedIdx);
+        UpdateTabWidth(win);
+    }
     return tab;
 }
 

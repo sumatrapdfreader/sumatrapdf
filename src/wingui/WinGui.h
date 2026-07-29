@@ -843,7 +843,7 @@ struct TabsCtrl : Wnd {
 
     Size GetIdealSize() override;
 
-    int InsertTab(int idx, TabInfo*);
+    int InsertTab(int idx, TabInfo*, bool update = true);
     TabInfo* GetTab(int idx);
     void SwapTabs(int idx1, int idx2);
 

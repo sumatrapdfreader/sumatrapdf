@@ -287,6 +287,7 @@ struct LoadArgs {
     FileArgs* fileArgs = nullptr;
 
     TabState* tabState = nullptr;
+    WindowTab* targetTab = nullptr;
 
     // if set, called on the UI thread when the load finishes,
     // with true if the document was loaded successfully
@@ -304,6 +305,7 @@ struct PasswordUI;
 MainWindow* LoadDocument(LoadArgs* args);
 MainWindow* LoadDocumentFinish(LoadArgs* args);
 void StartLoadDocument(LoadArgs* args);
+void StartLoadDocuments(StrVec& paths, MainWindow* win);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
 void ShowMainWindow(MainWindow* win, int windowState);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);

@@ -74,6 +74,11 @@ WindowTab::~WindowTab() {
     // so doesn't need to be kept for long
     gMostRecentlyOpenedDoc = nullptr;
     delete ctrl;
+    if (pendingLoadArgs) {
+        delete pendingLoadArgs->ctrl;
+        pendingLoadArgs->ctrl = nullptr;
+    }
+    delete pendingLoadArgs;
     str::Free(filePath);
     filePath = {};
     str::Free(displayName);

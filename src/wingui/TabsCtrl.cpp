@@ -791,7 +791,7 @@ int TabsCtrl::TabCount() {
 }
 
 // takes ownership of tab
-int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
+int TabsCtrl::InsertTab(int idx, TabInfo* tab, bool update) {
     ReportIf(idx < 0);
     TCITEMW item{};
     item.mask = TCIF_TEXT;
@@ -801,12 +801,14 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
         return res;
     }
     tabs.InsertAt(idx, tab);
-    // LayoutTabs() must be before SetSelected() because SetSelected()
-    // triggers sync repaint which paints tab texts in wrong positions
-    // because we didn't position them yet in layout.
-    LayoutTabs();
-    SetSelected(idx);
-    TabsCtrlUpdateAfterChangingTabsCount(this);
+    if (update) {
+        // LayoutTabs() must be before SetSelected() because SetSelected()
+        // triggers sync repaint which paints tab texts in wrong positions
+        // because we didn't position them yet in layout.
+        LayoutTabs();
+        SetSelected(idx);
+        TabsCtrlUpdateAfterChangingTabsCount(this);
+    }
     return idx;
 }
 
@@ -833,17 +835,20 @@ void TabsCtrl::SetTabDirty(int idx, bool dirty) {
 UINT_PTR TabsCtrl::RemoveTab(int idx) {
     ReportIf(idx < 0);
     ReportIf(idx >= TabCount());
+    int selectedTab = GetSelected();
     BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
     ReportIf(!ok);
     TabInfo* tab = tabs[idx];
     UINT_PTR userData = tab->userData;
     tabs.RemoveAt(idx);
     delete tab;
-    int selectedTab = GetSelected();
-    if (idx < selectedTab) {
-        SetSelected(selectedTab - 1);
-    } else if (idx == selectedTab) {
-        SetSelected(0);
+    if (TabCount() > 0 && selectedTab >= 0) {
+        if (idx < selectedTab) {
+            selectedTab--;
+        } else if (idx == selectedTab) {
+            selectedTab = 0;
+        }
+        SetSelected(selectedTab);
     }
     LayoutTabs();
     TabsCtrlUpdateAfterChangingTabsCount(this);

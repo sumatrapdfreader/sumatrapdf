@@ -5,6 +5,7 @@ struct SelectionOnPage;
 struct WatchedFile;
 struct EditAnnotationsWindow;
 struct MainWindow;
+struct LoadArgs;
 namespace str {
 struct Builder;
 }
@@ -21,6 +22,12 @@ struct AIChatTabState {
 /* (none of these depend on MainWindow, so that a WindowTab could
    be moved between windows once this is supported) */
 struct WindowTab {
+    enum class LoadState {
+        None,
+        Loading,
+        LoadedPending,
+        Error,
+    };
     enum class Type {
         None,
         About,
@@ -32,6 +39,9 @@ struct WindowTab {
     Str displayName;
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
+    LoadState loadState = LoadState::None;
+    u64 loadStartedAt = 0;
+    LoadArgs* pendingLoadArgs = nullptr;
     // text of win->hwndFrame when the tab is selected
     Str frameTitle;
     // state of the table of contents

@@ -2623,6 +2623,39 @@ struct OpenCopyDataAsync {
     u32 newWindow;
 };
 
+struct OpenManyCopyDataAsync {
+    StrVec paths;
+    HWND hwnd;
+    u32 newWindow;
+};
+
+static void OpenManyCopyDataAsyncRun(OpenManyCopyDataAsync* d) {
+    MainWindow* win = nullptr;
+    if (d->newWindow) {
+        MainWindow* emptyExistingWin = nullptr;
+        for (auto& w : gWindows) {
+            if (!w->HasDocsLoaded()) {
+                emptyExistingWin = w;
+                break;
+            }
+        }
+        win = emptyExistingWin ? emptyExistingWin : CreateAndShowMainWindow(nullptr);
+    } else {
+        win = FindMainWindowByHwnd(d->hwnd);
+        if (!win) {
+            win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+        }
+        if (!win && len(gWindows) > 0) {
+            win = gWindows[0];
+        }
+    }
+    if (win) {
+        win->Focus();
+    }
+    StartLoadDocuments(d->paths, win);
+    delete d;
+}
+
 static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
     // Pick a target window the same way HandleOpenCmd would, then kick off
     // the load on a worker thread. We stay off the UI thread for the heavy
@@ -2720,6 +2753,44 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         d->newWindow = data->newWindow;
         auto fn = MkFunc0<OpenCopyDataAsync>(OpenCopyDataAsyncRun, d);
         uitask::Post(fn, "OnCopyData/Open");
+        return TRUE;
+    }
+
+    if (cds->dwData == kCopyDataOpenMany) {
+        if (cds->cbData < sizeof(SumatraOpenManyCopyData) + 1) {
+            return FALSE;
+        }
+        auto* data = (const SumatraOpenManyCopyData*)cds->lpData;
+        if (data->pathCount == 0) {
+            return FALSE;
+        }
+        const char* s = (const char*)(data + 1);
+        size_t bytesLeft = cds->cbData - sizeof(*data);
+        StrVec paths;
+        for (u32 i = 0; i < data->pathCount; i++) {
+            size_t pathLen = strnlen_s(s, bytesLeft);
+            if (pathLen >= bytesLeft) {
+                return FALSE;
+            }
+            paths.Append(Str(s, (int)pathLen));
+            s += pathLen + 1;
+            bytesLeft -= pathLen + 1;
+        }
+        if (gIsStartup) {
+            for (Str path : paths) {
+                TempStr normalized = path::NormalizeTemp(path);
+                if (!IsDocumentOpenOrLoading(normalized)) {
+                    AppendIfNotExists(&gDdeOpenOnStartup, normalized);
+                }
+            }
+            return TRUE;
+        }
+        auto* d = new OpenManyCopyDataAsync;
+        d->paths = paths;
+        d->hwnd = hwnd;
+        d->newWindow = data->newWindow;
+        auto fn = MkFunc0<OpenManyCopyDataAsync>(OpenManyCopyDataAsyncRun, d);
+        uitask::Post(fn, "OnCopyData/OpenMany");
         return TRUE;
     }
 

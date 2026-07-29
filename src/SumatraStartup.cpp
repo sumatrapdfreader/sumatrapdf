@@ -204,6 +204,34 @@ static bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 ne
     return res != 0;
 }
 
+static bool SendOpenFilesToExistingInstance(HWND targetHwnd, StrVec& paths, u32 newWindow) {
+    size_t cbData = sizeof(SumatraOpenManyCopyData);
+    for (Str path : paths) {
+        cbData += path.len + 1;
+    }
+    if (cbData > MAXDWORD) {
+        return false;
+    }
+
+    u8* payload = (u8*)malloc(cbData);
+    if (!payload) {
+        return false;
+    }
+    auto* data = (SumatraOpenManyCopyData*)payload;
+    data->newWindow = newWindow;
+    data->pathCount = (u32)len(paths);
+    u8* dst = payload + sizeof(*data);
+    for (Str path : paths) {
+        memcpy(dst, path.s, path.len);
+        dst += path.len;
+        *dst++ = 0;
+    }
+    COPYDATASTRUCT cds = {kCopyDataOpenMany, (DWORD)cbData, payload};
+    LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
+    free(payload);
+    return res != 0;
+}
+
 // delegate file opening to a previously running instance by sending a DDE message
 static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     TempStr fullPath = path::NormalizeTemp(path);
@@ -397,15 +425,19 @@ static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
     AddTabToWindow(win, tab);
 }
 
-// TODO: when files are lazy loaded, they do not restore TabState. Need to remember
-// it in LoadArgs and call SetTabState() if present after loading
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad = true) {
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
+    if (!DocumentPathExists(state->filePath)) {
+        RestoreMissingTabOnStartup(win, state);
+        return;
+    }
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
     args.showWin = false;
-    if (lazyLoad) {
-        args.tabState = state;
+    args.tabState = state;
+    if (!lazyLoad && SettingsUseTabs()) {
+        StartLoadDocument(&args);
+        return;
     }
     args.lazyLoad = lazyLoad;
     if (!LoadDocument(&args)) {
@@ -2435,6 +2467,17 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // the rest open as tabs in that window (issue #5044). Previously every
         // file got its own window.
         bool userNewWindow = flags.inNewWindow;
+        bool canBatchOpen = nFiles > 1 && existingHwnd && !flags.reuseDdeInstance && IsSimpleOpenCase(flags, true);
+        if (canBatchOpen) {
+            StrVec paths;
+            for (Str path : flags.fileNames) {
+                paths.Append(path::NormalizeTemp(path));
+            }
+            u32 newWindow = (reuseInNewWindow || userNewWindow) ? 2 : 0;
+            if (SendOpenFilesToExistingInstance(existingHwnd, paths, newWindow)) {
+                goto Exit;
+            }
+        }
         for (int n = 0; n < nFiles; n++) {
             Str path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);

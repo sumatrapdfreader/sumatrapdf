@@ -7,7 +7,7 @@ void SaveCurrentWindowTab(MainWindow*);
 void LoadModelIntoTab(WindowTab*);
 
 void CreateTabbar(MainWindow*);
-WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab);
+WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate = false);
 void TabsOnCloseWindow(MainWindow*);
 void TabsOnChangedDoc(MainWindow*);
 void TabsSelect(MainWindow* win, int tabIndex);

@@ -272,6 +272,7 @@ LoadArgs* LoadArgs::Clone() {
     LoadArgs* res = new LoadArgs(fileName, win);
     res->SetDisplayName(displayName);
     res->tabState = this->tabState;
+    res->targetTab = this->targetTab;
     res->forceReuse = this->forceReuse;
     res->noSavePrefs = this->noSavePrefs;
     res->onFinished = this->onFinished;
@@ -2071,6 +2072,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         win->AsFixed()->SetScrollState(ss);
     }
 
+    tab->canvasRc = win->canvasRc;
     TabsOnChangedDoc(win);
 
     if (!win->IsDocLoaded()) {
@@ -2756,6 +2758,7 @@ static void DeleteOrphanedController(MainWindow* win, DocController*& ctrl) {
 MainWindow* LoadDocumentFinish(LoadArgs* args) {
     MainWindow* win = args->win;
     Str fullPath = args->FilePath();
+    WindowTab* targetTab = args->targetTab;
 
     bool openNewTab = SettingsUseTabs() && !args->forceReuse;
     ReportIf(openNewTab && args->forceReuse);
@@ -2764,7 +2767,14 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     // this on tab switch; cover the first open / about-page case here too).
     win->DeleteToolTip();
 
-    if (win->IsCurrentTabAbout()) {
+    if (targetTab) {
+        ReportIf(targetTab != win->CurrentTab());
+        if (targetTab != win->CurrentTab()) {
+            DeleteOrphanedController(win, args->ctrl);
+            return nullptr;
+        }
+        targetTab->loadState = WindowTab::LoadState::None;
+    } else if (win->IsCurrentTabAbout()) {
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
         // there's no tab to reuse at this point
@@ -2775,7 +2785,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         }
         CloseDocumentInCurrentTab(win, true, args->forceReuse);
     }
-    if (!args->forceReuse) {
+    if (targetTab) {
+        targetTab->SetFilePath(fullPath);
+        targetTab->SetDisplayName(args->DisplayName());
+    } else if (!args->forceReuse) {
         // insert a new tab for the loaded document
         WindowTab* tab = new WindowTab(win);
         tab->SetFilePath(fullPath);
@@ -2821,6 +2834,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     }
 
     auto currTab = win->CurrentTab();
+    currTab->loadState = WindowTab::LoadState::None;
     Str path = currTab->filePath;
 #if 0
     int nPages = 0;
@@ -2945,12 +2959,56 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d);
 static int gLoadThreadsActive = 0;
 static int gMaxLoadThreads = 0;
 static Vec<LoadDocumentAsyncData*> gLoadQueue;
+static bool gLoadQueueDispatchPosted = false;
+static UINT_PTR gLoadingMessageTimer = 0;
+
+static void CALLBACK LoadingMessageTimerProc(HWND, UINT, UINT_PTR timerId, DWORD) {
+    bool hasLoadingTabs = false;
+    u64 now = GetTickCount64();
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->loadState != WindowTab::LoadState::Loading) {
+                continue;
+            }
+            hasLoadingTabs = true;
+            if (tab == win->CurrentTab() && tab->loadStartedAt != 0 && now - tab->loadStartedAt >= 1000) {
+                HwndInvalidate(win->hwndCanvas);
+            }
+        }
+    }
+    if (!hasLoadingTabs) {
+        KillTimer(nullptr, timerId);
+        gLoadingMessageTimer = 0;
+    }
+}
+
+static void StartLoadingMessageTimer(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    tab->loadStartedAt = GetTickCount64();
+    if (gLoadingMessageTimer == 0) {
+        gLoadingMessageTimer = SetTimer(nullptr, 0, 1000, LoadingMessageTimerProc);
+    }
+}
+
+static bool IsLoadTargetValid(LoadArgs* args) {
+    if (!IsMainWindowValid(args->win) || args->win->isBeingClosed) {
+        return false;
+    }
+    return !args->targetTab || FindMainWindowByTab(args->targetTab) == args->win;
+}
+
+static void DispatchQueuedDocumentLoads();
 
 static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
     // show the "Loading ..." notification only now that we're actually
     // loading, not while the file was sitting in the queue
     LoadArgs* args = data->args;
-    data->wndNotif = ShowLoadingNotif(args->win, args->FilePath(), args->loadingNotifCorner);
+    StartLoadingMessageTimer(args->targetTab);
+    if (!args->targetTab) {
+        data->wndNotif = ShowLoadingNotif(args->win, args->FilePath(), args->loadingNotifCorner);
+    }
     gLoadThreadsActive++;
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
     RunAsync(fn, "LoadDocumentThread");
@@ -2958,15 +3016,44 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
 
 // start a background load now if a thread slot is free, otherwise queue it
 static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
+    gLoadQueue.Append(data);
+    if (gLoadQueueDispatchPosted) {
+        return;
+    }
+    gLoadQueueDispatchPosted = true;
     if (gMaxLoadThreads == 0) {
         // at most min(4, CpuCoreCount()) concurrent loads
         int n = CpuCoreCount();
         gMaxLoadThreads = n < 4 ? n : 4;
     }
-    if (gLoadThreadsActive < gMaxLoadThreads) {
-        StartLoadDocumentThread(data);
-    } else {
-        gLoadQueue.Append(data);
+    auto fn = MkFunc0Void(DispatchQueuedDocumentLoads);
+    uitask::Post(fn, "DispatchDocumentLoads");
+}
+
+static void DispatchQueuedDocumentLoads() {
+    gLoadQueueDispatchPosted = false;
+    if (gMaxLoadThreads == 0) {
+        // at most min(4, CpuCoreCount()) concurrent loads
+        int n = CpuCoreCount();
+        gMaxLoadThreads = n < 4 ? n : 4;
+    }
+    while (gLoadThreadsActive < gMaxLoadThreads && len(gLoadQueue) > 0) {
+        int idx = 0;
+        for (int i = 0; i < len(gLoadQueue); i++) {
+            LoadArgs* args = gLoadQueue[i]->args;
+            if (IsLoadTargetValid(args) && args->targetTab && args->targetTab == args->win->CurrentTab()) {
+                idx = i;
+                break;
+            }
+        }
+        LoadDocumentAsyncData* next = gLoadQueue.PopAt(idx);
+        if (!IsLoadTargetValid(next->args)) {
+            EndDocumentLoad(next->args->FilePath());
+            next->args->onFinished.Call(false);
+            delete next;
+            continue;
+        }
+        StartLoadDocumentThread(next);
     }
 }
 
@@ -2975,23 +3062,7 @@ static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
 static void OnLoadDocumentThreadFinished() {
     gLoadThreadsActive--;
     ReportIf(gLoadThreadsActive < 0);
-    while (len(gLoadQueue) > 0) {
-        LoadDocumentAsyncData* next = gLoadQueue.PopAt(0);
-        MainWindow* win = next->args->win;
-        if (!IsMainWindowValid(win) || win->isBeingClosed) {
-            // the target window is gone, e.g. it was closed or the app is
-            // shutting down (uitask::Destroy drains queued finish tasks after
-            // all windows were deleted). Starting the load would leak it: its
-            // finish task would be posted to the already-destroyed dispatch
-            // window and never run.
-            EndDocumentLoad(next->args->FilePath());
-            next->args->onFinished.Call(false);
-            delete next;
-            continue;
-        }
-        StartLoadDocumentThread(next);
-        break;
-    }
+    DispatchQueuedDocumentLoads();
 }
 
 static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
@@ -3003,18 +3074,37 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     Str path = args->FilePath();
     EndDocumentLoad(path);
     MainWindow* win = args->win;
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsLoadTargetValid(args)) {
         DeleteOrphanedController(win, args->ctrl);
         args->onFinished.Call(false);
         return;
     }
+    if (args->targetTab) {
+        args->targetTab->loadStartedAt = 0;
+    }
     if (!args->ctrl) {
-        ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
+        if (args->targetTab) {
+            args->targetTab->loadState = WindowTab::LoadState::Error;
+            if (args->targetTab == win->CurrentTab()) {
+                HwndInvalidate(win->hwndCanvas);
+            }
+            LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
+        } else {
+            ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
+        }
         // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
         // which can pump messages and change tab selection
         WindowTab* currTab = win->CurrentTab();
         win->ctrl = currTab ? currTab->ctrl : nullptr;
         args->onFinished.Call(false);
+        return;
+    }
+    if (args->targetTab && args->targetTab != win->CurrentTab()) {
+        WindowTab* tab = args->targetTab;
+        tab->loadState = WindowTab::LoadState::LoadedPending;
+        tab->pendingLoadArgs = args;
+        d->args = nullptr;
+        args->onFinished.Call(true);
         return;
     }
     args->activateExisting = false;
@@ -3198,6 +3288,29 @@ void StartLoadDocument(LoadArgs* argsIn) {
         return;
     }
 
+    if (argsIn->targetTab) {
+        argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
+        if (argsIn->targetTab == win->CurrentTab()) {
+            HwndInvalidate(win->hwndCanvas);
+        }
+    } else if (SettingsUseTabs() && !argsIn->forceReuse) {
+        if (!win->IsCurrentTabAbout()) {
+            SaveCurrentWindowTab(win);
+            CloseDocumentInCurrentTab(win, true, false);
+        }
+        WindowTab* tab = new WindowTab(win);
+        tab->SetFilePath(path);
+        tab->SetDisplayName(argsIn->DisplayName());
+        tab->loadState = WindowTab::LoadState::Loading;
+        argsIn->targetTab = AddTabToWindow(win, tab);
+        win->currentTabTemp = argsIn->targetTab;
+        LoadModelIntoTab(argsIn->targetTab);
+    } else if (SettingsUseTabs() && win->CurrentTab()) {
+        argsIn->targetTab = win->CurrentTab();
+        argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
+        HwndInvalidate(win->hwndCanvas);
+    }
+
     LoadArgs* args = argsIn->Clone();
     BeginDocumentLoad(path);
 
@@ -3211,15 +3324,28 @@ void StartLoadDocument(LoadArgs* argsIn) {
         bool isMd = !gGlobalPrefs->markdownUI.useFixedPageUI && MarkdownModel::IsSupportedFileType(kind);
         if (isChm || isMd) {
             // TODO: repeating the code below
-            auto wndNotif = ShowLoadingNotif(win, path, args->loadingNotifCorner);
+            NotificationWnd* wndNotif = nullptr;
+            if (!args->targetTab) {
+                wndNotif = ShowLoadingNotif(win, path, args->loadingNotifCorner);
+            }
             DocController* ctrl = nullptr;
             HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
             EngineBase* engine = args->engine;
+            StartLoadingMessageTimer(args->targetTab);
             args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
+            if (args->targetTab) {
+                args->targetTab->loadStartedAt = 0;
+            }
             RemoveNotification(wndNotif);
             EndDocumentLoad(path);
             if (!args->ctrl) {
-                ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
+                if (args->targetTab) {
+                    args->targetTab->loadState = WindowTab::LoadState::Error;
+                    HwndInvalidate(win->hwndCanvas);
+                    LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
+                } else {
+                    ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
+                }
                 // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
                 // which can pump messages and change tab selection
                 WindowTab* currTab = win->CurrentTab();
@@ -3239,6 +3365,56 @@ void StartLoadDocument(LoadArgs* argsIn) {
     auto data = new LoadDocumentAsyncData;
     data->args = args;
     StartOrQueueLoadDocument(data);
+}
+
+void StartLoadDocuments(StrVec& paths, MainWindow* win) {
+    if (!SettingsUseTabs() || !win) {
+        for (Str path : paths) {
+            LoadArgs args(path, win);
+            args.activateExisting = true;
+            args.activateExistingInWindow = win != nullptr;
+            StartLoadDocument(&args);
+        }
+        return;
+    }
+
+    StrVec pathsToLoad;
+    for (Str path : paths) {
+        if (!DocumentPathExists(path)) {
+            LoadArgs args(path, win);
+            StartLoadDocument(&args);
+            continue;
+        }
+        if (FindMainWindowByFile(path, true, win)) {
+            continue;
+        }
+        AppendIfNotExists(&pathsToLoad, path);
+    }
+    if (pathsToLoad.IsEmpty()) {
+        return;
+    }
+
+    if (!win->IsCurrentTabAbout()) {
+        SaveCurrentWindowTab(win);
+    }
+
+    Vec<WindowTab*> tabs;
+    for (int i = 0; i < len(pathsToLoad); i++) {
+        WindowTab* tab = new WindowTab(win);
+        tab->SetFilePath(pathsToLoad[i]);
+        tab->loadState = WindowTab::LoadState::Loading;
+        bool deferUpdate = i != len(pathsToLoad) - 1;
+        tabs.Append(AddTabToWindow(win, tab, deferUpdate));
+    }
+    WindowTab* visibleTab = tabs[0];
+    win->tabsCtrl->SetSelected(win->GetTabIdx(visibleTab));
+    LoadModelIntoTab(visibleTab);
+
+    for (int i = 0; i < len(pathsToLoad); i++) {
+        LoadArgs args(pathsToLoad[i], win);
+        args.targetTab = tabs[i];
+        StartLoadDocument(&args);
+    }
 }
 
 // remember which files failed to open so that a failure to
@@ -3330,7 +3506,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
-    if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab()) {
+    if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
+        tab->loadState == WindowTab::LoadState::None) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.msg = fmt(_TRA("Please wait - loading...").s);
@@ -3349,6 +3526,15 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
+
+    if (tab->loadState == WindowTab::LoadState::LoadedPending) {
+        LoadArgs* args = tab->pendingLoadArgs;
+        tab->pendingLoadArgs = nullptr;
+        win->ctrl = nullptr;
+        LoadDocumentFinish(args);
+        delete args;
+        return;
+    }
 
     // Favorites tab: no document, no viewport — full-area tree via RelayoutFrame
     if (tab->IsFavoritesTab()) {
@@ -3432,7 +3618,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (tab->type == WindowTab::Type::None) {
         logf("LoadModelIntoTab: tab 0x%p has Type::None, skipping reload\n", tab);
     } else if (!tab->IsAboutTab()) {
-        if (gGlobalPrefs->lazyLoading && !tab->ctrl) {
+        if (gGlobalPrefs->lazyLoading && !tab->ctrl && tab->loadState == WindowTab::LoadState::None) {
             ReloadDocument(win, false);
         } else {
             if (tab->reloadOnFocus) {
@@ -5020,6 +5206,7 @@ static void OpenFile(MainWindow* win) {
         return;
     }
 
+    StrVec paths;
     for (DWORD i = 0; i < count; i++) {
         ScopedComPtr<IShellItem> item;
         hr = results->GetItemAt(i, &item);
@@ -5036,11 +5223,9 @@ static void OpenFile(MainWindow* win) {
         if (len(path) == 0) {
             continue;
         }
-        LoadArgs args(path, win);
-        args.activateExisting = true;
-        args.activateExistingInWindow = true;
-        LoadDocument(&args);
+        paths.Append(path);
     }
+    StartLoadDocuments(paths, win);
 }
 
 static void RemoveFailedFiles(StrVec& files) {

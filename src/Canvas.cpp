@@ -3548,7 +3548,7 @@ static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM w
 
 ///// methods needed for FixedPageUI canvases with loading error /////
 
-static void OnPaintError(MainWindow* win) {
+static void OnPaintDocumentStatus(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
@@ -3560,7 +3560,29 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
+        TempStr msg;
+        if (tab->loadState == WindowTab::LoadState::Loading || tab->loadState == WindowTab::LoadState::LoadedPending) {
+            msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath));
+            if (tab->loadStartedAt != 0) {
+                u64 elapsedSecs = (GetTickCount64() - tab->loadStartedAt) / 1000;
+                if (elapsedSecs > 0) {
+                    TempStr elapsed;
+                    u64 hours = elapsedSecs / 3600;
+                    u64 minutes = (elapsedSecs % 3600) / 60;
+                    u64 seconds = elapsedSecs % 60;
+                    if (hours > 0) {
+                        elapsed = fmt("%dh %dm %ds", hours, minutes, seconds);
+                    } else if (minutes > 0) {
+                        elapsed = fmt("%dm %ds", minutes, seconds);
+                    } else {
+                        elapsed = fmt("%ds", seconds);
+                    }
+                    msg = fmt("%s %s", msg, elapsed);
+                }
+            }
+        } else {
+            msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
+        }
         SetTextColor(hdc, ThemeWindowTextColor());
         HdcDrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
@@ -3576,7 +3598,7 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
             if (gRedrawLog) {
                 logf("redraw: WM_PAINT hwnd=0x%p (canvas-error)\n", hwnd);
             }
-            OnPaintError(win);
+            OnPaintDocumentStatus(win);
             return 0;
 
         case WM_SETCURSOR:
@@ -3820,17 +3842,10 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
     bool isShift = IsShiftPressed();
 
     GetDropFilesResolved(hDrop, dragFinish, files);
-    for (Str path : files) {
-        // The first dropped document may override the current window
-        LoadArgs args(path, win);
-        if (isShift && !win) {
-            win = CreateAndShowMainWindow(nullptr);
-            args.win = win;
-        }
-        args.activateExisting = true;
-        args.activateExistingInWindow = true;
-        StartLoadDocument(&args);
+    if (isShift && !win) {
+        win = CreateAndShowMainWindow(nullptr);
     }
+    StartLoadDocuments(files, win);
 }
 
 // returns true if url looks like it could be an image URL

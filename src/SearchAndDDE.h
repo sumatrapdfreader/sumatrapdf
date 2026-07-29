@@ -13,12 +13,21 @@
 //                    the sending instance (launched by Explorer for
 //                    reuseInstance) can exit immediately without waiting for
 //                    the receiver to finish loading the file.
-#define kCopyDataDdeW 0x44646557 // 'DdeW'
-#define kCopyDataOpen 0x4F70656E // 'Open'
+// - kCopyDataOpenMany: payload is a SumatraOpenManyCopyData struct followed by
+//                     UTF-8 null-terminated paths.
+#define kCopyDataDdeW 0x44646557     // 'DdeW'
+#define kCopyDataOpen 0x4F70656E     // 'Open'
+#define kCopyDataOpenMany 0x4F704D6E // 'OpMn'
 
 struct SumatraOpenCopyData {
     u32 newWindow; // 0: reuse existing, non-zero: force new window
     // followed by UTF-8 path, null-terminated
+};
+
+struct SumatraOpenManyCopyData {
+    u32 newWindow;
+    u32 pathCount;
+    // followed by pathCount UTF-8 paths, each null-terminated
 };
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp);
