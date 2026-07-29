@@ -3546,18 +3546,18 @@ bool DestroyIconSafe(HICON* h) {
 
 //--- GDI: draw / measure (text)
 
-int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
+int HdcDrawText(HDC hdc, WStr s, const Rect& r, uint format, HFONT font) {
+    ReportIf(format & DT_CALCRECT);
     if (len(s) == 0) {
         return 0;
     }
-    TempWStr ws = ToWStrTemp(s);
-    if (len(ws) == 0) {
-        return 0;
-    }
-    int cch = ws.len;
     ScopedSelectFont f(hdc, font);
     RECT r2 = ToRECT(r);
-    return DrawTextW(hdc, ws.s, cch, &r2, format);
+    return DrawTextW(hdc, s.s, s.len, &r2, format);
+}
+
+int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
+    return HdcDrawText(hdc, ToWStrTemp(s), r, format, font);
 }
 
 int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font) {
@@ -3565,28 +3565,49 @@ int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font) {
     return HdcDrawText(hdc, s, r, format, font);
 }
 
+int HdcDrawText(HDC hdc, WStr s, const Point& pos, uint format, HFONT font) {
+    Rect r = {pos.x, pos.y, 0, 0};
+    return HdcDrawText(hdc, s, r, format, font);
+}
+
+Rect HdcMeasureWithDrawText(HDC hdc, WStr s, Rect r, uint format, HFONT font) {
+    if (len(s) == 0) {
+        return r;
+    }
+    ScopedSelectFont f(hdc, font);
+    RECT r2 = ToRECT(r);
+    DrawTextW(hdc, s.s, s.len, &r2, format | DT_CALCRECT);
+    return ToRect(r2);
+}
+
+Rect HdcMeasureWithDrawText(HDC hdc, Str s, Rect r, uint format, HFONT font) {
+    return HdcMeasureWithDrawText(hdc, ToWStrTemp(s), r, format, font);
+}
+
+bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, WStr text) {
+    RECT r = ToRECT(rect);
+    RECT* rectPtr = rect.IsEmpty() ? nullptr : &r;
+    return ExtTextOutW(hdc, pos.x, pos.y, options, rectPtr, text.s, (uint)text.len, nullptr) != 0;
+}
+
+bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, Str text) {
+    return HdcExTextOut(hdc, pos, options, rect, ToWStrTemp(text));
+}
+
+void HdcFillRectWithBkColor(HDC hdc, const Rect& rect) {
+    RECT r = ToRECT(rect);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &r, nullptr, 0, nullptr);
+}
+
 // uses the same logic as HdcDrawText
 // maxDx limits the width, used when measuring text wrapped with DT_WORDBREAK
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font) {
-    format |= DT_CALCRECT;
-    TempWStr ws = ToWStrTemp(s);
-    if (len(ws) == 0) {
+    if (len(s) == 0) {
         return {};
     }
-
-    ScopedSelectFont f(hdc, font);
-    int sLen = ws.len;
-    RECT rc{0, 0, maxDx, 4096};
-    int dy = DrawTextW(hdc, ws.s, sLen, &rc, format);
-    if (0 == dy) {
-        return {};
-    }
-    int dx = RectDx(rc);
-    int dy2 = RectDy(rc);
-    if (dy2 > dy) {
-        dy = dy2;
-    }
-    return Size(dx, dy);
+    Rect bounds = {0, 0, maxDx, 4096};
+    Rect measured = HdcMeasureWithDrawText(hdc, s, bounds, format, font);
+    return {measured.dx, measured.dy};
 }
 
 Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font) {
@@ -3602,15 +3623,13 @@ Size HdcMeasureText(HDC hdc, Str s, HFONT font) {
     return HdcMeasureText(hdc, s, fmt, font);
 }
 
-void HdcDrawCenteredText(HDC hdc, const Rect r, Str txt, bool isRTL) {
-    WCHAR* ws = CWStrTemp(txt);
+void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL) {
     int prevMode = SetBkMode(hdc, TRANSPARENT);
-    RECT tmpRect = ToRECT(r);
     uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
     if (isRTL) {
         format |= DT_RTLREADING;
     }
-    DrawTextW(hdc, ws, -1, &tmpRect, format);
+    HdcDrawText(hdc, txt, r, format);
     if (prevMode != 0) {
         SetBkMode(hdc, prevMode);
     }

@@ -418,7 +418,6 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     HDC hdc = ev->hdc;
     Rect rc = ev->itemRect;
-    RECT itemRc = ToRECT(rc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -427,7 +426,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &itemRc, nullptr, 0, nullptr);
+    HdcFillRectWithBkColor(hdc, rc);
 
     HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
@@ -443,14 +442,12 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     HGDIOBJ prevFont = SelectObject(hdc, nameFont);
     TempWStr ws = ToWStrTemp(item->name);
-    RECT nameRc = ToRECT(rcName);
-    DrawTextW(hdc, ws.s, -1, &nameRc, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    HdcDrawText(hdc, ws, rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
     TempStr val = FormatSettingValueTemp(item);
     SelectObject(hdc, valFont);
     ws = ToWStrTemp(val);
-    RECT valRc = ToRECT(rcVal);
-    DrawTextW(hdc, ws.s, -1, &valRc, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    HdcDrawText(hdc, ws, rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
     SelectObject(hdc, prevFont);
 }

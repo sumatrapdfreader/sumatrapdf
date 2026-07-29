@@ -369,7 +369,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         colBg = AccentColor(colBg, 30);
     }
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+    HdcFillRectWithBkColor(hdc, ToRect(rc));
     SetBkMode(hdc, TRANSPARENT);
 
     HFONT oldFont = lb->font ? SelectFont(hdc, lb->font) : nullptr;
@@ -412,10 +412,11 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
 
     // repaint the page column on top in case a prior draw left stray pixels
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rcPage, nullptr, 0, nullptr);
+    HdcFillRectWithBkColor(hdc, ToRect(rcPage));
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, AccentColor(colText, 80));
-    DrawTextW(hdc, pageW.s, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+    Rect pageRect = ToRect(rcPage);
+    HdcDrawText(hdc, pageW, pageRect, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
 
     if (oldFont) {
         SelectFont(hdc, oldFont);

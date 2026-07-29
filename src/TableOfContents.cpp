@@ -1159,9 +1159,9 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     if (filterActive) {
         DrawTreeItemFilterHighlight(hdc, titleRc, tocItem->title, words, bgCol, txtCol, font);
     } else {
-        TempWStr titleW = ToWStrTemp(tocItem->title);
-        DrawTextW(hdc, titleW.s, titleW.len, &titleRc,
-                  DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
+        Rect titleRect = ToRect(titleRc);
+        HdcDrawText(hdc, tocItem->title, titleRect,
+                    DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
     }
 
     if (showPage && pageW.len > 0) {
@@ -1175,7 +1175,8 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
                     (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
             SetTextColor(hdc, muted);
         }
-        DrawTextW(hdc, pageW.s, pageW.len, &pageRc, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
+        Rect pageRect = ToRect(pageRc);
+        HdcDrawText(hdc, pageW, pageRect, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
     }
 
     if ((cd->uItemState & CDIS_FOCUS) && isTreeSelected && hasFocus) {

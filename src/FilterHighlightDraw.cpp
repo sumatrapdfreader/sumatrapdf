@@ -22,8 +22,8 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
     int nWords = len(filterWords);
     if (nWords == 0) {
-        WCHAR* textW = CWStrTemp(text);
-        DrawTextW(hdc, textW, -1, &rc, drawFmt);
+        Rect textRect = ToRect(rc);
+        HdcDrawText(hdc, text, textRect, drawFmt);
         return;
     }
 
@@ -134,7 +134,8 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     }
 
     // draw the whole string at once over the highlights
-    DrawTextW(hdc, textW.s, -1, &rc, drawFmt);
+    Rect textRect = ToRect(rc);
+    HdcDrawText(hdc, textW, textRect, drawFmt);
 }
 
 // Ink that stays readable on a solid highlight underlay (black on yellow).
@@ -326,7 +327,8 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
         runRc.top = textTop;
         runRc.bottom = textBottom;
         SetTextColor(hdc, isHl ? matchTxtCol : txtCol);
-        DrawTextW(hdc, runW.s, -1, &runRc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
+        Rect runRect = ToRect(runRc);
+        HdcDrawText(hdc, runW, runRect, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
     }
     SetBkMode(hdc, oldBkMode);
     SetTextColor(hdc, oldTxtCol);

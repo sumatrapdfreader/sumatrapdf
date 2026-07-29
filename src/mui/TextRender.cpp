@@ -458,7 +458,7 @@ void TextRenderHdc::Draw(WStr s, const RectF bb, bool /* isRtl */) {
         opts = opts | ETO_RTLREADING;
     }
 #endif
-    ExtTextOutW(hdc, x, y, opts, nullptr, s.s, (uint)s.len, nullptr);
+    HdcExTextOut(hdc, Point(x, y), opts, Rect(), s);
 }
 
 TextRenderHdc::~TextRenderHdc() {

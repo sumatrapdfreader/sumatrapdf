@@ -242,7 +242,7 @@ static void DrawTabGroupItem(TabGroupsWnd* w, ListBox::DrawItemEvent* ev) {
     }
 
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+    HdcFillRectWithBkColor(hdc, ToRect(rc));
 
     SetTextColor(hdc, colText);
     SetBkMode(hdc, TRANSPARENT);
@@ -258,20 +258,20 @@ static void DrawTabGroupItem(TabGroupsWnd* w, ListBox::DrawItemEvent* ev) {
 
     // draw group name on the left
     Str name = w->model->Item(ev->itemIndex);
-    WCHAR* nameW = CWStrTemp(name);
     uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT;
-    DrawTextW(hdc, nameW, -1, &rc, fmt);
+    Rect nameRect = ToRect(rc);
+    HdcDrawText(hdc, name, nameRect, fmt);
 
     // draw tab count on the right
     int nTabs = w->model->TabCount(ev->itemIndex);
     char buf[32];
     snprintf(buf, sizeof(buf), "%d tabs", nTabs);
-    WCHAR* countW = CWStrTemp(buf);
     COLORREF rightCol = AccentColor(colText, 80);
     SetTextColor(hdc, rightCol);
     RECT rcRight = rc;
     fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT;
-    DrawTextW(hdc, countW, -1, &rcRight, fmt);
+    Rect rightRect = ToRect(rcRight);
+    HdcDrawText(hdc, Str(buf), rightRect, fmt);
 
     if (oldFont) {
         SelectFont(hdc, oldFont);

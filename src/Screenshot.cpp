@@ -893,11 +893,10 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
         labelRect.bottom = rc.bottom + kLabelGap + kLabelHeight;
         SetTextColor(hdcTemp, RGB(0, 0, 0));
         SetBkMode(hdcTemp, TRANSPARENT);
-        WCHAR* nameW = CWStrTemp(cs.processName);
-        DrawTextW(hdcTemp, nameW, -1, &labelRect, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
+        Rect labelBounds = ToRect(labelRect);
+        HdcDrawText(hdcTemp, cs.processName, labelBounds, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
         TempStr dimStr = fmt("%dx%d", cs.origW, cs.origH);
-        WCHAR* dimW = CWStrTemp(dimStr);
-        DrawTextW(hdcTemp, dimW, -1, &labelRect, DT_RIGHT | DT_SINGLELINE);
+        HdcDrawText(hdcTemp, dimStr, labelBounds, DT_RIGHT | DT_SINGLELINE);
 
         // draw selection border around thumbnail and label
         if (i == data->selected) {
@@ -946,8 +945,9 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     SetTextColor(hdcTemp, RGB(255, 255, 255));
     SetBkMode(hdcTemp, TRANSPARENT);
-    DrawTextW(hdcTemp, L"Select screenshot to save. ↑ ↓ to navigate. Enter to select. Esc to cancel", -1, &infoRect,
-              DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    Rect infoBounds = ToRect(infoRect);
+    HdcDrawText(hdcTemp, WStrL(L"Select screenshot to save. ↑ ↓ to navigate. Enter to select. Esc to cancel"),
+                infoBounds, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(hdcTemp, prevInfoFont);
     DeleteObject(infoFont);

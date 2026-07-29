@@ -34,7 +34,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ToRECT(ev->itemRect);
+    Rect rc = ev->itemRect;
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -43,7 +43,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+    HdcFillRectWithBkColor(hdc, rc);
 
     bool isRtl = HwndIsRtl(lb->hwnd);
     if (isRtl) {
@@ -75,22 +75,23 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     int padX = DpiScale(lb->hwnd, 4);
-    rc.left += padX;
-    rc.right -= padX;
+    rc.x += padX;
+    rc.dx -= 2 * padX;
 
     if (data->indent > 0) {
         int indentW = data->indent * DpiScale(lb->hwnd, 16);
         if (isRtl) {
-            rc.right -= indentW;
+            rc.dx -= indentW;
         } else {
-            rc.left += indentW;
+            rc.x += indentW;
+            rc.dx -= indentW;
         }
     }
 
     // reserve space on the right for rightStr (accel key, dir, or "p34") so it
     // is always visible; the item text gets the remaining space and is
     // ellipsized when too long.
-    RECT rcText = rc;
+    Rect rcText = rc;
     TempWStr rightStrW = nullptr;
     int rightW = 0;
     if (rightStr && rightStr.s[0]) {
@@ -98,31 +99,33 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         int gap = DpiScale(lb->hwnd, 8);
         rightW = HdcGetTextExtentPoint32(hdc, rightStr).dx;
         if (isRtl) {
-            rcText.left += rightW + gap;
+            rcText.x += rightW + gap;
+            rcText.dx -= rightW + gap;
         } else {
-            rcText.right -= rightW + gap;
+            rcText.dx -= rightW + gap;
         }
     }
 
     {
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
         drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
-        DrawMaybeHighlightedText(hdc, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
+        DrawMaybeHighlightedText(hdc, ToRECT(rcText), itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
     }
 
     if (rightStrW) {
-        RECT rcRight = rc;
+        Rect rcRight = rc;
         uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
         if (isRtl) {
-            rcRight.right = rc.left + rightW;
+            rcRight.dx = rightW;
             fmt |= DT_LEFT | DT_RTLREADING;
         } else {
-            rcRight.left = rc.right - rightW;
+            rcRight.x += rcRight.dx - rightW;
+            rcRight.dx = rightW;
             fmt |= DT_RIGHT;
         }
         COLORREF rightCol = AccentColor(colText, 80);
         SetTextColor(hdc, rightCol);
-        DrawTextW(hdc, rightStrW.s, -1, &rcRight, fmt);
+        HdcDrawText(hdc, rightStrW, rcRight, fmt);
         SetTextColor(hdc, colText);
     }
 

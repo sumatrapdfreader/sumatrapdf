@@ -297,7 +297,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+    HdcFillRectWithBkColor(hdc, ToRect(rc));
 
     bool isRtl = HwndIsRtl(lb->hwnd);
     if (isRtl) {
@@ -336,7 +336,8 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
         drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
         TempWStr nameW = ToWStrTemp(e.name);
-        DrawTextW(hdc, nameW.s, -1, &rcText, drawFmt);
+        Rect textRect = ToRect(rcText);
+        HdcDrawText(hdc, nameW, textRect, drawFmt);
     }
 
     if (rightW) {
@@ -350,7 +351,8 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
             drawFmt |= DT_RIGHT;
         }
         SetTextColor(hdc, AccentColor(colText, 80));
-        DrawTextW(hdc, rightW.s, -1, &rcRight, drawFmt);
+        Rect rightRect = ToRect(rcRight);
+        HdcDrawText(hdc, rightW, rightRect, drawFmt);
         SetTextColor(hdc, colText);
     }
 

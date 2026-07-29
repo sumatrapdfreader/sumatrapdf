@@ -1814,18 +1814,16 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
     if (!thumb.rcListPath.IsEmpty()) {
         TempStr dirPath = path::GetDirTemp(path);
         SetTextColor(hdc, ThemeWindowTextDisabledColor());
-        RECT rcPath = ToRECT(thumb.rcListPath);
         UINT pathFmt = DT_SINGLELINE | DT_VCENTER | DT_PATH_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-        TempWStr pathW = ToWStrTemp(dirPath);
-        DrawTextW(hdc, pathW.s, -1, &rcPath, pathFmt);
+        Rect pathRect = thumb.rcListPath;
+        HdcDrawText(hdc, dirPath, pathRect, pathFmt);
     }
 
     TempStr fileSize = FileSizeForHomeListTemp(path);
     SetTextColor(hdc, ThemeWindowTextColor());
-    RECT rcSize = ToRECT(thumb.rcListSize);
     UINT sizeFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-    TempWStr sizeW = ToWStrTemp(fileSize);
-    DrawTextW(hdc, sizeW.s, -1, &rcSize, sizeFmt);
+    Rect sizeRect = thumb.rcListSize;
+    HdcDrawText(hdc, fileSize, sizeRect, sizeFmt);
 
     ImageList_Draw(l.himlOpen, (int)TbIcon::Close, hdc, thumb.rcListRemove.x, thumb.rcListRemove.y, ILD_NORMAL);
     if (fs->isPinned) {
