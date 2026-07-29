@@ -21,7 +21,7 @@ static bool gThickArrows = true;
 // all live overlay scrollbars, for global mouse tracking
 static Vec<OverlayScrollbar*> gAllScrollbars;
 static UINT_PTR gMouseTrackTimer = 0;
-static POINT gLastMousePos = {-1, -1};
+static Point gLastMousePos = {-1, -1};
 static constexpr UINT_PTR kMouseTrackTimerID = 100;
 static constexpr int kMouseTrackIntervalMs = 50;
 
@@ -157,7 +157,7 @@ static Rect GetScrollbarScreenRect(OverlayScrollbar* sb) {
 }
 
 // Distance from point to rect edge (0 if inside)
-static int DistToRect(POINT pt, Rect rc) {
+static int DistToRect(Point pt, Rect rc) {
     int dx = 0;
     int dy = 0;
     if (pt.x < rc.x) {
@@ -463,8 +463,7 @@ static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
         return;
     }
 
-    POINT pt;
-    GetCursorPos(&pt);
+    Point pt = GetCursorPosition();
 
     bool mouseMoved = (pt.x != gLastMousePos.x || pt.y != gLastMousePos.y);
     gLastMousePos = pt;
@@ -493,9 +492,8 @@ static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
         }
 
         // Check if mouse is over the owner window's client area
-        RECT ownerRc;
-        GetWindowRect(sb->hwndOwner, &ownerRc);
-        bool overOwner = PtInRect(&ownerRc, pt);
+        Rect ownerRc = HwndWindowRect(sb->hwndOwner);
+        bool overOwner = ownerRc.Contains(pt);
 
         // Check distance to scrollbar area
         Rect sbRect = GetScrollbarScreenRect(sb);
@@ -518,7 +516,7 @@ static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
                 ShowScrollbarWindow(sb, true);
             }
             // Update thumb hover state
-            Point clientPt = HwndScreenToClient(sb->hwnd, Point(pt.x, pt.y));
+            Point clientPt = HwndScreenToClient(sb->hwnd, pt);
             Rect thumbRc = GetThumbRect(sb);
             bool wasOver = sb->mouseOverThumb;
             sb->mouseOverThumb = thumbRc.Contains(clientPt);

@@ -435,7 +435,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     if (tabUnderMouse->IsAboutTab()) {
         return;
     }
-    POINT pt = ToPOINT(ev->mouseScreen);
+    Point pt = ev->mouseScreen;
 
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
