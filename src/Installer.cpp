@@ -465,24 +465,52 @@ static bool MoveAsideInstallFile(Str installDir, Str fileName, bool silent) {
     return true;
 }
 
+// Through 3.6 the engine DLL was libmupdf.dll; 3.7+ ships libsumatrapdf.dll.
+// Best-effort only: a locked legacy file must not abort install — the new DLL
+// has a different name and can still be written. Prefer rename-aside so a
+// still-mapped module can unload later; fall back to delete when possible.
+static void MoveAsideOrDeleteLegacyLibmupdf(Str installDir) {
+    TempStr path = path::JoinTemp(installDir, StrL("libmupdf.dll"));
+    if (!file::Exists(path)) {
+        logf("MoveAsideOrDeleteLegacyLibmupdf: no legacy '%s'\n", path);
+        return;
+    }
+    logf("MoveAsideOrDeleteLegacyLibmupdf: found legacy '%s' size=%lld\n", path, (long long)file::GetSize(path));
+    KillProcessesWithModule(path, true);
+    TempStr copyPath = str::JoinTemp(path, ".copy");
+    if (TryRenameAsideOnce(path, copyPath)) {
+        logf("MoveAsideOrDeleteLegacyLibmupdf: renamed to '%s'\n", copyPath);
+        return;
+    }
+    DWORD attrs = file::GetAttributes(path);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
+        file::SetAttributes(path, attrs & ~FILE_ATTRIBUTE_READONLY);
+    }
+    if (file::Delete(path)) {
+        logf("MoveAsideOrDeleteLegacyLibmupdf: deleted '%s'\n", path);
+        return;
+    }
+    logf("MoveAsideOrDeleteLegacyLibmupdf: could not rename/delete '%s' (ok; install continues)\n", path);
+    LogLastError();
+}
+
 // Rename lockable DLLs aside before extract so new files can be written freely.
 static bool PrepareInstallDirByRenaming(Str installDir, bool silent) {
     logf("PrepareInstallDirByRenaming('%s' silent=%d)\n", installDir, (int)silent);
     StopWindowsSearchService();
     // Order: filter/preview first (often locked by Search/Explorer), then engine DLL.
-    // libmupdf.dll: legacy name through 3.6 — move aside on upgrade so a leftover
-    // locked copy cannot block install of libsumatrapdf.dll (3.7+).
     static const Str kFiles[] = {
         StrL("PdfFilter.dll"),
         StrL("PdfPreview.dll"),
         StrL("libsumatrapdf.dll"),
-        StrL("libmupdf.dll"),
     };
     for (Str name : kFiles) {
         if (!MoveAsideInstallFile(installDir, name, silent)) {
             return false;
         }
     }
+    // Older installs: move libmupdf.dll out of the way without blocking on it.
+    MoveAsideOrDeleteLegacyLibmupdf(installDir);
     return true;
 }
 
@@ -504,6 +532,9 @@ static void DeleteInstallCopyLeftovers(Str destDir) {
             logf("  could not delete leftover '%s' (ok to ignore)\n", copyPath);
         }
     }
+    // If a still-locked legacy DLL survived prepare, try again after extract
+    // (holders may have exited); never fail the install on this.
+    MoveAsideOrDeleteLegacyLibmupdf(destDir);
 }
 
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
@@ -1629,6 +1660,7 @@ bool ExtractInstallerFiles(Str dir) {
 
     // Rename lockable DLLs aside (PdfFilter / PdfPreview / libsumatrapdf) before
     // extract. Dialog retries every 3s if a file stays locked; user can abort.
+    // Legacy libmupdf.dll (through 3.6) is moved/deleted best-effort (different name).
     bool silent = gCliNew.silent || (gCli && gCli->silent);
     if (!PrepareInstallDirByRenaming(dir, silent)) {
         log("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n");
