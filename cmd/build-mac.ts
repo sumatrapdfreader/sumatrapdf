@@ -556,7 +556,6 @@ const TEST_UTIL_SOURCES = [
 ];
 
 const TEST_ENGINES_SOURCES = [
-  "src/base/BitReader.cpp",
   "src/base/GuessFileType.cpp",
   "src/DocProperties.cpp",
   "src/EbookDoc.cpp",
@@ -578,7 +577,6 @@ const TEST_ENGINES_SOURCES = [
 ];
 
 const MAC_APP_SOURCES = [
-  "src/base/BitReader.cpp",
   "src/base/GuessFileType.cpp",
   "src/DisplayMode.cpp",
   "src/DocumentLayout.cpp",

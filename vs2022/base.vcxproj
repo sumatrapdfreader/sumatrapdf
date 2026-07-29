@@ -909,7 +909,6 @@
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\Arena.h" />
     <ClInclude Include="..\src\base\Base.h" />
-    <ClInclude Include="..\src\base\BitReader.h" />
     <ClInclude Include="..\src\base\ByteReaderWriter.h" />
     <ClInclude Include="..\src\base\CmdLineArgsIter.h" />
     <ClInclude Include="..\src\base\Color.h" />
@@ -965,7 +964,6 @@
     <ClCompile Include="..\src\base\Arena_win.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\Base_win.cpp" />
-    <ClCompile Include="..\src\base\BitReader.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />

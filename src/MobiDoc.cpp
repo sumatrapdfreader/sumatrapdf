@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/BitReader.h"
 #include "base/ByteReaderWriter.h"
 #include "base/GuessFileType.h"
 

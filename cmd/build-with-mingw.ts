@@ -116,7 +116,6 @@ const utils: LibDef = {
         "Base.h",
         "Base.cpp",
         "Base_win.cpp",
-        "BitReader.*",
         "ByteReaderWriter.*",
         "CmdLineArgsIter.h",
         "CmdLineArgsIter.cpp",

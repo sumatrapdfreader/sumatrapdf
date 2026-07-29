@@ -859,7 +859,6 @@ function base_files()
     "Base.h",
     "Base.cpp",
     "Base_win.cpp",
-    "BitReader.*",
     "ByteReaderWriter.*",
     "CmdLineArgsIter.h",
     "CmdLineArgsIter.cpp",
