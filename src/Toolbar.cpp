@@ -547,8 +547,7 @@ static int ToolbarNaturalWidth(MainWindow* win) {
 static Rect CanvasRectInFrame(MainWindow* win) {
     RECT rc{};
     GetWindowRect(win->hwndCanvas, &rc);
-    POINT tl{rc.left, rc.top};
-    ScreenToClient(win->hwndFrame, &tl);
+    Point tl = HwndScreenToClient(win->hwndFrame, Point(rc.left, rc.top));
     return Rect(tl.x, tl.y, rc.right - rc.left, rc.bottom - rc.top);
 }
 
@@ -601,10 +600,8 @@ void PositionOverlayToolbar(MainWindow* win) {
 
 // whether the cursor is currently in the reveal band or over the toolbar
 static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
-    POINT pt{};
-    GetCursorPos(&pt);
-    POINT ptFrame = pt;
-    ScreenToClient(win->hwndFrame, &ptFrame);
+    Point pt = GetCursorPosition();
+    Point ptFrame = HwndScreenToClient(win->hwndFrame, pt);
 
     Rect tb = OverlayToolbarRect(win);
     // reveal band: spans the full canvas width so the toolbar also appears when
@@ -617,7 +614,7 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
 
     // also keep shown while the cursor is over the toolbar window itself
-    HWND hwndUnder = WindowFromPoint(pt);
+    HWND hwndUnder = HwndWindowFromPoint(pt);
     bool overToolbar = hwndUnder && (hwndUnder == win->hwndReBar || hwndUnder == win->hwndToolbar ||
                                      IsChild(win->hwndReBar, hwndUnder));
     return inBand || overToolbar;
@@ -1662,9 +1659,7 @@ static bool ShouldSwitchMenuBarOnMouseMove() {
     }
     HWND hwndTb = gMenuBarPopupNav.win->hwndMenuToolbar;
 
-    POINT pt;
-    GetCursorPos(&pt);
-    ScreenToClient(hwndTb, &pt);
+    Point pt = HwndGetCursorPos(hwndTb);
 
     // hit-test the toolbar
     int btnCount = TbGetButtonCount(hwndTb);

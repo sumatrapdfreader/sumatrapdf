@@ -518,11 +518,10 @@ static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
                 ShowScrollbarWindow(sb, true);
             }
             // Update thumb hover state
-            POINT clientPt = pt;
-            ScreenToClient(sb->hwnd, &clientPt);
+            Point clientPt = HwndScreenToClient(sb->hwnd, Point(pt.x, pt.y));
             Rect thumbRc = GetThumbRect(sb);
             bool wasOver = sb->mouseOverThumb;
-            sb->mouseOverThumb = thumbRc.Contains(Point(clientPt.x, clientPt.y));
+            sb->mouseOverThumb = thumbRc.Contains(clientPt);
             if (wasOver != sb->mouseOverThumb) {
                 PaintScrollbar(sb);
             }

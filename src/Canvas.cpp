@@ -127,8 +127,7 @@ class ImageDropSource : public IDropSource {
         if (!ImageList_BeginDrag(himl, 0, hotX, hotY)) {
             return false;
         }
-        POINT pt{};
-        GetCursorPos(&pt);
+        Point pt = GetCursorPosition();
         // Desktop HWND so the drag image is not clipped to our canvas
         if (!ImageList_DragEnter(GetDesktopWindow(), pt.x, pt.y)) {
             ImageList_EndDrag();
@@ -175,8 +174,7 @@ class ImageDropSource : public IDropSource {
     }
     STDMETHODIMP GiveFeedback(__unused DWORD) override {
         if (dragStarted) {
-            POINT pt{};
-            GetCursorPos(&pt);
+            Point pt = GetCursorPosition();
             ImageList_DragMove(pt.x, pt.y);
             // S_OK: we supply the drag visual via ImageList (not the OLE default cursor)
             return S_OK;
@@ -3185,8 +3183,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             if (!isBegin) {
                 auto prev = touchState.zoomIntermediate;
                 float factor = curr / prev;
-                Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
-                HwndScreenToClient(win->hwndCanvas, pt);
+                Point pt = HwndScreenToClient(win->hwndCanvas, Point(gi.ptsLocation.x, gi.ptsLocation.y));
                 float newZoom = ScaleZoomBy(win, factor);
                 SmartZoom(win, newZoom, &pt, false);
             }
@@ -3359,10 +3356,7 @@ static bool OnPointerMessage(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LP
     }
 
     // WM_POINTER* lp contains screen coordinates
-    POINT pt;
-    pt.x = GET_X_LPARAM(lp);
-    pt.y = GET_Y_LPARAM(lp);
-    ScreenToClient(hwnd, &pt);
+    Point pt = HwndScreenToClient(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
     int x = pt.x;
     int y = pt.y;
 

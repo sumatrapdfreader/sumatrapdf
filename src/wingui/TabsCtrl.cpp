@@ -545,7 +545,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (!inTitleBar || hwnd == GetCapture()) {
                 return HTCLIENT;
             }
-            HwndScreenToClient(hwnd, mousePos);
+            mousePos = HwndScreenToClient(hwnd, mousePos);
             tabState = TabStateFromMousePosition(mousePos);
             if (tabState.tabIdx >= 0) {
                 return HTCLIENT;

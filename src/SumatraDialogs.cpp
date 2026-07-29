@@ -1419,9 +1419,7 @@ static bool TryParseBgColorEdit(HWND hDlg, BgColorDlgData* data) {
 }
 
 static void PickColorFromArea(HWND hwndCA, BgColorDlgData* data, HWND hDlg) {
-    POINT pt;
-    GetCursorPos(&pt);
-    ScreenToClient(hwndCA, &pt);
+    Point pt = HwndGetCursorPos(hwndCA);
     HDC hdcCA = GetDC(hwndCA);
     COLORREF picked = GetPixel(hdcCA, pt.x, pt.y);
     ReleaseDC(hwndCA, hdcCA);

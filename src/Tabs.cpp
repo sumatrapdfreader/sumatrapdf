@@ -570,10 +570,7 @@ static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionCh
 static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev) {
     WindowTab* tab = win->GetTab(ev->tabIdx);
     MainWindow* releaseWnd = nullptr;
-    POINT p;
-    p.x = ev->releasePoint.x;
-    p.y = ev->releasePoint.y;
-    HWND hwnd = WindowFromPoint(p);
+    HWND hwnd = HwndWindowFromPoint(ev->releasePoint);
     if (hwnd != nullptr) {
         releaseWnd = FindMainWindowByHwnd(hwnd);
     }

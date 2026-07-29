@@ -240,11 +240,20 @@ Point HwndClientToScreen(HWND hwnd, Point p) {
     return Point(pt.x, pt.y);
 }
 
-void HwndScreenToClient(HWND hwnd, Point& p) {
-    POINT pt = {p.x, p.y};
+Point HwndScreenToClient(HWND hwnd, Point p) {
+    POINT pt = ToPOINT(p);
     ScreenToClient(hwnd, &pt);
-    p.x = pt.x;
-    p.y = pt.y;
+    return Point(pt.x, pt.y);
+}
+
+HWND HwndWindowFromPoint(Point p) {
+    return WindowFromPoint(ToPOINT(p));
+}
+
+Point GetCursorPosition() {
+    POINT pt{};
+    GetCursorPos(&pt);
+    return Point(pt.x, pt.y);
 }
 
 //--- HWND: focus / visibility / Z-order
@@ -1647,10 +1656,9 @@ bool HwndIsFocused(HWND hwnd) {
 }
 
 bool HwndIsCursorOverWindow(HWND hwnd) {
-    POINT pt;
-    GetCursorPos(&pt);
+    Point pt = GetCursorPosition();
     Rect rcWnd = HwndWindowRect(hwnd);
-    return rcWnd.Contains({pt.x, pt.y});
+    return rcWnd.Contains(pt);
 }
 
 HWND HwndGetParent(HWND hwnd) {
@@ -1665,14 +1673,7 @@ TempStr HwndGetClassName(HWND hwnd) {
 }
 
 Point HwndGetCursorPos(HWND hwnd) {
-    POINT pt;
-    if (!GetCursorPos(&pt)) {
-        return {};
-    }
-    if (!ScreenToClient(hwnd, &pt)) {
-        return {};
-    }
-    return {pt.x, pt.y};
+    return HwndScreenToClient(hwnd, GetCursorPosition());
 }
 
 Point& UnmirrorRtl(HWND hwnd, Point& p) {

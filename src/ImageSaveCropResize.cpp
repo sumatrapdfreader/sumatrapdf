@@ -1855,9 +1855,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_SETCURSOR: {
             ew = FindImageEditWindowByHwnd(hwnd);
             if (ew && ew->mode != ImageEditMode::Save && LOWORD(lp) == HTCLIENT) {
-                POINT pt;
-                GetCursorPos(&pt);
-                ScreenToClient(hwnd, &pt);
+                Point pt = HwndGetCursorPos(hwnd);
                 DragEdge edge;
                 if (ew->mode == ImageEditMode::Crop) {
                     edge = HitTestCropEdge(ew, pt.x, pt.y);

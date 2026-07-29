@@ -188,9 +188,8 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_NCHITTEST: {
             // If the gripper is enabled then perform a simple hit test on our gripper area.
-            POINT pt = {LOWORD(lp), HIWORD(lp)};
-            ScreenToClient(hwnd, &pt);
-            if (pdd->InsideGripper(Point(pt.x, pt.y))) {
+            Point pt = HwndScreenToClient(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
+            if (pdd->InsideGripper(pt)) {
                 return HTBOTTOMRIGHT;
             }
         } break;

@@ -57,7 +57,9 @@ void HwndCenterDialog(HWND hDlg, HWND hParent = nullptr);
 
 int MapWindowPoints(HWND, HWND, Point*, int);
 Point HwndClientToScreen(HWND, Point);
-void HwndScreenToClient(HWND, Point&);
+Point HwndScreenToClient(HWND, Point);
+HWND HwndWindowFromPoint(Point);
+Point GetCursorPosition();
 Point HwndGetCursorPos(HWND hwnd);
 Point& UnmirrorRtl(HWND hwnd, Point& p);
 bool HwndIsCursorOverWindow(HWND);

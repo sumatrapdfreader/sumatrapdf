@@ -10269,8 +10269,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
 
             {
-                Point ptClient{x, y};
-                HwndScreenToClient(hwnd, ptClient);
+                Point ptClient = HwndScreenToClient(hwnd, Point(x, y));
                 int btnIdx = CaptionButtonAt(win, ptClient);
                 if (btnIdx >= 0) {
                     if (btnIdx == CB_MAXIMIZE || btnIdx == CB_RESTORE) {
