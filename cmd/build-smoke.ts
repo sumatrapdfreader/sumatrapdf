@@ -18,7 +18,8 @@ async function main() {
 
   const { msbuildPath } = detectVisualStudio2026();
   const sln = String.raw`vs2022\SumatraPDF.sln`;
-  const t = `/t:SumatraPDF:Rebuild;test_util:Rebuild`;
+  // Nested under the "tools" solution folder → MSBuild target is tools\test_util
+  const t = String.raw`/t:SumatraPDF:Rebuild;tools\test_util:Rebuild`;
   const p = `/p:Configuration=Release;Platform=x64`;
   await runLogged(msbuildPath, [sln, t, p, `/m`]);
 

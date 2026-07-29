@@ -101,7 +101,8 @@ async function main() {
   await runLogged(join("bin", "premake5.exe"), ["vs2022"]);
   await runLogged(msbuildPath, [
     String.raw`vs2022\SumatraPDF.sln`,
-    "/t:test_util:Rebuild",
+    // Nested under the "tools" solution folder → MSBuild target is tools\test_util
+    String.raw`/t:tools\test_util:Rebuild`,
     `/p:Configuration=${config};Platform=${platform}`,
     "/m",
   ]);

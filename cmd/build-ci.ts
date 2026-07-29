@@ -287,7 +287,8 @@ async function buildPreRelease(
     const p = `/p:Configuration=Release;Platform=${vsplatform}`;
 
     // build and run tests (skip for ARM64)
-    await runLogged(msbuildPath, [slnPath, `/t:test_util:Rebuild`, p, `/m`]);
+    // Nested under the "tools" solution folder → MSBuild target is tools\test_util
+    await runLogged(msbuildPath, [slnPath, String.raw`/t:tools\test_util:Rebuild`, p, `/m`]);
     if (vsplatform !== "ARM64") {
       const testUtil = resolve(join(outDir, "test_util.exe"));
       await runLogged(testUtil, [], outDir);
@@ -319,7 +320,7 @@ async function buildSmoke(): Promise<void> {
     throw new Error(`'${makeLzsa}' doesn't exist`);
   }
 
-  const t = `/t:SumatraPDF:Rebuild;test_util:Rebuild`;
+  const t = String.raw`/t:SumatraPDF:Rebuild;tools\test_util:Rebuild`;
   const p = `/p:Configuration=Release;Platform=x64`;
   await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
 
