@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/WinDynCalls.h"
+#include "base/Win.h"
 #include "uia/Provider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"
@@ -177,13 +178,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_BoundingRectangle(str
     }
 
     // return Bounding Rect of the Canvas area
-    RECT canvas_rect;
-    GetWindowRect(canvasHwnd, &canvas_rect);
+    Rect canvasRect = HwndWindowRect(canvasHwnd);
 
-    pRetVal->left = canvas_rect.left;
-    pRetVal->top = canvas_rect.top;
-    pRetVal->width = canvas_rect.right - canvas_rect.left;
-    pRetVal->height = canvas_rect.bottom - canvas_rect.top;
+    pRetVal->left = canvasRect.x;
+    pRetVal->top = canvasRect.y;
+    pRetVal->width = canvasRect.dx;
+    pRetVal->height = canvasRect.dy;
 
     return S_OK;
 }

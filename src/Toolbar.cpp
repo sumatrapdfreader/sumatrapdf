@@ -545,10 +545,9 @@ static int ToolbarNaturalWidth(MainWindow* win) {
 
 // canvas rectangle in frame-client coordinates
 static Rect CanvasRectInFrame(MainWindow* win) {
-    RECT rc{};
-    GetWindowRect(win->hwndCanvas, &rc);
-    Point tl = HwndScreenToClient(win->hwndFrame, Point(rc.left, rc.top));
-    return Rect(tl.x, tl.y, rc.right - rc.left, rc.bottom - rc.top);
+    Rect rc = HwndWindowRect(win->hwndCanvas);
+    Point tl = HwndScreenToClient(win->hwndFrame, rc.TL());
+    return Rect(tl, rc.Size());
 }
 
 // when the overlay toolbar sits at the bottom, lift it above the horizontal

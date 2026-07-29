@@ -243,9 +243,8 @@ int Edit::GetLeftTextMargin() {
     int border = 0;
     if (HasBorder()) {
         Point clientOrigin = HwndClientToScreen(hwnd, Point());
-        RECT wr{};
-        GetWindowRect(hwnd, &wr);
-        border = clientOrigin.x - wr.left;
+        Rect wr = HwndWindowRect(hwnd);
+        border = clientOrigin.x - wr.x;
     }
     DWORD margins = (DWORD)SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
     int leftMargin = (int)LOWORD(margins);

@@ -2909,13 +2909,12 @@ void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
 
 // -1 to use existing value
 void ResizeWindow(HWND hwnd, int dx, int dy) {
-    RECT rc;
-    GetWindowRect(hwnd, &rc);
+    Rect rc = HwndWindowRect(hwnd);
     if (dx == -1) {
-        dx = RectDx(rc);
+        dx = rc.dx;
     }
     if (dy == -1) {
-        dy = RectDy(rc);
+        dy = rc.dy;
     }
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
 }

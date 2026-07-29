@@ -1036,9 +1036,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     blend.SourceConstantAlpha = 255;
     blend.AlphaFormat = AC_SRC_ALPHA;
 
-    RECT winRect;
-    GetWindowRect(hwnd, &winRect);
-    POINT ptDst = {winRect.left, winRect.top};
+    Rect winRect = HwndWindowRect(hwnd);
+    POINT ptDst = {winRect.x, winRect.y};
     UpdateLayeredWindow(hwnd, hdcScreen, &ptDst, &szWnd, hdcMem, &ptSrc, 0, &blend, ULW_ALPHA);
 
     SelectObject(hdcMem, oldBmp);

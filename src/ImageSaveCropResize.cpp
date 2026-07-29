@@ -693,12 +693,11 @@ static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
     int screenR = mi.rcWork.right;
     int screenB = mi.rcWork.bottom;
 
-    RECT winRc;
-    GetWindowRect(ew->hwnd, &winRc);
-    int winX = winRc.left;
-    int winY = winRc.top;
-    int winW = winRc.right - winRc.left;
-    int winH = winRc.bottom - winRc.top;
+    Rect winRc = HwndWindowRect(ew->hwnd);
+    int winX = winRc.x;
+    int winY = winRc.y;
+    int winW = winRc.dx;
+    int winH = winRc.dy;
 
     int newWinW = winW + extraW;
     int newWinH = winH + extraH;

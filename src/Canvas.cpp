@@ -4214,10 +4214,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (win && win->tabsInTitlebar && !IsZoomed(GetParent(hwnd))) {
                 int x = GET_X_LPARAM(lp);
                 int y = GET_Y_LPARAM(lp);
-                RECT wrc;
-                GetWindowRect(GetParent(hwnd), &wrc);
+                Rect wrc = HwndWindowRect(GetParent(hwnd));
                 int b = kFrameResizeHitTest;
-                if ((x - wrc.left) < b || (wrc.right - x) <= b || (y - wrc.top) < b || (wrc.bottom - y) <= b) {
+                if ((x - wrc.x) < b || (wrc.x + wrc.dx - x) <= b || (y - wrc.y) < b || (wrc.y + wrc.dy - y) <= b) {
                     return HTTRANSPARENT;
                 }
             }

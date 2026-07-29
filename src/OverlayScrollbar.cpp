@@ -147,13 +147,12 @@ static UINT ScrollMsgForType(OverlayScrollbar* sb) {
 
 // Get scrollbar rect in screen coordinates (for thick size, used for proximity check)
 static Rect GetScrollbarScreenRect(OverlayScrollbar* sb) {
-    RECT ownerRc;
-    GetWindowRect(sb->hwndOwner, &ownerRc);
+    Rect ownerRc = HwndWindowRect(sb->hwndOwner);
     int scrollW = ScaledWidth(sb, true); // use thick width for proximity
     if (IsVert(sb)) {
-        return Rect(ownerRc.right - scrollW, ownerRc.top, scrollW, ownerRc.bottom - ownerRc.top);
+        return Rect(ownerRc.x + ownerRc.dx - scrollW, ownerRc.y, scrollW, ownerRc.dy);
     }
-    return Rect(ownerRc.left, ownerRc.bottom - scrollW, ownerRc.right - ownerRc.left, scrollW);
+    return Rect(ownerRc.x, ownerRc.y + ownerRc.dy - scrollW, ownerRc.dx, scrollW);
 }
 
 // Distance from point to rect edge (0 if inside)
@@ -199,10 +198,9 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
         return;
     }
 
-    RECT wrc;
-    GetWindowRect(sb->hwnd, &wrc);
-    int w = wrc.right - wrc.left;
-    int h = wrc.bottom - wrc.top;
+    Rect wrc = HwndWindowRect(sb->hwnd);
+    int w = wrc.dx;
+    int h = wrc.dy;
     if (w <= 0 || h <= 0) {
         return;
     }
@@ -382,7 +380,7 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
 
     POINT ptSrc = {0, 0};
     SIZE szWnd = {w, h};
-    POINT ptDst = {wrc.left, wrc.top};
+    POINT ptDst = {wrc.x, wrc.y};
     BLENDFUNCTION blend{};
     blend.BlendOp = AC_SRC_OVER;
     blend.SourceConstantAlpha = 255;
@@ -758,9 +756,8 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
             // pass through rightmost 2px of vertical scrollbar for frame resize
             if (IsVert(sb)) {
                 int x = GET_X_LPARAM(lp);
-                RECT rc;
-                GetWindowRect(hwnd, &rc);
-                if ((rc.right - x) <= 2) {
+                Rect rc = HwndWindowRect(hwnd);
+                if ((rc.x + rc.dx - x) <= 2) {
                     return HTTRANSPARENT;
                 }
             }
@@ -896,8 +893,7 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
         return;
     }
 
-    RECT ownerRc;
-    GetWindowRect(sb->hwndOwner, &ownerRc);
+    Rect ownerRc = HwndWindowRect(sb->hwndOwner);
 
     int scrollW = ScaledWidth(sb, IsThick(sb));
     int x, y, w, h;
@@ -916,14 +912,14 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     }
 
     if (IsVert(sb)) {
-        x = ownerRc.right - scrollW;
-        y = ownerRc.top;
+        x = ownerRc.x + ownerRc.dx - scrollW;
+        y = ownerRc.y;
         w = scrollW;
-        h = ownerRc.bottom - ownerRc.top - siblingInset;
+        h = ownerRc.dy - siblingInset;
     } else {
-        x = ownerRc.left;
-        y = ownerRc.bottom - scrollW;
-        w = ownerRc.right - ownerRc.left - siblingInset;
+        x = ownerRc.x;
+        y = ownerRc.y + ownerRc.dy - scrollW;
+        w = ownerRc.dx - siblingInset;
         h = scrollW;
     }
 

@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Win.h"
 
 #include <uiautomationcore.h>
 
@@ -144,11 +145,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_BoundingRectangle
         return E_FAIL;
     }
 
-    RECT canvasRect;
-    GetWindowRect(canvasHwnd, &canvasRect);
+    Rect canvasRect = HwndWindowRect(canvasHwnd);
 
-    pRetVal->left = canvasRect.left + page->pageOnScreen.x;
-    pRetVal->top = canvasRect.top + page->pageOnScreen.y;
+    pRetVal->left = canvasRect.x + page->pageOnScreen.x;
+    pRetVal->top = canvasRect.y + page->pageOnScreen.y;
     pRetVal->width = page->pageOnScreen.dx;
     pRetVal->height = page->pageOnScreen.dy;
 

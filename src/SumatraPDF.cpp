@@ -10223,16 +10223,15 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_NCHITTEST: {
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
-            RECT wrc;
-            GetWindowRect(hwnd, &wrc);
+            Rect wrc = HwndWindowRect(hwnd);
 
             // use a larger hit-test area than the visible border for easier resizing
             if (!IsZoomed(hwnd) && !win->isFullScreen && !win->presentation) {
                 int b = kFrameResizeHitTest;
-                bool onLeft = (x - wrc.left) < b;
-                bool onRight = (wrc.right - x) <= b;
-                bool onTop = (y - wrc.top) < b;
-                bool onBottom = (wrc.bottom - y) <= b;
+                bool onLeft = (x - wrc.x) < b;
+                bool onRight = (wrc.x + wrc.dx - x) <= b;
+                bool onTop = (y - wrc.y) < b;
+                bool onBottom = (wrc.y + wrc.dy - y) <= b;
 
                 if (onTop && onLeft) {
                     *callDef = false;
