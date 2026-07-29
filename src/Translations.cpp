@@ -210,20 +210,44 @@ void SetCurrentLangByCode(Str langCode) {
         FallbackToEnglish();
         return;
     }
-    int fileIdx = lzma::GetIdxFromName(&archive, "translations-good.txt");
+    int fileIdx = lzma::GetIdxFromName(&archive, "translations.txt");
     if (fileIdx < 0) {
-        logf("SetCurrentLangByCode: translations-good.txt not found in archive\n");
+        logf("SetCurrentLangByCode: translations.txt not found in archive\n");
         FallbackToEnglish();
         return;
     }
+    auto* fi = &archive.files[fileIdx];
+    logf("SetCurrentLangByCode: translations.txt compressed=%u uncompressed=%u (archive=%d)\n",
+         (unsigned)fi->compressedSize, (unsigned)fi->uncompressedSize, ldr.dataSize);
     u8* data = lzma::GetFileDataByIdx(&archive, fileIdx, nullptr);
     if (!data) {
         logf("SetCurrentLangByCode: GetFileDataByIdx failed\n");
         FallbackToEnglish();
         return;
     }
-    int dataSize = (int)(archive.files[fileIdx].uncompressedSize);
+    int dataSize = (int)fi->uncompressedSize;
+    // empty file is expected when TRANS_UPLOAD_SECRET was missing at build time
+    if (dataSize <= 0) {
+        logf("SetCurrentLangByCode: translations.txt is empty (no translations available)\n");
+        free(data);
+        FallbackToEnglish();
+        return;
+    }
     Str d = Str((char*)(data), dataSize);
+    // whitespace-only / header-only with no strings: treat as empty
+    bool hasString = false;
+    for (int i = 0; i < d.len; i++) {
+        if (d.s[i] == ':' && (i == 0 || d.s[i - 1] == '\n')) {
+            hasString = true;
+            break;
+        }
+    }
+    if (!hasString) {
+        logf("SetCurrentLangByCode: translations.txt has no strings (no translations available)\n");
+        free(data);
+        FallbackToEnglish();
+        return;
+    }
     ParseTranslationsTxt(d, langCode);
     free(data);
 }

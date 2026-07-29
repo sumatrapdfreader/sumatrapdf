@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
 
 // [iso_code, display_name, ...]
@@ -263,7 +263,11 @@ function main() {
     printGroups(file, groups);
     updateGroups(allGroups, groups);
   }
-  const translationsTxtPath = join("translations", "translations.txt");
+  const translationsTxtPath = join(".work", "translations.txt");
+  if (!existsSync(translationsTxtPath)) {
+    console.error(`Missing ${translationsTxtPath}. Run: bun cmd/trans-dl.ts`);
+    process.exit(1);
+  }
   const d = readFileSync(translationsTxtPath, "utf-8");
   const translations = parseTranslations(d);
   detectAccesskeyClashes(allGroups, translations);
