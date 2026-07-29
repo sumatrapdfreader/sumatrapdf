@@ -153,6 +153,7 @@ const utils: LibDef = {
         "Log.*",
         "LzmaSimpleArchive.*",
         "Pixmap.*",
+        "Pixmap_win.cpp",
         "RegistryPaths.*",
         "SettingsUtil.*",
         "SquareTreeParser.*",
