@@ -34,12 +34,6 @@
     <Filter Include="liblzma\simple">
       <UniqueIdentifier>{497B92DA-3549-86E0-1EDD-F6060A4A6245}</UniqueIdentifier>
     </Filter>
-    <Filter Include="lzma">
-      <UniqueIdentifier>{D95D9A7C-C594-9B0D-6E81-81105A97170F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="lzma\C">
-      <UniqueIdentifier>{6B3EA90C-57E0-D3E2-409B-E7362CDC5A33}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\a-bzip2\bzlib.h">
@@ -505,15 +499,6 @@
     </ClCompile>
     <ClCompile Include="..\ext\liblzma\simple\x86.c">
       <Filter>liblzma\simple</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\lzma\C\Bra.c">
-      <Filter>lzma\C</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\lzma\C\Bra86.c">
-      <Filter>lzma\C</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\lzma\C\LzmaDec.c">
-      <Filter>lzma\C</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

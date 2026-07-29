@@ -534,9 +534,8 @@ workspace "SumatraPDF"
     defines { "BZ_NO_STDIO" }
     includedirs { "ext/a-bzip2" }
     files { "ext/a-bzip2/bzip2.c", "ext/a-bzip2/bzlib.h", "ext/a-bzip2/version.txt" }
-    -- LZMA files needed by LzmaSimpleArchive in utils
-    includedirs { "ext/lzma/C" }
-    files { "ext/lzma/C/LzmaDec.c", "ext/lzma/C/Bra86.c", "ext/lzma/C/Bra.c" }
+    -- LzmaDec/Bra* for LzSA live in base/exe (not here): installer must extract
+    -- libmupdf.dll without calling into the delay-loaded DLL.
     -- liblzma for LZMA/LZMA2/XZ decompression (needed for 7zip support in libarchive)
     defines { "HAVE_CONFIG_H", "LZMA_API_STATIC" }
     includedirs { "ext/liblzma/api", "ext/liblzma/common", "ext/liblzma/check",
@@ -654,8 +653,7 @@ workspace "SumatraPDF"
     disablewarnings { "4005", "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
-  -- Kept for bench_image only; mupdf compiles the same sources into its static
-  -- lib for libmupdf / SumatraPDF-static (see project "mupdf").
+  -- Used by mupdf (linked) and by bench_image.
   project "libjpeg-turbo"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -689,105 +687,220 @@ workspace "SumatraPDF"
     includedirs { "ext/brotli/c/include" }
     brotli_files()
 
-    function fonts()
-      files {
+  project "a-gumbo"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings { "4018", "4100", "4132", "4189", "4204", "4244", "4245", "4267",
+      "4305", "4306", "4389", "4456", "4701", "4702" }
+    includedirs { "ext/a-gumbo" }
+    a_gumbo_files()
 
-        "mupdf/resources/fonts/urw/Dingbats.cff",
-        "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
-        "mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
-        "mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff",
-        "mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff",
-        "mupdf/resources/fonts/urw/NimbusRoman-Regular.cff",
-        "mupdf/resources/fonts/urw/NimbusRoman-Italic.cff",
-        "mupdf/resources/fonts/urw/NimbusRoman-Bold.cff",
-        "mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff",
-        "mupdf/resources/fonts/urw/NimbusSans-Regular.cff",
-        "mupdf/resources/fonts/urw/NimbusSans-Italic.cff",
-        "mupdf/resources/fonts/urw/NimbusSans-Bold.cff",
-        "mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff",
-        "mupdf/resources/fonts/urw/StandardSymbolsPS.cff",
-        "mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf",
-        "mupdf/resources/fonts/sil/CharisSIL.cff",
-        "mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
-        "mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
-        "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
+  project "a-jbig2dec"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
+    includedirs { "ext/a-jbig2dec" }
+    files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
 
-        "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
-        "mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
-        "mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
-        "mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf",
-        "mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
-        "mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
-        "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
-      }
+  project "a-openjpeg"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings { "4005", "4100", "4127", "4244", "4310", "4389", "4456", "4702" }
+    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
+    includedirs { "ext/a-openjpeg" }
+    files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
 
-      filter { 'files:**.cff', 'platforms:x86' }
-      buildmessage 'bin2coff %{file.basename}.cff (x86)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86'
-      }
-      filter { 'files:**.cff', 'platforms:x64 or x64_asan' }
-      buildmessage 'bin2coff %{file.basename}.cff (x64)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86_64'
-      }
-      filter { 'files:**.cff', 'platforms:arm64' }
-      buildmessage 'bin2coff %{file.basename}.cff (arm64)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff ARM64'
-      }
-      filter {}
+  project "freetype"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
+    freetype_files()
 
-      filter { 'files:**.ttf', 'platforms:x86' }
-      buildmessage 'bin2coff %{file.basename}.ttf (x86)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86'
-      }
-      filter { 'files:**.ttf', 'platforms:x64 or x64_asan' }
-      buildmessage 'bin2coff %{file.basename}.ttf (x64)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86_64'
-      }
-      filter { 'files:**.ttf', 'platforms:arm64' }
-      buildmessage 'bin2coff %{file.basename}.ttf (arm64)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf ARM64'
-      }
-      filter {}
+  project "lcms2"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings { "4100", "4244" }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
 
-      filter { 'files:**.otf', 'platforms:x86' }
-      buildmessage 'bin2coff %{file.basename}.otf (x86)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86'
-      }
-      filter { 'files:**.otf', 'platforms:x64 or x64_asan' }
-      buildmessage 'bin2coff %{file.basename}.otf (x64)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86_64'
-      }
-      filter { 'files:**.otf', 'platforms:arm64' }
-      buildmessage 'bin2coff %{file.basename}.otf (arm64)'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf ARM64'
-      }
-      filter {}
-    end
+  project "harfbuzz"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++latest"
+    optimized_conf()
+    -- ext/harfbuzz/src is required so /Yu"hb.hh" and forceincludes can resolve
+    -- hb.hh (sources also rely on same-dir includes for other headers).
+    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HAVE_FREETYPE",
+      -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
+      -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
+      -- context being set (it's NULL during atexit and when fz_hb_lock/unlock
+      -- pairs nest via store scavenging)
+      "hb_malloc_impl=sumatra_hb_malloc",
+      "hb_calloc_impl=sumatra_hb_calloc",
+      "hb_realloc_impl=sumatra_hb_realloc",
+      "hb_free_impl=sumatra_hb_free"
+    }
+    filter "configurations:Debug or DebugFull"
+      defines { "HAVE_ATEXIT" }
+    filter {}
+    disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
+    -- precompiled header: hb.hh is re-parsed by every harfbuzz TU and dominates
+    -- its compile time. forceincludes so MSVC /Yu finds the PCH marker even in
+    -- TUs that include a secondary header first (which then pulls in hb.hh).
+    pchheader "hb.hh"
+    pchsource "src/HarfBuzzPch.cpp"
+    files { "src/HarfBuzzPch.cpp" }
+    forceincludes { "hb.hh" }
+    harfbuzz_files()
+
+  project "a-mujs"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    includedirs { "ext/a-mujs" }
+    disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
+    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
+
+  project "a-extract"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    disablewarnings {
+      "4005", "4100", "4127", "4130", "4201", "4245", "4310", "4389", "4456", "4457", "4701", "4996"
+    }
+    includedirs { "ext/a-extract" }
+    uses_zlib()
+    -- mupdf provides memento.obj; skip extract's amalgamated memento body so the
+    -- final link of libmupdf.dll / SumatraPDF-static does not LNK4006 Memento
+    defines { "EXTRACT_NO_OWN_MEMENTO" }
+    files {
+      "ext/a-extract/extract.c", "ext/a-extract/memento.h",
+      "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
+    }
+
+  function fonts()
+    files {
+
+      "mupdf/resources/fonts/urw/Dingbats.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-Regular.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-Italic.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-Bold.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-Regular.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-Italic.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-Bold.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff",
+      "mupdf/resources/fonts/urw/StandardSymbolsPS.cff",
+      "mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf",
+      "mupdf/resources/fonts/sil/CharisSIL.cff",
+      "mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
+      "mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
+      "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
+
+      "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
+      "mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
+    }
+
+    filter { 'files:**.cff', 'platforms:x86' }
+    buildmessage 'bin2coff %{file.basename}.cff (x86)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86'
+    }
+    filter { 'files:**.cff', 'platforms:x64 or x64_asan' }
+    buildmessage 'bin2coff %{file.basename}.cff (x64)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86_64'
+    }
+    filter { 'files:**.cff', 'platforms:arm64' }
+    buildmessage 'bin2coff %{file.basename}.cff (arm64)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff ARM64'
+    }
+    filter {}
+
+    filter { 'files:**.ttf', 'platforms:x86' }
+    buildmessage 'bin2coff %{file.basename}.ttf (x86)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86'
+    }
+    filter { 'files:**.ttf', 'platforms:x64 or x64_asan' }
+    buildmessage 'bin2coff %{file.basename}.ttf (x64)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86_64'
+    }
+    filter { 'files:**.ttf', 'platforms:arm64' }
+    buildmessage 'bin2coff %{file.basename}.ttf (arm64)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf ARM64'
+    }
+    filter {}
+
+    filter { 'files:**.otf', 'platforms:x86' }
+    buildmessage 'bin2coff %{file.basename}.otf (x86)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86'
+    }
+    filter { 'files:**.otf', 'platforms:x64 or x64_asan' }
+    buildmessage 'bin2coff %{file.basename}.otf (x64)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86_64'
+    }
+    filter { 'files:**.otf', 'platforms:arm64' }
+    buildmessage 'bin2coff %{file.basename}.otf (arm64)'
+    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+    buildcommands {
+      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf ARM64'
+    }
+    filter {}
+  end
 
   project "mupdf"
     static_intermediate_dirs()
     kind "StaticLib"
-    -- C++ for harfbuzz; C sources still compile as C
-    language "C++"
-    cppdialect "C++latest"
+    language "C"
     mixed_dbg_rel_conf()
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
@@ -798,33 +911,14 @@ workspace "SumatraPDF"
     defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
-    -- third-party libs compiled into this project (was separate a-* static libs)
-    defines {
-      "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO",
-      "FT2_BUILD_LIBRARY",
-      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
-      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
-      -- harfbuzz
-      "HAVE_FALLBACK=1", "HAVE_OT", "HAVE_UCDN", "HAVE_FREETYPE",
-      -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
-      -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
-      "hb_malloc_impl=sumatra_hb_malloc",
-      "hb_calloc_impl=sumatra_hb_calloc",
-      "hb_realloc_impl=sumatra_hb_realloc",
-      "hb_free_impl=sumatra_hb_free",
-    }
-    filter "configurations:Debug or DebugFull"
-      defines { "HAVE_ATEXIT" }
-    filter {}
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }
     filter {}
 
     disablewarnings {
-      "4005", "4013", "4018", "4057", "4100", "4101", "4115", "4127", "4130", "4132", "4146", "4189", "4200", "4201",
-      "4204", "4206", "4210", "4090", "4244", "4245", "4267", "4295", "4305", "4306", "4310", "4312", "4389", "4456",
-      "4457", "4459", "4505", "4701", "4702", "4703", "4706", "4805", "4819", "4996", "5286"
+      "4005", "4013", "4018", "4057", "4100", "4115", "4130", "4132", "4146", "4200", "4204", "4206", "4210",
+      "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -833,7 +927,6 @@ workspace "SumatraPDF"
     includedirs {
       "mupdf/include",
       "mupdf/generated",
-      "ext/a-jbig2dec",
       "ext/jbig2dec",
       "ext/libjpeg-turbo/src",
       "ext/a-openjpeg",
@@ -853,46 +946,11 @@ workspace "SumatraPDF"
     fonts()
 
     mupdf_files()
-    -- Third-party code that only mupdf/libmupdf needs is compiled into this
-    -- static lib (smaller VS solution; was separate a-* projects).
-    files { "ext/a-jbig2dec/jbig2dec.c", "ext/a-jbig2dec/jbig2.h", "ext/a-jbig2dec/version.txt" }
-    files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
-    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
-    files {
-      "ext/a-extract/extract.c", "ext/a-extract/memento.h",
-      "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
-    }
-    -- mupdf provides memento.obj; skip extract's amalgamated memento body
-    filter { "files:ext/a-extract/extract.c" }
-      defines { "EXTRACT_NO_OWN_MEMENTO" }
-    filter {}
-    a_gumbo_files()
-    lcms2_files()
-    -- libjpeg-turbo (also kept as its own project for bench_image only)
-    libjpeg_turbo_files()
-    freetype_files()
-    harfbuzz_files()
-    filter { 'files:**.asm', 'platforms:x86' }
-      buildmessage '%{file.relpath}'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
-      }
-    filter {}
-    filter { 'files:**.asm', 'platforms:x64 or x64_asan' }
-      buildmessage '%{file.relpath}'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
-      }
-    filter {}
-    filter {
-      "files:ext/a-jbig2dec/** or files:ext/a-openjpeg/** or files:ext/a-mujs/** or files:ext/a-extract/** or files:ext/a-gumbo/** or files:ext/lcms2/** or files:ext/libjpeg-turbo/** or files:ext/freetype/** or files:ext/harfbuzz/**"
-    }
-      optimize "Size"
-    filter {}
+    -- Third-party code lives in its own static libs; link them so libmupdf.dll
+    -- / SumatraPDF-static pick them up via project references.
     links {
-      "cmark-gfm", "brotli", "libarchive"
+      "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "brotli",
+      "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
     }
 
     -- mupdf
@@ -963,6 +1021,12 @@ workspace "SumatraPDF"
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/lzma/C", "ext/libarchive" }
     base_files()
+    -- LzSA decoder (LzmaDecode + x86 BCJ) for LzmaSimpleArchive. Not in
+    -- libmupdf/libarchive so the installer can extract without the delay-loaded DLL.
+    files { "ext/lzma/C/Bra86.c", "ext/lzma/C/LzmaDec.c" }
+    filter { "files:ext/lzma/C/**" }
+      enablepch "Off"
+    filter {}
     setup_base_pch()
 
 ---- executables
@@ -1329,6 +1393,30 @@ workspace "SumatraPDF"
         'copy /y "$(VCToolsInstallDir)bin\\Hostx64\\x64\\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"'
       }
     filter {}
+
+  -- Visual Studio solution folders (NestedProjects). Assigned after project
+  -- declarations so we don't have to reorder the large project blocks above.
+  do
+    local function set_group(g, names)
+      for _, n in ipairs(names) do
+        project(n).group = g
+      end
+    end
+    -- mupdf static lib + the libraries it links / depends on
+    set_group("mupdf", {
+      "mupdf", "cmark-gfm", "libarchive", "a-zlib", "brotli", "libjpeg-turbo",
+      "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
+      "freetype", "harfbuzz", "lcms2",
+    })
+    -- libmupdf.dll + extra codecs / archives linked only into it (and static EXE).
+    -- Folder named "libmupdf.dll" so it does not collide with project "libmupdf".
+    set_group("libmupdf.dll", {
+      "libmupdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "libwebp", "unrar",
+    })
+    set_group("tools", {
+      "bench_image", "bin2coff", "test_engines", "test_util",
+    })
+  end
 
 workspace "MakeLZSA"
   configurations { "Debug", "Release" }
