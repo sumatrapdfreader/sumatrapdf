@@ -154,10 +154,10 @@ struct ClaudeCode {
 
 // settings for the Grok Build chat sidebar
 struct GrokBuild {
-    // Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)
+    // Grok model ID for --model (e.g. grok-4.5)
     Str model;
-    // extra Grok model IDs for the dropdown, comma-separated;
-    // grok-composer-2.5-fast and grok-build are always included
+    // extra Grok model IDs for the dropdown, comma-separated; used in
+    // addition to models reported by Grok
     Str models;
     // Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max
     int effort;
@@ -914,7 +914,7 @@ static const StructInfo gClaudeCodeInfo = {
     "the Claude Code chat panel"};
 
 static const FieldInfo gGrokBuildFields[] = {
-    {offsetof(GrokBuild, model), SettingType::String, (intptr_t)"grok-composer-2.5-fast"},
+    {offsetof(GrokBuild, model), SettingType::String, (intptr_t)"grok-4.5"},
     {offsetof(GrokBuild, models), SettingType::String, (intptr_t)""},
     {offsetof(GrokBuild, effort), SettingType::Int, 1},
     {offsetof(GrokBuild, alwaysApprove), SettingType::Bool, false},
@@ -922,10 +922,9 @@ static const FieldInfo gGrokBuildFields[] = {
 };
 static const StructInfo gGrokBuildInfo = {
     sizeof(GrokBuild), 5, gGrokBuildFields, "Model\0Models\0Effort\0AlwaysApprove\0BgColor",
-    "Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)\0extra Grok model IDs for the dropdown, "
-    "comma-separated; grok-composer-2.5-fast and grok-build are always included\0Grok effort level: 0=Low, 1=Medium, "
-    "2=High, 3=XHigh, 4=Max\0if true, pass --always-approve to Grok Build (auto-approve tool executions)\0background "
-    "color of the Grok Build chat panel"};
+    "Grok model ID for --model (e.g. grok-4.5)\0extra Grok model IDs for the dropdown, comma-separated; used in "
+    "addition to models reported by Grok\0Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max\0if true, pass "
+    "--always-approve to Grok Build (auto-approve tool executions)\0background color of the Grok Build chat panel"};
 
 static const FieldInfo gCodexBuildFields[] = {
     {offsetof(CodexBuild, model), SettingType::String, (intptr_t)"gpt-5.5"},

@@ -40,9 +40,73 @@ TempStr GrokBuildExecutablePathTemp() {
 
 static Mutex gGrokBuildLogMutex;
 static AIChatLogger gGrokBuildLogger = {&gGrokBuildLogMutex, "grok-build-log.txt", "grok-build"};
+static bool gTriedGrokModels = false;
+static StrVec gGrokModels;
 
 static void GrokBuildLog(Str direction, Str text) {
     AIChatLog(&gGrokBuildLogger, direction, text);
+}
+
+static bool ParseGrokModelsOutput(Str output, StrVec& models) {
+    bool inModels = false;
+    Str rest = output;
+    Str line;
+    while (str::NextLine(rest, line, rest)) {
+        TempStr trimmed = str::DupTemp(line);
+        str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
+        if (str::Eq(trimmed, "Available models:")) {
+            inModels = true;
+            continue;
+        }
+        if (!inModels || !str::StartsWith(trimmed, "* ")) {
+            continue;
+        }
+        Str model(trimmed.s + 2, trimmed.len - 2);
+        for (int i = 0; i < model.len; i++) {
+            if (str::IsWs(model.s[i])) {
+                model.len = i;
+                break;
+            }
+        }
+        AIChatAppendModelUnique(models, model);
+    }
+    return len(models) > 0;
+}
+
+// `grok models` reports the catalog available to the current Grok login.
+// Cache it for this app session; old CLIs and all other failures use the built-in model.
+static bool QueryGrokModels(Str exePath, StrVec& models) {
+    TempStr cmdLine = fmt("%s models", QuoteCmdLineArgTemp(exePath));
+    AIChatProcessLaunchResult launch;
+    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, {}, &launch)) {
+        return false;
+    }
+
+    str::Builder output;
+    ULONGLONG deadline = GetTickCount64() + 3000;
+    while (GetTickCount64() < deadline && output.len < 1024 * 1024) {
+        DWORD available = 0;
+        if (!PeekNamedPipe(launch.hReadPipe, nullptr, 0, nullptr, &available, nullptr)) {
+            break;
+        }
+        if (available > 0) {
+            char buf[4096];
+            DWORD nRead = 0;
+            DWORD toRead = std::min<DWORD>(available, dimof(buf));
+            if (!ReadFile(launch.hReadPipe, buf, toRead, &nRead, nullptr) || nRead == 0) {
+                break;
+            }
+            output.Append(Str(buf, (int)nRead));
+            continue;
+        }
+        if (WaitForSingleObject(launch.hProcess, 10) != WAIT_TIMEOUT) {
+            break;
+        }
+        Sleep(10);
+    }
+    CloseHandle(launch.hReadPipe);
+    AIChatCloseProcess(&launch.hProcess, true);
+    return ParseGrokModelsOutput(ToStr(output), models);
 }
 
 // --- Session history ---
@@ -292,7 +356,7 @@ struct GrokBuildProvider : AIChatProvider {
         virtualHostW = L"https://sumatrapdf.grok/";
         webViewDataDirPrefix = "GrokWebView";
         docUri = "/AI-Chat-with-document#grok-build";
-        defaultModel = "grok-composer-2.5-fast";
+        defaultModel = "grok-4.5";
         optionItems = "Low\0Medium\0High\0XHigh\0Max\0";
         optionCount = 5;
         optionDefault = 1;
@@ -309,8 +373,20 @@ struct GrokBuildProvider : AIChatProvider {
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
-        AIChatAppendModelUnique(models, "grok-composer-2.5-fast");
-        AIChatAppendModelUnique(models, "grok-build");
+        if (!gTriedGrokModels) {
+            gTriedGrokModels = true;
+            TempStr exePath = FindGrokExecutableTemp();
+            if (exePath && QueryGrokModels(exePath, gGrokModels)) {
+                defaultModel = gGrokModels[0];
+            }
+        }
+        if (len(gGrokModels) > 0) {
+            for (int i = 0; i < len(gGrokModels); i++) {
+                AIChatAppendModelUnique(models, gGrokModels[i]);
+            }
+        } else {
+            AIChatAppendModelUnique(models, "grok-4.5");
+        }
         Str extra = gGlobalPrefs->grokBuild.models;
         if (len(extra) > 0) {
             StrVec parts;

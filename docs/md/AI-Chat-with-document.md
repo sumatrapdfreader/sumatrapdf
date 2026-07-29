@@ -30,6 +30,8 @@ Open the panel with **View → Grok chat** (`CmdAIChatWithGrokBuild`), or search
 
 Grok Build settings are in the `GrokBuild` section of [advanced settings](Advanced-options-settings.md). The **Always Approve** checkbox passes `--always-approve` to Grok Build.
 
+The first time you open the Grok chat panel in an app session, SumatraPDF runs `grok models` and uses the models available to the signed-in Grok CLI in the model picker. If that query fails, the picker falls back to `grok-4.5`.
+
 ## OpenAI Codex
 
 This feature can also use **[OpenAI Codex](https://developers.openai.com/codex/cli)** (the `codex` command-line tool).

@@ -353,12 +353,12 @@ const codexBuild: Field[] = [
 ];
 
 const grokBuild: Field[] = [
-  field("Model", Str, "grok-composer-2.5-fast", "Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)"),
+  field("Model", Str, "grok-4.5", "Grok model ID for --model (e.g. grok-4.5)"),
   field(
     "Models",
     Str,
     "",
-    "extra Grok model IDs for the dropdown, comma-separated; grok-composer-2.5-fast and grok-build are always included",
+    "extra Grok model IDs for the dropdown, comma-separated; used in addition to models reported by Grok",
   ),
   field("Effort", Int, 1, "Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max"),
   field("AlwaysApprove", Bool, false, "if true, pass --always-approve to Grok Build (auto-approve tool executions)"),

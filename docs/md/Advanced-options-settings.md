@@ -402,11 +402,11 @@ ClaudeCode [
 
 ; settings for the Grok Build chat sidebar (introduced in version 3.7)
 GrokBuild [
-    ; Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)
-    Model = grok-composer-2.5-fast
+    ; Grok model ID for --model (e.g. grok-4.5)
+    Model = grok-4.5
 
-    ; extra Grok model IDs for the dropdown, comma-separated;
-    ; grok-composer-2.5-fast and grok-build are always included
+    ; extra Grok model IDs for the dropdown, comma-separated; used in addition
+    ; to models reported by Grok
     Models = 
 
     ; Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max
