@@ -263,9 +263,14 @@ struct ClaudeCodeProvider : AIChatProvider {
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
+        AIChatAppendModelUnique(models, "default");
+        AIChatAppendModelUnique(models, "best");
         AIChatAppendModelUnique(models, "sonnet");
         AIChatAppendModelUnique(models, "opus");
         AIChatAppendModelUnique(models, "haiku");
+        AIChatAppendModelUnique(models, "sonnet[1m]");
+        AIChatAppendModelUnique(models, "opus[1m]");
+        AIChatAppendModelUnique(models, "opusplan");
         Str extra = gGlobalPrefs->claudeCode.models;
         if (len(extra) > 0) {
             StrVec parts;

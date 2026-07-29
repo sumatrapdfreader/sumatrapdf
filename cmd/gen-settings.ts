@@ -376,7 +376,7 @@ const claudeCode: Field[] = [
     "Models",
     Str,
     "",
-    "extra Claude model aliases for the dropdown, comma-separated; sonnet, opus, and haiku are always included",
+    "extra Claude model aliases for the dropdown, comma-separated; documented Claude Code aliases are always included",
   ),
   field("Effort", Int, 1, "Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
   field("SkipPermissions", Bool, false, "if true, pass --dangerously-skip-permissions to Claude Code"),

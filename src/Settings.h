@@ -141,7 +141,7 @@ struct ClaudeCode {
     // if not in the model list
     Str model;
     // extra Claude model aliases for the dropdown, comma-separated;
-    // sonnet, opus, and haiku are always included
+    // documented Claude Code aliases are always included
     Str models;
     // Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
     int effort;
@@ -909,9 +909,9 @@ static const FieldInfo gClaudeCodeFields[] = {
 static const StructInfo gClaudeCodeInfo = {
     sizeof(ClaudeCode), 5, gClaudeCodeFields, "Model\0Models\0Effort\0SkipPermissions\0BgColor",
     "Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if not in the model list\0extra Claude model "
-    "aliases for the dropdown, comma-separated; sonnet, opus, and haiku are always included\0Claude effort level: "
-    "0=Low, 1=Medium, 2=High, 3=Max\0if true, pass --dangerously-skip-permissions to Claude Code\0background color of "
-    "the Claude Code chat panel"};
+    "aliases for the dropdown, comma-separated; documented Claude Code aliases are always included\0Claude effort "
+    "level: 0=Low, 1=Medium, 2=High, 3=Max\0if true, pass --dangerously-skip-permissions to Claude Code\0background "
+    "color of the Claude Code chat panel"};
 
 static const FieldInfo gGrokBuildFields[] = {
     {offsetof(GrokBuild, model), SettingType::String, (intptr_t)"grok-4.5"},

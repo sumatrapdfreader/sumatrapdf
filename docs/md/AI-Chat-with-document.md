@@ -18,6 +18,8 @@ Install and set up Claude Code using Anthropic's official guide:
 
 After installation, make sure `claude` (or `claude.exe`) is on your `PATH`. SumatraPDF also looks in `%USERPROFILE%\.local\bin\`, `%USERPROFILE%\AppData\Local\Programs\claude-code\`, and `%USERPROFILE%\AppData\Roaming\npm\`.
 
+The model picker includes Claude Code's documented aliases: `default`, `best`, `sonnet`, `opus`, `haiku`, `sonnet[1m]`, `opus[1m]`, and `opusplan`. Claude Code resolves these aliases according to the user's account and configured provider.
+
 ## Grok Build
 
 This feature can also use **[Grok Build](https://x.ai/news/grok-build-cli)** (the `grok` command-line tool).
