@@ -910,7 +910,7 @@ static bool IsInstallerButNotInstalled() {
 // if not, at least I can add logging to figure out why it fails
 constexpr int kBtnIdLearnMore = 100;
 static Str kFailedToLoadURL() {
-    return StrL("https://www.sumatrapdfreader.org/docs/Failed-to-load-libmpdf");
+    return StrL("https://www.sumatrapdfreader.org/docs/Failed-to-load-libmupdf");
 }
 
 static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
@@ -946,6 +946,28 @@ static void FreeLibmupdfDll() {
     }
 }
 
+// Errors commonly seen when antivirus is scanning / locking a just-written DLL
+// (debug reports e.g. 8bfd12791000001 with err=87 after successful extract).
+static bool IsLibmupdfAvRaceError(DWORD err) {
+    return err == ERROR_INVALID_PARAMETER     // 87 — sometimes returned by AV hooks
+           || err == ERROR_ACCESS_DENIED      // 5
+           || err == ERROR_SHARING_VIOLATION; // 32
+}
+
+static void LogLibmupdfFileStateAfterLoadFail(Str path, DWORD err) {
+    i64 sizeAfter = file::GetSize(path);
+    bool existsAfter = file::Exists(path);
+    logf("LoadLibmupdfFromFile: after fail path='%s' stillExists=%d size=%lld err=%u\n", path, (int)existsAfter,
+         (long long)sizeAfter, err);
+    if (existsAfter) {
+        DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+        logf("LoadLibmupdfFromFile: after fail attrs=0x%x\n", attrs);
+    } else {
+        // Typical when AV quarantines the DLL right after extract
+        logf("LoadLibmupdfFromFile: file missing after LoadLibrary fail (possible AV quarantine)\n");
+    }
+}
+
 // Load libmupdf.dll from path only if the file size matches expectedSize (the
 // embedded/installer copy). Skips mismatched leftover DLLs from other builds.
 // useLoadLibraryEx: LoadLibraryExW with LOAD_WITH_ALTERED_SEARCH_PATH (helps
@@ -975,6 +997,9 @@ static bool LoadLibmupdfFromFile(Str path, i64 expectedSize, bool useLoadLibrary
             logf("LoadLibmupdfFromFile: failed to load '%s' err=%u\n", path, err);
         }
         LogLastError(err);
+        // Log whether the file still exists — AV often deletes/quarantines it
+        // between a successful write and LoadLibrary (see debug reports).
+        LogLibmupdfFileStateAfterLoadFail(path, err);
         SetLastError(err); // so callers' GetLastError() still see LoadLibrary's error
         return false;
     }
@@ -987,19 +1012,45 @@ static bool LoadLibmupdfFromFile(Str path, i64 expectedSize, bool useLoadLibrary
     return true;
 }
 
-// LoadLibraryW, wait 1s and retry, then LoadLibraryExW. For AV races that
-// briefly block a just-written DLL under LocalAppData (see crash reports).
-static bool LoadLibmupdfFromFileRobust(Str path, i64 expectedSize) {
+// LoadLibraryW with short retry, optional longer AV-race backoff, then
+// LoadLibraryExW. justWritten: we extracted the DLL moments ago (AV most active).
+static bool LoadLibmupdfFromFileRobust(Str path, i64 expectedSize, bool justWritten = false) {
     if (LoadLibmupdfFromFile(path, expectedSize)) {
         return true;
     }
+
     logf("LoadLibmupdfFromFileRobust: retry after 1s '%s'\n", path);
     Sleep(1000);
     if (LoadLibmupdfFromFile(path, expectedSize)) {
         return true;
     }
+
+    // Longer backoff when AV may still be scanning a just-written DLL
+    // (errors 5 / 32 / 87 are common in those reports).
+    DWORD err = gLibmupdfLastLoadError;
+    if (justWritten || IsLibmupdfAvRaceError(err)) {
+        static const int kAvBackoffMs[] = {2000, 3000, 5000};
+        for (int waitMs : kAvBackoffMs) {
+            logf("LoadLibmupdfFromFileRobust: AV-race retry after %dms (err=%u) '%s'\n", waitMs, err, path);
+            Sleep(waitMs);
+            if (LoadLibmupdfFromFile(path, expectedSize)) {
+                return true;
+            }
+            err = gLibmupdfLastLoadError;
+        }
+    }
+
     logf("LoadLibmupdfFromFileRobust: trying LoadLibraryExW '%s'\n", path);
-    return LoadLibmupdfFromFile(path, expectedSize, true);
+    if (LoadLibmupdfFromFile(path, expectedSize, true)) {
+        return true;
+    }
+
+    if (justWritten || IsLibmupdfAvRaceError(gLibmupdfLastLoadError)) {
+        logf("LoadLibmupdfFromFileRobust: final AV-race LoadLibraryExW after 3s '%s'\n", path);
+        Sleep(3000);
+        return LoadLibmupdfFromFile(path, expectedSize, true);
+    }
+    return false;
 }
 
 // Extract embedded libmupdf.dll into dir (if size mismatches), then load with
@@ -1014,6 +1065,7 @@ static bool ExtractAndLoadLibmupdfRobust(Str dir, bool extract) {
     }
     TempStr path = path::JoinTemp(dir, StrL("libmupdf.dll"));
     i64 realSize = file::GetSize(path);
+    bool justWritten = false;
     if (realSize != expectedSize) {
         if (realSize >= 0) {
             logf("ExtractAndLoadLibmupdfRobust: overwriting '%s' (size %lld, expected %lld)\n", path,
@@ -1024,9 +1076,10 @@ static bool ExtractAndLoadLibmupdfRobust(Str dir, bool extract) {
                 logf("ExtractAndLoadLibmupdfRobust: ExtractLibmupdfToDir failed for '%s'\n", dir);
                 return false;
             }
+            justWritten = true;
         }
     }
-    return LoadLibmupdfFromFileRobust(path, expectedSize);
+    return LoadLibmupdfFromFileRobust(path, expectedSize, justWritten);
 }
 
 // Log as much as we can about a failed load; ends up in the debug report via gLogBuf.
@@ -1119,11 +1172,19 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         return false;
     }
 
-    TempStr msg = fmt(R"(SumatraPDF.exe failed to load libmupdf.dll.
-Error code: %d
-We can't proceed.
-For more information see <a href="%s">SumatraPDF docs</a>.)",
-                      (int)err, kFailedToLoadURL());
+    // Keep this English-only: we may fail before translations / UI language load.
+    TempStr msg = fmt(
+        R"(SumatraPDF failed to load libmupdf.dll (error code %d).
+
+This is often caused by antivirus software blocking or quarantining libmupdf.dll when SumatraPDF extracts it.
+
+Try:
+• Add an exclusion for the SumatraPDF folder and %%LocalAppData%%\SumatraPDF-data
+• Temporarily disable real-time antivirus protection, then start SumatraPDF again
+• Re-download SumatraPDF from the official website
+
+For more information see <a href="%s">Failed to load libmupdf.dll</a>.)",
+        (int)err, kFailedToLoadURL());
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
