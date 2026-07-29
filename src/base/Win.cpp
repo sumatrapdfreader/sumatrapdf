@@ -164,32 +164,26 @@ void FillWndClassEx(WNDCLASSEX& wcex, WStr clsName, WNDPROC wndproc) {
     wcex.lpfnWndProc = wndproc;
 }
 
-RECT ClientRECT(HWND hwnd) {
-    RECT r;
-    ::GetClientRect(hwnd, &r);
-    return r;
-}
-
-Rect ClientRect(HWND hwnd) {
+Rect HwndClientRect(HWND hwnd) {
     RECT rc{};
     ::GetClientRect(hwnd, &rc);
     return Rect(rc);
 }
 
-Rect WindowRect(HWND hwnd) {
+Rect HwndWindowRect(HWND hwnd) {
     RECT rc{};
     GetWindowRect(hwnd, &rc);
     return Rect(rc);
 }
 
-Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
+Rect HwndMapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     RECT rc = ToRECT(rect);
     MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
     return ToRect(rc);
 }
 
 // map client coords where x=0 is the physical left edge (even on WS_EX_LAYOUTRTL windows)
-Rect MapLtrClientRectToScreen(HWND hwnd, Rect r) {
+Rect HwndMapLtrClientRectToScreen(HWND hwnd, Rect r) {
     RECT rc = ToRECT(r);
     if (HwndIsRtl(hwnd)) {
         RECT cr{};
@@ -205,11 +199,11 @@ Rect MapLtrClientRectToScreen(HWND hwnd, Rect r) {
 }
 
 // for SetWindowPos on a WS_EX_LAYOUTRTL parent: child x as offset from physical left
-int MapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
+int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
     if (!HwndIsRtl(parent)) {
         return ltrX;
     }
-    return ClientRect(parent).dx - ltrX - childDx;
+    return HwndClientRect(parent).dx - ltrX - childDx;
 }
 
 int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
@@ -236,16 +230,12 @@ void HwndScreenToClient(HWND hwnd, Point& p) {
 
 // move window to top of Z order (i.e. make it visible to the user)
 // but without activation (i.e. capturing focus)
-void HwndMakeVisible(HWND hwnd) {
+void HwndShowWithoutActivate(HWND hwnd) {
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 
-void MoveWindow(HWND hwnd, Rect rect) {
-    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
-}
-
-void MoveWindow(HWND hwnd, RECT* r) {
-    MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
+void HwndMoveWindow(HWND hwnd, Rect* r) {
+    MoveWindow(hwnd, r->x, r->y, r->dx, r->dy, TRUE);
 }
 
 bool GetOsVersion(OSVERSIONINFOEX& ver) {
@@ -1509,11 +1499,11 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
 
 // If the window is off-screen (e.g. a monitor was disconnected),
 // move it to the nearest visible monitor's work area.
-void HwndEnsureVisible(HWND hwnd) {
+void HwndEnsureOnScreen(HWND hwnd) {
     if (!hwnd) {
         return;
     }
-    Rect rect = WindowRect(hwnd);
+    Rect rect = HwndWindowRect(hwnd);
     if (rect.IsEmpty()) {
         return;
     }
@@ -1536,7 +1526,7 @@ void HwndEnsureVisible(HWND hwnd) {
     if (rect == shifted) {
         return;
     }
-    MoveWindow(hwnd, shifted);
+    HwndMoveWindow(hwnd, &shifted);
 }
 
 // returns available area of the screen i.e. screen minus taskbar area
@@ -1556,7 +1546,7 @@ Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
 }
 
 // returns the dimensions the given window has to have in order to be a fullscreen window
-Rect GetFullscreenRect(HWND hwnd) {
+Rect HwndGetFullscreenRect(HWND hwnd) {
     MONITORINFO mi{};
     mi.cbSize = sizeof(mi);
     if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
@@ -1579,7 +1569,7 @@ Rect GetVirtualScreenRect() {
     return result;
 }
 
-void DrawRect(HDC hdc, const Rect& rect) {
+void HdcDrawRect(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
@@ -1587,18 +1577,18 @@ void DrawRect(HDC hdc, const Rect& rect) {
     LineTo(hdc, rect.x, rect.y);
 }
 
-void FillRect(HDC hdc, const Rect& rect, HBRUSH br) {
+void HdcFillRect(HDC hdc, const Rect& rect, HBRUSH br) {
     RECT r = ToRECT(rect);
-    FillRect(hdc, &r, br);
+    ::FillRect(hdc, &r, br);
 }
 
-void FillRect(HDC hdc, const Rect& rect, COLORREF col) {
+void HdcFillRect(HDC hdc, const Rect& rect, COLORREF col) {
     AutoDeleteBrush br(CreateSolidBrush(col));
     RECT r = ToRECT(rect);
-    FillRect(hdc, &r, br);
+    ::FillRect(hdc, &r, br);
 }
 
-void DrawLine(HDC hdc, const Rect& rect) {
+void HdcDrawLine(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
@@ -1612,10 +1602,10 @@ bool HwndIsFocused(HWND hwnd) {
     return GetFocus() == hwnd;
 }
 
-bool IsCursorOverWindow(HWND hwnd) {
+bool HwndIsCursorOverWindow(HWND hwnd) {
     POINT pt;
     GetCursorPos(&pt);
-    Rect rcWnd = WindowRect(hwnd);
+    Rect rcWnd = HwndWindowRect(hwnd);
     return rcWnd.Contains({pt.x, pt.y});
 }
 
@@ -1649,19 +1639,19 @@ Point& UnmirrorRtl(HWND hwnd, Point& p) {
     return p;
 }
 
-bool IsMouseOverRect(HWND hwnd, const Rect& r) {
+bool HwndIsMouseOverRect(HWND hwnd, const Rect& r) {
     Point curPos = HwndGetCursorPos(hwnd);
     return r.Contains(curPos);
 }
 
-void CenterDialog(HWND hDlg, HWND hParent) {
+void HwndCenterDialog(HWND hDlg, HWND hParent) {
     if (!hParent) {
         hParent = GetParent(hDlg);
     }
 
-    Rect rcDialog = WindowRect(hDlg);
+    Rect rcDialog = HwndWindowRect(hDlg);
     rcDialog.Offset(-rcDialog.x, -rcDialog.y);
-    Rect rcOwner = WindowRect(hParent ? hParent : GetDesktopWindow());
+    Rect rcOwner = HwndWindowRect(hParent ? hParent : GetDesktopWindow());
     Rect rcRect = rcOwner;
     rcRect.Offset(-rcRect.x, -rcRect.y);
 
@@ -1818,7 +1808,7 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     return ok;
 }
 
-static void SetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
+static void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     DWORD style = GetWindowLongW(hwnd, type);
     DWORD newStyle;
     if (enable) {
@@ -1831,12 +1821,12 @@ static void SetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     }
 }
 
-bool IsWindowStyleSet(HWND hwnd, DWORD flags) {
+bool HwndIsWindowStyleSet(HWND hwnd, DWORD flags) {
     DWORD style = GetWindowLongW(hwnd, GWL_STYLE);
     return bit::IsMaskSet<DWORD>(style, flags);
 }
 
-bool IsWindowStyleExSet(HWND hwnd, DWORD flags) {
+bool HwndIsWindowStyleExSet(HWND hwnd, DWORD flags) {
     DWORD style = GetWindowLongW(hwnd, GWL_EXSTYLE);
     return (style != flags) != 0;
 }
@@ -1847,21 +1837,21 @@ bool HwndIsRtl(HWND hwnd) {
 }
 
 void HwndSetRtl(HWND hwnd, bool isRtl) {
-    SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
+    HwndSetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 
-void SetWindowStyle(HWND hwnd, DWORD flags, bool enable) {
-    SetWindowStyle(hwnd, flags, enable, GWL_STYLE);
+void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable) {
+    HwndSetWindowStyle(hwnd, flags, enable, GWL_STYLE);
 }
 
-void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
-    SetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
+void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
+    HwndSetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
 }
 
 Rect ChildPosWithinParent(HWND hwnd) {
     POINT pt = {0, 0};
     ClientToScreen(GetParent(hwnd), &pt);
-    Rect rc = WindowRect(hwnd);
+    Rect rc = HwndWindowRect(hwnd);
     rc.Offset(-pt.x, -pt.y);
     return rc;
 }
@@ -2418,12 +2408,23 @@ bool HwndHasCaption(HWND hwnd) {
     return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION);
 }
 
-void HwndSetVisibility(HWND hwnd, bool visible) {
-    bool isVisible = IsWindowVisible(hwnd);
-    if (isVisible == visible) {
+bool HwndIsVisible(HWND hwnd) {
+    return ::IsWindowVisible(hwnd);
+}
+
+void HwndSetVisible(HWND hwnd, bool visible) {
+    if (HwndIsVisible(hwnd) == visible) {
         return;
     }
     ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+}
+
+void HwndShow(HWND hwnd) {
+    HwndSetVisible(hwnd, true);
+}
+
+void HwndHide(HWND hwnd) {
+    HwndSetVisible(hwnd, false);
 }
 
 Size GetBitmapSize(HBITMAP hbmp) {
@@ -3322,33 +3323,6 @@ Exit:
     return ok;
 }
 
-// given r,  sets r1, r2 and r3 so that:
-//  [         r       ]
-//  [ r1 ][  r2 ][ r3 ]
-//        ^     ^
-//        y     y+dy
-void DivideRectV(const RECT& r, int x, int dx, RECT& r1, RECT& r2, RECT& r3) {
-    r1 = r2 = r3 = r;
-    r1.right = x;
-    r2.left = x;
-    r2.right = x + dx;
-    r3.left = x + dx + 1;
-}
-
-// like DivideRectV
-void DivideRectH(const RECT& r, int y, int dy, RECT& r1, RECT& r2, RECT& r3) {
-    r1 = r2 = r3 = r;
-    r1.bottom = y;
-    r2.top = y;
-    r2.bottom = y + dy;
-    r3.top = y + dy + 1;
-}
-
-void RectInflateTB(RECT& r, int top, int bottom) {
-    r.top += top;
-    r.bottom += bottom;
-}
-
 static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,    IDC_HAND,     IDC_SIZEALL, IDC_SIZEWE,
                                   IDC_SIZENS, IDC_SIZENWSE, IDC_SIZENESW, IDC_NO,      IDC_CROSS};
 
@@ -3622,7 +3596,7 @@ HFONT HwndGetFont(HWND hwnd) {
 
 // change size of the window to have a given client size
 void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
-    Rect rc = WindowRect(hwnd);
+    Rect rc = HwndWindowRect(hwnd);
     int x = rc.x;
     int y = rc.y;
     DWORD style = GetWindowStyle(hwnd);
@@ -3638,8 +3612,8 @@ void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
 
 // position hwnd on the right of hwndRelative
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
-    Rect rHwnd = WindowRect(hwnd);
-    Rect rHwndRelative = WindowRect(hwndRelative);
+    Rect rHwnd = HwndWindowRect(hwnd);
+    Rect rHwndRelative = HwndWindowRect(hwndRelative);
     rHwnd.x = rHwndRelative.x + rHwndRelative.dx;
     rHwnd.y = rHwndRelative.y;
     // position hwnd vertically in the middle of hwndRelative
@@ -3652,8 +3626,8 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
 }
 
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
-    Rect rRelative = WindowRect(hwndRelative);
-    Rect r = WindowRect(hwnd);
+    Rect rRelative = HwndWindowRect(hwndRelative);
+    Rect r = HwndWindowRect(hwnd);
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
 
@@ -3755,7 +3729,7 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
     if (len(s) == 0) {
         return 0;
     }
@@ -3765,18 +3739,13 @@ int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font) {
     }
     int cch = ws.len;
     ScopedSelectFont f(hdc, font);
-    return DrawTextW(hdc, ws.s, cch, r, format);
-}
-
-int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font) {
     RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, format, font);
+    return DrawTextW(hdc, ws.s, cch, &r2, format);
 }
 
 int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font) {
     Rect r = {pos.x, pos.y, 0, 0};
-    RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, format, font);
+    return HdcDrawText(hdc, s, r, format, font);
 }
 
 // uses the same logic as HdcDrawText

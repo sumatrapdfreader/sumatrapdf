@@ -150,7 +150,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         status->Create(args);
         // vertically center the single line of text so it lines up with the
         // (taller, bordered) edit box's text instead of sitting at the top
-        SetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
+        HwndSetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
     }
 
     {
@@ -364,7 +364,7 @@ void RecreateFindBar(MainWindow* win) {
     }
     // stop any in-flight find/count that captured the old bar's state
     AbortFinding(win, true);
-    bool wasVisible = IsWindowVisible(win->findBar->hwnd);
+    bool wasVisible = HwndIsVisible(win->findBar->hwnd);
     TempStr text = wasVisible ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
     DeleteFindBar(win);
     win->findBar = CreateFindBar(win);
@@ -387,11 +387,11 @@ void RecreateFindBar(MainWindow* win) {
 static void PositionFindBar(FindBarWnd* bar) {
     MainWindow* win = bar->win;
     Rect btn = GetToolbarButtonScreenRect(win, CmdFindFirst);
-    Rect fr = WindowRect(win->hwndFrame);
+    Rect fr = HwndWindowRect(win->hwndFrame);
     // Align to the right edge of the client area, not the outer window rect:
-    // WindowRect includes the resize border (and sits off-screen when maximized),
+    // HwndWindowRect includes the resize border (and sits off-screen when maximized),
     // which pushed the bar a few pixels too far right (#5762).
-    Rect frClient = MapLtrClientRectToScreen(win->hwndFrame, ClientRect(win->hwndFrame));
+    Rect frClient = HwndMapLtrClientRectToScreen(win->hwndFrame, HwndClientRect(win->hwndFrame));
     int cx = frClient.x + frClient.dx - bar->barDx;
     int cy;
     if (btn.IsEmpty()) {
@@ -465,7 +465,7 @@ void HideFindBar(MainWindow* win) {
 // note: the floating window is not anchored to the search icon, so "visible"
 // here means specifically the compact bar (used to reposition it on move)
 bool IsFindBarVisible(MainWindow* win) {
-    return win->findBar && IsWindowVisible(win->findBar->hwnd);
+    return win->findBar && HwndIsVisible(win->findBar->hwnd);
 }
 
 bool IsFindUIVisible(MainWindow* win) {

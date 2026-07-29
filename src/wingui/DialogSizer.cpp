@@ -29,7 +29,7 @@ class DialogData {
         }
 
         // Store some sizes etc. for later.
-        Rect rectWnd = WindowRect(hwnd);
+        Rect rectWnd = HwndWindowRect(hwnd);
         ptSmallest.x = rectWnd.dx;
         ptSmallest.y = rectWnd.dy;
 
@@ -37,7 +37,7 @@ class DialogData {
             hTheme = OpenThemeData(hwnd, WC_SCROLLBAR);
         }
 
-        Rect rectClient = ClientRect(hwnd);
+        Rect rectClient = HwndClientRect(hwnd);
         sizeClient = rectClient.Size();
         UpdateGripperRect();
 
@@ -136,7 +136,7 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
     for (int i = 0; i < pdd->nItemCount; i++) {
         const DialogSizerSizingItem* psd = pdd->psd + i;
         HWND hwndChild = GetDlgItem(hwnd, psd->uControlID);
-        Rect rect = MapRectToWindow(WindowRect(hwndChild), HWND_DESKTOP, hwnd);
+        Rect rect = HwndMapRectToWindow(HwndWindowRect(hwndChild), HWND_DESKTOP, hwnd);
 
         // Adjust the window horizontally
         if (psd->uSizeInfo & DS_MoveX) {

@@ -857,7 +857,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     // create a progress bar in place of the Options button
     int dx = DpiScale(wnd->hwnd, GetInstallerWinDx() / 2);
     Rect rc(0, 0, dx, gButtonDy);
-    rc = MapRectToWindow(rc, wnd->btnOptions->hwnd, wnd->hwnd);
+    rc = HwndMapRectToWindow(rc, wnd->btnOptions->hwnd, wnd->hwnd);
 
     int nInstallationSteps = gArchive.filesCount;
     nInstallationSteps++; // for copying files to installation dir
@@ -1280,7 +1280,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     {
         // button position: bottom-right
         HWND parent = ::GetParent(b->hwnd);
-        Rect r = ClientRect(parent);
+        Rect r = HwndClientRect(parent);
         Size size = b->GetIdealSize();
         int x = r.dx - size.dx - margin;
         int y = r.dy - size.dy - margin;
@@ -1288,7 +1288,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     }
     ShowAndEnable(wnd->btnInstall, showInstallButton);
 
-    Rect r = ClientRect(hwnd);
+    Rect r = HwndClientRect(hwnd);
     wnd->btnOptions = CreateDefaultButton(hwnd, _TRA("&Options"), isRtl);
     b = wnd->btnOptions;
     b->onClick = MkFunc0(OnButtonOptions, wnd);
@@ -1313,7 +1313,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     // build options controls going from the bottom
     y -= (staticDy + margin);
 
-    RECT rc;
+    Rect rc;
     int checkDy;
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
@@ -1327,7 +1327,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         wnd->checkboxRegisterPreview = CreateCheckbox(hwnd, s, isChecked);
         checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
 
-        rc = {x, y, x + dx, y + checkDy};
+        rc = {x, y, dx, checkDy};
         wnd->checkboxRegisterPreview->SetPos(&rc);
         y -= checkDy;
 
@@ -1338,7 +1338,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         s = _TRA("Let Windows Desktop Search &search PDF documents");
         wnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
         checkDy = wnd->checkboxRegisterSearchFilter->GetIdealSize().dy;
-        rc = {x, y, x + dx, y + checkDy};
+        rc = {x, y, dx, checkDy};
         wnd->checkboxRegisterSearchFilter->SetPos(&rc);
         y -= checkDy;
     }
@@ -1356,7 +1356,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         if (wnd->checkboxRegisterPreview) {
             checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
         }
-        rc = {x, y, x + dx, y + checkDy};
+        rc = {x, y, dx, checkDy};
         wnd->checkboxForAllUsers->SetPos(&rc);
         y -= checkDy;
     }
@@ -1538,7 +1538,7 @@ static bool CreateInstallerWindow(Flags* cli) {
 
     SetDefaultMsg();
 
-    CenterDialog(gWnd->hwnd);
+    HwndCenterDialog(gWnd->hwnd);
     ShowWindow(gWnd->hwnd, SW_SHOW);
 
     return true;

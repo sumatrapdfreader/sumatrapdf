@@ -65,7 +65,7 @@ static void UpdateResizeOverlay(Splitter* splitter, Point pos) {
     HWND parent = GetParent(splitter->hwnd);
     POINT origin = {0, 0};
     ClientToScreen(parent, &origin);
-    Rect splitterRc = WindowRect(splitter->hwnd);
+    Rect splitterRc = HwndWindowRect(splitter->hwnd);
 
     int x = 0, y = 0, dx = 0, dy = 0;
     bool isVert = splitter->type != SplitterType::Horiz;

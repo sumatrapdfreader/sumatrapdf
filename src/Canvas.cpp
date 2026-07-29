@@ -1961,7 +1961,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     if (isLeft && (win->presentation || win->isFullScreen)) {
         // in fullscreen we allow to exit by tapping in upper right corner
         constexpr int kCornerSize = 64;
-        Rect r = ClientRect(win->hwndCanvas);
+        Rect r = HwndClientRect(win->hwndCanvas);
         if (!isOverText && (x >= (r.dx - kCornerSize)) && (y < kCornerSize)) {
             ExitFullScreen(win);
             return;
@@ -2195,7 +2195,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             Rect isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty()) {
                 isect.Inflate(2, 2);
-                DrawRect(hdc, isect);
+                HdcDrawRect(hdc, isect);
             }
         }
     }
@@ -2210,7 +2210,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
 
             auto cbbox = dm->GetEngine()->PageContentBox(pageNo);
             Rect rect = dm->CvtToScreen(pageNo, cbbox);
-            DrawRect(hdc, rect);
+            HdcDrawRect(hdc, rect);
         }
     }
 }
@@ -2846,7 +2846,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
 
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->uiState.tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
+    if (win->uiState.tocVisible && HwndIsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
@@ -2870,7 +2870,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     //   plain wheel → falls through to scroll the main document, as if the
     //                 popup weren't there (modifier-less wheel scrolling a
     //                 document shouldn't get hijacked by the hover popup)
-    if (win->refHover && win->refHover->hwndPopup && IsWindowVisible(win->refHover->hwndPopup)) {
+    if (win->refHover && win->refHover->hwndPopup && HwndIsVisible(win->refHover->hwndPopup)) {
         bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
         bool isShift = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
         if (isCtrl || isShift) {
@@ -3055,7 +3055,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     if (gGlobalPrefs->fastScrollOverScrollbar) {
         // scroll faster if the cursor is over the scroll bar
-        if (IsCursorOverWindow(win->hwndCanvas)) {
+        if (HwndIsCursorOverWindow(win->hwndCanvas)) {
             Point pt = HwndGetCursorPos(win->hwndCanvas);
             if (pt.x > win->canvasRc.dx) {
                 wp = (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN;
@@ -3115,7 +3115,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
 static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->uiState.tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
+    if (win->uiState.tocVisible && HwndIsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
@@ -3568,7 +3568,7 @@ static void OnPaintError(MainWindow* win) {
     if (filePath) {
         TempStr msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
-        DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
+        DrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
     SelectObject(hdc, hPrevFont);
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);

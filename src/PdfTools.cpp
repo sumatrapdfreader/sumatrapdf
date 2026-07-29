@@ -264,7 +264,7 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -541,7 +541,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -738,7 +738,7 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -937,7 +937,7 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -1381,7 +1381,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     pagesEdit->onTextChanged = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::UpdateButton>(this);
     UpdateButton();
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -1641,7 +1641,7 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
     passwordEdit->onTextChanged = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::UpdateButton>(this);
     encryptBtn->SetIsEnabled(false);
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -1851,7 +1851,7 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    CenterDialog(hwnd, w->hwndFrame);
+    HwndCenterDialog(hwnd, w->hwndFrame);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);

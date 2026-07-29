@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Dpi.h"
+#include "base/Win.h"
 
 #include "OverlayScrollbar.h"
 #include "Theme.h"
@@ -194,7 +195,7 @@ static bool IsOrIsParentOf(HWND hwnd, HWND child) {
 
 // Update the layered window with the current appearance
 static void PaintScrollbar(OverlayScrollbar* sb) {
-    if (!sb->hwnd || !IsWindowVisible(sb->hwnd)) {
+    if (!sb->hwnd || !HwndIsVisible(sb->hwnd)) {
         return;
     }
 
@@ -941,7 +942,7 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     // re-show the window if the state says it should be visible
     // (RelayoutFrame hides overlay scrollbar windows with SW_HIDE
     // to prevent them from appearing at stale positions)
-    if (IsVisible(sb) && !IsWindowVisible(sb->hwnd)) {
+    if (IsVisible(sb) && !HwndIsVisible(sb->hwnd)) {
         swpFlags |= SWP_SHOWWINDOW;
     }
     // When not visible, don't change Z-order — HWND_TOP on an owned popup
@@ -968,7 +969,7 @@ void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
         return;
     }
     // skip if already in the desired visibility state
-    if (show && IsActive(sb) && IsWindowVisible(sb->hwnd)) {
+    if (show && IsActive(sb) && HwndIsVisible(sb->hwnd)) {
         return;
     }
     if (!show && !IsActive(sb)) {
@@ -977,7 +978,7 @@ void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
     if (show) {
         if (!IsActive(sb)) {
             ShowScrollbarWindow(sb, false);
-        } else if (IsVisible(sb) && !IsWindowVisible(sb->hwnd)) {
+        } else if (IsVisible(sb) && !HwndIsVisible(sb->hwnd)) {
             // re-show if window was temporarily hidden (e.g. during relayout)
             OverlayScrollbarUpdatePos(sb);
             ShowWindow(sb->hwnd, SW_SHOWNOACTIVATE);

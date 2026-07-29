@@ -185,7 +185,7 @@ static void StrokeRoundedRect(HDC hdc, const Rect& rc, int radius, COLORREF col)
 }
 
 // Clip the popup to a rounded rect. Use the intended layout size — not
-// ClientRect — because CreateWindow starts at 0x0 and ClientRect is still empty
+// HwndClientRect — because CreateWindow starts at 0x0 and client rect is still empty
 // until after SetWindowPos (a 1x1 region left the toolbar invisible).
 static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius, int dx, int dy) {
     if (dx < 1) {
@@ -271,7 +271,7 @@ static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
 
 static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
     HWND hwnd = tb->hwnd;
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     COLORREF bgCol = SelBarBg();
     COLORREF hoverBg = SelBarHoverBg(bgCol);
     int cornerRadius = DpiScale(hwnd, kCornerRadius);
@@ -560,13 +560,13 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     // Hide during drag so the bar does not chase the rubber-band selection.
     if (IsActivelySelecting(win)) {
         SelectionToolbar* activeTb = win->selectionToolbar;
-        if (activeTb && activeTb->hwnd && IsWindowVisible(activeTb->hwnd)) {
+        if (activeTb && activeTb->hwnd && HwndIsVisible(activeTb->hwnd)) {
             HideSelectionToolbar(win);
         }
         return;
     }
     SelectionToolbar* tb = win->selectionToolbar;
-    if (!tb || !tb->hwnd || !IsWindowVisible(tb->hwnd)) {
+    if (!tb || !tb->hwnd || !HwndIsVisible(tb->hwnd)) {
         if (win->showSelection) {
             ShowSelectionToolbar(win);
         }
@@ -610,7 +610,7 @@ void HideSelectionToolbar(MainWindow* win) {
     if (!tb || !tb->hwnd) {
         return;
     }
-    if (IsWindowVisible(tb->hwnd)) {
+    if (HwndIsVisible(tb->hwnd)) {
         ShowWindow(tb->hwnd, SW_HIDE);
     }
     tb->hotIndex = -1;

@@ -619,14 +619,14 @@ static void ResizeImageEditWindowToImage(ImageEditWindow* ew, int prevW, int pre
     ImageEditLayoutDimensions(ew, ew->imgW, ew->imgH, downsizing, &layoutW, &layoutH);
     Size winSize = CalcImageEditWindowSizeEx(ew->hwnd, ew->hwndParent, ew->fromRenderedBitmap, layoutW, layoutH, ew);
     SetWindowPos(ew->hwnd, nullptr, 0, 0, winSize.dx, winSize.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-    CenterDialog(ew->hwnd, ew->hwndParent);
+    HwndCenterDialog(ew->hwnd, ew->hwndParent);
     CalcImageLayout(ew);
     LayoutControls(ew);
     InvalidateRect(ew->hwnd, nullptr, TRUE);
 }
 
 static void CalcImageLayout(ImageEditWindow* ew) {
-    Rect cRc = ClientRect(ew->hwnd);
+    Rect cRc = HwndClientRect(ew->hwnd);
     ew->imgAreaH = cRc.dy - GetControlAreaDy(ew);
     if (ew->imgAreaH < 10) {
         ew->imgAreaH = 10;
@@ -668,7 +668,7 @@ static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
     int neededDispW = ImageToDisplayW(ew, ew->newW) + 2 * imgPad;
     int neededDispH = ImageToDisplayH(ew, ew->newH) + 2 * imgPad;
 
-    Rect cRc = ClientRect(ew->hwnd);
+    Rect cRc = HwndClientRect(ew->hwnd);
     int availW = cRc.dx;
     int availH = ew->imgAreaH;
 
@@ -926,7 +926,7 @@ static HCURSOR GetCursorForEdge(DragEdge edge) {
 }
 
 static void PaintSaveImage(ImageEditWindow* ew, HDC hdc) {
-    Rect cRc = ClientRect(ew->hwnd);
+    Rect cRc = HwndClientRect(ew->hwnd);
 
     PaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
 
@@ -939,7 +939,7 @@ static void PaintSaveImage(ImageEditWindow* ew, HDC hdc) {
 }
 
 static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
-    Rect cRc = ClientRect(ew->hwnd);
+    Rect cRc = HwndClientRect(ew->hwnd);
 
     PaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
 
@@ -1018,7 +1018,7 @@ static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
 }
 
 static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
-    Rect cRc = ClientRect(ew->hwnd);
+    Rect cRc = HwndClientRect(ew->hwnd);
 
     PaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
 
@@ -1083,7 +1083,7 @@ static void LayoutControls(ImageEditWindow* ew) {
     if (!ew->controlLayout) {
         return;
     }
-    Rect cRc = ClientRect(ew->hwnd);
+    Rect cRc = HwndClientRect(ew->hwnd);
     int btnPad = ImageEditButtonPadding(ew);
     int w = cRc.dx - 2 * btnPad;
     Constraints bc = Loose({w, Inf});
@@ -1600,7 +1600,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             // double-buffer only the image area to avoid flicker
-            Rect cRc = ClientRect(hwnd);
+            Rect cRc = HwndClientRect(hwnd);
             int paintH = ew->imgAreaH;
             if (paintH > cRc.dy) {
                 paintH = cRc.dy;
@@ -2244,8 +2244,8 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     LayoutControls(ew);
     UpdateSaveButtonText(ew);
 
-    CenterDialog(hwnd, win->hwndFrame);
-    HwndEnsureVisible(hwnd);
+    HwndCenterDialog(hwnd, win->hwndFrame);
+    HwndEnsureOnScreen(hwnd);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);

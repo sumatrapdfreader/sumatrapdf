@@ -139,7 +139,7 @@ void RelayoutNotifications(HWND hwndCanvas) {
         return;
     }
 
-    Rect frame = ClientRect(hwndCanvas);
+    Rect frame = HwndClientRect(hwndCanvas);
     int dyPadding = DpiScale(hwndCanvas, kPadding);
     bool isRtl = IsUIRtl();
     // running vertical offset per corner so multiple notifications in the same
@@ -151,19 +151,19 @@ void RelayoutNotifications(HWND hwndCanvas) {
             // still in delay period, not yet visible
             continue;
         }
-        if (!IsWindowVisible(wnd->hwnd)) {
+        if (!HwndIsVisible(wnd->hwnd)) {
             // hidden because it's tied to a non-active tab; don't reserve space
             continue;
         }
         int xMargin = DpiScale(hwndCanvas, wnd->xMargin);
         int yMargin = DpiScale(hwndCanvas, wnd->yMargin);
-        Rect rect = WindowRect(wnd->hwnd);
+        Rect rect = HwndWindowRect(wnd->hwnd);
         // re-wrap the message if the notification no longer fits
         // (e.g. when the window was made smaller, issue #2916)
         int maxDx = frame.dx - (2 * xMargin);
         if (maxDx > 0 && rect.dx > maxDx) {
             wnd->Layout(HwndGetTextTemp(wnd->hwnd));
-            rect = WindowRect(wnd->hwnd);
+            rect = HwndWindowRect(wnd->hwnd);
         }
 
         NotifCorner corner = wnd->corner;
@@ -234,8 +234,8 @@ static void NotifsRemoveNotification(NotificationWnd* wnd) {
 }
 
 int GetWndX(NotificationWnd* wnd) {
-    Rect rect = WindowRect(wnd->hwnd);
-    rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
+    Rect rect = HwndWindowRect(wnd->hwnd);
+    rect = HwndMapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
     return rect.x;
 }
 
@@ -329,7 +329,7 @@ void NotificationWnd::Layout(Str message) {
     // limit the width to the parent window so that the close button
     // stays reachable even for very long messages (issue #2916)
     int topLeftMargin = DpiScale(hwnd, kTopLeftMargin);
-    Rect rParent = ClientRect(GetParent(hwnd));
+    Rect rParent = HwndClientRect(GetParent(hwnd));
     int maxTextDx = rParent.dx - (2 * topLeftMargin) - (2 * padX);
     if (!noClose) {
         maxTextDx -= closeLeftMargin + closeDx + padX;
@@ -405,7 +405,7 @@ void NotificationWnd::Layout(Str message) {
         dy += padY + progressDy + padY;
     }
 
-    Rect rCurr = WindowRect(hwnd);
+    Rect rCurr = HwndWindowRect(hwnd);
     // for less flicker we don't want to shrink the window when the text shrinks
     if (dx < rCurr.dx) {
         int diff = rCurr.dx - dx;
@@ -434,7 +434,7 @@ void NotificationWnd::Layout(Str message) {
 #endif
 #if 0
     if (wnd->shrinkLimit < 1.0f) {
-        Rect rcOrig = ClientRect(wnd->hwnd);
+        Rect rcOrig = HwndClientRect(wnd->hwnd);
         if (rMsg.dx < rcOrig.dx && rMsg.dx > rcOrig.dx * wnd->shrinkLimit) {
             rMsg.dx = rcOrig.dx;
         }
@@ -457,9 +457,9 @@ void NotificationWnd::Layout(Str message) {
     // move the window to the right for a right-to-left layout
     if (IsUIRtl()) {
         HWND parent = GetParent(hwnd);
-        Rect r = MapRectToWindow(WindowRect(hwnd), HWND_DESKTOP, parent);
+        Rect r = HwndMapRectToWindow(HwndWindowRect(hwnd), HWND_DESKTOP, parent);
         int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-        r.x = WindowRect(parent).dx - r.dx - DpiScale(hwnd, kTopLeftMargin) - cxVScroll;
+        r.x = HwndWindowRect(parent).dx - r.dx - DpiScale(hwnd, kTopLeftMargin) - cxVScroll;
         flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_DEFERERASE;
         SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, flags);
     }
@@ -467,7 +467,7 @@ void NotificationWnd::Layout(Str message) {
 
 // TODO: figure out why it flickers
 void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();
     // HDC hdc = hdcIn;
@@ -498,8 +498,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
     } else {
         TempStr text = HwndGetTextTemp(hwnd);
-        RECT rTmp = ToRECT(rTxt);
-        HdcDrawText(hdc, text, &rTmp, txtFmt);
+        HdcDrawText(hdc, text, rTxt, txtFmt);
     }
 
     if (!noClose) {

@@ -1050,7 +1050,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
     if (gShowTileLayout) {
         HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
         HGDIOBJ oldPen = SelectObject(hdc, pen);
-        DrawRect(hdc, bounds);
+        HdcDrawRect(hdc, bounds);
         DeletePen(SelectObject(hdc, oldPen));
     }
 
@@ -1215,7 +1215,7 @@ void DebugTextWnd::LayoutToClient() {
     if (!edit || !hwnd) {
         return;
     }
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     edit->SetBounds(rc);
 }
 

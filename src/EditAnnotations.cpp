@@ -147,7 +147,7 @@ struct EditAnnotationsWindow : Wnd {
     str::Builder currCustomColor;
     str::Builder currCustomInteriorColor;
 
-    void OnSize(UINT msg, UINT type, SIZE size) override;
+    void OnSize(UINT msg, UINT type, Size size) override;
     void OnFocus() override;
     bool PreTranslateMessage(MSG&) override;
 
@@ -336,8 +336,8 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
 EditAnnotationsWindow::~EditAnnotationsWindow() {
     // hacky: we want the position of the main window
     // but the size of client area
-    tab->lastEditAnnotsWindowPos = WindowRect(hwnd);
-    auto cr = ClientRect(hwnd);
+    tab->lastEditAnnotsWindowPos = HwndWindowRect(hwnd);
+    auto cr = HwndClientRect(hwnd);
     tab->lastEditAnnotsWindowPos.dx = cr.dx;
     tab->lastEditAnnotsWindowPos.dy = cr.dy;
 
@@ -504,7 +504,7 @@ static void AdvanceFocus(EditAnnotationsWindow* ew, bool forward) {
     HWND controls[kMaxControls];
     int n = 0;
     auto addIfVisible = [&](HWND h) {
-        if (h && IsWindowVisible(h)) {
+        if (h && HwndIsVisible(h)) {
             ReportIf(n >= kMaxControls);
             controls[n++] = h;
         }
@@ -1070,7 +1070,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
 
     // Prefer the live client size so re-layout matches the window after resize;
     // fall back to last layout bounds if the window is not sized yet.
-    Rect client = ClientRect(ew->hwnd);
+    Rect client = HwndClientRect(ew->hwnd);
     int dx = client.dx;
     int dy = client.dy;
     if (dx <= 0 || dy <= 0) {
@@ -1251,7 +1251,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     // go to page with a given annotations before triggering repaint
     if (ew) {
         UpdateUIForSelectedAnnotation(ew, annot, isNew, focus);
-        HwndMakeVisible(ew->hwnd);
+        HwndShowWithoutActivate(ew->hwnd);
     }
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, false);
@@ -1332,15 +1332,15 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     });
 }
 
-void EditAnnotationsWindow::OnSize(UINT msg, UINT, SIZE size) {
+void EditAnnotationsWindow::OnSize(UINT msg, UINT, Size size) {
     if (msg != WM_SIZE) {
         return;
     }
     if (!mainLayout) {
         return;
     }
-    int dx = (int)size.cx;
-    int dy = (int)size.cy;
+    int dx = size.dx;
+    int dy = size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -1783,7 +1783,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 }
 
 static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative, SIZE& size) {
-    Rect work = GetWorkAreaRect(WindowRect(hwndRelative), hwndRelative);
+    Rect work = GetWorkAreaRect(HwndWindowRect(hwndRelative), hwndRelative);
     WINDOWINFO wi{};
     wi.cbSize = sizeof(wi);
     if (!GetWindowInfo(hwnd, &wi)) {
@@ -1814,7 +1814,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {
         bool isNew = annot != ew->tab->win->annotationUnderCursor;
-        HwndMakeVisible(ew->hwnd);
+        HwndShowWithoutActivate(ew->hwnd);
         SetForegroundWindow(ew->hwnd);
         if (ew->listBox && ew->listBox->model->ItemsCount() > 0) {
             HwndSetFocus(ew->listBox->hwnd);
@@ -1860,7 +1860,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         minDy = 720;
         // TODO: this is slightly less that wanted
         HWND hwnd = tab->win->hwndCanvas;
-        auto rc = ClientRect(hwnd);
+        auto rc = HwndClientRect(hwnd);
         if (rc.dy > 0) {
             minDy = rc.dy;
         }
@@ -1883,7 +1883,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         LayoutAndSizeToContent(ew->mainLayout, size.cx, size.cy, ew->hwnd);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
-        Rect r = WindowRect(ew->hwnd);
+        Rect r = HwndWindowRect(ew->hwnd);
         r.x = lastPos.x;
         r.y = lastPos.y;
         r = ShiftRectToWorkArea(r, nullptr, true);

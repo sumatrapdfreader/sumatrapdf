@@ -1192,12 +1192,12 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
         return;
     }
 
-    RECT labelRect;
+    Rect labelRect;
     TreeView* tv = ev->treeView;
     if (!tv->GetItemRect(ev->treeItem, true, labelRect)) {
         return;
     }
-    RECT itemRect{};
+    Rect itemRect{};
     tv->GetItemRect(ev->treeItem, false, itemRect);
 
     NMTVCUSTOMDRAW* tvcd = ev->nm;
@@ -1212,9 +1212,11 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
     bool hasFocus = (GetFocus() == tv->hwnd);
     COLORREF bgCol, txtCol;
-    ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
+    RECT itemRc = ToRECT(itemRect);
+    RECT labelRc = ToRECT(labelRect);
+    ResolveTreeFilterItemColors(hdc, itemRc, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
-    DrawTreeItemFilterHighlight(hdc, labelRect, fti->text, words, bgCol, txtCol, font);
+    DrawTreeItemFilterHighlight(hdc, labelRc, fti->text, words, bgCol, txtCol, font);
 }
 
 static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
@@ -1350,7 +1352,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
         return;
     }
 
-    POINT pt{};
+    Point pt{};
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (!ti) {
         pt = {ev->mouseScreen.x, ev->mouseScreen.y};
@@ -1399,8 +1401,8 @@ void LayoutFavoritesContainer(MainWindow* win) {
     if (!win || !win->favLayout || !win->hwndFavBox) {
         return;
     }
-    // ClientRect: layout is in parent client coordinates
-    Rect rc = ClientRect(win->hwndFavBox);
+    // HwndClientRect: layout is in parent client coordinates
+    Rect rc = HwndClientRect(win->hwndFavBox);
     if (rc.IsEmpty()) {
         return;
     }

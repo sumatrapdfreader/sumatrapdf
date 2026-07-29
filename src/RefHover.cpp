@@ -55,7 +55,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
     KillTimer(hwndCanvas, kRefHoverHideTimerID);
 
     bool sameSrc = s->displayed.srcPage == srcPage && s->displayed.srcRect == srcRect;
-    if (IsWindowVisible(s->hwndPopup) && s->displayed.destPage == destPage && s->displayed.destX == destX &&
+    if (HwndIsVisible(s->hwndPopup) && s->displayed.destPage == destPage && s->displayed.destX == destX &&
         s->displayed.destY == destY && sameSrc) {
         return;
     }
@@ -67,7 +67,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
     s->pending.srcPage = srcPage;
     s->pending.srcRect = srcRect;
     s->pending.pageScreenRect = pageScreenRect;
-    if (IsWindowVisible(s->hwndPopup)) {
+    if (HwndIsVisible(s->hwndPopup)) {
         delayMs = 0;
     }
     SetTimer(hwndCanvas, kRefHoverTimerID, (UINT)delayMs, nullptr);
@@ -82,7 +82,7 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
     s->pending.destPage = -1;
     s->renderGen++;
     RefHoverDropQueuedRender(s);
-    if (s->hwndPopup && IsWindowVisible(s->hwndPopup)) {
+    if (s->hwndPopup && HwndIsVisible(s->hwndPopup)) {
         ShowWindow(s->hwndPopup, SW_HIDE);
         s->displayed.destPage = -1;
     }
@@ -99,7 +99,7 @@ void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs) {
     s->pending.destPage = -1;
     s->renderGen++;
     RefHoverDropQueuedRender(s);
-    if (!s->hwndPopup || !IsWindowVisible(s->hwndPopup)) {
+    if (!s->hwndPopup || !HwndIsVisible(s->hwndPopup)) {
         s->displayed.destPage = -1;
         return;
     }
@@ -114,7 +114,7 @@ void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas) {
         return;
     }
     KillTimer(hwndCanvas, kRefHoverHideTimerID);
-    if (!s->hwndPopup || !IsWindowVisible(s->hwndPopup)) {
+    if (!s->hwndPopup || !HwndIsVisible(s->hwndPopup)) {
         return;
     }
     POINT pt;

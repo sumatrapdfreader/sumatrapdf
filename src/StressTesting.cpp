@@ -617,7 +617,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     if (w != st->win) {
         if (st->win->IsDocLoaded()) {
             // try to provoke a crash in RenderCache cleanup code
-            Rect rect = ClientRect(st->win->hwndFrame);
+            Rect rect = HwndClientRect(st->win->hwndFrame);
             rect.Inflate(rand() % 10, rand() % 10);
             SendMessageW(st->win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
             if (st->win->AsFixed()) {
@@ -835,7 +835,7 @@ static bool GoToNextPage(StressTest* st) {
     }
 
     if (1 == rand() % 3) {
-        Rect rect = ClientRect(st->win->hwndFrame);
+        Rect rect = HwndClientRect(st->win->hwndFrame);
         int deltaX = (rand() % 40) - 23;
         rect.dx += deltaX;
         if (rect.dx < 300) {

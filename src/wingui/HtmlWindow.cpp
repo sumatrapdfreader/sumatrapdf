@@ -1243,7 +1243,7 @@ bool HtmlWindow::CreateBrowser() {
     }
 
     ::SetActiveWindow(oleObjectHwnd);
-    RECT rc = ToRECT(ClientRect(hwndParent));
+    RECT rc = ToRECT(HwndClientRect(hwndParent));
 
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {
@@ -1391,7 +1391,7 @@ void HtmlWindow::OnLButtonDown() const {
 }
 
 void HtmlWindow::SetVisible(bool visible) {
-    HwndSetVisibility(hwndParent, visible);
+    HwndSetVisible(hwndParent, visible);
     if (webBrowser) {
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
     }
@@ -1680,7 +1680,7 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
     // capture the whole window (including scrollbars)
     // to image and create imageRes containing the area
     // user asked for
-    Rect winRc = WindowRect(hwndParent);
+    Rect winRc = HwndWindowRect(hwndParent);
     Gdiplus::Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
     Gdiplus::Graphics g(&image);
 

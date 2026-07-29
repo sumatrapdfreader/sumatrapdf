@@ -748,13 +748,13 @@ void PropertiesWnd::SizeToContent() {
     int wantedDy = (nLines + 3) * lineHeight + editBorderDy + btnAreaDy + bottomMargin + frameDy;
 
     // cap at 80% of screen
-    Rect work = GetWorkAreaRect(WindowRect(hwnd), hwnd);
+    Rect work = GetWorkAreaRect(HwndWindowRect(hwnd), hwnd);
     int maxDx = (work.dx * 80) / 100;
     int maxDy = (work.dy * 80) / 100;
     wantedDx = std::min(wantedDx, maxDx);
     wantedDy = std::min(wantedDy, maxDy);
 
-    Rect wRc = WindowRect(hwnd);
+    Rect wRc = HwndWindowRect(hwnd);
     MoveWindow(hwnd, wRc.x, wRc.y, wantedDx, wantedDy, TRUE);
     LayoutToClient();
 }
@@ -763,7 +763,7 @@ void PropertiesWnd::LayoutToClient() {
     if (!layout || !hwnd) {
         return;
     }
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     Constraints bc = Tight({rc.dx, rc.dy});
     layout->Layout(bc);
     layout->SetBounds({0, 0, rc.dx, rc.dy});
@@ -821,7 +821,7 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
     if (!w || !hwnd || !IsWindow(hwnd)) {
         return;
     }
-    Rect rc = WindowRect(hwnd);
+    Rect rc = HwndWindowRect(hwnd);
     Point pos = {rc.x, rc.y};
     if (pos != w->initialPos) {
         gGlobalPrefs->propWinPos = pos;
@@ -991,11 +991,11 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         SetWindowPos(wnd->hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
         wnd->LayoutToClient();
     } else {
-        CenterDialog(wnd->hwnd, parent);
+        HwndCenterDialog(wnd->hwnd, parent);
     }
-    HwndEnsureVisible(wnd->hwnd);
+    HwndEnsureOnScreen(wnd->hwnd);
     {
-        Rect rc = WindowRect(wnd->hwnd);
+        Rect rc = HwndWindowRect(wnd->hwnd);
         wnd->initialPos = {rc.x, rc.y};
     }
 

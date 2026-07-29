@@ -78,12 +78,12 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     str::Builder infotip;
 
     // Display the item's full label, if it's overlong
-    RECT rcLine, rcLabel;
+    Rect rcLine, rcLabel;
     treeView->GetItemRect(ev->treeItem, false, rcLine);
     treeView->GetItemRect(ev->treeItem, true, rcLabel);
 
     // TODO: this causes a duplicate. Not sure what changed
-    if (false && rcLine.right + 2 < rcLabel.right) {
+    if (false && rcLine.x + rcLine.dx + 2 < rcLabel.x + rcLabel.dx) {
         Str currInfoTip = tm->Text(ti);
         infotip.Append(currInfoTip);
         infotip.Append("\r\n");
@@ -824,7 +824,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     Str filePath = win->ctrl->GetFilePath();
 
-    POINT pt{};
+    Point pt{};
 
     TreeView* treeView = (TreeView*)ev->w;
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
@@ -1061,11 +1061,11 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
 
     TreeView* tv = ev->treeView;
-    RECT labelRect{};
+    Rect labelRect{};
     if (!tv->GetItemRect(ev->treeItem, true, labelRect)) {
         return;
     }
-    RECT itemRect{};
+    Rect itemRect{};
     tv->GetItemRect(ev->treeItem, false, itemRect);
 
     NMTVCUSTOMDRAW* tvcd = ev->nm;
@@ -1089,7 +1089,8 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     // Focus ring / highlight-text only for the real tree selection.
     bool hasFocus = isTreeSelected && (GetFocus() == tv->hwnd);
     COLORREF bgCol, txtCol;
-    ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
+    RECT itemRc = ToRECT(itemRect);
+    ResolveTreeFilterItemColors(hdc, itemRc, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     // Per-bookmark color from the document (when not the focused selection).
     if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {
         txtCol = tocItem->color;
@@ -1116,8 +1117,8 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
 
     // Label area extends to the visible right edge so the page number stays
     // right-aligned against the sidebar, not under a long title.
-    RECT drawRc = labelRect;
-    drawRc.right = std::min(itemRect.right, cd->rc.right);
+    RECT drawRc = ToRECT(labelRect);
+    drawRc.right = std::min(itemRect.x + itemRect.dx, (int)cd->rc.right);
     if (drawRc.right <= drawRc.left) {
         return;
     }
@@ -1372,7 +1373,7 @@ static void LayoutTocContainer(MainWindow* win) {
     if (!win->tocLayout) {
         return;
     }
-    Rect rc = WindowRect(win->hwndTocBox);
+    Rect rc = HwndWindowRect(win->hwndTocBox);
     win->tocLayout->Layout(Tight(Size{rc.dx, rc.dy}));
     win->tocLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
 }

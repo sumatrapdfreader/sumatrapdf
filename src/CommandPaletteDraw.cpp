@@ -16,8 +16,8 @@
 #include "CommandPaletteInternal.h"
 
 void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
-    Rect rRelative = WindowRect(hwndRelative);
-    Rect r = WindowRect(hwnd);
+    Rect rRelative = HwndWindowRect(hwndRelative);
+    Rect r = HwndWindowRect(hwnd);
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
     r = {x, y, r.dx, r.dy};
@@ -34,7 +34,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ev->itemRect;
+    RECT rc = ToRECT(ev->itemRect);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;

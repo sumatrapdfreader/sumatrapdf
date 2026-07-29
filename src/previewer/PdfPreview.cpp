@@ -189,7 +189,7 @@ class PageRenderer {
 };
 
 static LRESULT OnPaint(HWND hwnd) {
-    Rect rect = ClientRect(hwnd);
+    Rect rect = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rect);
     HDC hdc = buffer.GetDC();
     HBRUSH brushBg = CreateSolidBrush(kColWindowBg);

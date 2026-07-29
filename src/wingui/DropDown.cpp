@@ -134,7 +134,7 @@ Size DropDown::GetIdealSize() {
     // TODO: 5 is a guessed number.
     int dyPad = DpiScale(hwnd, 4);
     int dy = s1.dy + dyPad;
-    Rect rc = WindowRect(hwnd);
+    Rect rc = HwndWindowRect(hwnd);
     if (rc.dy > dy) {
         dy = rc.dy;
     }

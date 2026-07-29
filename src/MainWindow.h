@@ -368,7 +368,7 @@ struct MainWindow {
         };
         Layout layout; // last applied layout state
         // desired visibility of the sidebar / AI chat panels; applied
-        // (HwndSetVisibility) by RelayoutFrame
+        // (HwndSetVisible) by RelayoutFrame
         bool tocVisible = false;
         bool favVisible = false;
         bool aiChatVisible = false;

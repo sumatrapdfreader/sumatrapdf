@@ -103,7 +103,7 @@ void TabGroupsWnd::LayoutToClient() {
     if (!layout || !hwnd) {
         return;
     }
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     Constraints bc = Tight({rc.dx, rc.dy});
     layout->Layout(bc);
     layout->SetBounds({0, 0, rc.dx, rc.dy});
@@ -232,7 +232,7 @@ static void DrawTabGroupItem(TabGroupsWnd* w, ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ev->itemRect;
+    RECT rc = ToRECT(ev->itemRect);
     ListBox* lb = ev->listBox;
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
@@ -457,8 +457,8 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     int winH = DpiScale(hwnd, 350);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
     LayoutToClient();
-    CenterDialog(hwnd, hwndParent);
-    HwndEnsureVisible(hwnd);
+    HwndCenterDialog(hwnd, hwndParent);
+    HwndEnsureOnScreen(hwnd);
     UpdateTheme();
     UpdateDeleteButton();
     SetIsVisible(true);

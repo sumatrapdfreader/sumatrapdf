@@ -530,14 +530,14 @@ static int ToolbarNaturalWidth(MainWindow* win) {
     if (!win->hwndReBar || !win->hwndToolbar) {
         return 0;
     }
-    Rect rRebar = WindowRect(win->hwndReBar);
-    Rect rTb = WindowRect(win->hwndToolbar);
+    Rect rRebar = HwndWindowRect(win->hwndReBar);
+    Rect rTb = HwndWindowRect(win->hwndToolbar);
     int contentRight = rTb.x; // screen x of the rightmost content edge
     SIZE tbSz{};
     SendMessageW(win->hwndToolbar, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
     contentRight = std::max(contentRight, rTb.x + (int)tbSz.cx);
-    if (win->hwndPageTotal && IsWindowVisible(win->hwndPageTotal)) {
-        Rect rpt = WindowRect(win->hwndPageTotal);
+    if (win->hwndPageTotal && HwndIsVisible(win->hwndPageTotal)) {
+        Rect rpt = HwndWindowRect(win->hwndPageTotal);
         contentRight = std::max(contentRight, rpt.x + rpt.dx);
     }
     int natW = (contentRight - rRebar.x) + DpiScale(win->hwndFrame, 12);
@@ -575,7 +575,7 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     if (natW <= 0 || natW > canvas.dx) {
         natW = canvas.dx;
     }
-    int h = WindowRect(win->hwndReBar).dy;
+    int h = HwndWindowRect(win->hwndReBar).dy;
     int x = canvas.x + (canvas.dx - natW) / 2;
     int y = canvas.y;
     if (ToolbarAtBottom()) {
@@ -708,10 +708,10 @@ void ShowOrHideToolbar(MainWindow* win) {
 
 void UpdateFindbox(MainWindow* win) {
     // remove SS_WHITERECT so WM_CTLCOLORSTATIC controls the background color
-    SetWindowStyle(win->hwndPageBg, SS_WHITERECT, false);
+    HwndSetWindowStyle(win->hwndPageBg, SS_WHITERECT, false);
 
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
-    if (IsWindowVisible(win->hwndFrame)) {
+    if (HwndIsVisible(win->hwndFrame)) {
         UpdateWindow(win->hwndToolbar);
     }
 
@@ -961,7 +961,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     size.dx += padX;
     size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
-    Rect pageWndRect = WindowRect(win->hwndPageBg);
+    Rect pageWndRect = HwndWindowRect(win->hwndPageBg);
 
     // TB_GETRECT fails for hidden buttons, so anchor on a button that's still
     // visible. CmdPrint is hidden when PrinterAccess is revoked via
@@ -981,7 +981,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 #if 0
         // preserve hwndPageTotal's text and size
         txt = HwndGetTextTemp(win->hwndPageTotal);
-        size2 = ClientRect(win->hwndPageTotal).Size();
+        size2 = HwndClientRect(win->hwndPageTotal).Size();
         size2.dx -= padX;
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
 #endif
@@ -1378,7 +1378,7 @@ HIMAGELIST BuildStdToolbarImageList(int dx) {
 // presentation) so the caller can fall back to a different anchor.
 Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
     RECT r{};
-    if (!win->hwndToolbar || !IsWindowVisible(win->hwndToolbar)) {
+    if (!win->hwndToolbar || !HwndIsVisible(win->hwndToolbar)) {
         return {};
     }
     TbGetRectById(win->hwndToolbar, cmdId, &r);

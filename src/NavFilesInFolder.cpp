@@ -287,7 +287,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ev->itemRect;
+    RECT rc = ToRECT(ev->itemRect);
     NavFileEntry& e = m->entries[ev->itemIndex];
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
@@ -362,8 +362,8 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 }
 
 static void PositionNavFilesWnd(HWND hwnd, HWND hwndRelative) {
-    Rect rRelative = WindowRect(hwndRelative);
-    Rect r = WindowRect(hwnd);
+    Rect rRelative = HwndWindowRect(hwndRelative);
+    Rect r = HwndWindowRect(hwnd);
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
     Rect r2 = ShiftRectToWorkArea({x, y, r.dx, r.dy}, hwndRelative, true);
@@ -461,7 +461,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     TempStr dir = path::GetDirTemp(filePath);
     SetDir(dir, filePath);
 
-    auto rc = ClientRect(mainWin->hwndFrame);
+    auto rc = HwndClientRect(mainWin->hwndFrame);
     int dy = rc.dy - 72;
     if (dy < 480) {
         dy = 480;

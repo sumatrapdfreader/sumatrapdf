@@ -100,7 +100,8 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
 
     // second SetParent after WS_CHILD is set
     SetParent(hwndFrame, hwndParent);
-    MoveWindow(hwndFrame, ClientRect(hwndParent));
+    Rect r = HwndClientRect(hwndParent);
+    HwndMoveWindow(hwndFrame, &r);
     ShowWindow(hwndFrame, SW_SHOW);
     UpdateWindow(hwndFrame);
 

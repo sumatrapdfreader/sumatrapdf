@@ -16,7 +16,8 @@ Checks: >
   -modernize-use-using,
   -performance-no-int-to-ptr,
   -readability-identifier-length,
-  -readability-magic-numbers
+  -readability-magic-numbers,
+  -readability-non-const-parameter
 CheckOptions:
   - key: readability-implicit-bool-conversion.AllowIntegerConditions
     value: 1

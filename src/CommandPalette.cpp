@@ -529,7 +529,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
-    auto rc = ClientRect(win->hwndFrame);
+    auto rc = HwndClientRect(win->hwndFrame);
     int dy = rc.dy - 72;
     if (dy < 480) {
         dy = 480;

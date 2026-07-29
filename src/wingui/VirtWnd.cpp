@@ -88,14 +88,13 @@ void VirtWndText::Paint(HDC hdc) {
     if (isRtl) {
         fmt |= DT_RTLREADING;
     }
-    RECT dr = ToRECT(lastBounds);
-    HdcDrawText(hdc, s, &dr, fmt, font);
+    HdcDrawText(hdc, s, lastBounds, fmt, font);
     if (withUnderline) {
         auto& r = lastBounds;
         Rect lineRect = {r.x, r.y + sz.dy, sz.dx, 0};
         auto col = GetTextColor(hdc);
         ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, col), true);
-        DrawLine(hdc, lineRect);
+        HdcDrawLine(hdc, lineRect);
     }
     if (textColor != kColorUnset) {
         SetTextColor(hdc, prevCol);

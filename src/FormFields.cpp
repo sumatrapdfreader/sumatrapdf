@@ -213,7 +213,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     int listDy = visN * itemDy + DpiScale(win->hwndCanvas, 4);
     int listDx = std::max(rc.dx, DpiScale(win->hwndCanvas, 120));
     // drop down just below the field, or above if it would fall off the canvas
-    Rect canvasRc = ClientRect(win->hwndCanvas);
+    Rect canvasRc = HwndClientRect(win->hwndCanvas);
     int x = rc.x;
     int y = rc.y + rc.dy;
     if (y + listDy > canvasRc.dy && rc.y - listDy >= 0) {

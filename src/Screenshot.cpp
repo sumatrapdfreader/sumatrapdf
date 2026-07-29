@@ -98,7 +98,7 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
     if (hwnd == overlayHwnd) {
         return false;
     }
-    if (!IsWindowVisible(hwnd)) {
+    if (!HwndIsVisible(hwnd)) {
         return false;
     }
     if (hwnd == GetDesktopWindow()) {
@@ -1662,7 +1662,7 @@ bool SetHotkeyWnd::Create(HWND owner) {
 
     int minDx = DpiScale(hwnd, 320);
     LayoutAndSizeToContent(layout, minDx, 0, hwnd);
-    CenterDialog(hwnd, owner);
+    HwndCenterDialog(hwnd, owner);
     UpdateTheme();
     UpdateUI();
 

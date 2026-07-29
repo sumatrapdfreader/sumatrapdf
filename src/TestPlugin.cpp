@@ -54,7 +54,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     } else if (WM_SIZE == msg) {
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         if (hChild) {
-            Rect rcClient = ClientRect(hwnd);
+            Rect rcClient = HwndClientRect(hwnd);
             MoveWindow(hChild, rcClient.x, rcClient.y, rcClient.dx, rcClient.dy, FALSE);
         }
     } else if (WM_COPYDATA == msg) {
@@ -76,7 +76,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
         if (!hChild) {
             PAINTSTRUCT ps;
             HDC hDC = BeginPaint(hwnd, &ps);
-            RECT rcClient = ToRECT(ClientRect(hwnd));
+            RECT rcClient = ToRECT(HwndClientRect(hwnd));
             HBRUSH brushBg = CreateSolidBrush(0xCCCCCC);
             FillRect(hDC, &rcClient, brushBg);
             LOGFONTW lf{};

@@ -908,7 +908,7 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
 static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*, bool skipMessage) {
     // TODO: cache bmp object?
     Graphics g(dc);
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     Bitmap bmp(rc.dx, rc.dy, &g);
     Graphics g2((Image*)&bmp);
     DrawFrame2(g2, rc, skipMessage);

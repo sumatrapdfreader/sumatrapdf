@@ -19,7 +19,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     HBRUSH br = w->BackgroundBrush();
     FillRect(hdc, &ps.rcPaint, br);
 
-    Rect cr = ClientRect(w->hwnd);
+    Rect cr = HwndClientRect(w->hwnd);
 
     int x = DpiScale(w->hwnd, w->padX);
     int y = DpiScale(w->hwnd, w->padY);
@@ -40,8 +40,8 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
         fmt |= DT_RTLREADING;
     }
     TempStr s = HwndGetTextTemp(w->hwnd);
-    RECT rs{x, y, x + cr.dx, y + cr.dy};
-    HdcDrawText(hdc, s, &rs, fmt);
+    Rect rs{x, y, cr.dx, cr.dy};
+    HdcDrawText(hdc, s, rs, fmt);
 
     // Text might be too long and invade close button area. We just re-paint
     // the background, which is not the pretties but works.
@@ -146,7 +146,7 @@ void LabelWithCloseWnd::SetLabel(Str label) {
 }
 
 void LabelWithCloseWnd::Layout() {
-    Rect r = ClientRect(hwnd);
+    Rect r = HwndClientRect(hwnd);
     int dx = r.dx;
     int dy = r.dy;
 

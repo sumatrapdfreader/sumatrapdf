@@ -317,7 +317,7 @@ void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORRE
         int underlineY = first.y + first.dy - 3;
         int x1 = first.x;
         int x2 = last.x + last.dx;
-        DrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
+        HdcDrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
     }
     SelectObject(hdc, prevPen);
     DeleteObject(pen);
@@ -595,7 +595,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
 
     SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
 
     int innerPadding = DpiScale(hwnd, kInnerPadding);
     Rect r = {0, 0, txtSize.dx, txtSize.dy};
@@ -650,10 +650,10 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
 
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     col = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
-    FillRect(hdc, rc, brushAboutBg);
+    HdcFillRect(hdc, rc, brushAboutBg);
 
     /* render title */
     Rect titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
@@ -667,8 +667,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
     Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
     FillRect(hdc, &rcLogoBg, bgBrush);
-    DrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
-    DrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
+    HdcDrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
+    HdcDrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
 
     titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
@@ -709,7 +709,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
 
         if (hasUrl) {
             int underlineY = pos.y + pos.dy - 3;
-            DrawLine(hdc, Rect(pos.x, underlineY, pos.dx, 0));
+            HdcDrawLine(hdc, Rect(pos.x, underlineY, pos.dx, 0));
             auto sl = new StaticLink(pos, el->url, el->url);
             staticLinks.Append(sl);
         }
@@ -718,7 +718,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
     SelectObject(hdc, penDivideLine);
     Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, kAboutLeftRightSpaceDx), rect.y + titleRect.dy + 4,
                     0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
-    DrawLine(hdc, divideLine);
+    HdcDrawLine(hdc, divideLine);
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
@@ -783,7 +783,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     }
     minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
 
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     minRect.x = (rc.dx - minRect.dx) / 2;
     minRect.y = (rc.dy - minRect.dy) / 2;
 
@@ -992,8 +992,8 @@ void ShowAboutWindow(MainWindow* win) {
     rc.Inflate(rectPadding, rectPadding);
 
     // resize the new window to just match these dimensions
-    Rect wRc = WindowRect(gHwndAbout);
-    Rect cRc = ClientRect(gHwndAbout);
+    Rect wRc = HwndWindowRect(gHwndAbout);
+    Rect cRc = HwndClientRect(gHwndAbout);
     wRc.dx += rc.dx - cRc.dx;
     wRc.dy += rc.dy - cRc.dy;
     MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
@@ -1003,7 +1003,7 @@ void ShowAboutWindow(MainWindow* win) {
 }
 
 void DrawAboutPage(MainWindow* win, HDC hdc) {
-    Rect rc = ClientRect(win->hwndCanvas);
+    Rect rc = HwndClientRect(win->hwndCanvas);
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles()) {
@@ -1513,7 +1513,7 @@ void LayoutHomePage(HomePageLayout& l) {
 
     // layout tip at the bottom
     if (tip) {
-        Rect rcClient = ClientRect(win->hwndCanvas);
+        Rect rcClient = HwndClientRect(win->hwndCanvas);
         int tipPadding = DpiScale(hdc, 8);
 
         int tipY = rcClient.dy - tipHeight;
@@ -1746,7 +1746,7 @@ void HomePageOnCanvasMouseLeave() {
 
 static void DrawHomeViewButton(HDC hdc, HIMAGELIST himl, Rect r, TbIcon icon, bool selected) {
     if (selected) {
-        FillRect(hdc, r, ThemeControlBackgroundColor());
+        HdcFillRect(hdc, r, ThemeControlBackgroundColor());
         HBRUSH br = CreateSolidBrush(AccentColor(ThemeControlBackgroundColor(), 40));
         RECT rr = ToRECT(r);
         FrameRect(hdc, &rr, br);
@@ -1788,7 +1788,7 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
 
     COLORREF lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, lineCol), true);
-    DrawLine(hdc, Rect(row.x, row.y + row.dy - 1, row.dx, 0));
+    HdcDrawLine(hdc, Rect(row.x, row.y + row.dy - 1, row.dx, 0));
 
     RenderedBitmap* thumbImg = LoadThumbnail(fs);
     Rect thumbBox = thumb.rcListThumb;
@@ -1829,7 +1829,7 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
 
     ImageList_Draw(l.himlOpen, (int)TbIcon::Close, hdc, thumb.rcListRemove.x, thumb.rcListRemove.y, ILD_NORMAL);
     if (fs->isPinned) {
-        FillRect(hdc, thumb.rcListPin, ThemeControlBackgroundColor());
+        HdcFillRect(hdc, thumb.rcListPin, ThemeControlBackgroundColor());
     }
     ImageList_Draw(l.himlOpen, (int)TbIcon::Pin, hdc, thumb.rcListPin.x, thumb.rcListPin.y, ILD_NORMAL);
 }
@@ -1842,9 +1842,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     auto backgroundColor = ThemeMainWindowBackgroundColor();
 
     {
-        Rect rc = ClientRect(win->hwndCanvas);
+        Rect rc = HwndClientRect(win->hwndCanvas);
         auto color = ThemeMainWindowBackgroundColor();
-        FillRect(hdc, rc, color);
+        HdcFillRect(hdc, rc, color);
     }
 
     // draw search edit border and background on the canvas
@@ -1871,7 +1871,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     auto color = ThemeWindowTextColor();
     if (false) {
         ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
-        DrawLine(hdc, l.rcLine);
+        HdcDrawLine(hdc, l.rcLine);
     }
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
@@ -1958,7 +1958,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     // draw tip at the bottom
     if (l.tip) {
         COLORREF tipBgCol = ThemeControlBackgroundColor();
-        FillRect(hdc, l.rcTip, tipBgCol);
+        HdcFillRect(hdc, l.rcTip, tipBgCol);
 
         HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
         COLORREF textCol = ThemeWindowTextColor();
@@ -1976,7 +1976,7 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     DeleteVecMembers(win->staticLinks);
 
     HomePageLayout l;
-    l.rc = ClientRect(win->hwndCanvas);
+    l.rc = HwndClientRect(win->hwndCanvas);
     l.hdc = hdc;
     l.hwnd = hwnd;
     l.win = win;
@@ -2053,7 +2053,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
 }
 
 void HomePageOnMouseWheel(MainWindow* win, int delta) {
-    Rect rc = ClientRect(win->hwndCanvas);
+    Rect rc = HwndClientRect(win->hwndCanvas);
     HDC hdc = GetDC(win->hwndCanvas);
     int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
     ReleaseDC(win->hwndCanvas, hdc);

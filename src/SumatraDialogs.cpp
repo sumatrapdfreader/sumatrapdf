@@ -186,7 +186,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         if (UseDarkModeLib()) {
             DarkMode::setDarkWndSafe(hDlg);
         }
-        HwndSetVisibility(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
+        HwndSetVisible(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
         TempStr txt = fmt(_TRA("Enter password for %s").s, data->fileName);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
@@ -203,7 +203,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
             InvalidateRect(hwndEdit, nullptr, TRUE);
         }
 
-        CenterDialog(hDlg);
+        HwndCenterDialog(hDlg);
         HwndSetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
         BringWindowToTop(hDlg);
         return FALSE;
@@ -304,7 +304,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         HwndSetDlgItemText(hDlg, IDOK, _TRA("Go to page"));
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
-        CenterDialog(hDlg);
+        HwndCenterDialog(hDlg);
         HwndSetFocus(editPageNo);
         return FALSE;
     }
@@ -384,7 +384,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
                                                           (LONG_PTR)Dialog_Find_Edit_Proc);
             EditSelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
 
-            CenterDialog(hDlg);
+            HwndCenterDialog(hDlg);
             HwndSetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
             return FALSE;
             //] ACCESSKEY_GROUP Find Dialog
@@ -489,11 +489,11 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
 
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         // the language list is meant to be laid out left-to-right
-        SetWindowExStyle(langList, WS_EX_LAYOUTRTL, false);
+        HwndSetWindowExStyle(langList, WS_EX_LAYOUTRTL, false);
         HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
-        CenterDialog(hDlg);
+        HwndCenterDialog(hDlg);
         HwndSetFocus(GetDlgItem(hDlg, IDC_CHANGE_LANG_SEARCH));
         return FALSE;
     }
@@ -709,7 +709,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, L
             HwndSetDlgItemText(hDlg, IDOK, _TRA("Zoom"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
-            CenterDialog(hDlg);
+            HwndCenterDialog(hDlg);
             HwndSetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
             return FALSE;
             //] ACCESSKEY_GROUP Zoom Dialog
@@ -763,7 +763,7 @@ static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM 
             HwndSetText(hDlg, _TRA("Change Scrollbar"));
             HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
-            CenterDialog(hDlg);
+            HwndCenterDialog(hDlg);
             return TRUE;
         }
         case WM_COMMAND:
@@ -830,14 +830,14 @@ static void ApplyInverseSearchSettings(GlobalPrefs* prefs, HWND hwndComboBox) {
 
 static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
     HWND hItem = GetDlgItem(hDlg, itemId);
-    Rect itemRc = MapRectToWindow(WindowRect(hItem), HWND_DESKTOP, hDlg);
+    Rect itemRc = HwndMapRectToWindow(HwndWindowRect(hItem), HWND_DESKTOP, hDlg);
     // shrink by the distance to the previous item
     HWND hPrev = prevId ? GetDlgItem(hDlg, prevId) : GetWindow(hItem, GW_HWNDPREV);
-    Rect prevRc = MapRectToWindow(WindowRect(hPrev), HWND_DESKTOP, hDlg);
+    Rect prevRc = HwndMapRectToWindow(HwndWindowRect(hPrev), HWND_DESKTOP, hDlg);
     int shrink = itemRc.y - prevRc.y + itemRc.dy - prevRc.dy;
     // move items below up, shrink container items and hide contained items
     for (HWND item = GetWindow(hDlg, GW_CHILD); item; item = GetWindow(item, GW_HWNDNEXT)) {
-        Rect rc = MapRectToWindow(WindowRect(item), HWND_DESKTOP, hDlg);
+        Rect rc = HwndMapRectToWindow(HwndWindowRect(item), HWND_DESKTOP, hDlg);
         if (rc.y >= itemRc.y + itemRc.dy) { // below
             MoveWindow(item, rc.x, rc.y - shrink, rc.dx, rc.dy, TRUE);
         } else if (rc.Intersect(itemRc) == rc) { // contained (or self)
@@ -847,7 +847,7 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
         }
     }
     // shrink the dialog
-    Rect dlgRc = WindowRect(hDlg);
+    Rect dlgRc = HwndWindowRect(hDlg);
     MoveWindow(hDlg, dlgRc.x, dlgRc.y, dlgRc.dx, dlgRc.dy - shrink, TRUE);
 }
 
@@ -910,7 +910,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 RemoveDialogItem(hDlg, IDC_SECTION_INVERSESEARCH, IDC_SECTION_ADVANCED);
             }
 
-            CenterDialog(hDlg);
+            HwndCenterDialog(hDlg);
             HwndSetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
             return FALSE;
             //] ACCESSKEY_GROUP Settings Dialog
@@ -979,7 +979,7 @@ static INT_PTR CALLBACK Dialog_SetInverseSearch_Proc(HWND hDlg, UINT msg, WPARAM
             HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
             FillInverseSearchCombo(GetDlgItem(hDlg, IDC_CMDLINE), prefs->inverseSearchCmdLine);
-            CenterDialog(hDlg);
+            HwndCenterDialog(hDlg);
             HwndSetFocus(GetDlgItem(hDlg, IDC_CMDLINE));
             return FALSE;
 
@@ -1169,7 +1169,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             HwndSetDlgItemText(hDlg, IDC_FAV_NAME_EDIT, data->favName);
             EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         }
-        CenterDialog(hDlg);
+        HwndCenterDialog(hDlg);
         HwndSetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         return FALSE;
     }
@@ -1487,7 +1487,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
             // subclass color area for mouse drag tracking
             HWND hwndCA = GetDlgItem(hDlg, IDC_BGCOL_COLORAREA);
             gOrigColorAreaProc = (WNDPROC)SetWindowLongPtrW(hwndCA, GWLP_WNDPROC, (LONG_PTR)ColorAreaSubclassProc);
-            CenterDialog(hDlg);
+            HwndCenterDialog(hDlg);
             return TRUE;
         }
 

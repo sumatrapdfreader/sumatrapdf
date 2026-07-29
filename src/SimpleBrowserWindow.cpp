@@ -52,7 +52,7 @@ static void LayoutControls(SimpleBrowserWindow* w) {
         return;
     }
 
-    Rect rc = ClientRect(w->hwnd);
+    Rect rc = HwndClientRect(w->hwnd);
     int pad = DpiScale(w->hwnd, kNavRowPadding);
     int gap = DpiScale(w->hwnd, kNavBtnGap);
     int y = pad;
@@ -260,7 +260,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
 
         CreateWebViewArgs cargs;
         cargs.parent = frameHwnd;
-        cargs.pos = ClientRect(frameHwnd);
+        cargs.pos = HwndClientRect(frameHwnd);
         if (!webView->Create(cargs)) {
             return nullptr;
         }

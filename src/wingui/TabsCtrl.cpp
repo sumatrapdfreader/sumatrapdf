@@ -63,7 +63,7 @@ void TabsCtrl::ScheduleRepaint() {
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
 void TabsCtrl::LayoutTabs() {
-    Rect rect = ClientRect(hwnd);
+    Rect rect = HwndClientRect(hwnd);
     int dy = rect.dy;
     int nTabs = TabCount();
     if (nTabs == 0) {
@@ -189,10 +189,10 @@ bool TabsCtrl::IsValidIdx(int idx) {
     return idx >= 0 && idx < TabCount();
 }
 
-void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
+void TabsCtrl::Paint(HDC hdc, const Rect& rc) {
     // verify the cursor is actually inside the tab control; if not, ignore stale lastMousePos
     Point cursorPos = HwndGetCursorPos(hwnd);
-    Rect clientRc = ClientRect(hwnd);
+    Rect clientRc = HwndClientRect(hwnd);
     bool mouseInside = clientRc.Contains(cursorPos);
     TabsCtrl::MouseState tabState;
     if (mouseInside) {
@@ -746,9 +746,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_PAINT: {
             // TabCtrl_SetCurSel invalidates native (LTR) item rects; we lay out tabs
             // manually (RTL tabs start from the right). Avoid BeginPaint's clip region.
-            RECT clientRc = ClientRECT(hwnd);
+            Rect clientRc = HwndClientRect(hwnd);
             HDC hdc = GetDC(hwnd);
-            DoubleBuffer buffer(hwnd, ToRect(clientRc));
+            DoubleBuffer buffer(hwnd, clientRc);
             Paint(buffer.GetDC(), clientRc);
             buffer.Flush(hdc);
             ReleaseDC(hwnd, hdc);
@@ -781,7 +781,7 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
 
     if (withToolTips) {
         HWND ttHwnd = GetToolTipsHwnd();
-        SetWindowStyle(ttHwnd, TTS_NOPREFIX, true);
+        HwndSetWindowStyle(ttHwnd, TTS_NOPREFIX, true);
     }
     return hwnd;
 }

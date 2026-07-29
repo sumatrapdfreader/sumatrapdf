@@ -272,7 +272,7 @@ struct AdvancedSettingsWnd : Wnd {
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG&) override;
-    void OnSize(UINT msg, UINT type, SIZE size) override;
+    void OnSize(UINT msg, UINT type, Size size) override;
 
     void QueryChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
@@ -417,7 +417,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ev->itemRect;
+    RECT rc = ToRECT(ev->itemRect);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -805,14 +805,14 @@ static int gAdvSettingsLastClientDx = 0;
 static int gAdvSettingsLastClientDy = 0;
 
 // re-layout the controls when the (resizable) window is resized
-void AdvancedSettingsWnd::OnSize(UINT, UINT, SIZE size) {
+void AdvancedSettingsWnd::OnSize(UINT, UINT, Size size) {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
     // before the child controls exist; ignore layout until they're created
     if (!layout || !listBox) {
         return;
     }
-    int dx = (int)size.cx;
-    int dy = (int)size.cy;
+    int dx = size.dx;
+    int dy = size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -837,8 +837,8 @@ static HFONT CreateBoldFont(HFONT font) {
 
 // center the dialog over the main window frame
 static void PositionDialog(HWND hwnd, HWND hwndRelative) {
-    Rect rRelative = WindowRect(hwndRelative);
-    Rect r = WindowRect(hwnd);
+    Rect rRelative = HwndWindowRect(hwndRelative);
+    Rect r = HwndWindowRect(hwnd);
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
     r = {x, y, r.dx, r.dy};
@@ -977,15 +977,15 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
-    auto rc = ClientRect(win->hwndFrame);
+    auto rc = HwndClientRect(win->hwndFrame);
     // Default is wide enough that long setting names (e.g. InverseSearchCmdLine)
     // and long values don't crowd each other; reuse last size if the user
     // resized earlier this session (#5804).
     int dy = gAdvSettingsLastClientDy > 0 ? gAdvSettingsLastClientDy : limitValue(rc.dy - 72, 480, 900);
     int dx = gAdvSettingsLastClientDx > 0 ? gAdvSettingsLastClientDx : limitValue(rc.dx - 128, 760, 1100);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
-    gAdvSettingsLastClientDx = ClientRect(hwnd).dx;
-    gAdvSettingsLastClientDy = ClientRect(hwnd).dy;
+    gAdvSettingsLastClientDx = HwndClientRect(hwnd).dx;
+    gAdvSettingsLastClientDy = HwndClientRect(hwnd).dy;
     PositionDialog(hwnd, win->hwndFrame);
 
     SetIsVisible(true);

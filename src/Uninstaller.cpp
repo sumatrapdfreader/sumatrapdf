@@ -318,7 +318,7 @@ static bool InstanceInit() {
 
     SetDefaultMsg();
 
-    CenterDialog(gHwndFrame);
+    HwndCenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
     SetForegroundWindow(gHwndFrame);
 

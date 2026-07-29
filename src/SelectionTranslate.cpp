@@ -126,7 +126,7 @@ struct SelectionTranslateWnd : Wnd {
     void OnCloseClicked();
     void ScheduleDelete();
 
-    void OnSize(UINT msg, UINT type, SIZE size) override;
+    void OnSize(UINT msg, UINT type, Size size) override;
     void OnGetMinMaxInfo(MINMAXINFO* mmi) override;
 };
 
@@ -881,17 +881,17 @@ void SelectionTranslateWnd::Relayout(bool initial) {
     }
     if (initial || !sizeInitialized) {
         LayoutAndSizeToContent(layout, 0, 0, hwnd);
-        CenterDialog(hwnd, hwndOwner);
+        HwndCenterDialog(hwnd, hwndOwner);
         sizeInitialized = true;
         return;
     }
     // keep current client size (or grow if new content needs more space, e.g. result)
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     LayoutAndSizeToContent(layout, rc.dx, rc.dy, hwnd);
 }
 
 // reflow controls when the user resizes the window
-void SelectionTranslateWnd::OnSize(UINT msg, UINT, SIZE size) {
+void SelectionTranslateWnd::OnSize(UINT msg, UINT, Size size) {
     if (msg != WM_SIZE) {
         return;
     }
@@ -899,8 +899,8 @@ void SelectionTranslateWnd::OnSize(UINT msg, UINT, SIZE size) {
     if (!layout || !sizeInitialized) {
         return;
     }
-    int dx = (int)size.cx;
-    int dy = (int)size.cy;
+    int dx = size.dx;
+    int dy = size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }

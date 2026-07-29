@@ -197,7 +197,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         status = new Static();
         status->SetColors(colTxt, colBg);
         status->Create(args);
-        SetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
+        HwndSetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
     }
 
     {
@@ -264,7 +264,7 @@ void FindWindowWnd::Layout() {
     if (!edit || !status || !hwndBtns || !results) {
         return;
     }
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     int pad = DpiScale(hwnd, 8);
     int gap = DpiScale(hwnd, 6);
     int statusDx = DpiScale(hwnd, 90);
@@ -357,7 +357,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         return;
     }
     HDC hdc = ev->hdc;
-    RECT rc = ev->itemRect;
+    RECT rc = ToRECT(ev->itemRect);
 
     // clip the whole row so a partially visible last item (LBS_NOINTEGRALHEIGHT)
     // and highlight fill cannot paint outside the item / list client (#5796)
@@ -573,10 +573,10 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
 }
 
 void FindWindowWnd::SavePos() {
-    if (!IsWindowVisible(hwnd)) {
+    if (!HwndIsVisible(hwnd)) {
         return;
     }
-    Rect r = WindowRect(hwnd);
+    Rect r = HwndWindowRect(hwnd);
     gGlobalPrefs->searchUIWindowPos = r;
 }
 
@@ -811,7 +811,7 @@ static void PositionFindWindow(FindWindowWnd* w) {
     Rect r = gGlobalPrefs->searchUIWindowPos;
     if (r.IsEmpty()) {
         // default: a reasonable size near the top-right of the frame
-        Rect fr = WindowRect(win->hwndFrame);
+        Rect fr = HwndWindowRect(win->hwndFrame);
         int dx = DpiScale(w->hwnd, 520);
         int dy = DpiScale(w->hwnd, 360);
         r = {fr.x + fr.dx - dx - DpiScale(w->hwnd, 40), fr.y + DpiScale(w->hwnd, 80), dx, dy};
@@ -867,7 +867,7 @@ void HideFindWindow(MainWindow* win) {
 }
 
 bool IsFindWindowVisible(MainWindow* win) {
-    return win->findWindow && IsWindowVisible(win->findWindow->hwnd);
+    return win->findWindow && HwndIsVisible(win->findWindow->hwnd);
 }
 
 void FindWindowSetStatus(MainWindow* win, Str s) {

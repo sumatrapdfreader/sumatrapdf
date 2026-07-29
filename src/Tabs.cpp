@@ -229,7 +229,7 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
             if (!newWin) {
                 return;
             }
-            MoveWindow(newWin->hwndFrame, rect);
+            HwndMoveWindow(newWin->hwndFrame, &rect);
             ShowMainWindow(newWin, WIN_STATE_NORMAL);
         } else {
             newWin = CreateAndShowMainWindow(nullptr);

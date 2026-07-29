@@ -195,7 +195,7 @@ static void UpdateAIChatPanelTitle(MainWindow* win, int labelDx) {
         font = GetDefaultGuiFont(true, false);
     }
     if (labelDx <= 0 && win->hwndAiChatBox) {
-        labelDx = ClientRect(win->hwndAiChatBox).dx;
+        labelDx = HwndClientRect(win->hwndAiChatBox).dx;
     }
     int maxDx = AIChatLabelMaxTextDx(labelHwnd, labelDx);
     TempStr prefix = str::JoinTemp(p->TitleTemp(), StrL(" with "));
@@ -209,7 +209,7 @@ static void LayoutAIChatBox(MainWindow* win) {
     if (!win->aiChatLayout) {
         return;
     }
-    Rect rc = ClientRect(win->hwndAiChatBox);
+    Rect rc = HwndClientRect(win->hwndAiChatBox);
     if (rc.dx <= 0 || rc.dy <= 0) {
         return;
     }
@@ -809,7 +809,7 @@ static void OnAIChatSplitterMove(Splitter::MoveEvent* ev) {
         return;
     }
     Point pcur = HwndGetCursorPos(win->hwndFrame);
-    Rect rFrame = ClientRect(win->hwndFrame);
+    Rect rFrame = HwndClientRect(win->hwndFrame);
     int dx = rFrame.dx - pcur.x;
     if (dx < kAIChatMinDx || dx > rFrame.dx / 2) {
         ev->resizeAllowed = false;
@@ -869,7 +869,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->resourceProvider.ctx = &gAIChatMarkedJs;
     webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 
-    Rect rc = ClientRect(win->hwndAiChatBox);
+    Rect rc = HwndClientRect(win->hwndAiChatBox);
     CreateWebViewArgs wvArgs;
     wvArgs.parent = win->hwndAiChatBox;
     wvArgs.pos = Rect(0, 0, rc.dx, rc.dy);

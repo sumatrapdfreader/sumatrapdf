@@ -50,7 +50,7 @@ void TextViewWnd::LayoutToClient() {
     if (!edit || !hwnd) {
         return;
     }
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     edit->SetBounds(rc);
 }
 

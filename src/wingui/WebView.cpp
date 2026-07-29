@@ -172,7 +172,7 @@ static bool ShouldWebviewBeVisible(HWND hwnd) {
         return false;
     }
     HWND parent = GetParent(hwnd);
-    if (parent && !IsWindowVisible(parent)) {
+    if (parent && !HwndIsVisible(parent)) {
         return false;
     }
     HWND root = GetAncestor(hwnd, GA_ROOT);
@@ -925,10 +925,10 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     }
 
     isSuspended = false;
-    RECT bounds = ClientRECT(hwnd);
-    controller->put_Bounds(bounds);
-    lastBounds = bounds;
+    lastBounds = HwndClientRect(hwnd);
     hasLastBounds = true;
+    RECT bounds = ToRECT(lastBounds);
+    controller->put_Bounds(bounds);
     controller->get_CoreWebView2(&webview);
     if (!webview) {
         FailInit();
@@ -1017,13 +1017,14 @@ void WebviewWnd::UpdateWebviewSize() {
     if (controller == nullptr) {
         return;
     }
-    RECT bounds = ClientRECT(hwnd);
-    if (hasLastBounds && EqualRect(&bounds, &lastBounds)) {
+    Rect bounds = HwndClientRect(hwnd);
+    if (hasLastBounds && bounds == lastBounds) {
         return;
     }
     lastBounds = bounds;
     hasLastBounds = true;
-    controller->put_Bounds(bounds);
+    RECT r = ToRECT(bounds);
+    controller->put_Bounds(r);
 }
 
 void WebviewWnd::Eval(Str js) {

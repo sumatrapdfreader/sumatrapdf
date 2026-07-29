@@ -133,7 +133,7 @@ struct Wnd : ILayout {
     virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
     virtual void OnMove(POINTS* pts);
     virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
-    virtual void OnSize(UINT msg, UINT type, SIZE size);
+    virtual void OnSize(UINT msg, UINT type, Size size);
     virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
     virtual void OnTimer(UINT_PTR timerId);
     virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
@@ -141,7 +141,7 @@ struct Wnd : ILayout {
     virtual void SetColors(COLORREF textColor, COLORREF bgColor);
 
     void Close();
-    void SetPos(RECT* r);
+    void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
     void SetText(Str);
@@ -357,7 +357,7 @@ struct ListBox : Wnd {
     struct DrawItemEvent {
         ListBox* listBox = nullptr;
         HDC hdc = nullptr;
-        RECT itemRect{};
+        Rect itemRect{};
         int itemIndex = -1;
         bool selected = false;
     };
@@ -654,7 +654,7 @@ struct TreeView : Wnd {
     HWND GetToolTipsHwnd();
 
     bool IsExpanded(TreeItem ti);
-    bool GetItemRect(TreeItem ti, bool justText, RECT& r);
+    bool GetItemRect(TreeItem ti, bool justText, Rect& r);
     TreeItem GetSelection();
     bool SelectItem(TreeItem ti);
     void ExpandAll();
@@ -695,7 +695,7 @@ struct TreeView : Wnd {
     TVITEMW item{};
 };
 
-TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, Point& pt);
 
 //--- TabsCtrl
 
@@ -872,7 +872,7 @@ struct TabsCtrl : Wnd {
     void LayoutTabs();
     void ScheduleRepaint();
     TabsCtrl::MouseState TabStateFromMousePosition(const Point& p);
-    void Paint(HDC hdc, const RECT& rc);
+    void Paint(HDC hdc, const Rect& rc);
     HBITMAP RenderForDragging(int idx);
 };
 

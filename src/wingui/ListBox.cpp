@@ -220,7 +220,7 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         DrawItemEvent ev;
         ev.listBox = this;
         ev.hdc = dis->hDC;
-        ev.itemRect = dis->rcItem;
+        ev.itemRect = ToRect(dis->rcItem);
         ev.itemIndex = (int)dis->itemID;
         ev.selected = (dis->itemState & ODS_SELECTED) != 0;
         onDrawItem.Call(&ev);

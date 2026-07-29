@@ -12,12 +12,11 @@ bool ToBool(BOOL b);
 
 UINT_PTR NextSubclassId();
 
-RECT ClientRECT(HWND);
-Rect ClientRect(HWND);
-Rect WindowRect(HWND);
-Rect MapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
-Rect MapLtrClientRectToScreen(HWND hwnd, Rect r);
-int MapChildXForRtlParent(HWND parent, int ltrX, int childDx);
+Rect HwndClientRect(HWND);
+Rect HwndWindowRect(HWND);
+Rect HwndMapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
+Rect HwndMapLtrClientRectToScreen(HWND hwnd, Rect r);
+int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx);
 
 void EditSelectAll(HWND);
 int EditIdealDy(HWND, bool hasBorder, int lines = 1);
@@ -31,8 +30,7 @@ bool IsValidHandle(HANDLE);
 bool SafeCloseHandle(HANDLE*);
 bool SafeFindClose(HANDLE*);
 void FillWndClassEx(WNDCLASSEX& wcex, WStr clsName, WNDPROC wndproc);
-void MoveWindow(HWND hwnd, Rect rect);
-void MoveWindow(HWND hwnd, RECT* r);
+void HwndMoveWindow(HWND hwnd, Rect* r);
 
 bool IsOs64();
 int CpuCoreCount();
@@ -115,20 +113,19 @@ bool IsCtrlPressed();
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd = nullptr, bool bFully = false);
 Rect GetWorkAreaRect(Rect rect, HWND hwnd);
 void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
-void HwndEnsureVisible(HWND hwnd);
-Rect GetFullscreenRect(HWND);
+void HwndEnsureOnScreen(HWND hwnd);
+Rect HwndGetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 
-void DrawRect(HDC, const Rect&);
-void FillRect(HDC, const Rect&, HBRUSH);
-void FillRect(HDC hdc, const Rect&, COLORREF);
-void DrawLine(HDC, const Rect&);
+void HdcDrawRect(HDC, const Rect&);
+void HdcFillRect(HDC, const Rect&, HBRUSH);
+void HdcFillRect(HDC hdc, const Rect&, COLORREF);
+void HdcDrawLine(HDC, const Rect&);
 
 void DrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
 Size HwndMeasureText(HWND hwnd, Str txt, HFONT font = nullptr);
 int FontDyPx(HWND hwnd, HFONT hfont);
 
-int HdcDrawText(HDC hdc, Str s, RECT* r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
@@ -137,7 +134,7 @@ Size HdcMeasureText(HDC hdc, Str s, HFONT font = nullptr);
 
 HWND HwndSetFocus(HWND hwnd);
 bool HwndIsFocused(HWND);
-bool IsCursorOverWindow(HWND);
+bool HwndIsCursorOverWindow(HWND);
 
 HWND HwndGetParent(HWND hwnd);
 TempStr HwndGetClassName(HWND hwnd);
@@ -145,10 +142,10 @@ Point HwndGetCursorPos(HWND hwnd);
 Point& UnmirrorRtl(HWND hwnd, Point& p);
 int MapWindowPoints(HWND, HWND, Point*, int);
 void HwndScreenToClient(HWND, Point&);
-void HwndMakeVisible(HWND);
+void HwndShowWithoutActivate(HWND);
 
-bool IsMouseOverRect(HWND hwnd, const Rect& r);
-void CenterDialog(HWND hDlg, HWND hParent = nullptr);
+bool HwndIsMouseOverRect(HWND hwnd, const Rect& r);
+void HwndCenterDialog(HWND hDlg, HWND hParent = nullptr);
 void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt);
 
 TempStr GetDefaultPrinterNameTemp();
@@ -161,10 +158,10 @@ bool AppendTextToClipboard(Str s);
 
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 
-bool IsWindowStyleSet(HWND hwnd, DWORD flags);
-bool IsWindowStyleExSet(HWND hwnd, DWORD flags);
-void SetWindowStyle(HWND hwnd, DWORD flags, bool enable);
-void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
+bool HwndIsWindowStyleSet(HWND hwnd, DWORD flags);
+bool HwndIsWindowStyleExSet(HWND hwnd, DWORD flags);
+void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable);
+void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
 
 bool HwndIsRtl(HWND hwnd);
 void HwndSetRtl(HWND hwnd, bool isRtl);
@@ -305,10 +302,6 @@ double GetProcessRunningTime();
 void VariantInitBstr(VARIANT& urlVar, WStr s);
 bool DDEExecute(WStr server, WStr topic, WStr command);
 
-void RectInflateTB(RECT& r, int top, int bottom);
-void DivideRectH(const RECT& r, int y, int dy, RECT& r1, RECT& r2, RECT& r3);
-void DivideRectV(const RECT& r, int x, int dx, RECT& r1, RECT& r2, RECT& r3);
-
 HCURSOR GetCachedCursor(LPWSTR id);
 void SetCursorCached(LPWSTR id);
 void DeleteCachedCursors();
@@ -359,7 +352,10 @@ void HwndSendCommand(HWND hwnd, int cmdId, LPARAM lp = 0);
 void HwndPostCommand(HWND hwnd, int cmdId, LPARAM lp = 0);
 void HwndDestroyWindowSafe(HWND* hwnd);
 void HwndToForeground(HWND hwnd);
-void HwndSetVisibility(HWND hwnd, bool visible);
+bool HwndIsVisible(HWND hwnd);
+void HwndSetVisible(HWND hwnd, bool visible);
+void HwndShow(HWND hwnd);
+void HwndHide(HWND hwnd);
 
 bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteBrushSafe(HBRUSH*);

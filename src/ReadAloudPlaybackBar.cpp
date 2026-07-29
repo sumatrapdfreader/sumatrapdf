@@ -129,7 +129,7 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     }
 
     HWND parent = GetParent(hwnd);
-    Rect canvas = ClientRect(parent);
+    Rect canvas = HwndClientRect(parent);
     int margin = DpiScale(hwnd, kBarMargin);
     int padX = DpiScale(hwnd, kBarPadX);
     int padY = DpiScale(hwnd, kBarPadY);
@@ -185,7 +185,7 @@ void ReadAloudPlaybackBar::UpdateLayout() {
 }
 
 void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
-    Rect rc = ClientRect(hwnd);
+    Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();
 
@@ -218,14 +218,13 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         int textX = rSpeed.x + rSpeed.dx + btnGap;
         rTxt = {textX, rPause.y, rc.dx - textX - padX, rPause.dy};
     }
-    RECT rTmp = ToRECT(rTxt);
     uint txtFmt = DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS;
     if (IsUIRtl()) {
         txtFmt |= DT_RIGHT | DT_RTLREADING;
     } else {
         txtFmt |= DT_LEFT;
     }
-    HdcDrawText(hdc, status, &rTmp, txtFmt);
+    HdcDrawText(hdc, status, rTxt, txtFmt);
 
     Point curPos = HwndGetCursorPos(hwnd);
     auto drawBtn = [&](const Rect& r, Str label) {
@@ -339,7 +338,7 @@ void ReadAloudPlaybackBarRelayout(HWND hwndCanvas) {
     if (!win || !win->readAloudPlaybackBar || !win->readAloudPlaybackBar->hwnd) {
         return;
     }
-    if (!IsWindowVisible(win->readAloudPlaybackBar->hwnd)) {
+    if (!HwndIsVisible(win->readAloudPlaybackBar->hwnd)) {
         return;
     }
     win->readAloudPlaybackBar->UpdateLayout();
@@ -362,7 +361,7 @@ void ReadAloudPlaybackBarUpdateSession(WindowTab* tab) {
 
     // hide bars on other windows
     for (MainWindow* win : gWindows) {
-        if (win != tab->win && win->readAloudPlaybackBar && IsWindowVisible(win->readAloudPlaybackBar->hwnd)) {
+        if (win != tab->win && win->readAloudPlaybackBar && HwndIsVisible(win->readAloudPlaybackBar->hwnd)) {
             ReadAloudPlaybackBarHide(win);
         }
     }

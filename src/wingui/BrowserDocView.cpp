@@ -349,7 +349,7 @@ LRESULT BrowserDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     switch (msg) {
         case WM_SIZE:
             if (view->wv && view->wv->hwnd) {
-                Rect rc = ClientRect(hwnd);
+                Rect rc = HwndClientRect(hwnd);
                 view->wv->SetBounds(rc);
                 view->wv->UpdateWebviewSize();
             }
@@ -401,7 +401,7 @@ bool BrowserDocView::CreateWebView2() {
     // instead of being swallowed by the WebView2 control
     wv->allowExternalDrop = false;
 
-    Rect rc = ClientRect(hwndParent);
+    Rect rc = HwndClientRect(hwndParent);
     CreateWebViewArgs cargs;
     cargs.parent = hwndParent;
     cargs.pos = rc;

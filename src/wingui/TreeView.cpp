@@ -66,7 +66,7 @@ HWND TreeView::Create(const CreateArgs& args) {
     SetToolTipsDelayTime(TTDT_AUTOPOP, 32767);
 
     // TODO:
-    // must be done at the end. Doing  SetWindowStyle() sends bogus (?)
+    // must be done at the end. Doing  HwndSetWindowStyle() sends bogus (?)
     // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
     // if hItem doesn't point to an TreeItem
 
@@ -227,10 +227,14 @@ bool TreeView::IsExpanded(TreeItem ti) {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
-bool TreeView::GetItemRect(TreeItem ti, bool justText, RECT& r) {
+bool TreeView::GetItemRect(TreeItem ti, bool justText, Rect& r) {
     HTREEITEM hi = GetHandleByTreeItem(ti);
     BOOL b = toBOOL(justText);
-    BOOL ok = TreeView_GetItemRect(hwnd, hi, &r, b);
+    RECT rc{};
+    BOOL ok = TreeView_GetItemRect(hwnd, hi, &rc, b);
+    if (ok) {
+        r = ToRect(rc);
+    }
     return ok == TRUE;
 }
 
@@ -463,7 +467,7 @@ TreeItemState TreeView::GetItemState(TreeItem ti) {
 // if via right-click, selects the item under the cursor
 // in both cases can return null
 // sets pt to screen position (for context menu coordinates)
-TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, Point& pt) {
     TreeView* treeView = (TreeView*)args->w;
     // TreeModel* tm = treeView->treeModel;
     HWND hwnd = treeView->hwnd;
@@ -477,12 +481,13 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
         if (ti == TreeModel::kNullItem) {
             return TreeModel::kNullItem;
         }
-        RECT rcItem;
+        Rect rcItem;
         if (treeView->GetItemRect(ti, true, rcItem)) {
             // rcItem is local to window, map to global screen position
-            MapWindowPoints(hwnd, HWND_DESKTOP, (POINT*)&rcItem, 2);
-            pt.x = rcItem.left;
-            pt.y = rcItem.bottom;
+            POINT pts[2] = {{rcItem.x, rcItem.y}, {rcItem.x + rcItem.dx, rcItem.y + rcItem.dy}};
+            MapWindowPoints(hwnd, HWND_DESKTOP, pts, 2);
+            pt.x = pts[0].x;
+            pt.y = pts[1].y;
         }
     } else {
         ti = treeView->GetItemAt(pt.x, pt.y);

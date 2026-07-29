@@ -99,8 +99,8 @@ void ChangeThemeWnd::ScheduleDelete() {
 }
 
 static void PositionDialog(HWND hwnd, HWND hwndRelative) {
-    Rect rRelative = WindowRect(hwndRelative);
-    Rect r = WindowRect(hwnd);
+    Rect rRelative = HwndWindowRect(hwndRelative);
+    Rect r = HwndWindowRect(hwnd);
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
     r = {x, y, r.dx, r.dy};
