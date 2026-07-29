@@ -1972,7 +1972,7 @@ HFONT GetMenuFont() {
     return gMenuFont;
 }
 
-HFONT CreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
+HFONT HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     int realSize = MulDiv(fontSizePt, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
 
     u16 flags = 0;
@@ -3843,7 +3843,7 @@ Size HdcMeasureText(HDC hdc, Str s, HFONT font) {
     return HdcMeasureText(hdc, s, fmt, font);
 }
 
-void DrawCenteredText(HDC hdc, const Rect r, Str txt, bool isRTL) {
+void HdcDrawCenteredText(HDC hdc, const Rect r, Str txt, bool isRTL) {
     WCHAR* ws = CWStrTemp(txt);
     int prevMode = SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = ToRECT(r);
@@ -4115,7 +4115,7 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
 
 //--- GDI: draw (misc) / DC state
 
-void PaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
+void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
     constexpr int kCheckerSize = 8;
     COLORREF lightColor = RGB(255, 255, 255);
     COLORREF darkColor = RGB(204, 204, 204);
@@ -4158,7 +4158,7 @@ void RestoreDCState(SavedDCState* state) {
     ReleaseDC(state->hwnd, state->hdc);
 }
 
-int MeasureStringWidth(HDC hdc, WStr str) {
+int HdcMeasureStringWidth(HDC hdc, WStr str) {
     SIZE size;
     GetTextExtentPoint32W(hdc, str.s, str.len, &size);
     return size.cx;

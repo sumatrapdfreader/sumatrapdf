@@ -928,7 +928,7 @@ static HCURSOR GetCursorForEdge(DragEdge edge) {
 static void PaintSaveImage(ImageEditWindow* ew, HDC hdc) {
     Rect cRc = HwndClientRect(ew->hwnd);
 
-    PaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
+    HdcPaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
 
     if (!ew->srcBitmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
         return;
@@ -941,7 +941,7 @@ static void PaintSaveImage(ImageEditWindow* ew, HDC hdc) {
 static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
     Rect cRc = HwndClientRect(ew->hwnd);
 
-    PaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
+    HdcPaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
 
     if (!ew->srcBitmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
         return;
@@ -1020,7 +1020,7 @@ static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
 static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
     Rect cRc = HwndClientRect(ew->hwnd);
 
-    PaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
+    HdcPaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
 
     if (!ew->srcBitmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
         return;

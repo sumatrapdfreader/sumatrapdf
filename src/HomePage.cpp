@@ -546,8 +546,8 @@ constexpr COLORREF kCol5 = RGB(112, 115, 207);
 
 static void DrawSumatraVersion(HDC hdc, Rect rect) {
     uint fmt = DT_LEFT | DT_NOCLIP;
-    HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
-    HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
+    HFONT fontSumatraTxt = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+    HFONT fontVersionTxt = HdcCreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
 
     SetBkMode(hdc, TRANSPARENT);
 
@@ -583,7 +583,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
 
 // draw on the bottom right
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
-    HFONT fontLeftTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
 
     VirtWndText w(hwnd, txt, fontLeftTxt);
     w.isRtl = IsUIRtl();
@@ -610,8 +610,8 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
 }
 
 static Size CalcSumatraVersionSize(HDC hdc) {
-    HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
-    HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
+    HFONT fontSumatraTxt = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+    HFONT fontVersionTxt = HdcCreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
 
     /* calculate minimal top box size */
     Size sz = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
@@ -645,8 +645,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
     col = ThemeWindowLinkColor();
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
-    HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-    HFONT fontRightTxt = CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
+    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
+    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
 
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
@@ -722,8 +722,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
-    HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-    HFONT fontRightTxt = CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
+    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
+    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
 
     /* calculate minimal top box size */
     Size headerSize = CalcSumatraVersionSize(hdc);
@@ -1129,7 +1129,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     win->hwndHomeSearch = CreateWindowExW(exStyle, WC_EDITW, L"", style, 0, 0, 100, kSearchEditDy, win->hwndCanvas,
                                           nullptr, hmod, nullptr);
     HDC hdc = GetDC(win->hwndCanvas);
-    HFONT font = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
     ReleaseDC(win->hwndCanvas, hdc);
     SetWindowFont(win->hwndHomeSearch, font, TRUE);
     if (!DefWndProcHomeSearch) {
@@ -1215,8 +1215,8 @@ void LayoutHomePage(HomePageLayout& l) {
     }
 
     bool isRtl = IsUIRtl();
-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    HFONT hdrFont = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
 
     Size sz = CalcSumatraVersionSize(hdc);
     {
@@ -1343,7 +1343,7 @@ void LayoutHomePage(HomePageLayout& l) {
 
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
-    HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+    HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
     ParsedTip* tip = nullptr;
     if (gGlobalPrefs->showTips && gSelectedTipIdx >= 0) {
         if (gSelectedIsPromo && gSelectedTipIdx < gParsedPromoCount) {
@@ -1400,7 +1400,7 @@ void LayoutHomePage(HomePageLayout& l) {
         }
         int listIconDx = l.rcIconListView.dx;
         int listIconGap = DpiScale(hdc, 6);
-        HFONT fontRow = CreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
+        HFONT fontRow = HdcCreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
         for (int row = 0; row < nFiles; row++) {
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
             FileState* fs = fileStates[row];
@@ -1873,7 +1873,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
         HdcDrawLine(hdc, l.rcLine);
     }
-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
     color = ThemeWindowLinkColor();
@@ -1960,7 +1960,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         COLORREF tipBgCol = ThemeControlBackgroundColor();
         HdcFillRect(hdc, l.rcTip, tipBgCol);
 
-        HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
         COLORREF textCol = ThemeWindowTextColor();
         COLORREF linkCol = ThemeWindowLinkColor();
         DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol);

@@ -238,7 +238,7 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         DeleteObject(brBtn);
         graphics.DrawRectangle(&pen, r.x, r.y, r.dx - 1, r.dy - 1);
         SetTextColor(hdc, colTxt);
-        DrawCenteredText(hdc, r, label);
+        HdcDrawCenteredText(hdc, r, label);
     };
 
     Str pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");

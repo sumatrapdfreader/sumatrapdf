@@ -159,16 +159,16 @@ int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = null
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, HFONT font = nullptr);
-void DrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
+void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
 Size HwndMeasureText(HWND hwnd, Str txt, HFONT font = nullptr);
 int FontDyPx(HWND hwnd, HFONT hfont);
-void PaintCheckerboard(HDC hdc, int x, int y, int w, int h);
-int MeasureStringWidth(HDC hdc, WStr str);
+void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h);
+int HdcMeasureStringWidth(HDC hdc, WStr str);
 
 //--- GDI: fonts
 
 HFONT GetMenuFont();
-HFONT CreateSimpleFont(HDC hdc, Str fontName, int fontSize);
+HFONT HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSize);
 HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
 HFONT GetDefaultGuiFontOfSize(int size);
 HFONT GetUserGuiFont(Str fontName, int size);

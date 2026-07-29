@@ -104,7 +104,7 @@ bool TextViewWnd::Create(Str title, Str text) {
     SendMessageW(edit->hwnd, EM_SETREADONLY, TRUE, 0);
 
     HDC hdc = GetDC(hwnd);
-    monoFont = CreateSimpleFont(hdc, "Consolas", 14);
+    monoFont = HdcCreateSimpleFont(hdc, "Consolas", 14);
     ReleaseDC(hwnd, hdc);
     if (monoFont) {
         edit->font = monoFont;

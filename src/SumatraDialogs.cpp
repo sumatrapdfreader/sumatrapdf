@@ -1506,7 +1506,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
                     InflateRect(&rc, -3, -3);
                 }
                 if (data->isCheckered) {
-                    PaintCheckerboard(dis->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
+                    HdcPaintCheckerboard(dis->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
                 } else {
                     HBRUSH br = CreateSolidBrush(data->currentColor);
                     FillRect(dis->hDC, &rc, br);
@@ -1519,7 +1519,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
                 int idx = ctlId - IDC_BGCOL_PRESET_FIRST;
                 COLORREF col = kBgPresetColors[idx];
                 if (col == kColorUnset) {
-                    PaintCheckerboard(dis->hDC, dis->rcItem.left, dis->rcItem.top, dis->rcItem.right - dis->rcItem.left,
+                    HdcPaintCheckerboard(dis->hDC, dis->rcItem.left, dis->rcItem.top, dis->rcItem.right - dis->rcItem.left,
                                       dis->rcItem.bottom - dis->rcItem.top);
                 } else {
                     HBRUSH br = CreateSolidBrush(col);

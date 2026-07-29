@@ -291,7 +291,7 @@ static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
             FillRoundedRect(hdc, b.rc, btnRadius, hoverBg);
         }
         SetTextColor(hdc, b.enabled ? textCol : mutedCol);
-        DrawCenteredText(hdc, b.rc, _TRA(b.label));
+        HdcDrawCenteredText(hdc, b.rc, _TRA(b.label));
     }
 }
 

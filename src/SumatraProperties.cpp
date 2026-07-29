@@ -874,7 +874,7 @@ bool PropertiesWnd::Create(HWND parent) {
     }
 
     HDC hdc = GetDC(hwnd);
-    propsFont = CreateSimpleFont(hdc, "Consolas", 14);
+    propsFont = HdcCreateSimpleFont(hdc, "Consolas", 14);
     ReleaseDC(hwnd, hdc);
 
     auto* vbox = new VBox();

@@ -34,7 +34,7 @@ static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT&) {
 
     ScopedSelectObject selFont(hdc, w->font);
     TempStr txt = fmt("%d", w->frameRate);
-    DrawCenteredText(hdc, rc, txt);
+    HdcDrawCenteredText(hdc, rc, txt);
 }
 
 static void PositionWindow(FrameRateWnd* w, Size s) {

@@ -2373,7 +2373,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     auto nGCols = len(*gcols);
     auto paintBgOrCheckerboard = [&](COLORREF col, RECT* rc) {
         if (col == kColorUnset) {
-            PaintCheckerboard(hdc, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top);
+            HdcPaintCheckerboard(hdc, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top);
         } else {
             AutoDeleteBrush brush = CreateSolidBrush(col);
             FillRect(hdc, rc, brush);
@@ -2470,11 +2470,11 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         // check if this page is known to have failed rendering
         if (pi->failedToRender) {
             shouldPaint = true;
-            HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+            HFONT fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             auto prevCol = SetTextColor(hdc, colDocTxt);
             TempStr msg = fmt(_TRA("Couldn't render page %d").s, pageNo);
-            DrawCenteredText(hdc, bounds, msg, isRtl);
+            HdcDrawCenteredText(hdc, bounds, msg, isRtl);
             SetTextColor(hdc, prevCol);
             SelectObject(hdc, hPrevFont);
             continue;
@@ -2489,7 +2489,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
             }
         }
         if (renderDelay != 0) {
-            HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+            HFONT fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < kRenderDelayShowNotif) {
@@ -2503,14 +2503,14 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                     shouldPaint = true;
                     SetTextColor(hdc, colDocTxt);
                     TempStr msg = fmt(_TRA("Rendering page %d...").s, pageNo);
-                    DrawCenteredText(hdc, bounds, msg, isRtl);
+                    HdcDrawCenteredText(hdc, bounds, msg, isRtl);
                 }
                 rendering = true;
             } else {
                 shouldPaint = true;
                 auto prevCol = SetTextColor(hdc, colDocTxt);
                 TempStr msg = fmt(_TRA("Couldn't render page %d").s, pageNo);
-                DrawCenteredText(hdc, bounds, msg, isRtl);
+                HdcDrawCenteredText(hdc, bounds, msg, isRtl);
                 SetTextColor(hdc, prevCol);
             }
             SelectObject(hdc, hPrevFont);
@@ -3558,7 +3558,7 @@ static void OnPaintError(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
     auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
@@ -3568,7 +3568,7 @@ static void OnPaintError(MainWindow* win) {
     if (filePath) {
         TempStr msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
-        DrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
+        HdcDrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
     SelectObject(hdc, hPrevFont);
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
