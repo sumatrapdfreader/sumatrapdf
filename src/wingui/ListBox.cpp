@@ -53,7 +53,7 @@ HWND ListBox::Create(const CreateArgs& args) {
         if (onDrawItem.IsValid()) {
             Size sz = HwndMeasureText(hwnd, "Ag", font);
             int itemHeight = sz.dy + DpiScale(hwnd, 4);
-            SendMessageW(hwnd, LB_SETITEMHEIGHT, 0, itemHeight);
+            LbSetItemHeight(hwnd, 0, itemHeight);
         }
         if (model != nullptr) {
             FillWithItems(this->hwnd, model);
@@ -66,8 +66,8 @@ HWND ListBox::Create(const CreateArgs& args) {
 // https://docs.microsoft.com/en-us/windows/win32/controls/lb-getitemheight
 int ListBox::GetItemHeight(int idx) {
     // idx only valid for LBS_OWNERDRAWVARIABLE, otherwise should be 0
-    int res = (int)SendMessageW(hwnd, LB_GETITEMHEIGHT, idx, 0);
-    if (res == LB_ERR) {
+    int res = LbGetItemHeight(hwnd, idx);
+    if (res < 0) {
         Size sz = HwndMeasureText(hwnd, "Ag", font);
         res = sz.dy;
     }
@@ -97,28 +97,25 @@ Size ListBox::GetIdealSize() {
 }
 
 int ListBox::GetCount() {
-    LRESULT res = ListBox_GetCount(hwnd);
-    return (int)res;
+    return LbGetCount(hwnd);
 }
 
 int ListBox::GetCurrentSelection() {
-    LRESULT res = ListBox_GetCurSel(hwnd);
-    return (int)res;
+    return LbGetCurrentSelection(hwnd);
 }
 
 // -1 to clear selection
 // returns false on error
 bool ListBox::SetCurrentSelection(int n) {
     if (n < 0) {
-        ListBox_SetCurSel(hwnd, -1);
+        LbSetCurrentSelection(hwnd, -1);
         return true;
     }
     int nItems = model->ItemsCount();
     if (n >= nItems) {
         return false;
     }
-    LRESULT res = ListBox_SetCurSel(hwnd, n);
-    return res != LB_ERR;
+    return LbSetCurrentSelection(hwnd, n);
 }
 
 // for efficiency you can re-use model:
@@ -142,28 +139,26 @@ void ListBox::SetModel(ListBoxModel* model) {
 // the clicked item was fully visible.
 LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     if (msg == WM_LBUTTONDOWN) {
-        int topBefore = (int)SendMessageW(hwnd, LB_GETTOPINDEX, 0, 0);
+        int topBefore = LbGetTopIndex(hwnd);
         int count = GetCount();
-        POINT pt{GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
-        LRESULT ip = SendMessageW(hwnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
-        int idx = (int)LOWORD(ip);
-        bool outside = HIWORD(ip) != 0;
+        Point pt{GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+        bool outside = false;
+        int idx = LbItemFromPoint(hwnd, pt, &outside);
         bool wasFullyVisible = false;
         if (!outside && idx >= 0 && idx < count) {
-            RECT itemRc{};
-            if (SendMessageW(hwnd, LB_GETITEMRECT, (WPARAM)idx, (LPARAM)&itemRc) != LB_ERR) {
-                RECT client{};
-                GetClientRect(hwnd, &client);
-                wasFullyVisible = itemRc.top >= client.top && itemRc.bottom <= client.bottom;
+            Rect itemRc = LbGetItemRect(hwnd, idx);
+            if (!itemRc.IsEmpty()) {
+                Rect client = HwndClientRect(hwnd);
+                wasFullyVisible = itemRc.y >= client.y && itemRc.y + itemRc.dy <= client.y + client.dy;
             }
         }
 
         LRESULT res = FinalWindowProc(msg, wparam, lparam);
 
         if (wasFullyVisible) {
-            int topAfter = (int)SendMessageW(hwnd, LB_GETTOPINDEX, 0, 0);
+            int topAfter = LbGetTopIndex(hwnd);
             if (topAfter != topBefore) {
-                SendMessageW(hwnd, LB_SETTOPINDEX, (WPARAM)topBefore, 0);
+                LbSetTopIndex(hwnd, topBefore);
             }
         }
         return res;

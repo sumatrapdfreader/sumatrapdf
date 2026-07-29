@@ -120,8 +120,22 @@ void EditImplementCtrlBack(HWND hwnd);
 //--- list box
 
 void ListBox_AppendString_NoSort(HWND, WStr txt);
-int ListBoxGetTopIndex(HWND);
-bool ListBoxSetTopIndex(HWND, int);
+void LbResetContent(HWND hwnd);
+int LbAddString(HWND hwnd, WStr text);
+int LbAddString(HWND hwnd, Str text);
+int LbInsertString(HWND hwnd, int idx, WStr text);
+int LbInsertString(HWND hwnd, int idx, Str text);
+int LbGetCount(HWND hwnd);
+int LbGetCurrentSelection(HWND hwnd);
+bool LbSetCurrentSelection(HWND hwnd, int idx);
+TempWStr LbGetTextTemp(HWND hwnd, int idx);
+int LbGetItemHeight(HWND hwnd, int idx);
+void LbSetItemHeight(HWND hwnd, int idx, int height);
+Rect LbGetItemRect(HWND hwnd, int idx);
+int LbItemFromPoint(HWND hwnd, Point point, bool* outside);
+int LbGetTopIndex(HWND hwnd);
+bool LbSetTopIndex(HWND hwnd, int idx);
+void LbInitStorage(HWND hwnd, int count);
 
 //--- combo box
 

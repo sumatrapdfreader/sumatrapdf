@@ -54,13 +54,11 @@ void CommitFormFieldEdit(bool save) {
     Str text;
     if (save) {
         if (isChoice) {
-            int sel = (int)SendMessageW(h, LB_GETCURSEL, 0, 0);
+            int sel = LbGetCurrentSelection(h);
             if (sel < 0) {
                 save = false; // nothing selected
             } else {
-                int n = (int)SendMessageW(h, LB_GETTEXTLEN, sel, 0);
-                TempWStr buf = AllocArrayTemp<WCHAR>(n + 1);
-                SendMessageW(h, LB_GETTEXT, sel, (LPARAM)buf.s);
+                TempWStr buf = LbGetTextTemp(h, sel);
                 text = ToUtf8Temp(buf);
             }
         } else {
@@ -228,18 +226,18 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     }
     HFONT font = MakeFieldFont(fontPx);
     SetWindowFont(hLb, font, TRUE);
-    SendMessageW(hLb, LB_SETITEMHEIGHT, 0, (LPARAM)itemDy);
+    LbSetItemHeight(hLb, 0, itemDy);
 
     Str cur = GetWidgetValue(widget);
     int curIdx = -1;
     for (int i = 0; i < n; i++) {
         Str o = opts[i];
-        SendMessageW(hLb, LB_ADDSTRING, 0, (LPARAM)CWStrTemp(o));
+        LbAddString(hLb, o);
         if (curIdx < 0 && str::Eq(o, cur)) {
             curIdx = i;
         }
     }
-    SendMessageW(hLb, LB_SETCURSEL, (WPARAM)curIdx, 0);
+    LbSetCurrentSelection(hLb, curIdx);
 
     gDefCtrlProc = (WNDPROC)GetWindowLongPtrW(hLb, GWLP_WNDPROC);
     SetWindowLongPtrW(hLb, GWLP_WNDPROC, (LONG_PTR)WndProcFormCtrl);

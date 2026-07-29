@@ -137,21 +137,90 @@ void EditImplementCtrlBack(HWND hwnd) {
 //--- list box
 
 void ListBox_AppendString_NoSort(HWND hwnd, WStr txt) {
-    // LB_INSERTSTRING reads a NUL-terminated string; txt may be a
-    // non-terminated view, so use a terminated copy
-    ListBox_InsertString(hwnd, -1, CWStrTemp(txt));
+    LbInsertString(hwnd, -1, txt);
 }
 
-// https://learn.microsoft.com/en-us/windows/win32/controls/lb-gettopindex
-int ListBoxGetTopIndex(HWND hwnd) {
-    auto res = ListBox_GetTopIndex(hwnd);
-    return res;
+void LbResetContent(HWND hwnd) {
+    SendMessageW(hwnd, LB_RESETCONTENT, 0, 0);
 }
 
-// https://learn.microsoft.com/en-us/windows/win32/controls/lb-settopindex
-bool ListBoxSetTopIndex(HWND hwnd, int idx) {
-    auto res = ListBox_SetTopIndex(hwnd, idx);
+int LbAddString(HWND hwnd, WStr text) {
+    return (int)SendMessageW(hwnd, LB_ADDSTRING, 0, (LPARAM)CWStrTemp(text));
+}
+
+int LbAddString(HWND hwnd, Str text) {
+    return LbAddString(hwnd, ToWStrTemp(text));
+}
+
+int LbInsertString(HWND hwnd, int idx, WStr text) {
+    return (int)SendMessageW(hwnd, LB_INSERTSTRING, (WPARAM)idx, (LPARAM)CWStrTemp(text));
+}
+
+int LbInsertString(HWND hwnd, int idx, Str text) {
+    return LbInsertString(hwnd, idx, ToWStrTemp(text));
+}
+
+int LbGetCount(HWND hwnd) {
+    return (int)SendMessageW(hwnd, LB_GETCOUNT, 0, 0);
+}
+
+int LbGetCurrentSelection(HWND hwnd) {
+    return (int)SendMessageW(hwnd, LB_GETCURSEL, 0, 0);
+}
+
+bool LbSetCurrentSelection(HWND hwnd, int idx) {
+    LRESULT res = SendMessageW(hwnd, LB_SETCURSEL, (WPARAM)idx, 0);
+    return idx < 0 || res != LB_ERR;
+}
+
+TempWStr LbGetTextTemp(HWND hwnd, int idx) {
+    int len = (int)SendMessageW(hwnd, LB_GETTEXTLEN, (WPARAM)idx, 0);
+    if (len == LB_ERR) {
+        return {};
+    }
+    TempWStr text = AllocArrayTemp<WCHAR>(len + 1);
+    LRESULT res = SendMessageW(hwnd, LB_GETTEXT, (WPARAM)idx, (LPARAM)text.s);
+    if (res == LB_ERR) {
+        return {};
+    }
+    text.len = (int)res;
+    return text;
+}
+
+int LbGetItemHeight(HWND hwnd, int idx) {
+    return (int)SendMessageW(hwnd, LB_GETITEMHEIGHT, (WPARAM)idx, 0);
+}
+
+void LbSetItemHeight(HWND hwnd, int idx, int height) {
+    SendMessageW(hwnd, LB_SETITEMHEIGHT, (WPARAM)idx, (LPARAM)height);
+}
+
+Rect LbGetItemRect(HWND hwnd, int idx) {
+    RECT rect{};
+    LRESULT res = SendMessageW(hwnd, LB_GETITEMRECT, (WPARAM)idx, (LPARAM)&rect);
+    if (res == LB_ERR) {
+        return {};
+    }
+    return Rect(rect);
+}
+
+int LbItemFromPoint(HWND hwnd, Point point, bool* outside) {
+    LRESULT res = SendMessageW(hwnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(point.x, point.y));
+    *outside = HIWORD(res) != 0;
+    return (int)LOWORD(res);
+}
+
+int LbGetTopIndex(HWND hwnd) {
+    return (int)SendMessageW(hwnd, LB_GETTOPINDEX, 0, 0);
+}
+
+bool LbSetTopIndex(HWND hwnd, int idx) {
+    LRESULT res = SendMessageW(hwnd, LB_SETTOPINDEX, (WPARAM)idx, 0);
     return res != LB_ERR;
+}
+
+void LbInitStorage(HWND hwnd, int count) {
+    SendMessageW(hwnd, LB_INITSTORAGE, (WPARAM)count, 0);
 }
 
 //--- resources / instance / common controls

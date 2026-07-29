@@ -439,7 +439,7 @@ static Vec<int>* gLangListMap = nullptr;
 
 static void FilterLangList(HWND hDlg, Str filter, Str currLangCode) {
     HWND langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-    ListBox_ResetContent(langList);
+    LbResetContent(langList);
 
     delete gLangListMap;
     gLangListMap = new Vec<int>();
@@ -459,7 +459,7 @@ static void FilterLangList(HWND hDlg, Str filter, Str currLangCode) {
         gLangListMap->Append(i);
     }
     if (len(*gLangListMap) > 0) {
-        ListBox_SetCurSel(langList, itemToSelect);
+        LbSetCurrentSelection(langList, itemToSelect);
     }
 }
 
@@ -510,7 +510,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 ReportIf(IDC_CHANGE_LANG_LANG_LIST != LOWORD(wp));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 ReportIf(langList != (HWND)lp);
-                int idx = (int)ListBox_GetCurSel(langList);
+                int idx = LbGetCurrentSelection(langList);
                 if (gLangListMap && idx >= 0 && idx < len(*gLangListMap)) {
                     int langIdx = (*gLangListMap)[idx];
                     data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
@@ -521,7 +521,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
             switch (LOWORD(wp)) {
                 case IDOK: {
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-                    int idx = ListBox_GetCurSel(langList);
+                    int idx = LbGetCurrentSelection(langList);
                     if (gLangListMap && idx >= 0 && idx < len(*gLangListMap)) {
                         int langIdx = (*gLangListMap)[idx];
                         data->langCode = trans::GetLangCodeByIdxTemp(langIdx);

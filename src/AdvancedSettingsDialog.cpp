@@ -371,10 +371,10 @@ void AdvancedSettingsWnd::OnSelectionChanged() {
 // Split a list-item row into non-overlapping name (left) and value (right)
 // columns so long names and long values (e.g. InverseSearchCmdLine) don't
 // draw on top of each other (#5804).
-static void AdvSettingsItemColumns(HWND hwnd, const RECT& rc, RECT& rcName, RECT& rcVal) {
+static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect& rcVal) {
     int pad = DpiScale(hwnd, 4);
     int gap = DpiScale(hwnd, 10);
-    int totalW = (rc.right - rc.left) - 2 * pad;
+    int totalW = rc.dx - 2 * pad;
     if (totalW < 1) {
         rcName = rc;
         rcVal = rc;
@@ -400,12 +400,12 @@ static void AdvSettingsItemColumns(HWND hwnd, const RECT& rc, RECT& rcName, RECT
     }
 
     rcName = rc;
-    rcName.left += pad;
-    rcName.right = rcName.left + nameW;
+    rcName.x += pad;
+    rcName.dx = nameW;
 
     rcVal = rc;
-    rcVal.right -= pad;
-    rcVal.left = rcVal.right - valW;
+    rcVal.x += rcVal.dx - pad - valW;
+    rcVal.dx = valW;
 }
 
 void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
@@ -417,7 +417,8 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ToRECT(ev->itemRect);
+    Rect rc = ev->itemRect;
+    RECT itemRc = ToRECT(rc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -426,7 +427,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     SetBkColor(hdc, colBg);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &itemRc, nullptr, 0, nullptr);
 
     HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
@@ -437,17 +438,19 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     SetTextColor(hdc, colText);
 
-    RECT rcName{}, rcVal{};
+    Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
 
     HGDIOBJ prevFont = SelectObject(hdc, nameFont);
     TempWStr ws = ToWStrTemp(item->name);
-    DrawTextW(hdc, ws.s, -1, &rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    RECT nameRc = ToRECT(rcName);
+    DrawTextW(hdc, ws.s, -1, &nameRc, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
     TempStr val = FormatSettingValueTemp(item);
     SelectObject(hdc, valFont);
     ws = ToWStrTemp(val);
-    DrawTextW(hdc, ws.s, -1, &rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    RECT valRc = ToRECT(rcVal);
+    DrawTextW(hdc, ws.s, -1, &valRc, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
     SelectObject(hdc, prevFont);
 }
@@ -465,14 +468,13 @@ Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
     if (lbIdx < 0) {
         return Rect();
     }
-    RECT rc{};
-    LRESULT res = SendMessageW(listBox->hwnd, LB_GETITEMRECT, (WPARAM)lbIdx, (LPARAM)&rc);
-    if (res == LB_ERR) {
+    Rect rc = LbGetItemRect(listBox->hwnd, lbIdx);
+    if (rc.IsEmpty()) {
         return Rect();
     }
-    RECT rcName{}, rcVal{};
+    Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
-    return ToRect(rcVal);
+    return rcVal;
 }
 
 void AdvancedSettingsWnd::BeginEditValue(int idx) {
