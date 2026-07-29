@@ -383,14 +383,12 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     // instead of fighting a per-row measured width (#5692 / #5796).
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
-    int pageCch;
-    WCHAR* pageW = CWStrTemp(pageStr, pageCch);
+    TempWStr pageW = ToWStrTemp(pageStr);
     int pageGap = DpiScale(lb->hwnd, 10);
     int pageColDx = DpiScale(lb->hwnd, 40);
-    SIZE pSz{};
-    GetTextExtentPoint32W(hdc, pageW, pageCch, &pSz);
-    if ((int)pSz.cx + DpiScale(lb->hwnd, 4) > pageColDx) {
-        pageColDx = (int)pSz.cx + DpiScale(lb->hwnd, 4);
+    Size pageSize = HdcGetTextExtentPoint32(hdc, pageStr);
+    if (pageSize.dx + DpiScale(lb->hwnd, 4) > pageColDx) {
+        pageColDx = pageSize.dx + DpiScale(lb->hwnd, 4);
     }
     RECT rcPage = rcText;
     rcPage.left = std::max(rcText.left, (LONG)(rcText.right - pageColDx));
@@ -417,7 +415,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rcPage, nullptr, 0, nullptr);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, AccentColor(colText, 80));
-    DrawTextW(hdc, pageW, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+    DrawTextW(hdc, pageW.s, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
 
     if (oldFont) {
         SelectFont(hdc, oldFont);

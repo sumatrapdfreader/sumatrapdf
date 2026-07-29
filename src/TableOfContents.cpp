@@ -1132,13 +1132,13 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
 
     TempWStr pageW{};
-    SIZE pageSize{};
+    Size pageSize{};
     int pageReserve = 0;
     if (showPage) {
         pageW = ToWStrTemp(pageLabel);
         if (pageW.len > 0) {
-            GetTextExtentPoint32W(hdc, pageW.s, pageW.len, &pageSize);
-            pageReserve = pageSize.cx + DpiScale(tv->hwnd, 8);
+            pageSize = HdcGetTextExtentPoint32(hdc, pageLabel);
+            pageReserve = pageSize.dx + DpiScale(tv->hwnd, 8);
         } else {
             showPage = false;
         }
@@ -1167,7 +1167,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     if (showPage && pageW.len > 0) {
         RECT pageRc = drawRc;
         InflateRect(&pageRc, -2, -1);
-        pageRc.left = std::max(pageRc.left, pageRc.right - pageSize.cx);
+        pageRc.left = std::max(pageRc.left, pageRc.right - pageSize.dx);
         // Slightly muted vs title when not selected (keeps numbers secondary).
         if (!(isTreeSelected && hasFocus)) {
             COLORREF muted =

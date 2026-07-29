@@ -87,14 +87,12 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     }
 
     TempWStr textW = ToWStrTemp(text);
-    int textWLen = len(textW);
 
     // measure total string width for RTL positioning
     int strOriginX = rc.left;
     if (isRtl) {
-        SIZE szTotal;
-        GetTextExtentPoint32W(hdc, textW.s, textWLen, &szTotal);
-        strOriginX = rc.right - szTotal.cx;
+        Size sizeTotal = HdcGetTextExtentPoint32(hdc, textW);
+        strOriginX = rc.right - sizeTotal.dx;
     }
 
     // compute pixel rectangles for each highlighted range
@@ -105,14 +103,13 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
         TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
         int wEnd = len(prefixToEnd);
 
-        SIZE szStart, szEnd;
-        GetTextExtentPoint32W(hdc, textW.s, wStart, &szStart);
-        GetTextExtentPoint32W(hdc, textW.s, wEnd, &szEnd);
+        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, wStart));
+        Size sizeEnd = HdcGetTextExtentPoint32(hdc, WStr(textW.s, wEnd));
 
         highlightRects[i].top = rc.top;
         highlightRects[i].bottom = rc.bottom;
-        highlightRects[i].left = strOriginX + szStart.cx;
-        highlightRects[i].right = strOriginX + szEnd.cx;
+        highlightRects[i].left = strOriginX + sizeStart.dx;
+        highlightRects[i].right = strOriginX + sizeEnd.dx;
     }
 
     // draw highlight background rectangles for matches
@@ -264,18 +261,17 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
     }
 
     TempWStr textW = ToWStrTemp(text);
-    SIZE szFull{};
-    GetTextExtentPoint32W(hdc, textW.s, textW.len, &szFull);
+    Size sizeFull = HdcGetTextExtentPoint32(hdc, textW);
     // center underlay height on the glyph height (labelRect can be taller than
     // the font, which made yellow bars spill into neighboring rows)
-    int textTop = labelRect.top + ((labelRect.bottom - labelRect.top) - szFull.cy) / 2;
+    int textTop = labelRect.top + ((labelRect.bottom - labelRect.top) - sizeFull.dy) / 2;
     if (textTop < labelRect.top) {
         textTop = labelRect.top;
     }
-    int textBottom = textTop + szFull.cy;
+    int textBottom = textTop + sizeFull.dy;
     if (textBottom > labelRect.bottom) {
         textBottom = labelRect.bottom;
-        textTop = textBottom - szFull.cy;
+        textTop = textBottom - sizeFull.dy;
         if (textTop < labelRect.top) {
             textTop = labelRect.top;
         }
@@ -296,10 +292,9 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
     for (int i = 0; i < nRanges; i++) {
         TempWStr prefixToStart = ToWStrTemp(Str(text.s, byteRanges[i].start));
         TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
-        SIZE szStart, szEnd;
-        GetTextExtentPoint32W(hdc, textW.s, len(prefixToStart), &szStart);
-        GetTextExtentPoint32W(hdc, textW.s, len(prefixToEnd), &szEnd);
-        RECT hr{labelRect.left + szStart.cx, textTop, labelRect.left + szEnd.cx, textBottom};
+        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, len(prefixToStart)));
+        Size sizeEnd = HdcGetTextExtentPoint32(hdc, WStr(textW.s, len(prefixToEnd)));
+        RECT hr{labelRect.left + sizeStart.dx, textTop, labelRect.left + sizeEnd.dx, textBottom};
         RECT clipped;
         if (IntersectRect(&clipped, &hr, &labelRect)) {
             FillRect(hdc, &clipped, hbrHighlight);
@@ -321,14 +316,13 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
             pos++;
         }
         TempWStr prefixToStart = ToWStrTemp(Str(text.s, start));
-        SIZE szStart{};
-        GetTextExtentPoint32W(hdc, textW.s, len(prefixToStart), &szStart);
+        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, len(prefixToStart)));
         TempWStr runW = ToWStrTemp(Str(text.s + start, pos - start));
         if (len(runW) == 0) {
             continue;
         }
         RECT runRc = labelRect;
-        runRc.left = labelRect.left + szStart.cx;
+        runRc.left = labelRect.left + sizeStart.dx;
         runRc.top = textTop;
         runRc.bottom = textBottom;
         SetTextColor(hdc, isHl ? matchTxtCol : txtCol);

@@ -323,9 +323,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     if (!e.isDir && e.size > 0) {
         TempStr sizeStr = str::FormatSizeShortTemp(e.size);
         rightW = ToWStrTemp(sizeStr);
-        SIZE szRight{};
-        GetTextExtentPoint32W(hdc, rightW.s, len(rightW), &szRight);
-        rightDx = szRight.cx;
+        rightDx = HdcGetTextExtentPoint32(hdc, sizeStr).dx;
         int gap = DpiScale(lb->hwnd, 8);
         if (isRtl) {
             rcText.left += rightDx + gap;

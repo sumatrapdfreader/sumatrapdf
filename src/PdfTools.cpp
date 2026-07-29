@@ -37,13 +37,10 @@ extern "C" void fz_set_optind(int val);
 static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int padding) {
     HDC hdc = GetDC(nullptr);
     HFONT oldFont = (HFONT)SelectObject(hdc, font);
-    int pathCch;
-    WCHAR* pathW = CWStrTemp(path, pathCch);
-    SIZE sz{};
-    GetTextExtentPoint32W(hdc, pathW, pathCch, &sz);
+    Size size = HdcGetTextExtentPoint32(hdc, path);
     SelectObject(hdc, oldFont);
     ReleaseDC(nullptr, hdc);
-    int dlgW = sz.cx + 2 * padding + DpiScale(hwndParent, 32);
+    int dlgW = size.dx + 2 * padding + DpiScale(hwndParent, 32);
     dlgW = std::max(dlgW, minW);
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     dlgW = std::min(dlgW, screenW * 80 / 100);

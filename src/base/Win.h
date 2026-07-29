@@ -174,6 +174,8 @@ Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, Str s, HFONT font = nullptr);
 void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
+Size HdcGetTextExtentPoint32(HDC hdc, Str str);
+Size HdcGetTextExtentPoint32(HDC hdc, WStr str);
 Size HwndMeasureText(HWND hwnd, Str txt, HFONT font = nullptr);
 int FontDyPx(HWND hwnd, HFONT hfont);
 void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h);

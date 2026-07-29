@@ -96,9 +96,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     if (rightStr && rightStr.s[0]) {
         rightStrW = ToWStrTemp(rightStr);
         int gap = DpiScale(lb->hwnd, 8);
-        SIZE szRight{};
-        GetTextExtentPoint32W(hdc, rightStrW.s, len(rightStrW), &szRight);
-        rightW = szRight.cx;
+        rightW = HdcGetTextExtentPoint32(hdc, rightStr).dx;
         if (isRtl) {
             rcText.left += rightW + gap;
         } else {

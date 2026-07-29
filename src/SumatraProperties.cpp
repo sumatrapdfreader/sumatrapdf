@@ -709,11 +709,9 @@ void PropertiesWnd::SizeToContent() {
         Str rest = Str(text.s + off, text.len - off);
         int nl = str::IndexOfChar(rest, '\n');
         int lineLen = nl >= 0 ? nl : rest.len;
-        SIZE sz{};
-        TempWStr lineW = ToWStrTemp(Str(rest.s, lineLen));
-        GetTextExtentPoint32W(hdcEdit, lineW.s, lineW.len, &sz);
-        if (sz.cx > maxLineDx) {
-            maxLineDx = sz.cx;
+        Size size = HdcGetTextExtentPoint32(hdcEdit, Str(rest.s, lineLen));
+        if (size.dx > maxLineDx) {
+            maxLineDx = size.dx;
         }
         nLines++;
         off += lineLen + (nl >= 0 ? 1 : 0);

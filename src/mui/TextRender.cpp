@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/GdiPlus.h"
+#include "base/Win.h"
 #include "Mui.h"
 
 /*
@@ -119,9 +120,8 @@ float TextRenderGdi::GetCurrFontLineSpacing() {
 }
 
 RectF TextRenderGdi::Measure(WStr s) {
-    SIZE txtSize;
-    GetTextExtentPoint32W(hdcForTextMeasure, s.s, s.len, &txtSize);
-    RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    Size size = HdcGetTextExtentPoint32(hdcForTextMeasure, s);
+    RectF res(0.0f, 0.0f, (float)size.dx, (float)size.dy);
     return res;
 }
 
@@ -437,10 +437,9 @@ RectF TextRenderHdc::Measure(Str s) {
 }
 
 RectF TextRenderHdc::Measure(WStr s) {
-    SIZE txtSize;
     ReportIf(!hdc);
-    GetTextExtentPoint32W(hdc, s.s, s.len, &txtSize);
-    RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    Size size = HdcGetTextExtentPoint32(hdc, s);
+    RectF res(0.0f, 0.0f, (float)size.dx, (float)size.dy);
     return res;
 }
 

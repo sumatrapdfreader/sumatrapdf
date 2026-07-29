@@ -3843,10 +3843,18 @@ void RestoreDCState(SavedDCState* state) {
     ReleaseDC(state->hwnd, state->hdc);
 }
 
-int HdcMeasureStringWidth(HDC hdc, WStr str) {
-    SIZE size;
+Size HdcGetTextExtentPoint32(HDC hdc, WStr str) {
+    SIZE size{};
     GetTextExtentPoint32W(hdc, str.s, str.len, &size);
-    return size.cx;
+    return Size((int)size.cx, (int)size.cy);
+}
+
+Size HdcGetTextExtentPoint32(HDC hdc, Str str) {
+    return HdcGetTextExtentPoint32(hdc, ToWStrTemp(str));
+}
+
+int HdcMeasureStringWidth(HDC hdc, WStr str) {
+    return HdcGetTextExtentPoint32(hdc, str).dx;
 }
 
 Str GetLastErrorAsStr(Arena* arena) {
