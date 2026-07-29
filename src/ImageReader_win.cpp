@@ -98,12 +98,16 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
 static void MaybeFlipBitmap(Bitmap* bmp) {
     u8 buf[64] = {}; // empirically is 26
 
+    // propSize is derived from the image's EXIF Orientation field, so a crafted
+    // TIFF can make it exceed buf (e.g. many Orientation values). GetPropertyItem
+    // would then write propSize bytes past the fixed stack buffer - a stack
+    // overflow. The ReportIf here used to be diagnostic-only and did not stop it,
+    // so reject an oversized property before calling GDI+.
     UINT propSize = bmp->GetPropertyItemSize(PropertyTagOrientation);
-    if (propSize == 0) {
+    if (propSize == 0 || propSize > dimof(buf)) {
         bmp->GetLastStatus(); // clear last status
         return;
     }
-    ReportIf(propSize > dimof(buf));
 
     auto status = bmp->GetPropertyItem(PropertyTagOrientation, propSize, (Gdiplus::PropertyItem*)buf);
     if (status != Status::Ok) {
@@ -111,6 +115,10 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
         return;
     }
     auto propItem = (Gdiplus::PropertyItem*)buf;
+    // guard against a malformed/short property before reading the first value
+    if (!propItem->value || propItem->length < sizeof(u16)) {
+        return;
+    }
     u16* propValPtr = (u16*)propItem->value;
     ApplyExifOrientation(bmp, propValPtr[0]);
 }
