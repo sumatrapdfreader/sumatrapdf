@@ -285,7 +285,7 @@ LRESULT Wnd::OnNotifyReflect(WPARAM, LPARAM) {
 void Wnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
     auto br = BackgroundBrush();
     if (br != nullptr) {
-        FillRect(hdc, &ps->rcPaint, br);
+        HdcFillRect(hdc, ToRect(ps->rcPaint), br);
     }
 }
 
@@ -386,7 +386,7 @@ void Wnd::SetBounds(Rect bounds) {
 
     HwndMoveWindow(hwnd, &bounds);
     // TODO: optimize if doesn't change position
-    ::InvalidateRect(hwnd, nullptr, TRUE);
+    HwndInvalidate(hwnd, true);
 }
 
 // A function used internally to call OnMessageReflect. Don't call or override this function.
@@ -1224,7 +1224,7 @@ void DrawCloseButton2(const DrawCloseButtonArgs& args) {
         r2.right += p;
         r2.top -= p;
         r2.bottom += p;
-        FillRect(hdc, &r2, brush);
+        HdcFillRect(hdc, ToRect(r2), brush);
         // Ellipse(hdc, r2.left, r2.top, r2.right, r2.bottom);
     }
     AutoDeletePen pen(CreatePen(PS_SOLID, 2, lineCol));

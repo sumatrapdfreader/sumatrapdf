@@ -195,7 +195,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
         case WM_COMMAND:
             if (HIWORD(wp) == EN_CHANGE && (HWND)lp == win->hwndHomeSearch) {
                 win->homePageScrollY = 0;
-                InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+                HwndInvalidate(win->hwndCanvas);
                 return 0;
             }
             break;

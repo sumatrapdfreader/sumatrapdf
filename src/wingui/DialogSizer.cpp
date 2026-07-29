@@ -77,7 +77,7 @@ class DialogData {
         // otherwise we would have trail of grippers when we sized the dialog larger
         // in any axis
         RECT tmpRect = ToRECT(rcGrip.Union(rcOld));
-        InvalidateRect(hwnd, &tmpRect, TRUE);
+        HwndInvalidateRect(hwnd, ToRect(tmpRect), true);
     }
 
     void DrawGripper(HDC hdc) {

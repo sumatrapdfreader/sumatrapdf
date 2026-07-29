@@ -200,7 +200,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
             CheckDlgButton(hDlg, IDC_SHOW_PASSWORD, BST_CHECKED);
             HWND hwndEdit = GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT);
             SendMessageW(hwndEdit, EM_SETPASSWORDCHAR, 0, 0);
-            InvalidateRect(hwndEdit, nullptr, TRUE);
+            HwndInvalidate(hwndEdit, true);
         }
 
         HwndCenterDialog(hDlg);
@@ -236,7 +236,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
                         *data->showPassword = show;
                     }
                     SendMessageW(hwndEdit, EM_SETPASSWORDCHAR, show ? 0 : (WPARAM)L'\x25CF', 0);
-                    InvalidateRect(hwndEdit, nullptr, TRUE);
+                    HwndInvalidate(hwndEdit, true);
                     return TRUE;
                 }
             }
@@ -1353,10 +1353,10 @@ static void SelectPreviewButton(HWND hDlg, BgColorDlgData* data) {
     data->selectedCustomIdx = -1;
     data->previewSelected = true;
     if (prevCustom >= 0) {
-        InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + prevCustom), nullptr, TRUE);
+        HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + prevCustom), true);
     }
     if (!wasPreview) {
-        InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_PREVIEW), nullptr, TRUE);
+        HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_PREVIEW), true);
     }
 }
 
@@ -1366,20 +1366,20 @@ static void SelectCustomButton(HWND hDlg, BgColorDlgData* data, int idx) {
     data->selectedCustomIdx = idx;
     data->previewSelected = false;
     if (prevCustom >= 0 && prevCustom != idx) {
-        InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + prevCustom), nullptr, TRUE);
+        HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + prevCustom), true);
     }
     if (wasPreview) {
-        InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_PREVIEW), nullptr, TRUE);
+        HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_PREVIEW), true);
     }
-    InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + idx), nullptr, TRUE);
+    HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + idx), true);
 }
 
 static void InvalidatePreview(HWND hDlg, BgColorDlgData* data) {
     if (data->selectedCustomIdx >= 0) {
-        InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + data->selectedCustomIdx), nullptr, TRUE);
+        HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_CUSTOM_FIRST + data->selectedCustomIdx), true);
     }
     if (data->previewSelected) {
-        InvalidateRect(GetDlgItem(hDlg, IDC_BGCOL_PREVIEW), nullptr, TRUE);
+        HwndInvalidate(GetDlgItem(hDlg, IDC_BGCOL_PREVIEW), true);
     }
 }
 
@@ -1498,16 +1498,16 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
             }
             // preview button shows the currently selected color
             if (ctlId == IDC_BGCOL_PREVIEW) {
-                RECT rc = dis->rcItem;
+                Rect rc = ToRect(dis->rcItem);
                 if (data->previewSelected) {
-                    FillRect(dis->hDC, &rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
-                    InflateRect(&rc, -3, -3);
+                    HdcFillRect(dis->hDC, rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+                    rc.Inflate(-3, -3);
                 }
                 if (data->isCheckered) {
-                    HdcPaintCheckerboard(dis->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
+                    HdcPaintCheckerboard(dis->hDC, rc.x, rc.y, rc.dx, rc.dy);
                 } else {
                     HBRUSH br = CreateSolidBrush(data->currentColor);
-                    FillRect(dis->hDC, &rc, br);
+                    HdcFillRect(dis->hDC, rc, br);
                     DeleteObject(br);
                 }
                 return TRUE;
@@ -1521,7 +1521,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
                                          dis->rcItem.right - dis->rcItem.left, dis->rcItem.bottom - dis->rcItem.top);
                 } else {
                     HBRUSH br = CreateSolidBrush(col);
-                    FillRect(dis->hDC, &dis->rcItem, br);
+                    HdcFillRect(dis->hDC, ToRect(dis->rcItem), br);
                     DeleteObject(br);
                 }
                 // draw focus rect if focused
@@ -1533,33 +1533,35 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
             // custom color buttons
             if (ctlId >= IDC_BGCOL_CUSTOM_FIRST && ctlId < IDC_BGCOL_CUSTOM_FIRST + kMaxCustomColors) {
                 int idx = ctlId - IDC_BGCOL_CUSTOM_FIRST;
-                RECT rc = dis->rcItem;
+                Rect rc = ToRect(dis->rcItem);
                 bool isSelected = (idx == data->selectedCustomIdx);
                 if (isSelected) {
                     // draw selection outline: fill background, then inset for 2px gap
-                    FillRect(dis->hDC, &rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
-                    InflateRect(&rc, -3, -3);
+                    HdcFillRect(dis->hDC, rc, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+                    rc.Inflate(-3, -3);
                 }
                 if (data->customColorSet[idx]) {
                     HBRUSH br = CreateSolidBrush(data->customColors[idx]);
-                    FillRect(dis->hDC, &rc, br);
+                    HdcFillRect(dis->hDC, rc, br);
                     DeleteObject(br);
                 } else {
                     // empty slot: window background with accent border and diagonal X
-                    FillRect(dis->hDC, &rc, (HBRUSH)(COLOR_WINDOW + 1));
+                    HdcFillRect(dis->hDC, rc, (HBRUSH)(COLOR_WINDOW + 1));
                     HPEN pen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
                     HPEN oldPen = (HPEN)SelectObject(dis->hDC, pen);
+                    int right = rc.x + rc.dx;
+                    int bottom = rc.y + rc.dy;
                     // border
-                    MoveToEx(dis->hDC, rc.left, rc.top, nullptr);
-                    LineTo(dis->hDC, rc.right - 1, rc.top);
-                    LineTo(dis->hDC, rc.right - 1, rc.bottom - 1);
-                    LineTo(dis->hDC, rc.left, rc.bottom - 1);
-                    LineTo(dis->hDC, rc.left, rc.top);
+                    MoveToEx(dis->hDC, rc.x, rc.y, nullptr);
+                    LineTo(dis->hDC, right - 1, rc.y);
+                    LineTo(dis->hDC, right - 1, bottom - 1);
+                    LineTo(dis->hDC, rc.x, bottom - 1);
+                    LineTo(dis->hDC, rc.x, rc.y);
                     // diagonal lines
-                    MoveToEx(dis->hDC, rc.left, rc.top, nullptr);
-                    LineTo(dis->hDC, rc.right - 1, rc.bottom - 1);
-                    MoveToEx(dis->hDC, rc.right - 1, rc.top, nullptr);
-                    LineTo(dis->hDC, rc.left, rc.bottom - 1);
+                    MoveToEx(dis->hDC, rc.x, rc.y, nullptr);
+                    LineTo(dis->hDC, right - 1, bottom - 1);
+                    MoveToEx(dis->hDC, right - 1, rc.y, nullptr);
+                    LineTo(dis->hDC, rc.x, bottom - 1);
                     SelectObject(dis->hDC, oldPen);
                     DeleteObject(pen);
                 }
@@ -1646,7 +1648,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
                     if (data->selectedCustomIdx == idx) {
                         SelectPreviewButton(hDlg, data);
                     }
-                    InvalidateRect(hwndClicked, nullptr, TRUE);
+                    HwndInvalidate(hwndClicked, true);
                 }
                 return TRUE;
             }

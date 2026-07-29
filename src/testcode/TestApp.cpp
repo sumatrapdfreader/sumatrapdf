@@ -1,5 +1,6 @@
 #include "base/Base.h"
 
+#include "base/Win.h"
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
@@ -63,7 +64,7 @@ void TestApp() {
 
     w->layout = CreateMainLayout(w->hwnd);
     LayoutToSize(w->layout, {480, 640});
-    InvalidateRect(hwnd, nullptr, false);
+    HwndInvalidate(hwnd);
 
 #if 0
     w->onSize = [&](SizeEvent* args) {
@@ -74,7 +75,7 @@ void TestApp() {
             return;
         }
         LayoutToSize(l, {dx, dy});
-        InvalidateRect(hwnd, nullptr, false);
+        HwndInvalidate(hwnd);
     };
 #endif
     // important to call this after hooking up onSize to ensure

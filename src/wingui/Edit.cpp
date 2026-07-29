@@ -164,8 +164,7 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 // underline so borderless edits stay visible on flat dialog backgrounds
                 HDC hdc = GetDC(hwnd);
                 if (hdc) {
-                    RECT rc{};
-                    GetClientRect(hwnd, &rc);
+                    RECT rc = ToRECT(HwndClientRect(hwnd));
                     COLORREF col = IsSpecialColor(textColor) ? GetSysColor(COLOR_GRAYTEXT) : textColor;
                     // muted line: blend text color toward background
                     if (!IsSpecialColor(bgColor)) {

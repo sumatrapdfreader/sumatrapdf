@@ -127,7 +127,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
             // in the truncated-away tail doesn't paint a stray box outside the label.
             RECT clipped;
             if (IntersectRect(&clipped, &highlightRects[i], &rc)) {
-                FillRect(hdc, &clipped, hbrHighlight);
+                HdcFillRect(hdc, ToRect(clipped), hbrHighlight);
             }
         }
         DeleteObject(hbrHighlight);
@@ -280,7 +280,7 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
 
     // clear label so we do not stack on top of the control's text
     HBRUSH hbrBg = CreateSolidBrush(bgCol);
-    FillRect(hdc, &labelRect, hbrBg);
+    HdcFillRect(hdc, ToRect(labelRect), hbrBg);
     DeleteObject(hbrBg);
 
     COLORREF highlightCol;
@@ -298,7 +298,7 @@ void DrawTreeItemFilterHighlight(HDC hdc, RECT labelRect, Str text, const StrVec
         RECT hr{labelRect.left + sizeStart.dx, textTop, labelRect.left + sizeEnd.dx, textBottom};
         RECT clipped;
         if (IntersectRect(&clipped, &hr, &labelRect)) {
-            FillRect(hdc, &clipped, hbrHighlight);
+            HdcFillRect(hdc, ToRect(clipped), hbrHighlight);
         }
     }
     DeleteObject(hbrHighlight);

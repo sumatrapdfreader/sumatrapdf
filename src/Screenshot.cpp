@@ -870,7 +870,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     // white background for the temp surface
     RECT fullRect = {0, 0, w, h};
     HBRUSH brWhite = CreateSolidBrush(RGB(255, 255, 255));
-    FillRect(hdcTemp, &fullRect, brWhite);
+    HdcFillRect(hdcTemp, ToRect(fullRect), brWhite);
     DeleteObject(brWhite);
 
     int n = len(data->captures);
@@ -931,7 +931,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     infoRect.top = 0;
     infoRect.bottom = kInfoBarHeight;
     HBRUSH brBlue = CreateSolidBrush(RGB(0, 90, 180));
-    FillRect(hdcTemp, &infoRect, brBlue);
+    HdcFillRect(hdcTemp, ToRect(infoRect), brBlue);
     DeleteObject(brBlue);
 
     // Use bigger bold font for info text

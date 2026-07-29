@@ -568,7 +568,7 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
     if (sel >= 0) {
         str::ReplaceWithCopy(&item->strVal, item->enumValues[sel]);
         SetItemChanged(item);
-        InvalidateRect(listBox->hwnd, nullptr, TRUE);
+        HwndInvalidate(listBox->hwnd, true);
     }
     // selecting with the mouse closes the list: dispose of the control then.
     // can't do it here (we're inside its notification), so check afterwards;
@@ -600,7 +600,7 @@ void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
     }
     editItemIdx = -1;
     delete tmp;
-    InvalidateRect(listBox->hwnd, nullptr, TRUE);
+    HwndInvalidate(listBox->hwnd, true);
     HwndSetFocus(listBox->hwnd);
 }
 
@@ -626,7 +626,7 @@ void AdvancedSettingsWnd::CommitEditValue() {
     }
     SetItemChanged(item);
     CancelEditValue();
-    InvalidateRect(listBox->hwnd, nullptr, TRUE);
+    HwndInvalidate(listBox->hwnd, true);
 }
 
 // activate a setting: toggle a bool, or begin editing an enum / value. A single
@@ -640,7 +640,7 @@ void AdvancedSettingsWnd::ActivateItem(int lbIdx) {
     if (item->type == SettingType::Bool) {
         item->boolVal = !item->boolVal;
         SetItemChanged(item);
-        InvalidateRect(listBox->hwnd, nullptr, TRUE);
+        HwndInvalidate(listBox->hwnd, true);
         return;
     }
     int idx = model->filtered[lbIdx];
@@ -821,7 +821,7 @@ void AdvancedSettingsWnd::OnSize(UINT, UINT, Size size) {
     // moves on resize, so close them
     CancelEditValue();
     LayoutToSize(layout, {dx, dy});
-    InvalidateRect(hwnd, nullptr, false);
+    HwndInvalidate(hwnd);
 }
 
 // a bold variant of the given font, for drawing changed settings

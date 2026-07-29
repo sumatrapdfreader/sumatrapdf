@@ -240,9 +240,7 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         HBRUSH br = BackgroundBrush();
         if (br) {
             HDC hdc = (HDC)wp;
-            RECT rc;
-            GetClientRect(h, &rc);
-            FillRect(hdc, &rc, br);
+            HdcFillRect(hdc, HwndClientRect(h), br);
             return 1;
         }
     }
@@ -257,7 +255,7 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
                 // reuse the bar's cached background brush (rebuilt on theme change
                 // via SetColors) instead of allocating one per paint
-                FillRect(cd->nmcd.hdc, &cd->nmcd.rc, BackgroundBrush());
+                HdcFillRect(cd->nmcd.hdc, ToRect(cd->nmcd.rc), BackgroundBrush());
                 return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
             }
         }

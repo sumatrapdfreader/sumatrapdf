@@ -905,7 +905,7 @@ void SelectionTranslateWnd::OnSize(UINT msg, UINT, Size size) {
         return;
     }
     LayoutToSize(layout, {dx, dy});
-    InvalidateRect(hwnd, nullptr, false);
+    HwndInvalidate(hwnd);
 }
 
 void SelectionTranslateWnd::OnGetMinMaxInfo(MINMAXINFO* mmi) {

@@ -921,7 +921,7 @@ static void RedrawMenuBarForWindow(MainWindow* win) {
         }
         RelayoutCaption(win);
         RECT r = ToRECT(win->captionRect);
-        InvalidateRect(win->hwndFrame, &r, TRUE);
+        HwndInvalidateRect(win->hwndFrame, win->captionRect, true);
         RedrawWindow(win->hwndFrame, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_UPDATENOW);
         if (win->hwndMenuReBar) {
             RedrawWindow(win->hwndMenuReBar, nullptr, nullptr,
@@ -2519,7 +2519,7 @@ void ShowMainWindow(MainWindow* win, int windowState) {
 
     if (win->tabsInTitlebar && !win->isFullScreen) {
         RECT r = ToRECT(win->captionRect);
-        InvalidateRect(win->hwndFrame, &r, TRUE);
+        HwndInvalidateRect(win->hwndFrame, win->captionRect, true);
         RedrawWindow(win->hwndFrame, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
         if (win->hwndMenuReBar && HwndIsVisible(win->hwndMenuReBar)) {
             RedrawWindow(win->hwndMenuReBar, nullptr, nullptr,
@@ -3441,7 +3441,7 @@ void LoadModelIntoTab(WindowTab* tab) {
             }
         }
     }
-    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    HwndInvalidate(win->hwndCanvas);
     UpdateWindow(win->hwndCanvas);
 
     // show/hide notifications that are tied to a specific tab
@@ -5514,10 +5514,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         RelayoutAIChatPanel(win);
     }
     if (tocVisible || favVisible) {
-        InvalidateRect(win->sidebarSplitter->hwnd, nullptr, TRUE);
+        HwndInvalidate(win->sidebarSplitter->hwnd, true);
     }
     if (tocVisible && favVisible) {
-        InvalidateRect(win->favSplitter->hwnd, nullptr, TRUE);
+        HwndInvalidate(win->favSplitter->hwnd, true);
     }
     if (updateToolbars && win->isToolbarVisible) {
         RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
@@ -5530,8 +5530,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
     if (updateToolbars && win->tabsInTitlebar && !win->isFullScreen) {
-        RECT r = ToRECT(win->captionRect);
-        InvalidateRect(win->hwndFrame, &r, TRUE);
+        HwndInvalidateRect(win->hwndFrame, win->captionRect, true);
         if (win->hwndMenuReBar && HwndIsVisible(win->hwndMenuReBar)) {
             RedrawWindow(win->hwndMenuReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
@@ -5591,7 +5590,7 @@ static void EndFrameRedrawSuppression(MainWindow* win) {
         SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
         win->frameRedrawSuppressSent = false;
     }
-    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    HwndInvalidate(win->hwndCanvas);
     RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
 }
 
@@ -5651,10 +5650,10 @@ static void FrameUpdateUi(MainWindow* win) {
             RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
         if (tocVisible || favVisible) {
-            InvalidateRect(win->sidebarSplitter->hwnd, nullptr, TRUE);
+            HwndInvalidate(win->sidebarSplitter->hwnd, true);
         }
         if (tocVisible && favVisible) {
-            InvalidateRect(win->favSplitter->hwnd, nullptr, TRUE);
+            HwndInvalidate(win->favSplitter->hwnd, true);
         }
     }
 }
@@ -5987,7 +5986,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
         SaveSettings();
     }
     // trigger repaint
-    InvalidateRect(win->hwndCanvas, nullptr, TRUE);
+    HwndInvalidate(win->hwndCanvas, true);
 }
 
 static void OnMenuChangeScrollbar(HWND hwnd) {
@@ -9628,11 +9627,10 @@ static int CaptionButtonAt(MainWindow* win, Point pt) {
 
 static void RepaintButton(HWND hwnd, int btnIdx, MainWindow* win) {
     if (false) {
-        RECT rc = ToRECT(win->captionBtn[btnIdx].rect);
-        InvalidateRect(hwnd, &rc, FALSE);
+        HwndInvalidateRect(hwnd, win->captionBtn[btnIdx].rect, false);
         UpdateWindow(hwnd);
     } else {
-        InvalidateRect(hwnd, nullptr, FALSE);
+        HwndInvalidate(hwnd);
     }
 }
 
@@ -9935,8 +9933,7 @@ void RelayoutCaption(MainWindow* win) {
 
     for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
         if (win->captionBtn[i].visible) {
-            RECT r = ToRECT(win->captionBtn[i].rect);
-            InvalidateRect(win->hwndFrame, &r, FALSE);
+            HwndInvalidateRect(win->hwndFrame, win->captionBtn[i].rect, false);
         }
     }
 }
@@ -10087,7 +10084,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 // window DC is in window coordinates (origin at top-left of window)
                 RECT rc = {0, 0, wr.dx, 1};
                 HBRUSH br = CreateSolidBrush(ThemeControlBackgroundColor());
-                FillRect(hdc, &rc, br);
+                HdcFillRect(hdc, ToRect(rc), br);
                 DeleteObject(br);
                 ReleaseDC(hwnd, hdc);
             }
@@ -10116,7 +10113,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             {
                 HBRUSH brCap = CreateSolidBrush(ThemeControlBackgroundColor());
                 RECT rcFill = ToRECT(captionArea);
-                FillRect(memDC, &rcFill, brCap);
+                HdcFillRect(memDC, ToRect(rcFill), brCap);
                 DeleteObject(brCap);
             }
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
@@ -10133,7 +10130,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 RECT rcCaption = ToRECT(captionArea);
                 ExcludeClipRect(hdc, rcCaption.left, rcCaption.top, rcCaption.right, rcCaption.bottom);
                 HBRUSH brBorder = CreateSolidBrush(ThemeControlBackgroundColor());
-                FillRect(hdc, &ps.rcPaint, brBorder);
+                HdcFillRect(hdc, ToRect(ps.rcPaint), brBorder);
                 DeleteObject(brBorder);
             }
 
@@ -10539,7 +10536,7 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     logf("ReadAloud: FinishSession\n");
     if (tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
-        InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+        HwndInvalidate(tab->win->hwndCanvas);
         ReadAloudPlaybackBarHide(tab->win);
     }
     str::Free(tab->readAloudText);
@@ -10589,7 +10586,7 @@ static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     tab->readAloudChunkStart = start;
     tab->readAloudChunkEnd = end;
     ToolbarUpdateStateForWindow(tab->win, true);
-    InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+    HwndInvalidate(tab->win->hwndCanvas);
     return true;
 }
 
@@ -10710,7 +10707,7 @@ static void StopReadAloudIfSourceTab(WindowTab* tab) {
 
     if (tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
-        InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+        HwndInvalidate(tab->win->hwndCanvas);
     }
     ReadAloudClearSourceTab();
 }
@@ -10777,7 +10774,7 @@ static void ReadAloudStopRememberPos() {
     ReadAloudClearSourceTab();
     if (tab && tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
-        InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+        HwndInvalidate(tab->win->hwndCanvas);
         ReadAloudPlaybackBarUpdateSession(tab);
     }
 }
@@ -11691,7 +11688,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             TtsProcessEvents();
 
             if (TtsIsSpeaking() && gReadAloudSourceTab && gReadAloudSourceTab->win) {
-                InvalidateRect(gReadAloudSourceTab->win->hwndCanvas, nullptr, FALSE);
+                HwndInvalidate(gReadAloudSourceTab->win->hwndCanvas);
                 ReadAloudPlaybackBarUpdateSession(gReadAloudSourceTab);
             }
 
@@ -11716,15 +11713,13 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             LogRedraw("WM_ERASEBKGND", hwnd);
             if (win && win->tabsInTitlebar && !IsCurrentThemeDefault()) {
                 HDC hdc = (HDC)wp;
-                RECT rc;
-                GetClientRect(hwnd, &rc);
                 HBRUSH br = CreateSolidBrush(ThemeMainWindowBackgroundColor());
-                FillRect(hdc, &rc, br);
+                HdcFillRect(hdc, HwndClientRect(hwnd), br);
                 DeleteObject(br);
                 if (!win->captionRect.IsEmpty()) {
                     RECT rcCaption = ToRECT(win->captionRect);
                     HBRUSH brCaption = CreateSolidBrush(ThemeControlBackgroundColor());
-                    FillRect(hdc, &rcCaption, brCaption);
+                    HdcFillRect(hdc, ToRect(rcCaption), brCaption);
                     DeleteObject(brCaption);
                 }
             }

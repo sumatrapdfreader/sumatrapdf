@@ -256,6 +256,16 @@ Rect HwndWindowRect(HWND hwnd) {
     return Rect(rc);
 }
 
+void HwndInvalidateRect(HWND hwnd, Rect rect, bool erase) {
+    ReportIf(rect.IsEmpty());
+    RECT r = ToRECT(rect);
+    InvalidateRect(hwnd, &r, toBOOL(erase));
+}
+
+void HwndInvalidate(HWND hwnd, bool erase) {
+    InvalidateRect(hwnd, nullptr, toBOOL(erase));
+}
+
 Rect HwndMapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     RECT rc = ToRECT(rect);
     MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
@@ -266,9 +276,7 @@ Rect HwndMapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
 Rect HwndMapLtrClientRectToScreen(HWND hwnd, Rect r) {
     RECT rc = ToRECT(r);
     if (HwndIsRtl(hwnd)) {
-        RECT cr{};
-        GetClientRect(hwnd, &cr);
-        int w = cr.right;
+        int w = HwndClientRect(hwnd).dx;
         int left = w - rc.right;
         int right = w - rc.left;
         rc.left = left;
@@ -1747,9 +1755,7 @@ Point HwndGetCursorPos(HWND hwnd) {
 
 Point& UnmirrorRtl(HWND hwnd, Point& p) {
     if (!HwndIsRtl(hwnd)) return p;
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    p.x = rc.right - 1 - p.x;
+    p.x = HwndClientRect(hwnd).dx - 1 - p.x;
     return p;
 }
 
@@ -3284,7 +3290,7 @@ void HwndScheduleRepaint(HWND hwnd) {
     if (!hwnd || !::IsWindow(hwnd)) {
         return;
     }
-    InvalidateRect(hwnd, nullptr, FALSE);
+    HwndInvalidate(hwnd);
 }
 
 // do WM_PAINT immediately
@@ -3292,7 +3298,7 @@ void HwndRepaintNow(HWND hwnd) {
     if (!hwnd || !::IsWindow(hwnd)) {
         return;
     }
-    InvalidateRect(hwnd, nullptr, FALSE);
+    HwndInvalidate(hwnd);
     // send WM_PAINT right away (normally would wait for empty msg queue)
     UpdateWindow(hwnd);
 }
@@ -3906,7 +3912,7 @@ void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
             int cellH = std::min(kCheckerSize, h - cy);
             RECT rc = {x + cx, y + cy, x + cx + cellW, y + cy + cellH};
             bool isDark = ((cx / kCheckerSize) + (cy / kCheckerSize)) % 2 != 0;
-            FillRect(hdc, &rc, isDark ? darkBrush : lightBrush);
+            HdcFillRect(hdc, ToRect(rc), isDark ? darkBrush : lightBrush);
         }
     }
 

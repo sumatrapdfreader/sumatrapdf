@@ -26,6 +26,6 @@ void FillWithItems(HWND hwnd, ListBoxModel* model) {
         }
     }
     SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
-    InvalidateRect(hwnd, nullptr, TRUE);
+    HwndInvalidate(hwnd, true);
     ArenaRestoreSavepoint(temp);
 }

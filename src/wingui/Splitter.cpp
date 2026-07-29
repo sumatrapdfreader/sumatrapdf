@@ -22,7 +22,7 @@ static void OnSplitterPaint(HWND hwnd, COLORREF bgCol) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     AutoDeleteBrush br = CreateSolidBrush(bgCol);
-    FillRect(hdc, &ps.rcPaint, br);
+    HdcFillRect(hdc, ToRect(ps.rcPaint), br);
     EndPaint(hwnd, &ps);
 }
 
@@ -81,7 +81,7 @@ static void UpdateResizeOverlay(Splitter* splitter, Point pos) {
     }
 
     SetWindowPos(splitter->resizeOverlayHwnd, HWND_TOP, x, y, dx, dy, SWP_SHOWWINDOW | SWP_NOACTIVATE);
-    InvalidateRect(splitter->resizeOverlayHwnd, nullptr, TRUE);
+    HwndInvalidate(splitter->resizeOverlayHwnd, true);
 }
 
 static LRESULT CALLBACK ResizeOverlayWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -94,7 +94,7 @@ static LRESULT CALLBACK ResizeOverlayWndProc(HWND hwnd, UINT msg, WPARAM wparam,
         auto* splitter = (Splitter*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (splitter && splitter->brush) {
             SetBrushOrgEx(hdc, 0, 0, nullptr);
-            FillRect(hdc, &ps.rcPaint, splitter->brush);
+            HdcFillRect(hdc, ToRect(ps.rcPaint), splitter->brush);
         }
         EndPaint(hwnd, &ps);
         return 0;

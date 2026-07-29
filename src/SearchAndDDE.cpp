@@ -1617,7 +1617,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     // Clear the last forward-search result
     win->fwdSearchMark.rects.Reset();
-    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    HwndInvalidate(win->hwndCanvas);
 
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file

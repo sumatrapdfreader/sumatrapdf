@@ -73,19 +73,18 @@ static bool IsVert(OverlayScrollbar* sb) {
 
 // Get the track rect in client coords of the scrollbar window
 static Rect GetTrackRect(OverlayScrollbar* sb) {
-    RECT rc;
-    GetClientRect(sb->hwnd, &rc);
+    Rect rc = HwndClientRect(sb->hwnd);
     int arrowSize = 0;
     int gap = 0;
     if (IsThick(sb)) {
-        arrowSize = IsVert(sb) ? (rc.right - rc.left) : (rc.bottom - rc.top);
+        arrowSize = IsVert(sb) ? rc.dx : rc.dy;
         gap = DpiScale(sb->hwndOwner, 2);
     }
     int total = arrowSize + gap;
     if (IsVert(sb)) {
-        return Rect(0, total, rc.right - rc.left, (rc.bottom - rc.top) - 2 * total);
+        return Rect(0, total, rc.dx, rc.dy - 2 * total);
     }
-    return Rect(total, 0, (rc.right - rc.left) - 2 * total, rc.bottom - rc.top);
+    return Rect(total, 0, rc.dx - 2 * total, rc.dy);
 }
 
 // Calculate thumb rect within the track
@@ -118,23 +117,21 @@ static Rect GetThumbRect(OverlayScrollbar* sb) {
 }
 
 static Rect GetArrowTopRect(OverlayScrollbar* sb) {
-    RECT rc;
-    GetClientRect(sb->hwnd, &rc);
-    int arrowSize = IsVert(sb) ? (rc.right - rc.left) : (rc.bottom - rc.top);
+    Rect rc = HwndClientRect(sb->hwnd);
+    int arrowSize = IsVert(sb) ? rc.dx : rc.dy;
     if (IsVert(sb)) {
-        return Rect(0, 0, rc.right - rc.left, arrowSize);
+        return Rect(0, 0, rc.dx, arrowSize);
     }
-    return Rect(0, 0, arrowSize, rc.bottom - rc.top);
+    return Rect(0, 0, arrowSize, rc.dy);
 }
 
 static Rect GetArrowBottomRect(OverlayScrollbar* sb) {
-    RECT rc;
-    GetClientRect(sb->hwnd, &rc);
-    int arrowSize = IsVert(sb) ? (rc.right - rc.left) : (rc.bottom - rc.top);
+    Rect rc = HwndClientRect(sb->hwnd);
+    int arrowSize = IsVert(sb) ? rc.dx : rc.dy;
     if (IsVert(sb)) {
-        return Rect(0, (rc.bottom - rc.top) - arrowSize, rc.right - rc.left, arrowSize);
+        return Rect(0, rc.dy - arrowSize, rc.dx, arrowSize);
     }
-    return Rect((rc.right - rc.left) - arrowSize, 0, arrowSize, rc.bottom - rc.top);
+    return Rect(rc.dx - arrowSize, 0, arrowSize, rc.dy);
 }
 
 static void SendScrollMsg(OverlayScrollbar* sb, UINT scrollMsg, WPARAM wp) {

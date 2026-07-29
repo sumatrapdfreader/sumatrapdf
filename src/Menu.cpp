@@ -2432,7 +2432,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     };
 
     auto brBg = CreateSolidBrush(bgCol);
-    FillRect(hdc, &rc, brBg);
+    HdcFillRect(hdc, ToRect(rc), brBg);
     auto brTxt = CreateSolidBrush(txtCol);
 
     AutoDeleteObject deleteBgBrush(brBg);

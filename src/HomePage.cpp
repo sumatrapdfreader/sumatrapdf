@@ -666,7 +666,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
 #else
     Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
-    FillRect(hdc, &rcLogoBg, bgBrush);
+    HdcFillRect(hdc, ToRect(rcLogoBg), bgBrush);
     HdcDrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
     HdcDrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
@@ -1628,7 +1628,7 @@ static void EraseHomeCloseGlyph(MainWindow* win) {
         // no buffer to restore from: fall back to invalidating the area
         if (win) {
             RECT r = ToRECT(pr);
-            InvalidateRect(win->hwndCanvas, &r, FALSE);
+            HwndInvalidateRect(win->hwndCanvas, ToRect(r), false);
         }
     }
     pr = {};
@@ -1852,7 +1852,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         RECT rcBorder = {sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy};
         // fill interior with control background so padding matches the edit
         HBRUSH brBg = CreateSolidBrush(bgCol);
-        FillRect(hdc, &rcBorder, brBg);
+        HdcFillRect(hdc, ToRect(rcBorder), brBg);
         DeleteObject(brBg);
         // draw border frame
         COLORREF borderCol = AccentColor(bgCol, 40);
@@ -2046,7 +2046,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
     }
     if (newScrollY != win->homePageScrollY) {
         win->homePageScrollY = newScrollY;
-        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+        HwndInvalidate(win->hwndCanvas);
     }
 }
 
@@ -2066,6 +2066,6 @@ void HomePageOnMouseWheel(MainWindow* win, int delta) {
     }
     if (newScrollY != win->homePageScrollY) {
         win->homePageScrollY = newScrollY;
-        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+        HwndInvalidate(win->hwndCanvas);
     }
 }

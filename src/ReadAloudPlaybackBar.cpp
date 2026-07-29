@@ -234,7 +234,7 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         COLORREF bg = ReadAloudPlaybackBarHitTest(r, curPos) ? colBtnHover : colBtnBg;
         HBRUSH brBtn = CreateSolidBrush(bg);
         RECT rr = ToRECT(r);
-        FillRect(hdc, &rr, brBtn);
+        HdcFillRect(hdc, ToRect(rr), brBtn);
         DeleteObject(brBtn);
         graphics.DrawRectangle(&pen, r.x, r.y, r.dx - 1, r.dy - 1);
         SetTextColor(hdc, colTxt);

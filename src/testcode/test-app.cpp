@@ -90,7 +90,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
         //auto c = Loose(Size{dx, dy});
         LayoutToSize(l, {dx, dy});
-        InvalidateRect(hwnd, nullptr, false);
+        HwndInvalidate(hwnd);
     };
 
     // important to call this after hooking up onSize to ensure

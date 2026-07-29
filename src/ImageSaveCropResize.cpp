@@ -547,10 +547,10 @@ static void UpdateInfoLabel(ImageEditWindow* ew) {
 
 // invalidate only the image area, not the control area below
 static void InvalidateImageArea(ImageEditWindow* ew) {
-    RECT rc = {0, 0, 0, 0};
-    GetClientRect(ew->hwnd, &rc);
-    rc.bottom = ew->imgAreaH;
-    InvalidateRect(ew->hwnd, &rc, FALSE);
+    Rect imageRect = HwndClientRect(ew->hwnd);
+    imageRect.dy = ew->imgAreaH;
+    RECT rc = ToRECT(imageRect);
+    HwndInvalidateRect(ew->hwnd, imageRect, false);
 }
 
 static int GetControlAreaDy(ImageEditWindow* ew) {
@@ -622,7 +622,7 @@ static void ResizeImageEditWindowToImage(ImageEditWindow* ew, int prevW, int pre
     HwndCenterDialog(ew->hwnd, ew->hwndParent);
     CalcImageLayout(ew);
     LayoutControls(ew);
-    InvalidateRect(ew->hwnd, nullptr, TRUE);
+    HwndInvalidate(ew->hwnd, true);
 }
 
 static void CalcImageLayout(ImageEditWindow* ew) {
@@ -1572,7 +1572,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (ew->mode == ImageEditMode::Crop) {
                     InvalidateImageArea(ew);
                 } else {
-                    InvalidateRect(hwnd, nullptr, TRUE);
+                    HwndInvalidate(hwnd, true);
                 }
             }
             return 0;
@@ -1588,7 +1588,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ImageEditApplyFont(ew);
                 CalcImageLayout(ew);
                 LayoutControls(ew);
-                InvalidateRect(hwnd, nullptr, TRUE);
+                HwndInvalidate(hwnd, true);
             }
             return 0;
         }
@@ -1627,10 +1627,9 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (!ew) return 0;
             // paint control area background, skip image area (double-buffered)
             HDC hdc = (HDC)wp;
-            RECT crc;
-            GetClientRect(hwnd, &crc);
-            RECT ctrlRc = {0, ew->imgAreaH, crc.right, crc.bottom};
-            FillRect(hdc, &ctrlRc, GetSysColorBrush(COLOR_BTNFACE));
+            Rect crc = HwndClientRect(hwnd);
+            Rect ctrlRc = {0, ew->imgAreaH, crc.dx, crc.dy - ew->imgAreaH};
+            HdcFillRect(hdc, ctrlRc, GetSysColorBrush(COLOR_BTNFACE));
             return 1;
         }
 

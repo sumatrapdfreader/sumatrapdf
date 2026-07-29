@@ -2147,7 +2147,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
     // Draw shadow
     if (!presentation) {
         AutoDeleteBrush brush = CreateSolidBrush(COL_PAGE_SHADOW);
-        FillRect(hdc, &shadow.ToRECT(), brush);
+        HdcFillRect(hdc, shadow, brush);
     }
 
     // Draw frame
@@ -2300,7 +2300,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     drawHandle(left, midY);
 }
 
-static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
+static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     ReportIf(!win->AsFixed());
     if (!win->AsFixed()) {
         return false;
@@ -2369,12 +2369,12 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     bool shouldPaint = false;
     auto* gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = len(*gcols);
-    auto paintBgOrCheckerboard = [&](COLORREF col, RECT* rc) {
+    auto paintBgOrCheckerboard = [&](COLORREF col, Rect rc) {
         if (col == kColorUnset) {
-            HdcPaintCheckerboard(hdc, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top);
+            HdcPaintCheckerboard(hdc, rc.x, rc.y, rc.dx, rc.dy);
         } else {
             AutoDeleteBrush brush = CreateSolidBrush(col);
-            FillRect(hdc, rc, brush);
+            HdcFillRect(hdc, rc, brush);
         }
     };
 
@@ -2384,7 +2384,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         paintBgOrCheckerboard(colDocBg, rcArea);
     } else if (0 == nGCols) {
         AutoDeleteBrush brush = CreateSolidBrush(colDocBg);
-        FillRect(hdc, rcArea, brush);
+        HdcFillRect(hdc, rcArea, brush);
     } else {
         COLORREF colors[3];
         colors[0] = ParseColor((*gcols)[0], WIN_COL_WHITE);
@@ -2593,12 +2593,12 @@ void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc) {
     if (!hdc || !CanvasShouldShowKeyboardFocus(win)) {
         return;
     }
-    RECT rc;
-    GetClientRect(win->hwndCanvas, &rc);
+    Rect rc = HwndClientRect(win->hwndCanvas);
     // inset so the dashed rect is fully inside the client area
-    InflateRect(&rc, -1, -1);
-    if (rc.right > rc.left && rc.bottom > rc.top) {
-        DrawFocusRect(hdc, &rc);
+    rc.Inflate(-1, -1);
+    if (!rc.IsEmpty()) {
+        RECT nativeRect = ToRECT(rc);
+        DrawFocusRect(hdc, &nativeRect);
     }
 }
 
@@ -2611,7 +2611,7 @@ void InvalidateCanvasKeyboardFocus(MainWindow* win) {
     if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
         return;
     }
-    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    HwndInvalidate(win->hwndCanvas);
 }
 
 static void OnPaintDocument(MainWindow* win) {
@@ -2621,13 +2621,13 @@ static void OnPaintDocument(MainWindow* win) {
 
     switch (win->presentation) {
         case PM_BLACK_SCREEN:
-            FillRect(hdc, &ps.rcPaint, GetStockBrush(BLACK_BRUSH));
+            HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(BLACK_BRUSH));
             break;
         case PM_WHITE_SCREEN:
-            FillRect(hdc, &ps.rcPaint, GetStockBrush(WHITE_BRUSH));
+            HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(WHITE_BRUSH));
             break;
         default:
-            bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
+            bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), ToRect(ps.rcPaint));
             // Flush when the focus ring is needed so DrawFocusRect is not XOR'd
             // on top of a stale frame that already had a ring.
             bool showFocus = CanvasShouldShowKeyboardFocus(win);
@@ -3556,7 +3556,7 @@ static void OnPaintError(MainWindow* win) {
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
     auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
-    FillRect(hdc, &ps.rcPaint, bgBrush);
+    HdcFillRect(hdc, ToRect(ps.rcPaint), bgBrush);
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
@@ -3638,7 +3638,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             // entire frame and all children, so the toolbar "Page:" label and
             // page-number edit flash on every scroll even when the page is
             // unchanged (very visible with tall comic pages).
-            InvalidateRect(hwnd, nullptr, FALSE);
+            HwndInvalidate(hwnd);
             break;
 
         case SMOOTHSCROLL_TIMER_ID:
@@ -3710,7 +3710,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                 TtsProcessEvents();
                 ReadAloudUpdateAutoScroll(win);
                 ReadAloudPlaybackBarUpdateSession(GetReadAloudSourceTab());
-                InvalidateRect(hwnd, nullptr, FALSE);
+                HwndInvalidate(hwnd);
             } else {
                 ReadAloudHighlightTimerStop(win);
             }
@@ -4198,10 +4198,8 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
         case WM_ERASEBKGND: {
             if (gRedrawLog) {
-                RECT rc;
-                GetClientRect(hwnd, &rc);
-                logf("redraw: WM_ERASEBKGND hwnd=0x%p (canvas) rc=(%d,%d,%d,%d)\n", hwnd, rc.left, rc.top, rc.right,
-                     rc.bottom);
+                Rect rc = HwndClientRect(hwnd);
+                logf("redraw: WM_ERASEBKGND hwnd=0x%p (canvas) rc=(%d,%d,%d,%d)\n", hwnd, rc.x, rc.y, rc.dx, rc.dy);
             }
             // don't paint here; old content stays until WM_PAINT covers it
             // (CS_HREDRAW|CS_VREDRAW removed so no transparent flash)
@@ -4256,14 +4254,13 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_SIZE:
             if (!IsIconic(win->hwndFrame)) {
                 if (gRedrawLog) {
-                    RECT rc;
-                    GetClientRect(hwnd, &rc);
-                    logf("redraw: WM_SIZE hwnd=0x%p (canvas) size=(%d,%d)\n", hwnd, rc.right, rc.bottom);
+                    Rect rc = HwndClientRect(hwnd);
+                    logf("redraw: WM_SIZE hwnd=0x%p (canvas) size=(%d,%d)\n", hwnd, rc.dx, rc.dy);
                 }
                 win->UpdateCanvasSize();
                 // fully invalidate since layout depends on size
                 // (replaces CS_HREDRAW | CS_VREDRAW which caused transparent flash)
-                InvalidateRect(hwnd, nullptr, FALSE);
+                HwndInvalidate(hwnd);
             }
             return 0;
 

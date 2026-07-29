@@ -1344,7 +1344,7 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT, Size size) {
     if (dx == 0 || dy == 0) {
         return;
     }
-    InvalidateRect(hwnd, nullptr, false);
+    HwndInvalidate(hwnd);
     if (false && mainLayout->lastBounds.EqSize(dx, dy)) {
         // avoid un-necessary layout
         return;

@@ -195,7 +195,7 @@ static LRESULT OnPaint(HWND hwnd) {
     HBRUSH brushBg = CreateSolidBrush(kColWindowBg);
     HBRUSH brushWhite = GetStockBrush(WHITE_BRUSH);
     RECT rcClient = ToRECT(rect);
-    FillRect(hdc, &rcClient, brushBg);
+    HdcFillRect(hdc, ToRect(rcClient), brushBg);
 
     PdfPreview* preview = (PdfPreview*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (preview && preview->renderer) {
@@ -208,7 +208,7 @@ static LRESULT OnPaint(HWND hwnd) {
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
             RECT rcPage = ToRECT(onScreen);
-            FillRect(hdc, &rcPage, brushWhite);
+            HdcFillRect(hdc, ToRect(rcPage), brushWhite);
             preview->renderer->Render(hdc, onScreen, pageNo, zoom);
         }
     }
@@ -254,7 +254,7 @@ static LRESULT OnVScroll(HWND hwnd, WPARAM wp) {
     si.fMask = SIF_POS;
     SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 
-    InvalidateRect(hwnd, nullptr, TRUE);
+    HwndInvalidate(hwnd, true);
     UpdateWindow(hwnd);
     return 0;
 }
@@ -306,7 +306,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         case WM_DESTROY:
             return OnDestroy(hwnd);
         case kUwmPaintAgain:
-            InvalidateRect(hwnd, nullptr, TRUE);
+            HwndInvalidate(hwnd, true);
             UpdateWindow(hwnd);
             return 0;
         default:

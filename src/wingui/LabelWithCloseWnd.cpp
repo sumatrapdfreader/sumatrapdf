@@ -17,7 +17,7 @@
 
 static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     HBRUSH br = w->BackgroundBrush();
-    FillRect(hdc, &ps.rcPaint, br);
+    HdcFillRect(hdc, ToRect(ps.rcPaint), br);
 
     Rect cr = HwndClientRect(w->hwnd);
 
@@ -53,7 +53,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
         x = w->closeBtnPos.x - DpiScale(w->hwnd, kButtonSpaceDx);
         Rect ri(x, 0, cr.dx - x, cr.dy);
         RECT r = ToRECT(ri);
-        FillRect(hdc, &r, br);
+        HdcFillRect(hdc, ToRect(r), br);
     }
     Point curPos = HwndGetCursorPos(w->hwnd);
     // TODO: hack

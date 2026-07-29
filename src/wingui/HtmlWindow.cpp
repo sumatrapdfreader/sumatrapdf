@@ -2134,7 +2134,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(__unused LPCRECT pRect, __unused DWO
 }
 
 HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(__unused LPCRECT pRect, BOOL fErase) {
-    ::InvalidateRect(fs->hwndParent, nullptr, fErase);
+    HwndInvalidate(fs->hwndParent, tobool(fErase));
     return S_OK;
 }
 

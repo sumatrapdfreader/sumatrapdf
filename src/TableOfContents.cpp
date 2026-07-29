@@ -438,7 +438,7 @@ static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* b
     // TreeView selection paint won't cover the extra matches; repaint so
     // OnTocCustomDraw can draw them.
     if (treeView->hwnd) {
-        InvalidateRect(treeView->hwnd, nullptr, TRUE);
+        HwndInvalidate(treeView->hwnd, true);
     }
 }
 
@@ -1145,29 +1145,31 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
 
     HBRUSH brushBg = CreateSolidBrush(bgCol);
-    FillRect(hdc, &drawRc, brushBg);
+    HdcFillRect(hdc, ToRect(drawRc), brushBg);
     DeleteObject(brushBg);
 
-    RECT titleRc = drawRc;
-    titleRc.right = std::max(titleRc.left, drawRc.right - pageReserve);
-    InflateRect(&titleRc, -2, -1);
+    Rect titleRect = ToRect(drawRc);
+    titleRect.dx = std::max(0, titleRect.dx - pageReserve);
+    titleRect.Inflate(-2, -1);
 
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, txtCol);
     SetBkColor(hdc, bgCol);
 
     if (filterActive) {
+        RECT titleRc = ToRECT(titleRect);
         DrawTreeItemFilterHighlight(hdc, titleRc, tocItem->title, words, bgCol, txtCol, font);
     } else {
-        Rect titleRect = ToRect(titleRc);
         HdcDrawText(hdc, tocItem->title, titleRect,
                     DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
     }
 
     if (showPage && pageW.len > 0) {
-        RECT pageRc = drawRc;
-        InflateRect(&pageRc, -2, -1);
-        pageRc.left = std::max(pageRc.left, pageRc.right - pageSize.dx);
+        Rect pageRect = ToRect(drawRc);
+        pageRect.Inflate(-2, -1);
+        int right = pageRect.x + pageRect.dx;
+        pageRect.x = std::max(pageRect.x, right - pageSize.dx);
+        pageRect.dx = right - pageRect.x;
         // Slightly muted vs title when not selected (keeps numbers secondary).
         if (!(isTreeSelected && hasFocus)) {
             COLORREF muted =
@@ -1175,7 +1177,6 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
                     (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
             SetTextColor(hdc, muted);
         }
-        Rect pageRect = ToRect(pageRc);
         HdcDrawText(hdc, pageW, pageRect, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
     }
 

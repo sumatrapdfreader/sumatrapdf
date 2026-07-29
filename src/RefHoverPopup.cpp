@@ -76,11 +76,8 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        RECT rc;
-        GetClientRect(hwnd, &rc);
-
         HBRUSH hbg = CreateSolidBrush(RGB(255, 252, 200));
-        FillRect(hdc, &rc, hbg);
+        HdcFillRect(hdc, HwndClientRect(hwnd), hbg);
         DeleteObject(hbg);
 
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
@@ -231,7 +228,7 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     }
 
     SetWindowPos(s->hwndPopup, HWND_TOPMOST, x, y, popupW, popupH, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-    InvalidateRect(s->hwndPopup, nullptr, TRUE);
+    HwndInvalidate(s->hwndPopup, true);
 }
 
 bool RefHoverRerenderDisplayedRegion(RefHoverState* s, EngineBase* engine, int page, RectF region) {
@@ -268,11 +265,10 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     }
     s->displayed.userZoom = newZoom;
 
-    RECT rc;
-    GetClientRect(s->hwndPopup, &rc);
+    Rect rc = HwndClientRect(s->hwndPopup);
     int border = DpiScale(s->hwndPopup, kRefHoverBorder);
-    float clientW = (float)((rc.right - rc.left) - 2 * border);
-    float clientH = (float)((rc.bottom - rc.top) - 2 * border);
+    float clientW = (float)(rc.dx - 2 * border);
+    float clientH = (float)(rc.dy - 2 * border);
     float zoom = s->displayed.baseZoom * s->displayed.userZoom;
     if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
         return false;

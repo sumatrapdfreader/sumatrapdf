@@ -310,7 +310,7 @@ void FindWindowWnd::Layout() {
     // Erase margins (and any area the list just vacated when shrinking) so
     // snippet/page-number pixels don't ghost at the bottom/side of the window
     // when the dialog is resized narrower than the previous text (#5796).
-    InvalidateRect(hwnd, nullptr, TRUE);
+    HwndInvalidate(hwnd, true);
 }
 
 void FindWindowWnd::RefreshResults(bool allowNavigation) {
@@ -635,9 +635,9 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             }
             // full client erase: margins + list, so nothing left over from the
             // pre-resize layout at the bottom of the window (#5796)
-            InvalidateRect(h, nullptr, TRUE);
+            HwndInvalidate(h, true);
             if (results) {
-                InvalidateRect(results->hwnd, nullptr, TRUE);
+                HwndInvalidate(results->hwnd, true);
             }
             SavePos();
             break;
@@ -674,7 +674,7 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                 if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
                     // reuse the window's cached background brush (rebuilt on theme
                     // change via SetColors) instead of allocating one per paint
-                    FillRect(cd->nmcd.hdc, &cd->nmcd.rc, BackgroundBrush());
+                    HdcFillRect(cd->nmcd.hdc, ToRect(cd->nmcd.rc), BackgroundBrush());
                     return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
                 }
             }

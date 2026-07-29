@@ -47,7 +47,7 @@ static Pixmap* StackPixmapsVertically(Pixmap* top, Pixmap* bottom) {
     if (outDC && oldOut) {
         RECT full{0, 0, w, h};
         HBRUSH white = CreateSolidBrush(RGB(255, 255, 255));
-        FillRect(outDC, &full, white);
+        HdcFillRect(outDC, ToRect(full), white);
         DeleteObject(white);
 
         if (top->hbmp) {
@@ -97,7 +97,7 @@ static void RefHoverRenderDone(RefHoverRenderJob* job) {
             s->displayed.region = job->req.region;
             RefHoverShowPopup(s, job->req.screenPt);
         } else {
-            InvalidateRect(s->hwndPopup, nullptr, TRUE);
+            HwndInvalidate(s->hwndPopup, true);
         }
     } else {
         FreePixmap(job->bmp);

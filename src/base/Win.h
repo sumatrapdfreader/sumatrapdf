@@ -32,6 +32,8 @@ UINT_PTR NextSubclassId();
 
 Rect HwndClientRect(HWND);
 Rect HwndWindowRect(HWND);
+void HwndInvalidateRect(HWND hwnd, Rect rect, bool erase);
+void HwndInvalidate(HWND hwnd, bool erase = false);
 Rect HwndMapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
 Rect HwndMapLtrClientRectToScreen(HWND hwnd, Rect r);
 int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx);

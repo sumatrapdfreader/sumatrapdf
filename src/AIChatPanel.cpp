@@ -760,9 +760,7 @@ static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
     switch (msg) {
         case WM_ERASEBKGND: {
             HDC hdc = (HDC)wp;
-            RECT rc;
-            GetClientRect(hwnd, &rc);
-            FillRect(hdc, &rc, win->brControlBgColor);
+            HdcFillRect(hdc, HwndClientRect(hwnd), win->brControlBgColor);
             return TRUE;
         }
         case WM_CTLCOLORSTATIC: {
@@ -832,7 +830,7 @@ void RelayoutAIChatPanel(MainWindow* win) {
     }
     RedrawWindow(win->hwndAiChatBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     if (win->aiChatSplitter && win->aiChatSplitter->hwnd) {
-        InvalidateRect(win->aiChatSplitter->hwnd, nullptr, TRUE);
+        HwndInvalidate(win->aiChatSplitter->hwnd, true);
     }
 }
 

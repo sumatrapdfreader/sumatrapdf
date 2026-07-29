@@ -591,9 +591,8 @@ void PositionOverlayToolbar(MainWindow* win) {
     SetWindowPos(win->hwndReBar, HWND_TOP, r.x, r.y, r.dx, r.dy, flags);
     if (!win->toolbarOverlayShown) {
         // repaint the canvas area the toolbar was covering
-        RECT rc = ToRECT(r);
-        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
-        InvalidateRect(win->hwndFrame, &rc, FALSE);
+        HwndInvalidate(win->hwndCanvas);
+        HwndInvalidateRect(win->hwndFrame, r, false);
     }
 }
 
@@ -705,7 +704,7 @@ void UpdateFindbox(MainWindow* win) {
     // remove SS_WHITERECT so WM_CTLCOLORSTATIC controls the background color
     HwndSetWindowStyle(win->hwndPageBg, SS_WHITERECT, false);
 
-    InvalidateRect(win->hwndToolbar, nullptr, TRUE);
+    HwndInvalidate(win->hwndToolbar, true);
     if (HwndIsVisible(win->hwndFrame)) {
         UpdateWindow(win->hwndToolbar);
     }
@@ -720,13 +719,11 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                               DWORD_PTR dwRefData) {
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
         HDC hdc = (HDC)wParam;
-        RECT rect;
-        GetClientRect(hWnd, &rect);
         SetTextColor(hdc, ThemeWindowTextColor());
         COLORREF bgCol = ThemeControlBackgroundColor();
         SetBkColor(hdc, bgCol);
         auto bgBrush = CreateSolidBrush(bgCol);
-        FillRect(hdc, &rect, bgBrush);
+        HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
         DeleteObject(bgBrush);
         return 1;
     }
@@ -800,8 +797,7 @@ static LRESULT CALLBACK WndProcEditBg(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     LRESULT res = CallWindowProc(DefWndProcEditBg, hwnd, msg, wp, lp);
     if (msg == WM_PAINT) {
         HDC hdc = GetDC(hwnd);
-        RECT rc;
-        GetClientRect(hwnd, &rc);
+        RECT rc = ToRECT(HwndClientRect(hwnd));
         COLORREF bgCol2 = ThemeControlBackgroundColor();
         COLORREF col = AccentColor(bgCol2, 40);
         HBRUSH br = CreateSolidBrush(col);
@@ -1058,7 +1054,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (bi.cx != size2.dx || !updateOnly) {
         TbSetButtonDx(win->hwndToolbar, PageInfoId, size2.dx);
     }
-    InvalidateRect(win->hwndToolbar, nullptr, TRUE);
+    HwndInvalidate(win->hwndToolbar, true);
 }
 
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
@@ -1551,11 +1547,9 @@ static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     if (WM_ERASEBKGND == uMsg) {
         // always paint background with theme color to avoid gray strips in light theme
         HDC hdc = (HDC)wParam;
-        RECT rect;
-        GetClientRect(hWnd, &rect);
         COLORREF bgCol = ThemeControlBackgroundColor();
         auto bgBrush = CreateSolidBrush(bgCol);
-        FillRect(hdc, &rect, bgBrush);
+        HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
         DeleteObject(bgBrush);
         return 1;
     }

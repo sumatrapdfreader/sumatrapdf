@@ -123,7 +123,7 @@ class PdfPreview : public IThumbnailProvider,
             int dx = m_rcParent.dx;
             int dy = m_rcParent.dy;
             SetWindowPos(m_hwnd, nullptr, x, y, dx, dy, flags);
-            InvalidateRect(m_hwnd, nullptr, TRUE);
+            HwndInvalidate(m_hwnd, true);
             UpdateWindow(m_hwnd);
         }
         return S_OK;

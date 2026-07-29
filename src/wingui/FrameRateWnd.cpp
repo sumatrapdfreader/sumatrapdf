@@ -28,7 +28,7 @@ static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT&) {
     Rect rc = HwndClientRect(w->hwnd);
     RECT r = ToRECT(rc);
     AutoDeleteBrush brush = CreateSolidBrush(COL_BLACK);
-    FillRect(hdc, &r, brush);
+    HdcFillRect(hdc, ToRect(r), brush);
 
     SetTextColor(hdc, COL_WHITE);
 
