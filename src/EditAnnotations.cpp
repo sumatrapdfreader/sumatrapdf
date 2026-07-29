@@ -378,6 +378,9 @@ static void UpdateSaveButtonLabels(EditAnnotationsWindow* ew) {
 }
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->buttonSaveToCurrentFile || !ew->buttonSaveToNewFile) {
+        return;
+    }
     bool didChange = DidAnnotationsChange(ew);
     ew->buttonSaveToCurrentFile->SetIsEnabled(didChange);
     ew->buttonSaveToNewFile->SetIsEnabled(didChange);
@@ -476,21 +479,23 @@ extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
     FlushContentsFromEdit(ew);
     WindowTab* tab = ew->tab;
+    // On success SaveAnnotationsToMaybeNewPdfFile closes this window (and may
+    // open a new one). Do not touch ew after a successful return.
     bool ok = SaveAnnotationsToMaybeNewPdfFile(tab);
     if (!ok) {
         return;
     }
-    // Path may have changed to the new file; refresh the existing-save label.
-    UpdateSaveButtonLabels(ew);
-    EnableSaveIfAnnotationsChanged(ew);
+    // New window (if any) is created inside Save*; labels/enabled state are
+    // set when it opens. Old ew is already deleted.
 }
 
 extern bool SaveAnnotationsToExistingFile(WindowTab* tab);
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     FlushContentsFromEdit(ew);
+    // SaveAnnotationsToExistingFile closes this window and reloads the PDF
+    // (engine/Annotation* become invalid). Do not touch ew after this call.
     SaveAnnotationsToExistingFile(ew->tab);
-    EnableSaveIfAnnotationsChanged(ew);
 }
 
 constexpr int kMaxControls = 18;
