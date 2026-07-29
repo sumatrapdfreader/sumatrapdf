@@ -433,7 +433,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -477,7 +479,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -521,7 +525,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -565,7 +571,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -609,7 +617,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -653,7 +663,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -697,7 +709,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -741,7 +755,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -789,7 +805,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -837,7 +855,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -885,7 +905,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -932,7 +954,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -980,7 +1004,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1028,7 +1054,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1076,7 +1104,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1123,7 +1153,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt</Command>
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>

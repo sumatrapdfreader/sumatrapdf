@@ -1278,7 +1278,13 @@ workspace "SumatraPDF"
     linkoptions { "/INFERASANLIBS" }
     filter {}
     dependson { "test_util" }
-    prebuildcommands { "..\\bin\\MakeLZSA.exe ..\\translations\\translations.txt.lzsa ..\\translations\\translations-good.txt:translations-good.txt" }
+    -- translations are not checked in; seed an empty .work/translations.txt when
+    -- missing so CI (no APPTRANSLATOR secret) can still pack the RC resource.
+    prebuildcommands {
+      "if not exist ..\\.work mkdir ..\\.work",
+      "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
+      "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
+    }
 
   -- a dll version where most functionality is in libmupdf.dll
   project "SumatraPDF"
@@ -1380,7 +1386,13 @@ workspace "SumatraPDF"
     -- delay-loaded libmupdf.dll which LoadLibmupdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "test_util", "sumatrapdf-tool" }
-    prebuildcommands { "..\\bin\\MakeLZSA.exe ..\\translations\\translations.txt.lzsa ..\\translations\\translations-good.txt:translations-good.txt" }
+    -- translations are not checked in; seed an empty .work/translations.txt when
+    -- missing so CI (no APPTRANSLATOR secret) can still pack the RC resource.
+    prebuildcommands {
+      "if not exist ..\\.work mkdir ..\\.work",
+      "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
+      "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
+    }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe" }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it

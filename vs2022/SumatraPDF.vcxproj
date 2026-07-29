@@ -433,7 +433,9 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbg32 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -478,7 +480,9 @@ cd ../out/dbg32 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libm
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbg64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -523,7 +527,9 @@ cd ../out/dbg64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libm
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbgarm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -568,7 +574,9 @@ cd ../out/dbgarm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:l
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbg64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
@@ -616,7 +624,9 @@ cd ../out/dbg64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbgfull32 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -661,7 +671,9 @@ cd ../out/dbgfull32 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbgfull64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -706,7 +718,9 @@ cd ../out/dbgfull64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbgfullarm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -751,7 +765,9 @@ cd ../out/dbgfullarm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.d
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/dbgfull64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
@@ -803,7 +819,9 @@ cd ../out/dbgfull64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/rel32 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -852,7 +870,9 @@ cd ../out/rel32 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libm
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/rel64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -901,7 +921,9 @@ cd ../out/rel64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libm
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/arm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -949,7 +971,9 @@ cd ../out/arm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libm
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/rel64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
@@ -1001,7 +1025,9 @@ cd ../out/rel64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/rel32_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -1050,7 +1076,9 @@ cd ../out/rel32_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/rel64_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -1099,7 +1127,9 @@ cd ../out/rel64_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/arm64_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
@@ -1147,7 +1177,9 @@ cd ../out/arm64_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
+      <Command>if not exist ..\.work mkdir ..\.work
+if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
+..\bin\MakeLZSA.exe ..\.work\translations.txt.lzsa ..\.work\translations.txt:translations.txt
 cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
