@@ -1425,6 +1425,8 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
+    <ClCompile Include="..\src\AudiobookCharacters.cpp" />
+    <ClCompile Include="..\src\LibraryPage.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />

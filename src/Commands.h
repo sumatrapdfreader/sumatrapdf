@@ -256,7 +256,11 @@ enum {
     CmdToggleLightDarkTheme = 445,
     CmdChangeTheme = 446,
     CmdTranslateSelection = 447,
-    CmdNone = 448,
+    CmdToggleAudiobookVoices = 448,
+    CmdAudiobookCharacters = 449,
+    CmdToggleLibraryHome = 450,
+    CmdLibraryRescan = 451,
+    CmdNone = 452,
 
     /* range for file history */
     CmdFileHistoryFirst,

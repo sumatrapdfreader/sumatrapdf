@@ -210,6 +210,14 @@ struct MainWindow {
     // width of the AI chat sidebar
     int aiChatDx = 0;
 
+    // Audiobook Characters panel (left side), see AudiobookCharacters.cpp.
+    // A docked child of hwndFrame, not a window of its own: it sits beside the
+    // document and the splitter resizes it.
+    HWND hwndAudiobookBox = nullptr;
+    Splitter* audiobookSplitter = nullptr;
+    // width of the Audiobook Characters panel
+    int audiobookDx = 0;
+
     // vertical splitter for resizing left side panel
     Splitter* sidebarSplitter = nullptr;
 
@@ -328,13 +336,16 @@ struct MainWindow {
             bool showMenuBarRebar = false;
             bool aiChatVisible = false;
             int aiChatDx = 0;
+            bool audiobookVisible = false;
+            int audiobookDx = 0;
         };
         Layout layout; // last applied layout state
-        // desired visibility of the sidebar / AI chat panels; applied
-        // (HwndSetVisibility) by RelayoutFrame
+        // desired visibility of the sidebar / AI chat / audiobook panels;
+        // applied (HwndSetVisibility) by RelayoutFrame
         bool tocVisible = false;
         bool favVisible = false;
         bool aiChatVisible = false;
+        bool audiobookVisible = false;
         bool updatePending = false; // a WM_UPDATE_UI is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update

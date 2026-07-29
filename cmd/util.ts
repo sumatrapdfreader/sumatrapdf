@@ -6,7 +6,7 @@ const msBuildRelPath = String.raw`MSBuild\Current\Bin\MSBuild.exe`;
 const clangFormatRelPaths = [String.raw`VC\Tools\Llvm\bin\clang-format.exe`, String.raw`VC\Tools\Llvm\x64\bin\clang-format.exe`];
 const clangTidyRelPaths = [String.raw`VC\Tools\Llvm\bin\clang-tidy.exe`, String.raw`VC\Tools\Llvm\x64\bin\clang-tidy.exe`];
 
-const vsEditions = ["Community", "Professional", "Enterprise"];
+const vsEditions = ["Community", "Professional", "Enterprise", "BuildTools"];
 
 export interface VisualStudioInfo {
   vsRoot: string;
@@ -61,13 +61,18 @@ function findVsRootVer(ver: string): string {
     // msbuild not in PATH
   }
 
-  // try known Program Files locations
-  const programFiles = process.env["ProgramFiles"] ?? String.raw`C:\Program Files`;
-  const vsBase = join(programFiles, "Microsoft Visual Studio", ver);
-  for (const edition of vsEditions) {
-    const vsRoot = join(vsBase, edition);
-    if (existsSync(join(vsRoot, msBuildRelPath))) {
-      return vsRoot;
+  // try known Program Files locations (Build Tools install under x86)
+  const bases = [
+    process.env["ProgramFiles"] ?? String.raw`C:\Program Files`,
+    process.env["ProgramFiles(x86)"] ?? String.raw`C:\Program Files (x86)`,
+  ];
+  for (const programFiles of bases) {
+    const vsBase = join(programFiles, "Microsoft Visual Studio", ver);
+    for (const edition of vsEditions) {
+      const vsRoot = join(vsBase, edition);
+      if (existsSync(join(vsRoot, msBuildRelPath))) {
+        return vsRoot;
+      }
     }
   }
   return "";

@@ -256,6 +256,10 @@ export const commands = [
     "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
     "CmdChangeTheme", "Change Theme...",
     "CmdTranslateSelection", "Translate Selection...",
+    "CmdToggleAudiobookVoices", "Read Aloud with Chatterbox Voices",
+    "CmdAudiobookCharacters", "Audiobook Characters",
+    "CmdToggleLibraryHome", "Toggle Library Start Page",
+    "CmdLibraryRescan", "Rescan the Library",
     "CmdNone", "Do nothing",
 ];
 

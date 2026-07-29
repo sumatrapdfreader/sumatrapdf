@@ -1,6 +1,15 @@
 import { join } from "node:path";
-import { detectVisualStudio2026, runLogged } from "./util";
+import { detectVisualStudio2022, detectVisualStudio2026, runLogged } from "./util";
 import { clearDirPreserveSettings } from "./clean";
+
+// prefer VS 2026 if present, else fall back to VS 2022 / Build Tools
+function detectMsbuild(): string {
+  try {
+    return detectVisualStudio2026().msbuildPath;
+  } catch {
+    return detectVisualStudio2022().msbuildPath;
+  }
+}
 
 let clean = false;
 let config = "Debug";
@@ -33,7 +42,7 @@ async function main() {
     }
   }
 
-  const { msbuildPath } = detectVisualStudio2026();
+  const msbuildPath = detectMsbuild();
   const sln = String.raw`vs2022\SumatraPDF.sln`;
   // const t = `/t:SumatraPDF;test_util`;
   const p = `/p:Configuration=${config};Platform=${platform}`;

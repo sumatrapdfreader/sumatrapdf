@@ -95,6 +95,8 @@ CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 
 CmdSetDocumentColorsFollowTheme,,Set Document Colors Follow Theme,"ver 3.7+, opens a dialog to pick how MuPDF-rendered documents follow the UI theme (`DocumentColorsFollowTheme`: off, smart, legacy)"
 CmdTogglePreservePdfImages,,Toggle Preserve PDF Image Colors in Dark Mode,"ver 3.7+, session-only toggle of image preservation on inverted pages"
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
+CmdToggleLibraryHome,,Toggle Library Start Page,"ver 3.7+, switch the start page between the library of your books (cover art, series, per-book page) and the classic Frequently Read page. Books are found under the `Audiobook.LibraryRoots` advanced setting"
+CmdLibraryRescan,,Rescan the Library,"ver 3.7+, look for newly added books under the library roots. Only enabled while the library start page is on"
 ```
 
 ## Tabs

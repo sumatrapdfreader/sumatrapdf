@@ -258,6 +258,10 @@ static SeqStrings gCommandNames =
     "CmdToggleLightDarkTheme\0"
     "CmdChangeTheme\0"
     "CmdTranslateSelection\0"
+    "CmdToggleAudiobookVoices\0"
+    "CmdAudiobookCharacters\0"
+    "CmdToggleLibraryHome\0"
+    "CmdLibraryRescan\0"
     "CmdNone\0"
     "\0";
 
@@ -509,6 +513,10 @@ static i32 gCommandIds[] = {
     CmdToggleLightDarkTheme,
     CmdChangeTheme,
     CmdTranslateSelection,
+    CmdToggleAudiobookVoices,
+    CmdAudiobookCharacters,
+    CmdToggleLibraryHome,
+    CmdLibraryRescan,
     CmdNone,
 };
 
@@ -760,6 +768,10 @@ SeqStrings gCommandDescriptions =
     "Toggle Light/Dark Theme\0"
     "Change Theme...\0"
     "Translate Selection...\0"
+    "Read Aloud with Chatterbox Voices\0"
+    "Audiobook Characters\0"
+    "Toggle Library Start Page\0"
+    "Rescan the Library\0"
     "Do nothing\0"
     "\0";
 // clang-format on

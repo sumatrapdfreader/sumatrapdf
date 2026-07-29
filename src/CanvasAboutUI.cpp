@@ -15,6 +15,7 @@
 #include "Canvas.h"
 #include "Menu.h"
 #include "HomePage.h"
+#include "LibraryPage.h"
 #include "Theme.h"
 #include "FileHistory.h"
 #include "AppSettings.h"
@@ -31,7 +32,10 @@ static void OnPaintAbout(MainWindow* win) {
     GlobalPrefs* prefs = gGlobalPrefs;
     bool hasPerms = HasPermission(Perm::SavePreferences | Perm::DiskAccess);
     bool drawHome = hasPerms && prefs->rememberOpenedFiles && prefs->showStartPage;
-    if (drawHome) {
+    if (LibraryHomeEnabled()) {
+        HomePageDestroySearch(win);
+        DrawLibraryPage(win, bufDC);
+    } else if (drawHome) {
         DrawHomePage(win, bufDC);
     } else {
         HomePageDestroySearch(win);
@@ -48,6 +52,10 @@ static void OnPaintAbout(MainWindow* win) {
 static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     // lf("Left button clicked on %d %d", x, y);
 
+    if (LibraryHomeEnabled() && LibraryOnLeftButtonDown(win, x, y)) {
+        str::FreePtr(&win->urlOnLastButtonDown);
+        return;
+    }
     // remember a link under so that on mouse up we only activate
     // link if mouse up is on the same link as mouse down
     str::ReplaceWithCopy(&win->urlOnLastButtonDown, GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr));
@@ -67,7 +75,11 @@ static bool IsLink(Str url) {
 }
 
 static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
-    HomePageUpdateCloseButton(win, x, y);
+    if (LibraryHomeEnabled()) {
+        LibraryOnMouseMove(win, x, y);
+    } else {
+        HomePageUpdateCloseButton(win, x, y);
+    }
     TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
     tme.dwFlags = TME_LEAVE;
     tme.hwndTrack = hwnd;
@@ -75,9 +87,13 @@ static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
 }
 
 static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
+    if (LibraryHomeEnabled() && LibraryOnLeftButtonUp(win)) {
+        str::FreePtr(&win->urlOnLastButtonDown);
+        return;
+    }
     // a click on the thumbnail's ✕ close button removes the file instead of
     // opening it
-    if (HomePageOnCloseButtonClick(win, x, y)) {
+    if (!LibraryHomeEnabled() && HomePageOnCloseButtonClick(win, x, y)) {
         str::FreePtr(&win->urlOnLastButtonDown);
         return;
     }
@@ -85,6 +101,9 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     bool clickedURL = url && str::Eq(url, win->urlOnLastButtonDown);
     str::FreePtr(&win->urlOnLastButtonDown);
     if (!clickedURL) {
+        return;
+    }
+    if (LibraryOnLinkClicked(win, url)) {
         return;
     }
     if (str::Eq(url, kLinkOpenFile)) {
@@ -154,6 +173,9 @@ static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     if (isDrag) {
         return;
     }
+    if (LibraryOnRightClick(win, x, y)) {
+        return;
+    }
     OnAboutContextMenu(win, x, y);
 }
 
@@ -207,6 +229,10 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             HomePageOnCanvasMouseLeave();
             return 0;
 
+        case WM_CAPTURECHANGED:
+            LibraryOnCaptureLost(win);
+            return 0;
+
         case WM_LBUTTONDOWN:
             OnMouseLeftButtonDownAbout(win, x, y, wp);
             return 0;
@@ -246,13 +272,21 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
 
         case WM_VSCROLL:
             HomePageHideCloseButton();
-            HomePageOnVScroll(win, wp);
+            if (LibraryHomeEnabled()) {
+                LibraryOnVScroll(win, wp);
+            } else {
+                HomePageOnVScroll(win, wp);
+            }
             return 0;
 
         case WM_MOUSEWHEEL: {
             HomePageHideCloseButton();
             int delta = GET_WHEEL_DELTA_WPARAM(wp);
-            HomePageOnMouseWheel(win, delta);
+            if (LibraryHomeEnabled()) {
+                LibraryOnMouseWheel(win, delta, (short)LOWORD(lp), (short)HIWORD(lp));
+            } else {
+                HomePageOnMouseWheel(win, delta);
+            }
             return 0;
         }
 

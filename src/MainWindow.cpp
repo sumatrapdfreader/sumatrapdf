@@ -30,6 +30,7 @@
 #include "SumatraPDF.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+#include "AudiobookCharacters.h"
 #include "MainWindow.h"
 #include "SelectionToolbar.h"
 #include "FindBar.h"
@@ -187,6 +188,7 @@ MainWindow::~MainWindow() {
     delete favLayout;
 
     DestroyAIChatPanel(this);
+    DestroyAudiobookPanel(this);
 
     delete sidebarSplitter;
     delete favSplitter;

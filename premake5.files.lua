@@ -827,6 +827,8 @@ function sumatrapdf_files()
     "ChangeThemeDialog.*",
     "AppSettings.*",
     "AppTools.*",
+    "AudiobookCharacters.*",
+    "LibraryPage.*",
     "Canvas.*",
     "CanvasAboutUI.*",
     "CaptionGlyphs.*",

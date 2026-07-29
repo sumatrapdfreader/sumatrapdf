@@ -372,6 +372,99 @@ const claudeCode: Field[] = [
   field("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
 ];
 
+const audiobook: Field[] = [
+  field(
+    "UseChatterbox",
+    Bool,
+    false,
+    "if true, the Read Aloud button reads the document with the Chatterbox audiobook engine (per-character voices and word highlighting) instead of the built-in Windows TTS",
+  ),
+  field(
+    "ChatterboxDir",
+    Str,
+    "",
+    "folder of the Chatterbox-TTS-Extended install (contains tts_server.py and audiobook\\engine.py); found automatically, only set this if auto-detection fails",
+  ),
+  field(
+    "PythonExe",
+    Str,
+    "",
+    "python for the Chatterbox virtualenv; if empty, <ChatterboxDir>\\.venv-amd\\Scripts\\pythonw.exe is used",
+  ),
+  field("TtsServerPort", Int, 7861, "port of the Chatterbox headless TTS server"),
+  field(
+    "LmStudioUrl",
+    Str,
+    "http://127.0.0.1:11434",
+    "local LLM used once per book to work out who speaks each line (LM Studio, Ollama, or anything OpenAI-compatible); if unreachable the whole book is read in the narrator voice",
+  ),
+  field("NarratorVoice", Str, "", "default narrator voice name; empty = first available trained voice"),
+  field(
+    "LmModel",
+    Str,
+    "",
+    "local LLM used to work out who speaks each line; empty = pick it automatically " +
+      "(the only chat model the server has, or the one already loaded). Chosen in the " +
+      "Audiobook Characters panel",
+  ),
+  field(
+    "LmUrls",
+    Str,
+    "",
+    "extra LLM servers to analyse with, comma-separated, e.g. " +
+      "http://192.168.1.20:11434,http://192.168.1.21:11434 . The book's chunks are shared " +
+      "out across LmStudioUrl and these, so a second machine roughly halves the time. " +
+      "LM Studio and Ollama both work, and one computer running both counts as two. " +
+      "Unreachable ones are skipped. The Audiobook Characters panel can find these for " +
+      "you rather than requiring them typed here",
+  ),
+  field(
+    "Analyzer",
+    Str,
+    "llm",
+    "who works out who speaks each line: \"llm\" (a local LLM, per chunk) or " +
+      "\"booknlp\" (a local BookNLP model, one pass, no LLM server needed). " +
+      "BookNLP is faster and needs nothing running, but the LLM handles the " +
+      "hardest untagged lines a little better. Chosen in the Audiobook " +
+      "Characters panel",
+  ),
+  field(
+    "CharSort",
+    Str,
+    "appearance",
+    'how the Audiobook Characters panel orders the cast: "appearance" (first appearance ' +
+      'first), "appearance-desc", "lines" (most lines first), "lines-asc", "name" (A to Z) ' +
+      'or "name-desc". Chosen in the panel',
+  ),
+  field("SidebarDx", Int, 0, "width of the Audiobook Characters panel docked on the left").internal(),
+  field(
+    "LibraryHome",
+    Bool,
+    true,
+    "if true, the start page is the library: a wall of book covers grouped by series, " +
+      "with a page per book showing its metadata, the characters/family/places BookNLP " +
+      "found in it, and its film and TV adaptations. If false, the classic Frequently " +
+      "Read page is shown instead",
+  ),
+  field(
+    "LibraryRoots",
+    Str,
+    "",
+    "folders to look for books in, separated by ; . Empty means work them out: the " +
+      "folders already analysed, then Documents/Downloads/Desktop, then a bounded scan " +
+      "of every fixed drive",
+  ),
+  field("LibraryPort", Int, 7863, "port of the Chatterbox library service (audiobook\\library)"),
+  field(
+    "LibrarySort",
+    Str,
+    "alpha",
+    'how the library start page orders the series list: "alpha" (A to Z), "genre" ' +
+      '(grouped under genre headings), "most" (most books first) or "fewest" (fewest ' +
+      "books first). Chosen on the page",
+  ),
+];
+
 const fullscreen: Field[] = [
   field("ShowToolbar", Bool, false, "if true, show the toolbar in fullscreen mode"),
   field("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
@@ -861,6 +954,8 @@ const globalPrefs: Field[] = [
   ),
   emptyLine(),
   struct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar").ver("3.7"),
+  emptyLine(),
+  struct("Audiobook", audiobook, "settings for the Chatterbox audiobook Read Aloud engine").ver("3.7"),
   emptyLine(),
   struct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar").ver("3.7"),
   emptyLine(),

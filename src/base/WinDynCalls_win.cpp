@@ -201,6 +201,24 @@ HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWOR
     return DynDwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
 
+BOOL IsCompositionEnabled() {
+    if (!DynDwmIsCompositionEnabled) {
+        return FALSE;
+    }
+    BOOL isEnabled;
+    if (SUCCEEDED(DynDwmIsCompositionEnabled(&isEnabled))) {
+        return isEnabled;
+    }
+    return FALSE;
+}
+
+BOOL DefaultWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT* plResult) {
+    if (!DynDwmDefWindowProc) {
+        return FALSE;
+    }
+    return DynDwmDefWindowProc(hwnd, msg, wp, lp, plResult);
+}
+
 void SetWindowBorderColor(HWND hwnd, COLORREF color) {
     SetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &color, sizeof(color));
 }

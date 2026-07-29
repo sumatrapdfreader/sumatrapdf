@@ -12,6 +12,7 @@ bool Dialog_ChangeScrollbar(HWND hwnd);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_AddFavorite(HWND hwnd, Str pageNo, Str& favName);
+bool Dialog_PartitionName(HWND hwnd, Str title, Str prompt, Str& name);
 
 enum class PrintRangeAdv {
     All = 0,

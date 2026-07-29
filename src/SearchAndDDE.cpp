@@ -1831,6 +1831,113 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
 }
 
 /*
+Audiobook highlight DDE command: mark arbitrary word rectangles on a page
+and scroll them into view, so external read-aloud tools can highlight the
+words being spoken inside SumatraPDF's own window. Coordinates are in PDF
+points with the MuPDF convention (origin top-left, y down). The mark stays
+visible until replaced by the next AudiobookHighlight or removed with
+AudiobookClear.
+
+[AudiobookHighlight("<pdffile>",<page>,"<x0> <y0> <x1> <y1>[;<x0> <y0> <x1> <y1>...]")]
+*/
+static Str HandleAudiobookHighlightCmd(Str cmd, bool* ack) {
+    TempStr pdfFile;
+    TempStr rectsStr;
+    int page = 0;
+    Str next = str::Parse(cmd, "[AudiobookHighlight(\"%s\",%d,\"%s\")]", &pdfFile, &page, &rectsStr);
+    if (str::IsNull(next)) {
+        return {};
+    }
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    if (!win) {
+        return next;
+    }
+    if (!win->IsDocLoaded()) {
+        ReloadDocument(win, false);
+        if (!win->IsDocLoaded()) {
+            return next;
+        }
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !win->ctrl->ValidPageNo(page)) {
+        return next;
+    }
+
+    // incoming rects are in PDF points; the display model works in engine
+    // units (GetFileDPI() units per inch)
+    float scale = dm->GetEngine()->GetFileDPI() / 72.0f;
+    Vec<Rect> rects;
+    Str s = rectsStr;
+    while (s) {
+        float x0, y0, x1, y1;
+        Str rest = str::Parse(s, "%f %f %f %f", &x0, &y0, &x1, &y1);
+        if (str::IsNull(rest)) {
+            break;
+        }
+        RectF rc(x0 * scale, y0 * scale, (x1 - x0) * scale, (y1 - y0) * scale);
+        rects.Append(rc.Round());
+        s = rest;
+        if (s && s.s[0] == ';') {
+            s = Str(s.s + 1, s.len - 1);
+        } else {
+            break;
+        }
+    }
+    if (len(rects) == 0) {
+        return next;
+    }
+
+    // reuse the forward-search mark, but keep it up until the next command
+    // (no fade-out timer): the caller replaces or clears it per utterance
+    KillTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID);
+    win->fwdSearchMark.rects.Reset();
+    win->fwdSearchMark.rects = rects;
+    win->fwdSearchMark.page = page;
+    win->fwdSearchMark.show = true;
+    win->fwdSearchMark.hideStep = 0;
+
+    int pageNo = page;
+    Rect overall = rects[0];
+    for (int i = 1; i < len(rects); i++) {
+        overall = overall.Union(rects[i]);
+    }
+    TextSel res = {1, 1, &pageNo, &overall};
+    if (!dm->PageVisible(page)) {
+        win->ctrl->GoToPage(page, true);
+    }
+    if (!dm->ShowResultRectToScreen(&res)) {
+        ScheduleRepaint(win, 0);
+    }
+    if (IsIconic(win->hwndFrame)) {
+        ShowWindowAsync(win->hwndFrame, SW_RESTORE);
+    }
+    *ack = true;
+    return next;
+}
+
+/*
+Remove the audiobook highlight mark.
+
+[AudiobookClear("<pdffile>")]
+*/
+static Str HandleAudiobookClearCmd(Str cmd, bool* ack) {
+    TempStr pdfFile;
+    Str next = str::Parse(cmd, "[AudiobookClear(\"%s\")]", &pdfFile);
+    if (str::IsNull(next)) {
+        return {};
+    }
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    if (win && win->AsFixed()) {
+        KillTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID);
+        win->fwdSearchMark.show = false;
+        win->fwdSearchMark.rects.Reset();
+        ScheduleRepaint(win, 0);
+    }
+    *ack = true;
+    return next;
+}
+
+/*
 Open file DDE Command
 
 [Open("<pdffilepath>"[,<newWindow>,<setFocus>,<forceRefresh>,<inCurrentTab>])]
@@ -2334,6 +2441,12 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
         }
         if (str::IsNull(nextCmd)) {
             nextCmd = HandleGotoPageWordCmd(cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleAudiobookHighlightCmd(cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleAudiobookClearCmd(cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
             nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);
