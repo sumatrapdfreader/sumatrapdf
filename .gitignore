@@ -38,6 +38,12 @@ docs/md/.obsidian
 
 # temporary / scratch output written by tests (see tests/util.ts tmpPath())
 tests/tmp/
+# one-off GUI scripts written while working on a change, not part of the suite
+tests/ad-hoc-*.ts
+# screenshots taken while checking the UI
+/lib*.png
+# stale build output: translations now live in .work/
+translations/
 /.tmp
 /terminals
 /mcps/tasks/tools
