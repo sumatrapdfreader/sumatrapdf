@@ -8,7 +8,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/ByteReader.h"
+#include "base/ByteReaderWriter.h"
 #include "base/GuessFileType.h"
 
 // http://en.wikipedia.org/wiki/.nfo

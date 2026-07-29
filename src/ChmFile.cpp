@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include <chm.h>
-#include "base/ByteReader.h"
+#include "base/ByteReaderWriter.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Win.h"

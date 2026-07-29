@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Zip.h"
 
-#include "base/ByteWriter.h"
+#include "base/ByteReaderWriter.h"
 #include "base/DirIter.h"
 #include "base/File.h"
 

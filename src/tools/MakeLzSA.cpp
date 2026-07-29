@@ -10,7 +10,7 @@
 #include <LzmaEnc.h>
 #include <Bra.h>
 #include <zlib.h> // for crc32
-#include "base/ByteWriter.h"
+#include "base/ByteReaderWriter.h"
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/DirIter.h"

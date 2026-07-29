@@ -33,7 +33,7 @@
     <ClInclude Include="..\src\base\ByteOrderDecoder.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\ByteReader.h">
+    <ClInclude Include="..\src\base\ByteReaderWriter.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\CmdLineArgsIter.h">
@@ -159,7 +159,7 @@
     <ClCompile Include="..\src\base\ByteOrderDecoder.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\ByteReader.cpp">
+    <ClCompile Include="..\src\base\ByteReaderWriter.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">

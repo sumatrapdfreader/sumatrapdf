@@ -2,7 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/ByteReader.h"
+#include "base/ByteReaderWriter.h"
+
+// --- ByteReader
 
 // Unpacks a structure from the data according to the given format
 // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
@@ -145,4 +147,67 @@ bool ByteReader::UnpackBE(void* strct, int size, Str format, int off) const {
 
 bool ByteReader::Unpack(void* strct, int size, Str format, bool isBE, int off) const {
     return Unpack(strct, size, format, off, isBE);
+}
+
+// --- ByteWriter
+
+ByteWriter::ByteWriter(int sizeHint) {
+    d.cap = (u32)sizeHint;
+}
+
+void ByteWriter::Write8(u8 b) {
+    d.AppendChar((char)b);
+}
+
+void ByteWriter::Write8x2(u8 b1, u8 b2) {
+    u8 buf[2]{b1, b2};
+    d.Append(Str((char*)buf, 2));
+}
+
+void ByteWriter::Write16(u16 val) {
+    u8 b1 = val & 0xFF;
+    u8 b2 = (val >> 8) & 0xFF;
+    if (isLE) {
+        return Write8x2(b1, b2);
+    }
+    return Write8x2(b2, b1);
+}
+
+void ByteWriter::Write32(u32 val) {
+    u8 b1 = val & 0xFF;
+    u8 b2 = (val >> 8) & 0xFF;
+    u8 b3 = (val >> 16) & 0xFF;
+    u8 b4 = (val >> 24) & 0xFF;
+    if (isLE) {
+        Write8x2(b1, b2);
+        Write8x2(b3, b4);
+        return;
+    }
+    Write8x2(b4, b3);
+    Write8x2(b2, b1);
+}
+
+void ByteWriter::Write64(u64 val) {
+    u32 v1 = val & 0xFFFFFFFF;
+    u32 v2 = (val >> 32) & 0xFFFFFFFF;
+    if (isLE) {
+        Write32(v1);
+        Write32(v2);
+        return;
+    }
+    Write32(v2);
+    Write32(v1);
+}
+
+int ByteWriter::Size() const {
+    return len(d);
+}
+
+Str ByteWriter::AsByteSlice() const {
+    return ToStr(d);
+}
+
+ByteWriterLE::ByteWriterLE(int sizeHint) {
+    d.cap = (u32)sizeHint;
+    isLE = true;
 }
