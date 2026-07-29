@@ -862,5 +862,5 @@ The components are hex values (ranging from 00 to FF) and stand for:
 - `gg` : green component
 - `bb` : blue component
 
-For example #ff0000 means red color. #7fff0000 is half-transparent red.
+For example #ff0000 means red color. #7fff0000 is half-transparent red. You can use [Sphere](https://colorsphere.app/) to pick a color.
 

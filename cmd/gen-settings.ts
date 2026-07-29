@@ -1620,7 +1620,7 @@ The syntax for colors is: <code>#rrggbb</code> or <code>#rrggbbaa</code>.</p>
   <li><code>bb</code> : blue component</li>
   <li><code>aa</code> : alpha (transparency) component</li>
   </ul>
-For example #ff0000 means red color. You can use <a href="https://galactic.ink/sphere/">Sphere</a> to pick a color.
+For example #ff0000 means red color. You can use <a href="https://colorsphere.app/">Sphere</a> to pick a color.
 </p>
 </div>
 
@@ -1710,7 +1710,7 @@ The components are hex values (ranging from 00 to FF) and stand for:
 - \`gg\` : green component
 - \`bb\` : blue component
 
-For example #ff0000 means red color. #7fff0000 is half-transparent red.
+For example #ff0000 means red color. #7fff0000 is half-transparent red. You can use [Sphere](https://colorsphere.app/) to pick a color.
 
 `;
 
