@@ -199,6 +199,13 @@ class FrameSite : public IUnknown {
 static Vec<HtmlWindow*> gHtmlWindows;
 
 HtmlWindow* FindHtmlWindowById(int windowId) {
+    // windowId comes from the its:// URL host (a signed %d parsed from a CHM),
+    // so a crafted document can pass a negative or out-of-range value. Reject it
+    // instead of indexing out of bounds (Vec::operator[]'s ReportIf is
+    // diagnostic-only and still reads els[idx]). Callers null-check the result.
+    if (!gHtmlWindows.isValidIndex(windowId)) {
+        return nullptr;
+    }
     return gHtmlWindows[windowId];
 }
 
