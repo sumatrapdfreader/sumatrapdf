@@ -15,6 +15,7 @@
 #include "base/GuessFileType.h"
 
 #include <mmsystem.h> // timeBeginPeriod / timeEndPeriod for smooth-scroll timer
+#include <shlobj.h>   // IDragSourceHelper for image drag thumbnails
 #pragma comment(lib, "winmm.lib")
 
 #include "wingui/UIModels.h"
@@ -100,6 +101,88 @@ class TextDropSource : public IDropSource {
         return S_OK;
     }
     STDMETHODIMP GiveFeedback(__unused DWORD) override { return DRAGDROP_S_USEDEFAULTCURSORS; }
+};
+
+// Drop source that paints a proportional thumbnail via ImageList_BeginDrag
+// (IDragSourceHelper does not show a drag image for our custom IDataObject).
+class ImageDropSource : public IDropSource {
+    LONG refCount = 1;
+    HIMAGELIST himl = nullptr;
+    bool dragStarted = false;
+
+  public:
+    explicit ImageDropSource(HIMAGELIST list) : himl(list) {}
+    ~ImageDropSource() {
+        EndImageListDrag();
+        if (himl) {
+            ImageList_Destroy(himl);
+            himl = nullptr;
+        }
+    }
+
+    bool BeginImageListDrag(int hotX, int hotY) {
+        if (!himl) {
+            return false;
+        }
+        if (!ImageList_BeginDrag(himl, 0, hotX, hotY)) {
+            return false;
+        }
+        POINT pt{};
+        GetCursorPos(&pt);
+        // Desktop HWND so the drag image is not clipped to our canvas
+        if (!ImageList_DragEnter(GetDesktopWindow(), pt.x, pt.y)) {
+            ImageList_EndDrag();
+            return false;
+        }
+        dragStarted = true;
+        return true;
+    }
+
+    void EndImageListDrag() {
+        if (!dragStarted) {
+            return;
+        }
+        ImageList_DragLeave(GetDesktopWindow());
+        ImageList_EndDrag();
+        dragStarted = false;
+    }
+
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (riid == IID_IUnknown || riid == IID_IDropSource) {
+            *ppv = this;
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG r = InterlockedDecrement(&refCount);
+        if (r == 0) {
+            delete this;
+        }
+        return r;
+    }
+    STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override {
+        if (fEscapePressed) {
+            return DRAGDROP_S_CANCEL;
+        }
+        if (!(grfKeyState & MK_LBUTTON)) {
+            return DRAGDROP_S_DROP;
+        }
+        return S_OK;
+    }
+    STDMETHODIMP GiveFeedback(__unused DWORD) override {
+        if (dragStarted) {
+            POINT pt{};
+            GetCursorPos(&pt);
+            ImageList_DragMove(pt.x, pt.y);
+            // S_OK: we supply the drag visual via ImageList (not the OLE default cursor)
+            return S_OK;
+        }
+        return DRAGDROP_S_USEDEFAULTCURSORS;
+    }
 };
 
 class SimpleEnumFormatEtc : public IEnumFORMATETC {
@@ -535,6 +618,126 @@ class ImageDataObject : public IDataObject {
     STDMETHODIMP EnumDAdvise(__unused IEnumSTATDATA**) override { return E_NOTIMPL; }
 };
 
+// Longest edge of the proportional drag-out thumbnail (logical px; DPI-scaled).
+constexpr int kDragImageThumbnailSize = 220;
+
+// Proportional drag thumbnail (longest edge capped), Chrome-like.
+// GDI+ scales the source (StretchBlt on some DIB/mapped bitmaps leaves pure white).
+// Top-down 32bpp DIB with a 1px border so light pages stay visible. Caller owns HBITMAP.
+static HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge) {
+    if (!src || maxEdge < 16) {
+        return nullptr;
+    }
+    BITMAP bm{};
+    if (!GetObject(src, sizeof(bm), &bm) || bm.bmWidth <= 0 || bm.bmHeight <= 0) {
+        return nullptr;
+    }
+    int sw = bm.bmWidth;
+    int sh = bm.bmHeight;
+    int maxDim = sw > sh ? sw : sh;
+    int dw = sw;
+    int dh = sh;
+    if (maxDim > maxEdge) {
+        dw = (int)((i64)sw * maxEdge / maxDim);
+        dh = (int)((i64)sh * maxEdge / maxDim);
+        if (dw < 1) {
+            dw = 1;
+        }
+        if (dh < 1) {
+            dh = 1;
+        }
+    }
+
+    Gdiplus::Bitmap srcGdip(src, nullptr);
+    if (srcGdip.GetLastStatus() != Gdiplus::Ok) {
+        return nullptr;
+    }
+    Gdiplus::Bitmap scaled(dw, dh, PixelFormat32bppARGB);
+    if (scaled.GetLastStatus() != Gdiplus::Ok) {
+        return nullptr;
+    }
+    {
+        Gdiplus::Graphics g(&scaled);
+        g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+        g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+        g.Clear(Gdiplus::Color(255, 255, 255, 255));
+        g.DrawImage(&srcGdip, 0, 0, dw, dh);
+        Gdiplus::Pen border(Gdiplus::Color(255, 60, 60, 60), 1.0f);
+        g.DrawRectangle(&border, 0, 0, dw - 1, dh - 1);
+    }
+
+    Gdiplus::BitmapData bd{};
+    Gdiplus::Rect lockRc(0, 0, dw, dh);
+    if (scaled.LockBits(&lockRc, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bd) != Gdiplus::Ok) {
+        return nullptr;
+    }
+
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = dw;
+    bmi.bmiHeader.biHeight = -dh; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    void* bits = nullptr;
+    HDC screenDc = GetDC(nullptr);
+    HBITMAP dib = screenDc ? CreateDIBSection(screenDc, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0) : nullptr;
+    if (screenDc) {
+        ReleaseDC(nullptr, screenDc);
+    }
+    if (!dib || !bits) {
+        scaled.UnlockBits(&bd);
+        if (dib) {
+            DeleteObject(dib);
+        }
+        return nullptr;
+    }
+
+    auto* dst = (BYTE*)bits;
+    auto* srcRow = (const BYTE*)bd.Scan0;
+    for (int y = 0; y < dh; y++) {
+        auto* s = srcRow + y * bd.Stride;
+        auto* d = dst + y * dw * 4;
+        for (int x = 0; x < dw; x++) {
+            // GDI+ 32bppARGB is B,G,R,A in memory on Windows; full opacity
+            d[0] = s[0];
+            d[1] = s[1];
+            d[2] = s[2];
+            d[3] = 0xFF;
+            s += 4;
+            d += 4;
+        }
+    }
+    scaled.UnlockBits(&bd);
+    return dib;
+}
+
+// Build an imagelist from the thumbnail for ImageList_BeginDrag.
+// Takes ownership of hbmp (always destroyed before return).
+static HIMAGELIST CreateDragImageList(HBITMAP hbmp) {
+    if (!hbmp) {
+        return nullptr;
+    }
+    BITMAP bm{};
+    if (!GetObject(hbmp, sizeof(bm), &bm) || bm.bmWidth <= 0 || bm.bmHeight <= 0) {
+        DeleteObject(hbmp);
+        return nullptr;
+    }
+    HIMAGELIST himl = ImageList_Create(bm.bmWidth, bm.bmHeight, ILC_COLOR32, 1, 1);
+    if (!himl) {
+        DeleteObject(hbmp);
+        return nullptr;
+    }
+    int idx = ImageList_Add(himl, hbmp, nullptr);
+    DeleteObject(hbmp);
+    if (idx < 0) {
+        ImageList_Destroy(himl);
+        return nullptr;
+    }
+    return himl;
+}
+
 static void StartImageDragDrop(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
@@ -544,20 +747,70 @@ static void StartImageDragDrop(MainWindow* win) {
     if (!el) {
         return;
     }
-    RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(el);
-    if (!bmp) {
+    RenderedBitmap* rb = dm->GetEngine()->GetImageForPageElement(el);
+    if (!rb) {
         return;
     }
-    HGLOBAL hPng = EncodeBitmapToPngGlobal(bmp->GetBitmap());
-    delete bmp;
+    HBITMAP srcBmp = rb->GetBitmap();
+    HGLOBAL hPng = EncodeBitmapToPngGlobal(srcBmp);
     if (!hPng) {
+        delete rb;
         return;
     }
+
     ImageDataObject* dataObj = new ImageDataObject(hPng);
-    TextDropSource* dropSrc = new TextDropSource();
+
+    int maxEdge = DpiScale(win->hwndCanvas, kDragImageThumbnailSize);
+    POINT hot{0, 0};
+    HIMAGELIST himl = nullptr;
+    HBITMAP thumb = CreateProportionalDragThumbnail(srcBmp, maxEdge);
+    if (thumb) {
+        BITMAP tbm{};
+        GetObject(thumb, sizeof(tbm), &tbm);
+        hot.x = tbm.bmWidth / 2;
+        hot.y = tbm.bmHeight / 2;
+        if (win->imageDragPageNo > 0 && tbm.bmWidth > 0 && tbm.bmHeight > 0) {
+            Rect screenRc = dm->CvtToScreen(win->imageDragPageNo, el->GetRect());
+            if (screenRc.dx > 0 && screenRc.dy > 0) {
+                int relX = win->dragStart.x - screenRc.x;
+                int relY = win->dragStart.y - screenRc.y;
+                if (relX < 0) {
+                    relX = 0;
+                }
+                if (relY < 0) {
+                    relY = 0;
+                }
+                if (relX > screenRc.dx) {
+                    relX = screenRc.dx;
+                }
+                if (relY > screenRc.dy) {
+                    relY = screenRc.dy;
+                }
+                hot.x = (int)((i64)relX * tbm.bmWidth / screenRc.dx);
+                hot.y = (int)((i64)relY * tbm.bmHeight / screenRc.dy);
+            }
+        }
+        himl = CreateDragImageList(thumb); // takes ownership of thumb
+    }
+    delete rb;
+
+    ImageDropSource* dropSrc = himl ? new ImageDropSource(himl) : nullptr;
+    TextDropSource* plainSrc = dropSrc ? nullptr : new TextDropSource();
+    IDropSource* src = dropSrc ? (IDropSource*)dropSrc : (IDropSource*)plainSrc;
+
+    if (dropSrc) {
+        dropSrc->BeginImageListDrag(hot.x, hot.y);
+    }
+
     DWORD dwEffect = 0;
-    DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
-    dropSrc->Release();
+    DoDragDrop(dataObj, src, DROPEFFECT_COPY, &dwEffect);
+
+    if (dropSrc) {
+        dropSrc->EndImageListDrag();
+        dropSrc->Release();
+    } else {
+        plainSrc->Release();
+    }
     FinishDragDrop(dataObj);
 }
 
@@ -1103,6 +1356,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
         }
         StartImageDragDrop(win);
         win->imageDragElement = nullptr;
+        win->imageDragPageNo = -1;
         return;
     }
 
@@ -1517,6 +1771,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         if (pageEl && pageEl->Is(kindPageElementImage) && !IsFullPageImage(dm, pageEl, elPageNo)) {
             win->imageDragPending = true;
             win->imageDragElement = pageEl;
+            win->imageDragPageNo = elPageNo;
             win->linkOnLastButtonDown = nullptr;
             SetCapture(win->hwndCanvas);
             return;
@@ -1549,6 +1804,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     if (win->imageDragPending) {
         win->imageDragPending = false;
         win->imageDragElement = nullptr;
+        win->imageDragPageNo = -1;
         win->dragStartPending = false;
         if (GetCapture() == win->hwndCanvas) {
             ReleaseCapture();
