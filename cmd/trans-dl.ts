@@ -8,20 +8,22 @@
  * Flow:
  *   1. Extract _TR* strings from src + command names
  *   2. POST them to /api/dltransfor (marks active strings; returns sha1 + translations)
- *   3. If any language is missing translations:
+ *   3. Fix suspicious translations (trailing whitespace / \n / \r) via /api/edittranslation
+ *      as user "ai fix"
+ *   4. If any language is missing translations:
  *        - translate with Claude or Grok
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
- *   4. Re-download (should now include submitted translations)
- *   5. Write filtered .work/translations.txt and build .lzsa
+ *   5. Re-download (should now include submitted translations)
+ *   6. Write filtered .work/translations.txt and build .lzsa
  *
  * Usage:
  *   bun cmd/trans-dl.ts                 # production apptranslator + Claude if key set
  *   bun cmd/trans-dl.ts --local         # http://127.0.0.1:9311
  *   bun cmd/trans-dl.ts --server URL
  *   bun cmd/trans-dl.ts --ai=claude|grok|none
- *   bun cmd/trans-dl.ts --no-ai         # download + filter + lzsa only
+ *   bun cmd/trans-dl.ts --no-ai         # download + fix suspicious + filter + lzsa (no AI fill)
  *   bun cmd/trans-dl.ts --lang de       # only fill missing for one language
- *   bun cmd/trans-dl.ts --max-submit N  # cap AI submissions (for testing)
+ *   bun cmd/trans-dl.ts --max-submit N  # cap AI submissions (for testing; fixes always run)
  */
 
 import {
@@ -329,6 +331,48 @@ function printBadTranslations(server: string, badTranslations: BadTranslation[])
     }
     console.log(`${bt.currString}\n  '${bt.orig}' => '${bt.fixed}'`);
   }
+}
+
+/**
+ * Sometimes translators press Enter at the end of a string, or leave trailing
+ * whitespace. The download escapes real newlines as \n/\r; fixTranslation strips
+ * those and surrounding whitespace. Push the cleaned value back so apptranslator
+ * stays the source of truth (local-only fix would reappear every download).
+ */
+async function submitFixedSuspicious(
+  server: string,
+  secret: string,
+  badTranslations: BadTranslation[],
+): Promise<number> {
+  if (badTranslations.length === 0) return 0;
+
+  console.log(`\n${badTranslations.length} suspicious translation(s) to fix via API:`);
+  printBadTranslations(server, badTranslations);
+
+  let n = 0;
+  let nSkip = 0;
+  for (const bt of badTranslations) {
+    const colonIdx = bt.fixed.indexOf(":");
+    if (colonIdx < 0) {
+      console.log(`  skip (no lang:): '${bt.fixed}'`);
+      nSkip++;
+      continue;
+    }
+    const lang = bt.fixed.slice(0, colonIdx);
+    const translation = bt.fixed.slice(colonIdx + 1);
+    // empty after cleanup would wipe the translation on the server
+    if (translation.length === 0) {
+      console.log(`  skip empty fix for ${lang}: ${bt.currString}`);
+      nSkip++;
+      continue;
+    }
+    await submitTranslation(server, secret, "ai fix", lang, bt.currString, translation);
+    n++;
+  }
+  console.log(
+    `submitted ${n} fixed suspicious translation(s)${nSkip > 0 ? ` (${nSkip} skipped)` : ""}`,
+  );
+  return n;
 }
 
 interface ParsedTranslations {
@@ -1074,10 +1118,13 @@ async function main() {
     console.log("sha1 matches local cache (translations body unchanged for these strings)");
   }
 
-  // fix trailing junk on translation lines
-  const { fixed: fixedBody, badTranslations } = fixTranslations(dl.body);
+  // fix trailing junk on translation lines (local view + detect for API fix)
+  let { fixed: fixedBody, badTranslations } = fixTranslations(dl.body);
   // rebuild full text with same header + (possibly fixed) body
   let fullText = `AppTranslator: ${APP_NAME}\n${dl.sha1}\n${fixedBody}\n`;
+
+  // 2) push cleaned suspicious translations back to apptranslator (always, even --no-ai)
+  let nFixed = await submitFixedSuspicious(args.server, secret, badTranslations);
 
   // parse + auto-fill no-prefix candidates
   let pt = parseTranslations(fullText);
@@ -1104,29 +1151,36 @@ async function main() {
     `missing after auto no-prefix: ${nMissing} across ${missingAfterAuto.size} langs (auto-derived to submit: ${nAuto}); supported=${supportedLangs.length}`,
   );
 
+  let nAiSubmitted = 0;
   if (args.ai === "none") {
     if (nMissing > 0 || nAuto > 0) {
       console.log(
-        `skipping submit (--no-ai / --ai=none); re-run with --ai=claude|grok to fill ${nMissing + nAuto} missing`,
+        `skipping AI fill (--no-ai / --ai=none); re-run with --ai=claude|grok to fill ${nMissing + nAuto} missing`,
       );
     }
   } else if (nMissing > 0 || nAuto > 0) {
-    // 2) AI translate + submit (and auto no-prefix submit)
-    await fillMissingWithAiAndSubmit(args, secret, pt, autoAdded, ensureLangs);
+    // 3) AI translate + submit (and auto no-prefix submit)
+    nAiSubmitted = await fillMissingWithAiAndSubmit(args, secret, pt, autoAdded, ensureLangs);
+  }
 
-    // 3) re-download so cache is pure server truth
+  // 4) re-download so cache is pure server truth whenever we wrote anything
+  if (nFixed > 0 || nAiSubmitted > 0) {
     console.log("re-downloading after submissions...");
     dl = await downloadTranslations(args.server, strs, secret);
     const fixed2 = fixTranslations(dl.body);
+    if (fixed2.badTranslations.length > 0) {
+      console.log(
+        `warning: ${fixed2.badTranslations.length} suspicious translation(s) still present after fix submit`,
+      );
+      printBadTranslations(args.server, fixed2.badTranslations);
+    }
     fullText = `AppTranslator: ${APP_NAME}\n${dl.sha1}\n${fixed2.fixed}\n`;
     pt = parseTranslations(fullText);
     // local-only auto no-prefix for good subset (already on server if submitted above)
     autoAddNoPrefixTranslations(pt);
   }
 
-  printBadTranslations(args.server, badTranslations);
-
-  // 4) write filtered translations for the binary + lzsa
+  // 5) write filtered translations for the binary + lzsa
   //    (sha1 line is the full download sha1 for cache comparison on next run)
   writeTranslationsForBinary(pt, dl.sha1);
   if (!args.skipLzsa) {
