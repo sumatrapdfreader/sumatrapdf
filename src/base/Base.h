@@ -200,11 +200,6 @@ struct RECT {
     LONG bottom;
 };
 
-struct SIZE {
-    LONG cx;
-    LONG cy;
-};
-
 namespace Gdiplus {
 struct Point {
     int X;
