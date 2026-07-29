@@ -356,12 +356,12 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         return;
     }
     HDC hdc = ev->hdc;
-    RECT rc = ToRECT(ev->itemRect);
+    Rect rc = ev->itemRect;
 
     // clip the whole row so a partially visible last item (LBS_NOINTEGRALHEIGHT)
     // and highlight fill cannot paint outside the item / list client (#5796)
     int rowDC = SaveDC(hdc);
-    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+    IntersectClipRect(hdc, rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -369,14 +369,14 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         colBg = AccentColor(colBg, 30);
     }
     SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, ToRect(rc));
+    HdcFillRectWithBkColor(hdc, rc);
     SetBkMode(hdc, TRANSPARENT);
 
     HFONT oldFont = lb->font ? SelectFont(hdc, lb->font) : nullptr;
     int pad = DpiScale(lb->hwnd, 6);
-    RECT rcText = rc;
-    rcText.left += pad;
-    rcText.right -= pad;
+    Rect rcText = rc;
+    rcText.x += pad;
+    rcText.dx -= 2 * pad;
 
     // Fixed-width page column (room for multi-digit labels) so the right edge
     // stays stable while the window is resized; long snippets ellipsize into it
@@ -390,13 +390,14 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     if (pageSize.dx + DpiScale(lb->hwnd, 4) > pageColDx) {
         pageColDx = pageSize.dx + DpiScale(lb->hwnd, 4);
     }
-    RECT rcPage = rcText;
-    rcPage.left = std::max(rcText.left, (LONG)(rcText.right - pageColDx));
+    Rect rcPage = rcText;
+    rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
+    rcPage.dx = rcText.x + rcText.dx - rcPage.x;
 
     // snippet on the left, with the matched term highlighted
-    RECT rcSnippet = rcText;
-    rcSnippet.right = std::max(rcSnippet.left, rcPage.left - pageGap);
-    if (rcSnippet.right > rcSnippet.left) {
+    Rect rcSnippet = rcText;
+    rcSnippet.dx = std::max(0, rcPage.x - pageGap - rcSnippet.x);
+    if (rcSnippet.dx > 0) {
         SetTextColor(hdc, colText);
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
         // clip snippet drawing so match highlights cannot bleed into the page
@@ -404,7 +405,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         // SaveDC/RestoreDC (rather than SelectClipRgn(nullptr)) so the outer
         // listbox-client clip stays in effect afterwards
         int snippetDC = SaveDC(hdc);
-        IntersectClipRect(hdc, rcSnippet.left, rcSnippet.top, rcSnippet.right, rcSnippet.bottom);
+        IntersectClipRect(hdc, rcSnippet.x, rcSnippet.y, rcSnippet.x + rcSnippet.dx, rcSnippet.y + rcSnippet.dy);
         DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
                                  win->findMatchWholeWord, drawFmt);
         RestoreDC(hdc, snippetDC);
@@ -412,11 +413,10 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
 
     // repaint the page column on top in case a prior draw left stray pixels
     SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, ToRect(rcPage));
+    HdcFillRectWithBkColor(hdc, rcPage);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, AccentColor(colText, 80));
-    Rect pageRect = ToRect(rcPage);
-    HdcDrawText(hdc, pageW, pageRect, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+    HdcDrawText(hdc, pageW, rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
 
     if (oldFont) {
         SelectFont(hdc, oldFont);

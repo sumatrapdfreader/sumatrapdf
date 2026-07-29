@@ -287,7 +287,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     HDC hdc = ev->hdc;
-    RECT rc = ToRECT(ev->itemRect);
+    Rect rc = ev->itemRect;
     NavFileEntry& e = m->entries[ev->itemIndex];
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
@@ -297,7 +297,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, ToRect(rc));
+    HdcFillRectWithBkColor(hdc, rc);
 
     bool isRtl = HwndIsRtl(lb->hwnd);
     if (isRtl) {
@@ -313,11 +313,11 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     int padX = DpiScale(lb->hwnd, 4);
-    rc.left += padX;
-    rc.right -= padX;
+    rc.x += padX;
+    rc.dx -= 2 * padX;
 
     // human readable file size on the right (files only)
-    RECT rcText = rc;
+    Rect rcText = rc;
     TempWStr rightW = nullptr;
     int rightDx = 0;
     if (!e.isDir && e.size > 0) {
@@ -326,9 +326,10 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         rightDx = HdcGetTextExtentPoint32(hdc, sizeStr).dx;
         int gap = DpiScale(lb->hwnd, 8);
         if (isRtl) {
-            rcText.left += rightDx + gap;
+            rcText.x += rightDx + gap;
+            rcText.dx -= rightDx + gap;
         } else {
-            rcText.right -= rightDx + gap;
+            rcText.dx -= rightDx + gap;
         }
     }
 
@@ -336,23 +337,22 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
         drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
         TempWStr nameW = ToWStrTemp(e.name);
-        Rect textRect = ToRect(rcText);
-        HdcDrawText(hdc, nameW, textRect, drawFmt);
+        HdcDrawText(hdc, nameW, rcText, drawFmt);
     }
 
     if (rightW) {
-        RECT rcRight = rc;
+        Rect rcRight = rc;
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
         if (isRtl) {
-            rcRight.right = rc.left + rightDx;
+            rcRight.dx = rightDx;
             drawFmt |= DT_LEFT | DT_RTLREADING;
         } else {
-            rcRight.left = rc.right - rightDx;
+            rcRight.x = rc.x + rc.dx - rightDx;
+            rcRight.dx = rightDx;
             drawFmt |= DT_RIGHT;
         }
         SetTextColor(hdc, AccentColor(colText, 80));
-        Rect rightRect = ToRect(rcRight);
-        HdcDrawText(hdc, rightW, rightRect, drawFmt);
+        HdcDrawText(hdc, rightW, rcRight, drawFmt);
         SetTextColor(hdc, colText);
     }
 

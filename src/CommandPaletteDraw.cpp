@@ -109,7 +109,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     {
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
         drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
-        DrawMaybeHighlightedText(hdc, ToRECT(rcText), itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
+        DrawMaybeHighlightedText(hdc, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
     }
 
     if (rightStrW) {

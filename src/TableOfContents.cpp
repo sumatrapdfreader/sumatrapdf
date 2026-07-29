@@ -1089,8 +1089,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     // Focus ring / highlight-text only for the real tree selection.
     bool hasFocus = isTreeSelected && (GetFocus() == tv->hwnd);
     COLORREF bgCol, txtCol;
-    RECT itemRc = ToRECT(itemRect);
-    ResolveTreeFilterItemColors(hdc, itemRc, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
+    ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     // Per-bookmark color from the document (when not the focused selection).
     if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {
         txtCol = tocItem->color;
@@ -1144,11 +1143,12 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         }
     }
 
+    Rect drawRect = ToRect(drawRc);
     HBRUSH brushBg = CreateSolidBrush(bgCol);
-    HdcFillRect(hdc, ToRect(drawRc), brushBg);
+    HdcFillRect(hdc, drawRect, brushBg);
     DeleteObject(brushBg);
 
-    Rect titleRect = ToRect(drawRc);
+    Rect titleRect = drawRect;
     titleRect.dx = std::max(0, titleRect.dx - pageReserve);
     titleRect.Inflate(-2, -1);
 
@@ -1157,15 +1157,14 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     SetBkColor(hdc, bgCol);
 
     if (filterActive) {
-        RECT titleRc = ToRECT(titleRect);
-        DrawTreeItemFilterHighlight(hdc, titleRc, tocItem->title, words, bgCol, txtCol, font);
+        DrawTreeItemFilterHighlight(hdc, titleRect, tocItem->title, words, bgCol, txtCol, font);
     } else {
         HdcDrawText(hdc, tocItem->title, titleRect,
                     DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
     }
 
     if (showPage && pageW.len > 0) {
-        Rect pageRect = ToRect(drawRc);
+        Rect pageRect = drawRect;
         pageRect.Inflate(-2, -1);
         int right = pageRect.x + pageRect.dx;
         pageRect.x = std::max(pageRect.x, right - pageSize.dx);

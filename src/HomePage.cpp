@@ -1803,9 +1803,8 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
     UINT nameFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
     SelectObject(hdc, fontText);
     {
-        RECT rcText = ToRECT(thumb.rcListFileName);
-        DrawMaybeHighlightedText(hdc, rcText, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
-                                 nameFmt);
+        DrawMaybeHighlightedText(hdc, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor,
+                                 isRtl, false, nameFmt);
     }
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
@@ -1923,8 +1922,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
         SelectObject(hdc, fontText);
         {
-            RECT rcText = {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
-            DrawMaybeHighlightedText(hdc, rcText, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
+            DrawMaybeHighlightedText(hdc, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
                                      fmt);
         }
 

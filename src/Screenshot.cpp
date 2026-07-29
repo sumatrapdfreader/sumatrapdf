@@ -740,7 +740,7 @@ static void ComputeLayout(ScreenshotOverlayData* data) {
 }
 
 // Get the bounding rect for thumbnail at index i (in client coords)
-static RECT GetThumbRect(ScreenshotOverlayData* data, int idx) {
+static Rect GetThumbRect(ScreenshotOverlayData* data, int idx) {
     int col = idx % data->cols;
     int row = idx / data->cols;
     auto& cs = data->captures[idx];
@@ -756,23 +756,17 @@ static RECT GetThumbRect(ScreenshotOverlayData* data, int idx) {
     int tx = cellX + (cellW - cs.thumbW) / 2;
     int ty = cellY + kGridPaddingY + (thumbAreaH - (2 * kGridPaddingY) - cs.thumbH) / 2;
 
-    RECT rc;
-    rc.left = tx;
-    rc.top = ty;
-    rc.right = tx + cs.thumbW;
-    rc.bottom = ty + cs.thumbH;
-    return rc;
+    return {tx, ty, cs.thumbW, cs.thumbH};
 }
 
 // Hit test: returns index of thumbnail under point, or -1
 static int HitTestThumb(ScreenshotOverlayData* data, int mx, int my) {
     int n = len(data->captures);
     for (int i = 0; i < n; i++) {
-        RECT rc = GetThumbRect(data, i);
+        Rect rc = GetThumbRect(data, i);
         // expand hit area to include the label
-        rc.bottom += kLabelGap + kLabelHeight;
-        POINT pt = {mx, my};
-        if (PtInRect(&rc, pt)) {
+        rc.dy += kLabelGap + kLabelHeight;
+        if (rc.Contains({mx, my})) {
             return i;
         }
     }
@@ -868,35 +862,30 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     HGDIOBJ oldFont = SelectObject(hdcTemp, guiFont);
 
     // white background for the temp surface
-    RECT fullRect = {0, 0, w, h};
+    Rect fullRect = {0, 0, w, h};
     HBRUSH brWhite = CreateSolidBrush(RGB(255, 255, 255));
-    HdcFillRect(hdcTemp, ToRect(fullRect), brWhite);
+    HdcFillRect(hdcTemp, fullRect, brWhite);
     DeleteObject(brWhite);
 
     int n = len(data->captures);
     for (int i = 0; i < n; i++) {
         auto& cs = data->captures[i];
-        RECT rc = GetThumbRect(data, i);
+        Rect rc = GetThumbRect(data, i);
 
         // draw thumbnail onto temp DC
         HDC hdcSrc = CreateCompatibleDC(hdcTemp);
         HGDIOBJ prev = SelectObject(hdcSrc, cs.thumb);
-        BitBlt(hdcTemp, rc.left, rc.top, cs.thumbW, cs.thumbH, hdcSrc, 0, 0, SRCCOPY);
+        BitBlt(hdcTemp, rc.x, rc.y, cs.thumbW, cs.thumbH, hdcSrc, 0, 0, SRCCOPY);
         SelectObject(hdcSrc, prev);
         DeleteDC(hdcSrc);
 
         // draw label below thumbnail: process name on left, dimensions on right
-        RECT labelRect;
-        labelRect.left = rc.left + 4;
-        labelRect.right = rc.right - 4;
-        labelRect.top = rc.bottom + kLabelGap;
-        labelRect.bottom = rc.bottom + kLabelGap + kLabelHeight;
+        Rect labelRect = {rc.x + 4, rc.y + rc.dy + kLabelGap, rc.dx - 8, kLabelHeight};
         SetTextColor(hdcTemp, RGB(0, 0, 0));
         SetBkMode(hdcTemp, TRANSPARENT);
-        Rect labelBounds = ToRect(labelRect);
-        HdcDrawText(hdcTemp, cs.processName, labelBounds, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
+        HdcDrawText(hdcTemp, cs.processName, labelRect, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
         TempStr dimStr = fmt("%dx%d", cs.origW, cs.origH);
-        HdcDrawText(hdcTemp, dimStr, labelBounds, DT_RIGHT | DT_SINGLELINE);
+        HdcDrawText(hdcTemp, dimStr, labelRect, DT_RIGHT | DT_SINGLELINE);
 
         // draw selection border around thumbnail and label
         if (i == data->selected) {
@@ -904,10 +893,10 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
             HGDIOBJ oldPen = SelectObject(hdcTemp, pen);
             HGDIOBJ oldBrush = SelectObject(hdcTemp, GetStockObject(NULL_BRUSH));
             int b = (kBorderThickness / 2) + 1;
-            int selLeft = std::min((int)rc.left, (int)labelRect.left) - b;
-            int selTop = rc.top - b;
-            int selRight = std::max((int)rc.right, (int)labelRect.right) + b;
-            int selBottom = labelRect.bottom + b;
+            int selLeft = std::min(rc.x, labelRect.x) - b;
+            int selTop = rc.y - b;
+            int selRight = std::max(rc.x + rc.dx, labelRect.x + labelRect.dx) + b;
+            int selBottom = labelRect.y + labelRect.dy + b;
             Rectangle(hdcTemp, selLeft, selTop, selRight, selBottom);
             SelectObject(hdcTemp, oldBrush);
             SelectObject(hdcTemp, oldPen);
@@ -925,13 +914,9 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     DeleteObject(borderPen);
 
     // Draw info bar at the top with solid blue background
-    RECT infoRect;
-    infoRect.left = 0;
-    infoRect.right = w;
-    infoRect.top = 0;
-    infoRect.bottom = kInfoBarHeight;
+    Rect infoRect = {0, 0, w, kInfoBarHeight};
     HBRUSH brBlue = CreateSolidBrush(RGB(0, 90, 180));
-    HdcFillRect(hdcTemp, ToRect(infoRect), brBlue);
+    HdcFillRect(hdcTemp, infoRect, brBlue);
     DeleteObject(brBlue);
 
     // Use bigger bold font for info text
@@ -945,9 +930,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     SetTextColor(hdcTemp, RGB(255, 255, 255));
     SetBkMode(hdcTemp, TRANSPARENT);
-    Rect infoBounds = ToRect(infoRect);
-    HdcDrawText(hdcTemp, WStrL(L"Select screenshot to save. ↑ ↓ to navigate. Enter to select. Esc to cancel"),
-                infoBounds, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    HdcDrawText(hdcTemp, WStrL(L"Select screenshot to save. ↑ ↓ to navigate. Enter to select. Esc to cancel"), infoRect,
+                DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(hdcTemp, prevInfoFont);
     DeleteObject(infoFont);
@@ -977,14 +961,14 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     // Copy thumbnail and label regions with full opacity into the DIB
     for (int i = 0; i < n; i++) {
         auto& cs = data->captures[i];
-        RECT rc = GetThumbRect(data, i);
+        Rect rc = GetThumbRect(data, i);
 
         // expand region to include border and label
         int b = (kBorderThickness / 2) + 2;
-        int x0 = std::max(0, (int)rc.left - b);
-        int y0 = std::max(0, (int)rc.top - b);
-        int x1 = std::min(w, (int)rc.right + b);
-        int y1 = std::min(h, (int)rc.bottom + 4 + kLabelHeight + b);
+        int x0 = std::max(0, rc.x - b);
+        int y0 = std::max(0, rc.y - b);
+        int x1 = std::min(w, rc.x + rc.dx + b);
+        int y1 = std::min(h, rc.y + rc.dy + 4 + kLabelHeight + b);
 
         for (int y = y0; y < y1; y++) {
             for (int x = x0; x < x1; x++) {
