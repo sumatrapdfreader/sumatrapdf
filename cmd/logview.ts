@@ -1,20 +1,24 @@
-import { join } from "node:path";
+// Build and run the release x64 (rel64) build of the native logview tool
+// (tools/logview). Output binary: out/rel64/logview.exe.
+import { join, resolve } from "node:path";
+import { detectVisualStudio2026, runLogged } from "./util";
+import { launchDetached } from "../tests/winapi";
 
-// runs the logview-web dev server, which lives in a sibling repo:
-//   ..\hack\winapps\logview-web\
-// equivalent to: cd ..\hack\winapps\logview-web\; go run . -run-dev
-const cwd = join(import.meta.dir, "..", "..", "hack", "winapps", "logview-web");
+const config = "Release";
+const platform = "x64";
+const outDir = join("out", "rel64");
+const exe = resolve(join(outDir, "logview.exe"));
 
 async function main(): Promise<void> {
-  console.log(`> go run . -run-dev (in ${cwd})`);
-  const proc = Bun.spawn(["go", "run", ".", "-run-dev"], {
-    cwd: cwd,
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const exitCode = await proc.exited;
-  process.exit(exitCode);
+  const { msbuildPath } = detectVisualStudio2026();
+  const proj = String.raw`vs2022\logview.vcxproj`;
+  const p = `/p:Configuration=${config};Platform=${platform}`;
+  await runLogged(msbuildPath, [proj, p, "/m"]);
+
+  // launch fully detached (CreateProcessW) and return immediately: the GUI keeps
+  // running after this script exits (a Bun.spawn child would be killed on exit).
+  const pid = launchDetached(exe);
+  console.log(`launched ${exe} (pid ${pid})`);
 }
 
 if (import.meta.main) {
