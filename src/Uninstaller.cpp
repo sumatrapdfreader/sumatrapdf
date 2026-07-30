@@ -379,26 +379,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
         return;
     }
 
-    TempStr installerTempPath = GetUninstallerPathInTemp();
     TempStr ownPath = GetSelfExePathTemp();
-    if (str::EqI(installerTempPath, ownPath)) {
-        if (!gCli->allUsers) {
-            log("  already running from temp dir\n");
-            return;
-        }
-        if (IsProcessRunningElevated()) {
-            log("  already running elevated and from temp dir\n");
-            return;
-        }
-    }
-
-    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
-    bool ok = file::Copy(installerTempPath, ownPath, false);
-    if (!ok) {
-        logf("  failed to copy installer\n");
-        return;
-    }
-
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
     str::Builder cmdLine(StrL("-uninstall"));
@@ -412,24 +393,44 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
         cmdLine.Append(" -all-users");
     }
     Str cl = ToStr(cmdLine);
+
+    // Elevate the installed executable directly. Copying it to a user-writable
+    // temporary path before elevation would let another process replace it
+    // between the copy and ShellExecute.
     if (cli->allUsers) {
-        logf("LaunchElevated('%s', '%s')\n", installerTempPath, cl);
-        ok = LaunchElevated(installerTempPath, cl);
+        if (IsProcessRunningElevated()) {
+            log("  already running elevated\n");
+            return;
+        }
+        logf("LaunchElevated('%s', '%s')\n", ownPath, cl);
+        bool ok = LaunchElevated(ownPath, cl);
         if (!ok) {
-            logf("LaunchElevated() failed to launch '%s' '%s'\n", installerTempPath, cl);
+            logf("LaunchElevated() failed to launch '%s' '%s'\n", ownPath, cl);
             LogLastError();
         } else {
-            logf("LaunchElevated() launched '%s' '%s' ok!\n", installerTempPath, cl);
+            logf("LaunchElevated() launched '%s' '%s' ok!\n", ownPath, cl);
         }
+        ::ExitProcess(0);
+    }
+
+    TempStr installerTempPath = GetUninstallerPathInTemp();
+    if (str::EqI(installerTempPath, ownPath)) {
+        log("  already running from temp dir\n");
+        return;
+    }
+    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
+    bool ok = file::Copy(installerTempPath, ownPath, false);
+    if (!ok) {
+        logf("  failed to copy installer\n");
+        return;
+    }
+    logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath, cl);
+    HANDLE h = LaunchProcessWithCmdLine(installerTempPath, cl);
+    if (!h) {
+        logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath, cl);
+        LogLastError();
     } else {
-        logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath, cl);
-        HANDLE h = LaunchProcessWithCmdLine(installerTempPath, cl);
-        if (!h) {
-            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath, cl);
-            LogLastError();
-        } else {
-            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath, cl);
-        }
+        logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath, cl);
     }
     ::ExitProcess(0);
 }
