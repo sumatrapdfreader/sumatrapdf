@@ -3953,7 +3953,9 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     TempStr fileName = FileNameFromUrlTemp(url);
-    if (!fileName) {
+    if (!fileName || str::Eq(fileName, StrL(".")) || str::Eq(fileName, StrL("..")) ||
+        str::Contains(fileName, StrL("/")) || str::Contains(fileName, StrL("\\")) ||
+        str::Contains(fileName, StrL(":"))) {
         // generate a fallback name
         fileName = str::DupTemp("dropped_image.png");
     }
