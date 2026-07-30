@@ -90,12 +90,16 @@ static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
 
 bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     constexpr i64 kMaxEagerArchiveSize = 256LL * 1024 * 1024;
+    constexpr int kMaxArchiveEntries = 100'000;
     struct archive_entry* entry;
     int fileId = 0;
     i64 eagerSize = 0;
     ArchiveExtractProgress prog{};
     prog.nTotal = -1; // libarchive streams; total is only known at end
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+        if (fileId >= kMaxArchiveEntries) {
+            return false;
+        }
         Str entryName;
         const char* nameZ = archive_entry_pathname_utf8(entry);
         if (nameZ) {
