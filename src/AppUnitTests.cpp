@@ -12,6 +12,7 @@
 void TextSelection_UnitTests();
 bool TableOfContents_UnitTestSnapshotNamedDest();
 bool MarkdownModel_UnitTestBrowserNavigationUrl();
+bool MarkdownToc_UnitTestHtmlLinks();
 #endif
 
 // must be last to over-write assert()
@@ -80,6 +81,7 @@ int RunAppUnitTests() {
     TextSelection_UnitTests();
     utassert(TableOfContents_UnitTestSnapshotNamedDest());
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
+    utassert(MarkdownToc_UnitTestHtmlLinks());
 #endif
     return utassert_print_results();
 }

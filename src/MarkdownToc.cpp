@@ -388,6 +388,64 @@ static TempStr MarkdownPageCssTemp() {
     return fmt(kMarkdownPageCssFmt, cssVars);
 }
 
+// Markdown pages are exposed to WebView2 as generated .html resources. Keep
+// relative links on that virtual resource graph instead of navigating to the
+// source .md name.
+static TempStr MarkdownLinkToHtmlTemp(Str url) {
+    if (!url || url.s[0] == '#' || str::StartsWith(url, StrL("//"))) {
+        return {};
+    }
+
+    int pathLen = url.len;
+    for (int i = 0; i < url.len; i++) {
+        char c = url.s[i];
+        if (c == '?' || c == '#') {
+            pathLen = i;
+            break;
+        }
+        if (c == ':') {
+            return {};
+        }
+    }
+
+    Str path(url.s, pathLen);
+    int extLen = 0;
+    if (str::EndsWithI(path, StrL(".markdown"))) {
+        extLen = 9;
+    } else if (str::EndsWithI(path, StrL(".md"))) {
+        extLen = 3;
+    } else {
+        return {};
+    }
+
+    Str base(url.s, pathLen - extLen);
+    Str suffix(url.s + pathLen, url.len - pathLen);
+    return fmt("%s.html%s", base, suffix);
+}
+
+static void RewriteMarkdownLinks(cmark_node* doc) {
+    cmark_iter* iter = cmark_iter_new(doc);
+    cmark_event_type ev;
+    while ((ev = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
+        if (ev != CMARK_EVENT_ENTER) {
+            continue;
+        }
+        cmark_node* node = cmark_iter_get_node(iter);
+        if (cmark_node_get_type(node) != CMARK_NODE_LINK) {
+            continue;
+        }
+        const char* url = cmark_node_get_url(node);
+        if (!url) {
+            continue;
+        }
+        TempStr htmlUrl = MarkdownLinkToHtmlTemp(Str(url));
+        if (htmlUrl) {
+            cmark_node_set_url(node, CStrTemp(htmlUrl));
+        }
+    }
+    cmark_iter_free(iter);
+}
+
 Str MarkdownToHtmlPage(Str markdown) {
     if (!markdown) {
         return {};
@@ -404,6 +462,8 @@ Str MarkdownToHtmlPage(Str markdown) {
         cmark_parser_free(parser);
         return {};
     }
+
+    RewriteMarkdownLinks(doc);
 
     // Render before cmark_parser_free(); the extensions list is owned by the parser.
     cmark_llist* extensions = cmark_parser_get_syntax_extensions(parser);
@@ -427,4 +487,21 @@ Str MarkdownToHtmlPage(Str markdown) {
     mem->free(body);
 
     return html.TakeStr();
+}
+
+bool MarkdownToc_UnitTestHtmlLinks() {
+    TempStr url = MarkdownLinkToHtmlTemp(StrL("other.md"));
+    if (!str::Eq(url, StrL("other.html"))) {
+        return false;
+    }
+    url = MarkdownLinkToHtmlTemp(StrL("sub/page.markdown#heading"));
+    if (!str::Eq(url, StrL("sub/page.html#heading"))) {
+        return false;
+    }
+    url = MarkdownLinkToHtmlTemp(StrL("UPPER.MD?x=1#part"));
+    if (!str::Eq(url, StrL("UPPER.html?x=1#part"))) {
+        return false;
+    }
+    return !MarkdownLinkToHtmlTemp(StrL("https://example.com/readme.md")) &&
+           !MarkdownLinkToHtmlTemp(StrL("//example.com/readme.md")) && !MarkdownLinkToHtmlTemp(StrL("#heading"));
 }

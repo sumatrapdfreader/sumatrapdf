@@ -1914,7 +1914,9 @@ EXPORTS
 	cmark_node_free
 	cmark_node_get_heading_level
 	cmark_node_get_type
+	cmark_node_get_url
 	cmark_node_next
+	cmark_node_set_url
 	cmark_parser_attach_syntax_extension
 	cmark_parser_feed
 	cmark_parser_finish
