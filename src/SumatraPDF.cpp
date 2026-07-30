@@ -8217,6 +8217,10 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         args.opacity = a.freeTextOpacity;
         args.textSize = a.freeTextSize;
         args.borderWidth = a.freeTextBorderWidth;
+    } else if (typ == AnnotationType::Stamp || typ == AnnotationType::Caret || typ == AnnotationType::Square ||
+               typ == AnnotationType::Circle || typ == AnnotationType::Line) {
+        // MuPDF defaults these to red on create; no separate prefs color.
+        // Leave args.col unset so we keep MuPDF's default.
     } else {
         logf("SetAnnotCreateArgs: unexpected type %d for default prefs color\n", (int)typ);
         // ReportIf(true);

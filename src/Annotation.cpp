@@ -1453,6 +1453,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
 
     auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
     pdf_annot* annot = nullptr;
+    pdf_page* page = nullptr;
     auto typ = args->annotType;
     auto col = args->col;
     auto bgCol = args->bgCol;
@@ -1460,8 +1461,13 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     {
         ScopedRecursiveMutex cs(&epdf->docLock);
 
+        // pdf_create_annot returns a kept ref; the page list holds another.
+        // On failure we must drop our keep and not fall through to the success
+        // pdf_drop_annot (that would free the annot while still linked on the
+        // page → UAF on the next render; crash reports show stamp create then
+        // ACCESS_VIOLATION with float 30.0f as a pointer — stamp "DRAFT" uses h=30).
         fz_try(ctx) {
-            auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
+            page = pdf_page_from_fz_page(ctx, pageInfo->page);
             enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
 
             annot = pdf_create_annot(ctx, page, atyp);
@@ -1620,7 +1626,13 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
         fz_catch(ctx) {
             fz_report_error(ctx);
             if (annot) {
+                // Unlink + drop page ref, then drop our keep from create.
+                // Must not fall through to the success-path pdf_drop_annot.
+                if (page) {
+                    pdf_delete_annot(ctx, page, annot);
+                }
                 pdf_drop_annot(ctx, annot);
+                annot = nullptr;
             }
         }
         if (!annot) {
