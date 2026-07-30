@@ -21,5 +21,6 @@ Checks: >
   -readability-magic-numbers,
   -readability-non-const-parameter,
   -readability-braces-around-statements,
-  -readability-uppercase-literal-suffix
+  -readability-uppercase-literal-suffix,
+  -readability-make-member-function-const
 ...
