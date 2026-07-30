@@ -321,6 +321,26 @@ static void StrNextLineTest() {
     utassert(!str::NextLine(rest, line, rest));
 }
 
+static void StrStartsWithTest() {
+    char emptyBuf1[] = "";
+    char emptyBuf2[] = "";
+    Str empty1(emptyBuf1, 0);
+    Str empty2(emptyBuf2, 0);
+    utassert(str::StartsWith(StrL("abc"), empty1));
+    utassert(str::StartsWith(empty1, empty2));
+    utassert(str::StartsWithI(StrL("abc"), empty1));
+    utassert(str::StartsWithI(empty1, empty2));
+
+    WCHAR emptyWBuf1[] = L"";
+    WCHAR emptyWBuf2[] = L"";
+    WStr emptyW1(emptyWBuf1, 0);
+    WStr emptyW2(emptyWBuf2, 0);
+    utassert(wstr::StartsWith(WStrL(L"abc"), emptyW1));
+    utassert(wstr::StartsWith(emptyW1, emptyW2));
+    utassert(wstr::StartsWithI(WStrL(L"abc"), emptyW1));
+    utassert(wstr::StartsWithI(emptyW1, emptyW2));
+}
+
 void StrTest() {
     char buf[32];
     Str str = "a string";
@@ -779,5 +799,6 @@ void StrTest() {
     StrFindITest();
     StrCutTest();
     StrNextLineTest();
+    StrStartsWithTest();
     // ParseUntilTest();
 }

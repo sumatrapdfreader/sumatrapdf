@@ -337,13 +337,7 @@ bool TrimPrefix(Str& s, Str prefix) {
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(Str s, Str prefix) {
-    if (s.s == prefix.s) {
-        return true;
-    }
-    if (!s || !prefix) {
-        return false;
-    }
-    return 0 == _strnicmp(s.s, prefix.s, len(prefix));
+    return EqNI(s, prefix, len(prefix));
 }
 
 bool Contains(Str s, Str sub) {
