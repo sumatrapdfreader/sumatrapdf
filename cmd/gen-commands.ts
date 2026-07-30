@@ -264,6 +264,7 @@ export const commands = [
     "CmdToggleFavoritesSort", "Sort Favorites By Name",
     "CmdZoomFitHeight", "Zoom: Fit Height",
     "CmdDeleteFileAndOpenNext", "Delete File And Open Next",
+    "CmdShowGeneratedHTML", "Show Generated HTML",
     "CmdNone", "Do nothing",
 ];
 

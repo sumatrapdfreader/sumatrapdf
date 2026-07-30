@@ -264,7 +264,8 @@ enum {
     CmdToggleFavoritesSort = 453,
     CmdZoomFitHeight = 454,
     CmdDeleteFileAndOpenNext = 455,
-    CmdNone = 456,
+    CmdShowGeneratedHTML = 456,
+    CmdNone = 457,
 
     /* range for file history */
     CmdFileHistoryFirst,

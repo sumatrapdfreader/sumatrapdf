@@ -19,6 +19,7 @@
 #include "base/Archive.h"
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
+#include "base/CmdLineArgsIter.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -43,6 +44,7 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "MarkdownModel.h"
+#include "MarkdownToc.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
@@ -4806,6 +4808,62 @@ static void ShowCurrentFileInFolder(MainWindow* win) {
     SumatraOpenPathInDefaultFileManager(ctrl->GetFilePath());
 }
 
+static void ShowGeneratedMarkdownHtml(MainWindow* win) {
+    if (!win || !win->IsDocLoaded() || !CanAccessDisk()) {
+        return;
+    }
+    DocController* ctrl = win->ctrl;
+    Str path = ctrl->GetFilePath();
+    bool isMarkdown = str::EndsWithI(path, StrL(".md")) || str::EndsWithI(path, StrL(".markdown"));
+    if (!isMarkdown) {
+        return;
+    }
+
+    Str html;
+    bool ownsHtml = false;
+    MarkdownModel* model = ctrl->AsMarkdown();
+    if (model && model->currentPageUrl) {
+        html = model->GetDataForUrl(model->currentPageUrl);
+    } else {
+        Str markdown = file::ReadFile(path);
+        if (markdown) {
+            html = MarkdownToHtmlPage(markdown);
+            ownsHtml = true;
+        }
+        str::Free(markdown);
+    }
+    if (!html) {
+        return;
+    }
+
+    TempStr tempPath = GetTempFilePathTemp(StrL("smd"));
+    TempStr htmlPath = str::JoinTemp(tempPath, StrL(".html"));
+    bool ok = tempPath && file::Rename(htmlPath, tempPath) && file::WriteFile(htmlPath, html);
+    if (ownsHtml) {
+        str::Free(html);
+    }
+    if (!ok) {
+        file::Delete(tempPath);
+        file::Delete(htmlPath);
+        logf("ShowGeneratedMarkdownHtml: failed to create temporary HTML file\n");
+        return;
+    }
+
+    WCHAR systemDir[MAX_PATH]{};
+    UINT systemDirLen = GetSystemDirectoryW(systemDir, dimof(systemDir));
+    if (systemDirLen == 0 || systemDirLen >= dimof(systemDir)) {
+        logf("ShowGeneratedMarkdownHtml: failed to find the Windows system directory\n");
+        return;
+    }
+
+    TempStr notepadPath = path::JoinTemp(ToUtf8Temp(systemDir), StrL("notepad.exe"));
+    TempStr args = QuoteCmdLineArgTemp(htmlPath);
+    AutoCloseHandle process(LaunchProcessWithCmdLine(notepadPath, args));
+    if (!process) {
+        logf("ShowGeneratedMarkdownHtml: failed to launch Notepad for '%s'\n", htmlPath);
+    }
+}
+
 static void DeleteFileFromDiskAndHistory(Str path) {
     file::DeleteFileToTrash(path);
     DeleteThumbnailForFile(path);
@@ -8439,6 +8497,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdShowInFolder:
             ShowCurrentFileInFolder(win);
+            break;
+
+        case CmdShowGeneratedHTML:
+            ShowGeneratedMarkdownHtml(win);
             break;
 
         case CmdOpenPrevFileInFolder:

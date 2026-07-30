@@ -29,6 +29,7 @@ struct AppCommandCtx {
     bool isPdf = false;
     bool isPdfEncrypted = false;
     bool isChm = false;
+    bool isMarkdown = false;
     bool isCbx = false;
     bool isImageCollection = false;
     bool isSinglePage = false;

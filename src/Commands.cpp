@@ -266,6 +266,7 @@ static SeqStrings gCommandNames =
     "CmdToggleFavoritesSort\0"
     "CmdZoomFitHeight\0"
     "CmdDeleteFileAndOpenNext\0"
+    "CmdShowGeneratedHTML\0"
     "CmdNone\0"
     "\0";
 
@@ -525,6 +526,7 @@ static i32 gCommandIds[] = {
     CmdToggleFavoritesSort,
     CmdZoomFitHeight,
     CmdDeleteFileAndOpenNext,
+    CmdShowGeneratedHTML,
     CmdNone,
 };
 
@@ -784,6 +786,7 @@ SeqStrings gCommandDescriptions =
     "Sort Favorites By Name\0"
     "Zoom: Fit Height\0"
     "Delete File And Open Next\0"
+    "Show Generated HTML\0"
     "Do nothing\0"
     "\0";
 // clang-format on

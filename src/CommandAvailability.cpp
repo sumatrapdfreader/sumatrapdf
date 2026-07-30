@@ -192,6 +192,7 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdCreateShortcutToFile,
     CmdSaveEmbeddedFile,
     CmdShowLog,
+    CmdShowGeneratedHTML,
     0,
 };
 
@@ -350,6 +351,8 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
 
     if (ctx.tab) {
         ctx.isChm = ctx.tab->AsChm() || ctx.tab->AsMarkdown();
+        Str currentPath = win->ctrl ? win->ctrl->GetFilePath() : ctx.filePath;
+        ctx.isMarkdown = str::EndsWithI(currentPath, StrL(".md")) || str::EndsWithI(currentPath, StrL(".markdown"));
         EngineBase* engine = ctx.tab->GetEngine();
         if (engine && engine->kind == kindEngineComicBooks) {
             ctx.isCbx = true;
@@ -498,6 +501,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (!ctx.isDocLoaded) {
+        return CommandVisibility::Hide;
+    }
+
+    if (cmdId == CmdShowGeneratedHTML && !ctx.isMarkdown) {
         return CommandVisibility::Hide;
     }
 

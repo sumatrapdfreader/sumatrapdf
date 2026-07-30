@@ -23,6 +23,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - fix portable self-update failing to replace the running exe when installing from the update dialog
 - new `Advanced Settings...` dialog (`Ctrl + K` command palette): a filterable list of the advanced settings where you can toggle booleans, pick enum values from a drop-down and edit strings, colors and numbers in-place, then `Save`. Replaces the per-setting toggle commands (`CmdToggleSmoothScroll`, `CmdToggleEscToExit`, `CmdToggleReuseInstance` etc.), which were removed
 - can open and view Markdown documents (`.md`, `.markdown`): they render as formatted text (GitHub Flavored Markdown, including tables, task lists and strikethrough) via the rendering engine, and the installer registers the file association so they open from Explorer and drag&drop
+- Markdown documents have a **Show Generated HTML** command (`Ctrl + K` command palette) that saves the rendered HTML to a temporary `.html` file and opens it in Notepad
 - HEIC / HEIF still images now decode with a built-in decoder (no Windows HEIC codec required for most phone photos); AVIF still uses dav1d. The system WIC path remains as a fallback if built-in decode fails
 - Read Aloud: adjustable playback speed — pick 0.5x .. 3x in the new `Speed` submenu (next to `Voice` in the Read Aloud menu, toolbar dropdown and context menu) or click the speed button on the playback bar to cycle presets (right-click cycles backwards); the speed persists across sessions via the `ReadAloudSpeed` advanced setting
 - updated the bundled MuPDF rendering engine to 1.28.0
@@ -185,6 +186,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdScreenshot` : "Take Screenshot"
 - `CmdSetScreenshotHotkey` : "Set Screenshot Hotkey"
 - `CmdSetInverseSearch` : "Set Inverse Search Command Line" — opens a dialog to configure the SyncTeX inverse-search command (`Ctrl + k` command palette)
+- `CmdShowGeneratedHTML` : "Show Generated HTML" — available for Markdown documents
 - `CmdSetTabColor` : "Set Tab Color"
 - `CmdStartAutoScroll` : "Start Auto-Scroll"
 - `CmdTabGroupRestore` : "Restore Tab Group"
