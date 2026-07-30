@@ -221,7 +221,7 @@ class EngineDjvuDec : public EngineBase {
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
-    TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter);
+    TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter, int depth);
     // After a successful render of page0: mark MRU and drop cold pages if the
     // decoder's page-local cache exceeds the byte/page budget.
     void NotePageCacheAfterRender(int page0);
@@ -893,7 +893,10 @@ IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
     return nullptr;
 }
 
-TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter) {
+TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter, int depth) {
+    if (depth >= 64) {
+        return nullptr;
+    }
     TocItem* node = nullptr;
     for (int i = 0; i < n; i++) {
         djvu_outline_item& it = items[i];
@@ -908,7 +911,7 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
         }
         TocItem* tocItem = NewDjvuDecTocItem(parent, title, link);
         tocItem->id = ++idCounter;
-        tocItem->child = BuildTocTree(tocItem, it.children, it.nchildren, idCounter);
+        tocItem->child = BuildTocTree(tocItem, it.children, it.nchildren, idCounter, depth + 1);
         if (!node) {
             node = tocItem;
         } else {
@@ -931,7 +934,7 @@ TocTree* EngineDjvuDec::GetToc() {
         return nullptr;
     }
     int idCounter = 0;
-    TocItem* rootItem = BuildTocTree(nullptr, root->children, root->nchildren, idCounter);
+    TocItem* rootItem = BuildTocTree(nullptr, root->children, root->nchildren, idCounter, 0);
     djvu_outline_destroy(ctx, root);
     if (!rootItem) {
         return nullptr;
