@@ -424,7 +424,7 @@ struct GrokBuildProvider : AIChatProvider {
         return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort %s %s -r %s --rules %s",
                    QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.escapedInput),
                    QuoteCmdLineArgTemp(args.dir), QuoteCmdLineArgTemp(args.model), efforts[args.option], permsFlag,
-                   args.sessionId, QuoteCmdLineArgTemp(rules));
+                   QuoteCmdLineArgTemp(args.sessionId), QuoteCmdLineArgTemp(rules));
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
