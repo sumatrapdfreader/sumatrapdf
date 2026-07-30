@@ -783,9 +783,9 @@ void AddEntry(ExifParser& parser, IfdGroup group, u16 tag, u16 type, u32 count, 
     parser.entries.Append(entry);
 }
 
-static void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndian = 0);
+static void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndian = 0, int depth = 0);
 
-void ParseMakerNote(ExifParser& parser, int dataOff, u32 count) {
+void ParseMakerNote(ExifParser& parser, int dataOff, u32 count, int depth) {
     ByteReader r(parser.exifBlob);
     if (dataOff >= r.len || count < 6) {
         return;
@@ -814,12 +814,15 @@ void ParseMakerNote(ExifParser& parser, int dataOff, u32 count) {
     parser.isBE = makerNoteEndian == 'M';
     int ifdRel = (int)ReadDWord(parser, dataOff + mnOff);
     parser.tiffBase = mnBase;
-    ParseIfd(parser, IfdGroup::MakerNote, ifdRel, makerNoteEndian);
+    ParseIfd(parser, IfdGroup::MakerNote, ifdRel, makerNoteEndian, depth + 1);
     parser.tiffBase = savedBase;
     parser.isBE = savedBE;
 }
 
-void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndian) {
+void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndian, int depth) {
+    if (depth >= 32) {
+        return;
+    }
     ByteReader r(parser.exifBlob);
     int ifdAbs = parser.tiffBase + ifdRel;
     if (ifdAbs + 2 > r.len) {
@@ -859,23 +862,23 @@ void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndia
         if (group == IfdGroup::Image || group == IfdGroup::Exif) {
             if (tag == (u16)ExifProp::ExifOffset && type == TiffLong && count >= 1) {
                 u32 rel = ReadDWord(parser, dataOff);
-                ParseIfd(parser, IfdGroup::Exif, (int)rel);
+                ParseIfd(parser, IfdGroup::Exif, (int)rel, 0, depth + 1);
                 continue;
             }
             if (tag == (u16)ExifProp::GpsInfo && type == TiffLong && count >= 1) {
                 u32 rel = ReadDWord(parser, dataOff);
-                ParseIfd(parser, IfdGroup::Gps, (int)rel);
+                ParseIfd(parser, IfdGroup::Gps, (int)rel, 0, depth + 1);
                 continue;
             }
             if (tag == (u16)ExifProp::InteroperabilityOffset && type == TiffLong && count >= 1) {
                 u32 rel = ReadDWord(parser, dataOff);
-                ParseIfd(parser, IfdGroup::Interop, (int)rel);
+                ParseIfd(parser, IfdGroup::Interop, (int)rel, 0, depth + 1);
                 continue;
             }
         }
 
         if (group == IfdGroup::Exif && tag == (u16)ExifProp::MakerNote) {
-            ParseMakerNote(parser, dataOff, count);
+            ParseMakerNote(parser, dataOff, count, depth);
             continue;
         }
 
@@ -889,7 +892,7 @@ void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndia
     parser.isBE = savedBE;
 
     if (group == IfdGroup::Image && nextIfdOff != 0) {
-        ParseIfd(parser, IfdGroup::Thumbnail, nextIfdOff);
+        ParseIfd(parser, IfdGroup::Thumbnail, nextIfdOff, 0, depth + 1);
     }
 }
 
