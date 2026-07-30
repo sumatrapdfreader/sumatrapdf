@@ -301,8 +301,8 @@ static RectF GetTileRect(RectF pagerect, TilePosition tile) {
     RectF rect;
     rect.dx = pagerect.dx / (1ULL << tile.res);
     rect.dy = pagerect.dy / (1ULL << tile.res);
-    rect.x = pagerect.x + tile.col * rect.dx;
-    rect.y = pagerect.y + ((1ULL << tile.res) - tile.row - 1) * rect.dy;
+    rect.x = pagerect.x + (tile.col * rect.dx);
+    rect.y = pagerect.y + (((1ULL << tile.res) - tile.row - 1) * rect.dy);
     return rect;
 }
 
@@ -1131,9 +1131,9 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
                                     isTargetRes ? &neededScaling : nullptr);
         if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
             queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
-            queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2 + 1));
-            queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2));
-            queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2 + 1));
+            queue.Append(TilePosition(tile.res + 1, tile.row * 2, (tile.col * 2) + 1));
+            queue.Append(TilePosition(tile.res + 1, (tile.row * 2) + 1, tile.col * 2));
+            queue.Append(TilePosition(tile.res + 1, (tile.row * 2) + 1, (tile.col * 2) + 1));
         }
         if (isTargetRes && renderDelay != 0) {
             neededScaling = true;

@@ -577,8 +577,8 @@ static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRe
             controlDy -= DpiScale(dpiHwnd, 16) + DpiScale(dpiHwnd, kRowPadding);
         }
     }
-    int wantW = imgW + 2 * imagePadding;
-    int wantH = imgH + 2 * imagePadding + controlDy;
+    int wantW = imgW + (2 * imagePadding);
+    int wantH = imgH + (2 * imagePadding) + controlDy;
     RECT rc = {0, 0, wantW, wantH};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     int winW = rc.right - rc.left;
@@ -634,8 +634,8 @@ static void CalcImageLayout(ImageEditWindow* ew) {
 
     int imgPad = ImageEditImagePadding(ew);
     // fit image within image area with padding
-    int availW = cRc.dx - 2 * imgPad;
-    int availH = ew->imgAreaH - 2 * imgPad;
+    int availW = cRc.dx - (2 * imgPad);
+    int availH = ew->imgAreaH - (2 * imgPad);
     if (availW <= 0 || availH <= 0 || ew->imgW <= 0 || ew->imgH <= 0) {
         ew->imgDisplayX = imgPad;
         ew->imgDisplayY = imgPad;
@@ -655,8 +655,8 @@ static void CalcImageLayout(ImageEditWindow* ew) {
     ew->imgDisplayW = (int)(ew->imgW * scale);
     ew->imgDisplayH = (int)(ew->imgH * scale);
     // center in available area
-    ew->imgDisplayX = imgPad + (availW - ew->imgDisplayW) / 2;
-    ew->imgDisplayY = imgPad + (availH - ew->imgDisplayH) / 2;
+    ew->imgDisplayX = imgPad + ((availW - ew->imgDisplayW) / 2);
+    ew->imgDisplayY = imgPad + ((availH - ew->imgDisplayH) / 2);
 }
 
 // Grow the window if the new-size rectangle exceeds the image display area (resize mode only).
@@ -665,8 +665,8 @@ static void CalcImageLayout(ImageEditWindow* ew) {
 static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
     int imgPad = ImageEditImagePadding(ew);
     // calculate how much display space the new size needs
-    int neededDispW = ImageToDisplayW(ew, ew->newW) + 2 * imgPad;
-    int neededDispH = ImageToDisplayH(ew, ew->newH) + 2 * imgPad;
+    int neededDispW = ImageToDisplayW(ew, ew->newW) + (2 * imgPad);
+    int neededDispH = ImageToDisplayH(ew, ew->newH) + (2 * imgPad);
 
     Rect cRc = HwndClientRect(ew->hwnd);
     int availW = cRc.dx;
@@ -811,11 +811,11 @@ static DragEdge HitTestResizeEdge(ImageEditWindow* ew, int mx, int my) {
     // the "new size" rectangle, centered in the display area
     int dispNewW = ImageToDisplayW(ew, ew->newW);
     int dispNewH = ImageToDisplayH(ew, ew->newH);
-    int cx = ew->imgDisplayX + ew->imgDisplayW / 2;
-    int cy = ew->imgDisplayY + ew->imgDisplayH / 2;
-    int left = cx - dispNewW / 2;
+    int cx = ew->imgDisplayX + (ew->imgDisplayW / 2);
+    int cy = ew->imgDisplayY + (ew->imgDisplayH / 2);
+    int left = cx - (dispNewW / 2);
     int right = left + dispNewW;
-    int top = cy - dispNewH / 2;
+    int top = cy - (dispNewH / 2);
     int bottom = top + dispNewH;
 
     int t = kResizeEdgeThreshold;
@@ -1038,10 +1038,10 @@ static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
     // draw the "new size" rectangle showing the resized portion, centered
     int dispNewW = ImageToDisplayW(ew, ew->newW);
     int dispNewH = ImageToDisplayH(ew, ew->newH);
-    int cx = ew->imgDisplayX + ew->imgDisplayW / 2;
-    int cy = ew->imgDisplayY + ew->imgDisplayH / 2;
-    int newLeft = cx - dispNewW / 2;
-    int newTop = cy - dispNewH / 2;
+    int cx = ew->imgDisplayX + (ew->imgDisplayW / 2);
+    int cy = ew->imgDisplayY + (ew->imgDisplayH / 2);
+    int newLeft = cx - (dispNewW / 2);
+    int newTop = cy - (dispNewH / 2);
 
     // redraw the image portion at the new size area (clear overlay there)
     // clip source to full image, draw scaled into the new rect
@@ -1055,8 +1055,8 @@ static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
     // draw drag handles
     int hs = kDragHandleSize;
     int hh = hs / 2;
-    int midX = newLeft + dispNewW / 2;
-    int midY = newTop + dispNewH / 2;
+    int midX = newLeft + (dispNewW / 2);
+    int midY = newTop + (dispNewH / 2);
     int right = newLeft + dispNewW;
     int bottom = newTop + dispNewH;
 
@@ -1084,7 +1084,7 @@ static void LayoutControls(ImageEditWindow* ew) {
     }
     Rect cRc = HwndClientRect(ew->hwnd);
     int btnPad = ImageEditButtonPadding(ew);
-    int w = cRc.dx - 2 * btnPad;
+    int w = cRc.dx - (2 * btnPad);
     Constraints bc = Loose({w, Inf});
     Size layoutSize = ew->controlLayout->Layout(bc);
     ew->controlLayout->SetBounds({0, ew->imgAreaH, cRc.dx, layoutSize.dy});
@@ -1742,17 +1742,17 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
                     // left/right edges change width
                     if (edge == DragEdge::Left || edge == DragEdge::TopLeft || edge == DragEdge::BottomLeft) {
-                        nw = ew->dragNewW - imgDx * 2; // symmetric resize
+                        nw = ew->dragNewW - (imgDx * 2); // symmetric resize
                     }
                     if (edge == DragEdge::Right || edge == DragEdge::TopRight || edge == DragEdge::BottomRight) {
-                        nw = ew->dragNewW + imgDx * 2;
+                        nw = ew->dragNewW + (imgDx * 2);
                     }
                     // top/bottom edges change height
                     if (edge == DragEdge::Top || edge == DragEdge::TopLeft || edge == DragEdge::TopRight) {
-                        nh = ew->dragNewH - imgDy * 2;
+                        nh = ew->dragNewH - (imgDy * 2);
                     }
                     if (edge == DragEdge::Bottom || edge == DragEdge::BottomLeft || edge == DragEdge::BottomRight) {
-                        nh = ew->dragNewH + imgDy * 2;
+                        nh = ew->dragNewH + (imgDy * 2);
                     }
 
                     if (nw < 1) {

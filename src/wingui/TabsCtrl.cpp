@@ -104,12 +104,12 @@ void TabsCtrl::LayoutTabs() {
             xEnd = x - dx;
             ti->r = {xEnd, 0, dx, dy};
             ti->rClose = {xEnd + closePad, closeY, closeDx, closeDy};
-            ti->rCloseHit = {xEnd, 0, closeDx + 2 * closePad, dy};
+            ti->rCloseHit = {xEnd, 0, closeDx + (2 * closePad), dy};
         } else {
             xEnd = x + dx;
             ti->r = {x, 0, dx, dy};
             ti->rClose = {xEnd - closeDx - closePad, closeY, closeDx, closeDy};
-            ti->rCloseHit = {xEnd - closeDx - 2 * closePad, 0, closeDx + 2 * closePad, dy};
+            ti->rCloseHit = {xEnd - closeDx - (2 * closePad), 0, closeDx + (2 * closePad), dy};
         }
         ti->titleSize = HwndMeasureText(hwnd, ti->text, hfont);
         if (IsRunningOnWine() && i == 0) {
@@ -304,11 +304,11 @@ void TabsCtrl::Paint(HDC hdc, const Rect& rc) {
             int dotRadius = DpiScale(hwnd, 3);
             int dotX = (int)(bounds.X + bounds.Width) + dotRadius;
             // clamp to not exceed the text area
-            int maxX = (int)(rTxt.X + rTxt.Width) - dotRadius * 2;
+            int maxX = (int)(rTxt.X + rTxt.Width) - (dotRadius * 2);
             if (dotX > maxX) {
                 dotX = maxX;
             }
-            int dotY = ti->r.y + (ti->r.dy - dotRadius * 2) / 2;
+            int dotY = ti->r.y + ((ti->r.dy - (dotRadius * 2)) / 2);
             SolidBrush redBr(Color(255, 0xEE, 0x22, 0x22));
             gfx.FillEllipse(&redBr, dotX, dotY, dotRadius * 2, dotRadius * 2);
             gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);

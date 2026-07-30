@@ -144,16 +144,16 @@ void PdfDarkModeClearPixmapToThemeBackground(fz_context* ctx, fz_pixmap* pix, co
     if (!pix || !pix->samples) {
         return;
     }
-    byte rb = (byte)(palette.bgR * 255.f + 0.5f);
-    byte gb = (byte)(palette.bgG * 255.f + 0.5f);
-    byte bb = (byte)(palette.bgB * 255.f + 0.5f);
+    byte rb = (byte)((palette.bgR * 255.f) + 0.5f);
+    byte gb = (byte)((palette.bgG * 255.f) + 0.5f);
+    byte bb = (byte)((palette.bgB * 255.f) + 0.5f);
     int w = pix->w;
     int h = pix->h;
     int n = pix->n;
     for (int y = 0; y < h; y++) {
-        unsigned char* row = pix->samples + (size_t)y * pix->stride;
+        unsigned char* row = pix->samples + ((size_t)y * pix->stride);
         for (int x = 0; x < w; x++) {
-            unsigned char* p = row + x * n;
+            unsigned char* p = row + (x * n);
             p[0] = rb;
             p[1] = gb;
             p[2] = bb;
@@ -185,9 +185,9 @@ DarkModePalette PdfDarkModeBuildPalette() {
 }
 
 static bool IsLikelyLinkRgb(float r, float g, float b) {
-    int ri = (int)(r * 255.f + 0.5f);
-    int gi = (int)(g * 255.f + 0.5f);
-    int bi = (int)(b * 255.f + 0.5f);
+    int ri = (int)((r * 255.f) + 0.5f);
+    int gi = (int)((g * 255.f) + 0.5f);
+    int bi = (int)((b * 255.f) + 0.5f);
     int maxRG = ri > gi ? ri : gi;
     if (bi < maxRG + 25) {
         return false;
@@ -213,14 +213,14 @@ static float SmoothStep(float edge0, float edge1, float x) {
     if (t >= 1.f) {
         return 1.f;
     }
-    return t * t * (3.f - 2.f * t);
+    return t * t * (3.f - (2.f * t));
 }
 
 void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePalette& palette, float* outR, float* outG,
                                    float* outB) {
     float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
     float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 
     const float lowChroma = 0.08f;
@@ -231,13 +231,13 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
         // Low luminance = ink -> theme text; high luminance = paper -> theme background.
         float inkW = 1.f - SmoothStep(inkLum, paperLum, lum);
         float paperW = SmoothStep(inkLum, paperLum, lum);
-        float nr = palette.textR * inkW + palette.bgR * paperW;
-        float ng = palette.textG * inkW + palette.bgG * paperW;
-        float nb = palette.textB * inkW + palette.bgB * paperW;
-        float grayW = 1.f - chroma / lowChroma;
-        *outR = nr * grayW + r * (1.f - grayW);
-        *outG = ng * grayW + g * (1.f - grayW);
-        *outB = nb * grayW + b * (1.f - grayW);
+        float nr = (palette.textR * inkW) + (palette.bgR * paperW);
+        float ng = (palette.textG * inkW) + (palette.bgG * paperW);
+        float nb = (palette.textB * inkW) + (palette.bgB * paperW);
+        float grayW = 1.f - (chroma / lowChroma);
+        *outR = (nr * grayW) + (r * (1.f - grayW));
+        *outG = (ng * grayW) + (g * (1.f - grayW));
+        *outB = (nb * grayW) + (b * (1.f - grayW));
         return;
     }
 
@@ -247,9 +247,9 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
         if (maxC == r) {
             h = fmodf((g - b) / delta, 6.f);
         } else if (maxC == g) {
-            h = (b - r) / delta + 2.f;
+            h = ((b - r) / delta) + 2.f;
         } else {
-            h = (r - g) / delta + 4.f;
+            h = ((r - g) / delta) + 4.f;
         }
         h /= 6.f;
         if (h < 0.f) {
@@ -309,9 +309,9 @@ void MapRgbToDarkTheme(float r, float g, float b, const DarkModePalette& palette
         MapRgbToDarkThemeOklab(r, g, b, palette, outRgb);
         return;
     }
-    outRgb[0] = palette.textR + r * palette.diffR;
-    outRgb[1] = palette.textG + g * palette.diffG;
-    outRgb[2] = palette.textB + b * palette.diffB;
+    outRgb[0] = palette.textR + (r * palette.diffR);
+    outRgb[1] = palette.textG + (g * palette.diffG);
+    outRgb[2] = palette.textB + (b * palette.diffB);
 }
 
 void MapColorToDarkTheme(fz_context* ctx, fz_colorspace* cs, const float* color, fz_color_params colorParams,
@@ -339,7 +339,7 @@ void MapFillColorToDarkTheme(fz_context* ctx, fz_colorspace* cs, const float* co
 void MapRgbFillToDarkTheme(float r, float g, float b, const DarkModePalette& palette, float* outRgb) {
     float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
     float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
     DarkModeOptions opts = PdfDarkModeCurrentOptions();
     if (GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Smart && lum >= opts.lightFillLuminanceThreshold &&
@@ -359,7 +359,7 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
         return;
     }
 
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
     float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
     float chroma = maxC - minC;
@@ -370,7 +370,7 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
         // Only soften near-white paper; never pull ink pixels toward the background.
         paperW = SmoothStep(0.72f, 0.94f, lum);
     } else {
-        float chromaFactor = 1.f - chroma / 0.45f;
+        float chromaFactor = 1.f - (chroma / 0.45f);
         if (chromaFactor < 0.f) {
             chromaFactor = 0.f;
         }
@@ -378,9 +378,9 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
     }
     paperW *= strength;
 
-    *outR = r + (palette.bgR - r) * paperW;
-    *outG = g + (palette.bgG - g) * paperW;
-    *outB = b + (palette.bgB - b) * paperW;
+    *outR = r + ((palette.bgR - r) * paperW);
+    *outG = g + ((palette.bgG - g) * paperW);
+    *outB = b + ((palette.bgB - b) * paperW);
 }
 
 bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds) {

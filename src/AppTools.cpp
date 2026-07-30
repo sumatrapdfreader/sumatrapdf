@@ -500,7 +500,7 @@ void EnsureAreaVisibility(Rect& r) {
     // check whether the lower half of the window's title bar is
     // inside a visible working area
     int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    Rect halfCaption(r.x, r.y + captionDy / 2, r.dx, captionDy / 2);
+    Rect halfCaption(r.x, r.y + (captionDy / 2), r.dx, captionDy / 2);
     if (halfCaption.Intersect(work).IsEmpty()) {
         r = Rect(work.TL(), r.Size());
     }

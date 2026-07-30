@@ -445,7 +445,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         switch (i.type) {
             case DrawInstrType::String:
                 if (len(coords) > 0 &&
-                    (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
+                    (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + (coords.Last().dy * 0.8))) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
@@ -464,14 +464,14 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     if (nCodepoints > 0) {
                         double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
                         for (int k = 0; k < nCodepoints; k++) {
-                            coords.Append(Rect((int)(bbox.x + (double)k * cwidth), bbox.y, (int)cwidth, bbox.dy));
+                            coords.Append(Rect((int)(bbox.x + ((double)k * cwidth)), bbox.y, (int)cwidth, bbox.dy));
                         }
                     }
                 }
                 break;
             case DrawInstrType::RtlString:
                 if (len(coords) > 0 &&
-                    (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
+                    (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + (coords.Last().dy * 0.8))) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
@@ -490,7 +490,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     if (nCodepoints > 0) {
                         double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
                         for (int k = 0; k < nCodepoints; k++) {
-                            coords.Append(Rect((int)(bbox.x + (double)(nCodepoints - k - 1) * cwidth), bbox.y,
+                            coords.Append(Rect((int)(bbox.x + ((double)(nCodepoints - k - 1) * cwidth)), bbox.y,
                                                (int)cwidth, bbox.dy));
                         }
                     }
@@ -861,8 +861,8 @@ bool EngineEpub::FinishLoading() {
 
     HtmlFormatterArgs args{};
     args.htmlStr = doc->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
@@ -989,8 +989,8 @@ bool EngineFb2::FinishLoading() {
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetXmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
@@ -1117,8 +1117,8 @@ bool EngineMobi::FinishLoading() {
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
@@ -1260,8 +1260,8 @@ bool EnginePdb::Load(Str fileName) {
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
@@ -1631,8 +1631,8 @@ bool EngineChm::Load(Str fileName) {
 
     HtmlFormatterArgs args;
     args.htmlStr = dataCache->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
@@ -1769,8 +1769,8 @@ bool EngineHtml::Load(Str fileName) {
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
@@ -1887,8 +1887,8 @@ bool EngineTxt::Load(Str fileName) {
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;

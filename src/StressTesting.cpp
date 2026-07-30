@@ -217,7 +217,7 @@ void BenchFileOrDir(StrVec& pathsToBench) {
     for (int i = 0; i < n; i++) {
         Str path = pathsToBench[2 * i];
         if (file::Exists(path)) {
-            BenchFile(path, pathsToBench[2 * i + 1]);
+            BenchFile(path, pathsToBench[(2 * i) + 1]);
         } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {

@@ -132,8 +132,8 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         }
     }
     int border = DpiScale(s->hwndPopup, kRefHoverBorder);
-    float availH = (float)(popupHCap - 2 * border);
-    float availW = (float)(popupWCap - 2 * border);
+    float availH = (float)(popupHCap - (2 * border));
+    float availW = (float)(popupWCap - (2 * border));
     if (useLinkZoom) {
         float wantW = availW / baseZoom;
         float wantH = availH / baseZoom;

@@ -32,8 +32,8 @@ static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int cl
     if ((float)(clientY - border) > regionPixH) {
         return false;
     }
-    ptOut.x = s->displayed.region.x + (float)(clientX - border) / zoom;
-    ptOut.y = s->displayed.region.y + (float)(clientY - border) / zoom;
+    ptOut.x = s->displayed.region.x + ((float)(clientX - border) / zoom);
+    ptOut.y = s->displayed.region.y + ((float)(clientY - border) / zoom);
     return true;
 }
 
@@ -151,8 +151,8 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     }
     Size bmpSize = Size(s->bmp->width, s->bmp->height);
     int border = DpiScale(s->hwndPopup, kRefHoverBorder);
-    int popupW = bmpSize.dx + 2 * border;
-    int popupH = bmpSize.dy + 2 * border;
+    int popupW = bmpSize.dx + (2 * border);
+    int popupH = bmpSize.dy + (2 * border);
 
     HMONITOR hmon = MonitorFromPoint({screenPt.x, screenPt.y}, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi{};
@@ -181,15 +181,15 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         popupH = boundH;
     }
 
-    int pageCenterX = (pr.dx > 0) ? (pr.x + pr.dx / 2) : screenPt.x;
+    int pageCenterX = (pr.dx > 0) ? (pr.x + (pr.dx / 2)) : screenPt.x;
     int anchorX = pageCenterX;
     if (pr.dx > 0) {
         int colWidth = pr.dx / 2;
         if (popupW <= colWidth) {
-            anchorX = (screenPt.x >= pageCenterX) ? (pr.x + pr.dx * 3 / 4) : (pr.x + pr.dx / 4);
+            anchorX = (screenPt.x >= pageCenterX) ? (pr.x + (pr.dx * 3 / 4)) : (pr.x + (pr.dx / 4));
         }
     }
-    int x = anchorX - popupW / 2;
+    int x = anchorX - (popupW / 2);
     int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
     int spaceBelow = bottomBound - (screenPt.y + cursorPad);
     int spaceAbove = (screenPt.y - cursorPad) - topBound;
@@ -267,8 +267,8 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
 
     Rect rc = HwndClientRect(s->hwndPopup);
     int border = DpiScale(s->hwndPopup, kRefHoverBorder);
-    float clientW = (float)(rc.dx - 2 * border);
-    float clientH = (float)(rc.dy - 2 * border);
+    float clientW = (float)(rc.dx - (2 * border));
+    float clientH = (float)(rc.dy - (2 * border));
     float zoom = s->displayed.baseZoom * s->displayed.userZoom;
     if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
         return false;

@@ -27,7 +27,7 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int stride = pix->stride;
-    unsigned char* px = pix->samples + y * stride + x * n;
+    unsigned char* px = pix->samples + (y * stride) + (x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     int components = fz_colorspace_n(ctx, cs);
@@ -110,14 +110,14 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                             n++;
                             continue;
                         }
-                        int ri = (int)(r * 255.f + 0.5f);
-                        int gi = (int)(g * 255.f + 0.5f);
-                        int bi = (int)(b * 255.f + 0.5f);
+                        int ri = (int)((r * 255.f) + 0.5f);
+                        int gi = (int)((g * 255.f) + 0.5f);
+                        int bi = (int)((b * 255.f) + 0.5f);
                         buckets[((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4)]++;
 
                         float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
                         float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-                        float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+                        float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
                         lumSum += lum;
                         lumSqSum += lum * lum;
                         if (maxC - minC > 0.12f) {
@@ -129,7 +129,7 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                         if (lum > 0.72f) {
                             highLum++;
                         }
-                        int bi2 = by * kGridBlocks + bx;
+                        int bi2 = (by * kGridBlocks) + bx;
                         blockLum[bi2] += lum;
                         blockCount[bi2]++;
                         n++;
@@ -150,7 +150,7 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
         }
 
         float lumMean = lumSum / n;
-        outFeatures->luminanceVariance = lumSqSum / n - lumMean * lumMean;
+        outFeatures->luminanceVariance = (lumSqSum / n) - (lumMean * lumMean);
         outFeatures->colorBucketRatio = (float)significantBuckets / (float)kColorBuckets;
         outFeatures->transparentRatio = (float)transparent / (float)n;
         outFeatures->highLuminanceRatio = (float)highLum / (float)n;
@@ -189,7 +189,7 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
             if (a < 0.08f) {
                 return;
             }
-            float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+            float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
             borderLum[borderN] = lum;
             borderR[borderN] = r;
             borderG[borderN] = g;
@@ -230,7 +230,7 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                 float dr = borderR[i] - br;
                 float dg = borderG[i] - bg;
                 float db = borderB[i] - bb;
-                borderVar += dr * dr + dg * dg + db * db;
+                borderVar += (dr * dr) + (dg * dg) + (db * db);
             }
             borderVar /= borderN;
             outFeatures->borderUniformity = 1.f - (borderVar / 0.12f);

@@ -233,7 +233,7 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
             int dx = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
             int dy = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
             int x = releasePt.x - DpiScale(oldWin->hwndFrame, 100);
-            int y = releasePt.y - GetTabbarHeight(oldWin->hwndFrame) / 2;
+            int y = releasePt.y - (GetTabbarHeight(oldWin->hwndFrame) / 2);
             Rect rect = ShiftRectToWorkArea(Rect(x, y, dx, dy), oldWin->hwndFrame, true);
             newWin = CreateAndShowMainWindow(nullptr, false);
             if (!newWin) {

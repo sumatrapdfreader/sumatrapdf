@@ -82,9 +82,9 @@ static Rect GetTrackRect(OverlayScrollbar* sb) {
     }
     int total = arrowSize + gap;
     if (IsVert(sb)) {
-        return Rect(0, total, rc.dx, rc.dy - 2 * total);
+        return Rect(0, total, rc.dx, rc.dy - (2 * total));
     }
-    return Rect(total, 0, rc.dx - 2 * total, rc.dy);
+    return Rect(total, 0, rc.dx - (2 * total), rc.dy);
 }
 
 // Calculate thumb rect within the track
@@ -175,7 +175,7 @@ static int DistToRect(Point pt, Rect rc) {
     if (dy == 0) {
         return dx;
     }
-    return (int)sqrt((double)(dx * dx + dy * dy));
+    return (int)sqrt((double)((dx * dx) + (dy * dy)));
 }
 
 // Check if hwnd is the same as or an ancestor of child
@@ -244,7 +244,7 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
         int y1 = std::min(r.y + r.dy, h);
         for (int y = y0; y < y1; y++) {
             for (int x = x0; x < x1; x++) {
-                pixels[y * w + x] = pixel;
+                pixels[(y * w) + x] = pixel;
             }
         }
     };
@@ -287,41 +287,41 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
             if (IsVert(sb)) {
                 float sz = (float)arrowTop.dx / 3.0f;
                 // up triangle
-                float cx = (float)(arrowTop.x + arrowTop.dx / 2);
-                float cy = (float)(arrowTop.y + arrowTop.dy / 2);
+                float cx = (float)(arrowTop.x + (arrowTop.dx / 2));
+                float cy = (float)(arrowTop.y + (arrowTop.dy / 2));
                 Gdiplus::PointF upPts[3] = {
-                    {cx, cy - sz * 0.7f},
-                    {cx - sz, cy + sz * 0.7f},
-                    {cx + sz, cy + sz * 0.7f},
+                    {cx, cy - (sz * 0.7f)},
+                    {cx - sz, cy + (sz * 0.7f)},
+                    {cx + sz, cy + (sz * 0.7f)},
                 };
                 gfx.FillPolygon(&br, upPts, 3);
                 // down triangle
-                cx = (float)(arrowBot.x + arrowBot.dx / 2);
-                cy = (float)(arrowBot.y + arrowBot.dy / 2);
+                cx = (float)(arrowBot.x + (arrowBot.dx / 2));
+                cy = (float)(arrowBot.y + (arrowBot.dy / 2));
                 Gdiplus::PointF downPts[3] = {
-                    {cx - sz, cy - sz * 0.7f},
-                    {cx + sz, cy - sz * 0.7f},
-                    {cx, cy + sz * 0.7f},
+                    {cx - sz, cy - (sz * 0.7f)},
+                    {cx + sz, cy - (sz * 0.7f)},
+                    {cx, cy + (sz * 0.7f)},
                 };
                 gfx.FillPolygon(&br, downPts, 3);
             } else {
                 float sz = (float)arrowTop.dy / 3.0f;
                 // left triangle
-                float cx = (float)(arrowTop.x + arrowTop.dx / 2);
-                float cy = (float)(arrowTop.y + arrowTop.dy / 2);
+                float cx = (float)(arrowTop.x + (arrowTop.dx / 2));
+                float cy = (float)(arrowTop.y + (arrowTop.dy / 2));
                 Gdiplus::PointF leftPts[3] = {
-                    {cx - sz * 0.7f, cy},
-                    {cx + sz * 0.7f, cy - sz},
-                    {cx + sz * 0.7f, cy + sz},
+                    {cx - (sz * 0.7f), cy},
+                    {cx + (sz * 0.7f), cy - sz},
+                    {cx + (sz * 0.7f), cy + sz},
                 };
                 gfx.FillPolygon(&br, leftPts, 3);
                 // right triangle
-                cx = (float)(arrowBot.x + arrowBot.dx / 2);
-                cy = (float)(arrowBot.y + arrowBot.dy / 2);
+                cx = (float)(arrowBot.x + (arrowBot.dx / 2));
+                cy = (float)(arrowBot.y + (arrowBot.dy / 2));
                 Gdiplus::PointF rightPts[3] = {
-                    {cx - sz * 0.7f, cy - sz},
-                    {cx - sz * 0.7f, cy + sz},
-                    {cx + sz * 0.7f, cy},
+                    {cx - (sz * 0.7f), cy - sz},
+                    {cx - (sz * 0.7f), cy + sz},
+                    {cx + (sz * 0.7f), cy},
                 };
                 gfx.FillPolygon(&br, rightPts, 3);
             }
@@ -335,40 +335,40 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
 
             if (IsVert(sb)) {
                 int sz = arrowTop.dx / 5;
-                float cx = (float)(arrowTop.x + arrowTop.dx / 2);
-                float cy = (float)(arrowTop.y + arrowTop.dy / 2) + (float)inset / 2;
+                float cx = (float)(arrowTop.x + (arrowTop.dx / 2));
+                float cy = (float)(arrowTop.y + (arrowTop.dy / 2)) + ((float)inset / 2);
                 Gdiplus::PointF upPts[3] = {
-                    {cx - sz, cy + sz / 2.0f},
-                    {cx, cy - sz / 2.0f},
-                    {cx + sz, cy + sz / 2.0f},
+                    {cx - sz, cy + (sz / 2.0f)},
+                    {cx, cy - (sz / 2.0f)},
+                    {cx + sz, cy + (sz / 2.0f)},
                 };
                 gfx.DrawLines(&pen, upPts, 3);
 
-                cx = (float)(arrowBot.x + arrowBot.dx / 2);
-                cy = (float)(arrowBot.y + arrowBot.dy / 2) - (float)inset / 2;
+                cx = (float)(arrowBot.x + (arrowBot.dx / 2));
+                cy = (float)(arrowBot.y + (arrowBot.dy / 2)) - ((float)inset / 2);
                 Gdiplus::PointF downPts[3] = {
-                    {cx - sz, cy - sz / 2.0f},
-                    {cx, cy + sz / 2.0f},
-                    {cx + sz, cy - sz / 2.0f},
+                    {cx - sz, cy - (sz / 2.0f)},
+                    {cx, cy + (sz / 2.0f)},
+                    {cx + sz, cy - (sz / 2.0f)},
                 };
                 gfx.DrawLines(&pen, downPts, 3);
             } else {
                 int sz = arrowTop.dy / 5;
-                float cx = (float)(arrowTop.x + arrowTop.dx / 2) + (float)inset / 2;
-                float cy = (float)(arrowTop.y + arrowTop.dy / 2);
+                float cx = (float)(arrowTop.x + (arrowTop.dx / 2)) + ((float)inset / 2);
+                float cy = (float)(arrowTop.y + (arrowTop.dy / 2));
                 Gdiplus::PointF leftPts[3] = {
-                    {cx + sz / 2.0f, cy - sz},
-                    {cx - sz / 2.0f, cy},
-                    {cx + sz / 2.0f, cy + sz},
+                    {cx + (sz / 2.0f), cy - sz},
+                    {cx - (sz / 2.0f), cy},
+                    {cx + (sz / 2.0f), cy + sz},
                 };
                 gfx.DrawLines(&pen, leftPts, 3);
 
-                cx = (float)(arrowBot.x + arrowBot.dx / 2) - (float)inset / 2;
-                cy = (float)(arrowBot.y + arrowBot.dy / 2);
+                cx = (float)(arrowBot.x + (arrowBot.dx / 2)) - ((float)inset / 2);
+                cy = (float)(arrowBot.y + (arrowBot.dy / 2));
                 Gdiplus::PointF rightPts[3] = {
-                    {cx - sz / 2.0f, cy - sz},
-                    {cx + sz / 2.0f, cy},
-                    {cx - sz / 2.0f, cy + sz},
+                    {cx - (sz / 2.0f), cy - sz},
+                    {cx + (sz / 2.0f), cy},
+                    {cx - (sz / 2.0f), cy + sz},
                 };
                 gfx.DrawLines(&pen, rightPts, 3);
             }
@@ -585,7 +585,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                     UINT repeatMs = 0;
                     SystemParametersInfoW(SPI_GETKEYBOARDSPEED, 0, &repeatMs, 0);
                     // SPI_GETKEYBOARDSPEED returns 0-31, map to ~33-500ms (same as OS key repeat)
-                    repeatMs = 400 - repeatMs * 12;
+                    repeatMs = 400 - (repeatMs * 12);
                     SetTimer(hwnd, OverlayScrollbar::kTimerRepeatScroll, repeatMs, nullptr);
                 }
                 return 0;
@@ -651,7 +651,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                     sb->repeatIsInitial = true;
                     UINT delayMs = 0;
                     SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &delayMs, 0);
-                    delayMs = 250 + delayMs * 250; // 0-3 maps to 250-1000ms
+                    delayMs = 250 + (delayMs * 250); // 0-3 maps to 250-1000ms
                     SetTimer(hwnd, OverlayScrollbar::kTimerRepeatScroll, delayMs, nullptr);
                     return 0;
                 }
@@ -662,7 +662,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                     sb->repeatIsInitial = true;
                     UINT delayMs = 0;
                     SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &delayMs, 0);
-                    delayMs = 250 + delayMs * 250;
+                    delayMs = 250 + (delayMs * 250);
                     SetTimer(hwnd, OverlayScrollbar::kTimerRepeatScroll, delayMs, nullptr);
                     return 0;
                 }
@@ -681,7 +681,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int scrollableTrack = trackLen - thumbLen;
                 int scrollableRange = range - (int)sb->nPage;
                 int clickInTrack = (IsVert(sb) ? my : mx) - (IsVert(sb) ? track.y : track.x);
-                int thumbOffset = clickInTrack - thumbLen / 2;
+                int thumbOffset = clickInTrack - (thumbLen / 2);
                 thumbOffset = setMinMax(thumbOffset, 0, scrollableTrack);
                 int newPos = sb->nMin;
                 if (scrollableTrack > 0 && scrollableRange > 0) {
@@ -707,7 +707,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
             Rect track = GetTrackRect(sb);
             if (track.Contains(pt)) {
                 int clickPos = IsVert(sb) ? my : mx;
-                int thumbMid = IsVert(sb) ? (thumbRc.y + thumbRc.dy / 2) : (thumbRc.x + thumbRc.dx / 2);
+                int thumbMid = IsVert(sb) ? (thumbRc.y + (thumbRc.dy / 2)) : (thumbRc.x + (thumbRc.dx / 2));
                 UINT code;
                 if (clickPos < thumbMid) {
                     code = IsVert(sb) ? SB_PAGEUP : SB_PAGELEFT;
@@ -719,7 +719,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 sb->repeatIsInitial = true;
                 UINT delayMs = 0;
                 SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &delayMs, 0);
-                delayMs = 250 + delayMs * 250;
+                delayMs = 250 + (delayMs * 250);
                 SetTimer(hwnd, OverlayScrollbar::kTimerRepeatScroll, delayMs, nullptr);
                 return 0;
             }

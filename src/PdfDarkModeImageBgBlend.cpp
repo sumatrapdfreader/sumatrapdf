@@ -36,7 +36,7 @@ static float SmoothStep(float e0, float e1, float x) {
     if (t >= 1.f) {
         return 1.f;
     }
-    return t * t * (3.f - 2.f * t);
+    return t * t * (3.f - (2.f * t));
 }
 
 static void ReadPixmapPixel(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB,
@@ -50,7 +50,7 @@ static void ReadPixmapPixel(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + y * pix->stride + x * n;
+    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
@@ -69,7 +69,7 @@ static void RemapForegroundPixel(float r, float g, float b, const DarkModePalett
                                  float* outB) {
     float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
     float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 
     if (chroma >= 0.06f) {
@@ -109,13 +109,13 @@ static float SampleMaskBilinear(const float* mask, int maskW, int maskH, float u
     }
     float tx = fx - x0;
     float ty = fy - y0;
-    float v00 = mask[y0 * maskW + x0];
-    float v10 = mask[y0 * maskW + x1];
-    float v01 = mask[y1 * maskW + x0];
-    float v11 = mask[y1 * maskW + x1];
-    float a = v00 + (v10 - v00) * tx;
-    float b = v01 + (v11 - v01) * tx;
-    return a + (b - a) * ty;
+    float v00 = mask[(y0 * maskW) + x0];
+    float v10 = mask[(y0 * maskW) + x1];
+    float v01 = mask[(y1 * maskW) + x0];
+    float v11 = mask[(y1 * maskW) + x1];
+    float a = v00 + ((v10 - v00) * tx);
+    float b = v01 + ((v11 - v01) * tx);
+    return a + ((b - a) * ty);
 }
 
 static void BlurMaskBox3(float* mask, int maskW, int maskH) {
@@ -136,12 +136,12 @@ static void BlurMaskBox3(float* mask, int maskW, int maskH) {
                     int nx = x + dx;
                     int ny = y + dy;
                     if (nx >= 0 && nx < maskW && ny >= 0 && ny < maskH) {
-                        sum += mask[ny * maskW + nx];
+                        sum += mask[(ny * maskW) + nx];
                         count++;
                     }
                 }
             }
-            tmp[y * maskW + x] = sum / (float)count;
+            tmp[(y * maskW) + x] = sum / (float)count;
         }
     }
     memcpy(mask, tmp, (size_t)n * sizeof(float));
@@ -185,16 +185,16 @@ static bool BuildEdgeConnectedBgMask(fz_context* ctx, fz_pixmap* src, float bgR,
             float r, g, b, a;
             ReadPixmapPixel(ctx, src, sx, sy, &r, &g, &b, &a);
             if (a < 0.08f) {
-                bgScore[my * maskW + mx] = 1.f;
+                bgScore[(my * maskW) + mx] = 1.f;
                 continue;
             }
-            float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+            float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
             float dist = PdfDarkModeOklabDistance(r, g, b, bgR, bgG, bgB);
             float score = 1.f - SmoothStep(bgDistHard, bgDistSoft, dist);
             if (lum < 0.50f) {
                 score *= SmoothStep(0.50f, 0.38f, lum);
             }
-            bgScore[my * maskW + mx] = Clamp01(score);
+            bgScore[(my * maskW) + mx] = Clamp01(score);
         }
     }
 
@@ -204,7 +204,7 @@ static bool BuildEdgeConnectedBgMask(fz_context* ctx, fz_pixmap* src, float bgR,
         if (x < 0 || y < 0 || x >= maskW || y >= maskH) {
             return;
         }
-        int idx = y * maskW + x;
+        int idx = (y * maskW) + x;
         if (queued[idx]) {
             return;
         }
@@ -315,7 +315,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
 
                 float r, g, b, a;
                 ReadPixmapPixel(ctx, src, x, y, &r, &g, &b, &a);
-                unsigned char* px = dst->samples + y * dst->stride + x * n;
+                unsigned char* px = dst->samples + (y * dst->stride) + (x * n);
 
                 if (fgConf < 0.04f || a < 0.02f) {
                     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
@@ -334,7 +334,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
                 float back[FZ_MAX_COLORS] = {};
                 fz_convert_color(ctx, rgb, outRgb, cs, back, cs, fz_default_color_params);
                 for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                    int vpx = (int)(back[c] * 255.f + 0.5f);
+                    int vpx = (int)((back[c] * 255.f) + 0.5f);
                     if (vpx < 0) {
                         vpx = 0;
                     }
@@ -344,7 +344,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
                     px[c] = (unsigned char)vpx;
                 }
                 if (dst->alpha) {
-                    int av = (int)(a * fgConf * 255.f + 0.5f);
+                    int av = (int)((a * fgConf * 255.f) + 0.5f);
                     if (av < 0) {
                         av = 0;
                     }

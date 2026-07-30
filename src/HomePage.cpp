@@ -553,7 +553,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
 
     Str txt = kAppName;
     Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
-    Rect mainRect(rect.x + (rect.dx - txtSize.dx) / 2, rect.y + (rect.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    Rect mainRect(rect.x + ((rect.dx - txtSize.dx) / 2), rect.y + ((rect.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
 
     // draw SumatraPDF in colorful way
     Point pt = mainRect.TL();
@@ -775,13 +775,13 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     if (minRect.dx < headerSize.dx) {
         minRect.dx = headerSize.dx;
     }
-    minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * marginDx;
+    minRect.dx += (2 * ABOUT_LINE_OUTER_SIZE) + (2 * marginDx);
 
     minRect.dy = headerSize.dy;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         minRect.dy += rightDy + aboutTxtDy;
     }
-    minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
+    minRect.dy += (2 * ABOUT_LINE_OUTER_SIZE) + 4;
 
     Rect rc = HwndClientRect(hwnd);
     minRect.x = (rc.dx - minRect.dx) / 2;
@@ -796,7 +796,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     int currY = minRect.y + headerSize.dy + 4;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         el->leftPos.x = minRect.x + linePosX - leftRightSpaceDx - el->leftPos.dx;
-        el->leftPos.y = currY + (rightDy - leftDy) / 2;
+        el->leftPos.y = currY + ((rightDy - leftDy) / 2);
         el->rightPos.x = minRect.x + linePosX + leftRightSpaceDx;
         el->rightPos.y = currY;
         currY += rightDy + aboutTxtDy;
@@ -1235,15 +1235,15 @@ void LayoutHomePage(HomePageLayout& l) {
         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
     int thumbsColsForLayout = std::max(colsForLayout, 1);
     int thumbsStartX = rc.x + kThumbsMarginLeft +
-                       (rc.dx - thumbsColsForLayout * kThumbnailDx - (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX -
-                        kThumbsMarginLeft - kThumbsMarginRight) /
-                           2;
+                       ((rc.dx - (thumbsColsForLayout * kThumbnailDx) -
+                         ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX) - kThumbsMarginLeft - kThumbsMarginRight) /
+                        2);
     if (thumbsStartX < DpiScale(hdc, kInnerPadding)) {
         thumbsStartX = DpiScale(hdc, kInnerPadding);
     } else if (nFilesForLayout == 0) {
         thumbsStartX = kThumbsMarginLeft;
     }
-    int thumbsContentWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
+    int thumbsContentWidth = (thumbsColsForLayout * kThumbnailDx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
     // --- Step 1: layout header at the top ---
     l.himlOpen = TbGetImageList(win->hwndToolbar);
@@ -1262,9 +1262,9 @@ void LayoutHomePage(HomePageLayout& l) {
     int hdrY = DpiScale(hdc, 8);
     int iconGap = DpiScale(hdc, 4);
     int titleGap = DpiScale(hdc, 8);
-    int viewIconsDx = 2 * rcIconView.dx + iconGap;
+    int viewIconsDx = (2 * rcIconView.dx) + iconGap;
     Rect rcHdr(thumbsStartX + viewIconsDx + titleGap, hdrY, txtSize.dx, txtSize.dy);
-    l.rcIconThumbnailView = {thumbsStartX, rcHdr.y + (rcHdr.dy - rcIconView.dy) / 2, rcIconView.dx, rcIconView.dy};
+    l.rcIconThumbnailView = {thumbsStartX, rcHdr.y + ((rcHdr.dy - rcIconView.dy) / 2), rcIconView.dx, rcIconView.dy};
     l.rcIconListView = {l.rcIconThumbnailView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
                         rcIconView.dy};
     if (isRtl) {
@@ -1322,7 +1322,7 @@ void LayoutHomePage(HomePageLayout& l) {
         if (borderDx < DpiScale(hdc, 200)) {
             borderDx = DpiScale(hdc, 200);
         }
-        int borderX = thumbsStartX + (thumbsContentWidth - borderDx) / 2;
+        int borderX = thumbsStartX + ((thumbsContentWidth - borderDx) / 2);
         int borderY = headerBottomY + headerSearchGap;
         int borderDy = searchEditDy + 2; // 1px border on each side
         l.rcSearchBorder = {borderX, borderY, borderDx, borderDy};
@@ -1334,7 +1334,7 @@ void LayoutHomePage(HomePageLayout& l) {
         SelectObject(hdc, oldFont);
         int fontDy = tm.tmHeight + tm.tmExternalLeading + 2; // +2 for caret padding
         int editDy = std::min(fontDy, searchEditDy);
-        int editY = borderY + 1 + (searchEditDy - editDy) / 2;
+        int editY = borderY + 1 + ((searchEditDy - editDy) / 2);
         MoveWindow(win->hwndHomeSearch, borderX + 1, editY, borderDx - 2, editDy, TRUE);
     }
     // border is 1px top + 1px bottom = 2px
@@ -1357,7 +1357,7 @@ void LayoutHomePage(HomePageLayout& l) {
         int tipPadding = DpiScale(hdc, 8);
         // do a preliminary layout to get the height (use thumbnails content width)
         LayoutTip(*tip, thumbsContentWidth, 0, 0);
-        tipHeight = tip->totalDy + 2 * tipPadding;
+        tipHeight = tip->totalDy + (2 * tipPadding);
     }
 
     // --- Step 3: middle area for thumbnails/list ---
@@ -1378,7 +1378,7 @@ void LayoutHomePage(HomePageLayout& l) {
     } else {
         thumbsRows = (nFiles + thumbsColsForLayout - 1) / thumbsColsForLayout;
         if (thumbsRows > 0) {
-            thumbsContentDy = thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY) - kThumbsSpaceBetweenY;
+            thumbsContentDy = (thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY)) - kThumbsSpaceBetweenY;
         }
     }
 
@@ -1405,13 +1405,14 @@ void LayoutHomePage(HomePageLayout& l) {
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
             FileState* fs = fileStates[row];
             thumb.fs = fs;
-            Rect rcRow(listX, ptOff.y + row * kHomeListRowDy, thumbsContentWidth, kHomeListRowDy);
+            Rect rcRow(listX, ptOff.y + (row * kHomeListRowDy), thumbsContentWidth, kHomeListRowDy);
             thumb.rcListRow = rcRow;
             // size the file-size column to its text so it never ellipsizes
             TempStr fileSize = FileSizeForHomeListTemp(fs->filePath);
             int listSizeDx = HdcMeasureText(hdc, Str(fileSize), fontRow).dx + DpiScale(hdc, 4);
-            Rect rcThumb(rcRow.x, rcRow.y + (rcRow.dy - kHomeListThumbDy) / 2, kHomeListThumbDx, kHomeListThumbDy);
-            Rect rcPin(rcRow.x + rcRow.dx - listIconDx, rcRow.y + (rcRow.dy - listIconDx) / 2, listIconDx, listIconDx);
+            Rect rcThumb(rcRow.x, rcRow.y + ((rcRow.dy - kHomeListThumbDy) / 2), kHomeListThumbDx, kHomeListThumbDy);
+            Rect rcPin(rcRow.x + rcRow.dx - listIconDx, rcRow.y + ((rcRow.dy - listIconDx) / 2), listIconDx,
+                       listIconDx);
             Rect rcRemove(rcPin.x - listIconGap - listIconDx, rcPin.y, listIconDx, listIconDx);
             Rect rcSize(rcRemove.x - listIconGap - listSizeDx, rcRow.y, listSizeDx, rcRow.dy);
             Rect rcFileName(rcThumb.x + rcThumb.dx + kHomeListRowGapDx, rcRow.y,
@@ -1471,17 +1472,17 @@ void LayoutHomePage(HomePageLayout& l) {
     } else {
         for (int row = 0; row < thumbsRows; row++) {
             for (int col = 0; col < thumbsColsForLayout; col++) {
-                if (row * thumbsColsForLayout + col >= nFiles) {
+                if ((row * thumbsColsForLayout) + col >= nFiles) {
                     // no more files to display
                     thumbsRows = col > 0 ? row + 1 : row;
                     break;
                 }
                 ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
-                FileState* fs = fileStates[row * thumbsColsForLayout + col];
+                FileState* fs = fileStates[(row * thumbsColsForLayout) + col];
                 thumb.fs = fs;
 
-                Rect rcPage(ptOff.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
-                            ptOff.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
+                Rect rcPage(ptOff.x + (col * (kThumbnailDx + kThumbsSpaceBetweenX)),
+                            ptOff.y + (row * (kThumbnailDy + kThumbsSpaceBetweenY)), kThumbnailDx, kThumbnailDy);
                 if (isRtl) {
                     rcPage.x = rc.dx - rcPage.x - rcPage.dx;
                 }
@@ -1765,7 +1766,7 @@ static Rect FitRectInRect(Size src, Rect dst) {
         dy = dst.dy;
         dx = src.dx * dy / src.dy;
     }
-    Rect r(dst.x + (dst.dx - dx) / 2, dst.y + (dst.dy - dy) / 2, dx, dy);
+    Rect r(dst.x + ((dst.dx - dx) / 2), dst.y + ((dst.dy - dy) / 2), dx, dy);
     return r;
 }
 

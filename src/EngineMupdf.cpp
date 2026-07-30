@@ -1144,7 +1144,7 @@ static bool LinkifyCheckMultiline(Utf8PageText pageText, int posOff, Rect* coord
     return posOff > 0 && posOff < pageLen && '\n' == RuneAt(pageText, posOff) && (posOff + 1) < pageLen &&
            !IsAlphaNumRune(RuneAt(pageText, posOff - 1)) && !IsWhitespaceRune(RuneAt(pageText, posOff + 1)) &&
            coords[posOff + 1].BR().y > coords[posOff - 1].y &&
-           coords[posOff + 1].y <= coords[posOff - 1].BR().y + coords[posOff - 1].dy * 0.35 &&
+           coords[posOff + 1].y <= coords[posOff - 1].BR().y + (coords[posOff - 1].dy * 0.35) &&
            coords[posOff + 1].x < coords[posOff - 1].BR().x && coords[posOff + 1].dy >= coords[posOff - 1].dy * 0.85 &&
            coords[posOff + 1].dy <= coords[posOff - 1].dy * 1.2 && !StartsWithAscii(pageText, posOff + 1, "http");
 }
@@ -1540,7 +1540,7 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
         }
     }
 
-    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
+    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD))));
 
     fz_pixmap* bgrPixmap = nullptr;
     fz_colorspace* csdest = nullptr;
@@ -2344,7 +2344,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
         str::Builder number;
-        number.AppendChar('A' + (pageNo - 1) % 26);
+        number.AppendChar('A' + ((pageNo - 1) % 26));
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number[0]);
         }
@@ -4237,11 +4237,11 @@ RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rota
 
 static u32 DarkLegacySkipHash(FzPageInfo* pageInfo, float zoom, int rotation) {
     u32 h = PdfDarkModeComputeOptionsHash();
-    h = h * 31 + (u32)(zoom * 1000.f);
-    h = h * 31 + (u32)rotation;
-    h = h * 31 + (u32)GetPreservePdfImagesMinSize();
-    h = h * 31 + (u32)GetPreservePdfImagesInDarkMode();
-    h = h * 31 + (u32)(pageInfo ? len(pageInfo->images) : 0);
+    h = (h * 31) + (u32)(zoom * 1000.f);
+    h = (h * 31) + (u32)rotation;
+    h = (h * 31) + (u32)GetPreservePdfImagesMinSize();
+    h = (h * 31) + (u32)GetPreservePdfImagesInDarkMode();
+    h = (h * 31) + (u32)(pageInfo ? len(pageInfo->images) : 0);
     return h;
 }
 
@@ -4836,10 +4836,10 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
                     int my = (mh == bh) ? y : (int)((i64)y * mh / bh);
                     for (int x = 0; x < bw; x++) {
                         int mx = (mw == bw) ? x : (int)((i64)x * mw / bw);
-                        int a = mp[(size_t)my * mask->stride + (size_t)mx * mn]; // smask = alpha
-                        u8* px = bp + (size_t)y * pixmap->stride + (size_t)x * bn;
+                        int a = mp[((size_t)my * mask->stride) + ((size_t)mx * mn)]; // smask = alpha
+                        u8* px = bp + ((size_t)y * pixmap->stride) + ((size_t)x * bn);
                         for (int k = 0; k < 3; k++) {
-                            px[k] = (u8)((px[k] * a + 255 * (255 - a)) / 255);
+                            px[k] = (u8)(((px[k] * a) + (255 * (255 - a))) / 255);
                         }
                     }
                 }

@@ -240,8 +240,8 @@ void DrawCaptionSysButtonGlyph(HDC hdc, CaptionSysButtonKind kind, Rect rc, COLO
     BuildCaptionSysButtonPath(kind, &path);
 
     float scale = (float)iconPx / kCaptionGlyphEm;
-    float ox = (float)rc.x + ((float)rc.dx - (float)iconPx) / 2.0f;
-    float oy = (float)rc.y + ((float)rc.dy + (float)iconPx) / 2.0f;
+    float ox = (float)rc.x + (((float)rc.dx - (float)iconPx) / 2.0f);
+    float oy = (float)rc.y + (((float)rc.dy + (float)iconPx) / 2.0f);
 
     Gdiplus::Matrix m;
     m.Translate(ox, oy);

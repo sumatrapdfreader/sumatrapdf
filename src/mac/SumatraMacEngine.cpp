@@ -64,15 +64,15 @@ static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
     }
 
     if (pixmap->format == PixmapFormat::BGR8) {
-        size_t stride = ((size_t)pixmap->width * 4 + 3) & ~(size_t)3;
+        size_t stride = (((size_t)pixmap->width * 4) + 3) & ~(size_t)3;
         size_t nBytes = stride * (size_t)pixmap->height;
         auto* data = (unsigned char*)malloc(nBytes);
         if (!data) {
             return false;
         }
         for (int y = 0; y < pixmap->height; y++) {
-            const unsigned char* src = pixmap->data + (size_t)y * (size_t)pixmap->stride;
-            unsigned char* dst = data + (size_t)y * stride;
+            const unsigned char* src = pixmap->data + ((size_t)y * (size_t)pixmap->stride);
+            unsigned char* dst = data + ((size_t)y * stride);
             for (int x = 0; x < pixmap->width; x++) {
                 dst[0] = src[0];
                 dst[1] = src[1];

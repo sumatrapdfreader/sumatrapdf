@@ -654,8 +654,8 @@ void VBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, i
             break;
         case CrossAxisAlign::CrossCenter:
             r = Rect{
-                Point{posX + (posX2 - posX - dx) / 2, posY},
-                Point{posX + (posX2 - posX + dx) / 2, posY2},
+                Point{posX + ((posX2 - posX - dx) / 2), posY},
+                Point{posX + ((posX2 - posX + dx) / 2), posY2},
             };
             break;
         case CrossAxisAlign::CrossEnd:
@@ -983,8 +983,8 @@ void HBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, i
             break;
         case CrossAxisAlign::CrossCenter:
             v->SetBounds(Rect{
-                Point{posX, posY + (posY2 - posY - dy) / 2},
-                Point{posX2, posY + (posY2 - posY + dy) / 2},
+                Point{posX, posY + ((posY2 - posY - dy) / 2)},
+                Point{posX2, posY + ((posY2 - posY + dy) / 2)},
             });
             break;
         case CrossAxisAlign::CrossEnd:
@@ -1241,7 +1241,7 @@ int TableLayout::CellIdx(int row, int col) {
     ReportIf(!cells);
     ReportIf(row < 0 || row >= rows);
     ReportIf(col < 0 || col >= cols);
-    int idx = col * cols + row;
+    int idx = (col * cols) + row;
     return idx;
 }
 

@@ -106,11 +106,11 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         if (r.dx <= 0 && r.dy <= 0) {
             continue;
         }
-        int cx = r.x + r.dx / 2;
-        int cy = r.y + r.dy / 2;
+        int cx = r.x + (r.dx / 2);
+        int cy = r.y + (r.dy / 2);
         int ddx = cx - pagePos.x;
         int ddy = cy - pagePos.y;
-        int distSq = ddx * ddx + ddy * ddy;
+        int distSq = (ddx * ddx) + (ddy * ddy);
         if (distSq < bestDistSq) {
             bestDistSq = distSq;
             cursorIdx = i;
@@ -129,7 +129,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         lineH = 14;
     }
     int yMin = cursorY - lineH - 2;
-    int yMax = cursorY + lineH * 2 + 2;
+    int yMax = cursorY + (lineH * 2) + 2;
 
     // Word-generated PDFs frequently emit kerning-driven inter-glyph spaces
     // ("et  al .", "Geneti c  Al gorith ms"), which break naive pattern
@@ -189,7 +189,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         if (i > 0 && iswdigit(s.s[i - 1])) {
             return -1;
         }
-        int y = (s.s[i] - L'0') * 1000 + (s.s[i + 1] - L'0') * 100 + (s.s[i + 2] - L'0') * 10 + (s.s[i + 3] - L'0');
+        int y =
+            ((s.s[i] - L'0') * 1000) + ((s.s[i + 1] - L'0') * 100) + ((s.s[i + 2] - L'0') * 10) + (s.s[i + 3] - L'0');
         if (y < 1900 || y > 2050) {
             return -1;
         }
@@ -221,8 +222,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
             return false;
         }
     }
-    int year = (s.s[bestYearPos] - L'0') * 1000 + (s.s[bestYearPos + 1] - L'0') * 100 +
-               (s.s[bestYearPos + 2] - L'0') * 10 + (s.s[bestYearPos + 3] - L'0');
+    int year = ((s.s[bestYearPos] - L'0') * 1000) + ((s.s[bestYearPos + 1] - L'0') * 100) +
+               ((s.s[bestYearPos + 2] - L'0') * 10) + (s.s[bestYearPos + 3] - L'0');
 
     // 4. Walk back from the year through punctuation to find the surname.
     int p = bestYearPos - 1;
@@ -395,10 +396,10 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
 
     // Year as a wide string for searching.
     WCHAR yearStr[6];
-    yearStr[0] = (WCHAR)(L'0' + (year / 1000) % 10);
-    yearStr[1] = (WCHAR)(L'0' + (year / 100) % 10);
-    yearStr[2] = (WCHAR)(L'0' + (year / 10) % 10);
-    yearStr[3] = (WCHAR)(L'0' + year % 10);
+    yearStr[0] = (WCHAR)(L'0' + ((year / 1000) % 10));
+    yearStr[1] = (WCHAR)(L'0' + ((year / 100) % 10));
+    yearStr[2] = (WCHAR)(L'0' + ((year / 10) % 10));
+    yearStr[3] = (WCHAR)(L'0' + (year % 10));
     yearStr[4] = 0;
 
     int prevY = INT_MIN;
@@ -494,11 +495,11 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         if (r.dx <= 0 && r.dy <= 0) {
             continue;
         }
-        int cx = r.x + r.dx / 2;
-        int cy = r.y + r.dy / 2;
+        int cx = r.x + (r.dx / 2);
+        int cy = r.y + (r.dy / 2);
         int ddx = cx - pagePos.x;
         int ddy = cy - pagePos.y;
-        int distSq = ddx * ddx + ddy * ddy;
+        int distSq = (ddx * ddx) + (ddy * ddy);
         if (distSq < bestDistSq) {
             bestDistSq = distSq;
             cursorIdx = i;
@@ -701,7 +702,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         int start = k;
         int val = 0;
         while (k < closePos && iswdigit(text.s[seq[k]])) {
-            val = val * 10 + (text.s[seq[k]] - L'0');
+            val = (val * 10) + (text.s[seq[k]] - L'0');
             if (val > 99999) {
                 val = 99999; // guard against pathological runs
             }
@@ -776,7 +777,7 @@ bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, 
         int val = 0;
         int nd = 0;
         while (j < textLen && iswdigit(text.s[j])) {
-            val = val * 10 + (text.s[j] - L'0');
+            val = (val * 10) + (text.s[j] - L'0');
             j++;
             nd++;
         }

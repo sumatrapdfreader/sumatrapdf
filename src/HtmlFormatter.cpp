@@ -789,7 +789,7 @@ bool HtmlFormatter::EmitImage(Str img) {
     // move overly large images to a new page
     // (if they don't fit even when scaled down to 75%)
     float scalePage = std::min((pageDx - currX) / newSize.dx, pageDy / newSize.dy);
-    if (currY > 0 && currY + newSize.dy * std::min(scalePage, 0.75f) > pageDy) {
+    if (currY > 0 && currY + (newSize.dy * std::min(scalePage, 0.75f)) > pageDy) {
         ForceNewPage();
     }
     // if image is bigger than the available space, scale it down
@@ -1672,7 +1672,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInst
         bbox.y += offY;
         if (DrawInstrType::Line == i.type) {
             // hr is a line drawn in the middle of bounding box
-            float y = floorf(bbox.y + bbox.dy / 2.f + 0.5f);
+            float y = floorf(bbox.y + (bbox.dy / 2.f) + 0.5f);
             Gdiplus::PointF p1(bbox.x, y);
             Gdiplus::PointF p2(bbox.x + bbox.dx, y);
             if (showBbox) {

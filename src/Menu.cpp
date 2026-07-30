@@ -2467,7 +2467,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         ws = CWStrTemp(shortcutText);
         rc = dis->rcItem;
         rc.top += padY;
-        rc.right -= (padX + cxCheckMark / 2);
+        rc.right -= (padX + (cxCheckMark / 2));
         DrawTextExW(hdc, ws, -1, &rc, DT_RIGHT, nullptr);
     }
 

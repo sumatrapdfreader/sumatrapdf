@@ -1318,22 +1318,22 @@ static void PaintColorArea(HDC hdc, RECT* rc) {
         return;
     }
     // rows must be DWORD-aligned; each pixel is 3 bytes (BGR)
-    int stride = (w * 3 + 3) & ~3;
+    int stride = ((w * 3) + 3) & ~3;
     // cast before multiply so the product cannot overflow int→size_t
     u8* bits = (u8*)malloc((size_t)stride * (size_t)h);
     if (!bits) {
         return;
     }
     for (int y = 0; y < h; y++) {
-        float val = 1.0f - (float)y / (float)h;
-        u8* row = bits + y * stride;
+        float val = 1.0f - ((float)y / (float)h);
+        u8* row = bits + (y * stride);
         for (int x = 0; x < w; x++) {
             float hue = (float)x / (float)w * 360.0f;
             u8 r, g, b;
             HsvToRgb(hue, 1.0f, val, r, g, b);
             row[x * 3] = b;
-            row[x * 3 + 1] = g;
-            row[x * 3 + 2] = r;
+            row[(x * 3) + 1] = g;
+            row[(x * 3) + 2] = r;
         }
     }
     BITMAPINFO bmi{};

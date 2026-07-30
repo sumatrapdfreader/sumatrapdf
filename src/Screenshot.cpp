@@ -197,7 +197,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
     switch (edge) {
         case 0: // left column
             for (int y = y0; y < y0 + h; y++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[y * stride + x0] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[(y * stride) + x0] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -205,7 +205,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 1: // right column
             for (int y = y0; y < y0 + h; y++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[y * stride + x0 + w - 1] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[(y * stride) + x0 + w - 1] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -213,7 +213,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 2: // top row
             for (int x = x0; x < x0 + w; x++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[y0 * stride + x] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[(y0 * stride) + x] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -221,7 +221,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 3: // bottom row
             for (int x = x0; x < x0 + w; x++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[(y0 + h - 1) * stride + x] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToCOLORREF(pixels[((y0 + h - 1) * stride) + x] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -345,12 +345,12 @@ static void FixRoundedCorners(HBITMAP hbm, int w, int h, COLORREF bgColor, int r
             // distance from corner center to pixel
             int dx = radius - 1 - cx;
             int dy = radius - 1 - cy;
-            if (dx * dx + dy * dy > radius * radius) {
+            if ((dx * dx) + (dy * dy) > radius * radius) {
                 // outside the rounded corner — replace with background if black
-                replaceIfBlack(cy * w + cx);                     // top-left
-                replaceIfBlack(cy * w + (w - 1 - cx));           // top-right
-                replaceIfBlack((h - 1 - cy) * w + cx);           // bottom-left
-                replaceIfBlack((h - 1 - cy) * w + (w - 1 - cx)); // bottom-right
+                replaceIfBlack((cy * w) + cx);                     // top-left
+                replaceIfBlack((cy * w) + (w - 1 - cx));           // top-right
+                replaceIfBlack(((h - 1 - cy) * w) + cx);           // bottom-left
+                replaceIfBlack(((h - 1 - cy) * w) + (w - 1 - cx)); // bottom-right
             }
         }
     }
@@ -753,8 +753,8 @@ static Rect GetThumbRect(ScreenshotOverlayData* data, int idx) {
     int thumbAreaH = data->rowHeights[row] - kLabelGap - kLabelHeight;
 
     // center thumbnail in cell
-    int tx = cellX + (cellW - cs.thumbW) / 2;
-    int ty = cellY + kGridPaddingY + (thumbAreaH - (2 * kGridPaddingY) - cs.thumbH) / 2;
+    int tx = cellX + ((cellW - cs.thumbW) / 2);
+    int ty = cellY + kGridPaddingY + ((thumbAreaH - (2 * kGridPaddingY) - cs.thumbH) / 2);
 
     return {tx, ty, cs.thumbW, cs.thumbH};
 }
@@ -972,8 +972,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
         for (int y = y0; y < y1; y++) {
             for (int x = x0; x < x1; x++) {
-                COLORREF c = RgbToCOLORREF(tempPixels[y * w + x] & 0x00FFFFFF);
-                pixels[y * w + x] = PremultiplyPixel(c, 255);
+                COLORREF c = RgbToCOLORREF(tempPixels[(y * w) + x] & 0x00FFFFFF);
+                pixels[(y * w) + x] = PremultiplyPixel(c, 255);
             }
         }
     }
@@ -982,8 +982,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     {
         for (int y = 0; y < kInfoBarHeight; y++) {
             for (int x = 0; x < w; x++) {
-                COLORREF c = RgbToCOLORREF(tempPixels[y * w + x] & 0x00FFFFFF);
-                pixels[y * w + x] = PremultiplyPixel(c, 255);
+                COLORREF c = RgbToCOLORREF(tempPixels[(y * w) + x] & 0x00FFFFFF);
+                pixels[(y * w) + x] = PremultiplyPixel(c, 255);
             }
         }
     }
@@ -994,16 +994,16 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
         DWORD px = tempPixels[x];
         pixels[x] = (255u << 24) | (px & 0xFFFFFF);
         // bottom edge
-        px = tempPixels[(h - 1) * w + x];
-        pixels[(h - 1) * w + x] = (255u << 24) | (px & 0xFFFFFF);
+        px = tempPixels[((h - 1) * w) + x];
+        pixels[((h - 1) * w) + x] = (255u << 24) | (px & 0xFFFFFF);
     }
     for (int y = 0; y < h; y++) {
         // left edge
         DWORD px = tempPixels[y * w];
         pixels[y * w] = (255u << 24) | (px & 0xFFFFFF);
         // right edge
-        px = tempPixels[y * w + w - 1];
-        pixels[y * w + w - 1] = (255u << 24) | (px & 0xFFFFFF);
+        px = tempPixels[(y * w) + w - 1];
+        pixels[(y * w) + w - 1] = (255u << 24) | (px & 0xFFFFFF);
     }
 
     free(tempPixels);

@@ -1100,7 +1100,7 @@ int WebviewWnd::GetZoomPercent() const {
     }
     double factor = 1.0;
     controller->get_ZoomFactor(&factor);
-    return (int)(factor * 100.0 + 0.5);
+    return (int)((factor * 100.0) + 0.5);
 }
 
 bool WebviewWnd::CanGoBack() const {

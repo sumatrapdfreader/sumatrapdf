@@ -12,7 +12,7 @@
 #include "TextSelection.h"
 
 uint distSq(int x, int y) {
-    return x * x + y * y;
+    return (x * x) + (y * y);
 }
 // underscore is mainly used for programming and is thus considered a word character
 bool isWordChar(int c) {
@@ -66,7 +66,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
             continue;
         }
 
-        uint dist = distSq((int)x - coord.x - coord.dx / 2, (int)y - coord.y - coord.dy / 2);
+        uint dist = distSq((int)x - coord.x - (coord.dx / 2), (int)y - coord.y - (coord.dy / 2));
         if (dist < maxDist) {
             result = i;
             maxDist = dist;
@@ -87,7 +87,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     // the result indexes the first glyph to be selected in a forward selection
     RectF bbox = ts->engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
     pt = ts->engine->Transform(pt, pageNo, 1.0, 0);
-    if (pt.x > bbox.x + 0.5 * bbox.dx) {
+    if (pt.x > bbox.x + (0.5 * bbox.dx)) {
         result++;
         // for some (DjVu) documents, all glyphs of a word share the same bbox
         while (result < textLen && coords[result - 1] == coords[result]) {
@@ -702,8 +702,8 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
     while (refIx > 0 && !coords[refIx].x && !coords[refIx].dx && !IsLineBreakAt(text, coords, refIx, textLen)) {
         refIx--;
     }
-    int refX = coords[refIx].x + coords[refIx].dx / 2;
-    int refY = coords[refIx].y + coords[refIx].dy / 2;
+    int refX = coords[refIx].x + (coords[refIx].dx / 2);
+    int refY = coords[refIx].y + (coords[refIx].dy / 2);
     int lineH = coords[refIx].dy > 0 ? coords[refIx].dy : 12;
     int ySlop = std::max(lineH / 2, 2);
 
@@ -717,7 +717,7 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
             if (!coords[i].x && !coords[i].dx) {
                 continue;
             }
-            int cy = coords[i].y + coords[i].dy / 2;
+            int cy = coords[i].y + (coords[i].dy / 2);
             if (cy <= refY + ySlop) {
                 continue;
             }
@@ -737,11 +737,11 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
             if (!coords[i].x && !coords[i].dx) {
                 continue;
             }
-            int cy = coords[i].y + coords[i].dy / 2;
+            int cy = coords[i].y + (coords[i].dy / 2);
             if (std::abs(cy - targetBandY) > ySlop) {
                 continue;
             }
-            int cx = coords[i].x + coords[i].dx / 2;
+            int cx = coords[i].x + (coords[i].dx / 2);
             int d = std::abs(cx - refX);
             if (d < bestDist) {
                 bestDist = d;
@@ -761,7 +761,7 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
         if (!coords[i].x && !coords[i].dx) {
             continue;
         }
-        int cy = coords[i].y + coords[i].dy / 2;
+        int cy = coords[i].y + (coords[i].dy / 2);
         if (cy >= refY - ySlop) {
             continue;
         }
@@ -782,11 +782,11 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
         if (!coords[i].x && !coords[i].dx) {
             continue;
         }
-        int cy = coords[i].y + coords[i].dy / 2;
+        int cy = coords[i].y + (coords[i].dy / 2);
         if (std::abs(cy - targetBandY) > ySlop) {
             continue;
         }
-        int cx = coords[i].x + coords[i].dx / 2;
+        int cx = coords[i].x + (coords[i].dx / 2);
         int d = std::abs(cx - refX);
         if (d < bestDist) {
             bestDist = d;

@@ -22,7 +22,7 @@ typedef struct {
 static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
     float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
     float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     if (outLum) {
         *outLum = lum;
     }
@@ -34,7 +34,7 @@ static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
 }
 
 static float CadMatrixExpansion(fz_matrix ctm) {
-    return sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+    return sqrtf((ctm.a * ctm.a) + (ctm.b * ctm.b));
 }
 
 // WPS and similar tools export CAD labels with a tiny text matrix (~0.05).
@@ -47,7 +47,7 @@ static fz_matrix CadEmboldenTinyTextMatrix(fz_matrix ctm, bool hairlineDoc) {
     if (expansion <= 0.08f) {
         boost = 1.55f;
     } else {
-        boost = 1.f + (0.22f - expansion) * 2.5f;
+        boost = 1.f + ((0.22f - expansion) * 2.5f);
         if (boost > 1.55f) {
             boost = 1.55f;
         }
@@ -72,9 +72,9 @@ static float CadEnhanceBlendForExpansion(float expansion) {
 
 static void CadBlendRgb(float r, float g, float b, float mr, float mg, float mb, float blend, float* outR, float* outG,
                         float* outB) {
-    *outR = r + (mr - r) * blend;
-    *outG = g + (mg - g) * blend;
-    *outB = b + (mb - b) * blend;
+    *outR = r + ((mr - r) * blend);
+    *outG = g + ((mg - g) * blend);
+    *outB = b + ((mb - b) * blend);
 }
 
 // Map typical CAD export grays toward Acrobat-like darker strokes (not pure black).
@@ -96,7 +96,7 @@ static void CadAcrobatGrayRgb(float r, float g, float b, float* outR, float* out
     if (t > 1.f) {
         t = 1.f;
     }
-    float targetLum = 0.15f + t * 0.21f;
+    float targetLum = 0.15f + (t * 0.21f);
     if (targetLum >= lum || lum < 0.0001f) {
         *outR = r;
         *outG = g;
@@ -385,11 +385,11 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
             CadAcrobatGrayRgb(fr, fg, fb, &outR, &outG, &outB);
             CadBlendRgb(fr, fg, fb, outR, outG, outB, blend, &outR, &outG, &outB);
 
-            float lum = 0.2126f * outR + 0.7152f * outG + 0.0722f * outB;
+            float lum = (0.2126f * outR) + (0.7152f * outG) + (0.0722f * outB);
             float maxC = outR > outG ? (outR > outB ? outR : outB) : (outG > outB ? outG : outB);
             float minC = outR < outG ? (outR < outB ? outR : outB) : (outG < outB ? outG : outB);
             if (lum > 0.40f && lum < 0.90f && maxC - minC < 0.15f) {
-                float factor = 1.f - 0.28f * blend * (lum - 0.40f) / 0.50f;
+                float factor = 1.f - (0.28f * blend * (lum - 0.40f) / 0.50f);
                 outR *= factor;
                 outG *= factor;
                 outB *= factor;
@@ -401,7 +401,7 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
             }
             s += n;
         }
-        s += pix->stride - pix->w * n;
+        s += pix->stride - (pix->w * n);
     }
 }
 
@@ -411,7 +411,7 @@ static float CadMinLineWidthForZoom(float zoom, bool hairlineDoc) {
         z = 0.20f;
     }
     // Device pixels. Hairline CAD needs a modest floor; avoid double-boosting with stroke rewrites.
-    float minLw = hairlineDoc ? (0.50f + 0.55f / z) : (0.14f + 0.38f / z);
+    float minLw = hairlineDoc ? (0.50f + (0.55f / z)) : (0.14f + (0.38f / z));
     float maxLw = hairlineDoc ? 1.25f : 0.62f;
     float minFloor = hairlineDoc ? 0.50f : 0.14f;
     if (minLw > maxLw) {

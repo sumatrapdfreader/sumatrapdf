@@ -217,7 +217,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (int)binNames));
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
         for (DWORD j = 0; j < bins; j++) {
-            TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + 24 * (size_t)j));
+            TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + (24 * (size_t)j)));
             out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues.Get()[j]));
         }
     }
@@ -236,7 +236,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr);
         out.Append("  paper sizes:\n");
         for (DWORD j = 0; j < papers; j++) {
-            TempStr s = ToUtf8Temp(WStr(paperNameValues.Get() + 64 * (size_t)j));
+            TempStr s = ToUtf8Temp(WStr(paperNameValues.Get() + (64 * (size_t)j)));
             POINT sz = paperSizes.Get()[j];
             out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0));
         }
@@ -284,7 +284,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         out.Append("  resolutions:");
         for (DWORD j = 0; j < nRes; j++) {
             LONG xDpi = resPairs.Get()[j * 2];
-            LONG yDpi = resPairs.Get()[j * 2 + 1];
+            LONG yDpi = resPairs.Get()[(j * 2) + 1];
             out.Append(fmt(" %dx%d", (int)xDpi, (int)yDpi));
         }
         out.Append("\n");
@@ -312,7 +312,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
-            TempStr s = ToUtf8Temp(WStr(mediaNames.Get() + 64 * (size_t)j));
+            TempStr s = ToUtf8Temp(WStr(mediaNames.Get() + (64 * (size_t)j)));
             out.Append(fmt("    '%s' (%d)\n", s, (int)mediaValues.Get()[j]));
         }
     }
@@ -483,7 +483,7 @@ Printer* NewPrinter(Str printerName) {
         printer->nPaperSizes = (int)n;
         int paperNameSize = 64;
         printer->papers = AllocArray<WORD>((int)n);
-        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (int)n + 1);
+        WCHAR* paperNamesSeq = AllocArray<WCHAR>((paperNameSize * (int)n) + 1);
         printer->paperSizes = AllocArray<POINT>(n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
@@ -491,7 +491,7 @@ Printer* NewPrinter(Str printerName) {
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
         for (int i = 0; i < (int)n; i++) {
-            TempStr name = ToUtf8Temp(WStr(paperNamesSeq + i * paperNameSize));
+            TempStr name = ToUtf8Temp(WStr(paperNamesSeq + (i * paperNameSize)));
             printer->paperNames.Append(name);
         }
         free(paperNamesSeq);
@@ -509,11 +509,11 @@ Printer* NewPrinter(Str printerName) {
         if (n > 0) {
             int binNameSize = 24;
             printer->bins = AllocArray<WORD>((int)n);
-            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * (int)n + 1);
+            WCHAR* binNamesSeq = AllocArray<WCHAR>((binNameSize * (int)n) + 1);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             for (int i = 0; i < (int)n; i++) {
-                TempStr name = ToUtf8Temp(WStr(binNamesSeq + i * binNameSize));
+                TempStr name = ToUtf8Temp(WStr(binNamesSeq + (i * binNameSize)));
                 printer->binNames.Append(name);
             }
             free(binNamesSeq);
@@ -814,8 +814,8 @@ static bool PrintToDevice(const PrintData& pd) {
                 Point offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
-                    offset.x += (int)(printable.dx - bSize.dx * zoom) / 2;
-                    offset.y += (int)(printable.dy - bSize.dy * zoom) / 2;
+                    offset.x += (int)(printable.dx - (bSize.dx * zoom)) / 2;
+                    offset.y += (int)(printable.dy - (bSize.dy * zoom)) / 2;
                 }
 
                 PrintPageInBands(engine, hdc, pd.sel[i].pageNo, zoom, pd.rotation, *clipRegion, offset, nullptr,
@@ -923,10 +923,10 @@ static bool PrintToDevice(const PrintData& pd) {
                     zoom = dpiFactor;
                 }
                 // center the page on the physical paper
-                offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
-                offset.y += (int)(paperSize.dy - pSize.dy * zoom) / 2;
+                offset.x += (int)(paperSize.dx - (pSize.dx * zoom)) / 2;
+                offset.y += (int)(paperSize.dy - (pSize.dy * zoom)) / 2;
                 // make sure that no content lies in the non-printable paper margins
-                RectF onPaper(printable.x + offset.x + cbox.x * zoom, printable.y + offset.y + cbox.y * zoom,
+                RectF onPaper(printable.x + offset.x + (cbox.x * zoom), printable.y + offset.y + (cbox.y * zoom),
                               cbox.dx * zoom, cbox.dy * zoom);
                 if (onPaper.x < printable.x) {
                     offset.x += (int)(printable.x - onPaper.x);
@@ -947,7 +947,7 @@ static bool PrintToDevice(const PrintData& pd) {
             // for printing a page smaller than the paper (e.g. envelopes or A5
             // stock fed through a tray that centers the paper).
             if (pd.advData.centerHorizontally && PrintScaleAdv::None == pd.advData.scale) {
-                offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
+                offset.x += (int)(paperSize.dx - (pSize.dx * zoom)) / 2;
             }
 
             RectF mediabox = engine.PageMediabox((int)pageNo);

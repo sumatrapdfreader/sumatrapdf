@@ -171,7 +171,7 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                         u8 r, g, b, br, bg, bb;
                         UnpackColor(col, r, g, b);
                         UnpackColor(bgColor, br, bg, bb);
-                        col = RGB((r + br * 2) / 3, (g + bg * 2) / 3, (b + bb * 2) / 3);
+                        col = RGB((r + (br * 2)) / 3, (g + (bg * 2)) / 3, (b + (bb * 2)) / 3);
                     }
                     HPEN pen = CreatePen(PS_SOLID, 1, col);
                     HGDIOBJ old = SelectObject(hdc, pen);

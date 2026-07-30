@@ -275,7 +275,7 @@ void FindWindowWnd::Layout() {
     int tbW = tbSz.dx;
     int tbH = tbSz.dy;
 
-    int contentDx = std::max(0, rc.dx - 2 * pad);
+    int contentDx = std::max(0, rc.dx - (2 * pad));
     // minimum width for [edit][status][toolbar] on one row without overlap
     int singleRowDx = minEditDx + gap + statusDx + gap + tbW;
 
@@ -287,9 +287,9 @@ void FindWindowWnd::Layout() {
         int tbX = pad + contentDx - tbW;
         int statusX = tbX - gap - statusDx;
         int editDx = statusX - gap - pad;
-        MoveWindow(hwndBtns, tbX, y + (headerDy - tbH) / 2, tbW, tbH, TRUE);
-        MoveWindow(status->hwnd, statusX, y + (headerDy - editDy) / 2, statusDx, editDy, TRUE);
-        MoveWindow(edit->hwnd, pad, y + (headerDy - editDy) / 2, editDx, editDy, TRUE);
+        MoveWindow(hwndBtns, tbX, y + ((headerDy - tbH) / 2), tbW, tbH, TRUE);
+        MoveWindow(status->hwnd, statusX, y + ((headerDy - editDy) / 2), statusDx, editDy, TRUE);
+        MoveWindow(edit->hwnd, pad, y + ((headerDy - editDy) / 2), editDx, editDy, TRUE);
     } else {
         // narrow: full-width edit, then [n/m][toolbar] (issue #5692)
         MoveWindow(edit->hwnd, pad, y, contentDx, editDy, TRUE);
@@ -297,9 +297,9 @@ void FindWindowWnd::Layout() {
         headerDy = editDy + gap + std::max(editDy, tbH);
         int row2Dy = std::max(editDy, tbH);
         int statusW = std::max(0, contentDx - gap - tbW);
-        MoveWindow(status->hwnd, pad, y + (row2Dy - editDy) / 2, statusW, editDy, TRUE);
+        MoveWindow(status->hwnd, pad, y + ((row2Dy - editDy) / 2), statusW, editDy, TRUE);
         int tbX = pad + contentDx - tbW;
-        MoveWindow(hwndBtns, tbX, y + (row2Dy - tbH) / 2, tbW, tbH, TRUE);
+        MoveWindow(hwndBtns, tbX, y + ((row2Dy - tbH) / 2), tbW, tbH, TRUE);
     }
 
     // the results list fills the rest of the window below the header
@@ -655,8 +655,8 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             }
             int row2Dy = std::max(editDy, tbH);
             // narrow two-row header: edit, then status+toolbar
-            mmi->ptMinTrackSize.x = 2 * pad + std::max(tbW, DpiScale(h, 160));
-            mmi->ptMinTrackSize.y = 2 * pad + editDy + gap + row2Dy + pad + DpiScale(h, 48);
+            mmi->ptMinTrackSize.x = (2 * pad) + std::max(tbW, DpiScale(h, 160));
+            mmi->ptMinTrackSize.y = (2 * pad) + editDy + gap + row2Dy + pad + DpiScale(h, 48);
             return 0;
         }
         case WM_CLOSE:

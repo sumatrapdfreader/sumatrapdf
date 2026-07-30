@@ -149,7 +149,7 @@ static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
     if (x >= itemRc.x + itemRc.dx) {
         x = itemRc.x;
     }
-    int y = itemRc.y + itemRc.dy / 2;
+    int y = itemRc.y + (itemRc.dy / 2);
     COLORREF c = GetPixel(hdc, x, y);
     if (c == CLR_INVALID) {
         return kColorUnset;
@@ -260,7 +260,7 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
     Size sizeFull = HdcGetTextExtentPoint32(hdc, textW);
     // center underlay height on the glyph height (labelRect can be taller than
     // the font, which made yellow bars spill into neighboring rows)
-    int textTop = labelRect.y + (labelRect.dy - sizeFull.dy) / 2;
+    int textTop = labelRect.y + ((labelRect.dy - sizeFull.dy) / 2);
     if (textTop < labelRect.y) {
         textTop = labelRect.y;
     }

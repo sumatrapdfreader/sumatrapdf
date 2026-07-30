@@ -56,7 +56,7 @@ u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile) {
     if (!profile) {
         return 0;
     }
-    auto mix = [](u32 h, u32 v) -> u32 { return h * 31 + v; };
+    auto mix = [](u32 h, u32 v) -> u32 { return (h * 31) + v; };
     u32 h = 0;
     h = mix(h, (u32)profile->mode);
     h = mix(h, (u32)profile->foreground);

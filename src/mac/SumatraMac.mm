@@ -238,7 +238,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
     if (_scaleToFit) {
         CGFloat margin = 8.0;
         CGFloat scale =
-            MIN((bounds.size.width - 2 * margin) / imageSize.width, (bounds.size.height - 2 * margin) / imageSize.height);
+            MIN((bounds.size.width - (2 * margin)) / imageSize.width, (bounds.size.height - (2 * margin)) / imageSize.height);
         if (!isfinite(scale) || scale <= 0) {
             scale = 1;
         }

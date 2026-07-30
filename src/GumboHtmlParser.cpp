@@ -59,7 +59,7 @@ static Str ParseHtmlNumericEntity(Str str, int& rune) {
         if (codepoint > (0x10ffff - digit) / base) {
             overflow = true;
         } else if (!overflow) {
-            codepoint = codepoint * base + digit;
+            codepoint = (codepoint * base) + digit;
         }
         off++;
     }

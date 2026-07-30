@@ -575,7 +575,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
         if (!str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
             continue;
         }
-        int mid = i + wordLen / 2;
+        int mid = i + (wordLen / 2);
         int midByte = Utf8CodepointToByteIndex(text, mid);
         for (; mid < textLen && !coords[mid].x && !coords[mid].dx; mid++) {
             int nextByte = midByte;
@@ -587,8 +587,8 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
         if (mid >= textLen) {
             return false;
         }
-        *xOut = coords[mid].x + coords[mid].dx / 2.0;
-        *yOut = coords[mid].y + coords[mid].dy / 2.0;
+        *xOut = coords[mid].x + (coords[mid].dx / 2.0);
+        *yOut = coords[mid].y + (coords[mid].dy / 2.0);
         return true;
     }
     return false;

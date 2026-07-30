@@ -285,7 +285,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     // glyphs clearly taller than it (1.5x) — well above tall "[" labels / caps.
     constexpr int kMinBodyDy = 4;
     bool canStrip = modeDy >= kMinBodyDy;
-    int hgtThresh = modeDy + modeDy / 2; // 1.5 * modeDy
+    int hgtThresh = modeDy + (modeDy / 2); // 1.5 * modeDy
     constexpr int kBaselineTolPt = 4;
     constexpr int kMinRowGlyphs = 3; // a real text row has at least this many
 
@@ -454,7 +454,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
                     capBot = capStartY + 3;
                 } else {
                     capTop = prevLineBottom + 1;
-                    capBot = prevLineBottom + capLineH * 18 / 10;
+                    capBot = prevLineBottom + (capLineH * 18 / 10);
                 }
                 bool foundLine = false;
                 int lineTopY = INT_MAX;
@@ -639,7 +639,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
     // align environments are rare in cross-refs; a tight box is the right
     // default and the user can wheel-scroll if context is needed.
     float pad = (float)bestLabelDy + 6.f;
-    RectF box{0.f, (float)bestLabelY - pad, mediabox.dx, (float)bestLabelDy + 2.f * pad};
+    RectF box{0.f, (float)bestLabelY - pad, mediabox.dx, (float)bestLabelDy + (2.f * pad)};
     ClipToMediabox(box, mediabox);
     return box;
 }
@@ -779,7 +779,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     int colRightX = nextColLeftX + 250;
     {
         int bandTop = topY - 2;
-        int bandBot = topY + 6 * topDy;
+        int bandBot = topY + (6 * topDy);
         int xLo = nextColLeftX - 5;
         if (xLo < 0) {
             xLo = 0;
@@ -847,7 +847,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         if (r.x < nextColLeftX - 5 || r.x > nextColLeftX + 30) {
             continue;
         }
-        if (r.y <= topY + topDy / 2 || r.y >= capY) {
+        if (r.y <= topY + (topDy / 2) || r.y >= capY) {
             continue;
         }
         if (r.y < boundaryY) {
@@ -905,8 +905,8 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     if (bMinX == INT_MAX || (bMaxX - bMinX) < 30 || (bMaxY - bMinY) < 8) {
         return RectF{};
     }
-    RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt, (float)(bMaxX - bMinX) + 2.f * kEntryPadPt,
-              (float)(bMaxY - bMinY) + 2.f * kEntryPadPt};
+    RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt, (float)(bMaxX - bMinX) + (2.f * kEntryPadPt),
+              (float)(bMaxY - bMinY) + (2.f * kEntryPadPt)};
     ClipToMediabox(box, mediabox);
     return box;
 }
@@ -1176,8 +1176,8 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     // number sitting in the gutter band lower down can't bridge the columns.
     {
         constexpr int kGutterW = 8;
-        int bandTop = firstLineY - 2 * linePitch;
-        int bandBot = firstLineY + 6 * linePitch;
+        int bandTop = firstLineY - (2 * linePitch);
+        int bandBot = firstLineY + (6 * linePitch);
         int scanStartX = (entryBodyLeftX >= 0) ? entryBodyLeftX : firstLineLeftX;
         int xLo = scanStartX - 5;
         if (xLo < 0) {
@@ -1262,7 +1262,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             // inter-line pitch (tall bracket glyph) — the next entry then lands
             // exactly at firstLineY+firstLineDy and is wrongly treated as the
             // same line, so the box swallows the following entry.
-            if (r.y <= firstLineY + firstLineDy / 2) {
+            if (r.y <= firstLineY + (firstLineDy / 2)) {
                 continue;
             }
             if (r.y < entryYBoundary) {
@@ -1362,7 +1362,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
         if (bMinX != INT_MAX && (bMaxX - bMinX) >= 50 && (bMaxY - bMinY) >= 12) {
             RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt,
-                      (float)(bMaxX - bMinX) + 2.f * kEntryPadPt, (float)(bMaxY - bMinY) + 2.f * kEntryPadPt};
+                      (float)(bMaxX - bMinX) + (2.f * kEntryPadPt), (float)(bMaxY - bMinY) + (2.f * kEntryPadPt)};
             ClipToMediabox(box, mediabox);
             if (box.dx >= 50.f && box.dy >= 20.f) {
                 // No sibling "[" closed this entry, and — checked below — no
@@ -1480,7 +1480,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             currentLineLeftX = r.x;
         }
 
-        bool pastFirstLine = (r.y > firstLineY + firstLineDy * 3 / 4 + 2);
+        bool pastFirstLine = (r.y > firstLineY + (firstLineDy * 3 / 4) + 2);
         bool atFirstLineLeftX = (r.x >= firstLineLeftX - 5 && r.x <= firstLineLeftX + 5);
 
         // Capture the continuation X from the entry's second line.
@@ -1516,7 +1516,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         // vertical space) — treat as a sibling entry boundary. The
         // major-glyph newline tracking above keeps normal line spacing from
         // false-firing this rule, so it is safe to evaluate from line 1.
-        if (r.y > prevBottom + lineHeight * 5 / 4) {
+        if (r.y > prevBottom + (lineHeight * 5 / 4)) {
             if (atFirstLineLeftX) {
                 descListSibling = true;
             }
@@ -1604,8 +1604,8 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
 
-    RectF box{(float)minX - kEntryPadPt, (float)minY - kEntryPadPt, (float)(maxX - minX) + 2.f * kEntryPadPt,
-              (float)(maxY - minY) + 2.f * kEntryPadPt};
+    RectF box{(float)minX - kEntryPadPt, (float)minY - kEntryPadPt, (float)(maxX - minX) + (2.f * kEntryPadPt),
+              (float)(maxY - minY) + (2.f * kEntryPadPt)};
     ClipToMediabox(box, mediabox);
     if (box.dx < 50.f || box.dy < 20.f) {
         return LandscapeBox(mediabox, destX, destY, text, coords);

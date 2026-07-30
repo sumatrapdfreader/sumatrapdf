@@ -215,7 +215,7 @@ void FindBarWnd::Layout() {
     Size tbSz = TbGetMaxSize(hwndBtns);
 
     int innerDy = std::max(editDy, tbSz.dy);
-    barDy = innerDy + 2 * p;
+    barDy = innerDy + (2 * p);
     barDx = p + editDx + gap + statusDx + gap + tbSz.dx + p;
 
     int x = p;
@@ -394,7 +394,7 @@ static void PositionFindBar(FindBarWnd* bar) {
     if (btn.IsEmpty()) {
         cy = fr.y + bar->barDy;
     } else {
-        cy = btn.y + btn.dy / 2 - bar->barDy / 2;
+        cy = btn.y + (btn.dy / 2) - (bar->barDy / 2);
     }
     Rect r{cx, cy, bar->barDx, bar->barDy};
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);

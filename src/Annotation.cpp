@@ -1407,7 +1407,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     float dy = trect.y1 - trect.y0;
                     trect.x0 = pos.x;
                     trect.x1 = trect.x0 + dx;
-                    trect.y0 = pos.y - dy / 2;
+                    trect.y0 = pos.y - (dy / 2);
                     trect.y1 = trect.y0 + dy;
                     pdf_set_annot_rect(ctx, annot, trect);
                 } break;

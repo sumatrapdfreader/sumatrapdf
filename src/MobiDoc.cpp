@@ -214,7 +214,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
         return false;
     }
     code &= ((1 << (codeLength)) - 1);
-    u16 offset = UInt16BE(dicts[dict] + code * 2);
+    u16 offset = UInt16BE(dicts[dict] + (code * 2));
 
     if ((u32)offset + 2 > dictSize[dict]) {
         logf("invalid offset\n");
@@ -289,10 +289,10 @@ bool HuffDicDecompressor::Decompress(u8* src, int srcSize, str::Builder& dst) {
                     logf("code len > 32 bits\n");
                     return false;
                 }
-                baseVal = baseTable[codeLen * 2 - 2];
+                baseVal = baseTable[(codeLen * 2) - 2];
                 code = (bits >> (32 - codeLen));
             } while (baseVal > code);
-            code = baseTable[codeLen * 2 - 1] - (bits >> (32 - codeLen));
+            code = baseTable[(codeLen * 2) - 1] - (bits >> (32 - codeLen));
         }
 
         if (!DecodeOne(code, dst)) {

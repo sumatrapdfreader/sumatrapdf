@@ -625,7 +625,7 @@ bool DisplayModel::PageVisibleNearby(int pageNo) const {
     int columns = ColumnsFromDisplayMode(mode);
 
     pageNo = FirstPageInARowNo(pageNo, columns, IsBookView(mode));
-    for (int i = pageNo - columns; i < pageNo + 2 * columns; i++) {
+    for (int i = pageNo - columns; i < pageNo + (2 * columns); i++) {
         if (ValidPageNo(i) && PageVisible(i)) {
             return true;
         }
@@ -1034,7 +1034,7 @@ int DisplayModel::GetPageNextToPoint(Point pt) const {
         }
 
         Rect r = pageInfo->pageOnScreen;
-        unsigned int dist = distSq(pt.x - r.x - r.dx / 2, pt.y - r.y - r.dy / 2);
+        unsigned int dist = distSq(pt.x - r.x - (r.dx / 2), pt.y - r.y - (r.dy / 2));
         if (dist < maxDist) {
             closest = pageNo;
             maxDist = dist;
@@ -1947,18 +1947,18 @@ bool DisplayModel::ScrollScreenToRect(int pageNo, Rect rec) {
     // the search direction remains obvious and we still display some
     // context before and after the found text
     if (rec.y < viewPort.dy * 2 / 5) {
-        sy = rec.y - viewPort.dy * 2 / 5;
+        sy = rec.y - (viewPort.dy * 2 / 5);
     } else if (rec.y + rec.dy > viewPort.dy * 3 / 5) {
-        sy = std::min(rec.y + rec.dy - viewPort.dy * 3 / 5, rec.y + rec.dy / 2 - viewPort.dy * 2 / 5);
+        sy = std::min(rec.y + rec.dy - (viewPort.dy * 3 / 5), rec.y + (rec.dy / 2) - (viewPort.dy * 2 / 5));
     }
 
     // horizontally, we try to position the search result at the
     // center of the screen, but don't scroll further than page
     // boundaries, so that as much context as possible remains visible
     if (rec.x < 0) {
-        sx = std::max(rec.x + rec.dx / 2 - viewPort.dx / 2, pageInfo->pageOnScreen.x);
+        sx = std::max(rec.x + (rec.dx / 2) - (viewPort.dx / 2), pageInfo->pageOnScreen.x);
     } else if (rec.x + rec.dx >= viewPort.dx) {
-        sx = std::min(rec.x + rec.dx / 2 - viewPort.dx / 2,
+        sx = std::min(rec.x + (rec.dx / 2) - (viewPort.dx / 2),
                       pageInfo->pageOnScreen.x + pageInfo->pageOnScreen.dx - viewPort.dx);
     }
 

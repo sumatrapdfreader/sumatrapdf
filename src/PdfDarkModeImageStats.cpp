@@ -26,7 +26,7 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int stride = pix->stride;
-    unsigned char* px = pix->samples + y * stride + x * n;
+    unsigned char* px = pix->samples + (y * stride) + (x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     int components = fz_colorspace_n(ctx, cs);
@@ -75,15 +75,15 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
             for (int x = 0; x < pix->w; x += stepX) {
                 float r, g, b;
                 SamplePixmapRgb(ctx, pix, x, y, &r, &g, &b);
-                int ri = (int)(r * 255.f + 0.5f);
-                int gi = (int)(g * 255.f + 0.5f);
-                int bi = (int)(b * 255.f + 0.5f);
+                int ri = (int)((r * 255.f) + 0.5f);
+                int gi = (int)((g * 255.f) + 0.5f);
+                int bi = (int)((b * 255.f) + 0.5f);
                 int bucket = ((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4);
                 buckets[bucket]++;
 
                 float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
                 float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-                float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+                float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
                 lumSum += lum;
                 lumSqSum += lum * lum;
                 if (maxC - minC > 0.12f) {
@@ -108,7 +108,7 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
 
         float lumMean = lumSum / n;
         stats.significantBuckets = significantBuckets;
-        stats.lumVar = lumSqSum / n - lumMean * lumMean;
+        stats.lumVar = (lumSqSum / n) - (lumMean * lumMean);
         stats.satRatio = (float)saturated / (float)n;
         stats.highLumRatio = (float)highLum / (float)n;
         stats.valid = true;

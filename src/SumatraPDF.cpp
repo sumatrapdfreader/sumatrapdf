@@ -6271,8 +6271,8 @@ static Point GetSelectionCenter(MainWindow* win) {
 
     Rect rc = HwndClientRect(win->hwndCanvas);
     Point pt;
-    pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
-    pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
+    pt.x = (2 * selRect.x) + selRect.dx - (rc.dx / 2);
+    pt.y = (2 * selRect.y) + selRect.dy - (rc.dy / 2);
     pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
     pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
     return pt;
@@ -9999,7 +9999,7 @@ void RelayoutCaption(MainWindow* win) {
             int btnCount = TbGetButtonCount(win->hwndMenuToolbar);
             if (btnCount > 0) {
                 Rect lastBtn = TbGetItemRect(win->hwndMenuToolbar, btnCount - 1);
-                int naturalWidth = lastBtn.x + lastBtn.dx + GetSystemMetrics(SM_CXBORDER) * 2;
+                int naturalWidth = lastBtn.x + lastBtn.dx + (GetSystemMetrics(SM_CXBORDER) * 2);
                 if (naturalWidth < row1Dx) {
                     menuBarWidth = naturalWidth;
                 }
@@ -10236,9 +10236,9 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         UnpackColor(c, r, g, b);
         float width = floorf((float)rc.dy / 8.0f);
         Pen p(Color(r, g, b), width);
-        rc.Inflate(-int(rc.dx * 0.2f + 0.5f), -int(rc.dy * 0.3f + 0.5f));
+        rc.Inflate(-int((rc.dx * 0.2f) + 0.5f), -int((rc.dy * 0.3f) + 0.5f));
         for (int i = 0; i < 3; i++) {
-            gfx.DrawLine(&p, rc.x, rc.y + i * rc.dy / 2, rc.x + rc.dx, rc.y + i * rc.dy / 2);
+            gfx.DrawLine(&p, rc.x, rc.y + (i * rc.dy / 2), rc.x + rc.dx, rc.y + (i * rc.dy / 2));
         }
     } else if (button == CB_SYSTEM_MENU) {
         SolidBrush bgBrSys(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
@@ -10246,8 +10246,8 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         int xIcon = GetSystemMetrics(SM_CXSMICON);
         int yIcon = GetSystemMetrics(SM_CYSMICON);
         HICON hIcon = (HICON)GetClassLongPtr(win->hwndFrame, GCLP_HICONSM);
-        int x = rButton.x + (rButton.dx - xIcon) / 2;
-        int y = rButton.y + (rButton.dy - yIcon) / 2;
+        int x = rButton.x + ((rButton.dx - xIcon) / 2);
+        int y = rButton.y + ((rButton.dy - yIcon) / 2);
         DrawIconEx(hdc, x, y, hIcon, xIcon, yIcon, 0, nullptr, DI_NORMAL);
     }
 }
@@ -10992,7 +10992,7 @@ constexpr float kReadAloudSpeeds[] = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f
 
 // e.g. "1x", "0.75x", "1.5x"
 TempStr ReadAloudSpeedLabelTemp(float speed) {
-    int hundredths = (int)(speed * 100.0f + 0.5f);
+    int hundredths = (int)((speed * 100.0f) + 0.5f);
     int whole = hundredths / 100;
     int frac = hundredths % 100;
     if (frac == 0) {

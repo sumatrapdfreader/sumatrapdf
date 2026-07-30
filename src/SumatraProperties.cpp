@@ -159,7 +159,7 @@ static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
         if (!tzEnd.s) {
             str::Parse(tz, "%2d", &tzHour);
         }
-        *timeZoneOut = sign * (tzHour * 100 + tzMin);
+        *timeZoneOut = sign * ((tzHour * 100) + tzMin);
     }
     return true;
     // don't bother about the day of week, we won't display it anyway
@@ -198,7 +198,7 @@ static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
                 if (!tzEnd.s) {
                     str::Parse(tz, "%2d%2d", &tzHour, &tzMin);
                 }
-                *timeZoneOut = sign * (tzHour * 100 + tzMin);
+                *timeZoneOut = sign * ((tzHour * 100) + tzMin);
             }
         }
     }
@@ -310,8 +310,8 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     TempStr mmStr = FormatPageSizeUnitTemp(size, 25.4, StrL("mm"));
 
     // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
-    int pxW = (int)(size.dx * fileDpi + 0.5f);
-    int pxH = (int)(size.dy * fileDpi + 0.5f);
+    int pxW = (int)((size.dx * fileDpi) + 0.5f);
+    int pxH = (int)((size.dy * fileDpi) + 0.5f);
     TempStr pxStr = fmt("%d x %d px", pxW, pxH);
 
     // Locale unit first, then the other two, then pixels (issue #2186)
@@ -726,24 +726,24 @@ void PropertiesWnd::SizeToContent() {
     ReleaseDC(hwndEdit, hdcEdit);
 
     // add padding for scrollbar, border, window frame
-    int editPadding = GetSystemMetrics(SM_CXVSCROLL) + 2 * GetSystemMetrics(SM_CXEDGE) + 16;
+    int editPadding = GetSystemMetrics(SM_CXVSCROLL) + (2 * GetSystemMetrics(SM_CXEDGE)) + 16;
     int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
     int wantedClientDx = maxLineDx + editPadding;
     if (btnCopyToClipboard) {
         Size buttonSize = btnCopyToClipboard->GetIdealSize();
-        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + 2 * ButtonPadding(hwnd));
+        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + (2 * ButtonPadding(hwnd)));
     }
     int wantedDx = wantedClientDx + frameDx;
 
     // calculate height to fit all lines
     int editBorderDy = 2 * GetSystemMetrics(SM_CYEDGE);
-    int frameDy = GetSystemMetrics(SM_CYFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
+    int frameDy = (GetSystemMetrics(SM_CYFRAME) * 2) + GetSystemMetrics(SM_CYCAPTION);
     int btnAreaDy = DpiScale(hwnd, 40);
     if (btnCopyToClipboard) {
-        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + 2 * ButtonPadding(hwnd));
+        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding(hwnd)));
     }
     int bottomMargin = ButtonPadding(hwnd);
-    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + btnAreaDy + bottomMargin + frameDy;
+    int wantedDy = ((nLines + 3) * lineHeight) + editBorderDy + btnAreaDy + bottomMargin + frameDy;
 
     // cap at 80% of screen
     Rect work = GetWorkAreaRect(HwndWindowRect(hwnd), hwnd);

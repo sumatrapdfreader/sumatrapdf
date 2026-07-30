@@ -90,7 +90,7 @@ Size ListBox::GetIdealSize() {
         }
     }
     if (hwnd) {
-        int dy = GetItemHeight(0) * nLines + DpiScale(hwnd, 2 + 2); // padding of 2 at top and bottom
+        int dy = (GetItemHeight(0) * nLines) + DpiScale(hwnd, 2 + 2); // padding of 2 at top and bottom
         res.dy = dy;
     }
     return res;

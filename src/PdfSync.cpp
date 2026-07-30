@@ -375,7 +375,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points[i].x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points[i].y));
-        UINT dist = dx * dx + dy * dy;
+        UINT dist = (dx * dx) + (dy * dy);
         if (dist < PDFSYNC_EPSILON_SQUARE && dist < closest_xydist) {
             selected_record = points[i].record;
             closest_xydist = dist;

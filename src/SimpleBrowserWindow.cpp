@@ -79,15 +79,15 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     if (urlDy <= 0) {
         urlDy = rowH;
     }
-    int urlY = y + (rowH - urlDy) / 2;
+    int urlY = y + ((rowH - urlDy) / 2);
     MoveWindow(w->hwndUrl, urlX, urlY, urlDx, urlDy, TRUE);
 
-    int navRowDy = rowH + 2 * pad;
+    int navRowDy = rowH + (2 * pad);
     int webDy = rc.dy - navRowDy - pad;
     if (webDy < 0) {
         webDy = 0;
     }
-    int webDx = rc.dx - 2 * pad;
+    int webDx = rc.dx - (2 * pad);
     if (webDx < 0) {
         webDx = 0;
     }

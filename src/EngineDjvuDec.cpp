@@ -459,7 +459,7 @@ static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, 
     }
     for (int y = 0; y < dy; y++) {
         for (int x = 0; x < dx; x++) {
-            u8 v = src[(size_t)y * dx + x];
+            u8 v = src[((size_t)y * dx) + x];
             int nx = 0, ny = 0;
             if (rotation == 90) {
                 nx = dy - 1 - y;
@@ -471,7 +471,7 @@ static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, 
                 nx = y;
                 ny = dx - 1 - x;
             }
-            out[(size_t)ny * ndx + nx] = v;
+            out[((size_t)ny * ndx) + nx] = v;
         }
     }
     dxOut = ndx;
@@ -499,7 +499,7 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
     }
     for (int y = 0; y < dy; y++) {
         for (int x = 0; x < dx; x++) {
-            const u8* s = src + ((size_t)y * dx + x) * 3;
+            const u8* s = src + ((((size_t)y * dx) + x) * 3);
             int nx = 0, ny = 0;
             if (rotation == 90) {
                 nx = dy - 1 - y;
@@ -511,7 +511,7 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
                 nx = y;
                 ny = dx - 1 - x;
             }
-            u8* d = out + ((size_t)ny * ndx + nx) * 3;
+            u8* d = out + ((((size_t)ny * ndx) + nx) * 3);
             d[0] = s[0];
             d[1] = s[1];
             d[2] = s[2];
@@ -556,9 +556,9 @@ static inline int FloorInt(float v) {
 }
 
 static inline u8 BilinearByte(float v00, float v10, float v01, float v11, float tx, float ty) {
-    float v0 = v00 + (v10 - v00) * tx;
-    float v1 = v01 + (v11 - v01) * tx;
-    float v = v0 + (v1 - v0) * ty;
+    float v0 = v00 + ((v10 - v00) * tx);
+    float v1 = v01 + ((v11 - v01) * tx);
+    float v = v0 + ((v1 - v0) * ty);
     return (u8)ClampInt((int)(v + 0.5f), 0, 255);
 }
 
@@ -577,8 +577,8 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
     if (srcDx == screen.dx && srcDy == screen.dy && screen.x == full.x && screen.y == full.y && srcDx == full.dx &&
         srcDy == full.dy) {
         for (int y = 0; y < screen.dy; y++) {
-            const u8* sp = src + (size_t)y * srcDx * comp;
-            u8* dst = res->data + (size_t)y * res->stride;
+            const u8* sp = src + ((size_t)y * srcDx * comp);
+            u8* dst = res->data + ((size_t)y * res->stride);
             if (comp == 1) {
                 for (int x = 0; x < screen.dx; x++) {
                     u8 g = sp[x];
@@ -597,30 +597,30 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
     double sx = (double)srcDx / (double)full.dx;
     double sy = (double)srcDy / (double)full.dy;
     for (int y = 0; y < screen.dy; y++) {
-        float srcYf = (float)(((screen.y - full.y) + y + 0.5) * sy - 0.5);
+        float srcYf = (float)((((screen.y - full.y) + y + 0.5) * sy) - 0.5);
         int y0 = ClampInt(FloorInt(srcYf), 0, srcDy - 1);
         int y1 = ClampInt(y0 + 1, 0, srcDy - 1);
         float ty = srcYf - (float)y0;
-        u8* dst = res->data + (size_t)y * res->stride;
+        u8* dst = res->data + ((size_t)y * res->stride);
         for (int x = 0; x < screen.dx; x++) {
-            float srcXf = (float)(((screen.x - full.x) + x + 0.5) * sx - 0.5);
+            float srcXf = (float)((((screen.x - full.x) + x + 0.5) * sx) - 0.5);
             int x0 = ClampInt(FloorInt(srcXf), 0, srcDx - 1);
             int x1 = ClampInt(x0 + 1, 0, srcDx - 1);
             float tx = srcXf - (float)x0;
             if (comp == 1) {
-                float v00 = src[(size_t)y0 * srcDx + x0];
-                float v10 = src[(size_t)y0 * srcDx + x1];
-                float v01 = src[(size_t)y1 * srcDx + x0];
-                float v11 = src[(size_t)y1 * srcDx + x1];
+                float v00 = src[((size_t)y0 * srcDx) + x0];
+                float v10 = src[((size_t)y0 * srcDx) + x1];
+                float v01 = src[((size_t)y1 * srcDx) + x0];
+                float v11 = src[((size_t)y1 * srcDx) + x1];
                 u8 g = BilinearByte(v00, v10, v01, v11, tx, ty);
                 dst[0] = g;
                 dst[1] = g;
                 dst[2] = g;
             } else {
-                size_t off00 = ((size_t)y0 * srcDx + x0) * 3;
-                size_t off10 = ((size_t)y0 * srcDx + x1) * 3;
-                size_t off01 = ((size_t)y1 * srcDx + x0) * 3;
-                size_t off11 = ((size_t)y1 * srcDx + x1) * 3;
+                size_t off00 = (((size_t)y0 * srcDx) + x0) * 3;
+                size_t off10 = (((size_t)y0 * srcDx) + x1) * 3;
+                size_t off01 = (((size_t)y1 * srcDx) + x0) * 3;
+                size_t off11 = (((size_t)y1 * srcDx) + x1) * 3;
                 dst[0] = BilinearByte(src[off00 + 0], src[off10 + 0], src[off01 + 0], src[off11 + 0], tx, ty);
                 dst[1] = BilinearByte(src[off00 + 1], src[off10 + 1], src[off01 + 1], src[off11 + 1], tx, ty);
                 dst[2] = BilinearByte(src[off00 + 2], src[off10 + 2], src[off01 + 2], src[off11 + 2], tx, ty);
@@ -745,8 +745,8 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
     // highlight roughly just the matched characters
     int n = Utf8CodepointCount(z->text);
     for (int i = 0; i < n; i++) {
-        int xStart = r.x + (i * r.dx) / n;
-        int xEnd = r.x + ((i + 1) * r.dx) / n;
+        int xStart = r.x + ((i * r.dx) / n);
+        int xEnd = r.x + (((i + 1) * r.dx) / n);
         coords.Append(Rect(xStart, r.y, xEnd - xStart, r.dy));
     }
     sb.Append(z->text);

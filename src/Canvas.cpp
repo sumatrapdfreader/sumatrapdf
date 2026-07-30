@@ -695,8 +695,8 @@ static HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge) {
     auto* dst = (BYTE*)bits;
     auto* srcRow = (const BYTE*)bd.Scan0;
     for (int y = 0; y < dh; y++) {
-        auto* s = srcRow + y * bd.Stride;
-        auto* d = dst + y * dw * 4;
+        auto* s = srcRow + (y * bd.Stride);
+        auto* d = dst + (y * dw * 4);
         for (int x = 0; x < dw; x++) {
             // GDI+ 32bppARGB is B,G,R,A in memory on Windows; full opacity
             d[0] = s[0];
@@ -2220,9 +2220,9 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     UnpackColor(a, ar, ag, ab);
     UnpackColor(b, br, bg, bb);
 
-    tv->Red = (COLOR16)((ar + perc * (br - ar)) * 256);
-    tv->Green = (COLOR16)((ag + perc * (bg - ag)) * 256);
-    tv->Blue = (COLOR16)((ab + perc * (bb - ab)) * 256);
+    tv->Red = (COLOR16)((ar + (perc * (br - ar))) * 256);
+    tv->Green = (COLOR16)((ag + (perc * (bg - ag))) * 256);
+    tv->Blue = (COLOR16)((ab + (perc * (bb - ab))) * 256);
 }
 
 // Draw a border around selected annotation
@@ -2277,10 +2277,10 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     int hh = hs / 2;                                                     // half handle
 
     int left = rect.x - hh;
-    int midX = rect.x + rect.dx / 2 - hh;
+    int midX = rect.x + (rect.dx / 2) - hh;
     int right = rect.x + rect.dx - hh;
     int top = rect.y - hh;
-    int midY = rect.y + rect.dy / 2 - hh;
+    int midY = rect.y + (rect.dy / 2) - hh;
     int bottom = rect.y + rect.dy - hh;
 
     auto drawHandle = [&](int x, int y) {

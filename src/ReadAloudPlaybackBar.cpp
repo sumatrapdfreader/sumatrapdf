@@ -149,11 +149,11 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     ReleaseDC(hwnd, hdc);
 
     int btnDy = std::max(std::max(szPause.dy, szStop.dy), szSpeed.dy) + padY;
-    int btnPauseDx = szPause.dx + 2 * btnPadX;
-    int btnStopDx = szStop.dx + 2 * btnPadX;
-    int btnSpeedDx = szSpeed.dx + 2 * btnPadX;
-    int barDy = std::max(szStatus.dy, btnDy) + 2 * padY;
-    int barDx = canvas.dx - 2 * margin;
+    int btnPauseDx = szPause.dx + (2 * btnPadX);
+    int btnStopDx = szStop.dx + (2 * btnPadX);
+    int btnSpeedDx = szSpeed.dx + (2 * btnPadX);
+    int barDy = std::max(szStatus.dy, btnDy) + (2 * padY);
+    int barDx = canvas.dx - (2 * margin);
     if (barDx < 0) {
         barDx = 0;
     }
@@ -165,8 +165,8 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     }
 
     int rowY = padY;
-    if (barDy > 2 * padY + btnDy) {
-        rowY = padY + (barDy - 2 * padY - btnDy) / 2;
+    if (barDy > (2 * padY) + btnDy) {
+        rowY = padY + ((barDy - (2 * padY) - btnDy) / 2);
     }
 
     bool isRtl = IsUIRtl();

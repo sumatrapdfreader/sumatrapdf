@@ -40,7 +40,7 @@ static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int pad
     Size size = HdcGetTextExtentPoint32(hdc, path);
     SelectObject(hdc, oldFont);
     ReleaseDC(nullptr, hdc);
-    int dlgW = size.dx + 2 * padding + DpiScale(hwndParent, 32);
+    int dlgW = size.dx + (2 * padding) + DpiScale(hwndParent, 32);
     dlgW = std::max(dlgW, minW);
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     dlgW = std::min(dlgW, screenW * 80 / 100);

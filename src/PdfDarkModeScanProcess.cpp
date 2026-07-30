@@ -35,7 +35,7 @@ static float SmoothStep(float e0, float e1, float x) {
     if (t >= 1.f) {
         return 1.f;
     }
-    return t * t * (3.f - 2.f * t);
+    return t * t * (3.f - (2.f * t));
 }
 
 static void ReadPixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB) {
@@ -47,7 +47,7 @@ static void ReadPixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* 
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + y * pix->stride + x * n;
+    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
@@ -128,13 +128,13 @@ void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysi
                                const DarkModePalette& palette, float* outR, float* outG, float* outB) {
     float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
     float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 
     float paperR = analysis.estimatedBackground.r;
     float paperG = analysis.estimatedBackground.g;
     float paperB = analysis.estimatedBackground.b;
-    float paperLum = 0.2126f * paperR + 0.7152f * paperG + 0.0722f * paperB;
+    float paperLum = (0.2126f * paperR) + (0.7152f * paperG) + (0.0722f * paperB);
     if (paperLum < 0.35f) {
         paperLum = 0.72f;
         paperR = paperG = paperB = paperLum;
@@ -153,13 +153,13 @@ void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysi
     if (chroma < lowChroma) {
         float inkW = 1.f - SmoothStep(inkLum, paperHigh, lum);
         float paperW = SmoothStep(inkLum, paperHigh, lum);
-        docR = palette.textR * inkW + palette.bgR * paperW;
-        docG = palette.textG * inkW + palette.bgG * paperW;
-        docB = palette.textB * inkW + palette.bgB * paperW;
-        float grayW = 1.f - chroma / lowChroma;
-        *outR = docR * grayW + r * (1.f - grayW);
-        *outG = docG * grayW + g * (1.f - grayW);
-        *outB = docB * grayW + b * (1.f - grayW);
+        docR = (palette.textR * inkW) + (palette.bgR * paperW);
+        docG = (palette.textG * inkW) + (palette.bgG * paperW);
+        docB = (palette.textB * inkW) + (palette.bgB * paperW);
+        float grayW = 1.f - (chroma / lowChroma);
+        *outR = (docR * grayW) + (r * (1.f - grayW));
+        *outG = (docG * grayW) + (g * (1.f - grayW));
+        *outB = (docB * grayW) + (b * (1.f - grayW));
         return;
     }
 
@@ -169,11 +169,11 @@ void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysi
     float photoG = g;
     float photoB = b;
     PdfDarkModeCompressPhotoHighlights(r, g, b, &photoR, &photoG, &photoB);
-    float photoLum = 0.2126f * photoR + 0.7152f * photoG + 0.0722f * photoB;
+    float photoLum = (0.2126f * photoR) + (0.7152f * photoG) + (0.0722f * photoB);
     float darken = SmoothStep(0.55f, 0.88f, photoLum) * 0.12f;
-    photoR = photoR * (1.f - darken) + palette.bgR * darken;
-    photoG = photoG * (1.f - darken) + palette.bgG * darken;
-    photoB = photoB * (1.f - darken) + palette.bgB * darken;
+    photoR = (photoR * (1.f - darken)) + (palette.bgR * darken);
+    photoG = (photoG * (1.f - darken)) + (palette.bgG * darken);
+    photoB = (photoB * (1.f - darken)) + (palette.bgB * darken);
 
     float photoW = SmoothStep(0.09f, 0.24f, chroma);
     if (analysis.features.saturatedPixelRatio >= 0.14f) {
@@ -183,9 +183,9 @@ void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysi
         photoW = Clamp01(photoW + 0.08f);
     }
 
-    *outR = docR * (1.f - photoW) + photoR * photoW;
-    *outG = docG * (1.f - photoW) + photoG * photoW;
-    *outB = docB * (1.f - photoW) + photoB * photoW;
+    *outR = (docR * (1.f - photoW)) + (photoR * photoW);
+    *outG = (docG * (1.f - photoW)) + (photoG * photoW);
+    *outB = (docB * (1.f - photoW)) + (photoB * photoW);
 }
 
 static void WritePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float r, float g, float b) {
@@ -196,12 +196,12 @@ static void WritePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float 
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + y * pix->stride + x * n;
+    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
     float out[FZ_MAX_COLORS] = {r, g, b};
     float back[FZ_MAX_COLORS] = {};
     fz_convert_color(ctx, rgb, out, cs, back, cs, fz_default_color_params);
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        int v = (int)(back[c] * 255.f + 0.5f);
+        int v = (int)((back[c] * 255.f) + 0.5f);
         if (v < 0) {
             v = 0;
         }

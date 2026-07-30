@@ -41,7 +41,7 @@ static Mutex gPipeMutex;
 Str gLogFilePath;
 
 // 1 MB - 128 to stay under 1 MB even after appending (an estimate)
-constexpr int kMaxLogBuf = 1024 * 1024 - 128;
+constexpr int kMaxLogBuf = (1024 * 1024) - 128;
 
 static LARGE_INTEGER lastPipeOpenTryTime = {};
 

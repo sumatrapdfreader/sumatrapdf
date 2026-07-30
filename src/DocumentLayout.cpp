@@ -186,8 +186,8 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         SizeF pageSize = PageSizeAfterRotation(page, params.rotation);
         Rect pos;
         float zoom = page->zoomReal;
-        pos.dx = (int)(pageSize.dx * zoom + 0.499f);
-        pos.dy = (int)(pageSize.dy * zoom + 0.499f);
+        pos.dx = (int)((pageSize.dx * zoom) + 0.499f);
+        pos.dy = (int)((pageSize.dy * zoom) + 0.499f);
         rowMaxPageDy = std::max(rowMaxPageDy, pos.dy);
         pos.y = currPosY;
 
@@ -243,7 +243,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
             pageInARow++;
         }
         if (columns == 1) {
-            page->pos.x = pageOffX + (columnMaxWidth[0] - page->pos.dx) / 2;
+            page->pos.x = pageOffX + ((columnMaxWidth[0] - page->pos.dx) / 2);
         } else if (pageInARow == 0) {
             page->pos.x = pageOffX + columnMaxWidth[0] - page->pos.dx;
         } else {
@@ -251,7 +251,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         }
         if (IsBookView(params.displayMode) && pageNo == 1 && !IsContinuous(params.displayMode)) {
             page->pos.x = offX + params.windowMargin.left +
-                          (columnMaxWidth[0] + params.pageSpacing.dx + columnMaxWidth[1] - page->pos.dx) / 2;
+                          ((columnMaxWidth[0] + params.pageSpacing.dx + columnMaxWidth[1] - page->pos.dx) / 2);
         }
         if (params.displayR2L && columns > 1) {
             page->pos.x = canvasDx - page->pos.x - page->pos.dx;
@@ -266,7 +266,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     }
 
     if (canvasDy < viewPort.dy) {
-        int offY = params.windowMargin.top + (viewPort.dy - canvasDy) / 2;
+        int offY = params.windowMargin.top + ((viewPort.dy - canvasDy) / 2);
         for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
             DocumentLayoutPage* page = GetPage(pageNo);
             if (page->isShown) {

@@ -506,7 +506,7 @@ int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx) {
     int padX = DpiScale(labelHwnd, kAIChatLabelPadX);
     int btnDx = DpiScale(labelHwnd, kAIChatLabelCloseBtnDx);
     int spaceDx = DpiScale(labelHwnd, kAIChatLabelCloseBtnSpaceDx);
-    int maxDx = labelDx - btnDx - spaceDx - 2 * padX;
+    int maxDx = labelDx - btnDx - spaceDx - (2 * padX);
     return maxDx > 0 ? maxDx : 0;
 }
 

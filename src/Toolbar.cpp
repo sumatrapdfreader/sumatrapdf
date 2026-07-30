@@ -573,7 +573,7 @@ static Rect OverlayToolbarRect(MainWindow* win) {
         natW = canvas.dx;
     }
     int h = HwndWindowRect(win->hwndReBar).dy;
-    int x = canvas.x + (canvas.dx - natW) / 2;
+    int x = canvas.x + ((canvas.dx - natW) / 2);
     int y = canvas.y;
     if (ToolbarAtBottom()) {
         y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset(win);
@@ -1019,7 +1019,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX - 1;
-    int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
+    int y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
     MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
     if (IsUIRtl()) {
         currX += size2.dx;
@@ -1030,19 +1030,19 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     y = currY;
     MoveWindow(win->hwndPageBg, x, y, pageWndRect.dx, pageWndRect.dy, FALSE);
     x = currX + size.dx + padding;
-    y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
-    int dx = pageWndRect.dx - 2 * padding;
+    y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
+    int dx = pageWndRect.dx - (2 * padding);
     MoveWindow(win->hwndPageEdit, x, y, dx, size.dy, FALSE);
     // in right-to-left layout, the total comes "before" the current page number
     if (IsUIRtl()) {
         currX -= size2.dx;
         x = currX + size.dx;
-        y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
+        y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
         MoveWindow(win->hwndPageTotal, x, y, size2.dx, size.dy, FALSE);
     } else {
         x = currX + size.dx + pageWndRect.dx;
         int midX = (size2.dx - labelDx) / 2;
-        y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
+        y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
         MoveWindow(win->hwndPageTotal, x + midX, y, labelDx, size.dy, FALSE);
     }
 
@@ -1116,7 +1116,7 @@ void LogBitmapInfo(HBITMAP hbmp) {
     u8* bits = (u8*)bmpInfo.bmBits;
     u8* d;
     for (int y = 0; y < 5; y++) {
-        d = bits + (size_t)bmpInfo.bmWidthBytes * y;
+        d = bits + ((size_t)bmpInfo.bmWidthBytes * y);
         logf("y: %d, d: 0x%p\n", y, d);
     }
 }
@@ -1263,7 +1263,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
         int imgSize = (int)dstStride * h;
         int bitsCount = n * 8;
 
-        int bmiSize = (int)(sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD));
+        int bmiSize = (int)(sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD)));
         auto bmi = (BITMAPINFO*)AllocArrayTemp<u8>(bmiSize);
         BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
         bmih->biSize = sizeof(*bmih);
@@ -1475,7 +1475,7 @@ void CreateToolbar(MainWindow* win) {
     rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
     rbBand.hwndChild = hwndToolbar;
     rbBand.cxMinChild = rc.dx * kButtonsCount;
-    rbBand.cyMinChild = rc.dy + 2 * rc.y;
+    rbBand.cyMinChild = rc.dy + (2 * rc.y);
     rbBand.cx = 0;
     SendMessageW(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -1484,7 +1484,7 @@ void CreateToolbar(MainWindow* win) {
     int defFontSize = GetAppFontSize(win->hwndFrame);
     // ToolbarSize scales icons only; UI font size comes from UIFontSize (GetAppFontSize).
     int newSize = defFontSize;
-    int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically
+    int maxFontSize = iconSize - (yPad * 2) - 2; // -2 determined empirically
     if (newSize > maxFontSize) {
         logfa("CreateToolbar: setting toolbar font size to %d (scaled was %d, default size: %d)\n", maxFontSize,
               newSize, defFontSize);
@@ -1752,7 +1752,7 @@ void RebuildMenuBarButtons(MainWindow* win) {
         Rect rc = TbGetItemRect(hwndMb, 0);
         int menuBarDy = MenuBarToolbarIdealDy(win);
         if (rc.dy > 0) {
-            menuBarDy = rc.dy + 2 * rc.y;
+            menuBarDy = rc.dy + (2 * rc.y);
         }
         REBARBANDINFOW rbBand{};
         rbBand.cbSize = sizeof(REBARBANDINFOW);
@@ -1818,7 +1818,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     RebuildMenuBarButtons(win);
 
     Rect rc = TbGetItemRect(win->hwndMenuToolbar, 0);
-    int menuBarDy = rc.dy + 2 * rc.y;
+    int menuBarDy = rc.dy + (2 * rc.y);
     if (menuBarDy <= 0) {
         menuBarDy = MenuBarToolbarIdealDy(win);
     }

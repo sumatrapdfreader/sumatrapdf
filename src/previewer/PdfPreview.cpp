@@ -64,7 +64,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     if (bmp && GetDIBits(hdc, bmp->hbmp, 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
         for (int i = 0; i < thumb.dx * thumb.dy; i++) {
-            bmpData[4 * i + 3] = 0xFF;
+            bmpData[(4 * i) + 3] = 0xFF;
         }
 
         *phbmp = hthumb;

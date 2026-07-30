@@ -374,7 +374,7 @@ void AdvancedSettingsWnd::OnSelectionChanged() {
 static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect& rcVal) {
     int pad = DpiScale(hwnd, 4);
     int gap = DpiScale(hwnd, 10);
-    int totalW = rc.dx - 2 * pad;
+    int totalW = rc.dx - (2 * pad);
     if (totalW < 1) {
         rcName = rc;
         rcVal = rc;
@@ -389,7 +389,7 @@ static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect
     }
     int nameW = totalW - valW - gap;
     if (nameW < DpiScale(hwnd, 72)) {
-        nameW = totalW / 2 - gap / 2;
+        nameW = (totalW / 2) - (gap / 2);
         valW = totalW - nameW - gap;
     }
     if (nameW < 1) {

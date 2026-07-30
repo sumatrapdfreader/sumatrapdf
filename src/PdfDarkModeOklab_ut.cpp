@@ -20,7 +20,7 @@ static float RelLuminance(float r, float g, float b) {
     float lr = SrgbToLinear(r);
     float lg = SrgbToLinear(g);
     float lb = SrgbToLinear(b);
-    return 0.2126f * lr + 0.7152f * lg + 0.0722f * lb;
+    return (0.2126f * lr) + (0.7152f * lg) + (0.0722f * lb);
 }
 
 static float ContrastRatio(float r1, float g1, float b1, float r2, float g2, float b2) {

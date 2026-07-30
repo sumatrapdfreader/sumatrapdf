@@ -6,7 +6,7 @@
 #include "PdfDarkMode.h"
 
 static int PdfDarkModeFeatureColorBuckets(const DarkImageFeatures& f) {
-    return (int)(f.colorBucketRatio * 4096.f + 0.5f);
+    return (int)((f.colorBucketRatio * 4096.f) + 0.5f);
 }
 
 // Mirrors PdfDarkModeStatsLookLikePhoto in PdfDarkModeImageStats.cpp.
@@ -138,7 +138,7 @@ bool PdfDarkModeShouldPreserveImageFeatures(const DarkImageFeatures& f, float pa
 }
 
 void PdfDarkModeCompressPhotoHighlights(float r, float g, float b, float* outR, float* outG, float* outB) {
-    float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     const float knee = 0.82f;
     const float cap = 0.90f;
     if (lum <= knee) {
@@ -151,7 +151,7 @@ void PdfDarkModeCompressPhotoHighlights(float r, float g, float b, float* outR, 
     if (t > 1.f) {
         t = 1.f;
     }
-    float targetLum = knee + (cap - knee) * t;
+    float targetLum = knee + ((cap - knee) * t);
     float scale = lum > 0.0001f ? targetLum / lum : 1.f;
     *outR = r * scale;
     *outG = g * scale;

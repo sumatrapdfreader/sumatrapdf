@@ -1619,7 +1619,7 @@ static int WineDpiFromEnv() {
         if (scale < 1.f) {
             continue;
         }
-        int dpi = (int)(96.f * scale + 0.5f);
+        int dpi = (int)((96.f * scale) + 0.5f);
         if (dpi > bestDpi) {
             bestDpi = dpi;
         }

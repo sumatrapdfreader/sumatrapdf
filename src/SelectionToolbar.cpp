@@ -225,8 +225,8 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     for (int i = 0; i < n; i++) {
         SelectionToolbarButton& b = tb->buttons[i];
         Size s = HwndMeasureText(hwnd, _TRA(b.label), tb->font);
-        int dx = s.dx + 2 * padX;
-        int dy = s.dy + 2 * padY;
+        int dx = s.dx + (2 * padX);
+        int dy = s.dy + (2 * padY);
         b.rc = Rect(x, margin, dx, dy);
         x += dx + gap;
         if (dy > maxDy) {
@@ -239,7 +239,7 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     for (int i = 0; i < n; i++) {
         tb->buttons[i].rc.dy = maxDy;
     }
-    tb->size = Size(x + margin, maxDy + 2 * margin);
+    tb->size = Size(x + margin, maxDy + (2 * margin));
 }
 
 static int ButtonFromPoint(SelectionToolbar* tb, int x, int y) {
@@ -265,7 +265,7 @@ static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
     if (r.IsEmpty()) {
         return false;
     }
-    out = Point(r.x + r.dx, r.y + r.dy / 2);
+    out = Point(r.x + r.dx, r.y + (r.dy / 2));
     return true;
 }
 
@@ -453,7 +453,7 @@ static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
     int w = tb->size.dx;
     int h = tb->size.dy;
 
-    int x = sel.x + sel.dx / 2 - w / 2;
+    int x = sel.x + (sel.dx / 2) - (w / 2);
     int y = sel.y - gap - h;
     if (y < canvas.y) {
         y = sel.y + sel.dy + gap;

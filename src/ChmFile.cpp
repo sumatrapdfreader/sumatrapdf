@@ -137,7 +137,7 @@ void ChmFile::ParseWindowsData() {
     }
 
     for (int i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
-        int off = 8 + i * entrySize;
+        int off = 8 + (i * entrySize);
         if (str::IsNull(title)) {
             DWORD strOff = rw.UInt32LE(off + 0x14);
             title = GetCharZ(stringsData, (int)strOff);

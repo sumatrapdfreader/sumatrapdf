@@ -363,7 +363,7 @@ static Pixmap* FzPixmapToPixmap(fz_context* ctx, fz_pixmap* pixmap) {
         res->yres = (float)bgr->yres;
         int rowBytes = w * n;
         for (int y = 0; y < h; y++) {
-            memcpy(res->data + (size_t)y * res->stride, bgr->samples + (size_t)y * bgr->stride, rowBytes);
+            memcpy(res->data + ((size_t)y * res->stride), bgr->samples + ((size_t)y * bgr->stride), rowBytes);
         }
     }
     fz_drop_pixmap(ctx, bgr);
@@ -394,7 +394,7 @@ static inline int ClampInt(int v, int minVal, int maxVal) {
 
 static void GetPixmapPixelBgra(const Pixmap* pixmap, int x, int y, u8* bgra) {
     int bpp = PixmapBytesPerPixel(pixmap->format);
-    const u8* src = pixmap->data + (size_t)y * pixmap->stride + (size_t)x * bpp;
+    const u8* src = pixmap->data + ((size_t)y * pixmap->stride) + ((size_t)x * bpp);
     u8 r, g, b, a;
     if (pixmap->format == PixmapFormat::RGBA8) {
         r = src[0];
@@ -414,9 +414,9 @@ static void GetPixmapPixelBgra(const Pixmap* pixmap, int x, int y, u8* bgra) {
             g = (u8)std::min(255, g + (255 - a));
             r = (u8)std::min(255, r + (255 - a));
         } else {
-            b = (u8)((b * a + 255 * (255 - a)) / 255);
-            g = (u8)((g * a + 255 * (255 - a)) / 255);
-            r = (u8)((r * a + 255 * (255 - a)) / 255);
+            b = (u8)(((b * a) + (255 * (255 - a))) / 255);
+            g = (u8)(((g * a) + (255 * (255 - a))) / 255);
+            r = (u8)(((r * a) + (255 * (255 - a))) / 255);
         }
     }
     bgra[0] = b;
@@ -434,12 +434,12 @@ static uint32_t GetPixmapPixelRgbKey(const Pixmap* pixmap, int x, int y) {
 
 static void FillPixmapWhite(Pixmap* pixmap) {
     for (int y = 0; y < pixmap->height; y++) {
-        u8* row = pixmap->data + (size_t)y * pixmap->stride;
+        u8* row = pixmap->data + ((size_t)y * pixmap->stride);
         for (int x = 0; x < pixmap->width; x++) {
-            row[x * 4 + 0] = 255;
-            row[x * 4 + 1] = 255;
-            row[x * 4 + 2] = 255;
-            row[x * 4 + 3] = 255;
+            row[(x * 4) + 0] = 255;
+            row[(x * 4) + 1] = 255;
+            row[(x * 4) + 2] = 255;
+            row[(x * 4) + 3] = 255;
         }
     }
 }
@@ -591,7 +591,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     RectF mediaBox = PageMediabox(pageNo);
     for (int y = 0; y < result->height; y++) {
-        u8* dst = result->data + (size_t)y * result->stride;
+        u8* dst = result->data + ((size_t)y * result->stride);
         for (int x = 0; x < result->width; x++) {
             PointF devPt((float)(screen.x + x) + 0.5f, (float)(screen.y + y) + 0.5f);
             PointF srcPt = TransformPoint(devPt, pageNo, zoom, rotation, true);
