@@ -6,9 +6,9 @@ struct SquareTreeNode {
     ~SquareTreeNode();
 
     struct DataItem {
-        Str key = {};
+        Str key;
         // only one of str or child are set
-        Str str = {};
+        Str str;
         SquareTreeNode* child = nullptr;
 
         DataItem() = default;

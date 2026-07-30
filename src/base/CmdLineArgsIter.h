@@ -15,7 +15,7 @@ struct CmdLineArgsIter {
     StrVec args;
     int curr = 0;
     int nArgs = 0;
-    Str currArg = {};
+    Str currArg;
 
 #if OS_WIN
     explicit CmdLineArgsIter(WStr cmdLine);

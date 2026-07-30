@@ -35,7 +35,7 @@ struct DirIter {
         bool didFinish = false;
 
         StrVec dirsToVisit;
-        TempStr currDir = {};
+        TempStr currDir;
 #if OS_WIN
         WStr pattern;
         WIN32_FIND_DATAW fd{};

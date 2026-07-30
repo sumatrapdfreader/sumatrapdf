@@ -30,7 +30,7 @@ struct Archive {
 
     struct FileInfo {
         int fileId = 0;
-        Str name = {};
+        Str name;
         i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
         int fileSizeUncompressed = 0;
         bool isDir = false;

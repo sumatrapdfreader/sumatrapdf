@@ -243,7 +243,7 @@ struct RenderedBitmap;
 // blitted to an HDC. Concrete and Windows-only by design - portable pixel data lives in
 // Pixmap; this is just the GDI handle the UI paints. Built from a Pixmap or an HBITMAP.
 struct RenderedBitmap {
-    Size size = {};
+    Size size;
     HBITMAP hbmp = nullptr;
     HANDLE hMap = nullptr;
 
@@ -275,7 +275,7 @@ struct DoubleBuffer {
     HDC hdcCanvas = nullptr;
     HDC hdcBuffer = nullptr;
     HBITMAP doubleBuffer = nullptr;
-    Rect rect{};
+    Rect rect;
 
     DoubleBuffer(HWND hwnd, Rect rect);
     DoubleBuffer(const DoubleBuffer&) = delete;
