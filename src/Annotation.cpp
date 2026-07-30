@@ -530,7 +530,7 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
             for (int i = 0; i < n; i++) {
                 out.Append(opts[i] ? opts[i] : "");
             }
-            fz_free(ctx, opts);
+            fz_free(ctx, (void*)opts);
         }
     }
     fz_catch(ctx) {

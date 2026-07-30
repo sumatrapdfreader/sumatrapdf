@@ -1011,7 +1011,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
             Start(dst, filesProvider, i->stressTestCycles);
         }
 
-        free(windows);
+        free((void*)windows);
     } else {
         PositionStressWindows(&win, 1);
         // dst will be deleted when the stress ends

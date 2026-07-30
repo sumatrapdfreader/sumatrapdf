@@ -1851,7 +1851,7 @@ WStr CastToWCHAR(Str s) {
     }
     WCHAR* w = nullptr;
     static_assert(sizeof(char*) == sizeof(WCHAR*), "pointer sizes must match");
-    memcpy(&w, &s.s, sizeof(w));
+    memcpy((void*)&w, (const void*)&s.s, sizeof(w));
     return WStr(w, s.len / (int)sizeof(WCHAR));
 }
 

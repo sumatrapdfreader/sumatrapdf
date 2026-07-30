@@ -1821,7 +1821,7 @@ static int ToolIdxFromCmdLine() {
         TempStr toolName = ToUtf8Temp(wargv[1]);
         idx = SeqStrIndexIS(gToolNames, toolName);
     }
-    LocalFree(wargv);
+    LocalFree((void*)wargv);
     return idx;
 }
 
@@ -1844,7 +1844,7 @@ static bool IsRunningTool() {
             break;
         }
     }
-    LocalFree(wargv);
+    LocalFree((void*)wargv);
     return isTool;
 }
 
@@ -2003,7 +2003,9 @@ Run the command from cmd.exe instead, e.g.:
     }
 
 Exit:
-    if (wargvOrig) LocalFree(wargvOrig);
+    if (wargvOrig) {
+        LocalFree((void*)wargvOrig);
+    }
     if (argv) fz_free_argv(argc, argv);
     return res;
 }

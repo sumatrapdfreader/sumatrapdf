@@ -99,7 +99,7 @@ static HashTable* NewHashTable(int size, Arena* a) {
 }
 
 static void DeleteHashTable(HashTable* h) {
-    free(h->entries);
+    free((void*)h->entries);
     // the rest is freed by the arena
 }
 
@@ -121,7 +121,7 @@ static void HashTableResize(HashTable* h, HasherComparator* hc) {
             e = next;
         }
     }
-    free(h->entries);
+    free((void*)h->entries);
     h->entries = newEntries;
     h->nEntries = newSize;
     h->nResizes += 1;

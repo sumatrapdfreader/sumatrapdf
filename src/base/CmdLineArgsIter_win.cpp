@@ -20,7 +20,7 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
         }
         argsOut.Append(arg);
     }
-    LocalFree(argsArr);
+    LocalFree((void*)argsArr);
 }
 #else
 void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
@@ -37,7 +37,7 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
         }
         argsOut.Append(arg);
     }
-    LocalFree(argsArr);
+    LocalFree((void*)argsArr);
 }
 #endif
 

@@ -221,7 +221,7 @@ static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
         Str arg = ToUtf8Temp(argsArr[i]);
         args.Append(arg);
     }
-    LocalFree(argsArr);
+    LocalFree((void*)argsArr);
 }
 
 int mainVerify(Str archivePath) {

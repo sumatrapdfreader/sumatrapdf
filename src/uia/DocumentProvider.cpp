@@ -414,7 +414,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString
             }
 
             memset(*ppIDString, 0, 8);
-            memcpy(*ppIDString, &it, sizeof(void*)); // copy the pointer to the allocated array
+            memcpy(*ppIDString, (const void*)&it, sizeof(void*)); // copy the pointer to the allocated array
             *pdwIDStringLen = 8;
             return S_OK;
         }
