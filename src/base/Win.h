@@ -430,7 +430,7 @@ bool WasLaunchedByPowershellWithPipeRedirect();
 
 //--- registry
 
-const TempStr RegKeyNameTemp(HKEY key);
+TempStr RegKeyNameTemp(HKEY key);
 bool RegKeyExists(HKEY keySub, Str keyName);
 TempStr ReadRegStrTemp(HKEY keySub, Str keyName, Str valName);
 TempStr LoggedReadRegStrTemp(HKEY keySub, Str keyName, Str valName);

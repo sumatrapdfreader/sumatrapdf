@@ -258,7 +258,7 @@ static Str PrimaryLangIdToEnglishName(WORD primary) {
     }
 }
 
-static const TempStr OsDefaultDestinationLanguageTemp() {
+static TempStr OsDefaultDestinationLanguageTemp() {
     LANGID langId = GetUserDefaultUILanguage();
     Str name = PrimaryLangIdToEnglishName(PRIMARYLANGID(langId));
     if (name) {
@@ -270,7 +270,7 @@ static const TempStr OsDefaultDestinationLanguageTemp() {
     return "English";
 }
 
-static const TempStr DefaultDestinationLanguageTemp() {
+static TempStr DefaultDestinationLanguageTemp() {
     if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateToLang)) {
         return gGlobalPrefs->translateToLang;
     }
@@ -286,7 +286,7 @@ static TempStr NormalizeLangNameTemp(Str lang) {
     return normalized;
 }
 
-static const TempStr DefaultSourceLanguageTemp() {
+static TempStr DefaultSourceLanguageTemp() {
     if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateFromLang)) {
         return gGlobalPrefs->translateFromLang;
     }

@@ -726,7 +726,7 @@ bool CreateRegKey(HKEY keySub, Str keyName) {
     return true;
 }
 
-const TempStr RegKeyNameTemp(HKEY key) {
+TempStr RegKeyNameTemp(HKEY key) {
     if (key == HKEY_LOCAL_MACHINE) {
         return "HKEY_LOCAL_MACHINE";
     }
@@ -739,7 +739,7 @@ const TempStr RegKeyNameTemp(HKEY key) {
     return "RegKeyName: unknown key";
 }
 
-const TempStr RegKeyNameWTemp(HKEY key) {
+TempStr RegKeyNameWTemp(HKEY key) {
     auto k = RegKeyNameTemp(key);
     return str::Dup(k);
 }

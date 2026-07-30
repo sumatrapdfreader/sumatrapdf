@@ -1121,7 +1121,7 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
-static const TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
+static TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     if (!str::IsEmptyOrWhiteSpace(shortcut->name)) {
         return shortcut->name;
     }
