@@ -41,7 +41,8 @@ static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
 }
 
 static TocItem* NewChmTocItem(TocItem* parent, Str title, int pageNo, Str url) {
-    auto res = new TocItem(parent, title, pageNo);
+    auto res = AllocTocItem(nullptr, title, pageNo);
+    res->parent = parent;
     res->dest = NewChmNamedDest(url, pageNo);
     return res;
 }
@@ -260,7 +261,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
             // TODO: optimize, create just destination
             auto item = NewChmTocItem(nullptr, nullptr, 0, pageUrl);
             cb->GotoLink(item->dest);
-            delete item;
+            FreeTocItemRec(nullptr, item);
         }
         return true;
     }
@@ -656,7 +657,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
         // TODO: optimize, create just destination
         auto item = NewChmTocItem(nullptr, nullptr, 1, url);
         cb->GotoLink(item->dest);
-        delete item;
+        FreeTocItemRec(nullptr, item);
     }
     return false;
 }
@@ -847,7 +848,7 @@ TocTree* ChmModel::GetToc() {
     if (!foundRoot) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;

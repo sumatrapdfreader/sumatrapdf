@@ -102,7 +102,8 @@ static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, Str link, Str comment
 }
 
 static TocItem* NewDjvuDecTocItem(TocItem* parent, Str title, Str link) {
-    auto res = new TocItem(parent, title, 0);
+    auto res = AllocTocItem(nullptr, title, 0);
+    res->parent = parent;
     res->dest = NewDjvuDecDestination(link, {});
     if (res->dest) {
         res->pageNo = PageDestGetPageNo(res->dest);
@@ -938,7 +939,7 @@ TocTree* EngineDjvuDec::GetToc() {
     if (!rootItem) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = rootItem;
     tocTree = new TocTree(realRoot);
     return tocTree;

@@ -1649,7 +1649,8 @@ static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
 }
 
 static TocItem* NewTocItemWithDestination(TocItem* parent, Str title, IPageDestination* dest) {
-    auto res = new TocItem(parent, title, 0);
+    auto res = AllocTocItem(nullptr, title, 0);
+    res->parent = parent;
     res->dest = dest;
     return res;
 }
@@ -3688,7 +3689,7 @@ MakeTree:
     if (!root) {
         return nullptr;
     }
-    TocItem* realRoot = new TocItem();
+    TocItem* realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;

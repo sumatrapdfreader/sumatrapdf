@@ -1486,9 +1486,7 @@ static TocItem* FilterTocItemRec(TocItem* item, const StrVec& words) {
         bool titleMatches = si->title && FilterMatches(si->title, words);
         if (titleMatches) {
             // keep this node; only fully-matching children stay nested under it
-            auto* copy = new TocItem();
-            copy->title = str::Dup(si->title);
-            copy->pageNo = si->pageNo;
+            auto* copy = AllocTocItem(nullptr, si->title, si->pageNo);
             copy->id = si->id;
             copy->fontFlags = si->fontFlags;
             copy->color = si->color;
@@ -1546,7 +1544,7 @@ static void ApplyTocFilter(MainWindow* win, Str filter) {
     // TreeView populates Root()'s children only (the root itself is invisible).
     // Promote-filter returns a sibling list of matching items, so wrap them in
     // a dummy root — same shape every engine uses for the unfiltered TocTree.
-    auto* wrapRoot = new TocItem();
+    auto* wrapRoot = AllocTocItem(nullptr, {}, 0);
     wrapRoot->child = filteredItems;
     for (TocItem* c = filteredItems; c; c = c->next) {
         c->parent = wrapRoot;

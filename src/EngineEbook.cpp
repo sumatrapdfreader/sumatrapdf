@@ -192,7 +192,8 @@ static IPageElement* NewImageDataElement(int pageNo, Rect bbox, int imageID) {
 }
 
 static TocItem* newEbookTocItem(TocItem* parent, Str title, IPageDestination* dest) {
-    auto res = new TocItem(parent, title, 0);
+    auto res = AllocTocItem(nullptr, title, 0);
+    res->parent = parent;
     res->dest = dest;
     if (dest) {
         res->pageNo = PageDestGetPageNo(dest);
@@ -894,7 +895,7 @@ TocTree* EngineEpub::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1019,7 +1020,7 @@ TocTree* EngineFb2::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1180,7 +1181,7 @@ TocTree* EngineMobi::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1287,7 +1288,7 @@ TocTree* EnginePdb::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1684,7 +1685,7 @@ TocTree* EngineChm::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1915,7 +1916,7 @@ TocTree* EngineTxt::GetToc() {
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
 
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;

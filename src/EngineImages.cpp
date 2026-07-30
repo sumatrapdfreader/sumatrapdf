@@ -1607,7 +1607,9 @@ int EngineImageDir::GetPageByLabel(Str label) const {
 }
 
 static TocItem* newImageDirTocItem(TocItem* parent, Str title, int pageNo) {
-    return new TocItem(parent, title, pageNo);
+    auto res = AllocTocItem(nullptr, title, pageNo);
+    res->parent = parent;
+    return res;
 };
 
 TocTree* EngineImageDir::GetToc() {
@@ -1623,7 +1625,7 @@ TocTree* EngineImageDir::GetToc() {
         item->id = i;
         root->AddSiblingAtEnd(item);
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -2088,7 +2090,7 @@ bool EngineCbx::FinishLoading() {
     TocItem* tocBuildRoot = nullptr;
     TocItem* tocBuildCurr = nullptr;
     auto addTocItem = [&](Str title, int pageNo) {
-        TocItem* ti = new TocItem(nullptr, title, pageNo);
+        TocItem* ti = AllocTocItem(nullptr, title, pageNo);
         if (!tocBuildRoot) {
             tocBuildRoot = ti;
         } else if (tocBuildCurr) {
@@ -2121,7 +2123,7 @@ bool EngineCbx::FinishLoading() {
         }
     }
     if (tocBuildRoot) {
-        auto realRoot = new TocItem();
+        auto realRoot = AllocTocItem(nullptr, {}, 0);
         realRoot->child = tocBuildRoot;
         tocTree = new TocTree(realRoot);
     }

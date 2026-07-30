@@ -112,7 +112,8 @@ static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
 }
 
 static TocItem* NewMarkdownTocItem(TocItem* parent, Str title, int pageNo, Str url) {
-    auto res = new TocItem(parent, title, pageNo);
+    auto res = AllocTocItem(nullptr, title, pageNo);
+    res->parent = parent;
     res->dest = NewMarkdownNamedDest(url, pageNo);
     return res;
 }
@@ -348,7 +349,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
         if (cb) {
             auto item = NewMarkdownTocItem(nullptr, nullptr, 1, pageUrl);
             cb->GotoLink(item->dest);
-            delete item;
+            FreeTocItemRec(nullptr, item);
         }
         return false;
     }
@@ -611,7 +612,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     if (url && cb) {
         auto item = NewMarkdownTocItem(nullptr, nullptr, 1, url);
         cb->GotoLink(item->dest);
-        delete item;
+        FreeTocItemRec(nullptr, item);
     }
     return false;
 }
@@ -827,7 +828,7 @@ bool MarkdownModel::Load(Str fileName) {
     }
 
     if (foundRoot) {
-        auto realRoot = new TocItem();
+        auto realRoot = AllocTocItem(nullptr, {}, 0);
         realRoot->child = root;
         tocTree = new TocTree(realRoot);
     }
