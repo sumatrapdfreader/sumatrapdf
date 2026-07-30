@@ -6,6 +6,9 @@
 #include "DocController.h"
 #include "TreeModel.h"
 #include "EngineBase.h"
+#if defined(DEBUG)
+#include "base/UtAssert.h"
+#endif
 #include "TextSelection.h"
 
 uint distSq(int x, int y) {
@@ -96,6 +99,68 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     return result;
 }
 
+// Dehyphenation removes both the trailing hyphen and the line-separator glyph,
+// so adjacent coords can belong to different visual lines. Require at least
+// half of the new glyph's height to overlap the current line box; this still
+// keeps smaller subscript and superscript glyphs in the same run.
+static bool IsGlyphOnVisualLine(Rect lineBox, Rect glyphBox) {
+    int top = lineBox.y > glyphBox.y ? lineBox.y : glyphBox.y;
+    int bottom = lineBox.y + lineBox.dy < glyphBox.y + glyphBox.dy ? lineBox.y + lineBox.dy : glyphBox.y + glyphBox.dy;
+    return (bottom - top) * 2 >= glyphBox.dy;
+}
+
+static void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, int glyph, int length,
+                               Rect mediabox) {
+    Rect *c = &coords[glyph], *end = c + length;
+    while (c < end) {
+        // skip line breaks (empty boxes: hard newlines and soft-join spaces)
+        for (; c < end && !c->x && !c->dx; c++) {
+            // no-op
+        }
+
+        Rect bbox;
+        for (; c < end && (c->x || c->dx); c++) {
+            if (!bbox.IsEmpty() && !IsGlyphOnVisualLine(bbox, *c)) {
+                break;
+            }
+            bbox = bbox.Union(*c);
+        }
+        bbox = bbox.Intersect(mediabox);
+        // skip text that's completely outside a page's mediabox
+        if (bbox.IsEmpty()) {
+            continue;
+        }
+
+        // Only clip against the next glyph when it is on this visual line.
+        // At a dehyphenated break the next glyph belongs to the following line.
+        bool overlapsVertically = c < coords + textLen && c->y < bbox.y + bbox.dy && c->y + c->dy > bbox.y;
+        if (overlapsVertically && (c->x || c->dx) && bbox.x < c->x && bbox.x + bbox.dx > c->x) {
+            bbox.dx = c->x - bbox.x;
+        }
+
+        int currLen = result->len;
+        int left = result->cap - currLen;
+        ReportIf(left < 0);
+        if (left == 0) {
+            int newCap = result->cap * 2;
+            if (newCap < 64) {
+                newCap = 64;
+            }
+            int* newPages = (int*)realloc(result->pages, sizeof(int) * newCap);
+            Rect* newRects = (Rect*)realloc(result->rects, sizeof(Rect) * newCap);
+            ReportIf(!newPages);
+            ReportIf(!newRects);
+            result->pages = newPages;
+            result->rects = newRects;
+            result->cap = newCap;
+        }
+
+        result->pages[currLen] = pageNo;
+        result->rects[currLen] = bbox;
+        result->len++;
+    }
+}
+
 static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr) {
     Rect* coords;
     int textLen = 0;
@@ -161,50 +226,35 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         return;
     }
 
-    Rect *c = &coords[glyph], *end = c + length;
-    while (c < end) {
-        // skip line breaks (empty boxes: hard newlines and soft-join spaces)
-        for (; c < end && !c->x && !c->dx; c++) {
-            // no-op
-        }
-
-        Rect bbox, *c0 = c;
-        for (; c < end && (c->x || c->dx); c++) {
-            bbox = bbox.Union(*c);
-        }
-        bbox = bbox.Intersect(mediabox);
-        // skip text that's completely outside a page's mediabox
-        if (bbox.IsEmpty()) {
-            continue;
-        }
-
-        // cut the right edge, if it overlaps the next character
-        if (c < coords + textLen && (c->x || c->dx) && bbox.x < c->x && bbox.x + bbox.dx > c->x) {
-            bbox.dx = c->x - bbox.x;
-        }
-
-        int currLen = ts->result.len;
-        int left = ts->result.cap - currLen;
-        ReportIf(left < 0);
-        if (left == 0) {
-            int newCap = ts->result.cap * 2;
-            if (newCap < 64) {
-                newCap = 64;
-            }
-            int* newPages = (int*)realloc(ts->result.pages, sizeof(int) * newCap);
-            Rect* newRects = (Rect*)realloc(ts->result.rects, sizeof(Rect) * newCap);
-            ReportIf(!newPages);
-            ReportIf(!newRects);
-            ts->result.pages = newPages;
-            ts->result.rects = newRects;
-            ts->result.cap = newCap;
-        }
-
-        ts->result.pages[currLen] = pageNo;
-        ts->result.rects[currLen] = bbox;
-        ts->result.len++;
-    }
+    FillSelectionRects(&ts->result, pageNo, coords, textLen, glyph, length, mediabox);
 }
+
+#if defined(DEBUG)
+void TextSelection_UnitTests() {
+    Rect coords[] = {
+        {50, 100, 12, 10}, {60, 100, 12, 10}, {70, 100, 12, 10}, {56, 115, 12, 10},
+        {66, 115, 12, 10}, {76, 115, 12, 10}, {50, 130, 12, 10}, {60, 130, 12, 10},
+        {70, 130, 12, 10}, {56, 145, 12, 10}, {66, 145, 12, 10}, {76, 145, 12, 10},
+    };
+    TextSel result;
+    FillSelectionRects(&result, 1, coords, dimof(coords), 0, 10, {0, 0, 200, 200});
+    utassert(result.len == 4);
+    utassert(result.rects[0] == Rect(50, 100, 32, 10));
+    utassert(result.rects[1] == Rect(56, 115, 32, 10));
+    utassert(result.rects[2] == Rect(50, 130, 32, 10));
+    utassert(result.rects[3] == Rect(56, 145, 10, 10));
+    free(result.pages);
+    free(result.rects);
+
+    Rect superscript[] = {{10, 100, 12, 10}, {20, 97, 8, 6}, {28, 100, 12, 10}};
+    result = {};
+    FillSelectionRects(&result, 1, superscript, dimof(superscript), 0, dimof(superscript), {0, 0, 200, 200});
+    utassert(result.len == 1);
+    utassert(result.rects[0] == Rect(10, 97, 30, 13));
+    free(result.pages);
+    free(result.rects);
+}
+#endif
 
 bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     Rect* coords;

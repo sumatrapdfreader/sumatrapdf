@@ -8,6 +8,10 @@
 #include "TipText.h"
 #include "Commands.h"
 
+#if defined(DEBUG)
+void TextSelection_UnitTests();
+#endif
+
 // must be last to over-write assert()
 #include "base/UtAssert.h"
 
@@ -70,6 +74,9 @@ static void ParseTip_UnitTests() {
 
 int RunAppUnitTests() {
     ParseTip_UnitTests();
+#if defined(DEBUG)
+    TextSelection_UnitTests();
+#endif
     return utassert_print_results();
 }
 
