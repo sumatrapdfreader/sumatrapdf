@@ -622,43 +622,42 @@ TempStr DealPlainSync(TempStr pathSync) {
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
         return pathSync;
-    } else {
-        logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
-        Str converted = ConvertLocalToUTF8(srcZ);
-        if (!converted) {
-            logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
-            return {};
-        }
-        Str dst = converted;
-
-        if (len(dst) == 0) {
-            logfa("DealPlainSync: decoded content is empty.\n", pathSync);
-            return {};
-        }
-        TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
-        if (!tempPath) {
-            str::Free(dst);
-            logfa("DealPlainSync: unable to get temp file path. error: %d.\n", errno);
-            return {};
-        }
-        bool ok = file::WriteFile(tempPath, dst);
-        str::Free(dst);
-        if (!ok) {
-            logfa("DealPlainSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
-            return {};
-        }
-        logfa("DealPlainSync: utf-8 written to temp file '%s'.\n", tempPath);
-
-        TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);              // stxabcdef
-        TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
-        int ret = rename(tempPath.s, tempPathSync.s);
-        if (ret) {
-            logfa("DealPlainSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
-            return {};
-        }
-        logfa("DealPlainSync: copied '%s' to '%s'\n", pathSync, tempPathSync);
-        return tempPathSync;
     }
+    logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
+    Str converted = ConvertLocalToUTF8(srcZ);
+    if (!converted) {
+        logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
+        return {};
+    }
+    Str dst = converted;
+
+    if (len(dst) == 0) {
+        logfa("DealPlainSync: decoded content is empty.\n", pathSync);
+        return {};
+    }
+    TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
+    if (!tempPath) {
+        str::Free(dst);
+        logfa("DealPlainSync: unable to get temp file path. error: %d.\n", errno);
+        return {};
+    }
+    bool ok = file::WriteFile(tempPath, dst);
+    str::Free(dst);
+    if (!ok) {
+        logfa("DealPlainSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
+        return {};
+    }
+    logfa("DealPlainSync: utf-8 written to temp file '%s'.\n", tempPath);
+
+    TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);              // stxabcdef
+    TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
+    int ret = rename(tempPath.s, tempPathSync.s);
+    if (ret) {
+        logfa("DealPlainSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
+        return {};
+    }
+    logfa("DealPlainSync: copied '%s' to '%s'\n", pathSync, tempPathSync);
+    return tempPathSync;
 }
 
 static bool IsGzipFile(Str path) {
