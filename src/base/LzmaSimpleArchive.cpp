@@ -2,11 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include <LzmaDec.h>
-#include <Bra.h>
 #include "base/ByteReaderWriter.h"
 #include "base/LzmaSimpleArchive.h"
 #include "base/File.h"
+
+#include <LzmaDec.h>
+#include <Bra.h>
 
 /*
 Implements extracting data from a simple archive format, made up by me.
