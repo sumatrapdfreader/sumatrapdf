@@ -5,13 +5,13 @@
 //
 // We open a 25-page PDF (each page renders a big "Page N"), add favorites at
 // pages 10 and 20 through the UI (CmdFavoriteAdd + dismiss its dialog), then
-// drive the new commands and compare canvas screenshots: the same page renders
-// identically, different pages differ. So we can assert navigation landed on
-// the right favorite without reading any control text.
+// drive the new commands and compare the average tone in the center of canvas
+// screenshots. The page's solid grey fill identifies it without depending on
+// incidental canvas pixels such as scrollbars or focus indicators.
 //
 // Run:  bun tests/issue-3744.ts [--no-build]   (or via tests/all.ts)
 
-import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 import { waitForFrame, sendCommand, findCanvas } from "./win-automation.ts";
@@ -61,6 +61,31 @@ function makePdf(nPages: number): Buffer {
   }
   parts.push(enc(`${xref}trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
   return Buffer.concat(parts);
+}
+
+function pageTones(paths: string[]): number[] {
+  const quotedPaths = paths.map((p) => `'${p.replaceAll("'", "''")}'`).join(",");
+  const ps =
+    `Add-Type -AssemblyName System.Drawing; @(${quotedPaths}) | ForEach-Object { ` +
+    `$b=[System.Drawing.Bitmap]::FromFile($_); ` +
+    `$x0=[int]($b.Width*0.35); $x1=[int]($b.Width*0.65); ` +
+    `$y0=[int]($b.Height*0.35); $y1=[int]($b.Height*0.65); ` +
+    `$sum=0.0; $n=0; for($y=$y0;$y -lt $y1;$y+=4){for($x=$x0;$x -lt $x1;$x+=4){` +
+    `$c=$b.GetPixel($x,$y); $sum+=($c.R+$c.G+$c.B)/3; $n++}}; ` +
+    `$b.Dispose(); [Math]::Round($sum/$n, 2) }`;
+  const res = Bun.spawnSync(["powershell", "-NoProfile", "-Command", ps]);
+  if (res.exitCode !== 0) {
+    throw new Error(`failed to analyze page screenshots:\n${res.stderr.toString()}`);
+  }
+  const tones = res.stdout
+    .toString()
+    .trim()
+    .split(/\r?\n/)
+    .map((s) => Number(s.trim()));
+  if (tones.length !== paths.length || tones.some((n) => !Number.isFinite(n))) {
+    throw new Error(`unexpected screenshot tones: ${res.stdout.toString().trim()}`);
+  }
+  return tones;
 }
 
 export async function testit(): Promise<void> {
@@ -132,14 +157,13 @@ export async function testit(): Promise<void> {
       await sleep(400);
     }
 
-    const cap = (name: string): Buffer => {
+    const cap = (name: string): string => {
       const p = join(dir, name);
       if (!captureWindowToPng(canvas, p)) {
         throw new Error(`capture failed: ${name}`);
       }
-      return readFileSync(p);
+      return p;
     };
-    const eq = (a: Buffer, b: Buffer) => a.length === b.length && a.equals(b);
 
     await gotoPage(1);
     const page1 = cap("p1.png");
@@ -160,12 +184,17 @@ export async function testit(): Promise<void> {
     await sleep(700);
     const back10 = cap("back10.png");
 
-    // assertions (compare rendered pages, not control text)
+    const [tone1, tone10, tone20, tone20b, toneBack10] = pageTones([page1, fav10, fav20, fav20b, back10]);
+    const samePage = (a: number, b: number) => Math.abs(a - b) <= 2;
+    const differentPage = (a: number, b: number) => Math.abs(a - b) >= 10;
+    console.log(`  page tones: 1=${tone1}, 10=${tone10}, 20=${tone20}, 20b=${tone20b}, back10=${toneBack10}`);
+
+    // assertions (compare the generated pages' solid grey tones, not control text)
     const checks: [string, boolean][] = [
-      ["next from page 1 moved off page 1", !eq(fav10, page1)],
-      ["next advanced 10 -> 20 (different page)", !eq(fav20, fav10)],
-      ["next at last favorite stays on 20 (no wrap)", eq(fav20b, fav20)],
-      ["prev from 20 returns to the page-10 favorite", eq(back10, fav10)],
+      ["next from page 1 moved off page 1", differentPage(tone10, tone1)],
+      ["next advanced 10 -> 20 (different page)", differentPage(tone20, tone10)],
+      ["next at last favorite stays on 20 (no wrap)", samePage(tone20b, tone20)],
+      ["prev from 20 returns to the page-10 favorite", samePage(toneBack10, tone10)],
     ];
     let ok = true;
     for (const [label, pass] of checks) {
