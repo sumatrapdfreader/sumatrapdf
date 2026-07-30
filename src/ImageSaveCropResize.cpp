@@ -356,13 +356,12 @@ static bool TriggerImageEditMnemonic(ImageEditWindow* ew, WCHAR key) {
         if (!btn || !btn->hwnd || !IsWindowEnabled(btn->hwnd)) {
             continue;
         }
-        WCHAR buf[256]{};
-        GetWindowTextW(btn->hwnd, buf, dimof(buf) - 1);
-        WCHAR* amp = wcschr(buf, L'&');
-        if (!amp || amp[1] == L'\0') {
+        TempWStr text = ToWStrTemp(HwndGetTextTemp(btn->hwnd));
+        int ampIdx = wstr::IndexOfChar(text, L'&');
+        if (ampIdx < 0 || ampIdx + 1 >= len(text)) {
             continue;
         }
-        if (UpperW(amp[1]) == key) {
+        if (UpperW(text.s[ampIdx + 1]) == key) {
             if (btn->onClick.IsValid()) {
                 btn->onClick.Call();
             }

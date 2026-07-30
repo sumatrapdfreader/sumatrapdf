@@ -23,6 +23,7 @@
 // The filter is applied 300ms after you stop typing (debounced).
 
 #include "base/Base.h"
+#include "base/Win.h"
 
 // ---- logging required by the base library (we don't link SumatraLog.cpp) ----
 
@@ -1003,10 +1004,7 @@ static void CloseTab(int idx) {
 // ------------------------------------------------------------- main window
 
 static void OnFilterChanged() {
-    int len = GetWindowTextLengthW(gHwndFilter);
-    WCHAR* buf = AllocArrayTemp<WCHAR>(len + 1);
-    GetWindowTextW(gHwndFilter, buf, len + 1);
-    Str utf8 = ToUtf8Temp(WStr(buf, len));
+    TempStr utf8 = HwndGetTextTemp(gHwndFilter);
 
     str::Free(gFilter);
     gFilter = str::Dup(utf8);

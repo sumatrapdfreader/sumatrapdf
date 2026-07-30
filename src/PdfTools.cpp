@@ -56,7 +56,8 @@ static HICON GetAppIcon() {
 // Seeds the dialog with the edit's current text and writes the chosen path back.
 static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     WCHAR dstFileName[MAX_PATH + 1]{};
-    GetWindowTextW(edit->hwnd, dstFileName, MAX_PATH);
+    TempWStr currentFileName = ToWStrTemp(HwndGetTextTemp(edit->hwnd));
+    wstr::BufSet(WStr(dstFileName, MAX_PATH), currentFileName);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);

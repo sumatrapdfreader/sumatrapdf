@@ -656,7 +656,7 @@ static void SendAIChatMessage(MainWindow* win) {
         return;
     }
     HWND hwndInput = win->aiChatInput->hwnd;
-    int inputLen = GetWindowTextLengthW(hwndInput);
+    int inputLen = HwndGetTextLen(hwndInput);
     if (inputLen == 0) {
         return;
     }

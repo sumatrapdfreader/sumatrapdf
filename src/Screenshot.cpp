@@ -152,9 +152,7 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
     if (ownedByApp && (w < 20 || h < 20)) {
         return false;
     }
-    WCHAR title[256];
-    int titleLen = GetWindowTextW(hwnd, title, 256);
-    if (titleLen == 0) {
+    if (HwndGetTextLen(hwnd) == 0) {
         LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
         if (!(style & WS_POPUP)) {
             return false;
