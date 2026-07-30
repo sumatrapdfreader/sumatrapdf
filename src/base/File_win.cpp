@@ -68,7 +68,7 @@ static TempWStr NormalizeTemp(WStr path) {
         DWORD nShort = GetShortPathNameW(fullPath.s, shortBuf, cch);
         return WStr(shortBuf, (int)nShort);
     }
-    if (wstr::StartsWith(normPath.s, L"\\\\?\\")) {
+    if (wstr::StartsWith(normPath.s, WStrL(L"\\\\?\\"))) {
         return normPath;
     }
     if (len(normPath) >= MAX_PATH) {

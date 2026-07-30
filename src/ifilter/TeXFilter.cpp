@@ -67,7 +67,7 @@ WStr TeXFilter::ExtractBracedBlock() {
                 // skip all LaTeX/TeX commands
                 if (iscmdchar(*m_pPtr)) {
                     // ignore the content of \begin{...} and \end{...}
-                    if (wstr::StartsWith(m_pPtr, L"begin{") || wstr::StartsWith(m_pPtr, L"end{")) {
+                    if (wstr::StartsWith(m_pPtr, WStrL(L"begin{")) || wstr::StartsWith(m_pPtr, WStrL(L"end{"))) {
                         m_pPtr = wcschr(m_pPtr, '{') + 1;
                         int depth = 1;
                         while (*m_pPtr && depth > 0) {
@@ -82,7 +82,7 @@ WStr TeXFilter::ExtractBracedBlock() {
                         break;
                     }
                     // convert \item to a single dash
-                    if (wstr::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
+                    if (wstr::StartsWith(m_pPtr, WStrL(L"item")) && !iscmdchar(*(m_pPtr + 4))) {
                         m_pPtr += 4;
                         addsingleNL(result, &rptr);
                         *rptr++ = '-';
@@ -120,17 +120,17 @@ WStr TeXFilter::ExtractBracedBlock() {
                     break;
                 }
                 // TODO: handle more international characters
-                if (wstr::StartsWith(m_pPtr, L"'e")) {
+                if (wstr::StartsWith(m_pPtr, WStrL(L"'e"))) {
                     *rptr++ = L'é';
                     m_pPtr += 2;
                     break;
                 }
-                if (wstr::StartsWith(m_pPtr, L"`e")) {
+                if (wstr::StartsWith(m_pPtr, WStrL(L"`e"))) {
                     *rptr++ = L'è';
                     m_pPtr += 2;
                     break;
                 }
-                if (wstr::StartsWith(m_pPtr, L"`a")) {
+                if (wstr::StartsWith(m_pPtr, WStrL(L"`a"))) {
                     *rptr++ = L'à';
                     m_pPtr += 2;
                     break;

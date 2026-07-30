@@ -83,8 +83,8 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
         Status ok = f->GetLogFontW(g, &lfw);
         bool isItalicOrMonospace = Ok != ok || lfw.lfItalic || wstr::Eq(lfw.lfFaceName, L"Courier New") ||
                                    wstr::FindFrom(lfw.lfFaceName, L"Consol") ||
-                                   wstr::EndsWith(lfw.lfFaceName, L"Mono") ||
-                                   wstr::EndsWith(lfw.lfFaceName, L"Typewriter");
+                                   wstr::EndsWith(lfw.lfFaceName, WStrL(L"Mono")) ||
+                                   wstr::EndsWith(lfw.lfFaceName, WStrL(L"Typewriter"));
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);
         idx = fontCache.len - 1;
