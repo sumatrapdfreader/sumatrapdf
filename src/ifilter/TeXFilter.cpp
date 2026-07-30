@@ -68,7 +68,8 @@ WStr TeXFilter::ExtractBracedBlock() {
                 if (iscmdchar(*m_pPtr)) {
                     // ignore the content of \begin{...} and \end{...}
                     if (wstr::StartsWith(m_pPtr, WStrL(L"begin{")) || wstr::StartsWith(m_pPtr, WStrL(L"end{"))) {
-                        m_pPtr = wcschr(m_pPtr, '{') + 1;
+                        int braceIdx = wstr::IndexOfChar(WStr(m_pPtr), L'{');
+                        m_pPtr += braceIdx + 1;
                         int depth = 1;
                         while (*m_pPtr && depth > 0) {
                             if (*m_pPtr == '{') {
@@ -93,8 +94,11 @@ WStr TeXFilter::ExtractBracedBlock() {
                     }
                     skipspace(m_pPtr);
                     // ignore command parameters in brackets
-                    if (*m_pPtr == '[' && wcschr(m_pPtr, ']')) {
-                        m_pPtr = wcschr(m_pPtr, ']') + 1;
+                    if (*m_pPtr == '[') {
+                        int bracketIdx = wstr::IndexOfChar(WStr(m_pPtr), L']');
+                        if (bracketIdx >= 0) {
+                            m_pPtr += bracketIdx + 1;
+                        }
                     }
                     break;
                 }
@@ -179,12 +183,16 @@ WStr TeXFilter::ExtractBracedBlock() {
                     addsinglespace(result, &rptr);
                 }
                 break;
-            case '[':
+            case '[': {
                 // ignore command parameters in brackets
-                if (wcschr(m_pPtr, ']') && wcschr(m_pPtr, ']') < wcschr(m_pPtr, '\n')) {
-                    m_pPtr = wcschr(m_pPtr, ']') + 1;
+                WStr rest(m_pPtr);
+                int bracketIdx = wstr::IndexOfChar(rest, L']');
+                int newlineIdx = wstr::IndexOfChar(rest, L'\n');
+                if (bracketIdx >= 0 && newlineIdx >= 0 && bracketIdx < newlineIdx) {
+                    m_pPtr += bracketIdx + 1;
                 }
                 break;
+            }
             case '%':
                 skipcomment(m_pPtr);
                 break;
