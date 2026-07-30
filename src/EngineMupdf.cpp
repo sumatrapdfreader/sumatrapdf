@@ -2356,13 +2356,16 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     return str::DupTemp(prefix);
 }
 
-void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
+void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data, int depth) {
+    if (depth >= 64) {
+        return;
+    }
     pdf_obj* obj = pdf_dict_gets(ctx, node, "Kids");
     if (obj != nullptr && !pdf_mark_obj(ctx, node)) {
         int n = pdf_array_len(ctx, obj);
         for (int i = 0; i < n; i++) {
             auto arr = pdf_array_get(ctx, obj, i);
-            BuildPageLabelRec(ctx, arr, pageCount, data);
+            BuildPageLabelRec(ctx, arr, pageCount, data, depth + 1);
         }
         pdf_unmark_obj(ctx, node);
         return;
@@ -2392,7 +2395,7 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
 
 static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
-    BuildPageLabelRec(ctx, root, pageCount, data);
+    BuildPageLabelRec(ctx, root, pageCount, data, 0);
     data.Sort(CmpPageLabelInfo);
 
     int n = len(data);
