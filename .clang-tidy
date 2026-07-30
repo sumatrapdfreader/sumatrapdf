@@ -16,6 +16,7 @@ Checks: >
   -modernize-use-nodiscard,
   -modernize-use-using,
   -performance-no-int-to-ptr,
+  -performance-enum-size,
   -readability-identifier-length,
   -readability-implicit-bool-conversion,
   -readability-magic-numbers,
