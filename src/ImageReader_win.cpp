@@ -227,13 +227,21 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
         return res;
     }
     const GUID* dim = (FileType::Tiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
-    UINT nFrames = bmp->GetFrameCount(dim);
+    constexpr UINT kMaxImageFrames = 1000;
+    constexpr i64 kMaxDecodedFrameBytes = 512LL * 1024 * 1024;
+    UINT nFrames = std::min(bmp->GetFrameCount(dim), kMaxImageFrames);
+    i64 decodedBytes = 0;
     for (UINT i = 0; i < nFrames; i++) {
         if (bmp->SelectActiveFrame(dim, i) != Gdiplus::Ok) {
             break;
         }
         Pixmap* px = PixmapFromGdiplus(bmp);
         if (px) {
+            decodedBytes += PixmapByteSize(px);
+            if (decodedBytes > kMaxDecodedFrameBytes) {
+                FreePixmap(px);
+                break;
+            }
             res.Append(px);
         }
     }
