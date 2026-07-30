@@ -241,7 +241,6 @@ bool Archive::OpenFromData(Str data) {
     int r = archive_read_open_memory(a, data.s, (size_t)data.len);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
-        str::Free(data);
         return false;
     }
     // no file path to re-open from, so load all file data now; no
