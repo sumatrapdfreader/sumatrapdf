@@ -89,7 +89,7 @@ Error:
 constexpr const int kBufSize = 256 * 1024;
 
 // Download content of a url to a file
-bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress) {
+bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress, i64 maxSize) {
     logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
@@ -139,6 +139,9 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
         }
         if (dwRead == 0) {
             break;
+        }
+        if (maxSize >= 0 && progress.nDownloaded > maxSize - (i64)dwRead) {
+            goto Exit;
         }
         DWORD size;
         BOOL wroteOk = WriteFile(hf, buf, dwRead, &size, nullptr);

@@ -421,7 +421,8 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     UpdateProgressData pd;
     pd.hwndForNotif = hwndForNotif;
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
-    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb);
+    constexpr i64 kMaxUpdateDownloadSize = 256LL * 1024 * 1024;
+    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb, kMaxUpdateDownloadSize);
     logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = ok ? GetExecutableSignerTemp(installerPath) : TempStr{};
