@@ -939,11 +939,11 @@ static void OnGetFontsFinished(GetFontsResult* result) {
 
 struct GetFontsData {
     HWND hwnd;
-    DocController* ctrl;
+    EngineBase* engine;
 };
 
 static void GetFontsThread(GetFontsData* data) {
-    TempStr val = data->ctrl->GetPropertyTemp(DocProp::FontList);
+    TempStr val = data->engine->GetPropertyTemp(DocProp::FontList);
     auto result = new GetFontsResult;
     result->hwnd = data->hwnd;
     if (val) {
@@ -954,6 +954,7 @@ static void GetFontsThread(GetFontsData* data) {
     }
     auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
     uitask::Post(fn, "GetFontsFinished");
+    data->engine->Release();
     delete data;
     DestroyTempArena();
 }
@@ -997,9 +998,17 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         wnd->initialPos = {rc.x, rc.y};
     }
 
+    DisplayModel* dm = ctrl->AsFixed();
+    if (!dm || !dm->engine) {
+        auto result = new GetFontsResult;
+        result->hwnd = wnd->hwnd;
+        OnGetFontsFinished(result);
+        return;
+    }
     auto data = new GetFontsData;
     data->hwnd = wnd->hwnd;
-    data->ctrl = ctrl;
+    data->engine = dm->engine;
+    data->engine->AddRef();
     auto fn = MkFunc0<GetFontsData>(GetFontsThread, data);
     RunAsync(fn, "GetFontsThread");
 }
