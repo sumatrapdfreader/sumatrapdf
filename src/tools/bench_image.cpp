@@ -11,7 +11,7 @@
 // keeps the best time.
 
 #include "base/Base.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/ScopedWin.h"
 #include "base/Timer.h"

@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/Dpi.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"

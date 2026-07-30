@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include "base/WinDynCalls.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include <dwmapi.h>
 #include "base/Dpi.h"
 #include "base/File.h"

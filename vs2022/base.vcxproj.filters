@@ -48,9 +48,6 @@
     <ClInclude Include="..\src\base\Dict.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\DirIter.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\DirScan.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -192,12 +189,6 @@
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Dict.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\DirIter.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\DirIter_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\DirScan.cpp">

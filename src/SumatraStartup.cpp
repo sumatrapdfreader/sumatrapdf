@@ -7,7 +7,7 @@
 #include "base/ScopedWin.h"
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/Dpi.h"
 #include "base/File.h"
 #include "base/FileWatcher.h"

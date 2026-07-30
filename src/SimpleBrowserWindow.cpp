@@ -12,6 +12,7 @@
 
 #include "Settings.h"
 #include "AppTools.h"
+#include "Commands.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
@@ -161,6 +162,13 @@ static void HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
     }
 }
 
+static int ResolveAccelCmd(void*, u16 vk, bool ctrl, bool shift, bool alt) {
+    if (vk == 'W' && ctrl && !shift && !alt) {
+        return CmdClose;
+    }
+    return 0;
+}
+
 SimpleBrowserWindow::~SimpleBrowserWindow() {
     delete btnBack;
     delete btnForward;
@@ -176,6 +184,10 @@ LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     }
     if (msg == WM_SIZE) {
         LayoutControls(this);
+        return 0;
+    }
+    if (msg == WM_COMMAND && LOWORD(wparam) == CmdClose) {
+        SendMessageW(hwnd, WM_CLOSE, 0, 0);
         return 0;
     }
     if (msg == WM_CTLCOLORSTATIC && (HWND)lparam == hwndUrl) {
@@ -256,7 +268,8 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView->events.navigationStarting = NavigationStarting;
         webView->events.navigationCompleted = NavigationCompleted;
         webView->events.historyChanged = HistoryChanged;
-        webView->forwardAppAccelerators = false;
+        webView->events.resolveAccelCmd = ResolveAccelCmd;
+        webView->forwardAppAccelerators = true;
 
         CreateWebViewArgs cargs;
         cargs.parent = frameHwnd;

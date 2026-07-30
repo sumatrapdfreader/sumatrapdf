@@ -10,7 +10,7 @@
 #include "GumboHelpers.h"
 #include "base/JsonParser.h"
 #include "base/Timer.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 
 #if OS_WIN
 #include "base/Win.h"

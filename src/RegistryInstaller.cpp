@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 
 #include "SumatraConfig.h"
 #include "Version.h"

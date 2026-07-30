@@ -948,7 +948,7 @@
     <ClInclude Include="..\src\base\ByteReaderWriter.h" />
     <ClInclude Include="..\src\base\CmdLineArgsIter.h" />
     <ClInclude Include="..\src\base\Color.h" />
-    <ClInclude Include="..\src\base\DirIter.h" />
+    <ClInclude Include="..\src\base\DirScan.h" />
     <ClInclude Include="..\src\base\Dpi.h" />
     <ClInclude Include="..\src\base\File.h" />
     <ClInclude Include="..\src\base\Geom.h" />
@@ -980,8 +980,8 @@
     <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />
     <ClCompile Include="..\src\base\Color.cpp" />
-    <ClCompile Include="..\src\base\DirIter.cpp" />
-    <ClCompile Include="..\src\base\DirIter_win.cpp" />
+    <ClCompile Include="..\src\base\DirScan.cpp" />
+    <ClCompile Include="..\src\base\DirScan_win.cpp" />
     <ClCompile Include="..\src\base\Dpi_win.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\File_win.cpp" />

@@ -42,7 +42,7 @@
     <ClInclude Include="..\src\base\Color.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\DirIter.h">
+    <ClInclude Include="..\src\base\DirScan.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Dpi.h">
@@ -134,10 +134,10 @@
     <ClCompile Include="..\src\base\Color.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\DirIter.cpp">
+    <ClCompile Include="..\src\base\DirScan.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\DirIter_win.cpp">
+    <ClCompile Include="..\src\base\DirScan_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Dpi_win.cpp">

@@ -5,7 +5,7 @@
 #include "base/Zip.h"
 
 #include "base/ByteReaderWriter.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 
 extern "C" {

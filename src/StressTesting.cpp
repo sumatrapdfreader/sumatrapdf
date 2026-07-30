@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Timer.h"
