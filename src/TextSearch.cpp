@@ -587,41 +587,43 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
 
     int found = -1;
     PageAndOffset fg;
-    do {
-        if (WasCanceled(progressCb)) {
-            return false;
-        }
-        if (!anchor) {
-            found = GetNextIndex(pageTextLen, findIndex, forward);
-        } else if (forward) {
-            if (matchCase) {
-                found = StrStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
-            } else {
-                found = StrStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+    for (;;) {
+        do {
+            if (WasCanceled(progressCb)) {
+                return false;
             }
-        } else {
-            if (matchCase) {
-                found = StrRStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
+            if (!anchor) {
+                found = GetNextIndex(pageTextLen, findIndex, forward);
+            } else if (forward) {
+                if (matchCase) {
+                    found = StrStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                } else {
+                    found = StrStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                }
             } else {
-                found = StrRStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                if (matchCase) {
+                    found = StrRStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                } else {
+                    found = StrRStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                }
             }
-        }
-        if (found < 0) {
-            return false;
-        }
-        findIndex = found + (forward ? 1 : 0);
-        fg = MatchEnd(found);
-    } while (fg.page <= 0);
+            if (found < 0) {
+                return false;
+            }
+            findIndex = found + (forward ? 1 : 0);
+            fg = MatchEnd(found);
+        } while (fg.page <= 0);
 
-    int offset = found;
-    searchHitStartAt = pageNo;
-    StartAt(pageNo, offset);
-    SelectUpTo(fg.page, fg.offset);
-    findIndex = forward ? fg.offset : offset;
+        int offset = found;
+        searchHitStartAt = pageNo;
+        StartAt(pageNo, offset);
+        SelectUpTo(fg.page, fg.offset);
+        findIndex = forward ? fg.offset : offset;
 
-    // try again if the found text is completely outside the page's mediabox
-    if (result.len == 0) {
-        return FindTextInPage(pageNo, finalGlyph);
+        // try again if the found text is completely outside the page's mediabox
+        if (result.len != 0) {
+            break;
+        }
     }
 
     if (finalGlyph) {
