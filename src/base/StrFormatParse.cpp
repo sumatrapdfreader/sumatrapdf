@@ -95,7 +95,7 @@ static int parseArgDefPositional(Fmt& fmt, int off) {
     while (fmt.format.s[off] != '}') {
         // TODO: this could be more featurful
         ReportIf(!str::IsDigit(fmt.format.s[off]));
-        n = n * 10 + (fmt.format.s[off] - '0');
+        n = (n * 10) + (fmt.format.s[off] - '0');
         off++;
     }
     auto& i = fmt.instructions[fmt.nInst++];
@@ -166,7 +166,7 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
     // width
     int width = 0;
     while (off < f.len && str::IsDigit(f.s[off])) {
-        width = width * 10 + (f.s[off] - '0');
+        width = (width * 10) + (f.s[off] - '0');
         off++;
     }
     // precision
@@ -175,7 +175,7 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
         off++;
         prec = 0;
         while (off < f.len && str::IsDigit(f.s[off])) {
-            prec = prec * 10 + (f.s[off] - '0');
+            prec = (prec * 10) + (f.s[off] - '0');
             off++;
         }
     }
@@ -651,7 +651,7 @@ static bool ParseULongAt(Str str, int off, int base, unsigned long* val, int* en
             break;
         }
         any = true;
-        v = v * (unsigned long)base + (unsigned long)digit;
+        v = (v * (unsigned long)base) + (unsigned long)digit;
         i++;
     }
     if (!any) {
@@ -885,7 +885,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTrailingZero) {
-    i64 num = (i64)(number * 100 + 0.5);
+    i64 num = (i64)((number * 100) + 0.5);
 
     TempStr tmp = FormatNumWithThousandSepTemp(num / 100, locale);
 #if OS_WIN

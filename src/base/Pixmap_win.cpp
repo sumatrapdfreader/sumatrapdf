@@ -81,8 +81,8 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
             return nullptr;
         }
         for (int y = 0; y < px->height; y++) {
-            const u8* src = px->data + (size_t)y * px->stride;
-            u8* dst = dib->data + (size_t)y * dib->stride;
+            const u8* src = px->data + ((size_t)y * px->stride);
+            u8* dst = dib->data + ((size_t)y * dib->stride);
             for (int x = 0; x < px->width; x++) {
                 if (px->format == PixmapFormat::BGR8) {
                     dst[0] = src[0];
@@ -164,7 +164,7 @@ bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = p->format == PixmapFormat::BGR8 ? 24 : 32;
     bmi.bmiHeader.biCompression = BI_RGB;
-    const u8* rows = p->data + (size_t)source.y * p->stride;
+    const u8* rows = p->data + ((size_t)source.y * p->stride);
     int n = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, 0, source.dx, source.dy, rows, &bmi,
                           DIB_RGB_COLORS, SRCCOPY);
     return n != GDI_ERROR && n != 0;
@@ -192,7 +192,7 @@ static bool SkipRecolorPixel(int x, int y, Vec<Rect>* skipRects) {
 }
 
 static int Mul255(int a, int b) {
-    int n = a * b + 128;
+    int n = (a * b) + 128;
     n += n >> 8;
     return n >> 8;
 }
@@ -220,7 +220,7 @@ void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF li
     const int diff[3] = {(int)bgB - textB, (int)bgG - textG, (int)bgR - textR};
     int bpp = PixmapBytesPerPixel(px->format);
     for (int y = 0; y < px->height; y++) {
-        u8* pixel = px->data + (size_t)y * px->stride;
+        u8* pixel = px->data + ((size_t)y * px->stride);
         for (int x = 0; x < px->width; x++, pixel += bpp) {
             if (SkipRecolorPixel(x, y, skipRects)) {
                 continue;

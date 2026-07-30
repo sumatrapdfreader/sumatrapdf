@@ -477,7 +477,7 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
     int exifIfdOff = 0;
     // scan IFD0 for ExifIFD pointer (tag 0x8769)
     for (u16 i = 0; i < count; i++) {
-        int entryOff = ifdAbs + 2 + i * 12;
+        int entryOff = ifdAbs + 2 + (i * 12);
         if (entryOff + 12 > n) {
             break;
         }
@@ -497,7 +497,7 @@ static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
     }
     count = r.UInt16(exifAbs, isBE);
     for (u16 i = 0; i < count; i++) {
-        int entryOff = exifAbs + 2 + i * 12;
+        int entryOff = exifAbs + 2 + (i * 12);
         if (entryOff + 12 > n) {
             break;
         }
@@ -698,7 +698,7 @@ static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
         AppendImageSize(res, nIfds, cap, size.dx, size.dy);
         nIfds++;
         u16 nEntries = r.UInt16((int)off, isBE);
-        int nextOff = (int)off + 2 + nEntries * 12;
+        int nextOff = (int)off + 2 + (nEntries * 12);
         if (nextOff + 4 > r.len) {
             break;
         }
@@ -804,7 +804,7 @@ static int ExifOrientationFromTiff(ByteReader r, int tiffBase) {
     }
     u16 count = r.UInt16(ifdAbs, isBE);
     for (u16 i = 0; i < count; i++) {
-        int entryOff = ifdAbs + 2 + i * 12;
+        int entryOff = ifdAbs + 2 + (i * 12);
         if (entryOff + 12 > n) {
             break;
         }

@@ -144,7 +144,7 @@ Integers are little-endian.
 #define HEADER_START_SIZE (4 + 4)
 
 // 4 * u32 + FILETIME + name
-#define FILE_ENTRY_MIN_SIZE (4 * 4 + 8 + 1)
+#define FILE_ENTRY_MIN_SIZE ((4 * 4) + 8 + 1)
 
 bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* archiveOut) {
     if (dataLen < HEADER_START_SIZE) {

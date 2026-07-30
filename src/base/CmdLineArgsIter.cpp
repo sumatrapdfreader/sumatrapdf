@@ -45,7 +45,7 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
         }
         if (arg.s[i] == '"') {
             // Backslashes before a quote are doubled, then the quote is escaped.
-            for (int k = 0; k < nBackslashes * 2 + 1; k++) {
+            for (int k = 0; k < (nBackslashes * 2) + 1; k++) {
                 res.AppendChar('\\');
             }
             res.AppendChar('"');

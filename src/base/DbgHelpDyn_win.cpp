@@ -108,7 +108,7 @@ constexpr int kMaxSymLen = 512;
 
 // check if has access to valid .pdb symbols file by trying to resolve a symbol
 NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
-    char buf[sizeof(SYMBOL_INFO) + kMaxSymLen * sizeof(char)];
+    char buf[sizeof(SYMBOL_INFO) + (kMaxSymLen * sizeof(char))];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
     memset(buf, 0, sizeof(buf));
@@ -267,7 +267,7 @@ static void AppendAddress(str::Builder& s, DWORD64 addr) {
 void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
     static const int MAX_SYM_LEN = 512;
 
-    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
+    char buf[sizeof(SYMBOL_INFO) + (MAX_SYM_LEN * sizeof(char))];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
     memset(buf, 0, sizeof(buf));

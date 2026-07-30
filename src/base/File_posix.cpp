@@ -29,7 +29,7 @@ static bool StatPath(Str path, struct stat& st) {
 }
 
 static FILETIME FileTimeFromTimespec(time_t sec, long nsec) {
-    u64 t = (u64)sec * 1000000000ULL + (u64)nsec;
+    u64 t = ((u64)sec * 1000000000ULL) + (u64)nsec;
     FILETIME ft;
     ft.dwLowDateTime = (DWORD)t;
     ft.dwHighDateTime = (DWORD)(t >> 32);

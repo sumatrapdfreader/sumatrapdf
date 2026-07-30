@@ -16,7 +16,7 @@ struct TempEntryVec {
 };
 
 static FILETIME FileTimeFromTimespec(time_t sec, long nsec) {
-    u64 ft = (u64)sec * 1000000000ULL + (u64)nsec;
+    u64 ft = ((u64)sec * 1000000000ULL) + (u64)nsec;
     FILETIME res;
     res.dwLowDateTime = (DWORD)ft;
     res.dwHighDateTime = (DWORD)(ft >> 32);

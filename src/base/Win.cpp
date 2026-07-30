@@ -607,7 +607,7 @@ TryAgainWOW64:
         DWORD valLen;
         res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
         if (ERROR_SUCCESS == res) {
-            val = WStr(AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1));
+            val = WStr(AllocArray<WCHAR>((valLen / sizeof(WCHAR)) + 1));
             res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val.s, &valLen);
             if (ERROR_SUCCESS != res) {
                 wstr::FreePtr(&val);
@@ -1768,8 +1768,8 @@ void HwndCenterDialog(HWND hDlg, HWND hParent) {
     rcRect.Offset(-rcRect.x, -rcRect.y);
 
     // center dialog on its parent window
-    rcDialog.Offset(rcOwner.x + (rcRect.x - rcDialog.x + rcRect.dx - rcDialog.dx) / 2,
-                    rcOwner.y + (rcRect.y - rcDialog.y + rcRect.dy - rcDialog.dy) / 2);
+    rcDialog.Offset(rcOwner.x + ((rcRect.x - rcDialog.x + rcRect.dx - rcDialog.dx) / 2),
+                    rcOwner.y + ((rcRect.y - rcDialog.y + rcRect.dy - rcDialog.dy) / 2));
     // ensure that the dialog is fully visible on one monitor
     rcDialog = ShiftRectToWorkArea(rcDialog, hParent, true);
 
@@ -2558,7 +2558,7 @@ Size GetBitmapSize(HBITMAP hbmp) {
 
 // cf. fz_mul255 in fitz.h
 inline int mul255(int a, int b) {
-    int x = a * b + 128;
+    int x = (a * b) + 128;
     x += x >> 8;
     return x >> 8;
 }
@@ -2581,7 +2581,7 @@ COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
     ReportIf(x < 0 || x >= bitmap->size.dx);
     ReportIf(y < 0 || y >= bitmap->size.dy);
     u8* pixels = bitmap->pixels;
-    u8* pixel = pixels + y * bitmap->nBytesPerRow + x * bitmap->nBytesPerPixel;
+    u8* pixel = pixels + (y * bitmap->nBytesPerRow) + (x * bitmap->nBytesPerPixel);
     // color order in DIB is blue-green-red-alpha
     COLORREF c = 0;
     if (3 == bitmap->nBytesPerPixel) {
@@ -2748,7 +2748,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLO
         u8* bmpData = (u8*)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
             for (int x = 0; x < size.dx; x++) {
-                u8* px = bmpData + y * info.dsBm.bmWidthBytes + x * 3;
+                u8* px = bmpData + (y * info.dsBm.bmWidthBytes) + (x * 3);
                 u8 b = px[0];
                 u8 g = px[1];
                 u8 r = px[2];

@@ -676,7 +676,7 @@ static TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u
         str::Builder s;
         bool sr = type == TiffSRational;
         for (u32 i = 0; i < count; i++) {
-            int eoff = off + (int)i * 8;
+            int eoff = off + ((int)i * 8);
             ExifRational rat;
             if (!ReadRational(parser, eoff, &rat, sr)) {
                 break;
@@ -718,7 +718,7 @@ static TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u
     if (type == TiffShort || type == TiffSShort) {
         str::Builder s;
         for (u32 i = 0; i < count; i++) {
-            int eoff = off + (int)i * 2;
+            int eoff = off + ((int)i * 2);
             if (i > 0) {
                 s.Append(", ");
             }
@@ -744,7 +744,7 @@ static TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u
     if (type == TiffLong || type == TiffSLong) {
         str::Builder s;
         for (u32 i = 0; i < count; i++) {
-            int eoff = off + (int)i * 4;
+            int eoff = off + ((int)i * 4);
             if (i > 0) {
                 s.Append(", ");
             }
@@ -832,7 +832,7 @@ static void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNo
     u16 nTags = ReadWord(parser, ifdAbs);
     int nextIfdOff = 0;
     for (u16 i = 0; i < nTags; i++) {
-        int ent = ifdAbs + 2 + i * 12;
+        int ent = ifdAbs + 2 + (i * 12);
         if (ent + 12 > r.len) {
             break;
         }
@@ -883,8 +883,8 @@ static void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNo
         AppendLine(parser, group, tag, type, val);
     }
 
-    if (ifdAbs + 2 + nTags * 12 + 4 <= r.len) {
-        nextIfdOff = (int)ReadDWord(parser, ifdAbs + 2 + nTags * 12);
+    if (ifdAbs + 2 + (nTags * 12) + 4 <= r.len) {
+        nextIfdOff = (int)ReadDWord(parser, ifdAbs + 2 + (nTags * 12));
     }
     parser.isBE = savedBE;
 

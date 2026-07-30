@@ -23,7 +23,7 @@ constexpr int kLineH = 12;
 static void AddText(WCHAR* text, Rect* coords, int& n, int cap, WStr s, int x, int y) {
     for (int i = 0; i < s.len && n < cap; i++) {
         text[n] = s.s[i];
-        coords[n] = Rect{x + i * kCharW, y, kCharW, kLineH};
+        coords[n] = Rect{x + (i * kCharW), y, kCharW, kLineH};
         n++;
     }
 }
@@ -57,7 +57,7 @@ static void NegativeDestYFallsToLandscape() {
     Rect coords[512];
     int n = 0;
     for (int i = 0; i < 10; i++) {
-        AddText(text, coords, n, 512, L"Body text line content here.", 72, 100 + i * 14);
+        AddText(text, coords, n, 512, L"Body text line content here.", 72, 100 + (i * 14));
     }
     RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, -1.f);
     utassert(box.x == 0.f);
@@ -148,7 +148,7 @@ static void TwoColumnRightEntryStaysInColumn() {
     int n = 0;
     // Left column body text at x=72 (right edge ≈ 72+29*6=246), same y range.
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, n, 1024, L"left column body text line...", 72, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"left column body text line...", 72, 200 + (i * 15));
     }
     // Right column starts at x=320 (gutter ≈ 246..320).
     AddText(text, coords, n, 1024, L"[Foo10] Smith J., 2010, Title.", 320, 200);
@@ -174,7 +174,7 @@ static void TwoColumnLeftEntryStaysInColumn() {
     AddText(text, coords, n, 1024, L"[Bar11] Doe J., 2011, Other.", 72, 240);
     // Right column body text at x=340, same y range.
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + (i * 15));
     }
     RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
@@ -224,7 +224,7 @@ static void ColumnWrapContinuationRejectsUnrelatedBodyText() {
     // Right column: several lines of unrelated running text, then a sibling
     // entry far past the short continuation cap.
     for (int i = 0; i < 6; i++) {
-        AddText(text, coords, n, 1024, L"unrelated running body text here.", 340, 40 + i * 14);
+        AddText(text, coords, n, 1024, L"unrelated running body text here.", 340, 40 + (i * 14));
     }
     AddText(text, coords, n, 1024, L"[48] Li H Hou L Wang X Guo H Title", 340, 130);
     RectF continuation{};
@@ -247,7 +247,7 @@ static void AccentedAllCapsHeadingDetected() {
     AddText(text, coords, n, 1024, L"texto del cuerpo del documento.", 92, 215);
     AddText(text, coords, n, 1024, L"continua en el margen izquierdo.", 72, 230);
     for (int i = 0; i < 3; i++) {
-        AddText(text, coords, n, 1024, L"mas lineas de texto del cuerpo.", 72, 245 + i * 15);
+        AddText(text, coords, n, 1024, L"mas lineas de texto del cuerpo.", 72, 245 + (i * 15));
     }
     RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
@@ -267,7 +267,7 @@ static void EquationLabelDetected() {
     AddText(text, coords, n, 512, L"(14)", 540, 300);
     // A paragraph below.
     for (int i = 0; i < 3; i++) {
-        AddText(text, coords, n, 512, L"Paragraph text below the equation here.", 72, 330 + i * 14);
+        AddText(text, coords, n, 512, L"Paragraph text below the equation here.", 72, 330 + (i * 14));
     }
     RectF box = DetectEquationBox(WStr(text, n), coords, Mediabox(), 72.f, 300.f);
     utassert(!IsEmpty(box));
@@ -275,7 +275,7 @@ static void EquationLabelDetected() {
     utassert(box.dx == kPageW);
     // Tight vertical band around y=300 (within ~3 line heights).
     utassert(box.y < 300.f);
-    utassert(box.y + box.dy < 300.f + 3 * (float)kLineH + 20.f);
+    utassert(box.y + box.dy < 300.f + (3 * (float)kLineH) + 20.f);
 }
 
 // (5) "(N)" sitting in the left half of the page (body-text marker, not a
@@ -351,7 +351,7 @@ static void FrenchCaptionDetected() {
     AddText(text, coords, n, 512, L"Tableau 2: Donnees", 72, 300);
     // Body paragraph below.
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, n, 512, L"Paragraphe de texte courant.", 72, 320 + i * 14);
+        AddText(text, coords, n, 512, L"Paragraphe de texte courant.", 72, 320 + (i * 14));
     }
     RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, n), coords);
     // destAtCaption pulls region top above destY (figure body extension).
@@ -369,7 +369,7 @@ static void ItalianPortugueseCaptionDetected() {
         int n = 0;
         AddText(text, coords, n, 512, caption, 72, 300);
         for (int i = 0; i < 5; i++) {
-            AddText(text, coords, n, 512, L"testo del corpo del documento.", 72, 320 + i * 14);
+            AddText(text, coords, n, 512, L"testo del corpo del documento.", 72, 320 + (i * 14));
         }
         RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, n), coords);
         // destAtCaption pulls region top above destY (figure body extension)
@@ -401,7 +401,7 @@ static void CaptionExtensionPicksTopmost() {
     Rect coords[1024];
     int n = 0;
     for (int i = 0; i < 3; i++) {
-        AddText(text, coords, n, 1024, L"body paragraph at the dest.", 72, 100 + i * 14);
+        AddText(text, coords, n, 1024, L"body paragraph at the dest.", 72, 100 + (i * 14));
     }
     // a far caption drawn EARLY in the content stream ... (the leading
     // space stands in for the inter-block separator of real extraction)
@@ -421,7 +421,7 @@ static void LandscapeBoxBasicShape() {
     Rect coords[256];
     int n = 0;
     for (int i = 0; i < 5; i++) {
-        AddText(text, coords, n, 256, L"some body content.", 72, 400 + i * 14);
+        AddText(text, coords, n, 256, L"some body content.", 72, 400 + (i * 14));
     }
     RectF box = LandscapeBox(Mediabox(), 72.f, 400.f, WStr(text, n), coords);
     utassert(box.x == 0.f);
@@ -776,7 +776,7 @@ static void TwoColumnHangingIndentStaysInColumn() {
     // bridge (capped at 50pt) cannot reach x=340 from the label run, and the
     // dense left-column body run stops at the gutter.
     for (int i = 0; i < 4; i++) {
-        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + (i * 15));
     }
     RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
@@ -833,30 +833,30 @@ static void VariableGlyphTopsEntryNotHijacked() {
     WStr tail = L"1622292";
     for (int i = 0; i < tail.len; i++) {
         text[n] = tail.s[i];
-        coords[n] = Rect{130 + i * 6, 305, 6, 8};
+        coords[n] = Rect{130 + (i * 6), 305, 6, 8};
         n++;
     }
     text[n] = L'.';
-    coords[n] = Rect{130 + 7 * 6, 310, 4, 3};
+    coords[n] = Rect{130 + (7 * 6), 310, 4, 3};
     n++;
     // Entry "[Buc+23]" label (x=72) + body (x=130) at baseline ~327 (top 316).
     WStr label = L"[Buc+23]";
     for (int i = 0; i < label.len; i++) {
         text[n] = label.s[i];
-        coords[n] = Rect{72 + i * 6, 316, 6, 11};
+        coords[n] = Rect{72 + (i * 6), 316, 6, 11};
         n++;
     }
     WStr body = L"Georg Buchgeher et al. Using ADRs in Open Source.";
     for (int i = 0; i < body.len; i++) {
         text[n] = body.s[i];
-        coords[n] = Rect{130 + i * 6, 316, 6, 9};
+        coords[n] = Rect{130 + (i * 6), 316, 6, 9};
         n++;
     }
     // Next entry "[JB05]" below at top 352.
     WStr nb = L"[JB05] A. Jansen and J. Bosch.";
     for (int i = 0; i < nb.len; i++) {
         text[n] = nb.s[i];
-        coords[n] = Rect{72 + i * 6, 352, 6, 10};
+        coords[n] = Rect{72 + (i * 6), 352, 6, 10};
         n++;
     }
     Rect norm[1024];
@@ -979,7 +979,7 @@ static void StripWatermarkRemovesDiagonalStamp() {
     // Diagonal watermark: oversized (dy=40), each glyph on its own baseline.
     for (int i = 0; i < 10 && n < 1024; i++) {
         text[n] = L"UNDERREVIEW"[i];
-        coords[n] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
+        coords[n] = Rect{190 + (i * 14), 180 + (i * 6), 20, 40};
         n++;
     }
     WCHAR outText[1024];
@@ -998,7 +998,7 @@ static void StripWatermarkRemovesDiagonalStamp() {
     int headStart = n;
     for (int i = 0; i < 8 && n < 1024; i++) {
         text[n] = L"HEADING!"[i];
-        coords[n] = Rect{72 + i * 14, 150, 12, 30}; // tall, but all share baseline 180
+        coords[n] = Rect{72 + (i * 14), 150, 12, 30}; // tall, but all share baseline 180
         n++;
     }
     kept = StripWatermarkGlyphs(WStr(text, n), coords, outText, outCoords);
@@ -1021,13 +1021,13 @@ static void TwoColumnWatermarkStaysInColumn() {
     AddText(text, coords, n, 1024, L"[12] Sample left column entry", 72, 200);
     AddText(text, coords, n, 1024, L"more left column entry text..", 72, 215);
     for (int i = 0; i < 4; i++) {
-        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + i * 15);
+        AddText(text, coords, n, 1024, L"right column body text line..", 340, 200 + (i * 15));
     }
     // Diagonal watermark: oversized (dy=40), wide (dx=20) glyphs stepping right
     // by 14pt and down by 6pt, sweeping x≈190..360 across the gutter.
     for (int i = 0; i < 12 && n < 1024; i++) {
         text[n] = L"UNDERREVIEW.."[i];
-        coords[n] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
+        coords[n] = Rect{190 + (i * 14), 180 + (i * 6), 20, 40};
         n++;
     }
     // Caller pipeline: strip the watermark, then detect on the survivors.

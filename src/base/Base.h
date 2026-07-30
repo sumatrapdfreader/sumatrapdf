@@ -332,7 +332,7 @@ struct WStr {
 using TempWStr = WStr;
 
 // Create WStr from wide string literal with compile-time length
-#define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1))
+#define WStrL(lit) WStr((wchar_t*)(lit), (int)((sizeof(lit) / sizeof(wchar_t)) - 1))
 
 // length of a Str / WStr as int. Also accepts a C string (char* / wchar_t*) via
 // Str/WStr's implicit ctor, like the former str::Leni / wstr::Leni it replaces.

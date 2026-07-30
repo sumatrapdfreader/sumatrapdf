@@ -110,7 +110,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                     break;
             }
         }
-        bbox.Width *= (1.0f - correct / n) * 0.99f;
+        bbox.Width *= (1.0f - (correct / n)) * 0.99f;
     }
     bbox.Height *= 0.95f;
     return RectF{bbox};
@@ -286,7 +286,7 @@ Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp) {
         return nullptr;
     }
     for (int y = 0; y < h; y++) {
-        memcpy(px->data + (size_t)y * px->stride, (u8*)bd.Scan0 + (size_t)y * bd.Stride, (size_t)w * 4);
+        memcpy(px->data + ((size_t)y * px->stride), (u8*)bd.Scan0 + ((size_t)y * bd.Stride), (size_t)w * 4);
     }
     bmp->UnlockBits(&bd);
     px->xres = bmp->GetHorizontalResolution();

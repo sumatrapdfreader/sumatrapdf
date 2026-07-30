@@ -885,7 +885,7 @@ namespace str {
 TempStr MemToHexTemp(Str buf) {
     int n = buf.len;
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char* ret = AllocArrayTemp<char>(2 * n + 1);
+    char* ret = AllocArrayTemp<char>((2 * n) + 1);
     if (!ret) {
         return {};
     }
@@ -2266,7 +2266,7 @@ int ParseInt(Str s) {
     int value = 0;
     int overflowCheck = negative ? 1 : 0;
     for (; off < s.len && str::IsDigit(s.s[off]); off++) {
-        value = value * 10 + (s.s[off] - '0');
+        value = (value * 10) + (s.s[off] - '0');
         // return 0 on overflow
         if (value - overflowCheck < 0) {
             return 0;
@@ -2286,7 +2286,7 @@ i64 ParseInt64(Str s) {
     }
     i64 value = 0;
     for (; off < s.len && str::IsDigit(s.s[off]); off++) {
-        value = value * 10 + (s.s[off] - '0');
+        value = (value * 10) + (s.s[off] - '0');
     }
     return negative ? -value : value;
 }
@@ -2438,7 +2438,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
         lenDiff = replLen - findLen;
     }
     // heuristic: allow 6 replacements without reallocating
-    int capHint = s.len + 1 + lenDiff * 6;
+    int capHint = s.len + 1 + (lenDiff * 6);
     str::Builder result(capHint);
     bool ok;
     while (idx >= 0) {

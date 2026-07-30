@@ -180,7 +180,7 @@ void BaseUtilTest() {
     size_t n = dimof(roundUpTestCases) / 2;
     for (size_t i = 0; i < n; i++) {
         int v = roundUpTestCases[i * 2];
-        int exp = roundUpTestCases[i * 2 + 1];
+        int exp = roundUpTestCases[(i * 2) + 1];
         int got = RoundUp(v, 8);
         utassert(exp == got);
         void* got3 = RoundUp((void*)(uintptr_t)v, (int)8);

@@ -177,7 +177,7 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
     u8 M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     if (M == m) {
         // for grayscale values, lightness is proportional to the color value
-        u8 X = (u8)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
+        u8 X = (u8)limitValue((int)floorf((M * factor) + 0.5f), 0, 255);
         return MkColor(X, X, X);
     }
     u8 C = M - m;
@@ -206,7 +206,7 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
         u8 x = u8(units + 0.5f);
         return MkColor(x, x, x);
     }
-    return AdjustLightness(c, 1.0f + units / lightness);
+    return AdjustLightness(c, 1.0f + (units / lightness));
 }
 
 // http://en.wikipedia.org/wiki/HSV_color_space#Lightness
@@ -223,7 +223,7 @@ float GetLightness(COLORREF c) {
 bool IsLightColor(COLORREF c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
-    float y = 0.2126f * float(r) + 0.7152f * float(g) + 0.0722f * float(b);
+    float y = (0.2126f * float(r)) + (0.7152f * float(g)) + (0.0722f * float(b));
     return y > 127.5f; // mid 256
 }
 

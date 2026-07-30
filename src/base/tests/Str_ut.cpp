@@ -20,7 +20,7 @@ static void StrReplaceTest() {
     };
     size_t n = dimof(d) / 4;
     for (size_t i = 0; i < n; i++) {
-        StrReplaceTestOne(d[i * 4], d[i * 4 + 1], d[i * 4 + 2], d[i * 4 + 3]);
+        StrReplaceTestOne(d[i * 4], d[(i * 4) + 1], d[(i * 4) + 2], d[(i * 4) + 3]);
     }
 
     struct {

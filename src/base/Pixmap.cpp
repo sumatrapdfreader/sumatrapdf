@@ -17,7 +17,7 @@ static void AppendLE32(str::Builder& data, u32 v) {
 }
 
 static void AppendPixmapPixelBGR(str::Builder& data, const Pixmap* pixmap, int x, int y) {
-    const u8* src = pixmap->data + (size_t)y * pixmap->stride + (size_t)x * PixmapBytesPerPixel(pixmap->format);
+    const u8* src = pixmap->data + ((size_t)y * pixmap->stride) + ((size_t)x * PixmapBytesPerPixel(pixmap->format));
     if (pixmap->format == PixmapFormat::RGBA8) {
         data.AppendChar((char)src[2]);
         data.AppendChar((char)src[1]);
@@ -43,9 +43,9 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
 
     size_t w = (size_t)pixmap->width;
     size_t h = (size_t)pixmap->height;
-    size_t rowStride = (w * 3 + 3) & ~(size_t)3;
+    size_t rowStride = ((w * 3) + 3) & ~(size_t)3;
     size_t headerLen = 14 + 40;
-    size_t bmpBytes = rowStride * h + headerLen;
+    size_t bmpBytes = (rowStride * h) + headerLen;
     if (rowStride > UINT32_MAX || bmpBytes > INT_MAX || bmpBytes > UINT32_MAX) {
         return {};
     }
@@ -69,7 +69,7 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
     AppendLE32(bmpData, 0);
     AppendLE32(bmpData, 0);
 
-    int padding = (int)rowStride - pixmap->width * 3;
+    int padding = (int)rowStride - (pixmap->width * 3);
     for (int y = pixmap->height - 1; y >= 0; y--) {
         for (int x = 0; x < pixmap->width; x++) {
             AppendPixmapPixelBGR(bmpData, pixmap, x, y);
