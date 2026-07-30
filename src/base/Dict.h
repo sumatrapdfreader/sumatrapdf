@@ -12,7 +12,7 @@ struct HashTable;
 // hash tables.
 // Should use smaller values for long-lived hash tables, especially
 // if there are many of them.
-constexpr int kHashTableInitialSize = 16 * 1024
+constexpr int kHashTableInitialSize = 16 * 1024;
 
 // a dictionary whose keys are strings and the values are integers
 // note: StrToInt would be more natural name but it's re-#define'd in <shlwapi.h>
