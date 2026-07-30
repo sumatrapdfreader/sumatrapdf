@@ -477,7 +477,8 @@ u32 ReadDWord(const ExifParser& parser, int off) {
 }
 
 bool EntryBoundsOk(const ExifParser& parser, const ExifEntry& entry, int bytes) {
-    return entry.dataOff >= 0 && entry.dataOff + bytes <= parser.exifBlob.len;
+    return entry.dataOff >= 0 && bytes >= 0 && entry.dataOff <= parser.exifBlob.len &&
+           bytes <= parser.exifBlob.len - entry.dataOff;
 }
 
 int ValueOffset(const ExifParser& parser, u16 type, u32 count, u32 inlineVal, int entryOff) {
@@ -489,7 +490,8 @@ int ValueOffset(const ExifParser& parser, u16 type, u32 count, u32 inlineVal, in
     if (total <= 4) {
         return entryOff + 8;
     }
-    return (int)inlineVal + parser.tiffBase;
+    i64 off = (i64)inlineVal + parser.tiffBase;
+    return off <= INT_MAX ? (int)off : -1;
 }
 
 void AppendLine(ExifParser& parser, IfdGroup g, u16 tag, u16 type, TempStr value) {
@@ -824,10 +826,11 @@ void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndia
         return;
     }
     ByteReader r(parser.exifBlob);
-    int ifdAbs = parser.tiffBase + ifdRel;
-    if (ifdAbs + 2 > r.len) {
+    i64 ifdAbs64 = (i64)parser.tiffBase + ifdRel;
+    if (ifdAbs64 < 0 || ifdAbs64 > r.len - 2) {
         return;
     }
+    int ifdAbs = (int)ifdAbs64;
     bool savedBE = parser.isBE;
     if (makerNoteEndian) {
         parser.isBE = makerNoteEndian == 'M';
