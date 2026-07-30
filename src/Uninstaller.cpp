@@ -448,6 +448,14 @@ static TempStr GetSelfDeleteBatchPathInTemp() {
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
     TempStr exePath = GetSelfExePathTemp();
+    if (IsProcessRunningElevated()) {
+        BOOL ok = MoveFileExW(CWStrTemp(exePath), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
+        if (!ok) {
+            logf("Failed to schedule elevated uninstaller deletion\n");
+            LogLastError();
+        }
+        return;
+    }
     str::Builder script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
