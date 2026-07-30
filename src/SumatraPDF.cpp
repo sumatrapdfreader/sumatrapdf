@@ -10077,6 +10077,10 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
 
         case WM_NCPAINT: {
+            if (win->isFullScreen || win->presentation) {
+                *callDef = false;
+                return 0;
+            }
             // paint the 1px NC strip at top with the correct color
             HDC hdc = GetWindowDC(hwnd);
             if (hdc) {
