@@ -6,15 +6,96 @@
 #include "base/Win.h"
 
 #include "Settings.h"
+#include "GlobalPrefs.h"
 #include "Flags.h"
 #include "SumatraTest.h"
 #include "SumatraPDF.h"
+#include "DocController.h"
+#include "MainWindow.h"
+#include "WindowTab.h"
+#include "FileHistory.h"
+#include "Favorites.h"
 #include "SelectionTranslate.h"
 #include "ImageSaveCropResize.h"
 #include "base/GuessFileType.h"
 #include "FindWindow.h"
 
 extern Flags* gCli;
+
+// Silent add for -dbg-control tests (no name dialog, no settings flush).
+static void AddFavoriteSilent(MainWindow* win, int pageNo) {
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath || !win->ctrl->ValidPageNo(pageNo)) {
+        return;
+    }
+    Str path = tab->filePath;
+    FileState* fs = gFileHistory.FindByPath(path);
+    if (!fs) {
+        fs = NewFileState(path);
+        gFileHistory.Append(fs);
+    }
+    if (!fs->favorites) {
+        return;
+    }
+    for (Favorite* fav : *fs->favorites) {
+        if (fav->pageNo == pageNo) {
+            return;
+        }
+    }
+    TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
+    TempStr plainLabel = fmt("%d", pageNo);
+    bool needsLabel = pageLabel && !str::Eq(plainLabel, pageLabel);
+    Str pl = needsLabel ? pageLabel : Str{};
+    fs->favorites->Append(NewFavorite(pageNo, {}, pl));
+}
+
+// Drive favorites on the already-open document for tests/issue-3744.ts.
+// action: "add" | "goto" | "next" | "prev" | "page". pageNo is used by add/goto.
+static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (gWindows.IsEmpty()) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+
+    if (str::EqI(action, "add")) {
+        if (!win->ctrl->ValidPageNo(pageNo)) {
+            return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
+        }
+        AddFavoriteSilent(win, pageNo);
+    } else if (str::EqI(action, "goto")) {
+        if (!win->ctrl->ValidPageNo(pageNo)) {
+            return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
+        }
+        win->ctrl->GoToPage(pageNo, true);
+    } else if (str::EqI(action, "next")) {
+        GoToNextFavorite(win, true);
+    } else if (str::EqI(action, "prev")) {
+        GoToNextFavorite(win, false);
+    } else if (str::EqI(action, "page")) {
+        // report only
+    } else {
+        return finish(fmt("ERROR unknown-action action=%s", action), 1);
+    }
+
+    int cur = win->ctrl->CurrentPageNo();
+    return finish(fmt("OK page=%d", cur), 0);
+}
 
 enum class ControlCmd : u16 {
     Ping = 1,
@@ -42,6 +123,7 @@ enum class ControlCmd : u16 {
     TestWindowStateDuringLoad = 31,
     TestTocNavigate = 32,
     TestMarkdownTocNavigate = 33,
+    TestFavoriteNav = 34,
 };
 
 enum class ControlArgType : u16 {
@@ -536,6 +618,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownTocNavigateResultTemp(destNo, minScrollY, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFavoriteNav: {
+            Str action = StringArg(req, 0);
+            i32 pageNo = 0;
+            IntArg(req, 1, pageNo); // optional for next/prev/page
+            if (!action) {
+                AppendError(req, "TestFavoriteNav expects string action [, int pageNo]");
+                break;
+            }
+            int exitCode = 0;
+            Str res = FavoriteNavResultTemp(action, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
