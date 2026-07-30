@@ -83,7 +83,7 @@ struct ImagePageInfo {
     Vec<IPageElement*> allElements;
     PageElementImage imageElement;
     bool hasImageElement = false;
-    RectF mediabox{};
+    RectF mediabox;
     PageInfoState state = PageInfoState::Unknown;
     // raw image bytes; populated lazily by GetImageData for file-backed
     // engines (EngineImage, EngineImageDir). Unused by EngineCbx (which

@@ -3989,7 +3989,7 @@ struct SavedAnnotSel {
     bool valid = false;
     int pageNo = -1;
     AnnotationType type = AnnotationType::Unknown;
-    RectF bounds{};
+    RectF bounds;
 };
 
 static SavedAnnotSel CaptureSelectedAnnotation(WindowTab* tab) {

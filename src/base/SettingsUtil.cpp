@@ -546,8 +546,10 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
         } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
-            if (parent && (child = parent->GetChild(fieldNameStr)) != nullptr &&
-                (0 == len(child->data) || child->GetChild(StrL("")))) {
+            if (parent) {
+                child = parent->GetChild(fieldNameStr);
+            }
+            if (parent && child != nullptr && (0 == len(child->data) || child->GetChild(StrL("")))) {
                 parent = child;
                 fieldName += len(fieldName);
                 fieldNameStr = Str(fieldName);
@@ -555,7 +557,11 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
             if (child || useDefaults || !*(Vec<void*>**)fieldPtr) {
                 Vec<void*>* array = new Vec<void*>();
                 size_t idx = 0;
-                while (parent && (child = parent->GetChild(fieldNameStr, &idx)) != nullptr) {
+                while (parent) {
+                    child = parent->GetChild(fieldNameStr, &idx);
+                    if (child == nullptr) {
+                        break;
+                    }
                     void* v = DeserializeStructRec(GetSubstruct(field), child, nullptr, true);
                     array->Append(v);
                 }

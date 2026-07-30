@@ -2040,7 +2040,8 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         ApplyPrintSettings(printer, settings, engine->PageCount(), ranges, advanced);
 
         if (advanced.rotation == PrintRotationAdv::Auto && devMode->dmPaperSize == 0) {
-            if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printer)) {
+            devMode->dmPaperSize = DetectPrinterPaperSize(engine, printer);
+            if (devMode->dmPaperSize) {
                 devMode->dmFields |= DM_PAPERSIZE;
             } else if (!SetPrinterCustomPaperSizeForEngine(engine, printer)) {
                 // can't print on paper matching the document's page size;

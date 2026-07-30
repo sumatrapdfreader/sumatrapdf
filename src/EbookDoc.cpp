@@ -845,7 +845,8 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 level--;
             }
         } else if (tok->IsStartTag() && tok->NameIsNS(StrL("text"), EPUB_NCX_NS())) {
-            if ((tok = parser.Next()) == nullptr || tok->IsError()) {
+            tok = parser.Next();
+            if (tok == nullptr || tok->IsError()) {
                 break;
             }
             if (tok->IsText()) {
@@ -1055,7 +1056,8 @@ bool Fb2Doc::Load(Str srcData) {
         } else if (inDocInfo && tok->IsEndTag() && tok->NameIsNS(StrL("document-info"), FB2_MAIN_NS())) {
             inDocInfo--;
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("book-title"), FB2_MAIN_NS())) {
-            if ((tok = parser.Next()) == nullptr || tok->IsError()) {
+            tok = parser.Next();
+            if (tok == nullptr || tok->IsError()) {
                 break;
             }
             if (tok->IsText()) {
@@ -1096,7 +1098,8 @@ bool Fb2Doc::Load(Str srcData) {
                 AddPropOwned(props, DocProp::ModificationDate, val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("program-used"), FB2_MAIN_NS())) {
-            if ((tok = parser.Next()) == nullptr || tok->IsError()) {
+            tok = parser.Next();
+            if (tok == nullptr || tok->IsError()) {
                 break;
             }
             if (tok->IsText()) {

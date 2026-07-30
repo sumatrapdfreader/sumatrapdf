@@ -2357,8 +2357,8 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
 }
 
 void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
-    pdf_obj* obj;
-    if ((obj = pdf_dict_gets(ctx, node, "Kids")) != nullptr && !pdf_mark_obj(ctx, node)) {
+    pdf_obj* obj = pdf_dict_gets(ctx, node, "Kids");
+    if (obj != nullptr && !pdf_mark_obj(ctx, node)) {
         int n = pdf_array_len(ctx, obj);
         for (int i = 0; i < n; i++) {
             auto arr = pdf_array_get(ctx, obj, i);

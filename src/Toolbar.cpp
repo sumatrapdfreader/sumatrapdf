@@ -56,7 +56,7 @@ struct ToolbarButtonInfo {
     TbIcon bmpIndex;
     int cmdId;
     Str toolTip;
-    Str svgIcon = {};
+    Str svgIcon;
 };
 
 // thos are not real commands but we have to refer to toolbar buttons

@@ -318,7 +318,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    Str data{};
+    Str data;
     size_t dataCurrPos = 0;
 };
 

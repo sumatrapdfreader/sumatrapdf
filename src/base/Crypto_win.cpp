@@ -111,8 +111,11 @@ bool VerifySHA1Signature(Str data, Str hexSignature, Str pubkey) {
     const BYTE* dataPtr = (const BYTE*)data.s;
     size_t dataLen = (size_t)data.len;
 
-#define Check(val) \
-    if ((ok = (val)) == FALSE) goto CleanUp
+#define Check(val)                     \
+    do {                               \
+        ok = (val);                    \
+        if (ok == FALSE) goto CleanUp; \
+    } while (0)
     Check(ExtractSignature(hexSignature, data, signature, signatureLen));
     dataPtr = (const BYTE*)data.s;
     dataLen = (size_t)data.len;

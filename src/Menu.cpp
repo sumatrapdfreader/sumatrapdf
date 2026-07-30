@@ -43,7 +43,7 @@
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
-    Str text = {};
+    Str text;
     // copy of MENUITEMINFO fields
     uint fType = 0;
     uint fState = 0;

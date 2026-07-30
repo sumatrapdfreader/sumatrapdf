@@ -94,7 +94,7 @@ class PageRenderer {
     Size currSize;
     int reqPage = 0;
     float reqZoom = 0.f;
-    Size reqSize = {};
+    Size reqSize;
     bool reqAbort = false;
     AbortCookie* abortCookie = nullptr;
 

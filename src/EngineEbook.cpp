@@ -800,7 +800,7 @@ class EngineEpub : public EngineEbook {
     bool FinishLoading();
 };
 
-EngineEpub::EngineEpub() : EngineEbook() {
+EngineEpub::EngineEpub() {
     kind = kindEngineEpub;
     SetDefaultExt(defaultExt, ".epub");
 }
@@ -930,7 +930,7 @@ EngineBase* CreateEngineEpubFromData(Str data) {
 
 class EngineFb2 : public EngineEbook {
   public:
-    EngineFb2() : EngineEbook() {
+    EngineFb2() {
         kind = kindEngineFb2;
         SetDefaultExt(defaultExt, ".fb2");
     }
@@ -1057,7 +1057,7 @@ EngineBase* CreateEngineFb2FromData(Str data) {
 
 class EngineMobi : public EngineEbook {
   public:
-    EngineMobi() : EngineEbook() {
+    EngineMobi() {
         kind = kindEngineMobi;
         SetDefaultExt(defaultExt, ".mobi");
     }
@@ -1216,7 +1216,7 @@ EngineBase* CreateEngineMobiFromData(Str data) {
 
 class EnginePdb : public EngineEbook {
   public:
-    EnginePdb() : EngineEbook() {
+    EnginePdb() {
         kind = kindEnginePdb;
         SetDefaultExt(defaultExt, ".pdb");
     }
@@ -1388,8 +1388,11 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
         Str img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
-        HandleText(str::Dup(textAllocator, attr->val));
+    if (needAlt) {
+        attr = t->GetAttrByName(StrL("alt"));
+        if (attr != nullptr) {
+            HandleText(str::Dup(textAllocator, attr->val));
+        }
     }
 }
 
@@ -1439,7 +1442,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
 
 class EngineChm : public EngineEbook {
   public:
-    EngineChm() : EngineEbook() {
+    EngineChm() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
@@ -1728,7 +1731,7 @@ EngineBase* CreateEngineChmFromFile(Str fileName) {
 
 class EngineHtml : public EngineEbook {
   public:
-    EngineHtml() : EngineEbook() {
+    EngineHtml() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         SetDefaultExt(defaultExt, ".html");
@@ -1830,7 +1833,7 @@ EngineBase* CreateEngineHtmlFromFile(Str fileName) {
 
 class EngineTxt : public EngineEbook {
   public:
-    EngineTxt() : EngineEbook() {
+    EngineTxt() {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());

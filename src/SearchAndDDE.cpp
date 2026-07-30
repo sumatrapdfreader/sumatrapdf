@@ -46,7 +46,7 @@ constexpr COLORREF kFindOtherMatchColor = RGB(0xff, 0x96, 0x32);
 
 struct FindMatchPaintPageRect {
     int pageNo = 0;
-    Rect rect{};
+    Rect rect;
 };
 
 // references a [firstPos, firstPos + len) slice of gFindMatchPaintCache.positions
