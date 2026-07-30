@@ -316,6 +316,7 @@ void InitializePolicies(bool restrict) {
     SquareTreeNode* root = ParseSquareTree(restrictData);
     AutoDelete delRoot(root);
     SquareTreeNode* polsec = root ? root->GetChild(StrL("Policies")) : nullptr;
+    gPolicyRestrictions = Perm::RestrictedUse;
     // if the restriction file is broken, err on the side of full restriction
     if (!polsec) {
         return;
