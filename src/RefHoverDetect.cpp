@@ -249,33 +249,36 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     // Typical body glyph height = the most common dy (the watermark, a heading,
     // and any super/subscripts are all minorities). Histogram over non-space
     // glyph heights and take the mode.
+    constexpr int kMaxHistogramGlyphHeight = 4096;
     int maxDy = 0;
     for (int i = 0; i < n; i++) {
-        if (coords[i].dy > maxDy) {
+        if (coords[i].dy > maxDy && coords[i].dy <= kMaxHistogramGlyphHeight) {
             maxDy = coords[i].dy;
         }
     }
     int modeDy = 0;
     if (maxDy > 0) {
         int* hist = AllocArray<int>(maxDy + 1);
-        for (int i = 0; i < n; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
-                continue;
+        if (hist) {
+            for (int i = 0; i < n; i++) {
+                WCHAR c = text.s[i];
+                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                    continue;
+                }
+                int d = coords[i].dy;
+                if (d > 0 && d <= maxDy) {
+                    hist[d]++;
+                }
             }
-            int d = coords[i].dy;
-            if (d > 0) {
-                hist[d]++;
+            int modeCount = 0;
+            for (int d = 1; d <= maxDy; d++) {
+                if (hist[d] > modeCount) {
+                    modeCount = hist[d];
+                    modeDy = d;
+                }
             }
+            free(hist);
         }
-        int modeCount = 0;
-        for (int d = 1; d <= maxDy; d++) {
-            if (hist[d] > modeCount) {
-                modeCount = hist[d];
-                modeDy = d;
-            }
-        }
-        free(hist);
     }
 
     // Only strip when there's a stable body height to compare against, and only
