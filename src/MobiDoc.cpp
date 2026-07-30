@@ -512,6 +512,11 @@ bool MobiDoc::ParseHeader() {
         // cf. https://code.google.com/archive/p/sumatrapdf/issues/2529
         docRecCount--;
     }
+    constexpr u32 kMaxMobiTextSize = 256 * 1024 * 1024;
+    if (palmDocHdr.uncompressedDocSize > kMaxMobiTextSize) {
+        logf("MOBI text is too large\n");
+        return false;
+    }
     docUncompressedSize = (int)palmDocHdr.uncompressedDocSize;
 
     if (kPalmDocHeaderLen == recSize) {
