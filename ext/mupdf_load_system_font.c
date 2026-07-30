@@ -618,7 +618,7 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
                 }
             }
             fz_catch(ctx) {
-                fz_report_error(ctx);
+                fz_ignore_error(ctx);
                 // ignore errors occurring while parsing a given font file
             }
         }
