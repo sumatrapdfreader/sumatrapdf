@@ -1607,6 +1607,9 @@ static TempStr DecompressTcrTextTemp(Str data) {
         }
         dict[n] = curr;
         int step = 1 + (u8)curr.s[0];
+        if (step > curr.len) {
+            return str::DupTemp(data);
+        }
         curr = Str(curr.s + step, curr.len - step);
     }
 
