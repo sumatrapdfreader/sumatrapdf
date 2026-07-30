@@ -598,6 +598,8 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
     AIChatProvider* p = GetAIChatProvider(ctx->stream.providerId);
 
     str::Builder lineBuf;
+    constexpr int kMaxProviderLineSize = 1024 * 1024;
+    bool lineTooLong = false;
     char buf[4096];
     DWORD bytesRead;
 
@@ -605,19 +607,29 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                Str line = ToStr(lineBuf);
-                if (line) {
-                    AIChatLog(p->logger, "<<<", line);
+                if (lineTooLong) {
+                    AIChatPostUpdate(&ctx->stream, AIChatUpdateType::Error, StrL("Provider output line was too long"));
+                } else {
+                    Str line = ToStr(lineBuf);
+                    if (line) {
+                        AIChatLog(p->logger, "<<<", line);
+                    }
+                    p->ParseStreamLine(line, &ctx->stream);
                 }
-                p->ParseStreamLine(line, &ctx->stream);
                 lineBuf.Reset();
-            } else if (buf[i] != '\r') {
+                lineTooLong = false;
+            } else if (buf[i] != '\r' && !lineTooLong) {
+                if (len(lineBuf) >= kMaxProviderLineSize) {
+                    lineTooLong = true;
+                    lineBuf.Reset();
+                    continue;
+                }
                 lineBuf.AppendChar(buf[i]);
             }
         }
     }
 
-    Str rem = ToStr(lineBuf);
+    Str rem = lineTooLong ? Str{} : ToStr(lineBuf);
     if (rem) {
         AIChatLog(p->logger, "<<<", rem);
     }
