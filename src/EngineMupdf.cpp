@@ -3596,7 +3596,10 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     return dest;
 }
 
-TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
+TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment, int depth) {
+    if (depth >= 64) {
+        return nullptr;
+    }
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
 
@@ -3633,7 +3636,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         */
 
         if (outline->down) {
-            item->child = BuildTocTree(item, outline->down, idCounter, isAttachment);
+            item->child = BuildTocTree(item, outline->down, idCounter, isAttachment, depth + 1);
         }
 
         if (!root) {
@@ -3669,12 +3672,12 @@ TocTree* EngineMupdf::GetToc() {
     TocItem* root = nullptr;
     TocItem* att = nullptr;
     if (outline) {
-        root = BuildTocTree(nullptr, outline, idCounter, false);
+        root = BuildTocTree(nullptr, outline, idCounter, false, 0);
     }
     if (!attachments) {
         goto MakeTree;
     }
-    att = BuildTocTree(nullptr, attachments, idCounter, true);
+    att = BuildTocTree(nullptr, attachments, idCounter, true, 0);
     if (root) {
         root->AddSiblingAtEnd(att);
     } else {
