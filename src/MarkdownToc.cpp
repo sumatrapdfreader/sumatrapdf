@@ -453,7 +453,7 @@ Str MarkdownToHtmlPage(Str markdown) {
 
     EnsureCmarkPluginsRegistered();
 
-    int options = CMARK_OPT_UNSAFE | CMARK_OPT_LIBERAL_HTML_TAG;
+    int options = CMARK_OPT_DEFAULT;
     cmark_parser* parser = cmark_parser_new(options);
     AttachGfmExtensions(parser);
     cmark_parser_feed(parser, markdown.s, (size_t)markdown.len);

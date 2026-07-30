@@ -116,7 +116,7 @@ struct WebviewWnd : Wnd {
     WebViewResourceProvider resourceProvider;
     WebViewEvents events;
     bool forwardAppAccelerators = true;
-    bool allowClipboardRead = true;
+    bool allowClipboardRead = false;
     // when false, WebView2 won't claim external (file) drops, so they fall
     // through to the host window's drop target (e.g. to open the file)
     bool allowExternalDrop = true;
