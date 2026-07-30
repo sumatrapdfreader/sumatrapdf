@@ -2013,7 +2013,7 @@ bool EngineCbx::FinishLoading() {
         if (!fileName) {
             continue;
         }
-        if (Archive::Format::Zip == cbxArchive->format && str::StartsWithI(fileName, "_rels/.rels")) {
+        if (Archive::Format::Zip == cbxArchive->format && str::StartsWithI(fileName, StrL("_rels/.rels"))) {
             // bail, if we accidentally try to load an XPS file
             return false;
         }

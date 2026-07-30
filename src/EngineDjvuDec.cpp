@@ -44,7 +44,8 @@ static bool DjvuDecCouldBeURL(Str link) {
     if (!link) {
         return false;
     }
-    if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
+    if (str::StartsWithI(link, StrL("http:")) || str::StartsWithI(link, StrL("https:")) ||
+        str::StartsWithI(link, StrL("mailto:"))) {
         return true;
     }
     return str::Contains(link, ".");

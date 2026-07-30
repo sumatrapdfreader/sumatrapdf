@@ -55,13 +55,13 @@ static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
 }
 
 static bool IsLink(Str url) {
-    if (str::StartsWithI(url, "http:")) {
+    if (str::StartsWithI(url, StrL("http:"))) {
         return true;
     }
-    if (str::StartsWithI(url, "https:")) {
+    if (str::StartsWithI(url, StrL("https:"))) {
         return true;
     }
-    if (str::StartsWithI(url, "mailto:")) {
+    if (str::StartsWithI(url, StrL("mailto:"))) {
         return true;
     }
     return false;

@@ -1300,9 +1300,9 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         builder.Append("&lt;");
         return text;
     }
-    if (!str::StartsWithI(text, "<BOOKMARK") && !str::StartsWithI(text, "<HEADER") &&
-        !str::StartsWithI(text, "<HRULE") && !str::StartsWithI(text, "<LABEL") && !str::StartsWithI(text, "<LINK") &&
-        !str::StartsWithI(text, "<TEALPAINT")) {
+    if (!str::StartsWithI(text, StrL("<BOOKMARK")) && !str::StartsWithI(text, StrL("<HEADER")) &&
+        !str::StartsWithI(text, StrL("<HRULE")) && !str::StartsWithI(text, StrL("<LABEL")) &&
+        !str::StartsWithI(text, StrL("<LINK")) && !str::StartsWithI(text, StrL("<TEALPAINT"))) {
         goto Fallback;
     }
     GumboHtmlParser parser(Str(text.s, n));

@@ -1846,7 +1846,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             devMode->dmFields |= DM_ORIENTATION;
         } else if (str::EqI(s, "disable-auto-rotation")) {
             advanced.autoRotate = false;
-        } else if (str::StartsWithI(s, "rotate=")) {
+        } else if (str::StartsWithI(s, StrL("rotate="))) {
             // extra rotation of the printout in degrees: 90, 180 or 270 (#1246)
             int deg = 0;
             if (!str::IsNull(str::Parse(suffix(s, 7), "%d%$", &deg))) {
@@ -1888,10 +1888,10 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
         } else if (str::EqI(s, "nocollate")) {
             devMode->dmCollate = DMCOLLATE_FALSE;
             devMode->dmFields |= DM_COLLATE;
-        } else if (str::StartsWithI(s, "bin=")) {
+        } else if (str::StartsWithI(s, StrL("bin="))) {
             devMode->dmDefaultSource = GetPaperSourceByName(printer, suffix(s, 4));
             devMode->dmFields |= DM_DEFAULTSOURCE;
-        } else if (str::StartsWithI(s, "paper=")) {
+        } else if (str::StartsWithI(s, StrL("paper="))) {
             float mmW = 0, mmH = 0;
             if (str::EqI(suffix(s, 6), "auto")) {
                 // set the paper size per page from the document's page size, for
@@ -1906,13 +1906,13 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
                 devMode->dmPaperSize = GetPaperByName(printer, suffix(s, 6));
                 devMode->dmFields |= DM_PAPERSIZE;
             }
-        } else if (str::StartsWithI(s, "paperkind=")) {
+        } else if (str::StartsWithI(s, StrL("paperkind="))) {
             // alternatively allow indicating the paper kind directly by number
             devMode->dmPaperSize = GetPaperKind(suffix(s, 10));
             devMode->dmFields |= DM_PAPERSIZE;
-        } else if (str::StartsWithI(s, "output=")) {
+        } else if (str::StartsWithI(s, StrL("output="))) {
             printer->output = str::Dup(suffix(s, 7));
-        } else if (str::StartsWithI(s, "docname=")) {
+        } else if (str::StartsWithI(s, StrL("docname="))) {
             printer->docName = str::Dup(suffix(s, 8));
         } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
             // handled before ApplyPrintSettings (see PrintFile2); ignore here

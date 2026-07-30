@@ -23,7 +23,7 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
     // impersonate our update-check / crash-symbol hosts (GHSA-mjwr-9w29-jp96).
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
-    if (str::StartsWithI(urlA, "https")) {
+    if (str::StartsWithI(urlA, StrL("https"))) {
         flags |= INTERNET_FLAG_SECURE;
     }
 

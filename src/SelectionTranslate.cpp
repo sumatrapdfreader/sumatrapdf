@@ -370,7 +370,7 @@ static bool TranslationLooksLikeError(Str text) {
     if (str::ContainsI(text, StrL("api error"))) {
         return true;
     }
-    if (str::StartsWithI(text, "error:")) {
+    if (str::StartsWithI(text, StrL("error:"))) {
         return true;
     }
     if (str::ContainsI(text, StrL("model is not supported"))) {
@@ -751,10 +751,10 @@ static TempStr BuildTranslateUrlTemp(TranslateEngine engine, Str srcLang, Str ds
     }
     if (engine == TranslateEngine::DeepL) {
         // DeepL uses plain "zh" for Chinese
-        if (str::StartsWithI(src, "zh")) {
+        if (str::StartsWithI(src, StrL("zh"))) {
             src = str::DupTemp("zh");
         }
-        if (str::StartsWithI(dst, "zh")) {
+        if (str::StartsWithI(dst, StrL("zh"))) {
             dst = str::DupTemp("zh");
         }
         return fmt("https://www.deepl.com/translator#%s/%s/%s", src, dst, enc);

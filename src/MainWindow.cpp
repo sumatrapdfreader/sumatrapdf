@@ -600,7 +600,7 @@ void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
 // Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).
 // Returns false if uri is not a file: scheme.
 static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
-    if (!str::StartsWithI(uri, "file:")) {
+    if (!str::StartsWithI(uri, StrL("file:"))) {
         return false;
     }
     // Skip "file:" case-insensitively (str::TrimPrefix is case-sensitive).

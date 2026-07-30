@@ -36,7 +36,8 @@ static Kind destKinds[] = {
 // clang-format on
 
 bool IsExternalUrl(Str url) {
-    return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
+    return str::StartsWithI(url, StrL("http://")) || str::StartsWithI(url, StrL("https://")) ||
+           str::StartsWithI(url, StrL("mailto:"));
 }
 
 static void EnsurePageText(PageText* pageText) {

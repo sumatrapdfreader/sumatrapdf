@@ -294,10 +294,10 @@ static bool parseBool(Str value) {
     if (str::IsNull(value)) {
         return false;
     }
-    if (str::StartsWithI(value, "true") && (value.len <= 4 || str::IsWs(value.s[4]))) {
+    if (str::StartsWithI(value, StrL("true")) && (value.len <= 4 || str::IsWs(value.s[4]))) {
         return true;
     }
-    if (str::StartsWithI(value, "yes") && (value.len <= 3 || str::IsWs(value.s[3]))) {
+    if (str::StartsWithI(value, StrL("yes")) && (value.len <= 3 || str::IsWs(value.s[3]))) {
         return true;
     }
 

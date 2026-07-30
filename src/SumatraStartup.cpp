@@ -498,10 +498,10 @@ static bool SetupPluginMode(Flags& i) {
         for (int k = 0; k < len(parts); k++) {
             Str part = parts[k];
             int pageNo;
-            if (str::StartsWithI(part, "page=") &&
+            if (str::StartsWithI(part, StrL("page=")) &&
                 !str::IsNull(str::Parse(Str(part.s + 4, part.len - 4), "=%d%$", &pageNo))) {
                 i.pageNumber = pageNo;
-            } else if (str::StartsWithI(part, "nameddest=") && part.len > 10) {
+            } else if (str::StartsWithI(part, StrL("nameddest=")) && part.len > 10) {
                 i.namedDest = str::Dup(Str(part.s + 10, part.len - 10));
             } else if (!str::ContainsChar(part, '=') && part) {
                 i.namedDest = str::Dup(part);

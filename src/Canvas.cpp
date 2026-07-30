@@ -4054,7 +4054,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
             TempStr res = w ? ToUtf8Temp(w) : nullptr;
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
-            if (res && (str::StartsWithI(res, "http://") || str::StartsWithI(res, "https://"))) {
+            if (res && (str::StartsWithI(res, StrL("http://")) || str::StartsWithI(res, StrL("https://")))) {
                 return res;
             }
         }
@@ -4070,7 +4070,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
             TempStr res = s ? str::DupTemp(Str(s)) : nullptr;
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
-            if (res && (str::StartsWithI(res, "http://") || str::StartsWithI(res, "https://"))) {
+            if (res && (str::StartsWithI(res, StrL("http://")) || str::StartsWithI(res, StrL("https://")))) {
                 return res;
             }
         }
@@ -4090,7 +4090,8 @@ static bool DataObjectHasUrl(IDataObject* dataObj) {
     }
     // also check plain text that looks like an image URL
     TempStr text = GetTextFromDataObject(dataObj);
-    if (text && (str::StartsWithI(text, "http://") || str::StartsWithI(text, "https://")) && IsImageUrl(text)) {
+    if (text && (str::StartsWithI(text, StrL("http://")) || str::StartsWithI(text, StrL("https://"))) &&
+        IsImageUrl(text)) {
         return true;
     }
     return false;
@@ -4160,7 +4161,7 @@ class CanvasDropTarget : public IDropTarget {
         if (!url) {
             // fall back to plain text
             TempStr text = GetTextFromDataObject(dataObj);
-            if (text && (str::StartsWithI(text, "http://") || str::StartsWithI(text, "https://"))) {
+            if (text && (str::StartsWithI(text, StrL("http://")) || str::StartsWithI(text, StrL("https://")))) {
                 url = text;
             }
         }
