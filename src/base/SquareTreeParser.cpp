@@ -141,8 +141,12 @@ SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
     return nullptr;
 }
 
-static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = false) {
+static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, int depth) {
     SquareTreeNode* node = new SquareTreeNode();
+    if (depth >= 64) {
+        off = data.len;
+        return node;
+    }
 
     while (off < data.len && data.s[off]) {
         off = SkipWsAndComments(data, off);
@@ -182,7 +186,7 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
             // parse child node(s)
             int childOff = SkipWsAndComments(data, sepOff) + 1;
             Str key = str::Dup(ExtractTrimmed(data, keyOff, sepOff));
-            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data, childOff)));
+            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data, childOff, false, depth + 1)));
             off = childOff;
             // arrays are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
@@ -190,7 +194,8 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
                 off++;
                 // each DataItem owns its key (freed in ~SquareTreeNode), so
                 // repeated array children each need their own copy
-                node->data.Append(SquareTreeNode::DataItem(str::Dup(key), ParseSquareTreeRec(data, off)));
+                node->data.Append(
+                    SquareTreeNode::DataItem(str::Dup(key), ParseSquareTreeRec(data, off, false, depth + 1)));
             }
         } else if (data.s[keyOff] == ']') {
             // finish parsing child node
@@ -213,7 +218,8 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
             int nameEnd = SkipWsRev(data, nameStart, closeOff);
             Str sectionKey = str::Dup(Str(data.s + nameStart, nameEnd - nameStart));
             int sectionChildOff = off;
-            node->data.Append(SquareTreeNode::DataItem(sectionKey, ParseSquareTreeRec(data, sectionChildOff)));
+            node->data.Append(
+                SquareTreeNode::DataItem(sectionKey, ParseSquareTreeRec(data, sectionChildOff, false, depth + 1)));
             off = sectionChildOff;
         } else if ((off < data.len && data.s[sepOff] == '[') || data.s[sepOff] == ']') {
             // invalid line (ignored)
@@ -279,5 +285,5 @@ SquareTreeNode* ParseSquareTree(Str s) {
         return nullptr;
     }
     int off = 0;
-    return ParseSquareTreeRec(data, off, true);
+    return ParseSquareTreeRec(data, off, true, 0);
 }
