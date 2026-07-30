@@ -174,14 +174,6 @@ void TocItem::AddChild(TocItem* newChild) {
     newChild->next = curr;
 }
 
-// FreeTocItemRec() is recursive; this frees only this item.
-void TocItem::DeleteJustSelf() {
-    child = nullptr;
-    next = nullptr;
-    parent = nullptr;
-    FreeTocItemRec(nullptr, this);
-}
-
 // returns the destination this ToC item points to or nullptr
 // (the result is owned by the TocItem and MUST NOT be deleted)
 // TODO: rename to GetDestination()

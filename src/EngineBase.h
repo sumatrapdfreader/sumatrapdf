@@ -355,8 +355,6 @@ struct TocItem {
     void AddSiblingAtEnd(TocItem* sibling);
     void AddChild(TocItem* child);
 
-    void DeleteJustSelf();
-
     IPageDestination* GetPageDestination() const;
 
     int ChildCount();
