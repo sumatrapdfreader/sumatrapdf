@@ -2027,7 +2027,15 @@ bool EngineCbx::FinishLoading() {
         }
     }
 
-    auto* metadataFi = cbxArchive->GetFileDataByName("ComicInfo.xml");
+    constexpr int kMaxComicInfoSize = 4 * 1024 * 1024;
+    Archive::FileInfo* metadataFi = nullptr;
+    int metadataId = cbxArchive->GetFileId("ComicInfo.xml");
+    if (metadataId >= 0) {
+        auto* fi = fileInfos[metadataId];
+        if (fi->fileSizeUncompressed >= 0 && fi->fileSizeUncompressed <= kMaxComicInfoSize) {
+            metadataFi = cbxArchive->GetFileDataById(metadataId);
+        }
+    }
     if (metadataFi && metadataFi->data) {
         Str metadata = Str(metadataFi->data, metadataFi->fileSizeUncompressed);
         cip.Parse(metadata);
