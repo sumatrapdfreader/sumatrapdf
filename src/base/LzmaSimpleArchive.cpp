@@ -227,14 +227,18 @@ int GetIdxFromName(SimpleArchive* archive, Str fileName) {
 }
 
 u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a) {
-    if (idx >= archive->filesCount) {
+    if (idx < 0 || idx >= archive->filesCount) {
         return nullptr;
     }
 
     FileInfo* fi = &archive->files[idx];
+    if (fi->uncompressedSize > INT_MAX - 2) {
+        return nullptr;
+    }
 
     // over-allocate by 2 bytes and zero them so the result is always null-terminated
-    u8* uncompressed = (u8*)Alloc(a, (size_t)(fi->uncompressedSize + 2));
+    size_t allocSize = (size_t)fi->uncompressedSize + 2;
+    u8* uncompressed = (u8*)Alloc(a, allocSize);
     if (!uncompressed) {
         return nullptr;
     }
