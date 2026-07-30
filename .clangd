@@ -1,11 +1,15 @@
 # https://clangd.llvm.org/config#files
 # include paths and defines are in compile_flags.txt (clangd resolves
 # them relative to the repo root, which doesn't work from this file)
+# .h is ambiguous (C vs C++); treat non-.c TUs as C++ so -std=c++17 is valid
+# (otherwise clangd opens Crypto.h etc. as C and errors: drv_argument_not_allowed_with)
 If:
   PathExclude:
     - .*\.c
 CompileFlags:
   Add:
+    - -x
+    - c++
     - -std=c++17
 ---
 If:
