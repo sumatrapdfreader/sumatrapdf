@@ -374,13 +374,7 @@ bool StartsWith(Str path, Str s) {
 
 namespace dir {
 
-bool CreateAll(Str dir) {
-    TempStr parent = path::GetDirTemp(dir);
-    if (!str::Eq(parent, dir) && !Exists(parent)) {
-        CreateAll(parent);
-    }
-    return Create(dir);
-}
+// CreateAll is platform-specific (File_win.cpp / File_posix.cpp).
 
 bool CreateForFile(Str path) {
     TempStr dir = path::GetDirTemp(path);
