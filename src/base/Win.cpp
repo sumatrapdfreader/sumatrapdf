@@ -14,6 +14,7 @@
 #if COMPILER_MINGW
 #include <cpuid.h>
 #endif
+#include <float.h> // for _clearfp / _controlfp_s in MaskFpExceptions
 #include <mlang.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2
