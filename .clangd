@@ -26,6 +26,7 @@ Diagnostics:
     - readability-function-cognitive-complexity
     - readability-qualified-auto
     - modernize-use-auto
+    - modernize-use-nodiscard
     - readability-simplify-boolean-expr
     - readability-use-std-min-max
     - readability-named-parameter

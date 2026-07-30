@@ -13,6 +13,7 @@ Checks: >
   -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
   -modernize-avoid-c-style-cast,
+  -modernize-use-nodiscard,
   -modernize-use-using,
   -performance-no-int-to-ptr,
   -readability-identifier-length,
