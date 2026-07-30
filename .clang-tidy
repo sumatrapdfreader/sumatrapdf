@@ -20,5 +20,6 @@ Checks: >
   -readability-implicit-bool-conversion,
   -readability-magic-numbers,
   -readability-non-const-parameter,
+  -readability-braces-around-statements,
   -readability-uppercase-literal-suffix
 ...

@@ -37,6 +37,7 @@ Diagnostics:
     - readability-use-std-min-max
     - readability-named-parameter
     - readability-non-const-parameter
+    - readability-braces-around-statements
     - readability-uppercase-literal-suffix
 ---
 # When editing a header under src/base/, force-include Base.h plus other
