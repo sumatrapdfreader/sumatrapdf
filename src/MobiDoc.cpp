@@ -367,6 +367,9 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     }
     u32 hdrLen = UInt32BE(cdicData + 4);
     u32 codeLen = UInt32BE(cdicData + 12);
+    if (codeLen == 0 || codeLen > 16) {
+        return false;
+    }
     if (0 == codeLength) {
         codeLength = codeLen;
     } else {
@@ -380,7 +383,7 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     u32 size = cdicDataLen - hdrLen;
 
     u32 maxSize = 2u * (1u << codeLength);
-    if (maxSize >= size) {
+    if (maxSize > size) {
         return false;
     }
     dicts[dictsCount] = cdicData + hdrLen;
