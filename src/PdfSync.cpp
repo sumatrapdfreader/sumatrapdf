@@ -678,7 +678,9 @@ TempStr ungzipToTempSync(Str gzPath) {
         return {};
     }
     logf("ungzipToTempSync: file::ReadFile() did read '%s'\n", gzPath);
-    Str uncompr = Ungzip(compr);
+    constexpr int kMaxSyncTexSize = 256 * 1024 * 1024;
+    int expansionLimit = (int)std::min((i64)kMaxSyncTexSize, (i64)len(compr) * 1000);
+    Str uncompr = Ungzip(compr, expansionLimit);
     if (len(uncompr) == 0) {
         str::Free(compr);
         return {};

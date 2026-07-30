@@ -243,12 +243,15 @@ Str ZipDirToData(Str dirPath, bool recursive) {
 // the returned data will have 2 zero bytes at end to make sure it's also
 // a 0-terminated char* or WCHA* string
 // those 2 bytes are not reported as
-Str Ungzip(const Str& d) {
+Str Ungzip(const Str& d, int maxSize) {
     int n = d.len;
+    if (n <= 0 || maxSize <= 0) {
+        return {};
+    }
     u8* dataCompr = (u8*)d.s;
     // aggressive growth for uncompressed buffer because I use this
     // for .syntex files and they compress really well
-    int lenUncr = n * 2;
+    int lenUncr = (int)std::min((i64)maxSize, (i64)n * 2);
 
     bool done = false;
     int res;
@@ -268,12 +271,16 @@ Str Ungzip(const Str& d) {
     // +2 for space for terminating char* or WCHAR*
     u8* dataUncr = AllocArray<u8>(lenUncr + 2);
     if (!dataUncr) {
+        inflateEnd(&strm);
         return {};
     }
 
     while (!done) {
         if (strm.total_out >= (uLong)lenUncr) {
-            int newLen = lenUncr * 2;
+            if (lenUncr >= maxSize) {
+                break;
+            }
+            int newLen = (int)std::min((i64)maxSize, (i64)lenUncr * 2);
             u8* dataUncr2 = (u8*)realloc(dataUncr, newLen + 2);
             if (!dataUncr2) {
                 free((void*)dataUncr);

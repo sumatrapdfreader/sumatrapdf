@@ -28,4 +28,4 @@ class ZipCreator {
 
 Str ZipDirToData(Str dirPath, bool recursive = false);
 
-Str Ungzip(const Str&);
+Str Ungzip(const Str&, int maxSize);
