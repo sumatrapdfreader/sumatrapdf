@@ -81,7 +81,7 @@ struct PageDestinationDjvuDec : IPageDestination {
 };
 
 static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
-    if (!link || str::Eq(link, "#")) {
+    if (!link || str::Eq(link, StrL("#"))) {
         return nullptr;
     }
     auto res = new PageDestinationDjvuDec(link, comment);
@@ -855,11 +855,11 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
     }
     auto ddest = (PageDestinationDjvuDec*)dest;
     Str link = ddest->link;
-    if (str::Eq(link, "#+1")) {
+    if (str::Eq(link, StrL("#+1"))) {
         linkHandler->GoToNextPage();
         return true;
     }
-    if (str::Eq(link, "#-1")) {
+    if (str::Eq(link, StrL("#-1"))) {
         linkHandler->GoToPrevPage();
         return true;
     }

@@ -1179,10 +1179,10 @@ static HGLOBAL GlobalMemDevNames(const WCHAR* device) {
 // returns 1 to force collate, 0 to force no-collate, -1 to leave the driver default
 static int CollateDefaultPref() {
     Str s = gGlobalPrefs->printerDefaults.collate;
-    if (str::EqI(s, "collate")) {
+    if (str::EqI(s, StrL("collate"))) {
         return 1;
     }
-    if (str::EqI(s, "nocollate")) {
+    if (str::EqI(s, StrL("nocollate"))) {
         return 0;
     }
     return -1;
@@ -1231,11 +1231,11 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     if (!hasDefaults) {
         hasDefaults = true;
-        if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "fit")) {
+        if (str::EqI(gGlobalPrefs->printerDefaults.printScale, StrL("fit"))) {
             defaultScaleAdv = PrintScaleAdv::Fit;
-        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "stretch")) {
+        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, StrL("stretch"))) {
             defaultScaleAdv = PrintScaleAdv::Stretch;
-        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "none")) {
+        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, StrL("none"))) {
             defaultScaleAdv = PrintScaleAdv::None;
         }
     }
@@ -1628,31 +1628,31 @@ static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, in
 }
 
 static short GetStandardPaperByName(Str paperName) {
-    if (str::EqI(paperName, "letter")) {
+    if (str::EqI(paperName, StrL("letter"))) {
         return DMPAPER_LETTER;
     }
-    if (str::EqI(paperName, "legal")) {
+    if (str::EqI(paperName, StrL("legal"))) {
         return DMPAPER_LEGAL;
     }
-    if (str::EqI(paperName, "tabloid")) {
+    if (str::EqI(paperName, StrL("tabloid"))) {
         return DMPAPER_TABLOID;
     }
-    if (str::EqI(paperName, "statement")) {
+    if (str::EqI(paperName, StrL("statement"))) {
         return DMPAPER_STATEMENT;
     }
-    if (str::EqI(paperName, "A2")) {
+    if (str::EqI(paperName, StrL("A2"))) {
         return DMPAPER_A2;
     }
-    if (str::EqI(paperName, "A3")) {
+    if (str::EqI(paperName, StrL("A3"))) {
         return DMPAPER_A3;
     }
-    if (str::EqI(paperName, "A4")) {
+    if (str::EqI(paperName, StrL("A4"))) {
         return DMPAPER_A4;
     }
-    if (str::EqI(paperName, "A5")) {
+    if (str::EqI(paperName, StrL("A5"))) {
         return DMPAPER_A5;
     }
-    if (str::EqI(paperName, "A6")) {
+    if (str::EqI(paperName, StrL("A6"))) {
         return DMPAPER_A6;
     }
     return 0;
@@ -1803,7 +1803,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
     for (Str s : rangeList) {
         int val, val2;
         PRINTPAGERANGE pr{};
-        if (str::EqI(s, "last")) {
+        if (str::EqI(s, StrL("last"))) {
             pr.nFromPage = pr.nToPage = (DWORD)pageCount;
             ranges.Append(pr);
         } else if (!str::IsNull(str::Parse(s, "%d-%d%$", &val, &val2))) {
@@ -1824,27 +1824,27 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             }
             pr.nFromPage = pr.nToPage = limitValue((DWORD)val, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::EqI(s, "even")) {
+        } else if (str::EqI(s, StrL("even"))) {
             advanced.range = PrintRangeAdv::Even;
-        } else if (str::EqI(s, "odd")) {
+        } else if (str::EqI(s, StrL("odd"))) {
             advanced.range = PrintRangeAdv::Odd;
-        } else if (str::EqI(s, "noscale")) {
+        } else if (str::EqI(s, StrL("noscale"))) {
             advanced.scale = PrintScaleAdv::None;
-        } else if (str::EqI(s, "shrink")) {
+        } else if (str::EqI(s, StrL("shrink"))) {
             advanced.scale = PrintScaleAdv::Shrink;
-        } else if (str::EqI(s, "fit")) {
+        } else if (str::EqI(s, StrL("fit"))) {
             advanced.scale = PrintScaleAdv::Fit;
-        } else if (str::EqI(s, "stretch")) {
+        } else if (str::EqI(s, StrL("stretch"))) {
             advanced.scale = PrintScaleAdv::Stretch;
-        } else if (str::EqI(s, "portrait")) {
+        } else if (str::EqI(s, StrL("portrait"))) {
             advanced.rotation = PrintRotationAdv::Portrait;
             devMode->dmOrientation = DMORIENT_PORTRAIT;
             devMode->dmFields |= DM_ORIENTATION;
-        } else if (str::EqI(s, "landscape")) {
+        } else if (str::EqI(s, StrL("landscape"))) {
             advanced.rotation = PrintRotationAdv::Landscape;
             devMode->dmOrientation = DMORIENT_LANDSCAPE;
             devMode->dmFields |= DM_ORIENTATION;
-        } else if (str::EqI(s, "disable-auto-rotation")) {
+        } else if (str::EqI(s, StrL("disable-auto-rotation"))) {
             advanced.autoRotate = false;
         } else if (str::StartsWithI(s, StrL("rotate="))) {
             // extra rotation of the printout in degrees: 90, 180 or 270 (#1246)
@@ -1855,7 +1855,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
                     advanced.extraRotation = deg;
                 }
             }
-        } else if (str::EqI(s, "center")) {
+        } else if (str::EqI(s, StrL("center"))) {
             advanced.centerHorizontally = true;
         } else if (!str::IsNull(str::Parse(s, "%dx%$", &val))) {
             if (val < 0) {
@@ -1867,25 +1867,25 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             }
             devMode->dmCopies = (short)val;
             devMode->dmFields |= DM_COPIES;
-        } else if (str::EqI(s, "simplex")) {
+        } else if (str::EqI(s, StrL("simplex"))) {
             devMode->dmDuplex = DMDUP_SIMPLEX;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(s, "duplex") || str::EqI(s, "duplexlong")) {
+        } else if (str::EqI(s, StrL("duplex")) || str::EqI(s, StrL("duplexlong"))) {
             devMode->dmDuplex = DMDUP_VERTICAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(s, "duplexshort")) {
+        } else if (str::EqI(s, StrL("duplexshort"))) {
             devMode->dmDuplex = DMDUP_HORIZONTAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(s, "color")) {
+        } else if (str::EqI(s, StrL("color"))) {
             devMode->dmColor = DMCOLOR_COLOR;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::EqI(s, "monochrome")) {
+        } else if (str::EqI(s, StrL("monochrome"))) {
             devMode->dmColor = DMCOLOR_MONOCHROME;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::EqI(s, "collate")) {
+        } else if (str::EqI(s, StrL("collate"))) {
             devMode->dmCollate = DMCOLLATE_TRUE;
             devMode->dmFields |= DM_COLLATE;
-        } else if (str::EqI(s, "nocollate")) {
+        } else if (str::EqI(s, StrL("nocollate"))) {
             devMode->dmCollate = DMCOLLATE_FALSE;
             devMode->dmFields |= DM_COLLATE;
         } else if (str::StartsWithI(s, StrL("bin="))) {
@@ -1893,7 +1893,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             devMode->dmFields |= DM_DEFAULTSOURCE;
         } else if (str::StartsWithI(s, StrL("paper="))) {
             float mmW = 0, mmH = 0;
-            if (str::EqI(suffix(s, 6), "auto")) {
+            if (str::EqI(suffix(s, 6), StrL("auto"))) {
                 // set the paper size per page from the document's page size, for
                 // mixed page size documents (issue #533)
                 advanced.perPagePaperSize = true;

@@ -49,7 +49,7 @@ struct CodexModelsVisitor : json::ValueVisitor {
     StrVec models;
 
     bool Visit(Str path, Str value, json::Type type) override {
-        if (str::Eq(path, "/id") && type == json::Type::Number && str::Eq(value, "2")) {
+        if (str::Eq(path, StrL("/id")) && type == json::Type::Number && str::Eq(value, StrL("2"))) {
             isModelListResponse = true;
         } else if (str::StartsWith(path, StrL("/result/data[")) && str::EndsWith(path, StrL("]/model")) &&
                    type == json::Type::String) {
@@ -307,7 +307,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
             continue;
         }
         TempStr year = ToUtf8Temp(fdY.cFileName);
-        if (str::Eq(year, ".") || str::Eq(year, "..")) {
+        if (str::Eq(year, StrL(".")) || str::Eq(year, StrL(".."))) {
             continue;
         }
         TempStr monthPat = fmt("%s\\%s\\*", root, year);
@@ -321,7 +321,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
                 continue;
             }
             TempStr month = ToUtf8Temp(fdM.cFileName);
-            if (str::Eq(month, ".") || str::Eq(month, "..")) {
+            if (str::Eq(month, StrL(".")) || str::Eq(month, StrL(".."))) {
                 continue;
             }
             TempStr dayPat = fmt("%s\\%s\\%s\\*", root, year, month);
@@ -369,7 +369,7 @@ static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
             continue;
         }
         TempStr year = ToUtf8Temp(fdY.cFileName);
-        if (str::Eq(year, ".") || str::Eq(year, "..")) {
+        if (str::Eq(year, StrL(".")) || str::Eq(year, StrL(".."))) {
             continue;
         }
         TempStr monthPat = fmt("%s\\%s\\*", root, year);
@@ -383,7 +383,7 @@ static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
                 continue;
             }
             TempStr month = ToUtf8Temp(fdM.cFileName);
-            if (str::Eq(month, ".") || str::Eq(month, "..")) {
+            if (str::Eq(month, StrL(".")) || str::Eq(month, StrL(".."))) {
                 continue;
             }
             TempStr dayPat = fmt("%s\\%s\\%s\\*", root, year, month);
@@ -618,12 +618,12 @@ struct CodexBuildProvider : AIChatProvider {
         }
         TempStr eventType = AIChatJsonStrTemp(line, "type");
 
-        if (eventType && str::Eq(eventType, "thread.started")) {
+        if (eventType && str::Eq(eventType, StrL("thread.started"))) {
             TempStr threadId = AIChatJsonStrTemp(line, "thread_id");
             if (threadId) {
                 AIChatStreamSetSessionId(ctx, threadId);
             }
-        } else if (eventType && str::Eq(eventType, "item.completed")) {
+        } else if (eventType && str::Eq(eventType, StrL("item.completed"))) {
             Str p;
             if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &p)) {
                 TempStr text = AIChatJsonStrTemp(p, "text");
@@ -640,7 +640,7 @@ struct CodexBuildProvider : AIChatProvider {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Flush, {});
                 }
             }
-        } else if (eventType && str::Eq(eventType, "turn.completed")) {
+        } else if (eventType && str::Eq(eventType, StrL("turn.completed"))) {
             AIChatPostUpdate(ctx, AIChatUpdateType::Flush, {});
         }
     }

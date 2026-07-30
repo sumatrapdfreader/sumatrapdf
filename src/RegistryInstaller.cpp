@@ -226,20 +226,21 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         // ",-${n}" => n is icon with resource id (see SumatraPDF.rc)
         // 2=app, 3=epub, 4=cbx, 5=chm, 6=djvu, 7=img, 8=pdf, 9=mobi
         TempStr iconPath;
-        if (str::EqI(ext, ".epub")) {
+        if (str::EqI(ext, StrL(".epub"))) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-3"));
-        } else if (str::EqI(ext, ".cbr") || str::EqI(ext, ".cbz") || str::EqI(ext, ".cbt") || str::EqI(ext, ".cb7")) {
+        } else if (str::EqI(ext, StrL(".cbr")) || str::EqI(ext, StrL(".cbz")) || str::EqI(ext, StrL(".cbt")) ||
+                   str::EqI(ext, StrL(".cb7"))) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-4"));
-        } else if (str::EqI(ext, ".chm")) {
+        } else if (str::EqI(ext, StrL(".chm"))) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-5"));
-        } else if (str::EqI(ext, ".djvu")) {
+        } else if (str::EqI(ext, StrL(".djvu"))) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-6"));
         } else if (ExtInList(gImageExts, ext)) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-7"));
-        } else if (str::EqI(ext, ".pdf")) {
+        } else if (str::EqI(ext, StrL(".pdf"))) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-8"));
-        } else if (str::EqI(ext, ".mobi") || str::EqI(ext, ".azw") || str::EqI(ext, ".azw3") ||
-                   str::EqI(ext, ".azw4") || str::EqI(ext, ".prc")) {
+        } else if (str::EqI(ext, StrL(".mobi")) || str::EqI(ext, StrL(".azw")) || str::EqI(ext, StrL(".azw3")) ||
+                   str::EqI(ext, StrL(".azw4")) || str::EqI(ext, StrL(".prc"))) {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-9"));
         } else {
             iconPath = str::JoinTemp(exePathQuoted, StrL(",-2"));
@@ -259,7 +260,7 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdOpen);
 
         // for PDF also register for Print/PrintTo shell actions
-        if (str::Eq(ext, ".pdf")) {
+        if (str::Eq(ext, StrL(".pdf"))) {
             key = str::JoinTemp(progIDKey, StrL("\\shell\\Print\\command"));
             ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPrint);
 

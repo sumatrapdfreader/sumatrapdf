@@ -74,7 +74,7 @@ static float GetDefaultFontSize() {
 
 void SetDefaultEbookFont(Str name, float size) {
     // intentionally don't validate the input
-    if (str::Eq(name, "default")) {
+    if (str::Eq(name, StrL("default"))) {
         // "default" is used for mupdf engine to indicate
         // we should use the font as given in css
         name = StrL("Georgia");
@@ -1505,7 +1505,7 @@ static uint HttpCharsetFromMetaNode(const GumboNode* node) {
         return 0;
     }
     const GumboAttribute* httpEquiv = gumbo_get_attribute(&node->v.element.attributes, "http-equiv");
-    if (!httpEquiv || !str::EqI(httpEquiv->value, "Content-Type")) {
+    if (!httpEquiv || !str::EqI(httpEquiv->value, StrL("Content-Type"))) {
         return 0;
     }
     const GumboAttribute* content = gumbo_get_attribute(&node->v.element.attributes, "content");

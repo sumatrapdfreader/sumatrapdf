@@ -499,7 +499,7 @@ bool IsRunningOnWine() {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         auto nameA = ToUtf8Temp(mod.szModule);
-        if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
+        if (str::EqI(nameA, StrL("winex11.drv")) || str::EqI(nameA, StrL("winewayland.drv"))) {
             isWine = true;
             break;
         }
@@ -2091,7 +2091,7 @@ HFONT GetUserGuiFont(Str fontName, int size) {
 }
 
 HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
-    if (str::EqI(fontName, "automatic") || str::EqI(fontName, "auto")) {
+    if (str::EqI(fontName, StrL("automatic")) || str::EqI(fontName, StrL("auto"))) {
         fontName = Str();
     }
     u16 flags = 0;

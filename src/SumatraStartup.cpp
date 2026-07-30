@@ -840,35 +840,35 @@ static void UpdateGlobalPrefs(const Flags& i) {
     Str param;
     for (int n = 0; n < len(i.globalPrefArgs); n++) {
         arg = i.globalPrefArgs[n];
-        if (str::EqI(arg, "-esc-to-exit")) {
+        if (str::EqI(arg, StrL("-esc-to-exit"))) {
             gGlobalPrefs->escToExit = true;
-        } else if (str::EqI(arg, "-bgcolor") || str::EqI(arg, "-bg-color")) {
+        } else if (str::EqI(arg, StrL("-bgcolor")) || str::EqI(arg, StrL("-bg-color"))) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
             param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->mainWindowBackground, param);
-        } else if (str::EqI(arg, "-set-color-range")) {
+        } else if (str::EqI(arg, StrL("-set-color-range"))) {
             param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->fixedPageUI.textColor, param);
             param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
-        } else if (str::EqI(arg, "-fwdsearch-offset")) {
+        } else if (str::EqI(arg, StrL("-fwdsearch-offset"))) {
             param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightOffset = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, "-fwdsearch-width")) {
+        } else if (str::EqI(arg, StrL("-fwdsearch-width"))) {
             param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightWidth = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, "-fwdsearch-color")) {
+        } else if (str::EqI(arg, StrL("-fwdsearch-color"))) {
             param = i.globalPrefArgs[++n];
             ReplaceColor(&gGlobalPrefs->forwardSearch.highlightColor, param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, "-fwdsearch-permanent")) {
+        } else if (str::EqI(arg, StrL("-fwdsearch-permanent"))) {
             param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightPermanent = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, "-manga-mode")) {
+        } else if (str::EqI(arg, StrL("-manga-mode"))) {
             param = i.globalPrefArgs[++n];
             gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI("true", param) || str::Eq("1", param);
         }
@@ -911,7 +911,7 @@ static i64 GetEmbeddedLibsumatrapdfSize() {
     }
     for (int i = 0; i < archive.filesCount; i++) {
         lzma::FileInfo* fi = &archive.files[i];
-        if (str::EqI(fi->name, "libsumatrapdf.dll")) {
+        if (str::EqI(fi->name, StrL("libsumatrapdf.dll"))) {
             size = (i64)fi->uncompressedSize;
             break;
         }
@@ -1427,8 +1427,8 @@ static void DeleteStaleCbxCacheFiles() {
     di.includeDirs = false;
     for (DirIterEntry* de : di) {
         TempStr ext = path::GetExtTemp(de->name);
-        bool isCbx = str::EqI(ext, ".cbx") || str::EqI(ext, ".cbz") || str::EqI(ext, ".cbr") || str::EqI(ext, ".cb7") ||
-                     str::EqI(ext, ".cbt");
+        bool isCbx = str::EqI(ext, StrL(".cbx")) || str::EqI(ext, StrL(".cbz")) || str::EqI(ext, StrL(".cbr")) ||
+                     str::EqI(ext, StrL(".cb7")) || str::EqI(ext, StrL(".cbt"));
         if (!isCbx) {
             continue;
         }
@@ -1566,7 +1566,7 @@ static void DeleteStaleFilesAsync() {
     di.includeDirs = true;
     for (DirIterEntry* de : di) {
         Str name = de->name;
-        if (str::Eq(name, "cbx-cache")) {
+        if (str::Eq(name, StrL("cbx-cache"))) {
             continue;
         }
 
@@ -1839,7 +1839,7 @@ static bool IsRunningTool() {
     }
     bool isTool = false;
     for (int i = 1; i < argc; i++) {
-        if (wstr::EqI(wargv[i], L"-dump-chm") || wstr::EqI(wargv[i], L"-dump-exif")) {
+        if (wstr::EqI(wargv[i], WStrL(L"-dump-chm")) || wstr::EqI(wargv[i], WStrL(L"-dump-exif"))) {
             isTool = true;
             break;
         }

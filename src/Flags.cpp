@@ -152,7 +152,7 @@ bool IsValidPageRange(Str ranges) {
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
 bool IsBenchPagesInfo(Str s) {
-    return str::EqI(s, "loadonly") || IsValidPageRange(s);
+    return str::EqI(s, StrL("loadonly")) || IsValidPageRange(s);
 }
 
 // -view [continuous][singlepage|facing|bookview]
@@ -269,22 +269,22 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         valN = ParseInt(val);
 
         // https://pdfobject.com/pdf/pdf_open_parameters_acro8.pdf
-        if (str::EqI(name, "nameddest")) {
+        if (str::EqI(name, StrL("nameddest"))) {
             i.destName = str::Dup(val);
             continue;
         }
-        if (str::EqI(name, "page") && valN >= 1) {
+        if (str::EqI(name, StrL("page")) && valN >= 1) {
             i.pageNumber = valN;
             continue;
         }
         // comment=
         // collab=setting
-        if (str::EqI(name, "zoom")) {
+        if (str::EqI(name, StrL("zoom"))) {
             // TODO: handle zoom
             // 100 is 100%
             continue;
         }
-        if (str::EqI(name, "view")) {
+        if (str::EqI(name, StrL("view"))) {
             // TODO: Fit FitH FitH,top FitV FitV,left
             // FitB FitBH FitBH,top FitBV, FitBV,left
             continue;
@@ -292,7 +292,7 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         // viewrect
         // pagemode=bookmarks, thumbs, none
         // scrollbar=1|0
-        if (str::EqI(name, "search")) {
+        if (str::EqI(name, StrL("search"))) {
             if (len(val) > 0) {
                 i.search = str::Dup(val);
             }
@@ -307,14 +307,14 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
 
         // those are Sumatra additions
 
-        if (str::EqI(name, "annotatt") && valN > 0) {
+        if (str::EqI(name, StrL("annotatt")) && valN > 0) {
             // for annotations that are attachments this is pdf object number
             // representing the attachment
             i.annotAttObjNum = valN;
             continue;
         }
 
-        if (str::EqI(name, "attachno") && valN > 0) {
+        if (str::EqI(name, StrL("attachno")) && valN > 0) {
             // this is attachment number, use PdfLoadAttachment() to load it
             i.attachmentNo = valN;
             continue;
@@ -371,7 +371,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         // for some reason that makes Directory Opus "Open With" provide the file twice
         // and gives "%3" and "%4' on cmd-line.
         // this is a hack to ignore that
-        if (str::Eq(argName, "%2") || str::Eq(argName, "%3") || str::Eq(argName, "%4")) {
+        if (str::Eq(argName, StrL("%2")) || str::Eq(argName, StrL("%3")) || str::Eq(argName, StrL("%4"))) {
             logf("ParseFlags: skipping '%s'\n", argName);
             continue;
         }

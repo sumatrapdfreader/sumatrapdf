@@ -752,11 +752,11 @@ static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM 
             }
             Str s = gGlobalPrefs->scrollbars;
             int checkId = IDC_SCROLLBAR_WINDOWS;
-            if (str::EqI(s, "smart")) {
+            if (str::EqI(s, StrL("smart"))) {
                 checkId = IDC_SCROLLBAR_SMART;
-            } else if (str::EqI(s, "overlay")) {
+            } else if (str::EqI(s, StrL("overlay"))) {
                 checkId = IDC_SCROLLBAR_OVERLAY;
-            } else if (str::EqI(s, "hidden")) {
+            } else if (str::EqI(s, StrL("hidden"))) {
                 checkId = IDC_SCROLLBAR_HIDDEN;
             }
             CheckRadioButton(hDlg, IDC_SCROLLBAR_WINDOWS, IDC_SCROLLBAR_HIDDEN, checkId);

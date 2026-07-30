@@ -294,7 +294,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
 
             for (int i = 0; i < nEntries; i++) {
                 chm_entry* e = entries[i];
-                if (e->path && str::Eq(e->path, "/payload")) {
+                if (e->path && str::Eq(e->path, StrL("/payload"))) {
                     payloadEntry = e;
                 }
                 if (e->length == 0 || e->length > 128ULL * 1024 * 1024) {

@@ -460,7 +460,7 @@ static void ReadPipeToStrBuilder(HANDLE hPipe, str::Builder& out) {
 
 static void AppendGrokTranslationText(Str line, str::Builder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
-    if (eventType && str::Eq(eventType, "text")) {
+    if (eventType && str::Eq(eventType, StrL("text"))) {
         TempStr text = AIChatJsonStrTemp(line, "data");
         if (len(text) > 0) {
             out.Append(text);
@@ -473,7 +473,7 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
     if (!eventType) {
         return;
     }
-    if (str::Eq(eventType, "result")) {
+    if (str::Eq(eventType, StrL("result"))) {
         bool isError = str::Contains(line, StrL("\"is_error\":true"));
         TempStr text = AIChatJsonStrTemp(line, "result");
         if (len(text) > 0) {
@@ -489,12 +489,12 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
     if (str::Contains(line, StrL("authentication_failed")) || str::Contains(line, StrL("\"is_error\":true"))) {
         return;
     }
-    if (str::Eq(eventType, "assistant") && str::Contains(line, StrL("\"type\":\"text\""))) {
+    if (str::Eq(eventType, StrL("assistant")) && str::Contains(line, StrL("\"type\":\"text\""))) {
         TempStr text = AIChatJsonStrTemp(line, "text");
         if (len(text) > 0 && !TranslationLooksLikeError(text)) {
             out.Append(text);
         }
-    } else if (str::Eq(eventType, "content_block_delta")) {
+    } else if (str::Eq(eventType, StrL("content_block_delta"))) {
         TempStr text = AIChatJsonStrTemp(line, "text");
         if (len(text) > 0) {
             out.Append(text);
@@ -507,7 +507,7 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
         return;
     }
     TempStr eventType = AIChatJsonStrTemp(line, "type");
-    if (!eventType || !str::Eq(eventType, "item.completed")) {
+    if (!eventType || !str::Eq(eventType, StrL("item.completed"))) {
         return;
     }
     TempStr text = AIChatJsonStrTemp(line, "text");

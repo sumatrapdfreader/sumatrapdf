@@ -681,11 +681,11 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
         // SaveSettings() re-generates these strings from their parsed
         // representations, which would clobber the edit unless the parsed
         // representation is updated as well
-        if (str::EqI(item->name, "DefaultDisplayMode")) {
+        if (str::EqI(item->name, StrL("DefaultDisplayMode"))) {
             gGlobalPrefs->defaultDisplayModeEnum = DisplayModeFromString(item->strVal, DisplayMode::Automatic);
-        } else if (str::EqI(item->name, "DefaultZoom")) {
+        } else if (str::EqI(item->name, StrL("DefaultZoom"))) {
             gGlobalPrefs->defaultZoomFloat = ZoomFromString(item->strVal, kZoomActualSize);
-        } else if (str::EqI(item->name, "ImageUI.DefaultZoom")) {
+        } else if (str::EqI(item->name, StrL("ImageUI.DefaultZoom"))) {
             gGlobalPrefs->imageUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
         }
     }

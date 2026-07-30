@@ -81,16 +81,16 @@ int TesterMain() {
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
         Str arg = argv.at(i);
-        if (str::Eq(arg, "-layout")) {
+        if (str::Eq(arg, StrL("-layout"))) {
             gLayout = true;
             ++i;
-        } else if (str::Eq(arg, "-save-html")) {
+        } else if (str::Eq(arg, StrL("-save-html"))) {
             gSaveHtml = true;
             ++i;
-        } else if (str::Eq(arg, "-save-images")) {
+        } else if (str::Eq(arg, StrL("-save-images"))) {
             gSaveImages = true;
             ++i;
-        } else if (str::Eq(arg, "-zip-create")) {
+        } else if (str::Eq(arg, StrL("-zip-create"))) {
             ZipCreateTest();
             ++i;
         } else {

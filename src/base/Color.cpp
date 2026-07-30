@@ -93,7 +93,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
     }
     TempStr s = str::DupTemp(txt);
     str::TrimWSInPlace(s, str::TrimOpt::Both);
-    if (str::EqI(s, "checkered") || str::EqI(s, "unset")) {
+    if (str::EqI(s, StrL("checkered")) || str::EqI(s, StrL("unset"))) {
         parsed.col = kColorUnset;
         parsed.parsedOk = true;
         return;

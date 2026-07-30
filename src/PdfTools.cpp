@@ -1030,12 +1030,12 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             // "8-" means "8-N" (from page 8 to the last page)
             bool endIsEmpty = !endStr;
             int start, end;
-            if (str::EqI(startStr, "N")) {
+            if (str::EqI(startStr, StrL("N"))) {
                 start = pageCount;
             } else {
                 start = !str::IsNull(str::Parse(startStr, "%d%$", &start)) ? start : -1;
             }
-            if (endIsEmpty || str::EqI(endStr, "N")) {
+            if (endIsEmpty || str::EqI(endStr, StrL("N"))) {
                 end = pageCount;
             } else {
                 end = !str::IsNull(str::Parse(endStr, "%d%$", &end)) ? end : -1;
@@ -1049,7 +1049,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         } else {
             // single page
             int page;
-            if (str::EqI(part, "N")) {
+            if (str::EqI(part, StrL("N"))) {
                 page = pageCount;
             } else {
                 page = !str::IsNull(str::Parse(part, "%d%$", &page)) ? page : -1;

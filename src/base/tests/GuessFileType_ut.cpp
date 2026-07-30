@@ -459,8 +459,8 @@ static void extMapTest() {
     utassert(GuessFileTypeFromName(StrL("foo.tar")) == FileType::Tar);
     utassert(GuessFileTypeFromName(StrL("foo.unknown-ext")) == FileType::Unknown);
     // the canonical extension is the first one registered for the type
-    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Jpeg), ".jpg"));
-    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Mobi), ".mobi"));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Jpeg), StrL(".jpg")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Mobi), StrL(".mobi")));
     utassert(!GetExtForFileTypeTemp(FileType::Unknown));
 }
 

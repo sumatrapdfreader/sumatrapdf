@@ -331,7 +331,7 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     if (!data || !res || len(path) == 0) {
         return false;
     }
-    if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
+    if (!str::EqI(path, StrL("/marked.min.js")) && !str::EqI(path, StrL("marked.min.js"))) {
         return false;
     }
     res->data = data->data;

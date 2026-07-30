@@ -107,11 +107,11 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
     WCHAR className[256];
     bool isMenu = false;
     if (GetClassNameW(hwnd, className, 256) > 0) {
-        if (wstr::Eq(className, L"Progman") || wstr::Eq(className, L"WorkerW")) {
+        if (wstr::Eq(className, WStrL(L"Progman")) || wstr::Eq(className, WStrL(L"WorkerW"))) {
             return false;
         }
         // #32768 is the Win32 menu window class (context menus, popups etc.)
-        isMenu = wstr::Eq(className, L"#32768");
+        isMenu = wstr::Eq(className, WStrL(L"#32768"));
     }
     // our own floating UI (e.g. the find bar) is a tool window owned by a frame;
     // capture it even though the tool/owned-window filters below would drop it
@@ -1219,7 +1219,7 @@ static bool IsOtherSumatraProcessRunning() {
 static Str FindScreenshotShortcut() {
     // check gGlobalPrefs->shortcuts first (may have been updated at runtime)
     for (Shortcut* sc : *gGlobalPrefs->shortcuts) {
-        if (str::EqI(sc->cmd, "CmdScreenshot") && sc->key) {
+        if (str::EqI(sc->cmd, StrL("CmdScreenshot")) && sc->key) {
             return sc->key;
         }
     }
@@ -1324,7 +1324,7 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
 // find existing Shortcut entry for CmdScreenshot, or nullptr
 static Shortcut* FindScreenshotShortcutEntry() {
     for (Shortcut* sc : *gGlobalPrefs->shortcuts) {
-        if (str::EqI(sc->cmd, "CmdScreenshot")) {
+        if (str::EqI(sc->cmd, StrL("CmdScreenshot"))) {
             return sc;
         }
     }

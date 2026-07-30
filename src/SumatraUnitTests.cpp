@@ -37,9 +37,9 @@ static void ParseCommandLineTest() {
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(len(i.globalPrefArgs) == 2);
         Str s = i.globalPrefArgs[0];
-        utassert(str::Eq(s, "-fwdsearch-width"));
+        utassert(str::Eq(s, StrL("-fwdsearch-width")));
         s = i.globalPrefArgs[1];
-        utassert(str::Eq(s, "5"));
+        utassert(str::Eq(s, StrL("5")));
         utassert(2 == len(i.pathsToBenchmark));
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark[0]));
         utassert(len(i.pathsToBenchmark[1]) == 0);
@@ -175,7 +175,7 @@ static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
     u8 buf2[6]{};
     TempStr s = str::MemToHexTemp(Str((const char*)buf, dimofi(buf)));
-    utassert(str::Eq(s, "010221ff0012"));
+    utassert(str::Eq(s, StrL("010221ff0012")));
     bool ok = str::HexToMem(s, Str((char*)buf2, dimofi(buf2)));
     utassert(ok);
     utassert(memeq(buf, buf2, dimofi(buf)));
@@ -188,7 +188,7 @@ static void hexstrTest() {
     utassert(FileTimeEq(ft1, ft2));
 
     s = str::MemToHexTemp(Str());
-    utassert(str::Eq(s, ""));
+    utassert(str::Eq(s, StrL("")));
     ok = str::HexToMem(s, Str());
     utassert(ok);
 }
@@ -286,21 +286,21 @@ void parseCommandsTest() {
         arg = GetCommandArg(cmd, kCmdArgExe);
         utassert(str::Eq(arg->strVal, argStr));
         arg = GetCommandArg(cmd, kCmdArgFilter);
-        utassert(str::Eq(arg->strVal, "*.jpeg"));
+        utassert(str::Eq(arg->strVal, StrL("*.jpeg")));
     }
 }
 
 static void DocPropertiesTest() {
     // gPropNames round-trips: first (Title=1), a middle one (FocalLength35mm=27)
     // and the last property (ImagePath=53), both directions.
-    utassert(str::Eq(PropNameTemp(DocProp::Title), "title"));
-    utassert(str::Eq(PropNameTemp(DocProp::FocalLength35mm), "focalLength35mm"));
-    utassert(str::Eq(PropNameTemp(DocProp::ImagePath), "imagePath"));
+    utassert(str::Eq(PropNameTemp(DocProp::Title), StrL("title")));
+    utassert(str::Eq(PropNameTemp(DocProp::FocalLength35mm), StrL("focalLength35mm")));
+    utassert(str::Eq(PropNameTemp(DocProp::ImagePath), StrL("imagePath")));
     utassert(PropFromName("title") == DocProp::Title);
     utassert(PropFromName("focalLength35mm") == DocProp::FocalLength35mm);
     utassert(PropFromName("imagePath") == DocProp::ImagePath);
     // a couple more, plus unknown/None
-    utassert(str::Eq(PropNameTemp(DocProp::CreationDate), "creationDate"));
+    utassert(str::Eq(PropNameTemp(DocProp::CreationDate), StrL("creationDate")));
     utassert(PropFromName("modDate") == DocProp::ModificationDate);
     utassert(PropFromName("bogusPropName") == DocProp::None);
 }

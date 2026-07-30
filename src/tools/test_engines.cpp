@@ -129,7 +129,7 @@ static bool CloneAfterDeleteTest(Str srcPath) {
 }
 
 int main(int argc, char** argv) {
-    if (argc == 3 && str::Eq(argv[2], "-clone-after-delete")) {
+    if (argc == 3 && str::Eq(argv[2], StrL("-clone-after-delete"))) {
         bool ok = CloneAfterDeleteTest(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;

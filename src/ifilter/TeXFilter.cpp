@@ -1,4 +1,4 @@
-﻿/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "base/Base.h"
@@ -278,7 +278,7 @@ ContinueParsing:
                 return S_OK;
             }
 
-            if (!wcsncmp(start, L"begin", end - start) && wstr::Eq(ExtractBracedBlock(), L"document")) {
+            if (!wcsncmp(start, L"begin", end - start) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
                 m_state = STATE_TEX_CONTENT;
             }
             goto ContinueParsing;

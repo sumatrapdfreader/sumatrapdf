@@ -407,7 +407,7 @@ bool LoadSettings() {
         str::ReplaceWithCopy(&gprefs->toolbar, gprefs->showToolbar ? "show" : "hide");
     } else {
         // keep the legacy bool consistent with the mode
-        gprefs->showToolbar = !str::EqI(gprefs->toolbar, "hide");
+        gprefs->showToolbar = !str::EqI(gprefs->toolbar, StrL("hide"));
     }
 
     if (SeqStrIndexIS(gToolbarPositionNames, gprefs->toolbarPosition) < 0) {

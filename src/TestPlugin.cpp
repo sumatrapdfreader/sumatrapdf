@@ -112,7 +112,7 @@ void TestPlugin(WStr cmdLine) {
     // find the position of -test-plugin and take args after it
     int pluginIdx = -1;
     for (int i = 0; i < len(argList); i++) {
-        if (str::EqI(argList[i], "-test-plugin")) {
+        if (str::EqI(argList[i], StrL("-test-plugin"))) {
             pluginIdx = i;
             break;
         }

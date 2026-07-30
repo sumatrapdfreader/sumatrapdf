@@ -169,7 +169,7 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
 
 // display name for entry i resolved to a full path in currDir
 static TempStr NavEntryPathTemp(NavFilesInFolderWnd* wnd, NavFileEntry& e) {
-    if (str::Eq(e.name, "..")) {
+    if (str::Eq(e.name, StrL(".."))) {
         return path::GetDirTemp(wnd->currDir);
     }
     Str name = e.name;
@@ -223,7 +223,7 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection() {
         return;
     }
     NavFileEntry& e = m->entries[idx];
-    if (str::Eq(e.name, "..")) {
+    if (str::Eq(e.name, StrL(".."))) {
         GoUp();
         return;
     }

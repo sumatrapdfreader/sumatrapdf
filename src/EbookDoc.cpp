@@ -205,7 +205,7 @@ TempStr NormalizeURLTemp(Str url, Str base) {
         } else if (str::StartsWith(Str(norm.s + src, norm.len - src), StrL("/./"))) {
             src++;
         } else if (str::StartsWith(Str(norm.s + src, norm.len - src), StrL("/../")) ||
-                   str::Eq(Str(norm.s + src, norm.len - src), "/..")) {
+                   str::Eq(Str(norm.s + src, norm.len - src), StrL("/.."))) {
             while (dst > 0 && norm.s[dst - 1] != '/') {
                 dst--;
             }
@@ -379,19 +379,19 @@ EpubDoc::~EpubDoc() {
 
 // TODO: switch to seqstring
 static bool isHtmlMediaType(Str mediatype) {
-    if (str::Eq(mediatype, "application/xhtml+xml")) {
+    if (str::Eq(mediatype, StrL("application/xhtml+xml"))) {
         return true;
     }
-    if (str::Eq(mediatype, "application/html+xml")) {
+    if (str::Eq(mediatype, StrL("application/html+xml"))) {
         return true;
     }
-    if (str::Eq(mediatype, "application/x-dtbncx+xml")) {
+    if (str::Eq(mediatype, StrL("application/x-dtbncx+xml"))) {
         return true;
     }
-    if (str::Eq(mediatype, "text/html")) {
+    if (str::Eq(mediatype, StrL("text/html"))) {
         return true;
     }
-    if (str::Eq(mediatype, "text/xml")) {
+    if (str::Eq(mediatype, StrL("text/xml"))) {
         return true;
     }
     return false;
@@ -399,7 +399,8 @@ static bool isHtmlMediaType(Str mediatype) {
 
 // TODO: switch to seqstring
 static bool isImageMediaType(Str mediatype) {
-    return str::Eq(mediatype, "image/png") || str::Eq(mediatype, "image/jpeg") || str::Eq(mediatype, "image/gif");
+    return str::Eq(mediatype, StrL("image/png")) || str::Eq(mediatype, StrL("image/jpeg")) ||
+           str::Eq(mediatype, StrL("image/gif"));
 }
 
 static void ParseMetadata(Str content, Props& props);
@@ -521,7 +522,8 @@ bool EpubDoc::Load() {
             TempStr htmlId = GumboAttributeValueTemp(node, "id");
             // EPUB 3 ToC
             TempStr properties = GumboAttributeValueTemp(node, "properties");
-            if (properties && str::Contains(properties, StrL("nav")) && str::Eq(mediaType, "application/xhtml+xml")) {
+            if (properties && str::Contains(properties, StrL("nav")) &&
+                str::Eq(mediaType, StrL("application/xhtml+xml"))) {
                 str::Free(tocPath);
                 tocPath = str::Join(contentPath, htmlPath);
             }
@@ -553,7 +555,7 @@ bool EpubDoc::Load() {
     }
     TempStr readingDir = GumboAttributeValueTemp(node, "page-progression-direction");
     if (readingDir) {
-        isRtlDoc = str::EqI(readingDir, "rtl");
+        isRtlDoc = str::EqI(readingDir, StrL("rtl"));
     }
 
     const GumboNode* spine = node;

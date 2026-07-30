@@ -445,9 +445,9 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
         if (!attrName || !attrVal) {
             continue;
         }
-        if (str::EqI(attrName->value, "Name")) {
+        if (str::EqI(attrName->value, StrL("Name"))) {
             name = str::DupTemp(attrVal->value);
-        } else if (str::EqI(attrName->value, "Local")) {
+        } else if (str::EqI(attrName->value, StrL("Local"))) {
             local = str::DupTemp(StripItsProtocol(Str(attrVal->value)));
         }
     }
@@ -488,15 +488,15 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
         if (!attrName || !attrVal) {
             continue;
         }
-        if (str::EqI(attrName->value, "Keyword")) {
+        if (str::EqI(attrName->value, StrL("Keyword"))) {
             keyword = Str(attrVal->value);
-        } else if (str::EqI(attrName->value, "Name")) {
+        } else if (str::EqI(attrName->value, StrL("Name"))) {
             name = Str(attrVal->value);
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword) {
                 keyword = name;
             }
-        } else if (str::EqI(attrName->value, "Local") && name) {
+        } else if (str::EqI(attrName->value, StrL("Local")) && name) {
             references.Append(name);
             references.Append(StripItsProtocol(Str(attrVal->value)));
         }
@@ -610,7 +610,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         }
         if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "object")) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
-            if (type && str::EqI(type->value, "text/sitemap")) {
+            if (type && str::EqI(type->value, StrL("text/sitemap"))) {
                 *hadOneInOut |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
                 continue; // don't recurse into the object's <param> children
             }

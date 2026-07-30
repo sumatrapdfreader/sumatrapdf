@@ -482,11 +482,11 @@ void EngineDump(const Flags& flags) {
     bool loadOnly = false, silent = false;
 
     for (int i = 1; i < nArgs; i++) {
-        if (str::Eq(argList[i], "-pwd") && i + 1 < nArgs && !password) {
+        if (str::Eq(argList[i], StrL("-pwd")) && i + 1 < nArgs && !password) {
             password = argList[++i];
-        } else if (str::Eq(argList[i], "-quick")) {
+        } else if (str::Eq(argList[i], StrL("-quick"))) {
             fullDump = false;
-        } else if (str::Eq(argList[i], "-render") && i + 1 < nArgs && !renderPath) {
+        } else if (str::Eq(argList[i], StrL("-render")) && i + 1 < nArgs && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
             if (i + 2 < nArgs && !str::IsNull(str::Parse(argList[i + 1], "%f%%%$", &zoom)) && zoom > 0.f) {
@@ -494,12 +494,12 @@ void EngineDump(const Flags& flags) {
                 i++;
             }
             renderPath = argList[++i];
-        } else if (str::Eq(argList[i], "-loadonly")) {
+        } else if (str::Eq(argList[i], StrL("-loadonly"))) {
             // -loadonly and -silent are only meant for profiling
             loadOnly = true;
-        } else if (str::Eq(argList[i], "-silent")) {
+        } else if (str::Eq(argList[i], StrL("-silent"))) {
             silent = true;
-        } else if (str::Eq(argList[i], "-full")) {
+        } else if (str::Eq(argList[i], StrL("-full"))) {
             // -full is for backward compatibility
             fullDump = true;
         } else if (!filePath) {

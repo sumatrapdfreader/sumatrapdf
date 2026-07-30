@@ -863,7 +863,7 @@ int GetCommandIdByName(Str cmdName) {
         return cmdId;
     }
     // backwards compatibility for old names
-    if (str::EqI(cmdName, "CmdFindMatch")) {
+    if (str::EqI(cmdName, StrL("CmdFindMatch"))) {
         return CmdFindToggleMatchCase;
     }
     auto curr = gFirstCustomCommand;
@@ -1105,10 +1105,10 @@ CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
 // -1 : not a known boolean string
 // returns 1 for a true value, 0 for a false value, -1 if not a recognized bool
 static int ParseBool(Str s) {
-    if (str::EqI(s, "1") || str::EqI(s, "true") || str::EqI(s, "yes") || str::EqI(s, "on")) {
+    if (str::EqI(s, StrL("1")) || str::EqI(s, StrL("true")) || str::EqI(s, StrL("yes")) || str::EqI(s, StrL("on"))) {
         return 1;
     }
-    if (str::EqI(s, "0") || str::EqI(s, "false") || str::EqI(s, "no") || str::EqI(s, "off")) {
+    if (str::EqI(s, StrL("0")) || str::EqI(s, StrL("false")) || str::EqI(s, StrL("no")) || str::EqI(s, StrL("off"))) {
         return 0;
     }
     return -1;

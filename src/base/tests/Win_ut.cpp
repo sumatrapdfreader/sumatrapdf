@@ -20,7 +20,7 @@ static void QuoteCmdLineArgTest() {
         StrVec args;
         ParseCmdLine(cmdLine, args);
         utassert(len(args) >= 1);
-        utassert(str::Eq(args[0], "exe"));
+        utassert(str::Eq(args[0], StrL("exe")));
         if (len(input) == 0) {
             // `exe ""` → only "exe" after empty-token skip in ParseCmdLine
             utassert(len(args) == 1);

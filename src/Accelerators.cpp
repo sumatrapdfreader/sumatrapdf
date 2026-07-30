@@ -504,8 +504,8 @@ bool ParseShortcutString(Str shortcut, ACCEL& accel) {
 
 static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
-    bool isEng = len(lang) == 0 || str::Eq(lang, "en");
-    bool isGerman = str::Eq(lang, "de");
+    bool isEng = len(lang) == 0 || str::Eq(lang, StrL("en"));
+    bool isGerman = str::Eq(lang, StrL("de"));
     bool isAscii = false;
 
     str::Builder str;

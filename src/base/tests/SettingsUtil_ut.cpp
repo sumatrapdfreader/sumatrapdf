@@ -156,13 +156,13 @@ Key = Value";
         str::Free(reserializedBs);
         data->internal++;
     }
-    utassert(str::Eq(data->color, "#abcdef"));
-    utassert(str::Eq(data->escapedString.s, "\t\r\n$ "));
-    utassert(str::Eq(data->escapedUtf8String.s, "\r\n[]\t"));
+    utassert(str::Eq(data->color, StrL("#abcdef")));
+    utassert(str::Eq(data->escapedString.s, StrL("\t\r\n$ ")));
+    utassert(str::Eq(data->escapedUtf8String.s, StrL("\r\n[]\t")));
     utassert(2 == len(*data->intArray) && 3 == (*data->intArray)[0]);
     utassert(3 == len(*data->strArray) && 0 == len(*data->emptyStrArray));
-    utassert(str::Eq((*data->strArray)[0], "with space") && str::Eq((*data->strArray)[1], "plain") &&
-             str::Eq((*data->strArray)[2], "quote:\""));
+    utassert(str::Eq((*data->strArray)[0], StrL("with space")) && str::Eq((*data->strArray)[1], StrL("plain")) &&
+             str::Eq((*data->strArray)[2], StrL("quote:\"")));
     utassert(2 == len(*data->sutStructItems));
     utassert(Point(-1, 5) == (*data->sutStructItems)[0]->compactPoint);
     utassert(2 == len(*(*data->sutStructItems)[0]->floatArray));
@@ -192,10 +192,10 @@ Key = Value";
     }
     utassert(data->boolean && str::Eq("0xffcc9933", data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
-    utassert(str::Eq(data->string, "String") && str::IsNull(data->nullString) &&
-             str::Eq(data->escapedString, "$\nstring "));
-    utassert(str::Eq(data->utf8String, "Utf-8 String") && str::IsNull(data->nullUtf8String) &&
-             str::Eq(data->escapedUtf8String, "$\nstring "));
+    utassert(str::Eq(data->string, StrL("String")) && str::IsNull(data->nullString) &&
+             str::Eq(data->escapedString, StrL("$\nstring ")));
+    utassert(str::Eq(data->utf8String, StrL("Utf-8 String")) && str::IsNull(data->nullUtf8String) &&
+             str::Eq(data->escapedUtf8String, StrL("$\nstring ")));
     utassert(data->intArray);
     utassert(3 == len(*data->intArray) && 1 == (*data->intArray)[0]);
     utassert(2 == (*data->intArray)[1] && -3 == (*data->intArray)[2]);
@@ -204,9 +204,9 @@ Key = Value";
     utassert(3 == len(*data->strArray));
     utassert(0 == len(*data->emptyStrArray));
     Vec<Str>* sa = data->strArray;
-    utassert(str::Eq((*sa)[0], "one"));
-    utassert(str::Eq((*sa)[1], "two three"));
-    utassert(str::Eq((*sa)[2], ""));
+    utassert(str::Eq((*sa)[0], StrL("one")));
+    utassert(str::Eq((*sa)[1], StrL("two three")));
+    utassert(str::Eq((*sa)[2], StrL("")));
 
     utassert(Point(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == len(*data->sutStructItems));

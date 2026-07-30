@@ -229,7 +229,7 @@ bool SupportsChangeNotifications(Str pathA) {
     if (!GetVolumeInformationW(root, nullptr, 0, nullptr, nullptr, nullptr, fsName, dimof(fsName))) {
         return false;
     }
-    return wstr::EqI(fsName, L"NTFS") || wstr::EqI(fsName, L"ReFS");
+    return wstr::EqI(fsName, WStrL(L"NTFS")) || wstr::EqI(fsName, WStrL(L"ReFS"));
 }
 
 bool IsAbsolute(Str path) {

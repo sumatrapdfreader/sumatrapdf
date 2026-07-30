@@ -645,7 +645,7 @@ bool AdjustVariableDriveLetter(Str& path) {
 bool IsUntrustedFile(Str filePath, Str fileURL) {
     TempStr protocol;
     if (fileURL && !str::IsNull(str::Parse(fileURL, "%S:", &protocol))) {
-        if (len(protocol) > 1 && !str::EqI(protocol, "file")) {
+        if (len(protocol) > 1 && !str::EqI(protocol, StrL("file"))) {
             return true;
         }
     }

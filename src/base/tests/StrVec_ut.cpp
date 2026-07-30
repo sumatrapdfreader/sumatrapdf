@@ -296,7 +296,7 @@ static void StrVecTest2_3(StrVec* v2) {
     utassert(v2->Find("", 5) == -1);
     utassert(v2->Find("B") == -1 && v2->FindI("B") == 1);
     TempStr joined = JoinTemp(v2, ";");
-    utassert(str::Eq(joined, "a;b;;c;"));
+    utassert(str::Eq(joined, StrL("a;b;;c;")));
     TestRemoveAt(v2);
 }
 
@@ -304,7 +304,7 @@ static void StrVecTest2_4(StrVec* v2) {
     int n = Split(v2, "a,b,,c,", ",", true);
     utassert(n == 3 && v2->Find("c") == 2);
     TempStr joined = JoinTemp(v2, ";");
-    utassert(str::Eq(joined, "a;b;c"));
+    utassert(str::Eq(joined, StrL("a;b;c")));
     StrVecCheckIter(v2, nullptr);
 
     TestRemoveAt(v2);
@@ -314,26 +314,26 @@ static void StrVecTest2_5(StrVec* v2) {
     int n = Split(v2, "a,b,,c,d", ",", true, 3);
     Str s = JoinTemp(v2, "__");
     utassert(n == 3);
-    utassert(str::Eq(s, "a__b__c,d"));
+    utassert(str::Eq(s, StrL("a__b__c,d")));
 
     v2->Reset();
     n = Split(v2, "a,b,,c,d", ",", false, 3);
     s = JoinTemp(v2, "__");
     utassert(n == 3);
     // TODO: fix me
-    utassert(str::Eq(s, "a__b__,c,d"));
+    utassert(str::Eq(s, StrL("a__b__,c,d")));
 
     v2->Reset();
     n = Split(v2, "a,b,,c,d", ",", true, 1);
     utassert(n == 1);
     s = v2->At(0);
-    utassert(str::Eq(s, "a,b,,c,d"));
+    utassert(str::Eq(s, StrL("a,b,,c,d")));
 
     // max 0 is turned into 1
     v2->Reset();
     n = Split(v2, "a,b,,c,d", ",", true, 0);
     s = v2->At(0);
-    utassert(str::Eq(s, "a,b,,c,d"));
+    utassert(str::Eq(s, StrL("a,b,,c,d")));
 }
 
 static void StrVecTest2() {
@@ -350,16 +350,16 @@ static void StrVecTest2() {
 
     {
         StrVec v2(v);
-        utassert(str::Eq(v2[2], "foo"));
+        utassert(str::Eq(v2[2], StrL("foo")));
         v2.Append("nobar");
-        utassert(str::Eq(v2[4], "nobar"));
+        utassert(str::Eq(v2[4], StrL("nobar")));
         v2 = v;
         utassert(len(v2) == 4);
         // copies should be same values but at different addresses
         utassert(v2[1].s != v[1].s);
         utassert(str::Eq(v2[1], v[1]));
         s = v2[2];
-        utassert(str::Eq(s, "foo"));
+        utassert(str::Eq(s, StrL("foo")));
         TestRemoveAt(&v2);
     }
 
@@ -392,8 +392,8 @@ static void StrVecTest3_1(StrVec* v) {
     v->Append("two");
     v->Append("One");
     utassert(len(*v) == 3);
-    utassert(str::Eq(v->At(0), "one"));
-    utassert(str::EqI(v->At(2), "one"));
+    utassert(str::Eq(v->At(0), StrL("one")));
+    utassert(str::EqI(v->At(2), StrL("one")));
     utassert(v->Find("One") == 2);
     utassert(v->FindI("One") == 0);
     utassert(v->Find("Two") == -1);
@@ -516,9 +516,9 @@ static void StrVecTest6_1(StrVec* v) {
     Split(v, " CmdCreateAnnotHighlight   #00ff00 openEdit", " ", true, 2);
     utassert(len(*v) == 2);
     Str s = v->At(0);
-    utassert(str::Eq(s, "CmdCreateAnnotHighlight"));
+    utassert(str::Eq(s, StrL("CmdCreateAnnotHighlight")));
     s = v->At(1);
-    utassert(str::Eq(s, "#00ff00 openEdit"));
+    utassert(str::Eq(s, StrL("#00ff00 openEdit")));
 }
 
 static void StrVecTest6() {

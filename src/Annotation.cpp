@@ -1476,7 +1476,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             if (pdf_annot_has_author(ctx, annot)) {
                 Str defAuthor = gGlobalPrefs->annotations.defaultAuthor;
                 // if "(none)" we don't set it
-                if (!str::Eq(defAuthor, "(none)")) {
+                if (!str::Eq(defAuthor, StrL("(none)"))) {
                     Str author = GetUserTemp();
                     if (!str::IsEmptyOrWhiteSpace(defAuthor)) {
                         author = defAuthor;
@@ -1645,7 +1645,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
 
     if (typ == AnnotationType::Text) {
         TempStr iconName = GetAnnotationTextIconTemp();
-        if (!str::EqI(iconName.s, "Note")) {
+        if (!str::EqI(iconName.s, StrL("Note"))) {
             SetIconName(res, iconName);
         }
     }

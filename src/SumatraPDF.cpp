@@ -4581,9 +4581,9 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
     // Prefer GetDefaultFileExt() where it distinguishes formats (xps, epub, …);
     // fall back to engine kind for the rest.
     auto ext = ctrl->GetDefaultFileExt();
-    if (str::EqI(ext, ".xps")) {
+    if (str::EqI(ext, StrL(".xps"))) {
         fileFilter.Append(_TRA("XPS documents"));
-    } else if (str::EqI(ext, ".epub")) {
+    } else if (str::EqI(ext, StrL(".epub"))) {
         // .epub can be handled by kindEngineMupdf
         fileFilter.Append(_TRA("EPUB ebooks"));
     } else if (type == kindEngineDjVu) {
@@ -6182,7 +6182,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
     auto* engine = tab->GetEngine();
     bool isImage = engine && engine->IsImageCollection();
     bool isCbx = engine && engine->kind == kindEngineComicBooks;
-    bool isEbook = engine && engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, ".pdf");
+    bool isEbook = engine && engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
 
     COLORREF curColor;
     bool isCheckered;
@@ -7451,7 +7451,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
     Str lang = trans::GetCurrentLangCode();
-    if (str::Eq(lang, "kr")) {
+    if (str::Eq(lang, StrL("kr"))) {
         lang = "ko";
     }
     TempStr contryCode = GetISO639LangCodeFromLangTemp(lang);
@@ -8050,7 +8050,7 @@ static bool IsManualDocHtmlPage(Str path) {
     if (len(path) == 0 || !str::EndsWithI(path, StrL(".html"))) {
         return false;
     }
-    if (str::EqI(path, "manual.shell.html")) {
+    if (str::EqI(path, StrL("manual.shell.html"))) {
         return false;
     }
     return true;

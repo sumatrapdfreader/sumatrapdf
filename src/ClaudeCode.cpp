@@ -320,7 +320,7 @@ struct ClaudeCodeProvider : AIChatProvider {
         if (!eventType) {
             return;
         }
-        if (str::Eq(eventType, "assistant")) {
+        if (str::Eq(eventType, StrL("assistant"))) {
             if (str::Contains(line, StrL("\"type\":\"text\""))) {
                 TempStr text = AIChatJsonStrTemp(line, "text");
                 if (len(text) > 0) {
@@ -353,7 +353,7 @@ struct ClaudeCodeProvider : AIChatProvider {
             AIChatPostUpdate(ctx, AIChatUpdateType::Tool, ToStr(desc));
             return;
         }
-        if (str::Eq(eventType, "user")) {
+        if (str::Eq(eventType, StrL("user"))) {
             if (str::Contains(line, StrL("\"tool_use_result\""))) {
                 TempStr fp = AIChatJsonStrTemp(line, "filePath");
                 if (fp) {
@@ -364,16 +364,17 @@ struct ClaudeCodeProvider : AIChatProvider {
             }
             return;
         }
-        if (str::Eq(eventType, "result")) {
+        if (str::Eq(eventType, StrL("result"))) {
             TempStr sub = AIChatJsonStrTemp(line, "subtype");
-            if (sub && str::Eq(sub, "error")) {
+            if (sub && str::Eq(sub, StrL("error"))) {
                 TempStr err = AIChatJsonStrTemp(line, "error");
                 if (err) {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Error, err);
                 }
             }
             // claude emits result before the process exits; don't wait for EOF
-            if (sub && (str::Eq(sub, "success") || str::Eq(sub, "completion") || str::Eq(sub, "error"))) {
+            if (sub &&
+                (str::Eq(sub, StrL("success")) || str::Eq(sub, StrL("completion")) || str::Eq(sub, StrL("error")))) {
                 AIChatPostUpdate(ctx, AIChatUpdateType::Flush, {});
                 AIChatPostUpdate(ctx, AIChatUpdateType::Finished, {});
             }

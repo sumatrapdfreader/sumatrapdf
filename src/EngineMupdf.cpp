@@ -2331,10 +2331,10 @@ static bool PageLabelsContainInternalPdgNames(StrVec* labels, int pageCount) {
 }
 
 static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
-    if (str::Eq(type, "D")) {
+    if (str::Eq(type, StrL("D"))) {
         return fmt("%s%d", prefix, pageNo);
     }
-    if (str::EqI(type, "R")) {
+    if (str::EqI(type, StrL("R"))) {
         // roman numbering style
         TempStr number = str::FormatRomanNumeralTemp(pageNo);
         if (len(type) > 0 && type.s[0] == 'r') {
@@ -2342,7 +2342,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         }
         return fmt("%s%s", prefix, number);
     }
-    if (str::EqI(type, "A")) {
+    if (str::EqI(type, StrL("A"))) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
         str::Builder number;
         number.AppendChar((char)('A' + ((pageNo - 1) % 26)));
@@ -2405,7 +2405,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
     }
 
     PageLabelInfo& pli = data[0];
-    if (n == 1 && pli.startAt == 1 && pli.countFrom == 1 && !pli.prefix && str::Eq(pli.type, "D")) {
+    if (n == 1 && pli.startAt == 1 && pli.countFrom == 1 && !pli.prefix && str::Eq(pli.type, StrL("D"))) {
         // this is the default case, no need for special treatment
         return nullptr;
     }
@@ -2923,7 +2923,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         return FinishLoading();
     }
 
-    if (str::EqI(ext, ".pdb")) {
+    if (str::EqI(ext, StrL(".pdb"))) {
         // synthesize a .html file from pdb file
         Str d = PalmDocToHTML(path);
         if (len(d) == 0) {
@@ -3018,7 +3018,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     float ldx = layoutA4DxPt;
     float ldy = layoutA4DyPt;
     TempStr ext = path::GetExtTemp(nameHint);
-    if (str::EqI(ext, ".epub")) {
+    if (str::EqI(ext, StrL(".epub"))) {
         ldx = layoutA5DxPt;
         ldy = layoutA5DyPt;
     }
@@ -3225,7 +3225,7 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     fz_try(ctx) {
         prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
         direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
-        if (str::Eq(Str(direction), "R2L")) {
+        if (str::Eq(Str(direction), StrL("R2L"))) {
             layout.r2l = true;
         }
     }
@@ -3278,25 +3278,25 @@ bool GetPdfViewerPrintPrefs(EngineBase* engineBase, PdfViewerPrintPrefs& prefs) 
             found = true;
         }
         const char* dup = pdf_to_name(ctx, pdf_dict_gets(ctx, vprefs, "Duplex"));
-        if (str::Eq(Str(dup), "Simplex")) {
+        if (str::Eq(Str(dup), StrL("Simplex"))) {
             prefs.hasDuplex = true;
             prefs.duplex = PdfDuplexPref::Simplex;
             found = true;
-        } else if (str::Eq(Str(dup), "DuplexFlipShortEdge")) {
+        } else if (str::Eq(Str(dup), StrL("DuplexFlipShortEdge"))) {
             prefs.hasDuplex = true;
             prefs.duplex = PdfDuplexPref::FlipShortEdge;
             found = true;
-        } else if (str::Eq(Str(dup), "DuplexFlipLongEdge")) {
+        } else if (str::Eq(Str(dup), StrL("DuplexFlipLongEdge"))) {
             prefs.hasDuplex = true;
             prefs.duplex = PdfDuplexPref::FlipLongEdge;
             found = true;
         }
         const char* ps = pdf_to_name(ctx, pdf_dict_gets(ctx, vprefs, "PrintScaling"));
-        if (str::Eq(Str(ps), "None")) {
+        if (str::Eq(Str(ps), StrL("None"))) {
             prefs.hasPrintScaling = true;
             prefs.printScalingNone = true;
             found = true;
-        } else if (str::Eq(Str(ps), "AppDefault")) {
+        } else if (str::Eq(Str(ps), StrL("AppDefault"))) {
             prefs.hasPrintScaling = true;
             prefs.printScalingNone = false;
             found = true;
@@ -5041,22 +5041,22 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             type = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype")));
             if (font2 != font) {
                 Str type2 = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype")));
-                if (str::Eq(type2, "CIDFontType0")) {
+                if (str::Eq(type2, StrL("CIDFontType0"))) {
                     type = "Type1 (CID)";
-                } else if (str::Eq(type2, "CIDFontType2")) {
+                } else if (str::Eq(type2, StrL("CIDFontType2"))) {
                     type = "TrueType (CID)";
                 }
             }
-            if (str::Eq(type, "Type3")) {
+            if (str::Eq(type, StrL("Type3"))) {
                 embedded = pdf_dict_gets(ctx, font2, "CharProcs") != nullptr;
             }
 
             encoding = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Encoding")));
-            if (str::Eq(encoding, "WinAnsiEncoding")) {
+            if (str::Eq(encoding, StrL("WinAnsiEncoding"))) {
                 encoding = "Ansi";
-            } else if (str::Eq(encoding, "MacRomanEncoding")) {
+            } else if (str::Eq(encoding, StrL("MacRomanEncoding"))) {
                 encoding = "Roman";
-            } else if (str::Eq(encoding, "MacExpertEncoding")) {
+            } else if (str::Eq(encoding, StrL("MacExpertEncoding"))) {
                 encoding = "Expert";
             }
         }

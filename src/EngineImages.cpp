@@ -1826,34 +1826,34 @@ void ComicInfoParser::Parse(Str xmlData) {
 // extract ComicBookInfo metadata
 // https://code.google.com/archive/p/comicbookinfo/
 bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
-    if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
+    if (json::Type::String == type && str::Eq(path, StrL("/ComicBookInfo/1.0/title"))) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
-    } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
+    } else if (json::Type::Number == type && str::Eq(path, StrL("/ComicBookInfo/1.0/publicationYear"))) {
         Str newDate = str::Dup(fmt("%s/%d", len(propDate) == 0 ? "" : propDate, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
-    } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
+    } else if (json::Type::Number == type && str::Eq(path, StrL("/ComicBookInfo/1.0/publicationMonth"))) {
         Str newDate = str::Dup(fmt("%d%s", ParseInt(value), len(propDate) == 0 ? "" : propDate));
         str::Free(propDate);
         propDate = newDate;
-    } else if (json::Type::String == type && str::Eq(path, "/appID")) {
+    } else if (json::Type::String == type && str::Eq(path, StrL("/appID"))) {
         str::Free(propCreator);
         propCreator = str::Dup(value);
-    } else if (json::Type::String == type && str::Eq(path, "/lastModified")) {
+    } else if (json::Type::String == type && str::Eq(path, StrL("/lastModified"))) {
         str::Free(propModDate);
         propModDate = str::Dup(value);
-    } else if (json::Type::String == type && str::Eq(path, "/X-summary")) {
+    } else if (json::Type::String == type && str::Eq(path, StrL("/X-summary"))) {
         str::Free(propSummary);
         propSummary = str::Dup(value);
     } else if (str::StartsWith(path, StrL("/ComicBookInfo/1.0/credits["))) {
         int idx = -1;
         Str prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
-            if (json::Type::String == type && str::Eq(prop, "person")) {
+            if (json::Type::String == type && str::Eq(prop, StrL("person"))) {
                 str::Free(propAuthorTmp);
                 propAuthorTmp = str::Dup(value);
-            } else if (json::Type::Bool == type && str::Eq(prop, "primary") && len(propAuthorTmp) > 0 &&
+            } else if (json::Type::Bool == type && str::Eq(prop, StrL("primary")) && len(propAuthorTmp) > 0 &&
                        !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp);
             }

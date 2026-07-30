@@ -54,7 +54,7 @@ static bool ParseGrokModelsOutput(Str output, StrVec& models) {
     while (str::NextLine(rest, line, rest)) {
         TempStr trimmed = str::DupTemp(line);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
-        if (str::Eq(trimmed, "Available models:")) {
+        if (str::Eq(trimmed, StrL("Available models:"))) {
             inModels = true;
             continue;
         }
@@ -208,7 +208,7 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
             continue;
         }
         TempStr fileName = ToUtf8Temp(fd.cFileName);
-        if (str::Eq(fileName, ".") || str::Eq(fileName, "..")) {
+        if (str::Eq(fileName, StrL(".")) || str::Eq(fileName, StrL(".."))) {
             continue;
         }
         if (!IsGrokSessionDirName(fileName)) {
@@ -430,17 +430,17 @@ struct GrokBuildProvider : AIChatProvider {
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
         TempStr eventType = AIChatJsonStrTemp(line, "type");
 
-        if (eventType && str::Eq(eventType, "thought")) {
+        if (eventType && str::Eq(eventType, StrL("thought"))) {
             TempStr thought = AIChatJsonStrTemp(line, "data");
             if (len(thought) > 0) {
                 GrokBuildLog("<<< thought", thought);
             }
-        } else if (eventType && str::Eq(eventType, "text")) {
+        } else if (eventType && str::Eq(eventType, StrL("text"))) {
             TempStr text = AIChatJsonStrTemp(line, "data");
             if (len(text) > 0) {
                 AIChatPostUpdate(ctx, AIChatUpdateType::Text, text);
             }
-        } else if (eventType && str::Eq(eventType, "error")) {
+        } else if (eventType && str::Eq(eventType, StrL("error"))) {
             TempStr err = AIChatJsonStrTemp(line, "data");
             if (!err) {
                 err = AIChatJsonStrTemp(line, "message");
@@ -448,7 +448,7 @@ struct GrokBuildProvider : AIChatProvider {
             if (err) {
                 AIChatPostUpdate(ctx, AIChatUpdateType::Error, err);
             }
-        } else if (eventType && str::Eq(eventType, "end")) {
+        } else if (eventType && str::Eq(eventType, StrL("end"))) {
             GrokBuildLog("<<< end", line);
             TempStr newSessionId = AIChatJsonStrTemp(line, "sessionId");
             if (newSessionId) {

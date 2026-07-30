@@ -2313,8 +2313,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     // draw comic books and single images on a black background
     // (without frame and shadow)
     bool paintOnBlackWithoutShadow = win->presentation || isImage;
-    bool isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, ".pdf");
-    bool isPdf = engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, ".pdf");
+    bool isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
+    bool isPdf = engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf"));
     COLORREF colDocBg;
     COLORREF colDocTxt = ThemeDocumentColors(colDocBg);
     if (isImage) {

@@ -591,7 +591,7 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
             // outside an edit control (issue #5815).
             HWND focused = ::GetFocus();
             TempStr cls = HwndGetClassName(focused);
-            if (str::EqI(cls, "Edit")) {
+            if (str::EqI(cls, StrL("Edit"))) {
                 return false;
             }
             // Ctrl+Delete (and plain Delete) remove the selected annotation
