@@ -164,7 +164,7 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
         // cmd is a non-NUL-terminated view into the tip line, so %s must get a
         // zero-terminated copy of exactly the remainder -- otherwise it reads
         // past the link, pulling in trailing chars like ")."
-        return fmt("https://www.sumatrapdfreader.org/docs/%s", Str(CStrTemp(cmd)));
+        return fmt("https://www.sumatrapdfreader.org/docs/%s", cmd);
     }
     // Cmd* - use as-is, will be resolved to command ID on click
     return str::DupTemp(cmd);
