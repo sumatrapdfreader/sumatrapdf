@@ -81,16 +81,16 @@
 #define __unused [[maybe_unused]]
 
 // C/C++ standard headers  we use often
-#include <ctype.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <wchar.h>
-#include <wctype.h>
+#include <cctype>
+#include <climits>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <cwchar>
+#include <cwctype>
 #include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
@@ -657,7 +657,7 @@ inline bool isOfKindHelper(Kind k1, Kind k2) {
     return k1 == k2;
 }
 
-#define IsOfKind(o, wantedKind) (o && isOfKindHelper(o->kind, wantedKind))
+#define IsOfKind(o, wantedKind) ((o) && isOfKindHelper((o)->kind, (wantedKind)))
 
 extern Kind kindNone; // unknown kind
 
@@ -690,7 +690,7 @@ class ExitScopeHelp {
 using func0Ptr = void (*)(void*);
 using funcVoidPtr = void (*)();
 
-#define kFuncNoArg (void*)-1
+#define kFuncNoArg ((void*)(-1))
 
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
