@@ -281,13 +281,17 @@ ContinueParsing:
             }
             m_pPtr++;
 
-            if (!wcsncmp(start, L"author", end - start) || !wcsncmp(start, L"title", end - start)) {
-                chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
-                return S_OK;
-            }
+            {
+                int cmdLen = (int)(end - start);
+                WStr cmd(start, cmdLen);
+                if (wstr::EqN(cmd, WStrL(L"author"), cmdLen) || wstr::EqN(cmd, WStrL(L"title"), cmdLen)) {
+                    chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
+                    return S_OK;
+                }
 
-            if (!wcsncmp(start, L"begin", end - start) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
-                m_state = STATE_TEX_CONTENT;
+                if (wstr::EqN(cmd, WStrL(L"begin"), cmdLen) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
+                    m_state = STATE_TEX_CONTENT;
+                }
             }
             goto ContinueParsing;
         case STATE_TEX_CONTENT:
