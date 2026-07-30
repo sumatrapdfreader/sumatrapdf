@@ -1373,7 +1373,7 @@ struct SetHotkeyWnd : Wnd {
     void DoSet();
     void DoRemove();
     void OnCancel();
-    void CleanupHook();
+    static void CleanupHook();
     void ScheduleDelete();
 };
 

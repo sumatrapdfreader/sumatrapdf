@@ -2032,11 +2032,12 @@ bool EngineCbx::FinishLoading() {
         Str metadata = Str(metadataFi->data, metadataFi->fileSizeUncompressed);
         cip.Parse(metadata);
     }
+#if 0
     Str comment = cbxArchive->GetComment();
     if (comment) {
         json::Parse(comment, &cip);
     }
-
+#endif
     int nFiles = len(pageFiles);
     if (nFiles == 0) {
         delete cbxArchive;

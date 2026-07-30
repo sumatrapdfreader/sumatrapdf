@@ -321,10 +321,6 @@ void* Arena::Alloc(int size) {
     return Push((u64)size, 8, false);
 }
 
-void Arena::Free(void* ptr) {
-    (void)ptr;
-}
-
 void Arena::Reset() {
     PopTo(0);
     nAllocsSinceReset = 0;
@@ -382,14 +378,9 @@ void* Alloc(Arena* arena, int size) {
 }
 
 void Free(Arena* arena, void* mem) {
-    if (!mem) {
-        return;
-    }
-    if (!arena) {
-        free(mem);
-        return;
-    }
-    arena->Free(mem);
+    // Arena has no free
+    if (arena) return;
+    free(mem);
 }
 
 void* Alloc(Arena* arena, size_t size) {

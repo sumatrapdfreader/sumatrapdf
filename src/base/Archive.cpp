@@ -443,11 +443,6 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
     return {};
 }
 
-Str Archive::GetComment() {
-    // libarchive doesn't support zip global comments
-    return {};
-}
-
 ///// format specific handling /////
 
 // Open a file on disk. Archive::Open(path) detects RAR via a

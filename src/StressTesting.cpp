@@ -445,7 +445,7 @@ again:
         return path;
     }
     path = queue.PopFront();
-    if (queue.IsSentinel(path)) {
+    if (StrQueue::IsSentinel(path)) {
         return {};
     }
     path = str::Dup(path);

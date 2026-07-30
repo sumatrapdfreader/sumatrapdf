@@ -75,8 +75,6 @@ struct Archive {
     FileInfo* GetFileDataById(int fileId);
     Str GetFileDataPartById(int fileId, int sizeHint);
 
-    Str GetComment();
-
     // password for encrypted archives (owned by this object)
     Str password;
 
