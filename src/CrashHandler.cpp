@@ -280,6 +280,10 @@ static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
         lzma::FileInfo* fi = &(archive.files[i]);
         Str name = fi->name;
         logf("ExtractSymbols: file %d is '%s'\n", i, name);
+        if (!name || str::Eq(name, StrL(".")) || str::Eq(name, StrL("..")) || str::Contains(name, StrL("/")) ||
+            str::Contains(name, StrL("\\")) || str::Contains(name, StrL(":"))) {
+            return false;
+        }
         u8* uncompressed = GetFileDataByIdx(&archive, i, a);
         if (!uncompressed) {
             return false;
