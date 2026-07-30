@@ -4924,11 +4924,12 @@ void EngineMupdf::ReleaseTextExtractionThreadContext() {
     ReleasePerThreadContext(this);
 }
 
-static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
+static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList,
+                              int depth) {
     // dedupe/cycle-protect via resList, not pdf_mark_obj: marks mutate shared
     // pdf_obj flags, which races with other threads using marks (and would
     // leave objects marked while locks are dropped between pages)
-    if (!res || resList.Contains(res)) {
+    if (!res || depth >= 64 || resList.Contains(res)) {
         return;
     }
     resList.Append(res);
@@ -4945,7 +4946,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     for (int k = 0; k < pdf_dict_len(ctx, xobjs); k++) {
         pdf_obj* xobj = pdf_dict_get_val(ctx, xobjs, k);
         pdf_obj* xres = pdf_dict_gets(ctx, xobj, "Resources");
-        pdf_extract_fonts(ctx, xres, fontList, resList);
+        pdf_extract_fonts(ctx, xres, fontList, resList, depth + 1);
     }
 }
 
@@ -4977,7 +4978,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         fz_try(ctx) {
             pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, i);
             pdf_obj* resources = pdf_dict_gets(ctx, pageObj, "Resources");
-            pdf_extract_fonts(ctx, resources, fontList, resList);
+            pdf_extract_fonts(ctx, resources, fontList, resList, 0);
             // fonts used by annotation appearance streams
             pdf_obj* annots = pdf_dict_gets(ctx, pageObj, "Annots");
             int nAnnots = pdf_array_len(ctx, annots);
@@ -4988,12 +4989,12 @@ TempStr EngineMupdf::ExtractFontListTemp() {
                     continue;
                 }
                 if (pdf_is_stream(ctx, ap)) {
-                    pdf_extract_fonts(ctx, pdf_dict_gets(ctx, ap, "Resources"), fontList, resList);
+                    pdf_extract_fonts(ctx, pdf_dict_gets(ctx, ap, "Resources"), fontList, resList, 0);
                 } else {
                     // appearance state sub-dictionary
                     for (int j = 0; j < pdf_dict_len(ctx, ap); j++) {
                         pdf_obj* state = pdf_dict_get_val(ctx, ap, j);
-                        pdf_extract_fonts(ctx, pdf_dict_gets(ctx, state, "Resources"), fontList, resList);
+                        pdf_extract_fonts(ctx, pdf_dict_gets(ctx, state, "Resources"), fontList, resList, 0);
                     }
                 }
             }
