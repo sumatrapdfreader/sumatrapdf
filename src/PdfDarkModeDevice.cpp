@@ -135,7 +135,7 @@ static void dm_fill_shade(fz_context* ctx, fz_device* dev, fz_shade* shd, fz_mat
     int w = ibounds.x1 - ibounds.x0;
     int h = ibounds.y1 - ibounds.y0;
     static constexpr int kMaxShadeDim = 2048;
-    static constexpr i64 kMaxShadePixels = 2048 * 2048;
+    static constexpr i64 kMaxShadePixels = 2048LL * 2048;
     if (w <= 0 || h <= 0 || w > kMaxShadeDim || h > kMaxShadeDim || (i64)w * h > kMaxShadePixels) {
         PdfDarkModeRecordShadeForward();
         fz_fill_shade(ctx, d->inner, shd, ctm, alpha, color_params);

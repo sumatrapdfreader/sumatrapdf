@@ -401,7 +401,7 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
             }
             s += n;
         }
-        s += pix->stride - (pix->w * n);
+        s += pix->stride - ((size_t)pix->w * n);
     }
 }
 

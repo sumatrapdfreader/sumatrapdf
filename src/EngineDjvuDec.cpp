@@ -28,7 +28,7 @@ Kind kindEngineDjVu = "engineDjVu";
 // of failing with an error code.
 bool gMemoryMapLargeFiles = true;
 
-constexpr i64 kMemoryMapMinFileSize = 128 * 1024 * 1024;
+constexpr i64 kMemoryMapMinFileSize = 128LL * 1024 * 1024;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
@@ -232,7 +232,7 @@ class EngineDjvuDec : public EngineBase {
 
 // Cap decoder page-local cache (Sjbz/IW44/bg) so multi-GB books don't keep
 // every visited page. Tuned for interactive re-paint of a few recent pages.
-constexpr size_t kDjvuPageCacheMaxBytes = 64 * 1024 * 1024;
+constexpr size_t kDjvuPageCacheMaxBytes = 64ull * 1024 * 1024;
 constexpr int kDjvuPageCacheMaxPages = 32;
 
 EngineDjvuDec::EngineDjvuDec() {

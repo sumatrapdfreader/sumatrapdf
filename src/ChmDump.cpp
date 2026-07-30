@@ -65,7 +65,7 @@ static Str ChmEntryClass(const chm_entry* e) {
 
 static void FormatSha1Hex(const u8 digest[20], char out[41]) {
     for (int i = 0; i < 20; i++) {
-        sprintf_s(&out[i * 2], 3, "%02x", digest[i]);
+        sprintf_s(&out[(size_t)i * 2], 3, "%02x", digest[i]);
     }
     out[40] = '\0';
 }
@@ -83,7 +83,7 @@ static bool ReadChmObject(chm_ctx* ctx, chm_entry* e, ChmObjectReadResult* resul
         result->sha1Valid = true;
         return true;
     }
-    if (e->length > 512 * 1024 * 1024) {
+    if (e->length > 512ULL * 1024 * 1024) {
         return false; // sanity cap for the dump tool
     }
 

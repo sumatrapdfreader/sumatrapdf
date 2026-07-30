@@ -58,7 +58,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     // convert BGR to RGB without padding (fz_new_pixmap_with_data handles stride)
     u8 r, b;
     for (int y = 0; y < h; y++) {
-        u8* d = data + (y * stride);
+        u8* d = data + ((size_t)y * stride);
         for (int x = 0; x < w; x++) {
             b = d[0];
             // gree in the middle, stays in place

@@ -195,7 +195,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     str::Free(d);
     char id[7];
     for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetSumatraBuildSpecificDirTemp
-        sprintf_s(&id[2 * i], 3, "%02x", sha1[i]);
+        sprintf_s(&id[(size_t)2 * i], 3, "%02x", sha1[i]);
     }
     TempStr local = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!local) {

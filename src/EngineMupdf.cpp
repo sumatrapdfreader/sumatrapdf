@@ -598,7 +598,7 @@ static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
-constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
+constexpr i64 kMaxMemoryFileSize = 32LL * 1024 * 1024;
 
 static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
     fz_stream* stm = nullptr;

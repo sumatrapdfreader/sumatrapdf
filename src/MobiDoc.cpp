@@ -214,7 +214,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
         return false;
     }
     code &= ((1 << (codeLength)) - 1);
-    u16 offset = UInt16BE(dicts[dict] + (code * 2));
+    u16 offset = UInt16BE(dicts[dict] + ((size_t)code * 2));
 
     if ((u32)offset + 2 > dictSize[dict]) {
         logf("invalid offset\n");

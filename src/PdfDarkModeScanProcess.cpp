@@ -45,7 +45,7 @@ static void ReadPixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* 
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
+    unsigned char* px = pix->samples + ((size_t)y * pix->stride) + ((size_t)x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
@@ -194,7 +194,7 @@ static void WritePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float 
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
+    unsigned char* px = pix->samples + ((size_t)y * pix->stride) + ((size_t)x * n);
     float out[FZ_MAX_COLORS] = {r, g, b};
     float back[FZ_MAX_COLORS] = {};
     fz_convert_color(ctx, rgb, out, cs, back, cs, fz_default_color_params);

@@ -359,7 +359,7 @@ void TextRenderGdiplus::Draw(Str s, const RectF bb, bool isRtl) {
 void TextRenderHdc::Lock() {
     int dx = bmi.bmiHeader.biWidth;
     int dy = bmi.bmiHeader.biHeight;
-    ZeroMemory(bmpData, dx * dy * 4);
+    ZeroMemory(bmpData, (size_t)dx * dy * 4);
 }
 
 void TextRenderHdc::Unlock() {

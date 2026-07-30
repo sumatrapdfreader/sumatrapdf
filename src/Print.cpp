@@ -283,7 +283,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr);
         out.Append("  resolutions:");
         for (DWORD j = 0; j < nRes; j++) {
-            LONG xDpi = resPairs.Get()[j * 2];
+            LONG xDpi = resPairs.Get()[(size_t)j * 2];
             LONG yDpi = resPairs.Get()[(j * 2) + 1];
             out.Append(fmt(" %dx%d", (int)xDpi, (int)yDpi));
         }
@@ -491,7 +491,7 @@ Printer* NewPrinter(Str printerName) {
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
         for (int i = 0; i < (int)n; i++) {
-            TempStr name = ToUtf8Temp(WStr(paperNamesSeq + (i * paperNameSize)));
+            TempStr name = ToUtf8Temp(WStr(paperNamesSeq + ((size_t)i * paperNameSize)));
             printer->paperNames.Append(name);
         }
         free(paperNamesSeq);
@@ -513,7 +513,7 @@ Printer* NewPrinter(Str printerName) {
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             for (int i = 0; i < (int)n; i++) {
-                TempStr name = ToUtf8Temp(WStr(binNamesSeq + (i * binNameSize)));
+                TempStr name = ToUtf8Temp(WStr(binNamesSeq + ((size_t)i * binNameSize)));
                 printer->binNames.Append(name);
             }
             free(binNamesSeq);
@@ -602,7 +602,7 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
 
     // cap peak bitmap memory per band (RGBA pixels); 16 MB keeps memory small
     // while keeping the band/blit count low for normal pages
-    const i64 kMaxBandBytes = 16 * 1024 * 1024;
+    const i64 kMaxBandBytes = 16LL * 1024 * 1024;
     int bandH = (int)std::max((i64)1, kMaxBandBytes / ((i64)fullW * 4));
     bandH = std::min(bandH, fullH);
 

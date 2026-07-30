@@ -2281,7 +2281,7 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* f
 
     // eagerly decompress small archives up front so we don't have to
     // re-open the file for each page's image data.
-    constexpr i64 kMaxEagerLoadSize = 32 * 1024 * 1024;
+    constexpr i64 kMaxEagerLoadSize = 32LL * 1024 * 1024;
     i64 fileSize = file::GetSize(openPath);
     bool eagerLoad = fileSize > 0 && fileSize < kMaxEagerLoadSize;
 

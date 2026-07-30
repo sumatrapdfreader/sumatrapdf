@@ -131,7 +131,7 @@ static u32* OffsetsForString(const StrVecPage* p, int idx) {
     ReportIf(idx < 0 || idx > p->nStrings);
     u8* off = (u8*)p;
     off += kStrVecPageHdrSize;
-    off += idx * cbIndexSize(p->dataSize);
+    off += (size_t)idx * cbIndexSize(p->dataSize);
     return (u32*)off;
 }
 

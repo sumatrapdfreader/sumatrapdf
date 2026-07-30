@@ -2581,7 +2581,7 @@ COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
     ReportIf(x < 0 || x >= bitmap->size.dx);
     ReportIf(y < 0 || y >= bitmap->size.dy);
     u8* pixels = bitmap->pixels;
-    u8* pixel = pixels + (y * bitmap->nBytesPerRow) + (x * bitmap->nBytesPerPixel);
+    u8* pixel = pixels + ((size_t)y * bitmap->nBytesPerRow) + ((size_t)x * bitmap->nBytesPerPixel);
     // color order in DIB is blue-green-red-alpha
     COLORREF c = 0;
     if (3 == bitmap->nBytesPerPixel) {
@@ -2748,7 +2748,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLO
         u8* bmpData = (u8*)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
             for (int x = 0; x < size.dx; x++) {
-                u8* px = bmpData + (y * info.dsBm.bmWidthBytes) + (x * 3);
+                u8* px = bmpData + ((size_t)y * info.dsBm.bmWidthBytes) + ((size_t)x * 3);
                 u8 b = px[0];
                 u8 g = px[1];
                 u8 r = px[2];

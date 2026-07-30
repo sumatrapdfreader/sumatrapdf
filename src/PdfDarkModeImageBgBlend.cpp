@@ -48,7 +48,7 @@ static void ReadPixmapPixel(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
+    unsigned char* px = pix->samples + ((size_t)y * pix->stride) + ((size_t)x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
@@ -313,7 +313,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
 
                 float r, g, b, a;
                 ReadPixmapPixel(ctx, src, x, y, &r, &g, &b, &a);
-                unsigned char* px = dst->samples + (y * dst->stride) + (x * n);
+                unsigned char* px = dst->samples + ((size_t)y * dst->stride) + ((size_t)x * n);
 
                 if (fgConf < 0.04f || a < 0.02f) {
                     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {

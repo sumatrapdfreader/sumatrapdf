@@ -12,7 +12,7 @@ extern "C" {
 
 // Engine-level Smart Dark caches (Phase 6). Access only under EngineMupdf::renderLock.
 
-static constexpr i64 kMaxProcessedCacheBytes = 64 * 1024 * 1024;
+static constexpr i64 kMaxProcessedCacheBytes = 64LL * 1024 * 1024;
 static constexpr int kMaxFeatureEntries = 256;
 static constexpr int kMaxProcessedEntries = 48;
 

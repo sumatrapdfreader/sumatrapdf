@@ -1443,7 +1443,7 @@ static void DeleteStaleCbxCacheFiles() {
         }
         bool ok = file::Delete(de->filePath);
         logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath,
-             (long long)(ageSec / (24 * 60 * 60)), (int)ok);
+             (long long)(ageSec / (24LL * 60 * 60)), (int)ok);
     }
 }
 
@@ -1585,11 +1585,11 @@ static void DeleteStaleFilesAsync() {
             }
             if (ageSec < kMaxAgeSec) {
                 logf("DeleteStaleFilesAsync: skipping '%s' (age %lld days)\n", de->filePath,
-                     (long long)(ageSec / (24 * 60 * 60)));
+                     (long long)(ageSec / (24LL * 60 * 60)));
                 continue;
             }
             logf("DeleteStaleFilesAsync: deleting stale build dir '%s' (age %lld days)\n", de->filePath,
-                 (long long)(ageSec / (24 * 60 * 60)));
+                 (long long)(ageSec / (24LL * 60 * 60)));
         } else {
             logf("DeleteStaleFilesAsync: deleting legacy dir '%s'\n", de->filePath);
         }

@@ -1259,7 +1259,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
         int w = destDx;
         int h = dy;
         int n = 4;
-        dstStride = destDx * n;
+        dstStride = (ptrdiff_t)destDx * n;
         int imgSize = (int)dstStride * h;
         int bitsCount = n * 8;
 

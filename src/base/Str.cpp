@@ -1409,7 +1409,7 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
         return s->els;
     }
 
-    size_t newCap = s->cap * 2;
+    size_t newCap = (size_t)s->cap * 2;
     if (needed > newCap) {
         newCap = needed;
     }
@@ -1613,7 +1613,7 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
         return s->els;
     }
 
-    size_t newCap = s->cap * 2;
+    size_t newCap = (size_t)s->cap * 2;
     if (needed > newCap) {
         newCap = needed;
     }

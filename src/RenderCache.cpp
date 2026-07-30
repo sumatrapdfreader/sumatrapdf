@@ -1483,7 +1483,7 @@ static TempStr FormatCacheBytesTemp(i64 bytes) {
     if (bytes < 1024) {
         return fmt("%d B", (int)bytes);
     }
-    if (bytes < 1024 * 1024) {
+    if (bytes < 1024LL * 1024) {
         return fmt("%.1f KB", bytes / 1024.0);
     }
     return fmt("%.2f MB", bytes / (1024.0 * 1024.0));

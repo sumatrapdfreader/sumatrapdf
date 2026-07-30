@@ -118,7 +118,7 @@ class WindowsDllInterceptor {
         mMaxHooks = nhooks + (hooksPerPage % nhooks);
         mCurHooks = 0;
 
-        mHookPage = (byteptr_t)VirtualAllocEx(GetCurrentProcess(), nullptr, mMaxHooks * kHookSize,
+        mHookPage = (byteptr_t)VirtualAllocEx(GetCurrentProcess(), nullptr, (SIZE_T)mMaxHooks * kHookSize,
                                               MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
         if (!mHookPage) {
@@ -131,7 +131,7 @@ class WindowsDllInterceptor {
         if (!mModule) return;
 
         DWORD op;
-        VirtualProtectEx(GetCurrentProcess(), mHookPage, mMaxHooks * kHookSize, PAGE_EXECUTE_READ, &op);
+        VirtualProtectEx(GetCurrentProcess(), mHookPage, (SIZE_T)mMaxHooks * kHookSize, PAGE_EXECUTE_READ, &op);
 
         mModule = 0;
     }
@@ -402,7 +402,7 @@ class WindowsDllInterceptor {
     byteptr_t FindTrampolineSpace() {
         if (mCurHooks >= mMaxHooks) return 0;
 
-        byteptr_t p = mHookPage + mCurHooks * kHookSize;
+        byteptr_t p = mHookPage + (size_t)mCurHooks * kHookSize;
 
         mCurHooks++;
 

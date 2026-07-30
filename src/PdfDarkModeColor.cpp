@@ -153,7 +153,7 @@ void PdfDarkModeClearPixmapToThemeBackground(fz_context* ctx, fz_pixmap* pix, co
     for (int y = 0; y < h; y++) {
         unsigned char* row = pix->samples + ((size_t)y * pix->stride);
         for (int x = 0; x < w; x++) {
-            unsigned char* p = row + (x * n);
+            unsigned char* p = row + ((size_t)x * n);
             p[0] = rb;
             p[1] = gb;
             p[2] = bb;

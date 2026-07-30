@@ -999,8 +999,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     }
     for (int y = 0; y < h; y++) {
         // left edge
-        DWORD px = tempPixels[y * w];
-        pixels[y * w] = (255u << 24) | (px & 0xFFFFFF);
+        DWORD px = tempPixels[(size_t)y * w];
+        pixels[(size_t)y * w] = (255u << 24) | (px & 0xFFFFFF);
         // right edge
         px = tempPixels[(y * w) + w - 1];
         pixels[(y * w) + w - 1] = (255u << 24) | (px & 0xFFFFFF);

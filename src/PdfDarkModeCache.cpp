@@ -80,9 +80,9 @@ static void dm_transform_pixmap_rgb(fz_context* ctx, fz_pixmap* pix, const DarkM
     int w = pix->w;
     int h = pix->h;
     for (int y = 0; y < h; y++) {
-        unsigned char* row = pix->samples + (y * stride);
+        unsigned char* row = pix->samples + ((size_t)y * stride);
         for (int x = 0; x < w; x++) {
-            unsigned char* px = row + (x * n);
+            unsigned char* px = row + ((size_t)x * n);
             float conv[FZ_MAX_COLORS] = {};
             float srcRgb[FZ_MAX_COLORS] = {};
             for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {

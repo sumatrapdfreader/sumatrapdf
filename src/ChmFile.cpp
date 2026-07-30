@@ -69,7 +69,7 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
     if (!e) {
         return {};
     }
-    if (e->length > 128 * 1024 * 1024) {
+    if (e->length > 128ULL * 1024 * 1024) {
         // limit to 128 MB
         return {};
     }

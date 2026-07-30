@@ -27,7 +27,7 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int stride = (int)pix->stride;
-    unsigned char* px = pix->samples + (y * stride) + (x * n);
+    unsigned char* px = pix->samples + ((size_t)y * stride) + ((size_t)x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     int components = fz_colorspace_n(ctx, cs);

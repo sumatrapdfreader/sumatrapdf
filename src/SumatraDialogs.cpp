@@ -1327,12 +1327,12 @@ static void PaintColorArea(HDC hdc, RECT* rc) {
     }
     for (int y = 0; y < h; y++) {
         float val = 1.0f - ((float)y / (float)h);
-        u8* row = bits + (y * stride);
+        u8* row = bits + ((size_t)y * stride);
         for (int x = 0; x < w; x++) {
             float hue = (float)x / (float)w * 360.0f;
             u8 r, g, b;
             HsvToRgb(hue, 1.0f, val, r, g, b);
-            row[x * 3] = b;
+            row[(size_t)x * 3] = b;
             row[(x * 3) + 1] = g;
             row[(x * 3) + 2] = r;
         }

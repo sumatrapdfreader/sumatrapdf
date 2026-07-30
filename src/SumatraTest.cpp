@@ -297,7 +297,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 if (e->path && str::Eq(e->path, "/payload")) {
                     payloadEntry = e;
                 }
-                if (e->length == 0 || e->length > 128 * 1024 * 1024) {
+                if (e->length == 0 || e->length > 128ULL * 1024 * 1024) {
                     continue;
                 }
                 u8* buf = AllocArray<u8>((int)e->length + 1);
@@ -314,7 +314,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 free(buf);
             }
 
-            if (payloadEntry && payloadEntry->length > 0 && payloadEntry->length <= 128 * 1024 * 1024) {
+            if (payloadEntry && payloadEntry->length > 0 && payloadEntry->length <= 128ULL * 1024 * 1024) {
                 // chm_read_entry reads the whole entry, so the buffer must be
                 // at least entry->length bytes; this decompresses /payload and
                 // lets ASan catch the LZX overflow (issue-chm-lzx)

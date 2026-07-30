@@ -695,8 +695,8 @@ static HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge) {
     auto* dst = (BYTE*)bits;
     auto* srcRow = (const BYTE*)bd.Scan0;
     for (int y = 0; y < dh; y++) {
-        auto* s = srcRow + (y * bd.Stride);
-        auto* d = dst + (y * dw * 4);
+        auto* s = srcRow + ((size_t)y * bd.Stride);
+        auto* d = dst + ((size_t)y * dw * 4);
         for (int x = 0; x < dw; x++) {
             // GDI+ 32bppARGB is B,G,R,A in memory on Windows; full opacity
             d[0] = s[0];
