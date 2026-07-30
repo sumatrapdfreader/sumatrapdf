@@ -2280,13 +2280,9 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* f
     // still surface `path` as the logical file path.
     Str openPath = realPath ? realPath : path;
 
-    // eagerly decompress small archives up front so we don't have to
-    // re-open the file for each page's image data.
-    constexpr i64 kMaxEagerLoadSize = 32LL * 1024 * 1024;
-    i64 fileSize = file::GetSize(openPath);
-    bool eagerLoad = fileSize > 0 && fileSize < kMaxEagerLoadSize;
-
-    if (!archive->Open(openPath, eagerLoad, hintType, gArchiveProgressCb)) {
+    // The compressed file size does not bound the memory needed to expand it.
+    // Load individual pages on demand instead.
+    if (!archive->Open(openPath, /*eagerLoad=*/false, hintType, gArchiveProgressCb)) {
         delete archive;
         return nullptr;
     }
