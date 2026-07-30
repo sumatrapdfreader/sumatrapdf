@@ -464,10 +464,10 @@ static bool ParseSafeAnchorOpen(Str html, Str* idOut) {
     str::TrimWSInPlace(html, str::TrimOpt::Both);
     Str prefix = StrL("<a id=\"");
     Str suffix = StrL("\">");
-    if (!str::StartsWith(html, prefix) || !str::EndsWith(html, suffix)) {
+    if (!str::TrimPrefix(html, prefix) || !str::EndsWith(html, suffix)) {
         return false;
     }
-    Str id(html.s + prefix.len, html.len - prefix.len - suffix.len);
+    Str id(html.s, html.len - suffix.len);
     if (!IsSafeAnchorId(id)) {
         return false;
     }
@@ -479,10 +479,10 @@ static bool ParseSafeEmptyAnchor(Str html, Str* idOut) {
     str::TrimWSInPlace(html, str::TrimOpt::Both);
     Str prefix = StrL("<a id=\"");
     Str suffix = StrL("\"></a>");
-    if (!str::StartsWith(html, prefix) || !str::EndsWith(html, suffix)) {
+    if (!str::TrimPrefix(html, prefix) || !str::EndsWith(html, suffix)) {
         return false;
     }
-    Str id(html.s + prefix.len, html.len - prefix.len - suffix.len);
+    Str id(html.s, html.len - suffix.len);
     if (!IsSafeAnchorId(id)) {
         return false;
     }

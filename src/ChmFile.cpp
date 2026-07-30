@@ -48,7 +48,7 @@ static chm_entry* ChmResolveObject(const ChmFile* chm, Str fileName) {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp(StrL("/"), fileName);
     } else if (str::StartsWith(fileName, "///")) {
-        fileName = Str(fileName.s + 2, fileName.len - 2);
+        str::TrimPrefix(fileName, StrL("//"));
     }
 
     chm_entry* e = ChmLookupPath(chm, fileName);
@@ -88,8 +88,8 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
 }
 
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
-    if (str::StartsWith(s, UTF8_BOM)) {
-        return str::DupTemp(Str(s.s + 3, s.len - 3));
+    if (str::TrimPrefix(s, UTF8_BOM)) {
+        return str::DupTemp(s);
     }
     if (CP_UTF8 == codepage) {
         return str::DupTemp(s);

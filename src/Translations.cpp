@@ -71,7 +71,6 @@ static void FreeTranslations() {
 
 static void ParseTranslationsTxt(Str d, Str langCode) {
     TempStr langCodePref = str::JoinTemp(langCode, StrL(":"));
-    int nLangCode = langCodePref.len;
 
     StrVec lines;
     Split(&lines, d, "\n", true);
@@ -101,8 +100,8 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
         while (i < nLines && lines[i] && lines[i].s[0] != ':') {
             if (!trans) {
                 Str line = lines[i];
-                if (str::StartsWith(line, langCodePref)) {
-                    trans = Str(line.s + nLangCode, line.len - nLangCode);
+                if (str::TrimPrefix(line, langCodePref)) {
+                    trans = line;
                 }
             }
             i++;

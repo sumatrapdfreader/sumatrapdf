@@ -634,8 +634,9 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     FileState* fileFromHistory = gFileHistory.FindByPath(path);
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {
         TempStr fingerprint = str::MemToHexTemp(Str((const char*)fileDigest, 16));
-        *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint);
-        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey.s + 32, Str((char*)decryptionKeyOut, 32))) {
+        Str decryptionKey = fileFromHistory->decryptionKey;
+        *saveKey = str::TrimPrefix(decryptionKey, fingerprint);
+        if (*saveKey && str::HexToMem(decryptionKey, Str((char*)decryptionKeyOut, 32))) {
             return {};
         }
     }
@@ -8202,11 +8203,11 @@ void LaunchDocumentation(Str docURI) {
 // the home-page and notification tip links.
 bool MaybeLaunchDocumentation(Str url) {
     Str docsPrefix = StrL("https://www.sumatrapdfreader.org/docs");
-    if (!str::StartsWith(url, docsPrefix)) {
+    if (!str::TrimPrefix(url, docsPrefix)) {
         return false;
     }
     // remainder is "/<page>" (LaunchDocumentation's docURI convention)
-    LaunchDocumentation(Str(url.s + docsPrefix.len, url.len - docsPrefix.len));
+    LaunchDocumentation(url);
     return true;
 }
 

@@ -416,8 +416,9 @@ static Str EndTagInner(Str raw) {
 }
 
 static Str CDataText(Str raw, const GumboNode* node) {
-    if (str::StartsWith(raw, StrL("<![CDATA[")) && str::EndsWith(raw, StrL("]]>"))) {
-        return Str(raw.s + 9, raw.len - 12);
+    if (str::TrimPrefix(raw, StrL("<![CDATA[")) && str::EndsWith(raw, StrL("]]>"))) {
+        raw.len -= 3;
+        return raw;
     }
     return Str(node->v.text.text);
 }

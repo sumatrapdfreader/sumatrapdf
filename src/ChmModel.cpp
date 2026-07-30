@@ -294,13 +294,8 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     // chm files (I don't know such cases, though).
     // A more robust solution would try to match with the actual
     // names of files inside chm package.
-    if (str::StartsWith(pageUrl, "..\\")) {
-        pageUrl = Str(pageUrl.s + 3, pageUrl.len - 3);
-    }
-
-    if (str::StartsWith(pageUrl, "/")) {
-        pageUrl = Str(pageUrl.s + 1, pageUrl.len - 1);
-    }
+    str::TrimPrefix(pageUrl, StrL("..\\"));
+    str::TrimPrefix(pageUrl, StrL("/"));
 
     if (!docView) {
         return false;
@@ -972,8 +967,9 @@ bool ChmThumbnailTask::OnBeforeNavigate(Str, bool newWindow) {
 void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
     this->hw = hw;
     homeUrl = strconv::AnsiToUtf8(doc->GetHomePath());
-    if (str::StartsWith(homeUrl, "/")) {
-        str::ReplaceWithCopy(&homeUrl, Str(homeUrl.s + 1));
+    Str trimmedHomeUrl = homeUrl;
+    if (str::TrimPrefix(trimmedHomeUrl, StrL("/"))) {
+        str::ReplaceWithCopy(&homeUrl, trimmedHomeUrl);
     }
     hw->NavigateToDataUrl(homeUrl);
 }

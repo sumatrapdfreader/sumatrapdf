@@ -1305,9 +1305,7 @@ void OpenPathInDefaultFileManager(Str path) {
     }
 
     // strip \\?\ prefix — shell APIs (ILCreateFromPath, explorer.exe) don't understand it
-    if (str::StartsWith(path, StrL("\\\\?\\"))) {
-        path = Str(path.s + 4, path.len - 4);
-    }
+    str::TrimPrefix(path, StrL("\\\\?\\"));
 
     // Use SHOpenFolderAndSelectItems which respects the default file manager
     // (e.g. Directory Opus) instead of hardcoding explorer.exe

@@ -252,9 +252,7 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
     }
 
     TempStr res = ToUtf8Temp(realPath);
-    if (str::StartsWith(res, "\\\\?\\")) {
-        res = Str(res.s + 4, res.len - 4);
-    }
+    str::TrimPrefix(res, StrL("\\\\?\\"));
     return res;
 }
 

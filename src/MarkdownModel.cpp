@@ -60,19 +60,17 @@ static TempStr NormalizeMarkdownUrlTemp(Str url) {
 // removes it for page lookup and state tracking, but WebView2 needs it to scroll
 // to a heading within the current HTML page.
 static Str MarkdownBrowserNavigationUrl(Str url) {
-    if (str::StartsWith(url, kMdVirtualHost)) {
-        return Str(url.s + kMdVirtualHostLen, url.len - kMdVirtualHostLen);
-    }
+    str::TrimPrefix(url, kMdVirtualHost);
     return url;
 }
 
 static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
     TempStr normFile = path::NormalizeTemp(filePath);
     TempStr normBase = path::NormalizeTemp(baseDir);
-    if (!normBase || !str::StartsWith(normFile, normBase)) {
+    if (!normBase || !str::TrimPrefix(normFile, normBase)) {
         return path::GetBaseNameTemp(filePath);
     }
-    Str rel = Str(normFile.s + normBase.len, normFile.len - normBase.len);
+    Str rel = normFile;
     while (len(rel) > 0 && (rel.s[0] == '\\' || rel.s[0] == '/')) {
         rel.s++;
         rel.len--;
@@ -194,10 +192,10 @@ TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
 }
 
 TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
-    if (!url || !str::StartsWith(url, kMdVirtualHost)) {
+    if (!url || !str::TrimPrefix(url, kMdVirtualHost)) {
         return {};
     }
-    Str pathPart = Str(url.s + kMdVirtualHostLen, url.len - kMdVirtualHostLen);
+    Str pathPart = url;
     Str fragment = str::SliceFromChar(pathPart, '#');
     if (fragment) {
         pathPart = Str(pathPart.s, (int)(fragment.s - pathPart.s));

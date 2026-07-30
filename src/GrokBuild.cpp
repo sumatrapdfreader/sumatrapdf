@@ -58,10 +58,10 @@ static bool ParseGrokModelsOutput(Str output, StrVec& models) {
             inModels = true;
             continue;
         }
-        if (!inModels || !str::StartsWith(trimmed, "* ")) {
+        if (!inModels || !str::TrimPrefix(trimmed, StrL("* "))) {
             continue;
         }
-        Str model(trimmed.s + 2, trimmed.len - 2);
+        Str model = trimmed;
         for (int i = 0; i < model.len; i++) {
             if (str::IsWs(model.s[i])) {
                 model.len = i;

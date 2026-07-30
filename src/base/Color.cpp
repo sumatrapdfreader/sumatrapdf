@@ -98,13 +98,10 @@ void ParseColor(ParsedColor& parsed, Str txt) {
         parsed.parsedOk = true;
         return;
     }
-    int off = 0;
-    if (str::StartsWith(s, "0x")) {
-        off = 2;
-    } else if (str::StartsWith(s, "#")) {
-        off = 1;
+    if (!str::TrimPrefix(s, StrL("0x"))) {
+        str::TrimPrefix(s, StrL("#"));
     }
-    Str p = Str(s.s + off, s.len - off);
+    Str p = s;
     int n = p.len;
     unsigned int r = 0;
     unsigned int g = 0;

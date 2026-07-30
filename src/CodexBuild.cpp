@@ -184,9 +184,7 @@ static TempStr NormalizeCodexPathTemp(Str path) {
     if (!path) {
         return {};
     }
-    if (str::StartsWith(path, "\\\\?\\")) {
-        return str::DupTemp(Str(path.s + 4, path.len - 4));
-    }
+    str::TrimPrefix(path, StrL("\\\\?\\"));
     return str::DupTemp(path);
 }
 

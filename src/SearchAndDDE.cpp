@@ -2255,14 +2255,13 @@ Open new window.
 */
 static Str HandleNewWindowCmd(Str cmd, bool* ack) {
     Str kNewWindowCmd = "[NewWindow]";
-    if (!str::StartsWith(cmd, kNewWindowCmd)) {
+    if (!str::TrimPrefix(cmd, kNewWindowCmd)) {
         return {};
     }
     logf("HandleNewWindowCmd\n");
-    Str next = Str(cmd.s + kNewWindowCmd.len, cmd.len - kNewWindowCmd.len);
     CreateAndShowMainWindow(nullptr);
     *ack = true;
-    return next;
+    return cmd;
 }
 
 /*

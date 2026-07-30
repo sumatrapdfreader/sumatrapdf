@@ -603,11 +603,10 @@ static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
     if (!str::StartsWithI(uri, "file:")) {
         return false;
     }
-    // Skip "file:" case-insensitively (str::Skip is case-sensitive).
+    // Skip "file:" case-insensitively (str::TrimPrefix is case-sensitive).
     Str rest = Str(uri.s + 5, uri.len - 5);
     // file://host/path or file:///path → drop authority (// or ///)
-    if (str::StartsWith(rest, "//")) {
-        rest = Str(rest.s + 2, rest.len - 2);
+    if (str::TrimPrefix(rest, StrL("//"))) {
         // empty host: next char is / of absolute path
         if (rest && rest.s[0] == '/') {
             // Windows drive path: /C:/foo → C:/foo
@@ -698,9 +697,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
     }
 
     TempStr path = str::ReplaceTemp(pathOrig, StrL("/"), StrL("\\"));
-    if (str::StartsWith(path, ".\\")) {
-        path = Str(path.s + 2);
-    }
+    str::TrimPrefix(path, StrL(".\\"));
 
     TempStr fullPath = path;
     bool isAbsPath = str::StartsWith(path, "\\");

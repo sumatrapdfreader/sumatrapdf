@@ -1881,8 +1881,8 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
 // We only want the "path.pdf" / "foo@bar.com"
 static TempStr CleanupURLForClipbardCopyTemp(Str s) {
     Str slice = s;
-    str::Skip(slice, "file:");
-    str::Skip(slice, "mailto:");
+    str::TrimPrefix(slice, StrL("file:"));
+    str::TrimPrefix(slice, StrL("mailto:"));
     return str::DupTemp(slice);
 }
 

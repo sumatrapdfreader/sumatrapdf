@@ -241,10 +241,8 @@ void BrowserWebviewWnd::OnBrowserMessage(Str msg) {
         return;
     }
     // note: "mdfindall" must be tested before "mdfind" (shared prefix)
-    constexpr int kMdFindAllPrefixLen = 10; // "mdfindall "
-    if (owner && owner->cb && str::StartsWith(msg, "mdfindall ")) {
-        Str payload = Str(msg.s + kMdFindAllPrefixLen, msg.len - kMdFindAllPrefixLen);
-        owner->cb->OnFindAllResult(payload);
+    if (owner && owner->cb && str::TrimPrefix(msg, StrL("mdfindall "))) {
+        owner->cb->OnFindAllResult(msg);
         return;
     }
     int gen = 0;

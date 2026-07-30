@@ -52,6 +52,7 @@ bool EqN(Str s1, Str s2, int n);
 bool EqNI(Str s1, Str s2, int n);
 bool IsNull(const Str& s);
 bool StartsWith(Str str, Str prefix);
+bool TrimPrefix(Str& s, Str prefix);
 
 bool StartsWithI(Str str, Str prefix);
 bool EndsWith(Str txt, Str end);
@@ -111,7 +112,6 @@ int Cmp(Str a, Str b);
 int CmpI(Str a, Str b);
 
 bool IsEmptyOrWhiteSpace(Str s);
-bool Skip(Str& s, Str toSkip);
 bool SkipChar(Str& s, char toSkip);
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src);

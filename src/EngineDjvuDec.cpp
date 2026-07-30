@@ -883,9 +883,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
 
 IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
     Str n = name;
-    if (str::StartsWith(n, "#")) {
-        n = Str(n.s + 1, n.len - 1);
-    }
+    str::TrimPrefix(n, StrL("#"));
     TempStr link = ResolveNamedDestDjvuDecTemp(doc, n);
     if (link) {
         return NewDjvuDecDestination(link, {});

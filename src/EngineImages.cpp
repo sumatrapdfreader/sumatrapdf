@@ -1590,16 +1590,15 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
 }
 
 int EngineImageDir::GetPageByLabel(Str label) const {
-    int nLabel = len(label);
     for (int i = 0; i < len(pageFileNames); i++) {
         Str pagePath = pageFileNames[i];
         TempStr fileName = path::GetBaseNameTemp(pagePath);
         TempStr ext = path::GetExtTemp(fileName);
-        if (!str::StartsWith(fileName, label)) {
+        Str maybeExt = fileName;
+        if (!str::TrimPrefix(maybeExt, label)) {
             continue;
         }
-        Str maybeExt(fileName.s + nLabel, fileName.len - nLabel);
-        if (str::Eq(maybeExt, ext) || nLabel == fileName.len) {
+        if (str::Eq(maybeExt, ext) || !maybeExt) {
             return i + 1;
         }
     }

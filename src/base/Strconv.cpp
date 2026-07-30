@@ -180,21 +180,19 @@ TempStr UnknownToUtf8Temp(Str s) {
         return str::DupTemp(s);
     }
 
-    if (str::StartsWith(s, Str(UTF8_BOM))) {
-        return str::DupTemp(Str(s.s + 3, s.len - 3));
+    if (str::TrimPrefix(s, Str(UTF8_BOM))) {
+        return str::DupTemp(s);
     }
 
-    if (str::StartsWith(s, Str(UTF16_BOM))) {
-        int bomOff = 2;
-        int cch = (s.len - bomOff) / 2;
-        return ToUtf8Temp(WStr((wchar_t*)(s.s + bomOff), cch));
+    if (str::TrimPrefix(s, Str(UTF16_BOM))) {
+        int cch = s.len / 2;
+        return ToUtf8Temp(WStr((wchar_t*)s.s, cch));
     }
 
-    if (str::StartsWith(s, Str(UTF16BE_BOM))) {
+    if (str::TrimPrefix(s, Str(UTF16BE_BOM))) {
         // convert from utf16 big endian to utf16
-        int bomOff = 2;
-        int n = (s.len - bomOff) / 2;
-        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)(s.s + bomOff), n));
+        int n = s.len / 2;
+        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)s.s, n));
         u8* bytes = (u8*)tmpW.s;
         for (int i = 0; i < n; i++) {
             int idx = i * (int)sizeof(WCHAR);

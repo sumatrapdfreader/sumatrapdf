@@ -32,25 +32,18 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     }
 
     bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;
-    if (str::StartsWith(filter, kPalettePrefixEverything)) {
-        filter = Str(filter.s + 1);
+    if (str::TrimPrefix(filter, kPalettePrefixEverything)) {
         searchTabs = searchHistory = searchCommands = true;
-    } else if (str::StartsWith(filter, kPalettePrefixTabs)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixTabs)) {
         searchTabs = true;
-    } else if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixFileHistory)) {
         searchHistory = true;
-    } else if (str::StartsWith(filter, kPalettePrefixTOC)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixTOC)) {
         searchToc = true;
-    } else if (str::StartsWith(filter, kPalettePrefixFavorites)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixFavorites)) {
         searchFavorites = true;
     } else {
-        if (str::StartsWith(filter, kPalettePrefixCommands)) {
-            filter = Str(filter.s + 1);
-        }
+        str::TrimPrefix(filter, kPalettePrefixCommands);
         searchCommands = true;
     }
 

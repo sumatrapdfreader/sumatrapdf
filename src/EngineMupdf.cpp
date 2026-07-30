@@ -365,14 +365,14 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     Str uri = FzGetURL(link, outline);
     Str maybePath = uri;
 
-    if (str::Skip(maybePath, "file:")) {
+    if (str::TrimPrefix(maybePath, StrL("file:"))) {
         // decode: file:path%20to_file.pdf#page=1
 
         // this is to handle file:// and
         // file:/// (which I assume is a mistake in PDF)
-        str::Skip(maybePath, "/");
-        str::Skip(maybePath, "/");
-        str::Skip(maybePath, "/");
+        str::TrimPrefix(maybePath, StrL("/"));
+        str::TrimPrefix(maybePath, StrL("/"));
+        str::TrimPrefix(maybePath, StrL("/"));
 
         TempStr path = str::DupTemp(maybePath);
         Str pathStr = path;

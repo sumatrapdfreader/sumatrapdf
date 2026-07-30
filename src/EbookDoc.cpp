@@ -139,17 +139,15 @@ static bool IsValidUtf8(Str string) {
 }
 
 static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
-    if (str::StartsWith(s, UTF8_BOM)) {
-        return str::DupTemp(Str(s.s + 3, s.len - 3));
+    if (str::TrimPrefix(s, UTF8_BOM)) {
+        return str::DupTemp(s);
     }
-    if (str::StartsWith(s, UTF16_BOM)) {
-        s = Str(s.s + 2, s.len - 2);
+    if (str::TrimPrefix(s, UTF16_BOM)) {
         WStr ws = str::CastToWCHAR(s);
         return ToUtf8Temp(ws);
     }
-    if (str::StartsWith(s, UTF16BE_BOM)) {
+    if (str::TrimPrefix(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
-        s = Str(s.s + 2, s.len - 2);
         int n = str::CastToWCHAR(s).len;
         for (int i = 0; i < n; i++) {
             int idx = i * 2;

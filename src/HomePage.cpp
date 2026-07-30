@@ -160,11 +160,11 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
     if (str::StartsWith(cmd, "https://") || str::StartsWith(cmd, "http://")) {
         return str::DupTemp(cmd);
     }
-    if (str::StartsWith(cmd, "Help/")) {
+    if (str::TrimPrefix(cmd, StrL("Help/"))) {
         // cmd is a non-NUL-terminated view into the tip line, so %s must get a
         // zero-terminated copy of exactly the remainder -- otherwise it reads
         // past the link, pulling in trailing chars like ")."
-        return fmt("https://www.sumatrapdfreader.org/docs/%s", Str(CStrTemp(Str(cmd.s + 5, cmd.len - 5))));
+        return fmt("https://www.sumatrapdfreader.org/docs/%s", Str(CStrTemp(cmd)));
     }
     // Cmd* - use as-is, will be resolved to command ID on click
     return str::DupTemp(cmd);

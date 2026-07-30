@@ -325,6 +325,16 @@ bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, len(prefix));
 }
 
+// Removes prefix from the string view, without modifying the underlying data.
+bool TrimPrefix(Str& s, Str prefix) {
+    if (!StartsWith(s, prefix)) {
+        return false;
+    }
+    s.s += prefix.len;
+    s.len -= prefix.len;
+    return true;
+}
+
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(Str s, Str prefix) {
     if (s.s == prefix.s) {
@@ -1052,15 +1062,6 @@ bool IsEmptyOrWhiteSpace(Str s) {
         }
     }
     return true;
-}
-
-bool Skip(Str& s, Str toSkip) {
-    if (str::StartsWith(s, toSkip)) {
-        s.s += toSkip.len;
-        s.len -= toSkip.len;
-        return true;
-    }
-    return false;
 }
 
 // advances s past any leading toSkip chars (in place); returns whether it skipped any
