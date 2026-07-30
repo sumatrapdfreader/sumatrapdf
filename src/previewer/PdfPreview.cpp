@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #include "mui/Mui.h"
 

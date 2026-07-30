@@ -14,7 +14,7 @@
 
 #if OS_WIN
 #include "base/Win.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #endif
 
 extern "C" {

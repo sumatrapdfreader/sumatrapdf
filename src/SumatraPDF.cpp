@@ -15,7 +15,7 @@
 #include "base/Win.h"
 #include "base/Crypto.h"
 #include "base/ScopedWin.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "base/Archive.h"
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"

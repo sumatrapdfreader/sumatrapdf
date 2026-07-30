@@ -11,7 +11,7 @@
 #include "base/Win.h"
 #include "base/ScopedWin.h"
 #include "base/Http.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "base/GuessFileType.h"
 
 #include <mmsystem.h> // timeBeginPeriod / timeEndPeriod for smooth-scroll timer

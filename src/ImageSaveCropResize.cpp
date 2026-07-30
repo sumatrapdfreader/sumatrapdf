@@ -6,7 +6,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/Dpi.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "ImageReader.h"
 
 #include "wingui/UIModels.h"

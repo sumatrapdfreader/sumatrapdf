@@ -143,7 +143,7 @@ const utils: LibDef = {
         "File.cpp",
         "File_win.cpp",
         "FileWatcher.*",
-        "GdiPlus.cpp",
+        "GdiPlusUtil.cpp",
         "HtmlTags.*",
         "HtmlPrettyPrint.*",
         "Http.h",

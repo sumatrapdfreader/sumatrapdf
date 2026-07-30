@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include "base/File.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "base/TgaReader.h"
 #include "base/Win.h"
 

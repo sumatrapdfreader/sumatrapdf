@@ -71,7 +71,7 @@ CompileFlags:
     - -include
     - base/FrameTimeoutCalculator.h
     - -include
-    - base/GdiPlus.h
+    - base/GdiPlusUtil.h
     - -include
     - base/GuessFileType.h
     - -include
@@ -147,7 +147,7 @@ CompileFlags:
     - -include
     - base/FrameTimeoutCalculator.h
     - -include
-    - base/GdiPlus.h
+    - base/GdiPlusUtil.h
     - -include
     - base/GuessFileType.h
     - -include

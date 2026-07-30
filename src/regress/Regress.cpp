@@ -22,7 +22,7 @@ To write new regression test:
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "base/HtmlTags.h"
 #include "mui/Mui.h"
 #include "base/Win.h"

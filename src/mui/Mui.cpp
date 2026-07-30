@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 
 #include "Mui.h"
 

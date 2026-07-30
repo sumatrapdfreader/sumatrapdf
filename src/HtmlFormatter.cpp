@@ -12,7 +12,7 @@
 #include "HtmlFormatter.h"
 
 #if OS_WIN
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "mui/Mui.h"
 #endif
 

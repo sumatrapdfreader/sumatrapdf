@@ -11,7 +11,7 @@
 #include "base/Dpi.h"
 #include "base/File.h"
 #include "base/FileWatcher.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "mui/Mui.h"
 #include "base/UITask.h"
 #include "base/Win.h"

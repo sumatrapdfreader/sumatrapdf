@@ -20,7 +20,7 @@ Rough inventory (order of magnitude):
 - **~420 `Gdiplus::` refs** in **~38 files** under `src/`
 - Heavy custom painters include: `Canvas`, `HomePage`, `TabsCtrl`, `OverlayScrollbar`,
   `CaptionGlyphs`, `Selection` / `SelectionToolbar`, `Notifications`,
-  `ReadAloudPlaybackBar`, `ImageSaveCropResize`, `base/GdiPlus`, `mui/*`,
+  `ReadAloudPlaybackBar`, `ImageSaveCropResize`, `base/GdiPlusUtil`, `mui/*`,
   installer chrome, etc.
 - Page path is already raster; D2D there is mainly **composition**, not layout.
 
@@ -30,7 +30,7 @@ There is **no Direct2D layer** in the tree today.
 
 - `src/mui/TextRender.h` — `ITextRender` with GDI / GDI+ / HDC backends; comment
   `// TODO: implement TextRenderDirectDraw`
-- `src/base/GdiPlus.*` — measure text, pixmap/bitmap conversion, image load helpers
+- `src/base/GdiPlusUtil.*` — measure text, pixmap/bitmap conversion, image load helpers
 - `RenderCache` — `BlitPixmap` / region blit to `HDC` after MuPDF render
 
 ## Effort estimate
@@ -81,7 +81,7 @@ in isolation, or PDF engine to D2D.
 - **Device lost / DPI / session** (RDP, sleep, adapter change) must be handled carefully.
 - **Font / metric drift** if measure stays GDI and draw goes D2D (or vice versa)—breaks
   hit-testing, tab widths, selection toolbar layout.
-- **GDI+ used for more than paint:** image load/orientation/encode (`ImageReader_win.cpp`, `GdiPlus.cpp`,
+- **GDI+ used for more than paint:** image load/orientation/encode (`ImageReader_win.cpp`, `GdiPlusUtil.cpp`,
   thumbs, crop tool). “All GDI+” ≠ “all paint.”
 - **Page pipeline is MuPDF**, not GDI—D2D doesn’t simplify document fidelity.
 - **darkmodelib** already subclasses and paints borders; stacking D2D parents can fight it.

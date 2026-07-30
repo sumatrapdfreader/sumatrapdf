@@ -7,7 +7,7 @@
 #include "AvifReader.h"
 
 #if OS_WIN
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #endif
 
 #ifndef NO_AVIF

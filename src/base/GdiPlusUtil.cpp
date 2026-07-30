@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 
 using Gdiplus::Bitmap;
 using Gdiplus::BitmapData;

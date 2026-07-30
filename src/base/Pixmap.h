@@ -12,7 +12,7 @@
 // BGRA8 (premultiplied) is the canonical layout because it is the natively zero-copy
 // layout on all three platforms (Gdiplus 32bppPARGB, CoreGraphics
 // PremultipliedFirst|ByteOrder32Little, cairo ARGB32). The Windows-specific zero-copy
-// conversion helpers live in GdiPlus.h (NewGdiplusBitmapFromPixmap / PixmapFromGdiplus).
+// conversion helpers live in GdiPlusUtil.h (NewGdiplusBitmapFromPixmap / PixmapFromGdiplus).
 //
 // A Pixmap may additionally be backed by a platform "present" object so it can be blitted
 // to the screen with no copy (a GDI DIB section on Windows; later a CGImage/cairo surface

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -922,7 +922,7 @@
     <ClInclude Include="..\src\base\Exif.h" />
     <ClInclude Include="..\src\base\File.h" />
     <ClInclude Include="..\src\base\FileWatcher.h" />
-    <ClInclude Include="..\src\base\GdiPlus.h" />
+    <ClInclude Include="..\src\base\GdiPlusUtil.h" />
     <ClInclude Include="..\src\base\Geom.h" />
     <ClInclude Include="..\src\base\GuessFileType.h" />
     <ClInclude Include="..\src\base\HtmlTags.h" />
@@ -981,7 +981,7 @@
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\FileWatcher.cpp" />
     <ClCompile Include="..\src\base\File_win.cpp" />
-    <ClCompile Include="..\src\base\GdiPlus.cpp" />
+    <ClCompile Include="..\src\base\GdiPlusUtil.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\base\GuessFileTypeFromFile.cpp" />

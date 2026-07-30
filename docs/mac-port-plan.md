@@ -137,7 +137,7 @@ shared `.cpp` plus `_win` / `_mac` (or `_posix`) implementation, or replace an
 | `ReadAloudHighlight.{cpp,h}` | build logic portable; `Paint()` takes `HDC` | draw callback like Selection |
 | `base/UITask.{cpp}` | posts tasks via a hidden Win32 message window | add `UITask_mac.cpp` using `dispatch_async(dispatch_get_main_queue())` |
 | `base/FileWatcher.cpp` | `ReadDirectoryChangesW` | add `FileWatcher_mac.cpp` using FSEvents/kqueue |
-| `base/GdiPlus.{cpp,h}` (text measurement) | GDI text metrics used by formatter | `GdiPlus_mac.cpp` using CoreText, behind a small measurement API |
+| `base/GdiPlusUtil.{cpp,h}` (text measurement) | GDI text metrics used by formatter | `GdiPlus_mac.cpp` using CoreText, behind a small measurement API |
 | `AppSettings.cpp` | settings logic portable; font creation via `CreateFontIndirectW`; `%APPDATA%` via `GetSpecialFolder` | font seam (NSFont/CoreText); folder seam → `~/Library/Application Support` |
 | `AppTools.cpp` | path logic portable; install detection via registry + `CSIDL_*` | folder/bundle seam; registry checks become `_win`-only |
 | `TextToSpeech.{cpp,h}` | interface portable; WinRT backend + `HWND` notify | `_mac` backend with `AVSpeechSynthesizer`; async callback instead of `HWND` |

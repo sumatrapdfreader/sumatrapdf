@@ -8,7 +8,7 @@
 #include "base/ScopedWin.h"
 #include "base/TgaReader.h"
 #include "base/Win.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "AvifReader.h"
 #include "JxlReader.h"
 #include "WebpReader.h"

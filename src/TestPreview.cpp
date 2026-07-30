@@ -8,7 +8,7 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgsIter.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 
 #include "RegistryPreview.h"
 

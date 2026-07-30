@@ -26,7 +26,7 @@
 
 #if OS_WIN
 #include "base/ScopedWin.h"
-#include "base/GdiPlus.h"
+#include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #include "base/Zip.h"
 
