@@ -342,9 +342,10 @@ void ByteWriter::Write16(u16 val) {
     u8 b1 = val & 0xFF;
     u8 b2 = (val >> 8) & 0xFF;
     if (isLE) {
-        return Write8x2(b1, b2);
+        Write8x2(b1, b2);
+        return;
     }
-    return Write8x2(b2, b1);
+    Write8x2(b2, b1);
 }
 
 void ByteWriter::Write32(u32 val) {

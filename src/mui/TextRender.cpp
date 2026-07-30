@@ -192,7 +192,7 @@ void TextRenderGdi::Draw(Str s, const RectF bb, bool isRtl) {
     DrawTransparent(s, bb, isRtl);
 #else
     TempWStr buf = ToWStrTemp(s);
-    return Draw(buf, bb, isRtl);
+    Draw(buf, bb, isRtl);
 #endif
 }
 
@@ -285,7 +285,7 @@ void TextRenderGdi::DrawTransparent(WStr s, const RectF bb, bool isRtl) {
 
 void TextRenderGdi::DrawTransparent(Str s, const RectF bb, bool isRtl) {
     TempWStr buf = ToWStrTemp(s);
-    return DrawTransparent(buf, bb, isRtl);
+    DrawTransparent(buf, bb, isRtl);
 }
 
 TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, TextMeasureAlgorithm measureAlgo) {
@@ -449,7 +449,7 @@ RectF TextRenderHdc::Measure(WStr s) {
 
 void TextRenderHdc::Draw(Str s, const RectF bb, bool isRtl) {
     TempWStr buf = ToWStrTemp(s);
-    return Draw(buf, bb, isRtl);
+    Draw(buf, bb, isRtl);
 }
 
 void TextRenderHdc::Draw(WStr s, const RectF bb, bool /* isRtl */) {
