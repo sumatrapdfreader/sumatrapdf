@@ -115,17 +115,52 @@ Str AnnotationReadableNameTemp(AnnotationType tp) {
     }
 }
 
+// annot is still owned by EngineMupdf (markup or form widget list).
+static bool IsAnnotationInEngine(EngineMupdf* e, Annotation* annot) {
+    if (!e || !annot) {
+        return false;
+    }
+    int pageNo = annot->pageNo;
+    int pageIdx = pageNo - 1;
+    if (pageIdx < 0 || pageIdx >= len(e->pages)) {
+        return false;
+    }
+    ScopedRecursiveMutex scope(&e->pagesLock);
+    FzPageInfo* pageInfo = e->pages[pageIdx];
+    if (!pageInfo) {
+        return false;
+    }
+    return pageInfo->annotations.Contains(annot) || pageInfo->widgets.Contains(annot);
+}
+
+// Safe to call MuPDF with annot->pdfannot.
+bool AnnotationIsLive(Annotation* annot) {
+    if (!annot || !annot->engine || !annot->pdfannot) {
+        return false;
+    }
+    return IsAnnotationInEngine(annot->engine, annot);
+}
+
 AnnotationType Type(Annotation* annot) {
+    if (!annot) {
+        return AnnotationType::Unknown;
+    }
     ReportIf((int)annot->type < 0);
     return annot->type;
 }
 
 int PageNo(Annotation* annot) {
+    if (!annot) {
+        return -1;
+    }
     ReportIf(annot->pageNo < 1);
     return annot->pageNo;
 }
 
 RectF GetBounds(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return annot ? annot->bounds : RectF{};
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -144,17 +179,20 @@ RectF GetBounds(Annotation* annot) {
 }
 
 RectF GetRect(Annotation* annot) {
+    if (!annot) {
+        return {};
+    }
     return annot->bounds;
 }
 
 void SetRect(Annotation* annot, RectF r) {
-    EngineMupdf* e = annot->engine;
-    auto a = annot->pdfannot;
-    if (!a) {
-        // pdfannot is nulled out by DeleteAnnotation; a stale reference
-        // (e.g. annotationBeingDragged after a reload) must not reach mupdf
+    // Stale reference after delete/reload must not reach mupdf
+    // (e.g. annotationBeingDragged).
+    if (!AnnotationIsLive(annot)) {
         return;
     }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
     bool failed = false;
     {
         auto ctx = e->Ctx();
@@ -202,6 +240,9 @@ static Str MupdfCStrTemp(const char* s) {
 }
 
 Str Author(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return {};
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -219,6 +260,9 @@ Str Author(Annotation* annot) {
 }
 
 int Quadding(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -240,6 +284,9 @@ static bool IsValidQuadding(int i) {
 
 // return true if changed
 bool SetQuadding(Annotation* annot, int newQuadding) {
+    if (!AnnotationIsLive(annot)) {
+        return false;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -264,6 +311,9 @@ bool SetQuadding(Annotation* annot, int newQuadding) {
 }
 
 void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -308,7 +358,7 @@ static void UpdateFormFieldPage(fz_context* ctx, pdf_annot* a) {
 }
 
 int GetWidgetType(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return PDF_WIDGET_TYPE_UNKNOWN;
     }
     EngineMupdf* e = annot->engine;
@@ -326,7 +376,7 @@ int GetWidgetType(Annotation* annot) {
 }
 
 WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return WidgetCursorKind::None;
     }
     EngineMupdf* e = annot->engine;
@@ -352,7 +402,7 @@ WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
 }
 
 bool ToggleFormButton(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;
     }
     EngineMupdf* e = annot->engine;
@@ -408,7 +458,7 @@ bool ToggleFormButton(Annotation* annot) {
 }
 
 int GetWidgetFieldFlags(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
     }
     EngineMupdf* e = annot->engine;
@@ -426,7 +476,7 @@ int GetWidgetFieldFlags(Annotation* annot) {
 }
 
 Str GetWidgetValue(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return Str();
     }
     EngineMupdf* e = annot->engine;
@@ -444,7 +494,7 @@ Str GetWidgetValue(Annotation* annot) {
 }
 
 float GetWidgetFontSize(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
     }
     EngineMupdf* e = annot->engine;
@@ -466,7 +516,7 @@ float GetWidgetFontSize(Annotation* annot) {
 }
 
 int GetWidgetMaxLen(Annotation* annot) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
     }
     EngineMupdf* e = annot->engine;
@@ -485,7 +535,7 @@ int GetWidgetMaxLen(Annotation* annot) {
 }
 
 bool SetWidgetTextValue(Annotation* annot, Str value) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;
     }
     EngineMupdf* e = annot->engine;
@@ -515,7 +565,7 @@ bool SetWidgetTextValue(Annotation* annot, Str value) {
 }
 
 void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return;
     }
     EngineMupdf* e = annot->engine;
@@ -539,7 +589,7 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
 }
 
 bool SetWidgetChoiceValue(Annotation* annot, Str value) {
-    if (!annot || annot->type != AnnotationType::Widget) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;
     }
     EngineMupdf* e = annot->engine;
@@ -596,7 +646,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
 */
 
 Str Contents(Annotation* annot) {
-    if (!annot || !annot->engine || !annot->pdfannot) {
+    if (!AnnotationIsLive(annot)) {
         return {};
     }
     EngineMupdf* e = annot->engine;
@@ -617,7 +667,7 @@ Str Contents(Annotation* annot) {
 
 bool SetContents(Annotation* annot, Str sv) {
     ReportIf(!annot);
-    if (!annot || !annot->engine || !annot->pdfannot) {
+    if (!AnnotationIsLive(annot)) {
         return false;
     }
     EngineMupdf* e = annot->engine;
@@ -642,32 +692,31 @@ bool SetContents(Annotation* annot, Str sv) {
     return true;
 }
 
-static bool IsAnnotationInEngine(EngineMupdf* e, Annotation* annot) {
-    int pageNo = annot->pageNo;
-    int pageIdx = pageNo - 1;
-    if (pageIdx < 0 || pageIdx >= len(e->pages)) {
-        return false;
-    }
-    ScopedRecursiveMutex scope(&e->pagesLock);
-    FzPageInfo* pageInfo = e->pages[pageIdx];
-    return pageInfo->annotations.Contains(annot);
-}
-
 void DeleteAnnotation(Annotation* annot) {
     ReportIf(!annot);
     if (!annot) {
         return;
     }
+    // Caller must have DetachAnnotationFromUI (or have no UI holders).
     EngineMupdf* e = annot->engine;
     if (!e) {
+        delete annot;
         return;
     }
     auto a = annot->pdfannot;
     if (!a) {
+        // Already stripped from mupdf; drop from engine list if still present.
+        if (IsAnnotationInEngine(e, annot)) {
+            MarkNotificationAsModified(e, annot, AnnotationChange::Remove);
+        }
+        delete annot;
         return;
     }
     if (!IsAnnotationInEngine(e, annot)) {
         logf("DeleteAnnotation: annotation not found in engine, skipping\n");
+        // Still free the wrapper so callers do not leak a detached Annotation*.
+        annot->pdfannot = nullptr;
+        delete annot;
         return;
     }
     bool failed = false;
@@ -689,11 +738,16 @@ void DeleteAnnotation(Annotation* annot) {
         return;
     }
     annot->pdfannot = nullptr;
+    // Remove from pageInfo->annotations (must happen while annot is still valid).
     MarkNotificationAsModified(e, annot, AnnotationChange::Remove);
+    delete annot;
 }
 
 // -1 if not exist
 int PopupId(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return -1;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -732,6 +786,9 @@ time_t CreationDate(Annotation* annot) {
 */
 
 time_t ModificationDate(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -748,6 +805,9 @@ time_t ModificationDate(Annotation* annot) {
 
 // return empty if no icon
 Str IconName(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return {};
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -767,6 +827,9 @@ Str IconName(Annotation* annot) {
 }
 
 void SetIconName(Annotation* annot, Str iconName) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     Str curr = IconName(annot);
@@ -789,6 +852,9 @@ void SetIconName(Annotation* annot, Str iconName) {
 }
 
 void SetLineEndStyles(Annotation* annot, int end) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -806,6 +872,9 @@ void SetLineEndStyles(Annotation* annot, int end) {
 }
 
 void SetLineStartStyles(Annotation* annot, int start) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -869,6 +938,9 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
 }
 
 PdfColor GetColor(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -891,6 +963,9 @@ PdfColor GetColor(Annotation* annot) {
 
 // return true if color changed
 bool SetColor(Annotation* annot, PdfColor c) {
+    if (!AnnotationIsLive(annot)) {
+        return false;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -950,6 +1025,9 @@ bool SetColor(Annotation* annot, PdfColor c) {
 }
 
 PdfColor InteriorColor(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -971,6 +1049,9 @@ PdfColor InteriorColor(Annotation* annot) {
 }
 
 bool SetInteriorColor(Annotation* annot, PdfColor c) {
+    if (!AnnotationIsLive(annot)) {
+        return false;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -1013,6 +1094,9 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
 }
 
 Str DefaultAppearanceTextFont(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return {};
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1031,6 +1115,9 @@ Str DefaultAppearanceTextFont(Annotation* annot) {
 }
 
 void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     TempStr fontZ = str::DupTemp(sv);
@@ -1054,6 +1141,9 @@ void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
 }
 
 int DefaultAppearanceTextSize(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1072,6 +1162,9 @@ int DefaultAppearanceTextSize(Annotation* annot) {
 }
 
 void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -1094,6 +1187,9 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
 }
 
 PdfColor DefaultAppearanceTextColor(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1113,6 +1209,9 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
 }
 
 void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {
@@ -1136,6 +1235,15 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
 }
 
 void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
+    if (start) {
+        *start = 0;
+    }
+    if (end) {
+        *end = 0;
+    }
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1149,11 +1257,18 @@ void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
         fz_report_error(ctx);
         logf("GetLineEndingStyles: pdf_annot_line_ending_styles() failed\n");
     }
-    *start = (int)leStart;
-    *end = (int)leEnd;
+    if (start) {
+        *start = (int)leStart;
+    }
+    if (end) {
+        *end = (int)leEnd;
+    }
 }
 
 int BorderWidth(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1172,7 +1287,7 @@ int BorderWidth(Annotation* annot) {
 
 void SetBorderWidth(Annotation* annot, int newWidth) {
     ReportIf(!annot);
-    if (!annot) {
+    if (!AnnotationIsLive(annot)) {
         return;
     }
     EngineMupdf* e = annot->engine;
@@ -1193,6 +1308,9 @@ void SetBorderWidth(Annotation* annot, int newWidth) {
 }
 
 int Opacity(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return 0;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1210,6 +1328,9 @@ int Opacity(Annotation* annot) {
 }
 
 void SetOpacity(Annotation* annot, int newOpacity) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     {

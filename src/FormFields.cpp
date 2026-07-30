@@ -40,6 +40,13 @@ bool IsFormFieldEditActive() {
     return gEdit.hwnd != nullptr;
 }
 
+void CancelFormFieldEditIfWidget(Annotation* widget) {
+    if (!widget || !gEdit.hwnd || gEdit.widget != widget) {
+        return;
+    }
+    CommitFormFieldEdit(false);
+}
+
 void CommitFormFieldEdit(bool save) {
     if (!gEdit.hwnd || gCommitting) {
         return;
@@ -108,7 +115,9 @@ static LRESULT CALLBACK WndProcFormCtrl(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
                 MainWindow* win = gEdit.win;
                 CommitFormFieldEdit(true);
                 DisplayModel* dm = win ? win->AsFixed() : nullptr;
-                if (dm && cur) {
+                // cur may be dead if commit triggered a document reload; only
+                // walk to the next field when the widget is still live.
+                if (dm && AnnotationIsLive(cur)) {
                     Annotation* next = EngineMupdfGetAdjacentWidget(dm->GetEngine(), cur, !back);
                     if (next) {
                         StartFormFieldEdit(win, next);
@@ -254,7 +263,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
 }
 
 bool StartFormFieldEdit(MainWindow* win, Annotation* widget) {
-    if (!win || !widget) {
+    if (!win || !AnnotationIsLive(widget)) {
         return false;
     }
     int wt = GetWidgetType(widget);

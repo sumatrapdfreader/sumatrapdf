@@ -158,6 +158,10 @@ bool SetWidgetChoiceValue(Annotation*, Str value);
 // a (non-read-only) checkbox/radio and got toggled.
 bool ToggleFormButton(Annotation*);
 
+// True if annot is non-null, has a live pdf_annot*, and is still listed in
+// its EngineMupdf page (markup or form widget). Use before any MuPDF call.
+bool AnnotationIsLive(Annotation*);
+
 void DeleteAnnotation(Annotation*);
 bool AnnotationCanBeMoved(AnnotationType);
 bool AnnotationCanBeResized(AnnotationType);

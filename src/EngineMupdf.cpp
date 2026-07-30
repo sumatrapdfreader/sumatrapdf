@@ -5959,11 +5959,12 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     FzPageInfo* pageInfo = e->pages[pageIdx];
 
     if (change == AnnotationChange::Remove) {
-        int sizeBefore = len(pageInfo->annotations);
+        // Markup and form widgets live in separate vectors.
         int removedPos = pageInfo->annotations.Remove(annot);
-        ReportIf(removedPos < 0); // must exist
-        int sizeNow = len(pageInfo->annotations);
-        ReportIf(sizeBefore != sizeNow + 1);
+        if (removedPos < 0) {
+            removedPos = pageInfo->widgets.Remove(annot);
+        }
+        ReportIf(removedPos < 0); // must exist in one of the lists
         ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
         int sizeBefore = len(pageInfo->annotations);

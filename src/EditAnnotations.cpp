@@ -29,6 +29,7 @@ extern "C" {
 #include "Toolbar.h"
 #include "WindowTab.h"
 #include "EditAnnotations.h"
+#include "FormFields.h"
 #include "SumatraPDF.h"
 #include "DarkModeSubclass.h"
 
@@ -192,6 +193,42 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
     return nullptr;
 }
 
+static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
+
+void DetachAnnotationFromUI(Annotation* annot) {
+    if (!annot) {
+        return;
+    }
+    CancelFormFieldEditIfWidget(annot);
+    for (MainWindow* win : gWindows) {
+        if (win->annotationBeingDragged == annot) {
+            win->annotationBeingDragged = nullptr;
+            win->annotationBeingResized = false;
+        }
+        if (win->annotationUnderCursor == annot) {
+            win->annotationUnderCursor = nullptr;
+        }
+        int nTabs = win->TabCount();
+        for (int i = 0; i < nTabs; i++) {
+            WindowTab* t = win->GetTab(i);
+            if (t && t->selectedAnnotation == annot) {
+                t->selectedAnnotation = nullptr;
+            }
+        }
+    }
+}
+
+void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
+    if (!tab || !tab->editAnnotsWindow) {
+        return;
+    }
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    // selectedAnnotation is usually already null; do not FlushContents into a
+    // dying engine. Drop non-owning list entries before ~EngineMupdf frees them.
+    ew->annotations.Clear();
+    RebuildAnnotationsListBox(ew);
+}
+
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     Annotation* selectNext = nullptr;
@@ -203,23 +240,12 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         selectNext = FindAnnotationOnSamePage(tab, annot);
     }
 
+    // Clear all UI holders before DeleteAnnotation frees the wrapper.
+    DetachAnnotationFromUI(annot);
     DeleteAnnotation(annot);
-    // Deleted annot must not remain selected (use-after-free on subsequent UI).
-    if (tab->selectedAnnotation == annot) {
-        tab->selectedAnnotation = nullptr;
-    }
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
-        // ew->skipGoToPage = true;
-        // int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
         UpdateAnnotationsList(ew);
-#if 0
-        if ((selectNext == nullptr) && (currSelIdx >= 0)) {
-            // if we're deleting currently selected, pick
-            // next to select
-            annot = PickNewSelectedAnnotation(ew, currSelIdx);
-        }
-#endif
     }
     SetSelectedAnnotation(tab, selectNext);
 }
@@ -691,10 +717,7 @@ static void FlushContentsFromEdit(EditAnnotationsWindow* ew) {
         return;
     }
     Annotation* a = ew->tab->selectedAnnotation;
-    if (!a || !a->engine || !a->pdfannot) {
-        return;
-    }
-    if (ew->annotations.Find(a) < 0) {
+    if (!AnnotationIsLive(a) || ew->annotations.Find(a) < 0) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
@@ -1161,7 +1184,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
         return;
     }
     EngineMupdf* engine = GetEngineMupdf(ew);
-    if (!engine || !engine->pdfdoc || !annot->pdfannot) {
+    if (!engine || !engine->pdfdoc || !AnnotationIsLive(annot)) {
         return;
     }
 
@@ -1178,6 +1201,11 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+
+    // Dialog can pump messages (reload/close); re-check after return.
+    if (!AnnotationIsLive(annot)) {
         return;
     }
 
@@ -1302,7 +1330,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
         return;
     }
     Annotation* a = ew->tab->selectedAnnotation;
-    if (!a || !a->engine) {
+    if (!AnnotationIsLive(a)) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();

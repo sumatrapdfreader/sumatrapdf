@@ -2160,6 +2160,9 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
     win->annotationUnderCursor = nullptr;
+    // EditAnnotationsWindow keeps non-owning Annotation* from the engine; clear
+    // them before ReplaceDocumentInCurrentTab deletes the old engine.
+    InvalidateEditAnnotationsOnEngineChange(tab);
     // Do not clear ignoreNextAutoReload here: SaveAnnotationsToExistingFile sets it
     // so the file-watcher auto-reload from that write is skipped. Clearing it on every
     // ReloadDocument caused a second full open right after the intentional post-save
@@ -3893,6 +3896,10 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     if (currentTab) {
         currentTab->selectedAnnotation = nullptr;
         ResetReadAloudStateForTab(currentTab);
+        // Edit panel holds non-owning Annotation* into the engine about to die.
+        if (deleteModel) {
+            CloseAndDeleteEditAnnotationsWindow(currentTab);
+        }
     }
     if (deleteModel) {
         if (currentTab) {
