@@ -197,49 +197,6 @@ struct RECT {
     LONG right;
     LONG bottom;
 };
-
-namespace Gdiplus {
-struct Point {
-    int X;
-    int Y;
-
-    Point() = default;
-    Point(int x, int y) : X(x), Y(y) {}
-};
-struct PointF {
-    float X;
-    float Y;
-
-    PointF() = default;
-    PointF(float x, float y) : X(x), Y(y) {}
-};
-struct Rect {
-    int X;
-    int Y;
-    int Width;
-    int Height;
-
-    Rect() = default;
-    Rect(int x, int y, int width, int height) : X(x), Y(y), Width(width), Height(height) {}
-};
-struct RectF {
-    float X;
-    float Y;
-    float Width;
-    float Height;
-
-    RectF() = default;
-    RectF(float x, float y, float width, float height) : X(x), Y(y), Width(width), Height(height) {}
-};
-struct Color {
-    uint32_t argb = 0;
-
-    Color() = default;
-    explicit Color(uint32_t argb) : argb(argb) {}
-    Color(uint8_t r, uint8_t g, uint8_t b) : argb((uint32_t)0xff << 24 | (uint32_t)r << 16 | (uint32_t)g << 8 | b) {}
-    Color(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
-        : argb((uint32_t)a << 24 | (uint32_t)r << 16 | (uint32_t)g << 8 | b) {}
-};
 } // namespace Gdiplus
 
 #define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
