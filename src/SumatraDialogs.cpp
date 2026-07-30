@@ -1188,7 +1188,8 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             }
             EndDialog(hDlg, IDOK);
             return TRUE;
-        } else if (IDCANCEL == cmd) {
+        }
+        if (IDCANCEL == cmd) {
             EndDialog(hDlg, IDCANCEL);
             return TRUE;
         }

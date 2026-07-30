@@ -5606,7 +5606,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         }
         RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         return true;
-    } else if (tocVisible || favVisible) {
+    }
+    if (tocVisible || favVisible) {
         if (sidebarDx > 0) {
             win->sidebarDx = sidebarDx; // splitter drag
         }
