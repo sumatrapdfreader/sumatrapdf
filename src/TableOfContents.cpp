@@ -138,7 +138,20 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         copy->embedObjNum = p->embedObjNum;
         return copy;
     }
-    // scrollTo, mupdf, djvu, none → page navigation snapshot
+    if (k == kindDestinationScrollTo) {
+        auto* copy = new PageDestination();
+        copy->kind = k;
+        copy->pageNo = PageDestGetPageNo(dest);
+        if (copy->pageNo <= 0) {
+            copy->pageNo = tocPageNo;
+        }
+        copy->rect = PageDestGetRect(dest);
+        copy->zoom = PageDestGetZoom(dest);
+        copy->value = str::Dup(PageDestGetValue(dest));
+        copy->name = str::Dup(PageDestGetName(dest));
+        return copy;
+    }
+    // mupdf, djvu, none → page navigation snapshot
     int pageNo = PageDestGetPageNo(dest);
     if (pageNo <= 0) {
         pageNo = tocPageNo;
@@ -164,6 +177,25 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     }
     return NewSimpleDest(pageNo, r, zoom);
 }
+
+#if defined(DEBUG)
+bool TableOfContents_UnitTestSnapshotNamedDest() {
+    PageDestination source;
+    source.kind = kindDestinationScrollTo;
+    source.pageNo = 1;
+    source.rect = RectF(2, 3, 4, 5);
+    source.zoom = 125;
+    source.value = str::Dup(StrL("value"));
+    source.name = str::Dup(StrL("https://sumatrapdf.md/issue-5842.html#target-heading"));
+
+    IPageDestination* snapshot = SnapshotDestForDeferredNav(&source, 7);
+    bool ok = snapshot && snapshot->GetKind() == kindDestinationScrollTo && PageDestGetPageNo(snapshot) == 1 &&
+              PageDestGetRect(snapshot) == source.rect && PageDestGetZoom(snapshot) == source.zoom &&
+              str::Eq(PageDestGetValue(snapshot), source.value) && str::Eq(PageDestGetName(snapshot), source.name);
+    delete snapshot;
+    return ok;
+}
+#endif
 
 static TocItem* FindTocItemByTitlePage(TocItem* item, Str title, int pageNo) {
     for (; item; item = item->next) {

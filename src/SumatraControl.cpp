@@ -41,6 +41,7 @@ enum class ControlCmd : u16 {
     TestPageLinks = 30,
     TestWindowStateDuringLoad = 31,
     TestTocNavigate = 32,
+    TestMarkdownTocNavigate = 33,
 };
 
 enum class ControlArgType : u16 {
@@ -522,6 +523,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = TocNavigateResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMarkdownTocNavigate: {
+            i32 destNo = 0;
+            i32 minScrollY = 1;
+            if (!IntArg(req, 0, destNo) || !IntArg(req, 1, minScrollY)) {
+                AppendError(req, "TestMarkdownTocNavigate expects int destNo, int minScrollY");
+                break;
+            }
+            int exitCode = 0;
+            Str res = MarkdownTocNavigateResultTemp(destNo, minScrollY, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

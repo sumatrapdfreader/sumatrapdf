@@ -23,6 +23,9 @@
 #include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
+#include "MarkdownModel.h"
+#include "TableOfContents.h"
+#include "wingui/BrowserDocView.h"
 
 #include <chm.h>
 #include "EbookBase.h"
@@ -172,6 +175,22 @@ static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
         IPageDestination* d = NthDestInToc(item->child, target, counter);
         if (d) {
             return d;
+        }
+    }
+    return nullptr;
+}
+
+static TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter) {
+    for (; item; item = item->next) {
+        if (item->dest) {
+            counter++;
+            if (counter == target) {
+                return item;
+            }
+        }
+        TocItem* found = NthTocItemWithDest(item->child, target, counter);
+        if (found) {
+            return found;
         }
     }
     return nullptr;
@@ -751,6 +770,50 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
     return ToStrTemp(out);
+}
+
+// With destNo > 0, start navigation to that Markdown TOC item through the real
+// deferred TOC path. With destNo == 0, report whether WebView has reached the
+// requested vertical scroll position. Used by tests/issue-5842.ts.
+TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (gWindows.IsEmpty()) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+    MarkdownModel* mm = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+    if (!mm || !mm->docView) {
+        return finish(StrL("NOTREADY no-markdown-webview"), 2);
+    }
+
+    if (destNo > 0) {
+        TocTree* toc = mm->GetToc();
+        int counter = 0;
+        TocItem* item = toc && toc->root ? NthTocItemWithDest(toc->root, destNo, counter) : nullptr;
+        if (!item) {
+            return finish(fmt("ERROR no-dest destNo=%d", destNo), 1);
+        }
+        GoToTocItem(win, item);
+        return finish(fmt("NAVIGATING dest=%d name=%s", destNo, PageDestGetName(item->dest)), 0);
+    }
+
+    Point pos = mm->docView->GetScrollPos();
+    if (pos.y < minScrollY) {
+        return finish(fmt("NOTREADY scrollY=%d min=%d", pos.y, minScrollY), 2);
+    }
+    return finish(fmt("OK scrollX=%d scrollY=%d", pos.x, pos.y), 0);
 }
 
 // Follow the first internal link on page 1 after pinning the viewport to the

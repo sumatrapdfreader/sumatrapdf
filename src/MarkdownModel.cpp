@@ -56,6 +56,16 @@ static TempStr NormalizeMarkdownUrlTemp(Str url) {
     return str::JoinTemp(kMdVirtualHost, plainUrl);
 }
 
+// Keep the fragment when navigating the browser. GetFullPathTemp() intentionally
+// removes it for page lookup and state tracking, but WebView2 needs it to scroll
+// to a heading within the current HTML page.
+static Str MarkdownBrowserNavigationUrl(Str url) {
+    if (str::StartsWith(url, kMdVirtualHost)) {
+        return Str(url.s + kMdVirtualHostLen, url.len - kMdVirtualHostLen);
+    }
+    return url;
+}
+
 static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
     TempStr normFile = path::NormalizeTemp(filePath);
     TempStr normBase = path::NormalizeTemp(baseDir);
@@ -355,10 +365,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
     str::ReplaceWithCopy(&currentPageUrl, plainUrl);
     currentPageNo = pageNo;
     if (docView) {
-        TempStr navUrl = plainUrl;
-        if (str::StartsWith(navUrl, kMdVirtualHost)) {
-            navUrl = Str(navUrl.s + kMdVirtualHostLen, navUrl.len - kMdVirtualHostLen);
-        }
+        Str navUrl = MarkdownBrowserNavigationUrl(pageUrl);
         docView->NavigateToDataUrl(navUrl);
     }
     return true;
@@ -740,6 +747,13 @@ void MarkdownModel::CreateThumbnail(Size, const OnBitmapRendered*) {}
 bool MarkdownModel::IsSupportedFileType(FileType kind) {
     return kind == FileType::Markdown;
 }
+
+#if defined(DEBUG)
+bool MarkdownModel_UnitTestBrowserNavigationUrl() {
+    Str url = StrL("https://sumatrapdf.markdown/issue-5842.html#target-heading");
+    return str::Eq(MarkdownBrowserNavigationUrl(url), StrL("issue-5842.html#target-heading"));
+}
+#endif
 
 bool MarkdownModel::Load(Str fileName) {
     str::ReplaceWithCopy(&this->fileName, fileName);

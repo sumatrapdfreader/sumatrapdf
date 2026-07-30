@@ -10,6 +10,8 @@
 
 #if defined(DEBUG)
 void TextSelection_UnitTests();
+bool TableOfContents_UnitTestSnapshotNamedDest();
+bool MarkdownModel_UnitTestBrowserNavigationUrl();
 #endif
 
 // must be last to over-write assert()
@@ -76,6 +78,8 @@ int RunAppUnitTests() {
     ParseTip_UnitTests();
 #if defined(DEBUG)
     TextSelection_UnitTests();
+    utassert(TableOfContents_UnitTestSnapshotNamedDest());
+    utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
 #endif
     return utassert_print_results();
 }
