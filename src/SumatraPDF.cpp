@@ -898,8 +898,8 @@ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
 
         oldMii.cch++;
         newMii.cch++;
-        WCHAR* oldName = AllocArrayTemp<WCHAR>(oldMii.cch);
-        WCHAR* newName = AllocArrayTemp<WCHAR>(newMii.cch);
+        WCHAR* oldName = AllocArrayTemp<WCHAR>((int)oldMii.cch);
+        WCHAR* newName = AllocArrayTemp<WCHAR>((int)newMii.cch);
         oldMii.dwTypeData = oldName;
         newMii.dwTypeData = newName;
         GetMenuItemInfoW(oldMenu, i, TRUE, &oldMii);
@@ -1046,7 +1046,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     }
 
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = size.dx / (float)pageRect.dx;
+    float zoom = (float)size.dx / (float)pageRect.dx;
     if (pageRect.dy > (float)size.dy / zoom) {
         pageRect.dy = (float)size.dy / zoom;
     }
@@ -1323,7 +1323,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
             if (kZoomFitPage != dm->GetZoomVirtual()) {
                 // keep the top/bottom 5% of the previous page visible after paging down/up
                 si.nPage = (uint)(si.nPage * 0.95);
-                si.nMax -= viewPort.dy - si.nPage;
+                si.nMax -= (int)viewPort.dy - (int)si.nPage;
             }
         }
         showVScroll = (viewPort.dy < canvas.dy);
@@ -4205,7 +4205,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     dialogConfig.pszMainInstruction = mainInstr;
     dialogConfig.pszContent = CWStrTemp(content);
     dialogConfig.nDefaultButton = IDCANCEL;
-    dialogConfig.dwFlags = flags;
+    dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
     dialogConfig.cxWidth = 0;
     dialogConfig.pfCallback = nullptr;
     dialogConfig.dwCommonButtons = 0;
@@ -7296,7 +7296,7 @@ TempStr URLEncodeMayTruncateTemp(Str s) {
             // can't reduce further
             return {};
         }
-        maxLen -= diff;
+        maxLen -= (int)diff;
     }
     return {};
 }
@@ -9848,7 +9848,7 @@ static void MenuBarAsPopupMenu(MainWindow* win, Rect btnRect) {
             continue;
         }
         mii.cch++;
-        WCHAR* subMenuName = AllocArrayTemp<WCHAR>(mii.cch);
+        WCHAR* subMenuName = AllocArrayTemp<WCHAR>((int)mii.cch);
         mii.dwTypeData = subMenuName;
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenuW(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
@@ -10237,7 +10237,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         UnpackColor(c, r, g, b);
         float width = floorf((float)rc.dy / 8.0f);
         Pen p(Color(r, g, b), width);
-        rc.Inflate(-int((rc.dx * 0.2f) + 0.5f), -int((rc.dy * 0.3f) + 0.5f));
+        rc.Inflate(-int(((float)rc.dx * 0.2f) + 0.5f), -int(((float)rc.dy * 0.3f) + 0.5f));
         for (int i = 0; i < 3; i++) {
             gfx.DrawLine(&p, rc.x, rc.y + (i * rc.dy / 2), rc.x + rc.dx, rc.y + (i * rc.dy / 2));
         }

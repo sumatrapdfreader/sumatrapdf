@@ -338,18 +338,18 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
                 float cx = (float)(arrowTop.x + (arrowTop.dx / 2));
                 float cy = (float)(arrowTop.y + (arrowTop.dy / 2)) + ((float)inset / 2);
                 Gdiplus::PointF upPts[3] = {
-                    {cx - sz, cy + (sz / 2.0f)},
-                    {cx, cy - (sz / 2.0f)},
-                    {cx + sz, cy + (sz / 2.0f)},
+                    {cx - (float)sz, cy + ((float)sz / 2.0f)},
+                    {cx, cy - ((float)sz / 2.0f)},
+                    {cx + (float)sz, cy + ((float)sz / 2.0f)},
                 };
                 gfx.DrawLines(&pen, upPts, 3);
 
                 cx = (float)(arrowBot.x + (arrowBot.dx / 2));
                 cy = (float)(arrowBot.y + (arrowBot.dy / 2)) - ((float)inset / 2);
                 Gdiplus::PointF downPts[3] = {
-                    {cx - sz, cy - (sz / 2.0f)},
-                    {cx, cy + (sz / 2.0f)},
-                    {cx + sz, cy - (sz / 2.0f)},
+                    {cx - (float)sz, cy - ((float)sz / 2.0f)},
+                    {cx, cy + ((float)sz / 2.0f)},
+                    {cx + (float)sz, cy - ((float)sz / 2.0f)},
                 };
                 gfx.DrawLines(&pen, downPts, 3);
             } else {
@@ -357,18 +357,18 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
                 float cx = (float)(arrowTop.x + (arrowTop.dx / 2)) + ((float)inset / 2);
                 float cy = (float)(arrowTop.y + (arrowTop.dy / 2));
                 Gdiplus::PointF leftPts[3] = {
-                    {cx + (sz / 2.0f), cy - sz},
-                    {cx - (sz / 2.0f), cy},
-                    {cx + (sz / 2.0f), cy + sz},
+                    {cx + ((float)sz / 2.0f), cy - (float)sz},
+                    {cx - ((float)sz / 2.0f), cy},
+                    {cx + ((float)sz / 2.0f), cy + (float)sz},
                 };
                 gfx.DrawLines(&pen, leftPts, 3);
 
                 cx = (float)(arrowBot.x + (arrowBot.dx / 2)) - ((float)inset / 2);
                 cy = (float)(arrowBot.y + (arrowBot.dy / 2));
                 Gdiplus::PointF rightPts[3] = {
-                    {cx - (sz / 2.0f), cy - sz},
-                    {cx + (sz / 2.0f), cy},
-                    {cx - (sz / 2.0f), cy + sz},
+                    {cx - ((float)sz / 2.0f), cy - (float)sz},
+                    {cx + ((float)sz / 2.0f), cy},
+                    {cx - ((float)sz / 2.0f), cy + (float)sz},
                 };
                 gfx.DrawLines(&pen, rightPts, 3);
             }

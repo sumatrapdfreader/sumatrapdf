@@ -76,7 +76,7 @@ static void dm_transform_pixmap_rgb(fz_context* ctx, fz_pixmap* pix, const DarkM
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int components = fz_colorspace_n(ctx, cs);
     int n = pix->n;
-    int stride = pix->stride;
+    int stride = (int)pix->stride;
     int w = pix->w;
     int h = pix->h;
     for (int y = 0; y < h; y++) {
@@ -86,7 +86,7 @@ static void dm_transform_pixmap_rgb(fz_context* ctx, fz_pixmap* pix, const DarkM
             float conv[FZ_MAX_COLORS] = {};
             float srcRgb[FZ_MAX_COLORS] = {};
             for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                conv[c] = px[c] / 255.f;
+                conv[c] = (float)px[c] / 255.f;
             }
             fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
             float nr = 0.f, ng = 0.f, nb = 0.f;
@@ -236,7 +236,7 @@ static fz_image* dm_build_processed_shade(fz_context* ctx, fz_shade* shade, fz_m
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), bounds, nullptr, 1);
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
-        fz_matrix local_ctm = fz_concat(fz_translate(-bounds.x0, -bounds.y0), ctm);
+        fz_matrix local_ctm = fz_concat(fz_translate((float)-bounds.x0, (float)-bounds.y0), ctm);
         shadeDev = fz_new_draw_device(ctx, local_ctm, pix);
         fz_fill_shade(ctx, shadeDev, shade, fz_identity, alpha, fz_default_color_params);
         fz_close_device(ctx, shadeDev);

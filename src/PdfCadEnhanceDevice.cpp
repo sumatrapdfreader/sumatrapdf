@@ -373,9 +373,9 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
     int n1 = pix->n - pix->alpha;
     for (int y = 0; y < pix->h; y++) {
         for (int x = 0; x < pix->w; x++) {
-            float fr = s[0] / 255.f;
-            float fg = s[1] / 255.f;
-            float fb = s[2] / 255.f;
+            float fr = (float)s[0] / 255.f;
+            float fg = (float)s[1] / 255.f;
+            float fb = (float)s[2] / 255.f;
             if (fr > 0.96f && fg > 0.96f && fb > 0.96f) {
                 s += n;
                 continue;

@@ -110,7 +110,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                     break;
             }
         }
-        bbox.Width *= (1.0f - (correct / n)) * 0.99f;
+        bbox.Width *= (1.0f - (correct / (float)n)) * 0.99f;
     }
     bbox.Height *= 0.95f;
     return RectF{bbox};

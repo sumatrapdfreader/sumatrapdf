@@ -1978,7 +1978,7 @@ bool StartsWith(WStr str, WStr prefix) {
     if (!str || prefix.len > str.len) {
         return false;
     }
-    return EqN(str, prefix, (size_t)prefix.len);
+    return EqN(str, prefix, (int)(size_t)prefix.len);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
@@ -2095,7 +2095,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         return {};
     }
 
-    wstr::Builder result((size_t)s.len);
+    wstr::Builder result((int)(size_t)s.len);
     int findLen = toReplace.len;
     int start = 0;
     while (start < s.len) {
@@ -2571,7 +2571,7 @@ Str FormatFileSize(Arena* arena, u64 size) {
     char temp[32];
     int i = 0;
     while (size > 0 && i < 31) {
-        temp[i++] = '0' + (size % 10);
+        temp[i++] = (char)('0' + (size % 10));
         size /= 10;
     }
     int numDigits = i;

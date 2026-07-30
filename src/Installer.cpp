@@ -395,7 +395,7 @@ static bool ShowMoveAsideBlockedDialog(Str path, Str copyPath, Str fileName) {
     cfg.pszWindowTitle = L"SumatraPDF";
     cfg.pszMainInstruction = CWStrTemp(fmt(_TRA("Cannot update %s").s, fileName));
     cfg.pszContent = CWStrTemp(content);
-    cfg.dwFlags = flags;
+    cfg.dwFlags = (TASKDIALOG_FLAGS)flags;
     cfg.pfCallback = MoveAsideBlockedDialogCallback;
     cfg.lpCallbackData = (LONG_PTR)&ctx;
     cfg.pButtons = buttons;
@@ -1713,7 +1713,7 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
     s = _TRA("You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?");
     dialogConfig.pszContent = CWStrTemp(s);
     dialogConfig.nDefaultButton = kBtnIdContinue;
-    dialogConfig.dwFlags = flags;
+    dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
     dialogConfig.cxWidth = 0;
     dialogConfig.pfCallback = nullptr;
     dialogConfig.dwCommonButtons = 0;

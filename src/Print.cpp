@@ -212,7 +212,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     } else if (bins == (DWORD)-1) {
         out.Append(fmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError()));
     } else {
-        ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
+        ScopedMem<WORD> binValues(AllocArray<WORD>((int)bins));
         DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
         ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (int)binNames));
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
@@ -226,13 +226,13 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     DWORD papers = DeviceCapabilitiesW(nameW, portW, DC_PAPERS, nullptr, nullptr);
     DWORD paperNames = DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, nullptr, nullptr);
     if (papers > 0 && papers != (DWORD)-1) {
-        ScopedMem<WORD> paperValues(AllocArray<WORD>(papers));
+        ScopedMem<WORD> paperValues(AllocArray<WORD>((int)papers));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr);
         // paper names are 64 WCHARs each
         ScopedMem<WCHAR> paperNameValues(AllocArray<WCHAR>(64 * (int)paperNames));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues.Get(), nullptr);
         // paper sizes in tenths of a millimeter
-        ScopedMem<POINT> paperSizes(AllocArray<POINT>(papers));
+        ScopedMem<POINT> paperSizes(AllocArray<POINT>((int)papers));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr);
         out.Append("  paper sizes:\n");
         for (DWORD j = 0; j < papers; j++) {
@@ -293,7 +293,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     // N-up (pages per sheet)
     DWORD nup = DeviceCapabilitiesW(nameW, portW, DC_NUP, nullptr, nullptr);
     if (nup > 0 && nup != (DWORD)-1) {
-        ScopedMem<DWORD> nupValues(AllocArray<DWORD>(nup));
+        ScopedMem<DWORD> nupValues(AllocArray<DWORD>((int)nup));
         DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr);
         out.Append("  pages per sheet (N-up):");
         for (DWORD j = 0; j < nup; j++) {
@@ -308,7 +308,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         // media type names are 64 WCHARs each
         ScopedMem<WCHAR> mediaNames(AllocArray<WCHAR>(64 * (int)nMedia));
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames.Get(), nullptr);
-        ScopedMem<DWORD> mediaValues(AllocArray<DWORD>(nMedia));
+        ScopedMem<DWORD> mediaValues(AllocArray<DWORD>((int)nMedia));
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
@@ -446,7 +446,7 @@ Printer* NewPrinter(Str printerName) {
 
     DWORD needed = 0;
     GetPrinterW(hPrinter, 2, nullptr, 0, &needed);
-    PRINTER_INFO_2* info = (PRINTER_INFO_2*)AllocArray<BYTE>(needed);
+    PRINTER_INFO_2* info = (PRINTER_INFO_2*)AllocArray<BYTE>((int)needed);
     if (info) {
         ok = GetPrinterW(hPrinter, 2, (LPBYTE)info, needed, &needed);
     }
@@ -484,7 +484,7 @@ Printer* NewPrinter(Str printerName) {
         int paperNameSize = 64;
         printer->papers = AllocArray<WORD>((int)n);
         WCHAR* paperNamesSeq = AllocArray<WCHAR>((paperNameSize * (int)n) + 1);
-        printer->paperSizes = AllocArray<POINT>(n);
+        printer->paperSizes = AllocArray<POINT>((int)n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
@@ -504,7 +504,7 @@ Printer* NewPrinter(Str printerName) {
             delete printer;
             return nullptr;
         }
-        printer->nBins = n;
+        printer->nBins = (int)n;
         // it's ok for nBins to be 0, it means there's only one, default bin
         if (n > 0) {
             int binNameSize = 24;
@@ -536,7 +536,7 @@ Printer* NewPrinter(Str printerName) {
         printer->canStaple = (n > 0);
 
         n = DeviceCapabilitiesW(printerNameW, nullptr, DC_ORIENTATION, nullptr, nullptr);
-        printer->orientation = n;
+        printer->orientation = (int)n;
     }
 
 Exit:
@@ -705,9 +705,9 @@ static bool PrintToDevice(const PrintData& pd) {
     if (len(pd.sel) == 0) {
         for (int i = 0; i < len(pd.ranges); i++) {
             if (pd.ranges[i].nToPage < pd.ranges[i].nFromPage) {
-                total += pd.ranges[i].nFromPage - pd.ranges[i].nToPage + 1;
+                total += (int)pd.ranges[i].nFromPage - (int)pd.ranges[i].nToPage + 1;
             } else {
-                total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
+                total += (int)pd.ranges[i].nToPage - (int)pd.ranges[i].nFromPage + 1;
             }
         }
     } else {
@@ -814,8 +814,8 @@ static bool PrintToDevice(const PrintData& pd) {
                 Point offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
-                    offset.x += (int)(printable.dx - (bSize.dx * zoom)) / 2;
-                    offset.y += (int)(printable.dy - (bSize.dy * zoom)) / 2;
+                    offset.x += (int)((float)printable.dx - (bSize.dx * zoom)) / 2;
+                    offset.y += (int)((float)printable.dy - (bSize.dy * zoom)) / 2;
                 }
 
                 PrintPageInBands(engine, hdc, pd.sel[i].pageNo, zoom, pd.rotation, *clipRegion, offset, nullptr,
@@ -866,7 +866,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 continue;
             }
 
-            SizeF pSize = engine.PageMediabox(pageNo).Size();
+            SizeF pSize = engine.PageMediabox((int)pageNo).Size();
             int rotation = 0;
             // Turn the document by 90 deg if it isn't in portrait mode & if autoRotation is not disabled
             if (pd.advData.autoRotate && pSize.dx > pSize.dy) {
@@ -912,8 +912,8 @@ static bool PrintToDevice(const PrintData& pd) {
             } else if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                RectF rect = engine.PageContentBox(pageNo, RenderTarget::Print);
-                RectF cbox = engine.Transform(rect, pageNo, 1.0, rotation);
+                RectF rect = engine.PageContentBox((int)pageNo, RenderTarget::Print);
+                RectF cbox = engine.Transform(rect, (int)pageNo, 1.0, rotation);
                 zoom = std::min((float)printable.dx / cbox.dx,
                                 std::min((float)printable.dy / cbox.dy,
                                          std::min((float)paperSize.dx / pSize.dx, (float)paperSize.dy / pSize.dy)));
@@ -923,20 +923,20 @@ static bool PrintToDevice(const PrintData& pd) {
                     zoom = dpiFactor;
                 }
                 // center the page on the physical paper
-                offset.x += (int)(paperSize.dx - (pSize.dx * zoom)) / 2;
-                offset.y += (int)(paperSize.dy - (pSize.dy * zoom)) / 2;
+                offset.x += (int)((float)paperSize.dx - (pSize.dx * zoom)) / 2;
+                offset.y += (int)((float)paperSize.dy - (pSize.dy * zoom)) / 2;
                 // make sure that no content lies in the non-printable paper margins
-                RectF onPaper(printable.x + offset.x + (cbox.x * zoom), printable.y + offset.y + (cbox.y * zoom),
-                              cbox.dx * zoom, cbox.dy * zoom);
-                if (onPaper.x < printable.x) {
-                    offset.x += (int)(printable.x - onPaper.x);
-                } else if (onPaper.BR().x > printable.BR().x) {
-                    offset.x -= (int)(onPaper.BR().x - printable.BR().x);
+                RectF onPaper((float)printable.x + (float)offset.x + (cbox.x * zoom),
+                              (float)printable.y + (float)offset.y + (cbox.y * zoom), cbox.dx * zoom, cbox.dy * zoom);
+                if (onPaper.x < (float)printable.x) {
+                    offset.x += (int)((float)printable.x - onPaper.x);
+                } else if (onPaper.BR().x > (float)printable.BR().x) {
+                    offset.x -= (int)(onPaper.BR().x - (float)printable.BR().x);
                 }
-                if (onPaper.y < printable.y) {
-                    offset.y += (int)(printable.y - onPaper.y);
-                } else if (onPaper.BR().y > printable.BR().y) {
-                    offset.y -= (int)(onPaper.BR().y - printable.BR().y);
+                if (onPaper.y < (float)printable.y) {
+                    offset.y += (int)((float)printable.y - onPaper.y);
+                } else if (onPaper.BR().y > (float)printable.BR().y) {
+                    offset.y -= (int)(onPaper.BR().y - (float)printable.BR().y);
                 }
             }
 
@@ -947,7 +947,7 @@ static bool PrintToDevice(const PrintData& pd) {
             // for printing a page smaller than the paper (e.g. envelopes or A5
             // stock fed through a tray that centers the paper).
             if (pd.advData.centerHorizontally && PrintScaleAdv::None == pd.advData.scale) {
-                offset.x += (int)(paperSize.dx - (pSize.dx * zoom)) / 2;
+                offset.x += (int)((float)paperSize.dx - (pSize.dx * zoom)) / 2;
             }
 
             RectF mediabox = engine.PageMediabox((int)pageNo);
@@ -1675,14 +1675,14 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
     for (int i = 0; i < n; i++) {
         Str paperName = printer->paperNames[i];
         if (str::EqIS(wanted, paperName)) {
-            return printer->papers[i];
+            return (short)printer->papers[i];
         }
         // e.g. "A3" matches driver names like "A3 297 x 420 mm"
         int wantedLen = len(wanted);
         if (wantedLen > 0 && str::StartsWithI(paperName, wanted)) {
             char next = paperName.s[wantedLen];
             if (next == '\0' || next == ' ') {
-                return printer->papers[i];
+                return (short)printer->papers[i];
             }
         }
     }
@@ -1726,7 +1726,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
     for (int i = 0; i < n; i++) {
         Str currName = printer->binNames[i];
         if (str::EqIS(currName, binName)) {
-            return printer->bins[i];
+            return (short)printer->bins[i];
         }
     }
     uint count = 0;
@@ -1938,7 +1938,7 @@ static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
         POINT sz = sizes[i];
         Size pSizeP = NormalizePaperSize(Size(sz.x, sz.y));
         if (abs(sizeP.dx - pSizeP.dx) <= 10 && abs(sizeP.dy - pSizeP.dy) <= 10) {
-            return printer->papers[i];
+            return (short)printer->papers[i];
         }
     }
     return 0;

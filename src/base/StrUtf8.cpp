@@ -491,7 +491,7 @@ WStr ToWStrTemp(Str s) {
     }
 #if OS_WIN
     int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
-    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
+    wchar_t* wide = (wchar_t*)AllocTemp((int)((wideLen + 1) * sizeof(wchar_t)));
     MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, wide, wideLen);
 #else
     int wideLen = 0;

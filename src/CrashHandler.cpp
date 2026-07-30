@@ -649,7 +649,7 @@ static void GetOsVersion(str::Builder& s) {
     TempStr os = OsNameFromVerTemp(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
-    int buildNumber = ver.dwBuildNumber & 0xFFFF;
+    int buildNumber = (int)ver.dwBuildNumber & 0xFFFF;
     auto arch = "64-bit";
     if (IsProcess32()) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";

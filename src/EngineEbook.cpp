@@ -573,7 +573,7 @@ static RenderedBitmap* getImageFromData(Str imageData) {
         delete bmp;
         return nullptr;
     }
-    Size size(bmp->GetWidth(), bmp->GetHeight());
+    Size size((int)bmp->GetWidth(), (int)bmp->GetHeight());
     delete bmp;
     return new RenderedBitmap(hbmp, size);
 }

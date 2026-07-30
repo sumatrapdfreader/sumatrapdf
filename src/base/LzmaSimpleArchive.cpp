@@ -158,7 +158,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
     }
 
     u32 filesCount = br.UInt32LE();
-    archiveOut->filesCount = filesCount;
+    archiveOut->filesCount = (int)filesCount;
     if (filesCount > dimof(archiveOut->files)) {
         return false;
     }

@@ -367,8 +367,8 @@ bool EngineDjvuDec::FinishLoading() {
             }
             pi->uprightW = upW;
             pi->uprightH = upH;
-            float dx = upW * GetFileDPI() / dpi;
-            float dy = upH * GetFileDPI() / dpi;
+            float dx = (float)upW * GetFileDPI() / (float)dpi;
+            float dy = (float)upH * GetFileDPI() / (float)dpi;
             bool isValid = dx > 0 && dx < 1e6f && dy > 0 && dy < 1e6f;
             if (isValid) {
                 mbox = RectF(0, 0, dx, dy);
@@ -726,7 +726,8 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
             djvu_text_zone* c = &z->children[i];
             CollectZonesUtf8(c, dpiF, sb, coords);
             if (c->type == DJVU_ZONE_WORD) {
-                coords.Append(Rect((int)((c->x + c->w) * dpiF), (int)(c->y * dpiF), 2, (int)(c->h * dpiF)));
+                coords.Append(
+                    Rect((int)((float)(c->x + c->w) * dpiF), (int)((float)c->y * dpiF), 2, (int)((float)c->h * dpiF)));
                 sb.AppendChar(' ');
             } else if (c->type == DJVU_ZONE_LINE) {
                 coords.Append(Rect());
@@ -738,7 +739,7 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
     if (len(z->text) == 0) {
         return;
     }
-    Rect r((int)(z->x * dpiF), (int)(z->y * dpiF), (int)(z->w * dpiF), (int)(z->h * dpiF));
+    Rect r((int)((float)z->x * dpiF), (int)((float)z->y * dpiF), (int)((float)z->w * dpiF), (int)((float)z->h * dpiF));
     // zones are usually word-granularity, so approximate per-glyph rects by
     // evenly splitting the box horizontally (computed from endpoints so slices
     // tile exactly); this makes partial-word search hits and selections
@@ -815,7 +816,8 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
         if (!url) {
             continue;
         }
-        Rect rect((int)(l.x * dpiF), (int)(l.y * dpiF), (int)(l.w * dpiF), (int)(l.h * dpiF));
+        Rect rect((int)((float)l.x * dpiF), (int)((float)l.y * dpiF), (int)((float)l.w * dpiF),
+                  (int)((float)l.h * dpiF));
         TempStr link = ResolveNamedDestDjvuDecTemp(doc, url);
         if (!link) {
             link = url;

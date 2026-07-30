@@ -65,7 +65,7 @@ void PdfDarkModeOklab_UnitTests() {
     // Monotone gray ramp: lighter inputs map to darker outputs.
     float prevOutL = 2.f;
     for (int i = 10; i <= 90; i += 20) {
-        float g = i / 100.f;
+        float g = (float)i / 100.f;
         MapRgbToDarkThemeOklab(g, g, g, palette, out);
         float outL = RelLuminance(out[0], out[1], out[2]);
         utassert(outL <= prevOutL + 0.001f);

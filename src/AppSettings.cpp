@@ -167,7 +167,7 @@ static int GetWeekCount() {
     BOOL ok = SystemTimeToFileTime(&date20110101, &origTime);
     ReportIf(!ok);
     GetSystemTimeAsFileTime(&currTime);
-    return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
+    return (int)(currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
 }
 

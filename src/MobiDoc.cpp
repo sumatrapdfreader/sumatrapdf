@@ -443,7 +443,7 @@ static void DecodeMobiDocHeader(const u8* buf, int bufLen, MobiHeader* hdr) {
     d.Bytes(hdr->reserved2, 62);
     hdr->extraDataFlags = d.UInt16BE();
     if (hdr->hdrLen >= 232) {
-        hdr->indxRec = d.UInt32BE();
+        hdr->indxRec = (i32)d.UInt32BE();
     }
 }
 
@@ -509,7 +509,7 @@ bool MobiDoc::ParseHeader() {
         // cf. https://code.google.com/archive/p/sumatrapdf/issues/2529
         docRecCount--;
     }
-    docUncompressedSize = palmDocHdr.uncompressedDocSize;
+    docUncompressedSize = (int)palmDocHdr.uncompressedDocSize;
 
     if (kPalmDocHeaderLen == recSize) {
         // TODO: calculate imageFirstRec / imagesCount
@@ -536,7 +536,7 @@ bool MobiDoc::ParseHeader() {
         AddPropOwned(props, DocProp::UnsupportedFeatures, v);
         str::Free(v);
     }
-    textEncoding = mobiHdr.textEncoding;
+    textEncoding = (int)mobiHdr.textEncoding;
 
     if (pdbReader->GetRecordCount() > (int)mobiHdr.imageFirstRec) {
         imageFirstRec = (int)mobiHdr.imageFirstRec;
@@ -653,7 +653,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
             case 201:
                 if (length == 12 && imageFirstRec) {
                     d.Unskip(4);
-                    coverImageRec = imageFirstRec + d.UInt32BE();
+                    coverImageRec = (int)imageFirstRec + (int)d.UInt32BE();
                 }
                 continue;
             case 503:
@@ -957,7 +957,7 @@ bool MobiDoc::HasToc() {
         if (filepos) {
             unsigned int pos;
             if (!str::IsNull(str::Parse(Str(filepos->value), "%u%$", &pos))) {
-                docTocIndex = pos;
+                docTocIndex = (int)pos;
             }
         }
     }

@@ -219,13 +219,13 @@ TempStr NormalizeURLTemp(Str url, Str base) {
 
 inline char decode64(char c) {
     if ('A' <= c && c <= 'Z') {
-        return c - 'A';
+        return (char)(c - 'A');
     }
     if ('a' <= c && c <= 'z') {
-        return c - 'a' + 26;
+        return (char)(c - 'a' + 26);
     }
     if ('0' <= c && c <= '9') {
-        return c - '0' + 52;
+        return (char)(c - '0' + 52);
     }
     if ('+' == c) {
         return 62;
@@ -257,15 +257,15 @@ static TempStr Base64DecodeTemp(Str data) {
                 c = n;
                 break;
             case 1:
-                *curr++ = (c << 2) | (n >> 4);
-                c = n & 0xF;
+                *curr++ = (char)((c << 2) | (n >> 4));
+                c = (char)(n & 0xF);
                 break;
             case 2:
-                *curr++ = (c << 4) | (n >> 2);
-                c = n & 0x3;
+                *curr++ = (char)((c << 4) | (n >> 2));
+                c = (char)(n & 0x3);
                 break;
             case 3:
-                *curr++ = (c << 6) | (n >> 0);
+                *curr++ = (char)((c << 6) | (n >> 0));
                 break;
         }
     }

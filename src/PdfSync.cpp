@@ -328,7 +328,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 #define SYNC_TO_PDF_COORDINATE(c) ((c) / 65781.76)
 
 static int cmpLineRecords(const void* a, const void* b) {
-    return ((PdfsyncLine*)a)->record - ((PdfsyncLine*)b)->record;
+    return (int)((PdfsyncLine*)a)->record - (int)((PdfsyncLine*)b)->record;
 }
 
 // If `srcfilepath` doesn't exist on disk, checks whether it's been moved to sit
@@ -494,7 +494,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     Vec<int> found_records;
     UINT ret = SourceToRecord(srcfilename, line, col, found_records);
     if (ret != PDFSYNCERR_SUCCESS || len(found_records) == 0) {
-        return ret;
+        return (int)ret;
     }
 
     rects.Reset();
@@ -929,7 +929,7 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
             if (firstpage <= 0 || firstpage > engine->PageCount()) {
                 continue;
             }
-            *page = (UINT)firstpage;
+            *page = (int)(UINT)firstpage;
         }
         if (synctex_node_page(node) != firstpage) {
             continue;

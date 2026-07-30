@@ -120,7 +120,7 @@ NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
     if (!ok) {
         return false;
     }
-    int symLen = symInfo->NameLen;
+    int symLen = (int)symInfo->NameLen;
     if (symLen < 4) {
         return false;
     }

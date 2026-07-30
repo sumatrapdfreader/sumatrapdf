@@ -164,7 +164,7 @@ Str ExtractP7m(Str d) {
         return {};
     }
 
-    u8* content = AllocArray<u8>(cbContent);
+    u8* content = AllocArray<u8>((int)cbContent);
     ok = CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, content, &cbContent);
     CryptMsgClose(hMsg);
     if (!ok) {

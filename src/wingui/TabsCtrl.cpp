@@ -285,12 +285,12 @@ void TabsCtrl::Paint(HDC hdc, const Rect& rc) {
         rTxt = ToGdipRectF(ti->r);
         if (IsTabsRtl(hwnd)) {
             // RTL: [8px | close | text | 8px]
-            rTxt.X += (8 + r.dx);
+            rTxt.X += (Gdiplus::REAL)(8 + r.dx);
         } else {
             // LTR: [8px | text | close | 8px]
             rTxt.X += 8;
         }
-        rTxt.Width -= (8 + r.dx + 8);
+        rTxt.Width -= (Gdiplus::REAL)(8 + r.dx + 8);
         br.SetColor(GdipCol(textColor));
         WCHAR* ws = CWStrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);

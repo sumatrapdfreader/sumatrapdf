@@ -624,7 +624,7 @@ static void AddZoomLevel(float zoomLevel, HWND hwnd, Vec<float>* levels) {
 }
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
-    HWND hwnd = GetDlgItem(hDlg, idComboBox);
+    HWND hwnd = GetDlgItem(hDlg, (int)idComboBox);
 
     auto prefs = gGlobalPrefs;
     auto customZoomLevels = prefs->zoomLevels;
@@ -661,9 +661,9 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
         }
     }
 
-    if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
+    if (SendDlgItemMessage(hDlg, (int)idComboBox, CB_GETCURSEL, 0, 0) == -1) {
         TempStr customZoom = fmt("%.0f%%", currZoom);
-        SetDlgItemTextW(hDlg, idComboBox, CWStrTemp(customZoom));
+        SetDlgItemTextW(hDlg, (int)idComboBox, CWStrTemp(customZoom));
     }
     delete gCurrZoomLevels;
     gCurrZoomLevels = currZoomLevels;
@@ -673,7 +673,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
     float newZoom = defaultZoom;
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        TempStr customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
+        TempStr customZoom = HwndGetTextTemp(GetDlgItem(hDlg, (int)idComboBox));
         float zoom = (float)atof(customZoom.s);
         newZoom = limitValue(zoom, kZoomMin, kZoomMax);
         return newZoom;

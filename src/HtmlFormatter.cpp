@@ -481,7 +481,7 @@ float HtmlFormatter::CurrLineDy() {
 // indentation inside lists)
 float HtmlFormatter::NewLineX() const {
     // TODO: indent based on font size instead?
-    float x = 15.f * listDepth;
+    float x = 15.f * (float)listDepth;
     if (x < pageDx - 20.f) {
         return x;
     }

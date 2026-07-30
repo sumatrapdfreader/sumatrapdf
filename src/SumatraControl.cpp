@@ -567,7 +567,7 @@ static ControlRequest* ReadControlRequest(HANDLE h) {
     if (size < 4 || size > 16 * 1024 * 1024) {
         return nullptr;
     }
-    u8* data = AllocArray<u8>(size);
+    u8* data = AllocArray<u8>((int)size);
     if (!ReadExact(h, data, size)) {
         free(data);
         return nullptr;

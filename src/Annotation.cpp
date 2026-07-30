@@ -832,7 +832,7 @@ static void PdfColorToFloat(PdfColor c, float rgb[3]) {
 
 static float GetOpacityFloat(PdfColor c) {
     u8 alpha = GetAlpha(c);
-    return alpha / 255.0f;
+    return (float)alpha / 255.0f;
 }
 
 static PdfColor MkPdfColorFromFloat(float rf, float gf, float bf) {

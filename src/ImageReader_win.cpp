@@ -80,8 +80,8 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     HR(pConverter->GetSize(&w, &h));
     double xres, yres;
     HR(pConverter->GetResolution(&xres, &yres));
-    Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Gdiplus::Rect bmpRect(0, 0, w, h);
+    Bitmap bmp((INT)w, (INT)h, PixelFormat32bppARGB);
+    Gdiplus::Rect bmpRect(0, 0, (INT)w, (INT)h);
     BitmapData bmpData;
     Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok) {
@@ -92,7 +92,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     bmp.SetResolution((float)xres, (float)yres);
 #undef HR
     ApplyExifOrientation(&bmp, orientation);
-    return bmp.Clone(0, 0, bmp.GetWidth(), bmp.GetHeight(), PixelFormat32bppARGB);
+    return bmp.Clone(0, 0, (INT)bmp.GetWidth(), (INT)bmp.GetHeight(), PixelFormat32bppARGB);
 }
 
 static void MaybeFlipBitmap(Bitmap* bmp) {
@@ -298,7 +298,7 @@ RenderedBitmap* LoadRenderedBitmap(Str path) {
     HBITMAP hbmp = nullptr;
     RenderedBitmap* rendered = nullptr;
     if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
-        rendered = new RenderedBitmap(hbmp, Size(bmp->GetWidth(), bmp->GetHeight()));
+        rendered = new RenderedBitmap(hbmp, Size((int)bmp->GetWidth(), (int)bmp->GetHeight()));
     }
     delete bmp;
 

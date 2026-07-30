@@ -421,7 +421,7 @@ TempStr GetEnvVariableTemp(Str name) {
     if (res >= cchBufSize) {
         // buffer was too small
         cchBufSize = res + 4; // +4 jic
-        buf = AllocArrayTemp<WCHAR>(cchBufSize);
+        buf = AllocArrayTemp<WCHAR>((int)cchBufSize);
         res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
         ReportIf(res == 0 || res > cchBufSize);
     }
@@ -607,7 +607,7 @@ TryAgainWOW64:
         DWORD valLen;
         res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
         if (ERROR_SUCCESS == res) {
-            val = WStr(AllocArray<WCHAR>((valLen / sizeof(WCHAR)) + 1));
+            val = WStr(AllocArray<WCHAR>((int)(valLen / sizeof(WCHAR)) + 1));
             res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val.s, &valLen);
             if (ERROR_SUCCESS != res) {
                 wstr::FreePtr(&val);
@@ -1237,7 +1237,7 @@ IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
 
 bool IsKeyPressed(int key) {
     SHORT state = GetKeyState(key);
-    SHORT isDown = state & 0x8000;
+    SHORT isDown = (SHORT)(state & 0x8000);
     return isDown != 0;
 }
 
@@ -1933,7 +1933,7 @@ static void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
         newStyle = style & ~flags;
     }
     if (newStyle != style) {
-        SetWindowLongW(hwnd, type, newStyle);
+        SetWindowLongW(hwnd, type, (LONG)newStyle);
     }
 }
 
@@ -2365,7 +2365,7 @@ Str ReadIStream(IStream* stream) {
     }
 
     int n = (int)stat.cbSize.QuadPart;
-    char* d = AllocArray<char>(n + sizeof(WCHAR));
+    char* d = AllocArray<char>((int)n + (int)sizeof(WCHAR));
     if (!d) {
         return {};
     }

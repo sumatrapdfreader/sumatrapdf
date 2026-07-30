@@ -778,7 +778,7 @@ void Wnd::Attach(HWND hwnd) {
 // Attaches a CWnd object to a dialog item.
 void Wnd::AttachDlgItem(UINT id, HWND parent) {
     ReportIf(!::IsWindow(parent));
-    HWND wnd = ::GetDlgItem(parent, id);
+    HWND wnd = ::GetDlgItem(parent, (int)id);
     Attach(wnd);
 }
 

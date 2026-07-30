@@ -9,7 +9,7 @@
 
 // returns -1 if didn't find
 int HtmlEntityNameToRune(Str name) {
-    return FindHtmlEntityRune(name);
+    return (int)FindHtmlEntityRune(name);
 }
 
 static int HtmlEntityHexDigit(char c) {

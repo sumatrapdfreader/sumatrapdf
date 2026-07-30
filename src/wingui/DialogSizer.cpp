@@ -23,7 +23,7 @@ class DialogData {
 
         // Copy all of the user controls etc. for later, this way the user can quite happily
         // let the structure go out of scope.
-        this->psd = (DialogSizerSizingItem*)memdup((void*)psd, nItemCount * sizeof(DialogSizerSizingItem));
+        this->psd = (DialogSizerSizingItem*)memdup((void*)psd, (int)nItemCount * (int)sizeof(DialogSizerSizingItem));
         if (!this->psd) {
             nItemCount = 0;
         }
@@ -135,7 +135,7 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
     HDWP hdwp = BeginDeferWindowPos(pdd->nItemCount);
     for (int i = 0; i < pdd->nItemCount; i++) {
         const DialogSizerSizingItem* psd = pdd->psd + i;
-        HWND hwndChild = GetDlgItem(hwnd, psd->uControlID);
+        HWND hwndChild = GetDlgItem(hwnd, (int)psd->uControlID);
         Rect rect = HwndMapRectToWindow(HwndWindowRect(hwndChild), HWND_DESKTOP, hwnd);
 
         // Adjust the window horizontally

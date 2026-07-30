@@ -301,7 +301,7 @@ Str Ungzip(const Str& d) {
         return {};
     }
 
-    lenUncr = strm.total_out;
+    lenUncr = (int)strm.total_out;
     // also make it a valid 0-terminated char* or WCHAR* string
     dataUncr[lenUncr] = 0;
     dataUncr[lenUncr + 1] = 0;

@@ -16,7 +16,7 @@
 #include "PdfDarkMode.h"
 
 static float ColorChannel01(byte v) {
-    return v / 255.f;
+    return (float)v / 255.f;
 }
 
 static DarkModePalette BuildPaletteFromColors(COLORREF textCol, COLORREF bgCol, COLORREF linkCol) {

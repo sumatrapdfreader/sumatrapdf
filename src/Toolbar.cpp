@@ -352,7 +352,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
         binfo.pszText = CWStrTemp(s);
         WPARAM buttonId = (WPARAM)i;
-        TbSetButtonInfo(hwnd, buttonId, &binfo);
+        TbSetButtonInfo(hwnd, (int)buttonId, &binfo);
     }
     // TODO: need an explicit tooltip window https://chatgpt.com/c/18fb77c8-761c-4314-a1ac-e55b93edfeef
 #if 0
@@ -1733,7 +1733,7 @@ void RebuildMenuBarButtons(MainWindow* win) {
             continue;
         }
         mii.cch++;
-        WCHAR* name = AllocArrayTemp<WCHAR>(mii.cch);
+        WCHAR* name = AllocArrayTemp<WCHAR>((int)mii.cch);
         mii.dwTypeData = name;
         GetMenuItemInfoW(menu, i, TRUE, &mii);
 
@@ -1958,7 +1958,7 @@ bool ActivateMenuBarByAccel(MainWindow* win, WCHAR accel) {
             continue;
         }
         mii.cch++;
-        WCHAR* name = AllocArrayTemp<WCHAR>(mii.cch);
+        WCHAR* name = AllocArrayTemp<WCHAR>((int)mii.cch);
         mii.dwTypeData = name;
         GetMenuItemInfoW(win->menu, i, TRUE, &mii);
 

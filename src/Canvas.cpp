@@ -1002,7 +1002,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // Original logic for other display modes
 
     int currPos = si.nPos;
-    int halfPage = si.nPage / 2;
+    int halfPage = (int)si.nPage / 2;
     switch (msg) {
         case SB_TOP:
             si.nPos = si.nMin;
@@ -1024,10 +1024,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             si.nPos += halfPage;
             break;
         case SB_PAGEUP:
-            si.nPos -= si.nPage;
+            si.nPos -= (int)si.nPage;
             break;
         case SB_PAGEDOWN:
-            si.nPos += si.nPage;
+            si.nPos += (int)si.nPage;
             break;
         case SB_THUMBTRACK:
             si.nPos = si.nTrackPos;
@@ -1088,10 +1088,10 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
             si.nPos += DpiScale(win->hwndCanvas, 16);
             break;
         case SB_PAGELEFT:
-            si.nPos -= si.nPage;
+            si.nPos -= (int)si.nPage;
             break;
         case SB_PAGERIGHT:
-            si.nPos += si.nPage;
+            si.nPos += (int)si.nPage;
             break;
         case SB_THUMBTRACK:
             si.nPos = si.nTrackPos;
@@ -2220,9 +2220,9 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     UnpackColor(a, ar, ag, ab);
     UnpackColor(b, br, bg, bb);
 
-    tv->Red = (COLOR16)((ar + (perc * (br - ar))) * 256);
-    tv->Green = (COLOR16)((ag + (perc * (bg - ag))) * 256);
-    tv->Blue = (COLOR16)((ab + (perc * (bb - ab))) * 256);
+    tv->Red = (COLOR16)(((float)ar + (perc * (float)(br - ar))) * 256);
+    tv->Green = (COLOR16)(((float)ag + (perc * (float)(bg - ag))) * 256);
+    tv->Blue = (COLOR16)(((float)ab + (perc * (float)(bb - ab))) * 256);
 }
 
 // Draw a border around selected annotation
@@ -2400,13 +2400,13 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             colors[2] = ParseColor((*gcols)[2], WIN_COL_WHITE);
         }
         Size size = dm->GetCanvasSize();
-        float percTop = 1.0F * dm->GetViewPort().y / size.dy;
-        float percBot = 1.0F * dm->GetViewPort().BR().y / size.dy;
+        float percTop = 1.0F * (float)dm->GetViewPort().y / (float)size.dy;
+        float percBot = 1.0F * (float)dm->GetViewPort().BR().y / (float)size.dy;
         if (!IsContinuous(dm->GetDisplayMode())) {
-            percTop += dm->CurrentPageNo() - 1;
-            percTop /= dm->PageCount();
-            percBot += dm->CurrentPageNo() - 1;
-            percBot /= dm->PageCount();
+            percTop += (float)dm->CurrentPageNo() - 1;
+            percTop /= (float)dm->PageCount();
+            percBot += (float)dm->CurrentPageNo() - 1;
+            percBot /= (float)dm->PageCount();
         }
         Size vp = dm->GetViewPort().Size();
         TRIVERTEX tv[4] = {{0, 0}, {vp.dx, vp.dy / 2}, {0, vp.dy / 2}, {vp.dx, vp.dy}};
@@ -2431,7 +2431,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         if (needCenter) {
             GetGradientColor(col1, col1, 0, &tv[1]);
             GetGradientColor(col1, col1, 0, &tv[2]);
-            tv[1].y = tv[2].y = (LONG)((0.5F - percTop) / (percBot - percTop) * vp.dy);
+            tv[1].y = tv[2].y = (LONG)((0.5F - percTop) / (percBot - percTop) * (float)vp.dy);
         } else {
             gr[0].LowerRight = 3;
         }
@@ -3012,7 +3012,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             si.cbSize = sizeof(si);
             si.fMask = SIF_PAGE;
             GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
-            int scrollBy = -MulDiv(si.nPage, delta * 30, WHEEL_DELTA);
+            int scrollBy = -MulDiv((int)si.nPage, delta * 30, WHEEL_DELTA);
             // on sensitive touchpads delta can be very small
             if (scrollBy == 0) return 0;
             if (hScroll) {
@@ -3031,7 +3031,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         si.cbSize = sizeof(si);
         si.fMask = SIF_PAGE;
         GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
-        int scrollBy = -MulDiv(si.nPage, delta, WHEEL_DELTA);
+        int scrollBy = -MulDiv((int)si.nPage, delta, WHEEL_DELTA);
         // on sensitive touchpads delta can be very small
         if (scrollBy == 0) return 0;
         if (hScroll) {
@@ -4196,7 +4196,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // strip scroll styles that SetScrollInfo may have added
             DWORD style = GetWindowLong(hwnd, GWL_STYLE);
             if (style & (WS_VSCROLL | WS_HSCROLL)) {
-                SetWindowLong(hwnd, GWL_STYLE, style & ~(WS_VSCROLL | WS_HSCROLL));
+                SetWindowLong(hwnd, GWL_STYLE, (LONG)style & ~(WS_VSCROLL | WS_HSCROLL));
             }
             // let DefWindowProc calculate NC size without scroll styles
             return DefWindowProc(hwnd, msg, wp, lp);

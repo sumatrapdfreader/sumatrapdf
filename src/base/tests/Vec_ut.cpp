@@ -68,7 +68,7 @@ void VecTest() {
         str::Builder v(0, nullptr);
         for (int i = 0; i < 7; i++) {
             v.Append(Str(buf, 1));
-            buf[0] = buf[0] + 1;
+            buf[0] = (char)(buf[0] + 1);
         }
         Str s = ToStr(v);
         utassert(str::Eq("abcdefg", s));

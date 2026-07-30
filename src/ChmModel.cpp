@@ -881,7 +881,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
     int iCurrZoom = (int)currZoom;
     int iTowardsLevel = (int)towardsLevel;
     int iNewZoom = iTowardsLevel;
-    if (iCurrZoom < towardsLevel) {
+    if ((float)iCurrZoom < towardsLevel) {
         for (int i = 0; i < nZoomLevels; i++) {
             int iZoom = (int)zoomLevels[i];
             if (iZoom > iCurrZoom) {
@@ -889,7 +889,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
                 break;
             }
         }
-    } else if (iCurrZoom > towardsLevel) {
+    } else if ((float)iCurrZoom > towardsLevel) {
         for (int i = nZoomLevels - 1; i >= 0; i--) {
             int iZoom = (int)zoomLevels[i];
             if (iZoom < iCurrZoom) {

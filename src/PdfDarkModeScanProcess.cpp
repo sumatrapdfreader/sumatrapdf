@@ -51,7 +51,7 @@ static void ReadPixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* 
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        conv[c] = px[c] / 255.f;
+        conv[c] = (float)px[c] / 255.f;
     }
     fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
     *outR = srcRgb[0];

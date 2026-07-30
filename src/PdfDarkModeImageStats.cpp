@@ -25,13 +25,13 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* cs = pix->colorspace ? pix->colorspace : fz_device_rgb(ctx);
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
-    int stride = pix->stride;
+    int stride = (int)pix->stride;
     unsigned char* px = pix->samples + (y * stride) + (x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     int components = fz_colorspace_n(ctx, cs);
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        conv[c] = px[c] / 255.f;
+        conv[c] = (float)px[c] / 255.f;
     }
     fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
     *outR = srcRgb[0];
@@ -106,9 +106,9 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
             }
         }
 
-        float lumMean = lumSum / n;
+        float lumMean = lumSum / (float)n;
         stats.significantBuckets = significantBuckets;
-        stats.lumVar = (lumSqSum / n) - (lumMean * lumMean);
+        stats.lumVar = (lumSqSum / (float)n) - (lumMean * lumMean);
         stats.satRatio = (float)saturated / (float)n;
         stats.highLumRatio = (float)highLum / (float)n;
         stats.valid = true;

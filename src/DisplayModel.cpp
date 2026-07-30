@@ -530,7 +530,7 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
         // would make dpiFactor and therefore zoomReal negative
         screenDPI = 96;
     }
-    dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
+    dpiFactor = 1.0f * (float)screenDPI / engine->GetFileDPI();
     if (ValidPageNo(newStartPage)) {
         startPage = newStartPage;
     }
@@ -708,12 +708,12 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
 
             contentBox.x += row.dx;
             box = box.Union(contentBox);
-            row.dx += pageBox.dx + pageSpacing.dx;
+            row.dx += pageBox.dx + (float)pageSpacing.dx;
         }
         row = box.Size();
     } else {
         row = PageSizeAfterRotation(pageNo, fitToContent);
-        row.dx *= columns;
+        row.dx *= (float)columns;
         row.dx += (float)((double)pageSpacing.dx * (double)(columns - 1));
     }
 
@@ -727,8 +727,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         return 0;
     }
 
-    float zoomX = areaForPagesDx / row.dx;
-    float zoomY = areaForPagesDy / row.dy;
+    float zoomX = (float)areaForPagesDx / row.dx;
+    float zoomY = (float)areaForPagesDy / row.dy;
     float zoom;
     if (kZoomFitWidth == zoomVirtual) {
         zoom = zoomX;
@@ -895,7 +895,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
 
         int newViewPortOffsetX = 0;
         if (0 != currZoomReal && kInvalidZoom != currZoomReal) {
-            newViewPortOffsetX = (int)(viewPort.x * zoomReal / currZoomReal);
+            newViewPortOffsetX = (int)((float)viewPort.x * zoomReal / currZoomReal);
         }
         viewPort.x = newViewPortOffsetX;
 
@@ -1083,8 +1083,8 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PointF p = engine->Transform(pt, pageNo, zoom, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
-    p.x += 0.499f + r.x;
-    p.y += 0.499f + r.y;
+    p.x += 0.499f + (float)r.x;
+    p.y += 0.499f + (float)r.y;
 
     return ToPoint(p);
 }
@@ -1108,7 +1108,7 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
 
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
-    PointF p = PointF(pt.x - 0.499f - r.x, pt.y - 0.499f - r.y);
+    PointF p = PointF((float)pt.x - 0.499f - (float)r.x, (float)pt.y - 0.499f - (float)r.y);
 
     float zoom = getZoomSafe(this, pageNo, pageInfo);
     return engine->Transform(p, pageNo, zoom, rotation, true);

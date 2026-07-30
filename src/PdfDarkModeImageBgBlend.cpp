@@ -54,14 +54,14 @@ static void ReadPixmapPixel(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        conv[c] = px[c] / 255.f;
+        conv[c] = (float)px[c] / 255.f;
     }
     fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
     *outR = srcRgb[0];
     *outG = srcRgb[1];
     *outB = srcRgb[2];
     if (pix->alpha && n > components) {
-        *outA = px[components] / 255.f;
+        *outA = (float)px[components] / 255.f;
     }
 }
 
@@ -107,8 +107,8 @@ static float SampleMaskBilinear(const float* mask, int maskW, int maskH, float u
     if (y1 >= maskH) {
         y1 = maskH - 1;
     }
-    float tx = fx - x0;
-    float ty = fy - y0;
+    float tx = fx - (float)x0;
+    float ty = fy - (float)y0;
     float v00 = mask[(y0 * maskW) + x0];
     float v10 = mask[(y0 * maskW) + x1];
     float v01 = mask[(y1 * maskW) + x0];

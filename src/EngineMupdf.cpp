@@ -1571,7 +1571,7 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     int w = bgrPixmap->w;
     int h = bgrPixmap->h;
     int n = bgrPixmap->n;
-    int imgSize = bgrPixmap->stride * h;
+    int imgSize = (int)bgrPixmap->stride * h;
     int bitsCount = n * 8;
 
     BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;
@@ -2344,7 +2344,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
         str::Builder number;
-        number.AppendChar('A' + ((pageNo - 1) % 26));
+        number.AppendChar((char)('A' + ((pageNo - 1) % 26)));
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number[0]);
         }

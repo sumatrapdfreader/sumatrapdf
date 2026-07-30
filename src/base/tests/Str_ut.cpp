@@ -597,7 +597,7 @@ void StrTest() {
     // clang-format on
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        TempStr tmp = str::FormatNumWithThousandSepTemp(formatNumData[i].number, LOCALE_INVARIANT);
+        TempStr tmp = str::FormatNumWithThousandSepTemp((i64)formatNumData[i].number, LOCALE_INVARIANT);
         utassert(str::Eq(tmp, formatNumData[i].result));
     }
 

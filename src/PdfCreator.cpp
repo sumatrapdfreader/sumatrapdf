@@ -156,7 +156,7 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) const {
         if (imgDpi > 0) {
             zoom = 72.0f / imgDpi;
         }
-        fz_matrix ctm = {image->w * zoom, 0, 0, image->h * zoom, 0, 0};
+        fz_matrix ctm = {(float)image->w * zoom, 0, 0, (float)image->h * zoom, 0, 0};
         fz_rect bounds = fz_unit_rect;
         bounds = fz_transform_rect(bounds, ctm);
 
@@ -205,10 +205,10 @@ bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
     if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) != Gdiplus::Ok) {
         return false;
     }
-    if (!imgDpi) {
+    if (!(bool)imgDpi) {
         imgDpi = bmp->GetHorizontalResolution();
     }
-    bool ok = AddPageFromHBITMAP(this, hbmp, Size(bmp->GetWidth(), bmp->GetHeight()), imgDpi);
+    bool ok = AddPageFromHBITMAP(this, hbmp, Size((int)bmp->GetWidth(), (int)bmp->GetHeight()), imgDpi);
     DeleteObject(hbmp);
     return ok;
 }
@@ -353,13 +353,13 @@ bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
     PdfCreator* c = new PdfCreator();
     bool ok = true;
     // render all pages to images
-    float zoom = dpi / engine->GetFileDPI();
+    float zoom = (float)dpi / engine->GetFileDPI();
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
         RenderPageArgs args(i, zoom, 0, nullptr, RenderTarget::Export);
         Pixmap* bmp = engine->RenderPage(args);
         ok = false;
         if (bmp) {
-            ok = AddPageFromHBITMAP(c, bmp->hbmp, Size(bmp->width, bmp->height), dpi);
+            ok = AddPageFromHBITMAP(c, bmp->hbmp, Size(bmp->width, bmp->height), (float)dpi);
         }
         FreePixmap(bmp);
     }

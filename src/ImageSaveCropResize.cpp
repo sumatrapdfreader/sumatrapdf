@@ -377,7 +377,7 @@ static int DisplayToImageX(ImageEditWindow* ew, int dx) {
     if (ew->imgDisplayW <= 0) {
         return 0;
     }
-    int v = (int)((float)(dx - ew->imgDisplayX) * ew->imgW / ew->imgDisplayW);
+    int v = (int)((float)(dx - ew->imgDisplayX) * (float)ew->imgW / (float)ew->imgDisplayW);
     return setMinMax(v, 0, ew->imgW);
 }
 
@@ -385,7 +385,7 @@ static int DisplayToImageY(ImageEditWindow* ew, int dy) {
     if (ew->imgDisplayH <= 0) {
         return 0;
     }
-    int v = (int)((float)(dy - ew->imgDisplayY) * ew->imgH / ew->imgDisplayH);
+    int v = (int)((float)(dy - ew->imgDisplayY) * (float)ew->imgH / (float)ew->imgDisplayH);
     return setMinMax(v, 0, ew->imgH);
 }
 
@@ -394,14 +394,14 @@ static int ImageToDisplayX(ImageEditWindow* ew, int ix) {
     if (ew->imgW <= 0) {
         return ew->imgDisplayX;
     }
-    return ew->imgDisplayX + (int)((float)ix * ew->imgDisplayW / ew->imgW);
+    return ew->imgDisplayX + (int)((float)ix * (float)ew->imgDisplayW / (float)ew->imgW);
 }
 
 static int ImageToDisplayY(ImageEditWindow* ew, int iy) {
     if (ew->imgH <= 0) {
         return ew->imgDisplayY;
     }
-    return ew->imgDisplayY + (int)((float)iy * ew->imgDisplayH / ew->imgH);
+    return ew->imgDisplayY + (int)((float)iy * (float)ew->imgDisplayH / (float)ew->imgH);
 }
 
 // Convert display-scale sizes to image-scale sizes (resize mode)
@@ -409,14 +409,14 @@ static int DisplayToImageW(ImageEditWindow* ew, int dispW) {
     if (ew->imgDisplayW <= 0) {
         return 0;
     }
-    return (int)((float)dispW * ew->imgW / ew->imgDisplayW);
+    return (int)((float)dispW * (float)ew->imgW / (float)ew->imgDisplayW);
 }
 
 static int DisplayToImageH(ImageEditWindow* ew, int dispH) {
     if (ew->imgDisplayH <= 0) {
         return 0;
     }
-    return (int)((float)dispH * ew->imgH / ew->imgDisplayH);
+    return (int)((float)dispH * (float)ew->imgH / (float)ew->imgDisplayH);
 }
 
 // Convert image size to display size (resize mode)
@@ -424,14 +424,14 @@ static int ImageToDisplayW(ImageEditWindow* ew, int iw) {
     if (ew->imgW <= 0) {
         return 0;
     }
-    return (int)((float)iw * ew->imgDisplayW / ew->imgW);
+    return (int)((float)iw * (float)ew->imgDisplayW / (float)ew->imgW);
 }
 
 static int ImageToDisplayH(ImageEditWindow* ew, int ih) {
     if (ew->imgH <= 0) {
         return 0;
     }
-    return (int)((float)ih * ew->imgDisplayH / ew->imgH);
+    return (int)((float)ih * (float)ew->imgDisplayH / (float)ew->imgH);
 }
 
 static void LayoutControls(ImageEditWindow* ew);
@@ -525,8 +525,8 @@ static TempStr FormatCropInfoTemp(int srcW, int srcH, int cropW, int cropH, int 
 }
 
 static TempStr FormatResizeInfoTemp(int srcW, int srcH, int newW, int newH) {
-    float pctW = (srcW > 0) ? (float)newW * 100.0f / srcW : 0.0f;
-    float pctH = (srcH > 0) ? (float)newH * 100.0f / srcH : 0.0f;
+    float pctW = (srcW > 0) ? (float)newW * 100.0f / (float)srcW : 0.0f;
+    float pctH = (srcH > 0) ? (float)newH * 100.0f / (float)srcH : 0.0f;
     return fmt("%d x %d => %d x %d (%.2f%% x %.2f%%)", srcW, srcH, newW, newH, pctW, pctH);
 }
 
@@ -644,16 +644,16 @@ static void CalcImageLayout(ImageEditWindow* ew) {
         return;
     }
 
-    float scaleX = (float)availW / ew->imgW;
-    float scaleY = (float)availH / ew->imgH;
+    float scaleX = (float)availW / (float)ew->imgW;
+    float scaleY = (float)availH / (float)ew->imgH;
     float scale = std::min(scaleX, scaleY);
     // don't upscale beyond 100%
     if (scale > 1.0f) {
         scale = 1.0f;
     }
 
-    ew->imgDisplayW = (int)(ew->imgW * scale);
-    ew->imgDisplayH = (int)(ew->imgH * scale);
+    ew->imgDisplayW = (int)((float)ew->imgW * scale);
+    ew->imgDisplayH = (int)((float)ew->imgH * scale);
     // center in available area
     ew->imgDisplayX = imgPad + ((availW - ew->imgDisplayW) / 2);
     ew->imgDisplayY = imgPad + ((availH - ew->imgDisplayH) / 2);

@@ -1197,7 +1197,7 @@ static void FindThread(FindThreadData* ftd) {
     textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
     textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
-        !dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
+        !(bool)dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
         rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text);
     } else {
         rect = textSearch->FindNext();
@@ -1556,7 +1556,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
         rect = dm->CvtToScreen(pageNo, ToRectF(rect));
         if (hiLiOff > 0) {
             float zoom = dm->GetZoomReal(pageNo);
-            rect.x = std::max(pageInfo->pageOnScreen.x, 0) + (int)(hiLiOff * zoom);
+            rect.x = std::max(pageInfo->pageOnScreen.x, 0) + (int)((float)hiLiOff * zoom);
             rect.dx = (int)((hiLiWidth > 0 ? hiLiWidth : 15.0) * zoom);
             rect.y -= 4;
             rect.dy += 8;
@@ -1564,7 +1564,8 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
         rects.Append(rect);
     }
 
-    u8 alpha = (u8)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
+    u8 alpha =
+        (u8)(0x5f * 1.0f * (float)(HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->forwardSearch.highlightColor);
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
 }
@@ -2180,11 +2181,11 @@ static Str HandlePageCmd(HWND hwnd, Str cmd, bool* ack) {
         }
     }
 
-    if (!win->ctrl->ValidPageNo(page)) {
+    if (!win->ctrl->ValidPageNo((int)page)) {
         return next;
     }
 
-    win->ctrl->GoToPage(page, true);
+    win->ctrl->GoToPage((int)page, true);
     *ack = true;
     win->Focus();
     return next;

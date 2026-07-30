@@ -81,8 +81,8 @@ static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoom
         return 0;
     }
 
-    float zoomX = areaForPagesDx / row.dx;
-    float zoomY = areaForPagesDy / row.dy;
+    float zoomX = (float)areaForPagesDx / row.dx;
+    float zoomY = (float)areaForPagesDy / row.dy;
     if (zoomVirtual == kZoomFitWidth) {
         return zoomX;
     }
@@ -319,7 +319,8 @@ void DocumentLayout::RecalcVisibleParts() {
         Rect visiblePart = pageRect.Intersect(viewPort);
         page->visibleRatio = 0;
         if (!visiblePart.IsEmpty() && !pageRect.IsEmpty()) {
-            page->visibleRatio = 1.0f * visiblePart.dx * visiblePart.dy / ((float)pageRect.dx * pageRect.dy);
+            page->visibleRatio =
+                1.0f * (float)visiblePart.dx * (float)visiblePart.dy / ((float)pageRect.dx * (float)pageRect.dy);
         }
         page->pageOnScreen = pageRect;
         page->pageOnScreen.Offset(-viewPort.x, -viewPort.y);

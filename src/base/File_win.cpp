@@ -47,14 +47,14 @@ static TempWStr NormalizeTemp(WStr path) {
         return str::DupTemp(path);
     }
 
-    WCHAR* fullPathBuf = AllocArrayTemp<WCHAR>(cch);
+    WCHAR* fullPathBuf = AllocArrayTemp<WCHAR>((int)cch);
     DWORD nChars = GetFullPathNameW(pathZ, cch, fullPathBuf, nullptr);
     TempWStr fullPath = WStr(fullPathBuf, (int)nChars);
 
     TempWStr normPath = fullPath;
     cch = GetLongPathNameW(fullPath.s, nullptr, 0);
     if (cch > 0) {
-        WCHAR* longBuf = AllocArrayTemp<WCHAR>(cch);
+        WCHAR* longBuf = AllocArrayTemp<WCHAR>((int)cch);
         DWORD nLong = GetLongPathNameW(fullPath.s, longBuf, cch);
         normPath = WStr(longBuf, (int)nLong);
         if (cch <= MAX_PATH) {
@@ -64,7 +64,7 @@ static TempWStr NormalizeTemp(WStr path) {
 
     cch = GetShortPathNameW(fullPath.s, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
-        WCHAR* shortBuf = AllocArrayTemp<WCHAR>(cch);
+        WCHAR* shortBuf = AllocArrayTemp<WCHAR>((int)cch);
         DWORD nShort = GetShortPathNameW(fullPath.s, shortBuf, cch);
         return WStr(shortBuf, (int)nShort);
     }
@@ -90,7 +90,7 @@ TempStr ShortPathTemp(Str path) {
     if (!cch) {
         return ToUtf8Temp(normPath);
     }
-    TempWStr shortPath = WStr(AllocArrayTemp<WCHAR>(cch + 1), (int)cch + 1);
+    TempWStr shortPath = WStr(AllocArrayTemp<WCHAR>((int)cch + 1), (int)cch + 1);
     GetShortPathNameW(normPath.s, shortPath.s, cch);
     return ToUtf8Temp(shortPath);
 }
@@ -549,7 +549,7 @@ bool SetModificationTime(Str path, FILETIME lastMod) {
 
 int GetZoneIdentifier(Str filePath) {
     TempStr path = str::JoinTemp(filePath, StrL(":Zone.Identifier"));
-    return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, CWStrTemp(path));
+    return (int)GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, CWStrTemp(path));
 }
 
 bool SetZoneIdentifier(Str filePath, int zoneId) {
@@ -638,7 +638,7 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
     ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
     ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
-    LONGLONG diff = t1.QuadPart - t2.QuadPart;
+    LONGLONG diff = (LONGLONG)t1.QuadPart - (LONGLONG)t2.QuadPart;
     diff = diff / (LONGLONG)10000000L;
     return (int)diff;
 }
@@ -709,7 +709,7 @@ TempStr GetHomeDirTemp() {
     WCHAR buf[MAX_PATH];
     DWORD n = GetEnvironmentVariableW(L"USERPROFILE", buf, MAX_PATH);
     if (n > 0 && n < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, n));
+        return ToUtf8Temp(WStr(buf, (int)n));
     }
 
     WCHAR drive[MAX_PATH];
@@ -735,7 +735,7 @@ TempStr ExpandEnvVarTemp(Str varName) {
     WCHAR buf[MAX_PATH];
     DWORD n = GetEnvironmentVariableW(CWStrTemp(varName), buf, MAX_PATH);
     if (n > 0 && n < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, n));
+        return ToUtf8Temp(WStr(buf, (int)n));
     }
     return {};
 }
@@ -744,7 +744,7 @@ TempStr ToAbsolutePathTemp(Str path) {
     WCHAR buf[MAX_PATH];
     DWORD n = GetFullPathNameW(CWStrTemp(path), MAX_PATH, buf, nullptr);
     if (n > 0 && n < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, n));
+        return ToUtf8Temp(WStr(buf, (int)n));
     }
     return path;
 }
