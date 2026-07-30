@@ -646,7 +646,14 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
             continue;
         }
         u16 type = r.UInt16(idx + 2, isBE);
-        int typeSize = type == 1 ? 1 : type == 3 ? 2 : type == 4 ? 4 : 0;
+        int typeSize = 0;
+        if (type == 1) {
+            typeSize = 1;
+        } else if (type == 3) {
+            typeSize = 2;
+        } else if (type == 4) {
+            typeSize = 4;
+        }
         u32 nVals = r.UInt32(idx + 4, isBE);
         if (typeSize == 0 || nVals == 0) {
             continue;

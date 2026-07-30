@@ -524,7 +524,7 @@ TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
     static SeqStrings compNames = "Y\0Cb\0Cr\0R\0G\0B\0";
     str::Builder s;
     for (u32 i = 0; i < count && off + (int)i < r.len; i++) {
-        u8 c = r.UInt8((int)off + (int)i);
+        u8 c = r.UInt8(off + (int)i);
         if (c == 0) {
             break;
         }
@@ -551,7 +551,7 @@ TempStr FormatUndefinedBytesTemp(ByteReader r, int off, u32 count, bool asList) 
     }
     bool isAscii = true;
     for (u32 i = 0; i < count; i++) {
-        u8 b = r.UInt8((int)off + (int)i);
+        u8 b = r.UInt8(off + (int)i);
         if (b == 0) {
             break;
         }

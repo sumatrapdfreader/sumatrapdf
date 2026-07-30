@@ -181,7 +181,15 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
         return MkColor(X, X, X);
     }
     u8 C = M - m;
-    u8 Ha = (u8)abs(M == R ? G - B : M == G ? B - R : R - G);
+    int hueDiff;
+    if (M == R) {
+        hueDiff = G - B;
+    } else if (M == G) {
+        hueDiff = B - R;
+    } else {
+        hueDiff = R - G;
+    }
+    u8 Ha = (u8)abs(hueDiff);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
     float L2 = (float)(M + m);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Saturation
@@ -192,9 +200,18 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
     float C1 = (L2 > 255.0f ? 510.0f - L2 : L2) * S;
     float X1 = C1 * (float)Ha / (float)C;
     float m1 = (L2 - C1) / 2;
-    R = (u8)floorf((M == R ? C1 : m != R ? X1 : 0) + m1 + 0.5f);
-    G = (u8)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
-    B = (u8)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
+    auto chromaOrX = [](bool isMax, bool isMin, float c1, float x1) -> float {
+        if (isMax) {
+            return c1;
+        }
+        if (!isMin) {
+            return x1;
+        }
+        return 0.f;
+    };
+    R = (u8)floorf(chromaOrX(M == R, m == R, C1, X1) + m1 + 0.5f);
+    G = (u8)floorf(chromaOrX(M == G, m == G, C1, X1) + m1 + 0.5f);
+    B = (u8)floorf(chromaOrX(M == B, m == B, C1, X1) + m1 + 0.5f);
     return MkColor(R, G, B);
 }
 

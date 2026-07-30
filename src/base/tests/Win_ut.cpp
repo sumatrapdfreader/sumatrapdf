@@ -60,14 +60,13 @@ void WinUtilTest() {
     QuoteCmdLineArgTest();
 
     {
-        Str string = "abcde";
-        size_t stringSize = string.len;
-        auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
+        Str string = StrL("abcde");
+        auto strm = CreateStreamFromData(string);
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         Str data = ReadIStream(stream);
         utassert((u8*)data.s);
-        utassert(stringSize == (size_t)data.len);
+        utassert(string.len == data.len);
         utassert(data.s[data.len] == 0);
         utassert(data.s[data.len + 1] == 0);
         Str s = data;

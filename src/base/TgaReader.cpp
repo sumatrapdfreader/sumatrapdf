@@ -233,7 +233,11 @@ static void CopyPixelToBGRA(u8* dst, const u8* src, int bits, int alphaBits, Ima
             dst[0] = Scale5To8(v & 0x1f);
             dst[1] = Scale5To8((v >> 5) & 0x1f);
             dst[2] = Scale5To8((v >> 10) & 0x1f);
-            dst[3] = (bits == 16 && alphaBits == 1 && alphaType != Alpha_Ignore) ? ((v & 0x8000) ? 255 : 0) : 255;
+            if (bits == 16 && alphaBits == 1 && alphaType != Alpha_Ignore) {
+                dst[3] = (v & 0x8000) ? 255 : 0;
+            } else {
+                dst[3] = 255;
+            }
             break;
         }
         case 24:

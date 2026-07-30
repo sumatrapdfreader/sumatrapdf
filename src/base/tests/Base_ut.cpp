@@ -183,7 +183,7 @@ void BaseUtilTest() {
         int exp = roundUpTestCases[(i * 2) + 1];
         int got = RoundUp(v, 8);
         utassert(exp == got);
-        void* got3 = RoundUp((void*)(uintptr_t)v, (int)8);
+        void* got3 = RoundUp((void*)(uintptr_t)v, 8);
         utassert(got3 == (void*)(uintptr_t)exp);
     }
 

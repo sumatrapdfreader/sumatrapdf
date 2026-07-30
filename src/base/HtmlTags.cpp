@@ -23,10 +23,42 @@
 #define STR3i(s) (STR2i(s) | (lower((s)[2]) << 16))
 #define STR4i(s) (STR3i(s) | (lower((s)[3]) << 24))
 
+static u32 KeyFromNameI(const char* name, size_t n) {
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return STR1i(name);
+    }
+    if (n == 2) {
+        return STR2i(name);
+    }
+    if (n == 3) {
+        return STR3i(name);
+    }
+    return STR4i(name);
+}
+
+static u32 KeyFromName(const char* name, size_t n) {
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return STR1(name);
+    }
+    if (n == 2) {
+        return STR2(name);
+    }
+    if (n == 3) {
+        return STR3(name);
+    }
+    return STR4(name);
+}
+
 HtmlTag FindHtmlTag(Str nameIn) {
     const char* name = nameIn.s;
     size_t n = (size_t)nameIn.len;
-    u32 key = 0 == n ? 0 : 1 == n ? STR1i(name) : 2 == n ? STR2i(name) : 3 == n ? STR3i(name) : STR4i(name);
+    u32 key = KeyFromNameI(name, n);
     switch (key) {
         case CS1('a'):
             return Tag_A;
@@ -252,7 +284,7 @@ bool IsInlineTag(HtmlTag item) {
 AlignAttr FindAlignAttr(Str nameIn) {
     const char* name = nameIn.s;
     size_t n = (size_t)nameIn.len;
-    u32 key = 0 == n ? 0 : 1 == n ? STR1i(name) : 2 == n ? STR2i(name) : 3 == n ? STR3i(name) : STR4i(name);
+    u32 key = KeyFromNameI(name, n);
     switch (key) {
         case CS4('c', 'e', 'n', 't'):
             if (6 == n && CS2('e', 'r') == STR2i(name + 4)) return AlignAttr::Center;
@@ -277,7 +309,7 @@ AlignAttr FindAlignAttr(Str nameIn) {
 u32 FindHtmlEntityRune(Str nameIn) {
     const char* name = nameIn.s;
     size_t n = (size_t)nameIn.len;
-    u32 key = 0 == n ? 0 : 1 == n ? STR1(name) : 2 == n ? STR2(name) : 3 == n ? STR3(name) : STR4(name);
+    u32 key = KeyFromName(name, n);
     switch (key) {
         case CS4('A', 'E', 'l', 'i'):
             if (5 == n && CS1('g') == STR1(name + 4)) return 198;
@@ -1397,7 +1429,7 @@ u32 FindHtmlEntityRune(Str nameIn) {
 CssProp FindCssProp(Str nameIn) {
     const char* name = nameIn.s;
     size_t n = (size_t)nameIn.len;
-    u32 key = 0 == n ? 0 : 1 == n ? STR1i(name) : 2 == n ? STR2i(name) : 3 == n ? STR3i(name) : STR4i(name);
+    u32 key = KeyFromNameI(name, n);
     switch (key) {
         case CS4('c', 'o', 'l', 'o'):
             if (5 == n && CS1('r') == STR1i(name + 4)) return Css_Color;

@@ -208,7 +208,7 @@ static void testFloats() {
     check(FormatTemp("%+.1f", 1.25), "+1.2"); // banker-ish rounding via printf
     check(FormatTemp("%+.1f", 1.25), fmtRef("%+.1f", 1.25));
     // double argument
-    check(FormatTemp("%.2f", (double)1234.5678), "1234.57");
+    check(FormatTemp("%.2f", 1234.5678), "1234.57");
 }
 
 // integer-family specs (%d %x %c %p) accept any integer-like arg (char / int /
