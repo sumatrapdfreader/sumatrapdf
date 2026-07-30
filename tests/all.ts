@@ -46,6 +46,7 @@ import { testit as issue1189 } from "./issue-1189.ts";
 import { testit as issue5792 } from "./issue-5792.ts";
 import { testit as issue4576 } from "./issue-4576.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
+import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["lint-command-ids", lintCommandIds],
@@ -84,6 +85,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5792", issue5792],
   ["issue-4576", issue4576],
   ["parse-tip-brackets", parseTipBrackets],
+  ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
 ];
 
 export type AllTestOptions = {

@@ -84,6 +84,7 @@ export const WM_RBUTTONUP = 0x0205;
 export const WM_MBUTTONDOWN = 0x0207;
 export const WM_CONTEXTMENU = 0x007b;
 export const WM_COMMAND = 0x0111;
+export const WM_COPYDATA = 0x004a;
 // virtual-key / mouse-button flags
 export const MK_LBUTTON = 0x0001;
 export const MK_MBUTTON = 0x0010;
@@ -267,6 +268,18 @@ export function postMessage(hwnd: number, msg: number, wParam: number, lParam: n
 // exceed 2^53, so they must not be coerced to a JS number.
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
   return user32.symbols.SendMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam)) as bigint;
+}
+
+// Send a null-terminated UTF-16 WM_COPYDATA payload. COPYDATASTRUCT is 24
+// bytes on x64: ULONG_PTR dwData, DWORD cbData + padding, PVOID lpData.
+export function sendCopyDataW(hwnd: number, dataId: number, text: string): bigint {
+  const payload = wideZ(text);
+  const cds = new Uint8Array(24);
+  const view = new DataView(cds.buffer);
+  view.setBigUint64(0, BigInt(dataId), true);
+  view.setUint32(8, payload.byteLength, true);
+  view.setBigUint64(16, BigInt(ptr(payload)), true);
+  return sendMessage(hwnd, WM_COPYDATA, 0, BigInt(ptr(cds)));
 }
 
 // --- TreeView (SysTreeView32) helpers; item handles are opaque bigints ---

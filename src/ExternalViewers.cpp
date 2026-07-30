@@ -494,6 +494,9 @@ static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
 }
 
 bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
+    if (!tab) {
+        return false;
+    }
     if (!PathMatchFilter(tab->filePath, filter)) {
         return false;
     }
