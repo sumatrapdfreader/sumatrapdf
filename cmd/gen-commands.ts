@@ -263,6 +263,7 @@ export const commands = [
     "CmdTocCollapseSameLevel", "Bookmarks: Collapse Same Level",
     "CmdToggleFavoritesSort", "Sort Favorites By Name",
     "CmdZoomFitHeight", "Zoom: Fit Height",
+    "CmdDeleteFileAndOpenNext", "Delete File And Open Next",
     "CmdNone", "Do nothing",
 ];
 

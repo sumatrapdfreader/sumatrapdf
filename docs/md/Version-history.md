@@ -148,6 +148,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdCommandPalette $` : command palette favorites mode (`CmdCommandPaletteFavorites`)
 - `CmdCommandPaletteFavorites` : "Command Palette: Favorites"
 - `CmdContinueReadAloud` : "Continue Reading"
+- `CmdDeleteFileAndOpenNext` : "Delete File And Open Next" — opens the next file in the folder, then moves the previous file to the Recycle Bin (discussion #5845)
 - `CmdFavoriteShowInTab` : "Show Favorites in Tab" — full-window Favorites tab (sidebar Favorites still works)
 - `CmdToggleFavoritesSort` : "Sort Favorites By Name" — Favorites tree context menu checkbox; toggles `SortFavoritesByName` (fixes #2277)
 - `CmdZoomFitHeight` : "Zoom: Fit Height" — scale page height to the window (fixes #1714)

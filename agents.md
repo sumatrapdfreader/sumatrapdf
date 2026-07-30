@@ -239,6 +239,8 @@ Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Nami
 - if it needs a small number (one or two) of extra files, name them `tests/issue-<number>.<rest>`
 - if it needs more files, or a file must live in a directory, put them in `tests/issue-<number>-data/`
 
+After making a change, do **not** run the full test suites (`tests/all.ts`, `tests/before-release.ts`, or unrelated unit tests) as routine verification. Run only the test or tests directly related to the feature changed. Run broader suites only when the user explicitly requests them.
+
 Structure of each test (so they compose in tests/all.ts):
 - each `tests/issue-<number>.ts` exports `export async function testit(): Promise<void>` that runs the test logic and THROWS on failure (returns normally on success). It must NOT call `process.exit` or build the app itself.
 - end the file with a standalone runner so it can still be run directly:

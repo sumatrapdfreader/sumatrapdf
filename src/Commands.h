@@ -263,7 +263,8 @@ enum {
     CmdTocCollapseSameLevel = 452,
     CmdToggleFavoritesSort = 453,
     CmdZoomFitHeight = 454,
-    CmdNone = 455,
+    CmdDeleteFileAndOpenNext = 455,
+    CmdNone = 456,
 
     /* range for file history */
     CmdFileHistoryFirst,

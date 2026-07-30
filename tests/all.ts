@@ -46,6 +46,7 @@ import { testit as issue5792 } from "./issue-5792.ts";
 import { testit as issue4576 } from "./issue-4576.ts";
 import { testit as issue5840 } from "./issue-5840.ts";
 import { testit as issue5842 } from "./issue-5842.ts";
+import { testit as issue5845 } from "./issue-5845.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
@@ -87,6 +88,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-4576", issue4576],
   ["issue-5840", issue5840],
   ["issue-5842", issue5842],
+  ["issue-5845", issue5845],
   ["parse-tip-brackets", parseTipBrackets],
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["security-ghsa-crhm-w5qr-wjj4", ghsaCrhmW5qrWjj4],

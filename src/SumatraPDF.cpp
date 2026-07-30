@@ -1989,6 +1989,13 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
     }
 
+    // A folder-navigation load replaces the document without closing the tab
+    // first. Stop watching the old path before LoadDocumentFinish subscribes
+    // the tab to the new one.
+    if (prevCtrl && ctrl && !path::IsSame(prevCtrl->GetFilePath(), ctrl->GetFilePath())) {
+        FileWatcherUnsubscribe(tab->watcher);
+        tab->watcher = nullptr;
+    }
     delete prevCtrl;
 
 #if defined(ENABLE_REDRAW_ON_RELOAD)
@@ -4799,6 +4806,17 @@ static void ShowCurrentFileInFolder(MainWindow* win) {
     SumatraOpenPathInDefaultFileManager(ctrl->GetFilePath());
 }
 
+static void DeleteFileFromDiskAndHistory(Str path) {
+    file::DeleteFileToTrash(path);
+    DeleteThumbnailForFile(path);
+    FileState* fs = gFileHistory.FindByPath(path);
+    if (fs) {
+        gFileHistory.Remove(fs);
+        DeleteFileState(fs);
+    }
+    SaveSettings();
+}
+
 static void DeleteCurrentFile(MainWindow* win) {
     if (!CanAccessDisk()) {
         return;
@@ -4816,14 +4834,7 @@ static void DeleteCurrentFile(MainWindow* win) {
         return;
     }
     CloseCurrentTab(win, false);
-    file::DeleteFileToTrash(path);
-    DeleteThumbnailForFile(path);
-    FileState* fs = gFileHistory.FindByPath(path);
-    if (fs) {
-        gFileHistory.Remove(fs);
-        DeleteFileState(fs);
-    }
-    SaveSettings();
+    DeleteFileFromDiskAndHistory(path);
     // CloseCurrentTab may have destroyed the window if it had no more tabs
     if (IsMainWindowValid(win)) {
         win->RedrawAll(true);
@@ -5291,13 +5302,17 @@ static void ShowNoFileToOpenNotif(MainWindow* win) {
     ShowNotification(nargs);
 }
 
-static void OpenNextPrevFileInFolder(MainWindow* win, bool forward);
+static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = {});
 
 struct NextPrevFileInFolderData {
     MainWindow* win = nullptr;
     bool forward = true;
-    Str path; // the file we tried to load; owned
-    ~NextPrevFileInFolderData() { str::Free(path); }
+    Str path;         // the file we tried to load; owned
+    Str pathToDelete; // deleted only after another document loads; owned
+    ~NextPrevFileInFolderData() {
+        str::Free(path);
+        str::Free(pathToDelete);
+    }
 };
 
 static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
@@ -5307,16 +5322,19 @@ static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
         return;
     }
     if (ok) {
+        if (d->pathToDelete) {
+            DeleteFileFromDiskAndHistory(d->pathToDelete);
+        }
         HwndRepaintNow(win->tabsCtrl->hwnd);
         return;
     }
     // remember the failure so CollectNextPrevFilesIfChanged skips this
     // file, then advance to the one after it in the same direction
     AppendIfNotExists(&gFilesFailedToOpen, d->path);
-    OpenNextPrevFileInFolder(win, d->forward);
+    OpenNextPrevFileInFolder(win, d->forward, d->pathToDelete);
 }
 
-static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
+static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     ReportIf(win->IsCurrentTabAbout());
     if (win->IsCurrentTabAbout()) {
         return;
@@ -5371,11 +5389,24 @@ again:
     d->win = win;
     d->forward = forward;
     d->path = str::Dup(path);
+    d->pathToDelete = str::Dup(pathToDelete);
     LoadArgs args(path, win);
     args.forceReuse = true;
     args.loadingNotifCorner = NotifCorner::BottomRight;
     args.onFinished = MkFunc1<NextPrevFileInFolderData, bool>(OnNextPrevFileInFolderLoaded, d);
     StartLoadDocument(&args);
+}
+
+static void DeleteCurrentFileAndOpenNext(MainWindow* win) {
+    if (!CanAccessDisk() || !win->IsDocLoaded() || gPluginMode) {
+        return;
+    }
+    TempStr path = str::DupTemp(win->ctrl->GetFilePath());
+    // this happens e.g. for embedded documents and directories
+    if (!file::Exists(path)) {
+        return;
+    }
+    OpenNextPrevFileInFolder(win, true, path);
 }
 
 constexpr int kSplitterDx = 5;
@@ -8428,6 +8459,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDeleteFile:
             DeleteCurrentFile(win);
+            break;
+
+        case CmdDeleteFileAndOpenNext:
+            DeleteCurrentFileAndOpenNext(win);
             break;
 
         case CmdSaveAs:

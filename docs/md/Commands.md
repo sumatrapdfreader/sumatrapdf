@@ -56,6 +56,7 @@ CmdCopyLinkTarget,,Copy Link Target,
 CmdCopySelection,"Ctrl + C, Ctrl + Insert",Copy Selection,
 CmdCopyFilePath,,Copy File Path,ver 3.5+
 CmdDeleteFile,,Delete Currently Opened File, ver 3.6+
+CmdDeleteFileAndOpenNext,,Delete File And Open Next,"moves the current file to the Recycle Bin after the next file opens successfully, ver 3.7+"
 ```
 
 ## Search

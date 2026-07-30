@@ -265,6 +265,7 @@ static SeqStrings gCommandNames =
     "CmdTocCollapseSameLevel\0"
     "CmdToggleFavoritesSort\0"
     "CmdZoomFitHeight\0"
+    "CmdDeleteFileAndOpenNext\0"
     "CmdNone\0"
     "\0";
 
@@ -523,6 +524,7 @@ static i32 gCommandIds[] = {
     CmdTocCollapseSameLevel,
     CmdToggleFavoritesSort,
     CmdZoomFitHeight,
+    CmdDeleteFileAndOpenNext,
     CmdNone,
 };
 
@@ -781,6 +783,7 @@ SeqStrings gCommandDescriptions =
     "Bookmarks: Collapse Same Level\0"
     "Sort Favorites By Name\0"
     "Zoom: Fit Height\0"
+    "Delete File And Open Next\0"
     "Do nothing\0"
     "\0";
 // clang-format on

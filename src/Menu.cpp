@@ -118,6 +118,10 @@ static MenuDef menuDefFile[] = {
         CmdDeleteFile,
     },
     {
+        _TRN("Delete and Open Next File"),
+        CmdDeleteFileAndOpenNext,
+    },
+    {
         _TRN("&Print..."),
         CmdPrint,
     },
@@ -1129,6 +1133,7 @@ static MenuDef menuDefContextStart[] = {
 static int disableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
     CmdDeleteFile,
+    CmdDeleteFileAndOpenNext,
     CmdSendByEmail,
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
@@ -1788,6 +1793,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     if (win->IsDocLoaded() && !fileExists) {
         MenuSetEnabled(win->menu, CmdRenameFile, false);
         MenuSetEnabled(win->menu, CmdDeleteFile, false);
+        MenuSetEnabled(win->menu, CmdDeleteFileAndOpenNext, false);
     }
 
     CheckMenuRadioItem(win->menu, gFirstSetThemeCmdId, gLastSetThemeCmdId, gCurrSetThemeCmdId, MF_BYCOMMAND);
