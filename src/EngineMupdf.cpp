@@ -704,6 +704,7 @@ static void FzStreamFingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) 
     fz_md5_init(&md5);
     fz_md5_update(&md5, data, size);
     fz_md5_final(&md5, digest);
+    fz_free(ctx, data);
 }
 
 static Str FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
