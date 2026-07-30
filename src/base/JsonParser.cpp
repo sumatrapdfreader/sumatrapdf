@@ -31,7 +31,7 @@ class ParseArgs {
     explicit ParseArgs(ValueVisitor* visitor) : visitor(visitor) {}
 };
 
-static int ParseValue(ParseArgs& args, Str data, int off);
+static int ParseValue(ParseArgs& args, Str data, int off, int depth);
 
 static int ExtractString(str::Builder& string, Str data, int off) {
     ReportIf(off >= data.len || data.s[off] != '"');
@@ -142,7 +142,7 @@ static int ParseNumber(ParseArgs& args, Str data, int off) {
     return off;
 }
 
-static int ParseObject(ParseArgs& args, Str data, int off) {
+static int ParseObject(ParseArgs& args, Str data, int off, int depth) {
     off = SkipWS(data, off + 1);
     if (off < data.len && '}' == data.s[off]) {
         return off + 1;
@@ -164,7 +164,7 @@ static int ParseObject(ParseArgs& args, Str data, int off) {
             return kParseFail;
         }
 
-        off = ParseValue(args, data, off + 1);
+        off = ParseValue(args, data, off + 1, depth + 1);
         if (args.canceled || off < 0) {
             return off;
         }
@@ -181,7 +181,7 @@ static int ParseObject(ParseArgs& args, Str data, int off) {
     }
 }
 
-static int ParseArray(ParseArgs& args, Str data, int off) {
+static int ParseArray(ParseArgs& args, Str data, int off, int depth) {
     off = SkipWS(data, off + 1);
     if (off < data.len && ']' == data.s[off]) {
         return off + 1;
@@ -190,7 +190,7 @@ static int ParseArray(ParseArgs& args, Str data, int off) {
     int pathIdx = len(args.path);
     for (int idx = 0;; idx++) {
         args.path.Append(fmt("[%d]", idx));
-        off = ParseValue(args, data, off);
+        off = ParseValue(args, data, off, depth + 1);
         if (args.canceled || off < 0) {
             return off;
         }
@@ -218,7 +218,10 @@ static int ParseKeyword(ParseArgs& args, Str data, int off, Str keyword, Type ty
     return off + keyword.len;
 }
 
-static int ParseValue(ParseArgs& args, Str data, int off) {
+static int ParseValue(ParseArgs& args, Str data, int off, int depth) {
+    if (depth >= 128) {
+        return kParseFail;
+    }
     off = SkipWS(data, off);
     if (off >= data.len) {
         return kParseFail;
@@ -239,9 +242,9 @@ static int ParseValue(ParseArgs& args, Str data, int off) {
         case '-':
             return ParseNumber(args, data, off);
         case '{':
-            return ParseObject(args, data, off);
+            return ParseObject(args, data, off, depth);
         case '[':
-            return ParseArray(args, data, off);
+            return ParseArray(args, data, off, depth);
         case 't':
             return ParseKeyword(args, data, off, StrL("true"), Type::Bool);
         case 'f':
@@ -262,7 +265,7 @@ bool Parse(Str data, ValueVisitor* visitor) {
     if (data.len >= 3 && str::StartsWith(data, Str(UTF8_BOM))) {
         off = 3;
     }
-    int end = ParseValue(args, data, off);
+    int end = ParseValue(args, data, off, 0);
     if (end < 0) {
         return false;
     }
