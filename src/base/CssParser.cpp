@@ -53,15 +53,20 @@ static bool SkipQuotedString(Str data, int& off) {
 
 static bool SkipBlock(Str data, int& off) {
     ReportIf(off >= data.len || data.s[off] != '{');
-    off++;
-    while (off < data.len && data.s[off] != '}') {
+    int depth = 0;
+    while (off < data.len) {
         if (data.s[off] == '"' || data.s[off] == '\'') {
             if (!SkipQuotedString(data, off)) {
                 return false;
             }
         } else if (data.s[off] == '{') {
-            if (!SkipBlock(data, off)) {
-                return false;
+            depth++;
+            off++;
+        } else if (data.s[off] == '}') {
+            depth--;
+            off++;
+            if (depth == 0) {
+                return true;
             }
         } else if (data.s[off] == '\\' && off < data.len - 1) {
             off += 2;
@@ -69,11 +74,7 @@ static bool SkipBlock(Str data, int& off) {
             off++;
         }
     }
-    if (off >= data.len) {
-        return false;
-    }
-    off++;
-    return true;
+    return false;
 }
 
 bool CssPullParser::NextRule() {
