@@ -24,6 +24,9 @@ struct DirIter {
     bool includeDirs = false;
     bool recurse = false;
 
+    DirIter() = default;
+    explicit DirIter(Str dir);
+
     struct iterator {
         const DirIter* di;
         bool didFinish = false;

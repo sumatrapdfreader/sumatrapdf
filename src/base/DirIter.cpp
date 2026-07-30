@@ -8,6 +8,8 @@
 void AdvanceDirIter(DirIter::iterator* it, int n);
 void CloseDirIter(DirIter::iterator* it);
 
+DirIter::DirIter(Str dir) : dir(dir) {}
+
 DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
     this->di = di;
     this->dirsToVisit.Append(di->dir);
