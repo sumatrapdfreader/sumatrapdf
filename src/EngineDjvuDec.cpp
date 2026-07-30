@@ -84,7 +84,7 @@ static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
         return nullptr;
     }
     auto res = new PageDestinationDjvuDec(link, comment);
-    res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    res->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
     res->pageNo = ParseDjvuDecLink(link);
     return res;
 }

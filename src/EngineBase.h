@@ -228,7 +228,7 @@ struct PageDestination : IPageDestination {
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, Str value = {});
 
 // use in PageDestination::GetDestRect for values that don't matter
-#define DEST_USE_DEFAULT -999.9f
+constexpr float kDestUseDefault = -999.9f;
 
 extern Kind kindPageElementDest;
 extern Kind kindPageElementImage;

@@ -2165,20 +2165,20 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     // when pages have varying sizes in fit-width/fit-page mode
     float pageZoom = GetZoomReal(pageNo);
 
-    if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
+    if (rect.IsEmpty() || (rect.dx == kDestUseDefault && rect.dy == kDestUseDefault)) {
         // PDF: /XYZ, /Fit, /FitB — scroll to rect.TL() (defaults = page top)
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll = ToPoint(scrollD);
 
         // Unspecified X: keep horizontal scroll.
-        if (DEST_USE_DEFAULT == rect.x) {
+        if (kDestUseDefault == rect.x) {
             scroll.x = -1;
         }
         // Unspecified Y (page-level /Fit, /XYZ with null top): land at the top
         // of the *target* page. Reusing the current page's on-screen offset
         // often scrolls continuous view so the next page is most visible
         // ("bookmark lands one page ahead", #2799 / #3310).
-        if (DEST_USE_DEFAULT == rect.y) {
+        if (kDestUseDefault == rect.y) {
             if (pageNo == CurrentPageNo()) {
                 PageInfo* pageInfo = GetPageInfo(pageNo);
                 scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
@@ -2186,11 +2186,11 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
                 scroll.y = 0;
             }
         }
-    } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
+    } else if (rect.dx != kDestUseDefault && rect.dy != kDestUseDefault) {
         // PDF: /FitR left bottom right top
         RectF rectD = engine->Transform(rect, pageNo, pageZoom, rotation);
         scroll = ToPoint(rectD.TL());
-    } else if (rect.y != DEST_USE_DEFAULT) {
+    } else if (rect.y != kDestUseDefault) {
         // PDF: /FitH top  or  /FitBH top
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll.y = (int)scrollD.y;
@@ -2207,11 +2207,11 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     } else {
         GoToPage(pageNo, scroll.y, true, -1);
     }
-    if (rect.x != DEST_USE_DEFAULT) {
-        float docY = (rect.y != DEST_USE_DEFAULT) ? rect.y : 0.f;
+    if (rect.x != kDestUseDefault) {
+        float docY = (rect.y != kDestUseDefault) ? rect.y : 0.f;
         Rect destScreen = CvtToScreen(pageNo, RectF(rect.x, docY, 1, 1));
         ScrollScreenToRect(pageNo, destScreen);
-    } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
+    } else if (rect.dx != kDestUseDefault && rect.dy != kDestUseDefault) {
         Rect destScreen = CvtToScreen(pageNo, rect);
         ScrollScreenToRect(pageNo, destScreen);
     }

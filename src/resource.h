@@ -86,7 +86,7 @@
 #define IDC_FAV_LABEL_WITH_CLOSE 1106
 #define IDB_RELOADING_CUE 2010
 
-#define IDC_STATIC -1
+#define IDC_STATIC (-1)
 
 #define IDR_DLL_PAK 1
 #define IDR_TRANSLATIONS 2

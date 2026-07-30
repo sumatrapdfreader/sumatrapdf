@@ -23,7 +23,7 @@
 // must be last to over-write assert()
 #include "base/UtAssert.h"
 
-#define utassert_fequal(a, b) utassert(fabs(a - b) < FLT_EPSILON);
+#define utassert_fequal(a, b) utassert(fabs((a) - (b)) < FLT_EPSILON);
 
 #if OS_WIN
 static void ParseCommandLineTest() {

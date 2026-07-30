@@ -707,7 +707,7 @@ using Gdiplus::PathData;
 struct TabsCtrl;
 struct TabInfo;
 
-#define kTabDefaultBgCol (COLORREF) - 1
+#define kTabDefaultBgCol ((COLORREF)(-1))
 
 struct TabInfo {
     Str text;

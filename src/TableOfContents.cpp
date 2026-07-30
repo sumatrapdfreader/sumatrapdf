@@ -155,9 +155,9 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     if (k == kindDestinationMupdf) {
         // Prefer resolved anchor; outline x/y can be 0 and scroll to the wrong place
         RectF pt = PageDestGetDestPoint(dest);
-        if ((r.dx == 0 && r.dy == 0) || (r.dx == DEST_USE_DEFAULT && r.dy == DEST_USE_DEFAULT)) {
+        if ((r.dx == 0 && r.dy == 0) || (r.dx == kDestUseDefault && r.dy == kDestUseDefault)) {
             if (pt.x != 0 || pt.y != 0 || r.IsEmpty()) {
-                r = RectF{pt.x, pt.y, DEST_USE_DEFAULT, DEST_USE_DEFAULT};
+                r = RectF{pt.x, pt.y, kDestUseDefault, kDestUseDefault};
             }
         }
         zoom = dest->GetZoom2();

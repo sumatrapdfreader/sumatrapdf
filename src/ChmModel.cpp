@@ -36,7 +36,7 @@ static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
     }
     dest->pageNo = pageNo;
     ReportIf(!dest->kind);
-    dest->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    dest->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
     return dest;
 }
 

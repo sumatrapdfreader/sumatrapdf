@@ -121,7 +121,7 @@ struct PageDestinationMupdf : IPageDestination {
     Str name;
 
     // anchor (x, y) on the destination page resolved from the link URI.
-    // Valid after hasResolvedCoords; values may be DEST_USE_DEFAULT when the
+    // Valid after hasResolvedCoords; values may be kDestUseDefault when the
     // PDF destination left a coordinate unspecified (null / Fit).
     float destX = 0.f;
     float destY = 0.f;
@@ -139,13 +139,13 @@ struct PageDestinationMupdf : IPageDestination {
 
     RectF GetRect2() override {
         // Prefer URI-resolved coords (page-level /Fit and /XYZ nulls become
-        // DEST_USE_DEFAULT). outline->x/y are often 0 and would scroll to the
+        // kDestUseDefault). outline->x/y are often 0 and would scroll to the
         // bottom of the page in PDF space. FitR keeps width/height on `rect`.
         if (hasResolvedCoords) {
-            if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT && rect.dx > 0 && rect.dy > 0) {
+            if (rect.dx != kDestUseDefault && rect.dy != kDestUseDefault && rect.dx > 0 && rect.dy > 0) {
                 return rect;
             }
-            return RectF{destX, destY, DEST_USE_DEFAULT, DEST_USE_DEFAULT};
+            return RectF{destX, destY, kDestUseDefault, kDestUseDefault};
         }
         if (outline) {
             RectF r{outline->x, outline->y, 0, 0};
@@ -209,15 +209,15 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
 // zoomOut: 0 = leave zoom; >0 absolute fraction (1 = 100%); negative =
 // virtual modes (kZoomFitPage / FitWidth / FitContent). (issue #5828)
 static void DestFromFzLinkDest(const fz_link_dest& ldest, RectF* rectOut, float* zoomOut) {
-    float x = isnan(ldest.x) ? DEST_USE_DEFAULT : ldest.x;
-    float y = isnan(ldest.y) ? DEST_USE_DEFAULT : ldest.y;
-    float w = isnan(ldest.w) ? DEST_USE_DEFAULT : ldest.w;
-    float h = isnan(ldest.h) ? DEST_USE_DEFAULT : ldest.h;
+    float x = isnan(ldest.x) ? kDestUseDefault : ldest.x;
+    float y = isnan(ldest.y) ? kDestUseDefault : ldest.y;
+    float w = isnan(ldest.w) ? kDestUseDefault : ldest.w;
+    float h = isnan(ldest.h) ? kDestUseDefault : ldest.h;
     float zoom = 0.f;
 
     switch (ldest.type) {
         case FZ_LINK_DEST_XYZ:
-            w = h = DEST_USE_DEFAULT;
+            w = h = kDestUseDefault;
             // mupdf reports zoom as percentage (100 = 100%); we use 1.0 as 100%.
             if (!isnan(ldest.zoom) && ldest.zoom > 0) {
                 zoom = ldest.zoom / 100.f;
@@ -225,37 +225,37 @@ static void DestFromFzLinkDest(const fz_link_dest& ldest, RectF* rectOut, float*
             break;
         case FZ_LINK_DEST_FIT:
             zoom = kZoomFitPage;
-            x = y = w = h = DEST_USE_DEFAULT;
+            x = y = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_H:
             // Fit page width; optional top (y)
             zoom = kZoomFitWidth;
-            x = w = h = DEST_USE_DEFAULT;
+            x = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_V:
             // Fit page height (no dedicated mode → Fit Page); optional left (x)
             zoom = kZoomFitPage;
-            y = w = h = DEST_USE_DEFAULT;
+            y = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_B:
             zoom = kZoomFitContent;
-            x = y = w = h = DEST_USE_DEFAULT;
+            x = y = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_BH:
             // Fit content width; optional top (y)
             zoom = kZoomFitContent;
-            x = w = h = DEST_USE_DEFAULT;
+            x = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_BV:
             // Fit content height; optional left (x)
             zoom = kZoomFitContent;
-            y = w = h = DEST_USE_DEFAULT;
+            y = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_R:
             // rectangle in x,y,w,h — scroll/zoom handled by ScrollTo FitR path
             break;
         default:
-            w = h = DEST_USE_DEFAULT;
+            w = h = kDestUseDefault;
             break;
     }
     if (rectOut) {
@@ -289,7 +289,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
         return -1;
     }
     // Match HandleLinkMupdf: unspecified PDF coords are NaN and must stay
-    // DEST_USE_DEFAULT so ScrollTo lands on the page top, not user-space (0,0)
+    // kDestUseDefault so ScrollTo lands on the page top, not user-space (0,0)
     // (bottom of the page in PDF coords) which can make continuous view report
     // the next page as current (#2799 / page-level outline destinations).
     RectF rect;
@@ -437,7 +437,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         dest->destZoom = z;
         dest->hasResolvedCoords = true;
         // For FitR, w/h must reach ScrollTo; store on base rect as well.
-        if (destRect.dx != DEST_USE_DEFAULT || destRect.dy != DEST_USE_DEFAULT) {
+        if (destRect.dx != kDestUseDefault || destRect.dy != kDestUseDefault) {
             dest->rect = destRect;
         }
     }
@@ -3702,7 +3702,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
         return nullptr;
     }
 
-    // DEST_USE_DEFAULT dx/dy selects the /XYZ path in DisplayModel::ScrollTo
+    // kDestUseDefault dx/dy selects the /XYZ path in DisplayModel::ScrollTo
     // (IsEmpty would also work for 0,0 but would treat unspecified as bottom).
     pageDest = NewSimpleDest(pageNo, r, zoom);
     return pageDest;

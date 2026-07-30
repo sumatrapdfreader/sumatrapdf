@@ -325,7 +325,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 }
 
 // convert a coordinate from the sync file into a PDF coordinate
-#define SYNC_TO_PDF_COORDINATE(c) (c / 65781.76)
+#define SYNC_TO_PDF_COORDINATE(c) ((c) / 65781.76)
 
 static int cmpLineRecords(const void* a, const void* b) {
     return ((PdfsyncLine*)a)->record - ((PdfsyncLine*)b)->record;

@@ -163,11 +163,11 @@ static TempStr DestRectToStrTemp(EngineBase* engine, IPageDestination* dest) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return fmt("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
-    if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
+    if (rect.dx != kDestUseDefault && rect.dy != kDestUseDefault) {
         Rect rc = engine->Transform(rect, pageNo, 1.0, 0).Round();
         return fmt("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
-    if (rect.y != DEST_USE_DEFAULT) {
+    if (rect.y != kDestUseDefault) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return fmt("Point=\"x %.0f\"", pt.y);
     }

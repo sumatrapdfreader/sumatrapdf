@@ -213,12 +213,12 @@ char ByteReader::Char() {
 
 #define SEQUENTIAL_READ(name, type, size) \
     type ByteReader::name() {             \
-        if (!ok || off > len - size) {    \
+        if (!ok || off > len - (size)) {  \
             ok = false;                   \
             return 0;                     \
         }                                 \
         type res = name(off);             \
-        off += size;                      \
+        off += (size);                    \
         return res;                       \
     }
 

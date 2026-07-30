@@ -99,7 +99,7 @@ static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
         dest = pdest;
     }
     dest->pageNo = pageNo;
-    dest->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    dest->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
     return dest;
 }
 

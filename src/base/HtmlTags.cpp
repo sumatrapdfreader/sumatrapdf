@@ -7,9 +7,9 @@
 #include "base/HtmlTags.h"
 
 #define CS1(c1) (c1)
-#define CS2(c1, c2) (CS1(c1) | (c2 << 8))
-#define CS3(c1, c2, c3) (CS2(c1, c2) | (c3 << 16))
-#define CS4(c1, c2, c3, c4) (CS3(c1, c2, c3) | (c4 << 24))
+#define CS2(c1, c2) (CS1(c1) | ((c2) << 8))
+#define CS3(c1, c2, c3) (CS2(c1, c2) | ((c3) << 16))
+#define CS4(c1, c2, c3, c4) (CS3(c1, c2, c3) | ((c4) << 24))
 
 #define STR1(s) ((s)[0])
 #define STR2(s) (STR1(s) | ((s)[1] << 8))

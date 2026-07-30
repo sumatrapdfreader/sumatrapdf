@@ -14,11 +14,17 @@ If:
     - ext/.*
 
 Diagnostics:
+  # Base.h is the required first include in every .cpp; Include Cleaner often
+  # marks it unused even though the rest of the TU depends on its preamble.
+  Includes:
+    IgnoreHeader:
+      - base/Base\.h
   Suppress:
     - unused-parameter # example 1
     - misc-use-internal-linkage
     - misc-use-anonymous-namespace
     - readability-identifier-length
+    - readability-implicit-bool-conversion
     - bugprone-switch-missing-default-case
     - readability-avoid-unconditional-preprocessor-if
     - bugprone-easily-swappable-parameters
@@ -31,6 +37,7 @@ Diagnostics:
     - readability-use-std-min-max
     - readability-named-parameter
     - readability-non-const-parameter
+    - readability-uppercase-literal-suffix
 ---
 # When editing a header under src/base/, force-include Base.h plus other
 # src/base/*.h not already included by Base.h (headers are not self-sufficient).
