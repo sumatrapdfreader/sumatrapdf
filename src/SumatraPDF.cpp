@@ -443,7 +443,8 @@ bool OpenFileExternally(Str path) {
     TempStr ext = path::GetExtTemp(path);
     TempStr perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "PerceivedType");
     // since we allow following hyperlinks, also allow opening local webpages
-    if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
+    if (str::EndsWithI(path, StrL(".htm")) || str::EndsWithI(path, StrL(".html")) ||
+        str::EndsWithI(path, StrL(".xhtml"))) {
         perceivedType = str::DupTemp("webpage");
     }
     str::ToLowerInPlace(perceivedType);
@@ -5041,7 +5042,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     }
 
     TempStr fileName = ToUtf8Temp(dstFileName);
-    if (!str::EndsWithI(fileName, ".lnk")) {
+    if (!str::EndsWithI(fileName, StrL(".lnk"))) {
         fileName = str::JoinTemp(fileName, StrL(".lnk"));
     }
 
@@ -8046,7 +8047,7 @@ static TempStr ManualMimeFromPathTemp(Str path) {
 }
 
 static bool IsManualDocHtmlPage(Str path) {
-    if (len(path) == 0 || !str::EndsWithI(path, ".html")) {
+    if (len(path) == 0 || !str::EndsWithI(path, StrL(".html"))) {
         return false;
     }
     if (str::EqI(path, "manual.shell.html")) {
@@ -8141,7 +8142,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
     }
 
     TempStr htmlFile = str::DupTemp(Str(pathStart.s, pathLen));
-    if (!str::EndsWithI(htmlFile, ".html")) {
+    if (!str::EndsWithI(htmlFile, StrL(".html"))) {
         htmlFile = str::JoinTemp(htmlFile, StrL(".html"));
     }
 

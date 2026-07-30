@@ -147,7 +147,7 @@ static void OptimizePngThread(OptimizePngData* d) {
 // is not a .png file, so it's safe to call unconditionally after saving an
 // image in a user-selected format.
 void OptimizePngFileAsync(Str path) {
-    if (!str::EndsWithI(path, ".png")) {
+    if (!str::EndsWithI(path, StrL(".png"))) {
         return;
     }
     auto d = new OptimizePngData();

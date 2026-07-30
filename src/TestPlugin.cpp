@@ -132,7 +132,7 @@ void TestPlugin(WStr cmdLine) {
     }
 
     // if no exe path given or first arg doesn't end with .exe, use our own exe
-    if (len(args) == 1 || !str::EndsWithI(args[0], ".exe")) {
+    if (len(args) == 1 || !str::EndsWithI(args[0], StrL(".exe"))) {
         TempStr selfPath = GetSelfExePathTemp();
         args.InsertAt(0, selfPath);
     }

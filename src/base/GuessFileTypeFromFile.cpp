@@ -54,7 +54,7 @@ static bool IsFb2Archive(Archive* archive) {
     }
     auto fi = files[0];
     auto name = fi->name;
-    return str::EndsWithI(name, ".fb2");
+    return str::EndsWithI(name, StrL(".fb2"));
 }
 
 FileType GuessFileTypeFromFile(Str path) {

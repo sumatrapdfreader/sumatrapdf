@@ -885,7 +885,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         path = embeddedFile->path;
         // this is name of the file as set inside PDF file
         fileName = PageDestGetName(dest);
-        bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
+        bool canOpenEmbedded = str::EndsWithI(fileName, StrL(".pdf"));
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
         }
@@ -906,7 +906,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         // hack: attachmentNo is saved in pageNo see
         // PdfLoadAttachments and DestFromAttachment
         attachmentNo = pageNo;
-        bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
+        bool canOpenEmbedded = str::EndsWithI(fileName, StrL(".pdf"));
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenAttachment);
         }

@@ -51,7 +51,7 @@ struct CodexModelsVisitor : json::ValueVisitor {
     bool Visit(Str path, Str value, json::Type type) override {
         if (str::Eq(path, "/id") && type == json::Type::Number && str::Eq(value, "2")) {
             isModelListResponse = true;
-        } else if (str::StartsWith(path, StrL("/result/data[")) && str::EndsWith(path, "]/model") &&
+        } else if (str::StartsWith(path, StrL("/result/data[")) && str::EndsWith(path, StrL("]/model")) &&
                    type == json::Type::String) {
             AIChatAppendModelUnique(models, value);
         }
@@ -198,7 +198,7 @@ static bool CodexPathsEqual(Str a, Str b) {
 }
 
 static bool IsCodexRolloutFileName(Str name) {
-    return name && str::StartsWith(name, StrL("rollout-")) && str::EndsWithI(name, ".jsonl");
+    return name && str::StartsWith(name, StrL("rollout-")) && str::EndsWithI(name, StrL(".jsonl"));
 }
 
 static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {

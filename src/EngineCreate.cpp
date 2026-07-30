@@ -255,7 +255,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
 EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngine) {
     ReportIf(len(path) == 0);
 
-    if (str::EndsWithI(path, ".p7m")) {
+    if (str::EndsWithI(path, StrL(".p7m"))) {
         Str fileData = file::ReadFile(path);
         Str extracted = ExtractP7m(fileData);
         str::Free(fileData);

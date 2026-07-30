@@ -109,7 +109,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (len(argList) == 2 || !str::EndsWithI(argList[1], ".exe")) {
+    if (len(argList) == 2 || !str::EndsWithI(argList[1], StrL(".exe"))) {
         argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
     if (len(argList) == 3) {

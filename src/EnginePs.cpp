@@ -342,7 +342,7 @@ class EnginePs : public EngineBase {
             return false;
         }
 
-        if (str::EndsWithI(FilePath(), ".eps")) {
+        if (str::EndsWithI(FilePath(), StrL(".eps"))) {
             defaultExt = str::Dup(StrL(".eps"));
         }
 

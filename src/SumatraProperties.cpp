@@ -432,7 +432,7 @@ static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
 
 static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath) {
     if (len(fstruct) == 0) {
-        bool isPDF = str::EndsWithI(filePath, ".pdf");
+        bool isPDF = str::EndsWithI(filePath, StrL(".pdf"));
         if (isPDF) {
             AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), StrL(":")), _TRA("No"));
         }

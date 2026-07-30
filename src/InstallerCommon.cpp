@@ -147,7 +147,7 @@ TempStr GetExistingInstallationDirTemp() {
     if (!dir) {
         return {};
     }
-    if (str::EndsWithI(dir, ".exe")) {
+    if (str::EndsWithI(dir, StrL(".exe"))) {
         dir = path::GetDirTemp(dir);
     }
     if (len(dir) > 0 && dir::Exists(dir)) {

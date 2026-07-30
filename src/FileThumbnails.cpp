@@ -132,7 +132,7 @@ void SaveThumbnail(FileState* fs) {
         logf("SaveThumbnail: dir::CreateForFile('%s') failed, file path: '%s'\n", thumbnailPath, fs->filePath);
         ReportIfFast(true);
     }
-    ReportIfFast(!str::EndsWithI(thumbnailPath, ".png"));
+    ReportIfFast(!str::EndsWithI(thumbnailPath, StrL(".png")));
 
     RenderedBitmap* thumbnail = fs->thumbnail;
     if (!thumbnail) {

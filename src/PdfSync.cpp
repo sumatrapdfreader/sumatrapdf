@@ -42,7 +42,7 @@ struct PdfsyncPoint {
 struct Pdfsync : Synchronizer {
     Pdfsync(Str syncfilename, Str pdffilename, EngineBase* engine)
         : Synchronizer(syncfilename, pdffilename), engine(engine) {
-        ReportIf(!str::EndsWithI(syncfilename, ".pdfsync"));
+        ReportIf(!str::EndsWithI(syncfilename, StrL(".pdfsync")));
     }
 
     int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) override;
@@ -64,7 +64,7 @@ struct SyncTex : Synchronizer {
     SyncTex(Str syncfilename, Str pdffilename, EngineBase* engineIn) : Synchronizer(syncfilename, pdffilename) {
         engine = engineIn;
         scanner = nullptr;
-        ReportIf(!str::EndsWithI(syncfilename, ".synctex"));
+        ReportIf(!str::EndsWithI(syncfilename, StrL(".synctex")));
     }
 
     ~SyncTex() override { synctex_scanner_free(scanner); }
@@ -138,7 +138,7 @@ int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** syn
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    if (!str::EndsWithI(pdffilename, ".pdf")) {
+    if (!str::EndsWithI(pdffilename, StrL(".pdf"))) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 

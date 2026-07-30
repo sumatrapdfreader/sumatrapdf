@@ -1585,7 +1585,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         StrVec paths;
         doc->GetAllPaths(&paths);
         for (Str path : paths) {
-            if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
+            if (str::EndsWithI(path, StrL(".htm")) || str::EndsWithI(path, StrL(".html"))) {
                 if (path.s[0] == '/') {
                     path = Str(path.s + 1, path.len - 1);
                 }

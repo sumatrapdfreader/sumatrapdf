@@ -976,9 +976,9 @@ static Str loadFromFile(Fb2Doc* doc) {
     // .url files in addition (TODO: anything else?)
     for (auto&& fileInfo : fileInfos) {
         auto path = fileInfo->name;
-        if (str::EndsWithI(path, ".fb2") && len(data) == 0) {
+        if (str::EndsWithI(path, StrL(".fb2")) && len(data) == 0) {
             data = takeFileData(archive, fileInfo->fileId);
-        } else if (!str::EndsWithI(path, ".url")) {
+        } else if (!str::EndsWithI(path, StrL(".url"))) {
             return {};
         }
     }
@@ -1005,9 +1005,9 @@ static Str loadFromData(Fb2Doc* doc, Str srcData) {
     Str data;
     for (auto&& fileInfo : fileInfos) {
         auto path = fileInfo->name;
-        if (str::EndsWithI(path, ".fb2") && len(data) == 0) {
+        if (str::EndsWithI(path, StrL(".fb2")) && len(data) == 0) {
             data = takeFileData(archive, fileInfo->fileId);
-        } else if (!str::EndsWithI(path, ".url")) {
+        } else if (!str::EndsWithI(path, StrL(".url"))) {
             str::Free(data);
             return {};
         }
@@ -1765,7 +1765,7 @@ bool TxtDoc::Load() {
 
     TempStr text;
     Str raw = fileContent;
-    if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(raw, TCR_HEADER)) {
+    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(raw, TCR_HEADER)) {
         text = DecompressTcrTextTemp(raw);
     } else {
         text = DecodeTextToUtf8Temp(raw);

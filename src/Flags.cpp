@@ -191,7 +191,7 @@ static void ParseZoomValue(float* zoom, Str txtOrig) {
         return;
     }
     // remove trailing % in place, if exists
-    if (str::EndsWith(txtDup, "%")) {
+    if (str::EndsWith(txtDup, StrL("%"))) {
         txtDup.len--;
     }
     str::Parse(txtDup, "%f", zoom);
@@ -779,7 +779,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     CollectFile:
         // Resolve shell shortcuts so opening a .lnk loads the target document.
         Str filePath = argName;
-        if (str::EndsWithI(filePath, ".lnk")) {
+        if (str::EndsWithI(filePath, StrL(".lnk"))) {
             filePath = ResolveLnkTemp(argName);
         }
         if (filePath) { // resolve might fail

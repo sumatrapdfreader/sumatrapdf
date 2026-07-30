@@ -337,8 +337,8 @@ void StrTest() {
     Str withoutPrefix = str;
     utassert(str::TrimPrefix(withoutPrefix, StrL("a ")) && str::Eq(withoutPrefix, "string"));
     utassert(!str::TrimPrefix(withoutPrefix, StrL("a ")) && str::Eq(withoutPrefix, "string"));
-    utassert(str::EndsWith(str, "ing") && str::EndsWithI(str, "ING"));
-    utassert(!str::EndsWith(str, "ung"));
+    utassert(str::EndsWith(str, StrL("ing")) && str::EndsWithI(str, StrL("ING")));
+    utassert(!str::EndsWith(str, StrL("ung")));
     utassert(str::ContainsChar(str, 's') && !str::ContainsChar(str, 'S'));
     utassert(str::IndexOfChar(str, 's') == 2);
     utassert(str::IndexOfChar(str, 'g') == 7);

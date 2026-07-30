@@ -3824,7 +3824,7 @@ static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec& files) {
     for (int i = 0; i < nFiles; i++) {
         DragQueryFile(hDrop, i, pathW, dimof(pathW));
         Str path = ToUtf8Temp(pathW);
-        if (str::EndsWithI(path, ".lnk")) {
+        if (str::EndsWithI(path, StrL(".lnk"))) {
             TempStr resolved = ResolveLnkTemp(path);
             if (resolved) {
                 path = resolved;

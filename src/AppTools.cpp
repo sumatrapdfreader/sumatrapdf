@@ -30,7 +30,7 @@ static bool HasBeenInstalled() {
     }
 
     TempStr exePath = GetSelfExePathTemp();
-    if (!str::EndsWithI(installedPath, ".exe")) {
+    if (!str::EndsWithI(installedPath, StrL(".exe"))) {
         installedPath = path::JoinTemp(installedPath.s, path::GetBaseNameTemp(exePath).s);
     }
     return path::IsSame(installedPath, exePath);

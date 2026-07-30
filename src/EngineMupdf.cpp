@@ -2485,7 +2485,7 @@ static void fz_print_cb(void* user, const char* msg) {
         }
         AtomicBoolSet(&seenMsg, true);
     }
-    if (!str::EndsWith(msgStr, "\n")) {
+    if (!str::EndsWith(msgStr, StrL("\n"))) {
         msgStr = str::JoinTemp(msgStr, StrL("\n"));
     }
     log(msgStr);
@@ -3027,7 +3027,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     float ldx = layoutA5DxPt;
     float ldy = layoutA5DyPt;
     float lfontDy = layoutFontEm;
-    if (!str::EndsWithI(nameHint, ".epub")) {
+    if (!str::EndsWithI(nameHint, StrL(".epub"))) {
         lfontDy = 8.f;
     }
 
@@ -3208,7 +3208,7 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     fz_var(name);
     fz_try(ctx) {
         name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
-        if (str::EndsWith(Str(name), "Right")) {
+        if (str::EndsWith(Str(name), StrL("Right"))) {
             layout.type = PageLayout::Type::Book;
         } else if (str::StartsWith(Str(name), StrL("Two"))) {
             layout.type = PageLayout::Type::Facing;
@@ -5403,7 +5403,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
 
     // for epub files, list all files in the archive
     Str path = FilePath();
-    if (path && str::EndsWithI(path, ".epub")) {
+    if (path && str::EndsWithI(path, StrL(".epub"))) {
         ArchiveExtractProgressCb emptyCb;
         Archive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (zip) {

@@ -395,7 +395,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
         return false;
     }
 
-    if (str::EndsWithI(renderPath, ".txt")) {
+    if (str::EndsWithI(renderPath, StrL(".txt"))) {
         str::Builder text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             PageText pageText = engine->ExtractPageText(pageNo);
@@ -426,12 +426,12 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             continue;
         }
         TempStr pageBmpPath = fmt(renderPath.s, pageNo);
-        if (str::EndsWithI(pageBmpPath, ".png")) {
+        if (str::EndsWithI(pageBmpPath, StrL(".png"))) {
             Gdiplus::Bitmap gbmp(bmp->hbmp, nullptr);
             CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");
             WCHAR* pageBmpPathW = CWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
-        } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
+        } else if (str::EndsWithI(pageBmpPath, StrL(".bmp"))) {
             Str imgData = PixmapToBmpFormat(bmp);
             if (len(imgData) > 0) {
                 file::WriteFile(pageBmpPath, imgData);
