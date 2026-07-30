@@ -211,16 +211,27 @@ static EngineBase* psgz2pdf(Str fileName) {
         return nullptr;
     }
 
+    constexpr i64 kMaxUncompressedPostScriptSize = 512LL * 1024 * 1024;
+    i64 totalSize = 0;
+    bool ok = true;
     char buffer[12 * 1024];
     for (;;) {
         int n = gzread(inFile, buffer, sizeof(buffer));
         if (n <= 0) {
+            ok = n == 0;
             break;
         }
-        fwrite(buffer, 1, n, outFile);
+        totalSize += n;
+        if (totalSize > kMaxUncompressedPostScriptSize || fwrite(buffer, 1, n, outFile) != (size_t)n) {
+            ok = false;
+            break;
+        }
     }
     fclose(outFile);
     gzclose(inFile);
+    if (!ok) {
+        return nullptr;
+    }
 
     return ps2pdf(tmpFile);
 }
