@@ -319,13 +319,18 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     {
         auto ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
-        fz_quad quads[512];
         int n = len(rects);
         if (n == 0) {
             return;
         }
-        constexpr int kMaxQuads = (int)dimof(quads);
-        for (int i = 0; i < n && i < kMaxQuads; i++) {
+        fz_quad* quads = AllocArray<fz_quad>(n);
+        if (!quads) {
+            return;
+        }
+        defer {
+            free(quads);
+        };
+        for (int i = 0; i < n; i++) {
             RectF rect = rects[i];
             fz_rect r = ToFzRect(rect);
             fz_quad q = fz_quad_from_rect(r);
