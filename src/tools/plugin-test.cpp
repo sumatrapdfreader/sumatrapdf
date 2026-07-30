@@ -8,6 +8,18 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 
+// base expects these from the host app; provide no-ops for this tool
+void log(Str s) {
+    if (!s) {
+        return;
+    }
+    fwrite(s.s, 1, (size_t)s.len, stderr);
+}
+void loga(Str s) {
+    log(s);
+}
+void _uploadDebugReport(Str, Str, bool, bool) {}
+
 #define PLUGIN_TEST_NAMEA "SumatraPDF Plugin Test"
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
 
@@ -82,7 +94,7 @@ WStr GetSumatraExePath() {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
     TempStr path = GetPathInExeDirTemp("SumatraPDF.exe");
     if (!file::Exists(path)) {
-        return str::Dup(L"SumatraPDF.exe");
+        return wstr::Dup(WStrL(L"SumatraPDF.exe"));
     }
     return ToWStr(path);
 }
@@ -91,16 +103,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     StrVec argList;
     ParseCmdLine(GetCommandLineW(), argList);
 
-    if (argList.Size() == 1) {
+    if (len(argList) == 1) {
         TempStr name = path::GetBaseNameTemp(argList[0]);
         TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
         MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (argList.Size() == 2 || !str::EndsWithI(argList[1], ".exe")) {
+    if (len(argList) == 2 || !str::EndsWithI(argList[1], ".exe")) {
         argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
-    if (argList.Size() == 3) {
+    if (len(argList) == 3) {
         argList.InsertAt(2, nullptr);
     }
 

@@ -10,8 +10,6 @@ extern "C" {
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
 
-#include <math.h>
-
 static constexpr int kMaxMaskDim = 256;
 static constexpr int kMaxBlendPixels = 4096 * 4096;
 

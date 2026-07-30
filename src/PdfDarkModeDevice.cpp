@@ -10,8 +10,6 @@ extern "C" {
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
 
-#include <stdio.h>
-
 typedef struct {
     fz_device super;
     fz_device* inner;

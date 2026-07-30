@@ -9,8 +9,6 @@
 #include "base/Base.h"
 #include "RefHoverTextDetect.h"
 
-#include <wctype.h>
-
 // === Plain-text citation detection ===
 
 // Lowercase name-prefix particles that are part of a multi-word surname

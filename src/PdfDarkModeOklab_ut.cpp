@@ -5,8 +5,6 @@
 
 #include "PdfDarkMode.h"
 
-#include <math.h>
-
 #include "base/UtAssert.h"
 
 static float SrgbToLinear(float c) {

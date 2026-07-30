@@ -1103,6 +1103,41 @@ workspace "SumatraPDF"
       "ole32", "oleAut32", "windowscodecs", "shcore", "wininet",
     }
 
+  -- small console app that loads PdfPreview.dll and saves a thumbnail as PNG
+  project "preview_test"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4838" }
+    includedirs { "src" }
+    preview_test_files()
+    setup_base_pch()
+    links { "base" }
+    links {
+      "gdiplus", "gdi32", "user32", "ole32", "shell32", "shlwapi", "uuid",
+    }
+
+  -- minimal host for SumatraPDF -plugin mode (see src/tools/plugin-test.cpp)
+  project "plugin-test"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "WindowedApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4838" }
+    includedirs { "src" }
+    plugin_test_files()
+    setup_base_pch()
+    links { "base" }
+    links {
+      "gdiplus", "gdi32", "user32", "comctl32", "shell32", "shlwapi", "Version",
+      "wininet", "ole32", "oleAut32",
+    }
+
   -- native log viewer: the pipe server side of src/SumatraLog.cpp. GUI app,
   -- links the base static lib for its string / container / win helpers.
   project "logview"
@@ -1464,6 +1499,7 @@ workspace "SumatraPDF"
       "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "libwebp", "unrar",
     })
     set_group("tools", {
-      "bench_image", "bin2coff", "logview", "MakeLZSA", "test_engines", "test_util",
+      "bench_image", "bin2coff", "logview", "MakeLZSA", "plugin-test", "preview_test",
+      "test_engines", "test_util",
     })
   end

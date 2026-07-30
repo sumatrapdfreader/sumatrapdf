@@ -128,8 +128,6 @@
 // that use min/max as identifiers; pre-include them before defining macros
 #ifdef __GNUC__
 #include <cmath>
-#include <algorithm>
-#include <limits>
 #endif
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))

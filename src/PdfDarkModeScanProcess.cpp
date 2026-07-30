@@ -10,8 +10,6 @@ extern "C" {
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
 
-#include <math.h>
-
 static constexpr int kMaxScanPixels = 4096 * 4096;
 
 static float Clamp01(float v) {

@@ -8,9 +8,6 @@
 
 #include "base/Base.h"
 
-#include <cstdlib>
-#include <wctype.h>
-
 static constexpr float kAnchorTopMarginPt = 6.f;
 // pt of padding around the detected entry box.
 static constexpr float kEntryPadPt = 6.f;

@@ -14,7 +14,6 @@
 #if COMPILER_MINGW
 #include <cpuid.h>
 #endif
-#include <float.h>
 #include <mlang.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2

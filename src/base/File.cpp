@@ -2,9 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-
-#include <limits.h>
-
 #include "base/File.h"
 
 // we pad data read with 3 zeros for convenience. That way returned

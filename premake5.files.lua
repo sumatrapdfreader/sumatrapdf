@@ -1424,6 +1424,18 @@ function bench_image_files()
   }
 end
 
+function preview_test_files()
+  files {
+    "src/tools/preview_test.cpp",
+  }
+end
+
+function plugin_test_files()
+  files {
+    "src/tools/plugin-test.cpp",
+  }
+end
+
 function logview_files()
   files {
     "tools/logview/logview.cpp",

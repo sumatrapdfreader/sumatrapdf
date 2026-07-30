@@ -17,9 +17,6 @@
 #include "Flags.h"
 #include "Commands.h"
 
-#include <float.h>
-#include <math.h>
-
 // must be last to over-write assert()
 #include "base/UtAssert.h"
 

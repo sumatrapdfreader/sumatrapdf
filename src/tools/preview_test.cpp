@@ -1,19 +1,10 @@
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
+#include "base/Base.h"
 
 #include <objbase.h>
-#include <shlwapi.h>
 #include <thumbcache.h>
-#include <unknwn.h>
-#include <gdiplus.h>
-
-#include <stdio.h>
 
 #pragma comment(lib, "gdiplus.lib")
-
-#include "base/Base.h"
 
 #define kPdfPreviewClsid L"{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}"
 #define kXpsPreviewClsid L"{D427A82C-6545-4FBE-8E87-030EDB3BE46D}"
@@ -29,17 +20,19 @@ LPCOLESTR myGuid = kPdfPreviewClsid;
 
 typedef HRESULT ourDllGetClassObjectT(REFCLSID rclsid, REFIID riid, void** ppv);
 
-void log(Str s, int) {
+void log(Str s) {
+    if (!s) {
+        return;
+    }
     OutputDebugStringA(s.s);
-    printf("%s", s.s);
+    fwrite(s.s, 1, (size_t)s.len, stdout);
 }
-
-void log(Str s, bool) {
-    int cb = len(s);
-    log(s, cb);
+void loga(Str s) {
+    log(s);
 }
+void _uploadDebugReport(Str, Str, bool, bool) {}
 
-constexpr Str kPdfPreviewDllName = "PdfPreview.dll";
+static Str kPdfPreviewDllName = StrL("PdfPreview.dll");
 
 int main(int c, char** v) {
     GUID clsid{};

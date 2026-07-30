@@ -35,8 +35,7 @@
 #include "Theme.h"
 #include "PdfDarkMode.h"
 #include "TextToSpeech.h"
-
-#include <Notifications.h>
+#include "Notifications.h"
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.

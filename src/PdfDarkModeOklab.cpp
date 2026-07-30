@@ -5,8 +5,6 @@
 
 #include "PdfDarkMode.h"
 
-#include <math.h>
-
 struct OklabColor {
     float L = 0.f;
     float a = 0.f;
