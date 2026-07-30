@@ -167,7 +167,7 @@ void RemovePendingWebview(WebviewWnd* wv) {
     }
 }
 
-static bool ShouldWebviewBeVisible(HWND hwnd) {
+bool ShouldWebviewBeVisible(HWND hwnd) {
     if (!hwnd) {
         return false;
     }
