@@ -1915,8 +1915,12 @@ EXPORTS
 	cmark_node_get_heading_level
 	cmark_node_get_type
 	cmark_node_get_url
+	cmark_node_insert_before
+	cmark_node_new
 	cmark_node_next
+	cmark_node_set_on_enter
 	cmark_node_set_url
+	cmark_node_unlink
 	cmark_parser_attach_syntax_extension
 	cmark_parser_feed
 	cmark_parser_finish
