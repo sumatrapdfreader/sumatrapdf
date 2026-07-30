@@ -1570,7 +1570,7 @@ static void DeleteStaleFilesAsync() {
             continue;
         }
 
-        bool isLegacy = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
+        bool isLegacy = str::StartsWith(name, StrL("manual-")) || str::StartsWith(name, StrL("crashinfo-"));
         bool isBuildDir = IsBuildDirName(name);
         if (!isLegacy && !isBuildDir) {
             logf("DeleteStaleFilesAsync: skipping '%s'\n", name);

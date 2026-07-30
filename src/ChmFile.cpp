@@ -45,9 +45,9 @@ static chm_entry* ChmResolveObject(const ChmFile* chm, Str fileName) {
     if (!fileName) {
         return nullptr;
     }
-    if (!str::StartsWith(fileName, "/")) {
+    if (!str::StartsWith(fileName, StrL("/"))) {
         fileName = str::JoinTemp(StrL("/"), fileName);
-    } else if (str::StartsWith(fileName, "///")) {
+    } else if (str::StartsWith(fileName, StrL("///"))) {
         str::TrimPrefix(fileName, StrL("//"));
     }
 

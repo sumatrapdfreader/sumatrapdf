@@ -700,7 +700,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
     str::TrimPrefix(path, StrL(".\\"));
 
     TempStr fullPath = path;
-    bool isAbsPath = str::StartsWith(path, "\\");
+    bool isAbsPath = str::StartsWith(path, StrL("\\"));
     if (len(path) >= 2 && path.s[1] == ':') {
         /* technically c: is not abs, only c:\\ */
         isAbsPath = true;

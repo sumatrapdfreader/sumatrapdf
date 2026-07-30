@@ -332,8 +332,8 @@ void StrTest() {
     utassert(str::EqI(Str("AbCx", 3), Str("abcY", 3)));
     utassert(!str::EqI(Str("AbCx", 3), Str("abcY", 4)));
     utassert(str::EqN("abcd", "abce", 3) && !str::EqN("abcd", "Abcd", 3));
-    utassert(str::StartsWith(str, "a s") && str::StartsWithI(str, StrL("A Str")));
-    utassert(!str::StartsWith(str, "Astr"));
+    utassert(str::StartsWith(str, StrL("a s")) && str::StartsWithI(str, StrL("A Str")));
+    utassert(!str::StartsWith(str, StrL("Astr")));
     Str withoutPrefix = str;
     utassert(str::TrimPrefix(withoutPrefix, StrL("a ")) && str::Eq(withoutPrefix, "string"));
     utassert(!str::TrimPrefix(withoutPrefix, StrL("a ")) && str::Eq(withoutPrefix, "string"));

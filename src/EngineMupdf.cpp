@@ -331,7 +331,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     if (!uri || uri.s[0] == '#') {
         return false;
     }
-    if (str::StartsWith(uri, "file:") || IsExternalUrl(uri) || IsExternalLink(uri)) {
+    if (str::StartsWith(uri, StrL("file:")) || IsExternalUrl(uri) || IsExternalLink(uri)) {
         return false;
     }
 
@@ -2769,7 +2769,7 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     Str streamNoStr = ParseEmbeddedPdfName(path2).streamNoStr;
     if (streamNoStr) {
         Str rest = str::Parse(streamNoStr, ":%d", &streamNo);
-        bool hasAttachmentName = rest && str::StartsWith(rest, ":attachname=");
+        bool hasAttachmentName = rest && str::StartsWith(rest, StrL(":attachname="));
         // there shouldn't be any left unparsed data except attachment name metadata
         ReportIf(!rest.s || (rest.s[0] && !hasAttachmentName));
         if (!rest.s || (rest.s[0] && !hasAttachmentName)) {
@@ -3210,7 +3210,7 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
         name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
         if (str::EndsWith(Str(name), "Right")) {
             layout.type = PageLayout::Type::Book;
-        } else if (str::StartsWith(Str(name), "Two")) {
+        } else if (str::StartsWith(Str(name), StrL("Two"))) {
             layout.type = PageLayout::Type::Facing;
         }
     }
@@ -3523,7 +3523,7 @@ bool EngineMupdf::FinishLoading() {
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_dict_gets(ctx, pdf_array_get(ctx, intents, i), "S");
                 if (pdf_is_name(ctx, intent) && !pdf_is_indirect(ctx, intent) &&
-                    str::StartsWith(pdf_to_name(ctx, intent), "GTS_PDF")) {
+                    str::StartsWith(pdf_to_name(ctx, intent), StrL("GTS_PDF"))) {
                     pdf_array_push(ctx, list, intent);
                 }
             }
@@ -5169,7 +5169,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
             int n = pdf_array_len(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"));
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"), i);
-                ReportIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
+                ReportIf(!str::StartsWith(pdf_to_name(ctx, intent), StrL("GTS_")));
                 const char* intentName = pdf_to_name(ctx, intent);
                 fstruct.Append(Str(intentName + 4));
             }

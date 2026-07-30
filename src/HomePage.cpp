@@ -98,7 +98,7 @@ static Str FindMarkdownLinkTextEnd(Str textStart) {
 
 // closing ')' for the '(' before cmdStart; balances parens in http(s) targets
 static Str FindMarkdownLinkCmdEnd(Str cmdStart) {
-    if (str::StartsWith(cmdStart, "http://") || str::StartsWith(cmdStart, "https://")) {
+    if (str::StartsWith(cmdStart, StrL("http://")) || str::StartsWith(cmdStart, StrL("https://"))) {
         int depth = 0;
         for (int i = 0; i < cmdStart.len; i++) {
             char c = cmdStart.s[i];
@@ -157,7 +157,7 @@ static TempStr ResolveKeyShortcutTemp(Str cmdName) {
 
 // resolve link command to a URL for StaticLink target
 static TempStr ResolveLinkCmdTemp(Str cmd) {
-    if (str::StartsWith(cmd, "https://") || str::StartsWith(cmd, "http://")) {
+    if (str::StartsWith(cmd, StrL("https://")) || str::StartsWith(cmd, StrL("http://"))) {
         return str::DupTemp(cmd);
     }
     if (str::TrimPrefix(cmd, StrL("Help/"))) {
@@ -178,7 +178,7 @@ void ParseTip(ParsedTip& tip, Str s) {
     Str sp = s;
     // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
     while (len(sp) > 0) {
-        if (sp.s[0] == '(' && sp.len > 5 && str::StartsWith(Str(sp.s + 1, sp.len - 1), "Key/")) {
+        if (sp.s[0] == '(' && sp.len > 5 && str::StartsWith(Str(sp.s + 1, sp.len - 1), StrL("Key/"))) {
             int end = str::IndexOfChar(sp, ')');
             if (end >= 0) {
                 Str cmdName(sp.s + 5, end - 5); // skip "(Key/"
@@ -340,14 +340,14 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
     if (len(cmd) == 0) {
         return;
     }
-    if (str::StartsWith(cmd, "Cmd")) {
+    if (str::StartsWith(cmd, StrL("Cmd"))) {
         int cmdId = GetCommandIdByName(cmd);
         if (cmdId > 0) {
             HwndSendCommand(hwnd, cmdId);
         }
         return;
     }
-    if (str::StartsWith(cmd, "http://") || str::StartsWith(cmd, "https://")) {
+    if (str::StartsWith(cmd, StrL("http://")) || str::StartsWith(cmd, StrL("https://"))) {
         // documentation links open in the embedded manual browser
         if (!MaybeLaunchDocumentation(cmd)) {
             SumatraLaunchBrowser(cmd);

@@ -1846,7 +1846,7 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     } else if (json::Type::String == type && str::Eq(path, "/X-summary")) {
         str::Free(propSummary);
         propSummary = str::Dup(value);
-    } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
+    } else if (str::StartsWith(path, StrL("/ComicBookInfo/1.0/credits["))) {
         int idx = -1;
         Str prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
@@ -2021,7 +2021,7 @@ bool EngineCbx::FinishLoading() {
         FileType kind = GuessFileTypeFromName(fileName);
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
+            !str::StartsWith(path::GetBaseNameTemp(fileName), StrL("."))) {
             pageFiles.Append(fileInfo);
         }
     }

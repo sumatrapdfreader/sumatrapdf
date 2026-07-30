@@ -206,20 +206,20 @@ static bool IsPSFileContent(Str d) {
         return false;
     }
     // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
+    if (str::StartsWith(header, StrL("\xC5\xD0\xD3\xC6"))) {
         DWORD psStart = ByteReader(d).UInt32LE(4);
         if ((int)psStart >= n - 12) {
             return true;
         }
         Str sub = Str(header.s + psStart, header.len - (int)psStart);
-        return str::StartsWith(sub, "%!PS-Adobe-");
+        return str::StartsWith(sub, StrL("%!PS-Adobe-"));
     }
-    if (str::StartsWith(header, "%!PS-Adobe-")) {
+    if (str::StartsWith(header, StrL("%!PS-Adobe-"))) {
         return true;
     }
     // PJL (Printer Job Language) files containing Postscript data
     // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
-    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
+    bool isPJL = str::StartsWith(header, StrL("\x1B%-12345X@PJL"));
     if (isPJL && !str::Contains(header, StrL("%!PS-Adobe-"))) {
         isPJL = false;
     }
@@ -248,27 +248,27 @@ static FileType DetectHicAndAvif(Str d) {
         'mif1' also happens?
     */
     // TODO: support more ftyp types?
-    if (str::StartsWith(hdr, "ftypheic")) {
+    if (str::StartsWith(hdr, StrL("ftypheic"))) {
         return FileType::Heic;
     }
-    if (str::StartsWith(hdr, "ftypheix")) {
+    if (str::StartsWith(hdr, StrL("ftypheix"))) {
         return FileType::Heic;
     }
-    if (str::StartsWith(hdr, "ftypmif1")) {
+    if (str::StartsWith(hdr, StrL("ftypmif1"))) {
         return FileType::Heic;
     }
-    if (str::StartsWith(hdr, "ftypavif")) {
+    if (str::StartsWith(hdr, StrL("ftypavif"))) {
         return FileType::Avif;
     }
     hdr = Str(s.s + 16, s.len - 16);
-    if (str::StartsWith(hdr, "mif1heic")) {
+    if (str::StartsWith(hdr, StrL("mif1heic"))) {
         return FileType::Heic;
     }
     return FileType::Unknown;
 }
 
 static bool HasWebpSignature(Str d) {
-    return d.len > 12 && str::StartsWith(d, "RIFF") && str::StartsWith(Str(d.s + 8, d.len - 8), "WEBP");
+    return d.len > 12 && str::StartsWith(d, StrL("RIFF")) && str::StartsWith(Str(d.s + 8, d.len - 8), StrL("WEBP"));
 }
 
 static bool HasJxlSignature(Str d) {

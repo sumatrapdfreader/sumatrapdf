@@ -81,7 +81,7 @@ static TempStr GetXmlPIAttrTemp(Str xmlPI, Str attrName) {
 // tries to extract an encoding from <?xml encoding="..."?>
 // returns CP_ACP on failure
 static uint GetCodepageFromPI(Str xmlPI) {
-    if (!str::StartsWith(xmlPI, "<?xml")) {
+    if (!str::StartsWith(xmlPI, StrL("<?xml"))) {
         return CP_ACP;
     }
     int xmlPIEnd = str::IndexOf(xmlPI, StrL("?>"));
@@ -202,9 +202,9 @@ TempStr NormalizeURLTemp(Str url, Str base) {
         char c = norm.s[src];
         if (c != '/') {
             norm.s[dst++] = c;
-        } else if (str::StartsWith(Str(norm.s + src, norm.len - src), "/./")) {
+        } else if (str::StartsWith(Str(norm.s + src, norm.len - src), StrL("/./"))) {
             src++;
-        } else if (str::StartsWith(Str(norm.s + src, norm.len - src), "/../") ||
+        } else if (str::StartsWith(Str(norm.s + src, norm.len - src), StrL("/../")) ||
                    str::Eq(Str(norm.s + src, norm.len - src), "/..")) {
             while (dst > 0 && norm.s[dst - 1] != '/') {
                 dst--;
@@ -1547,7 +1547,7 @@ Str HtmlDoc::GetFileData(Str relPath) {
 }
 
 Str HtmlDoc::LoadURL(Str url) {
-    if (str::StartsWith(url, "data:")) {
+    if (str::StartsWith(url, StrL("data:"))) {
         return str::Dup(DecodeDataURITemp(url));
     }
     if (str::ContainsChar(url, ':')) {
@@ -1695,7 +1695,7 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
         // copy (not a view): htmlData is mutated below before beforeAt is appended back
         beforeAt = str::DupTemp(Str(&htmlData[idx]));
     } else {
-        ReportIf(!str::StartsWith(curr, "mailto:"));
+        ReportIf(!str::StartsWith(curr, StrL("mailto:")));
         rest = Str(curr.s + 7, curr.len - 7);
         if (!rest.len || !IsEmailUsernameChar(rest.s[0])) {
             return {};
@@ -1803,12 +1803,12 @@ bool TxtDoc::Load() {
             if (end) {
                 linkEndPos = (int)(end.s - text.s);
             }
-        } else if ('w' == c && str::StartsWith(curr, "www.")) {
+        } else if ('w' == c && str::StartsWith(curr, StrL("www."))) {
             Str end = TextFindLinkEnd(htmlData, curr, i > 0 ? text.s[i - 1] : ' ', true);
             if (end) {
                 linkEndPos = (int)(end.s - text.s);
             }
-        } else if ('m' == c && str::StartsWith(curr, "mailto:")) {
+        } else if ('m' == c && str::StartsWith(curr, StrL("mailto:"))) {
             Str end = TextFindEmailEnd(htmlData, curr);
             if (end) {
                 linkEndPos = (int)(end.s - text.s);
@@ -1829,7 +1829,7 @@ bool TxtDoc::Load() {
             continue;
         }
 
-        if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, "APPENDIX"))) {
+        if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, StrL("APPENDIX")))) {
             Str lineBefore, lineAfter;
             if (str::CutChar(curr, '\n', &lineBefore, &lineAfter) && !str::IsNull(str::Parse(lineAfter, "%?\r\n"))) {
                 htmlData.Append(fmt("<b id='section%d' title=\"", ++sectionCount));

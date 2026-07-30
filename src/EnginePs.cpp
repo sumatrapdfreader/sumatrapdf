@@ -115,7 +115,7 @@ struct AutoDeleteFile {
 static Rect ExtractDSCPageSize(const WCHAR* path) {
     char header[1024]{};
     file::ReadN(path, (u8*)header, sizeof(header) - 1);
-    if (!str::StartsWith((char*)header, "%!PS-Adobe-")) {
+    if (!str::StartsWith((char*)header, StrL("%!PS-Adobe-"))) {
         return {};
     }
 
@@ -126,7 +126,7 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
     char* nl = (char*)header;
     RectF bbox;
     while ((nl = strchr(nl + 1, '\n')) != nullptr && '%' == nl[1]) {
-        if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
+        if (str::StartsWith(nl + 1, StrL("%%BoundingBox:")) &&
             str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
             return ToRect(bbox);
         }

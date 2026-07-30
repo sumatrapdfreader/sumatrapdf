@@ -119,7 +119,7 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
             win->DeleteToolTip();
             win->RedrawAll(true);
         }
-    } else if (str::StartsWith(url, "Cmd")) {
+    } else if (str::StartsWith(url, StrL("Cmd"))) {
         int cmdId = GetCommandIdByName(url);
         if (cmdId > 0) {
             HwndSendCommand(win->hwndFrame, cmdId);
