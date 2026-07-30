@@ -69,7 +69,15 @@ WStr TeXFilter::ExtractBracedBlock() {
                     // ignore the content of \begin{...} and \end{...}
                     if (wstr::StartsWith(m_pPtr, L"begin{") || wstr::StartsWith(m_pPtr, L"end{")) {
                         m_pPtr = wcschr(m_pPtr, '{') + 1;
-                        ExtractBracedBlock();
+                        int depth = 1;
+                        while (*m_pPtr && depth > 0) {
+                            if (*m_pPtr == '{') {
+                                depth++;
+                            } else if (*m_pPtr == '}') {
+                                depth--;
+                            }
+                            m_pPtr++;
+                        }
                         addsingleNL(result, &rptr);
                         break;
                     }
