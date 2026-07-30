@@ -7,6 +7,7 @@
 #include "base/Http.h"
 #include "base/Win.h"
 #include "base/File.h"
+#include "base/Crypto.h"
 
 #include "wingui/Layout.h"
 #include "wingui/UIModels.h"
@@ -244,6 +245,13 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 }
 
 void StartInstallerAutoUpgrade(Str installerPath) {
+    TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
+    TempStr installerSigner = GetExecutableSignerTemp(installerPath);
+    if (!expectedSigner || !installerSigner || !str::Eq(expectedSigner, installerSigner) ||
+        !IsPEFileSigned(installerPath)) {
+        logf("StartInstallerAutoUpgrade: refusing an update with an untrusted signature\n");
+        return;
+    }
     str::Builder cmd;
     if (IsOurExeInstalled()) {
         // no need for sleep because it shows the installer dialog anyway
@@ -415,6 +423,10 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
     bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb);
     logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
+    TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
+    TempStr installerSigner = ok ? GetExecutableSignerTemp(installerPath) : TempStr{};
+    ok = ok && expectedSigner && installerSigner && str::Eq(expectedSigner, installerSigner) &&
+         IsPEFileSigned(installerPath);
     if (ok) {
         updateInfo->installerPath = str::Dup(installerPath);
     } else {
