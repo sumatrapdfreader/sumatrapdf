@@ -391,6 +391,34 @@ function addError(text) {
   chatDiv.appendChild(d);
   scrollToBottom();
 }
+function sanitizedMarkdown(markdown) {
+  var t = document.createElement('template');
+  t.innerHTML = marked.parse(markdown);
+  var allowed = new Set(['A', 'BLOCKQUOTE', 'BR', 'CODE', 'DEL', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+                         'HR', 'LI', 'OL', 'P', 'PRE', 'STRONG', 'TABLE', 'TBODY', 'TD', 'TH', 'THEAD', 'TR', 'UL']);
+  var nodes = Array.from(t.content.querySelectorAll('*'));
+  for (var el of nodes) {
+    if (!allowed.has(el.tagName)) {
+      el.replaceWith(document.createTextNode(el.textContent || ''));
+      continue;
+    }
+    for (var attr of Array.from(el.attributes)) {
+      var keep = el.tagName === 'A' && (attr.name === 'href' || attr.name === 'title');
+      if (!keep) {
+        el.removeAttribute(attr.name);
+      }
+    }
+    if (el.tagName === 'A' && el.hasAttribute('href')) {
+      try {
+        var u = new URL(el.getAttribute('href'), location.href);
+        if (!['http:', 'https:', 'mailto:'].includes(u.protocol)) el.removeAttribute('href');
+      } catch (_) {
+        el.removeAttribute('href');
+      }
+    }
+  }
+  return t.content;
+}
 function appendText(text) {
   if (!currentBlock) {
     currentBlock = document.createElement('div');
@@ -400,7 +428,7 @@ function appendText(text) {
   }
   currentRaw += text;
   if (typeof marked !== 'undefined') {
-    currentBlock.innerHTML = marked.parse(currentRaw);
+    currentBlock.replaceChildren(sanitizedMarkdown(currentRaw));
   } else {
     currentBlock.textContent = currentRaw;
   }
