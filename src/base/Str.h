@@ -80,8 +80,8 @@ bool CutChar(Str s, char c, Str* before, Str* after);
 bool CutCharLast(Str s, char c, Str* before, Str* after);
 bool NextLine(Str s, Str& line, Str& rest);
 
-bool Contains(Str s, Str txt);
-bool ContainsI(Str s, Str txt);
+bool Contains(Str s, Str sub);
+bool ContainsI(Str s, Str sub);
 bool ContainsChar(Str s, char c);
 
 Str TrimSuffix(Str s, Str suffix);
@@ -241,7 +241,7 @@ struct Builder {
     iterator end() const { return &(els[len]); }
 };
 
-bool Contains(const Builder& b, Str s);
+bool Contains(const Builder& b, Str sub);
 } // namespace str
 
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num);

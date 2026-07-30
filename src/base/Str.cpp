@@ -346,12 +346,12 @@ bool StartsWithI(Str s, Str prefix) {
     return 0 == _strnicmp(s.s, prefix.s, len(prefix));
 }
 
-bool Contains(Str s, Str txt) {
-    return str::IndexOf(s, txt) >= 0;
+bool Contains(Str s, Str sub) {
+    return str::IndexOf(s, sub) >= 0;
 }
 
-bool ContainsI(Str s, Str txt) {
-    return str::IndexOfI(s, txt) >= 0;
+bool ContainsI(Str s, Str sub) {
+    return str::IndexOfI(s, sub) >= 0;
 }
 
 bool EndsWith(Str txt, Str end) {
@@ -1581,8 +1581,8 @@ Str str::Builder::TakeStr() {
     return Str(res, n);
 }
 
-bool str::Contains(const str::Builder& b, Str s) {
-    return str::Contains(ToStr(b), s);
+bool str::Contains(const str::Builder& b, Str sub) {
+    return str::Contains(ToStr(b), sub);
 }
 
 bool str::Builder::IsEmpty() const {
