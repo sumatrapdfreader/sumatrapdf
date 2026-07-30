@@ -673,11 +673,16 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     bool isBitonal = pi->pageType == DJVU_PAGE_BITONAL || ri.format == DJVU_FORMAT_GRAY8;
     int comp = (ri.format == DJVU_FORMAT_GRAY8) ? 1 : 3;
     int sdx = ri.width, sdy = ri.height;
-    u8* pixels = AllocArray<u8>(sdx * sdy * comp);
+    i64 stride = (i64)sdx * comp;
+    i64 pixelCount = stride * sdy;
+    if (sdx <= 0 || sdy <= 0 || stride > INT_MAX || pixelCount > INT_MAX) {
+        return nullptr;
+    }
+    u8* pixels = AllocArray<u8>((int)pixelCount);
     if (!pixels) {
         return nullptr;
     }
-    if (djvu_page_render_into_abortable(doc, pageNo - 1, subsample, pixels, sdx * comp, ab) != 0) {
+    if (djvu_page_render_into_abortable(doc, pageNo - 1, subsample, pixels, (int)stride, ab) != 0) {
         free(pixels);
         return nullptr;
     }
