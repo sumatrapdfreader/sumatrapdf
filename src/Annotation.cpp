@@ -1299,11 +1299,10 @@ bool AnnotationCanBeMoved(AnnotationType tp) {
 }
 
 bool AnnotationCanBeResized(AnnotationType tp) {
-    switch (tp) {
+    if (tp == AnnotationType::Text) {
         // TODO: for now don't allow resizing text annotation because it's just an icon
         // would have to figure out how to change the size of the icon
-        case AnnotationType::Text:
-            return false;
+        return false;
     }
     return AnnotationCanBeMoved(tp);
 }
