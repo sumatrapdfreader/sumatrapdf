@@ -394,6 +394,7 @@ bool BrowserDocView::CreateWebView2() {
     wv->events.navigationCompleted = NavigationCompleted;
     wv->events.historyChanged = HistoryChanged;
     wv->events.resolveAccelCmd = ChmResolveAccelCmd;
+    wv->allowClipboardRead = false;
     // forward app accelerators (Ctrl+W close tab, Ctrl+K command palette, etc.)
     // to the main window so they work while the WebView2 has keyboard focus
     wv->forwardAppAccelerators = true;

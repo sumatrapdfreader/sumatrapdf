@@ -190,8 +190,8 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
     using webview2_com_handler_cb_t = Func1<ICoreWebView2Controller*>;
 
   public:
-    webview2_com_handler(HWND hwnd, WebViewMsgCb& msgCb, webview2_com_handler_cb_t cb)
-        : m_window(hwnd), msgCb(msgCb), m_cb(cb) {}
+    webview2_com_handler(HWND hwnd, WebViewMsgCb& msgCb, webview2_com_handler_cb_t cb, bool allowClipboardRead)
+        : m_window(hwnd), msgCb(msgCb), m_cb(cb), allowClipboardRead(allowClipboardRead) {}
     ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
 
     ULONG STDMETHODCALLTYPE Release() {
@@ -259,7 +259,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2PermissionRequestedEventArgs* args) {
         COREWEBVIEW2_PERMISSION_KIND kind;
         args->get_PermissionKind(&kind);
-        if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ) {
+        if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ && allowClipboardRead) {
             args->put_State(COREWEBVIEW2_PERMISSION_STATE_ALLOW);
         } else {
             args->put_State(COREWEBVIEW2_PERMISSION_STATE_DENY);
@@ -271,6 +271,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
     HWND m_window;
     WebViewMsgCb msgCb;
     webview2_com_handler_cb_t m_cb;
+    bool allowClipboardRead;
     ULONG m_refCount = 1;
 };
 
@@ -1258,7 +1259,7 @@ static void CreateControllerWithSharedEnvironment(WebviewWnd* self, WebViewMsgCb
     }
     HWND hwnd = self->hwnd;
     auto fn = MkFunc1<void, ICoreWebView2Controller*>(ComHandlerCbHwnd, (void*)hwnd);
-    auto* handler = new webview2_com_handler(hwnd, cb, fn);
+    auto* handler = new webview2_com_handler(hwnd, cb, fn, self->allowClipboardRead);
     HRESULT hr = gSharedEnvironment->CreateCoreWebView2Controller(self->hwnd, handler);
     handler->Release();
     if (FAILED(hr)) {
