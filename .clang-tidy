@@ -24,5 +24,6 @@ Checks: >
   -readability-braces-around-statements,
   -readability-uppercase-literal-suffix,
   -readability-make-member-function-const,
-  -readability-convert-member-functions-to-static
+  -readability-convert-member-functions-to-static,
+  -readability-use-anyofallof
 ...
