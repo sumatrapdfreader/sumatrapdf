@@ -196,6 +196,9 @@ TempStr NormalizeURLTemp(Str url, Str base) {
     TempStr basePath = basePathLen > 0 ? str::DupTemp(Str(base.s, basePathLen)) : Str{};
     TempStr norm = str::JoinTemp(basePath, url);
 
+    // Collapse /./ and /../. For /../, consume only "/.." so the trailing '/'
+    // stays for the next iteration — otherwise consecutive ../../ leaves a
+    // literal ".." (issue #5846: OEBPS/html/../../cover.jpg → cover.jpg).
     int dst = 0;
     for (int src = 0; src < norm.len; src++) {
         char c = norm.s[src];
@@ -203,12 +206,17 @@ TempStr NormalizeURLTemp(Str url, Str base) {
             norm.s[dst++] = c;
         } else if (str::StartsWith(Str(norm.s + src, norm.len - src), "/./")) {
             src++;
-        } else if (str::StartsWith(Str(norm.s + src, norm.len - src), "/../")) {
+        } else if (str::StartsWith(Str(norm.s + src, norm.len - src), "/../") ||
+                   str::Eq(Str(norm.s + src, norm.len - src), "/..")) {
             while (dst > 0 && norm.s[dst - 1] != '/') {
                 dst--;
             }
-            src += 3;
-        } else {
+            if (dst > 0) {
+                dst--; // drop the segment separator; re-added when trailing '/' is processed
+            }
+            src += 2; // leave trailing '/' (if any) for the next iteration
+        } else if (dst > 0) {
+            // skip a leading '/' so results stay relative to the ZIP root
             norm.s[dst++] = '/';
         }
     }
@@ -1927,3 +1935,51 @@ TxtDoc* TxtDoc::CreateFromFile(Str path) {
     }
     return doc;
 }
+
+#if defined(DEBUG)
+// issue #5846: consecutive ../../ must fully resolve
+bool EbookDoc_UnitTestNormalizeURL() {
+    auto eq = [](Str url, Str base, Str expected) -> bool { return str::Eq(NormalizeURLTemp(url, base), expected); };
+    // consecutive parent segments from OEBPS/html/ (EPUB cover layout)
+    if (!eq("../../cover.jpg", "OEBPS/html/titlepage.xhtml", "cover.jpg")) {
+        return false;
+    }
+    if (!eq("../../root.jpg", "OEBPS/html/page.xhtml", "root.jpg")) {
+        return false;
+    }
+    if (!eq("../../img/c.jpg", "a/b/p.xhtml", "img/c.jpg")) {
+        return false;
+    }
+    if (!eq("../../../c.jpg", "a/b/x/p.xhtml", "c.jpg")) {
+        return false;
+    }
+    // single ../ still works
+    if (!eq("../ok.jpg", "OEBPS/html/page.xhtml", "OEBPS/ok.jpg")) {
+        return false;
+    }
+    if (!eq("../Images/x.jpg", "OEBPS/Text/y.xhtml", "OEBPS/Images/x.jpg")) {
+        return false;
+    }
+    if (!eq("text/../cover.jpg", "page.xhtml", "cover.jpg")) {
+        return false;
+    }
+    // ./ collapse and over-pop
+    if (!eq("./y", "x/z", "x/y")) {
+        return false;
+    }
+    if (!eq("../../b", "a/c.xhtml", "b")) {
+        return false;
+    }
+    // absolute / scheme URLs left alone
+    if (!eq("/abs/path", "OEBPS/html/p.xhtml", "/abs/path")) {
+        return false;
+    }
+    if (!eq("http://example.com/x", "OEBPS/html/p.xhtml", "http://example.com/x")) {
+        return false;
+    }
+    if (!eq("#frag", "OEBPS/html/p.xhtml#old", "OEBPS/html/p.xhtml#frag")) {
+        return false;
+    }
+    return true;
+}
+#endif
