@@ -386,6 +386,11 @@
         if (innerSlot) {
           innerSlot.innerHTML = rendered.innerHTML;
         }
+        // Ensure code Copy handlers are bound (gen_code_copy.js). Delegation
+        // covers late-injected buttons; this is a safe no-op if already bound.
+        if (typeof window.initCodeCopyButtons === "function") {
+          window.initCodeCopyButtons();
+        }
         if (typeof window.rebuildPageToc === "function") {
           window.rebuildPageToc();
         }
