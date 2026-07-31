@@ -297,15 +297,22 @@ a.for-nav-icon:hover {
 
 .notion-page {
   font-size: 11pt;
+  /* allow nested pre/code to shrink and scroll within flex layout */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .code-block {
   position: relative;
   margin: 1em 0;
+  max-width: 100%;
 }
 
 .code-block pre {
   margin: 0;
+  /* long SVG / config lines: scroll inside the block (issue #5854) */
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .sum-code-copy-btn {
@@ -347,8 +354,11 @@ a.for-nav-icon:hover {
 
 pre > code {
   font-size: 10pt;
+  display: block;
+  white-space: pre;
 }
 
+/* hljs and plain fences both need horizontal scroll for long lines */
 pre code.hljs {
   display: block;
   overflow-x: auto;
@@ -1029,6 +1039,9 @@ code {
 
 pre {
   background: rgb(247 246 244);
+  /* plain <pre><code> (no hljs class) — e.g. in-app manual fences */
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 code {
