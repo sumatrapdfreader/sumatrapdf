@@ -1,5 +1,5 @@
 // Build and run the release x64 (rel64) build of the native logview tool
-// (tools/logview). Output binary: out/rel64/logview.exe.
+// (src/tools/logview). Output binary: out/rel64/logview.exe.
 import { join, resolve } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 import { launchDetached } from "../tests/winapi";

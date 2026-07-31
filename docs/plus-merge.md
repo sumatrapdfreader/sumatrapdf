@@ -129,7 +129,7 @@ New named themes: **Light-Warm** (eye-care), **Light-White**, **Dark-Dracula**,
 `LastDarkTheme`/`LastLightTheme`. Dark-mode fixes throughout the chrome: canvas + TOC
 scrollbar theming, menu check marks, maximized frame edges, toolbar separators,
 tab UI. Windows 11-style caption glyphs drawn from generated geometry
-(`src/CaptionGlyphs.{cpp,h}`, `tools/gen_caption_glyphs.py`) with DPI-aware layout and
+(`src/CaptionGlyphs.{cpp,h}`, `src/tools/gen_caption_glyphs.py`) with DPI-aware layout and
 interaction-state polish.
 - Touches: `Theme.cpp` (+400), `Caption.cpp`, `Toolbar.cpp`, `TableOfContents.cpp`,
   `Menu.cpp`, `TabsCtrl.cpp`, `SvgIcons.cpp`
@@ -195,7 +195,7 @@ Each fork fix was compared against current master to see if the bug still exists
   (`CancelInProgressInteraction` helper sending `WM_CANCELMODE` + 2 call sites);
   the `TableOfContents.cpp` hunk targets fork-only `ReCreateTocTreeView`. Small, clean.
 - `231e4124e` — **bin2coff.c buffer overflow** (`strcpy` → bounded `memcpy`). Our
-  `tools/bin2coff.c` still has the unbounded `strcpy`s; bin2coff.exe still embeds
+  `src/tools/bin2coff.c` still has the unbounded `strcpy`s; bin2coff.exe still embeds
   fonts in the mupdf build. Low severity (inputs are build-controlled labels), fix is
   harmless. Their `tests/test_invariant_bin2coff.c` doesn't fit our test conventions —
   skip or adapt.

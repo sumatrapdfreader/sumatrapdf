@@ -961,7 +961,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\tools\logview\logview.cpp" />
+    <ClCompile Include="..\src\tools\logview\logview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="base.vcxproj">

@@ -171,7 +171,7 @@ static Pixmap* PixmapFromDataWin(Str bmpData) {
     }
 
     // HEIC/AVIF: in Debug, prefer heicdec so we exercise our decoder; fall back
-    // to WIC. In Release, try WIC first — tools/bench_image (Release x64) found
+    // to WIC. In Release, try WIC first — src/tools/bench_image (Release x64) found
     // the OS HEIF codec via WIC faster than heicdec (~1.2x AVIF / ~2x HEIC when
     // the Windows codec is installed), then fall back to heicdec.
     if (FileType::Heic == kind || FileType::Avif == kind) {
@@ -249,7 +249,7 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
     return res;
 }
 
-// Prefer the fastest decoder per format (see tools/bench_image, Release x64):
+// Prefer the fastest decoder per format (see src/tools/bench_image, Release x64):
 //   JPEG/JP2 → MuPDF/libjpeg-turbo (beats WIC/GDI+)
 //   WebP     → libwebp (beats WIC; GDI+ often missing)
 //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec

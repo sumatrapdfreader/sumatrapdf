@@ -39,7 +39,7 @@ setting and re-resolves when Windows switches modes. Master has neither.
 
 ### 4. Windows 11-style caption buttons
 
-New `src/CaptionGlyphs.{cpp,h}` (~255 lines) + `tools/gen_caption_glyphs.py`:
+New `src/CaptionGlyphs.{cpp,h}` (~255 lines) + `src/tools/gen_caption_glyphs.py`:
 min/max/restore/close glyphs drawn from generated polyline geometry, DPI-aware
 icon sizing and layout proportions, relayout on `WM_DPICHANGED`, hover-state
 polish. Commit series `1cd0c85d6`→`b0002c393`.
@@ -72,7 +72,7 @@ polish. Commit series `1cd0c85d6`→`b0002c393`.
    that's `FixedPageUI`'s job in master).
 3. **Caption glyphs** — port `CaptionGlyphs.{cpp,h}` + wire into master's
    caption button painting (master: `src/Caption.cpp`); keep the generator
-   script `tools/gen_caption_glyphs.py`.
+   script `src/tools/gen_caption_glyphs.py`.
 4. **Chrome fixes** — verify symptoms on master first; port only what
    reproduces (candidates: scrollbar staying dark after switching to a light
    theme; maximized frame edge color in dark themes). The rest is presumed
@@ -86,7 +86,7 @@ polish. Commit series `1cd0c85d6`→`b0002c393`.
    pure-black palettes already exist in master as the `Dracula` and `Dark`
    themes.
 3. Done as `c837e3d92` (`src/CaptionGlyphs.{cpp,h}` +
-   `tools/gen_caption_glyphs.py`, wired into `DrawCaptionButton`).
+   `src/tools/gen_caption_glyphs.py`, wired into `DrawCaptionButton`).
 4. **All evaluated chrome fixes are superseded on master — nothing ported:**
    - scrollbar reset (`597f0c47d`): master calls
      `DarkMode::setDarkScrollBar(hwndCanvas)` on *every* theme change and

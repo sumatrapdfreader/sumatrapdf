@@ -51,7 +51,7 @@ async function main() {
     "src/base/tests/*.h",
     "src/wingui/*",
     "src/uia/*",
-    "src/tools/*",
+    "src/tools/**/*.{cpp,c,h,hpp}",
     "src/ifilter/*.cpp",
     "src/ifilter/*.h",
     "src/previewer/*.cpp",

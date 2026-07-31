@@ -1304,8 +1304,8 @@ function efi_files()
     "src/base/Dict*",
     "src/base/Str.*",
     "src/base/StrUtf8.*",
-    "tools/efi/*.cpp",
-    "tools/efi/*.h",
+    "src/tools/efi/*.cpp",
+    "src/tools/efi/*.h",
   }
 end
 
@@ -1381,8 +1381,10 @@ function test_util_files()
     "PdfDarkModeOklab.cpp",
     "PdfDarkModeImageClassifier_ut.cpp",
     "PdfDarkModeOklab_ut.cpp",
-    "tools/test_util.cpp"
   })
+  files {
+    "src/tools/test_util.cpp",
+  }
 end
 
 function test_engines_files()
@@ -1438,7 +1440,7 @@ end
 
 function logview_files()
   files {
-    "tools/logview/logview.cpp",
+    "src/tools/logview/logview.cpp",
   }
 end
 
@@ -1614,7 +1616,7 @@ function a_gumbo_files()
 end
 
 function bin2coff_files()
-  files_in_dir("tools", {
+  files_in_dir("src/tools", {
     "bin2coff.c"
   })
 end
