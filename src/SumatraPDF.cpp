@@ -9594,7 +9594,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             return 0;
         } break;
 
-        case CmdDiscardAnnotations: {
+        case CmdDiscardChanges: {
             // revert to the on-disk version, discarding unsaved changes (same as
             // the tab context menu); makes it work from the command palette too
             if (tab && win->IsDocLoaded()) {

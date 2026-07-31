@@ -114,11 +114,13 @@ Add annotation commands to the toolbar via the `Shortcuts` array — see [Custom
 | Action | Shortcut / command |
 | --- | --- |
 | Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`) |
+| Save to a new PDF | `CmdSaveAnnotationsNewFile` (tab context menu or command palette) |
+| Discard unsaved changes | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
 | Save when closing | Prompt dialog — choose existing file, new file, or discard |
 
 There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when the cursor is over it, or remove it in the annotation editor.
 
-To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing.
+To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing. To drop unsaved work without closing the tab, use **Discard Changes** (`CmdDiscardChanges`).
 
 ## Annotations from other programs
 

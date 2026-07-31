@@ -13,6 +13,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Favorites can open as a full-window tab so long paths and names use the whole window; the sidebar Favorites panel still works independently. The sidebar Favorites/ToC width can also be dragged past half the window (keeps ~200px for the document)
 - Favorites list has a search box (like Bookmarks), in both the sidebar panel and the Favorites tab
 - Favorites can be sorted alphabetically by name (or page label) within each file instead of by page number: `SortFavoritesByName = true`, or the **Sort By Name** checkbox in the Favorites tree context menu (fixes #2277)
+- rename `CmdDiscardAnnotations` to `CmdDiscardChanges` ("Discard Changes"): reloads the current document from disk, dropping unsaved annotations and form changes; available from the tab context menu when there are unsaved changes and from the `Ctrl + K` command palette
 
 - fix UI (tabs, toolbar, bookmarks/favorites trees, caption) not rescaling when moving the window between monitors with different DPI/scaling (issue #5827)
 - PDF bookmark / link destinations now apply Adobe-style view modes (`/Fit`, `/FitH`, `/FitV`, `/FitB`, `/FitBH`, `/FitBV`, `/XYZ` zoom) instead of only jumping to the page (fixes #5828)

@@ -79,7 +79,7 @@ export const commands = [
     "CmdFindToggleMatchCase", "Find: Toggle Match Case",
     "CmdSaveAnnotations", "Save Annotations to existing PDF",
     "CmdSaveAnnotationsNewFile", "Save Annotations to a new PDF...",
-    "CmdDiscardAnnotations", "Discard Unsaved Changes",
+    "CmdDiscardChanges", "Discard Changes",
     "CmdEditAnnotations", "Edit Annotations...",
     "CmdDeleteAnnotation", "Delete Annotation",
     "CmdZoomFitPage", "Zoom: Fit Page",

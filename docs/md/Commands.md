@@ -194,6 +194,7 @@ CmdDeleteAnnotation,Delete,Delete Annotation,
 CmdEditAnnotations,,Edit Annotations,
 CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF,
 CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
+CmdDiscardChanges,,Discard Changes,"reloads the document from disk, discarding unsaved annotations and form changes; also on the tab context menu when there are unsaved changes, ver 3.7+ (renamed from `CmdDiscardAnnotations`)"
 CmdShowAnnotations,,Show Annotations,"ver 3.6+, for current document"
 CmdHideAnnotations,,Hide Annotations,"ver 3.6+, for current document"
 CmdToggleShowAnnotations,,Toggle Showing Annotations,"ver 3.6+, for current document"
@@ -350,6 +351,7 @@ CmdNone,,Do nothing,
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
+CmdInstallPrereleaseUpdate,,internal,"used by the pre-release update notification link (Download and install latest version); not for user shortcuts or DDE"
 CmdDebugCorruptMemory,,don't use,
 CmdOpenWithKnownExternalViewerFirst,,don't use,
 CmdOpenWithKnownExternalViewerLast,,don't use,

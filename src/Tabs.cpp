@@ -324,7 +324,7 @@ static MenuDef menuDefContextTab[] = {
     },
     {
         _TRN("&Discard changes"),
-        CmdDiscardAnnotations,
+        CmdDiscardChanges,
     },
     {
         kMenuSeparator,
@@ -481,7 +481,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     if (!EngineHasUnsavedAnnotations(tabEngine)) {
         DeleteMenu(popup, CmdSaveAnnotations, MF_BYCOMMAND);
         DeleteMenu(popup, CmdSaveAnnotationsNewFile, MF_BYCOMMAND);
-        DeleteMenu(popup, CmdDiscardAnnotations, MF_BYCOMMAND);
+        DeleteMenu(popup, CmdDiscardChanges, MF_BYCOMMAND);
         RemoveBadMenuSeparators(popup);
     }
     MarkMenuOwnerDraw(popup);
@@ -547,7 +547,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             SaveAnnotationsToMaybeNewPdfFile(tabUnderMouse);
             return;
         }
-        case CmdDiscardAnnotations: {
+        case CmdDiscardChanges: {
             // revert to the on-disk version, discarding unsaved changes
             TabsSelect(win, tabIdx);
             ReloadDocument(win, false);

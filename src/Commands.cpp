@@ -82,7 +82,7 @@ static SeqStrings gCommandNames =
     "CmdFindToggleMatchCase\0"
     "CmdSaveAnnotations\0"
     "CmdSaveAnnotationsNewFile\0"
-    "CmdDiscardAnnotations\0"
+    "CmdDiscardChanges\0"
     "CmdEditAnnotations\0"
     "CmdDeleteAnnotation\0"
     "CmdZoomFitPage\0"
@@ -343,7 +343,7 @@ static i32 gCommandIds[] = {
     CmdFindToggleMatchCase,
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
-    CmdDiscardAnnotations,
+    CmdDiscardChanges,
     CmdEditAnnotations,
     CmdDeleteAnnotation,
     CmdZoomFitPage,
@@ -604,7 +604,7 @@ SeqStrings gCommandDescriptions =
     "Find: Toggle Match Case\0"
     "Save Annotations to existing PDF\0"
     "Save Annotations to a new PDF...\0"
-    "Discard Unsaved Changes\0"
+    "Discard Changes\0"
     "Edit Annotations...\0"
     "Delete Annotation\0"
     "Zoom: Fit Page\0"

@@ -80,7 +80,7 @@ enum {
     CmdFindToggleMatchCase = 269,
     CmdSaveAnnotations = 270,
     CmdSaveAnnotationsNewFile = 271,
-    CmdDiscardAnnotations = 272,
+    CmdDiscardChanges = 272,
     CmdEditAnnotations = 273,
     CmdDeleteAnnotation = 274,
     CmdZoomFitPage = 275,
