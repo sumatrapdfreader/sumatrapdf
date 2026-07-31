@@ -140,6 +140,42 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
     return IsRunningOnWine();
 }
 
+// Message from MuPDF's uncaught-throw abort (error.c). Looked up at crash time
+// so we do not need a hard link for every tool that builds CrashHandlerNoOp.
+// libsumatrapdf.dll (or the static main module) exports fz_last_uncaught_error.
+static const char* LookupUncaughtMupdfError() {
+#if OS_WIN
+    using Fn = const char* (*)();
+    HMODULE modules[2] = {
+        GetModuleHandleW(L"libsumatrapdf.dll"),
+        GetModuleHandleW(nullptr),
+    };
+    for (HMODULE h : modules) {
+        if (!h) {
+            continue;
+        }
+        auto fn = (Fn)GetProcAddress(h, "fz_last_uncaught_error");
+        if (fn) {
+            const char* msg = fn();
+            if (msg && msg[0]) {
+                return msg;
+            }
+        }
+    }
+#endif
+    return nullptr;
+}
+
+static void AppendUncaughtMupdfError(str::Builder& s) {
+    const char* msg = LookupUncaughtMupdfError();
+    if (!msg || !msg[0]) {
+        return;
+    }
+    // High-visibility: empty callstacks from the intentional null-write still
+    // need to explain the real failure (MuPDF throw with no fz_try).
+    s.Append(str::Format(s.a, "Uncaught MuPDF error: %s\n\n", Str(msg)));
+}
+
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
     str::Builder s(16 * 1024, gCrashHandlerArena);
     if (!isCrash) {
@@ -150,6 +186,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
         // format into the pre-allocated crash arena, not the temp allocator
         s.Append(str::Format(s.a, "Cond: %s @ %s\n", condStr, fileLine));
     }
+    AppendUncaughtMupdfError(s);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
         s.Append("\n");
@@ -207,6 +244,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         // format into the pre-allocated crash arena, not the temp allocator
         s.Append(str::Format(s.a, "Cond: %s @ %s\n", condStr, fileLine));
     }
+    AppendUncaughtMupdfError(s);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
         s.Append("\n");

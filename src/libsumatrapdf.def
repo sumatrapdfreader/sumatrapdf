@@ -10,6 +10,8 @@ EXPORTS
 
 	fz_set_optind
 
+	fz_last_uncaught_error
+
 	fz_open_document
 
 	fz_write_byte

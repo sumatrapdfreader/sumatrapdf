@@ -132,6 +132,13 @@ void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
 const char *fz_caught_message(fz_context *ctx);
 
 /**
+	SumatraPDF: message from the last uncaught fz_throw (no active fz_try),
+	or NULL if none. Used by the crash handler so reports still explain the
+	failure when the callstack only shows the intentional abort write.
+*/
+const char *fz_last_uncaught_error(void);
+
+/**
 	Within an fz_catch() block, retrieve the error code for
 	the current exception.
 
