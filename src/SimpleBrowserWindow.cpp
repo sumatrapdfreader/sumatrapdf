@@ -167,6 +167,10 @@ static int ResolveAccelCmd(void*, u16 vk, bool ctrl, bool shift, bool alt) {
     if (vk == 'W' && ctrl && !shift && !alt) {
         return CmdClose;
     }
+    // Esc closes documentation (WebView has focus; PreTranslate alone is not enough)
+    if (vk == VK_ESCAPE && !ctrl && !shift && !alt) {
+        return CmdClose;
+    }
     return 0;
 }
 
@@ -174,6 +178,15 @@ SimpleBrowserWindow::~SimpleBrowserWindow() {
     delete btnBack;
     delete btnForward;
     delete webView;
+}
+
+bool SimpleBrowserWindow::PreTranslateMessage(MSG& msg) {
+    // When focus is on chrome (Back/Forward/URL), Esc is not handled by WebView.
+    if ((msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && msg.wParam == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    return false;
 }
 
 LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {

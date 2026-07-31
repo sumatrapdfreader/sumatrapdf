@@ -20,6 +20,7 @@ struct SimpleBrowserWindow : Wnd {
 
     HWND Create(const SimpleBrowserCreateArgs&);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool PreTranslateMessage(MSG& msg) override;
     ~SimpleBrowserWindow() override;
 };
 

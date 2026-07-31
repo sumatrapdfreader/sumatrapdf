@@ -73,6 +73,18 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     }
 }
 
+// Esc closes PDF tool dialogs (Bake/Compress/etc.); same as other app dialogs (#5856).
+static bool PdfToolPreTranslateEsc(MSG& msg, Wnd* dlg) {
+    if (!dlg) {
+        return false;
+    }
+    if ((msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && msg.wParam == VK_ESCAPE) {
+        dlg->Close();
+        return true;
+    }
+    return false;
+}
+
 // create the source-path Static used as the first row of the PDF tool dialogs,
 // ellipsized in the middle for long paths
 static Static* CreatePathLabel(HWND parent, HFONT font, Str path, bool isRtl) {
@@ -108,6 +120,7 @@ struct PdfBakeDialog : Wnd {
     void OnBrowse();
     void DoBake();
     void OnCancel();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfBakeDialog::~PdfBakeDialog() {
@@ -313,6 +326,7 @@ struct PdfExtractTextDialog : Wnd {
     void OnBrowse();
     void DoExtract();
     void OnCancel();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfExtractTextDialog::~PdfExtractTextDialog() {
@@ -585,6 +599,7 @@ struct PdfCompressDialog : Wnd {
     void OnBrowse();
     void DoCompress();
     void OnCancel();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfCompressDialog::~PdfCompressDialog() {
@@ -785,6 +800,7 @@ struct PdfDecompressDialog : Wnd {
     void OnBrowse();
     void DoDecompress();
     void OnCancel();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfDecompressDialog::~PdfDecompressDialog() {
@@ -991,6 +1007,7 @@ struct PdfDeletePageDialog : Wnd {
     void DoIt();
     void OnCancel();
     void UpdateButton();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfDeletePageDialog::~PdfDeletePageDialog() {
@@ -1445,6 +1462,7 @@ struct PdfEncryptDialog : Wnd {
     void DoEncrypt();
     void OnCancel();
     void UpdateButton();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfEncryptDialog::~PdfEncryptDialog() {
@@ -1694,6 +1712,7 @@ struct PdfDecryptDialog : Wnd {
     void OnBrowse();
     void DoDecrypt();
     void OnCancel();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
 };
 
 PdfDecryptDialog::~PdfDecryptDialog() {
