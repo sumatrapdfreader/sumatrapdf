@@ -84,3 +84,7 @@ void DestroyLogging() {
     gLogMutex.Unlock();
     str::FreePtr(&gLogFilePath);
 }
+
+void LogParentProcessChain() {
+    // TODO: implement with getppid / /proc on POSIX if needed
+}

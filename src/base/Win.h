@@ -368,8 +368,6 @@ DWORD GetAccountType();
 DWORD GetOriginalAccountType();
 bool IsProcessRunningElevated();
 TempStr GetParentProcessPath(DWORD* pidOut = nullptr);
-// Walk parent PIDs and log path + command line for each (startup diagnostics).
-void LogParentProcessChain();
 bool CanTalkToProcess(DWORD procId);
 void DisableDataExecution();
 void MaskFpExceptions();
