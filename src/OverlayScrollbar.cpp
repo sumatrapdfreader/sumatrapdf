@@ -958,25 +958,28 @@ void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
     if (!sb) {
         return;
     }
-    // skip if already in the desired visibility state
-    if (show && IsActive(sb) && HwndIsVisible(sb->hwnd)) {
-        return;
-    }
-    if (!show && !IsActive(sb)) {
-        return;
-    }
-    if (show) {
+    if (!show) {
         if (!IsActive(sb)) {
-            ShowScrollbarWindow(sb, false);
-        } else if (IsVisible(sb) && !HwndIsVisible(sb->hwnd)) {
-            // re-show if window was temporarily hidden (e.g. during relayout)
-            OverlayScrollbarUpdatePos(sb);
-            ShowWindow(sb->hwnd, SW_SHOWNOACTIVATE);
-            PaintScrollbar(sb);
+            return;
         }
-    } else {
         SetState(sb, State::Hidden);
+        return;
     }
+
+    // Already painted thin/thick — nothing to do. SmartInvisible still has an
+    // IsWindowVisible layered HWND (fully transparent), so do not treat that as
+    // shown: keyboard scroll / UpdateScrollbars must re-reveal it (#5850).
+    if (IsVisible(sb) && HwndIsVisible(sb->hwnd)) {
+        return;
+    }
+    if (!IsActive(sb) || sb->state == State::SmartInvisible) {
+        ShowScrollbarWindow(sb, false);
+        return;
+    }
+    // re-show if window was temporarily hidden (e.g. during relayout)
+    OverlayScrollbarUpdatePos(sb);
+    ShowWindow(sb->hwnd, SW_SHOWNOACTIVATE);
+    PaintScrollbar(sb);
 }
 
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode) {

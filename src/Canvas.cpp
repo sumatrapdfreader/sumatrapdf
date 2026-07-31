@@ -930,7 +930,11 @@ Str scrollMsgStr(USHORT msg) {
 static void OnVScroll(MainWindow* win, WPARAM wp) {
     ReportIf(!win->AsFixed());
 
-    bool useOverlay = ScrollbarsUseOverlay() && IsOverlayScrollbarVisible(win->overlayScrollV);
+    // Use overlay state whenever overlay mode is on — including SmartInvisible
+    // (auto-hidden). Requiring IsOverlayScrollbarVisible() left keyboard scroll
+    // updating nPos with redraw=false, so the bar never reappeared (issue #5850).
+    bool overlayMode = ScrollbarsUseOverlay();
+    bool useOverlay = overlayMode && win->overlayScrollV;
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -1045,11 +1049,13 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // by Windows it may not be the same as the value set.
     si.fMask = SIF_POS;
     bool showScrollbar = !ScrollbarsAreHidden();
-    BOOL showWinScrollbar = showScrollbar && !useOverlay;
+    BOOL showWinScrollbar = showScrollbar && !overlayMode;
     BOOL showOverScrollbar = showScrollbar && useOverlay;
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
-    OverlayScrollbarSetInfo(win->overlayScrollV, &si, showOverScrollbar);
+    if (showOverScrollbar) {
+        OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
+    }
 
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
@@ -1071,7 +1077,8 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 static void OnHScroll(MainWindow* win, WPARAM wp) {
     ReportIf(!win->AsFixed());
 
-    bool useOverlay = ScrollbarsUseOverlay() && IsOverlayScrollbarVisible(win->overlayScrollH);
+    bool overlayMode = ScrollbarsUseOverlay();
+    bool useOverlay = overlayMode && win->overlayScrollH;
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -1110,7 +1117,7 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
     // Set the position and then retrieve it.  Due to adjustments
     // by Windows it may not be the same as the value set.
     si.fMask = SIF_POS;
-    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, !useOverlay);
+    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, !overlayMode);
     GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
     if (useOverlay) {
         OverlayScrollbarSetInfo(win->overlayScrollH, &si, TRUE);

@@ -1301,8 +1301,9 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
             OverlayScrollbarShow(win->overlayScrollH, false);
         }
     } else {
-        ShowScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
+        // Set range/page before showing so first paint has a thumb (issue #5850)
         SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
+        ShowScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
     }
 
     bool isSinglePageMode = gGlobalPrefs->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
@@ -1340,8 +1341,17 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         // hide the window scrollbar explicitly (see SB_HORZ note above)
         ShowScrollBar(win->hwndCanvas, SB_VERT, FALSE);
     } else {
-        ShowScrollBar(win->hwndCanvas, SB_VERT, showWinScrollbar);
-        SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
+        // SetScrollInfo first so the NC area is not a blank strip on first show
+        // (ShowScrollBar alone can paint an empty white track — issue #5850).
+        SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+        ShowScrollBar(win->hwndCanvas, SB_VERT, showWinScrollbar && showVScroll);
+        if (showWinScrollbar && showVScroll) {
+            if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
+                DarkMode::setDarkScrollBar(win->hwndCanvas);
+            }
+            // Force non-client paint so thumb/arrows appear immediately.
+            RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+        }
     }
 
     if (useOverlay) {

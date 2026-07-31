@@ -1624,6 +1624,8 @@ void DisplayModel::ScrollYTo(int yOff) {
     viewPort.y = yOff;
     RecalcVisibleParts();
     RenderVisibleParts();
+    // Match ScrollXTo: keep scrollbar thumb (and smart overlay reveal) in sync.
+    cb->UpdateScrollbars(canvasSize);
 
     int newPageNo = CurrentPageNo();
     if (newPageNo != currPageNo) {
