@@ -1096,7 +1096,15 @@ static bool LoadLibsumatrapdfFromFile(Str path, i64 expectedSize, bool useLoadLi
 
 // LoadLibraryW with short retry, optional longer AV-race backoff, then
 // LoadLibraryExW. justWritten: we extracted the DLL moments ago (AV most active).
+// Missing / wrong-size files fail immediately — no Sleep. Sleeps are only for real
+// LoadLibrary failures (AV race). Otherwise portable startup pays ~1s every launch
+// when the DLL is not next to the exe (issue #5849).
 static bool LoadLibsumatrapdfFromFileRobust(Str path, i64 expectedSize, bool justWritten = false) {
+    i64 realSize = file::GetSize(path);
+    if (realSize != expectedSize) {
+        return false;
+    }
+
     if (LoadLibsumatrapdfFromFile(path, expectedSize)) {
         return true;
     }
@@ -1153,13 +1161,15 @@ static bool ExtractAndLoadLibsumatrapdfRobust(Str dir, bool extract) {
             logf("ExtractAndLoadLibsumatrapdfRobust: overwriting '%s' (size %lld, expected %lld)\n", path,
                  (long long)realSize, (long long)expectedSize);
         }
-        if (extract) {
-            if (!ExtractLibsumatrapdfToDir(dir)) {
-                logf("ExtractAndLoadLibsumatrapdfRobust: ExtractLibsumatrapdfToDir failed for '%s'\n", dir);
-                return false;
-            }
-            justWritten = true;
+        if (!extract) {
+            // No DLL (or wrong build) here and we must not write — try next candidate.
+            return false;
         }
+        if (!ExtractLibsumatrapdfToDir(dir)) {
+            logf("ExtractAndLoadLibsumatrapdfRobust: ExtractLibsumatrapdfToDir failed for '%s'\n", dir);
+            return false;
+        }
+        justWritten = true;
     }
     return LoadLibsumatrapdfFromFileRobust(path, expectedSize, justWritten);
 }
