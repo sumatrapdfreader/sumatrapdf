@@ -62,10 +62,10 @@ struct PropertiesWnd : Wnd {
 static Vec<PropertiesWnd*> gPropertiesWindows;
 
 PropertiesWnd::~PropertiesWnd() {
-    if (propsFont) {
-        DeleteObject(propsFont);
-        propsFont = nullptr;
-    }
+    // propsFont is from HdcCreateSimpleFont — cached for the app lifetime.
+    // Do not DeleteObject it or the cache returns a dead HFONT on the next open
+    // (Document Properties then falls back to a proportional font; issue #5852).
+    propsFont = nullptr;
 }
 
 static void DeletePropertiesWndInstance(PropertiesWnd* w) {
@@ -778,6 +778,10 @@ void PropertiesWnd::UpdateTheme() {
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    // Re-apply monospaced font after darkmode child theming (may reset font).
+    if (editProps && propsFont) {
+        HwndSetFont(editProps->hwnd, propsFont);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }

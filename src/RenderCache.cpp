@@ -1197,10 +1197,9 @@ struct DebugTextWnd : Wnd {
 };
 
 DebugTextWnd::~DebugTextWnd() {
-    if (monoFont) {
-        DeleteObject(monoFont);
-        monoFont = nullptr;
-    }
+    // monoFont is from HdcCreateSimpleFont — cached for the app lifetime.
+    // Do not DeleteObject it or the shared cache returns a dead HFONT next time.
+    monoFont = nullptr;
 }
 
 static void DeleteDebugTextWndInstance(DebugTextWnd* w) {
@@ -1230,6 +1229,10 @@ void DebugTextWnd::UpdateTheme() {
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    // Re-apply monospaced font after darkmode child theming (may reset font).
+    if (edit && monoFont) {
+        HwndSetFont(edit->hwnd, monoFont);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
