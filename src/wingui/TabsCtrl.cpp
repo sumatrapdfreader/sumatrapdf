@@ -470,7 +470,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
     TabsCtrlUpdateAfterChangingTabsCount(tabsCtrl);
 }
 
-LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
+LRESULT TabsCtrl::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
     NMHDR* hdr = (NMHDR*)lp;
     switch (hdr->code) {
         case TCN_SELCHANGING:

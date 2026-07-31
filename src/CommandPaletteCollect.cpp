@@ -172,7 +172,7 @@ static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& c
     }
 }
 
-void CommandPaletteWnd::CollectTabsRegular(MainWindow* mainWin, WindowTab* currTab) {
+void CommandPaletteWnd::CollectTabsRegular(MainWindow* /*mainWin*/, WindowTab* currTab) {
     currTabIdx = 0;
     tabs.Reset();
     for (MainWindow* w : gWindows) {

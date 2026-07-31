@@ -157,7 +157,7 @@ class EngineImages : public EngineBase {
     // Returns a non-owning view into engine-owned storage; the caller must
     // not free. Bytes stay valid until the engine is destroyed.
     virtual Str GetImageData(int pageNo) = 0;
-    virtual TempStr GetImagePathTemp(int pageNo) { return {}; }
+    virtual TempStr GetImagePathTemp(int /*pageNo*/) { return {}; }
     // Uncompressed image bytes for pageNo when known without decoding (-1 unknown).
     virtual i64 GetImageByteSize(int pageNo);
 
@@ -850,7 +850,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
 }
 
 // Get content box for image by cropping out margins of similar color
-RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
     // try to load bitmap for the image
     auto page = GetPage(pageNo, true);
     if (!page) return RectF{};

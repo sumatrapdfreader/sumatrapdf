@@ -238,7 +238,8 @@ bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, floa
     return PdfDarkModeStatsLookLikeDarkArtwork(PdfDarkModeSampleImageStats(ctx, image), pageCoverage);
 }
 
-bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage, int devW, int devH) {
+bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
+                                            int /*devH*/) {
     if (!ctx || !image) {
         return false;
     }
@@ -261,7 +262,8 @@ bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, fl
     return false;
 }
 
-bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage, int devW, int devH) {
+bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
+                                        int /*devH*/) {
     if (!ctx || !image) {
         return false;
     }

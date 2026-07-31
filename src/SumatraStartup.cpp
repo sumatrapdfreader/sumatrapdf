@@ -946,8 +946,8 @@ static Str kFailedToLoadURL() {
     return StrL("https://www.sumatrapdfreader.org/docs/Failed-to-load-libmupdf");
 }
 
-static HRESULT CALLBACK LoadLibsumatrapdfDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                                                        LONG_PTR lpRefData) {
+static HRESULT CALLBACK LoadLibsumatrapdfDialogCallback(HWND /*hwnd*/, UINT msg, WPARAM wParam, LPARAM lParam,
+                                                        LONG_PTR /*lpRefData*/) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED: {
             LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
@@ -1312,8 +1312,8 @@ For more information see <a href="%s">Failed to load libsumatrapdf.dll</a>.)",
 }
 
 // TODO: maybe could set font on TDN_CREATED to Consolas, to better show the message
-static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                                                      LONG_PTR lpRefData) {
+static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND /*hwnd*/, UINT msg, WPARAM /*wParam*/, LPARAM lParam,
+                                                      LONG_PTR /*lpRefData*/) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
             LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));

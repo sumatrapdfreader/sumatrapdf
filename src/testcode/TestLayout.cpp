@@ -287,7 +287,7 @@ static BOOL CreateMainWindow(HINSTANCE hInstance, int nCmdShow) {
 }
 #endif
 
-int TestLayout(int nCmdShow) {
+int TestLayout(int /*nCmdShow*/) {
 #if 0
     RegisterWinClass(hInstance);
 

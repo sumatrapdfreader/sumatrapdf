@@ -570,7 +570,7 @@ static void MainWindowTabSelectionChanging(MainWindow* win, TabsCtrl::SelectionC
     ev->preventChanging = false;
 }
 
-static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionChangedEvent* ev) {
+static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionChangedEvent* /*ev*/) {
     int currentIdx = win->tabsCtrl->GetSelected();
     WindowTab* tab = win->Tabs()[currentIdx];
     // page-info tip is restored via MainWindow::pageInfoWanted in LoadModelIntoTab

@@ -503,7 +503,7 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, Point& pt) {
     return ti;
 }
 
-LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
+LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
     TreeView* w = this;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
     LRESULT res;

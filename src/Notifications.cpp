@@ -466,7 +466,7 @@ void NotificationWnd::Layout(Str message) {
 }
 
 // TODO: figure out why it flickers
-void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
+void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();

@@ -198,7 +198,7 @@ Str PageDestinationMupdf::GetName2() {
     return name;
 }
 
-static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
+static NO_INLINE RectF FzGetRectF(fz_link* link) {
     if (link) {
         return ToRectF(link->rect);
     }
@@ -399,13 +399,13 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
             return nullptr;
         }
         auto res = new PageDestinationFile(path, destStr);
-        res->rect = FzGetRectF(link, outline);
+        res->rect = FzGetRectF(link);
         return res;
     }
 
     if (IsExternalUrl(uri)) {
         auto res = new PageDestinationURL(uri);
-        res->rect = FzGetRectF(link, outline);
+        res->rect = FzGetRectF(link);
         return res;
     }
 
@@ -423,13 +423,13 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         Str localFragment;
         if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
             auto res = new PageDestinationFile(localPath, localFragment);
-            res->rect = FzGetRectF(link, outline);
+            res->rect = FzGetRectF(link);
             return res;
         }
     }
 
     auto dest = new PageDestinationMupdf(link, outline);
-    dest->rect = FzGetRectF(link, outline);
+    dest->rect = FzGetRectF(link);
     dest->pageNo = pageNo;
     if (pageNo > 0) {
         dest->destX = destRect.x;
@@ -2158,7 +2158,7 @@ static fz_link* FixupPageLinks(fz_link* root) {
     return new_root;
 }
 
-pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
+pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
         pdf_obj* val = pdf_dict_get_val(ctx, copy, i);
@@ -4173,7 +4173,7 @@ static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ct
     return fz_keep_display_list(ctx, pi->displayList);
 }
 
-RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
     auto ctx = Ctx();
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
@@ -5939,7 +5939,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
 static bool gSkipAnnotatoinValidation = true;
 
 // check that pageInfo->annotations has the same info as in mupdf
-NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* e, FzPageInfo* pageInfo) {
+NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* /*e*/, FzPageInfo* /*pageInfo*/) {
     if (gSkipAnnotatoinValidation) {
         return;
     }

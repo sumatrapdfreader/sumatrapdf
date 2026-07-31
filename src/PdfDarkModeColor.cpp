@@ -140,7 +140,7 @@ bool PdfDarkModeUsesObjectLevel() {
     return GetPdfDarkModeRenderer() == PdfDarkModeRenderer::ObjectLevelDevice;
 }
 
-void PdfDarkModeClearPixmapToThemeBackground(fz_context* ctx, fz_pixmap* pix, const DarkModePalette& palette) {
+void PdfDarkModeClearPixmapToThemeBackground(fz_context* /*ctx*/, fz_pixmap* pix, const DarkModePalette& palette) {
     if (!pix || !pix->samples) {
         return;
     }

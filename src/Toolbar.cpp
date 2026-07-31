@@ -716,7 +716,7 @@ void UpdateFindbox(MainWindow* win) {
 }
 
 LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
-                              DWORD_PTR dwRefData) {
+                              DWORD_PTR /*dwRefData*/) {
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
         HDC hdc = (HDC)wParam;
         SetTextColor(hdc, ThemeWindowTextColor());
@@ -1543,7 +1543,7 @@ int GetMenuBarRebarHeight(MainWindow* win) {
 // --- Menu bar as rebar control (used when tabs are in titlebar) ---
 
 static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
-                                            DWORD_PTR dwRefData) {
+                                            DWORD_PTR /*dwRefData*/) {
     if (WM_ERASEBKGND == uMsg) {
         // always paint background with theme color to avoid gray strips in light theme
         HDC hdc = (HDC)wParam;
@@ -1580,7 +1580,7 @@ static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 }
 
 static LRESULT CALLBACK MenuBarToolbarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
-                                              DWORD_PTR dwRefData) {
+                                              DWORD_PTR /*dwRefData*/) {
     if (WM_ERASEBKGND == uMsg) {
         // don't erase background here; toolbar paints its own background during WM_PAINT
         // filling here causes visible flicker (erase then paint) during window resize

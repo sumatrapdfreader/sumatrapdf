@@ -1516,7 +1516,7 @@ static void TogglePageInfoHelper(MainWindow* win) {
     ShowPageInfoIfWanted(win);
 }
 
-void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float zoomVirtual) {
+void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float /*zoomVirtual*/) {
     // discard change requests from documents
     // loaded asynchronously in a background tab
     if (win->ctrl != ctrl) {

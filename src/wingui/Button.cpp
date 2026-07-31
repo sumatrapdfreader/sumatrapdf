@@ -20,7 +20,7 @@ Button::Button() {
     kind = kindButton;
 }
 
-bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
+bool Button::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
     auto code = HIWORD(wparam);
     if (code == BN_CLICKED) {
         if (onClick.IsValid()) {
@@ -31,7 +31,7 @@ bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     return false;
 }
 
-LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT Button::OnMessageReflect(UINT msg, WPARAM /*wparam*/, LPARAM /*lparam*/) {
     if (msg == WM_CTLCOLORBTN) {
         // TODO: implement me
         return 0;

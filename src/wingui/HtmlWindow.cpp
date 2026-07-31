@@ -1167,7 +1167,8 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-static LRESULT CALLBACK WndProcParent2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+static LRESULT CALLBACK WndProcParent2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
+                                       DWORD_PTR data) {
     auto win = reinterpret_cast<HtmlWindow*>(data);
     return WndProcParent(hwnd, msg, wp, lp, win);
 }

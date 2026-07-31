@@ -628,7 +628,7 @@ bool SendAsEmailAttachmentWithMapi(HWND hwndParent, Str filePath) {
     return result <= 1;
 }
 
-bool SendAsEmailAttachment(WindowTab* tab, HWND hwndParent) {
+bool SendAsEmailAttachment(WindowTab* tab, HWND /*hwndParent*/) {
     if (!tab || !CanSendAsEmailAttachment(tab)) {
         return false;
     }

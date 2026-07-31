@@ -379,7 +379,7 @@ static sChar *BStrToString(BSTR str, const char *defString = "", bool stripWhite
     }
 }
 
-static sInt GetBStr(BSTR str, sChar *defString, DebugInfo &to)
+static sInt GetBStr(BSTR str, DebugInfo &to)
 {
     sChar *normalStr = BStrToString(str);
     sInt result = to.MakeString(normalStr);

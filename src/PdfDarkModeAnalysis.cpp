@@ -98,7 +98,7 @@ static void dm_analysis_record_image(fz_context* ctx, fz_device* dev, fz_image* 
     d->analysis->images.Append(info);
 }
 
-static void dm_analysis_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
+static void dm_analysis_fill_path(fz_context* /*ctx*/, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
                                   fz_colorspace* colorspace, const float* color, float alpha,
                                   fz_color_params color_params) {
     (void)path;
@@ -112,9 +112,9 @@ static void dm_analysis_fill_path(fz_context* ctx, fz_device* dev, const fz_path
     d->vectorOps++;
 }
 
-static void dm_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state* stroke,
-                                    fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
-                                    fz_color_params color_params) {
+static void dm_analysis_stroke_path(fz_context* /*ctx*/, fz_device* dev, const fz_path* path,
+                                    const fz_stroke_state* stroke, fz_matrix ctm, fz_colorspace* colorspace,
+                                    const float* color, float alpha, fz_color_params color_params) {
     (void)path;
     (void)stroke;
     (void)ctm;
@@ -126,7 +126,7 @@ static void dm_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_pa
     d->vectorOps++;
 }
 
-static void dm_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm,
+static void dm_analysis_fill_text(fz_context* /*ctx*/, fz_device* dev, const fz_text* text, fz_matrix ctm,
                                   fz_colorspace* colorspace, const float* color, float alpha,
                                   fz_color_params color_params) {
     (void)text;
@@ -139,9 +139,9 @@ static void dm_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_text
     d->textOps++;
 }
 
-static void dm_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text, const fz_stroke_state* stroke,
-                                    fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
-                                    fz_color_params color_params) {
+static void dm_analysis_stroke_text(fz_context* /*ctx*/, fz_device* dev, const fz_text* text,
+                                    const fz_stroke_state* stroke, fz_matrix ctm, fz_colorspace* colorspace,
+                                    const float* color, float alpha, fz_color_params color_params) {
     (void)text;
     (void)stroke;
     (void)ctm;
@@ -153,7 +153,7 @@ static void dm_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_te
     d->textOps++;
 }
 
-static void dm_analysis_fill_shade(fz_context* ctx, fz_device* dev, fz_shade* shd, fz_matrix ctm, float alpha,
+static void dm_analysis_fill_shade(fz_context* /*ctx*/, fz_device* dev, fz_shade* shd, fz_matrix ctm, float alpha,
                                    fz_color_params color_params) {
     (void)shd;
     (void)ctm;
@@ -180,7 +180,7 @@ static void dm_analysis_fill_image_mask(fz_context* ctx, fz_device* dev, fz_imag
     dm_analysis_record_image(ctx, dev, image, ctm, true);
 }
 
-static void dm_analysis_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
+static void dm_analysis_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int /*even_odd*/, fz_matrix ctm,
                                   fz_rect scissor) {
     (void)scissor;
     pdf_dark_mode_analysis_device* d = (pdf_dark_mode_analysis_device*)dev;
@@ -208,14 +208,14 @@ static void dm_analysis_clip_stroke_text(fz_context* ctx, fz_device* dev, const 
     dm_analysis_push_clip(d, fz_bound_text(ctx, text, stroke, ctm), true);
 }
 
-static void dm_analysis_clip_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
+static void dm_analysis_clip_image_mask(fz_context* /*ctx*/, fz_device* dev, fz_image* /*image*/, fz_matrix ctm,
                                         fz_rect scissor) {
     (void)scissor;
     pdf_dark_mode_analysis_device* d = (pdf_dark_mode_analysis_device*)dev;
     dm_analysis_push_clip(d, fz_transform_rect(fz_unit_rect, ctm), true);
 }
 
-static void dm_analysis_begin_mask(fz_context* ctx, fz_device* dev, fz_rect area, int luminosity,
+static void dm_analysis_begin_mask(fz_context* /*ctx*/, fz_device* dev, fz_rect area, int luminosity,
                                    fz_colorspace* colorspace, const float* color, fz_color_params color_params) {
     (void)luminosity;
     (void)colorspace;
@@ -230,7 +230,7 @@ static void dm_analysis_end_mask(fz_context* ctx, fz_device* dev, fz_function* t
     dm_analysis_pop_clip(ctx, dev);
 }
 
-static void dm_analysis_begin_group(fz_context* ctx, fz_device* dev, fz_rect area, fz_colorspace* cs, int isolated,
+static void dm_analysis_begin_group(fz_context* /*ctx*/, fz_device* dev, fz_rect area, fz_colorspace* cs, int isolated,
                                     int knockout, int blendmode, float alpha) {
     (void)cs;
     (void)isolated;
@@ -245,8 +245,8 @@ static void dm_analysis_end_group(fz_context* ctx, fz_device* dev) {
     dm_analysis_pop_clip(ctx, dev);
 }
 
-static int dm_analysis_begin_tile(fz_context* ctx, fz_device* dev, fz_rect area, fz_rect view, float xstep, float ystep,
-                                  fz_matrix ctm, int id, int doc_id) {
+static int dm_analysis_begin_tile(fz_context* /*ctx*/, fz_device* dev, fz_rect area, fz_rect view, float xstep,
+                                  float ystep, fz_matrix ctm, int id, int doc_id) {
     (void)view;
     (void)xstep;
     (void)ystep;

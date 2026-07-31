@@ -1436,7 +1436,8 @@ static void LayoutTocContainer(MainWindow* win) {
     win->tocLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
 }
 
-static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
+                                      DWORD_PTR /*data*/) {
     MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);
@@ -1592,7 +1593,7 @@ static void OnTocFilterTextChanged(MainWindow* win) {
     TocFilterChanged(win);
 }
 
-static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
                                              DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
     if (msg == WM_KEYDOWN) {

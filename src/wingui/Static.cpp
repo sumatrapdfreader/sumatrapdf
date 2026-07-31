@@ -44,7 +44,7 @@ Size Static::GetIdealSize() {
     return HwndMeasureText(hwnd, txt, hfont);
 }
 
-bool Static::OnCommand(WPARAM wparam, LPARAM lparam) {
+bool Static::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
     auto code = HIWORD(wparam);
     if (code == STN_CLICKED && onClick.IsValid()) {
         onClick.Call();
@@ -53,7 +53,7 @@ bool Static::OnCommand(WPARAM wparam, LPARAM lparam) {
     return false;
 }
 
-LRESULT Static::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
+LRESULT Static::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
     if (msg == WM_CTLCOLORSTATIC) {
         HDC hdc = (HDC)wp;
         if (!IsSpecialColor(textColor)) {

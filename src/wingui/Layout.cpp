@@ -1149,10 +1149,10 @@ Size Spacer::Layout(const Constraints bc) {
     return bc.Constrain({dx, dy});
 }
 
-int Spacer::MinIntrinsicHeight(int width) {
+int Spacer::MinIntrinsicHeight(int /*width*/) {
     return dy;
 }
-int Spacer::MinIntrinsicWidth(int height) {
+int Spacer::MinIntrinsicWidth(int /*height*/) {
     return dx;
 }
 void Spacer::SetBounds(Rect) {
@@ -1175,7 +1175,7 @@ TableLayout::~TableLayout() {
     free(maxColWidths);
 }
 
-Size TableLayout::Layout(Constraints bc) {
+Size TableLayout::Layout(Constraints /*bc*/) {
     // Not implemented: no caller should reach this yet.
     CrashMe();
     return {};

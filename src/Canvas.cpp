@@ -1565,7 +1565,7 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->dragPrevPos = pt;
 }
 
-static bool StopAnnotationResize(MainWindow* win, int x, int y, bool aborted) {
+static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     if (!win->annotationBeingResized) {
         return false;
     }
@@ -1842,7 +1842,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         if (win->annotationBeingResized) {
-            StopAnnotationResize(win, x, y, !didDragMouse);
+            StopAnnotationResize(win, !didDragMouse);
             // Trigger cursor update after resize
             SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
         } else {
@@ -2060,7 +2060,7 @@ void StartAutoScrollAtCursor(MainWindow* win) {
     ToggleAutoScroll(win, pt.x, pt.y);
 }
 
-static void OnMouseMiddleButtonUp(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM) {
     switch (win->mouseAction) {
         case MouseAction::Scrolling:
             if (!win->dragStartPending) {
@@ -3462,7 +3462,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_MBUTTONUP:
-            OnMouseMiddleButtonUp(win, x, y, wp);
+            OnMouseMiddleButtonUp(win, wp);
             return 0;
 
         case WM_RBUTTONDOWN:
@@ -4179,7 +4179,7 @@ class CanvasDropTarget : public IDropTarget {
 
     STDMETHODIMP DragLeave() override { return S_OK; }
 
-    STDMETHODIMP Drop(IDataObject* dataObj, DWORD grfKeyState, __unused POINTL pt, DWORD* pdwEffect) override {
+    STDMETHODIMP Drop(IDataObject* dataObj, DWORD /*grfKeyState*/, __unused POINTL pt, DWORD* pdwEffect) override {
         *pdwEffect = DROPEFFECT_COPY;
 
         // first try file drops (CF_HDROP)

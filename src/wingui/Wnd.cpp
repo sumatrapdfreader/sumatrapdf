@@ -89,8 +89,8 @@ static LRESULT CALLBACK WndWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
     }
 }
 
-static LRESULT CALLBACK WndSubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
-                                                DWORD_PTR data) {
+static LRESULT CALLBACK WndSubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
+                                                DWORD_PTR /*data*/) {
     return WndWindowProc(hwnd, msg, wp, lp);
 }
 
@@ -177,7 +177,7 @@ void Wnd::OnAttach() {}
 void Wnd::OnFocus() {}
 
 // Override this to handle WM_COMMAND messages
-bool Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
+bool Wnd::OnCommand(WPARAM /*wparam*/, LPARAM /*lparam*/) {
     //  UINT id = LOWORD(wparam);
     //  switch (id)
     //  {
@@ -233,14 +233,14 @@ void Wnd::OnDropFiles(HDROP drop_info) {}
 
 void Wnd::OnGetMinMaxInfo(MINMAXINFO* mmi) {}
 
-LRESULT Wnd::OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT Wnd::OnMouseEvent(UINT /*msg*/, WPARAM /*wparam*/, LPARAM /*lparam*/) {
     return -1;
 }
 
 void Wnd::OnMove(POINTS*) {}
 
 // Processes notification (WM_NOTIFY) messages from a child window.
-LRESULT Wnd::OnNotify(int controlId, NMHDR* nmh) {
+LRESULT Wnd::OnNotify(int /*controlId*/, NMHDR* /*nmh*/) {
     // You can use either OnNotifyReflect or OnNotify to handle notifications
     // Override OnNotifyReflect to handle notifications in the CWnd class that
     //   generated the notification.   OR
@@ -762,7 +762,7 @@ LRESULT Wnd::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 }
 
-bool Wnd::PreTranslateMessage(MSG& msg) {
+bool Wnd::PreTranslateMessage(MSG& /*msg*/) {
     return false;
 }
 

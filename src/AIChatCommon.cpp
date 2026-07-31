@@ -199,7 +199,7 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
 
 constexpr int kBtnIdAIChatLearnMore = 100;
 
-static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND /*hwnd*/, UINT msg, WPARAM wParam, LPARAM /*lParam*/,
                                                          LONG_PTR lpRefData) {
     Str docUri = lpRefData ? *(Str*)lpRefData : Str{};
     switch (msg) {

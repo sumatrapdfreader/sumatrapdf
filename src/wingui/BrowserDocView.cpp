@@ -338,7 +338,8 @@ void BrowserDocView::UnsubclassParent() {
     subclassId = 0;
 }
 
-LRESULT BrowserDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+LRESULT BrowserDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
+                                      DWORD_PTR data) {
     auto* view = reinterpret_cast<BrowserDocView*>(data);
     if (!view) {
         return DefSubclassProc(hwnd, msg, wp, lp);

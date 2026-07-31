@@ -840,7 +840,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::RemoveFromSelection() {
     return E_FAIL;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alignToTop) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL /*alignToTop*/) {
     HRESULT hrDoc = EnsureDocumentLoaded(document);
     if (FAILED(hrDoc)) {
         return hrDoc;

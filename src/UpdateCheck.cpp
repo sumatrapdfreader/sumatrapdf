@@ -495,7 +495,7 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
     RunAsync(fn, "DownloadUpdateAsync");
 }
 
-static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheckType) {
+static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
     if (gIsStoreBuild) {
         // I assume store will take care of updates
         return false;
@@ -511,8 +511,8 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheck
     return hasUpdate;
 }
 
-static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                                                    LONG_PTR lpRefData) {
+static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND /*hwnd*/, UINT msg, WPARAM /*wParam*/, LPARAM lParam,
+                                                    LONG_PTR /*lpRefData*/) {
     if (msg == TDN_HYPERLINK_CLICKED) {
         WCHAR* url = (WCHAR*)lParam;
         SumatraLaunchBrowser(ToUtf8Temp(url));
@@ -657,7 +657,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         return 0;
     }
     HWND hwndForNotif = win->hwndCanvas;
-    if (!ShouldDownloadUpdate(updateInfo, updateCheckType)) {
+    if (!ShouldDownloadUpdate(updateInfo)) {
         Str myVer = StrL(UPDATE_CHECK_VERA);
         logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
         /* if automated => don't notify that there is no new version */

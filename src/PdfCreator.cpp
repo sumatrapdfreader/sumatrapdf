@@ -88,7 +88,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     return img;
 }
 
-static void fz_print_cb(void* user, const char* msg) {
+static void fz_print_cb(void* /*user*/, const char* msg) {
     log(Str(msg));
 }
 

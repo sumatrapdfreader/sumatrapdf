@@ -933,7 +933,7 @@ static void PrepareFavoritesTabUi(MainWindow* win) {
     }
 }
 
-static LRESULT CALLBACK WndProcFavFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+static LRESULT CALLBACK WndProcFavFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
                                              DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
     if (msg == WM_KEYDOWN) {

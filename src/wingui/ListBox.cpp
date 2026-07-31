@@ -166,7 +166,7 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
-bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
+bool ListBox::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
     auto code = HIWORD(wparam);
     // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-selchange
     if (code == LBN_SELCHANGE && onSelectionChanged.IsValid()) {

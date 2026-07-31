@@ -184,7 +184,7 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     SetWindowPos(hwnd, nullptr, x, y, barDx, barDy, flags);
 }
 
-void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
+void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();

@@ -1125,7 +1125,7 @@ static void OnButtonStartSumatra() {
 
 constexpr int kBtnIdShowInstallLog = 100;
 
-static HRESULT CALLBACK InstallationFailedDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+static HRESULT CALLBACK InstallationFailedDialogCallback(HWND /*hwnd*/, UINT msg, WPARAM wParam, LPARAM lParam,
                                                          LONG_PTR /*lpRefData*/) {
     switch (msg) {
         case TDN_BUTTON_CLICKED:

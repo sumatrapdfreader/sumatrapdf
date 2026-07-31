@@ -2289,7 +2289,7 @@ Returns:
 error: <error message>
 if file doesn't exist or no opened file
 */
-static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& res) {
+static Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res) {
     TempStr filePath;
     Str next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
     if (str::IsNull(next)) {
@@ -2497,14 +2497,14 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     return didHandle;
 }
 
-static bool HandleRequestCmds(HWND hwnd, Str cmd, str::Builder& rsp) {
+static bool HandleRequestCmds(HWND /*hwnd*/, Str cmd, str::Builder& rsp) {
     bool didHandle = false;
     while (cmd) {
         {
             logf("HandleRequestCmds: '%s'\n", cmd);
         }
 
-        Str nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
+        Str nextCmd = HandleGetFileStateCmd(cmd, &didHandle, rsp);
         if (str::IsNull(nextCmd)) {
             nextCmd = HandleGetOpenFilesCmd(cmd, &didHandle, rsp);
         }

@@ -52,12 +52,12 @@ Size VirtWndText::Layout(const Constraints bc) {
     return bc.Constrain({sz.dx, sz.dy});
 }
 
-int VirtWndText::MinIntrinsicHeight(int width) {
+int VirtWndText::MinIntrinsicHeight(int /*width*/) {
     GetIdealSize(true);
     return sz.dy;
 }
 
-int VirtWndText::MinIntrinsicWidth(int height) {
+int VirtWndText::MinIntrinsicWidth(int /*height*/) {
     GetIdealSize(true);
     return sz.dx;
 }
