@@ -3071,6 +3071,22 @@ static void OnLoadDocumentThreadFinished() {
     DispatchQueuedDocumentLoads();
 }
 
+// true if targetTab still wants this load (path not replaced by a newer open)
+static bool IsLoadStillWanted(LoadArgs* args) {
+    if (!args || !args->targetTab) {
+        return true;
+    }
+    Str want = args->targetTab->filePath;
+    Str got = args->FilePath();
+    if (str::EqI(want, got)) {
+        return true;
+    }
+    if (len(want) > 0 && len(got) > 0 && path::IsSame(want, got)) {
+        return true;
+    }
+    return false;
+}
+
 static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     AutoDelete delData(d);
     OnLoadDocumentThreadFinished();
@@ -3080,6 +3096,13 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     EndDocumentLoad(path);
     MainWindow* win = args->win;
     if (!IsLoadTargetValid(args)) {
+        DeleteOrphanedController(win, args->ctrl);
+        args->onFinished.Call(false);
+        return;
+    }
+    // forceReuse next/prev can start a newer load into the same tab while this
+    // one is still finishing; drop the stale result instead of swapping docs
+    if (!IsLoadStillWanted(args)) {
         DeleteOrphanedController(win, args->ctrl);
         args->onFinished.Call(false);
         return;
@@ -3241,6 +3264,30 @@ void StartLoadDocument(LoadArgs* argsIn) {
         argsIn->targetTab = AddTabToWindow(win, tab);
         win->currentTabTemp = argsIn->targetTab;
         LoadModelIntoTab(argsIn->targetTab);
+    } else if (argsIn->forceReuse && win->CurrentTab() && !win->IsCurrentTabAbout()) {
+        // Reuse current tab (next/prev in folder, navigate dialog, etc.): drop the
+        // old document immediately so the canvas paints the standard "Loading ..."
+        // message while the engine loads on a background thread.
+        WindowTab* tab = win->CurrentTab();
+        DeleteOldSelectionInfo(win, true);
+        if (tab->ctrl || win->ctrl) {
+            CloseDocumentInCurrentTab(win, true, true);
+        }
+        tab->SetFilePath(path);
+        tab->SetDisplayName(argsIn->DisplayName());
+        tab->loadState = WindowTab::LoadState::Loading;
+        tab->loadCopyBytesCopied = -1;
+        tab->loadCopyBytesTotal = 0;
+        argsIn->targetTab = tab;
+        win->currentTabTemp = tab;
+        win->ctrl = nullptr;
+        SetFrameTitleForTab(tab, false);
+        UpdateUiForCurrentTab(win);
+        TabsOnChangedDoc(win);
+        // show loading UI right away (don't wait for the background thread to start)
+        StartLoadingMessageTimer(tab);
+        HwndInvalidate(win->hwndCanvas);
+        UpdateWindow(win->hwndCanvas);
     } else if (SettingsUseTabs() && win->CurrentTab()) {
         argsIn->targetTab = win->CurrentTab();
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
@@ -5334,7 +5381,7 @@ static TempStr PeekNextFileInFolderTemp(MainWindow* win, int* outN = nullptr, in
     return str::DupTemp(next);
 }
 
-static void DismissNextFileScrollHint(MainWindow* win) {
+void DismissNextFileScrollHint(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return;
     }
@@ -5365,9 +5412,9 @@ void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
     TempStr name = path::GetBaseNameTemp(nextPath);
     // [shortcut](Cmd): open file n/m · [navigate](Cmd)
     // (Key/...) expands to the bound shortcut before link parsing (see ParseTip)
-    TempStr msg =
-        fmt("[(Key/CmdOpenNextFileInFolder)](CmdOpenNextFileInFolder): %s **%s** · %d/%d · [%s](CmdNavigateFilesInFolder)",
-            _TRA("open"), name, n, m, _TRA("navigate"));
+    TempStr msg = fmt(
+        "[(Key/CmdOpenNextFileInFolder)](CmdOpenNextFileInFolder): %s **%s** · %d/%d · [%s](CmdNavigateFilesInFolder)",
+        _TRA("open"), name, n, m, _TRA("navigate"));
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.groupId = kNotifNextFileHint;
@@ -5395,6 +5442,11 @@ static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
     if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        return;
+    }
+    // superseded: user advanced next/prev again (or navigated elsewhere) while loading
+    WindowTab* tab = win->CurrentTab();
+    if (tab && tab->filePath && d->path && !str::EqI(tab->filePath, d->path) && !path::IsSame(tab->filePath, d->path)) {
         return;
     }
     if (ok) {

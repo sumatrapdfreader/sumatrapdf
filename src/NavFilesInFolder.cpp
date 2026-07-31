@@ -179,6 +179,74 @@ static TempStr NavEntryPathTemp(NavFilesInFolderWnd* wnd, NavFileEntry& e) {
     return path::JoinTemp(wnd->currDir, name);
 }
 
+// entry display name without a trailing path separator (dirs use "name\\")
+static Str NavEntryBaseName(const NavFileEntry& e) {
+    Str name = e.name;
+    if (e.isDir && name.len > 0 && path::IsSep(name.s[name.len - 1])) {
+        return Str(name.s, name.len - 1);
+    }
+    return name;
+}
+
+// index of selectPath in the listing, or 0 if not found / empty
+static int FindEntryIndex(NavFilesInFolderWnd* wnd, ListBoxModelNav* m, Str selectPath) {
+    if (!m || len(selectPath) == 0) {
+        return 0;
+    }
+    for (int i = 0; i < len(m->entries); i++) {
+        TempStr path = NavEntryPathTemp(wnd, m->entries[i]);
+        if (str::EqI(path, selectPath) || path::IsSame(path, selectPath)) {
+            return i;
+        }
+    }
+    // basename fallback (path form differences: long-path prefix, slash style, etc.)
+    TempStr base = path::GetBaseNameTemp(selectPath);
+    for (int i = 0; i < len(m->entries); i++) {
+        if (str::EqI(NavEntryBaseName(m->entries[i]), base)) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+// select idx and scroll so it is visible (centered when possible)
+static void SelectAndEnsureVisible(ListBox* lb, int idx) {
+    if (!lb || !lb->hwnd || idx < 0) {
+        return;
+    }
+    int n = lb->GetCount();
+    if (n <= 0) {
+        return;
+    }
+    if (idx >= n) {
+        idx = n - 1;
+    }
+    lb->SetCurrentSelection(idx);
+
+    int itemH = lb->GetItemHeight(0);
+    if (itemH <= 0) {
+        LbSetTopIndex(lb->hwnd, idx);
+        return;
+    }
+    Rect client = HwndClientRect(lb->hwnd);
+    int visible = client.dy / itemH;
+    if (visible < 1) {
+        visible = 1;
+    }
+    int top = idx - visible / 2;
+    if (top < 0) {
+        top = 0;
+    }
+    int maxTop = n - visible;
+    if (maxTop < 0) {
+        maxTop = 0;
+    }
+    if (top > maxTop) {
+        top = maxTop;
+    }
+    LbSetTopIndex(lb->hwnd, top);
+}
+
 void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     str::ReplaceWithCopy(&currDir, dir);
     dirLabel->SetText(currDir);
@@ -190,18 +258,9 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     FillEntriesForDir(m, currDir);
     listBox->SetModel(m);
 
-    int selIdx = 0;
-    if (len(selectPath) > 0) {
-        for (int i = 0; i < len(m->entries); i++) {
-            TempStr path = NavEntryPathTemp(this, m->entries[i]);
-            if (path::IsSame(path, selectPath)) {
-                selIdx = i;
-                break;
-            }
-        }
-    }
     if (m->ItemsCount() > 0) {
-        listBox->SetCurrentSelection(selIdx);
+        int selIdx = FindEntryIndex(this, m, selectPath);
+        SelectAndEnsureVisible(listBox, selIdx);
     }
     HwndScheduleRepaint(listBox->hwnd);
 }
@@ -242,6 +301,7 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection() {
     if (tab && !MaybeSaveAnnotations(tab)) {
         return;
     }
+    DismissNextFileScrollHint(mainWin);
     LoadArgs args(path, mainWin);
     args.forceReuse = true;
     StartLoadDocument(&args);
@@ -253,12 +313,21 @@ void NavFilesInFolderWnd::OnListDoubleClick() {
 }
 
 bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message != WM_KEYDOWN) {
+    // only keys aimed at this window or its children
+    if (hwnd && msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
         return false;
     }
-    if (msg.wParam == VK_ESCAPE) {
+    bool isKey = (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN);
+    bool isEscChar = (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE);
+    if (!isKey && !isEscChar) {
+        return false;
+    }
+    if (msg.wParam == VK_ESCAPE || isEscChar) {
         ScheduleDeleteNavFilesWnd();
         return true;
+    }
+    if (!isKey) {
+        return false;
     }
     if (msg.wParam == VK_RETURN) {
         ExecuteCurrentSelection();
@@ -273,6 +342,11 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
 
 LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_ACTIVATE && wp == WA_INACTIVE) {
+        ScheduleDeleteNavFilesWnd();
+        return 0;
+    }
+    // Esc when this popup (not a child) has focus
+    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();
         return 0;
     }
@@ -460,6 +534,9 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     Str filePath = tab ? tab->filePath : Str{};
     TempStr dir = path::GetDirTemp(filePath);
     SetDir(dir, filePath);
+    // remember selection: layout below changes listbox size, so LB_SETCURSEL
+    // during SetDir may not leave the item visible in the final viewport
+    int selIdx = listBox->GetCurrentSelection();
 
     auto rc = HwndClientRect(mainWin->hwndFrame);
     int dy = rc.dy - 72;
@@ -470,6 +547,10 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionNavFilesWnd(hwnd, mainWin->hwndFrame);
 
+    if (selIdx >= 0) {
+        SelectAndEnsureVisible(listBox, selIdx);
+    }
+
     SetIsVisible(true);
     HwndSetFocus(listBox->hwnd);
     return true;
@@ -478,7 +559,11 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
 void ShowNavFilesInFolder(MainWindow* win) {
     if (gNavFilesWnd) {
         if (gNavFilesWnd->hwnd && IsWindow(gNavFilesWnd->hwnd)) {
-            HwndSetFocus(gNavFilesWnd->hwnd);
+            if (gNavFilesWnd->listBox) {
+                HwndSetFocus(gNavFilesWnd->listBox->hwnd);
+            } else {
+                HwndSetFocus(gNavFilesWnd->hwnd);
+            }
             return;
         }
         ScheduleDeleteNavFilesWnd();
@@ -492,11 +577,14 @@ void ShowNavFilesInFolder(MainWindow* win) {
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);
     wnd->font = GetAppBiggerFont(win->hwndFrame);
+    // set before Create so Esc during Create can dismiss
+    gNavFilesWnd = wnd;
+    gHwndToActivateOnNavClose = win->hwndFrame;
     bool ok = wnd->Create(win);
     if (!ok) {
+        gNavFilesWnd = nullptr;
+        gHwndToActivateOnNavClose = nullptr;
         delete wnd;
         return;
     }
-    gNavFilesWnd = wnd;
-    gHwndToActivateOnNavClose = win->hwndFrame;
 }
