@@ -1000,6 +1000,18 @@ workspace "SumatraPDF"
       "winspool", "wininet", "urlmon", "gdiplus", "ole32",
       "oleAut32", "shlwapi", "version", "crypt32"
     }
+    -- Invalidate SumatraPDF's embedded payload when this DLL is rebuilt so a
+    -- later SumatraPDF prebuild re-packs InstallerData.dat with the new binary
+    -- (that prebuild only creates InstallerData.dat when it is missing).
+    -- Note: libsumatrapdf's targetdir is out/<cfg>/obj (intermediates); the DLL
+    -- and InstallerData.dat ship in out/<cfg>/, so delete there explicitly.
+    for_each_out_config(function(platform, config, outDir)
+      filter { platform, config }
+      prebuildcommands {
+        "if exist ..\\" .. outDir:gsub("/", "\\") .. "\\InstallerData.dat del /f /q ..\\" .. outDir:gsub("/", "\\") .. "\\InstallerData.dat",
+      }
+    end)
+    filter {}
 
   project "base"
     static_intermediate_dirs()
@@ -1466,7 +1478,13 @@ workspace "SumatraPDF"
       "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
       "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
     }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libsumatrapdf.dll:libsumatrapdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe" }
+    -- Only pack InstallerData.dat when missing. Signed release builds create it
+    -- after signtool (so the archive holds signed DLLs); a rebuild of
+    -- libsumatrapdf deletes InstallerData.dat so regular builds are not stuck
+    -- with a stale pack.
+    prebuildcommands {
+      "cd %{cfg.targetdir} & if not exist InstallerData.dat ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libsumatrapdf.dll:libsumatrapdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+    }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it
     -- won't launch. Nothing copies it automatically, so do it here.
