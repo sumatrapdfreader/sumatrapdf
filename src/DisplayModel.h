@@ -147,9 +147,11 @@ struct DisplayModel : DocController {
     bool NeedHScroll() const;
     bool NeedVScroll() const;
     bool CanScrollRight() const;
-    ;
     bool CanScrollLeft() const;
-    ;
+    bool CanScrollDown() const;
+    bool CanScrollUp() const;
+    // true when the view is at the bottom and GoToNextPage would fail
+    bool IsAtDocumentEnd() const;
     Size GetCanvasSize() const;
 
     bool PageShown(int pageNo) const;

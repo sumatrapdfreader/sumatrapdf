@@ -2870,11 +2870,11 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         SetTabState(currTab, currTab->tabState);
         currTab->tabState = nullptr;
     }
-    // TODO: figure why we hit this.
-    // happens when opening 3 files via "Open With"
-    // the first file is loaded via cmd-line arg, the rest
-    // via DDE Open command.
-    ReportIf(currTab->watcher);
+    // forceReuse / targetTab loads skip CloseDocumentInCurrentTab, so the
+    // previous document's watcher can still be set (e.g. open next file in
+    // folder, multi-file open). Always drop it before re-subscribing.
+    FileWatcherUnsubscribe(currTab->watcher);
+    currTab->watcher = nullptr;
 
     if (gGlobalPrefs->reloadModifiedDocuments) {
         auto fn = MkFunc0(ScheduleReloadTab, currTab);
@@ -5279,6 +5279,105 @@ static void ShowNoFileToOpenNotif(MainWindow* win) {
     ShowNotification(nargs);
 }
 
+// end-of-document hint for "open next file in folder" discoverability
+static Kind kNotifNextFileHint = "nextFileHint";
+
+static bool IsAtDocumentBottom(MainWindow* win) {
+    DocController* ctrl = win->ctrl;
+    if (!ctrl) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        return dm->IsAtDocumentEnd();
+    }
+    // CHM / Markdown: page-based only
+    return ctrl->CurrentPageNo() >= ctrl->PageCount();
+}
+
+// next openable file after the current tab's path (no wrap), or empty if none.
+// outN/outM are 1-based index of the next file and total count when non-null.
+static TempStr PeekNextFileInFolderTemp(MainWindow* win, int* outN = nullptr, int* outM = nullptr) {
+    if (outN) {
+        *outN = 0;
+    }
+    if (outM) {
+        *outM = 0;
+    }
+    if (!win || win->IsCurrentTabAbout() || !CanAccessDisk() || gPluginMode) {
+        return {};
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return {};
+    }
+    Str path = tab->filePath;
+    StrVec& files = CollectNextPrevFilesIfChanged(path);
+    int nFiles = len(files);
+    if (nFiles < 2) {
+        return {};
+    }
+    int idx = files.Find(path);
+    if (idx < 0 || idx + 1 >= nFiles) {
+        return {}; // no wrap: already last
+    }
+    Str next = files[idx + 1];
+    if (!file::Exists(next)) {
+        return {};
+    }
+    if (outN) {
+        *outN = idx + 2; // 1-based index of the next file
+    }
+    if (outM) {
+        *outM = nFiles;
+    }
+    return str::DupTemp(next);
+}
+
+static void DismissNextFileScrollHint(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifNextFileHint);
+}
+
+// scroll-down at document end: show open-next-file tip; scroll-up: dismiss.
+// Called after vertical scroll / page-change intents.
+void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
+    if (!win || !IsMainWindowValid(win) || win->isBeingClosed) {
+        return;
+    }
+    if (!down) {
+        DismissNextFileScrollHint(win);
+        return;
+    }
+    if (!win->IsDocLoaded() || win->IsCurrentTabAbout()) {
+        return;
+    }
+    if (!IsAtDocumentBottom(win)) {
+        return;
+    }
+    int n = 0, m = 0;
+    TempStr nextPath = PeekNextFileInFolderTemp(win, &n, &m);
+    if (!nextPath) {
+        return;
+    }
+    TempStr name = path::GetBaseNameTemp(nextPath);
+    // [shortcut](Cmd): open file n/m · [navigate](Cmd)
+    // (Key/...) expands to the bound shortcut before link parsing (see ParseTip)
+    TempStr msg =
+        fmt("[(Key/CmdOpenNextFileInFolder)](CmdOpenNextFileInFolder): %s **%s** · %d/%d · [%s](CmdNavigateFilesInFolder)",
+            _TRA("open"), name, n, m, _TRA("navigate"));
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.groupId = kNotifNextFileHint;
+    args.corner = NotifCorner::BottomRight;
+    args.timeoutMs = kNotifNoTimeout;
+    args.tab = win->CurrentTab();
+    args.msg = msg;
+    ShowNotification(args);
+}
+
 static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = {});
 
 struct NextPrevFileInFolderData {
@@ -5322,6 +5421,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDe
 
     // dismiss document error notifications from the previous document
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifDocErrors);
+    DismissNextFileScrollHint(win);
 
     WindowTab* tab = win->CurrentTab();
     bool didRetry = false;
@@ -5335,10 +5435,23 @@ again:
 
     int nFiles = len(files);
     int idx = files.Find(path);
+    if (idx < 0) {
+        ShowNoFileToOpenNotif(win);
+        return;
+    }
+    // do not wrap around at the ends of the folder
     if (forward) {
-        idx = (idx + 1) % nFiles;
+        if (idx + 1 >= nFiles) {
+            ShowNoFileToOpenNotif(win);
+            return;
+        }
+        idx = idx + 1;
     } else {
-        idx = (idx + nFiles - 1) % nFiles;
+        if (idx <= 0) {
+            ShowNoFileToOpenNotif(win);
+            return;
+        }
+        idx = idx - 1;
     }
     path = files[idx];
     if (!file::Exists(path)) {
@@ -8885,6 +8998,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEUP, 0);
             if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
+                OnDocumentVerticalScrollIntent(win, false);
             }
             ReadAloudOnUserViewChanged(win);
         } break;
@@ -8904,6 +9018,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
+                OnDocumentVerticalScrollIntent(win, false);
             }
             ReadAloudOnUserViewChanged(win);
         } break;
@@ -8930,6 +9045,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 } else {
                     win->ctrl->GoToNextPage();
                 }
+                // VSCROLL path already reports intent; page flips here need it
+                OnDocumentVerticalScrollIntent(win, cmdId == CmdScrollDown);
             }
             ReadAloudOnUserViewChanged(win);
         } break;
@@ -8947,6 +9064,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     ctrl->GoToNextPage();
                 }
             }
+            OnDocumentVerticalScrollIntent(win, cmdId == CmdGoToNextPage);
             ReadAloudOnUserViewChanged(win);
             break;
         }
@@ -8964,6 +9082,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEDOWN, 0);
             if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToNextPage();
+                OnDocumentVerticalScrollIntent(win, true);
             }
             ReadAloudOnUserViewChanged(win);
         } break;
@@ -8982,6 +9101,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToNextPage();
+                OnDocumentVerticalScrollIntent(win, true);
             }
             ReadAloudOnUserViewChanged(win);
         } break;

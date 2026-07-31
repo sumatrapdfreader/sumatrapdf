@@ -941,6 +941,9 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     }
 
     USHORT msg = LOWORD(wp);
+    // for next-file-in-folder tip: scroll intent after handling the action
+    bool scrollDown = (msg == SB_LINEDOWN || msg == SB_PAGEDOWN || msg == SB_HALF_PAGEDOWN || msg == SB_BOTTOM);
+    bool scrollUp = (msg == SB_LINEUP || msg == SB_PAGEUP || msg == SB_HALF_PAGEUP || msg == SB_TOP);
     auto* ctrl = win->ctrl;
     bool dmIsSinglePage = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
     // scrollbarInSinglePage is false by default
@@ -995,6 +998,9 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         if (targetPage != ctrl->CurrentPageNo()) {
             ctrl->GoToPage(targetPage, true);
             ReadAloudOnUserViewChanged(win);
+        }
+        if (scrollDown || scrollUp) {
+            OnDocumentVerticalScrollIntent(win, scrollDown);
         }
         return;
     }
@@ -1056,6 +1062,9 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             win->AsFixed()->ScrollYTo(si.nPos);
             ReadAloudOnUserViewChanged(win);
         }
+    }
+    if (scrollDown || scrollUp) {
+        OnDocumentVerticalScrollIntent(win, scrollDown);
     }
 }
 
@@ -2922,6 +2931,23 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
+
+    // run next-file-in-folder tip after any vertical wheel handling on this path
+    struct VerticalScrollIntentGuard {
+        MainWindow* win = nullptr;
+        bool down = false;
+        bool armed = false;
+        ~VerticalScrollIntentGuard() {
+            if (armed && win) {
+                OnDocumentVerticalScrollIntent(win, down);
+            }
+        }
+    } scrollIntent;
+    if (vScroll) {
+        scrollIntent.win = win;
+        scrollIntent.down = delta < 0;
+        scrollIntent.armed = true;
+    }
 
     // fit content: always flip page on wheel, regardless of scrollbar state
     if (vScroll && dm && dm->GetZoomVirtual() == kZoomFitContent && IsSingle(dm->GetDisplayMode())) {

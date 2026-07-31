@@ -117,7 +117,7 @@ static Str FindMarkdownLinkCmdEnd(Str cmdStart) {
     return str::SliceFromChar(cmdStart, ')');
 }
 
-static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int linkIdx) {
+static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int linkIdx, bool isBold = false) {
     int i = 0;
     while (i < text.len) {
         while (i < text.len && IsTipWhitespace(text.s[i])) {
@@ -133,6 +133,7 @@ static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int li
         TipWord w;
         str::ReplaceWithCopy(&w.text, Str(text.s + wordStart, i - wordStart));
         w.isLink = isLink;
+        w.isBold = isBold;
         w.linkIdx = linkIdx;
         tip.words.Append(w);
     }
@@ -202,6 +203,18 @@ void ParseTip(ParsedTip& tip, Str s) {
             break;
         }
 
+        // **bold text**
+        if (p.len >= 4 && p.s[0] == '*' && p.s[1] == '*') {
+            Str after(p.s + 2, p.len - 2);
+            int end = str::IndexOf(after, StrL("**"));
+            if (end >= 0) {
+                Str boldText(after.s, end);
+                AppendTipWordsFromText(tip, boldText, false, -1, true);
+                AdvanceTipText(p, 2 + end + 2);
+                continue;
+            }
+        }
+
         if (p.s[0] == '[') {
             Str textStart(p.s + 1, p.len - 1);
             Str textEnd = FindMarkdownLinkTextEnd(textStart);
@@ -242,6 +255,9 @@ void ParseTip(ParsedTip& tip, Str s) {
         int wordStart = 0;
         int i = 0;
         while (i < p.len && !IsTipWhitespace(p.s[i])) {
+            if (p.s[i] == '*' && i + 1 < p.len && p.s[i + 1] == '*') {
+                break; // start of **bold**
+            }
             if (p.s[i] == '[') {
                 Str textStart(p.s + i + 1, p.len - i - 1);
                 Str textEnd = FindMarkdownLinkTextEnd(textStart);
@@ -265,12 +281,32 @@ void ParseTip(ParsedTip& tip, Str s) {
     }
 }
 
+static HFONT CreateBoldFontFrom(HFONT font) {
+    if (!font) {
+        return nullptr;
+    }
+    LOGFONTW lf{};
+    if (GetObjectW(font, sizeof(lf), &lf) == 0) {
+        return nullptr;
+    }
+    lf.lfWeight = FW_BOLD;
+    return CreateFontIndirectW(&lf);
+}
+
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
+    HFONT boldFont = nullptr;
     for (auto& w : tip.words) {
-        Size sz = HdcMeasureText(hdc, w.text, fmt, font);
+        if (w.isBold && !boldFont) {
+            boldFont = CreateBoldFontFrom(font);
+        }
+        HFONT use = (w.isBold && boldFont) ? boldFont : font;
+        Size sz = HdcMeasureText(hdc, w.text, fmt, use);
         w.dx = sz.dx;
         w.dy = sz.dy;
+    }
+    if (boldFont) {
+        DeleteObject(boldFont);
     }
 }
 
@@ -303,10 +339,15 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
 
 void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol) {
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
+    HFONT boldFont = nullptr;
     for (auto& w : tip.words) {
+        if (w.isBold && !boldFont) {
+            boldFont = CreateBoldFontFrom(font);
+        }
         Point pt = {w.x, w.y};
         SetTextColor(hdc, w.isLink ? linkCol : textCol);
-        HdcDrawText(hdc, w.text, pt, fmt, font);
+        HFONT use = (w.isBold && boldFont) ? boldFont : font;
+        HdcDrawText(hdc, w.text, pt, fmt, use);
     }
     // underline each link
     HPEN pen = CreatePen(PS_SOLID, 1, linkCol);
@@ -320,6 +361,9 @@ void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORRE
         HdcDrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
     }
     SelectObject(hdc, prevPen);
+    if (boldFont) {
+        DeleteObject(boldFont);
+    }
     DeleteObject(pen);
 }
 

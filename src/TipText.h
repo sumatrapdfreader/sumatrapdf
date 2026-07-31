@@ -7,6 +7,7 @@
 //   [text](Help/Page)   a link that opens a docs page in the browser
 //   [text](https://..)  a link that opens a url in the browser
 //   (Key/Cmd...)        expanded inline to the command's keyboard shortcut
+//   **text**            bold text
 // note: include Base.h before this
 
 // a word in a parsed tip; can be part of a link
@@ -17,6 +18,7 @@ struct TipWord {
     int x = 0;
     int y = 0;
     bool isLink = false;
+    bool isBold = false;
     int linkIdx = -1; // index into ParsedTip::links
 };
 

@@ -202,6 +202,17 @@ bool DisplayModel::CanScrollLeft() const {
     return viewPort.x > 0;
 }
 
+bool DisplayModel::CanScrollDown() const {
+    if (viewPort.dy >= canvasSize.dy) {
+        return false;
+    }
+    return viewPort.y + viewPort.dy < canvasSize.dy;
+}
+
+bool DisplayModel::CanScrollUp() const {
+    return viewPort.y > 0;
+}
+
 Size DisplayModel::GetCanvasSize() const {
     return canvasSize;
 }
@@ -1494,6 +1505,21 @@ bool DisplayModel::GoToNextPage() {
     }
     GoToPage(firstPageInNewRow, false);
     return true;
+}
+
+bool DisplayModel::IsAtDocumentEnd() const {
+    if (CanScrollDown()) {
+        return false;
+    }
+    // continuous: one canvas for the whole document
+    if (IsContinuous(GetDisplayMode())) {
+        return true;
+    }
+    // non-continuous: also on the last page row (GoToNextPage would fail)
+    int columns = ColumnsFromDisplayMode(GetDisplayMode());
+    int currPageNo = CurrentPageNo();
+    int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, IsBookView(GetDisplayMode()));
+    return firstPageInNewRow > PageCount();
 }
 
 bool DisplayModel::GoToPrevPage(int scrollY) {
