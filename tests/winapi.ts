@@ -64,6 +64,66 @@ const kernel32 = dlopen("kernel32.dll", {
   GetLastError: { args: [], returns: FFIType.u32 },
 });
 
+// Authenticode helpers (mirror src/base/Crypto_win.cpp GetExecutableSignerTemp / IsPEFileSigned).
+// crypt32 for embedded PKCS#7 signer name; wintrust for signature validity.
+const crypt32 = dlopen("crypt32.dll", {
+  CryptQueryObject: {
+    args: [
+      FFIType.u32,
+      FFIType.ptr,
+      FFIType.u32,
+      FFIType.u32,
+      FFIType.u32,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+    ],
+    returns: FFIType.bool,
+  },
+  CryptMsgGetParam: {
+    args: [FFIType.u64, FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.ptr],
+    returns: FFIType.bool,
+  },
+  CryptMsgClose: { args: [FFIType.u64], returns: FFIType.bool },
+  CertCloseStore: { args: [FFIType.u64, FFIType.u32], returns: FFIType.bool },
+  CertFindCertificateInStore: {
+    args: [FFIType.u64, FFIType.u32, FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.ptr],
+    returns: FFIType.ptr,
+  },
+  CertGetNameStringA: {
+    args: [FFIType.ptr, FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.ptr, FFIType.u32],
+    returns: FFIType.u32,
+  },
+  CertFreeCertificateContext: { args: [FFIType.ptr], returns: FFIType.bool },
+});
+
+const wintrust = dlopen("wintrust.dll", {
+  WinVerifyTrust: { args: [FFIType.ptr, FFIType.ptr, FFIType.ptr], returns: FFIType.i32 },
+});
+
+const CERT_QUERY_OBJECT_FILE = 1;
+const CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED = 0x400;
+const CERT_QUERY_FORMAT_FLAG_BINARY = 2;
+const CMSG_SIGNER_INFO_PARAM = 6;
+const X509_ASN_ENCODING = 0x1;
+const PKCS_7_ASN_ENCODING = 0x10000;
+const CERT_FIND_SUBJECT_CERT = 11 << 16; // CERT_COMPARE_SUBJECT_CERT << CERT_COMPARE_SHIFT
+const CERT_NAME_SIMPLE_DISPLAY_TYPE = 4;
+
+// WINTRUST_ACTION_GENERIC_VERIFY_V2 = {00AAC56B-CD44-11d0-8CC2-00C04FC295EE}
+const WINTRUST_ACTION_GENERIC_VERIFY_V2 = new Uint8Array([
+  0x6b, 0xc5, 0xaa, 0x00, 0x44, 0xcd, 0xd0, 0x11, 0x8c, 0xc2, 0x00, 0xc0, 0x4f, 0xc2, 0x95, 0xee,
+]);
+const WTD_UI_NONE = 2;
+const WTD_REVOKE_NONE = 0;
+const WTD_CHOICE_FILE = 1;
+const WTD_STATEACTION_IGNORE = 0;
+const WTD_SAFER_FLAG = 0x100;
+const ERROR_SUCCESS = 0;
+
 // CreateProcess creation flags
 const DETACHED_PROCESS = 0x00000008;
 const CREATE_NEW_PROCESS_GROUP = 0x00000200;
@@ -427,6 +487,110 @@ export function captureWindowToPng(hwnd: number, outPath: string): boolean {
   gdi32.symbols.DeleteDC(memDC);
   user32.symbols.ReleaseDC(hwnd, winDC);
   return status === 0;
+}
+
+// Simple display name of the Authenticode signer (e.g. "Krzysztof Kowalczyk",
+// "Microsoft Windows"), or null if the file is unsigned / unreadable.
+// Mirrors GetExecutableSignerTemp in src/base/Crypto_win.cpp.
+export function getExecutableSigner(filePath: string): string | null {
+  const pathW = wideZ(filePath);
+  const hStore = new BigUint64Array(1);
+  const hMsg = new BigUint64Array(1);
+  const ok = crypt32.symbols.CryptQueryObject(
+    CERT_QUERY_OBJECT_FILE,
+    ptr(pathW),
+    CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED,
+    CERT_QUERY_FORMAT_FLAG_BINARY,
+    0,
+    null,
+    null,
+    null,
+    ptr(hStore),
+    ptr(hMsg),
+    null,
+  );
+  if (!ok || hStore[0] === 0n || hMsg[0] === 0n) {
+    return null;
+  }
+
+  try {
+    const sizeBuf = new Uint32Array(1);
+    if (!crypt32.symbols.CryptMsgGetParam(hMsg[0], CMSG_SIGNER_INFO_PARAM, 0, null, ptr(sizeBuf)) || sizeBuf[0] === 0) {
+      return null;
+    }
+    const signerInfo = new Uint8Array(sizeBuf[0]);
+    if (!crypt32.symbols.CryptMsgGetParam(hMsg[0], CMSG_SIGNER_INFO_PARAM, 0, ptr(signerInfo), ptr(sizeBuf))) {
+      return null;
+    }
+
+    // x64 CMSG_SIGNER_INFO: Issuer CRYPTOAPI_BLOB at +8, SerialNumber at +24.
+    // CERT_INFO for CERT_FIND_SUBJECT_CERT only needs SerialNumber (+8) and Issuer (+48).
+    const certInfo = new Uint8Array(64);
+    certInfo.set(signerInfo.subarray(24, 40), 8); // SerialNumber
+    certInfo.set(signerInfo.subarray(8, 24), 48); // Issuer
+
+    const certCtx = crypt32.symbols.CertFindCertificateInStore(
+      hStore[0],
+      X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+      0,
+      CERT_FIND_SUBJECT_CERT,
+      ptr(certInfo),
+      null,
+    );
+    if (!certCtx) {
+      return null;
+    }
+    try {
+      const nameBuf = new Uint8Array(512);
+      const n = crypt32.symbols.CertGetNameStringA(
+        certCtx,
+        CERT_NAME_SIMPLE_DISPLAY_TYPE,
+        0,
+        null,
+        ptr(nameBuf),
+        nameBuf.length,
+      );
+      if (n <= 1) {
+        return null;
+      }
+      // n includes the trailing NUL
+      return new TextDecoder().decode(nameBuf.subarray(0, n - 1));
+    } finally {
+      crypt32.symbols.CertFreeCertificateContext(certCtx);
+    }
+  } finally {
+    crypt32.symbols.CryptMsgClose(hMsg[0]);
+    crypt32.symbols.CertCloseStore(hStore[0], 0);
+  }
+}
+
+// True if WinVerifyTrust accepts the embedded Authenticode signature.
+// Mirrors IsPEFileSigned in src/base/Crypto_win.cpp.
+export function isPeFileSigned(filePath: string): boolean {
+  const pathW = wideZ(filePath);
+
+  // WINTRUST_FILE_INFO (x64): cbStruct@0, pcwszFilePath@8, hFile@16, pgKnownSubject@24 → 32 bytes
+  const fileInfo = new Uint8Array(32);
+  const fi = new DataView(fileInfo.buffer);
+  fi.setUint32(0, 32, true); // cbStruct
+  fi.setBigUint64(8, BigInt(ptr(pathW)), true); // pcwszFilePath
+
+  // WINTRUST_DATA (x64, with pSignatureSettings) → 88 bytes
+  // cbStruct@0, pPolicy@8, pSIP@16, dwUIChoice@24, fdwRevocation@28,
+  // dwUnionChoice@32, pFile@40, dwStateAction@48, hWVTStateData@56,
+  // pwszURLReference@64, dwProvFlags@72, dwUIContext@76, pSignatureSettings@80
+  const trustData = new Uint8Array(88);
+  const td = new DataView(trustData.buffer);
+  td.setUint32(0, 88, true); // cbStruct
+  td.setUint32(24, WTD_UI_NONE, true); // dwUIChoice
+  td.setUint32(28, WTD_REVOKE_NONE, true); // fdwRevocationChecks
+  td.setUint32(32, WTD_CHOICE_FILE, true); // dwUnionChoice
+  td.setBigUint64(40, BigInt(ptr(fileInfo)), true); // pFile
+  td.setUint32(48, WTD_STATEACTION_IGNORE, true); // dwStateAction
+  td.setUint32(72, WTD_SAFER_FLAG, true); // dwProvFlags
+
+  const status = wintrust.symbols.WinVerifyTrust(null, ptr(WINTRUST_ACTION_GENERIC_VERIFY_V2), ptr(trustData));
+  return status === ERROR_SUCCESS;
 }
 
 // Launch a process fully detached from this one (via CreateProcessW) and return
