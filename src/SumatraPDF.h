@@ -292,8 +292,6 @@ struct LoadArgs {
     // if set, called on the UI thread when the load finishes,
     // with true if the document was loaded successfully
     Func1<bool> onFinished;
-    // corner for the "Loading ..." notification; zero-init is TopLeft
-    NotifCorner loadingNotifCorner{};
 
   private:
     Str fileName;

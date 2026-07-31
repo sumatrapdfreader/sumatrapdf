@@ -41,6 +41,9 @@ struct WindowTab {
     DocController* ctrl = nullptr;
     LoadState loadState = LoadState::None;
     u64 loadStartedAt = 0;
+    // network-drive copy progress while loading (-1 = not in copy phase)
+    i64 loadCopyBytesCopied = -1;
+    i64 loadCopyBytesTotal = 0;
     LoadArgs* pendingLoadArgs = nullptr;
     // text of win->hwndFrame when the tab is selected
     Str frameTitle;

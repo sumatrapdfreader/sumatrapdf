@@ -278,7 +278,6 @@ LoadArgs* LoadArgs::Clone() {
     res->forceReuse = this->forceReuse;
     res->noSavePrefs = this->noSavePrefs;
     res->onFinished = this->onFinished;
-    res->loadingNotifCorner = this->loadingNotifCorner;
     return res;
 }
 
@@ -2789,6 +2788,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
             return nullptr;
         }
         targetTab->loadState = WindowTab::LoadState::None;
+        targetTab->loadCopyBytesCopied = -1;
+        targetTab->loadCopyBytesTotal = 0;
     } else if (win->IsCurrentTabAbout()) {
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
@@ -2850,6 +2851,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     auto currTab = win->CurrentTab();
     currTab->loadState = WindowTab::LoadState::None;
+    currTab->loadCopyBytesCopied = -1;
+    currTab->loadCopyBytesTotal = 0;
     Str path = currTab->filePath;
 #if 0
     int nPages = 0;
@@ -2912,15 +2915,6 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     return win;
 }
 
-static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path, NotifCorner corner = NotifCorner::TopLeft) {
-    NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
-    nargs.groupId = path.s;
-    nargs.corner = corner;
-    nargs.msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(path));
-    return ShowNotification(nargs);
-}
-
 static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
     MainWindow* win = args->win;
     bool openNewTab = SettingsUseTabs() && !args->forceReuse;
@@ -2957,7 +2951,6 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
 }
 
 struct LoadDocumentAsyncData {
-    NotificationWnd* wndNotif = nullptr;
     LoadArgs* args = nullptr;
     LoadDocumentAsyncData() = default;
     ~LoadDocumentAsyncData() { delete args; }
@@ -3002,6 +2995,8 @@ static void StartLoadingMessageTimer(WindowTab* tab) {
         return;
     }
     tab->loadStartedAt = GetTickCount64();
+    tab->loadCopyBytesCopied = -1;
+    tab->loadCopyBytesTotal = 0;
     if (gLoadingMessageTimer == 0) {
         gLoadingMessageTimer = SetTimer(nullptr, 0, 1000, LoadingMessageTimerProc);
     }
@@ -3017,13 +3012,11 @@ static bool IsLoadTargetValid(LoadArgs* args) {
 static void DispatchQueuedDocumentLoads();
 
 static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
-    // show the "Loading ..." notification only now that we're actually
-    // loading, not while the file was sitting in the queue
+    // loading status is painted on the tab canvas (StartLoadingMessageTimer);
+    // start the timer only now that we're actually loading, not while the
+    // file was sitting in the queue
     LoadArgs* args = data->args;
     StartLoadingMessageTimer(args->targetTab);
-    if (!args->targetTab) {
-        data->wndNotif = ShowLoadingNotif(args->win, args->FilePath(), args->loadingNotifCorner);
-    }
     gLoadThreadsActive++;
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
     RunAsync(fn, "LoadDocumentThread");
@@ -3085,7 +3078,6 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     OnLoadDocumentThreadFinished();
 
     auto args = d->args;
-    RemoveNotification(d->wndNotif);
     Str path = args->FilePath();
     EndDocumentLoad(path);
     MainWindow* win = args->win;
@@ -3096,6 +3088,8 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     }
     if (args->targetTab) {
         args->targetTab->loadStartedAt = 0;
+        args->targetTab->loadCopyBytesCopied = -1;
+        args->targetTab->loadCopyBytesTotal = 0;
     }
     if (!args->ctrl) {
         if (args->targetTab) {
@@ -3127,133 +3121,62 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     args->onFinished.Call(true);
 }
 
-// Progress notification payload posted from archive extraction (worker
-// thread) to the UI thread. The NotificationWnd* is safe to use without
-// a separate validity check because every progress task is enqueued
-// before LoadDocumentAsyncFinish (which calls RemoveNotification), and
-// uitask runs posted tasks in FIFO order on the UI thread.
-struct ExtractProgressUITask {
-    NotificationWnd* wnd;
-    Str path; // owned by the task; duped on the worker thread
-    int nDecoded;
-    int nTotal;
+// Network-drive cbx cache copy progress. Stored on the loading tab and
+// painted on the canvas when that tab is selected; the elapsed-time timer
+// only invalidates and re-reads these fields so it does not replace the
+// copy message.
+struct CopyProgressUITask {
+    WindowTab* targetTab = nullptr;
+    i64 bytesCopied = 0;
+    i64 bytesTotal = 0;
 };
 
-static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
+static void UpdateCopyProgressUI(CopyProgressUITask* task) {
     AutoDelete delTask(task);
-    if (task->wnd) {
-        // basename points into task->path, so free path only after building msg
-        TempStr basename = path::GetBaseNameTemp(task->path);
-        TempStr msg;
-        if (task->nTotal > 0) {
-            msg = fmt(_TRA("Loading %s %d of %d").s, basename, task->nDecoded, task->nTotal);
-        } else {
-            msg = fmt(_TRA("Loading %s %d").s, basename, task->nDecoded);
-        }
-        NotificationUpdateMessage(task->wnd, msg);
-    }
-    str::Free(task->path);
-}
-
-struct ExtractProgressState {
-    NotificationWnd* wnd;
-    Str path;
-    u64 lastUpdate = 0;
-};
-
-static void OnExtractProgress(ExtractProgressState* s, ArchiveExtractProgress* p) {
-    // throttle: the last callback (with nDecoded == nTotal) always posts
-    // so the final count is displayed; intermediate callbacks post at
-    // most once every 100 ms.
-    bool isFinal = (p->nTotal > 0 && p->nDecoded == p->nTotal);
-    u64 now = GetTickCount64();
-    if (!isFinal && (now - s->lastUpdate) < 100) {
+    WindowTab* tab = task->targetTab;
+    if (!tab || FindMainWindowByTab(tab) != tab->win) {
         return;
     }
-    s->lastUpdate = now;
-
-    auto* task = new ExtractProgressUITask;
-    task->wnd = s->wnd;
-    task->path = str::Dup(s->path);
-    task->nDecoded = p->nDecoded;
-    task->nTotal = p->nTotal;
-    auto fn = MkFunc0<ExtractProgressUITask>(UpdateLoadingNotifUI, task);
-    uitask::Post(fn, "ExtractProgress");
-}
-
-// Progress payload for the network-drive copy step, rendered as
-// "Copying <name>: 12.38 MB / 45.00 MB" so users can see large copies
-// making progress. nDecoded/nTotal from OnExtractProgress's task carry
-// counts; this task carries byte totals instead.
-struct CopyProgressUITask {
-    NotificationWnd* wnd;
-    Str path;
-    i64 bytesCopied;
-    i64 bytesTotal;
-};
-
-static void UpdateCopyNotifUI(CopyProgressUITask* task) {
-    AutoDelete delTask(task);
-    if (task->wnd) {
-        // basename points into task->path, so free path only after building msg
-        TempStr basename = path::GetBaseNameTemp(task->path);
-        TempStr copied = str::FormatSizeShortTemp(task->bytesCopied, nullptr);
-        TempStr msg;
-        if (task->bytesTotal > 0) {
-            TempStr total = str::FormatSizeShortTemp(task->bytesTotal, nullptr);
-            msg = fmt(_TRA("Copying %s: %s / %s").s, basename, copied, total);
-        } else {
-            msg = fmt(_TRA("Copying %s: %s").s, basename, copied);
-        }
-        NotificationUpdateMessage(task->wnd, msg);
+    tab->loadCopyBytesCopied = task->bytesCopied;
+    tab->loadCopyBytesTotal = task->bytesTotal;
+    if (tab == tab->win->CurrentTab()) {
+        HwndInvalidate(tab->win->hwndCanvas);
     }
-    str::Free(task->path);
 }
 
 struct CopyProgressState {
-    NotificationWnd* wnd;
-    Str path;
+    WindowTab* targetTab = nullptr;
 };
 
 static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
+    if (!s->targetTab) {
+        return;
+    }
     auto* task = new CopyProgressUITask;
-    task->wnd = s->wnd;
-    task->path = str::Dup(s->path);
+    task->targetTab = s->targetTab;
     task->bytesCopied = p->bytesCopied;
     task->bytesTotal = p->bytesTotal;
-    auto fn = MkFunc0<CopyProgressUITask>(UpdateCopyNotifUI, task);
+    auto fn = MkFunc0<CopyProgressUITask>(UpdateCopyProgressUI, task);
     uitask::Post(fn, "CopyProgress");
 }
 
 static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     auto args = d->args;
     AtomicIntInc(&gDangerousThreadCount);
-    DocController* ctrl = nullptr;
     MainWindow* win = args->win;
     HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
     Str path = args->FilePath();
     EngineBase* engine = args->engine;
 
-    // wire up the archive extraction progress callback so eager-load
-    // archives (small cbx / epub / fb2z) can update the "Loading ..."
-    // notification.
-    ExtractProgressState progState;
-    progState.wnd = d->wndNotif;
-    progState.path = path;
-    progState.lastUpdate = 0;
-    gArchiveProgressCb = MkFunc1<ExtractProgressState, ArchiveExtractProgress*>(OnExtractProgress, &progState);
-
-    // also wire up the file-copy progress callback so the cbx
-    // network-drive caching step (runs before archive open) reports bytes
-    // copied into the same loading notification.
+    // Network-drive cbx cache copy reports bytes onto the loading tab canvas.
     CopyProgressState copyState;
-    copyState.wnd = d->wndNotif;
-    copyState.path = path;
-    file::gFileCopyProgressCb = MkFunc1<CopyProgressState, file::CopyProgress*>(OnFileCopyProgress, &copyState);
+    copyState.targetTab = args->targetTab;
+    if (args->targetTab) {
+        file::gFileCopyProgressCb = MkFunc1<CopyProgressState, file::CopyProgress*>(OnFileCopyProgress, &copyState);
+    }
 
     args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
 
-    gArchiveProgressCb = {};
     file::gFileCopyProgressCb = {};
 
     if (args->ctrl && gIsDebugBuild) {
@@ -3339,19 +3262,15 @@ void StartLoadDocument(LoadArgs* argsIn) {
         bool isMd = !gGlobalPrefs->markdownUI.useFixedPageUI && MarkdownModel::IsSupportedFileType(kind);
         if (isChm || isMd) {
             // TODO: repeating the code below
-            NotificationWnd* wndNotif = nullptr;
-            if (!args->targetTab) {
-                wndNotif = ShowLoadingNotif(win, path, args->loadingNotifCorner);
-            }
-            DocController* ctrl = nullptr;
             HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
             EngineBase* engine = args->engine;
             StartLoadingMessageTimer(args->targetTab);
             args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
             if (args->targetTab) {
                 args->targetTab->loadStartedAt = 0;
+                args->targetTab->loadCopyBytesCopied = -1;
+                args->targetTab->loadCopyBytesTotal = 0;
             }
-            RemoveNotification(wndNotif);
             EndDocumentLoad(path);
             if (!args->ctrl) {
                 if (args->targetTab) {
@@ -5452,7 +5371,6 @@ again:
     d->pathToDelete = str::Dup(pathToDelete);
     LoadArgs args(path, win);
     args.forceReuse = true;
-    args.loadingNotifCorner = NotifCorner::BottomRight;
     args.onFinished = MkFunc1<NextPrevFileInFolderData, bool>(OnNextPrevFileInFolderLoaded, d);
     StartLoadDocument(&args);
 }

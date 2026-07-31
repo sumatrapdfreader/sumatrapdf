@@ -3562,7 +3562,21 @@ static void OnPaintDocumentStatus(MainWindow* win) {
     if (filePath) {
         TempStr msg;
         if (tab->loadState == WindowTab::LoadState::Loading || tab->loadState == WindowTab::LoadState::LoadedPending) {
-            msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath));
+            TempStr basename = path::GetBaseNameTemp(filePath);
+            // prefer network-drive copy progress when available (set by
+            // OnFileCopyProgress); the 1s loading timer only invalidates and
+            // re-reads these fields so it does not replace the copy message
+            if (tab->loadCopyBytesCopied >= 0) {
+                TempStr copied = str::FormatSizeShortTemp(tab->loadCopyBytesCopied, nullptr);
+                if (tab->loadCopyBytesTotal > 0) {
+                    TempStr total = str::FormatSizeShortTemp(tab->loadCopyBytesTotal, nullptr);
+                    msg = fmt(_TRA("Copying %s: %s / %s").s, basename, copied, total);
+                } else {
+                    msg = fmt(_TRA("Copying %s: %s").s, basename, copied);
+                }
+            } else {
+                msg = fmt(_TRA("Loading %s ...").s, basename);
+            }
             if (tab->loadStartedAt != 0) {
                 u64 elapsedSecs = (GetTickCount64() - tab->loadStartedAt) / 1000;
                 if (elapsedSecs > 0) {
