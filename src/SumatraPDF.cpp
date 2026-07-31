@@ -2341,6 +2341,15 @@ static void SetWindowRoundedCorners(HWND hwnd, bool rounded) {
 }
 
 static void UpdateWindowFrameBorderColor(MainWindow* win) {
+    if (!win || !win->hwndFrame) {
+        return;
+    }
+    // Maximized / fullscreen can't edge-resize; hide the DWM border so it does
+    // not show as a bright 1px seam against the taskbar (issue #5851).
+    if (IsZoomed(win->hwndFrame) || win->isFullScreen || win->presentation) {
+        SetWindowBorderColor(win->hwndFrame, (COLORREF)DWMWA_COLOR_NONE);
+        return;
+    }
     SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
 }
 
@@ -5992,6 +6001,8 @@ static void FrameUpdateUi(MainWindow* win) {
     // requested by clearing win->uiState.layout)
     bool didLayout = RelayoutFrame(win, updateToolbars, sidebarDx);
     if (didLayout) {
+        // maximize/restore toggles DWM border (hide when maximized; issue #5851)
+        UpdateWindowFrameBorderColor(win);
         // re-anchor the floating find bar over the (possibly moved) search icon
         FindBarReposition(win);
         if (win->presentation || win->isFullScreen) {
@@ -10525,14 +10536,36 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 *callDef = false;
                 return 0;
             }
-            // paint the 1px NC strip at top with the correct color
+            // Paint residual NC strips (top 1px for DWM; bottom only if present).
+            // Leaving them unpainted shows as a white/wrong-color glitch (#5851).
             HDC hdc = GetWindowDC(hwnd);
             if (hdc) {
                 Rect wr = HwndWindowRect(hwnd);
-                // window DC is in window coordinates (origin at top-left of window)
-                RECT rc = {0, 0, wr.dx, 1};
+                Rect cr = HwndClientRect(hwnd);
+                // client origin in window coordinates (window DC origin = top-left of frame)
+                Point clientScreen = HwndClientToScreen(hwnd, Point(0, 0));
+                int clientX = clientScreen.x - wr.x;
+                int clientY = clientScreen.y - wr.y;
                 HBRUSH br = CreateSolidBrush(ThemeControlBackgroundColor());
-                HdcFillRect(hdc, ToRect(rc), br);
+                if (clientY > 0) {
+                    RECT rc = {0, 0, wr.dx, clientY};
+                    HdcFillRect(hdc, ToRect(rc), br);
+                }
+                int bottomNcTop = clientY + cr.dy;
+                if (bottomNcTop < wr.dy) {
+                    RECT rc = {0, bottomNcTop, wr.dx, wr.dy};
+                    HdcFillRect(hdc, ToRect(rc), br);
+                }
+                // side NC (left/right frame borders when not maximized)
+                if (clientX > 0) {
+                    RECT rc = {0, clientY, clientX, bottomNcTop};
+                    HdcFillRect(hdc, ToRect(rc), br);
+                }
+                int rightNcLeft = clientX + cr.dx;
+                if (rightNcLeft < wr.dx) {
+                    RECT rc = {rightNcLeft, clientY, wr.dx, bottomNcTop};
+                    HdcFillRect(hdc, ToRect(rc), br);
+                }
                 DeleteObject(br);
                 ReleaseDC(hwnd, hdc);
             }
@@ -10636,12 +10669,14 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 // system metrics can still describe the old monitor during a
                 // cross-DPI move, leaving an unpainted strip at the screen edge.
                 // The proposed rect identifies the destination monitor reliably.
+                // Client fills the full work area — do not shrink by NON_CLIENT_BAND
+                // at the bottom (that left an unpainted 1px gap above the taskbar
+                // with tabs-in-titlebar; issue #5851).
                 HMONITOR monitor = MonitorFromRect(r, MONITOR_DEFAULTTONEAREST);
                 MONITORINFO mi{};
                 mi.cbSize = sizeof(mi);
                 if (monitor && GetMonitorInfoW(monitor, &mi)) {
                     *r = mi.rcWork;
-                    r->bottom -= NON_CLIENT_BAND;
                 } else {
                     int frameX = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
                     int frameY = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
@@ -10649,7 +10684,6 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                     r->top += frameY;
                     r->right -= frameX;
                     r->bottom -= frameY;
-                    r->bottom -= NON_CLIENT_BAND;
                 }
             } else if (!isFullScreen) {
                 // keep 1px non-client area at top so DWM preserves content
