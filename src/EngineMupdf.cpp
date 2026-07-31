@@ -5065,9 +5065,12 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             fz_report_error(ctx);
             continue;
         }
-        // check pointers, not Str's bool operator: empty type/encoding are
-        // legitimate (e.g. a font with no Encoding) and handled below
-        ReportIf(!name.s || !type.s || !encoding.s);
+        // skip if name/type/encoding pointers are null (pdf_to_name can return
+        // nullptr). Empty strings are fine. Do not ReportIf-then-continue with
+        // null deref on name.s[0] (would kill GetFontsThread mid-list).
+        if (!name.s || !type.s || !encoding.s) {
+            continue;
+        }
 
         str::Builder info;
 #if OS_WIN
@@ -5123,6 +5126,16 @@ static SeqStrNum mupdfPropsMap =
 // @gen-end docprop-mupdf
 
 TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
+    // Font list walks every page under renderLock+docLock and intentionally
+    // drops those locks between pages so the UI/renderer can run. Holding
+    // docLock here for the whole call inverts lock order vs render (which
+    // takes renderLock then docLock) and can deadlock the background
+    // GetFontsThread — Properties dialog stuck on "Getting font information..."
+    // or a truncated font list (issue #5853).
+    if (prop == DocProp::FontList) {
+        return ExtractFontListTemp();
+    }
+
     auto ctx = Ctx();
     ScopedRecursiveMutex ctxScope(&docLock);
 
@@ -5186,10 +5199,6 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
             return "XFA";
         }
         return {};
-    }
-
-    if (prop == DocProp::FontList) {
-        return ExtractFontListTemp();
     }
 
     // @gen-start docprop-pdf-info

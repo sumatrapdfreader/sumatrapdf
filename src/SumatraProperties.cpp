@@ -891,6 +891,8 @@ bool PropertiesWnd::Create(HWND parent) {
         editProps = new Edit();
         editProps->Create(args);
         SendMessageW(editProps->hwnd, EM_SETREADONLY, TRUE, 0);
+        // multi-line edit default can still cap text; font lists may be large
+        SendMessageW(editProps->hwnd, EM_SETLIMITTEXT, 0, 0);
         DWORD tabStop = 16;
         SendMessageW(editProps->hwnd, EM_SETTABSTOPS, 1, (LPARAM)&tabStop);
         vbox->AddChild(editProps, 1);

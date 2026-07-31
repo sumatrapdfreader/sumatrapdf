@@ -1263,6 +1263,7 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     edit = new Edit();
     edit->Create(args);
     SendMessageW(edit->hwnd, EM_SETREADONLY, TRUE, 0);
+    SendMessageW(edit->hwnd, EM_SETLIMITTEXT, 0, 0);
 
     HDC hdc = GetDC(hwnd);
     monoFont = HdcCreateSimpleFont(hdc, "Consolas", fontSize);
