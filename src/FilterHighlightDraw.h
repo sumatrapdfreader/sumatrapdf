@@ -16,8 +16,10 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
                                  COLORREF txtCol, HFONT font);
 
 // Colors for clearing/redrawing a TreeView label after default paint.
-// Non-selected: prefer sampling the already-painted row (theme/darkmode), not
-// COLOR_WINDOW. treeBg/treeTxt are TreeView::bgColor/textColor (may be unset).
+// Selected+focus: system highlight. Selected unfocused: themed accent of
+// treeBg (not COLOR_BTNFACE — unreadable with light text in dark mode).
+// Non-selected: sample the painted row / treeBg / theme control bg.
+// treeBg/treeTxt are TreeView::bgColor/textColor (may be unset).
 // itemRc is the full row rect (TreeView_GetItemRect with textOnly=FALSE).
 void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
                                  bool hasFocus, COLORREF* bgOut, COLORREF* txtOut);

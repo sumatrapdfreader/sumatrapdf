@@ -166,9 +166,14 @@ void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF
         return;
     }
     if (isSelected) {
-        // Selected but unfocused: keep system inactive-selection face; text from
-        // the tree/theme so dark themes don't fall back to pure black on gray.
-        *bgOut = GetSysColor(COLOR_BTNFACE);
+        // Selected but unfocused (or multi-match "current page" rows): use a
+        // subtle accent of the themed tree background. Explorer-themed TreeView
+        // inactive selection is often a light gray even in dark mode; combined
+        // with light theme text that made the initial bookmark highlight
+        // unreadable (issue #5848). COLOR_BTNFACE has the same problem when
+        // system colors are not fully remapped.
+        COLORREF base = !IsSpecialColor(treeBg) ? treeBg : ThemeControlBackgroundColor();
+        *bgOut = AccentColor(base, 40);
         *txtOut = IsSpecialColor(treeTxt) ? ThemeWindowTextColor() : treeTxt;
         return;
     }

@@ -1140,9 +1140,10 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     GetTocFilterWords(win, words);
     bool filterActive = len(words) > 0;
 
-    // Nothing to repaint unless we need page numbers, filter bars, or a
-    // secondary multi-match highlight (the real selection is already painted).
-    if (!showPage && !filterActive && !(isMultiMatch && !isTreeSelected)) {
+    // Always repaint selected / multi-match rows so themed selection colors
+    // replace Explorer's light inactive-selection face (issue #5848). Also
+    // when page numbers or filter bars need drawing.
+    if (!showPage && !filterActive && !isSelected) {
         return;
     }
 
@@ -1238,17 +1239,41 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
         if (!tocItem) {
             return;
         }
+        TreeView* tv = ev->treeView;
+        bool isTreeSelected = (cd->uItemState & CDIS_SELECTED) != 0;
+        if (!isTreeSelected) {
+            HTREEITEM hSel = TreeView_GetSelection(tv->hwnd);
+            HTREEITEM hItem = tv->GetHandleByTreeItem(ev->treeItem);
+            isTreeSelected = hSel && hItem && hSel == hItem;
+        }
+        bool isMultiMatch = TocItemIsMultiHighlight(win, tocItem);
+        bool isSelected = isTreeSelected || isMultiMatch;
+        bool hasFocus = isTreeSelected && (GetFocus() == tv->hwnd);
+
         LRESULT res = 0;
-        if (tocItem->color != kColorUnset) {
+        if (isSelected) {
+            // Theme-aware selection fill/text; strip CDIS_SELECTED so Explorer
+            // theme does not paint a light inactive selection over dark text.
+            COLORREF bgCol, txtCol;
+            ResolveTreeFilterItemColors(cd->hdc, ToRect(cd->rc), tv->bgColor, tv->textColor, true, hasFocus, &bgCol,
+                                        &txtCol);
+            if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {
+                txtCol = tocItem->color;
+            }
+            tvcd->clrText = txtCol;
+            tvcd->clrTextBk = bgCol;
+            cd->uItemState &= ~(CDIS_SELECTED | CDIS_FOCUS);
+            res |= CDRF_NEWFONT;
+        } else if (tocItem->color != kColorUnset) {
             tvcd->clrText = tocItem->color;
         }
         if (tocItem->fontFlags != 0) {
             UpdateFont(cd->hdc, ev->treeView->hwnd, tocItem->fontFlags);
-            res = CDRF_NEWFONT;
+            res |= CDRF_NEWFONT;
         }
-        // POSTPAINT redraws title + optional page number / filter / multi-match.
-        bool needPost = filterActive || (showPageNumbers && tocItem->pageNo > 0) ||
-                        (multiHighlight && TocItemIsMultiHighlight(win, tocItem));
+        // POSTPAINT: selection colors (issue #5848), page numbers, filter, multi-match.
+        bool needPost =
+            isSelected || filterActive || (showPageNumbers && tocItem->pageNo > 0) || (multiHighlight && isMultiMatch);
         if (needPost) {
             res |= CDRF_NOTIFYPOSTPAINT;
         }
