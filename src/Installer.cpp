@@ -9,8 +9,15 @@
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
 
+// Restart Manager is in the MSVC Windows SDK; mingw-w64 (Wine CI) has no
+// RestartManager.h / Rstrtmgr.lib. Holders listing is best-effort UI only.
+#if defined(_MSC_VER)
 #include <RestartManager.h>
 #pragma comment(lib, "Rstrtmgr.lib")
+#define HAS_RESTART_MANAGER 1
+#else
+#define HAS_RESTART_MANAGER 0
+#endif
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -311,6 +318,10 @@ static void StopWindowsSearchService() {
 // Restart Manager: list processes that hold a path open (for "file in use" UI).
 // Returns a multi-line string "name (pid N)\n..." or empty if none / RM fails.
 static TempStr ProcessesHoldingFileTemp(Str path) {
+#if !HAS_RESTART_MANAGER
+    (void)path;
+    return {};
+#else
     if (!path) {
         return {};
     }
@@ -382,6 +393,7 @@ static TempStr ProcessesHoldingFileTemp(Str path) {
         return {};
     }
     return str::DupTemp(ToStr(sb));
+#endif
 }
 
 static void StartWindowsSearchService() {
