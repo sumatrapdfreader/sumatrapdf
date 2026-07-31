@@ -126,8 +126,8 @@ typedef unsigned long long uint64_t;
 
 /* Symbol entry defines */
 #define IMAGE_SYM_UNDEFINED (int16_t)0
-#define IMAGE_SYM_ABSOLUTE (int16_t) - 1
-#define IMAGE_SYM_DEBUG (int16_t) - 2
+#define IMAGE_SYM_ABSOLUTE (int16_t)-1
+#define IMAGE_SYM_DEBUG (int16_t)-2
 
 #define IMAGE_SYM_TYPE_NULL 0x0000
 #define IMAGE_SYM_TYPE_VOID 0x0001
@@ -152,7 +152,7 @@ typedef unsigned long long uint64_t;
 #define IMAGE_SYM_DTYPE_FUNCTION 2
 #define IMAGE_SYM_DTYPE_ARRAY 3
 
-#define IMAGE_SYM_CLASS_END_OF_FUNCTION (uint8_t) - 1
+#define IMAGE_SYM_CLASS_END_OF_FUNCTION (uint8_t)-1
 #define IMAGE_SYM_CLASS_NULL 0x00
 #define IMAGE_SYM_CLASS_AUTOMATIC 0x01
 #define IMAGE_SYM_CLASS_EXTERNAL 0x02
@@ -333,8 +333,7 @@ int
         char* s = label;
 
         while (*s) {
-            if (*s == '-')
-                *s = '_';
+            if (*s == '-') *s = '_';
             s++;
         }
     }
@@ -405,7 +404,8 @@ int
     if (short_size) {
         symbol_table[1].N.ShortName[1] = '_';
         memcpy(&symbol_table[1].N.ShortName[addUnderscore], label, strlen(label));
-        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], SIZE_LABEL_SUFFIX, strlen(SIZE_LABEL_SUFFIX));
+        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], SIZE_LABEL_SUFFIX,
+               strlen(SIZE_LABEL_SUFFIX));
     } else {
         symbol_table[1].N.LongName.Zeroes = 0;
         symbol_table[1].N.LongName.Offset =
@@ -425,9 +425,11 @@ int
     }
     if (!short_size) {
         string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] = '_';
-        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] + addUnderscore, label, strlen(label));
+        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] + addUnderscore, label,
+               strlen(label));
         string_table->TotalSize += addUnderscore + (uint32_t)strlen(label);
-        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)], SIZE_LABEL_SUFFIX, strlen(SIZE_LABEL_SUFFIX) + 1);
+        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)], SIZE_LABEL_SUFFIX,
+               strlen(SIZE_LABEL_SUFFIX) + 1);
         string_table->TotalSize += (uint32_t)strlen(SIZE_LABEL_SUFFIX) + 1;
     }
 
@@ -448,8 +450,7 @@ int
     r = 0;
 
 err:
-    if (fd != NULL)
-        fclose(fd);
+    if (fd != NULL) fclose(fd);
     free(buffer);
     exit(r);
 }

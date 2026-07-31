@@ -6,12 +6,12 @@
 
 #define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
 
-void log(const char *s);
+void log(const char* s);
 
 class IDiaDataSource;
 
-IDiaDataSource *LoadDia();
+IDiaDataSource* LoadDia();
 
-void BStrToString(StrBuilder& strInOut, BSTR str, const char *defString = "", bool stripWhitespace = false);
+void BStrToString(StrBuilder& strInOut, BSTR str, const char* defString = "", bool stripWhitespace = false);
 
 #endif

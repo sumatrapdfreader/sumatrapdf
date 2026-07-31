@@ -27,10 +27,10 @@ extern "C" {
  * @see parg_init
  */
 struct parg_state {
-	const char *optarg;   /**< Pointer to option argument, if any */
-	int optind;           /**< Next index in argv to process */
-	int optopt;           /**< Option value resulting in error, if any */
-	const char *nextchar; /**< Next character to process */
+    const char* optarg;   /**< Pointer to option argument, if any */
+    int optind;           /**< Next index in argv to process */
+    int optopt;           /**< Option value resulting in error, if any */
+    const char* nextchar; /**< Next character to process */
 };
 
 /**
@@ -39,10 +39,10 @@ struct parg_state {
  * @see parg_getopt_long
  */
 struct parg_option {
-	const char *name; /**< Name of option */
-	int has_arg;      /**< Option argument status */
-	int *flag;        /**< Pointer to flag variable */
-	int val;          /**< Value of option */
+    const char* name; /**< Name of option */
+    int has_arg;      /**< Option argument status */
+    int* flag;        /**< Pointer to flag variable */
+    int val;          /**< Value of option */
 };
 
 /**
@@ -51,9 +51,9 @@ struct parg_option {
  * @see parg_option
  */
 typedef enum {
-	PARG_NOARG,  /**< No argument */
-	PARG_REQARG, /**< Required argument */
-	PARG_OPTARG  /**< Optional argument */
+    PARG_NOARG,  /**< No argument */
+    PARG_REQARG, /**< Required argument */
+    PARG_OPTARG  /**< Optional argument */
 } parg_arg_num;
 
 /**
@@ -65,8 +65,7 @@ typedef enum {
  *
  * @param ps pointer to state
  */
-void
-parg_init(struct parg_state *ps);
+void parg_init(struct parg_state* ps);
 
 /**
  * Parse next short option in `argv`.
@@ -111,9 +110,7 @@ parg_init(struct parg_state *ps);
  * arguments, '`?`' on unmatched option, '`?`' or '`:`' on option argument
  * error
  */
-int
-parg_getopt(struct parg_state *ps, int argc, char *const argv[],
-            const char *optstring);
+int parg_getopt(struct parg_state* ps, int argc, char* const argv[], const char* optstring);
 
 /**
  * Parse next long or short option in `argv`.
@@ -161,10 +158,8 @@ parg_getopt(struct parg_state *ps, int argc, char *const argv[],
  * element, `-1` on end of arguments, '`?`' on unmatched or ambiguous option,
  * '`?`' or '`:`' on option argument error
  */
-int
-parg_getopt_long(struct parg_state *ps, int argc, char *const argv[],
-                 const char *optstring,
-                 const struct parg_option *longopts, int *longindex);
+int parg_getopt_long(struct parg_state* ps, int argc, char* const argv[], const char* optstring,
+                     const struct parg_option* longopts, int* longindex);
 
 /**
  * Reorder elements of `argv` so options appear first.
@@ -180,10 +175,7 @@ parg_getopt_long(struct parg_state *ps, int argc, char *const argv[],
  * @param longopts array of `parg_option` structures
  * @return index of first nonoption in `argv` on success, `-1` on error
  */
-int
-parg_reorder(int argc, char *argv[],
-             const char *optstring,
-             const struct parg_option *longopts);
+int parg_reorder(int argc, char* argv[], const char* optstring, const struct parg_option* longopts);
 
 #ifdef __cplusplus
 } /* extern "C" */

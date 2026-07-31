@@ -9,9 +9,9 @@
 #include <string>
 #include <cassert>
 
-#pragma warning(disable:4018)
-#pragma warning(disable:4267)
-#pragma warning(disable:4244)
+#pragma warning(disable : 4018)
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4244)
 
 typedef signed int sInt;
 typedef char sChar;
@@ -22,10 +22,8 @@ typedef bool sBool;
 
 #define sArray std::vector
 
-inline void sCopyString(sChar* a, size_t a_len, const sChar* b, int b_len)
-{
-    if (strncpy_s(a, a_len, b, b_len) != 0)
-    {
+inline void sCopyString(sChar* a, size_t a_len, const sChar* b, int b_len) {
+    if (strncpy_s(a, a_len, b, b_len) != 0) {
         abort();
     }
 }
