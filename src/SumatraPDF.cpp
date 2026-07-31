@@ -2904,11 +2904,9 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     // happen automatically on drag&drop, reopening from history, etc.)
     if (CanAccessDisk() && !gPluginMode && !IsStressTesting()) {
         AddPathToRecentDocs(fullPath);
-    }
 
-    // Remove Zone.Identifier (Mark of the Web) so that Windows Explorer
-    // will show previews/thumbnails for this file without security warnings
-    if (CanAccessDisk() && !gPluginMode) {
+        // Remove Zone.Identifier (Mark of the Web) so that Windows Explorer
+        // will show previews/thumbnails for this file without security warnings
         file::DeleteZoneIdentifier(fullPath);
     }
 
