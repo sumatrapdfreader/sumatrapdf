@@ -987,6 +987,27 @@ static bool IsLibsumatrapdfAvRaceError(DWORD err) {
            || err == ERROR_SHARING_VIOLATION; // 32
 }
 
+// Windows Application Control (WDAC / AppLocker / Smart App Control) refused
+// LoadLibrary — file is on disk but policy blocks execution. e.g. debug report
+// 8c09d3b87000001 with err=4551 ("An Application Control policy has blocked this file.").
+static bool IsLibsumatrapdfAppControlError(DWORD err) {
+    switch (err) {
+        case ERROR_ACCESS_DISABLED_BY_POLICY:                      // 1260 — AppLocker / SRP
+        case ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION:              // 4551
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_MALICIOUS:          // 4556
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_PUA:                // 4557
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_DANGEROUS_EXT:      // 4558
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_OFFLINE:            // 4559
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_UNFRIENDLY_FILE:    // 4580
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_UNATTAINABLE:       // 4581
+        case ERROR_SYSTEM_INTEGRITY_REPUTATION_EXPLICIT_DENY_FILE: // 4582
+        case ERROR_SYSTEM_INTEGRITY_WHQL_NOT_SATISFIED:            // 4583
+            return true;
+        default:
+            return false;
+    }
+}
+
 static void LogLibsumatrapdfFileStateAfterLoadFail(Str path, DWORD err) {
     i64 sizeAfter = file::GetSize(path);
     bool existsAfter = file::Exists(path);
@@ -1206,8 +1227,24 @@ static bool LoadLibsumatrapdf(bool showErrorDialog) {
     }
 
     // Keep this English-only: we may fail before translations / UI language load.
-    TempStr msg = fmt(
-        R"(SumatraPDF failed to load libsumatrapdf.dll (error code %d).
+    TempStr msg;
+    if (IsLibsumatrapdfAppControlError(err)) {
+        msg = fmt(
+            R"(SumatraPDF failed to load libsumatrapdf.dll (error code %d).
+
+Windows Application Control blocked the file (WDAC, AppLocker, or Smart App Control). The DLL is present on disk but the OS policy will not allow it to load.
+
+Try:
+• Settings → Privacy & security → Windows Security → App & browser control: check Smart App Control and reputation-based protection
+• If this is a work or school PC, ask IT to allowlist SumatraPDF.exe and libsumatrapdf.dll
+• Unblock the files (right-click → Properties → Unblock) if they show "downloaded from the Internet"
+• Move the portable folder out of Downloads and try again, or install from the official website
+
+For more information see <a href="%s">Failed to load libsumatrapdf.dll</a>.)",
+            (int)err, kFailedToLoadURL());
+    } else {
+        msg = fmt(
+            R"(SumatraPDF failed to load libsumatrapdf.dll (error code %d).
 
 This is often caused by antivirus software blocking or quarantining libsumatrapdf.dll when SumatraPDF extracts it.
 
@@ -1217,7 +1254,8 @@ Try:
 • Re-download SumatraPDF from the official website
 
 For more information see <a href="%s">Failed to load libsumatrapdf.dll</a>.)",
-        (int)err, kFailedToLoadURL());
+            (int)err, kFailedToLoadURL());
+    }
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
