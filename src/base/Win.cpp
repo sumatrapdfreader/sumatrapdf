@@ -1415,45 +1415,165 @@ bool IsProcessRunningElevated() {
 }
 #endif
 
+// Parent PID of process `pid` via Toolhelp snapshot, or 0 on failure.
+static DWORD GetProcessParentPid(DWORD pid) {
+    if (pid == 0) {
+        return 0;
+    }
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == snap) {
+        return 0;
+    }
+    PROCESSENTRY32W pe{};
+    pe.dwSize = sizeof(pe);
+    if (!Process32FirstW(snap, &pe)) {
+        return 0;
+    }
+    do {
+        if (pe.th32ProcessID == pid) {
+            return pe.th32ParentProcessID;
+        }
+    } while (Process32NextW(snap, &pe));
+    return 0;
+}
+
+static TempStr GetProcessImagePathTemp(DWORD pid) {
+    if (pid == 0) {
+        return {};
+    }
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return {};
+    }
+    // Long paths can exceed MAX_PATH; grow if needed.
+    DWORD cap = MAX_PATH;
+    for (int attempt = 0; attempt < 3; attempt++) {
+        WCHAR* buf = AllocArrayTemp<WCHAR>((int)cap);
+        DWORD n = cap;
+        if (QueryFullProcessImageNameW(hProc, 0, buf, &n)) {
+            return ToUtf8Temp(WStr(buf, (int)n));
+        }
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            return {};
+        }
+        cap *= 2;
+    }
+    return {};
+}
+
+// Process command line via NtQueryInformationProcess ProcessCommandLineInformation
+// (Windows 10+). Returns empty if unavailable or access denied.
+static TempStr GetProcessCommandLineTemp(DWORD pid) {
+    if (pid == 0) {
+        return {};
+    }
+    using NtQueryInformationProcessFn = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+    static NtQueryInformationProcessFn ntQip = nullptr;
+    static bool tried = false;
+    if (!tried) {
+        tried = true;
+        HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+        if (ntdll) {
+            ntQip = (NtQueryInformationProcessFn)GetProcAddress(ntdll, "NtQueryInformationProcess");
+        }
+    }
+    if (!ntQip) {
+        return {};
+    }
+
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return {};
+    }
+
+    // ProcessCommandLineInformation = 60 (Windows 10+)
+    constexpr ULONG kProcessCommandLineInformation = 60;
+    ULONG retLen = 0;
+    LONG status = ntQip(hProc, kProcessCommandLineInformation, nullptr, 0, &retLen);
+    // STATUS_INFO_LENGTH_MISMATCH (0xC0000004) expected when sizing
+    if (retLen == 0 || retLen > 64 * 1024) {
+        return {};
+    }
+    void* buf = malloc(retLen);
+    if (!buf) {
+        return {};
+    }
+    status = ntQip(hProc, kProcessCommandLineInformation, buf, retLen, &retLen);
+    if (status < 0) {
+        free(buf);
+        return {};
+    }
+    // Buffer is a UNICODE_STRING (Length, MaximumLength, Buffer*) with data following.
+    struct {
+        USHORT Length;
+        USHORT MaximumLength;
+        PWSTR Buffer;
+    }* us = (decltype(us))buf;
+    TempStr out{};
+    if (us->Buffer && us->Length >= sizeof(WCHAR)) {
+        int nChars = us->Length / sizeof(WCHAR);
+        out = ToUtf8Temp(WStr(us->Buffer, nChars));
+    }
+    free(buf);
+    return out;
+}
+
 // returns the exe path of the parent process, or nullptr on failure
 // if pidOut is not nullptr, it receives the parent process ID
 TempStr GetParentProcessPath(DWORD* pidOut) {
     if (pidOut) {
         *pidOut = 0;
     }
-    DWORD pid = GetCurrentProcessId();
-    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (INVALID_HANDLE_VALUE == snap) {
-        return {};
-    }
-    PROCESSENTRY32W pe{};
-    pe.dwSize = sizeof(pe);
-    DWORD parentPid = 0;
-    if (!Process32FirstW(snap, &pe)) {
-        return {};
-    }
-    do {
-        if (pe.th32ProcessID == pid) {
-            parentPid = pe.th32ParentProcessID;
-            break;
-        }
-    } while (Process32NextW(snap, &pe));
+    DWORD parentPid = GetProcessParentPid(GetCurrentProcessId());
     if (parentPid == 0) {
         return {};
     }
     if (pidOut) {
         *pidOut = parentPid;
     }
-    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, parentPid);
-    if (!hProc.IsValid()) {
-        return {};
+    return GetProcessImagePathTemp(parentPid);
+}
+
+// Log parent → grandparent → … (path + command line when readable).
+void LogParentProcessChain() {
+    log("Parent process chain:\n");
+    DWORD pid = GetCurrentProcessId();
+    DWORD seen[16]{};
+    int nSeen = 0;
+    for (int depth = 0; depth < 16; depth++) {
+        DWORD parentPid = GetProcessParentPid(pid);
+        if (parentPid == 0 || parentPid == pid) {
+            if (depth == 0) {
+                log("  (none / unknown)\n");
+            }
+            break;
+        }
+        bool cycle = false;
+        for (int i = 0; i < nSeen; i++) {
+            if (seen[i] == parentPid) {
+                cycle = true;
+                break;
+            }
+        }
+        if (cycle) {
+            logf("  [%d] pid=%u (cycle, stop)\n", depth, parentPid);
+            break;
+        }
+        seen[nSeen++] = parentPid;
+
+        TempStr path = GetProcessImagePathTemp(parentPid);
+        TempStr cmd = GetProcessCommandLineTemp(parentPid);
+        if (path && cmd) {
+            logf("  [%d] pid=%u path='%s'\n      cmdline='%s'\n", depth, parentPid, path, cmd);
+        } else if (path) {
+            logf("  [%d] pid=%u path='%s'\n      cmdline=(unavailable)\n", depth, parentPid, path);
+        } else if (cmd) {
+            logf("  [%d] pid=%u path=(unavailable)\n      cmdline='%s'\n", depth, parentPid, cmd);
+        } else {
+            logf("  [%d] pid=%u path=(unavailable) cmdline=(unavailable)\n", depth, parentPid);
+        }
+        pid = parentPid;
     }
-    WCHAR path[MAX_PATH]{};
-    DWORD pathLen = MAX_PATH;
-    if (!QueryFullProcessImageNameW(hProc, 0, path, &pathLen)) {
-        return {};
-    }
-    return ToUtf8Temp(path);
 }
 
 // We assume that if OpenProcess() works, we are at the same or greater

@@ -2079,6 +2079,7 @@ Exit:
 static void LogCommandLine() {
     TempStr s = ToUtf8Temp(GetCommandLineW());
     logf("'%s'\n  ver %s\n", Str(s), StrL(UPDATE_CHECK_VERA));
+    LogParentProcessChain();
 }
 
 static void InstallSumatraCrashHandler(bool localOnly) {

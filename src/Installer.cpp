@@ -9,6 +9,9 @@
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
 
+#include <RestartManager.h>
+#pragma comment(lib, "Rstrtmgr.lib")
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
@@ -217,44 +220,168 @@ static Str kInstallDocsURL() {
     return StrL("https://www.sumatrapdfreader.org/docs/Installation");
 }
 
-// Stop Windows Search so SearchIndexer / SearchFilterHost release PdfFilter.dll.
-// Best-effort: fails quietly if the service is absent or stop is denied.
+// Wait until a service is stopped (or timeout / query failure).
+static bool WaitServiceStopped(SC_HANDLE svc, Str name, int maxWaitMs = 15000) {
+    SERVICE_STATUS st{};
+    int waited = 0;
+    while (waited < maxWaitMs) {
+        if (!QueryServiceStatus(svc, &st)) {
+            logf("WaitServiceStopped('%s'): QueryServiceStatus failed err=%u\n", name, GetLastError());
+            return false;
+        }
+        if (st.dwCurrentState == SERVICE_STOPPED) {
+            return true;
+        }
+        Sleep(500);
+        waited += 500;
+    }
+    logf("WaitServiceStopped('%s'): timed out (state=%u)\n", name, st.dwCurrentState);
+    return false;
+}
+
+// Stop a service and its active dependents first (depth-limited).
+// Fixes ERROR_DEPENDENT_SERVICES_RUNNING (1051) when stopping WSearch alone.
+static void StopServiceAndDependents(SC_HANDLE scm, Str serviceName, int depth = 0) {
+    if (depth > 8 || !scm || !serviceName) {
+        return;
+    }
+    SC_HANDLE svc =
+        OpenServiceW(scm, CWStrTemp(serviceName), SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
+    if (!svc) {
+        logf("StopServiceAndDependents('%s'): OpenService failed err=%u\n", serviceName, GetLastError());
+        return;
+    }
+    SERVICE_STATUS st{};
+    if (QueryServiceStatus(svc, &st) && st.dwCurrentState == SERVICE_STOPPED) {
+        if (depth == 0) {
+            logf("StopServiceAndDependents('%s'): already stopped\n", serviceName);
+        }
+        CloseServiceHandle(svc);
+        return;
+    }
+
+    // Active dependents must be stopped before this service (MSDN EnumDependentServices).
+    DWORD bytesNeeded = 0;
+    DWORD nServices = 0;
+    EnumDependentServicesW(svc, SERVICE_ACTIVE, nullptr, 0, &bytesNeeded, &nServices);
+    DWORD enumErr = GetLastError();
+    if (enumErr == ERROR_MORE_DATA && bytesNeeded > 0) {
+        auto* deps = (ENUM_SERVICE_STATUSW*)malloc(bytesNeeded);
+        if (deps && EnumDependentServicesW(svc, SERVICE_ACTIVE, deps, bytesNeeded, &bytesNeeded, &nServices)) {
+            logf("StopServiceAndDependents('%s'): %u active dependent(s)\n", serviceName, nServices);
+            // EnumDependentServices returns dependents in reverse dependency order;
+            // still stop each recursively so grandchildren are covered.
+            for (DWORD i = 0; i < nServices; i++) {
+                TempStr depName = ToUtf8Temp(deps[i].lpServiceName);
+                logf("  dependent: '%s' (display '%s')\n", depName, ToUtf8Temp(deps[i].lpDisplayName));
+                StopServiceAndDependents(scm, depName, depth + 1);
+            }
+        } else if (deps) {
+            logf("StopServiceAndDependents('%s'): EnumDependentServices failed err=%u\n", serviceName, GetLastError());
+        }
+        free(deps);
+    }
+
+    if (!ControlService(svc, SERVICE_CONTROL_STOP, &st)) {
+        DWORD err = GetLastError();
+        if (err != ERROR_SERVICE_NOT_ACTIVE) {
+            logf("StopServiceAndDependents('%s'): ControlService(STOP) failed err=%u\n", serviceName, err);
+        }
+    } else {
+        logf("StopServiceAndDependents('%s'): stop requested\n", serviceName);
+        if (WaitServiceStopped(svc, serviceName)) {
+            logf("StopServiceAndDependents('%s'): stopped\n", serviceName);
+        }
+    }
+    CloseServiceHandle(svc);
+}
+
+// Stop Windows Search (and dependents) so SearchIndexer / SearchFilterHost
+// release PdfFilter.dll. Best-effort: fails quietly if absent or denied.
 static void StopWindowsSearchService() {
     SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (!scm) {
         logf("StopWindowsSearchService: OpenSCManager failed err=%u\n", GetLastError());
         return;
     }
-    SC_HANDLE svc = OpenServiceW(scm, L"WSearch", SERVICE_STOP | SERVICE_QUERY_STATUS);
-    if (!svc) {
-        logf("StopWindowsSearchService: OpenService(WSearch) failed err=%u\n", GetLastError());
-        CloseServiceHandle(scm);
-        return;
-    }
-    SERVICE_STATUS st{};
-    if (QueryServiceStatus(svc, &st) && st.dwCurrentState == SERVICE_STOPPED) {
-        log("StopWindowsSearchService: already stopped\n");
-        CloseServiceHandle(svc);
-        CloseServiceHandle(scm);
-        return;
-    }
-    if (!ControlService(svc, SERVICE_CONTROL_STOP, &st)) {
-        logf("StopWindowsSearchService: ControlService(STOP) failed err=%u\n", GetLastError());
-    } else {
-        log("StopWindowsSearchService: stop requested\n");
-        for (int i = 0; i < 30; i++) { // up to ~15s
-            if (!QueryServiceStatus(svc, &st)) {
-                break;
-            }
-            if (st.dwCurrentState == SERVICE_STOPPED) {
-                log("StopWindowsSearchService: stopped\n");
-                break;
-            }
-            Sleep(500);
-        }
-    }
-    CloseServiceHandle(svc);
+    StopServiceAndDependents(scm, StrL("WSearch"), 0);
     CloseServiceHandle(scm);
+}
+
+// Restart Manager: list processes that hold a path open (for "file in use" UI).
+// Returns a multi-line string "name (pid N)\n..." or empty if none / RM fails.
+static TempStr ProcessesHoldingFileTemp(Str path) {
+    if (!path) {
+        return {};
+    }
+    DWORD session = 0;
+    WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {};
+    DWORD err = RmStartSession(&session, 0, sessionKey);
+    if (err != ERROR_SUCCESS) {
+        logf("ProcessesHoldingFile: RmStartSession failed err=%u\n", err);
+        return {};
+    }
+
+    TempWStr pathW = ToWStrTemp(path);
+    LPCWSTR files[1] = {pathW.s};
+    err = RmRegisterResources(session, 1, files, 0, nullptr, 0, nullptr);
+    if (err != ERROR_SUCCESS) {
+        logf("ProcessesHoldingFile: RmRegisterResources failed err=%u path='%s'\n", err, path);
+        RmEndSession(session);
+        return {};
+    }
+
+    UINT nNeeded = 0;
+    UINT nInfo = 0;
+    DWORD reason = 0;
+    err = RmGetList(session, &nNeeded, &nInfo, nullptr, &reason);
+    if (err != ERROR_MORE_DATA && err != ERROR_SUCCESS) {
+        logf("ProcessesHoldingFile: RmGetList (size) failed err=%u\n", err);
+        RmEndSession(session);
+        return {};
+    }
+    if (nNeeded == 0) {
+        logf("ProcessesHoldingFile: no holders for '%s'\n", path);
+        RmEndSession(session);
+        return {};
+    }
+
+    size_t bytes = sizeof(RM_PROCESS_INFO) * nNeeded;
+    auto* infos = (RM_PROCESS_INFO*)malloc(bytes);
+    if (!infos) {
+        RmEndSession(session);
+        return {};
+    }
+    memset(infos, 0, bytes);
+    nInfo = nNeeded;
+    err = RmGetList(session, &nNeeded, &nInfo, infos, &reason);
+    if (err != ERROR_SUCCESS) {
+        logf("ProcessesHoldingFile: RmGetList failed err=%u\n", err);
+        free(infos);
+        RmEndSession(session);
+        return {};
+    }
+
+    str::Builder sb;
+    for (UINT i = 0; i < nInfo; i++) {
+        TempStr app = ToUtf8Temp(infos[i].strAppName);
+        DWORD pid = infos[i].Process.dwProcessId;
+        // Prefer strAppName; fall back if empty
+        if (len(app) == 0) {
+            app = StrL("(unknown)");
+        }
+        logf("ProcessesHoldingFile: holder pid=%u app='%s' type=%u\n", pid, app, (unsigned)infos[i].ApplicationType);
+        if (len(sb) > 0) {
+            sb.Append("\n");
+        }
+        sb.Append(fmt("• %s (pid %u)", app, pid));
+    }
+    free(infos);
+    RmEndSession(session);
+    if (len(sb) == 0) {
+        return {};
+    }
+    return str::DupTemp(ToStr(sb));
 }
 
 static void StartWindowsSearchService() {
@@ -317,6 +444,37 @@ struct MoveAsideDlgCtx {
     DWORD lastTryTick = 0;
 };
 
+// Dialog body: prefer live Restart Manager holders; fall back to generic tips.
+static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
+    TempStr holders = ProcessesHoldingFileTemp(path);
+    if (holders) {
+        return fmt(_TRA("Could not update %s because another program still has the file open.\n\n"
+                        "Programs currently using this file:\n"
+                        "%s\n\n"
+                        "What to try:\n"
+                        "• Close the programs listed above\n"
+                        "• Close Explorer windows that show a PDF preview pane\n"
+                        "• Stop the \"Windows Search\" service temporarily (services.msc)\n\n"
+                        "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
+                        "More help: <a href=\"%s\">Installation documentation</a>")
+                       .s,
+                   fileName, holders, kInstallDocsURL());
+    }
+    return fmt(_TRA("Could not update %s because another program still has the file open.\n\n"
+                    "Common causes:\n"
+                    "• Windows Search Indexer (loads PdfFilter.dll for PDF search)\n"
+                    "• File Explorer PDF preview (loads PdfPreview.dll / libsumatrapdf.dll)\n"
+                    "• Another SumatraPDF window or PDF application\n\n"
+                    "What to try:\n"
+                    "• Close Explorer windows that show a PDF preview pane\n"
+                    "• Stop the \"Windows Search\" service temporarily (services.msc)\n"
+                    "• Close all SumatraPDF and other PDF apps\n\n"
+                    "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
+                    "More help: <a href=\"%s\">Installation documentation</a>")
+                   .s,
+               fileName, kInstallDocsURL());
+}
+
 static HRESULT CALLBACK MoveAsideBlockedDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                        LONG_PTR lpRefData) {
     auto* ctx = (MoveAsideDlgCtx*)lpRefData;
@@ -334,6 +492,9 @@ static HRESULT CALLBACK MoveAsideBlockedDialogCallback(HWND hwnd, UINT msg, WPAR
                 if (str::EqI(ctx->fileName, StrL("PdfFilter.dll")) || str::EqI(ctx->fileName, StrL("PdfPreview.dll"))) {
                     StopWindowsSearchService();
                 }
+                // Refresh holder list so the user sees who still has the file.
+                TempStr content = FormatMoveAsideDialogContentTemp(ctx->fileName, ctx->path);
+                SendMessageW(hwnd, TDM_UPDATE_ELEMENT_TEXT, TDE_CONTENT, (LPARAM)CWStrTemp(content));
                 if (TryRenameAsideOnce(ctx->path, ctx->copyPath)) {
                     ctx->success = true;
                     // Close dialog (IDCANCEL button); success is recorded in ctx.
@@ -366,19 +527,7 @@ static bool ShowMoveAsideBlockedDialog(Str path, Str copyPath, Str fileName) {
     ctx.copyPath = copyPath;
     ctx.fileName = fileName;
 
-    TempStr content = fmt(_TRA("Could not update %s because another program still has the file open.\n\n"
-                               "Common causes:\n"
-                               "• Windows Search Indexer (loads PdfFilter.dll for PDF search)\n"
-                               "• File Explorer PDF preview (loads PdfPreview.dll / libsumatrapdf.dll)\n"
-                               "• Another SumatraPDF window or PDF application\n\n"
-                               "What to try:\n"
-                               "• Close Explorer windows that show a PDF preview pane\n"
-                               "• Stop the \"Windows Search\" service temporarily (services.msc)\n"
-                               "• Close all SumatraPDF and other PDF apps\n\n"
-                               "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
-                               "More help: <a href=\"%s\">Installation documentation</a>")
-                              .s,
-                          fileName, kInstallDocsURL());
+    TempStr content = FormatMoveAsideDialogContentTemp(fileName, path);
 
     TASKDIALOG_BUTTON buttons[1];
     buttons[0].nButtonID = IDCANCEL;
@@ -1755,17 +1904,7 @@ int RunInstaller() {
         StartLogToFile(installerLogPath, removeLog);
     }
     logf("------------- Starting SumatraPDF installation\n");
-    {
-        DWORD parentPid = 0;
-        TempStr path = GetParentProcessPath(&parentPid);
-        if (path) {
-            logf("Parent process: pid=%d, path='%s'\n", (int)parentPid, path);
-        } else if (parentPid != 0) {
-            logf("Parent process: pid=%d, path unknown\n", (int)parentPid);
-        } else {
-            logf("Parent process: unknown\n");
-        }
-    }
+    LogParentProcessChain();
     if (!gCli->silent && !IsProcessAndOsArchSame()) {
         logfa("quitting because !IsProcessAndOsArchSame()\n");
         bool ok = ShouldInstallMismatchedArch(nullptr);
