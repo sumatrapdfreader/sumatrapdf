@@ -2341,10 +2341,34 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 #endif
 
+    // -x extract only needs the embedded LzSA archive in the EXE — not a loaded
+    // libsumatrapdf.dll. Do this before LoadLibsumatrapdf so Desktop/sandbox
+    // Access Denied or AV blocking LoadLibrary cannot abort a pure extract
+    // (see crash report 8c10917a4, WDAG/Sandbox + -x).
+    // ParseFlags skips flag parsing when argv[1] is a mutool name (poster, …),
+    // so poster’s own -x never sets justExtractFiles; MaybeRunMutool still runs
+    // for tools after we load the DLL below.
+    if (flags.justExtractFiles) {
+        RedirectIOToExistingConsole();
+        if (!HasEmbeddedLibsumatrapdf()) {
+            log("this is not a SumatraPDF installer, -x option not available\n");
+            HandleRedirectedConsoleOnShutdown();
+            return 1;
+        }
+        exitCode = 0;
+        if (!ExtractInstallerFiles(gCli->installDir)) {
+            log("failed to extract files");
+            LogLastError();
+            exitCode = 1;
+        }
+        HandleRedirectedConsoleOnShutdown();
+        return exitCode;
+    }
+
     // load libsumatrapdf.dll eagerly before any code path that might call into it.
     // if we let the delay-load helper do it and it fails, it raises a fatal
-    // exception. this must remain after the installer checks above because
-    // during installation libsumatrapdf.dll isn't extracted yet
+    // exception. this must remain after the installer / -x checks above because
+    // during installation or extract libsumatrapdf.dll need not be loaded yet
     if (!LoadLibsumatrapdf(!flags.silent)) {
         ::ExitProcess(1);
     }
@@ -2400,24 +2424,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
             exitCode = mutoolRes; // propagate the tool's exit code to the process
             goto Exit;
         }
-    }
-
-    // -x is one of options for poster tool, so we must run MaybeRunMutool() before this
-    if (flags.justExtractFiles) {
-        RedirectIOToExistingConsole();
-        if (!HasEmbeddedLibsumatrapdf()) {
-            log("this is not a SumatraPDF installer, -x option not available\n");
-            HandleRedirectedConsoleOnShutdown();
-            return 1;
-        }
-        exitCode = 0;
-        if (!ExtractInstallerFiles(gCli->installDir)) {
-            log("failed to extract files");
-            LogLastError();
-            exitCode = 1;
-        }
-        HandleRedirectedConsoleOnShutdown();
-        return exitCode;
     }
 
     DetectExternalViewers();
