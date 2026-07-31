@@ -265,6 +265,7 @@ export const commands = [
     "CmdZoomFitHeight", "Zoom: Fit Height",
     "CmdDeleteFileAndOpenNext", "Delete File And Open Next",
     "CmdShowGeneratedHTML", "Show Generated HTML",
+    "CmdDeleteCachedFiles", "Delete Cached Files",
     "CmdNone", "Do nothing",
 ];
 

@@ -182,6 +182,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdPdShowInfo` : "Show PDF Info"
 - `CmdReadAloud` : "Read Aloud"
 - `CmdRemoveDeletedFilesFromHistory` : "Remove Deleted Files From History"
+- `CmdDeleteCachedFiles` : "Delete Cached Files" — deletes local network-drive comic book cache (`cbx-cache`)
 - `CmdResizeImage` : "Resize Image"
 - `CmdScreenshot` : "Take Screenshot"
 - `CmdSetScreenshotHotkey` : "Set Screenshot Hotkey"

@@ -7872,6 +7872,51 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
     ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 }
 
+// Unconditionally delete all local copies of comic-book archives that were
+// cached under <data>/cbx-cache/ when opening them from a network drive.
+// Safe to call with no open document; open documents may still hold a lock
+// on a cache file so some deletes can fail (logged).
+void DeleteCachedFiles(MainWindow* win) {
+    int nDeleted = 0;
+    int nFailed = 0;
+    TempStr dataDir = GetSumatraDataDirTemp();
+    if (dataDir) {
+        TempStr cacheDir = path::JoinTemp(dataDir, StrL("cbx-cache"));
+        if (path::GetType(cacheDir) == path::Type::Dir) {
+            DirIter di{cacheDir};
+            di.includeFiles = true;
+            di.includeDirs = false;
+            for (DirIterEntry* de : di) {
+                TempStr sizeStr = str::FormatSizeShortTemp(de->size);
+                if (file::Delete(de->filePath)) {
+                    nDeleted++;
+                    logf("DeleteCachedFiles: deleted '%s' (%s)\n", de->filePath, sizeStr);
+                } else {
+                    nFailed++;
+                    logf("DeleteCachedFiles: failed to delete '%s' (%s)\n", de->filePath, sizeStr);
+                }
+            }
+            // remove the (now empty, or residual) cache directory itself
+            if (nFailed == 0) {
+                dir::RemoveAll(cacheDir);
+            }
+        }
+    }
+    logf("DeleteCachedFiles: deleted %d, failed %d\n", nDeleted, nFailed);
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    TempStr msg;
+    if (nDeleted == 0 && nFailed == 0) {
+        msg = fmt("%s", _TRA("No cached comic book files."));
+    } else if (nFailed == 0) {
+        msg = fmt(_TRA("Deleted %d cached comic book files.").s, nDeleted);
+    } else {
+        msg = fmt(_TRA("Deleted %d cached comic book files, %d failed.").s, nDeleted, nFailed);
+    }
+    ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
+}
+
 static void TogglePredictiveRender(MainWindow* win) {
     gPredictiveRender = !gPredictiveRender;
     NotificationCreateArgs args;
@@ -8497,6 +8542,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdRemoveDeletedFilesFromHistory:
             RemoveDeletedFilesFromHistory(win);
+            break;
+
+        case CmdDeleteCachedFiles:
+            DeleteCachedFiles(win);
             break;
 
         case CmdReopenLastClosedFile:

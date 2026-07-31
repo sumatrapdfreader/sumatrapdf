@@ -267,6 +267,7 @@ static SeqStrings gCommandNames =
     "CmdZoomFitHeight\0"
     "CmdDeleteFileAndOpenNext\0"
     "CmdShowGeneratedHTML\0"
+    "CmdDeleteCachedFiles\0"
     "CmdNone\0"
     "\0";
 
@@ -527,6 +528,7 @@ static i32 gCommandIds[] = {
     CmdZoomFitHeight,
     CmdDeleteFileAndOpenNext,
     CmdShowGeneratedHTML,
+    CmdDeleteCachedFiles,
     CmdNone,
 };
 
@@ -787,6 +789,7 @@ SeqStrings gCommandDescriptions =
     "Zoom: Fit Height\0"
     "Delete File And Open Next\0"
     "Show Generated HTML\0"
+    "Delete Cached Files\0"
     "Do nothing\0"
     "\0";
 // clang-format on

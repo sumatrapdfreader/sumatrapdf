@@ -265,7 +265,8 @@ enum {
     CmdZoomFitHeight = 454,
     CmdDeleteFileAndOpenNext = 455,
     CmdShowGeneratedHTML = 456,
-    CmdNone = 457,
+    CmdDeleteCachedFiles = 457,
+    CmdNone = 458,
 
     /* range for file history */
     CmdFileHistoryFirst,

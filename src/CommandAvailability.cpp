@@ -71,6 +71,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdShowLog,
     CmdClearHistory,
     CmdRemoveDeletedFilesFromHistory,
+    CmdDeleteCachedFiles,
     CmdReopenLastClosedFile,
     CmdListPrinters,
     CmdDebugCrashMe,

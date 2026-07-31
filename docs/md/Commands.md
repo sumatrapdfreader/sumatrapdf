@@ -280,6 +280,7 @@ CmdChangeLanguage,,Change Language...,
 CmdCheckUpdate,,Check For Updates,
 CmdClearHistory,,Clear History,Clears history of opened files (for recently opened list in home page)
 CmdRemoveDeletedFilesFromHistory,,Remove Deleted Files From History,"ver 3.7+, removes from history entries for files that no longer exist on disk"
+CmdDeleteCachedFiles,,Delete Cached Files,"ver 3.7+, deletes local copies of comic book archives cached under cbx-cache when opened from a network drive"
 CmdContributeTranslation,,Contribute Translation,
 CmdForgetSelectedDocument,,Remove Selected Document From History,
 CmdListPrinters,,List Printers,ver 3.7+
