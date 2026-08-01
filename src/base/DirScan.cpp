@@ -277,6 +277,39 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
     delete ctx;
 }
 
+// Is path dir itself, or something below it? Compared the way the file system
+// compares them, and only at a separator, so "C:\foo" doesn't swallow
+// "C:\foobar".
+static bool IsUnderDir(Str path, Str dir) {
+    if (dir.len == 0 || path.len < dir.len) {
+        return false;
+    }
+    if (!str::StartsWithI(path, dir)) {
+        return false;
+    }
+    if (path.len == dir.len) {
+        return true;
+    }
+    char last = dir.s[dir.len - 1];
+    if (last == '\\' || last == '/') {
+        // a drive root already ends in a separator
+        return true;
+    }
+    char next = path.s[dir.len];
+    return next == '\\' || next == '/';
+}
+
+// Appends node to a singly linked list kept with a tail pointer.
+static void AppendNode(DirEntriesNode** head, DirEntriesNode** last, DirEntriesNode* node) {
+    node->next = nullptr;
+    if (*last) {
+        (*last)->next = node;
+    } else {
+        *head = node;
+    }
+    *last = node;
+}
+
 // Request a directory scan - adds to FRONT of list (priority for user requests)
 // Returns DirEntries* (either existing from queue or newly allocated)
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive) {
@@ -317,6 +350,9 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive) {
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     ctx->cs.Lock();
     DirScanWorker* w = FindOrCreateWorker(ctx, dv->fullDir);
+    // the string it points at lives in the arena, so it stays valid once we
+    // let go of the lock
+    Str priorityDir = ctx->priorityDir;
     ctx->cs.Unlock();
     if (!w) {
         return;
@@ -329,17 +365,61 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     // Use arena allocator for queue nodes (thread-safe)
     DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv, nonRecursive);
 
-    // Add to end of queue, breadth first
-    if (w->dirsToVisitLast) {
-        w->dirsToVisitLast->next = node;
+    // Add to the end of one queue or the other, breadth first within each
+    if (IsUnderDir(dv->fullDir, priorityDir)) {
+        AppendNode(&w->preferredDirs, &w->preferredDirsLast, node);
     } else {
-        w->dirsToVisit = node;
+        AppendNode(&w->dirsToVisit, &w->dirsToVisitLast, node);
     }
-    w->dirsToVisitLast = node;
 
     WorkerNoteBusy(w);
     w->hasWork.Wake();
     w->cs.Unlock();
+}
+
+// Must hold w->cs. Re-sorts everything queued by walking into the ones under
+// dir and the ones that aren't, keeping the relative order within each.
+static void RepartitionWorkerQueues(DirScanWorker* w, Str dir) {
+    DirEntriesNode* nodes = w->preferredDirs;
+    if (nodes) {
+        w->preferredDirsLast->next = w->dirsToVisit;
+    } else {
+        nodes = w->dirsToVisit;
+    }
+    w->preferredDirs = nullptr;
+    w->preferredDirsLast = nullptr;
+    w->dirsToVisit = nullptr;
+    w->dirsToVisitLast = nullptr;
+
+    while (nodes) {
+        DirEntriesNode* node = nodes;
+        nodes = nodes->next;
+        if (IsUnderDir(node->dv->fullDir, dir)) {
+            AppendNode(&w->preferredDirs, &w->preferredDirsLast, node);
+        } else {
+            AppendNode(&w->dirsToVisit, &w->dirsToVisitLast, node);
+        }
+    }
+}
+
+void SetDirScanPriorityDir(DirScanCtx* ctx, Str dir) {
+    if (!ctx) {
+        return;
+    }
+    ctx->cs.Lock();
+    if (str::EqI(ctx->priorityDir, dir)) {
+        ctx->cs.Unlock();
+        return;
+    }
+    ctx->priorityDir = str::Dup(ctx->a, dir);
+    // Walking the queues is O(what's queued), but this only runs when the
+    // shown directory changes, not per directory scanned.
+    for (DirScanWorker* w = ctx->workers; w; w = w->next) {
+        w->cs.Lock();
+        RepartitionWorkerQueues(w, ctx->priorityDir);
+        w->cs.Unlock();
+    }
+    ctx->cs.Unlock();
 }
 
 // Request a refresh of a directory (non-recursive scan).
@@ -356,7 +436,7 @@ bool DirScanIsIdle(DirScanCtx* ctx) {
     ctx->cs.Lock();
     for (DirScanWorker* w = ctx->workers; w && idle; w = w->next) {
         w->cs.Lock();
-        idle = !w->priorityDirs && !w->dirsToVisit && w->inFlightCount == 0;
+        idle = !w->priorityDirs && !w->preferredDirs && !w->dirsToVisit && w->inFlightCount == 0;
         w->cs.Unlock();
     }
     ctx->cs.Unlock();
@@ -391,18 +471,25 @@ static void DirScanWorkerThread(DirScanWorker* w) {
 
     while (true) {
         w->cs.Lock();
-        while (!w->priorityDirs && !w->dirsToVisit && !AtomicBoolGet(&ctx->shouldExit)) {
+        while (!w->priorityDirs && !w->preferredDirs && !w->dirsToVisit && !AtomicBoolGet(&ctx->shouldExit)) {
             w->hasWork.Wait(&w->cs);
         }
         if (AtomicBoolGet(&ctx->shouldExit)) {
             w->cs.Unlock();
             break;
         }
-        // what the caller asked for comes first
+        // What the caller asked for comes first, then what's under the
+        // directory it says it's showing, then the rest of the walk.
         DirEntriesNode* node = w->priorityDirs;
         bool wasRequested = node != nullptr;
         if (node) {
             w->priorityDirs = node->next;
+        } else if (w->preferredDirs) {
+            node = w->preferredDirs;
+            w->preferredDirs = node->next;
+            if (!w->preferredDirs) {
+                w->preferredDirsLast = nullptr;
+            }
         } else {
             node = w->dirsToVisit;
             if (node) {
@@ -470,7 +557,7 @@ static void DirScanWorkerThread(DirScanWorker* w) {
         w->nDirs++;
         w->totalSize += filesSize;
         w->inFlightCount--;
-        bool allDone = !w->priorityDirs && !w->dirsToVisit && w->inFlightCount == 0;
+        bool allDone = !w->priorityDirs && !w->preferredDirs && !w->dirsToVisit && w->inFlightCount == 0;
         if (allDone) {
             WorkerNoteIdle(w);
             w->hasWork.WakeAll();

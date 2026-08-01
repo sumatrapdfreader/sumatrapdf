@@ -127,6 +127,11 @@ struct DirScanWorker {
     // ones discovered by walking. Without this a directory the user just
     // navigated to waits behind everything a recursive scan has queued up.
     DirEntriesNode* priorityDirs;
+    // Those found by walking that fall under the directory the caller says it
+    // is showing. Their sizes are the ones somebody is looking at, so they go
+    // before the rest of the walk. See SetDirScanPriorityDir.
+    DirEntriesNode* preferredDirs;
+    DirEntriesNode* preferredDirsLast;
     DirEntriesNode* dirsToVisit;
     DirEntriesNode* dirsToVisitLast; // tail, so appending doesn't walk the queue
     int inFlightCount;               // directories currently being read
@@ -148,6 +153,7 @@ struct DirScanCtx {
     Mutex cs;              // protects the worker list
     AtomicBool shouldExit; // signal all threads to exit
     DirScanWorker* workers;
+    Str priorityDir; // what SetDirScanPriorityDir was last given
 };
 
 // A worker's progress, copied out so the caller doesn't hold a lock while
@@ -167,6 +173,10 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx);
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive = false);
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive = false);
 void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
+// Scan what's under dir before the rest of the walk, so the sizes filling in
+// are the ones being looked at. Re-orders what's already queued. An empty dir
+// goes back to plain breadth-first order.
+void SetDirScanPriorityDir(DirScanCtx* ctx, Str dir);
 
 // true when no worker has anything left to do
 bool DirScanIsIdle(DirScanCtx* ctx);
