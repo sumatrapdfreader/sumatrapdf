@@ -1343,17 +1343,22 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     } else {
         // SetScrollInfo first so the NC area is not a blank strip on first show
         // (ShowScrollBar alone can paint an empty white track — issue #5850).
+        DWORD styleBefore = (DWORD)GetWindowLongW(win->hwndCanvas, GWL_STYLE);
+        bool wantV = showWinScrollbar && showVScroll;
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
-        ShowScrollBar(win->hwndCanvas, SB_VERT, showWinScrollbar && showVScroll);
-        if (showWinScrollbar && showVScroll) {
-            if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
-                DarkMode::setDarkScrollBar(win->hwndCanvas);
+        ShowScrollBar(win->hwndCanvas, SB_VERT, wantV);
+        // Dark scrollbar theme is applied at canvas create / theme change —
+        // not on every UpdateScrollbars. SetWindowTheme mid-update re-enters
+        // uxtheme/comctl32 and can AV (crash 8c1831c15000001).
+        // Only force a frame repaint when the bar newly appears; SetScrollInfo
+        // already redraws the thumb on position changes, and a hidden frame
+        // is handled again on SWP_SHOWWINDOW (issue #5850).
+        if (wantV) {
+            DWORD styleAfter = (DWORD)GetWindowLongW(win->hwndCanvas, GWL_STYLE);
+            bool newlyShown = !(styleBefore & WS_VSCROLL) && (styleAfter & WS_VSCROLL);
+            if (newlyShown) {
+                RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
             }
-            // Force non-client paint so thumb/arrows appear immediately.
-            // Note: this is a no-op while the frame is still hidden, which is
-            // the case for part of the initial load — WM_WINDOWPOSCHANGED /
-            // SWP_SHOWWINDOW in WndProcSumatraFrame repeats it on first show.
-            RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
         }
     }
 

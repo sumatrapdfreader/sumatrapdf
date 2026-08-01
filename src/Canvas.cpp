@@ -3571,35 +3571,13 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             }
             return DefWindowProc(hwnd, msg, wp, lp);
 
-        case WM_NCPAINT: {
-            if (ScrollbarsAreHidden() || ScrollbarsUseOverlay()) {
-                // native scrollbars are already disabled; don't call ShowScrollBar
-                // here as it changes the client area, triggering WM_SIZE oscillation
-                goto def;
-            }
-
-            DisplayModel* dm = win->AsFixed();
-            bool isSinglePage =
-                gGlobalPrefs->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
-            bool needH = dm->NeedHScroll();
-            bool needV = dm->NeedVScroll() || isSinglePage;
-            if (!needH && !needV) {
-                ShowScrollBar(win->hwndCanvas, SB_BOTH, false);
-                goto def;
-            }
-
-            // check whether scrolling is required in the horizontal and/or vertical axes
-            int wBar = -1;
-            if (needH && needV) {
-                wBar = SB_BOTH;
-            } else if (needH) {
-                wBar = SB_HORZ;
-            } else if (needV) {
-                wBar = SB_VERT;
-            }
-            ShowScrollBar(win->hwndCanvas, wBar, true);
-            // allow default processing to continue
-        }
+        case WM_NCPAINT:
+            // Do not call ShowScrollBar here. Visibility is owned by
+            // UpdateScrollbars; ShowScrollBar mid-NCPAINT re-enters uxtheme /
+            // comctl32 while the themed native scrollbar is already painting
+            // and can AV (null + 8) under dark themes (crash 8c1831c15000001).
+            // Overlay/hidden modes strip WS_*SCROLL in WM_NCCALCSIZE instead.
+            goto def;
     }
 def:
     return DefWindowProc(hwnd, msg, wp, lp);
