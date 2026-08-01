@@ -615,6 +615,19 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     AppendPropTranslated(out, DocProp::Files, GetPropValueTemp(props, DocProp::Files));
 }
 
+// make text end with exactly one '\n' (if not empty) so that appending
+// a section preceded by "\n" yields a single empty line, not more.
+// the last property is optional (e.g. "Files:") so text can end with
+// a stray blank line
+static void EndWithSingleNewline(str::Builder& b) {
+    while (len(b) > 0 && b.LastChar() == '\n') {
+        b.RemoveLast();
+    }
+    if (len(b) > 0) {
+        b.AppendChar('\n');
+    }
+}
+
 static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
     for (int i = 0; i + 2 < line.len; i++) {
         if (line.s[i] != ':' || line.s[i + 1] != ' ') {
@@ -719,6 +732,8 @@ void PropertiesWnd::SizeToContent() {
     TEXTMETRICW tm{};
     GetTextMetricsW(hdcEdit, &tm);
     int lineHeight = tm.tmHeight + tm.tmExternalLeading;
+    // a bit of slack so the longest lines don't touch the right edge
+    maxLineDx += 4 * tm.tmAveCharWidth;
 
     SelectObject(hdcEdit, origFont);
     ReleaseDC(hwndEdit, hdcEdit);
@@ -929,11 +944,10 @@ static void OnGetFontsFinished(GetFontsResult* result) {
         Str props = ToStr(w->propsText);
         int pos = str::IndexOf(props, marker);
         if (pos >= 0) {
-            if (pos > 0 && props.s[pos - 1] == '\n') {
-                pos--;
-            }
             w->propsText.RemoveAt(pos, len(w->propsText) - pos);
         }
+        // fontsText starts with "\n" to separate it with a single empty line
+        EndWithSingleNewline(w->propsText);
         w->propsText.Append(ToStr(result->fontsText));
         w->SetPropsText(ToStr(w->propsText));
         w->SizeToContent();
@@ -978,6 +992,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     gPropertiesWindows.Append(wnd);
     GetPropsText(ctrl, wnd->propsText);
     AlignPropertiesText(wnd->propsText);
+    EndWithSingleNewline(wnd->propsText);
     wnd->propsText.Append("\n");
     wnd->propsText.Append(_TRA("Getting font information..."));
 
