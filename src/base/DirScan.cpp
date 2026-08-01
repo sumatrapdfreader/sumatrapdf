@@ -302,7 +302,7 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive) {
     // Allocate new DirEntries and add to queue
     // Use arena allocator for queue nodes (thread-safe)
     dv = AllocDirEntries(ctx->a, dir);
-    DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv);
+    DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv, nonRecursive);
     node->next = w->priorityDirs;
     w->priorityDirs = node;
 
@@ -342,11 +342,12 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     w->cs.Unlock();
 }
 
-// Request a refresh of a directory (non-recursive scan)
-// Allocates a new DirEntries and queues it for scanning
+// Request a refresh of a directory (non-recursive scan).
+// A rescan is something the caller just asked for, so it goes on the priority
+// list like any other request: behind a recursive scan's queue it would be
+// tens of thousands of directories away.
 void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv) {
-    DirEntries* newDv = AllocDirEntries(ctx->a, dv->fullDir);
-    QueueDirScan(ctx, newDv, true);
+    RequestDirScan(ctx, dv->fullDir, true);
 }
 
 bool DirScanIsIdle(DirScanCtx* ctx) {
