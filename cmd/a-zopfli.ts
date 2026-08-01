@@ -506,18 +506,26 @@ async function main() {
   const outZopflipngHeader = join(outDir, "zopflipng", "zopflipng_lib.h");
   const outSource = join(outDir, "zopfli.cpp");
   const outVersion = join(outDir, "version.txt");
+  const outCopying = join(outDir, "COPYING");
+  const srcCopying = join(checkoutDir, "COPYING");
+  if (!existsSync(srcCopying)) {
+    throw new Error(`missing license file: ${srcCopying}`);
+  }
   rmSync(outLodepngHeader, { force: true });
   rmSync(outZopflipngHeader, { force: true });
   rmSync(outSource, { force: true });
   rmSync(outVersion, { force: true });
+  rmSync(outCopying, { force: true });
   writeFileSync(outLodepngHeader, lodepngHeader);
   writeFileSync(outZopflipngHeader, zopflipngHeader);
   writeFileSync(outSource, source);
   writeFileSync(outVersion, version);
+  writeFileSync(outCopying, readFileSync(srcCopying));
   console.log(`wrote ${outLodepngHeader}`);
   console.log(`wrote ${outZopflipngHeader}`);
   console.log(`wrote ${outSource}`);
   console.log(`wrote ${outVersion}`);
+  console.log(`wrote ${outCopying}`);
 }
 
 await main();

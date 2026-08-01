@@ -114,4 +114,4 @@ jxldec          dist       2026-07-28
 zopfli         1.0.3+     2024-04-11
   https://github.com/google/zopfli
   https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6
-  vendored: src/zopfli (minus zopfli_bin.c), src/zopflipng (minus zopflipng_bin.cc), COPYING
+  amalgamated as ext/a-zopfli (zopfli.cpp + public headers + COPYING)

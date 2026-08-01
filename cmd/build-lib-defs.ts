@@ -104,15 +104,11 @@ export const chmdec: LibDef = {
 };
 
 export const zopfli: LibDef = {
-  name: "zopfli",
+  name: "a-zopfli",
   alwaysOptimize: true,
   defines: ["_CRT_SECURE_NO_WARNINGS"],
-  includes: ["ext/zopfli/src"],
-  files: [
-    { dir: "ext/zopfli/src/zopfli", patterns: ["*.c"] },
-    { dir: "ext/zopfli/src/zopflipng", patterns: ["*.cc"] },
-    { dir: "ext/zopfli/src/zopflipng/lodepng", patterns: ["*.cpp"] },
-  ],
+  includes: ["ext/a-zopfli"],
+  files: [{ dir: "ext/a-zopfli", patterns: ["zopfli.cpp"] }],
 };
 
 export const libarchive: LibDef = {

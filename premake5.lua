@@ -510,6 +510,7 @@ workspace "SumatraPDF"
     files {
       "ext/a-zopfli/zopfli.cpp", "ext/a-zopfli/zopflipng/zopflipng_lib.h",
       "ext/a-zopfli/zopflipng/lodepng/lodepng.h", "ext/a-zopfli/version.txt",
+      "ext/a-zopfli/COPYING",
     }
 
   -- libarchive: linked into mupdf → libsumatrapdf.dll (and into static EXE).
@@ -1281,7 +1282,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
@@ -1387,7 +1388,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli" }
     includedirs { "ext/darkmodelib/include" }
     -- headers only: webp/jxl/heic/chm symbols come from libsumatrapdf.dll (libsumatrapdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }

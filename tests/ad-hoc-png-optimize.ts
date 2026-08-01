@@ -1,4 +1,4 @@
-// Ad-hoc test for background PNG optimization (ext/zopfli) of saved PNGs.
+// Ad-hoc test for background PNG optimization (ext/a-zopfli) of saved PNGs.
 //
 // CmdPasteClipboardImage saves the clipboard image as clipboard*.png in the
 // Downloads folder, then OptimizePngFileAsync() recompresses it in place on a

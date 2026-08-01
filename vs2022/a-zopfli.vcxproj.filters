@@ -20,6 +20,7 @@
     <ClCompile Include="..\ext\a-zopfli\zopfli.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-zopfli\COPYING" />
     <None Include="..\ext\a-zopfli\version.txt" />
   </ItemGroup>
 </Project>

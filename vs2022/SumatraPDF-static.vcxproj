@@ -403,7 +403,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -418,7 +418,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -449,7 +449,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -464,7 +464,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -495,7 +495,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -510,7 +510,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -541,7 +541,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -556,7 +556,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -587,7 +587,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -602,7 +602,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -633,7 +633,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -648,7 +648,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -679,7 +679,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -694,7 +694,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -725,7 +725,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -740,7 +740,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -771,7 +771,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -788,7 +788,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -821,7 +821,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -838,7 +838,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -871,7 +871,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -888,7 +888,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -921,7 +921,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -938,7 +938,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -969,7 +969,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -986,7 +986,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1019,7 +1019,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1036,7 +1036,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1069,7 +1069,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1086,7 +1086,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1119,7 +1119,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1136,7 +1136,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

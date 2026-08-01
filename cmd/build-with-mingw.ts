@@ -472,7 +472,7 @@ async function buildSumatraExe(
     "ext/synctex",
     "ext/djvudec",
     "ext/chmdec",
-    "ext/zopfli/src",
+    "ext/a-zopfli",
     "ext/darkmodelib/include",
     "ext/heicdec",
     "ext/libwebp/src",

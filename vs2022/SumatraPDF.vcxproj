@@ -403,7 +403,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -418,7 +418,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/dbg32\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -450,7 +450,7 @@ cd ../out/dbg32 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -465,7 +465,7 @@ cd ../out/dbg32 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/dbg64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -497,7 +497,7 @@ cd ../out/dbg64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -512,7 +512,7 @@ cd ../out/dbg64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/dbgarm64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -544,7 +544,7 @@ cd ../out/dbgarm64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe I
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -559,7 +559,7 @@ cd ../out/dbgarm64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe I
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/dbg64_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -594,7 +594,7 @@ cd ../out/dbg64_asan &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -609,7 +609,7 @@ cd ../out/dbg64_asan &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/dbgfull32\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -641,7 +641,7 @@ cd ../out/dbgfull32 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe 
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -656,7 +656,7 @@ cd ../out/dbgfull32 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe 
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/dbgfull64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -688,7 +688,7 @@ cd ../out/dbgfull64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe 
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -703,7 +703,7 @@ cd ../out/dbgfull64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe 
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/dbgfullarm64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -735,7 +735,7 @@ cd ../out/dbgfullarm64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.e
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -750,7 +750,7 @@ cd ../out/dbgfullarm64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.e
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/dbgfull64_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -785,7 +785,7 @@ cd ../out/dbgfull64_asan &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -802,7 +802,7 @@ cd ../out/dbgfull64_asan &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/rel32\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -836,7 +836,7 @@ cd ../out/rel32 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -853,7 +853,7 @@ cd ../out/rel32 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -887,7 +887,7 @@ cd ../out/rel64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -904,7 +904,7 @@ cd ../out/rel64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/arm64\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -938,7 +938,7 @@ cd ../out/arm64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -955,7 +955,7 @@ cd ../out/arm64 &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe Inst
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -990,7 +990,7 @@ cd ../out/rel64_asan &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1007,7 +1007,7 @@ cd ../out/rel64_asan &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.exe
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/rel32_prefast\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1041,7 +1041,7 @@ cd ../out/rel32_prefast &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1058,7 +1058,7 @@ cd ../out/rel32_prefast &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64_prefast\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1092,7 +1092,7 @@ cd ../out/rel64_prefast &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1109,7 +1109,7 @@ cd ../out/rel64_prefast &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;INSTALL_PAYLOAD_ZIP=.\../out/arm64_prefast\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1143,7 +1143,7 @@ cd ../out/arm64_prefast &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;6324;4302;4311;4838;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1160,7 +1160,7 @@ cd ../out/arm64_prefast &amp; if not exist InstallerData.dat ..\..\bin\MakeLZSA.
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;INSTALL_PAYLOAD_ZIP=.\../out/rel64_prefast_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\zopfli\src;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\mupdf\scripts\cmark-gfm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
