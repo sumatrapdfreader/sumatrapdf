@@ -99,8 +99,14 @@ struct DirEntriesNode {
     bool nonRecursive; // If true, don't queue subdirectories for scanning
 };
 
-// Callback type for when a directory scan completes
-typedef void (*OnScannedDirCallback)(DirEntries* dv, void* userData);
+// Callback type for when a directory scan completes.
+//
+// wasRequested tells the two kinds of result apart. A requested one comes from
+// RequestDirScan and its DirEntries is freshly made, so the caller may already
+// have one for the same directory. A result that isn't requested was found by
+// walking, and its DirEntries is the one the caller was handed by
+// QueueDirScan, so there is nothing it can collide with.
+typedef void (*OnScannedDirCallback)(DirEntries* dv, bool wasRequested, void* userData);
 
 struct DirScanCtx;
 

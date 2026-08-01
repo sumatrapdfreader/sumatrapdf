@@ -400,6 +400,7 @@ static void DirScanWorkerThread(DirScanWorker* w) {
         }
         // what the caller asked for comes first
         DirEntriesNode* node = w->priorityDirs;
+        bool wasRequested = node != nullptr;
         if (node) {
             w->priorityDirs = node->next;
         } else {
@@ -456,7 +457,7 @@ static void DirScanWorkerThread(DirScanWorker* w) {
         }
 
         if (ctx->onScannedDir) {
-            ctx->onScannedDir(dv, ctx->userData);
+            ctx->onScannedDir(dv, wasRequested, ctx->userData);
         }
 
         w->cs.Lock();
