@@ -445,7 +445,7 @@ const mupdfThirdPartySources: LibDef = {
     "ext/lcms2/include",
     "ext/harfbuzz/src/hb-ucdn",
     "ext/mujs",
-    "ext/extract/include",
+    "ext/a-extract",
     "ext/brotli/c/include",
     "ext/a-zlib",
   ],
@@ -708,33 +708,6 @@ const mupdfThirdPartySources: LibDef = {
     },
     // ── mujs ──
     { dir: "ext/mujs", patterns: ["one.c"] },
-    // ── extract ──
-    {
-      dir: "ext/extract/src",
-      patterns: [
-        "alloc.c",
-        "astring.c",
-        "boxer.c",
-        "buffer.c",
-        "document.c",
-        "docx.c",
-        "docx_template.c",
-        "extract.c",
-        "html.c",
-        "join.c",
-        "json.c",
-        "mem.c",
-        "memento.c",
-        "odt_template.c",
-        "odt.c",
-        "outf.c",
-        "rect.c",
-        "sys.c",
-        "text.c",
-        "xml.c",
-        "zip.c",
-      ],
-    },
     // ── brotli ──
     { dir: "ext/brotli/c/common", patterns: ["*.c"] },
     { dir: "ext/brotli/c/dec", patterns: ["*.c"] },
@@ -842,15 +815,18 @@ export const mujs = thirdPartyLib({
 });
 
 export const extract = thirdPartyLib({
-  name: "extract",
-  includes: ["ext/extract/include", "ext/extract/src", "ext/a-zlib"],
-  files: sourceFiles(9),
+  name: "a-extract",
+  // mupdf provides memento.obj; skip extract's amalgamated memento body so the
+  // final link does not get duplicate Memento symbols
+  defines: ["EXTRACT_NO_OWN_MEMENTO"],
+  includes: ["ext/a-extract", "ext/a-zlib"],
+  files: [{ dir: "ext/a-extract", patterns: ["extract.c"] }],
 });
 
 export const brotli = thirdPartyLib({
   name: "brotli",
   includes: ["ext/brotli/c/include"],
-  files: sourceFiles(10, 11, 12),
+  files: sourceFiles(9, 10, 11),
 });
 
 export const cmarkGfm = thirdPartyLib({
@@ -942,7 +918,7 @@ export const mupdf: LibDef = {
     "ext/harfbuzz/src",
     "ext/lcms2/include",
     "ext/a-gumbo",
-    "ext/extract/include",
+    "ext/a-extract",
     "ext/a-zlib",
     "ext/libarchive",
   ],

@@ -130,7 +130,7 @@ const clArgs = [
   "/I",
   "ext/gumbo-parser/src",
   "/I",
-  "ext/extract/include",
+  "ext/a-extract",
   "/I",
   "ext/libarchive",
   "/Od",

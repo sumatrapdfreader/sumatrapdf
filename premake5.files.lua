@@ -394,35 +394,6 @@ function openjpeg_files()
   })
 end
 
-function extract_files()
-  files_in_dir("ext/extract/src", {
-    "alloc.*",
-    "astring.*",
-    "boxer.*",
-    "buffer.*",
-    "document.*",
-    "docx.*",
-    "docx_template.*",
-    "extract.*",
-    "html.*",
-    "join.*",
-    "json.*",
-    "mem.*",
-    "memento.*",
-    "odt.*",
-    "odt_template.*",
-    "outf.*",
-    "rect.*",
-    "sys.*",
-    "text.*",
-    "xml.*",
-    "zip.*",
-  })
-  files_in_dir("ext/extract/include", {
-    "*.h",
-  })
-end
-
 function libwebp_files()
   files("ext/libwebp/src/dec/*.c")
 
