@@ -1011,6 +1011,18 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 
     // Original logic for other display modes
 
+    bool smoothWheel = gGlobalPrefs->smoothScroll && gInMouseWheelScroll;
+    // While a smooth scroll is in flight the animation moves the view a bit at a
+    // time, and ScrollYTo -> UpdateScrollbars keeps nPos on that lagging
+    // position. Stepping from it discards the distance still to be travelled, so
+    // a fast stream of wheel events (touchpads send many small ones) advances
+    // only a fraction of what the same events do with SmoothScroll off
+    // (issue #5857). Step from the pending target instead, so wheel events
+    // accumulate the same total distance either way.
+    if (smoothWheel && win->scrollAnimActive) {
+        si.nPos = win->scrollTargetY;
+    }
+
     int currPos = si.nPos;
     int halfPage = (int)si.nPage / 2;
     switch (msg) {
@@ -1051,16 +1063,25 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     bool showScrollbar = !ScrollbarsAreHidden();
     BOOL showWinScrollbar = showScrollbar && !overlayMode;
     BOOL showOverScrollbar = showScrollbar && useOverlay;
-    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
-    GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
-    if (showOverScrollbar) {
-        OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
+    if (smoothWheel) {
+        // Don't hand the target to the scrollbar: the thumb would jump ahead of
+        // the view and be pulled back by the next animation tick (which updates
+        // it via ScrollYTo -> UpdateScrollbars as the view actually moves).
+        // Clamp the way SetScrollInfo would have, so the target stays in range.
+        int maxPos = si.nMax - (int)si.nPage + 1;
+        si.nPos = limitValue(si.nPos, si.nMin, std::max(si.nMin, maxPos));
+    } else {
+        SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
+        GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
+        if (showOverScrollbar) {
+            OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
+        }
     }
 
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        if (gGlobalPrefs->smoothScroll && gInMouseWheelScroll) {
+        if (smoothWheel) {
             StartOrUpdateSmoothScrollY(win, si.nPos);
         } else {
             // Keyboard / scrollbar / programmatic scroll, or SmoothScroll off: apply immediately.
