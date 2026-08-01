@@ -412,7 +412,26 @@ export function getWindowText(hwnd: number): string {
   return s;
 }
 
-// Full window/control text (large buffer; GetWindowTextW works cross-process).
+// Text of a control (Edit, Static, ...) in another process. GetWindowTextW only
+// returns the caption of foreign windows, so child controls come back empty --
+// WM_GETTEXT is marshalled across processes by user32 and does work.
+export function getControlText(hwnd: number, maxChars = 1 << 20): string {
+  const n = Number(sendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0));
+  if (n <= 0) {
+    return "";
+  }
+  const cap = Math.min(n + 1, maxChars);
+  const buf = new Uint16Array(cap);
+  const got = Number(sendMessage(hwnd, WM_GETTEXT, cap, BigInt(ptr(buf))));
+  let s = "";
+  for (let i = 0; i < got; i++) {
+    s += String.fromCharCode(buf[i]);
+  }
+  return s;
+}
+
+// Full window text (large buffer). For child controls of another process use
+// getControlText instead.
 export function getWindowTextFull(hwnd: number, maxChars = 16384): string {
   const buf = new Uint16Array(maxChars);
   const n = user32.symbols.GetWindowTextW(hwnd, ptr(buf), maxChars);
