@@ -450,6 +450,18 @@ static void HideScrollbarWindow(OverlayScrollbar* sb) {
     SetState(sb, State::SmartInvisible);
 }
 
+// Restart the thin-bar auto-hide countdown (showAfterScrollMs). SetState only
+// arms the timer on a state transition, so continuous scroll while already
+// SmartThin would otherwise let the earlier mouse-stop / first-reveal timer
+// fire and hide the bar mid-scroll.
+static void RestartSmartThinAutoHide(OverlayScrollbar* sb) {
+    if (!sb->hwnd || sb->state != State::SmartThin) {
+        return;
+    }
+    KillTimer(sb->hwnd, OverlayScrollbar::kTimerAutoHide);
+    SetTimer(sb->hwnd, OverlayScrollbar::kTimerAutoHide, sb->showAfterScrollMs, nullptr);
+}
+
 // ---- Global mouse tracking ----
 
 static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
@@ -858,11 +870,37 @@ void OverlayScrollbarSetInfo(OverlayScrollbar* sb, const SCROLLINFO* si, bool re
     }
 
     if (redraw && changed) {
+        // Scroll moved: re-reveal the thin smart bar if auto-hidden, repaint the
+        // thumb, and keep the auto-hide timer alive while scrolling continues
+        // (wheel / keyboard / smooth-scroll ticks — not only mouse motion).
         if (IsVisible(sb)) {
             PaintScrollbar(sb);
+            if (sb->state == State::SmartThin) {
+                RestartSmartThinAutoHide(sb);
+            }
         } else {
             ShowScrollbarWindow(sb, false);
         }
+    }
+}
+
+// Show the thin smart overlay after scroll activity (mouse wheel, keys, etc.).
+// Unlike mouse-move tracking, this does not require cursor motion (#5859).
+void OverlayScrollbarNotifyScroll(OverlayScrollbar* sb) {
+    if (!sb || !IsActive(sb) || sb->isDragging) {
+        return;
+    }
+    if (sb->mode == OverlayScrollbar::Mode::Thick) {
+        return;
+    }
+    // Leave thick-from-proximity alone; only (re)show the thin indicator.
+    if (IsThick(sb)) {
+        return;
+    }
+    if (sb->state != State::SmartThin) {
+        ShowScrollbarWindow(sb, false);
+    } else {
+        RestartSmartThinAutoHide(sb);
     }
 }
 

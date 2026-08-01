@@ -1070,6 +1070,12 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         // Clamp the way SetScrollInfo would have, so the target stays in range.
         int maxPos = si.nMax - (int)si.nPage + 1;
         si.nPos = limitValue(si.nPos, si.nMin, std::max(si.nMin, maxPos));
+        // Still reveal the thin smart bar on wheel input (without moving the
+        // thumb to the pending target). Mouse-move tracking alone is not enough
+        // when the user scrolls with the wheel while the cursor is still (#5859).
+        if (showOverScrollbar) {
+            OverlayScrollbarNotifyScroll(win->overlayScrollV);
+        }
     } else {
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
         GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
@@ -3068,11 +3074,18 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
             int scrollBy = -MulDiv((int)si.nPage, delta * 30, WHEEL_DELTA);
             // on sensitive touchpads delta can be very small
-            if (scrollBy == 0) return 0;
+            if (scrollBy == 0) {
+                return 0;
+            }
             if (hScroll) {
                 dm->ScrollXBy(scrollBy);
             } else {
                 dm->ScrollYBy(scrollBy, true);
+            }
+            // ScrollYBy updates the thumb via UpdateScrollbars; also force the
+            // thin smart bar to appear for wheel-only reading (#5859).
+            if (ScrollbarsUseOverlay()) {
+                OverlayScrollbarNotifyScroll(hScroll ? win->overlayScrollH : win->overlayScrollV);
             }
             ReadAloudOnUserViewChanged(win);
             return 0;
@@ -3087,11 +3100,16 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
         int scrollBy = -MulDiv((int)si.nPage, delta, WHEEL_DELTA);
         // on sensitive touchpads delta can be very small
-        if (scrollBy == 0) return 0;
+        if (scrollBy == 0) {
+            return 0;
+        }
         if (hScroll) {
             dm->ScrollXBy(scrollBy);
         } else {
             dm->ScrollYBy(scrollBy, true);
+        }
+        if (ScrollbarsUseOverlay()) {
+            OverlayScrollbarNotifyScroll(hScroll ? win->overlayScrollH : win->overlayScrollV);
         }
         ReadAloudOnUserViewChanged(win);
         return 0;
