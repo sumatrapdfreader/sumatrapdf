@@ -128,7 +128,9 @@ int djvu_doc_page_info(djvu_doc *doc, int page_no, djvu_page_info *info);
 
 /* Free all page-local cached layers for page_no (Sjbz mask, BG44/FG44,
    composited backgrounds). No-op if caching is off or the page has nothing
-   cached. Safe with concurrent renders when lock/unlock are set. */
+   cached. Safe with concurrent renders when lock/unlock are set: layers that
+   are still pinned by an in-flight acquire are only freed after the last
+   release (refcount), so LRU eviction during multi-threaded render is OK. */
 void djvu_doc_drop_page_cache(djvu_doc *doc, int page_no);
 
 /* Heap bytes currently held in page-local cache for page_no (0 if none /
