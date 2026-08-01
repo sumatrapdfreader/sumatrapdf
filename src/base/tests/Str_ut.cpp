@@ -202,6 +202,24 @@ void strStrTest() {
     }
 
     {
+        // RemoveAt() shrinks len; appending after that must not switch
+        // back to the inline buf (which would lose data and leak the heap alloc)
+        str::Builder str;
+        uintptr_t buf = (uintptr_t)str.begin();
+        for (int i = 0; i < 40; i++) {
+            str.AppendChar((char)('a' + (i % 26)));
+        }
+        uintptr_t heap = (uintptr_t)str.begin();
+        utassert(buf != heap);
+        str.RemoveAt(0, 30);
+        utassert(len(str) == 10);
+        utassert((uintptr_t)str.begin() == heap);
+        str.Append("xyz");
+        utassert((uintptr_t)str.begin() == heap);
+        utassert(str::Eq(ToStr(str), StrL("efghijklmnxyz")));
+    }
+
+    {
         // verify that initialCapacity hint works
         str::Builder str(1024);
         uintptr_t buf = 0;
