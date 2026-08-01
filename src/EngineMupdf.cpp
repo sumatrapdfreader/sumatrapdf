@@ -5010,6 +5010,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     ScopedMutex renderScope(&renderLock);
     ScopedRecursiveMutex scope(&docLock);
 
+    str::Builder info;
     StrVec fonts;
     for (int i = 0; i < len(fontList); i++) {
         Str name, type, encoding;
@@ -5036,9 +5037,8 @@ TempStr EngineMupdf::ExtractFontListTemp() {
                 embedded = true;
             }
             if (embedded && name.len > 7 && name.s[6] == '+') {
-                name = Str(name.s + 7);
+                name = Str(name.s + 7, name.len-7);
             }
-
             type = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype")));
             if (font2 != font) {
                 Str type2 = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype")));
@@ -5072,7 +5072,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             continue;
         }
 
-        str::Builder info;
+        info.Reset();
 #if OS_WIN
         if (name.s[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name.s, -1, nullptr, 0)) {
             TempStr s = strconv::ToMultiByteTemp(name, 936, CP_UTF8);
