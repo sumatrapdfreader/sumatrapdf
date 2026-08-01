@@ -581,6 +581,38 @@ static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
 static short GetPaperSize(EngineBase* engine, int pageNo = 1);
 static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, int pageNo);
 
+// Positive finite zoom only. Virtual printers (e.g. Foxit PDF) sometimes return
+// zero LOGPIXELS / HORZRES / PHYSICAL*, which produced zoom <= 0 and tripped
+// EngineImages::TransformPoint ReportIf (debug report 8c15f2fd1000001).
+static bool IsValidPrintZoom(float zoom) {
+    return zoom > 0 && isfinite(zoom);
+}
+
+static float SafePrintDiv(float num, float den) {
+    if (!(den > 0) || !isfinite(den) || !isfinite(num)) {
+        return 0;
+    }
+    float q = num / den;
+    return isfinite(q) ? q : 0;
+}
+
+// If zoom is invalid, log printer geometry once and fall back to dpiFactor or 1.
+static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSize, Rect printable, float dpiX,
+                               float dpiY, float fileDPI, float dpiFactor, Str printerName) {
+    if (IsValidPrintZoom(zoom)) {
+        return zoom;
+    }
+    logf(
+        "PrintToDevice: invalid zoom=%g (%s); paper=%dx%d printable=(%d,%d %dx%d) "
+        "LOGPIXELS=%g/%g fileDPI=%g dpiFactor=%g printer='%s'\n",
+        zoom, why, paperSize.dx, paperSize.dy, printable.x, printable.y, printable.dx, printable.dy, dpiX, dpiY,
+        fileDPI, dpiFactor, printerName);
+    if (IsValidPrintZoom(fallback)) {
+        return fallback;
+    }
+    return 1.f;
+}
+
 // Rasterize a page (or, for selections, a page-space sub-rectangle of it) onto
 // the printer HDC in horizontal device-pixel bands. Banding bounds peak memory
 // regardless of page size / printer DPI, replacing the old "shrink to half
@@ -592,6 +624,10 @@ static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, in
 static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom, int rotation,
                              const RectF& pageRectFull, Point offset, const Rect* stretchTo, RenderTarget target,
                              AbortCookieManager* abortCookie, const ProgressUpdateCb& progressCb) {
+    if (!IsValidPrintZoom(zoom)) {
+        logf("PrintPageInBands: rejecting zoom=%g page=%d\n", zoom, pageNo);
+        return false;
+    }
     RectF devFull = engine.Transform(pageRectFull, pageNo, zoom, rotation);
     int fullW = (int)(devFull.dx + 0.5f);
     int fullH = (int)(devFull.dy + 0.5f);
@@ -760,18 +796,66 @@ static bool PrintToDevice(const PrintData& pd) {
     SetMapMode(hdc, MM_TEXT);
 
     float fileDPI = engine.GetFileDPI();
+    if (!(fileDPI > 0) || !isfinite(fileDPI)) {
+        logf("PrintToDevice: bad fileDPI=%g, using 96\n", fileDPI);
+        fileDPI = 96.f;
+    }
     // paper geometry; recomputed per page when printing mixed page sizes (#533)
     Size paperSize;
     Rect printable;
     float dpiFactor = 1.0f;
+    float logPixelsX = 96.f;
+    float logPixelsY = 96.f;
     bool bPrintPortrait = false;
     auto computeGeometry = [&] {
-        paperSize = Size(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
-        printable = Rect(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
-                         GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
-        float px = (float)GetDeviceCaps(hdc, LOGPIXELSX);
-        float py = (float)GetDeviceCaps(hdc, LOGPIXELSY);
-        dpiFactor = std::min(px / fileDPI, py / fileDPI);
+        int physW = GetDeviceCaps(hdc, PHYSICALWIDTH);
+        int physH = GetDeviceCaps(hdc, PHYSICALHEIGHT);
+        int offX = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+        int offY = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+        int horz = GetDeviceCaps(hdc, HORZRES);
+        int vert = GetDeviceCaps(hdc, VERTRES);
+        logPixelsX = (float)GetDeviceCaps(hdc, LOGPIXELSX);
+        logPixelsY = (float)GetDeviceCaps(hdc, LOGPIXELSY);
+
+        paperSize = Size(physW, physH);
+        printable = Rect(offX, offY, horz, vert);
+
+        bool capsOk = paperSize.dx > 0 && paperSize.dy > 0 && printable.dx > 0 && printable.dy > 0 && logPixelsX > 0 &&
+                      logPixelsY > 0 && isfinite(logPixelsX) && isfinite(logPixelsY);
+        if (!capsOk) {
+            // Virtual PDF printers sometimes return zeros for paper/printable/DPI
+            // (debug report 8c15f2fd1000001: Foxit Reader PDF Printer + CBR).
+            logf(
+                "PrintToDevice: bad printer caps PHYSICAL=%dx%d printable=(%d,%d %dx%d) "
+                "LOGPIXELS=%g/%g printer='%s' — applying fallbacks\n",
+                physW, physH, offX, offY, horz, vert, logPixelsX, logPixelsY, pd.printer->name);
+            if (!(logPixelsX > 0) || !isfinite(logPixelsX)) {
+                logPixelsX = 96.f;
+            }
+            if (!(logPixelsY > 0) || !isfinite(logPixelsY)) {
+                logPixelsY = 96.f;
+            }
+            if (paperSize.dx <= 0) {
+                paperSize.dx = (int)(8.5f * logPixelsX); // Letter-ish
+            }
+            if (paperSize.dy <= 0) {
+                paperSize.dy = (int)(11.f * logPixelsY);
+            }
+            if (printable.dx <= 0) {
+                printable.dx = paperSize.dx;
+            }
+            if (printable.dy <= 0) {
+                printable.dy = paperSize.dy;
+            }
+        }
+
+        dpiFactor = std::min(logPixelsX / fileDPI, logPixelsY / fileDPI);
+        if (!IsValidPrintZoom(dpiFactor)) {
+            logf("PrintToDevice: bad dpiFactor=%g (LOGPIXELS=%g/%g fileDPI=%g), using 1\n", dpiFactor, logPixelsX,
+                 logPixelsY, fileDPI);
+            dpiFactor = 1.f;
+        }
+
         bPrintPortrait = paperSize.dx < paperSize.dy;
         if (devMode && (devMode->dmFields & DM_ORIENTATION)) {
             bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
@@ -796,7 +880,9 @@ static bool PrintToDevice(const PrintData& pd) {
             StartPage(hdc);
 
             SizeF bSize = bounds.Size();
-            float zoom = std::min((float)printable.dx / bSize.dx, (float)printable.dy / bSize.dy);
+            float bdx = bSize.dx > 0 ? bSize.dx : 1.f;
+            float bdy = bSize.dy > 0 ? bSize.dy : 1.f;
+            float zoom = std::min(SafePrintDiv((float)printable.dx, bdx), SafePrintDiv((float)printable.dy, bdy));
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
             if (PrintScaleAdv::Shrink == pd.advData.scale) {
@@ -804,6 +890,8 @@ static bool PrintToDevice(const PrintData& pd) {
             } else if (PrintScaleAdv::None == pd.advData.scale) {
                 zoom = dpiFactor;
             }
+            zoom = SanitizePrintZoom(zoom, dpiFactor, StrL("selection"), paperSize, printable, logPixelsX, logPixelsY,
+                                     fileDPI, dpiFactor, pd.printer->name);
 
             for (int i = 0; i < len(pd.sel); i++) {
                 if (pd.sel[i].pageNo != pageNo) {
@@ -900,6 +988,9 @@ static bool PrintToDevice(const PrintData& pd) {
             // that printing forms/labels of varying size remains reliably possible)
             Point offset(-printable.x, -printable.y);
 
+            float pdx = pSize.dx > 0 ? pSize.dx : 1.f;
+            float pdy = pSize.dy > 0 ? pSize.dy : 1.f;
+
             if (PrintScaleAdv::Stretch == pd.advData.scale) {
                 // stretch the page to fill the whole printable area in both
                 // dimensions, ignoring the aspect ratio (issue #2220). Render at
@@ -907,16 +998,23 @@ static bool PrintToDevice(const PrintData& pd) {
                 // printable area in both dimensions (so we only ever downscale
                 // one of them); the StretchBlt in the blit loop below then resizes
                 // it to exactly fill the printable area.
-                zoom = std::max((float)printable.dx / pSize.dx, (float)printable.dy / pSize.dy);
+                zoom = std::max(SafePrintDiv((float)printable.dx, pdx), SafePrintDiv((float)printable.dy, pdy));
                 offset = Point(0, 0);
             } else if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectF rect = engine.PageContentBox((int)pageNo, RenderTarget::Print);
+                // empty content box (e.g. failed image crop) → use full mediabox
+                if (rect.IsEmpty() || rect.dx <= 0 || rect.dy <= 0) {
+                    rect = engine.PageMediabox((int)pageNo);
+                }
                 RectF cbox = engine.Transform(rect, (int)pageNo, 1.0, rotation);
-                zoom = std::min((float)printable.dx / cbox.dx,
-                                std::min((float)printable.dy / cbox.dy,
-                                         std::min((float)paperSize.dx / pSize.dx, (float)paperSize.dy / pSize.dy)));
+                float cdx = cbox.dx > 0 ? cbox.dx : pdx;
+                float cdy = cbox.dy > 0 ? cbox.dy : pdy;
+                zoom = std::min(
+                    SafePrintDiv((float)printable.dx, cdx),
+                    std::min(SafePrintDiv((float)printable.dy, cdy),
+                             std::min(SafePrintDiv((float)paperSize.dx, pdx), SafePrintDiv((float)paperSize.dy, pdy))));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleAdv::Shrink == pd.advData.scale && dpiFactor < zoom) {
@@ -939,6 +1037,9 @@ static bool PrintToDevice(const PrintData& pd) {
                     offset.y -= (int)(onPaper.BR().y - (float)printable.BR().y);
                 }
             }
+
+            zoom = SanitizePrintZoom(zoom, dpiFactor, StrL("page"), paperSize, printable, logPixelsX, logPixelsY,
+                                     fileDPI, dpiFactor, pd.printer->name);
 
             // optionally center the page horizontally on the physical paper
             // (issue #348). The scaling modes already center the page and Stretch
