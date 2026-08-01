@@ -358,7 +358,62 @@ static void StrStartsWithTest() {
     utassert(wstr::StartsWithI(emptyW1, emptyW2));
 }
 
+static void StrArenaTest() {
+    Arena* a = ArenaNew();
+    utassert(a != nullptr);
+
+    utassert(StrArenaToStr(a, 0).s == nullptr);
+    utassert(StrArenaToStr(a, 0).len == 0);
+
+    StrArena empty = StrArenaDupStr(a, StrL(""));
+    utassert(empty != 0);
+    Str emptyS = StrArenaToStr(a, empty);
+    utassert(emptyS.len == 0);
+    utassert(emptyS.s != nullptr);
+    utassert(emptyS.s[0] == 0);
+
+    StrArena sa = StrArenaDupStr(a, StrL("hello"));
+    utassert(sa != 0);
+    Str s = StrArenaToStr(a, sa);
+    utassert(str::Eq(s, StrL("hello")));
+    utassert(s.s[5] == 0); // C terminator after payload
+
+    // multi-byte LEB128 length: 200 > 127
+    StrArena big = StrArenaAlloc(a, 200);
+    utassert(big != 0);
+    Str bigS = StrArenaToStr(a, big);
+    utassert(bigS.len == 200);
+    utassert(bigS.s != nullptr);
+    memset(bigS.s, 'x', 200);
+    utassert(bigS.s[200] == 0);
+    utassert(str::Eq(StrArenaToStr(a, big), Str(bigS.s, 200)));
+
+    // multi-block arena: force a second chain block, then store a string there
+    {
+        ArenaParams params = ArenaDefaultParams();
+        params.reserve_size = 4 * 1024;
+        params.commit_size = 4 * 1024;
+        Arena* a2 = ArenaNew(params);
+        utassert(a2 != nullptr);
+        void* filler = a2->Push(3 * 1024, 8, true);
+        utassert(filler != nullptr);
+        // second large push forces a chained block (first block is ~4KB)
+        void* filler2 = a2->Push(3 * 1024, 8, true);
+        utassert(filler2 != nullptr);
+        utassert(a2->current != a2);
+        StrArena sa2 = StrArenaDupStr(a2, StrL("second-block"));
+        utassert(sa2 != 0);
+        utassert(sa2 >= (u32)a2->res); // compressed offset past first block
+        utassert(str::Eq(StrArenaToStr(a2, sa2), StrL("second-block")));
+        ArenaDelete(a2);
+    }
+
+    ArenaDelete(a);
+}
+
 void StrTest() {
+    StrArenaTest();
+
     char buf[32];
     Str str = "a string";
     utassert(str.len == 8);

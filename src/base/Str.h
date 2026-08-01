@@ -7,6 +7,11 @@
 #define UTF16_BOM "\xFF\xFE"
 #define UTF16BE_BOM "\xFE\xFF"
 
+using StrArena = u32;
+StrArena StrArenaAlloc(Arena* a, int size);
+StrArena StrArenaDupStr(Arena* a, Str s);
+Str StrArenaToStr(Arena* a, StrArena sa);
+
 namespace str {
 
 enum class TrimOpt {

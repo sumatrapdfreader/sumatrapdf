@@ -11,6 +11,102 @@
 #define sscanf_s sscanf
 #endif
 
+// StrArena: u32 handle from ArenaPtrCompress. Arena layout is unsigned LEB128
+// length, length bytes of payload, trailing 0 for C APIs. 0 is the null handle.
+
+static int StrArenaUlebSize(u32 n) {
+    int i = 1;
+    while (n >= 0x80) {
+        n >>= 7;
+        i++;
+    }
+    return i;
+}
+
+static int StrArenaUlebEncode(u8* dst, u32 n) {
+    int i = 0;
+    for (;;) {
+        u8 b = (u8)(n & 0x7f);
+        n >>= 7;
+        if (n) {
+            b |= 0x80;
+        }
+        dst[i++] = b;
+        if (!n) {
+            return i;
+        }
+    }
+}
+
+static bool StrArenaUlebDecode(const u8*& p, u32* out) {
+    u32 n = 0;
+    int shift = 0;
+    for (;;) {
+        u8 b = *p++;
+        n |= (u32)(b & 0x7f) << shift;
+        if (!(b & 0x80)) {
+            *out = n;
+            return true;
+        }
+        shift += 7;
+        if (shift >= 35) {
+            return false;
+        }
+    }
+}
+
+// Allocate [uleb(size)][size bytes][0]. Body is uninitialized; terminator is set.
+// Caller fills via StrArenaToStr(a, handle).s.
+StrArena StrArenaAlloc(Arena* a, int size) {
+    if (!a || size < 0) {
+        return 0;
+    }
+    int vlen = StrArenaUlebSize((u32)size);
+    int total = vlen + size + 1;
+    u8* mem = (u8*)a->Push((u64)total, 1, false);
+    if (!mem) {
+        return 0;
+    }
+    StrArenaUlebEncode(mem, (u32)size);
+    mem[vlen + size] = 0;
+    return ArenaPtrCompress(a, mem);
+}
+
+StrArena StrArenaDupStr(Arena* a, Str s) {
+    if (!a) {
+        return 0;
+    }
+    int size = s.len;
+    if (size < 0) {
+        size = 0;
+    }
+    StrArena sa = StrArenaAlloc(a, size);
+    if (!sa) {
+        return 0;
+    }
+    if (size > 0 && s.s) {
+        Str out = StrArenaToStr(a, sa);
+        memcpy(out.s, s.s, (size_t)size);
+    }
+    return sa;
+}
+
+Str StrArenaToStr(Arena* a, StrArena sa) {
+    if (!a || !sa) {
+        return {};
+    }
+    u8* mem = (u8*)ArenaPtrUncompress(a, sa);
+    if (!mem) {
+        return {};
+    }
+    const u8* p = mem;
+    u32 size = 0;
+    if (!StrArenaUlebDecode(p, &size)) {
+        return {};
+    }
+    return Str((char*)p, (int)size);
+}
+
 // Locale-independent Unicode lowercase fold for one WCHAR.
 // On Windows, CharLowerBuffW matches FoldCaseWInPlace; on POSIX a small table
 // covers Latin/Cyrillic/Greek used by tests and falls back to towlower().
