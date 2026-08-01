@@ -113,8 +113,13 @@ struct DirScanWorker {
 
     Mutex cs;                  // protects everything below
     ConditionVariable hasWork; // signaled when work is queued or the thread should exit
+    // Directories the caller asked for explicitly, always taken before the
+    // ones discovered by walking. Without this a directory the user just
+    // navigated to waits behind everything a recursive scan has queued up.
+    DirEntriesNode* priorityDirs;
     DirEntriesNode* dirsToVisit;
-    int inFlightCount; // directories currently being read
+    DirEntriesNode* dirsToVisitLast; // tail, so appending doesn't walk the queue
+    int inFlightCount;               // directories currently being read
     bool threadExited;
 
     // progress, so the caller can show what the scan is doing
@@ -148,7 +153,8 @@ struct DirScanProgress {
 
 DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* userData);
 void AskDirScanThreadToQuit(DirScanCtx* ctx);
-DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir);
+// nonRecursive scans just this directory, without walking into it
+DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive = false);
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive = false);
 void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
 

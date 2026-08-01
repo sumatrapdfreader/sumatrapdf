@@ -157,17 +157,6 @@ static DirEntries* FindDirInList(DirEntriesNode* list, Str dir) {
     return nullptr;
 }
 
-// Check if DirEntries is already in dirsToVisit list (must hold cs)
-static bool IsDirInList(DirEntriesNode* list, DirEntries* dv) {
-    while (list) {
-        if (list->dv == dv) {
-            return true;
-        }
-        list = list->next;
-    }
-    return false;
-}
-
 // Allocate a DirEntriesNode using given allocator
 static DirEntriesNode* AllocDirEntriesNode(Arena* arena, DirEntries* dv, bool nonRecursive = false) {
     DirEntriesNode* node = (DirEntriesNode*)Alloc(arena, sizeof(DirEntriesNode));
@@ -207,8 +196,13 @@ static Str DriveOfPath(Arena* a, Str path) {
 
 static void DirScanWorkerThread(DirScanWorker* w);
 
-// Must hold ctx->cs.
+// Must hold ctx->cs. Returns null once we're shutting down: a worker queuing
+// subdirectories could otherwise start a thread after teardown has collected
+// the worker list, and that thread would outlive the context.
 static DirScanWorker* FindOrCreateWorker(DirScanCtx* ctx, Str dir) {
+    if (AtomicBoolGet(&ctx->shouldExit)) {
+        return nullptr;
+    }
     Str drive = DriveOfPath(ctx->a, dir);
     for (DirScanWorker* w = ctx->workers; w; w = w->next) {
         if (str::EqI(w->drive, drive)) {
@@ -285,15 +279,21 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
 
 // Request a directory scan - adds to FRONT of list (priority for user requests)
 // Returns DirEntries* (either existing from queue or newly allocated)
-DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
+DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive) {
     ctx->cs.Lock();
     DirScanWorker* w = FindOrCreateWorker(ctx, dir);
     ctx->cs.Unlock();
+    if (!w) {
+        return AllocDirEntries(ctx->a, dir);
+    }
 
     w->cs.Lock();
 
-    // Check if already in list
-    DirEntries* dv = FindDirInList(w->dirsToVisit, dir);
+    // Only the priority list is searched. It holds just what the caller asked
+    // for, so it stays short, while dirsToVisit can hold tens of thousands of
+    // directories during a recursive scan and walking it would stall whoever
+    // is navigating.
+    DirEntries* dv = FindDirInList(w->priorityDirs, dir);
     if (dv) {
         w->cs.Unlock();
         return dv;
@@ -303,8 +303,8 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
     // Use arena allocator for queue nodes (thread-safe)
     dv = AllocDirEntries(ctx->a, dir);
     DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv);
-    node->next = w->dirsToVisit;
-    w->dirsToVisit = node;
+    node->next = w->priorityDirs;
+    w->priorityDirs = node;
 
     WorkerNoteBusy(w);
     w->hasWork.Wake();
@@ -318,28 +318,24 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     ctx->cs.Lock();
     DirScanWorker* w = FindOrCreateWorker(ctx, dv->fullDir);
     ctx->cs.Unlock();
-
-    w->cs.Lock();
-
-    // Skip if already in list
-    if (IsDirInList(w->dirsToVisit, dv)) {
-        w->cs.Unlock();
+    if (!w) {
         return;
     }
 
+    w->cs.Lock();
+
+    // Every caller hands us a freshly allocated DirEntries, so there's nothing
+    // to deduplicate against.
     // Use arena allocator for queue nodes (thread-safe)
     DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv, nonRecursive);
 
-    // Add to end of queue
-    if (!w->dirsToVisit) {
-        w->dirsToVisit = node;
+    // Add to end of queue, breadth first
+    if (w->dirsToVisitLast) {
+        w->dirsToVisitLast->next = node;
     } else {
-        DirEntriesNode* last = w->dirsToVisit;
-        while (last->next) {
-            last = last->next;
-        }
-        last->next = node;
+        w->dirsToVisit = node;
     }
+    w->dirsToVisitLast = node;
 
     WorkerNoteBusy(w);
     w->hasWork.Wake();
@@ -359,7 +355,7 @@ bool DirScanIsIdle(DirScanCtx* ctx) {
     ctx->cs.Lock();
     for (DirScanWorker* w = ctx->workers; w && idle; w = w->next) {
         w->cs.Lock();
-        idle = !w->dirsToVisit && w->inFlightCount == 0;
+        idle = !w->priorityDirs && !w->dirsToVisit && w->inFlightCount == 0;
         w->cs.Unlock();
     }
     ctx->cs.Unlock();
@@ -394,20 +390,31 @@ static void DirScanWorkerThread(DirScanWorker* w) {
 
     while (true) {
         w->cs.Lock();
-        while (!w->dirsToVisit && !AtomicBoolGet(&ctx->shouldExit)) {
+        while (!w->priorityDirs && !w->dirsToVisit && !AtomicBoolGet(&ctx->shouldExit)) {
             w->hasWork.Wait(&w->cs);
         }
         if (AtomicBoolGet(&ctx->shouldExit)) {
             w->cs.Unlock();
             break;
         }
-        DirEntriesNode* node = w->dirsToVisit;
+        // what the caller asked for comes first
+        DirEntriesNode* node = w->priorityDirs;
+        if (node) {
+            w->priorityDirs = node->next;
+        } else {
+            node = w->dirsToVisit;
+            if (node) {
+                w->dirsToVisit = node->next;
+                if (!w->dirsToVisit) {
+                    w->dirsToVisitLast = nullptr;
+                }
+            }
+        }
         if (!node) {
             // Spurious wake with empty queue: wait again.
             w->cs.Unlock();
             continue;
         }
-        w->dirsToVisit = node->next;
         w->inFlightCount++;
         DirEntries* dv = node->dv;
         bool nonRecursive = node->nonRecursive;
@@ -456,7 +463,7 @@ static void DirScanWorkerThread(DirScanWorker* w) {
         w->nDirs++;
         w->totalSize += filesSize;
         w->inFlightCount--;
-        bool allDone = !w->dirsToVisit && w->inFlightCount == 0;
+        bool allDone = !w->priorityDirs && !w->dirsToVisit && w->inFlightCount == 0;
         if (allDone) {
             WorkerNoteIdle(w);
             w->hasWork.WakeAll();
