@@ -60,6 +60,15 @@ struct NavFilesInFolderWnd : Wnd {
     ListBox* listBox = nullptr;
     Str currDir; // owned
 
+    // "n/m" shown after the path: n entries in currDir, m in the whole tree
+    // below it. m needs a full traversal, so it arrives from a background
+    // thread; countGen discards results for a directory we've navigated away
+    // from. countTotalPartial means the traversal hit kMaxTreeCount.
+    int countDirect = 0;
+    int countTotal = -1; // -1: still counting
+    bool countTotalPartial = false;
+    i64 countGen = 0; // from gNavCountGen, so it can't collide with a previous window's
+
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
 
@@ -69,10 +78,14 @@ struct NavFilesInFolderWnd : Wnd {
     void OnListDoubleClick();
     void GoUp();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
+    void UpdateDirLabel();
 };
 
 static NavFilesInFolderWnd* gNavFilesWnd = nullptr;
 static HWND gHwndToActivateOnNavClose = nullptr;
+// never reset, so an in-flight count from a closed window can't be mistaken
+// for one belonging to a window opened afterwards
+static i64 gNavCountGen = 0;
 
 NavFilesInFolderWnd::~NavFilesInFolderWnd() {
     str::Free(currDir);
@@ -105,6 +118,82 @@ static void ScheduleDeleteNavFilesWnd() {
 static bool CanOpenFile(Str path) {
     FileType kind = GuessFileTypeFromName(path);
     return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+}
+
+// Traversing a big tree (or a network drive) can take a long time and the user
+// can browse anywhere, including a drive root, so stop counting after this many
+// entries and show the total as "n+".
+constexpr int kMaxTreeCount = 50 * 1000;
+
+// true for entries the listing shows: sub-directories and openable files,
+// skipping hidden ones. Keep in sync with FillEntriesForDir().
+static bool IsCountedEntry(DirIterEntry* de, bool* isDirOut) {
+    *isDirOut = false;
+    if (de->fd->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) {
+        return false;
+    }
+    if (IsDirectory(de)) {
+        *isDirOut = true;
+        return true;
+    }
+    return CanOpenFile(de->name);
+}
+
+// number of entries under dir, including all sub-directories. Uses an explicit
+// worklist rather than DirIter's recurse so hidden directories are pruned the
+// same way the listing prunes them.
+static int CountEntriesInTree(Str dir, bool* partialOut) {
+    *partialOut = false;
+    int n = 0;
+    StrVec dirs;
+    dirs.Append(dir);
+    // dirs grows while we iterate: index-based so appends can't invalidate it
+    for (int i = 0; i < len(dirs); i++) {
+        DirIter di{dirs[i]};
+        di.includeFiles = true;
+        di.includeDirs = true;
+        for (DirIterEntry* de : di) {
+            bool isDir = false;
+            if (!IsCountedEntry(de, &isDir)) {
+                continue;
+            }
+            n++;
+            if (n >= kMaxTreeCount) {
+                *partialOut = true;
+                return n;
+            }
+            if (isDir) {
+                dirs.Append(de->filePath);
+            }
+        }
+    }
+    return n;
+}
+
+struct CountTreeData {
+    Str dir; // owned
+    i64 gen = 0;
+    int total = 0;
+    bool partial = false;
+};
+
+static void CountTreeFinished(CountTreeData* d) {
+    NavFilesInFolderWnd* wnd = gNavFilesWnd;
+    // ignore if the window is gone or the user already navigated elsewhere
+    if (wnd && wnd->countGen == d->gen) {
+        wnd->countTotal = d->total;
+        wnd->countTotalPartial = d->partial;
+        wnd->UpdateDirLabel();
+    }
+    str::Free(d->dir);
+    delete d;
+}
+
+static void CountTreeThread(CountTreeData* d) {
+    d->total = CountEntriesInTree(d->dir, &d->partial);
+    auto fn = MkFunc0<CountTreeData>(CountTreeFinished, d);
+    uitask::Post(fn, "CountTreeFinished");
+    DestroyTempArena();
 }
 
 // dirs first, then files, each sorted naturally by name
@@ -247,9 +336,21 @@ static void SelectAndEnsureVisible(ListBox* lb, int idx) {
     LbSetTopIndex(lb->hwnd, top);
 }
 
+// "<path>  n/m": n entries here, m in this directory and its sub-directories
+void NavFilesInFolderWnd::UpdateDirLabel() {
+    TempStr total;
+    if (countTotal < 0) {
+        total = str::DupTemp("…"); // still counting the tree
+    } else if (countTotalPartial) {
+        total = fmt("%d+", countTotal);
+    } else {
+        total = fmt("%d", countTotal);
+    }
+    dirLabel->SetText(fmt("%s  %d/%s", currDir, countDirect, total));
+}
+
 void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     str::ReplaceWithCopy(&currDir, dir);
-    dirLabel->SetText(currDir);
 
     auto m = (ListBoxModelNav*)listBox->model;
     if (!m) {
@@ -257,6 +358,23 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     }
     FillEntriesForDir(m, currDir);
     listBox->SetModel(m);
+
+    // ".." is navigation, not an entry of this directory
+    countDirect = m->ItemsCount();
+    if (countDirect > 0 && str::Eq(m->entries[0].name, StrL(".."))) {
+        countDirect--;
+    }
+    countTotal = -1;
+    countTotalPartial = false;
+    countGen = ++gNavCountGen;
+    UpdateDirLabel();
+    {
+        auto d = new CountTreeData;
+        d->dir = str::Dup(currDir);
+        d->gen = countGen;
+        auto fn = MkFunc0<CountTreeData>(CountTreeThread, d);
+        RunAsync(fn, "CountTreeThread");
+    }
 
     if (m->ItemsCount() > 0) {
         int selIdx = FindEntryIndex(this, m, selectPath);
