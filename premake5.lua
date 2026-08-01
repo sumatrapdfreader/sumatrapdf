@@ -533,7 +533,7 @@ workspace "SumatraPDF"
     -- bzip2 support for libarchive
     defines { "BZ_NO_STDIO" }
     includedirs { "ext/a-bzip2" }
-    files { "ext/a-bzip2/bzip2.c", "ext/a-bzip2/bzlib.h", "ext/a-bzip2/version.txt" }
+    files { "ext/a-bzip2/bzip2.c", "ext/a-bzip2/bzlib.h", "ext/a-bzip2/version.txt", "ext/a-bzip2/LICENSE" }
     -- LzmaDec/Bra* for LzSA live in base/exe (not here): installer must extract
     -- libsumatrapdf.dll without calling into the delay-loaded DLL.
     -- liblzma for LZMA/LZMA2/XZ decompression (needed for 7zip support in libarchive)

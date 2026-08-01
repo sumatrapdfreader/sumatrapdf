@@ -1076,6 +1076,7 @@
     <ClCompile Include="..\ext\liblzma\simple\x86.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-bzip2\LICENSE" />
     <None Include="..\ext\a-bzip2\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
