@@ -177,38 +177,109 @@ static DirEntriesNode* AllocDirEntriesNode(Arena* arena, DirEntries* dv, bool no
     return node;
 }
 
+// The part of a path that decides which worker owns it: the drive for a local
+// path, the share for a UNC one. Anything else gets a worker to itself.
+static Str DriveOfPath(Arena* a, Str path) {
+    if (path.len >= 2 && path.s[0] == '\\' && path.s[1] == '\\') {
+        // "\\server\share\dir" -> "\\server\share\"
+        int nSeps = 0;
+        int i = 2;
+        while (i < path.len) {
+            if (path.s[i] == '\\') {
+                nSeps++;
+                if (nSeps == 2) {
+                    break;
+                }
+            }
+            i++;
+        }
+        if (i < path.len) {
+            i++; // include the trailing separator
+        }
+        return str::Dup(a, Str(path.s, i));
+    }
+    if (path.len >= 2 && path.s[1] == ':') {
+        char drive[4] = {(char)toupper((u8)path.s[0]), ':', '\\', 0};
+        return str::Dup(a, Str(drive, 3));
+    }
+    return str::Dup(a, path);
+}
+
+static void DirScanWorkerThread(DirScanWorker* w);
+
+// Must hold ctx->cs.
+static DirScanWorker* FindOrCreateWorker(DirScanCtx* ctx, Str dir) {
+    Str drive = DriveOfPath(ctx->a, dir);
+    for (DirScanWorker* w = ctx->workers; w; w = w->next) {
+        if (str::EqI(w->drive, drive)) {
+            return w;
+        }
+    }
+
+    auto* w = new DirScanWorker();
+    w->ctx = ctx;
+    w->drive = drive;
+    w->next = ctx->workers;
+    ctx->workers = w;
+
+    ThreadHandle hThread = StartThread(MkFunc0(DirScanWorkerThread, w), StrL("DirScanThread"));
+    if (hThread) {
+        SafeCloseThreadHandle(&hThread);
+    } else {
+        w->threadExited = true;
+    }
+    return w;
+}
+
+// Must hold w->cs. Starts the clock if this is the first work in a while.
+static void WorkerNoteBusy(DirScanWorker* w) {
+    if (w->busySinceMs == 0) {
+        w->busySinceMs = GetTickCount64();
+    }
+}
+
+// Must hold w->cs. Banks the time spent in this stretch of scanning.
+static void WorkerNoteIdle(DirScanWorker* w) {
+    if (w->busySinceMs != 0) {
+        w->scannedForMs += GetTickCount64() - w->busySinceMs;
+        w->busySinceMs = 0;
+    }
+}
+
 // Create and initialize directory reader context
 DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* userData) {
     DirScanCtx* ctx = new DirScanCtx();
     ctx->a = arena;
     ctx->onScannedDir = callback;
     ctx->userData = userData;
-    ctx->threadExited = false;
-    ctx->dirsToVisit = nullptr;
     ctx->shouldExit = 0;
-    ctx->inFlightCount = 0;
-
-    ThreadHandle hThread = StartThread(MkFunc0(DirScanThread, ctx), StrL("DirScanThread"));
-    if (hThread) {
-        SafeCloseThreadHandle(&hThread);
-    } else {
-        ctx->threadExited = true;
-    }
-
+    ctx->workers = nullptr;
     return ctx;
 }
 
-// Signal directory reader thread to exit and wait for it
+// Signal all worker threads to exit and wait for them
 void AskDirScanThreadToQuit(DirScanCtx* ctx) {
     if (!ctx) return;
 
-    ctx->cs.Lock();
     AtomicBoolSet(&ctx->shouldExit, true);
-    ctx->hasWork.WakeAll();
-    while (!ctx->threadExited) {
-        ctx->hasWork.Wait(&ctx->cs);
-    }
+
+    ctx->cs.Lock();
+    DirScanWorker* workers = ctx->workers;
+    ctx->workers = nullptr;
     ctx->cs.Unlock();
+
+    DirScanWorker* w = workers;
+    while (w) {
+        w->cs.Lock();
+        w->hasWork.WakeAll();
+        while (!w->threadExited) {
+            w->hasWork.Wait(&w->cs);
+        }
+        w->cs.Unlock();
+        DirScanWorker* next = w->next;
+        delete w;
+        w = next;
+    }
     delete ctx;
 }
 
@@ -216,11 +287,15 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
 // Returns DirEntries* (either existing from queue or newly allocated)
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
     ctx->cs.Lock();
+    DirScanWorker* w = FindOrCreateWorker(ctx, dir);
+    ctx->cs.Unlock();
+
+    w->cs.Lock();
 
     // Check if already in list
-    DirEntries* dv = FindDirInList(ctx->dirsToVisit, dir);
+    DirEntries* dv = FindDirInList(w->dirsToVisit, dir);
     if (dv) {
-        ctx->cs.Unlock();
+        w->cs.Unlock();
         return dv;
     }
 
@@ -228,11 +303,12 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
     // Use arena allocator for queue nodes (thread-safe)
     dv = AllocDirEntries(ctx->a, dir);
     DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv);
-    node->next = ctx->dirsToVisit;
-    ctx->dirsToVisit = node;
+    node->next = w->dirsToVisit;
+    w->dirsToVisit = node;
 
-    ctx->hasWork.Wake();
-    ctx->cs.Unlock();
+    WorkerNoteBusy(w);
+    w->hasWork.Wake();
+    w->cs.Unlock();
     return dv;
 }
 
@@ -240,10 +316,14 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir) {
 // If nonRecursive is true, subdirectories won't be queued for scanning
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     ctx->cs.Lock();
+    DirScanWorker* w = FindOrCreateWorker(ctx, dv->fullDir);
+    ctx->cs.Unlock();
+
+    w->cs.Lock();
 
     // Skip if already in list
-    if (IsDirInList(ctx->dirsToVisit, dv)) {
-        ctx->cs.Unlock();
+    if (IsDirInList(w->dirsToVisit, dv)) {
+        w->cs.Unlock();
         return;
     }
 
@@ -251,18 +331,19 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv, nonRecursive);
 
     // Add to end of queue
-    if (!ctx->dirsToVisit) {
-        ctx->dirsToVisit = node;
+    if (!w->dirsToVisit) {
+        w->dirsToVisit = node;
     } else {
-        DirEntriesNode* last = ctx->dirsToVisit;
+        DirEntriesNode* last = w->dirsToVisit;
         while (last->next) {
             last = last->next;
         }
         last->next = node;
     }
 
-    ctx->hasWork.Wake();
-    ctx->cs.Unlock();
+    WorkerNoteBusy(w);
+    w->hasWork.Wake();
+    w->cs.Unlock();
 }
 
 // Request a refresh of a directory (non-recursive scan)
@@ -272,34 +353,79 @@ void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv) {
     QueueDirScan(ctx, newDv, true);
 }
 
-void DirScanThread(DirScanCtx* ctx) {
+bool DirScanIsIdle(DirScanCtx* ctx) {
+    if (!ctx) return true;
+    bool idle = true;
+    ctx->cs.Lock();
+    for (DirScanWorker* w = ctx->workers; w && idle; w = w->next) {
+        w->cs.Lock();
+        idle = !w->dirsToVisit && w->inFlightCount == 0;
+        w->cs.Unlock();
+    }
+    ctx->cs.Unlock();
+    return idle;
+}
+
+int GetDirScanProgress(DirScanCtx* ctx, DirScanProgress* out, int maxOut) {
+    if (!ctx) return 0;
+    int n = 0;
+    ctx->cs.Lock();
+    for (DirScanWorker* w = ctx->workers; w && n < maxOut; w = w->next) {
+        w->cs.Lock();
+        DirScanProgress* p = &out[n++];
+        p->drive = w->drive;
+        p->nFiles = w->nFiles;
+        p->nDirs = w->nDirs;
+        p->totalSize = w->totalSize;
+        p->scanning = w->busySinceMs != 0;
+        p->scanningForMs = w->scannedForMs;
+        if (p->scanning) {
+            p->scanningForMs += GetTickCount64() - w->busySinceMs;
+        }
+        w->cs.Unlock();
+    }
+    ctx->cs.Unlock();
+    return n;
+}
+
+static void DirScanWorkerThread(DirScanWorker* w) {
+    DirScanCtx* ctx = w->ctx;
     auto* tempAlloc = GetTempArena();
 
     while (true) {
-        ctx->cs.Lock();
-        while (!ctx->dirsToVisit && !AtomicBoolGet(&ctx->shouldExit)) {
-            ctx->hasWork.Wait(&ctx->cs);
+        w->cs.Lock();
+        while (!w->dirsToVisit && !AtomicBoolGet(&ctx->shouldExit)) {
+            w->hasWork.Wait(&w->cs);
         }
         if (AtomicBoolGet(&ctx->shouldExit)) {
-            ctx->cs.Unlock();
+            w->cs.Unlock();
             break;
         }
-        DirEntriesNode* node = ctx->dirsToVisit;
+        DirEntriesNode* node = w->dirsToVisit;
         if (!node) {
             // Spurious wake with empty queue: wait again.
-            ctx->cs.Unlock();
+            w->cs.Unlock();
             continue;
         }
-        ctx->dirsToVisit = node->next;
-        ctx->inFlightCount++;
+        w->dirsToVisit = node->next;
+        w->inFlightCount++;
         DirEntries* dv = node->dv;
         bool nonRecursive = node->nonRecursive;
-        ctx->cs.Unlock();
+        w->cs.Unlock();
 
         ReadDirectory(ctx->a, dv, &ctx->shouldExit);
 
         if (AtomicBoolGet(&ctx->shouldExit)) {
             break;
+        }
+
+        int nFiles = 0;
+        u64 filesSize = 0;
+        for (int i = 0; i < dv->len; i++) {
+            if (!IsDir(dv->els[i].dv)) {
+                nFiles++;
+                filesSize += dv->els[i].size;
+            }
         }
 
         if (!nonRecursive) {
@@ -325,21 +451,26 @@ void DirScanThread(DirScanCtx* ctx) {
             ctx->onScannedDir(dv, ctx->userData);
         }
 
-        ctx->cs.Lock();
-        ctx->inFlightCount--;
-        bool allDone = !ctx->dirsToVisit && ctx->inFlightCount == 0;
+        w->cs.Lock();
+        w->nFiles += nFiles;
+        w->nDirs++;
+        w->totalSize += filesSize;
+        w->inFlightCount--;
+        bool allDone = !w->dirsToVisit && w->inFlightCount == 0;
         if (allDone) {
-            ctx->hasWork.WakeAll();
+            WorkerNoteIdle(w);
+            w->hasWork.WakeAll();
         }
-        ctx->cs.Unlock();
+        w->cs.Unlock();
 
         tempAlloc->Reset();
     }
 
-    ctx->cs.Lock();
-    ctx->threadExited = true;
-    ctx->hasWork.WakeAll();
-    ctx->cs.Unlock();
+    w->cs.Lock();
+    WorkerNoteIdle(w);
+    w->threadExited = true;
+    w->hasWork.WakeAll();
+    w->cs.Unlock();
 
     if (gTempArena) {
         ArenaDelete(gTempArena);

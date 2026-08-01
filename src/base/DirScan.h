@@ -102,17 +102,48 @@ struct DirEntriesNode {
 // Callback type for when a directory scan completes
 typedef void (*OnScannedDirCallback)(DirEntries* dv, void* userData);
 
-// Background directory reader thread context
+struct DirScanCtx;
+
+// One scanning thread per drive, so a slow drive doesn't hold up the others.
+// Workers are created on demand as directories on new drives get queued.
+struct DirScanWorker {
+    DirScanWorker* next;
+    DirScanCtx* ctx;
+    Str drive; // "C:\" or "\\server\share\", whatever this worker owns
+
+    Mutex cs;                  // protects everything below
+    ConditionVariable hasWork; // signaled when work is queued or the thread should exit
+    DirEntriesNode* dirsToVisit;
+    int inFlightCount; // directories currently being read
+    bool threadExited;
+
+    // progress, so the caller can show what the scan is doing
+    int nFiles;
+    int nDirs;
+    u64 totalSize;
+    u64 busySinceMs;  // when the current stretch of scanning began, 0 if idle
+    u64 scannedForMs; // time spent scanning before the current stretch
+};
+
+// Background directory reader
 struct DirScanCtx {
     Arena* a; // Permanent data arena
     OnScannedDirCallback onScannedDir;
     void* userData;
-    Mutex cs;                  // Protect queue access
-    ConditionVariable hasWork; // Signaled when work is queued or thread should exit
-    bool threadExited;
-    DirEntriesNode* dirsToVisit; // Queue of directories to scan
-    AtomicBool shouldExit;       // Signal thread to exit
-    AtomicInt inFlightCount;     // Number of directories currently being processed
+    Mutex cs;              // protects the worker list
+    AtomicBool shouldExit; // signal all threads to exit
+    DirScanWorker* workers;
+};
+
+// A worker's progress, copied out so the caller doesn't hold a lock while
+// using it.
+struct DirScanProgress {
+    Str drive;
+    int nFiles;
+    int nDirs;
+    u64 totalSize;
+    u64 scanningForMs;
+    bool scanning;
 };
 
 DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* userData);
@@ -121,9 +152,13 @@ DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir);
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive = false);
 void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
 
+// true when no worker has anything left to do
+bool DirScanIsIdle(DirScanCtx* ctx);
+// Fills up to maxOut entries, one per worker, and returns how many were filled.
+int GetDirScanProgress(DirScanCtx* ctx, DirScanProgress* out, int maxOut);
+
 // Directory utilities (paths are UTF-8)
 DirEntry* FindEntryByName(DirEntries* dv, Str name);
-void DirScanThread(DirScanCtx* ctx);
 
 DirEntries* AllocDirEntries(Arena* arena, Str fullDir);
 void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit);
