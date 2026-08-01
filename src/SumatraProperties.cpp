@@ -260,7 +260,7 @@ static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str
     }
     TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
     TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
-    return fmt("%s x %s %s", strWidth, strHeight, unit);
+    return fmt("%sx%s %s", strWidth, strHeight, unit);
 }
 
 // Format page size in cm/mm/in (locale unit first) and pixels (issue #2186).
@@ -310,7 +310,7 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
     int pxW = (int)((size.dx * fileDpi) + 0.5f);
     int pxH = (int)((size.dy * fileDpi) + 0.5f);
-    TempStr pxStr = fmt("%d x %d px", pxW, pxH);
+    TempStr pxStr = fmt("%dx%d px", pxW, pxH);
 
     // Locale unit first, then the other two, then pixels (issue #2186)
     bool isMetric = GetMeasurementSystem() == 0;
