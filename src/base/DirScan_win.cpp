@@ -16,20 +16,30 @@ static i64 GetWinFileSize(WIN32_FIND_DATAW* fd) {
 
 // try to filter out things that are not files
 // or not meant to be used by other applications
-static bool IsRegularFileAttr(DWORD fileAttr) {
+//
+// Takes the whole find data because the reparse tag is in dwReserved0, and
+// only there when the entry is a reparse point.
+static bool IsRegularFile(const WIN32_FIND_DATAW& fd) {
+    DWORD fileAttr = fd.dwFileAttributes;
     if (fileAttr & FILE_ATTRIBUTE_DEVICE) {
         return false;
     }
     if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
         return false;
     }
-    if (fileAttr & FILE_ATTRIBUTE_OFFLINE) {
-        return false;
-    }
     if (fileAttr & FILE_ATTRIBUTE_TEMPORARY) {
         return false;
     }
     if (fileAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
+        // A symlink stands for a file somewhere else rather than being one. A
+        // cloud provider's placeholder is the file: OneDrive puts a reparse
+        // point on everything it syncs, and reading one fetches the contents.
+        return !IsReparseTagNameSurrogate(fd.dwReserved0);
+    }
+    // Offline with no reparse point is the older kind of archived storage,
+    // where reading can block for a very long time. A cloud placeholder is
+    // marked offline as well, but it was already let through above.
+    if (fileAttr & FILE_ATTRIBUTE_OFFLINE) {
         return false;
     }
     return true;
@@ -37,6 +47,25 @@ static bool IsRegularFileAttr(DWORD fileAttr) {
 
 static bool IsDirectoryAttr(DWORD fileAttr) {
     return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+// A directory that is a reparse point is still a directory to walk into unless
+// the reparse is a name surrogate. Symlinks and junctions are surrogates: they
+// stand for somewhere else, so descending into one can loop, or count the same
+// files twice. A cloud provider is not: OneDrive marks every folder it syncs
+// with a reparse point of its own, and those are ordinary directories that only
+// look like something else. Treating them as surrogates hides all of OneDrive.
+//
+// dwReserved0 holds the reparse tag, but only when the entry is a reparse
+// point, which is why this takes the whole find data.
+static bool IsRealDir(const WIN32_FIND_DATAW& fd) {
+    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        return false;
+    }
+    if (fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+        return !IsReparseTagNameSurrogate(fd.dwReserved0);
+    }
+    return true;
 }
 
 static bool IsSpecialDir(Str s) {
@@ -101,7 +130,7 @@ NextDir:
         }
     }
     while (true) {
-        isFile = IsRegularFileAttr(it->fd.dwFileAttributes);
+        isFile = IsRegularFile(it->fd);
         isDir = IsDirectoryAttr(it->fd.dwFileAttributes);
         name = ToUtf8Temp(it->fd.cFileName);
         path = path::JoinTemp(it->currDir, name);
@@ -187,8 +216,7 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
         e.name = utf8Name;
         e.createTime = fd.ftCreationTime;
         e.modTime = fd.ftLastWriteTime;
-        bool isRealDir =
-            (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !(fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT);
+        bool isRealDir = IsRealDir(fd);
         if (isRealDir) {
             e.size = 0;
             e.dv = kStillScanningDir;
