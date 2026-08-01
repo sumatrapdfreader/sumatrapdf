@@ -45,7 +45,7 @@ FreeType       ext/freetype2/FTL.txt          https://www.freetype.org/
 jbig2dec       ext/jbig2dec/COPYING      AGPL https://www.ghostscript.com/jbig2dec.html
 libjpeg-turbo  ext/.../README-turbo.txt  BSD  https://libjpeg-turbo.virtualgl.org/
 DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  https://djvu.sourceforge.net/
-OpenJPEG       ext/openjpeg/LICENSE      BSD  https://www.openjpeg.org/
+OpenJPEG       ext/a-openjpeg/LICENSE    BSD  https://www.openjpeg.org/
 SyncTeX        ext/.../synctex_parser.c       https://itexmac.sourceforge.net/SyncTeX.html
 zlib           ext/a-zlib/LICENSE             https://www.zlib.net/
 lzma           ext/lzma/lzma.txt              https://www.7-zip.org/sdk.html

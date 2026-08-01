@@ -108,7 +108,7 @@ const clArgs = [
   "/I",
   "ext/libjpeg-turbo",
   "/I",
-  "ext/openjpeg/src/lib/openjp2",
+  "ext/a-openjpeg",
   "/I",
   "mupdf/scripts/freetype",
   "/I",

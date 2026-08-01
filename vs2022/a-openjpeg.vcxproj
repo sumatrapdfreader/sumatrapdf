@@ -944,6 +944,7 @@
     <ClCompile Include="..\ext\a-openjpeg\openjpeg.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-openjpeg\LICENSE" />
     <None Include="..\ext\a-openjpeg\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

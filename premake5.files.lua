@@ -363,39 +363,6 @@ function dav1d_files()
   files("ext/dav1d/include/dav1d/*.h")
 end
 
-function openjpeg_files()
-  files_in_dir("ext/openjpeg/src/lib/openjp2", {
-    "*.h",
-    "bio.c",
-    "cidx_manager.c",
-    "cio.c",
-    "dwt.c",
-    "event.c",
-    "function_list.c",
-    "ht_dec.c",
-    "image.c",
-    "invert.c",
-    "j2k.c",
-    "jp2.c",
-    "mct.c",
-    "mqc.c",
-    "openjpeg.c",
-    "opj_clock.c",
-    --"opj_malloc.c",
-    "phix_manager.c",
-    "pi.c",
-    "ppix_manager.c",
-    "sparse_array.c",
-    "t1.c",
-    "t2.c",
-    "tcd.c",
-    "tgt.c",
-    "thix_manager.c",
-    "thread.c",
-    "tpix_manager.c",
-  })
-end
-
 function libwebp_files()
   files("ext/libwebp/src/dec/*.c")
 

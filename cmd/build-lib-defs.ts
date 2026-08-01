@@ -415,10 +415,6 @@ const mupdfThirdPartySources: LibDef = {
     // jbig2dec
     "HAVE_STRING_H=1",
     "JBIG_NO_MEMENTO",
-    // openjpeg
-    "USE_JPIP",
-    "OPJ_STATIC",
-    "OPJ_EXPORTS",
     // freetype
     "FT2_BUILD_LIBRARY",
     'FT_CONFIG_MODULES_H="slimftmodules.h"',
@@ -553,38 +549,6 @@ const mupdfThirdPartySources: LibDef = {
         "jbig2_segment.c",
         "jbig2_symbol_dict.c",
         "jbig2_text.c",
-      ],
-    },
-    // ── openjpeg ──
-    {
-      dir: "ext/openjpeg/src/lib/openjp2",
-      patterns: [
-        "bio.c",
-        "cidx_manager.c",
-        "cio.c",
-        "dwt.c",
-        "event.c",
-        "function_list.c",
-        "ht_dec.c",
-        "image.c",
-        "invert.c",
-        "j2k.c",
-        "jp2.c",
-        "mct.c",
-        "mqc.c",
-        "openjpeg.c",
-        "opj_clock.c",
-        "phix_manager.c",
-        "pi.c",
-        "ppix_manager.c",
-        "sparse_array.c",
-        "t1.c",
-        "t2.c",
-        "tcd.c",
-        "tgt.c",
-        "thix_manager.c",
-        "thread.c",
-        "tpix_manager.c",
       ],
     },
     // ── freetype ──
@@ -767,13 +731,13 @@ export const freetype = thirdPartyLib({
     "ext/freetype/include",
     "ext/brotli/c/include",
   ],
-  files: sourceFiles(4, 5),
+  files: sourceFiles(3, 4),
 });
 
 export const lcms2 = thirdPartyLib({
   name: "lcms2",
   includes: ["ext/lcms2/include"],
-  files: sourceFiles(6),
+  files: sourceFiles(5),
 });
 
 const harfbuzzAllocDefines = [
@@ -797,7 +761,7 @@ export const harfbuzz = thirdPartyLib({
     "mupdf/scripts/freetype",
     "ext/freetype/include",
   ],
-  files: sourceFiles(7),
+  files: sourceFiles(6),
   debugExtraDefines: ["HAVE_ATEXIT", ...harfbuzzAllocDefines],
   releaseExtraDefines: harfbuzzAllocDefines,
 });
@@ -820,7 +784,7 @@ export const extract = thirdPartyLib({
 export const brotli = thirdPartyLib({
   name: "brotli",
   includes: ["ext/brotli/c/include"],
-  files: sourceFiles(8, 9, 10),
+  files: sourceFiles(7, 8, 9),
 });
 
 export const cmarkGfm = thirdPartyLib({

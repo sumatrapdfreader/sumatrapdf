@@ -311,6 +311,19 @@ function writeOutput(dir: string, headers: Map<string, string>, source: string, 
   }
 }
 
+// OpenJPEG is BSD-licensed, so the notice has to ship with the source. This is
+// the only copy in the tree now that ext/openjpeg is gone, and writeOutput()
+// wipes the directory, so re-copy it on every regeneration.
+function writeLicense(dir: string): void {
+  const srcLicense = join(checkoutDir, "LICENSE");
+  if (!existsSync(srcLicense)) {
+    throw new Error(`missing license file: ${srcLicense}`);
+  }
+  const outLicense = join(dir, "LICENSE");
+  writeFileSync(outLicense, readFileSync(srcLicense));
+  console.log(`wrote ${outLicense}`);
+}
+
 async function validateCompile(headers: Map<string, string>, source: string): Promise<void> {
   writeOutput(tmpDir, headers, source);
 
@@ -363,6 +376,7 @@ async function main(): Promise<void> {
   const { headers, source } = generateAmalgamation(srcDir);
   await validateCompile(headers, source);
   writeOutput(outDir, headers, source, versionText(args.repo, args.rev));
+  writeLicense(outDir);
   console.log(`wrote ${outDir}`);
 }
 

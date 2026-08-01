@@ -716,7 +716,10 @@ workspace "SumatraPDF"
     disablewarnings { "4005", "4100", "4127", "4244", "4310", "4389", "4456", "4702" }
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     includedirs { "ext/a-openjpeg" }
-    files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
+    files {
+      "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h",
+      "ext/a-openjpeg/version.txt", "ext/a-openjpeg/LICENSE",
+    }
 
   project "freetype"
     static_intermediate_dirs()
