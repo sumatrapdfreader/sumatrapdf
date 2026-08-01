@@ -314,6 +314,68 @@ void ArenaRestoreSavepoint(ArenaSavepoint temp) {
     }
 }
 
+// ArenaPtrCompress / ArenaPtrUncompress: store a pointer as a u32 offset from
+// the first block in the arena chain. The head has base_pos 0; each chained
+// block has base_pos = sum of previous blocks' res. nullptr compresses to 0.
+// Pointers must belong to this arena (any block). Offsets beyond u32 fail.
+
+// Walk current -> prev to find the block whose reserved range contains ptr.
+static Arena* ArenaFindBlockContaining(Arena* arena, const void* ptr) {
+    for (Arena* block = arena->current; block; block = block->prev) {
+        char* base = (char*)block;
+        if ((const char*)ptr >= base && (const char*)ptr < base + block->res) {
+            return block;
+        }
+    }
+    return nullptr;
+}
+
+// Walk current -> prev to find the block whose base_pos range contains offset.
+static Arena* ArenaFindBlockForOffset(Arena* arena, u64 offset) {
+    for (Arena* block = arena->current; block; block = block->prev) {
+        if (offset >= block->base_pos && offset < block->base_pos + block->res) {
+            return block;
+        }
+    }
+    return nullptr;
+}
+
+u32 ArenaPtrCompress(Arena* arena, void* ptr) {
+    if (!arena || !ptr) {
+        return 0;
+    }
+    arena->lock.Lock();
+    Arena* block = ArenaFindBlockContaining(arena, ptr);
+    if (!block) {
+        arena->lock.Unlock();
+        ReportIf(true);
+        return 0;
+    }
+    u64 off = block->base_pos + (u64)((char*)ptr - (char*)block);
+    arena->lock.Unlock();
+    if (off > 0xffffffffull) {
+        ReportIf(true);
+        return 0;
+    }
+    return (u32)off;
+}
+
+void* ArenaPtrUncompress(Arena* arena, u32 compressed) {
+    if (!arena || compressed == 0) {
+        return nullptr;
+    }
+    arena->lock.Lock();
+    Arena* block = ArenaFindBlockForOffset(arena, compressed);
+    if (!block) {
+        arena->lock.Unlock();
+        ReportIf(true);
+        return nullptr;
+    }
+    void* ptr = (char*)block + (compressed - block->base_pos);
+    arena->lock.Unlock();
+    return ptr;
+}
+
 void* Arena::Alloc(int size) {
     if (size <= 0) {
         return nullptr;

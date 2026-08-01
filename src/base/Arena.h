@@ -83,6 +83,14 @@ void ArenaDelete(Arena* arena);
 ArenaSavepoint ArenaGetSavepoint(Arena* arena);
 void ArenaRestoreSavepoint(ArenaSavepoint temp);
 
+u32 ArenaPtrCompress(Arena* arena, void* ptr);
+void* ArenaPtrUncompress(Arena* arena, u32 compressed);
+
+template <typename T>
+inline T* ArenaPtrUncompress(Arena* arena, u32 compressed) {
+    return (T*)ArenaPtrUncompress(arena, compressed);
+}
+
 // Thread-local temporary arena, reset after each message loop iteration
 extern thread_local Arena* gTempArena;
 Arena* GetTempArena();

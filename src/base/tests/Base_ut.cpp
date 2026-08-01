@@ -171,11 +171,80 @@ static void ColorTest() {
     utassert(!parsed.parsedOk);
 }
 
+static void ArenaPtrCompressTest() {
+    // Single-block round-trip
+    {
+        Arena* a = ArenaNew();
+        utassert(a != nullptr);
+        int* p = (int*)a->Push(sizeof(int) * 4, 8, true);
+        p[0] = 11;
+        p[1] = 22;
+        u32 c = ArenaPtrCompress(a, p);
+        utassert(c != 0);
+        utassert(c >= (u32)ARENA_HEADER_SIZE);
+        utassert(ArenaPtrUncompress(a, c) == p);
+        utassert(ArenaPtrUncompress<int>(a, c) == p);
+        utassert(ArenaPtrUncompress<int>(a, c)[1] == 22);
+        utassert(ArenaPtrCompress(a, nullptr) == 0);
+        utassert(ArenaPtrUncompress(a, 0) == nullptr);
+        ArenaDelete(a);
+    }
+
+    // Multi-block chain: tiny reserve so a second Push allocates a new block
+    {
+        ArenaParams params = ArenaDefaultParams();
+        params.reserve_size = 4 * 1024;
+        params.commit_size = 4 * 1024;
+        Arena* a = ArenaNew(params);
+        utassert(a != nullptr);
+        utassert(a->current == a);
+        utassert(a->base_pos == 0);
+
+        // Fill most of the first block (header is ARENA_HEADER_SIZE)
+        void* p1 = a->Push(3 * 1024, 8, true);
+        utassert(p1 != nullptr);
+        utassert(a->current == a);
+
+        // Force a second arena block in the chain
+        void* p2 = a->Push(3 * 1024, 8, true);
+        utassert(p2 != nullptr);
+        utassert(a->current != a);
+        utassert(a->current->prev == a);
+        utassert(a->current->base_pos == a->res);
+
+        u32 c1 = ArenaPtrCompress(a, p1);
+        u32 c2 = ArenaPtrCompress(a, p2);
+        utassert(c1 != 0 && c2 != 0);
+        utassert(c1 < a->res);  // still in the first block's range
+        utassert(c2 >= a->res); // past the first block
+        utassert(c2 > c1);
+
+        utassert(ArenaPtrUncompress(a, c1) == p1);
+        utassert(ArenaPtrUncompress(a, c2) == p2);
+        utassert(ArenaPtrUncompress<char>(a, c2) == (char*)p2);
+
+        // Write through uncompressed pointer in the second block
+        char* s = ArenaPtrUncompress<char>(a, c2);
+        s[0] = 'Z';
+        utassert(((char*)p2)[0] == 'Z');
+
+        // Another allocation on the second block still round-trips
+        void* p3 = a->Push(64, 8, true);
+        utassert(a->current != a);
+        u32 c3 = ArenaPtrCompress(a, p3);
+        utassert(ArenaPtrUncompress(a, c3) == p3);
+        utassert(c3 > c2);
+
+        ArenaDelete(a);
+    }
+}
+
 void BaseUtilTest() {
     ListTest();
     Func0Test();
     Func1Test();
     ColorTest();
+    ArenaPtrCompressTest();
 
     size_t n = dimof(roundUpTestCases) / 2;
     for (size_t i = 0; i < n; i++) {
