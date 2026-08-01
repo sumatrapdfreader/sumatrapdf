@@ -49,23 +49,37 @@ static bool IsDirectoryAttr(DWORD fileAttr) {
     return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-// A directory that is a reparse point is still a directory to walk into unless
-// the reparse is a name surrogate. Symlinks and junctions are surrogates: they
-// stand for somewhere else, so descending into one can loop, or count the same
-// files twice. A cloud provider is not: OneDrive marks every folder it syncs
-// with a reparse point of its own, and those are ordinary directories that only
-// look like something else. Treating them as surrogates hides all of OneDrive.
+// Whether the entry stands for something elsewhere rather than being it.
+// Symlinks and junctions are such name surrogates, and descending into one can
+// loop or count the same files twice: a profile has
+// AppData\Local\"Application Data" pointing back at AppData\Local. A cloud
+// provider's reparse point is not a surrogate: OneDrive marks every folder it
+// syncs with one, and those are ordinary directories that only look like
+// something else. Treating them as surrogates hides all of OneDrive.
 //
 // dwReserved0 holds the reparse tag, but only when the entry is a reparse
-// point, which is why this takes the whole find data.
-static bool IsRealDir(const WIN32_FIND_DATAW& fd) {
-    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+// point, which is why this takes the whole find data. FindExInfoBasic still
+// fills it in; it only leaves out cAlternateFileName.
+static bool IsNameSurrogate(const WIN32_FIND_DATAW& fd) {
+    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
         return false;
     }
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
-        return !IsReparseTagNameSurrogate(fd.dwReserved0);
-    }
-    return true;
+    return IsReparseTagNameSurrogate(fd.dwReserved0);
+}
+
+// Hidden and system together is what Windows calls a protected operating system
+// file. Explorer keeps these out of sight even when it's been told to show
+// hidden files, behind a second setting of its own, and it's a good rule: what
+// it covers is pagefile.sys, System Volume Information, $Recycle.Bin, a
+// profile's registry hives, and the legacy junctions ("Moje dokumenty",
+// PrintHood, "Ustawienia lokalne") that exist only so pre-Vista programs keep
+// working. None of it is a person's own files.
+//
+// Hidden on its own still shows: AppData, ProgramData and NTUSER.DAT are things
+// someone browsing might actually be after.
+static bool IsProtectedOSFile(DWORD fileAttr) {
+    DWORD both = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
+    return (fileAttr & both) == both;
 }
 
 static bool IsSpecialDir(Str s) {
@@ -139,7 +153,7 @@ NextDir:
             return;
         }
         if (isDir && !IsSpecialDir(name)) {
-            if (recur) {
+            if (recur && !IsNameSurrogate(it->fd)) {
                 it->dirsToVisit.Append(path);
             }
             if (includeDirs) {
@@ -210,14 +224,21 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
             continue;
         }
 
+        if (IsProtectedOSFile(fd.dwFileAttributes)) {
+            continue;
+        }
+
         Str utf8Name = ToUtf8Temp(WStr(fd.cFileName));
 
         DirEntry e = {};
         e.name = utf8Name;
         e.createTime = fd.ftCreationTime;
         e.modTime = fd.ftLastWriteTime;
-        bool isRealDir = IsRealDir(fd);
-        if (isRealDir) {
+        e.isLink = IsNameSurrogate(fd);
+        // A junction is still a directory to show and to let the user step
+        // into. It's only the walking that stops here, which the caller does by
+        // looking at isLink.
+        if (IsDirectoryAttr(fd.dwFileAttributes)) {
             e.size = 0;
             e.dv = kStillScanningDir;
         } else {
@@ -236,6 +257,7 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
         els[i].dv = temp.els[i].dv;
         els[i].createTime = temp.els[i].createTime;
         els[i].modTime = temp.els[i].modTime;
+        els[i].isLink = temp.els[i].isLink;
     }
     dv->els = els;
     MemoryBarrier();

@@ -192,7 +192,11 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
         e.name = name;
         e.createTime = StatCreateTime(st);
         e.modTime = StatModTime(st);
-        if (S_ISDIR(st.st_mode) && !S_ISLNK(st.st_mode)) {
+        // lstat() reports on the link itself, so a symlink is never S_ISDIR
+        // here and lands in the file branch below. Recording it still matters:
+        // the caller uses isLink to decide not to walk in.
+        e.isLink = S_ISLNK(st.st_mode);
+        if (S_ISDIR(st.st_mode)) {
             e.size = 0;
             e.dv = kStillScanningDir;
         } else {
@@ -211,6 +215,7 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
         els[i].dv = temp.els[i].dv;
         els[i].createTime = temp.els[i].createTime;
         els[i].modTime = temp.els[i].modTime;
+        els[i].isLink = temp.els[i].isLink;
     }
     dv->els = els;
     __sync_synchronize();

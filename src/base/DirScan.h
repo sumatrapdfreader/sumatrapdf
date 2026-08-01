@@ -84,6 +84,10 @@ struct DirEntry {
     DirEntries* dv; // nullptr=file, kStillScanningDir=dir not yet scanned, else=scanned dir
     FILETIME createTime;
     FILETIME modTime;
+    // Stands for something elsewhere rather than being it: a symlink or, on
+    // Windows, a junction. Recursive scanning stops here, so it keeps its
+    // kStillScanningDir until someone asks for it by name.
+    bool isLink;
 };
 
 struct DirEntries {

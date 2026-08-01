@@ -443,6 +443,11 @@ static void DirScanWorkerThread(DirScanWorker* w) {
                     break;
                 }
                 DirEntry* e = &dv->els[i];
+                if (e->isLink) {
+                    // Following it would walk the target twice, or forever if
+                    // it points at an ancestor of itself.
+                    continue;
+                }
                 if (e->dv == kStillScanningDir && !str::Eq(e->name, StrL(".."))) {
                     Str subPath = path::JoinTemp(dv->fullDir, e->name);
                     DirEntries* subDv = AllocDirEntries(ctx->a, subPath);
