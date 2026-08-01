@@ -1498,7 +1498,17 @@ void CreateToolbar(MainWindow* win) {
     CreatePageBox(win, font, iconSize);
     SubclassToolbar(win);
 
-    UpdateToolbarPageText(win, -1);
+    // a document can already be loaded when we're re-creating the toolbar
+    // (settings reload, DPI or RTL change), so restore the page box instead
+    // of leaving it blank until the next page change
+    DocController* ctrl = win->ctrl;
+    UpdateToolbarPageText(win, ctrl ? ctrl->PageCount() : -1);
+    if (ctrl) {
+        TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+        HwndSetText(win->hwndPageEdit, label);
+        // the box is created with ES_NUMBER; docs with page labels need it off
+        HwndSetWindowStyle(win->hwndPageEdit, ES_NUMBER, !ctrl->HasPageLabels());
+    }
     UpdateToolbarFindText(win);
 }
 
