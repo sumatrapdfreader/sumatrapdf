@@ -114,7 +114,7 @@ const clArgs = [
   "/I",
   "ext/freetype/include",
   "/I",
-  "ext/mujs",
+  "ext/a-mujs",
   "/I",
   "ext/brotli/c/include",
   "/I",

@@ -907,11 +907,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\a-mujs\mujs.h" />
+    <ClInclude Include="..\ext\a-mujs\regexp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\a-mujs\mujs.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-mujs\COPYING" />
     <None Include="..\ext\a-mujs\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

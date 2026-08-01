@@ -12,8 +12,9 @@ Use `cmd/a-mujs.ts` to update the amalgamated MuJS copy used by the build.
    Running `bun cmd/a-mujs.ts` without arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/mujs` and writes
-   `ext/a-mujs/mujs.h`, `ext/a-mujs/mujs.c`, and
-   `ext/a-mujs/version.txt`.
+   `ext/a-mujs/mujs.h`, `ext/a-mujs/mujs.c`, `ext/a-mujs/version.txt`,
+   `ext/a-mujs/regexp.h` (used by MuPDF text search), and
+   `ext/a-mujs/COPYING`.
 3. Review `ext/a-mujs/version.txt`; it records the project homepage, source
    repo URL, requested revision, resolved commit SHA-1, and GitHub URLs.
 4. Regenerate the Visual Studio projects:
@@ -28,5 +29,4 @@ Use `cmd/a-mujs.ts` to update the amalgamated MuJS copy used by the build.
    bun ./cmd/build.ts
    ```
 
-The old `ext/mujs` checkout is intentionally left in the tree for now, but
-the active MuJS build uses the `a-mujs` Premake project.
+The active MuJS build uses only the amalgamated `ext/a-mujs` source.

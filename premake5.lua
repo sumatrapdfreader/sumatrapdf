@@ -784,7 +784,10 @@ workspace "SumatraPDF"
     optimized_conf()
     includedirs { "ext/a-mujs" }
     disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
-    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
+    files {
+      "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/regexp.h",
+      "ext/a-mujs/version.txt", "ext/a-mujs/COPYING",
+    }
 
   project "a-extract"
     static_intermediate_dirs()

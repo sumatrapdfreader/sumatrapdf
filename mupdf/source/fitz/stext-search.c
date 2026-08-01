@@ -22,8 +22,8 @@
 
 #include "mupdf/fitz.h"
 
-/* SumatraPDF: different location */
-#include "../../../ext/mujs/regexp.h"
+/* SumatraPDF: different location (amalgamated a-mujs) */
+#include "../../../ext/a-mujs/regexp.h"
 
 #include "mupdf/ucdn.h"
 

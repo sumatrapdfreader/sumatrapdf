@@ -859,7 +859,7 @@ async function buildTestEngines(
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libsumatrapdf.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
-    join(outDir, "lib", "libmujs.a"),
+    join(outDir, "lib", "liba-mujs.a"),
     join(outDir, "lib", "liba-extract.a"),
     join(outDir, "lib", "libharfbuzz.a"),
     join(outDir, "lib", "libfreetype.a"),

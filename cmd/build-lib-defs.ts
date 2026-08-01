@@ -444,7 +444,7 @@ const mupdfThirdPartySources: LibDef = {
     "ext/freetype/include",
     "ext/lcms2/include",
     "ext/harfbuzz/src/hb-ucdn",
-    "ext/mujs",
+    "ext/a-mujs",
     "ext/a-extract",
     "ext/brotli/c/include",
     "ext/a-zlib",
@@ -706,8 +706,6 @@ const mupdfThirdPartySources: LibDef = {
         "hb-ucd.cc",
       ],
     },
-    // ── mujs ──
-    { dir: "ext/mujs", patterns: ["one.c"] },
     // ── brotli ──
     { dir: "ext/brotli/c/common", patterns: ["*.c"] },
     { dir: "ext/brotli/c/dec", patterns: ["*.c"] },
@@ -809,9 +807,9 @@ export const harfbuzz = thirdPartyLib({
 });
 
 export const mujs = thirdPartyLib({
-  name: "mujs",
-  includes: ["ext/mujs"],
-  files: sourceFiles(8),
+  name: "a-mujs",
+  includes: ["ext/a-mujs"],
+  files: [{ dir: "ext/a-mujs", patterns: ["mujs.c"] }],
 });
 
 export const extract = thirdPartyLib({
@@ -826,7 +824,7 @@ export const extract = thirdPartyLib({
 export const brotli = thirdPartyLib({
   name: "brotli",
   includes: ["ext/brotli/c/include"],
-  files: sourceFiles(9, 10, 11),
+  files: sourceFiles(8, 9, 10),
 });
 
 export const cmarkGfm = thirdPartyLib({
@@ -913,7 +911,7 @@ export const mupdf: LibDef = {
     "ext/a-openjpeg",
     "mupdf/scripts/freetype",
     "ext/freetype/include",
-    "ext/mujs",
+    "ext/a-mujs",
     "ext/brotli/c/include",
     "ext/harfbuzz/src",
     "ext/lcms2/include",
