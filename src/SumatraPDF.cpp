@@ -1350,6 +1350,9 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
                 DarkMode::setDarkScrollBar(win->hwndCanvas);
             }
             // Force non-client paint so thumb/arrows appear immediately.
+            // Note: this is a no-op while the frame is still hidden, which is
+            // the case for part of the initial load — WM_WINDOWPOSCHANGED /
+            // SWP_SHOWWINDOW in WndProcSumatraFrame repeats it on first show.
             RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
         }
     }
@@ -11843,6 +11846,20 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // do nothing
             TtsSetNotifyWindow(hwnd, WM_TTS_EVENT, 0, 0);
             goto InitMouseWheelInfo;
+
+        case WM_WINDOWPOSCHANGED: {
+            LRESULT r = DefWindowProc(hwnd, msg, wp, lp);
+            WINDOWPOS* wpos = (WINDOWPOS*)lp;
+            // The document is loaded (and the canvas scrollbars configured with
+            // SetScrollInfo / ShowScrollBar) while the frame is still hidden.
+            // A hidden window discards the non-client paint that would draw the
+            // thumb and arrows, so the scrollbar showed up as a blank strip on
+            // first open (issue #5850). Repeat it once we're actually visible.
+            if (win && wpos && (wpos->flags & SWP_SHOWWINDOW) && win->hwndCanvas) {
+                RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+            }
+            return r;
+        }
 
         case WM_SIZE:
             if (win && SIZE_MINIMIZED != wp) {

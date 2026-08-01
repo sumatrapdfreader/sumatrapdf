@@ -46,6 +46,18 @@ const gdi32 = dlopen("gdi32.dll", {
   SelectObject: { args: [FFIType.u64, FFIType.u64], returns: FFIType.u64 },
   DeleteObject: { args: [FFIType.u64], returns: FFIType.bool },
   DeleteDC: { args: [FFIType.u64], returns: FFIType.bool },
+  BitBlt: {
+    args: [FFIType.u64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u64, FFIType.i32, FFIType.i32, FFIType.u32],
+    returns: FFIType.bool,
+  },
+  StretchBlt: {
+    args: [
+      FFIType.u64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32,
+      FFIType.u64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u32,
+    ],
+    returns: FFIType.bool,
+  },
+  SetStretchBltMode: { args: [FFIType.u64, FFIType.i32], returns: FFIType.i32 },
 });
 
 const gdiplus = dlopen("gdiplus.dll", {
@@ -158,6 +170,8 @@ export const VK_RIGHT = 0x27;
 export const VK_DOWN = 0x28;
 // PrintWindow flags
 export const PW_RENDERFULLCONTENT = 0x00000002;
+export const SRCCOPY = 0x00cc0020;
+export const COLORONCOLOR = 3; // StretchBlt mode: no smoothing
 // ShowWindow commands
 export const SW_RESTORE = 9;
 // scrollbar bars + SCROLLINFO flags
@@ -495,6 +509,72 @@ export function captureWindowToPng(hwnd: number, outPath: string): boolean {
   const bmp = gdi32.symbols.CreateCompatibleBitmap(winDC, w, h);
   const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
   user32.symbols.PrintWindow(hwnd, memDC, PW_RENDERFULLCONTENT);
+  gdi32.symbols.SelectObject(memDC, oldObj);
+
+  const gpBmp = new BigUint64Array(1);
+  gdiplus.symbols.GdipCreateBitmapFromHBITMAP(bmp, 0n, ptr(gpBmp));
+  const status = gdiplus.symbols.GdipSaveImageToFile(gpBmp[0], ptr(wideZ(outPath)), ptr(PNG_ENCODER_CLSID), 0);
+  gdiplus.symbols.GdipDisposeImage(gpBmp[0]);
+
+  gdi32.symbols.DeleteObject(bmp);
+  gdi32.symbols.DeleteDC(memDC);
+  user32.symbols.ReleaseDC(hwnd, winDC);
+  return status === 0;
+}
+
+// Capture a window by BitBlt-ing from its window DC instead of PrintWindow.
+// Use this to verify NON-CLIENT drawing (native scrollbars, custom NC frames):
+// PrintWindow re-renders the window's content and leaves the NC area blank,
+// while the window DC holds what is actually on screen for that window. Under
+// DWM this works for background windows too, but NOT for minimized ones.
+export function captureWindowDCToPng(hwnd: number, outPath: string): boolean {
+  ensureGdiplus();
+  const r = getWindowRect(hwnd);
+  const w = r.right - r.left;
+  const h = r.bottom - r.top;
+  if (w <= 0 || h <= 0) {
+    return false;
+  }
+  const winDC = user32.symbols.GetWindowDC(hwnd);
+  const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
+  const bmp = gdi32.symbols.CreateCompatibleBitmap(winDC, w, h);
+  const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
+  gdi32.symbols.BitBlt(memDC, 0, 0, w, h, winDC, 0, 0, SRCCOPY);
+  gdi32.symbols.SelectObject(memDC, oldObj);
+
+  const gpBmp = new BigUint64Array(1);
+  gdiplus.symbols.GdipCreateBitmapFromHBITMAP(bmp, 0n, ptr(gpBmp));
+  const status = gdiplus.symbols.GdipSaveImageToFile(gpBmp[0], ptr(wideZ(outPath)), ptr(PNG_ENCODER_CLSID), 0);
+  gdiplus.symbols.GdipDisposeImage(gpBmp[0]);
+
+  gdi32.symbols.DeleteObject(bmp);
+  gdi32.symbols.DeleteDC(memDC);
+  user32.symbols.ReleaseDC(hwnd, winDC);
+  return status === 0;
+}
+
+// Like captureWindowDCToPng but only a sub-rect (window-relative, so 0,0 is the
+// top-left of the NON-client area), optionally magnified `zoom` times with
+// nearest-neighbour so thin things like a scrollbar are legible in the PNG.
+export function captureWindowDCRegionToPng(
+  hwnd: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  outPath: string,
+  zoom = 1,
+): boolean {
+  ensureGdiplus();
+  if (w <= 0 || h <= 0) {
+    return false;
+  }
+  const winDC = user32.symbols.GetWindowDC(hwnd);
+  const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
+  const bmp = gdi32.symbols.CreateCompatibleBitmap(winDC, w * zoom, h * zoom);
+  const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
+  gdi32.symbols.SetStretchBltMode(memDC, COLORONCOLOR);
+  gdi32.symbols.StretchBlt(memDC, 0, 0, w * zoom, h * zoom, winDC, x, y, w, h, SRCCOPY);
   gdi32.symbols.SelectObject(memDC, oldObj);
 
   const gpBmp = new BigUint64Array(1);

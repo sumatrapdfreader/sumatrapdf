@@ -43,9 +43,19 @@ postMessage(frame, 0x0010 /*WM_CLOSE*/, 0, 0);
   buttons (painted via `BeginPaint` directly on the frame DC) nor native
   scrollbars (non-client area) — those regions come out blank. Screen capture
   (`CopyFromScreen`) is also unavailable in this environment (blank desktop).
-  To verify such drawing code, dump its output to a bitmap via a temporary
-  harness (render into a `CreateDIBSection` DC, save with `HBITMAPToBmpFormat`
-  + `file::WriteFile`, view, then remove the harness).
+  For non-client drawing use `captureWindowDCToPng` / `captureWindowDCRegionToPng`
+  instead: they BitBlt from `GetWindowDC`, i.e. what is actually on screen for
+  that window (works for background windows, not minimized ones). The Region
+  variant takes a window-relative sub-rect plus a zoom factor — a 17px scrollbar
+  strip is unreadable in a full-window PNG, so crop it and magnify 3x. If neither
+  works, dump the drawing to a bitmap via a temporary harness (render into a
+  `CreateDIBSection` DC, save with `HBITMAPToBmpFormat` + `file::WriteFile`,
+  view, then remove the harness).
+
+- Reading a control's text cross-process needs `getControlText` (WM_GETTEXT);
+  `GetWindowTextW` only returns captions for windows of another process, so
+  `getWindowText`/`getWindowTextFull` come back empty for child controls.
+  Text assertions beat pixel comparison when the change is textual.
 
 - `out/dbg64/SumatraPDF-settings.txt` exists (portable mode): the dbg build **loads** it even under `-for-testing` (which only prevents saving). Stale values there change app behavior in tests — e.g. a non-default `PdfDocumentColorMode` silently alters rendering. Check it when the app behaves unexpectedly at startup; it's written only by non-`-for-testing` (manual) launches.
 
