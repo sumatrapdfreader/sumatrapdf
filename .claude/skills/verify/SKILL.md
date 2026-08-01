@@ -34,7 +34,7 @@ postMessage(frame, 0x0010 /*WM_CLOSE*/, 0, 0);
 
 - Compare before/after PNGs (byte diff is a good first signal; Read the PNGs to eyeball).
 - Repeating an action back to the same state reproduces byte-identical captures — useful as a determinism control.
-- Sample PDF in-repo: `ext/zlib/zlib.3.pdf`. Bug repros live in `C:\Users\kjk\OneDrive\!sumatra\bugs\`.
+- Sample PDF in-repo: `ext/a-zlib/zlib.3.pdf`. Bug repros live in `C:\Users\kjk\OneDrive\!sumatra\bugs\`.
 - Synthetic PDFs are easy to hand-generate from a bun script (compute xref offsets from string lengths) when a specific content shape is needed (e.g. metadata, hairline strokes).
 
 ## Gotchas

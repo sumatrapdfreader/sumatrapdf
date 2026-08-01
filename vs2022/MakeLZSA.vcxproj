@@ -1001,7 +1001,9 @@
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-zlib\LICENSE" />
     <None Include="..\ext\a-zlib\version.txt" />
+    <None Include="..\ext\a-zlib\zlib.3.pdf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

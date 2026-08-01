@@ -392,15 +392,23 @@ async function main() {
   const outHeader = join(outDir, "zlib.h");
   const outSource = join(outDir, "zlib.c");
   const outVersion = join(outDir, "version.txt");
+  const outLicense = join(outDir, "LICENSE");
+  const srcLicense = join(checkoutDir, "LICENSE");
   rmSync(outHeader, { force: true });
   rmSync(outSource, { force: true });
   rmSync(outVersion, { force: true });
+  rmSync(outLicense, { force: true });
   writeFileSync(outHeader, header);
   writeFileSync(outSource, source);
   writeFileSync(outVersion, version);
+  if (!existsSync(srcLicense)) {
+    throw new Error(`missing license file: ${srcLicense}`);
+  }
+  writeFileSync(outLicense, readFileSync(srcLicense));
   console.log(`wrote ${outHeader}`);
   console.log(`wrote ${outSource}`);
   console.log(`wrote ${outVersion}`);
+  console.log(`wrote ${outLicense}`);
 }
 
 await main();

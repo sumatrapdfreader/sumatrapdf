@@ -98,7 +98,7 @@ const clArgs = [
   "/DCMARK_GFM_STATIC_DEFINE",
   "/D_HAS_EXCEPTIONS=0",
   "/I",
-  "ext/zlib",
+  "ext/a-zlib",
   "/I",
   "mupdf/include",
   "/I",

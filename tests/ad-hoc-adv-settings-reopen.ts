@@ -8,7 +8,7 @@ import { enumWindows, getWindowText, getWindowPid, postMessage, sleep } from "./
 
 const CmdAdvancedSettings = cmdId("CmdAdvancedSettings");
 const WM_CLOSE = 0x0010;
-const PDF = "ext/zlib/zlib.3.pdf";
+const PDF = "ext/a-zlib/zlib.3.pdf";
 
 function findDialog(pid: number): number {
   let found = 0;

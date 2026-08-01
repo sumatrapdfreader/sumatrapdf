@@ -193,7 +193,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-zlib\LICENSE">
+      <Filter>ext\a-zlib</Filter>
+    </None>
     <None Include="..\ext\a-zlib\version.txt">
+      <Filter>ext\a-zlib</Filter>
+    </None>
+    <None Include="..\ext\a-zlib\zlib.3.pdf">
       <Filter>ext\a-zlib</Filter>
     </None>
   </ItemGroup>

@@ -79,6 +79,8 @@ function zlib_files()
     "zlib.c",
     "zlib.h",
     "version.txt",
+    "LICENSE",
+    "zlib.3.pdf",
   })
 end
 

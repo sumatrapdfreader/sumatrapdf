@@ -40,7 +40,7 @@ We are making non-UI library code compile on macOS and Linux while keeping the W
 `src/mac/` is an early Cocoa application, not a port of the Windows UI. Keep it small and native for now:
 
 - Build it with `bun cmd/build-mac.ts -debug` (or `-release` / `-asan`). The app bundle is `out/mac-dbg64/SumatraPDF.app` for debug builds.
-- Run it with a document path using `open out/mac-dbg64/SumatraPDF.app --args <path>`, for example `open out/mac-dbg64/SumatraPDF.app --args ./ext/zlib/zlib.3.pdf`. Relative paths from the repo should work; absolute paths are fine.
+- Run it with a document path using `open out/mac-dbg64/SumatraPDF.app --args <path>`, for example `open out/mac-dbg64/SumatraPDF.app --args ./ext/a-zlib/zlib.3.pdf`. Relative paths from the repo should work; absolute paths are fine.
 - The current app only opens the first command-line file, renders page 1 through the existing engine layer, displays it, and supports standard macOS Quit / `Cmd-Q`.
 - Keep Objective-C / Cocoa code in `.mm` files under `src/mac/`. Do **not** include `base/Base.h` or other Sumatra headers in files that import Cocoa/AppKit: Apple headers define names such as `Size` that conflict with Sumatra types. Use a small C/C++ bridge (`SumatraMacEngine.*`) between Cocoa code and engine/base code.
 - When adding mac-specific build inputs, update `MAC_APP_SOURCES` in `cmd/build-mac.ts`.

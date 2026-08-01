@@ -5,7 +5,7 @@
 -Iext/chmdec
 -Iext/libarchive
 -Iext/darkmodelib/include
--Iext/zlib
+-Iext/a-zlib
 -Iext/synctex
 -Ipackages/Microsoft.Web.WebView2.1.0.992.28/build/native/include
 -DUNICODE

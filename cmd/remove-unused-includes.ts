@@ -87,7 +87,7 @@ const clArgs = [
   "/I",
   "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include",
   "/I",
-  "ext/zlib",
+  "ext/a-zlib",
   "/I",
   "ext/synctex",
   "/O1",

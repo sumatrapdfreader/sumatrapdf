@@ -47,7 +47,7 @@ libjpeg-turbo  ext/.../README-turbo.txt  BSD  https://libjpeg-turbo.virtualgl.or
 DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  https://djvu.sourceforge.net/
 OpenJPEG       ext/openjpeg/LICENSE      BSD  https://www.openjpeg.org/
 SyncTeX        ext/.../synctex_parser.c       https://itexmac.sourceforge.net/SyncTeX.html
-zlib           ext/zlib/zlib.h                https://www.zlib.net/
+zlib           ext/a-zlib/LICENSE             https://www.zlib.net/
 lzma           ext/lzma/lzma.txt              https://www.7-zip.org/sdk.html
 libwebp        ext/libwebp/COPYING       BSD  https://developers.google.com/speed/webp/
 

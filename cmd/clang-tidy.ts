@@ -17,7 +17,7 @@ const includes = [
   "-I",
   "ext/djvudec",
   "-I",
-  "ext/zlib",
+  "ext/a-zlib",
   "-I",
   "ext/synctex",
   "-I",
