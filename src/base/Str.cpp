@@ -1461,9 +1461,12 @@ static char* MakeSpaceAt(str::Builder* s, size_t idx, size_t count) {
 
 static void StrBuilderReset(str::Builder* s) {
     s->len = 0;
-    if (s->els) {
-        s->els[0] = 0;
+    // keep an existing heap buffer for re-use; only default to the
+    // inline buf when we have not allocated yet (e.g. constructor)
+    if (!s->els) {
+        s->els = s->buf;
     }
+    s->els[0] = 0;
 }
 
 static void StrBuilderFree(str::Builder* s) {
@@ -1661,9 +1664,12 @@ static WCHAR* MakeSpaceAt(wstr::Builder* s, size_t idx, size_t count) {
 
 static void WStrBuilderReset(wstr::Builder* s) {
     s->len = 0;
-    if (s->els) {
-        s->els[0] = 0;
+    // keep an existing heap buffer for re-use; only default to the
+    // inline buf when we have not allocated yet (e.g. constructor)
+    if (!s->els) {
+        s->els = s->buf;
     }
+    s->els[0] = 0;
 }
 
 static void WStrBuilderFree(wstr::Builder* s) {
