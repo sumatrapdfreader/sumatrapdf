@@ -2641,6 +2641,7 @@ void FormatFileSizeToWstrBuf(u64 size, WStr buf) {
 int FormatSizeHumanIntoBuf(u64 size, Str buf) {
     if (buf.len < 2) return 0;
 
+    const u64 TB = 1024ULL * 1024 * 1024 * 1024;
     const u64 GB = 1024ULL * 1024 * 1024;
     const u64 MB = 1024ULL * 1024;
     const u64 KB = 1024ULL;
@@ -2648,7 +2649,10 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
     Str suffix;
     u64 divisor;
 
-    if (size >= GB) {
+    if (size >= TB) {
+        suffix = StrL(" TB");
+        divisor = TB;
+    } else if (size >= GB) {
         suffix = StrL(" GB");
         divisor = GB;
     } else if (size >= MB) {
