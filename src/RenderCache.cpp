@@ -813,7 +813,7 @@ bool RenderCache::ClearCurrentRequest(int threadIdx) {
 /* Wait until rendering of a page beloging to <dm> has finished. */
 /* TODO: this might take some time, would be good to show a dialog to let the
    user know he has to wait until we finish */
-void RenderCache::CancelRendering(DisplayModel* dm) {
+void RenderCache::CancelRenderingBlocking(DisplayModel* dm) {
     ClearQueueForDisplayModel(dm);
 
     for (;;) {
@@ -835,6 +835,24 @@ void RenderCache::CancelRendering(DisplayModel* dm) {
 
         /* TODO: busy loop is not good, but I don't have a better idea */
         Sleep(50);
+    }
+}
+
+// Like CancelRenderingBlocking() but returns immediately instead of waiting for an
+// in-flight render to notice the abort. mupdf only checks the abort cookie
+// between display-list ops, so a single big image decode makes that wait run
+// into the hundreds of ms -- on the UI thread it's a visible freeze.
+//
+// Only for callers that are NOT destroying dm: the render thread keeps using
+// dm and its engine until the current page is done. Anything that frees the
+// model must still use CancelRenderingBlocking() (DisplayModel's destructor does).
+void RenderCache::AbortRendering(DisplayModel* dm) {
+    ScopedRecursiveMutex scope(&requestAccess);
+    ClearQueueForDisplayModel(dm);
+    for (int i = 0; i < nRenderThreads; i++) {
+        if (curReqs[i] && curReqs[i]->dm == dm) {
+            AbortCurrentRequest(i);
+        }
     }
 }
 

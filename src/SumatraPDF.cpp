@@ -1180,7 +1180,7 @@ void ControllerCallbackHandler::RequestPredictiveRendering(DisplayModel* dm, int
 }
 
 void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
-    gRenderCache->CancelRendering(dm);
+    gRenderCache->CancelRenderingBlocking(dm);
     gRenderCache->FreeForDisplayModel(dm);
 }
 
@@ -3784,7 +3784,9 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     if (!dm) {
         return;
     }
-    gRenderCache->CancelRendering(dm);
+    // don't wait for in-flight renders: dm stays alive and a render that lands
+    // after this is either still valid or dropped by the darkModeEpoch check
+    gRenderCache->AbortRendering(dm);
     gRenderCache->KeepForDisplayModel(dm, dm);
     if (includeNonClientArea) {
         win->RedrawAllIncludingNonClient();
@@ -3803,7 +3805,9 @@ static void RerenderEverything() {
         for (WindowTab* tab : win->Tabs()) {
             DisplayModel* dm = tab->AsFixed();
             if (dm && dm != currentDm) {
-                gRenderCache->CancelRendering(dm);
+                // no wait: only reached after darkModeEpoch was bumped, so a
+                // render still in flight is discarded when it finishes
+                gRenderCache->AbortRendering(dm);
                 gRenderCache->FreeForDisplayModel(dm);
             }
         }
@@ -3939,8 +3943,19 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // stop render threads before waiting on find: they hold pagesLock/renderLock
     // that the find thread needs for text extraction (issue: stress-test hang in
     // AbortFinding while RenderCacheThread holds engine locks).
+    //
+    // Only actually wait for them when there is a find to wait on. With no find
+    // running this call has nothing to protect -- the model outlives us here
+    // (deleteModel callers free it later, and ~DisplayModel does its own
+    // CancelRenderingBlocking()) -- and blocking on an in-flight image decode froze the
+    // UI for the length of the decode on every tab switch.
     if (DisplayModel* dm = win->AsFixed()) {
-        gRenderCache->CancelRendering(dm);
+        bool findRunning = win->findThread || win->findCountThread;
+        if (findRunning) {
+            gRenderCache->CancelRenderingBlocking(dm);
+        } else {
+            gRenderCache->AbortRendering(dm);
+        }
     }
     AbortFinding(win, true);
 
