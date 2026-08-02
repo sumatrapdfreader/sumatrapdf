@@ -208,6 +208,8 @@ bool ToolbarAtBottom();
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 bool AutoReloadFileStillChanging(WindowTab* tab);
+void DeleteControllerAsync(DocController* ctrl);
+void WaitForPendingControllerDeletes();
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 
 // flags for ScheduleUiUpdate

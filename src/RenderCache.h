@@ -207,6 +207,7 @@ struct RenderCache {
                 const Func1<PageRenderRequest*>& callback);
     void CancelRenderingBlocking(DisplayModel* dm);
     void AbortRendering(DisplayModel* dm);
+    bool IsRenderingFor(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);

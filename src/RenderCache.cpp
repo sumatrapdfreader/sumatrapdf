@@ -846,6 +846,19 @@ void RenderCache::CancelRenderingBlocking(DisplayModel* dm) {
 // Only for callers that are NOT destroying dm: the render thread keeps using
 // dm and its engine until the current page is done. Anything that frees the
 // model must still use CancelRenderingBlocking() (DisplayModel's destructor does).
+// true if a render thread is currently working on a page of dm. Only a snapshot:
+// no new requests can appear for a dm that's being torn down (its tab is gone
+// and pauseRendering is set), so a false answer stays false.
+bool RenderCache::IsRenderingFor(DisplayModel* dm) {
+    ScopedRecursiveMutex scope(&requestAccess);
+    for (int i = 0; i < nRenderThreads; i++) {
+        if (curReqs[i] && curReqs[i]->dm == dm) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void RenderCache::AbortRendering(DisplayModel* dm) {
     ScopedRecursiveMutex scope(&requestAccess);
     ClearQueueForDisplayModel(dm);

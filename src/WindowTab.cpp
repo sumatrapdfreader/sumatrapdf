@@ -73,7 +73,9 @@ WindowTab::~WindowTab() {
     // but gMostRecentlyOpenedDoc is only for dde commands
     // so doesn't need to be kept for long
     gMostRecentlyOpenedDoc = nullptr;
-    delete ctrl;
+    // waits for in-flight renders off the UI thread; deletes on the UI thread
+    DeleteControllerAsync(ctrl);
+    ctrl = nullptr;
     if (pendingLoadArgs) {
         delete pendingLoadArgs->ctrl;
         pendingLoadArgs->ctrl = nullptr;

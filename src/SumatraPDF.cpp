@@ -1184,6 +1184,77 @@ void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
     gRenderCache->FreeForDisplayModel(dm);
 }
 
+// ~DisplayModel waits for in-flight renders (CleanUp -> CancelRenderingBlocking)
+// because a render thread keeps using the model and its engine until the current
+// page is done, and mupdf only checks the abort cookie between display-list ops
+// -- one image decode isn't interruptible. Doing that wait on the UI thread froze
+// the app for the length of the decode on every tab close.
+//
+// So hand the model to a scratch thread that does the waiting, and delete it back
+// on the UI thread once no render is using it: the delete itself keeps running on
+// the UI thread (it touches gRenderCache and the engine), only the waiting moves
+// off it. The one thing that can't survive the delay is the model's callback
+// handler -- see DeleteControllerFinish().
+static AtomicInt gPendingControllerDeletes;
+
+static void DeleteControllerFinish(DocController* ctrl) {
+    DisplayModel* dm = ctrl->AsFixed();
+    if (dm) {
+        // ctrl->cb is the MainWindow's ControllerCallbackHandler and the window
+        // can be closed while we're waiting, so don't let ~DisplayModel call
+        // into it (cf. DeleteOrphanedController). Do CleanUp()'s work here
+        // instead: the renders are already done, this just drops the cache.
+        gRenderCache->FreeForDisplayModel(dm);
+        ctrl->cb = nullptr;
+    }
+    delete ctrl;
+    AtomicIntDec(&gPendingControllerDeletes);
+}
+
+static void WaitForRendersThenDelete(DocController* ctrl) {
+    // blocking wait, but we're not the UI thread
+    gRenderCache->CancelRenderingBlocking(ctrl->AsFixed());
+    auto fn = MkFunc0<DocController>(DeleteControllerFinish, ctrl);
+    uitask::Post(fn, "DeleteControllerFinish");
+}
+
+void DeleteControllerAsync(DocController* ctrl) {
+    if (!ctrl) {
+        return;
+    }
+    DisplayModel* dm = ctrl->AsFixed();
+    if (!dm) {
+        // only DisplayModel is rendered by the render threads
+        delete ctrl;
+        return;
+    }
+    // no new requests for this model from here on
+    dm->pauseRendering = true;
+    gRenderCache->AbortRendering(dm);
+    if (!gRenderCache->IsRenderingFor(dm)) {
+        // nothing to wait for, the common case
+        delete ctrl;
+        return;
+    }
+    AtomicIntInc(&gPendingControllerDeletes);
+    auto fn = MkFunc0<DocController>(WaitForRendersThenDelete, ctrl);
+    if (!StartThread(fn, "DeleteController")) {
+        // couldn't spawn: fall back to deleting (and waiting) right here
+        AtomicIntDec(&gPendingControllerDeletes);
+        delete ctrl;
+    }
+}
+
+// Called during shutdown, before the render cache goes away: the scratch threads
+// use gRenderCache and their deletes are queued as ui tasks.
+void WaitForPendingControllerDeletes() {
+    while (AtomicIntGet(&gPendingControllerDeletes) > 0) {
+        uitask::DrainQueue();
+        Sleep(10);
+    }
+    uitask::DrainQueue();
+}
+
 void ControllerCallbackHandler::FocusFrame(bool always) {
     if (always || !FindMainWindowByHwnd(GetFocus())) {
         HwndSetFocus(win->hwndFrame);
@@ -3983,7 +4054,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     }
     if (deleteModel) {
         if (currentTab) {
-            delete currentTab->ctrl;
+            DeleteControllerAsync(currentTab->ctrl);
             currentTab->ctrl = nullptr;
             FileWatcherUnsubscribe(currentTab->watcher);
             currentTab->watcher = nullptr;

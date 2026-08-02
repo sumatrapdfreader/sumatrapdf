@@ -2884,6 +2884,10 @@ Exit:
     }
 #endif
 
+    // must run before uitask::Destroy() (these deletes are queued as ui tasks)
+    // and before gRenderCache goes away (the waiting threads use it)
+    WaitForPendingControllerDeletes();
+
     mui::Destroy();
     uitask::Destroy();
     trans::Destroy();
