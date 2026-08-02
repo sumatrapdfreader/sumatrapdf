@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/GuessFileType.h"
+#include "base/JsonParser.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -21,10 +22,12 @@ constexpr const WCHAR* kChmVirtualHostW = L"https://sumatrapdf.chm/";
 // Injected on every WebView2 navigation. Reports the document scroll position
 // back to the host on each scroll so BrowserDocView can answer GetScrollPos()
 // synchronously (WebView2 script eval is async and can't return a value here).
+// notify() rather than call(): scrolling fires constantly and there's nothing to
+// reply with, so this must not allocate a promise per event
 constexpr const char* kReportScrollJs =
     "(function(){var post=function(){try{var x=Math.round(window.scrollX||window.pageXOffset||0);"
     "var y=Math.round(window.scrollY||window.pageYOffset||0);"
-    "window.chrome.webview.postMessage('chmscroll '+x+' '+y);}catch(e){}};"
+    "window.__sumatra__.notify('scroll',x,y);}catch(e){}};"
     "window.addEventListener('scroll',post,true);})();";
 
 // Injected on every WebView2 navigation. In-page find driven by the host's
@@ -40,10 +43,11 @@ constexpr const char* kReportScrollJs =
 // code as the visible page and match counts/indices stay aligned with what
 // start() highlights when that page is shown.
 //
-// Messages posted back to the host (gen is an echo of the generation the
-// host passed in, so it can drop results of a superseded search):
-//   'mdfind <gen> <current> <total>'  current 1-based match on this page
-//   'mdfindall <gen> <total> <recs>'  recs: page US idx US snippet, RS-joined
+// Notifications sent back to the host through the JS bridge (gen is an echo of
+// the generation the host passed in, so it can drop results of a superseded
+// search):
+//   findResult(gen, current, total)   current 1-based match on this page
+//   findAllResult(gen, total, recs)   recs: page US idx US snippet, RS-joined
 constexpr const char* kFindInPageJs = R"JS((function(){
 if (window.__sumatraFind) { return; }
 var matches = [];
@@ -62,7 +66,7 @@ function ensureStyle() {
   } catch (e) {}
 }
 function post() {
-  try { window.chrome.webview.postMessage("mdfind " + gen + " " + (cur + 1) + " " + matches.length); } catch (e) {}
+  try { window.__sumatra__.notify("findResult", gen, cur + 1, matches.length); } catch (e) {}
 }
 function isWordChar(c) {
   try { return /[\p{L}\p{N}_]/u.test(c); } catch (e) { return /\w/.test(c); }
@@ -214,43 +218,87 @@ function searchAll(urls, term, matchCase, wholeWord, g) {
     });
   });
   chain.then(function() {
-    try { window.chrome.webview.postMessage("mdfindall " + g + " " + recs.length + " " + recs.join("\x1e")); } catch (e) {}
+    try { window.__sumatra__.notify("findAllResult", g, recs.length, recs.join("\x1e")); } catch (e) {}
   });
 }
 window.__sumatraFind = { start: start, gotoMatch: gotoMatch, searchAll: searchAll, clear: clearHighlights };
 })();)JS";
 
-// WebView2 host that captures scroll-position and find-result messages posted
-// by kReportScrollJs / kFindInPageJs.
+// WebView2 host for the scroll-position and find-result notifications sent by
+// kReportScrollJs / kFindInPageJs through the JS bridge.
 struct BrowserWebviewWnd : WebviewWnd {
     BrowserDocView* owner = nullptr;
-    void OnBrowserMessage(Str msg) override;
+    // BrowserWebviewWnd is a friend of BrowserDocView, and friendship covers its
+    // members, so this can reach the private state the notifications update
+    static void OnJsNotifyCb(void* ctx, Str method, Str paramsJson);
 };
 
-void BrowserWebviewWnd::OnBrowserMessage(Str msg) {
-    int x = 0;
-    int y = 0;
-    if (owner && !str::IsNull(str::Parse(msg, "chmscroll %d %d", &x, &y))) {
-        if (x < 0) {
-            x = 0;
+namespace {
+// Pulls the positional arguments out of a bridge notification's params, which
+// arrive as a JSON array. json::Parse is a push parser, so collect by path:
+// "[0]", "[1]", ... Values die with the call, hence the temp-arena copies.
+struct NotifyArgsVisitor : json::ValueVisitor {
+    static constexpr int kMaxArgs = 4;
+    TempStr args[kMaxArgs] = {};
+
+    bool Visit(Str path, Str value, json::Type) override {
+        for (int i = 0; i < kMaxArgs; i++) {
+            if (str::Eq(path, fmt("[%d]", i))) {
+                args[i] = str::DupTemp(value);
+                return true;
+            }
         }
-        if (y < 0) {
-            y = 0;
+        return true;
+    }
+
+    int Int(int idx) const {
+        Str s = Text(idx);
+        if (len(s) == 0) {
+            return 0;
         }
-        owner->webviewScrollPos = Point(x, y);
+        int v = 0;
+        str::Parse(s, "%d", &v);
+        return v;
+    }
+    Str Text(int idx) const {
+        if (idx < 0 || idx >= kMaxArgs || !args[idx]) {
+            return {};
+        }
+        return args[idx];
+    }
+};
+} // namespace
+
+void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
+    auto* self = (BrowserDocView*)ctx;
+    if (!self) {
         return;
     }
-    // note: "mdfindall" must be tested before "mdfind" (shared prefix)
-    if (owner && owner->cb && str::TrimPrefix(msg, StrL("mdfindall "))) {
-        owner->cb->OnFindAllResult(msg);
+    NotifyArgsVisitor v;
+    if (!json::Parse(paramsJson, &v)) {
+        logf("BrowserOnJsNotify: bad params for '%s': %s\n", method, paramsJson);
         return;
     }
-    int gen = 0;
-    if (owner && owner->cb && !str::IsNull(str::Parse(msg, "mdfind %d %d %d", &gen, &x, &y))) {
-        owner->cb->OnFindResult(gen, x, y);
+    if (str::Eq(method, "scroll")) {
+        int x = std::max(0, v.Int(0));
+        int y = std::max(0, v.Int(1));
+        self->webviewScrollPos = Point(x, y);
         return;
     }
-    WebviewWnd::OnBrowserMessage(msg);
+    if (!self->cb) {
+        return;
+    }
+    if (str::Eq(method, "findResult")) {
+        self->cb->OnFindResult(v.Int(0), v.Int(1), v.Int(2));
+        return;
+    }
+    if (str::Eq(method, "findAllResult")) {
+        // downstream (BrowserFindAllResultReceived) still parses the flat
+        // "<gen> <total> <recs>" form, so reassemble it here
+        self->cb->OnFindAllResult(fmt("%d %d %s", v.Int(0), v.Int(1), v.Text(2)));
+        return;
+    }
+    logf("BrowserOnJsNotify: unhandled '%s'\n", method);
 }
 
 static TempStr ChmMimeFromPathTemp(Str path, Str data) {
@@ -393,6 +441,7 @@ bool BrowserDocView::CreateWebView2() {
     wv->events.navigationCompleted = NavigationCompleted;
     wv->events.historyChanged = HistoryChanged;
     wv->events.resolveAccelCmd = ChmResolveAccelCmd;
+    wv->events.jsNotify = BrowserWebviewWnd::OnJsNotifyCb;
     wv->allowClipboardRead = false;
     // forward app accelerators (Ctrl+W close tab, Ctrl+K command palette, etc.)
     // to the main window so they work while the WebView2 has keyboard focus
@@ -632,7 +681,7 @@ void BrowserDocView::FindStart(Str term, bool matchCase, bool wholeWord, int gen
 }
 
 // search all pages of the document (pageUrls in page order); the match list
-// is posted back asynchronously as one 'mdfindall' message
+// comes back asynchronously as one findAllResult notification
 void BrowserDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen) {
     if (!CanFindInPage()) {
         return;

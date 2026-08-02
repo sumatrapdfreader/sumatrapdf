@@ -255,6 +255,10 @@ static const char* kJsBridgeScript = R"JS((function() {
     };
   };
   S.onUnbind = function(name) { delete window[name]; };
+  S.notify = function(method) {
+    var params = Array.prototype.slice.call(arguments, 1);
+    S.post(JSON.stringify({__sumatraNotify: 1, method: method, params: JSON.stringify(params)}));
+  };
   window.__sumatra__ = S;
 })())JS";
 
@@ -1397,12 +1401,17 @@ void WebviewWnd::RemoveAllInitScripts() {
     }
 }
 
-// marker the bridge puts first in every call message; JSON.stringify preserves
+// markers the bridge puts first in its messages; JSON.stringify preserves
 // insertion order, so a prefix test is enough to tell these from raw messages
 static const char* kJsCallPrefix = "{\"__sumatraCall\":1";
+static const char* kJsNotifyPrefix = "{\"__sumatraNotify\":1";
 
 static bool IsJsCallMessage(Str msg) {
     return str::StartsWith(msg, kJsCallPrefix);
+}
+
+static bool IsJsNotifyMessage(Str msg) {
+    return str::StartsWith(msg, kJsNotifyPrefix);
 }
 
 // escape for embedding inside a double-quoted JS string literal
@@ -1478,6 +1487,22 @@ void WebviewWnd::OnJsCall(Str msg) {
     }
     Str params = visitor.params ? Str(visitor.params) : StrL("[]");
     events.jsCall(events.ctx, visitor.id, visitor.method, params);
+}
+
+void WebviewWnd::OnJsNotify(Str msg) {
+    if (!events.jsNotify) {
+        return;
+    }
+    JsCallVisitor visitor;
+    if (!json::Parse(msg, &visitor)) {
+        logf("WebviewWnd::OnJsNotify: failed to parse '%s'\n", msg);
+        return;
+    }
+    if (!visitor.method) {
+        return;
+    }
+    Str params = visitor.params ? Str(visitor.params) : StrL("[]");
+    events.jsNotify(events.ctx, visitor.method, params);
 }
 
 void WebviewWnd::Resolve(Str id, int status, Str resultJson) {
@@ -1948,6 +1973,10 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
             self->OnJsCall(msg);
             return;
         }
+        if (IsJsNotifyMessage(msg)) {
+            self->OnJsNotify(msg);
+            return;
+        }
         self->OnBrowserMessage(msg);
     }
 }
@@ -2062,6 +2091,7 @@ void WebviewWnd::Bind(Str) {}
 void WebviewWnd::Unbind(Str) {}
 void WebviewWnd::Resolve(Str, int, Str) {}
 void WebviewWnd::OnJsCall(Str) {}
+void WebviewWnd::OnJsNotify(Str) {}
 void WebviewWnd::RebuildBindScript() {}
 void WebviewWnd::OnProcessFailed(WebViewProcessFailure) {}
 void WebviewWnd::Navigate(Str) {}

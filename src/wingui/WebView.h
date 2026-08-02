@@ -50,6 +50,9 @@ struct WebViewEvents {
     // paramsJson is the arguments as a JSON array. Reply with WebviewWnd::Resolve
     // (may be async); not replying leaves the JS promise pending forever.
     void (*jsCall)(void* ctx, Str id, Str method, Str paramsJson) = nullptr;
+    // window.__sumatra__.notify(name, ...): one-way, no reply and no promise, so
+    // it's the right channel for high-frequency events like scrolling
+    void (*jsNotify)(void* ctx, Str method, Str paramsJson) = nullptr;
 };
 
 struct WebViewResourceProvider {
@@ -111,6 +114,7 @@ struct WebviewWnd : Wnd {
     // valid JSON (or empty for undefined)
     void Resolve(Str id, int status, Str resultJson);
     void OnJsCall(Str msg);
+    void OnJsNotify(Str msg);
     void RebuildBindScript();
     void GoBack();
     void GoForward();
