@@ -538,6 +538,10 @@ class EngineBase {
     // returns a list of all available elements for this page
     // caller must delete the Vec but not the elements inside the vector
     virtual Vec<IPageElement*> GetElements(int pageNo) = 0;
+    // like GetElements but returns false (and no elements) if the engine can't
+    // acquire locks without blocking. Default always succeeds; EngineMupdf fails
+    // when a render thread holds them
+    virtual bool TryGetElements(int pageNo, Vec<IPageElement*>* out);
 
     // returns the element at a given point or nullptr if there's none
     virtual IPageElement* GetElementAtPos(int pageNo, PointF pt) = 0;

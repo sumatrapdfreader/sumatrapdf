@@ -472,6 +472,11 @@ bool EngineBase::TryExtractPageText(int pageNo, PageText* out) {
     return true;
 }
 
+bool EngineBase::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
+    *out = GetElements(pageNo);
+    return true;
+}
+
 static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut) {
     if (lenOut) {
         *lenOut = pt->nCodepoints;

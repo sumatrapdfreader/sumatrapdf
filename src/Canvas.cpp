@@ -2226,7 +2226,10 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             continue;
         }
 
-        Vec<IPageElement*> els = dm->GetEngine()->GetElements(pageNo);
+        // don't block the paint (and the whole UI) behind a busy render thread
+        // just to outline links; they get drawn on the next repaint
+        Vec<IPageElement*> els;
+        dm->GetEngine()->TryGetElements(pageNo, &els);
 
         for (auto& el : els) {
             if (el->Is(kindPageElementImage)) {

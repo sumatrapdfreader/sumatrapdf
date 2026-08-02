@@ -4682,6 +4682,27 @@ Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
     return pageInfo->allElements;
 }
 
+// The UI thread draws link boxes from here on every repaint, and pagesLock can
+// be held for the length of an image decode by a render thread that is itself
+// queued on renderLock. Skip the decoration for this paint rather than freeze
+// the window; the next repaint draws it.
+bool EngineMupdf::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
+    *out = Vec<IPageElement*>();
+    if (!pagesLock.TryLock()) {
+        return false;
+    }
+    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (pageNo >= 1 && pageNo <= pageCount) {
+        FzPageInfo* pageInfo = pages[pageNo - 1];
+        if (pageInfo && pageInfo->page && pageInfo->fullyLoaded) {
+            BuildElementsInfo(pageInfo);
+            *out = pageInfo->allElements;
+        }
+    }
+    pagesLock.Unlock();
+    return true;
+}
+
 void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
     ReportIf(kindDestinationMupdf != dest->GetKind());
     PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
@@ -5586,17 +5607,18 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     return ok;
 }
 
-bool EngineMupdf::HasClipOptimizations(int pageNo) {
-    if (!pdfdoc) {
+// caller must hold pagesLock (protects pages[] and pageInfo->images)
+static bool HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
+    ReportIf(pageNo < 1 || pageNo > e->pageCount);
+    if (pageNo < 1 || pageNo > e->pageCount) {
+        return false;
+    }
+    FzPageInfo* pageInfo = e->pages[pageNo - 1];
+    if (!pageInfo || !pageInfo->page || !pageInfo->fullyLoaded) {
         return false;
     }
 
-    FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
-    if (!pageInfo || !pageInfo->page) {
-        return false;
-    }
-
-    fz_rect mbox = ToFzRect(PageMediabox(pageNo));
+    fz_rect mbox = ToFzRect(e->PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img->rect;
@@ -5605,6 +5627,24 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
         }
     }
     return true;
+}
+
+bool EngineMupdf::HasClipOptimizations(int pageNo) {
+    if (!pdfdoc) {
+        return false;
+    }
+    // This only tunes tile size (RenderCache::GetTileRes) and the UI thread asks
+    // on every zoom/scroll, so never wait for the answer: pagesLock can be held
+    // for the length of an image decode by a render thread that is itself queued
+    // on renderLock, which stalls the UI mid-mouse-wheel. "false" is what we
+    // already return for a page that isn't loaded yet, i.e. "can't tell, use the
+    // smaller tiles".
+    if (!pagesLock.TryLock()) {
+        return false;
+    }
+    bool res = HasClipOptimizationsLocked(this, pageNo);
+    pagesLock.Unlock();
+    return res;
 }
 
 TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
