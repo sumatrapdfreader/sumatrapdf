@@ -548,14 +548,25 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
 // password dialog message pump) would create a duplicate tab. UI thread only.
 static StrVec gFilesLoading;
 
-static int IndexOfLoadingFile(Str file) {
-    if (!file) {
+static int IndexOfLoadingFile(Str path) {
+    if (!path) {
         return -1;
     }
-    TempStr norm = path::NormalizeTemp(file);
     int n = len(gFilesLoading);
+    // Fast path: entries are stored normalized, but the caller often already has
+    // the same string (or only differs by case). Avoid NormalizeTemp / IsSame —
+    // both can hit the network on UNC paths and stall the UI.
     for (int i = 0; i < n; i++) {
-        if (path::IsSame(gFilesLoading[i], norm)) {
+        if (str::EqI(gFilesLoading[i], path)) {
+            return i;
+        }
+    }
+    TempStr norm = path::NormalizeTemp(path);
+    if (!norm || str::EqI(norm, path)) {
+        return -1; // already compared as-is
+    }
+    for (int i = 0; i < n; i++) {
+        if (str::EqI(gFilesLoading[i], norm)) {
             return i;
         }
     }
