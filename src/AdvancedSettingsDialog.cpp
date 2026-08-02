@@ -31,6 +31,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "FilterHighlightDraw.h"
 #include "AdvancedSettingsDialog.h"
 
 constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
@@ -333,13 +334,34 @@ void AdvancedSettingsWnd::ScheduleDelete() {
     uitask::Post(fn, "SafeDeleteAdvancedSettingsDialog");
 }
 
+// Match setting name against a pre-split filter so "use tabs" hits "UseTabs".
+// words is empty when the filter is empty (match all).
+static bool SettingNameMatchesFilter(Str name, Str filter, const StrVec& words) {
+    if (len(words) == 0) {
+        return true;
+    }
+    // Continuous substring (also covers a single word / no spaces)
+    if (str::ContainsI(name, filter)) {
+        return true;
+    }
+    // Single word that already failed ContainsI — no match
+    if (len(words) == 1) {
+        return false;
+    }
+    return FilterMatches(name, words);
+}
+
 void AdvancedSettingsWnd::QueryChanged() {
     CancelEditValue();
     Str filter = editFilter->GetTextTemp();
+    StrVec words;
+    if (len(filter) > 0) {
+        SplitFilterToWords(filter, words);
+    }
     model->filtered.Reset();
     int n = len(items);
     for (int i = 0; i < n; i++) {
-        if (len(filter) == 0 || str::ContainsI(items[i]->name, filter)) {
+        if (SettingNameMatchesFilter(items[i]->name, filter, words)) {
             model->filtered.Append(i);
         }
     }
@@ -749,8 +771,11 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
                 CloseEnumEdit(true);
                 return true;
             }
+            // Activate the selected row (bool: toggle true↔false; else edit).
+            // Do not require list focus: after filter/arrow navigation the
+            // selection can be valid while focus is still on the filter.
             int lbIdx = listBox->GetCurrentSelection();
-            if (msg.hwnd == listBox->hwnd && lbIdx >= 0) {
+            if (lbIdx >= 0) {
                 ActivateItem(lbIdx);
                 return true;
             }
