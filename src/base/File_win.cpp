@@ -31,12 +31,14 @@ Type GetType(Str pathA) {
     return Type::File;
 }
 
-// Network-drive attribute cache: GetFileAttributesW on UNC/mapped drives is
-// slow and menu rebuild can call IsDirectory/GuessFileTypeFromName many times
-// for the same open-tab path.
+// Network-drive attribute cache: GetFileAttributesExW on UNC/mapped drives is
+// slow and menu rebuild / Exists / GetSize can hit the same path repeatedly.
+// One entry stores full WIN32_FILE_ATTRIBUTE_DATA for both GetCachedAttributes
+// and GetCachedAttributesEx.
 struct AttrsCacheEntry {
     char* path = nullptr; // owned heap string
-    DWORD attrs = INVALID_FILE_ATTRIBUTES;
+    bool ok = false;      // last GetFileAttributesEx result
+    WIN32_FILE_ATTRIBUTE_DATA data{};
     u64 tickMs = 0;
 };
 
@@ -48,80 +50,125 @@ constexpr int kAttrsCacheMaxEntries = 512;
 static void FreeAttrsCacheEntry(AttrsCacheEntry& e) {
     free(e.path);
     e.path = nullptr;
-    e.attrs = INVALID_FILE_ATTRIBUTES;
+    e.ok = false;
+    e.data = {};
     e.tickMs = 0;
 }
 
-DWORD GetCachedAttributes(Str path) {
-    if (!path) {
-        return INVALID_FILE_ATTRIBUTES;
+// Look up a non-expired cache entry. Caller holds gAttrsCacheMutex.
+// Returns true if a live entry was found (ok or failed query).
+static bool LookupAttrsCache(Str path, u64 now, bool* okOut, WIN32_FILE_ATTRIBUTE_DATA* dataOut) {
+    for (int i = 0; i < len(gAttrsCache); i++) {
+        AttrsCacheEntry& e = gAttrsCache[i];
+        if (!e.path || !str::EqI(Str(e.path), path)) {
+            continue;
+        }
+        if (now - e.tickMs > kAttrsCacheTtlMs) {
+            FreeAttrsCacheEntry(e);
+            return false;
+        }
+        *okOut = e.ok;
+        *dataOut = e.data;
+        return true;
+    }
+    return false;
+}
+
+// Insert or update cache entry. Caller holds gAttrsCacheMutex.
+static void StoreAttrsCache(Str path, u64 now, bool ok, const WIN32_FILE_ATTRIBUTE_DATA& data) {
+    int freeIdx = -1;
+    int oldestIdx = -1;
+    u64 oldestTick = UINT64_MAX;
+    for (int i = 0; i < len(gAttrsCache); i++) {
+        AttrsCacheEntry& e = gAttrsCache[i];
+        if (!e.path) {
+            if (freeIdx < 0) {
+                freeIdx = i;
+            }
+            continue;
+        }
+        if (str::EqI(Str(e.path), path)) {
+            e.ok = ok;
+            e.data = data;
+            e.tickMs = now;
+            return;
+        }
+        if (e.tickMs < oldestTick) {
+            oldestTick = e.tickMs;
+            oldestIdx = i;
+        }
+    }
+    if (freeIdx < 0 && len(gAttrsCache) < kAttrsCacheMaxEntries) {
+        freeIdx = len(gAttrsCache);
+        gAttrsCache.AppendBlanks(1);
+    }
+    if (freeIdx < 0) {
+        freeIdx = oldestIdx;
+    }
+    if (freeIdx < 0) {
+        return;
+    }
+    AttrsCacheEntry& e = gAttrsCache[freeIdx];
+    FreeAttrsCacheEntry(e);
+    Str owned = str::Dup(path);
+    e.path = owned.s;
+    e.ok = ok;
+    e.data = data;
+    e.tickMs = now;
+}
+
+bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
+    if (out) {
+        *out = {};
+    }
+    if (!path || !out) {
+        return false;
     }
 
     const bool network = IsOnNetworkDrive(path);
     if (network) {
         const u64 now = GetTickCount64();
-        ScopedMutex lock(&gAttrsCacheMutex);
-        for (int i = 0; i < len(gAttrsCache); i++) {
-            AttrsCacheEntry& e = gAttrsCache[i];
-            if (!e.path) {
-                continue;
+        bool ok = false;
+        WIN32_FILE_ATTRIBUTE_DATA data{};
+        {
+            ScopedMutex lock(&gAttrsCacheMutex);
+            if (LookupAttrsCache(path, now, &ok, &data)) {
+                logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=hit\n", path, (int)ok,
+                     data.dwFileAttributes);
+                if (ok) {
+                    *out = data;
+                }
+                return ok;
             }
-            if (!str::EqI(Str(e.path), path)) {
-                continue;
-            }
-            if (now - e.tickMs > kAttrsCacheTtlMs) {
-                FreeAttrsCacheEntry(e);
-                break; // expired; fall through to real query
-            }
-            logf("path::GetCachedAttributes: network path='%s' attrs=0x%x cache=hit\n", path, e.attrs);
-            return e.attrs;
         }
     }
 
-    DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+    WIN32_FILE_ATTRIBUTE_DATA data{};
+    BOOL ok = GetFileAttributesExW(CWStrTemp(path), GetFileExInfoStandard, &data);
+    if (!ok) {
+        data = {};
+    }
 
     if (network) {
-        logf("path::GetCachedAttributes: network path='%s' attrs=0x%x cache=miss\n", path, attrs);
-        const u64 now = GetTickCount64();
+        logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=miss\n", path, (int)(ok != 0),
+             data.dwFileAttributes);
         ScopedMutex lock(&gAttrsCacheMutex);
-        int freeIdx = -1;
-        int oldestIdx = -1;
-        u64 oldestTick = UINT64_MAX;
-        for (int i = 0; i < len(gAttrsCache); i++) {
-            AttrsCacheEntry& e = gAttrsCache[i];
-            if (!e.path) {
-                if (freeIdx < 0) {
-                    freeIdx = i;
-                }
-                continue;
-            }
-            if (str::EqI(Str(e.path), path)) {
-                e.attrs = attrs;
-                e.tickMs = now;
-                return attrs;
-            }
-            if (e.tickMs < oldestTick) {
-                oldestTick = e.tickMs;
-                oldestIdx = i;
-            }
-        }
-        if (freeIdx < 0 && len(gAttrsCache) < kAttrsCacheMaxEntries) {
-            freeIdx = len(gAttrsCache);
-            gAttrsCache.AppendBlanks(1);
-        }
-        if (freeIdx < 0) {
-            freeIdx = oldestIdx;
-        }
-        if (freeIdx >= 0) {
-            AttrsCacheEntry& e = gAttrsCache[freeIdx];
-            FreeAttrsCacheEntry(e);
-            Str owned = str::Dup(path);
-            e.path = owned.s;
-            e.attrs = attrs;
-            e.tickMs = now;
-        }
+        StoreAttrsCache(path, GetTickCount64(), ok != 0, data);
     }
-    return attrs;
+
+    if (ok) {
+        *out = data;
+        return true;
+    }
+    return false;
+}
+
+DWORD GetCachedAttributes(Str path) {
+    WIN32_FILE_ATTRIBUTE_DATA data{};
+    if (!GetCachedAttributesEx(path, &data)) {
+        return INVALID_FILE_ATTRIBUTES;
+    }
+    return data.dwFileAttributes;
 }
 
 bool IsDirectory(Str path) {
@@ -532,11 +579,7 @@ void MemoryUnmap(Mapping* m) {
 }
 
 static bool GetInfo(Str path, WIN32_FILE_ATTRIBUTE_DATA& fileInfo) {
-    if (!path) {
-        return false;
-    }
-    BOOL ok = GetFileAttributesEx(CWStrTemp(path), GetFileExInfoStandard, &fileInfo);
-    return ok != 0;
+    return path::GetCachedAttributesEx(path, &fileInfo);
 }
 
 i64 GetSize(Str path) {

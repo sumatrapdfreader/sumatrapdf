@@ -35,10 +35,15 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2 = WStr());
 bool IsDirectory(Str path);
 
 // Like GetFileAttributesW: returns attributes or INVALID_FILE_ATTRIBUTES.
-// On Windows, network-drive results are cached for 1 hour to avoid repeated
-// slow metadata round-trips (e.g. menu rebuild for tabs on UNC paths).
+// On Windows, network-drive results are cached for 1 hour (shared with
+// GetCachedAttributesEx) to avoid repeated slow metadata round-trips.
 // Non-Windows: no cache (same as an uncached attribute query).
 DWORD GetCachedAttributes(Str path);
+#if OS_WIN
+// Like GetFileAttributesExW(..., GetFileExInfoStandard, ...). Network paths
+// share the same 1-hour cache as GetCachedAttributes.
+bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out);
+#endif
 
 TempStr NormalizeTemp(Str path);
 TempStr ToOSTemp(Str path);
