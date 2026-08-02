@@ -18,7 +18,8 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if (gExecuteTaskMessage == msg) {
         Kind kind = (Kind)wp;
         auto func = (Func0*)lp;
-        bool shouldLog = (kind != nullptr) && !str::Eq(Str(kind), StrL("RenderFinished"));
+        bool shouldLog = (kind != nullptr) && !str::Eq(Str(kind), StrL("RenderFinished")) &&
+                         !str::Eq(Str(kind), StrL("CopyProgress"));
         if (shouldLog) {
             logf("uitask::WndProcTaskDispatch: will execute '%s', func 0x%p\n", Str(kind), (void*)func);
         }
