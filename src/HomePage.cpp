@@ -1227,10 +1227,28 @@ void PickAnotherRandomPromotion() {
     PickAnotherRandomTip();
 }
 
-// tooltip is path only — file::GetSize is too slow on network drives to call
-// during layout/scroll (was ~11% of home-page scroll CPU)
+// Just the path here — no file::GetSize during layout/scroll, it's too slow on
+// network drives (was ~11% of home-page scroll CPU). The size is appended when
+// the tooltip is actually shown, see LinkTooltipTemp().
 static TempStr HomeThumbTooltipTemp(Str path) {
     return str::DupTemp(path);
+}
+
+// A thumbnail / list-row tooltip is the file path, then two spaces and a
+// human-readable size. Looking the size up on hover (rather than when the link
+// is created) keeps it off the layout/scroll path, where file::GetSize() on a
+// network drive is slow enough to be felt. Links whose target isn't a file
+// (urls, commands) keep their plain tooltip.
+TempStr LinkTooltipTemp(StaticLink* link) {
+    Str tip = link->tooltip;
+    if (!tip || !link->target) {
+        return str::DupTemp(tip);
+    }
+    i64 size = file::GetSize(link->target);
+    if (size < 0) {
+        return str::DupTemp(tip);
+    }
+    return fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
 }
 
 // --- scroll-friendly layout cache: full LayoutHomePage only when content/size/

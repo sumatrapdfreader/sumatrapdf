@@ -161,7 +161,10 @@ static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
     if (!pt.IsEmpty()) {
         StaticLink* link;
         if (GetStaticLinkAtTemp(win->staticLinks, pt.x, pt.y, &link)) {
-            win->ShowToolTip(link->tooltip, link->rect);
+            // LinkTooltipTemp appends the file size; it's looked up here (once
+            // per hover) rather than during layout, which is too slow to do per
+            // thumbnail while scrolling
+            win->ShowToolTip(LinkTooltipTemp(link), link->rect);
             SetCursorCached(IDC_HAND);
         } else {
             win->DeleteToolTip();

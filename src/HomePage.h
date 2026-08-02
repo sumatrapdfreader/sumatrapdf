@@ -19,6 +19,7 @@ bool HomePageIsListView();
 void SetHomePageListView(bool listView);
 
 TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
+TempStr LinkTooltipTemp(StaticLink* link);
 
 constexpr const char* kLinkOpenFile = "<File,Open>";
 constexpr const char* kLinkShowList = "<View,ShowList>";
