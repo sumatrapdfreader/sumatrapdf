@@ -983,6 +983,52 @@ CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* ar
     return cmd;
 }
 
+static CommandArg* CopyCommandArgs(CommandArg* first) {
+    CommandArg* res = nullptr;
+    CommandArg** tail = &res;
+    for (CommandArg* curr = first; curr; curr = curr->next) {
+        auto arg = new CommandArg();
+        arg->type = curr->type;
+        arg->name = str::Dup(curr->name);
+        arg->strVal = str::Dup(curr->strVal);
+        arg->boolVal = curr->boolVal;
+        arg->intVal = curr->intVal;
+        arg->floatVal = curr->floatVal;
+        arg->colorVal = curr->colorVal;
+        *tail = arg;
+        tail = &arg->next;
+    }
+    return res;
+}
+
+// Commands without arguments keep their original id (CreateCustomCommand), so
+// several CustomCommand can end up with the same id.
+bool IsCustomCommandIdShared(CustomCommand* cmd) {
+    for (auto curr = gFirstCustomCommand; curr; curr = curr->next) {
+        if (curr != cmd && curr->id == cmd->id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// A copy of cmd (same original command, same arguments) under a fresh, unique
+// command id. Two settings entries can resolve to the same command and yet have
+// to stay distinguishable (their own name, key, toolbar button); they can't
+// share a CustomCommand, and they can't share an id either because the toolbar
+// identifies buttons by command id (#5869). name / key are deliberately not
+// copied: the caller sets those from its own settings entry.
+CustomCommand* CloneCustomCommand(CustomCommand* cmd) {
+    auto res = new CustomCommand();
+    res->id = gNextCustomCommandId++;
+    res->origId = cmd->origId;
+    res->definition = str::Dup(cmd->definition);
+    res->firstArg = CopyCommandArgs(cmd->firstArg);
+    res->next = gFirstCustomCommand;
+    gFirstCustomCommand = res;
+    return res;
+}
+
 CustomCommand* FindCustomCommand(int cmdId) {
     auto cmd = gFirstCustomCommand;
     while (cmd) {

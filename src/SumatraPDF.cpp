@@ -8588,7 +8588,10 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
 }
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
-    if (cmd && (cmd->id != cmd->origId)) {
+    // note: test the arguments, not `cmd->id != cmd->origId`. A command without
+    // arguments usually keeps its original id, but not always: a Shortcuts entry
+    // that would collide with an earlier one gets a generated id (#5869).
+    if (cmd && cmd->firstArg) {
         // a command definition doesn't use values from settings
         // must specify everything explicitly
         SetAnnotCreateArgsFromCommand(args, cmd);

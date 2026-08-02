@@ -373,6 +373,8 @@ int GetCommandIdByName(Str);
 int GetCommandIdByDesc(Str);
 
 CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args);
+CustomCommand* CloneCustomCommand(CustomCommand* cmd);
+bool IsCustomCommandIdShared(CustomCommand* cmd);
 CustomCommand* FindCustomCommand(int cmdId);
 void FreeCustomCommands();
 CommandArg* NewStringArg(Str name, Str val);

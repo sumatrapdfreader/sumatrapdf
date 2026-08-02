@@ -268,17 +268,29 @@ static void CreateZoomCommands() {
     }
 }
 
+// Every entry in the Shortcuts section is its own thing: it has its own Name,
+// its own Key and possibly its own toolbar button. Two entries must therefore
+// never end up on the same CustomCommand (they would overwrite each other's
+// name and key) and must not even share a command id: the toolbar identifies a
+// button - and registers its tooltip - by command id, so with duplicate ids all
+// but one of the buttons ends up without a working tooltip (#5869).
+//
+// Both happen easily, because commands are cached: CreateCommandFromDefinition
+// returns an existing command for an identical definition string, and a command
+// without arguments keeps its original command id (e.g. CmdNone) instead of
+// getting a generated one. So give every entry that would collide with an
+// earlier one a clone of the command, under a fresh id.
 static void CreateCustomShortcuts() {
+    Vec<CustomCommand*> claimed;
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
         auto cmd = CreateCommandFromDefinition(shortcut->cmd);
         if (!cmd) {
             continue;
         }
-        // if command already has a key bound (from a previous shortcut entry),
-        // create a separate command so both shortcuts work
-        if (cmd->key && !str::IsEmptyOrWhiteSpace(shortcut->key)) {
-            cmd = CreateCustomCommand(shortcut->cmd, cmd->origId, nullptr);
+        if (claimed.Contains(cmd) || IsCustomCommandIdShared(cmd)) {
+            cmd = CloneCustomCommand(cmd);
         }
+        claimed.Append(cmd);
         shortcut->cmdId = cmd->id;
         SetCommandNameAndShortcut(cmd, shortcut->name, shortcut->key);
     }

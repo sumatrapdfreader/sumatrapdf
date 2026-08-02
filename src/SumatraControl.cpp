@@ -19,6 +19,7 @@
 #include "ImageSaveCropResize.h"
 #include "base/GuessFileType.h"
 #include "FindWindow.h"
+#include "Toolbar.h"
 
 extern Flags* gCli;
 
@@ -124,6 +125,7 @@ enum class ControlCmd : u16 {
     TestTocNavigate = 32,
     TestMarkdownTocNavigate = 33,
     TestFavoriteNav = 34,
+    TestToolbarButtons = 35,
 };
 
 enum class ControlArgType : u16 {
@@ -632,6 +634,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = FavoriteNavResultTemp(action, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestToolbarButtons: {
+            int exitCode = 0;
+            Str res = ToolbarButtonsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

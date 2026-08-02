@@ -1173,8 +1173,16 @@ static void PopulateCustomToolbarButtons() {
         }
     }
 
-    // add toolbar buttons from custom commands with toolbar settings (e.g. ExternalViewers)
+    // add toolbar buttons from custom commands with toolbar settings (e.g. ExternalViewers).
+    // gFirstCustomCommand is a prepend-only list, so walking it directly yields
+    // the commands in reverse creation order and the buttons would show up in
+    // the reverse of the order the user listed them in (#5869)
+    Vec<CustomCommand*> customCmds;
     for (auto cc = gFirstCustomCommand; cc; cc = cc->next) {
+        customCmds.Append(cc);
+    }
+    customCmds.Reverse();
+    for (CustomCommand* cc : customCmds) {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;
         }
@@ -1420,6 +1428,51 @@ Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
     }
     Rect r = TbGetRect(win->hwndToolbar, cmdId);
     return HwndMapRectToWindow(r, win->hwndToolbar, HWND_DESKTOP);
+}
+
+// Dump of the toolbar's buttons for -dbg-control tests (tests/issue-5869.ts).
+// One line per button: its command id, its rect and the string the toolbar
+// shows as its tooltip. Also reports how many tools the toolbar's tooltip
+// control ended up with: the toolbar registers one tool per button keyed by
+// command id, so duplicate command ids silently collapse into one tooltip.
+TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    MainWindow* win = gWindows.IsEmpty() ? nullptr : gWindows[0];
+    if (!win || !win->hwndToolbar) {
+        *exitCodeOut = 1;
+        out.Append("ERROR no-toolbar\n");
+        return ToStrTemp(out);
+    }
+    HWND hwnd = win->hwndToolbar;
+    int n = (int)SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0);
+    HWND hwndTt = (HWND)SendMessageW(hwnd, TB_GETTOOLTIPS, 0, 0);
+    int nTools = hwndTt ? (int)SendMessageW(hwndTt, TTM_GETTOOLCOUNT, 0, 0) : -1;
+    out.Append(fmt("buttons=%d tooltipTools=%d\n", n, nTools));
+    for (int i = 0; i < n; i++) {
+        WCHAR buf[512]{};
+        TBBUTTONINFOW bi{};
+        bi.cbSize = sizeof(bi);
+        bi.dwMask = TBIF_BYINDEX | TBIF_COMMAND | TBIF_TEXT | TBIF_STATE;
+        bi.pszText = buf;
+        bi.cchText = dimof(buf);
+        TbGetButtonInfo(hwnd, i, &bi);
+        RECT r{};
+        SendMessageW(hwnd, TB_GETITEMRECT, (WPARAM)i, (LPARAM)&r);
+        bool hidden = (bi.fsState & TBSTATE_HIDDEN) != 0;
+        out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, (int)bi.idCommand, hidden ? 1 : 0,
+                       (int)r.left, (int)r.top, (int)r.right, (int)r.bottom, ToUtf8Temp(buf)));
+    }
+    for (int i = 0; i < nTools; i++) {
+        TTTOOLINFOW ti{};
+        ti.cbSize = sizeof(ti);
+        if (!SendMessageW(hwndTt, TTM_ENUMTOOLSW, (WPARAM)i, (LPARAM)&ti)) {
+            continue;
+        }
+        out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", i, (int)ti.uId, (int)ti.rect.left, (int)ti.rect.top,
+                       (int)ti.rect.right, (int)ti.rect.bottom));
+    }
+    *exitCodeOut = 0;
+    return ToStrTemp(out);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference

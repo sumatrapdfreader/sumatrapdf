@@ -21,6 +21,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - fix mouse-wheel / touchpad scrolling doing nothing (and 100% CPU use) after restoring a session that was left in fullscreen: the hidden tab bar repainted in a loop, starving the timer that drives smooth scrolling (fixes #5865)
 - fix the vertical scrollbar being painted as a blank strip — no thumb, no arrows until you scrolled or hovered it — when a document opened into a maximized window with `Scrollbars = windows` and `UseTabs = false` (fixes #5850)
 - fix parts of the document being left painted over the tab bar and toolbar after leaving full screen in a maximized window, when the taskbar is set to auto-hide (fixes #5866)
+- fix custom toolbar buttons that share a command (e.g. several `Shortcuts` entries using `Cmd = CmdNone` with a `ToolbarSvgIcon`): only one of them had a working tooltip, and it showed the wrong name. `ExternalViewers` toolbar buttons also showed up in the reverse of the order they are listed in (fixes #5869)
 - Bookmarks sidebar: **Collapse All** expands a single top-level root one level when that is all the outline has (typical Word-export TOC), and the context menu has **Expand to Level 1/2/3** for explicit depth control (fixes #5239)
 - Bookmarks context menu **Collapse Same Level** collapses every outline entry that shares the parent of the selected/clicked item (siblings at that nesting level) (fixes #1895)
 - FB2 document properties (`Ctrl+D`) now show the book annotation from `title-info` as Subject (fixes #2254)

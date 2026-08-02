@@ -30,6 +30,8 @@ void UpdateToolbarAfterThemeChange(MainWindow*);
 HIMAGELIST BuildStdToolbarImageList(int dx);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 
+TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
+
 int GetMenuBarRebarHeight(MainWindow*);
 void CreateMenuBarRebar(MainWindow*);
 void DestroyMenuBarRebar(MainWindow*);
