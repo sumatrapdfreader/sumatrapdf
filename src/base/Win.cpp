@@ -3691,9 +3691,42 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
     }
 }
 
+// SHAddToRecentDocs can block on network paths (shell resolves / writes Recent).
+// Run those off the UI thread with COM initialized and a heap-owned path.
+static void AddPathToRecentDocsOnThread(WCHAR* pathW) {
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    bool comInitedByUs = SUCCEEDED(hr);
+    if (!comInitedByUs && hr != RPC_E_CHANGED_MODE) {
+        logf("AddPathToRecentDocsOnThread: CoInitializeEx failed hr=0x%08x\n", (unsigned)hr);
+        free(pathW);
+        return;
+    }
+
+    if (pathW) {
+        SHAddToRecentDocs(SHARD_PATH, pathW);
+    }
+    free(pathW);
+
+    if (comInitedByUs) {
+        CoUninitialize();
+    }
+}
+
 void AddPathToRecentDocs(Str path) {
-    WCHAR* pathW = CWStrTemp(path);
-    SHAddToRecentDocs(SHARD_PATH, pathW);
+    if (!path) {
+        return;
+    }
+    if (!path::IsOnNetworkDrive(path)) {
+        WCHAR* pathW = CWStrTemp(path);
+        SHAddToRecentDocs(SHARD_PATH, pathW);
+        return;
+    }
+
+    WCHAR* owned = ToWStr(path).s; // heap; thread frees
+    if (!owned) {
+        return;
+    }
+    RunAsync(MkFunc0(AddPathToRecentDocsOnThread, owned), StrL("AddPathToRecentDocs"));
 }
 
 TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
