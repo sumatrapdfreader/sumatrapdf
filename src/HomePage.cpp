@@ -480,6 +480,8 @@ static void EnsureTipsParsed() {
     PickRandomTipOrPromo();
 }
 
+static void ClearHomeLayoutCache();
+
 void FreeHomePageTips() {
     if (gTipsParsed) {
         for (int i = 0; i < gParsedTipCount; i++) {
@@ -494,6 +496,7 @@ void FreeHomePageTips() {
     }
     str::Free(promoFromServer);
     ResetHomeCloseBtn();
+    ClearHomeLayoutCache();
 }
 
 static void PickAnotherRandomTip() {
@@ -1086,9 +1089,23 @@ struct ThumbnailLayout {
     Rect rcListPin;
     FileState* fs = nullptr; // info needed to draw the thumbnail
     StaticLink* sl = nullptr;
+    i64 fileSize = -2; // -2 = not fetched; avoids file::GetSize on every paint
 };
 
-static TempStr FileSizeForHomeListTemp(Str path);
+static TempStr FileSizeForHomeListTemp(i64 size);
+
+// true if r overlaps the visible thumbs band (optionally with a small margin)
+static bool IsHomeThumbOnScreen(const Rect& r, const Rect& thumbsArea, int marginY = 0) {
+    if (r.IsEmpty() || thumbsArea.IsEmpty()) {
+        return false;
+    }
+    Rect band = thumbsArea;
+    if (marginY > 0) {
+        band.y -= marginY;
+        band.dy += 2 * marginY;
+    }
+    return !r.Intersect(band).IsEmpty();
+}
 
 bool HomePageIsListView() {
     return gGlobalPrefs && str::EqI(gGlobalPrefs->homePageViewMode, StrL("list"));
@@ -1210,13 +1227,321 @@ void PickAnotherRandomPromotion() {
     PickAnotherRandomTip();
 }
 
-// thumbnail tooltip: the file path, then two spaces and a human-readable size
+// tooltip is path only — file::GetSize is too slow on network drives to call
+// during layout/scroll (was ~11% of home-page scroll CPU)
 static TempStr HomeThumbTooltipTemp(Str path) {
-    i64 size = file::GetSize(path);
-    if (size < 0) {
-        return str::DupTemp(path);
+    return str::DupTemp(path);
+}
+
+// --- scroll-friendly layout cache: full LayoutHomePage only when content/size/
+// filter changes; pure scrollY changes just offset stored thumb rects ---
+struct HomePageLayoutCache {
+    bool valid = false;
+    Rect canvasRc{};
+    int scrollY = 0;
+    int nFiles = 0;
+    bool listView = false;
+    bool sortByFreq = false;
+    bool showTips = false;
+    int tipIdx = -1;
+    bool tipIsPromo = false;
+    Str filterText{}; // owned
+
+    Rect rcThumbsArea{};
+    Rect rcSearchBorder{};
+    Rect rcIconOpen{};
+    Rect rcIconListView{};
+    Rect rcIconThumbnailView{};
+    Rect rcTip{};
+    Rect rcAppWithVer{};
+    Rect rcLine{};
+    Rect rcFreqRead{};
+    Rect rcOpenDoc{};
+    int totalContentDy = 0;
+    int thumbsVisibleDy = 0;
+    ParsedTip* tip = nullptr;
+    Vec<ThumbnailLayout> thumbs;
+    StrVec filterWords;
+};
+
+static HomePageLayoutCache gHomeLayoutCache;
+
+static void ClearHomeLayoutCache() {
+    gHomeLayoutCache.valid = false;
+    str::Free(gHomeLayoutCache.filterText);
+    gHomeLayoutCache.filterText = {};
+    gHomeLayoutCache.thumbs.Reset();
+    gHomeLayoutCache.filterWords.Reset();
+    gHomeLayoutCache.tip = nullptr;
+    gHomeLayoutCache.nFiles = 0;
+    gHomeLayoutCache.scrollY = 0;
+}
+
+static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
+    if (dy == 0) {
+        return;
     }
-    return fmt("%s  %s", path, str::FormatSizeShortTemp(size, nullptr));
+    for (ThumbnailLayout& t : thumbs) {
+        t.rcPage.y += dy;
+        t.rcText.y += dy;
+        t.rcListRow.y += dy;
+        t.rcListThumb.y += dy;
+        t.rcListFileName.y += dy;
+        t.rcListPath.y += dy;
+        t.rcListSize.y += dy;
+        t.rcListRemove.y += dy;
+        t.rcListPin.y += dy;
+    }
+}
+
+// rebuild hit-test links for currently visible file rows/thumbs (scroll-safe)
+static void HomePageAppendFileStaticLinks(HomePageLayout& l) {
+    MainWindow* win = l.win;
+    bool list = HomePageIsListView();
+    for (ThumbnailLayout& thumb : l.thumbnails) {
+        FileState* fs = thumb.fs;
+        if (!fs || !fs->filePath) {
+            continue;
+        }
+        Str path = fs->filePath;
+        if (list) {
+            Rect slRect = thumb.rcListRow.Intersect(l.rcThumbsArea);
+            if (slRect.IsEmpty()) {
+                continue;
+            }
+            TempStr removeTarget = str::JoinTemp(kLinkHomeRemoveFilePrefix, path);
+            TempStr pinTarget = str::JoinTemp(kLinkHomePinFilePrefix, path);
+            Str pinTip = fs->isPinned ? _TRA("Unpin") : _TRA("Pin");
+            win->staticLinks.Append(new StaticLink(thumb.rcListRemove.Intersect(l.rcThumbsArea), removeTarget,
+                                                   _TRA("Remove from Frequently Read")));
+            win->staticLinks.Append(new StaticLink(thumb.rcListPin.Intersect(l.rcThumbsArea), pinTarget, pinTip));
+            thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
+            win->staticLinks.Append(thumb.sl);
+        } else {
+            Rect slRect = thumb.rcText.Union(thumb.rcPage).Intersect(l.rcThumbsArea);
+            if (slRect.IsEmpty()) {
+                continue;
+            }
+            thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
+            win->staticLinks.Append(thumb.sl);
+        }
+    }
+}
+
+static void HomePageAppendChromeStaticLinks(HomePageLayout& l) {
+    MainWindow* win = l.win;
+    win->staticLinks.Append(new StaticLink(l.rcIconListView, kLinkHomeListView, _TRA("Show as list")));
+    win->staticLinks.Append(new StaticLink(l.rcIconThumbnailView, kLinkHomeThumbnailView, _TRA("Show as thumbnails")));
+
+    Rect rcOpen = l.rcIconOpen;
+    if (l.openDoc) {
+        rcOpen = rcOpen.Union(l.openDoc->lastBounds);
+    }
+    rcOpen.Inflate(10, 10);
+    win->staticLinks.Append(new StaticLink(rcOpen, kLinkOpenFile));
+
+    if (l.tip) {
+        for (auto& link : l.tip->links) {
+            Rect linkRect;
+            for (int i = link.firstWord; i <= link.lastWord; i++) {
+                auto& w = l.tip->words[i];
+                Rect wr = {w.x, w.y, w.dx, w.dy};
+                if (i == link.firstWord) {
+                    linkRect = wr;
+                } else {
+                    linkRect = linkRect.Union(wr);
+                }
+            }
+            win->staticLinks.Append(new StaticLink(linkRect, link.cmd, link.cmd));
+        }
+        win->staticLinks.Append(new StaticLink(l.rcTip, kLinkNextTip));
+    }
+}
+
+static TempStr HomeSearchQueryTemp(MainWindow* win) {
+    if (!win->hwndHomeSearch) {
+        return {};
+    }
+    return HwndGetTextTemp(win->hwndHomeSearch);
+}
+
+static bool HomeLayoutCacheMatches(MainWindow* win, const Rect& rc, Str filterText) {
+    auto& c = gHomeLayoutCache;
+    if (!c.valid) {
+        return false;
+    }
+    if (c.canvasRc != rc) {
+        return false;
+    }
+    if (c.listView != HomePageIsListView()) {
+        return false;
+    }
+    if (c.sortByFreq != (gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead)) {
+        return false;
+    }
+    if (c.showTips != (gGlobalPrefs && gGlobalPrefs->showTips)) {
+        return false;
+    }
+    if (c.tipIdx != gSelectedTipIdx || c.tipIsPromo != gSelectedIsPromo) {
+        return false;
+    }
+    if (!str::Eq(c.filterText, filterText)) {
+        return false;
+    }
+    // pin/remove/reorder changes FileState pointers or order → invalidate
+    // (nFiles alone is not enough: pin does not change count)
+    return true;
+}
+
+// true if cached thumb FileState* sequence still matches the current file list
+static bool HomeLayoutCacheFilesMatch(const Vec<FileState*>& files) {
+    auto& c = gHomeLayoutCache;
+    if (len(files) != c.nFiles || len(c.thumbs) != c.nFiles) {
+        return false;
+    }
+    for (int i = 0; i < c.nFiles; i++) {
+        if (c.thumbs[i].fs != files[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, StrVec& filterWords) {
+    Vec<FileState*> allFileStates;
+    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+        gFileHistory.GetFrequencyOrder(allFileStates);
+    } else {
+        gFileHistory.GetRecentlyOpenedOrder(allFileStates);
+    }
+
+    TempStr searchQuery = HomeSearchQueryTemp(win);
+    bool hasFilter = searchQuery && searchQuery.s[0];
+    if (hasFilter) {
+        SplitFilterToWords(searchQuery, filterWords);
+    }
+    for (int i = 0; i < len(allFileStates); i++) {
+        FileState* fs = allFileStates[i];
+        if (len(fs->filePath) == 0) {
+            continue;
+        }
+        if (hasFilter) {
+            TempStr baseName = path::GetBaseNameTemp(fs->filePath);
+            if (!FilterMatches(baseName, filterWords)) {
+                continue;
+            }
+        }
+        fileStates.Append(fs);
+    }
+}
+
+static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scrollY) {
+    auto& c = gHomeLayoutCache;
+    c.valid = true;
+    c.canvasRc = l.rc;
+    c.scrollY = scrollY;
+    c.nFiles = len(l.thumbnails);
+    c.listView = HomePageIsListView();
+    c.sortByFreq = gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead;
+    c.showTips = gGlobalPrefs && gGlobalPrefs->showTips;
+    c.tipIdx = gSelectedTipIdx;
+    c.tipIsPromo = gSelectedIsPromo;
+    str::ReplaceWithCopy(&c.filterText, filterText);
+    c.rcThumbsArea = l.rcThumbsArea;
+    c.rcSearchBorder = l.rcSearchBorder;
+    c.rcIconOpen = l.rcIconOpen;
+    c.rcIconListView = l.rcIconListView;
+    c.rcIconThumbnailView = l.rcIconThumbnailView;
+    c.rcTip = l.rcTip;
+    c.rcAppWithVer = l.rcAppWithVer;
+    c.rcLine = l.rcLine;
+    c.rcFreqRead = l.freqRead ? l.freqRead->lastBounds : Rect{};
+    c.rcOpenDoc = l.openDoc ? l.openDoc->lastBounds : Rect{};
+    c.totalContentDy = l.totalContentDy;
+    c.thumbsVisibleDy = l.thumbsVisibleDy;
+    c.tip = l.tip;
+    c.thumbs = l.thumbnails;
+    for (ThumbnailLayout& t : c.thumbs) {
+        t.sl = nullptr; // links are owned by win->staticLinks, recreated each paint
+    }
+    c.filterWords = l.filterWords;
+}
+
+// rebuild chrome VirtWndText + copy cached geometry into l (no full layout)
+static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
+    auto& c = gHomeLayoutCache;
+    auto win = l.win;
+    auto hdc = l.hdc;
+    auto hwnd = l.hwnd;
+    bool isRtl = IsUIRtl();
+
+    // clamp scroll using cached content height
+    int maxScrollY = std::max(0, c.totalContentDy - c.thumbsVisibleDy);
+    if (scrollY > maxScrollY) {
+        scrollY = maxScrollY;
+        win->homePageScrollY = scrollY;
+    }
+    if (scrollY < 0) {
+        scrollY = 0;
+        win->homePageScrollY = 0;
+    }
+
+    int dy = c.scrollY - scrollY; // content moves opposite scroll direction
+    OffsetThumbnailLayouts(c.thumbs, dy);
+    c.scrollY = scrollY;
+
+    l.rcThumbsArea = c.rcThumbsArea;
+    l.rcSearchBorder = c.rcSearchBorder;
+    l.rcIconOpen = c.rcIconOpen;
+    l.rcIconListView = c.rcIconListView;
+    l.rcIconThumbnailView = c.rcIconThumbnailView;
+    l.rcTip = c.rcTip;
+    l.rcAppWithVer = c.rcAppWithVer;
+    l.rcLine = c.rcLine;
+    l.totalContentDy = c.totalContentDy;
+    l.thumbsVisibleDy = c.thumbsVisibleDy;
+    l.tip = c.tip;
+    l.thumbnails = c.thumbs;
+    l.filterWords = c.filterWords;
+
+    l.himlOpen = TbGetImageList(win->hwndToolbar);
+
+    HFONT hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+
+    Str txt = _TRA("Recently Opened");
+    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+        txt = _TRA("Frequently Read");
+    }
+    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
+    hdr->isRtl = isRtl;
+    hdr->SetBounds(c.rcFreqRead);
+    l.freqRead = hdr;
+
+    VirtWndText* openDoc = new VirtWndText(hwnd, _TRA("Open a document..."), fontText);
+    openDoc->isRtl = isRtl;
+    openDoc->withUnderline = true;
+    openDoc->SetBounds(c.rcOpenDoc);
+    l.openDoc = openDoc;
+
+    HomePageAppendChromeStaticLinks(l);
+    HomePageAppendFileStaticLinks(l);
+}
+
+// after paint, keep lazy fileSize values in the cache for the next frame
+static void SyncHomeLayoutCacheFileSizes(const HomePageLayout& l) {
+    auto& c = gHomeLayoutCache;
+    if (!c.valid || len(c.thumbs) != len(l.thumbnails)) {
+        return;
+    }
+    for (int i = 0; i < len(c.thumbs); i++) {
+        c.thumbs[i].fileSize = l.thumbnails[i].fileSize;
+        // geometry may have been filled for newly visible list rows
+        c.thumbs[i].rcListFileName = l.thumbnails[i].rcListFileName;
+        c.thumbs[i].rcListPath = l.thumbnails[i].rcListPath;
+        c.thumbs[i].rcListSize = l.thumbnails[i].rcListSize;
+        c.thumbs[i].szThumb = l.thumbnails[i].szThumb;
+    }
 }
 
 void LayoutHomePage(HomePageLayout& l) {
@@ -1445,15 +1770,18 @@ void LayoutHomePage(HomePageLayout& l) {
         int listIconDx = l.rcIconListView.dx;
         int listIconGap = DpiScale(hdc, 6);
         HFONT fontRow = HdcCreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
+        // fixed size column — never call file::GetSize during layout (disk/network I/O)
+        int listSizeDx = DpiScale(hdc, 56);
+        // one-row margin so a quick scroll still has measured name/path splits ready
+        int listPrefetchY = kHomeListRowDy;
         for (int row = 0; row < nFiles; row++) {
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
             FileState* fs = fileStates[row];
             thumb.fs = fs;
             Rect rcRow(listX, ptOff.y + (row * kHomeListRowDy), thumbsContentWidth, kHomeListRowDy);
             thumb.rcListRow = rcRow;
-            // size the file-size column to its text so it never ellipsizes
-            TempStr fileSize = FileSizeForHomeListTemp(fs->filePath);
-            int listSizeDx = HdcMeasureText(hdc, Str(fileSize), fontRow).dx + DpiScale(hdc, 4);
+            bool onScreen = IsHomeThumbOnScreen(rcRow, l.rcThumbsArea, listPrefetchY);
+
             Rect rcThumb(rcRow.x, rcRow.y + ((rcRow.dy - kHomeListThumbDy) / 2), kHomeListThumbDx, kHomeListThumbDy);
             Rect rcPin(rcRow.x + rcRow.dx - listIconDx, rcRow.y + ((rcRow.dy - listIconDx) / 2), listIconDx,
                        listIconDx);
@@ -1473,9 +1801,10 @@ void LayoutHomePage(HomePageLayout& l) {
                 rcFileName.dx = 0;
             }
             // give the file name the width it needs; the directory path goes
-            // into the remaining space, right-aligned (mirrored for RTL)
+            // into the remaining space, right-aligned (mirrored for RTL).
+            // CPU-only measure for visible rows; no disk I/O here.
             Rect rcPath;
-            {
+            if (onScreen) {
                 TempStr fileName = path::GetBaseNameTemp(fs->filePath);
                 int nameDx = HdcMeasureText(hdc, Str(fileName), fontRow).dx + DpiScale(hdc, 4);
                 int minPathDx = DpiScale(hdc, 80);
@@ -1496,9 +1825,12 @@ void LayoutHomePage(HomePageLayout& l) {
             thumb.rcListSize = rcSize;
             thumb.rcListFileName = rcFileName;
             thumb.rcListPath = rcPath;
-            RenderedBitmap* thumbImg = LoadThumbnail(fs);
-            if (thumbImg) {
-                thumb.szThumb = thumbImg->GetSize();
+            // already-cached in-memory thumb size only (no LoadThumbnail / disk)
+            if (onScreen && fs->thumbnail) {
+                thumb.szThumb = fs->thumbnail->GetSize();
+            }
+            if (!onScreen) {
+                continue;
             }
             Str path = fs->filePath;
             Rect slRect = rcRow.Intersect(l.rcThumbsArea);
@@ -1514,6 +1846,7 @@ void LayoutHomePage(HomePageLayout& l) {
             }
         }
     } else {
+        int thumbPrefetchY = kThumbnailDy + kThumbsSpaceBetweenY;
         for (int row = 0; row < thumbsRows; row++) {
             for (int col = 0; col < thumbsColsForLayout; col++) {
                 if ((row * thumbsColsForLayout) + col >= nFiles) {
@@ -1530,9 +1863,11 @@ void LayoutHomePage(HomePageLayout& l) {
                 if (isRtl) {
                     rcPage.x = rc.dx - rcPage.x - rcPage.dx;
                 }
-                RenderedBitmap* thumbImg = LoadThumbnail(fs);
-                if (thumbImg) {
-                    Size szThumb = thumbImg->GetSize();
+                bool onScreen = IsHomeThumbOnScreen(rcPage, l.rcThumbsArea, thumbPrefetchY);
+                // only use already-resident thumbnails for aspect adjust — never LoadThumbnail
+                // during layout (disk I/O dominated scroll/paint CPU)
+                if (onScreen && fs->thumbnail) {
+                    Size szThumb = fs->thumbnail->GetSize();
                     if (szThumb.dx != kThumbnailDx || szThumb.dy != kThumbnailDy) {
                         rcPage.dy = szThumb.dy * kThumbnailDx / szThumb.dx;
                         rcPage.y += kThumbnailDy - rcPage.dy;
@@ -1546,6 +1881,9 @@ void LayoutHomePage(HomePageLayout& l) {
                     rcText.x -= iconSpace;
                 }
                 thumb.rcText = rcText;
+                if (!onScreen) {
+                    continue;
+                }
                 Str path = fs->filePath;
                 Rect slRect = rcText.Union(rcPage).Intersect(l.rcThumbsArea);
                 if (!slRect.IsEmpty()) {
@@ -1814,20 +2152,19 @@ static Rect FitRectInRect(Size src, Rect dst) {
     return r;
 }
 
-static TempStr FileSizeForHomeListTemp(Str path) {
-    i64 size = file::GetSize(path);
+static TempStr FileSizeForHomeListTemp(i64 size) {
     if (size < 0) {
         return str::DupTemp("");
     }
     return str::FormatSizeShortTemp(size, nullptr);
 }
 
-static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
+static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
                             bool isRtl) {
     HDC hdc = l.hdc;
     FileState* fs = thumb.fs;
     Rect row = thumb.rcListRow;
-    if (row.Intersect(l.rcThumbsArea).IsEmpty()) {
+    if (!IsHomeThumbOnScreen(row, l.rcThumbsArea)) {
         return;
     }
 
@@ -1835,11 +2172,13 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, lineCol), true);
     HdcDrawLine(hdc, Rect(row.x, row.y + row.dy - 1, row.dx, 0));
 
+    // LoadThumbnail only hits disk the first time; result stays on fs->thumbnail
     RenderedBitmap* thumbImg = LoadThumbnail(fs);
     Rect thumbBox = thumb.rcListThumb;
     if (thumbImg) {
         Rect thumbDst = FitRectInRect(thumbImg->GetSize(), thumbBox);
         thumbImg->Blit(hdc, thumbDst);
+        thumb.szThumb = thumbImg->GetSize();
     }
     RoundRect(hdc, thumbBox.x, thumbBox.y, thumbBox.x + thumbBox.dx, thumbBox.y + thumbBox.dy, 4, 4);
 
@@ -1863,7 +2202,11 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
         HdcDrawText(hdc, dirPath, pathRect, pathFmt);
     }
 
-    TempStr fileSize = FileSizeForHomeListTemp(path);
+    // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses it)
+    if (thumb.fileSize == -2) {
+        thumb.fileSize = file::GetSize(path);
+    }
+    TempStr fileSize = FileSizeForHomeListTemp(thumb.fileSize);
     SetTextColor(hdc, ThemeWindowTextColor());
     UINT sizeFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
     Rect sizeRect = thumb.rcListSize;
@@ -1939,16 +2282,23 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         DeleteObject(thumbsClip);
     }
 
-    for (const ThumbnailLayout& thumb : l.thumbnails) {
+    for (ThumbnailLayout& thumb : l.thumbnails) {
         FileState* fs = thumb.fs;
         if (HomePageIsListView()) {
             DrawHomeListRow(l, thumb, fontText, backgroundColor, isRtl);
             continue;
         }
         const Rect& page = thumb.rcPage;
+        // skip off-screen thumbs (scroll was redoing Blit+text for every history
+        // entry and dominated CPU in DrawHomePageLayout)
+        if (!IsHomeThumbOnScreen(page.Union(thumb.rcText), l.rcThumbsArea)) {
+            continue;
+        }
 
+        // disk load only first time; stays on fs->thumbnail afterwards
         RenderedBitmap* thumbImg = LoadThumbnail(fs);
         if (thumbImg) {
+            thumb.szThumb = thumbImg->GetSize();
             int savedDC = SaveDC(hdc);
             HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
             ExtSelectClipRgn(hdc, clip, RGN_AND);
@@ -2021,9 +2371,29 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     l.hdc = hdc;
     l.hwnd = hwnd;
     l.win = win;
-    LayoutHomePage(l);
+
+    TempStr filterText = HomeSearchQueryTemp(win);
+    int scrollY = win->homePageScrollY;
+
+    // Prefer the scroll-friendly path: when only scrollY changed, offset cached
+    // thumb rects instead of re-running full LayoutHomePage (was ~30% of scroll CPU).
+    bool usedCache = false;
+    if (HomeLayoutCacheMatches(win, l.rc, filterText)) {
+        Vec<FileState*> files;
+        StrVec filterWords;
+        CollectHomePageFiles(win, files, filterWords);
+        if (HomeLayoutCacheFilesMatch(files)) {
+            ApplyHomeLayoutCache(l, scrollY);
+            usedCache = true;
+        }
+    }
+    if (!usedCache) {
+        LayoutHomePage(l);
+        SaveHomeLayoutCache(l, filterText, win->homePageScrollY);
+    }
 
     DrawHomePageLayout(l);
+    SyncHomeLayoutCacheFileSizes(l);
 
     // update overlay scrollbar for home page if thumbnails overflow visible area
     bool showScrollbarV = ScrollbarsUseOverlay() && l.totalContentDy > l.thumbsVisibleDy;
