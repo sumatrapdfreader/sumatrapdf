@@ -6,6 +6,11 @@
 
 #include "base/File.h"
 
+// we pad data read with 3 zeros for convenience. That way returned
+// data is a valid null-terminated string or WCHAR*.
+// 3 is for absolute worst case of WCHAR* where last char was partially written
+#define ZERO_PADDING_COUNT 3
+
 // Defined in Win.cpp; avoid pulling all of Win.h into this file.
 void LogLastError(DWORD err = 0);
 
@@ -594,6 +599,62 @@ int ReadN(Str path, u8* buf, size_t toRead) {
         return -1;
     }
     return (int)nRead;
+}
+
+// Reads the whole file into memory allocated from a (heap if a is nullptr),
+// followed by ZERO_PADDING_COUNT zero bytes so the result is also a valid
+// NUL-terminated char* / WCHAR*.
+//
+// Skips the CRT for the same reason ReadN() does, plus two wins that matter
+// more here because this is used for whole (potentially large) files:
+//  - the portable version sizes the file with fseek(END)/ftell(), which is a
+//    32-bit long on Windows, so it can't read files >= 2GB at all
+//  - we allocate without zeroing: the buffer is immediately overwritten with
+//    file data, so pre-zeroing it is a second full-size memset per file
+Str ReadFileWithArena(Str filePath, Arena* a) {
+    ReportIf(!filePath);
+    if (!filePath) {
+        return {};
+    }
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN;
+    HANDLE h = CreateFileW(CWStrTemp(filePath), GENERIC_READ, share, nullptr, OPEN_EXISTING, flags, nullptr);
+    if (h == INVALID_HANDLE_VALUE) {
+        return {};
+    }
+    AutoCloseHandle hf(h);
+
+    i64 fileSize = GetSize(h);
+    if (fileSize < 0 || fileSize > (i64)(INT_MAX - ZERO_PADDING_COUNT)) {
+        return {};
+    }
+    int size = (int)fileSize;
+    char* d = (char*)Alloc(a, (size_t)size + ZERO_PADDING_COUNT);
+    if (!d) {
+        return {};
+    }
+    memset(d + size, 0, ZERO_PADDING_COUNT);
+
+    int nTotal = 0;
+    while (nTotal < size) {
+        DWORD nRead = 0;
+        // ::ReadFile is allowed to return less than asked for; loop until done
+        if (!::ReadFile(h, d + nTotal, (DWORD)(size - nTotal), &nRead, nullptr)) {
+            DWORD err = GetLastError();
+            logf("ReadFileWithArena: ReadFile() failed, path: '%s', size: %d, nRead: %d, lastError: %u\n", filePath,
+                 size, nTotal, err);
+            Free(a, (void*)d);
+            return {};
+        }
+        if (nRead == 0) {
+            // unexpected end of file (someone truncated it while we were reading)
+            logf("ReadFileWithArena: unexpected eof, path: '%s', size: %d, nRead: %d\n", filePath, size, nTotal);
+            Free(a, (void*)d);
+            return {};
+        }
+        nTotal += (int)nRead;
+    }
+    return Str(d, size);
 }
 
 bool Exists(Str path) {

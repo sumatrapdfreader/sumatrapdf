@@ -293,6 +293,8 @@ namespace file {
 
 thread_local CopyProgressCb gFileCopyProgressCb;
 
+#if !OS_WIN
+// Windows has its own ReadFileWithArena() in File_win.cpp that skips the CRT
 Str ReadFileWithArena(Str filePath, Arena* a) {
     char* d = nullptr;
     int res;
@@ -336,6 +338,7 @@ Error:
     Free(a, (void*)d);
     return {};
 }
+#endif
 
 Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
