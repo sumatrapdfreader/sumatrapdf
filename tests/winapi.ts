@@ -63,6 +63,10 @@ const gdi32 = dlopen("gdi32.dll", {
   GetPixel: { args: [FFIType.u64, FFIType.i32, FFIType.i32], returns: FFIType.u32 },
 });
 
+const shell32 = dlopen("shell32.dll", {
+  SHAppBarMessage: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.u64 },
+});
+
 const gdiplus = dlopen("gdiplus.dll", {
   GdiplusStartup: { args: [FFIType.ptr, FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
   GdipCreateBitmapFromHBITMAP: { args: [FFIType.u64, FFIType.u64, FFIType.ptr], returns: FFIType.u32 },
@@ -487,6 +491,39 @@ export function getSystemMetrics(index: number): number {
 export function setProcessDpiAware(): boolean {
   // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == (HANDLE)-4
   return user32.symbols.SetProcessDpiAwarenessContext(-4n as unknown as number);
+}
+
+// Taskbar auto-hide, via SHAppBarMessage. Takes effect immediately (no Explorer
+// restart). Worth toggling in a test because auto-hide makes the monitor work
+// area equal the whole screen, so a MAXIMIZED window's client rect matches a
+// full-screen one -- which is a distinct code path in SumatraPDF's
+// ExitFullScreen (issue #5866). Always restore the previous value in a finally.
+const ABM_GETSTATE = 0x4;
+const ABM_SETSTATE = 0xa;
+const ABS_AUTOHIDE = 0x1;
+const ABS_ALWAYSONTOP = 0x2;
+
+function appBarData(lParam: number): Uint8Array {
+  const buf = new Uint8Array(48); // x64 APPBARDATA
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(0, 48, true); // cbSize
+  dv.setBigInt64(40, BigInt(lParam), true); // lParam
+  return buf;
+}
+
+function taskbarState(): number {
+  return Number(shell32.symbols.SHAppBarMessage(ABM_GETSTATE, ptr(appBarData(0))));
+}
+
+export function getTaskbarAutoHide(): boolean {
+  return (taskbarState() & ABS_AUTOHIDE) !== 0;
+}
+
+export function setTaskbarAutoHide(on: boolean): void {
+  // preserve always-on-top; only flip the auto-hide bit
+  const onTop = taskbarState() & ABS_ALWAYSONTOP;
+  const next = on ? ABS_AUTOHIDE | onTop : onTop;
+  shell32.symbols.SHAppBarMessage(ABM_SETSTATE, ptr(appBarData(next)));
 }
 
 // Read a vertical run of pixels straight out of a window's DC, as 0x00bbggrr

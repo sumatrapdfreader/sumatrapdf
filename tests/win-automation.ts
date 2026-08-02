@@ -159,6 +159,32 @@ export function sendCommand(hwnd: number, cmdId: number): void {
   postMessage(hwnd, WM_COMMAND, cmdId, 0);
 }
 
+// A dense pixel sample of the top `dy` rows of a window, straight from its
+// window DC (so it covers the non-client caption row as well as the tab bar and
+// toolbar children). Use it to assert that chrome repainted: capture once in a
+// known-good state, again after the action, and compare — see tests/issue-5866.ts.
+// Call setProcessDpiAware() first on scaled displays.
+export function topChromePixels(hwnd: number, dy: number): number[] {
+  const r = getWindowRect(hwnd);
+  const w = r.right - r.left;
+  const px: number[] = [];
+  for (let x = 2; x < w - 2; x += 6) {
+    px.push(...readWindowDCColumn(hwnd, x, 0, dy));
+  }
+  return px;
+}
+
+export function countDifferingPixels(a: number[], b: number[]): number {
+  let n = 0;
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    if (a[i] !== b[i]) {
+      n++;
+    }
+  }
+  return n + Math.abs(a.length - b.length);
+}
+
 // How many distinct colors are painted down the middle of the canvas's native
 // vertical scrollbar. The scrollbar lives in the canvas's non-client area, so
 // this reads the window DC (what is on screen) rather than PrintWindow output.

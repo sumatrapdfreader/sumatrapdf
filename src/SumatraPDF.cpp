@@ -5839,7 +5839,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         LayoutFavoritesContainer(win);
         if (suppressIntermediateRedraws) {
             SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
-            RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
+            // RDW_ALLCHILDREN as in the main path below: WM_SETREDRAW FALSE dropped any
+            // update region already pending on the tab bar / toolbar (issue #5866)
+            RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
         }
         RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         return true;
@@ -5938,7 +5940,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         // nothing to paint on, and the bar was left a blank strip (issue #5850).
         // The frame's own RDW_FRAME below does not reach child windows.
         RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
-        RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
+        // RDW_ALLCHILDREN for the frame too: WM_SETREDRAW FALSE above discards update
+        // regions that were already pending on the tab bar and toolbar, and without it
+        // nothing invalidates them again, so they kept whatever pixels were on screen —
+        // the document showing through the caption row after leaving full screen
+        // (issue #5866). Matches EndFrameRedrawSuppression, which has always done this.
+        RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
     }
     if (tocVisible) {
         RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
