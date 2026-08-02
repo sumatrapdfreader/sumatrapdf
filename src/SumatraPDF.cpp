@@ -5890,6 +5890,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     dh.End();
 
+    // Canvas size/position may have changed (e.g. first open shows the ToC via
+    // deferred ScheduleUiUpdate after "Errors in document" was created against
+    // the full-width canvas). Re-anchor notifications now; UpdateCanvasSize may
+    // not run if only position changed, and first-open layout used to skip
+    // IsWindowVisible notifs while parents were mid-show.
+    RelayoutNotifications(win->hwndCanvas);
+
     if (suppressIntermediateRedraws) {
         // re-enable redraw and invalidate once
         SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);

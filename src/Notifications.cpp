@@ -140,6 +140,11 @@ void RelayoutNotifications(HWND hwndCanvas) {
     }
 
     Rect frame = HwndClientRect(hwndCanvas);
+    // Canvas can be empty during early startup / DeferWindowPos; nothing to
+    // anchor to yet. A later UpdateCanvasSize / RelayoutFrame will retry.
+    if (frame.IsEmpty()) {
+        return;
+    }
     int dyPadding = DpiScale(hwndCanvas, kPadding);
     bool isRtl = IsUIRtl();
     // running vertical offset per corner so multiple notifications in the same
@@ -151,17 +156,22 @@ void RelayoutNotifications(HWND hwndCanvas) {
             // still in delay period, not yet visible
             continue;
         }
-        if (!HwndIsVisible(wnd->hwnd)) {
-            // hidden because it's tied to a non-active tab; don't reserve space
+        // Use the window's own WS_VISIBLE, not IsWindowVisible(): the latter
+        // walks parents and returns false while the frame/canvas is mid-show
+        // (first document open). That skipped positioning so bottom-right
+        // toasts (e.g. "Errors in document") stayed at 0,0 / off-canvas until
+        // a later reload when parents were already visible.
+        if (!(GetWindowStyle(wnd->hwnd) & WS_VISIBLE)) {
+            // explicitly hidden (e.g. tied to a non-active tab)
             continue;
         }
         int xMargin = DpiScale(hwndCanvas, wnd->xMargin);
         int yMargin = DpiScale(hwndCanvas, wnd->yMargin);
         Rect rect = HwndWindowRect(wnd->hwnd);
-        // re-wrap the message if the notification no longer fits
-        // (e.g. when the window was made smaller, issue #2916)
+        // re-measure when the canvas is too small for the current size, or when
+        // the notif was first laid out against an empty/wrong parent size
         int maxDx = frame.dx - (2 * xMargin);
-        if (maxDx > 0 && rect.dx > maxDx) {
+        if (maxDx > 0 && (rect.dx > maxDx || rect.dx <= 0 || rect.dy <= 0)) {
             wnd->Layout(HwndGetTextTemp(wnd->hwnd));
             rect = HwndWindowRect(wnd->hwnd);
         }
@@ -175,6 +185,13 @@ void RelayoutNotifications(HWND hwndCanvas) {
         int x = atRight ? (frame.dx - rect.dx - xMargin) : xMargin;
         int idx = (int)corner;
         int y = atBottom ? (frame.dy - rect.dy - yMargin - yOffset[idx]) : (yMargin + yOffset[idx]);
+        // keep fully inside the canvas (guards empty/partial layout races)
+        if (x < 0) {
+            x = 0;
+        }
+        if (y < 0) {
+            y = 0;
+        }
         // SWP_NOCOPYBITS: repaint from scratch instead of copying stale bits, so
         // notifications that shift when another is dismissed draw correctly
         // (OnPaint is double-buffered, so no flicker)
