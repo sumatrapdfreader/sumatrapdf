@@ -798,8 +798,7 @@ static float GlyphGapX(const fz_stext_char* prev, const fz_stext_char* next) {
 // True if this space is only tracking/justification between syllables, not a
 // real word break. PDFs that place space operators (or MuPDF synthetic spaces)
 // between every syllable produce "Kro nik, im mün" on copy (#5627).
-static bool IsTrackingSpace(const fz_stext_char* spaceChar, const fz_stext_char* prevNonSpace,
-                            const fz_stext_char* nextNonSpace) {
+static bool IsTrackingSpace(const fz_stext_char* prevNonSpace, const fz_stext_char* nextNonSpace) {
     if (!prevNonSpace || !nextNonSpace) {
         return false;
     }
@@ -808,16 +807,15 @@ static bool IsTrackingSpace(const fz_stext_char* spaceChar, const fz_stext_char*
     if (size <= 0) {
         size = 1.f;
     }
-    // Real word gaps are typically ~0.25–0.5em; tracking spaces are ~0 (or a
-    // few percent of size). Threshold 0.2em keeps normal word spaces.
-    if (gap < size * 0.2f) {
-        return true;
-    }
-    // MuPDF-inserted synthetic spaces with only a tiny advance
-    if ((spaceChar->flags & FZ_STEXT_SYNTHETIC) && gap < size * 0.35f) {
-        return true;
-    }
-    return false;
+    // Measured gap/size over both a tracking-space PDF (#5627) and an ordinary
+    // one: tracking spaces sit at 0.00-0.02em while real word spaces start
+    // around 0.20em, so 0.1em separates them with room on both sides.
+    //
+    // Don't treat synthetic (MuPDF-inserted) spaces as more suspicious than
+    // real ones: a PDF that positions words with TJ offsets instead of space
+    // glyphs -- groff/troff output, for one -- gets *every* word space
+    // synthesized, at a perfectly normal 0.25-0.3em gap (#5868).
+    return gap < size * 0.1f;
 }
 
 static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
@@ -986,7 +984,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
                         }
                         nextNonSpace = nextNonSpace->next;
                     }
-                    if (IsTrackingSpace(c, prevNonSpace, nextNonSpace)) {
+                    if (IsTrackingSpace(prevNonSpace, nextNonSpace)) {
                         c = c->next;
                         continue;
                     }
