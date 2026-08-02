@@ -19,6 +19,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - PDF bookmark / link destinations now apply Adobe-style view modes (`/Fit`, `/FitH`, `/FitV`, `/FitB`, `/FitBH`, `/FitBV`, `/XYZ` zoom) instead of only jumping to the page (fixes #5828)
 - fix Advanced Settings list jumping scroll position on the first click after open or filter change (fixes #5829)
 - fix mouse-wheel / touchpad scrolling doing nothing (and 100% CPU use) after restoring a session that was left in fullscreen: the hidden tab bar repainted in a loop, starving the timer that drives smooth scrolling (fixes #5865)
+- fix the vertical scrollbar being painted as a blank strip — no thumb, no arrows until you scrolled or hovered it — when a document opened into a maximized window with `Scrollbars = windows` and `UseTabs = false` (fixes #5850)
 - Bookmarks sidebar: **Collapse All** expands a single top-level root one level when that is all the outline has (typical Word-export TOC), and the context menu has **Expand to Level 1/2/3** for explicit depth control (fixes #5239)
 - Bookmarks context menu **Collapse Same Level** collapses every outline entry that shares the parent of the selected/clicked item (siblings at that nesting level) (fixes #1895)
 - FB2 document properties (`Ctrl+D`) now show the book annotation from `title-info` as Subject (fixes #2254)

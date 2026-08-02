@@ -31,6 +31,8 @@ const user32 = dlopen("user32.dll", {
   GetWindowDC: { args: [FFIType.ptr], returns: FFIType.u64 },
   ReleaseDC: { args: [FFIType.ptr, FFIType.u64], returns: FFIType.i32 },
   PrintWindow: { args: [FFIType.ptr, FFIType.u64, FFIType.u32], returns: FFIType.bool },
+  GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
+  SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -58,6 +60,7 @@ const gdi32 = dlopen("gdi32.dll", {
     returns: FFIType.bool,
   },
   SetStretchBltMode: { args: [FFIType.u64, FFIType.i32], returns: FFIType.i32 },
+  GetPixel: { args: [FFIType.u64, FFIType.i32, FFIType.i32], returns: FFIType.u32 },
 });
 
 const gdiplus = dlopen("gdiplus.dll", {
@@ -174,6 +177,9 @@ export const SRCCOPY = 0x00cc0020;
 export const COLORONCOLOR = 3; // StretchBlt mode: no smoothing
 // ShowWindow commands
 export const SW_RESTORE = 9;
+// GetSystemMetrics indices
+export const SM_CXVSCROLL = 2;
+export const SM_CYHSCROLL = 3;
 // scrollbar bars + SCROLLINFO flags
 export const SB_HORZ = 0;
 export const SB_VERT = 1;
@@ -465,6 +471,36 @@ export function getWindowRect(hwnd: number): Rect {
 
 export function setForegroundWindow(hwnd: number): boolean {
   return user32.symbols.SetForegroundWindow(hwnd);
+}
+
+export function getSystemMetrics(index: number): number {
+  return user32.symbols.GetSystemMetrics(index);
+}
+
+// Opt this process into per-monitor-v2 DPI awareness. Bun is DPI-virtualized by
+// default, which makes window rects and window-DC pixel coordinates disagree
+// when reading a DPI-aware window like SumatraPDF's on a scaled display (see
+// project memory dpi-aware-probe-trick). No-op at 100% scaling.
+//
+// This is process-wide and cannot be undone, so only call it from tests that
+// read pixels or physical geometry, not from every test.
+export function setProcessDpiAware(): boolean {
+  // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == (HANDLE)-4
+  return user32.symbols.SetProcessDpiAwarenessContext(-4n as unknown as number);
+}
+
+// Read a vertical run of pixels straight out of a window's DC, as 0x00bbggrr
+// COLORREFs. Coordinates are window-relative, so 0,0 is the top-left of the
+// NON-client area -- which is what makes this usable for checking that native
+// scrollbars actually painted (PrintWindow leaves the NC area blank).
+export function readWindowDCColumn(hwnd: number, x: number, y: number, count: number): number[] {
+  const dc = user32.symbols.GetWindowDC(hwnd);
+  const out: number[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push(gdi32.symbols.GetPixel(dc, x, y + i) >>> 0);
+  }
+  user32.symbols.ReleaseDC(hwnd, dc);
+  return out;
 }
 
 // set a window's text via WM_SETTEXT (works on edit controls cross-process,

@@ -24,6 +24,10 @@ import {
   postMessage,
   sendText,
   captureWindowToPng,
+  getSystemMetrics,
+  getWindowRect,
+  readWindowDCColumn,
+  SM_CXVSCROLL,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_KEYDOWN,
@@ -153,4 +157,20 @@ export async function waitForContextMenu(timeoutMs = 1500): Promise<number> {
 // Send a WM_COMMAND (menu/command id) to a window (usually the frame).
 export function sendCommand(hwnd: number, cmdId: number): void {
   postMessage(hwnd, WM_COMMAND, cmdId, 0);
+}
+
+// How many distinct colors are painted down the middle of the canvas's native
+// vertical scrollbar. The scrollbar lives in the canvas's non-client area, so
+// this reads the window DC (what is on screen) rather than PrintWindow output.
+//
+// A drawn scrollbar has at least a track color and a thumb color, so >= 2. An
+// unpainted one is a flat strip of a single color (issue #5850), which is how a
+// missing WM_NCPAINT shows up. Call setProcessDpiAware() first on scaled displays.
+export function vScrollbarColorCount(canvas: number): number {
+  const r = getWindowRect(canvas);
+  const w = r.right - r.left;
+  const h = r.bottom - r.top;
+  const sbW = getSystemMetrics(SM_CXVSCROLL);
+  const colors = readWindowDCColumn(canvas, w - Math.floor(sbW / 2), 0, h);
+  return new Set(colors).size;
 }

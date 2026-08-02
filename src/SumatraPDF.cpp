@@ -1362,8 +1362,10 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         // not on every UpdateScrollbars. SetWindowTheme mid-update re-enters
         // uxtheme/comctl32 and can AV (crash 8c1831c15000001).
         // Only force a frame repaint when the bar newly appears; SetScrollInfo
-        // already redraws the thumb on position changes, and a hidden frame
-        // is handled again on SWP_SHOWWINDOW (issue #5850).
+        // already redraws the thumb on position changes. This is a no-op while
+        // the frame is hidden (including the WM_SETREDRAW FALSE window inside
+        // RelayoutFrame, which clears WS_VISIBLE) — RelayoutFrame repeats it
+        // with RDW_FRAME once redrawing is back on (issue #5850).
         if (wantV) {
             DWORD styleAfter = (DWORD)GetWindowLongW(win->hwndCanvas, GWL_STYLE);
             bool newlyShown = !(styleBefore & WS_VSCROLL) && (styleAfter & WS_VSCROLL);
@@ -5929,8 +5931,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (suppressIntermediateRedraws) {
         // re-enable redraw and invalidate once
         SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
-        // RDW_ALLCHILDREN ensures notification windows (children of canvas) also repaint
-        RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
+        // RDW_ALLCHILDREN ensures notification windows (children of canvas) also repaint.
+        // RDW_FRAME repaints the canvas's non-client area, i.e. the window scrollbars:
+        // WM_SETREDRAW FALSE clears WS_VISIBLE on the frame, so the SetScrollInfo /
+        // ShowScrollBar done by the UpdateScrollbars that this relayout triggers has
+        // nothing to paint on, and the bar was left a blank strip (issue #5850).
+        // The frame's own RDW_FRAME below does not reach child windows.
+        RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
     }
     if (tocVisible) {
@@ -11889,20 +11896,6 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // do nothing
             TtsSetNotifyWindow(hwnd, WM_TTS_EVENT, 0, 0);
             goto InitMouseWheelInfo;
-
-        case WM_WINDOWPOSCHANGED: {
-            LRESULT r = DefWindowProc(hwnd, msg, wp, lp);
-            WINDOWPOS* wpos = (WINDOWPOS*)lp;
-            // The document is loaded (and the canvas scrollbars configured with
-            // SetScrollInfo / ShowScrollBar) while the frame is still hidden.
-            // A hidden window discards the non-client paint that would draw the
-            // thumb and arrows, so the scrollbar showed up as a blank strip on
-            // first open (issue #5850). Repeat it once we're actually visible.
-            if (win && wpos && (wpos->flags & SWP_SHOWWINDOW) && win->hwndCanvas) {
-                RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
-            }
-            return r;
-        }
 
         case WM_SIZE:
             if (win && SIZE_MINIMIZED != wp) {
