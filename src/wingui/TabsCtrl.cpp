@@ -745,23 +745,30 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0; // remove non-client area so no edge is reserved
 
         case WM_PAINT: {
-            // TabCtrl_SetCurSel invalidates native (LTR) item rects; we lay out tabs
-            // manually (RTL tabs start from the right). Avoid BeginPaint's clip region.
-            RECT updateRc;
-            if (!GetUpdateRect(hwnd, &updateRc, FALSE)) {
+            // BeginPaint / EndPaint only to consume the update region: ValidateRect
+            // doesn't clear it on a hidden control, so WM_PAINT was regenerated
+            // forever (fullscreen hides the tab bar), starving the low-priority
+            // WM_TIMER that drives smooth wheel scrolling (issue #5865).
+            PAINTSTRUCT ps;
+            BeginPaint(hwnd, &ps);
+            defer {
+                EndPaint(hwnd, &ps);
+            };
+            if (!IsWindowVisible(hwnd)) {
                 return 0;
             }
             Rect clientRc = HwndClientRect(hwnd);
             if (clientRc.IsEmpty()) {
-                ValidateRect(hwnd, nullptr);
                 return 0;
             }
+            // TabCtrl_SetCurSel invalidates native (LTR) item rects; we lay out tabs
+            // manually (RTL tabs start from the right), so paint through an unclipped
+            // GetDC() rather than ps.hdc, which is clipped to the update region.
             HDC hdc = GetDC(hwnd);
             DoubleBuffer buffer(hwnd, clientRc);
             Paint(buffer.GetDC(), clientRc);
             buffer.Flush(hdc);
             ReleaseDC(hwnd, hdc);
-            ValidateRect(hwnd, nullptr);
             return 0;
         }
     }
