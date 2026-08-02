@@ -84,7 +84,15 @@ static bool IsOurThread(ThreadId tid, Str callstack) {
         // don't rely on WinMain still being in the captured part
         return true;
     }
-    return str::Contains(callstack, StrL("WinMain")) || str::Contains(callstack, StrL("ThreadFunc0"));
+    static Str validThreads[] = {
+        StrL("WinMain"),
+        StrL("ThreadFunc0"),
+        StrL("RenderCacheThread"),
+    };
+    for (auto& s : validThreads) {
+        if (str::Contains(callstack, s)) return true;
+    }
+    return false;
 }
 
 // Suspends every thread of this process except the watchdog, captures raw
