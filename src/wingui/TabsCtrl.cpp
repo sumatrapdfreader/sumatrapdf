@@ -67,8 +67,9 @@ void TabsCtrl::LayoutTabs() {
     int dy = rect.dy;
     int nTabs = TabCount();
     if (nTabs == 0) {
-        // logfa("TabsCtrl::Layout size: (%d, %d), no tabs\n", rect.dx, rect.dy);
-        HwndScheduleRepaint(hwnd);
+        // Do not ScheduleRepaint here: an empty bar with a forced repaint can
+        // re-enter layout/paint forever if something keeps calling LayoutTabs
+        // (issue #5861). The parent hides the control when there are no tabs.
         return;
     }
     int dx;
@@ -78,7 +79,9 @@ void TabsCtrl::LayoutTabs() {
         auto maxDx = (rect.dx - 5) / nTabs;
         dx = std::min(tabDefaultDx, maxDx);
     }
-    tabSize = {dx, dy};
+    Size newTabSize = {dx, dy};
+    bool sizeChanged = (newTabSize.dx != tabSize.dx || newTabSize.dy != tabSize.dy);
+    tabSize = newTabSize;
     if (IsRunningOnWine()) {
         logf("TabsCtrl::LayoutTabs: hwnd=%p client=(%d,%d) tabSize=(%d,%d) nTabs=%d\n", hwnd, rect.dx, rect.dy,
              tabSize.dx, tabSize.dy, nTabs);
@@ -139,7 +142,11 @@ void TabsCtrl::LayoutTabs() {
         TooltipAddTools(ttHwnd, hwnd, tools, nTabs);
     }
 
-    HwndTabsSetItemSize(hwnd, tabSize);
+    // TabCtrl_SetItemSize always invalidates; skip when size is unchanged to
+    // avoid a paint storm after last-tab close / caption relayout (#5861).
+    if (sizeChanged) {
+        HwndTabsSetItemSize(hwnd, tabSize);
+    }
 }
 
 // Finds the index of the tab, which contains the given point.
@@ -740,7 +747,15 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_PAINT: {
             // TabCtrl_SetCurSel invalidates native (LTR) item rects; we lay out tabs
             // manually (RTL tabs start from the right). Avoid BeginPaint's clip region.
+            RECT updateRc;
+            if (!GetUpdateRect(hwnd, &updateRc, FALSE)) {
+                return 0;
+            }
             Rect clientRc = HwndClientRect(hwnd);
+            if (clientRc.IsEmpty()) {
+                ValidateRect(hwnd, nullptr);
+                return 0;
+            }
             HDC hdc = GetDC(hwnd);
             DoubleBuffer buffer(hwnd, clientRc);
             Paint(buffer.GetDC(), clientRc);

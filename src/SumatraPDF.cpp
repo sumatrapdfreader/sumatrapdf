@@ -10297,12 +10297,14 @@ void RelayoutCaption(MainWindow* win) {
         dh.SetWindowPos(win->hwndMenuReBar, nullptr, menuBarX, row1Y, menuBarWidth, menuBarDy, SWP_NOZORDER);
 
         if (hasFileTabs) {
-            // Row 2: tabs
+            // Row 2: tabs — keep MainWindow::tabsVisible in sync (issue #5861)
+            win->tabsVisible = true;
             win->tabsCtrl->SetIsVisible(true);
             int tabBarX = HwndMapChildXForRtlParent(win->hwndFrame, tabsX, tabsDx);
             dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabBarX, row2Y, tabsDx, tabHeight, SWP_NOZORDER);
         } else {
             // no file tabs: hide tab bar, single-row caption
+            win->tabsVisible = false;
             win->tabsCtrl->SetIsVisible(false);
         }
         dh.End();

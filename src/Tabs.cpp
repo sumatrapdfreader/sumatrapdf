@@ -106,8 +106,19 @@ static void ShowTabBar(MainWindow* win, bool show) {
 
 void UpdateTabWidth(MainWindow* win) {
     int nTabs = win->TabCount();
+    // Count real documents only: Home (and Favorites) alone should not keep the
+    // tab bar open. Showing Home as a single tab after the last document closed
+    // fought RelayoutCaption (which hides tabs with no file tabs) and caused a
+    // continuous TabsCtrl repaint storm (issue #5861).
+    int nDocTabs = 0;
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* t = win->GetTab(i);
+        if (t && !t->IsNonDocumentTab()) {
+            nDocTabs++;
+        }
+    }
     bool showSingleTab = SettingsUseTabs() || win->tabsInTitlebar;
-    bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
+    bool showTabs = (nDocTabs > 1) || (showSingleTab && (nDocTabs > 0));
     // TabWidth is stored in logical (96-DPI) units, same as other layout
     // settings; convert to physical pixels so HiDPI monitors honor the value
     // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
@@ -128,14 +139,6 @@ void RemoveTab(WindowTab* tab) {
     MainWindow* win = tab->win;
     win->tabSelectionHistory->Remove(tab);
     int idx = win->GetTabIdx(tab);
-    bool leavesOnlyHome = false;
-    if (win->TabCount() == 2) {
-        WindowTab* other = win->GetTab(idx == 0 ? 1 : 0);
-        leavesOnlyHome = other->IsAboutTab();
-    }
-    if (leavesOnlyHome) {
-        ShowTabBar(win, false);
-    }
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
     bool closedCurrentTab = (tab == win->CurrentTab());
@@ -143,9 +146,10 @@ void RemoveTab(WindowTab* tab) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
     }
-    if (!leavesOnlyHome) {
-        UpdateTabWidth(win);
-    }
+    // Hide the bar before selecting Home so we don't flash Home's close button
+    // when the last document closes (formerly a special case; now UpdateTabWidth
+    // itself treats Home-only as "no tabs").
+    UpdateTabWidth(win);
 
     int nTabs = win->TabCount();
     if (nTabs < 1) {
