@@ -313,17 +313,60 @@ static DWORD GetTimeoutInMs() {
     return INFINITE;
 }
 
-static void RunManualChecks() {
-    ScopedMutex cs(&gFileWatcherMutex);
+static bool WatchedFileStillActive(WatchedFile* wf) {
+    for (WatchedFile* p = gWatchedFiles; p; p = p->next) {
+        if (p == wf) {
+            return true;
+        }
+    }
+    return false;
+}
 
-    for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
-        if (!wf->isManualCheck) {
+// Manual checks use GetFileAttributesEx (via FileStateChanged), which is slow
+// on network drives. Hold gFileWatcherMutex only while collecting / applying;
+// never around the filesystem call.
+static void RunManualChecks() {
+    struct ManualCheckItem {
+        WatchedFile* wf = nullptr;
+        Str path{};
+        FileWatcherState state{};
+        bool changed = false;
+    };
+    Vec<ManualCheckItem> items;
+    {
+        ScopedMutex cs(&gFileWatcherMutex);
+        for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
+            if (!wf->isManualCheck) {
+                continue;
+            }
+            ManualCheckItem it;
+            it.wf = wf;
+            // Dup so we can use path after releasing the lock (wf may be freed).
+            it.path = str::Dup(wf->filePath);
+            it.state = wf->fileState;
+            items.Append(it);
+        }
+    }
+
+    for (ManualCheckItem& it : items) {
+        // slow path: no lock held
+        it.changed = FileStateChanged(it.path, &it.state);
+        str::Free(it.path);
+        it.path = {};
+    }
+
+    ScopedMutex cs(&gFileWatcherMutex);
+    for (ManualCheckItem& it : items) {
+        if (!it.changed) {
             continue;
         }
-        if (FileStateChanged(wf->filePath, &wf->fileState)) {
-            // logf("RunManualCheck() %s changed\n", wf->filePath);
-            wf->onFileChangedCb.Call();
+        // Unwatch may have removed/freed wf while we were querying attributes
+        if (!WatchedFileStillActive(it.wf)) {
+            continue;
         }
+        it.wf->fileState = it.state;
+        // logf("RunManualCheck() %s changed\n", it.wf->filePath);
+        it.wf->onFileChangedCb.Call();
     }
 }
 
