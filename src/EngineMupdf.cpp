@@ -4371,7 +4371,16 @@ void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation
     if (renderPageRect.IsEmpty() || bmpSize.dx <= 0 || bmpSize.dy <= 0) {
         return;
     }
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    // Everything below runs pages through mupdf (FzCollectImagesFromPageContent
+    // and, via FzGetKeptPageImage, stext) and mutates shared FzPageInfo state,
+    // so it must hold the same locks as every other page-running path. Several
+    // render threads render tiles of the same document at once; without this,
+    // two of them ran fz_run_page on one fz_document concurrently and corrupted
+    // the shared content-stream filter state (crash in next_endstream/memcpy).
+    ScopedRecursiveMutex pagesScope(&pagesLock);
+    ScopedMutex renderScope(&renderLock);
+
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, false, nullptr);
     if (!pageInfo || !pageInfo->page) {
         return;
     }
