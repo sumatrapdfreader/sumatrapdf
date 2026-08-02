@@ -219,6 +219,9 @@
     <ClInclude Include="..\src\GumboHtmlParser.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\HangDetector.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\HomePage.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -678,6 +681,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GumboHtmlParser.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\HangDetector.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\HomePage.cpp">

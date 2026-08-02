@@ -665,6 +665,7 @@ function sumatrapdf_files()
     "ImageReader.cpp",
     "ImageReader_win.cpp",
     "GlobalPrefs.*",
+    "HangDetector.*",
     "HomePage.*",
     "Installer.*",
     "InstallerCommon.cpp",

@@ -133,8 +133,8 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         {
             ScopedMutex lock(&gAttrsCacheMutex);
             if (LookupAttrsCache(path, now, &ok, &data)) {
-                //logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=hit\n", path, (int)ok,
-                //     data.dwFileAttributes);
+                // logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=hit\n", path, (int)ok,
+                //      data.dwFileAttributes);
                 if (ok) {
                     *out = data;
                 }
@@ -150,8 +150,8 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     }
 
     if (network) {
-        //logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=miss\n", path, (int)(ok != 0),
-        //     data.dwFileAttributes);
+        // logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=miss\n", path, (int)(ok != 0),
+        //      data.dwFileAttributes);
         ScopedMutex lock(&gAttrsCacheMutex);
         StoreAttrsCache(path, GetTickCount64(), ok != 0, data);
     }
