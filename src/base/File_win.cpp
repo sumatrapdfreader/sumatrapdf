@@ -601,6 +601,18 @@ int ReadN(Str path, u8* buf, size_t toRead) {
     return (int)nRead;
 }
 
+static i64 GetSizeFromHandle(FileHandle h) {
+    if (h == nullptr || h == kInvalidFileHandle) {
+        return -1;
+    }
+    LARGE_INTEGER size{};
+    BOOL ok = GetFileSizeEx(h, &size);
+    if (!ok) {
+        return -1;
+    }
+    return size.QuadPart;
+}
+
 // Reads the whole file into memory allocated from a (heap if a is nullptr),
 // followed by ZERO_PADDING_COUNT zero bytes so the result is also a valid
 // NUL-terminated char* / WCHAR*.
@@ -624,7 +636,7 @@ Str ReadFileWithArena(Str filePath, Arena* a) {
     }
     AutoCloseHandle hf(h);
 
-    i64 fileSize = GetSize(h);
+    i64 fileSize = GetSizeFromHandle(h);
     if (fileSize < 0 || fileSize > (i64)(INT_MAX - ZERO_PADDING_COUNT)) {
         return {};
     }
@@ -670,18 +682,6 @@ bool Exists(Str path) {
     return (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
 }
 
-i64 GetSize(FileHandle h) {
-    if (h == nullptr || h == kInvalidFileHandle) {
-        return -1;
-    }
-    LARGE_INTEGER size{};
-    BOOL ok = GetFileSizeEx(h, &size);
-    if (!ok) {
-        return -1;
-    }
-    return size.QuadPart;
-}
-
 // Maps the whole file at path into memory as a read-only view backed by the
 // OS file cache. Unlike ReadFile() this doesn't commit private memory for the
 // file content: pages are faulted in from disk on first access and can be
@@ -695,7 +695,7 @@ bool MemoryMap(Str path, Mapping* res) {
     if (hFile == kInvalidFileHandle) {
         return false;
     }
-    i64 size = GetSize(hFile);
+    i64 size = GetSizeFromHandle(hFile);
     if (size <= 0) {
         CloseHandle(hFile);
         return false;

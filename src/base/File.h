@@ -103,7 +103,6 @@ Str ReadFile(Str path);
 int ReadN(Str path, u8* buf, size_t toRead);
 bool WriteFile(Str path, Str);
 
-i64 GetSize(FileHandle h);
 i64 GetSize(Str path);
 
 // read-only memory-mapped view of an entire file
