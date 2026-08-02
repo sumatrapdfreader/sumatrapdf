@@ -14,7 +14,7 @@ Str ListBoxModelStrings::Item(int i) {
 }
 
 void FillWithItems(HWND hwnd, ListBoxModel* model) {
-    ArenaSavepoint temp = ArenaGetSavepoint(GetTempArena());
+    AutoArenaSavepoint scratch;
     SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
     LbResetContent(hwnd);
     if (model) {
@@ -27,5 +27,4 @@ void FillWithItems(HWND hwnd, ListBoxModel* model) {
     }
     SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
     HwndInvalidate(hwnd, true);
-    ArenaRestoreSavepoint(temp);
 }

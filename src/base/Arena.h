@@ -97,6 +97,21 @@ Arena* GetTempArena();
 void ResetTempArena();
 void DestroyTempArena();
 
+// RAII scratch scope for an arena (the temp arena unless told otherwise):
+// rewinds it to the entry position on scope exit, so code that allocates
+// scratch in a loop or on a hot path doesn't grow the arena unbounded.
+struct AutoArenaSavepoint {
+    ArenaSavepoint sp;
+    AutoArenaSavepoint(Arena* a = GetTempArena()) { // NOLINT
+        sp = ArenaGetSavepoint(a);
+    }
+    AutoArenaSavepoint(AutoArenaSavepoint& other) = delete;
+    AutoArenaSavepoint(AutoArenaSavepoint&& other) = delete;
+    AutoArenaSavepoint(const AutoArenaSavepoint& other) = delete;
+    AutoArenaSavepoint(const AutoArenaSavepoint&& other) = delete;
+    ~AutoArenaSavepoint() { ArenaRestoreSavepoint(sp); }
+};
+
 // Arena for allocations that live for the whole lifetime of the program (i.e.
 // never freed until exit). Allocating them here avoids per-allocation frees and
 // lets us track how much such memory we use (logged on exit). Never Reset().

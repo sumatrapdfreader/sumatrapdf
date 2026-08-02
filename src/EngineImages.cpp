@@ -26,6 +26,7 @@ extern "C" {
 #include "DocController.h"
 #include "TreeModel.h"
 #include "EngineBase.h"
+#include "EngineAll.h"
 
 Kind kindEngineImage = "engineImage";
 Kind kindEngineImageDir = "engineImageDir";
@@ -267,7 +268,11 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     return img;
 }
 
-static Size ImageSizeFromDataPortable(Str data) {
+// partial: data is only the first kImageSizeFromDataPartialSize bytes of the
+// file, so only the header parse can work. The decoders below need the whole
+// image, and running them on a truncated buffer costs a full (failing) decode
+// attempt. Callers that pass partial=true fall back to a full read instead.
+static Size ImageSizeFromDataPortable(Str data, bool partial = false) {
     if (len(data) == 0) {
         return {};
     }
@@ -285,6 +290,9 @@ static Size ImageSizeFromDataPortable(Str data) {
     FreeFileTypeInfo(&fti);
     if (!headerSize.IsEmpty()) {
         return headerSize;
+    }
+    if (partial) {
+        return {};
     }
 
     Size res;
@@ -1669,6 +1677,24 @@ Str EngineImageDir::GetImageData(int pageNo) {
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
     Str path = pageFileNames[pageNo - 1];
+
+    // the size lives in the header, so read just the front of the file: images
+    // in a dir are often multi-MB scans and this runs for every page on open.
+    // The header buffer is scratch: give it back to the temp arena on the way
+    // out so opening a big dir doesn't grow the arena by 64 KB per page.
+    AutoArenaSavepoint scratch;
+    u8* buf = AllocArrayTemp<u8>(kImageSizeFromDataPartialSize);
+    if (buf) {
+        int nRead = file::ReadN(path, buf, (size_t)kImageSizeFromDataPartialSize);
+        if (nRead > 0) {
+            Size size = ImageSizeFromDataPortable(Str((char*)buf, nRead), true);
+            if (!size.IsEmpty()) {
+                return RectF(0, 0, (float)size.dx, (float)size.dy);
+            }
+        }
+    }
+
+    // header didn't have it (or the file is odd): fall back to the full image
     Str bmpData = file::ReadFile(path);
     if (bmpData) {
         Size size = ImageSizeFromDataPortable(bmpData);
@@ -2225,7 +2251,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     // try to get image size from just the file header (first 1024 bytes)
     Str header = cbxArchive->GetFileDataPartById(fileId, 1024);
     if (len(header) > 0) {
-        Size size = ImageSizeFromDataPortable(header);
+        Size size = ImageSizeFromDataPortable(header, true);
         str::Free(header);
         if (!size.IsEmpty()) {
             return RectF(0, 0, (float)size.dx, (float)size.dy);

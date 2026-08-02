@@ -513,10 +513,10 @@ int IndexOfI(Str s, Str toFind) {
     // match position back to a byte offset in the original UTF-8 string so the
     // returned offset keeps IndexOfI's contract (an offset into s).
     //
-    // Scratch buffers come from the temporary arena; we restore it to its entry
-    // position before returning so repeated calls (e.g. the command palette
-    // filtering every item) don't grow the arena unbounded.
-    ArenaSavepoint sp = ArenaGetSavepoint(GetTempArena());
+    // Scratch buffers come from the temporary arena; AutoArenaSavepoint restores
+    // it to its entry position on return so repeated calls (e.g. the command
+    // palette filtering every item) don't grow the arena unbounded.
+    AutoArenaSavepoint scratch;
 
     TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
     TempWStr wsLo = str::DupTemp(ws);
@@ -529,7 +529,6 @@ int IndexOfI(Str s, Str toFind) {
     if (idx >= 0) {
         res = Utf8ByteOffsetForWCharOffset(s, idx);
     }
-    ArenaRestoreSavepoint(sp);
     return res;
 }
 

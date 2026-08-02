@@ -32,6 +32,10 @@ void EngineEbookCleanup();
 
 /* EngineImages.cpp */
 
+// how many leading bytes of an image file are enough, in practice, to parse the
+// image size out of its header (JPEG SOF can sit past EXIF / ICC segments)
+constexpr int kImageSizeFromDataPartialSize = 64 * 1024;
+
 bool IsEngineImageSupportedFileType(FileType);
 EngineBase* CreateEngineImageFromFile(Str fileName);
 EngineBase* CreateEngineImageFromData(Str data);

@@ -28,6 +28,7 @@ EBookUI* GetEBookUI() {
 
 static void Usage() {
     printf("usage: test_engines <document-or-image-path>\n");
+    printf("       test_engines <path> -bench-mediabox   time PageMediabox() for every page\n");
 }
 
 static EngineBase* CreateEngineForPath(Str path) {
@@ -77,6 +78,46 @@ static bool RenderPath(Str path) {
 
     engine->Release();
     return ok;
+}
+
+// Times PageMediabox() for every page: that's what the UI needs before it can
+// lay out a document, and for image dirs / cbx it's the dominant open cost.
+static bool BenchMediabox(Str path) {
+    auto timeLoad = TimeGet();
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+    double loadMs = TimeSinceInMs(timeLoad);
+    int pageCount = engine->PageCount();
+
+    auto timeStart = TimeGet();
+    int nEmpty = 0;
+    double maxMs = 0;
+    // cheap order-sensitive digest of all page sizes, to compare runs
+    u64 digest = 0;
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        auto t = TimeGet();
+        RectF mb = engine->PageMediabox(pageNo);
+        double ms = TimeSinceInMs(t);
+        if (ms > maxMs) {
+            maxMs = ms;
+        }
+        digest = digest * 1000003 + (u64)(int)mb.dx * 65599 + (u64)(int)mb.dy;
+        if (mb.IsEmpty()) {
+            nEmpty++;
+            printf("page %d: empty mediabox\n", pageNo);
+        }
+    }
+    double totalMs = TimeSinceInMs(timeStart);
+    printf("load: %.2f ms, pages: %d\n", loadMs, pageCount);
+    printf("digest: %llu\n", (unsigned long long)digest);
+    printf("mediabox: %.2f ms total, %.2f ms/page, max %.2f ms, empty %d\n", totalMs,
+           pageCount ? totalMs / pageCount : 0, maxMs, nEmpty);
+
+    engine->Release();
+    return nEmpty == 0;
 }
 
 // Regression test for issue #5790: after the document's file is moved or
@@ -129,6 +170,11 @@ static bool CloneAfterDeleteTest(Str srcPath) {
 }
 
 int main(int argc, char** argv) {
+    if (argc == 3 && str::Eq(argv[2], StrL("-bench-mediabox"))) {
+        bool ok = BenchMediabox(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
     if (argc == 3 && str::Eq(argv[2], StrL("-clone-after-delete"))) {
         bool ok = CloneAfterDeleteTest(Str(argv[1]));
         DestroyTempArena();
