@@ -135,6 +135,9 @@ bool IsDirectory(Str path) {
 
 static TempWStr NormalizeTemp(WStr path) {
     WCHAR* pathZ = CWStrTemp(path);
+    // GetFullPathNameW is path-string math only (relative→absolute, collapse
+    // . / ..). It does not require the path to exist and does not hit the
+    // network for UNC/mapped paths the way GetLongPathNameW does.
     DWORD cch = GetFullPathNameW(pathZ, 0, nullptr, nullptr);
     if (!cch) {
         return str::DupTemp(path);
@@ -143,6 +146,20 @@ static TempWStr NormalizeTemp(WStr path) {
     WCHAR* fullPathBuf = AllocArrayTemp<WCHAR>((int)cch);
     DWORD nChars = GetFullPathNameW(pathZ, cch, fullPathBuf, nullptr);
     TempWStr fullPath = WStr(fullPathBuf, (int)nChars);
+
+    // GetLongPathNameW / GetShortPathNameW query the filesystem (each path
+    // component) and are very slow on network drives when called on the UI
+    // thread (open, tab switch, menu rebuild). Skip them for network paths —
+    // absolute form from GetFullPathNameW is enough.
+    if (PathIsNetworkPathW(fullPath.s) || PathIsNetworkPathW(pathZ)) {
+        if (wstr::StartsWith(fullPath.s, WStrL(L"\\\\?\\"))) {
+            return fullPath;
+        }
+        if (len(fullPath) >= MAX_PATH) {
+            return str::JoinTemp(WStrL(L"\\\\?\\"), fullPath);
+        }
+        return fullPath;
+    }
 
     TempWStr normPath = fullPath;
     cch = GetLongPathNameW(fullPath.s, nullptr, 0);
@@ -170,6 +187,8 @@ static TempWStr NormalizeTemp(WStr path) {
     return normPath;
 }
 
+// Absolute path form. Local drives also expand 8.3 names via GetLongPathNameW;
+// network paths skip that (too slow on the UI thread) and only use GetFullPathNameW.
 TempStr NormalizeTemp(Str path) {
     TempWStr s = ToWStrTemp(path);
     TempWStr ws = NormalizeTemp(s);
