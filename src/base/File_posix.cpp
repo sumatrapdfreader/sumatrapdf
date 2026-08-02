@@ -87,6 +87,15 @@ bool IsDirectory(Str path) {
     return StatPath(path, st) && S_ISDIR(st.st_mode);
 }
 
+// No cache on non-Windows — same as an uncached attribute query.
+DWORD GetCachedAttributes(Str path) {
+    struct stat st;
+    if (!StatPath(path, st)) {
+        return (DWORD)-1; // INVALID_FILE_ATTRIBUTES
+    }
+    return (DWORD)st.st_mode;
+}
+
 TempStr NormalizeTemp(Str path) {
     char resolved[PATH_MAX];
     if (realpath(PathZTemp(path), resolved)) {

@@ -1042,7 +1042,7 @@ static void LogLibsumatrapdfFileStateAfterLoadFail(Str path, DWORD err) {
     logf("LoadLibsumatrapdfFromFile: after fail path='%s' stillExists=%d size=%lld err=%u\n", path, (int)existsAfter,
          (long long)sizeAfter, err);
     if (existsAfter) {
-        DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+        DWORD attrs = path::GetCachedAttributes(path);
         logf("LoadLibsumatrapdfFromFile: after fail attrs=0x%x\n", attrs);
     } else {
         // Typical when AV quarantines the DLL right after extract
@@ -1194,7 +1194,7 @@ static void LogLibsumatrapdfLoadFailureDiagnostics(Str selfDir, Str buildDir, i6
         bool exists = file::Exists(path);
         logf("LoadLibsumatrapdf FAILED: %s path='%s' exists=%d size=%lld\n", label, path, (int)exists, (long long)size);
         if (exists) {
-            DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+            DWORD attrs = path::GetCachedAttributes(path);
             logf("LoadLibsumatrapdf FAILED: %s attrs=0x%x\n", label, attrs);
         }
     };

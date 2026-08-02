@@ -32,8 +32,101 @@ Type GetType(Str pathA) {
     return Type::File;
 }
 
-bool IsDirectory(Str path) {
+// Network-drive attribute cache: GetFileAttributesW on UNC/mapped drives is
+// slow and menu rebuild can call IsDirectory/GuessFileTypeFromName many times
+// for the same open-tab path.
+struct AttrsCacheEntry {
+    char* path = nullptr; // owned heap string
+    DWORD attrs = INVALID_FILE_ATTRIBUTES;
+    u64 tickMs = 0;
+};
+
+static Mutex gAttrsCacheMutex;
+static Vec<AttrsCacheEntry> gAttrsCache;
+constexpr u64 kAttrsCacheTtlMs = 60ull * 60ull * 1000ull; // 1 hour
+constexpr int kAttrsCacheMaxEntries = 512;
+
+static void FreeAttrsCacheEntry(AttrsCacheEntry& e) {
+    free(e.path);
+    e.path = nullptr;
+    e.attrs = INVALID_FILE_ATTRIBUTES;
+    e.tickMs = 0;
+}
+
+DWORD GetCachedAttributes(Str path) {
+    if (!path) {
+        return INVALID_FILE_ATTRIBUTES;
+    }
+
+    const bool network = IsOnNetworkDrive(path);
+    if (network) {
+        const u64 now = GetTickCount64();
+        ScopedMutex lock(&gAttrsCacheMutex);
+        for (int i = 0; i < len(gAttrsCache); i++) {
+            AttrsCacheEntry& e = gAttrsCache[i];
+            if (!e.path) {
+                continue;
+            }
+            if (!str::EqI(Str(e.path), path)) {
+                continue;
+            }
+            if (now - e.tickMs > kAttrsCacheTtlMs) {
+                FreeAttrsCacheEntry(e);
+                break; // expired; fall through to real query
+            }
+            logf("path::GetCachedAttributes: network path='%s' attrs=0x%x cache=hit\n", path, e.attrs);
+            return e.attrs;
+        }
+    }
+
     DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+
+    if (network) {
+        logf("path::GetCachedAttributes: network path='%s' attrs=0x%x cache=miss\n", path, attrs);
+        const u64 now = GetTickCount64();
+        ScopedMutex lock(&gAttrsCacheMutex);
+        int freeIdx = -1;
+        int oldestIdx = -1;
+        u64 oldestTick = UINT64_MAX;
+        for (int i = 0; i < len(gAttrsCache); i++) {
+            AttrsCacheEntry& e = gAttrsCache[i];
+            if (!e.path) {
+                if (freeIdx < 0) {
+                    freeIdx = i;
+                }
+                continue;
+            }
+            if (str::EqI(Str(e.path), path)) {
+                e.attrs = attrs;
+                e.tickMs = now;
+                return attrs;
+            }
+            if (e.tickMs < oldestTick) {
+                oldestTick = e.tickMs;
+                oldestIdx = i;
+            }
+        }
+        if (freeIdx < 0 && len(gAttrsCache) < kAttrsCacheMaxEntries) {
+            freeIdx = len(gAttrsCache);
+            gAttrsCache.AppendBlanks(1);
+        }
+        if (freeIdx < 0) {
+            freeIdx = oldestIdx;
+        }
+        if (freeIdx >= 0) {
+            AttrsCacheEntry& e = gAttrsCache[freeIdx];
+            FreeAttrsCacheEntry(e);
+            Str owned = str::Dup(path);
+            e.path = owned.s;
+            e.attrs = attrs;
+            e.tickMs = now;
+        }
+    }
+    return attrs;
+}
+
+bool IsDirectory(Str path) {
+    DWORD attrs = GetCachedAttributes(path);
     if (INVALID_FILE_ATTRIBUTES == attrs) {
         return false;
     }
@@ -189,7 +282,7 @@ bool IsOnNetworkDrive(Str path) {
 }
 
 bool IsCloudPlaceholder(Str path) {
-    DWORD attrs = GetFileAttributesW(CWStrTemp(path));
+    DWORD attrs = GetCachedAttributes(path);
     if (attrs == INVALID_FILE_ATTRIBUTES) {
         return false;
     }
@@ -529,7 +622,7 @@ FILETIME GetModificationTime(Str filePath) {
 }
 
 DWORD GetAttributes(Str path) {
-    return GetFileAttributesW(CWStrTemp(path));
+    return path::GetCachedAttributes(path);
 }
 
 bool SetAttributes(Str path, DWORD attrs) {
