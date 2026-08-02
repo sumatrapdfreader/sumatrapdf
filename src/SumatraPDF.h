@@ -37,8 +37,12 @@ constexpr int kHideCursorDelayInMs = 3000;
 #define READ_ALOUD_HIGHLIGHT_DELAY_IN_MS 80
 // debounce: coalesce bursts of file-change notifications (a single save can
 // fire several) into one reload. SetTimer() with the same id resets it, so the
-// reload only happens once the file has been quiet for this long (#5690)
+// reload only happens once the file has been quiet for this long (#5690).
+// The timer also re-arms itself while the file keeps changing, so a slow
+// writer doesn't get us to load a half-written document
 #define AUTO_RELOAD_DELAY_IN_MS 500
+// stop waiting for the writer after this long and reload whatever is there
+constexpr u64 kAutoReloadMaxWaitMs = 5000;
 
 // permissions that can be revoked through sumatrapdfrestrict.ini or the -restrict command line flag
 enum class Perm : uint {
@@ -203,6 +207,7 @@ int ToolbarPositionFromPrefs();
 bool ToolbarAtBottom();
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
+bool AutoReloadFileStillChanging(WindowTab* tab);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 
 // flags for ScheduleUiUpdate

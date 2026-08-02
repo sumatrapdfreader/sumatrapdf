@@ -2718,6 +2718,54 @@ static void ScheduleReloadTab(WindowTab* tab) {
     uitask::Post(fn, "ReloadTab");
 }
 
+static void AutoReloadResetFileState(WindowTab* tab) {
+    tab->autoReloadSize = -1;
+    tab->autoReloadModTime = {};
+    tab->autoReloadStartMs = 0;
+}
+
+// Called from the AUTO_RELOAD_TIMER tick. Returns true if the file changed
+// since the previous tick, i.e. whoever is writing it isn't done: the caller
+// then re-arms the timer instead of reloading a half-written document.
+//
+// The first tick after a notification always reports "changing" (there's no
+// previous state to compare against), so a reload happens one interval later
+// than it used to. That's deliberate: a LaTeX run used to produce two reloads,
+// one of a truncated file ("document has no pages") and one of the finished
+// file.
+//
+// Gives up after kAutoReloadMaxWaitMs so a file that is appended to
+// continuously (a log being tailed) still reloads.
+//
+// Note: file::GetSize()/GetModificationTime() go through the 1-hour network
+// attribute cache, so on a network drive both values look stable right away
+// and we reload immediately, as before.
+bool AutoReloadFileStillChanging(WindowTab* tab) {
+    if (!tab || !tab->filePath) {
+        return false;
+    }
+    u64 now = GetTickCount64();
+    if (tab->autoReloadStartMs == 0) {
+        tab->autoReloadStartMs = now;
+    } else if (now - tab->autoReloadStartMs > kAutoReloadMaxWaitMs) {
+        logf("AutoReloadFileStillChanging: '%s' still changing after %d ms, reloading anyway\n", tab->filePath,
+             (int)(now - tab->autoReloadStartMs));
+        AutoReloadResetFileState(tab);
+        return false;
+    }
+
+    i64 size = file::GetSize(tab->filePath);
+    FILETIME modTime = file::GetModificationTime(tab->filePath);
+    bool changed = (size != tab->autoReloadSize) || !FileTimeEq(modTime, tab->autoReloadModTime);
+    tab->autoReloadSize = size;
+    tab->autoReloadModTime = modTime;
+    if (changed) {
+        return true;
+    }
+    AutoReloadResetFileState(tab);
+    return false;
+}
+
 // return true if adjustd path
 static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     Str path = args->FilePath();

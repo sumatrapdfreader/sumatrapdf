@@ -3811,6 +3811,12 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                     // reloadOnFocus set or a later tab focus would reload
                     tab->ignoreNextAutoReload = false;
                     tab->reloadOnFocus = false;
+                } else if (AutoReloadFileStillChanging(tab)) {
+                    // a writer (LaTeX etc.) is still producing the file: reloading
+                    // now shows a half-written document ("cannot find startxref",
+                    // "document has no pages") and costs a second reload once the
+                    // write finishes. Wait for it to go quiet instead.
+                    SetTimer(hwnd, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
                 } else {
                     ReloadDocument(win, true);
                 }

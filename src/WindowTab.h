@@ -99,6 +99,13 @@ struct WindowTab {
     // and already call ReloadDocument ourselves). Consumed by AUTO_RELOAD_TIMER.
     bool ignoreNextAutoReload = false;
 
+    // file size / mtime seen at the previous AUTO_RELOAD_TIMER tick, and when
+    // the pending auto-reload was first scheduled. Used to wait out a writer
+    // that is still producing the file (see AUTO_RELOAD_TIMER_ID in Canvas.cpp)
+    i64 autoReloadSize = -1;
+    FILETIME autoReloadModTime{};
+    u64 autoReloadStartMs = 0;
+
     // per-provider AI chat state, indexed by AIChatBackend
     // (0 = Claude, 1 = Grok, 2 = Codex)
     AIChatTabState aiChat[3];
