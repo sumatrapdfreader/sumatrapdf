@@ -21,12 +21,11 @@ Type GetType(Str pathA) {
         return Type::None;
     }
 
-    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(CWStrTemp(pathA), GetFileExInfoStandard, &fileInfo);
-    if (0 == res) {
+    DWORD attrs = GetCachedAttributes(pathA);
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
         return Type::None;
     }
-    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+    if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
         return Type::Dir;
     }
     return Type::File;
@@ -460,13 +459,13 @@ bool Exists(Str path) {
     if (!path) {
         return false;
     }
-
-    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(CWStrTemp(path), GetFileExInfoStandard, &fileInfo);
-    if (0 == res) {
+    // GetCachedAttributes: network paths cached 1hr (avoids UI-thread stalls in
+    // menu/toolbar rebuild → CanViewExternally → file::Exists).
+    DWORD attrs = path::GetCachedAttributes(path);
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
         return false;
     }
-    return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
 }
 
 i64 GetSize(FileHandle h) {
@@ -759,24 +758,18 @@ bool Exists(WStr dir) {
     if (!dir) {
         return false;
     }
-    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(CWStrTemp(dir), GetFileExInfoStandard, &fileInfo);
-    if (0 == res) {
-        return false;
-    }
-    return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    return Exists(ToUtf8Temp(dir));
 }
 
 bool Exists(Str dir) {
     if (!dir) {
         return false;
     }
-    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(CWStrTemp(dir), GetFileExInfoStandard, &fileInfo);
-    if (0 == res) {
+    DWORD attrs = path::GetCachedAttributes(dir);
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
         return false;
     }
-    return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
 bool Create(Str dir) {
