@@ -1546,9 +1546,13 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
     e->SetFilePath(dir);
 
     DirIter di{dir};
+    bool notDir = true;
     for (DirIterEntry* de : di) {
+        if (de->isDir) {
+            continue;
+        }
         auto path = de->filePath;
-        FileType kind = GuessFileTypeFromName(path);
+        FileType kind = GuessFileTypeFromName(path, notDir);
         if (IsEngineImageSupportedFileType(kind)) {
             e->pageFileNames.Append(path);
         }
@@ -2046,7 +2050,8 @@ bool EngineCbx::FinishLoading() {
             return false;
         }
 
-        FileType kind = GuessFileTypeFromName(fileName);
+        // an archive member name, not a path on disk: nothing to probe
+        FileType kind = GuessFileTypeFromName(fileName, true);
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameTemp(fileName), StrL("."))) {

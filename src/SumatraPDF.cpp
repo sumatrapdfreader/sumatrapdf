@@ -5408,7 +5408,8 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     // traverse from the end so that removing doesn't change iterator
     for (int i = nFiles - 1; i >= 0; i--) {
         Str path2 = files[i];
-        FileType kind = GuessFileTypeFromName(path2);
+        // files[] came from DirIter with the default includeDirs = false
+        FileType kind = GuessFileTypeFromName(path2, true);
         bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
         bool inHistory = gFileHistory.FindByPath(path2);
         if (isSupported || inHistory) {

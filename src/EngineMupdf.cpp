@@ -3072,7 +3072,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     fz_var(dy);
     fz_var(fontDy);
     fz_var(dir);
-    FileType kind = GuessFileTypeFromName(nameHint);
+    // a synthesized name for the stream (e.g. "<path>.html"), never a directory
+    FileType kind = GuessFileTypeFromName(nameHint, true);
     const char* nameHintZ = CStrTemp(nameHint);
     if (kind == FileType::Markdown) {
         TempStr parentDir = path::GetDirTemp(nameHint);

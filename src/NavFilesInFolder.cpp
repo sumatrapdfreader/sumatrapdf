@@ -115,8 +115,13 @@ static void ScheduleDeleteNavFilesWnd() {
     uitask::Post(fn, "SafeDeleteNavFilesWnd");
 }
 
+// only called for entries we already know are files (both callers check
+// IsDirectory(de) first), so skip GuessFileTypeFromName()'s IsDirectory() probe:
+// it's a per-entry round trip on a network drive, and this runs over a whole
+// tree. The name is also relative to the listed dir, so the probe was answering
+// about a path relative to the cwd anyway.
 static bool CanOpenFile(Str path) {
-    FileType kind = GuessFileTypeFromName(path);
+    FileType kind = GuessFileTypeFromName(path, true);
     return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
 }
 

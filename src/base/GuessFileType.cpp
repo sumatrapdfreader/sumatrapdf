@@ -1264,13 +1264,14 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
     return res;
 }
 
-FileType GuessFileTypeFromName(Str path) {
+// path::IsDirectory() is expensive on network drives so we can pass notDir=true if we know the path is not a directory
+FileType GuessFileTypeFromName(Str path, bool notDir) {
     VerifyExtsMatch();
 
     if (!path) {
         return FileType::Unknown;
     }
-    if (path::IsDirectory(path)) {
+    if (!notDir && path::IsDirectory(path)) {
         return FileType::Directory;
     }
     FileType res = GetTypeByFileExt(path);
