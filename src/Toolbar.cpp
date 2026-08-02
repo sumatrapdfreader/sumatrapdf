@@ -1200,19 +1200,42 @@ static void PopulateCustomToolbarButtons() {
     }
 }
 
+// Returns nullptr if mupdf can't render svgData; the caller then leaves that
+// icon's part of the bitmap empty.
+//
+// A custom ToolbarSvgIcon comes from the settings file, so it can be malformed:
+// a typo, or the file caught half-written by the settings watcher while the user
+// is editing it. mupdf signals that by throwing, and an uncaught mupdf exception
+// aborts the whole process, so everything here has to be inside fz_try.
 static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol) {
     TempStr strokeCol = SerializeColorTemp(fgCol);
     TempStr fillCol = SerializeColorTemp(bgCol);
     TempStr fillColRepl = str::JoinTemp(StrL("fill=\""), fillCol, StrL("\""));
     TempStr svg = str::ReplaceTemp(svgData, StrL("currentColor"), strokeCol);
     svg = str::ReplaceTemp(svg, StrL(R"(fill="none")"), fillColRepl);
-    fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
-    fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
-    image->w = dx;
-    image->h = dy;
-    fz_pixmap* pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
-    fz_drop_image(ctx, image);
-    fz_drop_buffer(ctx, buf);
+
+    fz_buffer* buf = nullptr;
+    fz_image* image = nullptr;
+    fz_pixmap* pixmap = nullptr;
+    fz_var(buf);
+    fz_var(image);
+    fz_var(pixmap);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
+        image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
+        image->w = dx;
+        image->h = dy;
+        pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+    }
+    fz_always(ctx) {
+        fz_drop_image(ctx, image);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("RenderSvgIconPixmap: rendering svg icon failed with: '%s'\n", Str(fz_caught_message(ctx)));
+        return nullptr;
+    }
     return pixmap;
 }
 
@@ -1242,6 +1265,24 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
             }
             d += dstN;
             s += srcN;
+        }
+    }
+}
+
+// leaves an icon-sized hole in the bitmap: background color, fully transparent.
+// Used for an icon we couldn't render, so the button shows up empty instead of
+// as a black square (the zero-filled DIB).
+static void ClearIconSlot(u8* dstSamples, ptrdiff_t dstStride, int dx, int dy, int dstX, COLORREF bgCol) {
+    u8 r, g, b;
+    UnpackColor(bgCol, r, g, b);
+    for (size_t y = 0; y < (size_t)dy; y++) {
+        u8* d = dstSamples + (dstStride * y) + ((size_t)dstX * 4);
+        for (int x = 0; x < dx; x++) {
+            d[0] = b;
+            d[1] = g;
+            d[2] = r;
+            d[3] = 0;
+            d += 4;
         }
     }
 }
@@ -1286,11 +1327,19 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
     for (int i = 0; i < nBuiltIn; i++) {
         Str svgData = GetSvgIcon((TbIcon)i);
         fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
+        if (!pixmap) {
+            ClearIconSlot(hbmpData, dstStride, dx, dy, dx * i, bgCol);
+            continue;
+        }
         BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0, bgCol);
         fz_drop_pixmap(ctx, pixmap);
     }
     for (int i = 0; i < customCount; i++) {
         fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, customSvgs[i], dx, dy, fgCol, bgCol);
+        if (!pixmap) {
+            ClearIconSlot(hbmpData, dstStride, dx, dy, dx * (nBuiltIn + i), bgCol);
+            continue;
+        }
         BlitPixmap(hbmpData, dstStride, pixmap, dx * (nBuiltIn + i), 0, bgCol);
         fz_drop_pixmap(ctx, pixmap);
     }
