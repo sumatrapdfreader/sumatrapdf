@@ -4996,6 +4996,21 @@ static void RenameCurrentFile(MainWindow* win) {
     LoadArgs args(dstPathNormalized, win);
     args.forceReuse = true;
     LoadDocument(&args);
+
+    // LoadDocument is async; forceReuse already updates tab path/title when the
+    // load is queued. Repaint tabs/frame now so the new name is visible without
+    // waiting for hover or load finish (#5863).
+    if (IsMainWindowValid(win) && win->CurrentTab()) {
+        WindowTab* tab = win->CurrentTab();
+        TabsOnChangedDoc(win);
+        SetFrameTitleForTab(tab, false);
+        HwndSetText(win->hwndFrame, tab->frameTitle);
+        if (win->tabsCtrl && win->tabsCtrl->hwnd) {
+            HwndRepaintNow(win->tabsCtrl->hwnd);
+        }
+        // tabs-in-titlebar draws into the frame non-client area
+        RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_INVALIDATE | RDW_FRAME | RDW_UPDATENOW);
+    }
 }
 
 static void CreateLnkShortcut(MainWindow* win) {

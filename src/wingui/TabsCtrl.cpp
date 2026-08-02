@@ -832,7 +832,9 @@ void TabsCtrl::SetTextAndTooltip(int idx, Str text, Str tooltip) {
     str::ReplaceWithCopy(&tab->text, text);
     str::ReplaceWithCopy(&tab->tooltip, tooltip);
     LayoutTabs();
-    HwndScheduleRepaint(hwnd);
+    // Immediate paint so F2 rename / path changes show without waiting for
+    // hover or the next idle paint (tabs-in-titlebar caption especially).
+    HwndRepaintNow(hwnd);
 }
 
 void TabsCtrl::SetTabDirty(int idx, bool dirty) {
