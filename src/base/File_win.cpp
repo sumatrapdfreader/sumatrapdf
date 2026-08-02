@@ -342,8 +342,72 @@ bool HasVariableDriveLetter(Str path) {
     return false;
 }
 
+// Drive-letter -> is-network cache. Mappings change rarely and
+// IsOnNetworkDrive() runs in front of every cached attribute query, so keep a
+// short TTL rather than querying the drive for each call.
+constexpr u64 kDriveIsNetCacheTtlMs = 60ull * 1000ull;
+static Mutex gDriveIsNetMutex;
+static u64 gDriveIsNetTick[26];
+static bool gDriveIsNet[26];
+
+// drive is an upper-case letter 'A'..'Z'
+static bool IsNetworkDriveLetter(char drive) {
+    int idx = drive - 'A';
+    u64 now = GetTickCount64();
+    {
+        ScopedMutex lock(&gDriveIsNetMutex);
+        u64 tick = gDriveIsNetTick[idx];
+        if (tick != 0 && (now - tick) <= kDriveIsNetCacheTtlMs) {
+            return gDriveIsNet[idx];
+        }
+    }
+    WCHAR root[] = LR"(?:\)";
+    root[0] = (WCHAR)drive;
+    // resolved locally from the mount point, unlike WNetGetConnection
+    bool isNet = GetDriveTypeW(root) == DRIVE_REMOTE;
+    ScopedMutex lock(&gDriveIsNetMutex);
+    gDriveIsNetTick[idx] = now;
+    gDriveIsNet[idx] = isNet;
+    return isNet;
+}
+
+// PathIsNetworkPathW() answers this for a drive-letter path by going through
+// WNetGetConnection -> NetWkstaGetInfo, i.e. a synchronous RPC to the
+// LanmanWorkstation service: ~0.3 ms per call on a mapped drive here, and it
+// can block for seconds when the server behind a mapping is unreachable.
+// Decide from the path shape (UNC is a pure string question) plus a cached
+// GetDriveType (local) instead.
 bool IsOnNetworkDrive(Str path) {
-    return PathIsNetworkPathW(CWStrTemp(path));
+    int n = len(path);
+    if (n < 2) {
+        return false;
+    }
+    const char* s = path.s;
+    bool sep0 = s[0] == '\\' || s[0] == '/';
+    bool sep1 = s[1] == '\\' || s[1] == '/';
+    if (sep0 && sep1) {
+        // \\?\UNC\server\share is UNC; \\?\C:\... is a drive-letter path;
+        // \\.\ names a device and is never a network path
+        if (n >= 4 && (s[2] == '?' || s[2] == '.') && (s[3] == '\\' || s[3] == '/')) {
+            if (s[2] == '.') {
+                return false;
+            }
+            Str rest((char*)s + 4, n - 4);
+            if (str::StartsWithI(rest, StrL("UNC\\")) || str::StartsWithI(rest, StrL("UNC/"))) {
+                return true;
+            }
+            return IsOnNetworkDrive(rest);
+        }
+        return true; // \\server\share
+    }
+    if (s[1] != ':') {
+        return false; // relative path
+    }
+    char drive = (char)toupper((u8)s[0]);
+    if (drive < 'A' || drive > 'Z') {
+        return false;
+    }
+    return IsNetworkDriveLetter(drive);
 }
 
 bool IsCloudPlaceholder(Str path) {

@@ -4,6 +4,8 @@
 #include "base/Pixmap.h"
 #include "base/Timer.h"
 
+#include <shlwapi.h>
+
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -169,7 +171,79 @@ static bool CloneAfterDeleteTest(Str srcPath) {
     return ok;
 }
 
+// Times path::IsOnNetworkDrive(): it sits in front of every cached file
+// attribute query, and on drive-letter paths it can turn into a synchronous RPC
+// to the LanmanWorkstation service.
+static bool BenchIsOnNetworkDrive(Str path) {
+    const int nIter = 2000;
+    // first call in the process is a cache miss: that's the real recurring cost
+    auto tFirst = TimeGet();
+    bool first = path::IsOnNetworkDrive(path);
+    double firstMs = TimeSinceInMs(tFirst);
+    printf("first (uncached) call: %.4f ms -> %d\n", firstMs, (int)first);
+
+    auto t = TimeGet();
+    int nTrue = 0;
+    for (int i = 0; i < nIter; i++) {
+        if (path::IsOnNetworkDrive(path)) {
+            nTrue++;
+        }
+    }
+    double ms = TimeSinceInMs(t);
+    printf("IsOnNetworkDrive('%.*s') -> %s\n", path.len, path.s, nTrue == nIter ? "true" : "false");
+    printf("%d calls: %.2f ms total, %.4f ms/call\n", nIter, ms, ms / nIter);
+    return true;
+}
+
+// Compares path::IsOnNetworkDrive() against PathIsNetworkPathW() (what it used
+// to call) over a spread of path shapes.
+static bool CheckIsOnNetworkDrive() {
+    // X: is a mapped network drive here, Q: is unmapped
+    struct TestCase {
+        const char* path;
+        bool want;
+    };
+    TestCase cases[] = {
+        {R"(X:\tmp\file.pdf)", true},
+        {R"(x:\tmp\file.pdf)", true},
+        {R"(C:\Users\kjk\file.pdf)", false},
+        {"c:/Users/kjk/file.pdf", false},
+        {R"(\\server\share\file.pdf)", true},
+        {R"(\\?\UNC\server\share\file.pdf)", true},
+        {R"(\\?\C:\Users\file.pdf)", false},
+        {R"(\\?\X:\tmp\file.pdf)", true},
+        // a local device, not a network path: PathIsNetworkPathW() says true
+        // here because it only looks for the leading "\\"
+        {R"(\\.\PhysicalDrive0)", false},
+        {"file.pdf", false},
+        {R"(..\file.pdf)", false},
+        {R"(Q:\unmapped\file.pdf)", false},
+        {"", false},
+        {"C", false},
+    };
+    bool ok = true;
+    for (const TestCase& tc : cases) {
+        Str path(tc.path);
+        bool got = path::IsOnNetworkDrive(path);
+        bool old = PathIsNetworkPathW(CWStrTemp(path)) != FALSE;
+        const char* mark = (got == tc.want) ? "ok  " : "FAIL";
+        printf("%s '%s' got=%d want=%d (PathIsNetworkPathW=%d)\n", mark, tc.path, (int)got, (int)tc.want, (int)old);
+        ok = ok && (got == tc.want);
+    }
+    return ok;
+}
+
 int main(int argc, char** argv) {
+    if (argc == 2 && str::Eq(argv[1], StrL("-check-netdrive"))) {
+        bool ok = CheckIsOnNetworkDrive();
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
+    if (argc == 3 && str::Eq(argv[2], StrL("-bench-netdrive"))) {
+        bool ok = BenchIsOnNetworkDrive(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
     if (argc == 3 && str::Eq(argv[2], StrL("-bench-mediabox"))) {
         bool ok = BenchMediabox(Str(argv[1]));
         DestroyTempArena();
