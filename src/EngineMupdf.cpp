@@ -5037,7 +5037,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
                 embedded = true;
             }
             if (embedded && name.len > 7 && name.s[6] == '+') {
-                name = Str(name.s + 7, name.len-7);
+                name = Str(name.s + 7, name.len - 7);
             }
             type = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype")));
             if (font2 != font) {

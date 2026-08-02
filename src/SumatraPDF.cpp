@@ -3193,12 +3193,14 @@ struct CopyProgressUITask {
 static void UpdateCopyProgressUI(CopyProgressUITask* task) {
     AutoDelete delTask(task);
     WindowTab* tab = task->targetTab;
-    if (!tab || FindMainWindowByTab(tab) != tab->win) {
+    MainWindow* win = FindMainWindowByTab(tab);
+    if (!win) {
         return;
     }
+    ReportIf(tab->win != win);
     tab->loadCopyBytesCopied = task->bytesCopied;
     tab->loadCopyBytesTotal = task->bytesTotal;
-    if (tab == tab->win->CurrentTab()) {
+    if (tab == win->CurrentTab()) {
         HwndInvalidate(tab->win->hwndCanvas);
     }
 }
