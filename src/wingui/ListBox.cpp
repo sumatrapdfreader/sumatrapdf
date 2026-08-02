@@ -138,6 +138,27 @@ void ListBox::SetModel(ListBoxModel* model) {
 // though the item was already on screen. Restore the pre-click top when
 // the clicked item was fully visible.
 LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_SETFOCUS || msg == WM_KILLFOCUS) {
+        // redraw so the focus ring appears/disappears
+        InvalidateRect(hwnd, nullptr, FALSE);
+        return WndProcDefault(hwnd, msg, wparam, lparam);
+    }
+
+    if (msg == WM_PAINT) {
+        // default paints items; then dotted focus ring around the control
+        LRESULT res = WndProcDefault(hwnd, msg, wparam, lparam);
+        if (::GetFocus() == hwnd) {
+            HDC hdc = GetDC(hwnd);
+            if (hdc) {
+                RECT rc{};
+                GetClientRect(hwnd, &rc);
+                DrawFocusRect(hdc, &rc);
+                ReleaseDC(hwnd, hdc);
+            }
+        }
+        return res;
+    }
+
     if (msg == WM_LBUTTONDOWN) {
         int topBefore = LbGetTopIndex(hwnd);
         int count = GetCount();

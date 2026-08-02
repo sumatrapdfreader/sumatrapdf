@@ -18,12 +18,26 @@
 // TODO:
 // - expose EN_UPDATE
 // https://docs.microsoft.com/en-us/windows/win32/controls/en-update
-// - add border and possibly other decorations by handling WM_NCCALCSIZE, WM_NCPAINT and
-// WM_NCHITTEST
+// - fuller border decorations via WM_NCCALCSIZE / WM_NCPAINT / WM_NCHITTEST
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
-// - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
 Kind kindEdit = "edit";
+
+// 1px non-client underline for withBottomBorder (must not sit in the client
+// area: edit client paint on typing would overwrite a WM_PAINT GetDC line)
+static constexpr int kEditBottomBorderDy = 1;
+
+static COLORREF EditBottomBorderColor(COLORREF textColor, COLORREF bgColor) {
+    COLORREF col = IsSpecialColor(textColor) ? GetSysColor(COLOR_GRAYTEXT) : textColor;
+    // muted line: blend text color toward background
+    if (!IsSpecialColor(bgColor)) {
+        u8 r, g, b, br, bg, bb;
+        UnpackColor(col, r, g, b);
+        UnpackColor(bgColor, br, bg, bb);
+        col = RGB((r + (br * 2)) / 3, (g + (bg * 2)) / 3, (b + (bb * 2)) / 3);
+    }
+    return col;
+}
 
 static bool EditSetCueText(HWND hwnd, Str s) {
     if (!hwnd) {
@@ -133,6 +147,12 @@ HWND Edit::Create(const CreateArgs& args) {
     }
     SizeToIdealSize(this);
 
+    if (createdWithBottomBorder) {
+        // apply the 1px bottom NC strip from WM_NCCALCSIZE
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    }
+
     if (args.cueText) {
         EditSetCueText(hwnd, args.cueText);
     }
@@ -158,31 +178,41 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return true;
         }
 
-        case WM_PAINT: {
+        case WM_NCCALCSIZE: {
+            if (!createdWithBottomBorder) {
+                break;
+            }
+            // reserve a 1px strip under the client so typing never paints over the line
             LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
-            if (createdWithBottomBorder) {
-                // underline so borderless edits stay visible on flat dialog backgrounds
-                HDC hdc = GetDC(hwnd);
-                if (hdc) {
-                    RECT rc = ToRECT(HwndClientRect(hwnd));
-                    COLORREF col = IsSpecialColor(textColor) ? GetSysColor(COLOR_GRAYTEXT) : textColor;
-                    // muted line: blend text color toward background
-                    if (!IsSpecialColor(bgColor)) {
-                        u8 r, g, b, br, bg, bb;
-                        UnpackColor(col, r, g, b);
-                        UnpackColor(bgColor, br, bg, bb);
-                        col = RGB((r + (br * 2)) / 3, (g + (bg * 2)) / 3, (b + (bb * 2)) / 3);
-                    }
-                    HPEN pen = CreatePen(PS_SOLID, 1, col);
-                    HGDIOBJ old = SelectObject(hdc, pen);
-                    MoveToEx(hdc, rc.left, rc.bottom - 1, nullptr);
-                    LineTo(hdc, rc.right, rc.bottom - 1);
-                    SelectObject(hdc, old);
-                    DeleteObject(pen);
-                    ReleaseDC(hwnd, hdc);
-                }
+            RECT* rc = (wp == TRUE) ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
+            if (rc->bottom - rc->top > kEditBottomBorderDy) {
+                rc->bottom -= kEditBottomBorderDy;
             }
             return res;
+        }
+
+        case WM_NCPAINT: {
+            if (!createdWithBottomBorder) {
+                break;
+            }
+            // borderless edit has no default NC chrome; still call default then draw
+            WndProcDefault(hwnd, msg, wp, lp);
+            HDC hdc = GetWindowDC(hwnd);
+            if (hdc) {
+                RECT wr{};
+                GetWindowRect(hwnd, &wr);
+                int w = wr.right - wr.left;
+                int h = wr.bottom - wr.top;
+                COLORREF col = EditBottomBorderColor(textColor, bgColor);
+                HPEN pen = CreatePen(PS_SOLID, 1, col);
+                HGDIOBJ old = SelectObject(hdc, pen);
+                MoveToEx(hdc, 0, h - 1, nullptr);
+                LineTo(hdc, w, h - 1);
+                SelectObject(hdc, old);
+                DeleteObject(pen);
+                ReleaseDC(hwnd, hdc);
+            }
+            return 0;
         }
     }
     return WndProcDefault(hwnd, msg, wp, lp);
@@ -230,6 +260,9 @@ Size Edit::GetIdealSize() {
     if (HasBorder()) {
         dx += DpiScale(hwnd, 4);
         dy += DpiScale(hwnd, 8);
+    }
+    if (createdWithBottomBorder) {
+        dy += kEditBottomBorderDy;
     }
     // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
     return {dx, dy};

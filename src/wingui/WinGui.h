@@ -293,7 +293,7 @@ struct Edit : Wnd {
         HWND parent = nullptr;
         bool isMultiLine = false;
         bool withBorder = false;
-        // 1px underline under the client area (no WS_EX_CLIENTEDGE)
+        // 1px NC underline under the client area (no WS_EX_CLIENTEDGE)
         bool withBottomBorder = false;
         Str cueText;
         Str text;

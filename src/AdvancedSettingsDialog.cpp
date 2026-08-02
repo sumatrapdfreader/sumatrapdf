@@ -269,11 +269,22 @@ struct AdvancedSettingsWnd : Wnd {
     Str dropDownOrigVal;                   // value before the drop-down opened (owned), for Esc
     int editItemIdx = -1;                  // index into items of the setting being edited
 
+    // bottom buttons (layout-owned; Tab order Save → Cancel → Open → Help)
+    Button* btnSave = nullptr;
+    Button* btnCancel = nullptr;
+    Button* btnOpenSettingsFile = nullptr;
+    Button* btnHelp = nullptr;
+
+    // filter tokens for list matching + match underlay paint (command-palette style)
+    StrVec filterWords;
+    Vec<u8> highlighted; // scratch for DrawMaybeHighlightedText
+
     Vec<SettingItem*> items;
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG&) override;
     void OnSize(UINT msg, UINT type, Size size) override;
+    void AdvanceFocus(bool forward);
 
     void QueryChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
@@ -335,33 +346,31 @@ void AdvancedSettingsWnd::ScheduleDelete() {
 }
 
 // Match setting name against a pre-split filter so "use tabs" hits "UseTabs".
-// words is empty when the filter is empty (match all).
-static bool SettingNameMatchesFilter(Str name, Str filter, const StrVec& words) {
+// words is empty when the filter is empty or only whitespace (match all).
+// SplitFilterToWords already trims; do not ContainsI against the raw edit text
+// ("use " would miss "UseTabs" because of the trailing space).
+static bool SettingNameMatchesFilter(Str name, const StrVec& words) {
     if (len(words) == 0) {
         return true;
     }
-    // Continuous substring (also covers a single word / no spaces)
-    if (str::ContainsI(name, filter)) {
-        return true;
-    }
-    // Single word that already failed ContainsI — no match
+    // Single token: continuous case-insensitive substring ("use" / "use " → UseTabs)
     if (len(words) == 1) {
-        return false;
+        return str::ContainsI(name, words[0]);
     }
+    // Multi-word: every word must appear (camelCase-friendly; order-independent)
     return FilterMatches(name, words);
 }
 
 void AdvancedSettingsWnd::QueryChanged() {
     CancelEditValue();
     Str filter = editFilter->GetTextTemp();
-    StrVec words;
-    if (len(filter) > 0) {
-        SplitFilterToWords(filter, words);
-    }
+    // split trims leading/trailing/internal runs of whitespace into words
+    filterWords.Reset();
+    SplitFilterToWords(filter, filterWords);
     model->filtered.Reset();
     int n = len(items);
     for (int i = 0; i < n; i++) {
-        if (SettingNameMatchesFilter(items[i]->name, filter, words)) {
+        if (SettingNameMatchesFilter(items[i]->name, filterWords)) {
             model->filtered.Append(i);
         }
     }
@@ -458,17 +467,23 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     HFONT valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
 
     SetTextColor(hdc, colText);
+    SetBkMode(hdc, TRANSPARENT);
 
     Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
 
+    bool isRtl = HwndIsRtl(lb->hwnd);
     HGDIOBJ prevFont = SelectObject(hdc, nameFont);
-    TempWStr ws = ToWStrTemp(item->name);
-    HdcDrawText(hdc, ws, rcName, DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    // yellow/accent underlays on matched filter tokens (same as command palette)
+    uint nameFmt = DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
+    if (isRtl) {
+        nameFmt = DT_RIGHT | DT_RTLREADING | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
+    }
+    DrawMaybeHighlightedText(hdc, rcName, item->name, filterWords, highlighted, colBg, isRtl, false, nameFmt);
 
     TempStr val = FormatSettingValueTemp(item);
     SelectObject(hdc, valFont);
-    ws = ToWStrTemp(val);
+    TempWStr ws = ToWStrTemp(val);
     HdcDrawText(hdc, ws, rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
     SelectObject(hdc, prevFont);
@@ -748,6 +763,54 @@ void AdvancedSettingsWnd::OnSave() {
     ApplyChangesAndSave();
 }
 
+// Tab / Shift+Tab: filter → list → Save → Cancel → Open Settings File → Help
+void AdvancedSettingsWnd::AdvanceFocus(bool forward) {
+    HWND controls[] = {
+        editFilter ? editFilter->hwnd : nullptr,
+        listBox ? listBox->hwnd : nullptr,
+        btnSave ? btnSave->hwnd : nullptr,
+        btnCancel ? btnCancel->hwnd : nullptr,
+        btnOpenSettingsFile ? btnOpenSettingsFile->hwnd : nullptr,
+        btnHelp ? btnHelp->hwnd : nullptr,
+    };
+    HWND order[6]{};
+    int n = 0;
+    for (HWND h : controls) {
+        if (h && IsWindow(h)) {
+            order[n++] = h;
+        }
+    }
+    if (n == 0) {
+        return;
+    }
+
+    HWND focused = ::GetFocus();
+    int idx = -1;
+    for (int i = 0; i < n; i++) {
+        if (order[i] == focused || ::IsChild(order[i], focused)) {
+            idx = i;
+            break;
+        }
+    }
+    // in-place editors sit over the list; treat them as the list slot
+    if (idx < 0 && editValue && editValue->hwnd &&
+        (focused == editValue->hwnd || ::IsChild(editValue->hwnd, focused))) {
+        idx = 1; // list
+    }
+    if (idx < 0 && dropDownValue && dropDownValue->hwnd &&
+        (focused == dropDownValue->hwnd || ::IsChild(dropDownValue->hwnd, focused))) {
+        idx = 1; // list
+    }
+
+    int next;
+    if (forward) {
+        next = (idx + 1) % n;
+    } else {
+        next = (idx <= 0) ? n - 1 : idx - 1;
+    }
+    HwndSetFocus(order[next]);
+}
+
 bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         bool isEditingValue = editValue && msg.hwnd == editValue->hwnd;
@@ -762,6 +825,16 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
             }
             return true;
         }
+        if (msg.wParam == VK_TAB) {
+            // leave in-place editors before moving focus (Enter would commit too)
+            if (isEditingValue) {
+                CommitEditValue();
+            } else if (isEditingEnum) {
+                CloseEnumEdit(true);
+            }
+            AdvanceFocus(!IsShiftPressed());
+            return true;
+        }
         if (msg.wParam == VK_RETURN) {
             if (isEditingValue) {
                 CommitEditValue();
@@ -770,6 +843,16 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
             if (isEditingEnum) {
                 CloseEnumEdit(true);
                 return true;
+            }
+            // focused button: Enter = click (PreTranslate would otherwise steal
+            // Enter for list-item activation)
+            HWND focused = ::GetFocus();
+            Button* buttons[] = {btnSave, btnCancel, btnOpenSettingsFile, btnHelp};
+            for (Button* b : buttons) {
+                if (b && b->hwnd && b->hwnd == focused) {
+                    SendMessageW(b->hwnd, BM_CLICK, 0, 0);
+                    return true;
+                }
             }
             // Activate the selected row (bool: toggle true↔false; else edit).
             // Do not require list focus: after filter/arrow navigation the
@@ -977,22 +1060,30 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     }
 
     {
+        // left: Save, Cancel, Open Settings File — right: Help
         auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignMain = MainAxisAlign::SpaceBetween;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        Button* b;
-        b = CreateButton(hwnd, _TRA("Open Settings File"),
+        auto left = new HBox();
+        left->alignMain = MainAxisAlign::MainStart;
+        left->alignCross = CrossAxisAlign::CrossCenter;
+        btnSave =
+            CreateButton(hwnd, _TRA("Save"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnSave>(this), isRtl);
+        left->AddChild(new Padding(btnSave, pad));
+        btnCancel = CreateButton(hwnd, _TRA("Cancel"),
+                                 MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnCancel>(this), isRtl);
+        left->AddChild(new Padding(btnCancel, pad));
+        btnOpenSettingsFile =
+            CreateButton(hwnd, _TRA("Open Settings File"),
                          MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnOpenSettingsFile>(this), isRtl);
-        hbox->AddChild(new Padding(b, pad));
-        b = CreateButton(hwnd, _TRA("Help"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnHelp>(this), isRtl);
-        hbox->AddChild(new Padding(b, pad));
-        b = CreateButton(hwnd, _TRA("Cancel"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnCancel>(this),
-                         isRtl);
-        hbox->AddChild(new Padding(b, pad));
-        b = CreateButton(hwnd, _TRA("Save"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnSave>(this), isRtl);
-        hbox->AddChild(new Padding(b, pad));
+        left->AddChild(new Padding(btnOpenSettingsFile, pad));
+        hbox->AddChild(left);
+
+        btnHelp =
+            CreateButton(hwnd, _TRA("Help"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnHelp>(this), isRtl);
+        hbox->AddChild(new Padding(btnHelp, pad));
         vbox->AddChild(hbox);
     }
 
