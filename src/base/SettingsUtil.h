@@ -61,6 +61,9 @@ struct StructInfo {
     // one string of fieldCount zero-terminated per-field doc comments, in the
     // same order as fieldNames (empty entry if a field has no comment)
     const char* fieldComments = nullptr;
+    // true if this struct has a Bool field named IsTemporary (array elements
+    // with that flag set are omitted when serializing)
+    bool couldBeTemporary = false;
 };
 
 Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {});

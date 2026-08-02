@@ -99,6 +99,11 @@ static DocController* BrowserFindCtrl(MainWindow* win) {
 // asynchronously via BrowserFindResultReceived() / BrowserFindAllResultReceived()
 static void BrowserFindStartSearch(MainWindow* win, DocController* md) {
     TempStr term = HwndGetTextTemp(win->hwndFindEdit);
+    if (len(term) == 0) {
+        return;
+    }
+    // intentional search start (Sioyek-style "/" mark; session-only, #5862)
+    SetSearchStartFavorite(win);
     str::ReplaceWithCopy(&win->browserFindTerm, term);
     ClearFindMatches(win); // also resets browserFindPageCurrent / browserFindCurrent / browserFindTotal
     win->browserFindGen++;
@@ -253,13 +258,11 @@ bool NeedsFindUI(MainWindow* win) {
 }
 
 void FindFirst(MainWindow* win) {
-    // When starting a search from the document (not re-focusing an already-active
-    // find box), remember the current page as favorite "/" so the user can jump
-    // back after navigating matches (Sioyek-style mark, issue #5726).
+    // Only open/focus the find UI here. The search-start favorite ("/") is set
+    // when a real search begins (non-empty term in FindTextOnThread /
+    // BrowserFindStartSearch), not merely when the find box is opened
+    // (issue #5862 / #5726).
     bool hadFindFocus = win && win->hwndFindEdit && HwndIsFocused(win->hwndFindEdit);
-    if (!hadFindFocus) {
-        SetSearchStartFavorite(win);
-    }
 
     if (BrowserFindCtrl(win)) {
         // chm / markdown in a webview: our own find bar drives the search
@@ -322,9 +325,12 @@ constexpr UINT kFindDebounceShortDelayMs = 1000;
 static void StartIncrementalFind(MainWindow* win) {
     DocController* md = BrowserFindCtrl(win);
     if (md) {
-        BrowserFindStartSearch(win, md);
+        BrowserFindStartSearch(win, md); // sets search-start mark
         return;
     }
+    // find-as-you-type is an intentional search start even when Edit_GetModify
+    // is false (e.g. Ctrl+F copied selection via HwndSetText after SetLastResult)
+    SetSearchStartFavorite(win);
     // the full-document count (n/m + results list) is kicked from FindEndTask,
     // after this find thread exits, so the two never touch the engine's text
     // extraction concurrently (mupdf isn't safe for that)
@@ -493,6 +499,9 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
 
+    // wasModified stays false so FindNext continues from the selection; still
+    // record the search-start page as session-only favorite "/" (#5726 / #5862)
+    SetSearchStartFavorite(win);
     FindTextOnThread(win, direction, true);
 }
 
@@ -1289,6 +1298,11 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
         if (!str::Eq(searchText, dm->textSearch->lastText)) {
             wasModified = true;
         }
+    }
+    // New/changed term: record search-start page as session-only favorite "/"
+    // (issue #5726 / #5862). Find Next/Prev for the same term does not update it.
+    if (wasModified) {
+        SetSearchStartFavorite(win);
     }
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);

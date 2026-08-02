@@ -351,6 +351,8 @@ static Favorite* FindByName(FileState* ds, Str name) {
 
 // Silently set/update favorite "/" to the current page so the user can jump
 // back after searching (command palette $ Favorites, or the Favorites sidebar).
+// Session-only: isTemporary is true so SerializeStruct skips the entry when
+// writing settings (issue #5862).
 void SetSearchStartFavorite(MainWindow* win) {
     if (!win || !win->IsDocLoaded() || !win->ctrl) {
         return;
@@ -382,19 +384,21 @@ void SetSearchStartFavorite(MainWindow* win) {
     Str markName = SearchStartFavName();
     Favorite* fn = FindByName(fs, markName);
     if (fn) {
-        if (fn->pageNo == pageNo && str::Eq(fn->pageLabel, pl)) {
+        if (fn->isTemporary && fn->pageNo == pageNo && str::Eq(fn->pageLabel, pl)) {
             return; // already marks this page
         }
         fn->pageNo = pageNo;
         str::ReplaceWithCopy(&fn->pageLabel, pl);
+        // mark as session-only even if a prior build persisted a "/" entry
+        fn->isTemporary = true;
         SortFileFavorites(fs);
     } else {
         fn = NewFavorite(pageNo, markName, pl);
+        fn->isTemporary = true;
         fs->favorites->Append(fn);
         SortFileFavorites(fs);
     }
     UpdateFavoritesTreeForAllWindows();
-    // Settings are written on normal save/exit; no need to flush on every Ctrl+F.
 }
 
 static void RemoveFav(Str filePath, int pageNo) {

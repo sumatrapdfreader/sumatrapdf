@@ -221,4 +221,75 @@ Key = Value";
         utassert(data->boolean == ((i % 2) == 0));
         FreeStruct(&gSutStructInfo, data);
     }
+
+    // Array elements with Bool field IsTemporary=true are omitted on serialize
+    // (session-only favorites, issue #5862). The IsTemporary field itself is
+    // never written.
+    struct SutTempItem {
+        Str name;
+        int pageNo;
+        bool isTemporary;
+    };
+    static const FieldInfo gSutTempItemFields[] = {
+        {offsetof(SutTempItem, name), SettingType::String, 0},
+        {offsetof(SutTempItem, pageNo), SettingType::Int, 0},
+        {offsetof(SutTempItem, isTemporary), SettingType::Bool, (intptr_t)false},
+    };
+    static const StructInfo gSutTempItemInfo = {sizeof(SutTempItem),         3,       gSutTempItemFields,
+                                                "Name\0PageNo\0IsTemporary", nullptr, true};
+
+    struct SutTempRoot {
+        Vec<SutTempItem*>* items;
+    };
+    static const FieldInfo gSutTempRootFields[] = {
+        {offsetof(SutTempRoot, items), SettingType::Array, (intptr_t)&gSutTempItemInfo},
+    };
+    static const StructInfo gSutTempRootInfo = {sizeof(SutTempRoot), 1, gSutTempRootFields, "Items"};
+
+    {
+        auto* root = (SutTempRoot*)DeserializeStruct(&gSutTempRootInfo, nullptr);
+        utassert(root && root->items);
+
+        auto* keep = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        str::ReplaceWithCopy(&keep->name, StrL("keep"));
+        keep->pageNo = 3;
+        keep->isTemporary = false;
+
+        auto* drop = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        str::ReplaceWithCopy(&drop->name, StrL("/"));
+        drop->pageNo = 7;
+        drop->isTemporary = true;
+
+        auto* keep2 = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        str::ReplaceWithCopy(&keep2->name, StrL("also"));
+        keep2->pageNo = 9;
+        keep2->isTemporary = false;
+
+        root->items->Append(keep);
+        root->items->Append(drop);
+        root->items->Append(keep2);
+
+        Str out = SerializeStruct(&gSutTempRootInfo, root);
+        utassert(str::Contains(out, StrL("Name = keep")));
+        utassert(str::Contains(out, StrL("PageNo = 3")));
+        utassert(str::Contains(out, StrL("Name = also")));
+        utassert(str::Contains(out, StrL("PageNo = 9")));
+        utassert(!str::Contains(out, StrL("Name = /")));
+        utassert(!str::Contains(out, StrL("PageNo = 7")));
+        utassert(!str::Contains(out, StrL("IsTemporary")));
+        // still three elements in memory after serialize
+        utassert(3 == len(*root->items));
+
+        // only the two non-temporary elements round-trip
+        auto* loaded = (SutTempRoot*)DeserializeStruct(&gSutTempRootInfo, out);
+        str::Free(out);
+        utassert(loaded && loaded->items && 2 == len(*loaded->items));
+        utassert(str::Eq((*loaded->items)[0]->name, StrL("keep")));
+        utassert(3 == (*loaded->items)[0]->pageNo);
+        utassert(!(*loaded->items)[0]->isTemporary);
+        utassert(str::Eq((*loaded->items)[1]->name, StrL("also")));
+        utassert(9 == (*loaded->items)[1]->pageNo);
+        FreeStruct(&gSutTempRootInfo, loaded);
+        FreeStruct(&gSutTempRootInfo, root);
+    }
 }

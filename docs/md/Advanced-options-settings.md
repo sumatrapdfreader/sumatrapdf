@@ -715,6 +715,9 @@ FileStates [
         ; label for this page (only present if logical and physical page numbers
         ; are not the same)
         PageLabel =
+
+        ; session-only favorite; omitted when serializing array elements
+        IsTemporary = false
       ]
     ]
 

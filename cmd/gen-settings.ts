@@ -465,6 +465,11 @@ const favorite: Field[] = [
     "label for this page (only present if logical and physical page numbers are not the same)",
   ),
   field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)").notSaved(),
+  // search-start mark ("/") from Find; session-only. Field is in metadata so
+  // SerializeStruct can skip array elements with IsTemporary=true; the field
+  // itself is never written (SettingsUtil) (issue #5862)
+  field("IsTemporary", Bool, false, "session-only favorite; omitted when serializing array elements")
+    .internal(),
 ];
 
 const fileSettings: Field[] = [
@@ -1267,8 +1272,19 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
   const constStr = fullName !== "FileState" ? "const " : "";
   const namesStr = names.join("\\0");
   const commentsStr = comments.map(escapeCStr).join("\\0");
+  // true if metadata includes Bool IsTemporary (SerializeStruct skips those array elements)
+  let couldBeTemporary = false;
+  for (const field of fields) {
+    if (field.NotSaved || isComment(field)) {
+      continue;
+    }
+    if (field.Name === "IsTemporary" && field.Type.name === "Bool") {
+      couldBeTemporary = true;
+      break;
+    }
+  }
   lines.push(
-    `static ${constStr}StructInfo g${fullName}Info = { sizeof(${struc.StructName}), ${names.length}, g${fullName}Fields, "${namesStr}", "${commentsStr}" };`,
+    `static ${constStr}StructInfo g${fullName}Info = { sizeof(${struc.StructName}), ${names.length}, g${fullName}Fields, "${namesStr}", "${commentsStr}", ${couldBeTemporary} };`,
   );
   return lines.join("\n");
 }

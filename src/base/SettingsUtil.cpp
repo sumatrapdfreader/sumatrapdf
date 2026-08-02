@@ -473,6 +473,26 @@ static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int 
     }
 }
 
+// If the struct defines a Bool field named IsTemporary and it is true, the
+// element is session-only and must not be written (e.g. search-start favorites).
+static bool StructIsTemporary(const StructInfo* info, const void* data) {
+    if (!info || !data || !info->couldBeTemporary) {
+        return false;
+    }
+    const char* fieldName = info->fieldNames;
+    for (size_t i = 0; i < info->fieldCount; i++, fieldName += len(fieldName) + 1) {
+        const FieldInfo& field = info->fields[i];
+        if (field.type != SettingType::Bool) {
+            continue;
+        }
+        if (!str::Eq(fieldName, StrL("IsTemporary"))) {
+            continue;
+        }
+        return *(const bool*)((const u8*)data + field.offset);
+    }
+    return false;
+}
+
 static void SerializeStructRec(str::Builder& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
                                int indent = 0) {
     const u8* base = (const u8*)data;
@@ -483,6 +503,11 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
         ReportIf(str::ContainsChar(fieldNameStr, '=') || str::ContainsChar(fieldNameStr, ':') ||
                  str::ContainsChar(fieldNameStr, '[') || str::ContainsChar(fieldNameStr, ']') ||
                  NeedsEscaping(fieldNameStr));
+        // Never write IsTemporary itself; it only gates array-element omission.
+        if (SettingType::Bool == field.type && str::Eq(fieldNameStr, StrL("IsTemporary"))) {
+            MarkFieldKnown(prevNode, fieldNameStr, field.type);
+            continue;
+        }
         if (SettingType::Struct == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
@@ -497,10 +522,15 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             out.Append(" [\r\n");
             Vec<void*>* array = *(Vec<void*>**)(base + field.offset);
             if (array && len(*array) > 0) {
+                const StructInfo* elemInfo = GetSubstruct(field);
                 for (int j = 0; j < len(*array); j++) {
+                    void* elem = (*array)[j];
+                    if (StructIsTemporary(elemInfo, elem)) {
+                        continue;
+                    }
                     Indent(out, indent + 1);
                     out.Append("[\r\n");
-                    SerializeStructRec(out, GetSubstruct(field), (*array)[j], nullptr, indent + 2);
+                    SerializeStructRec(out, elemInfo, elem, nullptr, indent + 2);
                     Indent(out, indent + 1);
                     out.Append("]\r\n");
                 }

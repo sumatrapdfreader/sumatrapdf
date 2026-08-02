@@ -388,6 +388,8 @@ struct Favorite {
     Str pageLabel;
     // id of this favorite in the menu (assigned by AppendFavMenuItems)
     int menuId;
+    // session-only favorite; omitted when serializing array elements
+    bool isTemporary;
 };
 
 // information about opened files (in most recently used order)
@@ -800,16 +802,20 @@ static const FieldInfo gWindowMarginFields[] = {
     {offsetof(WindowMargin, left), SettingType::Int, 4},
 };
 static const StructInfo gWindowMarginInfo = {
-    sizeof(WindowMargin), 4, gWindowMarginFields, "Top\0Right\0Bottom\0Left",
+    sizeof(WindowMargin),
+    4,
+    gWindowMarginFields,
+    "Top\0Right\0Bottom\0Left",
     "size of the top margin between window and document\0size of the right margin between window and document\0size of "
-    "the bottom margin between window and document\0size of the left margin between window and document"};
+    "the bottom margin between window and document\0size of the left margin between window and document",
+    false};
 
 static const FieldInfo gSizeFields[] = {
     {offsetof(Size, dx), SettingType::Int, 4},
     {offsetof(Size, dy), SettingType::Int, 4},
 };
-static const StructInfo gSizeInfo = {sizeof(Size), 2, gSizeFields, "Dx\0Dy",
-                                     "horizontal difference\0vertical difference"};
+static const StructInfo gSizeInfo = {
+    sizeof(Size), 2, gSizeFields, "Dx\0Dy", "horizontal difference\0vertical difference", false};
 
 static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, textColor), SettingType::Color, (intptr_t)"#000000"},
@@ -821,7 +827,9 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, windowBgCol), SettingType::Color, (intptr_t)""},
 };
 static const StructInfo gFixedPageUIInfo = {
-    sizeof(FixedPageUI), 7, gFixedPageUIFields,
+    sizeof(FixedPageUI),
+    7,
+    gFixedPageUIFields,
     "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0WindowBgCol",
     "color value with which black (text) will be substituted\0color value with which white (background) will be "
     "substituted\0color value for the text selection rectangle (also used to highlight found text). Use an #aarrggbb "
@@ -831,7 +839,8 @@ static const StructInfo gFixedPageUIInfo = {
     "use for the gradient from top to bottom (stops will be inserted at regular intervals throughout the document); "
     "currently only up to three colors are supported; the idea behind this experimental feature is that the background "
     "might allow to subconsciously determine reading progress; suggested values: #2828aa #28aa28 #aa2828\0if given, "
-    "sets the canvas background color for PDF files"};
+    "sets the canvas background color for PDF files",
+    false};
 
 static const FieldInfo gEBookUIFields[] = {
     {offsetof(EBookUI, fontSize), SettingType::Float, (intptr_t)"0"},
@@ -842,9 +851,13 @@ static const FieldInfo gEBookUIFields[] = {
     {offsetof(EBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
 };
 static const StructInfo gEBookUIInfo = {
-    sizeof(EBookUI), 6, gEBookUIFields, "FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol",
+    sizeof(EBookUI),
+    6,
+    gEBookUIFields,
+    "FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol",
     "font size, default 8.0\0default is 420\0default is 595\0if true, we ignore ebook's CSS\0custom CSS. Might need to "
-    "set IgnoreDocumentCSS = true\0if given, sets the canvas background color for ebook documents (epub, mobi etc.)"};
+    "set IgnoreDocumentCSS = true\0if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
+    false};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
     {offsetof(WindowMargin, top), SettingType::Int, 0},
@@ -853,16 +866,20 @@ static const FieldInfo gWindowMargin_1_Fields[] = {
     {offsetof(WindowMargin, left), SettingType::Int, 0},
 };
 static const StructInfo gWindowMargin_1_Info = {
-    sizeof(WindowMargin), 4, gWindowMargin_1_Fields, "Top\0Right\0Bottom\0Left",
+    sizeof(WindowMargin),
+    4,
+    gWindowMargin_1_Fields,
+    "Top\0Right\0Bottom\0Left",
     "size of the top margin between window and document\0size of the right margin between window and document\0size of "
-    "the bottom margin between window and document\0size of the left margin between window and document"};
+    "the bottom margin between window and document\0size of the left margin between window and document",
+    false};
 
 static const FieldInfo gSize_1_Fields[] = {
     {offsetof(Size, dx), SettingType::Int, 4},
     {offsetof(Size, dy), SettingType::Int, 4},
 };
-static const StructInfo gSize_1_Info = {sizeof(Size), 2, gSize_1_Fields, "Dx\0Dy",
-                                        "horizontal difference\0vertical difference"};
+static const StructInfo gSize_1_Info = {
+    sizeof(Size), 2, gSize_1_Fields, "Dx\0Dy", "horizontal difference\0vertical difference", false};
 
 static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMargin_1_Info},
@@ -871,33 +888,49 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
 };
 static const StructInfo gComicBookUIInfo = {
-    sizeof(ComicBookUI), 4, gComicBookUIFields, "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol",
+    sizeof(ComicBookUI),
+    4,
+    gComicBookUIFields,
+    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
     "between two pages in facing and book view modes\0if true, default to displaying Comic Book files in manga mode "
     "(from right to left if showing 2 pages at a time)\0if given, sets the canvas background color for comic book "
-    "files"};
+    "files",
+    false};
 
 static const FieldInfo gImageUIFields[] = {
     {offsetof(ImageUI, windowBgCol), SettingType::Color, (intptr_t)""},
     {offsetof(ImageUI, defaultZoom), SettingType::String, (intptr_t)"shrink to fit"},
 };
 static const StructInfo gImageUIInfo = {
-    sizeof(ImageUI), 2, gImageUIFields, "WindowBgCol\0DefaultZoom",
+    sizeof(ImageUI),
+    2,
+    gImageUIFields,
+    "WindowBgCol\0DefaultZoom",
     "if given, sets the canvas background color for image files\0default zoom for image files. valid values: fit page, "
-    "fit width, fit height, fit content, shrink to fit or percent like 100%"};
+    "fit width, fit height, fit content, shrink to fit or percent like 100%",
+    false};
 
 static const FieldInfo gChmUIFields[] = {
     {offsetof(ChmUI, useFixedPageUI), SettingType::Bool, false},
 };
-static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI",
-                                      "if true, the UI used for PDF documents will be used for CHM documents as well"};
+static const StructInfo gChmUIInfo = {sizeof(ChmUI),
+                                      1,
+                                      gChmUIFields,
+                                      "UseFixedPageUI",
+                                      "if true, the UI used for PDF documents will be used for CHM documents as well",
+                                      false};
 
 static const FieldInfo gMarkdownUIFields[] = {
     {offsetof(MarkdownUI, useFixedPageUI), SettingType::Bool, false},
 };
 static const StructInfo gMarkdownUIInfo = {
-    sizeof(MarkdownUI), 1, gMarkdownUIFields, "UseFixedPageUI",
-    "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available"};
+    sizeof(MarkdownUI),
+    1,
+    gMarkdownUIFields,
+    "UseFixedPageUI",
+    "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available",
+    false};
 
 static const FieldInfo gClaudeCodeFields[] = {
     {offsetof(ClaudeCode, model), SettingType::String, (intptr_t)"sonnet"},
@@ -907,11 +940,15 @@ static const FieldInfo gClaudeCodeFields[] = {
     {offsetof(ClaudeCode, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
 };
 static const StructInfo gClaudeCodeInfo = {
-    sizeof(ClaudeCode), 5, gClaudeCodeFields, "Model\0Models\0Effort\0SkipPermissions\0BgColor",
+    sizeof(ClaudeCode),
+    5,
+    gClaudeCodeFields,
+    "Model\0Models\0Effort\0SkipPermissions\0BgColor",
     "Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if not in the model list\0extra Claude model "
     "aliases for the dropdown, comma-separated; documented Claude Code aliases are always included\0Claude effort "
     "level: 0=Low, 1=Medium, 2=High, 3=Max\0if true, pass --dangerously-skip-permissions to Claude Code\0background "
-    "color of the Claude Code chat panel"};
+    "color of the Claude Code chat panel",
+    false};
 
 static const FieldInfo gGrokBuildFields[] = {
     {offsetof(GrokBuild, model), SettingType::String, (intptr_t)"grok-4.5"},
@@ -921,10 +958,14 @@ static const FieldInfo gGrokBuildFields[] = {
     {offsetof(GrokBuild, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
 };
 static const StructInfo gGrokBuildInfo = {
-    sizeof(GrokBuild), 5, gGrokBuildFields, "Model\0Models\0Effort\0AlwaysApprove\0BgColor",
+    sizeof(GrokBuild),
+    5,
+    gGrokBuildFields,
+    "Model\0Models\0Effort\0AlwaysApprove\0BgColor",
     "Grok model ID for --model (e.g. grok-4.5)\0extra Grok model IDs for the dropdown, comma-separated; used in "
     "addition to models reported by Grok\0Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max\0if true, pass "
-    "--always-approve to Grok Build (auto-approve tool executions)\0background color of the Grok Build chat panel"};
+    "--always-approve to Grok Build (auto-approve tool executions)\0background color of the Grok Build chat panel",
+    false};
 
 static const FieldInfo gCodexBuildFields[] = {
     {offsetof(CodexBuild, model), SettingType::String, (intptr_t)"gpt-5.5"},
@@ -934,11 +975,15 @@ static const FieldInfo gCodexBuildFields[] = {
     {offsetof(CodexBuild, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
 };
 static const StructInfo gCodexBuildInfo = {
-    sizeof(CodexBuild), 5, gCodexBuildFields, "Model\0Models\0Sandbox\0SkipSandbox\0BgColor",
+    sizeof(CodexBuild),
+    5,
+    gCodexBuildFields,
+    "Model\0Models\0Sandbox\0SkipSandbox\0BgColor",
     "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)\0extra Codex model IDs for the dropdown, comma-separated; used "
     "in addition to models reported by Codex\0Codex sandbox mode: 0=read-only, 1=workspace-write, "
     "2=danger-full-access\0if true, pass --dangerously-bypass-approvals-and-sandbox to Codex\0background color of the "
-    "OpenAI Codex chat panel"};
+    "OpenAI Codex chat panel",
+    false};
 
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t)"#ffff00"},
@@ -955,7 +1000,9 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 12, gAnnotationsFields,
+    sizeof(Annotations),
+    12,
+    gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
     "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor",
     "highlight annotation color\0underline annotation color\0squiggly annotation color\0strike out annotation "
@@ -963,7 +1010,8 @@ static const StructInfo gAnnotationsInfo = {
     "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0size "
     "of free text annotation\0width of free text annotation border\0text icon annotation color\0type of text "
     "annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.\0default author "
-    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name"};
+    "for created annotations, use (none) to not add an author at all. If not set will use Windows user name",
+    false};
 
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
@@ -974,13 +1022,17 @@ static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, toolbarSvgIcon), SettingType::String, 0},
 };
 static const StructInfo gExternalViewerInfo = {
-    sizeof(ExternalViewer), 6, gExternalViewerFields, "CommandLine\0Name\0Filter\0Key\0ToolbarText\0ToolbarSvgIcon",
+    sizeof(ExternalViewer),
+    6,
+    gExternalViewerFields,
+    "CommandLine\0Name\0Filter\0Key\0ToolbarText\0ToolbarSvgIcon",
     "command line with which to call the external viewer, may contain %p for page number and \"%1\" for the file name "
     "(add quotation marks around paths containing spaces)\0name of the external viewer to be shown in the menu "
     "(implied by CommandLine if missing)\0optional filter for which file types the menu item is to be shown; separate "
     "multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS "
     "documents)\0optional: keyboard shortcut e.g. Alt + 7\0if given, shows in toolbar\0optional SVG icon for toolbar "
-    "button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used"};
+    "button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
+    false};
 
 static const FieldInfo gForwardSearchFields[] = {
     {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},
@@ -989,29 +1041,39 @@ static const FieldInfo gForwardSearchFields[] = {
     {offsetof(ForwardSearch, highlightPermanent), SettingType::Bool, false},
 };
 static const StructInfo gForwardSearchInfo = {
-    sizeof(ForwardSearch), 4, gForwardSearchFields,
+    sizeof(ForwardSearch),
+    4,
+    gForwardSearchFields,
     "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent",
     "when set to a positive value, the forward search highlight style will be changed to a rectangle at the left of "
     "the page (with the indicated amount of margin from the page margin)\0width of the highlight rectangle (if "
     "HighlightOffset is > 0)\0color used for the forward search highlight\0if true, highlight remains visible until "
-    "the next mouse click (instead of fading away immediately)"};
+    "the next mouse click (instead of fading away immediately)",
+    false};
 
 static const FieldInfo gPrinterDefaultsFields[] = {
     {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t)"shrink"},
     {offsetof(PrinterDefaults, collate), SettingType::String, (intptr_t)"default"},
 };
-static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 2, gPrinterDefaultsFields,
+static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults),
+                                                2,
+                                                gPrinterDefaultsFields,
                                                 "PrintScale\0Collate",
                                                 "default value for scaling (shrink, fit, none)\0default value for "
-                                                "collate in the print dialog (default, collate, nocollate)"};
+                                                "collate in the print dialog (default, collate, nocollate)",
+                                                false};
 
 static const FieldInfo gFullscreenFields[] = {
     {offsetof(Fullscreen, showToolbar), SettingType::Bool, false},
     {offsetof(Fullscreen, showMenubar), SettingType::Bool, false},
 };
 static const StructInfo gFullscreenInfo = {
-    sizeof(Fullscreen), 2, gFullscreenFields, "ShowToolbar\0ShowMenubar",
-    "if true, show the toolbar in fullscreen mode\0if true, show the menu bar in fullscreen mode"};
+    sizeof(Fullscreen),
+    2,
+    gFullscreenFields,
+    "ShowToolbar\0ShowMenubar",
+    "if true, show the toolbar in fullscreen mode\0if true, show the menu bar in fullscreen mode",
+    false};
 
 static const FieldInfo gSelectionHandlerFields[] = {
     {offsetof(SelectionHandler, url), SettingType::String, 0},
@@ -1019,9 +1081,13 @@ static const FieldInfo gSelectionHandlerFields[] = {
     {offsetof(SelectionHandler, key), SettingType::String, 0},
 };
 static const StructInfo gSelectionHandlerInfo = {
-    sizeof(SelectionHandler), 3, gSelectionHandlerFields, "URL\0Name\0Key",
+    sizeof(SelectionHandler),
+    3,
+    gSelectionHandlerFields,
+    "URL\0Name\0Key",
     "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with "
-    "language code for current UI (e.g. 'de' for German)\0name shown in context menu\0keyboard shortcut"};
+    "language code for current UI (e.g. 'de' for German)\0name shown in context menu\0keyboard shortcut",
+    false};
 
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t)""},
@@ -1031,9 +1097,13 @@ static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, toolbarSvgIcon), SettingType::String, 0},
 };
 static const StructInfo gShortcutInfo = {
-    sizeof(Shortcut), 5, gShortcutFields, "Cmd\0Key\0Name\0ToolbarText\0ToolbarSvgIcon",
+    sizeof(Shortcut),
+    5,
+    gShortcutFields,
+    "Cmd\0Key\0Name\0ToolbarText\0ToolbarSvgIcon",
     "command\0keyboard shortcut (e.g. Ctrl-Alt-F)\0name shown in command palette\0if given, shows in toolbar\0optional "
-    "SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used"};
+    "SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
+    false};
 
 static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
@@ -1054,7 +1124,9 @@ static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gThemeInfo = {
-    sizeof(Theme), 16, gThemeFields,
+    sizeof(Theme),
+    16,
+    gThemeFields,
     "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
     "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
     "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
@@ -1062,19 +1134,20 @@ static const StructInfo gThemeInfo = {
     "color\0secondary / muted text color\0hovered control background color\0control border / edge color\0hovered "
     "control border color\0disabled control border color\0error background color\0notification tip background "
     "color\0notification tip highlight background color\0notification tip highlight text color\0should we colorize "
-    "Windows controls and window areas"};
+    "Windows controls and window areas",
+    false};
 
 static const FieldInfo gTabFileFields[] = {
     {offsetof(TabFile, path), SettingType::String, (intptr_t)""},
 };
-static const StructInfo gTabFileInfo = {sizeof(TabFile), 1, gTabFileFields, "Path", "file path"};
+static const StructInfo gTabFileInfo = {sizeof(TabFile), 1, gTabFileFields, "Path", "file path", false};
 
 static const FieldInfo gTabGroupFields[] = {
     {offsetof(TabGroup, name), SettingType::String, (intptr_t)""},
     {offsetof(TabGroup, tabFiles), SettingType::Array, (intptr_t)&gTabFileInfo},
 };
-static const StructInfo gTabGroupInfo = {sizeof(TabGroup), 2, gTabGroupFields, "Name\0TabFiles",
-                                         "name of the tab group\0files in the tab group"};
+static const StructInfo gTabGroupInfo = {
+    sizeof(TabGroup), 2, gTabGroupFields, "Name\0TabFiles", "name of the tab group\0files in the tab group", false};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -1082,8 +1155,8 @@ static const FieldInfo gRectFields[] = {
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy",
-                                     "x coordinate\0y coordinate\0width\0height"};
+static const StructInfo gRectInfo = {
+    sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy", "x coordinate\0y coordinate\0width\0height", false};
 
 static const FieldInfo gRect_1_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -1091,24 +1164,30 @@ static const FieldInfo gRect_1_Fields[] = {
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy",
-                                        "x coordinate\0y coordinate\0width\0height"};
+static const StructInfo gRect_1_Info = {
+    sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy", "x coordinate\0y coordinate\0width\0height", false};
 
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), SettingType::String, 0},
     {offsetof(Favorite, pageNo), SettingType::Int, 0},
     {offsetof(Favorite, pageLabel), SettingType::String, 0},
+    {offsetof(Favorite, isTemporary), SettingType::Bool, false, true},
 };
 static const StructInfo gFavoriteInfo = {
-    sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel",
+    sizeof(Favorite),
+    4,
+    gFavoriteFields,
+    "Name\0PageNo\0PageLabel\0IsTemporary",
     "name of this favorite as shown in the menu\0number of the bookmarked page\0label for this page (only present if "
-    "logical and physical page numbers are not the same)"};
+    "logical and physical page numbers are not the same)\0session-only favorite; omitted when serializing array "
+    "elements",
+    true};
 
 static const FieldInfo gPointFFields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
     {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
 };
-static const StructInfo gPointFInfo = {sizeof(PointF), 2, gPointFFields, "X\0Y", "x coordinate\0y coordinate"};
+static const StructInfo gPointFInfo = {sizeof(PointF), 2, gPointFFields, "X\0Y", "x coordinate\0y coordinate", false};
 
 static const FieldInfo gRect_2_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -1116,8 +1195,8 @@ static const FieldInfo gRect_2_Fields[] = {
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_2_Info = {sizeof(Rect), 4, gRect_2_Fields, "X\0Y\0Dx\0Dy",
-                                        "x coordinate\0y coordinate\0width\0height"};
+static const StructInfo gRect_2_Info = {
+    sizeof(Rect), 4, gRect_2_Fields, "X\0Y\0Dx\0Dy", "x coordinate\0y coordinate\0width\0height", false};
 
 static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, filePath), SettingType::String, 0},
@@ -1143,7 +1222,9 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, tocState), SettingType::IntArray, 0},
 };
 static StructInfo gFileStateInfo = {
-    sizeof(FileState), 21, gFileStateFields,
+    sizeof(FileState),
+    21,
+    gFileStateFields,
     "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0BgCol\0TabCol\0ReparseIdx\0TocState",
     "path of the document\0Values which are persisted for bookmarks/favorites\0a document can be \"pinned\" to the "
@@ -1159,13 +1240,15 @@ static StructInfo gFileStateInfo = {
     "containing the table of contents\0if true, the document is displayed right-to-left in facing and book view modes "
     "(only used for comic book documents)\0if given, overrides the background color for this document\0if given, "
     "overrides the tab color for this document\0data required to restore the last read page in the ebook UI\0data "
-    "required to determine which parts of the table of contents have been expanded"};
+    "required to determine which parts of the table of contents have been expanded",
+    false};
 
 static const FieldInfo gPointF_1_Fields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
     {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
 };
-static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "X\0Y", "x coordinate\0y coordinate"};
+static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "X\0Y", "x coordinate\0y coordinate",
+                                          false};
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
@@ -1178,10 +1261,14 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };
 static const StructInfo gTabStateInfo = {
-    sizeof(TabState), 8, gTabStateFields, "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState",
+    sizeof(TabState),
+    8,
+    gTabStateFields,
+    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState",
     "path of the document\0same as FileStates -> DisplayMode\0number of the last read page\0same as FileStates -> "
     "Zoom\0same as FileStates -> Rotation\0how far this document has been scrolled (in x and y direction)\0if true, "
-    "the table of contents was shown when the document was closed\0same as FileStates -> TocState"};
+    "the table of contents was shown when the document was closed\0same as FileStates -> TocState",
+    false};
 
 static const FieldInfo gRect_3_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -1189,8 +1276,8 @@ static const FieldInfo gRect_3_Fields[] = {
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_3_Info = {sizeof(Rect), 4, gRect_3_Fields, "X\0Y\0Dx\0Dy",
-                                        "x coordinate\0y coordinate\0width\0height"};
+static const StructInfo gRect_3_Info = {
+    sizeof(Rect), 4, gRect_3_Fields, "X\0Y\0Dx\0Dy", "x coordinate\0y coordinate\0width\0height", false};
 
 static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, tabStates), SettingType::Array, (intptr_t)&gTabStateInfo},
@@ -1200,22 +1287,27 @@ static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, sidebarDx), SettingType::Int, 0},
 };
 static const StructInfo gSessionDataInfo = {
-    sizeof(SessionData), 5, gSessionDataFields, "TabStates\0TabIndex\0WindowState\0WindowPos\0SidebarDx",
+    sizeof(SessionData),
+    5,
+    gSessionDataFields,
+    "TabStates\0TabIndex\0WindowState\0WindowPos\0SidebarDx",
     "data required for restoring the view state of a single tab\0index of the currently selected tab (1-based)\0same "
     "as FileState -> WindowState\0default position (can be on any monitor)\0width of favorites/bookmarks sidebar (if "
-    "shown)"};
+    "shown)",
+    false};
 
 static const FieldInfo gFILETIMEFields[] = {
     {offsetof(FILETIME, dwHighDateTime), SettingType::Int, 0},
     {offsetof(FILETIME, dwLowDateTime), SettingType::Int, 0},
 };
-static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime", "\0"};
+static const StructInfo gFILETIMEInfo = {
+    sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime", "\0", false};
 
 static const FieldInfo gPointFields[] = {
     {offsetof(Point, x), SettingType::Int, 0},
     {offsetof(Point, y), SettingType::Int, 0},
 };
-static const StructInfo gPointInfo = {sizeof(Point), 2, gPointFields, "X\0Y", "x coordinate\0y coordinate"};
+static const StructInfo gPointInfo = {sizeof(Point), 2, gPointFields, "X\0Y", "x coordinate\0y coordinate", false};
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
@@ -1347,7 +1439,9 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 126, gGlobalPrefsFields,
+    sizeof(GlobalPrefs),
+    126,
+    gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
@@ -1440,7 +1534,8 @@ static const StructInfo gGlobalPrefsInfo = {
     "depends on RestoreSession\0data required for reloading documents after an auto-update\0data required to determine "
     "when SumatraPDF last checked for updates\0value required to determine recency for the OpenCount value in "
     "FileStates\0position of the document properties window\0if true, we check once a day if an update is "
-    "available\0\0Settings below are not recognized by the current version"};
+    "available\0\0Settings below are not recognized by the current version",
+    false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},
@@ -1460,7 +1555,9 @@ static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gTheme_1_Info = {
-    sizeof(Theme), 16, gTheme_1_Fields,
+    sizeof(Theme),
+    16,
+    gTheme_1_Fields,
     "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
     "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
     "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
@@ -1468,11 +1565,12 @@ static const StructInfo gTheme_1_Info = {
     "color\0secondary / muted text color\0hovered control background color\0control border / edge color\0hovered "
     "control border color\0disabled control border color\0error background color\0notification tip background "
     "color\0notification tip highlight background color\0notification tip highlight text color\0should we colorize "
-    "Windows controls and window areas"};
+    "Windows controls and window areas",
+    false};
 
 static const FieldInfo gThemesFields[] = {
     {offsetof(Themes, themes), SettingType::Array, (intptr_t)&gTheme_1_Info},
 };
-static const StructInfo gThemesInfo = {sizeof(Themes), 1, gThemesFields, "Themes", "color themes"};
+static const StructInfo gThemesInfo = {sizeof(Themes), 1, gThemesFields, "Themes", "color themes", false};
 
 #endif
