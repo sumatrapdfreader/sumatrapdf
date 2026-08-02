@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "base/JsonParser.h"
 
 #include "wingui/UIModels.h"
 
@@ -139,6 +140,10 @@ class ForwardingDropTarget : public IDropTarget {
     }
 };
 
+// defined below, after the shared-environment state they operate on
+static void ScheduleEnvCreateRetry();
+static void ResetSharedEnvironment();
+
 namespace {
 
 enum class SharedWebViewEnvState {
@@ -153,6 +158,24 @@ ICoreWebView2Environment* gSharedEnvironment = nullptr;
 WStr gSharedUserDataFolder;
 Vec<WebviewWnd*> gPendingWebviews;
 
+// Creating the environment fails with HRESULT_FROM_WIN32(ERROR_INVALID_STATE) when
+// another process is already using the same user data folder with different
+// EnvironmentOptions -- e.g. a second SumatraPDF from before/after an upgrade, since
+// we pass our own AdditionalBrowserArguments. It's transient (the other instance
+// exits), so retry a few times before giving up.
+constexpr int kMaxEnvCreateAttempts = 10;
+constexpr DWORD kEnvCreateRetryDelayMs = 300;
+// after giving up, let a later Embed() start over rather than leaving every webview
+// in the process dead until restart
+constexpr DWORD kEnvFailedCooldownMs = 10 * 1000;
+
+int gEnvCreateAttempts = 0;
+DWORD gEnvFailedAtMs = 0;
+UINT_PTR gEnvRetryTimerId = 0;
+HWND gEnvRetryTimerHwnd = nullptr;
+
+constexpr UINT_PTR kEnvRetryTimerId = 0x5eb1;
+
 void FreePendingOps(Vec<PendingWebViewOp>& ops) {
     for (PendingWebViewOp& op : ops) {
         str::Free(op.text);
@@ -164,6 +187,12 @@ void RemovePendingWebview(WebviewWnd* wv) {
     int i = gPendingWebviews.Find(wv);
     if (i >= 0) {
         gPendingWebviews.RemoveAt(i);
+    }
+    // the retry timer lives on a pending webview's hwnd, so move it if this was
+    // the one hosting it -- otherwise the timer dies with the window and the
+    // shared environment stays stuck in Creating forever
+    if (wv && wv->hwnd && wv->hwnd == gEnvRetryTimerHwnd) {
+        ScheduleEnvCreateRetry();
     }
 }
 
@@ -183,6 +212,51 @@ bool ShouldWebviewBeVisible(HWND hwnd) {
 }
 
 } // namespace
+
+// The JS half of the native-call bridge. window.__sumatra__.call(name, ...args)
+// returns a promise that Resolve() settles. Params are JSON.stringify'd into a
+// *string* field so the native side gets them as one opaque value -- our JSON
+// parser is a push parser over primitives and can't hand back a subtree.
+static const char* kJsBridgeScript = R"JS((function() {
+  'use strict';
+  if (window.__sumatra__) { return; }
+  function genId() {
+    var b = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(b);
+    return Array.prototype.map.call(b, function(n) {
+      var s = n.toString(16);
+      return (s.length === 1 ? '0' : '') + s;
+    }).join('');
+  }
+  var pending = {};
+  var S = {};
+  S.post = function(m) { window.chrome.webview.postMessage(m); };
+  S.call = function(method) {
+    var id = genId();
+    var params = Array.prototype.slice.call(arguments, 1);
+    var p = new Promise(function(resolve, reject) { pending[id] = {resolve: resolve, reject: reject}; });
+    S.post(JSON.stringify({__sumatraCall: 1, id: id, method: method, params: JSON.stringify(params)}));
+    return p;
+  };
+  S.onReply = function(id, status, result) {
+    var pr = pending[id];
+    if (!pr) { return; }
+    delete pending[id];
+    var v;
+    if (result !== undefined && result !== null && result !== '') {
+      try { v = JSON.parse(result); } catch (e) { pr.reject(new Error('bad JSON from host')); return; }
+    }
+    if (status === 0) { pr.resolve(v); } else { pr.reject(v); }
+  };
+  S.onBind = function(name) {
+    if (window[name]) { return; }
+    window[name] = function() {
+      return S.call.apply(S, [name].concat(Array.prototype.slice.call(arguments)));
+    };
+  };
+  S.onUnbind = function(name) { delete window[name]; };
+  window.__sumatra__ = S;
+})())JS";
 
 class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
                              public ICoreWebView2WebMessageReceivedEventHandler,
@@ -796,17 +870,156 @@ class webview2_find_start_handler : public ICoreWebView2FindStartCompletedHandle
     ULONG m_refCount = 1;
 };
 
+// Receives the id WebView2 assigns to a script passed to
+// AddScriptToExecuteOnDocumentCreated. The id is the only handle to that script
+// and is needed by RemoveScriptToExecuteOnDocumentCreated, so without capturing
+// it here init scripts could never be removed or replaced. Looks the window up
+// by hwnd because the completion is asynchronous and the window may be gone.
+class webview2_add_script_handler : public ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler {
+  public:
+    webview2_add_script_handler(HWND hwnd, int token) : m_hwnd(hwnd), m_token(token) {}
+
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown ||
+            riid == __uuidof(ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler)) {
+            *ppv = static_cast<ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, LPCWSTR id) {
+        if (FAILED(res) || !id) {
+            return S_OK;
+        }
+        auto* wnd = (WebviewWnd*)WndListFindByHwnd(m_hwnd);
+        if (wnd) {
+            wnd->OnInitScriptAdded(m_token, id);
+        }
+        return S_OK;
+    }
+
+  private:
+    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    int m_token = 0;
+};
+
+// A WebView2 process died. Without this the control just goes blank forever:
+// a dead renderer leaves nothing painting, and a dead browser process takes the
+// whole environment with it.
+class webview2_process_failed_handler : public ICoreWebView2ProcessFailedEventHandler {
+  public:
+    explicit webview2_process_failed_handler(HWND hwnd) : m_hwnd(hwnd) {}
+
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2ProcessFailedEventHandler)) {
+            *ppv = static_cast<ICoreWebView2ProcessFailedEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2ProcessFailedEventArgs* args) {
+        if (!args) {
+            return S_OK;
+        }
+        COREWEBVIEW2_PROCESS_FAILED_KIND kind;
+        if (FAILED(args->get_ProcessFailedKind(&kind))) {
+            return S_OK;
+        }
+        auto* wnd = (WebviewWnd*)WndListFindByHwnd(m_hwnd);
+        if (!wnd) {
+            return S_OK;
+        }
+        WebViewProcessFailure f = WebViewProcessFailure::Other;
+        switch (kind) {
+            case COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED:
+                f = WebViewProcessFailure::BrowserExited;
+                break;
+            case COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED:
+                f = WebViewProcessFailure::RenderExited;
+                break;
+            case COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE:
+                f = WebViewProcessFailure::RenderUnresponsive;
+                break;
+            default:
+                f = WebViewProcessFailure::Other;
+                break;
+        }
+        wnd->OnProcessFailed(f);
+        return S_OK;
+    }
+
+  private:
+    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+};
+
 WebviewWnd::WebviewWnd() {
     kind = kindWebView;
 }
 
-void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text) {
+void WebviewWnd::OnProcessFailed(WebViewProcessFailure kind) {
+    logf("WebviewWnd::OnProcessFailed: kind=%d\n", (int)kind);
+    if (events.processFailed && events.processFailed(events.ctx, kind)) {
+        return;
+    }
+    switch (kind) {
+        case WebViewProcessFailure::RenderExited:
+        case WebViewProcessFailure::RenderUnresponsive:
+            // the browser process is still alive, so a reload rebuilds the renderer
+            if (webview) {
+                webview->Reload();
+            }
+            break;
+        case WebViewProcessFailure::BrowserExited:
+            // everything hanging off this environment is dead, including the
+            // shared one other webviews use; drop it so the next Embed() builds
+            // a fresh environment instead of handing out a dead one
+            ResetSharedEnvironment();
+            FailInit();
+            break;
+        case WebViewProcessFailure::Other:
+            // GPU/utility process: WebView2 recovers on its own
+            break;
+    }
+}
+
+void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text, int token) {
     if (initFailed) {
         return;
     }
     PendingWebViewOp op;
     op.kind = kind;
     op.text = str::Dup(text ? text : StrL(""));
+    op.token = token;
     pendingOps.Append(op);
 }
 
@@ -821,7 +1034,8 @@ void WebviewWnd::FlushPendingOps() {
     for (PendingWebViewOp& op : ops) {
         switch (op.kind) {
             case PendingWebViewOp::Init:
-                Init(op.text);
+                // keep the token the caller already holds so RemoveInitScript works
+                AddInitScriptWithToken(op.text, op.token);
                 break;
             case PendingWebViewOp::SetHtml:
                 SetHtml(op.text);
@@ -1003,7 +1217,19 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
         }
     }
 
+    {
+        auto* failedHandler = new webview2_process_failed_handler(hwnd);
+        ::EventRegistrationToken token = {};
+        if (FAILED(webview->add_ProcessFailed(failedHandler, &token))) {
+            logf("WebviewWnd: add_ProcessFailed failed\n");
+        }
+        failedHandler->Release();
+    }
+
     Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+    Init(kJsBridgeScript);
+    // re-register any names bound before the controller was ready
+    RebuildBindScript();
     initStarted = true;
     FlushPendingOps();
 
@@ -1053,15 +1279,266 @@ void WebviewWnd::SetHtml(Str html) {
 }
 
 void WebviewWnd::Init(Str js) {
+    AddInitScript(js);
+}
+
+// Registers a script to run on every document, returning a token that
+// RemoveInitScript() takes. The token is ours and valid immediately; the
+// WebView2 id it maps to arrives later via OnInitScriptAdded().
+int WebviewWnd::AddInitScript(Str js) {
     if (initFailed || len(js) == 0) {
+        return 0;
+    }
+    int token = nextInitScriptToken++;
+    AddInitScriptWithToken(js, token);
+    return token;
+}
+
+void WebviewWnd::AddInitScriptWithToken(Str js, int token) {
+    if (initFailed || len(js) == 0 || token == 0) {
         return;
     }
     if (!webview) {
-        QueuePendingOp(PendingWebViewOp::Init, js);
+        QueuePendingOp(PendingWebViewOp::Init, js, token);
         return;
     }
+    WebViewInitScript script;
+    script.token = token;
+    initScripts.Append(script);
+
     WCHAR* ws = CWStrTemp(js);
-    webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
+    auto* handler = new webview2_add_script_handler(hwnd, token);
+    HRESULT hr = webview->AddScriptToExecuteOnDocumentCreated(ws, handler);
+    handler->Release();
+    if (FAILED(hr)) {
+        int idx = FindInitScript(token);
+        if (idx >= 0) {
+            initScripts.RemoveAt(idx);
+        }
+    }
+}
+
+int WebviewWnd::FindInitScript(int token) const {
+    int n = len(initScripts);
+    for (int i = 0; i < n; i++) {
+        if (initScripts[i].token == token) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void WebviewWnd::OnInitScriptAdded(int token, const WCHAR* id) {
+    int idx = FindInitScript(token);
+    if (idx < 0) {
+        return;
+    }
+    WebViewInitScript& script = initScripts[idx];
+    // RemoveInitScript() ran before the id arrived; drop it now that we can
+    if (script.removePending) {
+        if (webview) {
+            webview->RemoveScriptToExecuteOnDocumentCreated(id);
+        }
+        initScripts.RemoveAt(idx);
+        return;
+    }
+    wstr::Free(script.id);
+    script.id = wstr::Dup(WStr(id));
+}
+
+void WebviewWnd::RemoveInitScript(int token) {
+    if (token == 0) {
+        return;
+    }
+    // still queued: it was never handed to WebView2, so just drop it
+    int n = len(pendingOps);
+    for (int i = 0; i < n; i++) {
+        PendingWebViewOp& op = pendingOps[i];
+        if (op.kind == PendingWebViewOp::Init && op.token == token) {
+            str::Free(op.text);
+            pendingOps.RemoveAt(i);
+            return;
+        }
+    }
+    int idx = FindInitScript(token);
+    if (idx < 0) {
+        return;
+    }
+    WebViewInitScript& script = initScripts[idx];
+    if (!script.id) {
+        // the id hasn't arrived yet; OnInitScriptAdded will remove it
+        script.removePending = true;
+        return;
+    }
+    if (webview) {
+        webview->RemoveScriptToExecuteOnDocumentCreated(script.id.s);
+    }
+    wstr::Free(script.id);
+    initScripts.RemoveAt(idx);
+}
+
+void WebviewWnd::RemoveAllInitScripts() {
+    for (WebViewInitScript& script : initScripts) {
+        if (script.id) {
+            if (webview) {
+                webview->RemoveScriptToExecuteOnDocumentCreated(script.id.s);
+            }
+            wstr::Free(script.id);
+        } else {
+            script.removePending = true;
+        }
+    }
+    // scripts whose id is still pending must stay in the list so
+    // OnInitScriptAdded() can remove them once it arrives
+    for (int i = len(initScripts) - 1; i >= 0; i--) {
+        if (!initScripts[i].removePending) {
+            initScripts.RemoveAt(i);
+        }
+    }
+}
+
+// marker the bridge puts first in every call message; JSON.stringify preserves
+// insertion order, so a prefix test is enough to tell these from raw messages
+static const char* kJsCallPrefix = "{\"__sumatraCall\":1";
+
+static bool IsJsCallMessage(Str msg) {
+    return str::StartsWith(msg, kJsCallPrefix);
+}
+
+// escape for embedding inside a double-quoted JS string literal
+static TempStr JsStrEscapeTemp(Str s) {
+    str::Builder buf;
+    for (int i = 0; i < s.len; i++) {
+        u8 c = (u8)s.s[i];
+        switch (c) {
+            case '\\':
+                buf.Append("\\\\");
+                break;
+            case '"':
+                buf.Append("\\\"");
+                break;
+            case '\n':
+                buf.Append("\\n");
+                break;
+            case '\r':
+                buf.Append("\\r");
+                break;
+            case '\t':
+                buf.Append("\\t");
+                break;
+            default:
+                if (c < 0x20) {
+                    buf.Append(fmt("\\u%04x", (int)c));
+                } else {
+                    buf.AppendChar((char)c);
+                }
+                break;
+        }
+    }
+    return ToStrTemp(buf);
+}
+
+namespace {
+// json::Parse hands the visitor values that live in a Builder owned by the
+// parser, so anything we keep has to be copied out
+struct JsCallVisitor : json::ValueVisitor {
+    TempStr id = nullptr;
+    TempStr method = nullptr;
+    TempStr params = nullptr;
+
+    bool Visit(Str path, Str value, json::Type type) override {
+        if (type != json::Type::String) {
+            return true;
+        }
+        if (str::Eq(path, "/id")) {
+            id = str::DupTemp(value);
+        } else if (str::Eq(path, "/method")) {
+            method = str::DupTemp(value);
+        } else if (str::Eq(path, "/params")) {
+            params = str::DupTemp(value);
+        }
+        return true;
+    }
+};
+} // namespace
+
+void WebviewWnd::OnJsCall(Str msg) {
+    JsCallVisitor visitor;
+    if (!json::Parse(msg, &visitor)) {
+        logf("WebviewWnd::OnJsCall: failed to parse '%s'\n", msg);
+        return;
+    }
+    if (!visitor.id || !visitor.method) {
+        return;
+    }
+    if (!events.jsCall) {
+        // nothing can answer, so reject instead of leaving the promise pending
+        Resolve(visitor.id, 1, StrL("\"no handler\""));
+        return;
+    }
+    Str params = visitor.params ? Str(visitor.params) : StrL("[]");
+    events.jsCall(events.ctx, visitor.id, visitor.method, params);
+}
+
+void WebviewWnd::Resolve(Str id, int status, Str resultJson) {
+    if (len(id) == 0) {
+        return;
+    }
+    TempStr js = fmt("if (window.__sumatra__) window.__sumatra__.onReply(\"%s\", %d, \"%s\");", JsStrEscapeTemp(id),
+                     status, JsStrEscapeTemp(resultJson));
+    Eval(js);
+}
+
+// Rebuilds the init script that re-binds every name on each new document, so
+// bindings survive navigation.
+void WebviewWnd::RebuildBindScript() {
+    if (bindScriptToken) {
+        RemoveInitScript(bindScriptToken);
+        bindScriptToken = 0;
+    }
+    if (len(boundNames) == 0) {
+        return;
+    }
+    str::Builder js;
+    js.Append("(function(){var m=[");
+    bool first = true;
+    for (Str& name : boundNames) {
+        if (!first) {
+            js.Append(",");
+        }
+        first = false;
+        js.Append(fmt("\"%s\"", JsStrEscapeTemp(name)));
+    }
+    js.Append("];m.forEach(function(n){window.__sumatra__.onBind(n)})})()");
+    bindScriptToken = AddInitScript(ToStr(js));
+}
+
+void WebviewWnd::Bind(Str name) {
+    if (len(name) == 0) {
+        return;
+    }
+    for (Str& n : boundNames) {
+        if (str::Eq(n, name)) {
+            return;
+        }
+    }
+    boundNames.Append(str::Dup(name));
+    RebuildBindScript();
+    // also expose it in the document that's already loaded
+    Eval(fmt("if (window.__sumatra__) window.__sumatra__.onBind(\"%s\");", JsStrEscapeTemp(name)));
+}
+
+void WebviewWnd::Unbind(Str name) {
+    int n = len(boundNames);
+    for (int i = 0; i < n; i++) {
+        if (str::Eq(boundNames[i], name)) {
+            str::Free(boundNames[i]);
+            boundNames.RemoveAt(i);
+            RebuildBindScript();
+            Eval(fmt("if (window.__sumatra__) window.__sumatra__.onUnbind(\"%s\");", JsStrEscapeTemp(name)));
+            return;
+        }
+    }
 }
 
 void WebviewWnd::Navigate(Str url) {
@@ -1267,16 +1744,88 @@ static void CreateControllerWithSharedEnvironment(WebviewWnd* self, WebViewMsgCb
     }
 }
 
+static bool StartSharedEnvironmentCreation();
+
+// Give up on creating the shared environment. Records when, so that
+// EnvCreationAllowed() lets a later Embed() try again instead of leaving every
+// webview in the process dead until restart.
+static void SharedEnvironmentGiveUp() {
+    gSharedEnvState = SharedWebViewEnvState::Failed;
+    gEnvFailedAtMs = GetTickCount();
+    FailPendingWebviews();
+}
+
+// Drops the shared environment. Used when the browser process dies: every
+// controller created from it is dead too, so the next Embed() must build a new
+// one rather than hand out a stale pointer.
+static void ResetSharedEnvironment() {
+    if (gSharedEnvironment) {
+        gSharedEnvironment->Release();
+        gSharedEnvironment = nullptr;
+    }
+    gSharedEnvState = SharedWebViewEnvState::NotStarted;
+    gEnvCreateAttempts = 0;
+    gEnvFailedAtMs = 0;
+}
+
+static void CancelEnvRetryTimer() {
+    if (gEnvRetryTimerId && gEnvRetryTimerHwnd && ::IsWindow(gEnvRetryTimerHwnd)) {
+        KillTimer(gEnvRetryTimerHwnd, gEnvRetryTimerId);
+    }
+    gEnvRetryTimerId = 0;
+    gEnvRetryTimerHwnd = nullptr;
+}
+
+// Retry on a timer rather than Sleep()ing: this runs on the UI thread.
+static void ScheduleEnvCreateRetry() {
+    CancelEnvRetryTimer();
+    HWND hwnd = nullptr;
+    for (WebviewWnd* wv : gPendingWebviews) {
+        if (wv && wv->hwnd && ::IsWindow(wv->hwnd)) {
+            hwnd = wv->hwnd;
+            break;
+        }
+    }
+    if (!hwnd) {
+        // nothing is waiting anymore; let the next Embed() start over with a
+        // fresh attempt budget rather than leaving the state stuck in Creating
+        gSharedEnvState = SharedWebViewEnvState::NotStarted;
+        gEnvCreateAttempts = 0;
+        return;
+    }
+    gEnvRetryTimerHwnd = hwnd;
+    gEnvRetryTimerId = SetTimer(hwnd, kEnvRetryTimerId, kEnvCreateRetryDelayMs, nullptr);
+    if (!gEnvRetryTimerId) {
+        SharedEnvironmentGiveUp();
+    }
+}
+
+static void OnEnvCreateRetryTimer() {
+    CancelEnvRetryTimer();
+    if (gSharedEnvState != SharedWebViewEnvState::Creating) {
+        return;
+    }
+    if (!StartSharedEnvironmentCreation()) {
+        SharedEnvironmentGiveUp();
+    }
+}
+
 static void OnSharedEnvironmentReady(HRESULT res, ICoreWebView2Environment* env) {
     if (FAILED(res) || !env) {
-        gSharedEnvState = SharedWebViewEnvState::Failed;
-        FailPendingWebviews();
+        logf("WebView2: creating environment failed with 0x%x (attempt %d/%d)\n", (int)res, gEnvCreateAttempts,
+             kMaxEnvCreateAttempts);
+        if (gEnvCreateAttempts < kMaxEnvCreateAttempts) {
+            ScheduleEnvCreateRetry();
+        } else {
+            SharedEnvironmentGiveUp();
+        }
         return;
     }
 
     env->AddRef();
     gSharedEnvironment = env;
     gSharedEnvState = SharedWebViewEnvState::Ready;
+    gEnvCreateAttempts = 0;
 
     Vec<WebviewWnd*> pending = gPendingWebviews;
     gPendingWebviews.Reset();
@@ -1310,6 +1859,34 @@ static Microsoft::WRL::ComPtr<CoreWebView2EnvironmentOptions> CreateOfflineEnvir
     return options;
 }
 
+static bool StartSharedEnvironmentCreation() {
+    gEnvCreateAttempts++;
+    auto options = CreateOfflineEnvironmentOptions();
+    auto* envHandler = new webview2_env_handler(OnSharedEnvironmentReady);
+    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(nullptr, gSharedUserDataFolder.s, options.Get(), envHandler);
+    envHandler->Release();
+    if (SUCCEEDED(hr)) {
+        return true;
+    }
+    logf("WebView2: CreateCoreWebView2EnvironmentWithOptions failed with 0x%x (attempt %d/%d)\n", (int)hr,
+         gEnvCreateAttempts, kMaxEnvCreateAttempts);
+    if (gEnvCreateAttempts < kMaxEnvCreateAttempts) {
+        ScheduleEnvCreateRetry();
+        return true;
+    }
+    return false;
+}
+
+// After giving up we stay Failed for a cooldown, then allow a fresh attempt: the
+// usual cause (another instance holding the user data folder) goes away on its own.
+static bool EnvCreationAllowedAgain() {
+    if (gSharedEnvState != SharedWebViewEnvState::Failed) {
+        return false;
+    }
+    DWORD elapsed = GetTickCount() - gEnvFailedAtMs;
+    return elapsed >= kEnvFailedCooldownMs;
+}
+
 bool WebviewWnd::Embed(WebViewMsgCb& cb) {
     if (initStarted) {
         return !initFailed;
@@ -1329,8 +1906,13 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
     }
 
     if (gSharedEnvState == SharedWebViewEnvState::Failed) {
-        initFailed = true;
-        return false;
+        if (!EnvCreationAllowedAgain()) {
+            initFailed = true;
+            return false;
+        }
+        logf("WebView2: retrying environment creation after an earlier failure\n");
+        gSharedEnvState = SharedWebViewEnvState::NotStarted;
+        gEnvCreateAttempts = 0;
     }
 
     gPendingWebviews.Append(this);
@@ -1339,14 +1921,8 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
         gSharedEnvState = SharedWebViewEnvState::Creating;
         wstr::Free(gSharedUserDataFolder);
         gSharedUserDataFolder = wstr::Dup(userDataFolder);
-        auto options = CreateOfflineEnvironmentOptions();
-        auto* envHandler = new webview2_env_handler(OnSharedEnvironmentReady);
-        HRESULT hr =
-            CreateCoreWebView2EnvironmentWithOptions(nullptr, gSharedUserDataFolder.s, options.Get(), envHandler);
-        envHandler->Release();
-        if (FAILED(hr)) {
-            gSharedEnvState = SharedWebViewEnvState::Failed;
-            FailPendingWebviews();
+        if (!StartSharedEnvironmentCreation()) {
+            SharedEnvironmentGiveUp();
             return false;
         }
     } else if (gSharedEnvState == SharedWebViewEnvState::Creating) {
@@ -1366,6 +1942,12 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
     HWND hwnd = (HWND)hwndVoid;
     auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
     if (self) {
+        // structured calls from the JS bridge don't go to OnBrowserMessage, so
+        // subclasses keep seeing only their own raw messages
+        if (IsJsCallMessage(msg)) {
+            self->OnJsCall(msg);
+            return;
+        }
         self->OnBrowserMessage(msg);
     }
 }
@@ -1395,6 +1977,10 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
 }
 
 LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_TIMER && wparam == kEnvRetryTimerId) {
+        OnEnvCreateRetryTimer();
+        return 0;
+    }
     if (msg == WM_ENTERSIZEMOVE) {
         isInSizeMove = true;
         Eval("if (window.__setHostResizing) window.__setHostResizing(true);");
@@ -1424,6 +2010,14 @@ LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 WebviewWnd::~WebviewWnd() {
     RemovePendingWebview(this);
     FreePendingOps(pendingOps);
+    for (WebViewInitScript& script : initScripts) {
+        wstr::Free(script.id);
+    }
+    initScripts.Reset();
+    for (Str& name : boundNames) {
+        str::Free(name);
+    }
+    boundNames.Reset();
     RevokeForwardingDropTarget();
     if (webview) {
         webview->Release();
@@ -1454,6 +2048,22 @@ HWND WebviewWnd::Create(const CreateWebViewArgs&) {
 void WebviewWnd::Eval(Str) {}
 void WebviewWnd::SetHtml(Str) {}
 void WebviewWnd::Init(Str) {}
+int WebviewWnd::AddInitScript(Str) {
+    return 0;
+}
+void WebviewWnd::AddInitScriptWithToken(Str, int) {}
+int WebviewWnd::FindInitScript(int) const {
+    return -1;
+}
+void WebviewWnd::RemoveInitScript(int) {}
+void WebviewWnd::RemoveAllInitScripts() {}
+void WebviewWnd::OnInitScriptAdded(int, const WCHAR*) {}
+void WebviewWnd::Bind(Str) {}
+void WebviewWnd::Unbind(Str) {}
+void WebviewWnd::Resolve(Str, int, Str) {}
+void WebviewWnd::OnJsCall(Str) {}
+void WebviewWnd::RebuildBindScript() {}
+void WebviewWnd::OnProcessFailed(WebViewProcessFailure) {}
 void WebviewWnd::Navigate(Str) {}
 void WebviewWnd::RegisterForwardingDropTarget() {}
 void WebviewWnd::RevokeForwardingDropTarget() {}
@@ -1476,7 +2086,7 @@ bool WebviewWnd::Embed(WebViewMsgCb&) {
 }
 void WebviewWnd::OnControllerReady(ICoreWebView2Controller*) {}
 void WebviewWnd::FailInit() {}
-void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str) {}
+void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str, int) {}
 void WebviewWnd::FlushPendingOps() {}
 void WebviewWnd::SetControllerVisible(bool) {}
 void WebviewWnd::OnBrowserMessage(Str) {}

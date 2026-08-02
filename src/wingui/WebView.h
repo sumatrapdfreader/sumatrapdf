@@ -22,6 +22,16 @@ struct WebViewResourceResult {
 // keys handled by the frame's key handler instead of an accelerator (e.g. Esc).
 constexpr int kWebViewForwardKey = -1;
 
+enum class WebViewProcessFailure {
+    // the whole WebView2 browser process died: the control is unusable
+    BrowserExited,
+    // only a renderer died or hung: reloading usually recovers
+    RenderExited,
+    RenderUnresponsive,
+    // some other helper process (GPU, utility, ...) died
+    Other,
+};
+
 struct WebViewEvents {
     void* ctx = nullptr;
     bool (*navigationStarting)(void* ctx, Str url, bool newWindow) = nullptr;
@@ -32,6 +42,14 @@ struct WebViewEvents {
     // webview, or kWebViewForwardKey to re-post the key itself. Lets the host
     // forward its keyboard shortcuts that the webview would otherwise swallow.
     int (*resolveAccelCmd)(void* ctx, u16 vk, bool ctrl, bool shift, bool alt) = nullptr;
+    // a WebView2 process died. Return true if handled; returning false runs the
+    // default recovery (reload for a dead renderer, fail the control for a dead
+    // browser process). Called on the UI thread.
+    bool (*processFailed)(void* ctx, WebViewProcessFailure kind) = nullptr;
+    // a JS call made through window.__sumatra__.call(name, ...) / a bound name.
+    // paramsJson is the arguments as a JSON array. Reply with WebviewWnd::Resolve
+    // (may be async); not replying leaves the JS promise pending forever.
+    void (*jsCall)(void* ctx, Str id, Str method, Str paramsJson) = nullptr;
 };
 
 struct WebViewResourceProvider {
@@ -49,6 +67,19 @@ struct PendingWebViewOp {
 
     Kind kind;
     Str text;
+    // for Init: the token AddInitScript() already handed back to the caller, so
+    // the script keeps its identity across the queue
+    int token = 0;
+};
+
+// An init script (AddScriptToExecuteOnDocumentCreated). `id` is assigned
+// asynchronously by WebView2 and is what RemoveScriptToExecuteOnDocumentCreated
+// needs, so a script can only be removed once its id has arrived.
+struct WebViewInitScript {
+    int token = 0;
+    WStr id;
+    // remove as soon as the id arrives (RemoveInitScript ran before that)
+    bool removePending = false;
 };
 
 struct CreateWebViewArgs {
@@ -65,7 +96,22 @@ struct WebviewWnd : Wnd {
     void Eval(Str js);
     void SetHtml(Str html);
     void Init(Str js);
+    int AddInitScript(Str js);
+    void AddInitScriptWithToken(Str js, int token);
+    int FindInitScript(int token) const;
+    void RemoveInitScript(int token);
+    void RemoveAllInitScripts();
+    void OnInitScriptAdded(int token, const WCHAR* id);
     void Navigate(Str url);
+    // makes window.<name>(...) available to page JS, returning a promise that
+    // WebViewEvents::jsCall resolves via Resolve()
+    void Bind(Str name);
+    void Unbind(Str name);
+    // status 0 resolves the JS promise, non-0 rejects it. resultJson must be
+    // valid JSON (or empty for undefined)
+    void Resolve(Str id, int status, Str resultJson);
+    void OnJsCall(Str msg);
+    void RebuildBindScript();
     void GoBack();
     void GoForward();
     void SetZoomPercent(int zoom);
@@ -79,8 +125,9 @@ struct WebviewWnd : Wnd {
     void RevokeForwardingDropTarget();
     bool Embed(WebViewMsgCb& cb);
     void OnControllerReady(ICoreWebView2Controller* controller);
+    void OnProcessFailed(WebViewProcessFailure kind);
     void FailInit();
-    void QueuePendingOp(PendingWebViewOp::Kind kind, Str text);
+    void QueuePendingOp(PendingWebViewOp::Kind kind, Str text, int token = 0);
     void FlushPendingOps();
     void SetControllerVisible(bool visible);
 
@@ -121,4 +168,9 @@ struct WebviewWnd : Wnd {
     // through to the host window's drop target (e.g. to open the file)
     bool allowExternalDrop = true;
     Vec<PendingWebViewOp> pendingOps;
+    Vec<WebViewInitScript> initScripts;
+    int nextInitScriptToken = 1;
+    // names exposed to JS via Bind(); the bind script is rebuilt when this changes
+    Vec<Str> boundNames;
+    int bindScriptToken = 0;
 };
