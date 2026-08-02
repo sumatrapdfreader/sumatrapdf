@@ -1551,13 +1551,16 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     x = margin;
     dx = r.dx - (2 * margin) - btnDx - DpiScale(hwnd, 4);
 
-    rc = {x, y, x + dx, y + editDy};
+    // Rect is (x, y, dx, dy) — not (left, top, right, bottom). Using right/bottom
+    // here made the edit (and label below) cover most of the client area with a
+    // white background when Options was shown (issue #5860).
+    rc = {x, y, dx, editDy};
     wnd->editInstallationDir->SetBounds(rc);
 
     y -= editDy;
 
     Str s2 = _TRA("Install SumatraPDF in &folder:");
-    rc = {x, y, x + r.dx, y + staticDy};
+    rc = {x, y, r.dx - 2 * margin, staticDy};
 
     Static::CreateArgs args;
     args.parent = hwnd;
