@@ -424,6 +424,9 @@ static void StartWindowsSearchService() {
     CloseServiceHandle(scm);
 }
 
+// Last MoveFileEx failure for move-aside UI / NotifyFailed wording.
+static DWORD gLastMoveAsideError = 0;
+
 // One rename attempt: clear RO, delete stale .copy, kill holders, MoveFileEx.
 static bool TryRenameAsideOnce(Str path, Str copyPath) {
     if (!file::Exists(path)) {
@@ -439,9 +442,11 @@ static bool TryRenameAsideOnce(Str path, Str copyPath) {
     KillProcessesWithModule(path, true);
     if (MoveFileExW(CWStrTemp(path), CWStrTemp(copyPath), MOVEFILE_REPLACE_EXISTING)) {
         logf("TryRenameAsideOnce: ok '%s' -> '%s'\n", path, copyPath);
+        gLastMoveAsideError = 0;
         return true;
     }
     DWORD err = GetLastError();
+    gLastMoveAsideError = err;
     logf("TryRenameAsideOnce: MoveFileEx failed for '%s' lastError=%u\n", path, err);
     LogLastError(err);
     return false;
@@ -456,7 +461,16 @@ struct MoveAsideDlgCtx {
     DWORD lastTryTick = 0;
 };
 
-// Dialog body: prefer live Restart Manager holders; fall back to generic tips.
+// ACCESS_DENIED with no process holders → permissions/UAC, not "file in use".
+static bool MoveAsideLooksLikeAccessDenied(Str path) {
+    if (gLastMoveAsideError != ERROR_ACCESS_DENIED) {
+        return false;
+    }
+    TempStr holders = ProcessesHoldingFileTemp(path);
+    return !holders;
+}
+
+// Dialog body: prefer live Restart Manager holders; ACCESS_DENIED vs file-in-use.
 static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
     TempStr holders = ProcessesHoldingFileTemp(path);
     if (holders) {
@@ -472,6 +486,18 @@ static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
                        .s,
                    fileName, holders, kInstallDocsURL());
     }
+    if (gLastMoveAsideError == ERROR_ACCESS_DENIED) {
+        return fmt(_TRA("Could not update %s due to insufficient permissions.\n\n"
+                        "The install folder is protected (for example Program Files) or access was denied.\n\n"
+                        "What to try:\n"
+                        "• Run the installer again and accept the administrator (UAC) prompt\n"
+                        "• Or install to a folder your account can write to (Options)\n"
+                        "• Temporarily disable Controlled Folder Access / antivirus blocking\n\n"
+                        "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
+                        "More help: <a href=\"%s\">Installation documentation</a>")
+                       .s,
+                   fileName, kInstallDocsURL());
+    }
     return fmt(_TRA("Could not update %s because another program still has the file open.\n\n"
                     "Common causes:\n"
                     "• Windows Search Indexer (loads PdfFilter.dll for PDF search)\n"
@@ -485,6 +511,33 @@ static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
                     "More help: <a href=\"%s\">Installation documentation</a>")
                    .s,
                fileName, kInstallDocsURL());
+}
+
+static void NotifyMoveAsideFailed(Str fileName, Str path, bool userAborted) {
+    if (MoveAsideLooksLikeAccessDenied(path)) {
+        if (userAborted) {
+            NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (access denied; try running as "
+                                  "administrator).")
+                                 .s,
+                             fileName));
+        } else {
+            NotifyFailed(fmt(_TRA("Could not update %s: access denied. Run the installer as administrator, "
+                                  "or choose a folder you can write to. "
+                                  "See https://www.sumatrapdfreader.org/docs/Installation")
+                                 .s,
+                             fileName));
+        }
+        return;
+    }
+    if (userAborted) {
+        NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (file in use).").s, fileName));
+    } else {
+        NotifyFailed(fmt(_TRA("Could not update %s because it is in use by another program. "
+                              "Stop Windows Search / close Explorer previews and try again. "
+                              "See https://www.sumatrapdfreader.org/docs/Installation")
+                             .s,
+                         fileName));
+    }
 }
 
 static HRESULT CALLBACK MoveAsideBlockedDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
@@ -609,18 +662,14 @@ static bool MoveAsideInstallFile(Str installDir, Str fileName, bool silent) {
             }
         }
         logf("MoveAsideInstallFile: silent FAILED for '%s'\n", path);
-        NotifyFailed(fmt(_TRA("Could not update %s because it is in use by another program. "
-                              "Stop Windows Search / close Explorer previews and try again. "
-                              "See https://www.sumatrapdfreader.org/docs/Installation")
-                             .s,
-                         fileName));
+        NotifyMoveAsideFailed(fileName, path, false);
         return false;
     }
 
     // Interactive: blocking dialog that retries every 3s until success or abort.
     if (!ShowMoveAsideBlockedDialog(path, copyPath, fileName)) {
         logf("MoveAsideInstallFile: user aborted for '%s'\n", path);
-        NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (file in use).").s, fileName));
+        NotifyMoveAsideFailed(fileName, path, true);
         return false;
     }
     return true;
@@ -1109,7 +1158,15 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     // note: this checkbox isn't created on Windows 2000 and XP
     cli->withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
 
-    bool needsElevation = cli->allUsers || gPrevInstall.allUsers;
+    // Program Files always needs machine-style install + elevation
+    if (IsPathUnderProgramFiles(cli->installDir) && !cli->allUsers) {
+        logf("OnButtonInstall: install dir under Program Files; forcing allUsers\n");
+        cli->allUsers = true;
+    }
+
+    bool needsElevation = InstallNeedsElevation(cli->installDir, cli->allUsers || gPrevInstall.allUsers);
+    logf("OnButtonInstall: needsElevation=%d elevated=%d allUsers=%d dir='%s'\n", (int)needsElevation,
+         (int)IsProcessRunningElevated(), (int)cli->allUsers, cli->installDir);
     if (needsElevation && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers(cli);
         ::ExitProcess(0);
@@ -1274,7 +1331,14 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
 
 static void SetInstallButtonElevationState() {
     bool forAllUsers = gWnd->checkboxForAllUsers->IsChecked();
-    bool mustElevate = forAllUsers || gPrevInstall.allUsers;
+    Str dir = gCliNew.installDir;
+    if (gWnd->editInstallationDir && gWnd->editInstallationDir->hwnd) {
+        TempStr editDir = HwndGetTextTemp(gWnd->editInstallationDir->hwnd);
+        if (editDir && editDir.s[0]) {
+            dir = editDir;
+        }
+    }
+    bool mustElevate = InstallNeedsElevation(dir, forAllUsers || gPrevInstall.allUsers);
     Button_SetElevationRequiredState(gWnd->btnInstall->hwnd, mustElevate);
 }
 
@@ -1949,6 +2013,11 @@ int RunInstaller() {
         auto dir = GetDefaultInstallationDirTemp(gCliNew.allUsers, false);
         gCliNew.installDir = str::Dup(dir);
     }
+    // Program Files installs must be all-users (and will elevate below)
+    if (IsPathUnderProgramFiles(gCliNew.installDir) && !gCliNew.allUsers) {
+        logf("RunInstaller: install dir under Program Files; forcing allUsers\n");
+        gCliNew.allUsers = true;
+    }
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
     logf("RunInstaller: '%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp(), cmdLine,
          gCliNew.installDir);
@@ -1961,8 +2030,9 @@ int RunInstaller() {
     bool isElevated = IsProcessRunningElevated();
     logf("RunInstaller: requiresSilentElevation: %d, isElevated: %d\n", (int)requiresSilentElevation, (int)isElevated);
     if (requiresSilentElevation && !isElevated) {
-        bool needsElevation = gCliNew.allUsers || gPrevInstall.allUsers;
-        logf("RunInstaller: needsElevation: %d\n", (int)needsElevation);
+        bool needsElevation = InstallNeedsElevation(gCliNew.installDir, gCliNew.allUsers || gPrevInstall.allUsers);
+        logf("RunInstaller: needsElevation: %d (allUsers=%d prevAllUsers=%d underPF=%d)\n", (int)needsElevation,
+             (int)gCliNew.allUsers, (int)gPrevInstall.allUsers, (int)IsPathUnderProgramFiles(gCliNew.installDir));
         if (needsElevation) {
             logf(
                 "Restarting as elevated: gCli->silent: %d, gCli->fastInstall: %d, isElevated: %d, gCli->allUsers: %d, "

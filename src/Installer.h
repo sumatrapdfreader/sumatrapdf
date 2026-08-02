@@ -68,6 +68,11 @@ TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 bool IsOurExeInstalled();
 
+// true if path is under Program Files / Program Files (x86)
+bool IsPathUnderProgramFiles(Str path);
+// true if install needs a UAC elevation (all-users, Program Files, or not writable)
+bool InstallNeedsElevation(Str installDir, bool allUsers);
+
 TempStr GetInstallationFilePathTemp(Str installDir, Str name);
 
 void RegisterPreviewer(bool allUsers, Str installDir);

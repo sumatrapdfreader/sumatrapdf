@@ -166,6 +166,84 @@ bool IsOurExeInstalled() {
     return str::EqI(installedDir, exeDir);
 }
 
+// Walk path and parents; true if any component equals dir (junction-aware via path::IsSame).
+static bool IsPathUnderOrEqualDir(Str path, Str dir) {
+    if (!path || !dir) {
+        return false;
+    }
+    TempStr cur = str::DupTemp(path);
+    while (cur) {
+        if (path::IsSame(dir, cur)) {
+            return true;
+        }
+        TempStr parent = path::GetDirTemp(cur);
+        if (!parent || len(parent) == 0 || len(parent) >= len(cur)) {
+            break;
+        }
+        cur = parent;
+    }
+    return false;
+}
+
+bool IsPathUnderProgramFiles(Str path) {
+    if (!path) {
+        return false;
+    }
+    TempStr pf = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
+    if (IsPathUnderOrEqualDir(path, pf)) {
+        return true;
+    }
+    TempStr pfx86 = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
+    if (IsPathUnderOrEqualDir(path, pfx86)) {
+        return true;
+    }
+    return false;
+}
+
+// Probe whether the current process can create a file under dir (or a parent that exists).
+static bool CanWriteToDirectory(Str dir) {
+    if (!dir) {
+        return false;
+    }
+    TempStr probeDir = str::DupTemp(dir);
+    while (probeDir && !dir::Exists(probeDir)) {
+        TempStr parent = path::GetDirTemp(probeDir);
+        if (!parent || len(parent) == 0 || len(parent) >= len(probeDir)) {
+            break;
+        }
+        probeDir = parent;
+    }
+    if (!probeDir || !dir::Exists(probeDir)) {
+        return false;
+    }
+    TempStr probe = path::JoinTemp(probeDir, fmt("sumatra-write-test-%u.tmp", GetCurrentProcessId()));
+    HANDLE h = CreateFileW(CWStrTemp(probe), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
+                           FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, nullptr);
+    if (h == INVALID_HANDLE_VALUE) {
+        logf("CanWriteToDirectory: CreateFile failed for '%s' err=%u\n", probe, GetLastError());
+        return false;
+    }
+    CloseHandle(h);
+    return true;
+}
+
+bool InstallNeedsElevation(Str installDir, bool allUsers) {
+    if (allUsers) {
+        return true;
+    }
+    if (IsPathUnderProgramFiles(installDir)) {
+        return true;
+    }
+    // Already admin: no further elevation needed even if write probe is odd.
+    if (IsProcessRunningElevated()) {
+        return false;
+    }
+    if (!CanWriteToDirectory(installDir)) {
+        return true;
+    }
+    return false;
+}
+
 void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     info->installationDir = str::Dup(GetExistingInstallationDirTemp());
     if (!info->installationDir) {
@@ -186,6 +264,13 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
         info->allUsers = true;
     } else {
         info->typ = PreviousInstallationType::User;
+        info->allUsers = false;
+    }
+    // HKCU-only uninstall key can still point at Program Files (broken / partial state).
+    // Treat as machine-style so upgrades elevate and write HKLM correctly.
+    if (!info->allUsers && IsPathUnderProgramFiles(info->installationDir)) {
+        logf("GetPreviousInstallInfo: dir under Program Files with only HKCU key; forcing allUsers\n");
+        info->allUsers = true;
     }
     logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d, needsElevation: %d\n",
          info->installationDir, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
