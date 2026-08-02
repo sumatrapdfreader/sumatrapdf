@@ -566,6 +566,36 @@ FileHandle OpenReadOnly(Str path) {
                        nullptr);
 }
 
+// Reads up to toRead bytes from the front of the file, zero-filling the rest of
+// buf. Returns the number of bytes read or -1 on failure.
+//
+// Goes to CreateFileW directly instead of the portable fopen()/fread() version:
+// the CRT allocates a FILE and its buffer, takes the lowio handle-table lock and
+// copies through that buffer before calling CreateFileW anyway. This runs once
+// per page when opening an image directory, so that overhead is worth skipping.
+int ReadN(Str path, u8* buf, size_t toRead) {
+    ReportIf(!path);
+    if (!path || !buf || toRead > (size_t)UINT32_MAX) {
+        return -1;
+    }
+    // share flags match what the CRT's "rb" mode uses, plus DELETE so we don't
+    // block someone else from replacing the file while we peek at its header
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN;
+    HANDLE h = CreateFileW(CWStrTemp(path), GENERIC_READ, share, nullptr, OPEN_EXISTING, flags, nullptr);
+    if (h == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
+    AutoCloseHandle hf(h);
+    ZeroMemory(buf, toRead);
+    DWORD nRead = 0;
+    // a short read at end of file is not an error, same as fread()
+    if (!::ReadFile(h, buf, (DWORD)toRead, &nRead, nullptr)) {
+        return -1;
+    }
+    return (int)nRead;
+}
+
 bool Exists(Str path) {
     if (!path) {
         return false;

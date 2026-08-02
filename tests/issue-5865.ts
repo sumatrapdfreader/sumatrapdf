@@ -15,6 +15,8 @@ import { clientToScreen, getClientRect, getScrollInfo, packCoords, postMessage, 
 import { FRAME_CLASS, findCanvas, sendCommand } from "./win-automation";
 
 const WM_MOUSEWHEEL = 0x020a;
+const WM_VSCROLL = 0x0115;
+const SB_TOP = 6;
 const WHEEL_DELTA = 120;
 
 const SETTINGS = `RestoreSession = true
@@ -30,6 +32,33 @@ UiLanguage = en
 
 function launch(appDataDir: string, extra: string[]): Bun.Subprocess {
     return Bun.spawn([EXE, "-appdata", appDataDir, ...extra], { stdout: "ignore", stderr: "ignore" });
+}
+
+// Waits for a canvas with a loaded, scrollable document: a fixed sleep isn't
+// enough on a slow/busy machine and gives confusing "no canvas" failures.
+async function waitForScrollableCanvas(frame: number, timeoutMs = 20000): Promise<number> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+        const canvas = findCanvas(frame);
+        if (canvas) {
+            const si = getScrollInfo(canvas);
+            // nMax > nPage means the document is taller than the viewport
+            if (si.max > (si.page | 0)) {
+                return canvas;
+            }
+        }
+        if (Date.now() > deadline) {
+            throw new Error(`no scrollable canvas after ${timeoutMs} ms`);
+        }
+        await sleep(250);
+    }
+}
+
+// Puts the view at the top so a scroll-down always has somewhere to go: the
+// fixture is short, and at fit-page zoom a couple of notches can reach the end.
+async function scrollToTop(canvas: number): Promise<void> {
+    postMessage(canvas, WM_VSCROLL, SB_TOP, 0);
+    await sleep(600);
 }
 
 // wheel down over the middle of the canvas; returns how the vertical scrollbar moved
@@ -69,13 +98,11 @@ export async function testit(): Promise<void> {
     if (!frame) {
         throw new Error("run1: no frame window");
     }
-    await sleep(3000);
+    await waitForScrollableCanvas(frame);
     sendCommand(frame, cmdId("CmdToggleFullscreen"));
     await sleep(1500);
-    let canvas = findCanvas(frame);
-    if (!canvas) {
-        throw new Error("run1: no canvas");
-    }
+    let canvas = await waitForScrollableCanvas(frame);
+    await scrollToTop(canvas);
     let r = await wheelScroll(canvas, 3);
     if (r.after === r.before) {
         throw new Error(`run1: wheel scroll did nothing in fullscreen (pos stuck at ${r.before})`);
@@ -90,11 +117,8 @@ export async function testit(): Promise<void> {
     if (!frame) {
         throw new Error("run2: no frame window");
     }
-    await sleep(3500);
-    canvas = findCanvas(frame);
-    if (!canvas) {
-        throw new Error("run2: no canvas");
-    }
+    canvas = await waitForScrollableCanvas(frame);
+    await scrollToTop(canvas);
     const cpu0 = cpuTime(proc.pid);
     await sleep(2000);
     const cpuIdle = cpuTime(proc.pid) - cpu0;

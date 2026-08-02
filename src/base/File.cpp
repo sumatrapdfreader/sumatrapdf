@@ -341,6 +341,8 @@ Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
 }
 
+#if !OS_WIN
+// Windows has its own ReadN() in File_win.cpp that skips the CRT
 int ReadN(Str path, u8* buf, size_t toRead) {
     FILE* fp = OpenFILE(path);
     if (!fp) {
@@ -354,6 +356,7 @@ int ReadN(Str path, u8* buf, size_t toRead) {
     }
     return (int)nRead;
 }
+#endif
 
 bool StartsWithN(Str path, Str s) {
     u8* buf = AllocArrayTemp<u8>(s.len);

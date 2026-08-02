@@ -1,5 +1,6 @@
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/DirScan.h"
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 #include "base/Timer.h"
@@ -233,7 +234,89 @@ static bool CheckIsOnNetworkDrive() {
     return ok;
 }
 
+// Times file::ReadN(): reads the first 64 KB of every file in a directory,
+// which is what EngineImageDir::LoadMediabox() does per page.
+// what file::ReadN() used to be on Windows: the portable CRT version, kept here
+// so both can be timed in one process (cross-run timings are too noisy to tell
+// them apart)
+static int ReadNCrt(Str path, u8* buf, size_t toRead) {
+    FILE* fp = file::OpenFILE(path);
+    if (!fp) {
+        return -1;
+    }
+    memset(buf, 0, toRead);
+    size_t nRead = fread((void*)buf, 1, toRead, fp);
+    int res = (int)nRead;
+    if (nRead == 0 && ferror(fp)) {
+        res = -1;
+    }
+    fclose(fp);
+    return res;
+}
+
+static bool BenchReadN(Str dir) {
+    StrVec files;
+    DirIter di{dir};
+    for (DirIterEntry* de : di) {
+        files.Append(de->filePath);
+    }
+    int n = len(files);
+    if (n == 0) {
+        printf("no files in '%.*s'\n", dir.len, dir.s);
+        return false;
+    }
+    const int bufSize = 64 * 1024;
+    u8* buf = AllocArray<u8>(nullptr, bufSize);
+    // alternate the two implementations pass by pass and keep each one's best,
+    // so drift in the machine's state hits both equally
+    const int nPasses = 8;
+    double bestNew = 1e30;
+    double bestCrt = 1e30;
+    i64 bytesNew = 0;
+    i64 bytesCrt = 0;
+    for (int pass = 0; pass < nPasses; pass++) {
+        auto t = TimeGet();
+        i64 nBytes = 0;
+        for (int i = 0; i < n; i++) {
+            int nRead = file::ReadN(files.At(i), buf, (size_t)bufSize);
+            if (nRead > 0) {
+                nBytes += nRead;
+            }
+        }
+        double ms = TimeSinceInMs(t);
+        bytesNew = nBytes;
+        if (ms < bestNew) {
+            bestNew = ms;
+        }
+
+        t = TimeGet();
+        nBytes = 0;
+        for (int i = 0; i < n; i++) {
+            int nRead = ReadNCrt(files.At(i), buf, (size_t)bufSize);
+            if (nRead > 0) {
+                nBytes += nRead;
+            }
+        }
+        ms = TimeSinceInMs(t);
+        bytesCrt = nBytes;
+        if (ms < bestCrt) {
+            bestCrt = ms;
+        }
+    }
+    Free(nullptr, buf);
+    printf("%d files, %lld bytes, best of %d alternating passes:\n", n, (long long)bytesNew, nPasses);
+    printf("  file::ReadN (CreateFileW): %.2f ms, %.4f ms/file\n", bestNew, bestNew / n);
+    printf("  CRT fopen/fread:           %.2f ms, %.4f ms/file\n", bestCrt, bestCrt / n);
+    printf("  %.1f%% faster\n", (bestCrt - bestNew) * 100.0 / bestCrt);
+    return bytesNew == bytesCrt;
+}
+
 int main(int argc, char** argv) {
+    if (argc == 3 && str::Eq(argv[2], StrL("-bench-readn"))) {
+        bool ok = BenchReadN(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
     if (argc == 2 && str::Eq(argv[1], StrL("-check-netdrive"))) {
         bool ok = CheckIsOnNetworkDrive();
         DestroyTempArena();
