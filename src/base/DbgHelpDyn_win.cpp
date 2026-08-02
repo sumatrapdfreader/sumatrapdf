@@ -381,6 +381,64 @@ static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
     return true;
 }
 
+// Walks the callstack of a thread the caller has already suspended and stores
+// the raw addresses. Unlike GetThreadCallstack() this resolves no symbols and
+// allocates nothing, so it can run while every other thread is frozen (the hang
+// detector): symbolizing there could block on a heap or loader lock held by a
+// frozen thread. Resolve the addresses with GetAddressInfo() after resuming.
+// Returns the number of addresses stored.
+int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAddrs) {
+    if (!CanStackWalk() || !addrs || maxAddrs <= 0) {
+        return 0;
+    }
+    CONTEXT ctx{};
+    ctx.ContextFlags = CONTEXT_FULL;
+    if (!GetThreadContext(hThread, &ctx)) {
+        return 0;
+    }
+
+    STACKFRAME64 stackFrame;
+    memset(&stackFrame, 0, sizeof(stackFrame));
+#if IS_INTEL_64 == 1
+    stackFrame.AddrPC.Offset = ctx.Rip;
+    stackFrame.AddrFrame.Offset = ctx.Rbp;
+    stackFrame.AddrStack.Offset = ctx.Rsp;
+#elif IS_INTEL_32 == 1
+    stackFrame.AddrPC.Offset = ctx.Eip;
+    stackFrame.AddrFrame.Offset = ctx.Ebp;
+    stackFrame.AddrStack.Offset = ctx.Esp;
+#elif IS_ARM_64 == 1
+    stackFrame.AddrPC.Offset = ctx.Pc;
+    stackFrame.AddrFrame.Offset = ctx.Fp;
+    stackFrame.AddrStack.Offset = ctx.Sp;
+#else
+#error "Unsupported CPU architecture"
+#endif
+    stackFrame.AddrPC.Mode = AddrModeFlat;
+    stackFrame.AddrFrame.Mode = AddrModeFlat;
+    stackFrame.AddrStack.Mode = AddrModeFlat;
+
+#if defined(_WIN64)
+    int machineType = IMAGE_FILE_MACHINE_AMD64;
+#else
+    int machineType = IMAGE_FILE_MACHINE_I386;
+#endif
+    int n = 0;
+    while (n < maxAddrs) {
+        BOOL ok = DynStackWalk64(machineType, GetCurrentProcess(), hThread, &stackFrame, &ctx, nullptr,
+                                 DynSymFunctionTableAccess64, DynSymGetModuleBase64, nullptr);
+        if (!ok) {
+            break;
+        }
+        u64 addr = (u64)stackFrame.AddrPC.Offset;
+        if (addr == 0 || addr == (u64)stackFrame.AddrReturn.Offset) {
+            break;
+        }
+        addrs[n++] = addr;
+    }
+    return n;
+}
+
 void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
     if (threadId == GetCurrentThreadId()) {
         return;

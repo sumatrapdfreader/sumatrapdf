@@ -51,6 +51,7 @@
 #include "AppSettings.h"
 #include "Canvas.h"
 #include "CrashHandler.h"
+#include "HangDetector.h"
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "SumatraProperties.h"
@@ -2801,7 +2802,14 @@ ContinueOpenWindow:
 
     StartSumatraControl(flags.controlPipeName);
 
+    // on by default in debug builds; release builds can opt in by calling
+    // StartUiHangDetector() themselves
+    if (gIsDebugBuild) {
+        StartUiHangDetector();
+    }
+
     exitCode = RunMessageLoop();
+    StopUiHangDetector();
     SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache();
 

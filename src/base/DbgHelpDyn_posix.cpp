@@ -23,6 +23,10 @@ void WriteMiniDump(WStr, MINIDUMP_EXCEPTION_INFORMATION*, bool) {}
 
 void GetThreadCallstack(str::Builder&, ThreadId) {}
 
+int GetSuspendedThreadCallstackAddrs(ThreadHandle, u64*, int) {
+    return 0;
+}
+
 bool GetCurrentThreadCallstack(str::Builder&) {
     return false;
 }
