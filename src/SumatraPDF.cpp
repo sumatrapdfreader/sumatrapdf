@@ -5356,13 +5356,14 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     return files;
 }
 
-static void ShowNoFileToOpenNotif(MainWindow* win) {
+// at folder ends: forward = last file (next), !forward = first file (prev)
+static void ShowNoFileToOpenNotif(MainWindow* win, bool forward) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.warning = true;
     nargs.timeoutMs = kNotifDefaultTimeOut;
     nargs.corner = NotifCorner::BottomRight;
-    nargs.msg = _TRA("No file to open in this folder");
+    Str tip = forward ? _TRA("Last file in folder.") : _TRA("First file in folder.");
+    nargs.msg = fmt("%s [%s](CmdNavigateFilesInFolder)", tip, _TRA("Navigate"));
     ShowNotification(nargs);
 }
 
@@ -5521,26 +5522,26 @@ again:
     Str path = tab->filePath;
     StrVec files = CollectNextPrevFilesIfChanged(path);
     if (len(files) < 2) {
-        ShowNoFileToOpenNotif(win);
+        ShowNoFileToOpenNotif(win, forward);
         return;
     }
 
     int nFiles = len(files);
     int idx = files.Find(path);
     if (idx < 0) {
-        ShowNoFileToOpenNotif(win);
+        ShowNoFileToOpenNotif(win, forward);
         return;
     }
     // do not wrap around at the ends of the folder
     if (forward) {
         if (idx + 1 >= nFiles) {
-            ShowNoFileToOpenNotif(win);
+            ShowNoFileToOpenNotif(win, forward);
             return;
         }
         idx = idx + 1;
     } else {
         if (idx <= 0) {
-            ShowNoFileToOpenNotif(win);
+            ShowNoFileToOpenNotif(win, forward);
             return;
         }
         idx = idx - 1;
@@ -5548,7 +5549,7 @@ again:
     path = files[idx];
     if (!file::Exists(path)) {
         if (didRetry) {
-            ShowNoFileToOpenNotif(win);
+            ShowNoFileToOpenNotif(win, forward);
             return;
         }
         didRetry = true;
