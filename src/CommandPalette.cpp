@@ -24,6 +24,7 @@
 #include "TableOfContents.h"
 #include "Favorites.h"
 #include "FileHistory.h"
+#include "Menu.h"
 #include "DarkModeSubclass.h"
 #include "Translations.h"
 #include "CommandPalette.h"
@@ -234,6 +235,70 @@ bool CommandPaletteWnd::AdvanceSelection(int dir) {
     return true;
 }
 
+// Delete selected list item when it is removable: file-history entry, open tab,
+// or favorite. Commands and TOC entries are not removable (caller should let
+// the edit control handle Delete). After removal, refilter and keep selection
+// on the same index (or the new last item if we deleted the last row).
+bool CommandPaletteWnd::RemoveSelectedItem() {
+    if (!listBox || !listBox->model) {
+        return false;
+    }
+    int currSel = listBox->GetCurrentSelection();
+    if (currSel < 0) {
+        return false;
+    }
+    auto m = (ListBoxModelCP*)listBox->model;
+    int n = m->ItemsCount();
+    if (currSel >= n) {
+        return false;
+    }
+    ItemDataCP* d = m->Data(currSel);
+    if (!d) {
+        return false;
+    }
+
+    // Commands and TOC: not removable from the palette
+    if (d->cmdId != 0 || d->tocItem) {
+        return false;
+    }
+
+    if (d->tab) {
+        WindowTab* tab = d->tab;
+        CloseTab(tab, false);
+        if (!IsMainWindowValid(win)) {
+            // closing the last tab closed the host window
+            ScheduleDeleteAndExecCommand();
+            return true;
+        }
+    } else if (d->fav && d->favFs) {
+        // copy before DelFavorite frees the Favorite*
+        Str path = d->favFs->filePath;
+        int pageNo = d->fav->pageNo;
+        DelFavorite(path, pageNo);
+    } else if (d->filePath) {
+        ForgetFileFromFrequentlyRead(win, d->filePath);
+    } else {
+        return false;
+    }
+
+    CollectStrings(win);
+    Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    FilterStringsForQuery(filter, m->strings);
+    listBox->SetModel(m);
+
+    n = m->ItemsCount();
+    if (n == 0) {
+        listBox->SetCurrentSelection(-1);
+        return true;
+    }
+    int sel = currSel;
+    if (sel >= n) {
+        sel = n - 1;
+    }
+    CommandPaletteSetCurrentSelection(this, sel);
+    return true;
+}
+
 bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         int dir = 0;
@@ -248,36 +313,11 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         }
 
         if (msg.wParam == VK_DELETE) {
-            Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
-            if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
-                int n = listBox->GetCount();
-                if (n == 0) {
-                    return false;
-                }
-                int currSel = listBox->GetCurrentSelection();
-                auto m = (ListBoxModelCP*)listBox->model;
-                auto d = m->Data(currSel);
-                FileState* fs = gFileHistory.FindByPath(d->filePath);
-                if (!fs) {
-                    return true;
-                }
-                gFileHistory.Remove(fs);
-                CollectStrings(this->win);
-                this->QueryChanged();
-
-                n = listBox->GetCount();
-                if (n == 0) {
-                    return true;
-                }
-                int lastIdx = n - 1;
-                if (currSel > lastIdx) {
-                    currSel = lastIdx;
-                }
-                listBox->SetCurrentSelection(currSel);
+            if (RemoveSelectedItem()) {
                 return true;
             }
-            // not in file-history mode: let the edit control process Delete
-            // normally (delete the character to the right of the cursor)
+            // not a removable list item: let the edit control process Delete
+            // (delete the character to the right of the cursor)
             return false;
         }
 
@@ -503,21 +543,24 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     {
-        Str strings[3];
+        Str strings[4];
+        int nHelp = 0;
         if (smartTabMode) {
-            strings[0] = _TRA("Ctrl+Tab to navigate");
-            strings[1] = _TRA("Release Ctrl to select");
-            strings[2] = _TRA("Space for sticky mode");
+            strings[nHelp++] = _TRA("Ctrl+Tab to navigate");
+            strings[nHelp++] = _TRA("Release Ctrl to select");
+            strings[nHelp++] = _TRA("Space for sticky mode");
+            strings[nHelp++] = _TRA("Del to remove item");
         } else {
-            strings[0] = _TRA("↑ ↓ to navigate");
-            strings[1] = _TRA("Enter to select");
-            strings[2] = _TRA("Esc to close");
+            strings[nHelp++] = _TRA("↑ ↓ to navigate");
+            strings[nHelp++] = _TRA("Enter to select");
+            strings[nHelp++] = _TRA("Del to remove item");
+            strings[nHelp++] = _TRA("Esc to close");
         }
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < nHelp; i++) {
             auto c = CreateStatic(hwnd, font, strings[i]);
             c->SetColors(colTxt, colBg);
             auto p = new Padding(c, pad);
