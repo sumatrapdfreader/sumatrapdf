@@ -1071,9 +1071,9 @@ constexpr int kThumbsBorderDx = 1;
 #define kThumbsSpaceBetweenX DpiScale(hdc, 38)
 #define kThumbsSpaceBetweenY DpiScale(hdc, 58)
 #define kThumbsBottomBoxDy DpiScale(hdc, 50)
-#define kHomeListThumbDx DpiScale(hdc, 38)
-#define kHomeListThumbDy DpiScale(hdc, 50)
-#define kHomeListRowDy DpiScale(hdc, 58)
+#define kHomeListThumbDx DpiScale(hdc, 30)
+#define kHomeListThumbDy DpiScale(hdc, 40)
+#define kHomeListRowDy DpiScale(hdc, 46)
 #define kHomeListRowGapDx DpiScale(hdc, 8)
 
 struct ThumbnailLayout {
@@ -2224,8 +2224,6 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
         thumbImg->Blit(hdc, thumbDst);
         thumb.szThumb = thumbImg->GetSize();
     }
-    RoundRect(hdc, thumbBox.x, thumbBox.y, thumbBox.x + thumbBox.dx, thumbBox.y + thumbBox.dy, 4, 4);
-
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
     UINT nameFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
