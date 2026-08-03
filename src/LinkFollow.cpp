@@ -59,26 +59,26 @@ bool KeyboardLinkFollowingActive(MainWindow* win) {
     return win && win->linkFollowActive;
 }
 
-// sort what's on screen into reading order (top to bottom, then left to right)
-// so the numbering doesn't jump around; rows are matched with a tolerance
-// because links on the same line rarely share an exact top edge
-static int CmpTargetsInReadingOrder(const void* a, const void* b) {
-    auto* ta = (const Rect*)a;
-    auto* tb = (const Rect*)b;
-    int rowTolerance = 8;
-    if (abs(ta->y - tb->y) > rowTolerance) {
-        return ta->y < tb->y ? -1 : 1;
-    }
-    if (ta->x != tb->x) {
-        return ta->x < tb->x ? -1 : 1;
-    }
-    return 0;
-}
-
 struct ScreenTarget {
     Rect screenRect;
     KeyboardLinkTarget target;
 };
+
+// sort what's on screen into reading order (top to bottom, then left to right)
+// so the numbering doesn't jump around; rows are matched with a tolerance
+// because links on the same line rarely share an exact top edge
+static int CmpTargetsInReadingOrder(const ScreenTarget* a, const ScreenTarget* b) {
+    const Rect& ta = a->screenRect;
+    const Rect& tb = b->screenRect;
+    int rowTolerance = 8;
+    if (abs(ta.y - tb.y) > rowTolerance) {
+        return ta.y < tb.y ? -1 : 1;
+    }
+    if (ta.x != tb.x) {
+        return ta.x < tb.x ? -1 : 1;
+    }
+    return 0;
+}
 
 void KeyboardLinkFollowingRecompute(MainWindow* win) {
     win->linkFollowTargets.Reset();
@@ -118,10 +118,7 @@ void KeyboardLinkFollowingRecompute(MainWindow* win) {
         }
     }
 
-    // the comparator reads the leading Rect member, which keeps the paired
-    // page-space target with its screen rect
-    static_assert(offsetof(ScreenTarget, screenRect) == 0, "sort key must be first");
-    found.Sort(CmpTargetsInReadingOrder);
+    VecSort(found, CmpTargetsInReadingOrder);
 
     int n = std::min(len(found), kMaxKeyboardLinkTargets);
     for (int i = 0; i < n; i++) {

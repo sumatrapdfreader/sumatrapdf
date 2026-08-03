@@ -1589,10 +1589,8 @@ struct PreviewLogFile {
     Str path;
     FILETIME ft;
 };
-static int CmpPreviewLogNewestFirst(const void* a, const void* b) {
-    auto la = (const PreviewLogFile*)a;
-    auto lb = (const PreviewLogFile*)b;
-    return -CompareFileTime(&la->ft, &lb->ft); // newest (largest time) first
+static int CmpPreviewLogNewestFirst(const PreviewLogFile* a, const PreviewLogFile* b) {
+    return -CompareFileTime(&a->ft, &b->ft); // newest (largest time) first
 }
 static void DeleteOldPdfPreviewLogs(int keep) {
     TempStr dir = GetPdfPreviewLogDirTemp();
@@ -1612,7 +1610,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     }
     int n = len(files);
     if (n > keep) {
-        files.Sort(CmpPreviewLogNewestFirst);
+        VecSort(files, CmpPreviewLogNewestFirst);
         for (int i = keep; i < n; i++) {
             logf("DeleteOldPdfPreviewLogs: deleting '%s'\n", files[i].path);
             file::Delete(files[i].path);

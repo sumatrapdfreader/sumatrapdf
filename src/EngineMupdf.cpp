@@ -2297,8 +2297,8 @@ struct PageLabelInfo {
     pdf_obj* prefix = nullptr;
 };
 
-int CmpPageLabelInfo(const void* a, const void* b) {
-    return ((PageLabelInfo*)a)->startAt - ((PageLabelInfo*)b)->startAt;
+int CmpPageLabelInfo(const PageLabelInfo* a, const PageLabelInfo* b) {
+    return a->startAt - b->startAt;
 }
 
 // Some PDFs (often scanned ebooks) assign a separate PageLabels entry to
@@ -2401,7 +2401,7 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
 static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data, 0);
-    data.Sort(CmpPageLabelInfo);
+    VecSort(data, CmpPageLabelInfo);
 
     int n = len(data);
     if (n == 0) {

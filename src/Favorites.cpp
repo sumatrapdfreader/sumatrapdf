@@ -250,18 +250,18 @@ static Favorite* FindByPage(FileState* ds, int pageNo, Str pageLabel = {}) {
     return nullptr;
 }
 
-static int SortByPageNo(const void* a, const void* b) {
-    Favorite* na = *(Favorite**)a;
-    Favorite* nb = *(Favorite**)b;
+static int SortByPageNo(Favorite* const* a, Favorite* const* b) {
+    Favorite* na = *a;
+    Favorite* nb = *b;
     // sort lower page numbers first
     return na->pageNo - nb->pageNo;
 }
 
 // Sort by user name if set, else page label; page number breaks ties and is
 // the only key when neither favorite has a name/label (issue #2277).
-static int SortByName(const void* a, const void* b) {
-    Favorite* na = *(Favorite**)a;
-    Favorite* nb = *(Favorite**)b;
+static int SortByName(Favorite* const* a, Favorite* const* b) {
+    Favorite* na = *a;
+    Favorite* nb = *b;
     Str sa = na->name;
     if (!sa) {
         sa = na->pageLabel;
@@ -290,9 +290,9 @@ static void SortFileFavorites(FileState* fs) {
         return;
     }
     if (gGlobalPrefs->sortFavoritesByName) {
-        fs->favorites->Sort(SortByName);
+        VecSort(*fs->favorites, SortByName);
     } else {
-        fs->favorites->Sort(SortByPageNo);
+        VecSort(*fs->favorites, SortByPageNo);
     }
 }
 

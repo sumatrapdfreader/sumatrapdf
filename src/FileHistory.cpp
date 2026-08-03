@@ -175,9 +175,9 @@ bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
 }
 
 // sorts the most often used files first
-static int cmpOpenCount(const void* a, const void* b) {
-    FileState* dsA = *(FileState**)a;
-    FileState* dsB = *(FileState**)b;
+static int cmpOpenCount(FileState* const* a, FileState* const* b) {
+    FileState* dsA = *a;
+    FileState* dsB = *b;
     // sort pinned documents before unpinned ones
     if (dsA->isPinned != dsB->isPinned) {
         return dsA->isPinned ? -1 : 1;
@@ -207,13 +207,13 @@ void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
             list.Append(ds);
         }
     }
-    list.Sort(cmpOpenCount);
+    VecSort(list, cmpOpenCount);
 }
 
 // sorts recently opened files first
-static int cmpRecentlyOpened(const void* a, const void* b) {
-    FileState* dsA = *(FileState**)a;
-    FileState* dsB = *(FileState**)b;
+static int cmpRecentlyOpened(FileState* const* a, FileState* const* b) {
+    FileState* dsA = *a;
+    FileState* dsB = *b;
     // sort pinned documents before unpinned ones
     if (dsA->isPinned != dsB->isPinned) {
         return dsA->isPinned ? -1 : 1;
@@ -235,7 +235,7 @@ void FileHistory::GetRecentlyOpenedOrder(Vec<FileState*>& list) const {
             list.Append(ds);
         }
     }
-    list.Sort(cmpRecentlyOpened);
+    VecSort(list, cmpRecentlyOpened);
 }
 
 // removes file history entries which shouldn't be saved anymore

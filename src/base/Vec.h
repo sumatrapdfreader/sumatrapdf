@@ -239,12 +239,6 @@ struct Vec {
         return i;
     }
 
-    void Sort(int (*cmpFunc)(const void* a, const void* b)) {
-        if (len > 0) {
-            qsort(els, len, sizeof(T), cmpFunc);
-        }
-    }
-
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = T*;

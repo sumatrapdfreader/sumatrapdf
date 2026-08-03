@@ -1097,9 +1097,8 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
     return 0;
 }
 
-static int cmpTilePosition(const void* a, const void* b) {
-    const TilePosition *ta = (const TilePosition*)a, *tb = (const TilePosition*)b;
-    return ta->res != tb->res ? ta->res - tb->res : ta->row != tb->row ? ta->row - tb->row : ta->col - tb->col;
+static int cmpTilePosition(const TilePosition* a, const TilePosition* b) {
+    return a->res != b->res ? a->res - b->res : a->row != b->row ? a->row - b->row : a->col - b->col;
 }
 
 int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue) {
@@ -1177,7 +1176,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         }
         // paint tiles from left to right from top to bottom
         if (tile.res > 0 && len(queue) > 0 && tile.res < queue[0].res) {
-            queue.Sort(cmpTilePosition);
+            VecSort(queue, cmpTilePosition);
         }
     }
 

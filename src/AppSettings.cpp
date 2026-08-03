@@ -170,8 +170,8 @@ static int GetWeekCount() {
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
 }
 
-static int cmpFloat(const void* a, const void* b) {
-    return *(float*)a < *(float*)b ? -1 : *(float*)a > *(float*)b ? 1 : 0;
+static int cmpFloat(const float* a, const float* b) {
+    return *a < *b ? -1 : *a > *b ? 1 : 0;
 }
 
 TempStr GetSettingsFileNameTemp() {
@@ -337,7 +337,7 @@ bool LoadSettings() {
     }
 
     // make sure that zoom levels are in the order expected by DisplayModel
-    gprefs->zoomLevels->Sort(cmpFloat);
+    VecSort(*gprefs->zoomLevels, cmpFloat);
     while (len(*gprefs->zoomLevels) > 0 && (*gprefs->zoomLevels)[0] < kZoomMin) {
         gprefs->zoomLevels->PopAt(0);
     }
