@@ -236,7 +236,33 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         DrawItemEvent ev;
         ev.listBox = this;
         ev.hdc = dis->hDC;
-        ev.itemRect = ToRect(dis->rcItem);
+        // Inset by 1px from the client edge so a solid selection fill does not
+        // paint over the focus ring that WM_PAINT draws around the control.
+        Rect itemRc = ToRect(dis->rcItem);
+        Rect client = HwndClientRect(hwnd);
+        if (itemRc.x <= client.x) {
+            int d = client.x + 1 - itemRc.x;
+            itemRc.x += d;
+            itemRc.dx -= d;
+        }
+        if (itemRc.y <= client.y) {
+            int d = client.y + 1 - itemRc.y;
+            itemRc.y += d;
+            itemRc.dy -= d;
+        }
+        if (itemRc.x + itemRc.dx >= client.x + client.dx) {
+            itemRc.dx = client.x + client.dx - 1 - itemRc.x;
+        }
+        if (itemRc.y + itemRc.dy >= client.y + client.dy) {
+            itemRc.dy = client.y + client.dy - 1 - itemRc.y;
+        }
+        if (itemRc.dx < 0) {
+            itemRc.dx = 0;
+        }
+        if (itemRc.dy < 0) {
+            itemRc.dy = 0;
+        }
+        ev.itemRect = itemRc;
         ev.itemIndex = (int)dis->itemID;
         ev.selected = (dis->itemState & ODS_SELECTED) != 0;
         onDrawItem.Call(&ev);

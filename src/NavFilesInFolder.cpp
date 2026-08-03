@@ -28,10 +28,23 @@
 #include "DarkModeSubclass.h"
 #include "NavFilesInFolder.h"
 
-// A floating window with a directory listing of all sub-directories and
-// files SumatraPDF can open (judged by extension). Enter / double-click
-// opens a file or descends into a directory, the ".." entry at the top
-// goes one directory up, Esc closes the window.
+// A modeless directory browser listing sub-directories and files SumatraPDF
+// can open (judged by extension). Enter / double-click replaces the document
+// in the current tab or descends into a directory; ".." goes one directory up.
+// The window stays open so you can open several files in succession; Esc or
+// the close button dismisses it.
+
+// logical (pre-DPI) sizes for placement / sizing of the nav window
+constexpr int kNavDockMinFreeDx = 320;  // free strip beside main must be wider than this to dock
+constexpr int kNavDockMaxWidthDx = 480; // docked outer width = min(this, free strip)
+constexpr int kNavMinClientDx = 200;    // floor after subtracting window chrome
+constexpr int kNavMinClientDy = 200;
+constexpr int kNavFallbackMinDy = 480; // centered (non-docked) client size
+constexpr int kNavFallbackMinDx = 480;
+constexpr int kNavFallbackMaxDx = 720;
+constexpr int kNavFallbackMainDxMargin = 256; // main client dx minus this → preferred width
+constexpr int kNavFallbackMainDyMargin = 72;
+constexpr int kNavFallbackYOffset = 42; // top offset when centered over main
 
 struct NavFileEntry {
     Str name; // owned; display name, "..\\" for the parent dir
@@ -60,17 +73,9 @@ struct NavFilesInFolderWnd : Wnd {
     ListBox* listBox = nullptr;
     Str currDir; // owned
 
-    // "n/m" shown after the path: n entries in currDir, m in the whole tree
-    // below it. m needs a full traversal, so it arrives from a background
-    // thread; countGen discards results for a directory we've navigated away
-    // from. countTotalPartial means the traversal hit kMaxTreeCount.
-    int countDirect = 0;
-    int countTotal = -1; // -1: still counting
-    bool countTotalPartial = false;
-    i64 countGen = 0; // from gNavCountGen, so it can't collide with a previous window's
-
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    void OnSize(UINT msg, UINT type, Size size) override;
 
     bool Create(MainWindow* win);
     void SetDir(Str dir, Str selectPath);
@@ -83,9 +88,6 @@ struct NavFilesInFolderWnd : Wnd {
 
 static NavFilesInFolderWnd* gNavFilesWnd = nullptr;
 static HWND gHwndToActivateOnNavClose = nullptr;
-// never reset, so an in-flight count from a closed window can't be mistaken
-// for one belonging to a window opened afterwards
-static i64 gNavCountGen = 0;
 
 NavFilesInFolderWnd::~NavFilesInFolderWnd() {
     str::Free(currDir);
@@ -115,90 +117,11 @@ static void ScheduleDeleteNavFilesWnd() {
     uitask::Post(fn, "SafeDeleteNavFilesWnd");
 }
 
-// only called for entries we already know are files (both callers check
-// IsDirectory(de) first), so skip GuessFileTypeFromName()'s IsDirectory() probe:
-// it's a per-entry round trip on a network drive, and this runs over a whole
-// tree. The name is also relative to the listed dir, so the probe was answering
-// about a path relative to the cwd anyway.
+// skip GuessFileTypeFromName()'s IsDirectory() probe: name is relative to the
+// listed dir, and callers already skipped directories.
 static bool CanOpenFile(Str path) {
     FileType kind = GuessFileTypeFromName(path, true);
     return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
-}
-
-// Traversing a big tree (or a network drive) can take a long time and the user
-// can browse anywhere, including a drive root, so stop counting after this many
-// entries and show the total as "n+".
-constexpr int kMaxTreeCount = 50 * 1000;
-
-// true for entries the listing shows: sub-directories and openable files,
-// skipping hidden ones. Keep in sync with FillEntriesForDir().
-static bool IsCountedEntry(DirIterEntry* de, bool* isDirOut) {
-    *isDirOut = false;
-    if (de->fd->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) {
-        return false;
-    }
-    if (IsDirectory(de)) {
-        *isDirOut = true;
-        return true;
-    }
-    return CanOpenFile(de->name);
-}
-
-// number of entries under dir, including all sub-directories. Uses an explicit
-// worklist rather than DirIter's recurse so hidden directories are pruned the
-// same way the listing prunes them.
-static int CountEntriesInTree(Str dir, bool* partialOut) {
-    *partialOut = false;
-    int n = 0;
-    StrVec dirs;
-    dirs.Append(dir);
-    // dirs grows while we iterate: index-based so appends can't invalidate it
-    for (int i = 0; i < len(dirs); i++) {
-        DirIter di{dirs[i]};
-        di.includeFiles = true;
-        di.includeDirs = true;
-        for (DirIterEntry* de : di) {
-            bool isDir = false;
-            if (!IsCountedEntry(de, &isDir)) {
-                continue;
-            }
-            n++;
-            if (n >= kMaxTreeCount) {
-                *partialOut = true;
-                return n;
-            }
-            if (isDir) {
-                dirs.Append(de->filePath);
-            }
-        }
-    }
-    return n;
-}
-
-struct CountTreeData {
-    Str dir; // owned
-    i64 gen = 0;
-    int total = 0;
-    bool partial = false;
-};
-
-static void CountTreeFinished(CountTreeData* d) {
-    NavFilesInFolderWnd* wnd = gNavFilesWnd;
-    // ignore if the window is gone or the user already navigated elsewhere
-    if (wnd && wnd->countGen == d->gen) {
-        wnd->countTotal = d->total;
-        wnd->countTotalPartial = d->partial;
-        wnd->UpdateDirLabel();
-    }
-    str::Free(d->dir);
-    delete d;
-}
-
-static void CountTreeThread(CountTreeData* d) {
-    d->total = CountEntriesInTree(d->dir, &d->partial);
-    auto fn = MkFunc0<CountTreeData>(CountTreeFinished, d);
-    uitask::Post(fn, "CountTreeFinished");
-    DestroyTempArena();
 }
 
 // dirs first, then files, each sorted naturally by name
@@ -341,17 +264,8 @@ static void SelectAndEnsureVisible(ListBox* lb, int idx) {
     LbSetTopIndex(lb->hwnd, top);
 }
 
-// "<path>  n/m": n entries here, m in this directory and its sub-directories
 void NavFilesInFolderWnd::UpdateDirLabel() {
-    TempStr total;
-    if (countTotal < 0) {
-        total = str::DupTemp("…"); // still counting the tree
-    } else if (countTotalPartial) {
-        total = fmt("%d+", countTotal);
-    } else {
-        total = fmt("%d", countTotal);
-    }
-    dirLabel->SetText(fmt("%s  %d/%s", currDir, countDirect, total));
+    dirLabel->SetText(currDir);
 }
 
 void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
@@ -363,23 +277,7 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     }
     FillEntriesForDir(m, currDir);
     listBox->SetModel(m);
-
-    // ".." is navigation, not an entry of this directory
-    countDirect = m->ItemsCount();
-    if (countDirect > 0 && str::Eq(m->entries[0].name, StrL(".."))) {
-        countDirect--;
-    }
-    countTotal = -1;
-    countTotalPartial = false;
-    countGen = ++gNavCountGen;
     UpdateDirLabel();
-    {
-        auto d = new CountTreeData;
-        d->dir = str::Dup(currDir);
-        d->gen = countGen;
-        auto fn = MkFunc0<CountTreeData>(CountTreeThread, d);
-        RunAsync(fn, "CountTreeThread");
-    }
 
     if (m->ItemsCount() > 0) {
         int selIdx = FindEntryIndex(this, m, selectPath);
@@ -426,9 +324,9 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection() {
     }
     DismissNextFileScrollHint(mainWin);
     LoadArgs args(path, mainWin);
+    // replace the document in the current tab; keep this window open
     args.forceReuse = true;
     StartLoadDocument(&args);
-    ScheduleDeleteNavFilesWnd();
 }
 
 void NavFilesInFolderWnd::OnListDoubleClick() {
@@ -464,16 +362,35 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
 }
 
 LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ACTIVATE && wp == WA_INACTIVE) {
-        ScheduleDeleteNavFilesWnd();
-        return 0;
+    if (msg == WM_ACTIVATE) {
+        // Alt-Tab / click back into this window: put keyboard focus on the list
+        if (LOWORD(wp) != WA_INACTIVE && listBox && listBox->hwnd) {
+            HwndSetFocus(listBox->hwnd);
+        }
+        return WndProcDefault(hwndIn, msg, wp, lp);
     }
-    // Esc when this popup (not a child) has focus
+    // Esc when this window (not a child) has focus
     if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();
         return 0;
     }
     return WndProcDefault(hwndIn, msg, wp, lp);
+}
+
+// re-layout the controls when the (resizable) window is resized
+void NavFilesInFolderWnd::OnSize(UINT, UINT, Size size) {
+    // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
+    // before the child controls exist; ignore layout until they're created
+    if (!layout || !listBox) {
+        return;
+    }
+    int dx = size.dx;
+    int dy = size.dy;
+    if (dx == 0 || dy == 0) {
+        return;
+    }
+    LayoutToSize(layout, {dx, dy});
+    HwndInvalidate(hwnd);
 }
 
 void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
@@ -558,13 +475,93 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 }
 
-static void PositionNavFilesWnd(HWND hwnd, HWND hwndRelative) {
-    Rect rRelative = HwndWindowRect(hwndRelative);
+// non-client (frame) size for an outer width/height of the given client size
+static Size NavFrameChrome(HWND hwnd) {
+    DWORD style = (DWORD)GetWindowLongPtrW(hwnd, GWL_STYLE);
+    DWORD exStyle = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    RECT r{0, 0, 0, 0};
+    AdjustWindowRectEx(&r, style, FALSE, exStyle);
+    return {r.right - r.left, r.bottom - r.top};
+}
+
+// free horizontal space on the work area to the left / right of the main frame
+static void NavFreeSpaceBeside(HWND hwndMain, int* freeLeftOut, int* freeRightOut) {
+    Rect main = HwndWindowRect(hwndMain);
+    Rect work = GetWorkAreaRect(main, hwndMain);
+    *freeLeftOut = main.x - work.x;
+    *freeRightOut = (work.x + work.dx) - (main.x + main.dx);
+    if (*freeLeftOut < 0) {
+        *freeLeftOut = 0;
+    }
+    if (*freeRightOut < 0) {
+        *freeRightOut = 0;
+    }
+}
+
+// pick docked client size when there is enough free space beside the main window.
+// returns true and fills clientDx/clientDy; false means fall back to centered placement.
+static bool NavDockedClientSize(HWND hwnd, HWND hwndMain, int* clientDxOut, int* clientDyOut, bool* placeLeftOut) {
+    int freeLeft = 0;
+    int freeRight = 0;
+    NavFreeSpaceBeside(hwndMain, &freeLeft, &freeRight);
+
+    int minFree = DpiScale(hwndMain, kNavDockMinFreeDx);
+    int free = 0;
+    bool placeLeft = false;
+    if (freeLeft > freeRight && freeLeft > minFree) {
+        free = freeLeft;
+        placeLeft = true;
+    } else if (freeRight > minFree) {
+        free = freeRight;
+        placeLeft = false;
+    } else if (freeLeft > minFree) {
+        free = freeLeft;
+        placeLeft = true;
+    } else {
+        return false;
+    }
+
+    // outer width fits the free strip but is capped at kNavDockMaxWidthDx
+    int maxOuterDx = DpiScale(hwndMain, kNavDockMaxWidthDx);
+    int outerDx = free < maxOuterDx ? free : maxOuterDx;
+
+    Rect main = HwndWindowRect(hwndMain);
+    int outerDy = main.dy;
+    Size chrome = NavFrameChrome(hwnd);
+    int clientDx = outerDx - chrome.dx;
+    int clientDy = outerDy - chrome.dy;
+    int minClientDx = DpiScale(hwndMain, kNavMinClientDx);
+    int minClientDy = DpiScale(hwndMain, kNavMinClientDy);
+    if (clientDx < minClientDx) {
+        clientDx = minClientDx;
+    }
+    if (clientDy < minClientDy) {
+        clientDy = minClientDy;
+    }
+    *clientDxOut = clientDx;
+    *clientDyOut = clientDy;
+    *placeLeftOut = placeLeft;
+    return true;
+}
+
+// place hwnd next to the main frame (docked) or centered over it (fallback)
+static void PositionNavFilesWnd(HWND hwnd, HWND hwndMain, bool docked, bool placeLeft) {
+    Rect main = HwndWindowRect(hwndMain);
     Rect r = HwndWindowRect(hwnd);
-    int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
-    int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
-    Rect r2 = ShiftRectToWorkArea({x, y, r.dx, r.dy}, hwndRelative, true);
-    r2.y = rRelative.y + 42;
+    int x;
+    int y;
+    if (docked) {
+        y = main.y;
+        if (placeLeft) {
+            x = main.x - r.dx;
+        } else {
+            x = main.x + main.dx;
+        }
+    } else {
+        x = main.x + (main.dx / 2) - (r.dx / 2);
+        y = main.y + DpiScale(hwndMain, kNavFallbackYOffset);
+    }
+    Rect r2 = ShiftRectToWorkArea({x, y, r.dx, r.dy}, hwndMain, true);
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
@@ -581,12 +578,19 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     {
         CreateCustomArgs args;
         args.visible = false;
-        args.style = WS_POPUPWINDOW;
+        // regular resizable window (not a popup that auto-dismisses)
+        args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+        args.title = _TRA("Navigate Files in Folder");
         args.font = font;
+        args.isRtl = IsUIRtl();
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
+    }
+    // top-level (no owner) so Alt-Tab switches between this and the main window
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkTitleBarEx(hwnd, true);
     }
 
     auto colBg = ThemeWindowControlBackgroundColor();
@@ -630,7 +634,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        Str strings[3] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to select"), _TRA("Esc to close")};
+        Str strings[3] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open"), _TRA("Esc to close")};
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
@@ -661,14 +665,21 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     // during SetDir may not leave the item visible in the final viewport
     int selIdx = listBox->GetCurrentSelection();
 
-    auto rc = HwndClientRect(mainWin->hwndFrame);
-    int dy = rc.dy - 72;
-    if (dy < 480) {
-        dy = 480;
+    int dx = 0;
+    int dy = 0;
+    bool placeLeft = false;
+    bool docked = NavDockedClientSize(hwnd, mainWin->hwndFrame, &dx, &dy, &placeLeft);
+    if (!docked) {
+        auto rc = HwndClientRect(mainWin->hwndFrame);
+        dy = rc.dy - DpiScale(hwnd, kNavFallbackMainDyMargin);
+        if (dy < DpiScale(hwnd, kNavFallbackMinDy)) {
+            dy = DpiScale(hwnd, kNavFallbackMinDy);
+        }
+        dx = limitValue(rc.dx - DpiScale(hwnd, kNavFallbackMainDxMargin), DpiScale(hwnd, kNavFallbackMinDx),
+                        DpiScale(hwnd, kNavFallbackMaxDx));
     }
-    int dx = limitValue(rc.dx - 256, 480, 720);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
-    PositionNavFilesWnd(hwnd, mainWin->hwndFrame);
+    PositionNavFilesWnd(hwnd, mainWin->hwndFrame, docked, placeLeft);
 
     if (selIdx >= 0) {
         SelectAndEnsureVisible(listBox, selIdx);
@@ -682,6 +693,8 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
 void ShowNavFilesInFolder(MainWindow* win) {
     if (gNavFilesWnd) {
         if (gNavFilesWnd->hwnd && IsWindow(gNavFilesWnd->hwnd)) {
+            ShowWindow(gNavFilesWnd->hwnd, SW_SHOW);
+            SetForegroundWindow(gNavFilesWnd->hwnd);
             if (gNavFilesWnd->listBox) {
                 HwndSetFocus(gNavFilesWnd->listBox->hwnd);
             } else {

@@ -215,6 +215,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'O', CmdOpenFile},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_RIGHT, CmdOpenNextFileInFolder},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_LEFT, CmdOpenPrevFileInFolder},
+    {FSHIFT | FCONTROL | FVIRTKEY, VK_UP, CmdNavigateFilesInFolder},
     {FVIRTKEY, VK_F2, CmdRenameFile},
     {FCONTROL | FVIRTKEY, 'W', CmdClose},
     {FCONTROL | FVIRTKEY, 'N', CmdNewWindow},
