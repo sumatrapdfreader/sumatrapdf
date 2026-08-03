@@ -266,7 +266,8 @@ enum {
     CmdDeleteFileAndOpenNext = 455,
     CmdShowGeneratedHTML = 456,
     CmdDeleteCachedFiles = 457,
-    CmdNone = 458,
+    CmdToggleKeyboardLinkFollowing = 458,
+    CmdNone = 459,
 
     /* range for file history */
     CmdFileHistoryFirst,

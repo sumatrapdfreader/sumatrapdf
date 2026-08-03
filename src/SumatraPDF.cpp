@@ -78,6 +78,7 @@
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
+#include "LinkFollow.h"
 #include "SelectionToolbar.h"
 #include "Screenshot.h"
 #include "ImageSaveCropResize.h"
@@ -1368,6 +1369,10 @@ bool ToolbarAtBottom() {
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
+
+    // called on every viewport change, so this is where scrolling is noticed;
+    // the recompute itself is debounced
+    KeyboardLinkFollowingViewportChanged(win);
 
     bool hideScrollbar = ScrollbarsAreHidden();
     bool useOverlay = ScrollbarsUseOverlay();
@@ -3699,6 +3704,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
+    // the numbered link overlay belongs to the outgoing document
+    StopKeyboardLinkFollowing(win);
     if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
         tab->loadState == WindowTab::LoadState::None) {
         NotificationCreateArgs args;
@@ -7350,6 +7357,9 @@ static WCHAR SingleCharLowerW(WCHAR c) {
 }
 
 static void OnFrameKeyEsc(MainWindow* win) {
+    if (StopKeyboardLinkFollowing(win)) {
+        return;
+    }
     if (AbortFinding(win, true)) {
         return;
     }
@@ -7564,6 +7574,11 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
     }
 
     if (!win->IsDocLoaded()) {
+        return;
+    }
+
+    // while keyboard link following is on, 1..9 pick a numbered link
+    if (!isCtrl && !isAlt && KeyboardLinkFollowingOnChar(win, key)) {
         return;
     }
 
@@ -9985,6 +10000,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleCursorPosition:
             ToggleCursorPositionInDoc(win);
+            break;
+
+        case CmdToggleKeyboardLinkFollowing:
+            ToggleKeyboardLinkFollowing(win);
             break;
 
         case CmdPresentationBlackBackground:

@@ -28,6 +28,7 @@ export enum ControlCommand {
   TestMarkdownTocNavigate = 33,
   TestFavoriteNav = 34,
   TestToolbarButtons = 35,
+  TestKeyboardLinkFollow = 36,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -315,9 +316,11 @@ export function uniquePipeName(prefix = "sumatra-control"): string {
 // -for-testing run; must match kDebugReportTestExitCode in src/CrashHandler.cpp
 export const DEBUG_REPORT_EXIT_CODE = 105;
 
+// fn also gets the spawned process so a test can combine control commands with
+// real window messages (its pid is what finds the app's windows)
 export async function withControlledSumatra<T>(
   exe: string,
-  fn: (client: ControlClient) => Promise<T>,
+  fn: (client: ControlClient, proc: Bun.Subprocess) => Promise<T>,
   extraArgs: string[] = [],
   options: { cwd?: string; env?: Record<string, string | undefined>; connectTimeoutMs?: number } = {},
 ): Promise<T> {
@@ -337,7 +340,7 @@ export async function withControlledSumatra<T>(
   let fnOk = false;
   try {
     client = await ControlClient.connect(pipeName, options.connectTimeoutMs ?? 10000);
-    result = await fn(client);
+    result = await fn(client, proc);
     fnOk = true;
   } catch (e) {
     fnErr = e;

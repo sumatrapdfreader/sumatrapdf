@@ -300,6 +300,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, 'R', CmdReloadDocument},
     {FVIRTKEY, 'Z', CmdToggleZoom},
     {FVIRTKEY, 'F', CmdToggleFullscreen},
+    {FSHIFT | FVIRTKEY, 'F', CmdToggleKeyboardLinkFollowing},
     // '['
     {FVIRTKEY, VK_OEM_4, CmdRotateLeft},
     // ']'

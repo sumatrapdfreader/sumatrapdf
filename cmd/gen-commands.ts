@@ -266,6 +266,7 @@ export const commands = [
     "CmdDeleteFileAndOpenNext", "Delete File And Open Next",
     "CmdShowGeneratedHTML", "Show Generated HTML",
     "CmdDeleteCachedFiles", "Delete Cached Files",
+    "CmdToggleKeyboardLinkFollowing", "Follow Link With Keyboard",
     "CmdNone", "Do nothing",
 ];
 

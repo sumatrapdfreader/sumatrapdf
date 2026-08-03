@@ -25,6 +25,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - fix copy/extract of Russian text from some Distiller Type1 PDFs (Literaturnaya, Academy, …) that advertise Latin ToUnicode maps for CP1251 glyph codes (fixes #5873)
 - fix copied text losing spaces in condensed titles/headers (and other tight real word gaps ~0.16em) after the #5627 tracking-space filter; the threshold stays at 0.1em so syllable-tracking PDFs (#5627) and TJ-synthesized word spaces (#5868) keep working (fixes #5871)
 - the compact Find bar can be resized: drag its left edge to make the search field wider or narrower (the bar stays anchored to the right edge and keeps its height)
+- follow links from the keyboard, like Zathura: `Shift + F` numbers the links visible on screen from 1 to 9 and highlights them; pressing that digit follows the link (internal destination or URL), `Shift + F` again or `Esc` leaves the mode. The numbering follows the page while you scroll and is recalculated shortly after scrolling stops. Not offered for comic books, image folders and images, whose pages can't have links (fixes #2629)
 - fix the Bookmarks sidebar's "current page" highlight staying on the previous page after clicking a bookmark, until the sidebar was rebuilt
 - fix stale pixels left in the Bookmarks / Favorites trees to the right of an entry's label when the selection moved
 - Bookmarks sidebar: **Collapse All** expands a single top-level root one level when that is all the outline has (typical Word-export TOC), and the context menu has **Expand to Level 1/2/3** for explicit depth control (fixes #5239)
@@ -164,6 +165,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdFavoriteShowInTab` : "Show Favorites in Tab" — full-window Favorites tab (sidebar Favorites still works)
 - `CmdToggleFavoritesSort` : "Sort Favorites By Name" — Favorites tree context menu checkbox; toggles `SortFavoritesByName` (fixes #2277)
 - `CmdZoomFitHeight` : "Zoom: Fit Height" — scale page height to the window (fixes #1714)
+- `CmdToggleKeyboardLinkFollowing` : "Follow Link With Keyboard" (`Shift + F`) — numbers the links on screen 1..9, a digit follows one (fixes #2629)
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"
 - `CmdNavigateFilesInFolder` : "Navigate Files in Folder" — floating directory browser for openable files (Enter/double-click opens a file or enters a directory, `..` goes up, Esc closes)

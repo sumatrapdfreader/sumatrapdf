@@ -1256,6 +1256,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\JxlReader.h" />
+    <ClInclude Include="..\src\LinkFollow.h" />
     <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\MarkdownModel.h" />
     <ClInclude Include="..\src\MarkdownToc.h" />
@@ -1449,6 +1450,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
+    <ClCompile Include="..\src\LinkFollow.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
     <ClCompile Include="..\src\MarkdownModel.cpp" />
     <ClCompile Include="..\src\MarkdownToc.cpp" />

@@ -670,6 +670,7 @@ function sumatrapdf_files()
     "Installer.*",
     "InstallerCommon.cpp",
     "JxlReader.*",
+    "LinkFollow.*",
     "MainWindow.*",
     "Menu.*",
     "NavFilesInFolder.*",

@@ -25,6 +25,14 @@ struct TocItem;
 struct FindBarWnd;
 struct FindWindowWnd;
 
+// one link numbered by keyboard link following (CmdToggleKeyboardLinkFollowing).
+// stored in page coordinates so the badges stay glued to their links while
+// scrolling, between the debounced recomputes
+struct KeyboardLinkTarget {
+    int pageNo = 0;
+    RectF rect;
+};
+
 // one search match with a text snippet around it, for the floating results list
 struct FindMatch {
     int startPage = 0;
@@ -452,6 +460,11 @@ struct MainWindow {
     Str browserFindTerm;            // owned; the term the current md find ran with
 
     ILinkHandler* linkHandler = nullptr;
+    // keyboard link following: when on, visible links are numbered 1..9 and
+    // pressing a digit follows that link (see LinkFollow.cpp)
+    bool linkFollowActive = false;
+    Vec<KeyboardLinkTarget> linkFollowTargets;
+
     IPageElement* linkOnLastButtonDown = nullptr;
     Str urlOnLastButtonDown;
     Annotation* annotationUnderCursor = nullptr;

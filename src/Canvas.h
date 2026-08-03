@@ -24,3 +24,6 @@ void DisconnectLastDragDataObject();
 constexpr UINT_PTR kSmoothScrollTimerID = 6;
 // Timer for smooth middle-click auto-scroll (issue #2693)
 constexpr UINT_PTR kAutoScrollTimerID = 7;
+// Debounce for re-numbering keyboard link targets after scrolling (issue #2629)
+constexpr UINT_PTR kLinkFollowTimerID = 11;
+constexpr uint kLinkFollowRecomputeDelayInMs = 300;

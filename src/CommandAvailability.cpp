@@ -591,6 +591,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    if (cmdId == CmdToggleKeyboardLinkFollowing) {
+        // pages of image collections (comic books, image folders, single
+        // images) can't carry links; CHM / markdown handle their own (#2629)
+        Kind k = ctx.engineKind;
+        bool isImage = k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks;
+        if (ctx.isImageCollection || isImage || ctx.isChm || !k) {
+            return CommandVisibility::Hide;
+        }
+    }
+
     if (cmdId == CmdToggleMangaMode) {
         if (surface == CommandSurface::Palette && ctx.isSinglePage) {
             return CommandVisibility::Hide;

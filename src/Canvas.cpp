@@ -50,6 +50,7 @@
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
+#include "LinkFollow.h"
 #include "SelectionToolbar.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
@@ -2612,6 +2613,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         PaintForwardSearchMark(win, hdc);
     }
 
+    PaintKeyboardLinkTargets(win, hdc);
+
     if (!rendering) {
         DebugShowLinks(dm, hdc);
     }
@@ -3779,6 +3782,13 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kRefHoverTimerID:
         case kRefHoverHideTimerID:
             RefHoverOnCanvasTimer(win->refHover, hwnd, win->AsFixed(), timerId);
+            break;
+
+        case kLinkFollowTimerID:
+            // scrolling settled: re-number the links that are on screen now
+            KillTimer(hwnd, kLinkFollowTimerID);
+            KeyboardLinkFollowingRecompute(win);
+            ScheduleRepaint(win, 0);
             break;
 
         case HIDE_FWDSRCHMARK_TIMER_ID:

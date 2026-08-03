@@ -20,6 +20,7 @@
 #include "base/GuessFileType.h"
 #include "FindWindow.h"
 #include "Toolbar.h"
+#include "LinkFollow.h"
 
 extern Flags* gCli;
 
@@ -126,6 +127,7 @@ enum class ControlCmd : u16 {
     TestMarkdownTocNavigate = 33,
     TestFavoriteNav = 34,
     TestToolbarButtons = 35,
+    TestKeyboardLinkFollow = 36,
 };
 
 enum class ControlArgType : u16 {
@@ -641,6 +643,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestToolbarButtons: {
             int exitCode = 0;
             Str res = ToolbarButtonsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestKeyboardLinkFollow: {
+            int exitCode = 0;
+            Str res = KeyboardLinkFollowResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

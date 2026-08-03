@@ -84,6 +84,7 @@ CmdRotateLeft,"[, Shift + Ctrl + Subtract",Rotate Left,
 CmdRotateRight,"], Shift + Ctrl + Add",Rotate Right,
 CmdSinglePageView,Ctrl + 6,Single Page View,
 CmdToggleContinuousView,c,Toggle Continuous View,
+CmdToggleKeyboardLinkFollowing,Shift + F,Follow Link With Keyboard,"ver 3.7+, numbers the links visible on screen 1..9; pressing a digit follows that link, Esc or Shift + F again leaves the mode. Not available for comic books, image folders and images (fixes #2629)"
 CmdToggleFullscreen,"f, Shift + Ctrl + L, F11",Toggle Fullscreen,
 CmdToggleMangaMode,,Toggle Manga Mode,
 CmdToggleMenuBar,F9,Toggle Menu Bar,
