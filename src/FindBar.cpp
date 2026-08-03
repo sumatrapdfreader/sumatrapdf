@@ -47,12 +47,20 @@ struct FindBarWnd : Wnd {
     // when set, programmatic edits to the text don't kick off a search
     // (used while restoring text during a theme-change recreate)
     bool suppressTextChanged = false;
+    // set while Layout() runs so the WM_SIZE its own SetWindowPos generates
+    // doesn't re-enter Layout()
+    bool inLayout = false;
 
     FindBarWnd() = default;
     ~FindBarWnd() override;
 
     bool Create(MainWindow* win);
-    void Layout();
+    // forceBarDx > 0: fit the bar into exactly that window width, giving the
+    // slack to the edit box. 0: the default edit width.
+    void Layout(int forceBarDx = 0);
+    // width of everything in the bar except the edit box
+    int FixedDx() const;
+    int MinBarDx() const;
 
     void OnTextChanged();
 
@@ -128,6 +136,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
+        args.font = GetAppFont(hwnd);
         args.isMultiLine = false;
         args.withBorder = true;
         args.cueText = _TRA("Find");
@@ -143,6 +152,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     {
         Static::CreateArgs args;
         args.parent = hwnd;
+        args.font = GetAppFont(hwnd);
         args.text = "";
         args.isRtl = IsUIRtl();
         status = new Static();
@@ -204,11 +214,33 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     return true;
 }
 
-void FindBarWnd::Layout() {
-    int p = DpiScale(hwnd, 6);
-    int gap = DpiScale(hwnd, 4);
-    int editDx = DpiScale(hwnd, 220);
-    int statusDx = DpiScale(hwnd, 88);
+constexpr int kFindBarPadding = 6;
+constexpr int kFindBarGap = 4;
+constexpr int kFindBarStatusDx = 88;
+constexpr int kFindBarDefaultEditDx = 220;
+constexpr int kFindBarMinEditDx = 80;
+// how wide the drag zone along the left edge is
+constexpr int kFindBarResizeGripDx = 6;
+
+// left padding + gap + status + gap + toolbar + right padding
+int FindBarWnd::FixedDx() const {
+    Size tbSz = TbGetMaxSize(hwndBtns);
+    return (2 * DpiScale(hwnd, kFindBarPadding)) + (2 * DpiScale(hwnd, kFindBarGap)) +
+           DpiScale(hwnd, kFindBarStatusDx) + tbSz.dx;
+}
+
+int FindBarWnd::MinBarDx() const {
+    return DpiScale(hwnd, kFindBarMinEditDx) + FixedDx();
+}
+
+void FindBarWnd::Layout(int forceBarDx) {
+    // WM_SIZE can arrive from CreateCustom, before the child controls exist
+    if (!edit || !status || !hwndBtns) {
+        return;
+    }
+    int p = DpiScale(hwnd, kFindBarPadding);
+    int gap = DpiScale(hwnd, kFindBarGap);
+    int statusDx = DpiScale(hwnd, kFindBarStatusDx);
 
     int editDy = edit->GetIdealSize().dy;
 
@@ -216,7 +248,16 @@ void FindBarWnd::Layout() {
 
     int innerDy = std::max(editDy, tbSz.dy);
     barDy = innerDy + (2 * p);
-    barDx = p + editDx + gap + statusDx + gap + tbSz.dx + p;
+
+    int fixedDx = FixedDx();
+    int editDx;
+    if (forceBarDx > 0) {
+        // resizing: the edit box absorbs the change
+        editDx = std::max(forceBarDx - fixedDx, DpiScale(hwnd, kFindBarMinEditDx));
+    } else {
+        editDx = DpiScale(hwnd, kFindBarDefaultEditDx);
+    }
+    barDx = editDx + fixedDx;
 
     int x = p;
     MoveWindow(edit->hwnd, x, (barDy - editDy) / 2, editDx, editDy, TRUE);
@@ -225,7 +266,9 @@ void FindBarWnd::Layout() {
     x += statusDx + gap;
     MoveWindow(hwndBtns, x, (barDy - tbSz.dy) / 2, tbSz.dx, tbSz.dy, TRUE);
 
+    inLayout = true;
     SetWindowPos(hwnd, nullptr, 0, 0, barDx, barDy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    inLayout = false;
 }
 
 void FindBarWnd::OnTextChanged() {
@@ -236,6 +279,35 @@ void FindBarWnd::OnTextChanged() {
 }
 
 LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
+    // The bar is pinned to the right edge of the frame, so only its left edge
+    // can be dragged; report that edge as a sizing border and the default
+    // handling turns a drag there into a resize.
+    if (msg == WM_NCHITTEST) {
+        Rect wr = HwndWindowRect(h);
+        int x = GET_X_LPARAM(lp);
+        if (x < wr.x + DpiScale(h, kFindBarResizeGripDx)) {
+            return HTLEFT;
+        }
+    }
+    if (msg == WM_SIZE) {
+        // ignore the WM_SIZE our own SetWindowPos in Layout() generates
+        if (!inLayout) {
+            // GetWindowRect, not LOWORD(lp): lp is the client size, while barDx
+            // is a window size
+            Rect wr = HwndWindowRect(h);
+            Layout(wr.dx);
+        }
+        return 0;
+    }
+    if (msg == WM_GETMINMAXINFO && barDy > 0) {
+        // don't let the edit box be dragged away entirely, and keep the height
+        // fixed: it comes from the font metrics, not from the user
+        auto* mmi = (MINMAXINFO*)lp;
+        mmi->ptMinTrackSize.x = MinBarDx();
+        mmi->ptMinTrackSize.y = barDy;
+        mmi->ptMaxTrackSize.y = barDy;
+        return 0;
+    }
     if (msg == WM_ERASEBKGND) {
         HBRUSH br = BackgroundBrush();
         if (br) {

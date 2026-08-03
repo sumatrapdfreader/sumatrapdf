@@ -502,12 +502,23 @@ static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
 }
 
 void UpdateTocSelection(MainWindow* win, int currPageNo) {
-    if (!win->tocLoaded || !win->uiState.tocVisible || win->tocKeepSelection) {
+    auto treeView = win->tocTreeView;
+    if (!win->tocLoaded || !win->uiState.tocVisible || !treeView) {
         return;
     }
 
-    auto treeView = win->tocTreeView;
     auto item = TreeItemForPageNo(treeView, currPageNo);
+    if (win->tocKeepSelection) {
+        // the tree selection is deliberately left alone: the user clicked a
+        // bookmark and GoToTocLink set tocKeepSelection so the page change
+        // doesn't move the selection off it. The multi-match "current page"
+        // highlight is a different thing though and must still follow the page,
+        // otherwise the previous page's highlight stays until the sidebar is
+        // rebuilt.
+        SetTocMultiHighlight(win, treeView, item);
+        return;
+    }
+
     // only select the items that are visible i.e. are top nodes or
     // children of expanded node
     TreeItem toSelect = (TreeItem)FindVisibleParentTreeItem(treeView, item);

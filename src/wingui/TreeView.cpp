@@ -503,6 +503,21 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, Point& pt) {
     return ti;
 }
 
+// On a selection change the tree view only invalidates the label part of the
+// rows involved. A CDDS_ITEMPOSTPAINT handler that paints the whole row (we do:
+// selection fill, page numbers, the multi-match highlight) would leave stale
+// pixels to the right of the label, so invalidate the full rows instead.
+static void InvalidateTreeItemRow(HWND hwnd, HTREEITEM hItem) {
+    if (!hItem) {
+        return;
+    }
+    RECT rc{};
+    // FALSE: whole row, not just the label
+    if (TreeView_GetItemRect(hwnd, hItem, &rc, FALSE)) {
+        InvalidateRect(hwnd, &rc, TRUE);
+    }
+}
+
 LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
     TreeView* w = this;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
@@ -550,6 +565,12 @@ LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
         // log("tv: TVN_SELCHANGED\n");
+        // only needed when a handler paints beyond the label; without one the
+        // control's own invalidation is enough and this would just cost repaints
+        if (onCustomDraw.IsValid()) {
+            InvalidateTreeItemRow(hwnd, nmtv->itemOld.hItem);
+            InvalidateTreeItemRow(hwnd, nmtv->itemNew.hItem);
+        }
         if (!onSelectionChanged.IsValid()) {
             return 0;
         }

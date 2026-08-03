@@ -202,9 +202,13 @@ Size LabelWithCloseWnd::GetIdealSize() {
     return size;
 }
 
+// this is a custom window that draws the label itself in OnPaint() using
+// `font`, so a repaint is all it takes to pick up the new font
 void LabelWithCloseWnd::SetFont(HFONT f) {
     this->font = f;
-    // TODO: if created, set on the label?
+    if (this->hwnd) {
+        HwndScheduleRepaint(this->hwnd);
+    }
 }
 
 void LabelWithCloseWnd::SetPaddingXY(int x, int y) {

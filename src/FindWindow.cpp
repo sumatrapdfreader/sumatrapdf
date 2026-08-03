@@ -13,6 +13,7 @@
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "ProgressUpdateUI.h"
@@ -245,7 +246,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
     {
         ListBox::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetDefaultGuiFont();
+        args.font = GetAppFont(hwnd);
         results = new ListBox();
         results->onDrawItem = MkMethod1<FindWindowWnd, ListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
         results->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);

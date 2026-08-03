@@ -574,7 +574,14 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         case WM_SETFONT: {
             font = (HFONT)wparam;
-            return 0;
+            if (!subclassId) {
+                return 0;
+            }
+            // a subclassed window is a real control (edit, tree view etc.) that
+            // draws its own text: remembering the font here isn't enough, the
+            // control itself has to see WM_SETFONT. Fall through to the original
+            // wndproc.
+            break;
         }
 
         case WM_COMMAND: {
@@ -970,9 +977,15 @@ HFONT Wnd::GetFont() {
     return font;
 }
 
+// HwndSetFont() sends WM_SETFONT, which our wndproc records in `font` and (for
+// subclassed controls) forwards to the control itself, so this both remembers
+// and applies the font. Without it SetFont() was a no-op on screen.
 void Wnd::SetFont(HFONT fontIn) {
     font = fontIn;
-    // TODO: for controls, send WM_SETFONT message to original wndproc function
+    if (!hwnd) {
+        return;
+    }
+    HwndSetFont(hwnd, fontIn);
 }
 
 void Wnd::SetIsEnabled(bool isEnabled) const {
