@@ -35,6 +35,7 @@ extern "C" {
 #include "Menu.h"
 #include "SearchAndDDE.h"
 #include "Toolbar.h"
+#include "Tabs.h"
 #include "FindBar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
@@ -461,16 +462,12 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             if (tab && tab->AsFixed()) {
                 dirty = EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine());
             }
-            // update tooltip before SetTabDirty (which rebuilds tooltips via LayoutTabs)
+            // update tooltip before SetTabDirty (which rebuilds tooltips via LayoutTabs).
+            // Must use MakeTabTooltipTemp (path+size); path-only overwrote size here.
             TabInfo* ti = win->tabsCtrl->GetTab(i);
             if (ti && tab && tab->filePath) {
-                Str path = tab->filePath;
-                if (dirty) {
-                    TempStr tooltip = str::JoinTemp(path, StrL(" "), _TRA("(unsaved annotations)"));
-                    str::ReplaceWithCopy(&ti->tooltip, tooltip);
-                } else {
-                    str::ReplaceWithCopy(&ti->tooltip, path);
-                }
+                TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
+                str::ReplaceWithCopy(&ti->tooltip, tooltip);
             }
             win->tabsCtrl->SetTabDirty(i, dirty);
         }

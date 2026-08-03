@@ -255,6 +255,9 @@ i64 GetSize(FileHandle h) {
 }
 
 i64 GetSize(Str path) {
+    if (!path) {
+        return -1;
+    }
     struct stat st;
     if (!StatPath(path, st) || S_ISDIR(st.st_mode)) {
         return -1;

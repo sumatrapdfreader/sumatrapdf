@@ -953,9 +953,20 @@ static bool GetInfo(Str path, WIN32_FILE_ATTRIBUTE_DATA& fileInfo) {
 
 i64 GetSize(Str path) {
     ReportIf(!path);
-    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    if (!GetInfo(path, fileInfo)) {
+    if (!path) {
         return -1;
+    }
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo{};
+    if (!GetInfo(path, fileInfo)) {
+        // Cache can fail (e.g. "drive offline" short-circuit or a cached
+        // negative attrs result). Probe directly and recover when the path is fine.
+        WIN32_FILE_ATTRIBUTE_DATA direct{};
+        BOOL ok = GetFileAttributesExW(CWStrTemp(path), GetFileExInfoStandard, &direct);
+        if (!ok || (direct.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            return -1;
+        }
+        u64 sz = ((u64)direct.nFileSizeHigh << 32) | (u64)direct.nFileSizeLow;
+        return (i64)sz;
     }
     if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         return -1;

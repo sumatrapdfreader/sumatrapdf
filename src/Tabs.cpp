@@ -34,6 +34,26 @@
 #include "Theme.h"
 #include "Translations.h"
 
+// always full path (FullPathInTitle only affects tab/window title text).
+// Append size when GetSize succeeds (may fail for offline network paths).
+// Used by Tabs and Toolbar (toolbar was overwriting tooltips with path-only).
+TempStr MakeTabTooltipTemp(Str path, bool dirty) {
+    if (!path) {
+        return Str{};
+    }
+    TempStr tip;
+    i64 size = file::GetSize(path);
+    if (size >= 0) {
+        tip = fmt("%s  %s", path, str::FormatSizeShortTemp(size, nullptr));
+    } else {
+        tip = path;
+    }
+    if (dirty) {
+        tip = str::JoinTemp(tip, StrL(" "), _TRA("(unsaved annotations)"));
+    }
+    return tip;
+}
+
 static void UpdateTabTitle(WindowTab* tab) {
     if (!tab) {
         return;
@@ -41,19 +61,11 @@ static void UpdateTabTitle(WindowTab* tab) {
     MainWindow* win = tab->win;
     int idx = win->GetTabIdx(tab);
     Str title = tab->GetTabTitle();
-    // respect FullPathInTitle for the tab tooltip too: when the user opted out
-    // of showing the full path, don't reveal it on hover either (#3024)
-    Str tooltip = tab->filePath;
-    if (tooltip && !gGlobalPrefs->fullPathInTitle) {
-        tooltip = path::GetBaseNameTemp(tooltip);
+    bool dirty = false;
+    if (tab->AsFixed()) {
+        dirty = EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine());
     }
-    // append a human-readable file size, like the home page thumbnail tooltips
-    if (tooltip) {
-        i64 size = file::GetSize(tab->filePath);
-        if (size >= 0) {
-            tooltip = fmt("%s  %s", tooltip, str::FormatSizeShortTemp(size, nullptr));
-        }
-    }
+    TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
 }
 
@@ -717,7 +729,9 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     tab->canvasRc = win->canvasRc;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
-    newTab->tooltip = str::Dup(tab->filePath);
+    // same full path + size as UpdateTabTitle (was path-only, so size missing until
+    // TabsOnChangedDoc for the active tab)
+    newTab->tooltip = str::Dup(MakeTabTooltipTemp(tab->filePath, false));
     newTab->userData = (UINT_PTR)tab;
     newTab->tabColor = tab->tabColor;
 
