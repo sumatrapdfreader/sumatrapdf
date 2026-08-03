@@ -110,6 +110,14 @@ Str GetInstallerLogPath() {
     return path::Join(dir, kLogFileName);
 }
 
+static void ClearReadOnly(Str path) {
+    DWORD attrs = file::GetAttributes(path);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
+        logf("  clearing READONLY on '%s'\n", path);
+        file::SetAttributes(path, attrs & ~FILE_ATTRIBUTE_READONLY);
+    }
+}
+
 // Write a file during install/upgrade. libsumatrapdf.dll is often locked by
 // SumatraPDF.exe, dllhost/prevhost (preview), or PdfFilter; a plain
 // CreateFile(CREATE_ALWAYS) then fails and leaves the old DLL (size mismatch
@@ -129,14 +137,6 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
         logf("  no existing file (GetSize failed)\n");
     }
 
-    auto clearReadonly = [](Str p) {
-        DWORD attrs = file::GetAttributes(p);
-        if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
-            logf("  clearing READONLY on '%s'\n", p);
-            file::SetAttributes(p, attrs & ~FILE_ATTRIBUTE_READONLY);
-        }
-    };
-
     auto verifySize = [&](Str p) -> bool {
         i64 sz = file::GetSize(p);
         if (sz != (i64)expected) {
@@ -147,7 +147,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
     };
 
     auto tryDirect = [&]() -> bool {
-        clearReadonly(path);
+        ClearReadOnly(path);
         if (!file::WriteFile(path, data)) {
             DWORD err = GetLastError();
             logf("  direct WriteFile failed lastError=%u\n", err);
@@ -160,7 +160,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
     auto tryTempRename = [&]() -> bool {
         TempStr tmp = str::JoinTemp(path, ".tmp");
         logf("  trying write via temp '%s'\n", tmp);
-        clearReadonly(tmp);
+        ClearReadOnly(tmp);
         file::Delete(tmp);
         if (!file::WriteFile(tmp, data)) {
             DWORD err = GetLastError();
@@ -173,7 +173,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
             file::Delete(tmp);
             return false;
         }
-        clearReadonly(path);
+        ClearReadOnly(path);
         if (!MoveFileExW(CWStrTemp(tmp), CWStrTemp(path), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
             DWORD err = GetLastError();
             logf("  MoveFileExW(REPLACE) failed lastError=%u\n", err);
@@ -198,7 +198,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
         int killed = KillProcessesWithModule(path, true);
         logf("  KillProcessesWithModule('%s') killed=%d\n", path, killed);
         if (file::Exists(path)) {
-            clearReadonly(path);
+            ClearReadOnly(path);
             bool delOk = file::Delete(path);
             logf("  Delete('%s') => %d\n", path, (int)delOk);
             if (!delOk) {
@@ -432,10 +432,7 @@ static bool TryRenameAsideOnce(Str path, Str copyPath) {
     if (!file::Exists(path)) {
         return true;
     }
-    DWORD attrs = file::GetAttributes(path);
-    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
-        file::SetAttributes(path, attrs & ~FILE_ATTRIBUTE_READONLY);
-    }
+    ClearReadOnly(path);
     if (file::Exists(copyPath)) {
         file::Delete(copyPath);
     }
@@ -692,10 +689,7 @@ static void MoveAsideOrDeleteLegacyLibmupdf(Str installDir) {
         logf("MoveAsideOrDeleteLegacyLibmupdf: renamed to '%s'\n", copyPath);
         return;
     }
-    DWORD attrs = file::GetAttributes(path);
-    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
-        file::SetAttributes(path, attrs & ~FILE_ATTRIBUTE_READONLY);
-    }
+    ClearReadOnly(path);
     if (file::Delete(path)) {
         logf("MoveAsideOrDeleteLegacyLibmupdf: deleted '%s'\n", path);
         return;
@@ -752,6 +746,46 @@ static void DeleteInstallCopyLeftovers(Str destDir) {
     MoveAsideOrDeleteLegacyLibmupdf(destDir);
 }
 
+// After a failed upgrade that renamed install files to *.copy, put the previous
+// install back so the user is not left without SumatraPDF.exe / companion DLLs.
+// Also undoes a partial PrepareInstallDirByRenaming when a later rename fails.
+static void RestoreInstallCopyFiles(Str installDir) {
+    logf("RestoreInstallCopyFiles('%s')\n", installDir);
+    static const Str kFiles[] = {
+        StrL("SumatraPDF.exe"), StrL("libsumatrapdf.dll"), StrL("PdfFilter.dll"),
+        StrL("PdfPreview.dll"), StrL("libmupdf.dll"),
+    };
+    for (Str name : kFiles) {
+        TempStr path = path::JoinTemp(installDir, name);
+        TempStr copyPath = str::JoinTemp(path, ".copy");
+        if (!file::Exists(copyPath)) {
+            continue;
+        }
+        // Prefer the previous working file over any partial new write.
+        if (file::Exists(path)) {
+            ClearReadOnly(path);
+            if (file::Delete(path)) {
+                logf("  deleted partial '%s'\n", path);
+            } else {
+                TempStr failedPath = str::JoinTemp(path, ".failed");
+                file::Delete(failedPath);
+                if (MoveFileExW(CWStrTemp(path), CWStrTemp(failedPath), MOVEFILE_REPLACE_EXISTING)) {
+                    logf("  moved partial '%s' -> '%s'\n", path, failedPath);
+                } else {
+                    logf("  could not clear partial '%s' lastError=%u\n", path, GetLastError());
+                    LogLastError();
+                }
+            }
+        }
+        if (MoveFileExW(CWStrTemp(copyPath), CWStrTemp(path), MOVEFILE_REPLACE_EXISTING)) {
+            logf("  restored '%s' <- .copy\n", path);
+        } else {
+            logf("  failed to restore '%s' from .copy lastError=%u\n", path, GetLastError());
+            LogLastError();
+        }
+    }
+}
+
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
     logf("ExtractFiles(): dir '%s' filesCount=%d\n", destDir, archive->filesCount);
     lzma::FileInfo* fi;
@@ -790,22 +824,94 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
     return true;
 }
 
+// Copy the running installer to installDir\SumatraPDF.exe. Retries and uses
+// temp+rename like WriteInstallerFileRobust: a single CopyFileW often fails
+// with ACCESS_DENIED (AV / Controlled Folder Access) or a sharing race after
+// TerminateProcess of the previous instance.
 static bool CopySelfToDir(Str destDir) {
     logf("CopySelfToDir(%s)\n", destDir);
     TempStr exePath = GetSelfExePathTemp();
     TempStr dstPath = path::JoinTemp(destDir, kExeName);
-    bool failIfExists = false;
-    bool ok = file::Copy(dstPath, exePath, failIfExists);
-    // strip zone identifier (if exists) to avoid windows
-    // complaining when launching the file
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
-    file::DeleteZoneIdentifier(dstPath);
-    if (!ok) {
-        logf("  failed to copy '%s' to dir '%s'\n", exePath, destDir);
-        return false;
+    TempStr tmpPath = str::JoinTemp(dstPath, ".tmp");
+    DWORD lastErr = 0;
+
+    auto tryDirectCopy = [&]() -> bool {
+        ClearReadOnly(dstPath);
+        BOOL ok = CopyFileW(CWStrTemp(exePath), CWStrTemp(dstPath), FALSE);
+        if (!ok) {
+            lastErr = GetLastError();
+            logf("  CopyFileW('%s' -> '%s') failed lastError=%u\n", exePath, dstPath, lastErr);
+            LogLastError(lastErr);
+            return false;
+        }
+        return true;
+    };
+
+    auto tryTempCopyRename = [&]() -> bool {
+        ClearReadOnly(tmpPath);
+        file::Delete(tmpPath);
+        BOOL ok = CopyFileW(CWStrTemp(exePath), CWStrTemp(tmpPath), FALSE);
+        if (!ok) {
+            lastErr = GetLastError();
+            logf("  CopyFileW('%s' -> '%s') failed lastError=%u\n", exePath, tmpPath, lastErr);
+            LogLastError(lastErr);
+            return false;
+        }
+        ClearReadOnly(dstPath);
+        if (!MoveFileExW(CWStrTemp(tmpPath), CWStrTemp(dstPath), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+            lastErr = GetLastError();
+            logf("  MoveFileExW('%s' -> '%s') failed lastError=%u\n", tmpPath, dstPath, lastErr);
+            LogLastError(lastErr);
+            file::Delete(tmpPath);
+            return false;
+        }
+        return true;
+    };
+
+    for (int attempt = 1; attempt <= 4; attempt++) {
+        logf("  attempt %d/4\n", attempt);
+        if (tryDirectCopy() || tryTempCopyRename()) {
+            // strip zone identifier (if exists) to avoid windows
+            // complaining when launching the file
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
+            file::DeleteZoneIdentifier(dstPath);
+            logf("  copied '%s' to '%s'\n", exePath, dstPath);
+            return true;
+        }
+        int killed = KillProcessesWithModule(dstPath, true);
+        logf("  KillProcessesWithModule('%s') killed=%d\n", dstPath, killed);
+        if (file::Exists(dstPath)) {
+            ClearReadOnly(dstPath);
+            bool delOk = file::Delete(dstPath);
+            logf("  Delete('%s') => %d\n", dstPath, (int)delOk);
+            if (!delOk) {
+                LogLastError();
+            }
+        }
+        file::Delete(tmpPath);
+        if (attempt < 4) {
+            DWORD sleepMs = 300u * (DWORD)attempt;
+            logf("  sleep %u ms before retry\n", sleepMs);
+            Sleep(sleepMs);
+        }
     }
-    logf("  copied '%s' to dir '%s'\n", exePath, destDir);
-    return true;
+
+    logf("  failed to copy '%s' to '%s' lastError=%u\n", exePath, dstPath, lastErr);
+    if (lastErr == ERROR_ACCESS_DENIED) {
+        NotifyFailed(
+            _TRA("Couldn't copy SumatraPDF.exe to the installation directory (access denied). "
+                 "Temporarily disable antivirus or Controlled Folder Access for this folder, "
+                 "run the installer as administrator, or choose a different install folder. "
+                 "See https://www.sumatrapdfreader.org/docs/Installation"));
+    } else if (lastErr == ERROR_SHARING_VIOLATION || lastErr == ERROR_LOCK_VIOLATION) {
+        NotifyFailed(
+            _TRA("Couldn't copy SumatraPDF.exe to the installation directory (file in use). "
+                 "Close all SumatraPDF windows and Explorer PDF previews, then try again. "
+                 "See https://www.sumatrapdfreader.org/docs/Installation"));
+    } else {
+        NotifyFailed(_TRA("Couldn't copy SumatraPDF.exe to the installation directory"));
+    }
+    return false;
 }
 
 static void CopySettingsFile() {
@@ -1897,22 +2003,31 @@ bool ExtractInstallerFiles(Str dir) {
     bool silent = gCliNew.silent || (gCli && gCli->silent);
     if (!PrepareInstallDirByRenaming(dir, silent)) {
         log("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n");
+        // Some files may already be *.copy; put them back before aborting.
+        RestoreInstallCopyFiles(dir);
         return false;
     }
 
     ok = CopySelfToDir(dir);
     if (!ok) {
-        NotifyFailed(_TRA("Couldn't copy SumatraPDF.exe to the installation directory"));
+        // NotifyFailed already called inside CopySelfToDir with a specific reason.
+        RestoreInstallCopyFiles(dir);
         return false;
     }
     ProgressStep();
 
     ok = OpenEmbeddedFilesArchive();
     if (!ok) {
+        RestoreInstallCopyFiles(dir);
         return false;
     }
     // on error, ExtractFiles() shows error message itself
-    return ExtractInstallerFiles(&gArchive, dir);
+    ok = ExtractInstallerFiles(&gArchive, dir);
+    if (!ok) {
+        RestoreInstallCopyFiles(dir);
+        return false;
+    }
+    return true;
 }
 
 static bool ShouldInstallMismatchedArch(HWND hwndParent) {
