@@ -16,7 +16,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, runStandalone } from "./util.ts";
+import { extractPageText, runStandalone } from "./util.ts";
 
 const PDF = join(import.meta.dir, "issue-5871.pdf");
 
@@ -36,29 +36,13 @@ const BAD = [
   "WirelessNetworkingStandardsandRegulations",
 ];
 
-function extractWithMupdf(pdf: string): string {
-  const psCmd = `& '${EXE}' -for-testing -extract-text -1 '${pdf}' 2>&1 | Out-String -Width 100000`;
-  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
-  const raw = p.stdout.toString();
-  let all = "";
-  for (const m of raw.matchAll(/text on page \d+: '([0-9a-f ]*)'/g)) {
-    const hex = m[1].trim();
-    if (!hex) {
-      continue;
-    }
-    const bytes = hex.split(/\s+/).map((h) => parseInt(h, 16));
-    all += Buffer.from(bytes).toString("utf8");
-  }
-  return all.split("_").join("\n");
-}
-
 export async function testit(): Promise<void> {
   if (!existsSync(PDF)) {
     console.log(`SKIP issue-5871: fixture not found: ${PDF}`);
     return;
   }
 
-  const text = extractWithMupdf(PDF);
+  const text = extractPageText(PDF);
   console.log(`extracted ${text.length} chars`);
 
   for (const bad of BAD) {

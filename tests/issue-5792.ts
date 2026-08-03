@@ -16,29 +16,11 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone } from "./util.ts";
+import { cmdId, EXE, extractPageText, runStandalone } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { launchSumatra, sendCommand, waitForFrame } from "./win-automation.ts";
 
 const FB2 = join(import.meta.dir, "issue-5792.fb2");
-
-function extractPage(page: number, file: string): string {
-  const p = Bun.spawnSync([EXE, "-for-testing", "-extract-text", String(page), file], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const raw = p.stdout.toString() + p.stderr.toString();
-  let all = "";
-  for (const m of raw.matchAll(/text on page \d+: '([0-9a-f ]*)'/g)) {
-    const hex = m[1].trim();
-    if (!hex) {
-      continue;
-    }
-    const bytes = hex.split(/\s+/).map((h) => parseInt(h, 16));
-    all += Buffer.from(bytes).toString("utf8");
-  }
-  return all.split("_").join("\n");
-}
 
 function assertSoftJoinedParagraphs(text: string, label: string): void {
   if (!text.includes("Alpha paragraph") || !text.includes("Bravo paragraph")) {
@@ -111,7 +93,7 @@ export async function testit(): Promise<void> {
     throw new Error(`exe missing: ${EXE}`);
   }
 
-  const text = extractPage(1, FB2);
+  const text = extractPageText(FB2, 1);
   console.log(`page 1 extract len=${text.length} newlines=${(text.match(/\n/g) || []).length}`);
   if (!text) {
     throw new Error("#5792: empty extract for fixture FB2");
@@ -125,7 +107,12 @@ export async function testit(): Promise<void> {
   assertSoftJoinedParagraphs(text, "extract-text");
 
   // #5792 sanity: short sample is one page — page 2 must be empty / fail extract
-  const page2 = extractPage(2, FB2);
+  let page2 = "";
+  try {
+    page2 = extractPageText(FB2, 2);
+  } catch {
+    // no "text on page 2" is fine for a one-page fixture
+  }
   if (page2.includes("Alpha paragraph")) {
     throw new Error("#5792: body repeated on page 2 (unexpected giant-font pagination?)");
   }

@@ -10,6 +10,37 @@ import { join } from "node:path";
 export const ROOT = join(import.meta.dir, "..");
 export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 
+// Extract page text via the debug -extract-text harness (hex-encoded UTF-8).
+// The GUI exe's stdout often does not reach a Bun pipe on Windows; PowerShell
+// (a console app) relays it. pageNo -1 means all pages (same as the flag).
+// Newlines in the harness are encoded as '_' (0x5f); those become real '\n'.
+// Throws if no "text on page" line appears (missing DEBUG build, bad path, …).
+export function extractPageText(file: string, pageNo: number = -1): string {
+  const psCmd =
+    `& '${EXE}' -for-testing -extract-text ${pageNo} '${file}' 2>&1 | Out-String -Width 100000`;
+  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
+  const raw = p.stdout.toString() + p.stderr.toString();
+  let all = "";
+  let nPages = 0;
+  for (const m of raw.matchAll(/text on page \d+: '([0-9a-f ]*)'/g)) {
+    nPages++;
+    const hex = m[1].trim();
+    if (!hex) {
+      continue;
+    }
+    const bytes = hex.split(/\s+/).map((h) => parseInt(h, 16));
+    all += Buffer.from(bytes).toString("utf8");
+  }
+  if (nPages === 0) {
+    throw new Error(
+      `extractPageText: no text from ${file} (debug build? -extract-text is DEBUG-only). ` +
+        `out=${raw.slice(0, 400).replace(/\s+/g, " ")}`,
+    );
+  }
+  // '_' is the harness's stand-in for newline
+  return all.split("_").join("\n");
+}
+
 // Command ids (sent with WM_COMMAND) live in src/Commands.h, but they're
 // generated and renumber whenever a command is added or removed -- so tests must
 // never hardcode the integer. Look it up by name at runtime instead, so a test

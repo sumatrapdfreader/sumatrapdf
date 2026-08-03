@@ -13,7 +13,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, runStandalone } from "./util.ts";
+import { extractPageText, runStandalone } from "./util.ts";
 
 const PDF = join(import.meta.dir, "issue-5873.pdf");
 // ПРЕДИСЛОВИЕ
@@ -23,29 +23,13 @@ const TARGET_WORD = "\u041D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u043
 // mojibake of the title if the bug is back (Latin-1 reading of CP1251 bytes)
 const MOJIBAKE_TITLE = "\u00CF\u00D0\u00C5\u00C4\u00C8\u00D1\u00CB\u00CE\u00C2\u00C8\u00C5";
 
-function extractWithMupdf(pdf: string): string {
-  const psCmd = `& '${EXE}' -for-testing -extract-text -1 '${pdf}' 2>&1 | Out-String -Width 100000`;
-  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
-  const raw = p.stdout.toString();
-  let all = "";
-  for (const m of raw.matchAll(/text on page \d+: '([0-9a-f ]*)'/g)) {
-    const hex = m[1].trim();
-    if (!hex) {
-      continue;
-    }
-    const bytes = hex.split(/\s+/).map((h) => parseInt(h, 16));
-    all += Buffer.from(bytes).toString("utf8");
-  }
-  return all.split("_").join("\n");
-}
-
 export async function testit(): Promise<void> {
   if (!existsSync(PDF)) {
     console.log(`SKIP issue-5873: fixture not found: ${PDF}`);
     return;
   }
 
-  const text = extractWithMupdf(PDF);
+  const text = extractPageText(PDF);
   console.log(`extracted ${text.length} chars`);
 
   if (text.includes(MOJIBAKE_TITLE)) {
