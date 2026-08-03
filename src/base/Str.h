@@ -121,7 +121,7 @@ bool SkipChar(Str& s, char toSkip);
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 
-WStr CastToWCHAR(Str s);
+WStr CastStrToWStr(Str s);
 } // namespace str
 
 void SplitStrByWhitespace(Arena* arena, const Str& s, VecStr& vecOut);

@@ -143,17 +143,17 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
         return str::DupTemp(s);
     }
     if (str::TrimPrefix(s, UTF16_BOM)) {
-        WStr ws = str::CastToWCHAR(s);
+        WStr ws = str::CastStrToWStr(s);
         return ToUtf8Temp(ws);
     }
     if (str::TrimPrefix(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
-        int n = str::CastToWCHAR(s).len;
+        int n = str::CastStrToWStr(s).len;
         for (int i = 0; i < n; i++) {
             int idx = i * 2;
             std::swap(s.s[idx], s.s[idx + 1]);
         }
-        WStr ws = str::CastToWCHAR(s);
+        WStr ws = str::CastStrToWStr(s);
         return ToUtf8Temp(ws);
     }
     uint codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;

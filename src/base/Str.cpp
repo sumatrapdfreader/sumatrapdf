@@ -1941,7 +1941,7 @@ namespace str {
 
 // Reinterpret a UTF-16 byte buffer held in a Str as a WStr without a
 // char*→WCHAR* cast (CodeQL cpp/incorrect-string-type-conversion).
-WStr CastToWCHAR(Str s) {
+WStr CastStrToWStr(Str s) {
     if (!s) {
         return {};
     }
