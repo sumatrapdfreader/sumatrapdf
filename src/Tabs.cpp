@@ -125,13 +125,18 @@ void UpdateTabWidth(MainWindow* win) {
     if (win->tabsCtrl) {
         HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
         win->tabsCtrl->tabDefaultDx = DpiScale(hwnd, gGlobalPrefs->tabWidth);
-        win->tabsCtrl->LayoutTabs();
     }
+    // Lay out only when the bar stays visible. Hiding it right after
+    // TabCtrl_SetItemSize invalidated the control leaves a pending WM_PAINT for
+    // a window we're about to hide (issue #5861). It's laid out when shown again.
     if (!showTabs) {
         ShowTabBar(win, false);
         return;
     }
     ShowTabBar(win, true);
+    if (win->tabsCtrl) {
+        win->tabsCtrl->LayoutTabs();
+    }
 }
 
 void RemoveTab(WindowTab* tab) {

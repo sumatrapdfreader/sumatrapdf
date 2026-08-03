@@ -5872,10 +5872,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             int captionHeight = tabHeight + 2;
             if (showingMenuBar) {
                 int menuBarDy = GetMenuBarRebarHeight(win);
-                // check if there are actual file tabs to show
+                // check if there are actual file tabs to show. IsNonDocumentTab,
+                // not IsAboutTab: Favorites alone must not reserve a tab row
+                // either, or this disagrees with UpdateTabWidth and the two take
+                // turns showing and hiding the bar (issue #5861)
                 bool hasFileTabs = false;
                 for (WindowTab* tab : win->Tabs()) {
-                    if (!tab->IsAboutTab()) {
+                    if (!tab->IsNonDocumentTab()) {
                         hasFileTabs = true;
                         break;
                     }
@@ -10471,10 +10474,13 @@ void RelayoutCaption(MainWindow* win) {
             }
         }
 
-        // check if there are actual file tabs to show
+        // check if there are actual file tabs to show. IsNonDocumentTab, not
+        // IsAboutTab: Favorites alone must not keep the tab row open either, or
+        // this disagrees with UpdateTabWidth and the two take turns showing and
+        // hiding the bar (issue #5861)
         bool hasFileTabs = false;
         for (WindowTab* tab : win->Tabs()) {
-            if (!tab->IsAboutTab()) {
+            if (!tab->IsNonDocumentTab()) {
                 hasFileTabs = true;
                 break;
             }
