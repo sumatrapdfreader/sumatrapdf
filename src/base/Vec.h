@@ -22,19 +22,19 @@ class Vec {
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
     static constexpr int kPadding = 1;
-    // byte size of a single element; kept size_t because it's used in
+    // byte size of a single element; kept int because it's used in
     // allocation-size arithmetic that must not overflow
-    static constexpr size_t kElSize = sizeof(T);
+    static constexpr int kElSize = (int)sizeof(T);
 
   private:
-    NO_INLINE bool EnsureCapSlow(int needed, size_t elSize) {
+    NO_INLINE bool EnsureCapSlow(int needed, int elSize) {
         int newCap = cap * 2;
         if (needed > newCap) {
             newCap = needed;
         }
 
-        size_t newElCount = (size_t)newCap + kPadding;
-        if (newElCount >= SIZE_MAX / elSize) {
+        int newElCount = newCap + kPadding;
+        if (newElCount >= (INT_MAX / elSize)) {
             return false;
         }
         if (newElCount > INT_MAX) {
@@ -42,9 +42,9 @@ class Vec {
             return false;
         }
 
-        size_t oldSize = (size_t)len * elSize;
-        size_t allocSize = newElCount * elSize;
-        size_t newPadding = allocSize - oldSize;
+        int oldSize = len * elSize;
+        int allocSize = newElCount * elSize;
+        int newPadding = allocSize - oldSize;
         T* newEls;
         if (buf == els) {
             newEls = (T*)MemDup(a, buf, oldSize, newPadding);
@@ -199,7 +199,7 @@ class Vec {
         if (!dst) {
             return false;
         }
-        memcpy(dst, src, (size_t)count * kElSize);
+        memcpy(dst, src, (size_t)(count * kElSize));
         return true;
     }
 
@@ -216,10 +216,10 @@ class Vec {
         if (len > idx + count) {
             T* dst = els + idx;
             T* src = els + idx + count;
-            memmove(dst, src, (size_t)(len - idx - count) * kElSize);
+            memmove(dst, src, (size_t)((len - idx - count) * kElSize));
         }
         len -= count;
-        memset(els + len, 0, (size_t)count * kElSize);
+        memset(els + len, 0, ((size_t)count * kElSize));
     }
 
     void RemoveLast() {
