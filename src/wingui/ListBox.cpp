@@ -147,14 +147,28 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     if (msg == WM_PAINT) {
         // default paints items; then dotted focus ring around the control
         LRESULT res = WndProcDefault(hwnd, msg, wparam, lparam);
-        if (::GetFocus() == hwnd) {
-            HDC hdc = GetDC(hwnd);
-            if (hdc) {
-                RECT rc{};
-                GetClientRect(hwnd, &rc);
+        HDC hdc = GetDC(hwnd);
+        if (hdc) {
+            RECT rc{};
+            GetClientRect(hwnd, &rc);
+            // Owner-draw items are inset by 1px so they do not cover the ring.
+            // DrawFocusRect is XOR: if the 1px border still holds a previous
+            // ring (not erased by item paint), the next draw toggles it off —
+            // which made the ring appear only every other focus. Clear the
+            // border to the list background first, then draw if focused.
+            HBRUSH br = BackgroundBrush();
+            RECT edge = {rc.left, rc.top, rc.right, rc.top + 1};
+            FillRect(hdc, &edge, br);
+            edge = {rc.left, rc.bottom - 1, rc.right, rc.bottom};
+            FillRect(hdc, &edge, br);
+            edge = {rc.left, rc.top, rc.left + 1, rc.bottom};
+            FillRect(hdc, &edge, br);
+            edge = {rc.right - 1, rc.top, rc.right, rc.bottom};
+            FillRect(hdc, &edge, br);
+            if (::GetFocus() == hwnd) {
                 DrawFocusRect(hdc, &rc);
-                ReleaseDC(hwnd, hdc);
             }
+            ReleaseDC(hwnd, hdc);
         }
         return res;
     }

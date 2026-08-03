@@ -117,6 +117,27 @@ static void ScheduleDeleteNavFilesWnd() {
     uitask::Post(fn, "SafeDeleteNavFilesWnd");
 }
 
+// Alt-Tab / activation finishes setting focus after WM_ACTIVATE, so set list
+// focus after the message queue drains (and only while this window is still active).
+static void FocusNavListBox() {
+    NavFilesInFolderWnd* wnd = gNavFilesWnd;
+    if (!wnd || !wnd->hwnd || !IsWindow(wnd->hwnd) || !wnd->listBox || !wnd->listBox->hwnd) {
+        return;
+    }
+    if (GetForegroundWindow() != wnd->hwnd) {
+        return;
+    }
+    HwndSetFocus(wnd->listBox->hwnd);
+}
+
+static void ScheduleFocusNavListBox() {
+    if (!gNavFilesWnd) {
+        return;
+    }
+    auto fn = MkFunc0Void(FocusNavListBox);
+    uitask::Post(fn, "FocusNavListBox");
+}
+
 // skip GuessFileTypeFromName()'s IsDirectory() probe: name is relative to the
 // listed dir, and callers already skipped directories.
 static bool CanOpenFile(Str path) {
@@ -363,11 +384,19 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
 
 LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_ACTIVATE) {
-        // Alt-Tab / click back into this window: put keyboard focus on the list
-        if (LOWORD(wp) != WA_INACTIVE && listBox && listBox->hwnd) {
-            HwndSetFocus(listBox->hwnd);
+        LRESULT res = WndProcDefault(hwndIn, msg, wp, lp);
+        // defer: Windows assigns focus after WM_ACTIVATE during Alt-Tab
+        if (LOWORD(wp) != WA_INACTIVE) {
+            ScheduleFocusNavListBox();
         }
-        return WndProcDefault(hwndIn, msg, wp, lp);
+        return res;
+    }
+    // top-level received focus (e.g. Alt-Tab); steer it to the list
+    if (msg == WM_SETFOCUS) {
+        if (listBox && listBox->hwnd) {
+            HwndSetFocus(listBox->hwnd);
+            return 0;
+        }
     }
     // Esc when this window (not a child) has focus
     if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
