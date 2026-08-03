@@ -262,8 +262,14 @@ inline int len(const Vec<T>& v) {
     return v.len;
 }
 
+// cmp is non-deduced (via nested type) so lambdas convert after T is known from v.
 template <typename T>
-void VecSort(Vec<T>& v, int (*cmpFunc)(const T* a, const T* b)) {
+struct VecSortCmp {
+    using Fn = int (*)(const T* a, const T* b);
+};
+
+template <typename T>
+void VecSort(Vec<T>& v, typename VecSortCmp<T>::Fn cmpFunc) {
     if (v.len > 0) {
         auto cmp = (int (*)(const void* a, const void* b))cmpFunc;
         qsort(v.els, v.len, sizeof(T), cmp);
