@@ -27,13 +27,20 @@ EBookUI [
 
 Full field reference: [Advanced options / settings](Advanced-options-settings.md).
 
-## Themes and invert colors
+## Themes and document page colors
 
-UI themes (`Theme = ...` in advanced settings) change window chrome. To change how the **document** looks:
+UI themes (`Theme = ...`) only change window chrome. Ebooks that go through MuPDF’s fixed-page color path use the same **`DocumentColorsFollowTheme`** setting as PDF:
 
-- **`Shift + I`** (`CmdInvertColors`) toggles the `DocumentColorsFollowTheme` advanced setting between `off` and `smart` for MuPDF-rendered documents (PDF-style and ebook pages through the shared color path). `smart` recolors text and background but preserves images; `legacy` recolors images too (pre-3.7 behavior).
+| Value | Effect |
+| --- | --- |
+| **`off`** | Original page colors. |
+| **`smart`** | Dark (or custom) text and background; **images stay intact**. |
+| **`legacy`** | Recolor text, background, **and** images (pre-3.7 invert-style). |
 
-For dark reading without crushing photos, experiment with `CustomCSS` (dark background, light text) and `IgnoreDocumentCSS = true` instead of global invert. See [Customize theme colors](Customize-theme-colors.md).
+- **`Shift + I`** toggles **`off` ↔ `smart`**.
+- For **`legacy`**, use Settings → Theme… / Make Document Colors Follow Theme, or set `DocumentColorsFollowTheme = legacy` in advanced settings.
+
+For dark reading of reflowed EPUBs without recoloring the whole page, you can also use `EBookUI.CustomCSS` + `IgnoreDocumentCSS = true` and `WindowBgCol`. See [Customize theme colors](Customize-theme-colors.md).
 
 ## Continuous vs paged view
 

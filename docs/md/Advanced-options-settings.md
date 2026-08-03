@@ -223,7 +223,14 @@ LastLightTheme =
 ; (introduced in version 3.7)
 LastDarkTheme = 
 
-; Valid values: off, smart, legacy (introduced in version 3.7)
+; how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images,
+; etc.) use UI / FixedPageUI colors for the page. Values: off (document's own
+; colors; default); smart (recolor text and page background, keep photos/images
+; as-is — best for dark reading); legacy (also recolor images; pre-3.7
+; invert-style). Does not change menus/toolbars — use Theme for UI chrome.
+; Shift+I toggles off and smart. Also Settings / Theme and
+; CmdSetDocumentColorsFollowTheme for all three values (introduced in version
+; 3.7)
 DocumentColorsFollowTheme = off
 
 ; if both favorites and bookmarks parts of sidebar are visible, this is the

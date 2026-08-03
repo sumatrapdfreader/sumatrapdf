@@ -657,10 +657,14 @@ struct GlobalPrefs {
     Str lastLightTheme;
     // the dark theme the light/dark toggle and the System theme switch to
     Str lastDarkTheme;
-    // how fixed-page documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, HTML,
-    // etc.) follow the UI theme: off (keep original page colors), smart
-    // (recolor text and background but not images), or legacy (recolor
-    // text and background and images, pre-3.7 behavior)
+    // how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ,
+    // images, etc.) use UI / FixedPageUI colors for the page. Values: off
+    // (document's own colors; default); smart (recolor text and page
+    // background, keep photos/images as-is — best for dark reading);
+    // legacy (also recolor images; pre-3.7 invert-style). Does not change
+    // menus/toolbars — use Theme for UI chrome. Shift+I toggles off and
+    // smart. Also Settings / Theme and CmdSetDocumentColorsFollowTheme for
+    // all three values
     Str documentColorsFollowTheme;
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
@@ -1514,8 +1518,12 @@ static const StructInfo gGlobalPrefsInfo = {
     "mode\0maximum width of a single tab\0Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized "
     "Light, Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin "
     "Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System\0the light theme the light/dark toggle and the "
-    "System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0Valid values: off, "
-    "smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this is the height of bookmarks "
+    "System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0how MuPDF-rendered "
+    "documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI colors for the page. Values: "
+    "off (document's own colors; default); smart (recolor text and page background, keep photos/images as-is — best "
+    "for dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme "
+    "for UI chrome. Shift+I toggles off and smart. Also Settings / Theme and CmdSetDocumentColorsFollowTheme for all "
+    "three values\0if both favorites and bookmarks parts of sidebar are visible, this is the height of bookmarks "
     "(table of contents) part\0height of toolbar\0font name for bookmarks and favorites tree views. automatic means "
     "Windows default\0font size for bookmarks and favorites tree views. 0 means Windows default\0over-ride application "
     "font size. 0 means Windows default\0if true, disables anti-aliasing for rendering PDF documents\0CAD/engineering "

@@ -858,14 +858,19 @@ const globalPrefs: Field[] = [
   field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to")
     .internal()
     .ver("3.7"),
+  // Full text is shown in Advanced Settings and Advanced-options-settings.md
+  // (do not use a short .doc() here — that would replace this description).
   field(
     "DocumentColorsFollowTheme",
     Str,
     "off",
-    "how fixed-page documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, HTML, etc.) follow the UI theme: off (keep original page colors), smart (recolor text and background but not images), or legacy (recolor text and background and images, pre-3.7 behavior)",
-  )
-    .ver("3.7")
-    .doc("Valid values: off, smart, legacy"),
+    "how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) " +
+      "use UI / FixedPageUI colors for the page. Values: off (document's own colors; default); " +
+      "smart (recolor text and page background, keep photos/images as-is — best for dark reading); " +
+      "legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme " +
+      "for UI chrome. Shift+I toggles off and smart. Also Settings / Theme and " +
+      "CmdSetDocumentColorsFollowTheme for all three values",
+  ).ver("3.7"),
   field(
     "TocDy",
     Int,
