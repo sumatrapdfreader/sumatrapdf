@@ -3067,7 +3067,7 @@ static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,    IDC_HAND,     IDC_SI
 static HCURSOR cachedCursors[dimof(knownCursorIds)]{};
 
 static int GetCursorIndex(LPWSTR cursorId) {
-    int n = (int)dimof(knownCursorIds);
+    int n = dimofi(knownCursorIds);
     for (int i = 0; i < n; i++) {
         if (cursorId == knownCursorIds[i]) {
             return i;

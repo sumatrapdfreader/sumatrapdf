@@ -1482,7 +1482,7 @@ static FileType imageEngineTypes[] = {
 
 bool IsEngineImageSupportedFileType(FileType kind) {
     // logf("IsEngineImageSupportedFileType(%s)\n", kind);
-    int n = (int)dimof(imageEngineTypes);
+    int n = dimofi(imageEngineTypes);
     return FileTypeIndexOf(imageEngineTypes, n, kind) >= 0;
 }
 

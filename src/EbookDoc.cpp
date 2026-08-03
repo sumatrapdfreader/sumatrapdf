@@ -1601,7 +1601,7 @@ static TempStr DecompressTcrTextTemp(Str data) {
     Str end = Str(data.s + data.len, 0);
 
     Str dict[256];
-    for (int n = 0; n < (int)dimof(dict); n++) {
+    for (int n = 0; n < dimofi(dict); n++) {
         if (!curr.len) {
             return str::DupTemp(data);
         }

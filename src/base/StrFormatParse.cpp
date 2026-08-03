@@ -343,7 +343,7 @@ static void bufFmt(Str buf, const char* fmt, ...) {
 // default formatting for {n} positional and %v: format by the arg's runtime type
 static void evalDefault(Fmt& fmt, const FmtArg& arg) {
     TempStr s;
-    Str buf(fmt.buf, (int)dimof(fmt.buf));
+    Str buf(fmt.buf, dimofi(fmt.buf));
     switch (arg.t) {
         case FmtArg::Kind::Char:
             fmt.res.AppendChar(arg.c);
@@ -397,7 +397,7 @@ static i64 argToI64(const FmtArg& arg) {
 // avoid relying on the Str being NUL-terminated.
 static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
     char* buf = fmt.buf;
-    Str bufS(fmt.buf, (int)dimof(fmt.buf));
+    Str bufS(fmt.buf, dimofi(fmt.buf));
 
     if (inst.conv == 's' || inst.conv == 'S') {
         Str sv = (arg.t == FmtArg::Kind::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
@@ -427,7 +427,7 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
     char fbuf[64];
     int k = 0;
     fbuf[k++] = '%';
-    for (int j = 0; j < inst.fwpLen && k < (int)dimof(fbuf) - 5; j++) {
+    for (int j = 0; j < inst.fwpLen && k < dimofi(fbuf) - 5; j++) {
         fbuf[k++] = fmt.format.s[inst.fwpOff + j];
     }
     char conv = inst.conv;

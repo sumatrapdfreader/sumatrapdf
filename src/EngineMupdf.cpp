@@ -5176,7 +5176,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     Str key = SeqStrNumStrByNumber(mupdfPropsMap, (i64)prop);
     if (key) {
         char buf[1024]{};
-        int bufSize = (int)dimof(buf);
+        int bufSize = dimofi(buf);
         int n = fz_lookup_metadata(ctx, _doc, CStrTemp(key), buf, bufSize);
         if (n > 0) {
             if (n > bufSize) {
@@ -5268,12 +5268,12 @@ static SeqStrNum pdfPropNames =
 
 static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     char buf[1024]{};
-    int n = fz_lookup_metadata(ctx, doc, CStrTemp(key), buf, (int)dimof(buf));
+    int n = fz_lookup_metadata(ctx, doc, CStrTemp(key), buf, dimofi(buf));
     if (n <= 0) {
         return {};
     }
-    if (n > (int)dimof(buf)) {
-        n = (int)dimof(buf) - 1;
+    if (n > dimofi(buf)) {
+        n = dimofi(buf) - 1;
         buf[n] = 0;
     }
     return str::DupTemp(Str(buf, (int)((size_t)n - 1)));

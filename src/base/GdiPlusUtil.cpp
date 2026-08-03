@@ -223,7 +223,7 @@ void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
         return;
     }
     int iRot = exifOrientation - 2;
-    if (iRot < (int)dimof(rfts)) {
+    if (iRot < dimofi(rfts)) {
         bmp->RotateFlip(rfts[iRot]);
     }
 }

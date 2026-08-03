@@ -81,7 +81,7 @@ static AnnotationType gAnnotsIsColorBackground[] = {
 // clang-format on
 
 TempStr GetKnownColorNameTemp(PdfColor c) {
-    int n = (int)dimof(gColorsValues);
+    int n = dimofi(gColorsValues);
     for (int i = 0; i < n; i++) {
         if (c == gColorsValues[i]) {
             return SeqStrByIndex(gColors, i);
@@ -636,7 +636,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customCo
 static PdfColor GetDropDownColor(Str sv) {
     int idx = SeqStrIndex(gColors, sv);
     if (idx >= 0) {
-        int nMaxColors = (int)dimof(gColorsValues);
+        int nMaxColors = dimofi(gColorsValues);
         ReportIf(idx >= nMaxColors);
         if (idx < nMaxColors) {
             return gColorsValues[idx];

@@ -355,7 +355,7 @@ static void FindTextEditors() {
     }
     StrVec found;
     // all but last entry, which is notepad.exe
-    int n = (int)dimof(editorRules) - 1;
+    int n = dimofi(editorRules) - 1;
     for (int i = 0; i < n; i++) {
         auto& rule = editorRules[i];
         Str regKey = rule.regKey;
@@ -398,7 +398,7 @@ static void FindTextEditors() {
 // corresponding inverse search commands.
 void DetectTextEditors(Vec<TextEditor*>& res) {
     FindTextEditors();
-    int n = (int)dimof(editorRules);
+    int n = dimofi(editorRules);
     for (int i = 0; i < n; i++) {
         TextEditor* e = &editorRules[i];
         if (!e->openFileCmd) {

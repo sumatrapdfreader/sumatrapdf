@@ -389,7 +389,7 @@ static void WStrBuilderCapHint() {
     utassert(str.nReallocs == 1);
 
     WCHAR stack[16];
-    wstr::Builder str2(1024, nullptr, WStr(stack, (int)dimof(stack)));
+    wstr::Builder str2(1024, nullptr, WStr(stack, dimofi(stack)));
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {

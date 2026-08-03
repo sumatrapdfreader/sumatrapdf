@@ -2167,7 +2167,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
         StrVec items;
         int defaultDdIdx = 0;
         int wantFmtIdx = selectPdf ? kPdfFormatIdx : kDefaultFormatIdx;
-        for (int i = 0; i < (int)dimof(gImageFormats); i++) {
+        for (int i = 0; i < dimofi(gImageFormats); i++) {
             if (!gImageFormats[i].available) {
                 continue;
             }

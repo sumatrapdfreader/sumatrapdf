@@ -698,7 +698,7 @@ the latest version */
 void CreateSumatraAcceleratorTable() {
     ReportIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
 
-    int nMax = (int)dimof(gBuiltInAccelerators);
+    int nMax = dimofi(gBuiltInAccelerators);
     auto curr = gFirstCustomCommand;
     while (curr) {
         if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {

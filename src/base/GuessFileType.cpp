@@ -108,7 +108,7 @@ static FileType GetTypeByFileExt(Str path) {
     if (idx < 0) {
         return FileType::Unknown;
     }
-    int n = (int)dimof(gExtsType);
+    int n = dimofi(gExtsType);
     if (idx >= n) {
         return FileType::Unknown;
     }
@@ -366,7 +366,7 @@ static FileType DetectFileTypeFromData(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
     int dataLen = d.len;
-    int n = (int)dimof(gFileSigs);
+    int n = dimofi(gFileSigs);
 
     for (int i = 0; i < n; i++) {
         Str sig = gFileSigs[i].sig;
