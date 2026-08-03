@@ -47,17 +47,23 @@ constexpr int kNavFallbackMainDyMargin = 72;
 constexpr int kNavFallbackYOffset = 42; // top offset when centered over main
 
 struct NavFileEntry {
-    Str name; // owned; display name, "..\\" for the parent dir
+    Str name; // owned; leaf display name (dirs end with "\\"); ".." for parent
+    Str path; // owned; full path (empty for "..")
     bool isDir = false;
-    i64 size = 0; // file size, 0 for dirs
+    i64 size = 0; // file size; 0 for dirs / unknown
 };
+
+static void FreeNavEntry(NavFileEntry& e) {
+    str::Free(e.name);
+    str::Free(e.path);
+}
 
 struct ListBoxModelNav : ListBoxModel {
     Vec<NavFileEntry> entries;
 
     ~ListBoxModelNav() override {
         for (NavFileEntry& e : entries) {
-            str::Free(e.name);
+            FreeNavEntry(e);
         }
     }
     int ItemsCount() override { return len(entries); }
@@ -164,9 +170,19 @@ static void SortNavEntries(Vec<NavFileEntry>& entries, int firstIdx) {
     }
 }
 
+// leaf name for display: find-data names are usually basenames, but some network
+// providers put a relative or full path in cFileName — always show the leaf only.
+static TempStr NavLeafNameTemp(DirIterEntry* de) {
+    TempStr leaf = path::GetBaseNameTemp(de->name);
+    if (len(leaf) == 0) {
+        leaf = path::GetBaseNameTemp(de->filePath);
+    }
+    return leaf;
+}
+
 static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
     for (NavFileEntry& e : m->entries) {
-        str::Free(e.name);
+        FreeNavEntry(e);
     }
     m->entries.Reset();
 
@@ -188,16 +204,33 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
         if (attrs & FILE_ATTRIBUTE_HIDDEN) {
             continue;
         }
+        TempStr leaf = NavLeafNameTemp(de);
+        if (len(leaf) == 0) {
+            continue;
+        }
+        // own path/name before any further temp allocations
+        Str fullPath = str::Dup(de->filePath);
+
         NavFileEntry e;
+        e.path = fullPath;
         if (IsDirectory(de)) {
             e.isDir = true;
-            e.name = str::Join(de->name, StrL("\\"));
+            e.name = str::Join(leaf, StrL("\\"));
         } else {
-            if (!CanOpenFile(de->name)) {
+            if (!CanOpenFile(leaf)) {
+                str::Free(fullPath);
                 continue;
             }
-            e.name = str::Dup(de->name);
+            e.name = str::Dup(leaf);
             e.size = GetFileSize(de);
+            // FindFirstFile size is sometimes 0 on network/cloud providers even
+            // when the file has content; attributes are cached for network paths.
+            if (e.size == 0) {
+                WIN32_FILE_ATTRIBUTE_DATA fad{};
+                if (path::GetCachedAttributesEx(fullPath, &fad) && !(fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                    e.size = ((i64)fad.nFileSizeHigh << 32) | (i64)fad.nFileSizeLow;
+                }
+            }
         }
         m->entries.Append(e);
     }
@@ -205,10 +238,13 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
     SortNavEntries(m->entries, firstIdx);
 }
 
-// display name for entry i resolved to a full path in currDir
+// full path for entry e under currDir
 static TempStr NavEntryPathTemp(NavFilesInFolderWnd* wnd, NavFileEntry& e) {
     if (str::Eq(e.name, StrL(".."))) {
         return path::GetDirTemp(wnd->currDir);
+    }
+    if (e.path) {
+        return e.path;
     }
     Str name = e.name;
     if (e.isDir) {
@@ -459,11 +495,11 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     rc.x += padX;
     rc.dx -= 2 * padX;
 
-    // human readable file size on the right (files only)
+    // human readable file size on the right (files only; include 0-byte files)
     Rect rcText = rc;
     TempWStr rightW = nullptr;
     int rightDx = 0;
-    if (!e.isDir && e.size > 0) {
+    if (!e.isDir) {
         TempStr sizeStr = str::FormatSizeShortTemp(e.size);
         rightW = ToWStrTemp(sizeStr);
         rightDx = HdcGetTextExtentPoint32(hdc, sizeStr).dx;
