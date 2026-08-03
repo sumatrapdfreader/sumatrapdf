@@ -27,6 +27,7 @@ const user32 = dlopen("user32.dll", {
   ClientToScreen: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   GetWindowTextW: { args: [FFIType.ptr, FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
   GetWindowRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
+  IsWindowVisible: { args: [FFIType.ptr], returns: FFIType.bool },
   SetForegroundWindow: { args: [FFIType.ptr], returns: FFIType.bool },
   GetWindowDC: { args: [FFIType.ptr], returns: FFIType.u64 },
   ReleaseDC: { args: [FFIType.ptr, FFIType.u64], returns: FFIType.i32 },
@@ -487,6 +488,13 @@ export function getWindowRect(hwnd: number): Rect {
   const buf = new Int32Array(4);
   user32.symbols.GetWindowRect(hwnd, ptr(buf));
   return { left: buf[0], top: buf[1], right: buf[2], bottom: buf[3] };
+}
+
+// A hidden window keeps its last rect, so getWindowRect can't tell you whether a
+// control is actually on screen (e.g. layout code that collapses a control hides
+// it rather than resizing it to nothing). Ask the OS instead.
+export function isWindowVisible(hwnd: number): boolean {
+  return user32.symbols.IsWindowVisible(hwnd);
 }
 
 export function setForegroundWindow(hwnd: number): boolean {

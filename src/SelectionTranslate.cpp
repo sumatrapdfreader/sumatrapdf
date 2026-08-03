@@ -1132,6 +1132,41 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
     }
 
+    // The two text fields come first and the controls that act on them
+    // (engine, languages, buttons) follow, so the dialog reads top to bottom.
+    // flex so source/result edits absorb extra height when the window is resized
+    vbox->AddChild(editSrcText, 1);
+
+    {
+        Static::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.text = _TRA("Translation:");
+        args.isRtl = isRtl;
+        staticResultLabel = new Static();
+        staticResultLabel->Create(args);
+        staticResultLabel->SetVisibility(Visibility::Collapse);
+        staticResultLabel->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(staticResultLabel);
+    }
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.isMultiLine = true;
+        args.withBorder = true;
+        args.idealSizeLines = 6;
+        args.idealWidthChars = 40;
+        args.maxWidthChars = 120;
+        args.isRtl = isRtl;
+        editResult = new Edit();
+        editResult->Create(args);
+        SendMessageW(editResult->hwnd, EM_SETREADONLY, TRUE, 0);
+        editResult->SetVisibility(Visibility::Collapse);
+        editResult->SetInsetsPt(4, 0, 0, 0);
+        vbox->AddChild(editResult, 1);
+    }
+
     {
         auto* engineRow = new HBox();
         engineRow->alignMain = MainAxisAlign::MainStart;
@@ -1159,11 +1194,8 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             dropEngine->SetInsetsPt(0, 0, 0, 4);
             engineRow->AddChild(dropEngine, 1);
         }
-        vbox->AddChild(new Padding(engineRow, DpiScaledInsets(hwnd, 0, 0, 8, 0)));
+        vbox->AddChild(new Padding(engineRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
     }
-
-    // flex so source/result edits absorb extra height when the window is resized
-    vbox->AddChild(editSrcText, 1);
 
     {
         auto* langRow = new HBox();
@@ -1248,36 +1280,6 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             btnRow->AddChild(btnTranslate);
         }
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
-    }
-
-    {
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.text = _TRA("Translation:");
-        args.isRtl = isRtl;
-        staticResultLabel = new Static();
-        staticResultLabel->Create(args);
-        staticResultLabel->SetVisibility(Visibility::Collapse);
-        staticResultLabel->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(staticResultLabel);
-    }
-    {
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.isMultiLine = true;
-        args.withBorder = true;
-        args.idealSizeLines = 6;
-        args.idealWidthChars = 40;
-        args.maxWidthChars = 120;
-        args.isRtl = isRtl;
-        editResult = new Edit();
-        editResult->Create(args);
-        SendMessageW(editResult->hwnd, EM_SETREADONLY, TRUE, 0);
-        editResult->SetVisibility(Visibility::Collapse);
-        editResult->SetInsetsPt(4, 0, 0, 0);
-        vbox->AddChild(editResult, 1);
     }
 
     layout = new Padding(vbox, DpiScaledInsets(hwnd, 12, 12));
