@@ -28,7 +28,7 @@ void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWo
 
     // find all match ranges in text
     int textLen = text.len;
-    u8* hl = highlighted.EnsureCap(textLen);
+    u8* hl = VecReserve(highlighted, textLen);
     memset(hl, 0, textLen);
     for (int w = 0; w < nWords; w++) {
         Str word = filterWords[w];

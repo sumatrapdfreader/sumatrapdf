@@ -9,6 +9,18 @@
 Storage is heap (or arena) only; starts empty with no allocation.
 */
 template <typename T>
+struct Vec;
+
+// Ensure capacity is at least wantedSize for a vec-like {els,len,cap}.
+// Growth: max(cap*2, wantedSize). arena may be null (heap).
+template <typename T>
+bool VecReserve(Arena* arena, T& v, int wantedSize);
+
+// Heap Vec: same growth; returns v.els (nullptr on failure).
+template <typename T>
+inline T* VecReserve(Vec<T>& v, int capNeeded);
+
+template <typename T>
 struct Vec {
     int len = 0;
     int cap = 0;
@@ -19,25 +31,9 @@ struct Vec {
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
 
-    inline T* EnsureCap(int capNeeded) {
-        // this is frequent, fast path that should be inlined
-        if (cap >= capNeeded) {
-            return els;
-        }
-        // slow path: growth policy + untyped realloc (NO_INLINE VecRealloc)
-        int newCap = cap * 2;
-        if (capNeeded > newCap) {
-            newCap = capNeeded;
-        }
-        if (!VecRealloc(nullptr, (void**)&els, len, &cap, newCap, (int)sizeof(T))) {
-            return nullptr;
-        }
-        return els;
-    }
-
     T* MakeSpaceAt(int idx, int count) {
         int newLen = std::max(len, idx) + count;
-        T* ok = EnsureCap(newLen);
+        T* ok = VecReserve(*this, newLen);
         if (!ok) {
             return nullptr;
         }
@@ -79,7 +75,7 @@ struct Vec {
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
     Vec(const Vec& other) {
-        EnsureCap(other.len);
+        VecReserve(*this, other.len);
         len = other.len;
         // using memcpy, as Vec only supports POD types
         if (other.len > 0 && other.els && els) {
@@ -95,7 +91,7 @@ struct Vec {
         }
 
         Reset();
-        EnsureCap(other.len);
+        VecReserve(*this, other.len);
         // using memcpy, as Vec only supports POD types
         len = other.len;
         if (other.len > 0) {
@@ -291,6 +287,26 @@ inline int len(const Vec<T>& v) {
     return v.len;
 }
 
+template <typename T>
+bool VecReserve(Arena* arena, T& v, int wantedSize) {
+    if (wantedSize <= v.cap) {
+        return true;
+    }
+    int newCap = v.cap * 2;
+    if (wantedSize > newCap) {
+        newCap = wantedSize;
+    }
+    return VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
+}
+
+template <typename T>
+inline T* VecReserve(Vec<T>& v, int capNeeded) {
+    if (!VecReserve(nullptr, v, capNeeded)) {
+        return nullptr;
+    }
+    return v.els;
+}
+
 // Set logical length to newSize (std::vector::resize). Grows capacity if needed;
 // zeros unused capacity beyond the new length.
 template <typename T>
@@ -299,7 +315,7 @@ bool VecResize(Vec<T>& v, int newSize) {
         return false;
     }
     if (newSize > v.cap) {
-        if (!v.EnsureCap(newSize)) {
+        if (!VecReserve(v, newSize)) {
             return false;
         }
     }
@@ -319,23 +335,9 @@ inline void DeleteVecMembers(Vec<T>& v) {
     v.Clear();
 }
 
-// Grow a vec-like {els, len, cap} to hold at least wantedSize elements.
-// Growth policy: (max(cap*2, wantedSize)).
-template <typename T>
-bool VecExpandTo(Arena* arena, T& v, int wantedSize) {
-    if (wantedSize <= v.cap) {
-        return true;
-    }
-    int newCap = v.cap * 2;
-    if (wantedSize > newCap) {
-        newCap = wantedSize;
-    }
-    return VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
-}
-
 template <typename T>
 bool VecExpand(Arena* arena, T& v, int n) {
-    return VecExpandTo(arena, v, v.len + n);
+    return VecReserve(arena, v, v.len + n);
 }
 
 template <typename T, typename E>
