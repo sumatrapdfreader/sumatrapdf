@@ -782,14 +782,16 @@ int setMinMax(int& v, int minVal, int maxVal);
 extern AtomicInt gAllowAllocFailure;
 
 #include "base/Geom.h"
+// Thread (Mutex) then Arena before Vec: Vec templates call Alloc/Free/Realloc;
+// GCC two-phase lookup needs those names declared at the template definition site.
+#include "base/Thread.h"
+#include "base/Arena.h"
 #include "base/Vec.h"
 #include "base/Str.h"
 #include "base/StrUtf8.h"
 #include "base/StrFormatParse.h"
 #include "base/StrVec.h"
 #include "base/Strconv.h"
-#include "base/Thread.h"
-#include "base/Arena.h"
 #include "base/Scoped.h"
 #include "base/Color.h"
 
