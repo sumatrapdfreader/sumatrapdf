@@ -261,6 +261,9 @@ struct Tooltip : Wnd {
     void Delete(int id = 0);
 
     int SetSingle(Str s, const Rect& rc, bool multiline);
+    // Track-mode tip at an absolute screen position (e.g. keyboard nav), not the cursor.
+    // If maxRightScreen > 0, shifts left so the bubble stays left of that x.
+    int SetSingleAt(Str s, const Rect& rc, Point screenPos, bool multiline, int maxRightScreen = 0);
 
     int Count();
 

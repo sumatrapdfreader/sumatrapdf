@@ -451,6 +451,14 @@ void MainWindow::ShowToolTip(Str text, Rect& rc, bool multiline) const {
     infotip->SetSingle(text, rc, multiline);
 }
 
+void MainWindow::ShowToolTipAt(Str text, const Rect& rc, Point screenPos, bool multiline, int maxRightScreen) const {
+    if (len(text) == 0) {
+        DeleteToolTip();
+        return;
+    }
+    infotip->SetSingleAt(text, rc, screenPos, multiline, maxRightScreen);
+}
+
 void MainWindow::DeleteToolTip() const {
     infotip->Delete();
 }

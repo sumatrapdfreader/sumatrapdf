@@ -140,6 +140,19 @@ static void TooltipTrackDeactivate(HWND hwndTT, HWND owner, int id) {
     SendMessageW(hwndTT, TTM_TRACKACTIVATE, FALSE, (LPARAM)&ti);
 }
 
+static void TooltipTrackActivateAtScreen(HWND hwndTT, HWND owner, int id, int screenX, int screenY) {
+    if (!hwndTT || !owner || id == 0) {
+        return;
+    }
+    SendMessageW(hwndTT, TTM_TRACKPOSITION, 0, MAKELPARAM(screenX, screenY));
+    TOOLINFOW ti = {};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.uFlags = kTrackToolFlags;
+    SendMessageW(hwndTT, TTM_TRACKACTIVATE, TRUE, (LPARAM)&ti);
+}
+
 static void TooltipTrackActivateAtCursor(HWND hwndTT, HWND owner, int id) {
     if (!hwndTT || !owner || id == 0) {
         return;
@@ -149,13 +162,21 @@ static void TooltipTrackActivateAtCursor(HWND hwndTT, HWND owner, int id) {
         return;
     }
     // Slight offset so the tip is not under the cursor hot-spot.
-    SendMessageW(hwndTT, TTM_TRACKPOSITION, 0, MAKELPARAM(pt.x + 12, pt.y + 18));
+    TooltipTrackActivateAtScreen(hwndTT, owner, id, pt.x + 12, pt.y + 18);
+}
+
+// Tip bubble size after the tool exists (for placement under a keyboard selection).
+static Size TooltipGetBubbleSize(HWND hwndTT, HWND owner, int id) {
     TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
     ti.uFlags = kTrackToolFlags;
-    SendMessageW(hwndTT, TTM_TRACKACTIVATE, TRUE, (LPARAM)&ti);
+    LRESULT lr = SendMessageW(hwndTT, TTM_GETBUBBLESIZE, 0, (LPARAM)&ti);
+    if (!lr) {
+        return {};
+    }
+    return {LOWORD(lr), HIWORD(lr)};
 }
 
 Tooltip::Tooltip() {
@@ -246,6 +267,64 @@ int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
         return -1;
     }
     TooltipTrackActivateAtCursor(hwnd, parent, id);
+    return id;
+}
+
+// Like SetSingle, but pins the tip at screenPos. If maxRightScreen > 0, shifts
+// left so the bubble's right edge does not pass that x (e.g. last thumbnail).
+// Also keeps the bubble inside the monitor work area when size is known.
+int Tooltip::SetSingleAt(Str s, const Rect& rc, Point screenPos, bool multiline, int maxRightScreen) {
+    if (!hwnd || !parent) {
+        return -1;
+    }
+    if (len(s) > 256) {
+        s = Str(ShortenStringUtf8InTheMiddleTemp(s, 250));
+    }
+
+    int id = -1;
+    if (len(tooltipIds) == 1) {
+        TempStr cur = GetTextTemp(tooltipIds[0]);
+        if (str::Eq(s, cur)) {
+            id = tooltipIds[0];
+            TooltipUpdateRect(hwnd, parent, id, rc);
+        }
+    }
+    if (id < 0) {
+        Delete();
+        id = Add(s, rc, multiline);
+        if (id < 0) {
+            return -1;
+        }
+    }
+
+    Size tipSz = TooltipGetBubbleSize(hwnd, parent, id);
+    int x = screenPos.x;
+    int y = screenPos.y;
+    if (tipSz.dx > 0) {
+        if (maxRightScreen > 0 && x + tipSz.dx > maxRightScreen) {
+            x = maxRightScreen - tipSz.dx;
+        }
+    }
+    if (tipSz.dx > 0 && tipSz.dy > 0) {
+        HMONITOR mon = MonitorFromPoint(POINT{x, y}, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi{sizeof(mi)};
+        if (GetMonitorInfoW(mon, &mi)) {
+            RECT wa = mi.rcWork;
+            if (x + tipSz.dx > wa.right) {
+                x = wa.right - tipSz.dx;
+            }
+            if (x < wa.left) {
+                x = wa.left;
+            }
+            if (y + tipSz.dy > wa.bottom) {
+                y = wa.bottom - tipSz.dy;
+            }
+            if (y < wa.top) {
+                y = wa.top;
+            }
+        }
+    }
+    TooltipTrackActivateAtScreen(hwnd, parent, id, x, y);
     return id;
 }
 

@@ -48,6 +48,11 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow);
 Str HomePageSelectedFilePathTemp(MainWindow* win);
 // select the first entry, e.g. after the filter changed the list
 void HomePageSelectFirst(MainWindow* win);
+// hide keyboard-selection tip on deactivate; restore it when the frame is active
+void HomePageOnWindowActivate(MainWindow* win, bool active);
+// mouse over a file entry: update homePageSelIdx and show tip at that entry
+// (not at the cursor). Returns true if (x,y) is over a file thumbnail/list row
+bool HomePageOnHover(MainWindow* win, int x, int y);
 
 // per-thumbnail ✕ close button (issue #283)
 void HomePageUpdateCloseButton(MainWindow* win, int x, int y);

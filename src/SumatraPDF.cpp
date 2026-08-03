@@ -12187,10 +12187,16 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_ACTIVATE:
             if (wp != WA_INACTIVE) {
                 gLastActiveFrameHwnd = hwnd;
+                // restore home-page keyboard-selection tooltip if applicable
+                if (win) {
+                    HomePageOnWindowActivate(win, true);
+                }
             } else if (win) {
                 // hide the topmost citation-hover popup when switching to
                 // another application (no WM_MOUSELEAVE is generated then)
                 RefHoverHide(win->refHover, win->hwndCanvas);
+                // home-page thumbnail tip is topmost track-mode; hide on deactivate
+                HomePageOnWindowActivate(win, false);
             }
             break;
 

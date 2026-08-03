@@ -1174,14 +1174,19 @@ constexpr int kSearchThumbnailsGapY = 12;
 
 static WNDPROC DefWndProcHomeSearch = nullptr;
 
+static void HomeSelectFromSearchReturnCol(MainWindow* win);
+static void HomePageShowSelectionTooltip(MainWindow* win);
+
 static LRESULT CALLBACK WndProcHomeSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_KEYDOWN && wp == VK_DOWN) {
-        // down from the search box moves into the file list (issue #1136)
+        // down from the search box moves into the file list (issue #1136),
+        // restoring the column we left from when going up
         MainWindow* win = FindMainWindowByHwnd(GetParent(hwnd));
         if (win) {
-            win->homePageSelIdx = 0;
+            HomeSelectFromSearchReturnCol(win);
             HwndSetFocus(win->hwndCanvas);
             HwndInvalidate(win->hwndCanvas);
+            HomePageShowSelectionTooltip(win);
         }
         return 0;
     }
@@ -1779,6 +1784,9 @@ void LayoutHomePage(HomePageLayout& l) {
 
     int nFiles = len(fileStates);
     bool showList = HomePageIsListView();
+    // Leave room above the first row so RoundRect / selection outline top edges
+    // aren't clipped by rcThumbsArea (they extend a few px upward).
+    int thumbsContentPadTop = showList ? DpiScale(hdc, 2) : DpiScale(hdc, 5);
     int thumbsRows = 0;
     int thumbsContentDy = 0;
     if (showList) {
@@ -1790,6 +1798,9 @@ void LayoutHomePage(HomePageLayout& l) {
             thumbsContentDy = (thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY)) - kThumbsSpaceBetweenY;
         }
     }
+    if (thumbsContentDy > 0) {
+        thumbsContentDy += thumbsContentPadTop;
+    }
 
     int scrollY = win->homePageScrollY;
     int maxScrollY = std::max(0, thumbsContentDy - thumbsVisibleDy);
@@ -1800,7 +1811,7 @@ void LayoutHomePage(HomePageLayout& l) {
     l.totalContentDy = thumbsContentDy;
     l.thumbsVisibleDy = thumbsVisibleDy;
 
-    Point ptOff(thumbsStartX, thumbsTopY - scrollY);
+    Point ptOff(thumbsStartX, thumbsTopY + thumbsContentPadTop - scrollY);
 
     if (showList) {
         int listX = thumbsStartX;
@@ -2228,6 +2239,11 @@ static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, 
     thumb.rcListFileName = rcFileName;
 }
 
+// True when keyboard focus is in the home search box (hide list selection then).
+static bool HomeSearchHasFocus(MainWindow* win) {
+    return win && win->hwndHomeSearch && GetFocus() == win->hwndHomeSearch;
+}
+
 static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
                             bool isRtl, bool isSelected) {
     HDC hdc = l.hdc;
@@ -2237,7 +2253,8 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
         return;
     }
     MeasureHomeListRowText(hdc, thumb, fontText, isRtl);
-    if (isSelected) {
+    // no selection chrome while typing in the search box
+    if (isSelected && !HomeSearchHasFocus(l.win)) {
         DrawHomeSelectionOutline(hdc, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
     }
 
@@ -2361,10 +2378,16 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     if (win->homePageSelIdx >= nThumbs) {
         win->homePageSelIdx = nThumbs - 1;
     }
+    // no selection rectangle while the search box has focus
+    const bool showKeyboardSel = !HomeSearchHasFocus(win);
+    // draw selection after restoring the thumbs clip so the outline on the
+    // first row isn't clipped at the top edge of rcThumbsArea
+    Rect pendingThumbSel;
+    bool hasPendingThumbSel = false;
     for (int thumbIdx = 0; thumbIdx < nThumbs; thumbIdx++) {
         ThumbnailLayout& thumb = l.thumbnails[thumbIdx];
         FileState* fs = thumb.fs;
-        bool isSelected = (thumbIdx == win->homePageSelIdx);
+        bool isSelected = showKeyboardSel && (thumbIdx == win->homePageSelIdx);
         if (HomePageIsListView()) {
             DrawHomeListRow(l, thumb, fontText, backgroundColor, isRtl, isSelected);
             continue;
@@ -2409,12 +2432,17 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         if (isSelected) {
             Rect sel = page.Union(rect);
             sel.Inflate(DpiScale(hdc, 4), DpiScale(hdc, 3));
-            DrawHomeSelectionOutline(hdc, sel, 10);
+            pendingThumbSel = sel;
+            hasPendingThumbSel = true;
         }
     }
 
     // restore full clip region
     SelectClipRgn(hdc, nullptr);
+
+    if (hasPendingThumbSel) {
+        DrawHomeSelectionOutline(hdc, pendingThumbSel, 10);
+    }
 
     color = ThemeWindowLinkColor();
     SetTextColor(hdc, color);
@@ -2535,6 +2563,58 @@ static int HomeGridColumnCount() {
     return nCols > 0 ? nCols : 1;
 }
 
+// Select the first-row entry at the column remembered when leaving for search.
+static void HomeSelectFromSearchReturnCol(MainWindow* win) {
+    int n = HomeSelectableCount();
+    if (n <= 0) {
+        win->homePageSelIdx = 0;
+        return;
+    }
+    if (HomePageIsListView()) {
+        win->homePageSelIdx = 0;
+        return;
+    }
+    int nCols = HomeGridColumnCount();
+    if (nCols < 1) {
+        nCols = 1;
+    }
+    int col = win->homePageSearchReturnCol;
+    if (col < 0) {
+        col = 0;
+    }
+    if (col >= nCols) {
+        col = nCols - 1;
+    }
+    // first row only has min(nCols, n) entries
+    int firstRowN = n < nCols ? n : nCols;
+    if (col >= firstRowN) {
+        col = firstRowN - 1;
+    }
+    win->homePageSelIdx = col;
+}
+
+// Keep layout-cache thumb rects in sync with homePageScrollY (without a full
+// paint) so keyboard tooltips can use up-to-date geometry after scroll.
+static void HomeSyncLayoutCacheScroll(MainWindow* win) {
+    auto& c = gHomeLayoutCache;
+    if (!c.valid || !win) {
+        return;
+    }
+    int scrollY = win->homePageScrollY;
+    int maxScrollY = std::max(0, c.totalContentDy - c.thumbsVisibleDy);
+    if (scrollY > maxScrollY) {
+        scrollY = maxScrollY;
+        win->homePageScrollY = scrollY;
+    }
+    if (scrollY < 0) {
+        scrollY = 0;
+        win->homePageScrollY = 0;
+    }
+    int dy = c.scrollY - scrollY;
+    OffsetThumbnailLayouts(c.thumbs, dy);
+    c.scrollY = scrollY;
+}
+
 // scroll so the selected entry is fully visible
 static void HomeScrollSelectionIntoView(MainWindow* win) {
     auto& c = gHomeLayoutCache;
@@ -2542,6 +2622,8 @@ static void HomeScrollSelectionIntoView(MainWindow* win) {
     if (!c.valid || idx < 0 || idx >= len(c.thumbs)) {
         return;
     }
+    // rects must match current scroll before we measure visibility
+    HomeSyncLayoutCacheScroll(win);
     Rect r = HomeEntryRect(c.thumbs[idx]);
     const Rect& area = c.rcThumbsArea;
     if (r.IsEmpty() || area.IsEmpty()) {
@@ -2562,10 +2644,147 @@ static void HomeScrollSelectionIntoView(MainWindow* win) {
         newScrollY = 0;
     }
     win->homePageScrollY = newScrollY; // layout clamps against content height
+    HomeSyncLayoutCacheScroll(win);
+}
+
+// Selection outline rect — must match DrawHomePageLayout / DrawHomeListRow.
+static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t, HWND hwnd) {
+    if (HomePageIsListView()) {
+        // list: outline is the row, 1px shorter (separator line)
+        return Rect(t.rcListRow.x, t.rcListRow.y, t.rcListRow.dx, t.rcListRow.dy - 1);
+    }
+    // thumbnails: page ∪ name, inflated by the same amounts as paint
+    Rect sel = t.rcPage.Union(t.rcText);
+    sel.Inflate(DpiScale(hwnd, 4), DpiScale(hwnd, 3));
+    return sel;
+}
+
+// Show/update the infotip for the keyboard-selected home entry. Placed just
+// below the blue selection outline, left-aligned with the outline's left edge;
+// shifted left if it would extend past the right edge of the last outline in
+// that row.
+static void HomePageShowSelectionTooltip(MainWindow* win) {
+    if (!win || HomeSearchHasFocus(win)) {
+        if (win) {
+            win->DeleteToolTip();
+        }
+        return;
+    }
+    auto& c = gHomeLayoutCache;
+    int idx = win->homePageSelIdx;
+    if (!c.valid || idx < 0 || idx >= len(c.thumbs)) {
+        win->DeleteToolTip();
+        return;
+    }
+    HomeSyncLayoutCacheScroll(win);
+    ThumbnailLayout& t = c.thumbs[idx];
+    FileState* fs = t.fs;
+    if (!fs || !fs->filePath) {
+        win->DeleteToolTip();
+        return;
+    }
+
+    // Same text as hover: path + size (size looked up only when shown)
+    TempStr tip = HomeThumbTooltipTemp(fs->filePath);
+    i64 size = file::GetSize(fs->filePath);
+    if (size >= 0) {
+        tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
+    }
+
+    HWND hwnd = win->hwndCanvas;
+    Rect outline = HomeSelectionOutlineRect(t, hwnd);
+    // a little below the outline so the tip clears the blue border
+    int tipClientX = outline.x;
+    int tipClientY = outline.y + outline.dy + DpiScale(hwnd, 4);
+
+    int rightEdgeClient = outline.x + outline.dx;
+    if (!HomePageIsListView()) {
+        int n = len(c.thumbs);
+        int nCols = HomeGridColumnCount();
+        if (nCols < 1) {
+            nCols = 1;
+        }
+        int col = idx % nCols;
+        int rowStart = idx - col;
+        int lastInRow = rowStart + nCols - 1;
+        if (lastInRow >= n) {
+            lastInRow = n - 1;
+        }
+        Rect lastOutline = HomeSelectionOutlineRect(c.thumbs[lastInRow], hwnd);
+        rightEdgeClient = lastOutline.x + lastOutline.dx;
+    }
+
+    POINT tl{tipClientX, tipClientY};
+    POINT tr{rightEdgeClient, tipClientY};
+    ClientToScreen(hwnd, &tl);
+    ClientToScreen(hwnd, &tr);
+    win->ShowToolTipAt(tip, outline, Point(tl.x, tl.y), false, tr.x);
 }
 
 void HomePageSelectFirst(MainWindow* win) {
     win->homePageSelIdx = 0;
+    win->homePageSearchReturnCol = 0;
+}
+
+void HomePageOnWindowActivate(MainWindow* win, bool active) {
+    if (!win) {
+        return;
+    }
+    if (!active) {
+        win->DeleteToolTip();
+        return;
+    }
+    // only restore the selection tip (positioned at the active entry, not cursor)
+    if (win->IsCurrentTabAbout()) {
+        HomePageShowSelectionTooltip(win);
+    }
+}
+
+// Index of the file entry under (x,y), or -1. Uses layout-cache geometry so
+// it matches the keyboard selection outline.
+static int HomeEntryIndexAt(int x, int y) {
+    auto& c = gHomeLayoutCache;
+    if (!c.valid) {
+        return -1;
+    }
+    Point pt(x, y);
+    int n = len(c.thumbs);
+    for (int i = 0; i < n; i++) {
+        if (HomeEntryRect(c.thumbs[i]).Contains(pt)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Last mouse position that drove a selection change. Keyboard nav invalidates
+// the canvas and Windows may re-send WM_MOUSEMOVE / WM_SETCURSOR with the same
+// coordinates — ignore those so selection does not snap back under the cursor.
+static Point gHomeHoverLastPt{-1, -1};
+
+bool HomePageOnHover(MainWindow* win, int x, int y) {
+    if (!win) {
+        return false;
+    }
+    Point pt(x, y);
+    if (pt.x == gHomeHoverLastPt.x && pt.y == gHomeHoverLastPt.y) {
+        // no real mouse movement — leave selection alone
+        return HomeEntryIndexAt(x, y) >= 0;
+    }
+    gHomeHoverLastPt = pt;
+
+    HomeSyncLayoutCacheScroll(win);
+    int idx = HomeEntryIndexAt(x, y);
+    if (idx < 0) {
+        return false;
+    }
+    if (idx != win->homePageSelIdx) {
+        win->homePageSelIdx = idx;
+        HwndInvalidate(win->hwndCanvas);
+    }
+    // tip always anchored to the active entry, never the cursor
+    HomePageShowSelectionTooltip(win);
+    return true;
 }
 
 Str HomePageSelectedFilePathTemp(MainWindow* win) {
@@ -2584,6 +2803,7 @@ Str HomePageSelectedFilePathTemp(MainWindow* win) {
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
     int n = HomeSelectableCount();
     if (n == 0) {
+        win->DeleteToolTip();
         return;
     }
     int idx = win->homePageSelIdx;
@@ -2592,24 +2812,29 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
         win->homePageSelIdx = 0;
         HomeScrollSelectionIntoView(win);
         HwndInvalidate(win->hwndCanvas);
+        HomePageShowSelectionTooltip(win);
         return;
     }
 
+    int nCols = HomePageIsListView() ? 1 : HomeGridColumnCount();
     int delta;
     if (HomePageIsListView()) {
         // one entry per row; left/right have nothing to move along
         delta = dRow;
     } else {
-        delta = dCol + (dRow * HomeGridColumnCount());
+        delta = dCol + (dRow * nCols);
     }
     if (delta == 0) {
         return;
     }
     int newIdx = idx + delta;
     if (newIdx < 0) {
-        // above the first row: hand focus to the search box
+        // above the first row: hand focus to the search box, remember column
         if (dRow < 0 && win->hwndHomeSearch) {
+            win->homePageSearchReturnCol = HomePageIsListView() ? 0 : (idx % nCols);
+            win->DeleteToolTip();
             HwndSetFocus(win->hwndHomeSearch);
+            HwndInvalidate(win->hwndCanvas); // drop selection outline while typing
             return;
         }
         newIdx = 0;
@@ -2623,6 +2848,7 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
     win->homePageSelIdx = newIdx;
     HomeScrollSelectionIntoView(win);
     HwndInvalidate(win->hwndCanvas);
+    HomePageShowSelectionTooltip(win);
 }
 
 void HomePageOnVScroll(MainWindow* win, WPARAM wp) {

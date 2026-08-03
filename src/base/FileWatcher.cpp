@@ -583,13 +583,15 @@ void FileWatcherWaitForShutdown(void) {
     // have any file watching subscriptions pending
     ReportIf(gWatchedFiles != nullptr);
     ReportIf(gWatchedDirs != nullptr);
-
+        
     u64 timeStart = GetTickCount64();
-    while (GetRemovalsPending() > 0 && (GetTickCount64() - timeStart) < 15000) {
+    int nPending = GetRemovalsPending();
+    while (nPending > 0 && (GetTickCount64() - timeStart) < 15000) {
+        if (IsDebuggerPresent()) {
+            logf("FileWatcherWaitForShutdown: %d removals pending\n", nPending);
+        }
         Sleep(100);
-    }
-    if (IsDebuggerPresent() && GetRemovalsPending() != 0) {
-        logf("FileWatcherWaitForShutdown: %d removals pending\n", GetRemovalsPending());
+        nPending = GetRemovalsPending();
     }
 
     // Signal from this thread and wake the watcher through the control event.

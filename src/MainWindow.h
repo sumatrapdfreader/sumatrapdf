@@ -321,6 +321,9 @@ struct MainWindow {
     // keyboard-selected home page entry (index into the filtered list),
     // -1 when there's nothing to select. Enter opens it (issue #1136)
     int homePageSelIdx = 0;
+    // grid column remembered when Up moves focus from the first thumbnail row
+    // into the search box; Down restores it (clamped to the current column count)
+    int homePageSearchReturnCol = 0;
 
     // home page search filter
     HWND hwndHomeSearch = nullptr;
@@ -516,6 +519,9 @@ struct MainWindow {
     void MoveDocBy(int dx, int dy) const;
 
     void ShowToolTip(Str text, Rect& rc, bool multiline = false) const;
+    // Track-mode tip at a fixed screen position (keyboard home-page selection).
+    // maxRightScreen > 0 clamps the bubble so it does not extend past that x.
+    void ShowToolTipAt(Str text, const Rect& rc, Point screenPos, bool multiline = false, int maxRightScreen = 0) const;
     void DeleteToolTip() const;
 
     bool CreateUIAProvider();

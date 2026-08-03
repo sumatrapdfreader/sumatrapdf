@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Timer.h"
 #include "base/Win.h"
 
@@ -69,6 +70,8 @@ static bool IsLink(Str url) {
 
 static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
     HomePageUpdateCloseButton(win, x, y);
+    // file entries: update active thumbnail and show tip at that entry
+    HomePageOnHover(win, x, y);
     TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
     tme.dwFlags = TME_LEAVE;
     tme.hwndTrack = hwnd;
@@ -159,14 +162,19 @@ static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
 static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
     Point pt = HwndGetCursorPos(hwnd);
     if (!pt.IsEmpty()) {
-        StaticLink* link;
+        StaticLink* link = nullptr;
         if (GetStaticLinkAtTemp(win->staticLinks, pt.x, pt.y, &link)) {
-            // LinkTooltipTemp appends the file size; it's looked up here (once
-            // per hover) rather than during layout, which is too slow to do per
-            // thumbnail while scrolling
-            win->ShowToolTip(LinkTooltipTemp(link), link->rect);
             SetCursorCached(IDC_HAND);
+            // File entries: selection/tip are driven only by real WM_MOUSEMOVE
+            // (and keyboard). Do not call HomePageOnHover here — after arrow-key
+            // selection the canvas invalidates and WM_SETCURSOR would snap the
+            // active entry back under the stationary cursor.
+            if (link && !path::IsAbsolute(link->target)) {
+                // chrome links (open, tips, …) keep a simple hover tip
+                win->ShowToolTip(LinkTooltipTemp(link), link->rect);
+            }
         } else {
+            // not on a link — hide tip; keyboard selection outline stays
             win->DeleteToolTip();
             SetCursorCached(IDC_ARROW);
         }
@@ -194,12 +202,20 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             break;
 
         case WM_COMMAND:
-            if (HIWORD(wp) == EN_CHANGE && (HWND)lp == win->hwndHomeSearch) {
-                win->homePageScrollY = 0;
-                // the filter changed the list, so select its first entry (#1136)
-                HomePageSelectFirst(win);
-                HwndInvalidate(win->hwndCanvas);
-                return 0;
+            if ((HWND)lp == win->hwndHomeSearch) {
+                UINT notify = HIWORD(wp);
+                if (notify == EN_CHANGE) {
+                    win->homePageScrollY = 0;
+                    // the filter changed the list, so select its first entry (#1136)
+                    HomePageSelectFirst(win);
+                    HwndInvalidate(win->hwndCanvas);
+                    return 0;
+                }
+                // hide/show keyboard selection outline when focus enters/leaves search
+                if (notify == EN_SETFOCUS || notify == EN_KILLFOCUS) {
+                    HwndInvalidate(win->hwndCanvas);
+                    return 0;
+                }
             }
             break;
 
