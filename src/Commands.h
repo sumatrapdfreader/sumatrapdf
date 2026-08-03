@@ -359,9 +359,6 @@ struct CustomCommand {
     // it identifies a command with their fixed set of arguments
     int id = 0;
 
-    // optional
-    Str idStr;
-
     CommandArg* firstArg = nullptr;
     CustomCommand() = default;
     ~CustomCommand();

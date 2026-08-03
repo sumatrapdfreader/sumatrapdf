@@ -872,13 +872,6 @@ int GetCommandIdByName(Str cmdName) {
     if (str::EqI(cmdName, StrL("CmdFindMatch"))) {
         return CmdFindToggleMatchCase;
     }
-    auto curr = gFirstCustomCommand;
-    while (curr) {
-        if (curr->idStr && str::EqI(cmdName, curr->idStr)) {
-            return curr->id;
-        }
-        curr = curr->next;
-    }
     return -1;
 }
 
@@ -958,7 +951,6 @@ CustomCommand::~CustomCommand() {
     FreeCommandArgs(firstArg);
     str::Free(name);
     str::Free(key);
-    str::Free(idStr);
     str::Free(definition);
 }
 
