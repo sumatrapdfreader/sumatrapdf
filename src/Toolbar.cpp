@@ -486,34 +486,36 @@ void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
         UpdateToolbarButtonStateByIdx(win->hwndToolbar, idx, isEnabled, TBSTATE_ENABLED);
     }
 }
-// whether the current window context (presentation, fullscreen, about page)
-// permits showing the toolbar at all, independent of the show/hide/overlay mode
+// whether the current window context (presentation, about page) permits a
+// toolbar at all, independent of the show/hide/overlay mode
 static bool ToolbarContextAllows(MainWindow* win) {
     if (win->presentation) {
         return false;
     }
-    if (win->isFullScreen) {
-        return gGlobalPrefs->fullscreen.showToolbar;
-    }
     return true;
 }
 
-bool ShouldShowToolbar(MainWindow* win) {
+// toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar
+static int ToolbarModeForWindow(MainWindow* win) {
     if (win->isFullScreen) {
-        // fullscreen has its own pinned toggle (fullscreen.showToolbar)
-        return ToolbarContextAllows(win);
+        return FullscreenToolbarModeFromPrefs();
     }
-    if (ToolbarModeIsHidden() || ToolbarModeIsOverlay()) {
+    return ToolbarModeFromPrefs();
+}
+
+bool ShouldShowToolbar(MainWindow* win) {
+    if (!ToolbarContextAllows(win)) {
         return false;
     }
-    return ToolbarContextAllows(win);
+    int mode = ToolbarModeForWindow(win);
+    return mode == kToolbarShow;
 }
 
 bool ShouldOverlayToolbar(MainWindow* win) {
-    if (win->isFullScreen) {
+    if (!ToolbarContextAllows(win)) {
         return false;
     }
-    if (!ToolbarModeIsOverlay()) {
+    if (ToolbarModeForWindow(win) != kToolbarOverlay) {
         return false;
     }
     // don't float the overlay toolbar over the home / about page (only the
@@ -521,7 +523,7 @@ bool ShouldOverlayToolbar(MainWindow* win) {
     if (win->IsCurrentTabAbout()) {
         return false;
     }
-    return ToolbarContextAllows(win);
+    return true;
 }
 
 // natural width of the toolbar content (buttons + page box); the find bar

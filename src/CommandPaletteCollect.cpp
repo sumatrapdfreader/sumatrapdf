@@ -59,7 +59,9 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleToolbar: {
             isToggle = true;
-            newIsOn = !gGlobalPrefs->showToolbar;
+            bool currentlyOn =
+                win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+            newIsOn = !currentlyOn;
         } break;
         case CmdToggleMenuBar: {
             isToggle = true;

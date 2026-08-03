@@ -276,8 +276,13 @@ struct PrinterDefaults {
 
 // options for fullscreen mode
 struct Fullscreen {
-    // if true, show the toolbar in fullscreen mode
+    // legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty,
+    // derived as show/hide (internal; use Fullscreen.Toolbar instead)
     bool showToolbar;
+    // toolbar mode in fullscreen: show (pinned), hide (no toolbar),
+    // overlay (toolbar floats over the page, only shown when the mouse is
+    // near it). if empty, derived from Fullscreen.ShowToolbar
+    Str toolbar;
     // if true, show the menu bar in fullscreen mode
     bool showMenubar;
 };
@@ -569,7 +574,8 @@ struct GlobalPrefs {
     // up to 13 custom colors for the background color picker, separated by
     // space (e.g. '#ff0000 #00ff00 #0000ff')
     Str customColors;
-    // if true, we show the toolbar at the top of the window
+    // legacy bool for toolbar; if Toolbar is empty, derived as show/hide
+    // (internal; use Toolbar instead)
     bool showToolbar;
     // toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar
     // floats over the page, sized to its natural width and centered, only
@@ -1064,15 +1070,19 @@ static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults),
                                                 false};
 
 static const FieldInfo gFullscreenFields[] = {
-    {offsetof(Fullscreen, showToolbar), SettingType::Bool, false},
+    {offsetof(Fullscreen, showToolbar), SettingType::Bool, false, true},
+    {offsetof(Fullscreen, toolbar), SettingType::String, 0},
     {offsetof(Fullscreen, showMenubar), SettingType::Bool, false},
 };
 static const StructInfo gFullscreenInfo = {
     sizeof(Fullscreen),
-    2,
+    3,
     gFullscreenFields,
-    "ShowToolbar\0ShowMenubar",
-    "if true, show the toolbar in fullscreen mode\0if true, show the menu bar in fullscreen mode",
+    "ShowToolbar\0Toolbar\0ShowMenubar",
+    "legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty, derived as show/hide (internal; use "
+    "Fullscreen.Toolbar instead)\0toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay (toolbar "
+    "floats over the page, only shown when the mouse is near it). if empty, derived from Fullscreen.ShowToolbar\0if "
+    "true, show the menu bar in fullscreen mode",
     false};
 
 static const FieldInfo gSelectionHandlerFields[] = {
@@ -1335,7 +1345,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showMenubarWithTabs), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showTips), SettingType::Bool, true},
     {offsetof(GlobalPrefs, customColors), SettingType::String, 0, true},
-    {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true, true},
     {offsetof(GlobalPrefs, toolbar), SettingType::String, 0},
     {offsetof(GlobalPrefs, toolbarPosition), SettingType::String, (intptr_t)"top"},
     {offsetof(GlobalPrefs, searchUIFloating), SettingType::Bool, false},
@@ -1474,51 +1484,52 @@ static const StructInfo gGlobalPrefsInfo = {
     "existing SumatraPDF process\0if false, the menu bar will be hidden (use F9 to toggle, persisted across "
     "sessions)\0if true, show the menu bar when using tabs (useTabs = true)\0if true, we show tips on the home "
     "page\0up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 "
-    "#0000ff')\0if true, we show the toolbar at the top of the window\0toolbar mode: show (pinned), hide (no toolbar), "
-    "overlay (toolbar floats over the page, sized to its natural width and centered, only shown when the mouse is near "
-    "it). if empty, derived from ShowToolbar\0where the toolbar is placed: top or bottom (applies to both show and "
-    "overlay modes)\0if true, the find UI is a floating, movable window with a results list instead of the compact "
-    "toolbar overlay\0if true, we show the Favorites sidebar\0if true, favorites within each file are sorted "
-    "alphabetically by name (or page label); if false (the default), they are sorted by page number\0if true, we show "
-    "table of contents (Bookmarks) sidebar if it's present in the document\0if true we draw a blue border around links "
-    "in the document\0if true, draw a focus ring around the document when it has keyboard focus (Tab to the page "
-    "area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if "
-    "true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries\0if true, we show a list "
-    "of frequently read documents when no document is loaded\0width of favorites/bookmarks sidebar (if "
-    "shown)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay "
-    "(always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show scrollbar in single page mode\0if "
-    "true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)\0if "
-    "true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the "
-    "top of the window\0how long to hover an internal-document link (in ms) before we show a popup rendering the "
-    "destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value "
-    "like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids "
-    "match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed "
-    "multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud "
-    "playback bar\0if true, mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the "
-    "screen from turning off when in fullscreen or presentation mode\0maximum width of a single tab\0Valid themes: "
-    "light, dark, darker, system\0the light theme the light/dark toggle and the System theme switch to\0the dark theme "
-    "the light/dark toggle and the System theme switch to\0Valid values: off, smart, legacy\0if both favorites and "
-    "bookmarks parts of sidebar are visible, this is the height of bookmarks (table of contents) part\0height of "
-    "toolbar\0font name for bookmarks and favorites tree views. automatic means Windows default\0font size for "
-    "bookmarks and favorites tree views. 0 means Windows default\0over-ride application font size. 0 means Windows "
-    "default\0if true, disables anti-aliasing for rendering PDF documents\0CAD/engineering PDF line rendering: off, "
-    "auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses "
-    "found in PDF text\0if true, we use Windows system colors for background/text color. Over-rides other settings\0if "
-    "true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar with selection "
-    "actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it\0if true, "
-    "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
-    "order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0zoom step size in "
-    "percents relative to the current zoom level. if zero or negative, the values from ZoomLevels are used "
-    "instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options for "
-    "eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
-    "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
-    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
-    "available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings "
-    "for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok "
-    "Build, and OpenAI Codex (internal)\0\0remembered destination language for selection translation; empty uses OS UI "
-    "language\0remembered source language for selection translation; empty means Auto\0remembered engine for Translate "
-    "Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF "
-    "documents\0\0list of additional external viewers for various file types. See [docs for more "
+    "#0000ff')\0legacy bool for toolbar; if Toolbar is empty, derived as show/hide (internal; use Toolbar "
+    "instead)\0toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over the page, sized to its "
+    "natural width and centered, only shown when the mouse is near it). if empty, derived from ShowToolbar\0where the "
+    "toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the find UI is a floating, "
+    "movable window with a results list instead of the compact toolbar overlay\0if true, we show the Favorites "
+    "sidebar\0if true, favorites within each file are sorted alphabetically by name (or page label); if false (the "
+    "default), they are sorted by page number\0if true, we show table of contents (Bookmarks) sidebar if it's present "
+    "in the document\0if true we draw a blue border around links in the document\0if true, draw a focus ring around "
+    "the document when it has keyboard focus (Tab to the page area)\0if true, show a tip when hovering an annotation "
+    "(e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if true, show page numbers (labels) right-aligned on "
+    "bookmark / table-of-contents entries\0if true, we show a list of frequently read documents when no document is "
+    "loaded\0width of favorites/bookmarks sidebar (if shown)\0scrollbar mode: windows (standard Windows scrollbar), "
+    "smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if "
+    "true, we show scrollbar in single page mode\0if true, smooth mouse-wheel scrolling (exponential chase of the "
+    "target; continuous wheel input stays fluid)\0if true, continuous view has extra scroll room after the last page "
+    "so you can scroll the end of the document to the top of the window\0how long to hover an internal-document link "
+    "(in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the "
+    "default) disables the popup; set a positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; "
+    "empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT "
+    "voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal "
+    "speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling is faster when mouse "
+    "is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or presentation "
+    "mode\0maximum width of a single tab\0Valid themes: light, dark, darker, system\0the light theme the light/dark "
+    "toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0Valid "
+    "values: off, smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this is the height of "
+    "bookmarks (table of contents) part\0height of toolbar\0font name for bookmarks and favorites tree views. "
+    "automatic means Windows default\0font size for bookmarks and favorites tree views. 0 means Windows "
+    "default\0over-ride application font size. 0 means Windows default\0if true, disables anti-aliasing for rendering "
+    "PDF documents\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
+    "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, we use Windows system colors "
+    "for background/text color. Over-rides other settings\0if true, documents are opened in tabs instead of new "
+    "windows\0if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up "
+    "after selecting text. Set to false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in "
+    "most recently used order instead of tab-strip order\0sequence of zoom levels when zooming in/out; all values must "
+    "lie between 8.33 and 6400\0zoom step size in percents relative to the current zoom level. if zero or negative, "
+    "the values from ZoomLevels are used instead\0\0customization options for PDF, XPS, DjVu and PostScript "
+    "UI\0\0customization options for eBookUI\0\0customization options for Comic Book UI\0\0customization options for "
+    "image files UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
+    "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
+    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
+    "shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
+    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
+    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
+    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
+    "types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "we show forward search results (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

@@ -113,7 +113,8 @@ ShowTips = true
 ; (e.g. '#ff0000 #00ff00 #0000ff') (introduced in version 3.7)
 CustomColors =
 
-; if true, we show the toolbar at the top of the window
+; legacy bool for toolbar; if Toolbar is empty, derived as show/hide (internal;
+; use Toolbar instead)
 ShowToolbar = true
 
 ; toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over
@@ -558,8 +559,14 @@ PrinterDefaults [
 
 ; options for fullscreen mode (introduced in version 3.7)
 Fullscreen [
-    ; if true, show the toolbar in fullscreen mode
+    ; legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty,
+    ; derived as show/hide (internal; use Fullscreen.Toolbar instead)
     ShowToolbar = false
+
+    ; toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay
+    ; (toolbar floats over the page, only shown when the mouse is near it). if
+    ; empty, derived from Fullscreen.ShowToolbar (introduced in version 3.7)
+    Toolbar =
 
     ; if true, show the menu bar in fullscreen mode
     ShowMenubar = false

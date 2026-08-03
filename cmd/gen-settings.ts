@@ -384,7 +384,21 @@ const claudeCode: Field[] = [
 ];
 
 const fullscreen: Field[] = [
-  field("ShowToolbar", Bool, false, "if true, show the toolbar in fullscreen mode"),
+  field(
+    "ShowToolbar",
+    Bool,
+    false,
+    "legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty, " +
+      "derived as show/hide (internal; use Fullscreen.Toolbar instead)",
+  ).internal(),
+  field(
+    "Toolbar",
+    Str,
+    null,
+    "toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay " +
+      "(toolbar floats over the page, only shown when the mouse is near it). " +
+      "if empty, derived from Fullscreen.ShowToolbar",
+  ).ver("3.7"),
   field("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
 ];
 
@@ -706,7 +720,13 @@ const globalPrefs: Field[] = [
   )
     .internal()
     .ver("3.7"),
-  field("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
+  field(
+    "ShowToolbar",
+    Bool,
+    true,
+    "legacy bool for toolbar; if Toolbar is empty, derived as show/hide " +
+      "(internal; use Toolbar instead)",
+  ).internal(),
   field(
     "Toolbar",
     Str,

@@ -120,7 +120,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - crop and resize images when viewing image files
 - `Ctrl + V` pastes image from clipboard, saves as PNG in Downloads folder and opens it
 - Can save images in different formats: PNG, JPEG, BMP, GIF, TIFF.
-- add `Fullscreen` advanced setting with `ShowToolbar` and `ShowMenubar` options to show toolbar and menu bar in fullscreen mode. Use `F9` / `F8` to toggle them while in fullscreen
+- add `Fullscreen` advanced setting with `Toolbar` (show / hide / overlay, like `Toolbar`) and `ShowMenubar` options for fullscreen mode. Use `F8` / `F9` to toggle toolbar / menubar while in fullscreen. Legacy `ShowToolbar` / `Fullscreen.ShowToolbar` remain for migration only
 - add `Show Errors` in right-click context menu for PDF documents that have mupdf warnings/errors
 - replace `HideScrollbars` and `UseOverlayScrollbar` settings with `Scrollbars` setting (values: `windows`, `smart`, `overlay`, `hidden`)
 - save and restore groups of tabs; saved groups are persisted in `TabGroups` advanced setting

@@ -1348,8 +1348,27 @@ void SetToolbarMode(int mode) {
         mode = kToolbarShow;
     }
     str::ReplaceWithCopy(&gGlobalPrefs->toolbar, name);
-    // keep the legacy bool in sync so old versions and fullscreen logic stay sane
+    // keep the legacy bool in sync so old versions stay sane
     gGlobalPrefs->showToolbar = (mode != kToolbarHide);
+}
+
+int FullscreenToolbarModeFromPrefs() {
+    int idx = SeqStrIndexIS(gToolbarModeNames, gGlobalPrefs->fullscreen.toolbar);
+    if (idx < 0) {
+        // not set / invalid: derive from the legacy Fullscreen.ShowToolbar bool
+        idx = gGlobalPrefs->fullscreen.showToolbar ? kToolbarShow : kToolbarHide;
+    }
+    return idx;
+}
+
+void SetFullscreenToolbarMode(int mode) {
+    Str name = SeqStrByIndex(gToolbarModeNames, mode);
+    if (!name) {
+        name = "hide";
+        mode = kToolbarHide;
+    }
+    str::ReplaceWithCopy(&gGlobalPrefs->fullscreen.toolbar, name);
+    gGlobalPrefs->fullscreen.showToolbar = (mode != kToolbarHide);
 }
 
 SeqStrings gToolbarPositionNames = "top\0bottom\0";
@@ -6505,11 +6524,18 @@ static void OnMenuChangeLanguage(HWND hwnd) {
 }
 
 // cycle the toolbar mode show -> overlay -> hide -> show
-// (in fullscreen, toggle the separate pinned-toolbar setting instead; on the
-// home page overlay has no effect, so only toggle show <-> hide there)
+// (fullscreen uses Fullscreen.Toolbar; home page overlay has no effect, so only
+// toggle show <-> hide there)
 static void OnMenuViewShowHideToolbar(MainWindow* win) {
     if (win->isFullScreen) {
-        gGlobalPrefs->fullscreen.showToolbar = !gGlobalPrefs->fullscreen.showToolbar;
+        int mode = FullscreenToolbarModeFromPrefs();
+        int next = kToolbarShow;
+        if (mode == kToolbarShow) {
+            next = kToolbarOverlay;
+        } else if (mode == kToolbarOverlay) {
+            next = kToolbarHide;
+        }
+        SetFullscreenToolbarMode(next);
     } else if (win->IsCurrentTabAbout()) {
         int mode = ToolbarModeFromPrefs();
         SetToolbarMode(mode == kToolbarHide ? kToolbarShow : kToolbarHide);
@@ -6996,11 +7022,10 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
     // Set state flags; RelayoutFrame (triggered by SetWindowPos/WM_SIZE)
     // will handle the actual showing/hiding of toolbar and tabs.
-    bool showToolbarInFS = !presentation && gGlobalPrefs->fullscreen.showToolbar && gGlobalPrefs->showToolbar;
+    // Fullscreen.Toolbar mode (show / hide / overlay); presentation never has a toolbar.
     bool showMenubarInFS = !presentation && gGlobalPrefs->fullscreen.showMenubar;
-    win->isToolbarVisible = showToolbarInFS;
-    // no floating overlay toolbar in fullscreen / presentation
-    win->isToolbarOverlay = false;
+    win->isToolbarVisible = !presentation && ShouldShowToolbar(win);
+    win->isToolbarOverlay = !presentation && ShouldOverlayToolbar(win);
     win->toolbarOverlayShown = false;
     win->tabsCtrl->SetIsVisible(false);
 
@@ -9180,13 +9205,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleToolbar:
-            if (!win->isFullScreen && GetCommandArg(cmd, kCmdArgState)) {
+            if (GetCommandArg(cmd, kCmdArgState)) {
                 // explicit state: on -> show (pinned), off -> hide
                 bool on = GetCommandBoolArg(cmd, kCmdArgState, true);
-                SetToolbarModeAndApply(on ? kToolbarShow : kToolbarHide);
-            } else if (win->isFullScreen) {
-                if (ShouldToggle(cmd, gGlobalPrefs->fullscreen.showToolbar)) {
-                    OnMenuViewShowHideToolbar(win);
+                int mode = on ? kToolbarShow : kToolbarHide;
+                if (win->isFullScreen) {
+                    SetFullscreenToolbarMode(mode);
+                    for (MainWindow* w : gWindows) {
+                        ShowOrHideToolbar(w);
+                    }
+                } else {
+                    SetToolbarModeAndApply(mode);
                 }
             } else {
                 OnMenuViewShowHideToolbar(win);

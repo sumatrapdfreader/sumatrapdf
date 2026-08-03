@@ -189,7 +189,7 @@ bool ScrollbarsAreHidden();
 bool ScrollbarsUseOverlay();
 OverlayScrollbar::Mode ScrollbarsOverlayMode();
 
-// toolbar mode values: "show\0hide\0overlay\0"
+// toolbar mode values: "show\0hide\0overlay\0" (Toolbar and Fullscreen.Toolbar)
 constexpr int kToolbarShow = 0;
 constexpr int kToolbarHide = 1;
 constexpr int kToolbarOverlay = 2;
@@ -198,6 +198,8 @@ int ToolbarModeFromPrefs();
 bool ToolbarModeIsOverlay();
 bool ToolbarModeIsHidden();
 void SetToolbarMode(int mode);
+int FullscreenToolbarModeFromPrefs();
+void SetFullscreenToolbarMode(int mode);
 
 // toolbar position values: "top\0bottom\0"
 constexpr int kToolbarTop = 0;

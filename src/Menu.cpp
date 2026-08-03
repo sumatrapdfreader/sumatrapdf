@@ -1760,7 +1760,11 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
 
     MenuSetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
     MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
-    MenuSetChecked(win->menu, CmdToggleToolbar, gGlobalPrefs->showToolbar);
+    {
+        // checked when mode is not "hide" (show or overlay)
+        bool toolbarOn = win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+        MenuSetChecked(win->menu, CmdToggleToolbar, toolbarOn);
+    }
     MenuSetChecked(win->menu, CmdToggleMenuBar, gGlobalPrefs->showMenubar);
     // CmdChangeScrollbar doesn't need a check mark - it opens a dialog
     MenuUpdateDisplayMode(win);

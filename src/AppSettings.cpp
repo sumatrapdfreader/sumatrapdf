@@ -422,6 +422,13 @@ bool LoadSettings() {
         gprefs->showToolbar = !str::EqI(gprefs->toolbar, StrL("hide"));
     }
 
+    // fullscreen toolbar mode: same migration from Fullscreen.ShowToolbar
+    if (SeqStrIndexIS(gToolbarModeNames, gprefs->fullscreen.toolbar) < 0) {
+        str::ReplaceWithCopy(&gprefs->fullscreen.toolbar, gprefs->fullscreen.showToolbar ? "show" : "hide");
+    } else {
+        gprefs->fullscreen.showToolbar = !str::EqI(gprefs->fullscreen.toolbar, StrL("hide"));
+    }
+
     if (SeqStrIndexIS(gToolbarPositionNames, gprefs->toolbarPosition) < 0) {
         str::ReplaceWithCopy(&gprefs->toolbarPosition, "top");
     }
