@@ -28,11 +28,6 @@ using Gdiplus::SolidBrush;
 // defined in MainWindow.cpp
 HWND GetHwndForNotification();
 
-struct StrNode {
-    StrNode* next;
-    Str s;
-};
-
 static StrNode* gDelayedNotifications = nullptr;
 
 Kind kNotifCursorPos = "cursorPosHelper";
@@ -831,21 +826,6 @@ NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {
     return NotifsGetForGroup(wnds, nWnds, kind);
 }
 
-static StrNode* AllocStrNode(Str s) {
-    size_t n = (size_t)s.len + 1;
-    size_t cbAlloc = sizeof(StrNode) + n;
-    auto* node = (StrNode*)malloc(cbAlloc);
-    if (!node) {
-        return nullptr;
-    }
-    u8* dst = (u8*)node + sizeof(StrNode);
-    memcpy(dst, s.s, s.len);
-    dst[s.len] = 0;
-    node->next = nullptr;
-    node->s = Str((char*)dst, s.len);
-    return node;
-}
-
 void MaybeDelayedWarningNotification(Str msg) {
     log(msg);
 
@@ -853,7 +833,7 @@ void MaybeDelayedWarningNotification(Str msg) {
     if (hwnd) {
         ShowWarningNotification(hwnd, msg, kNotifNoTimeout);
     } else {
-        StrNode* node = AllocStrNode(msg);
+        StrNode* node = AllocStrNode(nullptr, msg);
         if (node) {
             ListInsertFront(&gDelayedNotifications, node);
         }
@@ -868,6 +848,6 @@ void ShowMaybeDelayedNotifications(HWND hwndParent) {
         ShowWarningNotification(hwndParent, curr->s, kNotifNoTimeout);
         curr = curr->next;
     }
-    ListDelete(gDelayedNotifications);
+    FreeStrNode(nullptr, gDelayedNotifications);
     gDelayedNotifications = nullptr;
 }

@@ -12,6 +12,17 @@ StrArena StrArenaAlloc(Arena* a, int size);
 StrArena StrArenaDupStr(Arena* a, Str s);
 Str StrArenaToStr(Arena* a, StrArena sa);
 
+// Singly-linked string node; AllocStrNode places the string bytes immediately
+// after the node in one allocation (s.s points into that block).
+struct StrNode {
+    StrNode* next = nullptr;
+    Str s;
+};
+// One allocation: sizeofi(StrNode) + s.len + 1. a==null => malloc; else arena.
+StrNode* AllocStrNode(Arena* a, Str s);
+// Frees the list with free() when a==null (malloc path). Arena path is a no-op.
+void FreeStrNode(Arena* a, StrNode* head);
+
 namespace str {
 
 enum class TrimOpt {

@@ -181,6 +181,38 @@ static bool IsLtrCodepoint(wchar_t c) {
 }
 #endif
 
+StrNode* AllocStrNode(Arena* a, Str s) {
+    int n = s.len;
+    if (n < 0) {
+        n = 0;
+    }
+    int cb = sizeofi(StrNode) + n + 1;
+    auto* node = (StrNode*)Alloc(a, cb);
+    if (!node) {
+        return nullptr;
+    }
+    char* dst = (char*)node + sizeofi(StrNode);
+    if (n > 0 && s.s) {
+        memcpy(dst, s.s, (size_t)n);
+    }
+    dst[n] = 0;
+    node->next = nullptr;
+    node->s = Str(dst, n);
+    return node;
+}
+
+// Malloc path (a==null): free each node. Arena path: no per-node free.
+void FreeStrNode(Arena* a, StrNode* head) {
+    if (a) {
+        return;
+    }
+    while (head) {
+        StrNode* next = head->next;
+        free(head);
+        head = next;
+    }
+}
+
 namespace str {
 
 void Free(Str s) {
