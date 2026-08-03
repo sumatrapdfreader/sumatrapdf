@@ -3,10 +3,10 @@
 
 // note: include Base.h instead of including directly
 
-/* Simple but also optimized for small sizes vector/array class that can
-store pointer types or POD types
+/* Simple vector/array class that can store pointer types or POD types
 (http://stackoverflow.com/questions/146452/what-are-pod-types-in-c).
 
+Storage is heap (or arena) only; starts empty with no allocation.
 */
 template <typename T>
 class Vec {
@@ -15,7 +15,6 @@ class Vec {
     int len = 0;
     int cap = 0;
     T* els = nullptr;
-    T buf[16];
 
     // We always pad the elements with a single 0 value. This makes
     // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
@@ -46,17 +45,22 @@ class Vec {
         int allocSize = newElCount * elSize;
         int newPadding = allocSize - oldSize;
         T* newEls;
-        if (buf == els) {
-            newEls = (T*)MemDup(a, buf, oldSize, newPadding);
+        if (!els) {
+            newEls = (T*)Alloc(a, allocSize);
+            if (newEls) {
+                memset(newEls, 0, allocSize);
+            }
         } else {
             newEls = (T*)Realloc(a, els, allocSize, oldSize);
+            if (newEls) {
+                memset((char*)newEls + oldSize, 0, newPadding);
+            }
         }
         if (!newEls) {
             ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
             return false;
         }
         els = newEls;
-        memset((char*)els + oldSize, 0, newPadding);
         cap = newCap;
         return true;
     }
@@ -91,7 +95,7 @@ class Vec {
     }
 
     void FreeEls() {
-        if (els != buf) {
+        if (els) {
             Free(a, els);
             els = nullptr;
         }
@@ -102,22 +106,24 @@ class Vec {
     void Reset() {
         FreeEls();
         len = 0;
-        cap = dimofi(buf) - kPadding;
-        els = buf;
-        memset(buf, 0, sizeof(buf));
+        cap = 0;
     }
 
     // use to empty but don't free els
     // for efficient reuse
     void Clear() {
         len = 0;
-        memset(els, 0, cap * kElSize);
+        if (els && cap > 0) {
+            memset(els, 0, cap * kElSize);
+        }
     }
 
     bool SetSize(int newSize) {
         if (newSize <= cap) {
             len = newSize;
-            memset(els + len, 0, (cap - len) * kElSize);
+            if (els) {
+                memset(els + len, 0, (cap - len) * kElSize);
+            }
             return true;
         }
         auto res = MakeSpaceAt(0, newSize);
@@ -125,22 +131,17 @@ class Vec {
     }
 
     // arena is not owned by Vec and must outlive it
-    explicit Vec(Arena* a = nullptr) {
-        this->a = a;
-        els = buf;
-        Reset();
-    }
+    explicit Vec(Arena* a = nullptr) { this->a = a; }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
     Vec(const Vec& other) {
-        els = buf;
-        Reset();
-
         EnsureCap(other.len);
         len = other.len;
         // using memcpy, as Vec only supports POD types
-        memcpy(els, other.els, kElSize * (other.len));
+        if (other.len > 0) {
+            memcpy(els, other.els, kElSize * other.len);
+        }
     }
 
     // TODO: write Vec(const Vec&& other)
@@ -150,13 +151,14 @@ class Vec {
             return *this;
         }
 
-        els = buf;
         Reset();
         EnsureCap(other.len);
         // using memcpy, as Vec only supports POD types
         len = other.len;
-        memcpy(els, other.els, kElSize * len);
-        memset(els + len, 0, kElSize * (cap - len));
+        if (other.len > 0) {
+            memcpy(els, other.els, kElSize * len);
+            memset(els + len, 0, kElSize * (cap - len));
+        }
         return *this;
     }
 
@@ -273,11 +275,9 @@ class Vec {
     // it doesn't matter
     T* Take() {
         T* res = els;
-        if (els == buf) {
-            res = (T*)MemDup(a, buf, (len + kPadding) * kElSize);
-        }
-        els = buf;
-        Reset();
+        els = nullptr;
+        len = 0;
+        cap = 0;
         return res;
     }
 
@@ -312,11 +312,17 @@ class Vec {
         return i;
     }
 
-    void Sort(int (*cmpFunc)(const void* a, const void* b)) { qsort(els, len, kElSize, cmpFunc); }
+    void Sort(int (*cmpFunc)(const void* a, const void* b)) {
+        if (len > 0) {
+            qsort(els, len, kElSize, cmpFunc);
+        }
+    }
 
     void SortTyped(int (*cmpFunc)(const T* a, const T* b)) {
-        auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
-        qsort(els, len, kElSize, cmpFunc2);
+        if (len > 0) {
+            auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
+            qsort(els, len, kElSize, cmpFunc2);
+        }
     }
 
     void Reverse() {
@@ -335,10 +341,10 @@ class Vec {
     using iterator = T*;
     using const_iterator = const T*;
 
-    iterator begin() { return &(els[0]); }
-    const_iterator begin() const { return &(els[0]); }
-    iterator end() { return &(els[len]); }
-    const_iterator end() const { return &(els[len]); }
+    iterator begin() { return els; }
+    const_iterator begin() const { return els; }
+    iterator end() { return els ? els + len : nullptr; }
+    const_iterator end() const { return els ? els + len : nullptr; }
 };
 
 // number of elements, as int (matches len() for Str / WStr)
@@ -385,7 +391,7 @@ class VecIterator {
   public:
     VecIterator(Vec* v) : vec(v) {}
     auto begin() { return vec ? vec->els : nullptr; }
-    auto end() { return vec ? vec->els + vec->len : nullptr; }
+    auto end() { return vec && vec->els ? vec->els + vec->len : nullptr; }
 };
 
 // Helper functions for type deduction (works with both Vec& and Vec*)
