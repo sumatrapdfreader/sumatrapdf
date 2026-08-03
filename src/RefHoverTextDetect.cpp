@@ -134,7 +134,9 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     // matching. Collapse runs of whitespace to a single space so downstream
     // checks (the "et al." literal, walk-back stop conditions) work against
     // normalized text. Line breaks also become a single space.
-    wstr::Builder chunk;
+    // 3-line band of page text; most citations fit in a few hundred WCHARs.
+    WCHAR chunkScratch[512]{};
+    wstr::Builder chunk(0, nullptr, WStr(chunkScratch, (int)dimof(chunkScratch)));
     Vec<int> chunkGlyphs;
     int cursorChunkPos = -1;
     int prevY = INT_MIN;
@@ -338,8 +340,9 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         return false;
     }
 
-    // Build surname string.
-    wstr::Builder surnameW;
+    // Build surname string (author names are short).
+    WCHAR surnameScratch[128]{};
+    wstr::Builder surnameW(0, nullptr, WStr(surnameScratch, (int)dimof(surnameScratch)));
     for (int j = surnameStart; j < surnameEnd; j++) {
         surnameW.AppendChar(s.s[j]);
     }
