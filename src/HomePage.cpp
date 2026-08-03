@@ -1206,8 +1206,36 @@ static LRESULT CALLBACK WndProcHomeSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
     return CallWindowProcW(DefWndProcHomeSearch, hwnd, msg, wp, lp);
 }
 
+// Home-list entries with a path (same set as thumbnails when search is empty).
+static int CountHomePageFiles() {
+    Vec<FileState*> all;
+    if (gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead) {
+        gFileHistory.GetFrequencyOrder(all);
+    } else {
+        gFileHistory.GetRecentlyOpenedOrder(all);
+    }
+    int n = 0;
+    for (FileState* fs : all) {
+        if (fs && len(fs->filePath) > 0) {
+            n++;
+        }
+    }
+    return n;
+}
+
+// Cue banner when the search field is empty: "Search N files (Ctrl + F)".
+static void UpdateHomeSearchCueBanner(MainWindow* win) {
+    if (!win || !win->hwndHomeSearch) {
+        return;
+    }
+    // _TRA returns Str; pass .s into type-safe fmt for the format string.
+    TempStr cue = fmt(_TRA("Search %d files (Ctrl + F)").s, CountHomePageFiles());
+    Edit_SetCueBannerText(win->hwndHomeSearch, CWStrTemp(cue));
+}
+
 static void EnsureHomeSearchCreated(MainWindow* win) {
     if (win->hwndHomeSearch) {
+        UpdateHomeSearchCueBanner(win);
         return;
     }
     HMODULE hmod = GetModuleHandleW(nullptr);
@@ -1223,7 +1251,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
         DefWndProcHomeSearch = (WNDPROC)GetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC);
     }
     SetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC, (LONG_PTR)WndProcHomeSearch);
-    Edit_SetCueBannerText(win->hwndHomeSearch, L"search files (Ctrl + F)");
+    UpdateHomeSearchCueBanner(win);
     // add left/right padding so text doesn't overlap the border
     int margin = DpiScale(win->hwndCanvas, 6);
     SendMessage(win->hwndHomeSearch, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
@@ -2506,6 +2534,8 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
         LayoutHomePage(l);
         SaveHomeLayoutCache(l, filterText, win->homePageScrollY);
     }
+    // Keep cue "Search N files …" in sync when history changes without recreating the edit.
+    UpdateHomeSearchCueBanner(win);
 
     DrawHomePageLayout(l);
     SyncHomeLayoutCacheFileSizes(l);
