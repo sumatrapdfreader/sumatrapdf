@@ -23,10 +23,10 @@ __CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0
 
 //--- subclass ids
 
-static LONG gSubclassId = 0;
+static AtomicInt gSubclassId = 0;
 
 UINT_PTR NextSubclassId() {
-    LONG res = InterlockedIncrement(&gSubclassId);
+    int res = AtomicIntInc(&gSubclassId);
     return (UINT_PTR)res;
 }
 

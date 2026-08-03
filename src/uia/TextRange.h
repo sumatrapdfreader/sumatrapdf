@@ -5,7 +5,7 @@ struct TextSelection;
 class SumatraUIAutomationDocumentProvider;
 
 class SumatraUIAutomationTextRange : public ITextRangeProvider {
-    LONG refCount;
+    AtomicInt refCount;
 
     // used for getting dm and document state (== is document closed == dm is invalid)
     // text range will hold reference to document to prevent it from being removed

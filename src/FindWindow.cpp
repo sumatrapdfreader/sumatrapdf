@@ -74,7 +74,7 @@ struct FindWindowWnd : Wnd {
     StrVec filterWords; // search term(s) to highlight in snippets
     Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
     // coalesce rapid list selections: only the latest deferred navigation runs
-    LONG pendingNavEpoch = 0;
+    AtomicInt pendingNavEpoch = 0;
     // in an interactive size/move loop (between WM_ENTERSIZEMOVE/EXITSIZEMOVE)
     bool inSizeMove = false;
     // list redraw is paused only while interactively *resizing* (a WM_SIZE
@@ -448,7 +448,7 @@ void FindWindowWnd::OnResultSelected() {
     data->startGlyph = fm.startGlyph;
     data->endPage = fm.endPage;
     data->endGlyph = fm.endGlyph;
-    data->epoch = InterlockedIncrement(&pendingNavEpoch);
+    data->epoch = AtomicIntInc(&pendingNavEpoch);
     uitask::Post(MkFunc0<DeferredGoToFindMatchData>(DeferredGoToFindMatch, data), "GoToFindMatch");
 }
 
@@ -849,7 +849,7 @@ void HideFindWindow(MainWindow* win) {
     win->findWindow->SavePos();
     // Cancel any deferred GoToFindMatch so it cannot run after the document/tab
     // that owned these matches is gone (issue #5807).
-    InterlockedIncrement(&win->findWindow->pendingNavEpoch);
+    AtomicIntInc(&win->findWindow->pendingNavEpoch);
     ClearFindMatches(win);
     // drop the active TextSearch hit so closing find clears the highlight;
     // F3 still works (FindNext re-searches) and paints the new hit (#5802)

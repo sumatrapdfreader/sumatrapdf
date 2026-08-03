@@ -74,7 +74,7 @@ ICoreWebView2Controller4 : public ICoreWebView2Controller3 {
 // WM_DROPFILES message. Used so file drops over a WebView2 (with external drop
 // disabled) reach the host window's normal drop handling.
 class ForwardingDropTarget : public IDropTarget {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
     HWND forwardTo = nullptr;
 
   public:
@@ -93,7 +93,7 @@ class ForwardingDropTarget : public IDropTarget {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG res = InterlockedDecrement(&refCount);
         if (res == 0) {

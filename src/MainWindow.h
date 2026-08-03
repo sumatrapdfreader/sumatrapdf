@@ -428,7 +428,7 @@ struct MainWindow {
     // matches for findCountText are cached so prev/next is instant; a background
     // thread (re)builds the cache when the search term or match-case changes.
     ThreadHandle findCountThread = nullptr;
-    LONG findCountEpoch = 0;
+    AtomicInt findCountEpoch = 0;
     Str findCountText;
     bool findCountMatchCase = false;
     bool findCountMatchWholeWord = false;

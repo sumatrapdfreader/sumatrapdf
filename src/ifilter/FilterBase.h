@@ -139,9 +139,9 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     inline DWORD GetChunkId() const { return m_dwChunkId; }
 
   public:
-    FilterBase(long* plRefCount)
+    FilterBase(AtomicInt* plRefCount)
         : m_lRef(1), m_plModuleRef(plRefCount), m_dwChunkId(0), m_iText(0), m_pStream(nullptr) {
-        InterlockedIncrement(m_plModuleRef);
+        AtomicIntInc(m_plModuleRef);
     }
 
     virtual ~FilterBase() {
@@ -159,7 +159,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
                                     {0}};
         return QISearch(this, qit, riid, ppv);
     }
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
         if (cRef == 0) delete this;
@@ -274,7 +274,8 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     IStream* m_pStream;
 
   private:
-    long m_lRef, *m_plModuleRef;
+    AtomicInt m_lRef;
+    AtomicInt* m_plModuleRef;
 
     DWORD m_dwChunkId;
     DWORD m_iText;

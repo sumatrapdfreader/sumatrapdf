@@ -72,7 +72,7 @@ constexpr int kRenderDelayShowNotif = 500;
 
 // OLE drag-drop support for dragging selected text out of the window
 class TextDropSource : public IDropSource {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 
   public:
     STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
@@ -84,7 +84,7 @@ class TextDropSource : public IDropSource {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG r = InterlockedDecrement(&refCount);
         if (r == 0) {
@@ -107,7 +107,7 @@ class TextDropSource : public IDropSource {
 // Drop source that paints a proportional thumbnail via ImageList_BeginDrag
 // (IDragSourceHelper does not show a drag image for our custom IDataObject).
 class ImageDropSource : public IDropSource {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
     HIMAGELIST himl = nullptr;
     bool dragStarted = false;
 
@@ -156,7 +156,7 @@ class ImageDropSource : public IDropSource {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG r = InterlockedDecrement(&refCount);
         if (r == 0) {
@@ -185,7 +185,7 @@ class ImageDropSource : public IDropSource {
 };
 
 class SimpleEnumFormatEtc : public IEnumFORMATETC {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
     const FORMATETC* formats = nullptr;
     ULONG count = 0;
     ULONG index = 0;
@@ -202,7 +202,7 @@ class SimpleEnumFormatEtc : public IEnumFORMATETC {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG r = InterlockedDecrement(&refCount);
         if (r == 0) {
@@ -248,7 +248,7 @@ class SimpleEnumFormatEtc : public IEnumFORMATETC {
 };
 
 class TextDataObject : public IDataObject {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
     HGLOBAL hText = nullptr;
 
   public:
@@ -285,7 +285,7 @@ class TextDataObject : public IDataObject {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG r = InterlockedDecrement(&refCount);
         if (r == 0) {
@@ -431,7 +431,7 @@ static HGLOBAL EncodeBitmapToPngGlobal(HBITMAP hbmp) {
 // IDataObject that provides an image as a virtual file (CFSTR_FILEDESCRIPTOR + CFSTR_FILECONTENTS)
 // without creating any temporary files on disk.
 class ImageDataObject : public IDataObject {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
     HGLOBAL hPngData = nullptr; // PNG-encoded image data
     size_t pngSize = 0;
     UINT cfFileDescriptor = 0;
@@ -484,7 +484,7 @@ class ImageDataObject : public IDataObject {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG r = InterlockedDecrement(&refCount);
         if (r == 0) {
@@ -4181,7 +4181,7 @@ static bool DataObjectHasUrl(IDataObject* dataObj) {
 }
 
 class CanvasDropTarget : public IDropTarget {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
     HWND hwnd = nullptr;
 
   public:
@@ -4196,7 +4196,7 @@ class CanvasDropTarget : public IDropTarget {
         *ppv = nullptr;
         return E_NOINTERFACE;
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG r = InterlockedDecrement(&refCount);
         if (r == 0) {

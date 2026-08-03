@@ -255,7 +255,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(REFIID ri
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef() {
-    return InterlockedIncrement(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release() {

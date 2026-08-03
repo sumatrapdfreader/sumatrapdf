@@ -365,10 +365,10 @@ static bool NeedsMui(PreviewType type) {
     return type == PreviewType::Epub || type == PreviewType::Fb2 || type == PreviewType::Mobi;
 }
 
-PdfPreview::PdfPreview(long* plRefCount, PreviewType type) {
+PdfPreview::PdfPreview(AtomicInt* plRefCount, PreviewType type) {
     m_type = type;
     m_plModuleRef = plRefCount;
-    InterlockedIncrement(m_plModuleRef);
+    AtomicIntInc(m_plModuleRef);
     if (NeedsGdiPlus(type)) {
         m_gdiScope = new ScopedGdiPlus();
     }

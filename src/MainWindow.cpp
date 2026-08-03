@@ -159,7 +159,7 @@ MainWindow::~MainWindow() {
     // stop the find-bar match-count background thread before we're freed
     // (it reads our fields; a pending CountEndTask closes the handle later)
     if (findCountThread) {
-        InterlockedIncrement(&findCountEpoch);
+        AtomicIntInc(&findCountEpoch);
         WaitForSingleObject(findCountThread, INFINITE);
         findCountThread = nullptr;
     }

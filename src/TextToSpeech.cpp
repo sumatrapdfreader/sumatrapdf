@@ -490,7 +490,7 @@ static Str HStringToUtf8Dup(HSTRING hs) {
 }
 
 class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 
   public:
     // IUnknown
@@ -507,7 +507,7 @@ class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
         return E_NOINTERFACE;
     }
 
-    STDMETHODIMP_(ULONG) AddRef() override { return (ULONG)InterlockedIncrement(&refCount); }
+    STDMETHODIMP_(ULONG) AddRef() override { return (ULONG)AtomicIntInc(&refCount); }
 
     STDMETHODIMP_(ULONG) Release() override {
         ULONG res = (ULONG)InterlockedDecrement(&refCount);

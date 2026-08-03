@@ -154,11 +154,11 @@ class FrameSite : public IUnknown {
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) override;
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override;
 
   protected:
-    LONG refCount = 0;
+    AtomicInt refCount = 0;
 
     HW_IOleInPlaceFrame* oleInPlaceFrame = nullptr;
     HW_IOleInPlaceSiteWindowless* oleInPlaceSiteWindowless = nullptr;
@@ -242,7 +242,7 @@ class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
   public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override;
 
     // IInternetProtocolInfo
@@ -270,7 +270,7 @@ class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
     }
 
   protected:
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
@@ -297,7 +297,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
   public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override;
 
     // IInternetProtocol
@@ -314,7 +314,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
     STDMETHODIMP UnlockRequest() override { return S_OK; }
 
   protected:
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 
     // those are filled in Start() and represent data to be sent
     // for a given url
@@ -460,7 +460,7 @@ class HW_IInternetProtocolFactory : public IClassFactory {
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override;
 
     // IClassFactory
@@ -468,7 +468,7 @@ class HW_IInternetProtocolFactory : public IClassFactory {
     STDMETHODIMP LockServer(__unused BOOL fLock) override { return S_OK; }
 
   protected:
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 };
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release() {
@@ -500,13 +500,13 @@ STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown* pUnkOuter, RE
     return E_NOINTERFACE;
 }
 
-static LONG gProtocolFactoryRefCount = 0;
+static AtomicInt gProtocolFactoryRefCount = 0;
 HW_IInternetProtocolFactory* gInternetProtocolFactory = nullptr;
 
 // Register our protocol so that urlmon will call us for every
 // url that starts with HW_PROTO_PREFIX
 static void RegisterInternetProtocolFactory() {
-    LONG val = InterlockedIncrement(&gProtocolFactoryRefCount);
+    int val = AtomicIntInc(&gProtocolFactoryRefCount);
     if (val > 1) {
         return;
     }
@@ -522,7 +522,7 @@ static void RegisterInternetProtocolFactory() {
 }
 
 static void UnregisterInternetProtocolFactory() {
-    LONG val = InterlockedDecrement(&gProtocolFactoryRefCount);
+    int val = AtomicIntDec(&gProtocolFactoryRefCount);
     if (val > 0) {
         return;
     }
@@ -884,7 +884,7 @@ __CRT_UUID_DECL(IDownloadManager, 0x988934a4, 0x064b, 0x11d3, 0xbb, 0x80, 0x0, 0
 #endif
 
 class HW_IDownloadManager : public IDownloadManager {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 
   public:
     HW_IDownloadManager() = default;
@@ -895,7 +895,7 @@ class HW_IDownloadManager : public IDownloadManager {
         static const QITAB qit[] = {QITABENT(HW_IDownloadManager, IDownloadManager), {nullptr}};
         return QISearch(this, qit, riid, ppv);
     }
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
     ULONG STDMETHODCALLTYPE Release() override {
         LONG res = InterlockedDecrement(&refCount);
         ReportIf(res < 0);
@@ -1033,7 +1033,7 @@ class HtmlMoniker : public IMoniker {
     STDMETHODIMP GetClassID(__unused CLSID* pClassID) override { return E_NOTIMPL; }
 
   private:
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 
     Str htmlData;
     IStream* htmlStream = nullptr;
@@ -1107,7 +1107,7 @@ STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void** ppv) {
 }
 
 ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef() {
-    return InterlockedIncrement(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE HtmlMoniker::Release() {

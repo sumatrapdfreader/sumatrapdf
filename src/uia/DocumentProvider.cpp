@@ -116,7 +116,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(RE
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef() {
-    return InterlockedIncrement(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release() {

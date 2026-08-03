@@ -1027,7 +1027,7 @@ static void CountThread(CountThreadData* d) {
 // not start while a count is running. The wait is bounded: the worker checks
 // the epoch after every match, so it exits within one page's work.
 static void AbortCount(MainWindow* win) {
-    InterlockedIncrement(&win->findCountEpoch);
+    AtomicIntInc(&win->findCountEpoch);
     str::FreePtr(&win->findCountPendingText);
     ThreadHandle th = win->findCountThread;
     if (th) {
@@ -1055,7 +1055,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     if (win->findCountThread) {
         // a scan is in flight: cancel it and queue this request; the running
         // worker's CountEndTask will start it once it exits
-        InterlockedIncrement(&win->findCountEpoch);
+        AtomicIntInc(&win->findCountEpoch);
         str::FreePtr(&win->findCountPendingText);
         win->findCountPendingText = str::Dup(text);
         win->findCountPendingMatchCase = matchCase;
@@ -1068,7 +1068,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     // snippets only when the floating results list is showing
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = true;
-    LONG epoch = InterlockedIncrement(&win->findCountEpoch);
+    int epoch = AtomicIntInc(&win->findCountEpoch);
     int startPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
     auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, startPage,
                                  epoch);

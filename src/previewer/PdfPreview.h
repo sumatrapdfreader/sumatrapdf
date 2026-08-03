@@ -22,7 +22,7 @@ class PdfPreview : public IThumbnailProvider,
                    public IPreviewHandler,
                    public IOleWindow {
   public:
-    PdfPreview(long* plRefCount, PreviewType type);
+    PdfPreview(AtomicInt* plRefCount, PreviewType type);
     ~PdfPreview();
 
     // IUnknown
@@ -35,7 +35,7 @@ class PdfPreview : public IThumbnailProvider,
                                     {0}};
         return QISearch(this, qit, riid, ppv);
     }
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
         if (cRef == 0) {
@@ -162,8 +162,8 @@ class PdfPreview : public IThumbnailProvider,
     PageRenderer* renderer = nullptr;
 
   protected:
-    long m_lRef = 1;
-    long* m_plModuleRef = nullptr;
+    AtomicInt m_lRef = 1;
+    AtomicInt* m_plModuleRef = nullptr;
     PreviewType m_type;
     ScopedComPtr<IStream> m_pStream;
     EngineBase* m_engine = nullptr;

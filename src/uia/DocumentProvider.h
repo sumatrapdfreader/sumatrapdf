@@ -10,7 +10,7 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
                                             public IRawElementProviderSimple,
                                             public ITextProvider,
                                             public IAccIdentity {
-    LONG refCount;
+    AtomicInt refCount;
     HWND canvasHwnd;
     SumatraUIAutomationProvider* root;
     bool released;

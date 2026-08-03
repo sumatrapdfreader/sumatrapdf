@@ -15,7 +15,7 @@
 
 Kind kindTooltip = "tooltip";
 
-LONG gTolltipID = 0;
+AtomicInt gTolltipID = 0;
 
 // Canvas infotips (home thumbnails, page elements) are shown from WM_SETCURSOR
 // via SetSingle. TTF_SUBCLASS on the canvas breaks after open→close→home
@@ -25,7 +25,7 @@ LONG gTolltipID = 0;
 static constexpr UINT kTrackToolFlags = TTF_TRACK | TTF_ABSOLUTE | TTF_TRANSPARENT;
 
 static int GetNextTooltipID() {
-    LONG res = InterlockedIncrement(&gTolltipID);
+    int res = AtomicIntInc(&gTolltipID);
     return (int)res;
 }
 

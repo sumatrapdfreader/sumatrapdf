@@ -14,7 +14,7 @@ struct EpubDoc;
 
 class EpubFilter : public FilterBase {
   public:
-    EpubFilter(long* plRefCount) : FilterBase(plRefCount), m_state(STATE_EPUB_END), m_epubDoc(nullptr) {}
+    EpubFilter(AtomicInt* plRefCount) : FilterBase(plRefCount), m_state(STATE_EPUB_END), m_epubDoc(nullptr) {}
     ~EpubFilter() override { CleanUp(); }
 
     HRESULT OnInit() override;
