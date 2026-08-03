@@ -86,6 +86,74 @@ static bool IsSpecialDir(Str s) {
     return str::Eq(s, StrL(".")) || str::Eq(s, StrL(".."));
 }
 
+// Store apps put 0-byte execution aliases under WindowsApps with tag
+// IO_REPARSE_TAG_APPEXECLINK. FindFirstFile reports size 0; the reparse
+// buffer names the real package executable, whose size is what to show.
+#ifndef IO_REPARSE_TAG_APPEXECLINK
+#define IO_REPARSE_TAG_APPEXECLINK (0x8000001BL)
+#endif
+
+static bool IsAbsolutePathW(const WCHAR* s, int cch) {
+    if (cch >= 3 && s[1] == L':' && (s[2] == L'\\' || s[2] == L'/')) {
+        return true;
+    }
+    if (cch >= 2 && s[0] == L'\\' && s[1] == L'\\') {
+        return true;
+    }
+    return false;
+}
+
+static u64 SizeOfAppExecLinkTarget(Str path) {
+    TempWStr wpath = ToWStrTemp(path);
+    HANDLE h = CreateFileW(wpath.s, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+                           FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    if (!IsValidHandle(h)) {
+        return 0;
+    }
+
+    // Header is 8 bytes (tag, data length, reserved); body starts with a
+    // ULONG version, then NUL-terminated WCHAR strings. Version 3 has package
+    // id, entry point, application id, executable path, application type.
+    BYTE buf[16 * 1024];
+    DWORD bytes = 0;
+    BOOL ok = DeviceIoControl(h, FSCTL_GET_REPARSE_POINT, nullptr, 0, buf, sizeof(buf), &bytes, nullptr);
+    CloseHandle(h);
+    if (!ok || bytes < 12) {
+        return 0;
+    }
+
+    DWORD tag = *(DWORD*)buf;
+    WORD dataLen = *(WORD*)(buf + 4);
+    if (tag != IO_REPARSE_TAG_APPEXECLINK || dataLen < 4 || (DWORD)dataLen + 8 > bytes) {
+        return 0;
+    }
+
+    const BYTE* data = buf + 8;
+    const WCHAR* p = (const WCHAR*)(data + 4);
+    const WCHAR* end = (const WCHAR*)(data + dataLen);
+    while (p < end && *p) {
+        const WCHAR* s = p;
+        while (p < end && *p) {
+            p++;
+        }
+        int cch = (int)(p - s);
+        if (p < end) {
+            p++; // skip the NUL between strings
+        }
+        if (!IsAbsolutePathW(s, cch)) {
+            continue;
+        }
+        // GetFileAttributesEx needs a NUL-terminated path; DupTemp adds one.
+        TempWStr target = str::DupTemp(WStr((WCHAR*)s, cch));
+        WIN32_FILE_ATTRIBUTE_DATA fad;
+        if (!GetFileAttributesExW(target.s, GetFileExInfoStandard, &fad)) {
+            return 0;
+        }
+        return ((u64)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+    }
+    return 0;
+}
+
 static void SetDirIterData(DirIter::iterator* it, TempStr name, TempStr path, bool isFile, bool isDir) {
     it->data.fd = &it->fd;
     it->data.name = name;
@@ -244,6 +312,11 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
         } else {
             e.size = ((u64)fd.nFileSizeHigh << 32) | fd.nFileSizeLow;
             e.dv = nullptr;
+            // App execution aliases are 0-byte reparse points; size the target.
+            if (e.size == 0 && (fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) &&
+                fd.dwReserved0 == IO_REPARSE_TAG_APPEXECLINK) {
+                e.size = SizeOfAppExecLinkTarget(path::JoinTemp(dv->fullDir, utf8Name));
+            }
         }
         VecPush(GetTempArena(), temp, e);
     } while (FindNextFileW(hFind, &fd));
