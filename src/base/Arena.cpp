@@ -559,41 +559,43 @@ Str AllocStrTemp(int size) {
     return Str(res, size);
 }
 
-void* ReallocMem(Arena* arena, void* els, int* cap, int newCap, int elSize) {
-    if (newCap <= 0 || elSize <= 0) {
-        return els;
+// Grow/shrink vec storage to newCap elements, plus one trailing zero-pad
+// element (so Vec<char>/Vec<WCHAR> stay C-string compatible).
+// Keeps the first min(len, newCap) elements; zeros the rest of the new block.
+// Updates *els and *cap. len is not modified (caller owns logical length).
+NO_INLINE bool VecRealloc(Arena* a, void** els, int len, int* cap, int newCap, int elSize) {
+    // newCap+1 must fit in int; newElCount * elSize must not overflow.
+    if (elSize <= 0 || newCap < 0 || newCap > INT_MAX - 1) {
+        return false;
+    }
+    int newElCount = newCap + 1;
+    if (newElCount > INT_MAX / elSize) {
+        return false;
     }
 
-    int newSize = newCap * elSize;
-    if (!arena) {
-        void* newEls = realloc(els, newSize);
-        if (!newEls) {
-            return els;
-        }
-        *cap = newCap;
-        return newEls;
+    int keep = len;
+    if (keep < 0) {
+        keep = 0;
     }
+    if (keep > newCap) {
+        keep = newCap;
+    }
+    int oldSize = keep * elSize;
+    int allocSize = newElCount * elSize;
 
-    void* newEls = arena->Alloc(newSize);
+    // Realloc(a, nullptr, n, 0) is malloc-like; single path for first alloc and grow.
+    void* newEls = Realloc(a, *els, (size_t)allocSize, (size_t)oldSize);
     if (!newEls) {
-        return els;
+        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
+        return false;
     }
-
-    if (els && *cap > 0) {
-        int oldSize = *cap * elSize;
-        memcpy(newEls, els, oldSize);
+    int tail = allocSize - oldSize;
+    if (tail > 0) {
+        memset((char*)newEls + oldSize, 0, (size_t)tail);
     }
-
+    *els = newEls;
     *cap = newCap;
-    return newEls;
-}
-
-void* ReallocToWantedSize(Arena* arena, void* els, int* cap, int wantedSize, int elSize) {
-    int newCap = (*cap == 0) ? 8 : *cap * 2;
-    while (newCap < wantedSize) {
-        newCap *= 2;
-    }
-    return ReallocMem(arena, els, cap, newCap, elSize);
+    return true;
 }
 
 // Logs an arena's lifetime allocation count and peak bytes. Call on exit, before

@@ -9,14 +9,6 @@
 Storage is heap (or arena) only; starts empty with no allocation.
 */
 template <typename T>
-class Vec;
-
-// Slow path for Vec::EnsureCap: grow storage to at least `needed` elements
-// (plus one trailing zero pad). elSize is sizeof(T) as int.
-template <typename T>
-NO_INLINE bool VecEnsureCapSlow(Vec<T>& v, int needed, int elSize);
-
-template <typename T>
 class Vec {
   public:
     Arena* a = nullptr;
@@ -34,8 +26,12 @@ class Vec {
         if (cap >= capNeeded) {
             return els;
         }
-        // slow path
-        if (!VecEnsureCapSlow(*this, capNeeded, (int)sizeof(T))) {
+        // slow path: growth policy + untyped realloc (NO_INLINE VecRealloc)
+        int newCap = cap * 2;
+        if (capNeeded > newCap) {
+            newCap = capNeeded;
+        }
+        if (!VecRealloc(a, (void**)&els, len, &cap, newCap, (int)sizeof(T))) {
             return nullptr;
         }
         return els;
@@ -310,46 +306,6 @@ class Vec {
     const_iterator end() const { return els ? els + len : nullptr; }
 };
 
-template <typename T>
-NO_INLINE bool VecEnsureCapSlow(Vec<T>& v, int needed, int elSize) {
-    int newCap = v.cap * 2;
-    if (needed > newCap) {
-        newCap = needed;
-    }
-
-    int newElCount = newCap + 1;
-    if (newElCount >= (INT_MAX / elSize)) {
-        return false;
-    }
-    if (newElCount > INT_MAX) {
-        // limitation of Vec::Find
-        return false;
-    }
-
-    int oldSize = v.len * elSize;
-    int allocSize = newElCount * elSize;
-    int newPadding = allocSize - oldSize;
-    T* newEls;
-    if (!v.els) {
-        newEls = (T*)Alloc(v.a, allocSize);
-        if (newEls) {
-            memset(newEls, 0, (size_t)allocSize);
-        }
-    } else {
-        newEls = (T*)Realloc(v.a, v.els, (size_t)allocSize, (size_t)oldSize);
-        if (newEls) {
-            memset((char*)newEls + oldSize, 0, (size_t)newPadding);
-        }
-    }
-    if (!newEls) {
-        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
-        return false;
-    }
-    v.els = newEls;
-    v.cap = newCap;
-    return true;
-}
-
 // number of elements, as int (matches len() for Str / WStr)
 template <typename T>
 inline int len(const Vec<T>& v) {
@@ -365,18 +321,23 @@ inline void DeleteVecMembers(Vec<T>& v) {
     v.Clear();
 }
 
+// Grow a vec-like {els, len, cap} to hold at least wantedSize elements.
+// Same growth policy as Vec::EnsureCap (max(cap*2, wantedSize)).
 template <typename T>
 void VecExpandTo(Arena* arena, T& v, int wantedSize) {
     if (wantedSize <= v.cap) {
         return;
     }
-    v.els = (decltype(v.els))ReallocToWantedSize(arena, v.els, &v.cap, wantedSize, sizeofi(*v.els));
+    int newCap = v.cap * 2;
+    if (wantedSize > newCap) {
+        newCap = wantedSize;
+    }
+    VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
 }
 
 template <typename T>
 void VecExpand(Arena* arena, T& v, int n) {
-    int wantedSize = v.len + n;
-    VecExpandTo(arena, v, wantedSize);
+    VecExpandTo(arena, v, v.len + n);
 }
 
 template <typename T, typename E>

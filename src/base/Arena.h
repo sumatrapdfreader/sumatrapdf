@@ -162,8 +162,9 @@ inline T* AllocArrayTemp(int n = 1) {
 
 void* AllocTemp(int size, u64 align = 8);
 
-void* ReallocMem(struct Arena* arena, void* els, int* cap, int newCap, int elSize);
-void* ReallocToWantedSize(struct Arena* arena, void* els, int* cap, int wantedSize, int elSize);
+// Grow/shrink vec-like storage to newCap elements (+1 trailing zero pad).
+// Updates *els and *cap; keeps min(len, newCap) elements.
+bool VecRealloc(struct Arena* a, void** els, int len, int* cap, int newCap, int elSize);
 
 // Allocate and construct object using placement new (supports constructor args)
 template <typename T, typename... Args>
