@@ -1460,6 +1460,9 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         ReportIf(!hwnd);
         w->maxDx = 150;
         w->onTextChanged = MkFunc0(ContentsChanged, ew);
+        // flush Contents on blur (EN_KILLFOCUS); do not fold this into
+        // onTextChanged — that must stay EN_CHANGE-only (Advanced Settings UAF)
+        w->onKillFocus = MkFunc0(ContentsChanged, ew);
         ew->editContents = w;
         vbox->AddChild(w);
     }

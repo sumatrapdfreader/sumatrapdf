@@ -309,7 +309,10 @@ struct Edit : Wnd {
         bool isRtl = false;
     };
 
+    // EN_CHANGE only (do not use for kill-focus flush; see onKillFocus)
     TextChangedHandler onTextChanged;
+    // EN_KILLFOCUS only (e.g. flush annotation Contents before blur)
+    TextChangedHandler onKillFocus;
 
     // set before Create() (pixels); or use idealWidthChars / maxWidthChars
     int idealSizeLines = 1;

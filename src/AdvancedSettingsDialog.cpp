@@ -268,6 +268,12 @@ struct AdvancedSettingsWnd : Wnd {
     DropDown* dropDownValue = nullptr;     // in-place enum editor, created on demand
     Str dropDownOrigVal;                   // value before the drop-down opened (owned), for Esc
     int editItemIdx = -1;                  // index into items of the setting being edited
+    // Create/show/focus of the in-place editor can re-enter CancelEditValue
+    // (filter EN_CHANGE, selection change) while the local editor pointer is
+    // still in use — that was a heap UAF (CloseEnumEdit delete). While set,
+    // CancelEditValue / CloseEnumEdit only mark pendingCancelEdit and return.
+    bool editCreating = false;
+    bool pendingCancelEdit = false;
 
     // bottom buttons (layout-owned; Tab order Save → Cancel → Open → Help)
     Button* btnSave = nullptr;
@@ -527,9 +533,17 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     args.text = FormatSettingValueTemp(item);
     auto c = new Edit();
     c->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    // Suppress re-entrant CancelEditValue while Create/show/focus pump messages.
+    editCreating = true;
+    pendingCancelEdit = false;
     HWND ok = c->Create(args);
     if (!ok) {
+        editCreating = false;
         delete c;
+        if (pendingCancelEdit) {
+            pendingCancelEdit = false;
+            CancelEditValue();
+        }
         return;
     }
     editValue = c;
@@ -537,9 +551,20 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     SetWindowPos(c->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW);
     c->SelectAll();
     HwndSetFocus(c->hwnd);
+    editCreating = false;
+    if (pendingCancelEdit) {
+        pendingCancelEdit = false;
+        CancelEditValue();
+    }
 }
 
 void AdvancedSettingsWnd::CancelEditValue() {
+    if (editCreating) {
+        // Called re-entrantly from Create/show/focus of BeginEdit*; finish
+        // construction first, then cancel (avoids UAF on the editor being built).
+        pendingCancelEdit = true;
+        return;
+    }
     CloseEnumEdit(true);
     if (!editValue) {
         return;
@@ -570,9 +595,18 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     args.parent = hwnd;
     args.font = font;
     auto c = new DropDown();
+    // Suppress re-entrant CancelEditValue / CloseEnumEdit while Create and
+    // CB_SHOWDROPDOWN pump messages (filter EN_CHANGE was freeing c mid-flight).
+    editCreating = true;
+    pendingCancelEdit = false;
     HWND ok = c->Create(args);
     if (!ok) {
+        editCreating = false;
         delete c;
+        if (pendingCancelEdit) {
+            pendingCancelEdit = false;
+            CancelEditValue();
+        }
         return;
     }
     StrVec vals;
@@ -592,6 +626,11 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     SetWindowPos(c->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW);
     HwndSetFocus(c->hwnd);
     SendMessageW(c->hwnd, CB_SHOWDROPDOWN, TRUE, 0);
+    editCreating = false;
+    if (pendingCancelEdit) {
+        pendingCancelEdit = false;
+        CancelEditValue();
+    }
 }
 
 void AdvancedSettingsWnd::OnEnumSelectionChanged() {
@@ -623,6 +662,10 @@ void AdvancedSettingsWnd::CheckDropDownClosed() {
 }
 
 void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
+    if (editCreating) {
+        pendingCancelEdit = true;
+        return;
+    }
     if (!dropDownValue) {
         return;
     }
