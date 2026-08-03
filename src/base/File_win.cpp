@@ -122,6 +122,158 @@ static void StoreAttrsCache(Str path, u64 now, bool ok, const WIN32_FILE_ATTRIBU
     e.tickMs = now;
 }
 
+// Non-fixed drive availability (network / removable / …). When a mapped or UNC
+// drive is offline, GetFileAttributesEx is very slow; after the first failure
+// we cache "unavailable" and fail subsequent paths on that drive for a few
+// minutes without touching the network again.
+struct DriveAvailEntry {
+    DriveAvailEntry* next = nullptr;
+    char driveName[128]; // "X" or "\\server\share"
+    bool isAvailable = false;
+    u64 lastCheckMs = 0;
+};
+
+static DriveAvailEntry* gDriveAvailHead = nullptr;
+constexpr u64 kDriveAvailTtlMs = 4ull * 60ull * 1000ull; // 4 minutes
+
+// Fill keyOut with a non-fixed drive key ("X" or "\\server\share"). Returns
+// false for fixed drives, relative paths, and paths we do not guard.
+static bool GetNonFixedDriveKey(Str path, char* keyOut, int keyCap) {
+    if (!path || !keyOut || keyCap < 2) {
+        return false;
+    }
+    keyOut[0] = 0;
+    int n = len(path);
+    if (n < 2) {
+        return false;
+    }
+    const char* s = path.s;
+
+    bool sep0 = s[0] == '\\' || s[0] == '/';
+    bool sep1 = s[1] == '\\' || s[1] == '/';
+    if (sep0 && sep1) {
+        // \\?\UNC\server\share\... or \\?\C:\... or \\server\share\...
+        int start = 2;
+        if (n >= 4 && (s[2] == '?' || s[2] == '.') && (s[3] == '\\' || s[3] == '/')) {
+            if (s[2] == '.') {
+                return false; // \\.\device
+            }
+            Str rest((char*)s + 4, n - 4);
+            if (str::StartsWithI(rest, StrL("UNC\\")) || str::StartsWithI(rest, StrL("UNC/"))) {
+                // skip "UNC\"
+                start = 4 + 4;
+            } else {
+                // \\?\C:\... → treat rest as the real path
+                return GetNonFixedDriveKey(rest, keyOut, keyCap);
+            }
+        }
+        // Parse \\server\share from s[start..]
+        if (start >= n) {
+            return false;
+        }
+        int i = start;
+        while (i < n && s[i] != '\\' && s[i] != '/') {
+            i++;
+        }
+        if (i >= n || i == start) {
+            return false; // no server or no share
+        }
+        int shareStart = i + 1;
+        int j = shareStart;
+        while (j < n && s[j] != '\\' && s[j] != '/') {
+            j++;
+        }
+        if (j == shareStart) {
+            return false;
+        }
+        // key = "\\server\share" (normalize seps to '\')
+        int need = 2 + (i - start) + 1 + (j - shareStart) + 1;
+        if (need > keyCap) {
+            return false;
+        }
+        int p = 0;
+        keyOut[p++] = '\\';
+        keyOut[p++] = '\\';
+        for (int k = start; k < i; k++) {
+            keyOut[p++] = s[k];
+        }
+        keyOut[p++] = '\\';
+        for (int k = shareStart; k < j; k++) {
+            keyOut[p++] = s[k];
+        }
+        keyOut[p] = 0;
+        return true;
+    }
+
+    if (s[1] != ':') {
+        return false; // relative
+    }
+    char drive = (char)toupper((u8)s[0]);
+    if (drive < 'A' || drive > 'Z') {
+        return false;
+    }
+    WCHAR root[] = LR"(?:\)";
+    root[0] = (WCHAR)drive;
+    UINT type = GetDriveTypeW(root);
+    // Guard everything that is not a local fixed disk. DRIVE_NO_ROOT_DIR is a
+    // disconnected mapping — still use the availability cache.
+    if (type == DRIVE_FIXED || type == DRIVE_UNKNOWN) {
+        return false;
+    }
+    keyOut[0] = drive;
+    keyOut[1] = 0;
+    return true;
+}
+
+// Caller holds gAttrsCacheMutex. Drops expired nodes while scanning.
+static DriveAvailEntry* FindDriveAvailLocked(Str driveName, u64 now) {
+    DriveAvailEntry** pp = &gDriveAvailHead;
+    while (*pp) {
+        DriveAvailEntry* e = *pp;
+        if (now - e->lastCheckMs > kDriveAvailTtlMs) {
+            *pp = e->next;
+            free(e);
+            continue;
+        }
+        if (str::EqI(Str(e->driveName), driveName)) {
+            return e;
+        }
+        pp = &e->next;
+    }
+    return nullptr;
+}
+
+// Caller holds gAttrsCacheMutex.
+static void StoreDriveAvailLocked(Str driveName, bool isAvailable, u64 now) {
+    DriveAvailEntry* e = FindDriveAvailLocked(driveName, now);
+    if (e) {
+        e->isAvailable = isAvailable;
+        e->lastCheckMs = now;
+        return;
+    }
+    e = AllocStruct<DriveAvailEntry>();
+    if (!e) {
+        return;
+    }
+    str::BufSet(Str(e->driveName, dimof(e->driveName)), driveName);
+    e->isAvailable = isAvailable;
+    e->lastCheckMs = now;
+    e->next = gDriveAvailHead;
+    gDriveAvailHead = e;
+}
+
+// Probe the drive root ("X:\" or "\\server\share\") without holding the mutex.
+static bool ProbeDriveRootAccessible(Str driveKey) {
+    TempStr root;
+    if (len(driveKey) == 1) {
+        root = fmt("%c:\\", driveKey.s[0]);
+    } else {
+        root = str::JoinTemp(driveKey, StrL("\\"));
+    }
+    WIN32_FILE_ATTRIBUTE_DATA data{};
+    return GetFileAttributesExW(CWStrTemp(root), GetFileExInfoStandard, &data) != 0;
+}
+
 bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     if (out) {
         *out = {};
@@ -131,6 +283,40 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     }
 
     const bool network = IsOnNetworkDrive(path);
+
+    char driveKeyBuf[128];
+    const bool hasDriveKey = GetNonFixedDriveKey(path, driveKeyBuf, dimof(driveKeyBuf));
+    Str driveKey = hasDriveKey ? Str(driveKeyBuf) : Str();
+
+    // Non-fixed drive availability. Network paths check this first (before the
+    // per-path attrs cache and GetFileAttributesEx): an offline share would
+    // otherwise hang on every history/menu path. On cache miss for network we
+    // probe the drive root once and remember the result for ~4 minutes.
+    if (hasDriveKey) {
+        const u64 now = GetTickCount64();
+        bool needProbe = false;
+        {
+            ScopedMutex lock(&gAttrsCacheMutex);
+            DriveAvailEntry* e = FindDriveAvailLocked(driveKey, now);
+            if (e) {
+                if (!e->isAvailable) {
+                    return false; // known offline — fail fast
+                }
+                // known available: continue to path cache / attribute query
+            } else if (network) {
+                needProbe = true;
+            }
+        }
+        if (needProbe) {
+            bool avail = ProbeDriveRootAccessible(driveKey);
+            ScopedMutex lock(&gAttrsCacheMutex);
+            StoreDriveAvailLocked(driveKey, avail, GetTickCount64());
+            if (!avail) {
+                return false;
+            }
+        }
+    }
+
     if (network) {
         const u64 now = GetTickCount64();
         bool ok = false;
@@ -154,16 +340,44 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         data = {};
     }
 
+    if (ok) {
+        if (hasDriveKey) {
+            ScopedMutex lock(&gAttrsCacheMutex);
+            StoreDriveAvailLocked(driveKey, true, GetTickCount64());
+        }
+        if (network) {
+            ScopedMutex lock(&gAttrsCacheMutex);
+            StoreAttrsCache(path, GetTickCount64(), true, data);
+        }
+        *out = data;
+        return true;
+    }
+
+    // Attribute query failed. For non-network non-fixed drives (e.g. removable
+    // with no media), learn availability after the first failure. Network was
+    // already probed above on miss.
+    if (hasDriveKey && !network) {
+        const u64 now = GetTickCount64();
+        bool needProbe = false;
+        {
+            ScopedMutex lock(&gAttrsCacheMutex);
+            DriveAvailEntry* e = FindDriveAvailLocked(driveKey, now);
+            if (!e) {
+                needProbe = true;
+            }
+        }
+        if (needProbe) {
+            bool avail = ProbeDriveRootAccessible(driveKey);
+            ScopedMutex lock(&gAttrsCacheMutex);
+            StoreDriveAvailLocked(driveKey, avail, GetTickCount64());
+        }
+    }
+
     if (network) {
         // logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=miss\n", path, (int)(ok != 0),
         //      data.dwFileAttributes);
         ScopedMutex lock(&gAttrsCacheMutex);
-        StoreAttrsCache(path, GetTickCount64(), ok != 0, data);
-    }
-
-    if (ok) {
-        *out = data;
-        return true;
+        StoreAttrsCache(path, GetTickCount64(), false, data);
     }
     return false;
 }
