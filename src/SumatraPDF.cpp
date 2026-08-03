@@ -8425,6 +8425,9 @@ ShowMessage:
     MessageBoxWarning(nullptr, msg, _TRA("Downloading symbols"));
 }
 
+#if 1
+void DebugCorruptMemory() {}
+#else
 // try to trigger a crash due to corrupting allocator
 // this is a different kind of a crash than just referencing invalid memory
 // as corrupted memory migh prevent crash handler from working
@@ -8441,9 +8444,9 @@ void DebugCorruptMemory() {
     // this triggers ntdll.dll!RtlReportCriticalFailure()
     // cppcheck-suppress doubleFree
     // the double free is deliberate; silence /analyze C6001
-#pragma warning(suppress : 6001)
     free(s);
 }
+#endif
 
 constexpr const char* kManualDefaultDocURI = "/SumatraPDF-documentation";
 constexpr const char* kManualVirtualHost = "https://sumatrapdf.manual/";
