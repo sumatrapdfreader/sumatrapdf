@@ -335,14 +335,9 @@ inline void DeleteVecMembers(Vec<T>& v) {
     v.Clear();
 }
 
-template <typename T>
-bool VecExpand(Arena* arena, T& v, int n) {
-    return VecReserve(arena, v, v.len + n);
-}
-
 template <typename T, typename E>
 bool VecPush(Arena* arena, T& v, E el) {
-    bool ok = VecExpand(arena, v, 1);
+    bool ok = VecReserve(arena, v, v.len + 1);
     if (!ok) {
         return false;
     }
