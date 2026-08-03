@@ -245,13 +245,6 @@ struct Vec {
         }
     }
 
-    void SortTyped(int (*cmpFunc)(const T* a, const T* b)) {
-        if (len > 0) {
-            auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
-            qsort(els, len, sizeof(T), cmpFunc2);
-        }
-    }
-
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = T*;
@@ -267,6 +260,14 @@ struct Vec {
 template <typename T>
 inline int len(const Vec<T>& v) {
     return v.len;
+}
+
+template <typename T>
+void VecSort(Vec<T>& v, int (*cmpFunc)(const T* a, const T* b)) {
+    if (v.len > 0) {
+        auto cmp = (int (*)(const void* a, const void* b))cmpFunc;
+        qsort(v.els, v.len, sizeof(T), cmp);
+    }
 }
 
 template <typename T>

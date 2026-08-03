@@ -1082,7 +1082,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         return false;
     }
     // sort and deduplicate
-    pagesToDelete.SortTyped([](const int* a, const int* b) -> int { return *a - *b; });
+    VecSort(pagesToDelete, [](const int* a, const int* b) -> int { return *a - *b; });
     int prev = -1;
     Vec<int> unique;
     for (int p : pagesToDelete) {
