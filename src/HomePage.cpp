@@ -1076,6 +1076,11 @@ constexpr int kThumbsBorderDx = 1;
 #define kHomeListRowDy DpiScale(hdc, 46)
 #define kHomeListRowGapDx DpiScale(hdc, 8)
 
+// ThumbnailLayout::fileSize cache: AppendBlanks zero-fills, so set
+// kSizeNotFetched after each AppendBlanks (default member init never runs).
+constexpr i64 kSizeNotFetched = -2;
+constexpr i64 kSizeFetchFail = -1;
+
 struct ThumbnailLayout {
     Rect rcPage;
     Size szThumb;
@@ -1089,14 +1094,11 @@ struct ThumbnailLayout {
     Rect rcListPin;
     FileState* fs = nullptr; // info needed to draw the thumbnail
     StaticLink* sl = nullptr;
-    // Cached file::GetSize() so we don't hit the disk on every paint. 0 means
-    // "not fetched yet" and -1 "couldn't read it", NOT some other sentinel:
-    // these are created with Vec::AppendBlanks(), which zero-fills, so default
-    // member initializers never run and any non-zero "unset" value would read
-    // back as 0 (#5870: the whole size column showed 0.00 KB).
-    i64 fileSize = 0;
+    // Cached file::GetSize() so we don't hit the disk on every paint.
+    // AppendBlanks zero-fills, so set to kSizeNotFetched after AppendBlanks.
+    i64 fileSize = kSizeNotFetched;
     // false until MeasureHomeListRowText() has split rcListFileName into name +
-    // directory. Also relies on the zero-fill above, so false must mean "not
+    // directory. Also relies on AppendBlanks zero-fill, so false must mean "not
     // measured yet"
     bool listTextMeasured = false;
 };
@@ -1814,6 +1816,7 @@ void LayoutHomePage(HomePageLayout& l) {
         int listPrefetchY = kHomeListRowDy;
         for (int row = 0; row < nFiles; row++) {
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
+            thumb.fileSize = kSizeNotFetched;
             FileState* fs = fileStates[row];
             thumb.fs = fs;
             Rect rcRow(listX, ptOff.y + (row * kHomeListRowDy), thumbsContentWidth, kHomeListRowDy);
@@ -1878,6 +1881,7 @@ void LayoutHomePage(HomePageLayout& l) {
                     break;
                 }
                 ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
+                thumb.fileSize = kSizeNotFetched;
                 FileState* fs = fileStates[(row * thumbsColsForLayout) + col];
                 thumb.fs = fs;
 
@@ -2270,10 +2274,11 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     }
 
     // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses
-    // it). An actually-empty file re-queries each paint, which is fine: they're
-    // rare, and on a network drive the answer comes from the attribute cache.
-    if (thumb.fileSize == 0) {
-        thumb.fileSize = file::GetSize(path);
+    // it). kSizeNotFetched = not tried; kSizeFetchFail = GetSize failed; >= 0
+    // is a real size (including empty files).
+    if (thumb.fileSize == kSizeNotFetched) {
+        i64 sz = file::GetSize(path);
+        thumb.fileSize = (sz < 0) ? kSizeFetchFail : sz;
     }
     TempStr fileSize = FileSizeForHomeListTemp(thumb.fileSize);
     SetTextColor(hdc, ThemeWindowTextColor());
