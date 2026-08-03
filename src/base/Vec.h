@@ -290,11 +290,6 @@ class Vec {
         }
     }
 
-    bool IsEmpty() const { return len == 0; }
-
-    // TOOD: replace with IsEmpty()
-    bool empty() const { return len == 0; }
-
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = T*;
@@ -322,29 +317,33 @@ inline void DeleteVecMembers(Vec<T>& v) {
 }
 
 // Grow a vec-like {els, len, cap} to hold at least wantedSize elements.
-// Same growth policy as Vec::EnsureCap (max(cap*2, wantedSize)).
+// Growth policy: (max(cap*2, wantedSize)).
 template <typename T>
-void VecExpandTo(Arena* arena, T& v, int wantedSize) {
+bool VecExpandTo(Arena* arena, T& v, int wantedSize) {
     if (wantedSize <= v.cap) {
-        return;
+        return true;
     }
     int newCap = v.cap * 2;
     if (wantedSize > newCap) {
         newCap = wantedSize;
     }
-    VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
+    return VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
 }
 
 template <typename T>
-void VecExpand(Arena* arena, T& v, int n) {
-    VecExpandTo(arena, v, v.len + n);
+bool VecExpand(Arena* arena, T& v, int n) {
+    return VecExpandTo(arena, v, v.len + n);
 }
 
 template <typename T, typename E>
-void VecPush(Arena* arena, T& v, E el) {
-    VecExpand(arena, v, 1);
+bool VecPush(Arena* arena, T& v, E el) {
+    bool ok = VecExpand(arena, v, 1);
+    if (!ok) {
+        return false;
+    }
     v.els[v.len] = el;
     v.len++;
+    return true;
 }
 
 // Iterator wrapper for range-based for loops over Vec types (structs with len/els)

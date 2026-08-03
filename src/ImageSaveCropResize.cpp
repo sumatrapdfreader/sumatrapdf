@@ -1349,7 +1349,7 @@ static void OnSave(ImageEditWindow* ew) {
     DestroyWindow(ew->hwnd);
 
     MainWindow* win = FindMainWindowByHwnd(hwndParent);
-    if (!win && !gWindows.IsEmpty()) {
+    if (!win && len(gWindows) > 0) {
         win = gWindows[0];
     }
     if (win) {
@@ -2266,7 +2266,7 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     if (len(imagePath) == 0 || !file::Exists(imagePath)) {
         return fail(StrL("ERROR missing-image"));
     }
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];

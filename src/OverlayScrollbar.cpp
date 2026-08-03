@@ -833,7 +833,7 @@ void OverlayScrollbarDestroy(OverlayScrollbar* sb) {
 
     // Unregister from global mouse tracking
     gAllScrollbars.Remove(sb);
-    if (gAllScrollbars.IsEmpty()) {
+    if (len(gAllScrollbars) == 0) {
         StopMouseTracking();
     }
 

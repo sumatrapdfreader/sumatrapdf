@@ -1869,7 +1869,7 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
         return;
     }
     TempStr path = str::DupTemp(fs->filePath);
-    if (!fs->favorites->IsEmpty()) {
+    if (len(*fs->favorites) > 0) {
         // only hide documents with favorites
         gFileHistory.MarkFileInexistent(fs->filePath, true);
     } else {

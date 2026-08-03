@@ -389,7 +389,7 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
     if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
         return fail("ERROR missing word1, word2 or cursorWord");
     }
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];
@@ -493,7 +493,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
         return fail("ERROR missing word or typed");
     }
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];
@@ -723,7 +723,7 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail(StrL("NOTREADY no-window"), 2);
     }
     MainWindow* win = gWindows[0];
@@ -786,7 +786,7 @@ TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeO
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return finish(StrL("NOTREADY no-window"), 2);
     }
     MainWindow* win = gWindows[0];
@@ -829,7 +829,7 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];

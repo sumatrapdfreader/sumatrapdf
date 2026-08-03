@@ -4013,7 +4013,7 @@ struct DownloadAndOpenUrlData {
 
 static void OpenDownloadedPath(Str* path) {
     MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow());
-    if (!win && !gWindows.IsEmpty()) {
+    if (!win && len(gWindows) > 0) {
         win = gWindows[0];
     }
     if (win) {

@@ -486,9 +486,9 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     ctx->filePath = tabUnderMouse->filePath;
     ctx->supportsAnnots = EngineSupportsAnnotations(tabEngine) && !win->isFullScreen;
     ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(tabEngine);
-    ctx->canCloseOtherTabs = !toCloseOther.IsEmpty();
-    ctx->canCloseTabsToRight = !toCloseRight.IsEmpty();
-    ctx->canCloseTabsToLeft = !toCloseLeft.IsEmpty();
+    ctx->canCloseOtherTabs = len(toCloseOther) > 0;
+    ctx->canCloseTabsToRight = len(toCloseRight) > 0;
+    ctx->canCloseTabsToLeft = len(toCloseLeft) > 0;
 
     HMENU popup = BuildMenuFromDef(menuDefContextTab, CreatePopupMenu(), ctx);
     DeleteBuildMenuCtx(ctx);

@@ -229,7 +229,7 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, WPARAM key) {
 // on, which page we're on, and the numbered links with their screen rects.
 TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut) {
     str::Builder out;
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         *exitCodeOut = 2;
         out.Append("NOTREADY no-window\n");
         return ToStrTemp(out);

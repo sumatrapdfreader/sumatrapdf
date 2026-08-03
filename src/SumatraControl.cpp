@@ -67,7 +67,7 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return finish(StrL("NOTREADY no-window"), 2);
     }
     MainWindow* win = gWindows[0];

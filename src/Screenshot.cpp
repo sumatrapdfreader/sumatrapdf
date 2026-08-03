@@ -1159,7 +1159,7 @@ void TakeScreenshots() {
 
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)data);
 
-    if (data->captures.IsEmpty()) {
+    if (len(data->captures) == 0) {
         logf("Screenshot: no windows captured\n");
         DestroyWindow(hwnd);
         return;

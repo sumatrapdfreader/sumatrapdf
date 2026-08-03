@@ -932,7 +932,7 @@ static bool IsUnicodeHyphenRune(int c) {
 // so "some-\\nthing" becomes "something" (#5793, #1189). Handles multi-byte
 // UTF-8 hyphens (U+00AD soft hyphen, U+2010/U+2011), not just ASCII '-'.
 static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
-    if (s.IsEmpty() || rects.IsEmpty()) {
+    if (s.IsEmpty() || len(rects) == 0) {
         return;
     }
     Str text = ToStr(s);

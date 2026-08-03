@@ -992,7 +992,7 @@ EngineImage::~EngineImage() {
 }
 
 EngineBase* EngineImage::Clone() {
-    if ((frames.empty() || !frames[0]) && len(pageInfos) == 0) {
+    if ((len(frames) == 0 || !frames[0]) && len(pageInfos) == 0) {
         logf("EngineImage::Clone() failed: no image data for '%s'\n", FilePath() ? FilePath() : StrL("(null)"));
         return nullptr;
     }
@@ -1079,10 +1079,10 @@ bool EngineImage::LoadFromData(Str data) {
 }
 
 bool EngineImage::FinishLoading(Size fallbackSize) {
-    if ((frames.empty() || !frames[0]) && fallbackSize.IsEmpty()) {
+    if ((len(frames) == 0 || !frames[0]) && fallbackSize.IsEmpty()) {
         return false;
     }
-    Pixmap* p0 = frames.empty() ? nullptr : frames[0];
+    Pixmap* p0 = len(frames) == 0 ? nullptr : frames[0];
     if (p0) {
         fileDPI = p0->xres;
     }

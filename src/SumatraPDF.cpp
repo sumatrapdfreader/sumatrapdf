@@ -389,8 +389,8 @@ bool AnnotationsAreDisabled() {
 bool SumatraLaunchBrowser(Str url) {
     if (gPluginMode) {
         // pass the URI back to the browser
-        ReportIf(gWindows.empty());
-        if (gWindows.empty()) {
+        ReportIf(len(gWindows) == 0);
+        if (len(gWindows) == 0) {
             return false;
         }
         HWND plugin = gWindows[0]->hwndFrame;
@@ -2590,7 +2590,7 @@ static MainWindow* CreateMainWindow() {
         RegisterCanvasDropTarget(win->hwndCanvas);
     }
 
-    if (gWindows.IsEmpty() && !NeedsWindowEmbeddingHacks()) {
+    if (len(gWindows) == 0 && !NeedsWindowEmbeddingHacks()) {
         RegisterScreenshotHotkey(win->hwndFrame);
     }
     gWindows.Append(win);
@@ -3123,7 +3123,7 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
     if (openNewTab && !args->win) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
-        if (!gWindows.empty()) {
+        if (len(gWindows) > 0) {
             win = gWindows.Last();
             args->win = win;
             args->isNewWindow = false;
@@ -6693,7 +6693,7 @@ static void ShowOptionsDialog(HWND hwnd) {
 // TODO: should use currently active window, but most of the time
 // there's only one window
 void MaybeRedrawHomePage() {
-    if (!gWindows.empty() && gWindows[0]->IsCurrentTabAbout()) {
+    if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
         gWindows[0]->RedrawAll(true);
     }
 }
@@ -7493,7 +7493,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         }
         AddUniquePageNo(pageNos, pageNo);
     }
-    if (pageNos.empty()) {
+    if (len(pageNos) == 0) {
         return 0;
     }
 
@@ -12640,7 +12640,7 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
     if (len(pathTwoPages) == 0 || len(pathOnePage) == 0) {
         return fail("ERROR missing-paths");
     }
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];
@@ -12716,7 +12716,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail(StrL("NOTREADY no-window"), 2);
     }
     MainWindow* win = gWindows[0];

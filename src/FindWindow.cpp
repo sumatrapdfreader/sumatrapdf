@@ -909,7 +909,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];

@@ -1436,7 +1436,7 @@ Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
 // command id, so duplicate command ids silently collapse into one tooltip.
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     str::Builder out;
-    MainWindow* win = gWindows.IsEmpty() ? nullptr : gWindows[0];
+    MainWindow* win = len(gWindows) == 0 ? nullptr : gWindows[0];
     if (!win || !win->hwndToolbar) {
         *exitCodeOut = 1;
         out.Append("ERROR no-toolbar\n");
