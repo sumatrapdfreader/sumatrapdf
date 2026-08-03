@@ -9,9 +9,7 @@
 Storage is heap (or arena) only; starts empty with no allocation.
 */
 template <typename T>
-class Vec {
-  public:
-    Arena* a = nullptr;
+struct Vec {
     int len = 0;
     int cap = 0;
     T* els = nullptr;
@@ -31,7 +29,7 @@ class Vec {
         if (capNeeded > newCap) {
             newCap = capNeeded;
         }
-        if (!VecRealloc(a, (void**)&els, len, &cap, newCap, (int)sizeof(T))) {
+        if (!VecRealloc(nullptr, (void**)&els, len, &cap, newCap, (int)sizeof(T))) {
             return nullptr;
         }
         return els;
@@ -55,12 +53,11 @@ class Vec {
 
     void FreeEls() {
         if (els) {
-            Free(a, els);
+            Free(nullptr, els);
             els = nullptr;
         }
     }
 
-  public:
     // resets to initial state, freeing memory
     void Reset() {
         FreeEls();
@@ -89,8 +86,7 @@ class Vec {
         return res != nullptr;
     }
 
-    // arena is not owned by Vec and must outlive it
-    explicit Vec(Arena* a = nullptr) { this->a = a; }
+    explicit Vec() = default;
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
@@ -98,7 +94,7 @@ class Vec {
         EnsureCap(other.len);
         len = other.len;
         // using memcpy, as Vec only supports POD types
-        if (other.len > 0) {
+        if (other.len > 0 && other.els && els) {
             memcpy(els, other.els, sizeof(T) * (size_t)other.len);
         }
     }

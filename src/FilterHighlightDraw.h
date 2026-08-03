@@ -4,7 +4,7 @@
 struct StrVec;
 
 template <typename T>
-class Vec;
+struct Vec;
 
 void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt);

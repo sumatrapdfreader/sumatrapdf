@@ -2602,10 +2602,6 @@ EngineMupdf::EngineMupdf() {
     fileDPI = 72.0f;
     darkModeEngineCache = PdfDarkModeEngineCacheCreate();
 
-    // pages Vec + its FzPageInfo elements live for the lifetime of the
-    // engine, so bump-allocate them out of EngineBase::arena
-    pages.a = arena;
-
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
