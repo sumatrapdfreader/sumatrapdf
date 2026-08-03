@@ -1089,7 +1089,12 @@ struct ThumbnailLayout {
     Rect rcListPin;
     FileState* fs = nullptr; // info needed to draw the thumbnail
     StaticLink* sl = nullptr;
-    i64 fileSize = -2; // -2 = not fetched; avoids file::GetSize on every paint
+    // Cached file::GetSize() so we don't hit the disk on every paint. 0 means
+    // "not fetched yet" and -1 "couldn't read it", NOT some other sentinel:
+    // these are created with Vec::AppendBlanks(), which zero-fills, so default
+    // member initializers never run and any non-zero "unset" value would read
+    // back as 0 (#5870: the whole size column showed 0.00 KB).
+    i64 fileSize = 0;
 };
 
 static TempStr FileSizeForHomeListTemp(i64 size);
@@ -2220,8 +2225,10 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
         HdcDrawText(hdc, dirPath, pathRect, pathFmt);
     }
 
-    // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses it)
-    if (thumb.fileSize == -2) {
+    // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses
+    // it). An actually-empty file re-queries each paint, which is fine: they're
+    // rare, and on a network drive the answer comes from the attribute cache.
+    if (thumb.fileSize == 0) {
         thumb.fileSize = file::GetSize(path);
     }
     TempStr fileSize = FileSizeForHomeListTemp(thumb.fileSize);
