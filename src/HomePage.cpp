@@ -1095,6 +1095,10 @@ struct ThumbnailLayout {
     // member initializers never run and any non-zero "unset" value would read
     // back as 0 (#5870: the whole size column showed 0.00 KB).
     i64 fileSize = 0;
+    // false until MeasureHomeListRowText() has split rcListFileName into name +
+    // directory. Also relies on the zero-fill above, so false must mean "not
+    // measured yet"
+    bool listTextMeasured = false;
 };
 
 static TempStr FileSizeForHomeListTemp(i64 size);
@@ -1563,6 +1567,7 @@ static void SyncHomeLayoutCacheFileSizes(const HomePageLayout& l) {
         c.thumbs[i].rcListFileName = l.thumbnails[i].rcListFileName;
         c.thumbs[i].rcListPath = l.thumbnails[i].rcListPath;
         c.thumbs[i].rcListSize = l.thumbnails[i].rcListSize;
+        c.thumbs[i].listTextMeasured = l.thumbnails[i].listTextMeasured;
         c.thumbs[i].szThumb = l.thumbnails[i].szThumb;
     }
 }
@@ -1823,31 +1828,16 @@ void LayoutHomePage(HomePageLayout& l) {
             if (rcFileName.dx < 0) {
                 rcFileName.dx = 0;
             }
-            // give the file name the width it needs; the directory path goes
-            // into the remaining space, right-aligned (mirrored for RTL).
-            // CPU-only measure for visible rows; no disk I/O here.
-            Rect rcPath;
-            if (onScreen) {
-                TempStr fileName = path::GetBaseNameTemp(fs->filePath);
-                int nameDx = HdcMeasureText(hdc, Str(fileName), fontRow).dx + DpiScale(hdc, 4);
-                int minPathDx = DpiScale(hdc, 80);
-                if (nameDx + kHomeListRowGapDx + minPathDx <= rcFileName.dx) {
-                    int pathDx = rcFileName.dx - nameDx - kHomeListRowGapDx;
-                    if (isRtl) {
-                        rcPath = Rect(rcFileName.x, rcFileName.y, pathDx, rcFileName.dy);
-                        rcFileName.x = rcFileName.x + rcFileName.dx - nameDx;
-                    } else {
-                        rcPath = Rect(rcFileName.x + nameDx + kHomeListRowGapDx, rcFileName.y, pathDx, rcFileName.dy);
-                    }
-                    rcFileName.dx = nameDx;
-                }
-            }
+            // rcFileName is the whole name+path span; MeasureHomeListRowText()
+            // splits it when the row is first painted. Doing it here would
+            // measure text for every history entry on every layout, and doing it
+            // only for rows that happen to be on screen *now* left rows scrolled
+            // in later without their directory (#5870 follow-up).
             thumb.rcListThumb = rcThumb;
             thumb.rcListPin = rcPin;
             thumb.rcListRemove = rcRemove;
             thumb.rcListSize = rcSize;
             thumb.rcListFileName = rcFileName;
-            thumb.rcListPath = rcPath;
             // already-cached in-memory thumb size only (no LoadThumbnail / disk)
             if (onScreen && fs->thumbnail) {
                 thumb.szThumb = fs->thumbnail->GetSize();
@@ -2182,6 +2172,36 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
     return str::FormatSizeShortTemp(size, nullptr);
 }
 
+// Give the file name the width it needs and put the directory path in what's
+// left, right-aligned (mirrored for RTL). Done on first paint of a row, not
+// during layout: measuring every history entry made layout (and so scrolling)
+// slow, and measuring only the rows visible at layout time meant rows scrolled
+// into view later never got a directory.
+static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, bool isRtl) {
+    if (thumb.listTextMeasured) {
+        return;
+    }
+    thumb.listTextMeasured = true;
+
+    Rect rcFileName = thumb.rcListFileName;
+    TempStr fileName = path::GetBaseNameTemp(thumb.fs->filePath);
+    int nameDx = HdcMeasureText(hdc, Str(fileName), font).dx + DpiScale(hdc, 4);
+    int minPathDx = DpiScale(hdc, 80);
+    if (nameDx + kHomeListRowGapDx + minPathDx > rcFileName.dx) {
+        // no room for a path, the name gets the whole span
+        return;
+    }
+    int pathDx = rcFileName.dx - nameDx - kHomeListRowGapDx;
+    if (isRtl) {
+        thumb.rcListPath = Rect(rcFileName.x, rcFileName.y, pathDx, rcFileName.dy);
+        rcFileName.x = rcFileName.x + rcFileName.dx - nameDx;
+    } else {
+        thumb.rcListPath = Rect(rcFileName.x + nameDx + kHomeListRowGapDx, rcFileName.y, pathDx, rcFileName.dy);
+    }
+    rcFileName.dx = nameDx;
+    thumb.rcListFileName = rcFileName;
+}
+
 static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
                             bool isRtl) {
     HDC hdc = l.hdc;
@@ -2190,6 +2210,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     if (!IsHomeThumbOnScreen(row, l.rcThumbsArea)) {
         return;
     }
+    MeasureHomeListRowText(hdc, thumb, fontText, isRtl);
 
     COLORREF lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, lineCol), true);
