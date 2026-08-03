@@ -9,6 +9,14 @@
 Storage is heap (or arena) only; starts empty with no allocation.
 */
 template <typename T>
+class Vec;
+
+// Slow path for Vec::EnsureCap: grow storage to at least `needed` elements
+// (plus one trailing zero pad). elSize is sizeof(T) as int.
+template <typename T>
+NO_INLINE bool VecEnsureCapSlow(Vec<T>& v, int needed, int elSize);
+
+template <typename T>
 class Vec {
   public:
     Arena* a = nullptr;
@@ -21,54 +29,13 @@ class Vec {
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
 
-  private:
-    NO_INLINE bool EnsureCapSlow(int needed, int elSize) {
-        int newCap = cap * 2;
-        if (needed > newCap) {
-            newCap = needed;
-        }
-
-        int newElCount = newCap + 1;
-        if (newElCount >= (INT_MAX / elSize)) {
-            return false;
-        }
-        if (newElCount > INT_MAX) {
-            // limitation of Vec::Find
-            return false;
-        }
-
-        int oldSize = len * elSize;
-        int allocSize = newElCount * elSize;
-        int newPadding = allocSize - oldSize;
-        T* newEls;
-        if (!els) {
-            newEls = (T*)Alloc(a, allocSize);
-            if (newEls) {
-                memset(newEls, 0, (size_t)allocSize);
-            }
-        } else {
-            newEls = (T*)Realloc(a, els, (size_t)allocSize, (size_t)oldSize);
-            if (newEls) {
-                memset((char*)newEls + oldSize, 0, (size_t)newPadding);
-            }
-        }
-        if (!newEls) {
-            ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
-            return false;
-        }
-        els = newEls;
-        cap = newCap;
-        return true;
-    }
-
-  public:
     inline T* EnsureCap(int capNeeded) {
         // this is frequent, fast path that should be inlined
         if (cap >= capNeeded) {
             return els;
         }
         // slow path
-        if (!EnsureCapSlow(capNeeded, (int)sizeof(T))) {
+        if (!VecEnsureCapSlow(*this, capNeeded, (int)sizeof(T))) {
             return nullptr;
         }
         return els;
@@ -342,6 +309,46 @@ class Vec {
     iterator end() { return els ? els + len : nullptr; }
     const_iterator end() const { return els ? els + len : nullptr; }
 };
+
+template <typename T>
+NO_INLINE bool VecEnsureCapSlow(Vec<T>& v, int needed, int elSize) {
+    int newCap = v.cap * 2;
+    if (needed > newCap) {
+        newCap = needed;
+    }
+
+    int newElCount = newCap + 1;
+    if (newElCount >= (INT_MAX / elSize)) {
+        return false;
+    }
+    if (newElCount > INT_MAX) {
+        // limitation of Vec::Find
+        return false;
+    }
+
+    int oldSize = v.len * elSize;
+    int allocSize = newElCount * elSize;
+    int newPadding = allocSize - oldSize;
+    T* newEls;
+    if (!v.els) {
+        newEls = (T*)Alloc(v.a, allocSize);
+        if (newEls) {
+            memset(newEls, 0, (size_t)allocSize);
+        }
+    } else {
+        newEls = (T*)Realloc(v.a, v.els, (size_t)allocSize, (size_t)oldSize);
+        if (newEls) {
+            memset((char*)newEls + oldSize, 0, (size_t)newPadding);
+        }
+    }
+    if (!newEls) {
+        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
+        return false;
+    }
+    v.els = newEls;
+    v.cap = newCap;
+    return true;
+}
 
 // number of elements, as int (matches len() for Str / WStr)
 template <typename T>
