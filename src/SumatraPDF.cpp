@@ -12649,7 +12649,8 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
 }
 
 // Verifies maximized WindowState is not downgraded while a document is still
-// loading (about page / unloaded tab). Used by tests/issue-5529.ts.
+// loading, and that a plain empty/home window still may record NORMAL.
+// Used by tests/issue-5529.ts.
 TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {
@@ -12679,30 +12680,65 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
     if (IsZoomed(win->hwndFrame)) {
         ShowWindow(win->hwndFrame, SW_RESTORE);
     }
+
+    // --- mid-load: keep maximized WindowState ---
+    // Empty -for-testing launch has no tabs until a document is opened, so the
+    // old harness (set Loading on CurrentTab) was a no-op and always "failed"
+    // after the guard required WindowHasDocumentLoading. Create a temporary
+    // loading document tab when needed.
     gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
-    // Simulate mid-load so the #5529 guard applies (empty home alone must not).
     WindowTab* tab = win->CurrentTab();
     if (!tab && win->TabCount() > 0) {
         tab = win->GetTab(0);
     }
-    WindowTab::LoadState prevLoad = tab ? tab->loadState : WindowTab::LoadState::None;
-    if (tab) {
+    bool createdTempTab = false;
+    WindowTab::LoadState prevLoad = WindowTab::LoadState::None;
+    if (!tab) {
+        tab = new WindowTab(win);
+        tab->SetFilePath(StrL("C:\\__sumatra_issue_5529_loading__.pdf"));
+        tab->loadState = WindowTab::LoadState::Loading;
+        AddTabToWindow(win, tab);
+        createdTempTab = true;
+    } else {
+        prevLoad = tab->loadState;
         tab->loadState = WindowTab::LoadState::Loading;
     }
     RememberDefaultWindowPosition(win);
-    int observed = gGlobalPrefs->windowState;
-    if (tab) {
+    int observedLoading = gGlobalPrefs->windowState;
+    if (createdTempTab) {
+        RemoveTab(tab);
+        delete tab;
+        tab = nullptr;
+    } else if (tab) {
         tab->loadState = prevLoad;
     }
+
+    // --- empty home (no loading tab): may record NORMAL ---
+    gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+    RememberDefaultWindowPosition(win);
+    int observedEmpty = gGlobalPrefs->windowState;
+
     gGlobalPrefs->windowState = prevState;
-    bool ok = observed == WIN_STATE_MAXIMIZED;
-    if (ok) {
-        out.Append(fmt("OK windowState preserved as maximized\n"));
-    } else {
-        out.Append(fmt("FAIL windowState=%d expected=%d\n", observed, WIN_STATE_MAXIMIZED));
+
+    bool okLoading = observedLoading == WIN_STATE_MAXIMIZED;
+    // Empty non-maximized frame should be allowed to write NORMAL (home-window
+    // fix after #5529). If the frame is still maximized for some reason, skip.
+    bool okEmpty = IsZoomed(win->hwndFrame) || observedEmpty == WIN_STATE_NORMAL;
+    if (okLoading && okEmpty) {
+        out.Append(fmt("OK loading preserved maximized; empty records normal\n"));
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        return ToStrTemp(out);
+    }
+    if (!okLoading) {
+        out.Append(fmt("FAIL loading windowState=%d expected=%d\n", observedLoading, WIN_STATE_MAXIMIZED));
+    }
+    if (!okEmpty) {
+        out.Append(fmt("FAIL empty windowState=%d expected=%d\n", observedEmpty, WIN_STATE_NORMAL));
     }
     if (exitCodeOut) {
-        *exitCodeOut = ok ? 0 : 1;
+        *exitCodeOut = 1;
     }
     return ToStrTemp(out);
 }
