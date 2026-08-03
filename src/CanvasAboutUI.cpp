@@ -196,8 +196,41 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
         case WM_COMMAND:
             if (HIWORD(wp) == EN_CHANGE && (HWND)lp == win->hwndHomeSearch) {
                 win->homePageScrollY = 0;
+                // the filter changed the list, so select its first entry (#1136)
+                HomePageSelectFirst(win);
                 HwndInvalidate(win->hwndCanvas);
                 return 0;
+            }
+            break;
+
+        case WM_KEYDOWN:
+            // keyboard navigation of the file list (issue #1136). These keys are
+            // routed here by MaybeTranslateAccelerator instead of scrolling
+            switch (wp) {
+                case VK_LEFT:
+                    HomePageMoveSelection(win, -1, 0);
+                    return 0;
+                case VK_RIGHT:
+                    HomePageMoveSelection(win, 1, 0);
+                    return 0;
+                case VK_UP:
+                    HomePageMoveSelection(win, 0, -1);
+                    return 0;
+                case VK_DOWN:
+                    HomePageMoveSelection(win, 0, 1);
+                    return 0;
+                case VK_RETURN: {
+                    Str path = HomePageSelectedFilePathTemp(win);
+                    if (!path) {
+                        return 0;
+                    }
+                    LoadArgs args(path, win);
+                    // ctrl forces always opening, as for a click
+                    args.activateExisting = !IsCtrlPressed();
+                    args.activateExistingInWindow = true;
+                    StartLoadDocument(&args);
+                    return 0;
+                }
             }
             break;
 

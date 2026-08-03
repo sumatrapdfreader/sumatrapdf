@@ -33,6 +33,7 @@ const user32 = dlopen("user32.dll", {
   PrintWindow: { args: [FFIType.ptr, FFIType.u64, FFIType.u32], returns: FFIType.bool },
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
+  GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -228,6 +229,21 @@ export function getWindowPid(hwnd: number): number {
   const out = new Uint32Array(1);
   user32.symbols.GetWindowThreadProcessId(hwnd, ptr(out));
   return out[0];
+}
+
+// Which window has keyboard focus in the thread that owns hwnd. GetFocus() only
+// answers for the calling thread, so a test in another process must go through
+// GUITHREADINFO { DWORD cbSize, flags; HWND active, focus, capture, menuOwner,
+// moveSize, caret; RECT rcCaret; } = 72 bytes on x64, focus at offset 16.
+export function getFocusedHwnd(hwndInSameThread: number): number {
+  const tid = user32.symbols.GetWindowThreadProcessId(hwndInSameThread, null);
+  const buf = new ArrayBuffer(72);
+  const dv = new DataView(buf);
+  dv.setUint32(0, 72, true);
+  if (!user32.symbols.GetGUIThreadInfo(tid, ptr(buf))) {
+    return 0;
+  }
+  return Number(dv.getBigUint64(16, true));
 }
 
 // visit returns false to stop enumeration early

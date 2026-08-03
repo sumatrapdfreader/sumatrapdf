@@ -40,6 +40,15 @@ void HomePageOnMouseWheel(MainWindow* win, int delta);
 void HomePageFocusSearch(MainWindow* win);
 void HomePageDestroySearch(MainWindow* win);
 
+// keyboard navigation of the file list (issue #1136). dCol/dRow are in grid
+// steps; in list view only dRow matters. Moving up past the first row puts
+// focus in the search box
+void HomePageMoveSelection(MainWindow* win, int dCol, int dRow);
+// file of the keyboard-selected entry, empty if there's no selection
+Str HomePageSelectedFilePathTemp(MainWindow* win);
+// select the first entry, e.g. after the filter changed the list
+void HomePageSelectFirst(MainWindow* win);
+
 // per-thumbnail ✕ close button (issue #283)
 void HomePageUpdateCloseButton(MainWindow* win, int x, int y);
 void HomePageHideCloseButton();

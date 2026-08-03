@@ -1173,6 +1173,16 @@ constexpr int kSearchThumbnailsGapY = 12;
 static WNDPROC DefWndProcHomeSearch = nullptr;
 
 static LRESULT CALLBACK WndProcHomeSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_KEYDOWN && wp == VK_DOWN) {
+        // down from the search box moves into the file list (issue #1136)
+        MainWindow* win = FindMainWindowByHwnd(GetParent(hwnd));
+        if (win) {
+            win->homePageSelIdx = 0;
+            HwndSetFocus(win->hwndCanvas);
+            HwndInvalidate(win->hwndCanvas);
+        }
+        return 0;
+    }
     if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
         HwndSetText(hwnd, "");
         MainWindow* win = FindMainWindowByHwnd(GetParent(hwnd));
@@ -2172,6 +2182,18 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
     return str::FormatSizeShortTemp(size, nullptr);
 }
 
+// light blue outline marking the keyboard-selected entry (issue #1136).
+// A fixed color: it has to read as "selected" against both the light and the
+// dark page background
+constexpr COLORREF kHomeSelectionColor = RGB(0x4c, 0xa6, 0xff);
+
+static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
+    int penDx = DpiScale(hdc, 2);
+    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, penDx, kHomeSelectionColor), true);
+    ScopedSelectObject brush(hdc, GetStockBrush(NULL_BRUSH));
+    RoundRect(hdc, r.x, r.y, r.x + r.dx, r.y + r.dy, radius, radius);
+}
+
 // Give the file name the width it needs and put the directory path in what's
 // left, right-aligned (mirrored for RTL). Done on first paint of a row, not
 // during layout: measuring every history entry made layout (and so scrolling)
@@ -2203,7 +2225,7 @@ static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, 
 }
 
 static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
-                            bool isRtl) {
+                            bool isRtl, bool isSelected) {
     HDC hdc = l.hdc;
     FileState* fs = thumb.fs;
     Rect row = thumb.rcListRow;
@@ -2211,6 +2233,9 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
         return;
     }
     MeasureHomeListRowText(hdc, thumb, fontText, isRtl);
+    if (isSelected) {
+        DrawHomeSelectionOutline(hdc, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
+    }
 
     COLORREF lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, lineCol), true);
@@ -2326,10 +2351,17 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         DeleteObject(thumbsClip);
     }
 
-    for (ThumbnailLayout& thumb : l.thumbnails) {
+    int nThumbs = len(l.thumbnails);
+    // keep the keyboard selection inside the (possibly filtered) list
+    if (win->homePageSelIdx >= nThumbs) {
+        win->homePageSelIdx = nThumbs - 1;
+    }
+    for (int thumbIdx = 0; thumbIdx < nThumbs; thumbIdx++) {
+        ThumbnailLayout& thumb = l.thumbnails[thumbIdx];
         FileState* fs = thumb.fs;
+        bool isSelected = (thumbIdx == win->homePageSelIdx);
         if (HomePageIsListView()) {
-            DrawHomeListRow(l, thumb, fontText, backgroundColor, isRtl);
+            DrawHomeListRow(l, thumb, fontText, backgroundColor, isRtl, isSelected);
             continue;
         }
         const Rect& page = thumb.rcPage;
@@ -2368,6 +2400,12 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         GetFileStateIcon(fs);
         int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
         ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
+
+        if (isSelected) {
+            Rect sel = page.Union(rect);
+            sel.Inflate(DpiScale(hdc, 4), DpiScale(hdc, 3));
+            DrawHomeSelectionOutline(hdc, sel, 10);
+        }
     }
 
     // restore full clip region
@@ -2458,6 +2496,128 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     }
     // show thin scrollbar briefly to indicate content is scrollable
     OverlayScrollbarShow(win->overlayScrollV, showScrollbarV);
+}
+
+// --- keyboard navigation of the file list (issue #1136) ---
+
+// Selection works off the layout cache, which is filled by the last paint, so
+// the entries are exactly what's on screen (same order, same filtering).
+static int HomeSelectableCount() {
+    return gHomeLayoutCache.valid ? len(gHomeLayoutCache.thumbs) : 0;
+}
+
+// bounding box of an entry, in window coordinates for the current scroll
+static Rect HomeEntryRect(const ThumbnailLayout& t) {
+    if (HomePageIsListView()) {
+        return t.rcListRow;
+    }
+    return t.rcPage.Union(t.rcText);
+}
+
+// how many thumbnails fit in a grid row: the run of entries sharing the y of
+// the first one
+static int HomeGridColumnCount() {
+    auto& c = gHomeLayoutCache;
+    int n = len(c.thumbs);
+    if (n == 0) {
+        return 1;
+    }
+    int y0 = c.thumbs[0].rcPage.y;
+    int nCols = 0;
+    while (nCols < n && c.thumbs[nCols].rcPage.y == y0) {
+        nCols++;
+    }
+    return nCols > 0 ? nCols : 1;
+}
+
+// scroll so the selected entry is fully visible
+static void HomeScrollSelectionIntoView(MainWindow* win) {
+    auto& c = gHomeLayoutCache;
+    int idx = win->homePageSelIdx;
+    if (!c.valid || idx < 0 || idx >= len(c.thumbs)) {
+        return;
+    }
+    Rect r = HomeEntryRect(c.thumbs[idx]);
+    const Rect& area = c.rcThumbsArea;
+    if (r.IsEmpty() || area.IsEmpty()) {
+        return;
+    }
+    // scrollY grows as the content moves up
+    int dy = 0;
+    if (r.y < area.y) {
+        dy = r.y - area.y;
+    } else if (r.y + r.dy > area.y + area.dy) {
+        dy = (r.y + r.dy) - (area.y + area.dy);
+    }
+    if (dy == 0) {
+        return;
+    }
+    int newScrollY = win->homePageScrollY + dy;
+    if (newScrollY < 0) {
+        newScrollY = 0;
+    }
+    win->homePageScrollY = newScrollY; // layout clamps against content height
+}
+
+void HomePageSelectFirst(MainWindow* win) {
+    win->homePageSelIdx = 0;
+}
+
+Str HomePageSelectedFilePathTemp(MainWindow* win) {
+    auto& c = gHomeLayoutCache;
+    int idx = win->homePageSelIdx;
+    if (!c.valid || idx < 0 || idx >= len(c.thumbs)) {
+        return {};
+    }
+    FileState* fs = c.thumbs[idx].fs;
+    if (!fs) {
+        return {};
+    }
+    return str::DupTemp(fs->filePath);
+}
+
+void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
+    int n = HomeSelectableCount();
+    if (n == 0) {
+        return;
+    }
+    int idx = win->homePageSelIdx;
+    if (idx < 0 || idx >= n) {
+        // nothing selected yet: any arrow key selects the first entry
+        win->homePageSelIdx = 0;
+        HomeScrollSelectionIntoView(win);
+        HwndInvalidate(win->hwndCanvas);
+        return;
+    }
+
+    int delta;
+    if (HomePageIsListView()) {
+        // one entry per row; left/right have nothing to move along
+        delta = dRow;
+    } else {
+        delta = dCol + (dRow * HomeGridColumnCount());
+    }
+    if (delta == 0) {
+        return;
+    }
+    int newIdx = idx + delta;
+    if (newIdx < 0) {
+        // above the first row: hand focus to the search box
+        if (dRow < 0 && win->hwndHomeSearch) {
+            HwndSetFocus(win->hwndHomeSearch);
+            return;
+        }
+        newIdx = 0;
+    }
+    if (newIdx >= n) {
+        newIdx = n - 1;
+    }
+    if (newIdx == idx) {
+        return;
+    }
+    win->homePageSelIdx = newIdx;
+    HomeScrollSelectionIntoView(win);
+    HwndInvalidate(win->hwndCanvas);
 }
 
 void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
