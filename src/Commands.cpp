@@ -891,11 +891,6 @@ int GetCommandIdByDesc(Str cmdDesc) {
     return -1;
 }
 
-CommandArg::~CommandArg() {
-    str::Free(strVal);
-    str::Free(name);
-}
-
 // arg names are case insensitive
 static bool IsArgName(Str name, Str argName) {
     if (str::EqI(name, argName)) {
@@ -909,6 +904,38 @@ static bool IsArgName(Str name, Str argName) {
     }
     char c = name.s[argName.len];
     return c == '=';
+}
+
+// One allocation: sizeofi(CommandArg) + name + NUL + strVal + NUL.
+// name.s / strVal.s point into the same block (do not free them separately).
+CommandArg* AllocCommandArg(Str name, Str strVal) {
+    int nameN = name.len;
+    if (nameN < 0) {
+        nameN = 0;
+    }
+    int strN = strVal.len;
+    if (strN < 0) {
+        strN = 0;
+    }
+    int cb = sizeofi(CommandArg) + nameN + 1 + strN + 1;
+    auto* arg = (CommandArg*)malloc((size_t)cb);
+    if (!arg) {
+        return nullptr;
+    }
+    memset(arg, 0, (size_t)cb);
+    char* dst = (char*)arg + sizeofi(CommandArg);
+    if (nameN > 0 && name.s) {
+        memcpy(dst, name.s, (size_t)nameN);
+    }
+    dst[nameN] = 0;
+    arg->name = Str(dst, nameN);
+    dst += nameN + 1;
+    if (strN > 0 && strVal.s) {
+        memcpy(dst, strVal.s, (size_t)strN);
+    }
+    dst[strN] = 0;
+    arg->strVal = Str(dst, strN);
+    return arg;
 }
 
 void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
@@ -925,7 +952,7 @@ void FreeCommandArgs(CommandArg* first) {
     CommandArg* curr = first;
     while (curr) {
         next = curr->next;
-        delete curr;
+        free(curr);
         curr = next;
     }
 }
@@ -982,10 +1009,8 @@ static CommandArg* CopyCommandArgs(CommandArg* first) {
     CommandArg* res = nullptr;
     CommandArg** tail = &res;
     for (CommandArg* curr = first; curr; curr = curr->next) {
-        auto arg = new CommandArg();
+        auto arg = AllocCommandArg(curr->name, curr->strVal);
         arg->type = curr->type;
-        arg->name = str::Dup(curr->name);
-        arg->strVal = str::Dup(curr->strVal);
         arg->boolVal = curr->boolVal;
         arg->intVal = curr->intVal;
         arg->floatVal = curr->floatVal;
@@ -1059,24 +1084,20 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
 }
 
 static CommandArg* NewArg(CommandArg::Type type, Str name) {
-    auto res = new CommandArg();
+    auto res = AllocCommandArg(name, {});
     res->type = type;
-    res->name = str::Dup(name);
     return res;
 }
 
 CommandArg* NewStringArg(Str name, Str val) {
-    auto res = new CommandArg();
+    auto res = AllocCommandArg(name, val);
     res->type = CommandArg::Type::String;
-    res->name = str::Dup(name);
-    res->strVal = str::Dup(val);
     return res;
 }
 
 CommandArg* NewFloatArg(Str name, float val) {
-    auto res = new CommandArg();
+    auto res = AllocCommandArg(name, {});
     res->type = CommandArg::Type::Float;
-    res->name = str::Dup(name);
     res->floatVal = val;
     return res;
 }
@@ -1102,8 +1123,8 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
     }
 
     if (type == CommandArg::Type::String) {
-        auto arg = NewArg(type, argName);
-        arg->strVal = str::Dup(val);
+        auto arg = AllocCommandArg(argName, val);
+        arg->type = type;
         return arg;
     }
 

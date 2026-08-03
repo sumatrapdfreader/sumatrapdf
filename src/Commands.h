@@ -331,11 +331,9 @@ struct CommandArg {
     int intVal = 0;
     float floatVal = 0.0;
     ParsedColor colorVal;
-
-    CommandArg() = default;
-    ~CommandArg();
 };
 
+CommandArg* AllocCommandArg(Str name, Str strVal);
 void FreeCommandArgs(CommandArg* first);
 
 struct CustomCommand {
