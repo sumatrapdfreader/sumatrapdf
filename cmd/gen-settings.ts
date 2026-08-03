@@ -833,9 +833,24 @@ const globalPrefs: Field[] = [
     "if true, prevents the screen from turning off when in fullscreen or presentation mode",
   ),
   field("TabWidth", Int, 300, "maximum width of a single tab"),
-  field("Theme", Str, "", "the name of the theme to use. System picks the last used light or dark theme based on the Windows app mode")
+  // Built-in names must stay in sync with themesTxt in src/Theme.cpp (plus System)
+  field(
+    "Theme",
+    Str,
+    "",
+    "the name of the theme to use. System follows the Windows light/dark app mode " +
+      "and switches between LastLightTheme and LastDarkTheme. Built-in themes: " +
+      "Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
+      "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, " +
+      "Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, " +
+      "Palenight, System (custom Themes[] entries can add more)",
+  )
     .ver("3.5")
-    .doc("Valid themes: light, dark, darker, system"),
+    .doc(
+      "Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
+        "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, " +
+        "GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System",
+    ),
   // remembered by the light/dark toggle and System theme; not user-facing knobs
   field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to")
     .internal()

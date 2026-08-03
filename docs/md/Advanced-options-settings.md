@@ -209,7 +209,10 @@ PreventSleepInFullscreen = true
 ; maximum width of a single tab
 TabWidth = 300
 
-; Valid themes: light, dark, darker, system (introduced in version 3.5)
+; Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized
+; Light, Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark,
+; Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl,
+; Ayu, Palenight, System (introduced in version 3.5)
 Theme = 
 
 ; the light theme the light/dark toggle and the System theme switch to

@@ -645,8 +645,13 @@ struct GlobalPrefs {
     bool preventSleepInFullscreen;
     // maximum width of a single tab
     int tabWidth;
-    // the name of the theme to use. System picks the last used light or
-    // dark theme based on the Windows app mode
+    // the name of the theme to use. System follows the Windows light/dark
+    // app mode and switches between LastLightTheme and LastDarkTheme.
+    // Built-in themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal,
+    // Solarized Light, Solarized Dark, Dracula, Nebula, Greeny, Choco,
+    // Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo
+    // Night, Gruvbox, Night Owl, Ayu, Palenight, System (custom Themes[]
+    // entries can add more)
     Str theme;
     // the light theme the light/dark toggle and the System theme switch to
     Str lastLightTheme;
@@ -1506,22 +1511,24 @@ static const StructInfo gGlobalPrefsInfo = {
     "voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal "
     "speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling is faster when mouse "
     "is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or presentation "
-    "mode\0maximum width of a single tab\0Valid themes: light, dark, darker, system\0the light theme the light/dark "
-    "toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0Valid "
-    "values: off, smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this is the height of "
-    "bookmarks (table of contents) part\0height of toolbar\0font name for bookmarks and favorites tree views. "
-    "automatic means Windows default\0font size for bookmarks and favorites tree views. 0 means Windows "
-    "default\0over-ride application font size. 0 means Windows default\0if true, disables anti-aliasing for rendering "
-    "PDF documents\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
-    "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, we use Windows system colors "
-    "for background/text color. Over-rides other settings\0if true, documents are opened in tabs instead of new "
-    "windows\0if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up "
-    "after selecting text. Set to false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in "
-    "most recently used order instead of tab-strip order\0sequence of zoom levels when zooming in/out; all values must "
-    "lie between 8.33 and 6400\0zoom step size in percents relative to the current zoom level. if zero or negative, "
-    "the values from ZoomLevels are used instead\0\0customization options for PDF, XPS, DjVu and PostScript "
-    "UI\0\0customization options for eBookUI\0\0customization options for Comic Book UI\0\0customization options for "
-    "image files UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
+    "mode\0maximum width of a single tab\0Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized "
+    "Light, Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin "
+    "Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System\0the light theme the light/dark toggle and the "
+    "System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0Valid values: off, "
+    "smart, legacy\0if both favorites and bookmarks parts of sidebar are visible, this is the height of bookmarks "
+    "(table of contents) part\0height of toolbar\0font name for bookmarks and favorites tree views. automatic means "
+    "Windows default\0font size for bookmarks and favorites tree views. 0 means Windows default\0over-ride application "
+    "font size. 0 means Windows default\0if true, disables anti-aliasing for rendering PDF documents\0CAD/engineering "
+    "PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of "
+    "URLs and email addresses found in PDF text\0if true, we use Windows system colors for background/text color. "
+    "Over-rides other settings\0if true, documents are opened in tabs instead of new windows\0if true, a small "
+    "floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to "
+    "false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order "
+    "instead of tab-strip order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and "
+    "6400\0zoom step size in percents relative to the current zoom level. if zero or negative, the values from "
+    "ZoomLevels are used instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization "
+    "options for eBookUI\0\0customization options for Comic Book UI\0\0customization options for image files "
+    "UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
     "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
     "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
     "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
