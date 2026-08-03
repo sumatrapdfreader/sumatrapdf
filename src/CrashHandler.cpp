@@ -177,7 +177,8 @@ static void AppendUncaughtMupdfError(str::Builder& s) {
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s(16 * 1024, gCrashHandlerArena);
+    str::Builder s(16 * 1024);
+    s.a = gCrashHandlerArena;
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -235,7 +236,8 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s(16 * 1024, gCrashHandlerArena);
+    str::Builder s(16 * 1024);
+    s.a = gCrashHandlerArena;
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -296,10 +298,12 @@ void UploadCrashReport(Str d) {
         return;
     }
 
-    str::Builder headers(256, gCrashHandlerArena);
+    str::Builder headers(256);
+    headers.a = gCrashHandlerArena;
     headers.Append("Content-Type: text/plain");
 
-    str::Builder data(16 * 1024, gCrashHandlerArena);
+    str::Builder data(16 * 1024);
+    data.a = gCrashHandlerArena;
     data.Append(d);
 
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
@@ -429,7 +433,8 @@ static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(Str symDir) {
-    str::Builder path(2048, GetTempArena());
+    str::Builder path(2048);
+    path.a = GetTempArena();
 
     bool symDirExists = dir::Exists(symDir);
 
@@ -845,14 +850,16 @@ static void GetSystemInfo(str::Builder& s) {
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    str::Builder s(1024, gCrashHandlerArena);
+    str::Builder s(1024);
+    s.a = gCrashHandlerArena;
     bool isWine = GetModules(s, false);
     gModulesInfo = s.TakeStr();
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    str::Builder s(1024, gCrashHandlerArena);
+    str::Builder s(1024);
+    s.a = gCrashHandlerArena;
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);

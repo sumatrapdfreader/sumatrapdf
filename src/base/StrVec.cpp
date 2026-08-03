@@ -838,7 +838,8 @@ Str Join(StrVec* v, Str sep) {
 
 TempStr JoinTemp(StrVec* v, Str sep) {
     int capHint = CalcCapForJoin(v, sep);
-    str::Builder tmp(capHint, GetTempArena());
+    str::Builder tmp(capHint);
+    tmp.a = GetTempArena();
     JoinInner(v, sep, tmp);
     return ToStrTemp(tmp);
 }

@@ -175,7 +175,7 @@ static void StrBuilderRunTwice(void (*fn)(str::Builder&)) {
     {
         char stack[128];
         int n = 1 + (rand() % 128); // 1..128
-        str::Builder b(0, nullptr, Str(stack, n));
+        str::Builder b(Str(stack, n));
         fn(b);
     }
 }
@@ -272,8 +272,10 @@ static void StrBuilderCapHint() {
     utassert(str.nReallocs == 1);
 
     // same with a small external buf: once content needs heap, capHint applies
+    // (set .cap after construct — preferred capacity while still on external storage)
     char stack[16];
-    str::Builder str2(1024, nullptr, Str(stack, sizeofi(stack)));
+    str::Builder str2(Str(stack, sizeofi(stack)));
+    str2.cap = 1024 + 1; // +1 NUL padding, same as Builder(1024)
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {
@@ -308,7 +310,7 @@ static void WStrBuilderRunTwice(void (*fn)(wstr::Builder&)) {
     {
         WCHAR stack[128];
         int n = 1 + (rand() % 128); // 1..128
-        wstr::Builder b(0, nullptr, WStr(stack, n));
+        wstr::Builder b(WStr(stack, n));
         fn(b);
     }
 }
@@ -389,7 +391,8 @@ static void WStrBuilderCapHint() {
     utassert(str.nReallocs == 1);
 
     WCHAR stack[16];
-    wstr::Builder str2(1024, nullptr, WStr(stack, dimofi(stack)));
+    wstr::Builder str2(WStr(stack, dimofi(stack)));
+    str2.cap = 1024 + 1; // +1 NUL padding, same as Builder(1024)
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {

@@ -65,7 +65,7 @@ void VecTest() {
 
     {
         char buf[2] = {'a', '\0'};
-        str::Builder v(0, nullptr);
+        str::Builder v;
         for (int i = 0; i < 7; i++) {
             v.Append(Str(buf, 1));
             buf[0] = (char)(buf[0] + 1);
@@ -99,7 +99,7 @@ void VecTest() {
     }
 
     {
-        str::Builder v(0, nullptr);
+        str::Builder v;
         for (int i = 0; i < 32; i++) {
             utassert(len(v) == i * 6);
             v.Append("lambd");

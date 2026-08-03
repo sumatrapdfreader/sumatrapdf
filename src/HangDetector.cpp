@@ -54,7 +54,8 @@ bool IsUiHangDetectorRunning() {
 // Symbols: prefer a .pdb next to the .exe (what a local build has), then
 // whatever the crash handler downloaded into gSymbolsDir.
 static bool EnsureSymbols() {
-    str::Builder symPath(1024, GetTempArena());
+    str::Builder symPath(1024);
+    symPath.a = GetTempArena();
     symPath.Append(GetSelfExeDirTemp());
     if (len(gSymbolsDir) > 0) {
         symPath.Append(";");

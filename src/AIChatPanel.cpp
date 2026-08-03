@@ -599,7 +599,7 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
 
     // Most SSE/provider lines are well under 4KB; grow to heap for rare large lines.
     char lineScratch[4096]{};
-    str::Builder lineBuf(0, nullptr, Str(lineScratch, sizeofi(lineScratch)));
+    str::Builder lineBuf(Str(lineScratch, sizeofi(lineScratch)));
     constexpr int kMaxProviderLineSize = 1024 * 1024;
     bool lineTooLong = false;
     char buf[4096];

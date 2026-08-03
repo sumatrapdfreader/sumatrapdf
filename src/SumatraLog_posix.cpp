@@ -29,7 +29,8 @@ static void log2(Str s, bool) {
 
     if (!gLogBuf) {
         gLogAllocator = ArenaNew();
-        gLogBuf = new str::Builder(32 * 1024, gLogAllocator);
+        gLogBuf = new str::Builder(32 * 1024);
+        gLogBuf->a = gLogAllocator;
     }
     gLogBuf->Append(s);
 

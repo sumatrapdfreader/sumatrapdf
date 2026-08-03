@@ -382,7 +382,8 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     TempStr ownPath = GetSelfExePathTemp();
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
-    str::Builder cmdLine(StrL("-uninstall"));
+    str::Builder cmdLine;
+    cmdLine.Append(StrL("-uninstall"));
     if (cli->silent) {
         cmdLine.Append(" -silent");
     }

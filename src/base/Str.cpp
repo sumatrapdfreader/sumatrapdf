@@ -1621,17 +1621,15 @@ void str::Builder::Reset(Str s) {
     Append(s); // no-op if s is empty
 }
 
-// arena is not owned by Builder and must outlive it
-str::Builder::Builder(int capHint, Arena* a, Str externalBuf) {
-    this->a = a;
+// arena is not owned by Builder; set .a after construction if needed
+str::Builder::Builder(Str externalBuf) {
     this->buf = externalBuf;
     Reset();
-    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
-str::Builder::Builder(Str s) {
+str::Builder::Builder(int capHint) {
     Reset();
-    Append(s);
+    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
 str::Builder::~Builder() {
@@ -1843,17 +1841,15 @@ void wstr::Builder::Reset(WStr s) {
     Append(s); // no-op if s is empty
 }
 
-// arena is not owned by Builder and must outlive it
-wstr::Builder::Builder(int capHint, Arena* a, WStr externalBuf) {
-    this->a = a;
+// arena is not owned by Builder; set .a after construction if needed
+wstr::Builder::Builder(WStr externalBuf) {
     this->buf = externalBuf;
     Reset();
-    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
-wstr::Builder::Builder(WStr s) {
+wstr::Builder::Builder(int capHint) {
     Reset();
-    Append(s);
+    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
 wstr::Builder::~Builder() {

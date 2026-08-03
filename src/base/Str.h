@@ -228,11 +228,11 @@ struct Builder {
 
     int nReallocs = 0;
 
-    // capHint: preferred capacity after first grow; a: optional arena for heap allocs.
     // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
-    explicit Builder(int capHint = 0, Arena* a = nullptr, Str externalBuf = {});
-    // initialize content from s (no external buf)
-    Builder(Str s);
+    // Set .a after construction if heap allocs should use an arena.
+    explicit Builder(Str externalBuf = {});
+    // capHint: preferred capacity after first grow
+    explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
     Builder& operator=(const Builder&) = delete;
@@ -283,11 +283,11 @@ struct Builder {
 
     static constexpr int kElSize = sizeofi(WCHAR);
 
-    // capHint: preferred capacity after first grow; a: optional arena for heap allocs.
     // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
-    explicit Builder(int capHint = 0, Arena* a = nullptr, WStr externalBuf = {});
-    // initialize content from s (no external buf)
-    Builder(WStr s);
+    // Set .a after construction if heap allocs should use an arena.
+    explicit Builder(WStr externalBuf = {});
+    // capHint: preferred capacity after first grow
+    explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
     Builder& operator=(const Builder&) = delete;
