@@ -7,8 +7,8 @@
 constexpr u32 kNullOffset = (u32)-2;
 
 static int StrCmp(Str s1, Str s2) {
-    size_t n = std::min((size_t)s1.len, (size_t)s2.len);
-    int cmp = n > 0 ? memcmp(s1.s, s2.s, n) : 0;
+    int n = std::min(s1.len, s2.len);
+    int cmp = n > 0 ? memcmp(s1.s, s2.s, (size_t)n) : 0;
     if (cmp != 0) {
         return cmp;
     }
@@ -123,15 +123,15 @@ static StrVecPage* AllocStrVecPage(int pageSize, int dataSize) {
 // how many bytes per index entry with data
 // index entry is offset and size (both u32) + (optional) data
 static int cbIndexSize(int dataSize) {
-    // dataSize is guaranteed multiple of sizeof(u32)
-    return (int)(2 * sizeof(u32)) + dataSize;
+    // dataSize is guaranteed multiple of sizeofi(u32)
+    return 2 * sizeofi(u32) + dataSize;
 }
 
 static u32* OffsetsForString(const StrVecPage* p, int idx) {
     ReportIf(idx < 0 || idx > p->nStrings);
     u8* off = (u8*)p;
     off += kStrVecPageHdrSize;
-    off += (size_t)idx * cbIndexSize(p->dataSize);
+    off += idx * cbIndexSize(p->dataSize);
     return (u32*)off;
 }
 
@@ -249,7 +249,7 @@ Str StrVecPage::RemoveAt(int idx) {
     }
     u32* dst = OffsetsForString(this, idx);
     u32* src = OffsetsForString(this, idx + 1);
-    memmove((void*)dst, (void*)src, nToCopy);
+    memmove((void*)dst, (void*)src, (size_t)nToCopy);
     return removed;
 }
 
@@ -266,7 +266,7 @@ Str StrVecPage::RemoveAtFast(int idx) {
     u32* dst = OffsetsForString(this, idx);
     u32* src = OffsetsForString(this, nStrings);
     int nToCopy = cbIndexSize(dataSize);
-    memmove((void*)dst, (void*)src, nToCopy);
+    memmove((void*)dst, (void*)src, (size_t)nToCopy);
     return removed;
 }
 
@@ -318,7 +318,7 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
             if (dataSize > 0) {
                 void* dst = page->AtDataRaw(nStr);
                 void* src = curr->AtDataRaw(i);
-                memcpy(dst, src, dataSize);
+                memcpy(dst, src, (size_t)dataSize);
                 nStr++;
             }
         }

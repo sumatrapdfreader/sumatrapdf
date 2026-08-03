@@ -48,12 +48,12 @@ class Vec {
         if (!els) {
             newEls = (T*)Alloc(a, allocSize);
             if (newEls) {
-                memset(newEls, 0, allocSize);
+                memset(newEls, 0, (size_t)allocSize);
             }
         } else {
-            newEls = (T*)Realloc(a, els, allocSize, oldSize);
+            newEls = (T*)Realloc(a, els, (size_t)allocSize, (size_t)oldSize);
             if (newEls) {
-                memset((char*)newEls + oldSize, 0, newPadding);
+                memset((char*)newEls + oldSize, 0, (size_t)newPadding);
             }
         }
         if (!newEls) {
@@ -88,7 +88,7 @@ class Vec {
         if (len > idx) {
             T* src = els + idx;
             T* dst = els + idx + count;
-            memmove(dst, src, (len - idx) * kElSize);
+            memmove(dst, src, (size_t)(len - idx) * kElSize);
         }
         len = newLen;
         return res;
@@ -114,7 +114,7 @@ class Vec {
     void Clear() {
         len = 0;
         if (els && cap > 0) {
-            memset(els, 0, cap * kElSize);
+            memset(els, 0, (size_t)cap * kElSize);
         }
     }
 
@@ -122,7 +122,7 @@ class Vec {
         if (newSize <= cap) {
             len = newSize;
             if (els) {
-                memset(els + len, 0, (cap - len) * kElSize);
+                memset(els + len, 0, (size_t)(cap - len) * kElSize);
             }
             return true;
         }
@@ -140,7 +140,7 @@ class Vec {
         len = other.len;
         // using memcpy, as Vec only supports POD types
         if (other.len > 0) {
-            memcpy(els, other.els, kElSize * other.len);
+            memcpy(els, other.els, (size_t)kElSize * other.len);
         }
     }
 
@@ -156,8 +156,8 @@ class Vec {
         // using memcpy, as Vec only supports POD types
         len = other.len;
         if (other.len > 0) {
-            memcpy(els, other.els, kElSize * len);
-            memset(els + len, 0, kElSize * (cap - len));
+            memcpy(els, other.els, (size_t)kElSize * len);
+            memset(els + len, 0, (size_t)kElSize * (cap - len));
         }
         return *this;
     }
@@ -244,9 +244,9 @@ class Vec {
         T* toRemove = els + idx;
         T* last = els + len - 1;
         if (toRemove != last) {
-            memcpy(toRemove, last, kElSize);
+            memcpy(toRemove, last, (size_t)kElSize);
         }
-        memset(last, 0, kElSize);
+        memset(last, 0, (size_t)kElSize);
         --len;
     }
 
