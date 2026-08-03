@@ -1480,7 +1480,11 @@ static void SubclassToc(MainWindow* win) {
     if (win->tocBoxSubclassId == 0) {
         win->tocBoxSubclassId = NextSubclassId();
         BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
-        ReportIf(!ok);
+        if (!ok) {
+            // can fail under low memory / desktop heap exhaustion, so don't assert
+            logf("SubclassToc: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
+            win->tocBoxSubclassId = 0;
+        }
     }
 }
 

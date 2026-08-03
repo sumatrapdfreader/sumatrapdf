@@ -962,7 +962,13 @@ void Wnd::Subclass() {
 
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwnd, WndSubclassedWindowProc, subclassId, (DWORD_PTR)this);
-    ReportIf(!ok);
+    if (!ok) {
+        // can fail under low memory / desktop heap exhaustion (it allocates and
+        // attaches a window property), so don't assert. Reset subclassId so that
+        // `subclassId != 0` keeps meaning "is subclassed".
+        logf("Wnd::Subclass: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
+        subclassId = 0;
+    }
 }
 
 void Wnd::UnSubclass() {

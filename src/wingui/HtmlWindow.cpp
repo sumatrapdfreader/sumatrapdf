@@ -1177,7 +1177,11 @@ void HtmlWindow::SubclassHwnd() {
     ReportIf(subclassId); // don't subclass multiple times
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwndParent, WndProcParent2, subclassId, (DWORD_PTR)this);
-    ReportIf(!ok);
+    if (!ok) {
+        // can fail under low memory / desktop heap exhaustion, so don't assert
+        logf("HtmlWindow::SubclassHwnd: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
+        subclassId = 0;
+    }
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 }
 

@@ -465,7 +465,11 @@ bool BrowserDocView::CreateWebView2() {
 
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwndParent, ParentWndProc, subclassId, (DWORD_PTR)this);
-    ReportIf(!ok);
+    if (!ok) {
+        // can fail under low memory / desktop heap exhaustion, so don't assert
+        logf("BrowserDocView: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
+        subclassId = 0;
+    }
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
     backend = Backend::WebView2;
     return true;
