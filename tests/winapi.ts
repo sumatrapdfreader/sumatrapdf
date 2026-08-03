@@ -542,15 +542,26 @@ export function setTaskbarAutoHide(on: boolean): void {
   shell32.symbols.SHAppBarMessage(ABM_SETSTATE, ptr(appBarData(next)));
 }
 
+// GetPixel returns this (DWORD)-1 when it cannot read the pixel. Callers that
+// compare samples must treat it as "no data", not as a color (issue #5866 test
+// was failing on these alone while the UI looked correct).
+export const CLR_INVALID = 0xffffffff;
+
 // Read a vertical run of pixels straight out of a window's DC, as 0x00bbggrr
 // COLORREFs. Coordinates are window-relative, so 0,0 is the top-left of the
 // NON-client area -- which is what makes this usable for checking that native
 // scrollbars actually painted (PrintWindow leaves the NC area blank).
+// Retries briefly on CLR_INVALID: concurrent DWM/paint can make GetPixel fail
+// for a frame without meaning the chrome is wrong.
 export function readWindowDCColumn(hwnd: number, x: number, y: number, count: number): number[] {
   const dc = user32.symbols.GetWindowDC(hwnd);
   const out: number[] = [];
   for (let i = 0; i < count; i++) {
-    out.push(gdi32.symbols.GetPixel(dc, x, y + i) >>> 0);
+    let c = gdi32.symbols.GetPixel(dc, x, y + i) >>> 0;
+    for (let attempt = 0; c === CLR_INVALID && attempt < 4; attempt++) {
+      c = gdi32.symbols.GetPixel(dc, x, y + i) >>> 0;
+    }
+    out.push(c);
   }
   user32.symbols.ReleaseDC(hwnd, dc);
   return out;

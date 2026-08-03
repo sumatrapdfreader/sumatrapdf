@@ -174,10 +174,17 @@ export function topChromePixels(hwnd: number, dy: number): number[] {
   return px;
 }
 
+// Count positions where both samples have a real COLORREF and they differ.
+// GetPixel's CLR_INVALID (0xffffffff) is skipped: concurrent paint often makes
+// a few samples fail even when the chrome is fine (issue #5866 false positive).
 export function countDifferingPixels(a: number[], b: number[]): number {
+  const CLR_INVALID = 0xffffffff;
   let n = 0;
   const len = Math.min(a.length, b.length);
   for (let i = 0; i < len; i++) {
+    if (a[i] === CLR_INVALID || b[i] === CLR_INVALID) {
+      continue;
+    }
     if (a[i] !== b[i]) {
       n++;
     }

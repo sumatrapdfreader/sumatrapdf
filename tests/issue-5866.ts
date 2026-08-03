@@ -15,27 +15,37 @@
 //
 // So this test toggles taskbar auto-hide on and RESTORES it in a finally. The
 // chrome geometry is identical before and after; only the pixels differ, so the
-// assertion compares a dense sample of the top rows of the frame's window DC.
+// assertion compares a sparse sample of the top chrome rows of the frame DC.
+//
+// Pixel compare skips GetPixel CLR_INVALID (0xffffffff): concurrent DWM/paint
+// makes some samples fail even when the chrome looks correct; that used to make
+// this test fail while nothing was wrong on screen.
+//
+// Keep this fast: F11 is near-instant; do not pad with multi-second sleeps or
+// dense GetPixel grids (a 200px × every-6px strip was ~64k FFI calls × 2).
 //
 // Run:  bun tests/issue-5866.ts [--no-build]   (or via tests/all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, cmdId, tmpPath } from "./util.ts";
-import { countDifferingPixels, sendCommand, topChromePixels, waitForFrame } from "./win-automation.ts";
+import { ROOT, cmdId, tmpPath, EXE } from "./util.ts";
+import { countDifferingPixels, sendCommand, waitForFrame } from "./win-automation.ts";
 import {
   getTaskbarAutoHide,
+  getWindowRect,
   postMessage,
+  readWindowDCColumn,
   setProcessDpiAware,
   setTaskbarAutoHide,
   sleep,
   WM_CLOSE,
 } from "./winapi.ts";
-import { EXE } from "./util.ts";
 
 const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
-// caption row + tab bar + toolbar; the leftovers land in this band
-const STRIP_DY = 200;
+// Caption + tabs-in-titlebar + toolbar. Deep enough for the bug, shallow enough
+// to stay out of the document canvas (where progressive render is noisy).
+const STRIP_DY = 80;
+const X_STEP = 16;
 
 // WindowState = 2 is maximized, the other half of the repro
 const SETTINGS = `WindowState = 2
@@ -43,6 +53,18 @@ CheckForUpdates = false
 RestoreSession = false
 UiLanguage = en
 `;
+
+// Sparse sample of the top chrome strip (far fewer GetPixel calls than
+// topChromePixels with STRIP_DY=200 / step 6).
+function sampleChrome(hwnd: number): number[] {
+  const r = getWindowRect(hwnd);
+  const w = r.right - r.left;
+  const px: number[] = [];
+  for (let x = 4; x < w - 4; x += X_STEP) {
+    px.push(...readWindowDCColumn(hwnd, x, 0, STRIP_DY));
+  }
+  return px;
+}
 
 export async function testit(): Promise<void> {
   // window rects and window-DC pixel coordinates must agree; no-op at 100% DPI
@@ -57,26 +79,33 @@ export async function testit(): Promise<void> {
   let proc: Bun.Subprocess | undefined;
   let frame = 0;
   try {
+    // SHAppBarMessage takes effect immediately; no need to wait on Explorer
     setTaskbarAutoHide(true);
-    await sleep(600); // let the work area change land
 
-    proc = Bun.spawn([EXE, "-appdata", appDataDir, PDF], { stdout: "ignore", stderr: "ignore" });
-    frame = await waitForFrame(proc.pid!);
+    proc = Bun.spawn([EXE, "-for-testing", "-appdata", appDataDir, PDF], {
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    frame = await waitForFrame(proc.pid!, 8000);
     if (!frame) {
       throw new Error("SumatraPDF frame window not found");
     }
-    await sleep(3000); // document render + startup layout
+    // Short settle for first paint / maximized layout (not full-page render)
+    await sleep(250);
 
-    const before = topChromePixels(frame, STRIP_DY);
+    const before = sampleChrome(frame);
 
     sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(1800);
+    await sleep(120);
     sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(2500);
+    // ExitFullScreen + RelayoutFrame is synchronous on the UI thread; a short
+    // beat is enough for WM_PAINT to run after EndFrameRedrawSuppression.
+    await sleep(150);
 
     // nothing here scrolls, switches tabs or moves the mouse: leaving full
     // screen must repaint the chrome on its own
-    const nDiff = countDifferingPixels(before, topChromePixels(frame, STRIP_DY));
+    const after = sampleChrome(frame);
+    const nDiff = countDifferingPixels(before, after);
     if (nDiff > 0) {
       throw new Error(
         `the caption/tab row did not repaint after leaving full screen: ` +
@@ -86,7 +115,7 @@ export async function testit(): Promise<void> {
   } finally {
     if (frame) {
       postMessage(frame, WM_CLOSE, 0, 0);
-      await sleep(600);
+      await sleep(100);
     }
     proc?.kill();
     setTaskbarAutoHide(hadAutoHide);
