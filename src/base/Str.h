@@ -220,8 +220,8 @@ struct Builder {
     // arena is not owned by Builder and must outlive it
     Arena* a = nullptr;
     char* els = nullptr;
-    u32 len = 0;
-    u32 cap = 0;
+    int len = 0;
+    int cap = 0;
     // Optional external scratch (not owned; default empty = allocate on first use).
     // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
     Str buf{};
