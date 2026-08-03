@@ -7,6 +7,9 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
+#if !defined(SUMATRA_TEST_UTIL)
+#include "Accelerators.h"
+#endif
 
 // @gen-start cmd-c
 // clang-format off
@@ -974,14 +977,78 @@ CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
 
 static int gNextCustomCommandId = (int)CmdFirstCustom;
 
-CustomCommand::~CustomCommand() {
-    FreeCommandArgs(firstArg);
-    str::Free(name);
-    str::Free(key);
-    str::Free(definition);
+// One allocation: sizeofi(CustomCommand) + definition + NUL + name + NUL + key + NUL.
+// definition/name/key.s point into the same block (do not free them separately).
+CustomCommand* AllocCustomCommand(Str definition, Str name, Str key) {
+    int defN = definition.len;
+    if (defN < 0) {
+        defN = 0;
+    }
+    int nameN = name.len;
+    if (nameN < 0) {
+        nameN = 0;
+    }
+    int keyN = key.len;
+    if (keyN < 0) {
+        keyN = 0;
+    }
+    int cb = sizeofi(CustomCommand) + defN + 1 + nameN + 1 + keyN + 1;
+    auto* cmd = (CustomCommand*)malloc((size_t)cb);
+    if (!cmd) {
+        return nullptr;
+    }
+    memset(cmd, 0, (size_t)cb);
+    char* dst = (char*)cmd + sizeofi(CustomCommand);
+    if (defN > 0 && definition.s) {
+        memcpy(dst, definition.s, (size_t)defN);
+    }
+    dst[defN] = 0;
+    cmd->definition = Str(dst, defN);
+    dst += defN + 1;
+    if (nameN > 0 && name.s) {
+        memcpy(dst, name.s, (size_t)nameN);
+    }
+    dst[nameN] = 0;
+    cmd->name = Str(dst, nameN);
+    dst += nameN + 1;
+    if (keyN > 0 && key.s) {
+        memcpy(dst, key.s, (size_t)keyN);
+    }
+    dst[keyN] = 0;
+    cmd->key = Str(dst, keyN);
+    return cmd;
 }
 
-CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args) {
+void FreeCustomCommand(CustomCommand* cmd) {
+    if (!cmd) {
+        return;
+    }
+    FreeCommandArgs(cmd->firstArg);
+    free(cmd);
+}
+
+// Empty / whitespace name or key becomes empty. Invalid shortcut keys are
+// rejected with a warning and stored as empty (same as SetCommandNameAndShortcut).
+static void NormalizeCommandNameAndKey(Str definition, Str* name, Str* key) {
+    if (str::IsEmptyOrWhiteSpace(*name)) {
+        *name = {};
+    }
+    if (str::IsEmptyOrWhiteSpace(*key)) {
+        *key = {};
+        return;
+    }
+#if !defined(SUMATRA_TEST_UTIL)
+    if (!IsValidShortcutString(*key)) {
+        logf("CreateCustomCommand: '%s' is not a valid shortcut for '%s'\n", *key, definition);
+        MaybeDelayedWarningNotification(fmt("'%s' is not a valid shortcut for '%s'", *key, definition));
+        *key = {};
+    }
+#else
+    (void)definition;
+#endif
+}
+
+CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args, Str name, Str key) {
     // if no args we retain original command id
     // only when we have unique args we have to create a new command id
     int id = origCmdId;
@@ -995,10 +1062,10 @@ CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* ar
         }
 #endif
     }
-    auto cmd = new CustomCommand();
+    NormalizeCommandNameAndKey(definition, &name, &key);
+    auto cmd = AllocCustomCommand(definition, name, key);
     cmd->id = id;
     cmd->origId = origCmdId;
-    cmd->definition = str::Dup(definition);
     cmd->firstArg = args;
     cmd->next = gFirstCustomCommand;
     gFirstCustomCommand = cmd;
@@ -1021,28 +1088,17 @@ static CommandArg* CopyCommandArgs(CommandArg* first) {
     return res;
 }
 
-// Commands without arguments keep their original id (CreateCustomCommand), so
-// several CustomCommand can end up with the same id.
-bool IsCustomCommandIdShared(CustomCommand* cmd) {
-    for (auto curr = gFirstCustomCommand; curr; curr = curr->next) {
-        if (curr != cmd && curr->id == cmd->id) {
-            return true;
-        }
-    }
-    return false;
-}
-
 // A copy of cmd (same original command, same arguments) under a fresh, unique
 // command id. Two settings entries can resolve to the same command and yet have
 // to stay distinguishable (their own name, key, toolbar button); they can't
 // share a CustomCommand, and they can't share an id either because the toolbar
-// identifies buttons by command id (#5869). name / key are deliberately not
-// copied: the caller sets those from its own settings entry.
-CustomCommand* CloneCustomCommand(CustomCommand* cmd) {
-    auto res = new CustomCommand();
+// identifies buttons by command id (#5869). name / key come from the caller's
+// settings entry (not copied from cmd).
+CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name, Str key) {
+    NormalizeCommandNameAndKey(cmd->definition, &name, &key);
+    auto res = AllocCustomCommand(cmd->definition, name, key);
     res->id = gNextCustomCommandId++;
     res->origId = cmd->origId;
-    res->definition = str::Dup(cmd->definition);
     res->firstArg = CopyCommandArgs(cmd->firstArg);
     res->next = gFirstCustomCommand;
     gFirstCustomCommand = res;
@@ -1065,7 +1121,7 @@ void FreeCustomCommands() {
     CustomCommand* curr = gFirstCustomCommand;
     while (curr) {
         next = curr->next;
-        delete curr;
+        FreeCustomCommand(curr);
         curr = next;
     }
     gFirstCustomCommand = nullptr;

@@ -189,22 +189,6 @@ static void setMin(int& i, int minVal) {
     }
 }
 
-static void SetCommandNameAndShortcut(CustomCommand* cmd, Str name, Str key) {
-    if (!cmd) {
-        return;
-    }
-    cmd->name = str::IsEmptyOrWhiteSpace(name) ? Str{} : str::Dup(name);
-    if (str::IsEmptyOrWhiteSpace(key)) {
-        return;
-    }
-    if (!IsValidShortcutString(key)) {
-        logf("SetCommandNameAndShortcut: '%s' is not a valid shortcut for '%s'\n", key, cmd->definition);
-        MaybeDelayedWarningNotification(fmt("'%s' is not a valid shortcut for '%s'", key, cmd->definition));
-        return;
-    }
-    cmd->key = str::Dup(key);
-}
-
 /* for every selection handler defined by user in advanced settings, create
     a command that will be inserted into a menu item */
 static void CreateSelectionHandlerCommands() {
@@ -223,8 +207,7 @@ static void CreateSelectionHandlerCommands() {
         }
 
         CommandArg* args = NewStringArg(kCmdArgURL, sh->url);
-        auto cmd = CreateCustomCommand(sh->url, CmdSelectionHandler, args);
-        SetCommandNameAndShortcut(cmd, sh->name, sh->key);
+        CreateCustomCommand(sh->url, CmdSelectionHandler, args, sh->name, sh->key);
     }
 }
 
@@ -246,8 +229,7 @@ static void CreateExternalViewersCommands() {
             auto arg = NewStringArg(kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
             InsertArg(&args, arg);
         }
-        auto cmd = CreateCustomCommand("", CmdViewWithExternalViewer, args);
-        SetCommandNameAndShortcut(cmd, ev->name, ev->key);
+        CreateCustomCommand("", CmdViewWithExternalViewer, args, ev->name, ev->key);
     }
 }
 
@@ -271,29 +253,21 @@ static void CreateZoomCommands() {
 
 // Every entry in the Shortcuts section is its own thing: it has its own Name,
 // its own Key and possibly its own toolbar button. Two entries must therefore
-// never end up on the same CustomCommand (they would overwrite each other's
-// name and key) and must not even share a command id: the toolbar identifies a
-// button - and registers its tooltip - by command id, so with duplicate ids all
-// but one of the buttons ends up without a working tooltip (#5869).
+// never share a CustomCommand or command id: the toolbar identifies a button
+// (and its tooltip) by command id, so with duplicate ids all but one of the
+// buttons ends up without a working tooltip (#5869).
 //
-// Both happen easily, because commands are cached: CreateCommandFromDefinition
-// returns an existing command for an identical definition string, and a command
-// without arguments keeps its original command id (e.g. CmdNone) instead of
-// getting a generated one. So give every entry that would collide with an
-// earlier one a clone of the command, under a fresh id.
+// CreateCommandFromDefinition caches by definition string and may return a
+// command that keeps its original id (no args). Always CloneCustomCommand so
+// each shortcut gets a unique id with its name/key packed into the allocation.
 static void CreateCustomShortcuts() {
-    Vec<CustomCommand*> claimed;
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
-        auto cmd = CreateCommandFromDefinition(shortcut->cmd);
-        if (!cmd) {
+        auto base = CreateCommandFromDefinition(shortcut->cmd);
+        if (!base) {
             continue;
         }
-        if (claimed.Contains(cmd) || IsCustomCommandIdShared(cmd)) {
-            cmd = CloneCustomCommand(cmd);
-        }
-        claimed.Append(cmd);
+        auto cmd = CloneCustomCommand(base, shortcut->name, shortcut->key);
         shortcut->cmdId = cmd->id;
-        SetCommandNameAndShortcut(cmd, shortcut->name, shortcut->key);
     }
 }
 

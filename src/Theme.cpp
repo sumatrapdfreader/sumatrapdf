@@ -487,8 +487,7 @@ void CreateThemeCommands() {
         Theme* theme = (*gThemes)[i];
         Str themeName = theme->name;
         auto args = NewStringArg(kCmdArgTheme, themeName);
-        cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
-        cmd->name = str::Dup(fmt(_TRA("Set theme '%s'").s, themeName));
+        cmd = CreateCustomCommand(themeName, CmdSetTheme, args, fmt(_TRA("Set theme '%s'").s, themeName));
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
         } else if (i == gThemeCount - 1) {

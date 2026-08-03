@@ -358,9 +358,10 @@ struct CustomCommand {
     int id = 0;
 
     CommandArg* firstArg = nullptr;
-    CustomCommand() = default;
-    ~CustomCommand();
 };
+
+CustomCommand* AllocCustomCommand(Str definition, Str name, Str key);
+void FreeCustomCommand(CustomCommand* cmd);
 
 extern CustomCommand* gFirstCustomCommand;
 extern SeqStrings gCommandDescriptions;
@@ -368,9 +369,8 @@ extern SeqStrings gCommandDescriptions;
 int GetCommandIdByName(Str);
 int GetCommandIdByDesc(Str);
 
-CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args);
-CustomCommand* CloneCustomCommand(CustomCommand* cmd);
-bool IsCustomCommandIdShared(CustomCommand* cmd);
+CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args, Str name = {}, Str key = {});
+CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name = {}, Str key = {});
 CustomCommand* FindCustomCommand(int cmdId);
 void FreeCustomCommands();
 CommandArg* NewStringArg(Str name, Str val);
