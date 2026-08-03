@@ -69,7 +69,7 @@ inline int len(const StrVec& v) {
 
 template <typename T>
 struct StrVecWithData : StrVec {
-    StrVecWithData() : StrVec((int)sizeof(T)) {}
+    StrVecWithData() : StrVec(sizeofi(T)) {}
 
     T* AtData(int i) const {
         void* res = AtDataRaw(i);

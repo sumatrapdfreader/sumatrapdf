@@ -86,13 +86,13 @@ void SetThreadName(Str threadName, ThreadId threadId) {
     }
 #if OS_DARWIN
     char buf[64];
-    size_t n = (size_t)std::min(threadName.len, (int)sizeof(buf) - 1);
+    size_t n = (size_t)std::min(threadName.len, sizeofi(buf) - 1);
     memcpy(buf, threadName.s, n);
     buf[n] = 0;
     pthread_setname_np(buf);
 #elif OS_LINUX
     char buf[16];
-    size_t n = (size_t)std::min(threadName.len, (int)sizeof(buf) - 1);
+    size_t n = (size_t)std::min(threadName.len, sizeofi(buf) - 1);
     memcpy(buf, threadName.s, n);
     buf[n] = 0;
     pthread_setname_np(pthread_self(), buf);

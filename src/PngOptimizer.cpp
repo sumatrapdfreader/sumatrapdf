@@ -21,8 +21,8 @@ constexpr int kMaxPngSizeToOptimize = 16 * 1024 * 1024;
 // offset (IHDR is always first and fixed-size), so detection is a memcmp of
 // the file's first kMarkerOffset + kMarkerChunkSize bytes.
 static const char kMarkerPayload[] = "Software\0SumatraPDF zopfli";
-constexpr int kMarkerPayloadLen = (int)sizeof(kMarkerPayload) - 1; // sans implicit terminating NUL
-constexpr int kMarkerChunkSize = 4 + 4 + kMarkerPayloadLen + 4;    // length + type + payload + crc
+constexpr int kMarkerPayloadLen = sizeofi(kMarkerPayload) - 1;  // sans implicit terminating NUL
+constexpr int kMarkerChunkSize = 4 + 4 + kMarkerPayloadLen + 4; // length + type + payload + crc
 // 8-byte PNG signature + IHDR chunk (4 length + 4 type + 13 data + 4 crc)
 constexpr int kMarkerOffset = 8 + 25;
 

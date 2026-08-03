@@ -23,7 +23,7 @@ class DialogData {
 
         // Copy all of the user controls etc. for later, this way the user can quite happily
         // let the structure go out of scope.
-        this->psd = (DialogSizerSizingItem*)memdup((void*)psd, (int)nItemCount * (int)sizeof(DialogSizerSizingItem));
+        this->psd = (DialogSizerSizingItem*)memdup((void*)psd, (int)nItemCount * sizeofi(DialogSizerSizingItem));
         if (!this->psd) {
             nItemCount = 0;
         }

@@ -168,7 +168,7 @@ void* ReallocToWantedSize(struct Arena* arena, void* els, int* cap, int wantedSi
 // Allocate and construct object using placement new (supports constructor args)
 template <typename T, typename... Args>
 T* New(Arena* arena, Args&&... args) {
-    void* mem = Alloc(arena, (int)sizeof(T));
+    void* mem = Alloc(arena, sizeofi(T));
     return new (mem) T(std::forward<Args>(args)...);
 }
 void LogArenaStats(Str what, Arena* a);

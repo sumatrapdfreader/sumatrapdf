@@ -1513,7 +1513,7 @@ void CreateToolbar(MainWindow* win) {
     HWND hwndToolbar =
         CreateWindowExW(exStyle, TOOLBARCLASSNAME, nullptr, style, 0, 0, 0, 0, win->hwndReBar, cmd, hinst, nullptr);
     win->hwndToolbar = hwndToolbar;
-    TbSetButtonStructSize(hwndToolbar, (int)sizeof(TBBUTTON));
+    TbSetButtonStructSize(hwndToolbar, sizeofi(TBBUTTON));
 
     if (!UseDarkModeLib() || !DarkMode::isEnabled()) {
         if (!IsCurrentThemeDefault()) {
@@ -1911,7 +1911,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     win->hwndMenuToolbar = CreateWindowExW(exStyle, TOOLBARCLASSNAME, nullptr, style, 0, 0, 0, 0, win->hwndMenuReBar,
                                            (HMENU)IDC_MENUBAR, hinst, nullptr);
     SetWindowSubclass(win->hwndMenuToolbar, MenuBarToolbarWndProc, 0, 0);
-    TbSetButtonStructSize(win->hwndMenuToolbar, (int)sizeof(TBBUTTON));
+    TbSetButtonStructSize(win->hwndMenuToolbar, sizeofi(TBBUTTON));
 
     if (!UseDarkModeLib() || !DarkMode::isEnabled()) {
         if (!IsCurrentThemeDefault()) {

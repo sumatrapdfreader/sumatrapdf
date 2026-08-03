@@ -621,7 +621,7 @@ namespace wstr {
 WStr Join(Arena* a, WStr s1, WStr s2, WStr s3) {
     int s1Len = s1.len, s2Len = s2.len, s3Len = s3.len;
     int n = s1Len + s2Len + s3Len + 1;
-    WCHAR* res = (WCHAR*)Alloc(a, n * (int)sizeof(WCHAR));
+    WCHAR* res = (WCHAR*)Alloc(a, n * sizeofi(WCHAR));
     memcpy(res, s1.s, (size_t)s1Len * sizeof(WCHAR));
     memcpy(res + s1Len, s2.s, (size_t)s2Len * sizeof(WCHAR));
     memcpy(res + s1Len + s2Len, s3.s, (size_t)s3Len * sizeof(WCHAR));
@@ -1961,7 +1961,7 @@ WStr CastStrToWStr(Str s) {
     WCHAR* w = nullptr;
     static_assert(sizeof(char*) == sizeof(WCHAR*), "pointer sizes must match");
     memcpy((void*)&w, (const void*)&s.s, sizeof(w));
-    return WStr(w, s.len / (int)sizeof(WCHAR));
+    return WStr(w, s.len / sizeofi(WCHAR));
 }
 
 } // namespace str

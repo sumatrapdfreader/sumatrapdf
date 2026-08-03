@@ -605,7 +605,7 @@ void LogArenaStats(Str what, Arena* a) {
     u64 nAllocs = a->nAllocsLifetime;
     u64 peakBytes = a->peakBytesLifetime;
     char human[32];
-    FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
+    FormatSizeHumanIntoBuf(peakBytes, Str(human, sizeofi(human)));
     logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
          str::FormatNumWithThousandSepTemp((i64)peakBytes), Str(human));
 }

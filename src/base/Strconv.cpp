@@ -196,7 +196,7 @@ TempStr UnknownToUtf8Temp(Str s) {
         int n = ws.len;
         u8* bytes = (u8*)tmpW.s;
         for (int i = 0; i < n; i++) {
-            int idx = i * (int)sizeof(WCHAR);
+            int idx = i * sizeofi(WCHAR);
             std::swap(bytes[idx], bytes[idx + 1]);
         }
         return ToUtf8Temp(WStr(tmpW.s, n));

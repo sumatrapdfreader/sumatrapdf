@@ -352,7 +352,7 @@ bool ChmFile::Load(Str path) {
     uint fileCodepage = codepage;
     char header[24]{};
     int n = file::ReadN(path, (u8*)header, sizeof(header));
-    if (n < (int)sizeof(header)) {
+    if (n < sizeofi(header)) {
         ByteReader r(Str(header, sizeof(header)));
         DWORD lcid = r.UInt32LE(20);
         fileCodepage = LcidToCodepage(lcid);

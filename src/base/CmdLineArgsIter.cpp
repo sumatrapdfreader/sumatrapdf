@@ -26,7 +26,7 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
 
     // Paths/args usually fit; worst case ~2x arg for backslash doubling + quotes.
     char resScratch[1024]{};
-    str::Builder res(0, nullptr, Str(resScratch, (int)sizeof(resScratch)));
+    str::Builder res(0, nullptr, Str(resScratch, sizeofi(resScratch)));
     res.AppendChar('"');
 
     int n = arg.len;

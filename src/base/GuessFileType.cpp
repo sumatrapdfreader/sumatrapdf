@@ -276,8 +276,8 @@ static bool HasJxlSignature(Str d) {
     static const u8 jxlContainer[] = {0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a};
 
     const u8* data = (const u8*)d.s;
-    return (d.len >= (int)sizeof(jxlCodestream) && memeq(data, jxlCodestream, (int)sizeof(jxlCodestream))) ||
-           (d.len >= (int)sizeof(jxlContainer) && memeq(data, jxlContainer, (int)sizeof(jxlContainer)));
+    return (d.len >= sizeofi(jxlCodestream) && memeq(data, jxlCodestream, sizeofi(jxlCodestream))) ||
+           (d.len >= sizeofi(jxlContainer) && memeq(data, jxlContainer, sizeofi(jxlContainer)));
 }
 
 #pragma pack(push, 1)

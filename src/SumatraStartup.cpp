@@ -784,7 +784,7 @@ static void ResetTempArenaWithLogging() {
     }
     if (isNewMax) {
         char human[32];
-        FormatSizeHumanIntoBuf(gPeakBytes, Str(human, (int)sizeof(human)));
+        FormatSizeHumanIntoBuf(gPeakBytes, Str(human, sizeofi(human)));
         logf("temp allocator new max: %s allocations, peak %s bytes (%s)\n",
              str::FormatNumWithThousandSepTemp((i64)gMaxAllocs), str::FormatNumWithThousandSepTemp((i64)gPeakBytes),
              Str(human));

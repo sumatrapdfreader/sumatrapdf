@@ -31,7 +31,7 @@ class ParseArgs {
     ValueVisitor* visitor = nullptr;
 
     explicit ParseArgs(ValueVisitor* visitor)
-        : path(0, nullptr, Str(pathScratch, (int)sizeof(pathScratch))), visitor(visitor) {}
+        : path(0, nullptr, Str(pathScratch, sizeofi(pathScratch))), visitor(visitor) {}
 };
 
 static int ParseValue(ParseArgs& args, Str data, int off, int depth);
@@ -98,7 +98,7 @@ static int ExtractString(str::Builder& string, Str data, int off) {
 static int ParseString(ParseArgs& args, Str data, int off) {
     // Most JSON string values fit in a few hundred bytes; grow to heap if not.
     char stringScratch[512]{};
-    str::Builder string(0, nullptr, Str(stringScratch, (int)sizeof(stringScratch)));
+    str::Builder string(0, nullptr, Str(stringScratch, sizeofi(stringScratch)));
     int end = ExtractString(string, data, off);
     if (end >= 0) {
         Str path = ToStr(args.path);

@@ -2363,7 +2363,7 @@ Str ReadIStream(IStream* stream) {
     }
 
     int n = (int)stat.cbSize.QuadPart;
-    char* d = AllocArray<char>(n + (int)sizeof(WCHAR));
+    char* d = AllocArray<char>(n + sizeofi(WCHAR));
     if (!d) {
         return {};
     }

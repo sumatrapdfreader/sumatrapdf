@@ -174,7 +174,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         // bar's themed background instead of a light box in dark themes (the
         // background is painted from NM_CUSTOMDRAW in WndProc)
         SetWindowTheme(hwndBtns, L"", L"");
-        TbSetButtonStructSize(hwndBtns, (int)sizeof(TBBUTTON));
+        TbSetButtonStructSize(hwndBtns, sizeofi(TBBUTTON));
 
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
         himl = BuildStdToolbarImageList(isz);

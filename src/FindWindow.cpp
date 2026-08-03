@@ -211,7 +211,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         // drop the visual-style button background so the flat toolbar shows the
         // window's themed background instead of a light box in dark themes
         SetWindowTheme(hwndBtns, L"", L"");
-        TbSetButtonStructSize(hwndBtns, (int)sizeof(TBBUTTON));
+        TbSetButtonStructSize(hwndBtns, sizeofi(TBBUTTON));
 
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
         himl = BuildStdToolbarImageList(isz);

@@ -270,7 +270,7 @@ struct Builder {
 
     int nReallocs = 0;
 
-    static constexpr int kElSize = (int)sizeof(WCHAR);
+    static constexpr int kElSize = sizeofi(WCHAR);
 
     // capHint: preferred capacity after first grow; a: optional arena for heap allocs.
     // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.

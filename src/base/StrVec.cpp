@@ -91,11 +91,11 @@ struct StrVecPage {
     PageOpResult InsertAt(int idxSet, Str s);
 };
 
-constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
+constexpr int kStrVecPageHdrSize = sizeofi(StrVecPage);
 
 static int cbOffsetsSize(int nStrings, int dataSize) {
     ReportIf(dataSize % 4 != 0);
-    int nOffsets = (2 * (int)sizeof(u32)) + dataSize;
+    int nOffsets = (2 * sizeofi(u32)) + dataSize;
     return nStrings * nOffsets;
 }
 
@@ -358,7 +358,7 @@ StrVec::StrVec(int dataSize) {
     if (dataSize == 0) {
         return;
     }
-    this->dataSize = RoundUp(dataSize, (int)sizeof(u32));
+    this->dataSize = RoundUp(dataSize, sizeofi(u32));
 }
 
 StrVec::~StrVec() {

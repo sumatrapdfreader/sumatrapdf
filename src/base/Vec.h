@@ -23,7 +23,7 @@ class Vec {
     static constexpr int kPadding = 1;
     // byte size of a single element; kept int because it's used in
     // allocation-size arithmetic that must not overflow
-    static constexpr int kElSize = (int)sizeof(T);
+    static constexpr int kElSize = sizeofi(T);
 
   private:
     NO_INLINE bool EnsureCapSlow(int needed, int elSize) {
@@ -367,7 +367,7 @@ void VecExpandTo(Arena* arena, T& v, int wantedSize) {
     if (wantedSize <= v.cap) {
         return;
     }
-    v.els = (decltype(v.els))ReallocToWantedSize(arena, v.els, &v.cap, wantedSize, (int)sizeof(*v.els));
+    v.els = (decltype(v.els))ReallocToWantedSize(arena, v.els, &v.cap, wantedSize, sizeofi(*v.els));
 }
 
 template <typename T>

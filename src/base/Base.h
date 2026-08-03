@@ -307,6 +307,7 @@ template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
 #define dimof(array) (sizeof(DimofSizeHelper(array)))
 #define dimofi(array) (int)(sizeof(DimofSizeHelper(array)))
+#define sizeofi(x) ((int)sizeof(x))
 
 #if COMPILER_MSVC
 // https://msdn.microsoft.com/en-us/library/4dt9kyhy.aspx
@@ -403,12 +404,12 @@ void* AllocZero(int count, int size);
 
 template <typename T>
 FORCEINLINE T* AllocArray(int n) {
-    return (T*)AllocZero(n, (int)sizeof(T));
+    return (T*)AllocZero(n, sizeofi(T));
 }
 
 template <typename T>
 FORCEINLINE T* AllocStruct() {
-    return (T*)AllocZero(1, (int)sizeof(T));
+    return (T*)AllocZero(1, sizeofi(T));
 }
 
 template <typename T>

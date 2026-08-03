@@ -273,7 +273,7 @@ static void StrBuilderCapHint() {
 
     // same with a small external buf: once content needs heap, capHint applies
     char stack[16];
-    str::Builder str2(1024, nullptr, Str(stack, (int)sizeof(stack)));
+    str::Builder str2(1024, nullptr, Str(stack, sizeofi(stack)));
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {

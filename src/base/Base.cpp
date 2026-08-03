@@ -126,7 +126,7 @@ u32 MurmurHash2(Str s) {
 }
 
 u32 MurmurHash2(WStr s) {
-    return MurmurHash2(s.s, s.len * (int)sizeof(wchar_t));
+    return MurmurHash2(s.s, s.len * sizeofi(wchar_t));
 }
 
 // variation of MurmurHash2 which deals with strings that are

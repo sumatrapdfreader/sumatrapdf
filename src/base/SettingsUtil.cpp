@@ -99,7 +99,7 @@ static Str UnescapeStr(Str s) {
 static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
     // Typical open-file history / recent lists fit in a few KB; grow if not.
     char serializedScratch[1024]{};
-    str::Builder serialized(0, nullptr, Str(serializedScratch, (int)sizeof(serializedScratch)));
+    str::Builder serialized(0, nullptr, Str(serializedScratch, sizeofi(serializedScratch)));
 
     for (int i = 0; i < len(*strArray); i++) {
         if (i > 0) {
@@ -154,7 +154,7 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
         if ('"' == serialized.s[off]) {
             // One quoted token per loop iteration; most paths fit in 256.
             char partScratch[256]{};
-            str::Builder part(0, nullptr, Str(partScratch, (int)sizeof(partScratch)));
+            str::Builder part(0, nullptr, Str(partScratch, sizeofi(partScratch)));
             for (off++; off < serialized.len;) {
                 if (serialized.s[off] == '"' && (off + 1 >= serialized.len || serialized.s[off + 1] != '"')) {
                     break;
