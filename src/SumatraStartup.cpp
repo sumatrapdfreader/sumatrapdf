@@ -792,20 +792,6 @@ static void ResetTempArenaWithLogging() {
     ResetTempArena();
 }
 
-// Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
-// logging is torn down.
-static void LogArenaStats(Str what, Arena* a) {
-    if (!a) {
-        return;
-    }
-    u64 nAllocs = a->nAllocsLifetime;
-    u64 peakBytes = a->peakBytesLifetime;
-    char human[32];
-    FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
-    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
-         str::FormatNumWithThousandSepTemp((i64)peakBytes), Str(human));
-}
-
 static int RunMessageLoop() {
     MSG msg;
 
@@ -2839,8 +2825,8 @@ Exit:
     HandleRedirectedConsoleOnShutdown();
     DeleteManualBrowserWindow();
 
-    LogArenaStats("temp allocator", GetTempArena());
-    LogArenaStats("perm arena", gPermArena);
+    LogArenaStats(StrL("temp arena"), GetTempArena());
+    LogArenaStats(StrL("perm arena"), gPermArena);
 
     // don't shell-open the log for -for-testing automation runs: it spawns a
     // stray editor window per run (and, depending on the .txt association,

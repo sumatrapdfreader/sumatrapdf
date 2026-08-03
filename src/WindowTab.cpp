@@ -77,8 +77,11 @@ WindowTab::~WindowTab() {
     DeleteControllerAsync(ctrl);
     ctrl = nullptr;
     if (pendingLoadArgs) {
+        // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
+        // not double-delete through both paths if both were set
         delete pendingLoadArgs->ctrl;
         pendingLoadArgs->ctrl = nullptr;
+        SafeEngineRelease(&pendingLoadArgs->engine);
     }
     delete pendingLoadArgs;
     str::Free(filePath);

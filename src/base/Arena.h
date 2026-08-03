@@ -171,3 +171,4 @@ T* New(Arena* arena, Args&&... args) {
     void* mem = Alloc(arena, (int)sizeof(T));
     return new (mem) T(std::forward<Args>(args)...);
 }
+void LogArenaStats(Str what, Arena* a);

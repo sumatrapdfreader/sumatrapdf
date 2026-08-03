@@ -595,3 +595,17 @@ void* ReallocToWantedSize(Arena* arena, void* els, int* cap, int wantedSize, int
     }
     return ReallocMem(arena, els, cap, newCap, elSize);
 }
+
+// Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
+// logging is torn down.
+void LogArenaStats(Str what, Arena* a) {
+    if (!a) {
+        return;
+    }
+    u64 nAllocs = a->nAllocsLifetime;
+    u64 peakBytes = a->peakBytesLifetime;
+    char human[32];
+    FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
+         str::FormatNumWithThousandSepTemp((i64)peakBytes), Str(human));
+}

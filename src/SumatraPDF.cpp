@@ -249,6 +249,9 @@ LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
 }
 
 LoadArgs::~LoadArgs() {
+    // async load may leave an engine if the finish path never ran (e.g. tab
+    // destroyed with pendingLoadArgs); never leave a leaked EngineBase
+    SafeEngineRelease(&engine);
     delete fileArgs;
     str::Free(fileName);
     str::Free(displayName);
@@ -278,6 +281,8 @@ LoadArgs* LoadArgs::Clone() {
     res->forceReuse = this->forceReuse;
     res->noSavePrefs = this->noSavePrefs;
     res->onFinished = this->onFinished;
+    res->hwndPwdParent = this->hwndPwdParent;
+    res->engine = this->engine;
     return res;
 }
 
@@ -3189,6 +3194,10 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
     // start the timer only now that we're actually loading, not while the
     // file was sitting in the queue
     LoadArgs* args = data->args;
+    // Snapshot HWND for the password dialog before leaving the UI thread.
+    if (args->win && args->win->hwndFrame) {
+        args->hwndPwdParent = args->win->hwndFrame;
+    }
     StartLoadingMessageTimer(args->targetTab);
     gLoadThreadsActive++;
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
@@ -3262,6 +3271,15 @@ static bool IsLoadStillWanted(LoadArgs* args) {
     return false;
 }
 
+// Drop engine/controller produced by a load whose window/tab went away.
+static void DiscardFailedAsyncLoad(LoadArgs* args) {
+    if (!args) {
+        return;
+    }
+    SafeEngineRelease(&args->engine);
+    DeleteOrphanedController(args->win, args->ctrl);
+}
+
 static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     AutoDelete delData(d);
     OnLoadDocumentThreadFinished();
@@ -3271,17 +3289,27 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     EndDocumentLoad(path);
     MainWindow* win = args->win;
     if (!IsLoadTargetValid(args)) {
-        DeleteOrphanedController(win, args->ctrl);
+        DiscardFailedAsyncLoad(args);
         args->onFinished.Call(false);
         return;
     }
     // forceReuse next/prev can start a newer load into the same tab while this
     // one is still finishing; drop the stale result instead of swapping docs
     if (!IsLoadStillWanted(args)) {
-        DeleteOrphanedController(win, args->ctrl);
+        DiscardFailedAsyncLoad(args);
         args->onFinished.Call(false);
         return;
     }
+
+    // DisplayModel needs win->cbHandler: create it only on the UI thread after
+    // the window is known to still exist (load thread must not touch MainWindow).
+    if (!args->ctrl && args->engine) {
+        EngineBase* eng = args->engine;
+        args->engine = nullptr;
+        args->ctrl = CreateControllerForEngineOrFile(eng, path, nullptr, win);
+        // CreateControllerForEngineOrFile takes ownership of eng (or releases it)
+    }
+
     if (args->targetTab) {
         args->targetTab->loadStartedAt = 0;
         args->targetTab->loadCopyBytesCopied = -1;
@@ -3358,28 +3386,37 @@ static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
     uitask::Post(fn, "CopyProgress");
 }
 
+// Background load thread: create the engine only. Never touch MainWindow* /
+// WindowTab* here — the UI thread may CloseWindow/DeleteMainWindow while we
+// are in CreateEngineFromFile (ASan heap-use-after-free on win->cbHandler).
+// DisplayModel is built on the UI thread in LoadDocumentAsyncFinish.
 static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     auto args = d->args;
     AtomicIntInc(&gDangerousThreadCount);
-    MainWindow* win = args->win;
-    HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
     Str path = args->FilePath();
     EngineBase* engine = args->engine;
 
     // Network-drive cbx cache copy reports bytes onto the loading tab canvas.
+    // targetTab is only used to post UI tasks; FindMainWindowByTab rejects dead tabs.
     CopyProgressState copyState;
     copyState.targetTab = args->targetTab;
     if (args->targetTab) {
         file::gFileCopyProgressCb = MkFunc1<CopyProgressState, file::CopyProgress*>(OnFileCopyProgress, &copyState);
     }
 
-    args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
+    HwndPasswordUI pwdUI(args->hwndPwdParent);
+    bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
+    if (!engine) {
+        engine = CreateEngineFromFile(path, &pwdUI, chmInFixedUI);
+    }
+    if (engine && engine->pageCount <= 0) {
+        // same guard as CreateControllerForEngineOrFile
+        SafeEngineRelease(&engine);
+    }
+    args->engine = engine;
+    // args->ctrl stays null until LoadDocumentAsyncFinish
 
     file::gFileCopyProgressCb = {};
-
-    if (args->ctrl && gIsDebugBuild) {
-        //::Sleep(5000);
-    }
 
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsyncFinish, d);
     uitask::Post(fn, "TaskLoadDocumentAsyncFinish");

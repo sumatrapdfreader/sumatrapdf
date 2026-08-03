@@ -268,6 +268,9 @@ struct LoadArgs {
     // we don't own those values
     EngineBase* engine = nullptr;
     MainWindow* win = nullptr;
+    // HWND only (not MainWindow*): password UI parent for the load thread. The
+    // window may close while loading; never dereference win on the load thread.
+    HWND hwndPwdParent = nullptr;
 
     bool showWin = true;
     bool forceReuse = false;

@@ -583,7 +583,7 @@ void FileWatcherWaitForShutdown(void) {
     // have any file watching subscriptions pending
     ReportIf(gWatchedFiles != nullptr);
     ReportIf(gWatchedDirs != nullptr);
-        
+
     u64 timeStart = GetTickCount64();
     int nPending = GetRemovalsPending();
     while (nPending > 0 && (GetTickCount64() - timeStart) < 15000) {

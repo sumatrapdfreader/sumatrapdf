@@ -382,6 +382,7 @@ EngineBase::~EngineBase() {
     }
     free(pagesTextState);
     str::Free(defaultExt);
+    LogArenaStats(StrL("engine"), arena);
     ArenaDelete(arena);
 }
 
