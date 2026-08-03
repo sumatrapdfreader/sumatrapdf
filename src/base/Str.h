@@ -264,16 +264,28 @@ struct Builder {
     WCHAR* els = nullptr;
     u32 len = 0;
     u32 cap = 0;
-    WCHAR buf[32];
+    // Optional external scratch (not owned; default empty = allocate on first use).
+    // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
+    WStr buf{};
 
-    static constexpr size_t kBufChars = dimof(buf);
+    int nReallocs = 0;
+
     static constexpr size_t kElSize = sizeof(WCHAR);
 
-    explicit Builder(int capHint = 0, Arena* a = nullptr);
-    Builder(const Builder&);
+    // capHint: preferred capacity after first grow; a: optional arena for heap allocs.
+    // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
+    explicit Builder(int capHint = 0, Arena* a = nullptr, WStr externalBuf = {});
+    // initialize content from s (no external buf)
     Builder(WStr s);
-    Builder& operator=(const Builder& that);
+    // the implicit memberwise copy would alias els and double-free it
+    Builder(const Builder&) = delete;
+    Builder& operator=(const Builder&) = delete;
+
     ~Builder();
+
+    // true while storage is the external buf (or no storage yet)
+    bool UsesExternalBuf() const { return !els || (buf.s && els == buf.s); }
+
     void Reset(WStr s = {});
     WCHAR& operator[](int idx) const;
     bool InsertAt(int idx, const WCHAR& el);
@@ -289,8 +301,8 @@ struct Builder {
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = WCHAR*;
 
-    iterator begin() const { return &(els[0]); }
-    iterator end() const { return &(els[len]); }
+    iterator begin() const { return els ? &(els[0]) : nullptr; }
+    iterator end() const { return els ? &(els[len]) : nullptr; }
 };
 } // namespace wstr
 

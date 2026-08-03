@@ -1705,22 +1705,28 @@ char str::Builder::LastChar() const {
     return els[n - 1];
 }
 
+// using external scratch, or no storage yet (not heap)
+static bool IsExternalOrEmpty(const wstr::Builder* s) {
+    return !s->els || (s->buf.s && s->els == s->buf.s);
+}
+
 static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
-    bool isInlineBuf = !s->els || (s->els == s->buf);
-    // see the comment in str::Builder's EnsureCap()
-    if (isInlineBuf && (needed + kPadding <= wstr::Builder::kBufChars)) {
-        s->els = s->buf;
-        return s->buf;
+    // only use external buf if we haven't moved to the heap yet.
+    // RemoveAt() can shrink len enough for needed to fit again and switching
+    // back would lose the data and leak the heap allocation.
+    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= (size_t)s->buf.len) {
+        s->els = s->buf.s;
+        return s->els;
     }
 
     size_t capacityHint = s->cap;
-    // tricky: to save sapce we reuse cap for capacityHint
-    if (isInlineBuf) {
-        // on first expand cap might be capacityHint
+    // tricky: to save space we reuse cap for capacityHint while still on
+    // external/empty storage (cap was set from constructor hint)
+    if (IsExternalOrEmpty(s)) {
         s->cap = 0;
     }
 
-    if (s->cap >= needed) {
+    if (s->els && s->cap >= needed) {
         return s->els;
     }
 
@@ -1734,12 +1740,16 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
 
     size_t newElCount = newCap + kPadding;
 
+    s->nReallocs++;
+
     size_t allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
-    if (s->buf == s->els) {
+    if (IsExternalOrEmpty(s)) {
         newEls = (WCHAR*)Alloc(s->a, allocSize);
-        if (newEls) {
-            memcpy(newEls, s->buf, wstr::Builder::kElSize * (s->len + 1));
+        if (newEls && s->els && s->len > 0) {
+            memcpy(newEls, s->els, wstr::Builder::kElSize * (s->len + 1));
+        } else if (newEls) {
+            newEls[0] = 0;
         }
     } else {
         newEls = (WCHAR*)Realloc(s->a, s->els, allocSize, wstr::Builder::kElSize * (s->len + kPadding));
@@ -1774,23 +1784,26 @@ static WCHAR* MakeSpaceAt(wstr::Builder* s, size_t idx, size_t count) {
 
 static void WStrBuilderReset(wstr::Builder* s) {
     s->len = 0;
-    // keep an existing heap buffer for re-use; only default to the
-    // inline buf when we have not allocated yet (e.g. constructor)
-    if (!s->els) {
-        s->els = s->buf;
+    // keep an existing heap buffer for re-use; only bind external buf when
+    // we have not allocated heap yet
+    if (!s->els || (s->buf.s && s->els == s->buf.s)) {
+        s->els = s->buf.s; // may be null when no external buf
     }
-    s->els[0] = 0;
+    if (s->els) {
+        s->els[0] = 0;
+    }
 }
 
 static void WStrBuilderFree(wstr::Builder* s) {
-    bool isInlineBuf = !s->els || (s->els == s->buf);
-    if (!isInlineBuf) {
+    if (s->els && !(s->buf.s && s->els == s->buf.s)) {
         Free(s->a, s->els);
     }
     s->len = 0;
     s->cap = 0;
-    s->els = s->buf;
-    s->buf[0] = 0;
+    s->els = s->buf.s;
+    if (s->els) {
+        s->els[0] = 0;
+    }
 }
 
 void wstr::Builder::Reset(WStr s) {
@@ -1799,39 +1812,16 @@ void wstr::Builder::Reset(WStr s) {
 }
 
 // arena is not owned by Builder and must outlive it
-wstr::Builder::Builder(int capHint, Arena* a) {
+wstr::Builder::Builder(int capHint, Arena* a, WStr externalBuf) {
     this->a = a;
+    this->buf = externalBuf;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
-}
-
-// ensure that a Vec never shares its els buffer with another after a clone/copy
-// note: we don't inherit allocator as it's not needed for our use cases
-wstr::Builder::Builder(const wstr::Builder& that) {
-    Reset();
-    WCHAR* s = EnsureCap(this, that.cap);
-    WStr sOrig = ToWStr(that);
-    len = that.len;
-    size_t n = (len + kPadding) * kElSize;
-    memcpy(s, sOrig.s, n);
 }
 
 wstr::Builder::Builder(WStr s) {
     Reset();
     Append(s);
-}
-
-wstr::Builder& wstr::Builder::operator=(const wstr::Builder& that) {
-    if (this == &that) {
-        return *this;
-    }
-    Reset();
-    WCHAR* s = EnsureCap(this, that.cap);
-    WStr sOrig = ToWStr(that);
-    len = that.len;
-    size_t n = (len + kPadding) * kElSize;
-    memcpy(s, sOrig.s, n);
-    return *this;
 }
 
 wstr::Builder::~Builder() {
@@ -1898,10 +1888,18 @@ WCHAR wstr::Builder::RemoveLast() {
 WStr wstr::Builder::TakeWStr() {
     int n = (int)len;
     WCHAR* res = els;
-    if (els == buf) {
-        res = (WCHAR*)MemDup(a, buf, (len + kPadding) * kElSize);
+    if (!els || n == 0) {
+        Reset();
+        return WStr{};
     }
-    els = buf;
+    if (buf.s && els == buf.s) {
+        // data is in the external buffer, so we have to duplicate it
+        res = (WCHAR*)MemDup(a, els, (len + kPadding) * kElSize);
+        els = buf.s;
+    } else {
+        // we're returning the heap allocation; rebind to external if any
+        els = buf.s;
+    }
     Reset();
     return WStr(res, n);
 }
@@ -1927,10 +1925,10 @@ namespace wstr {
 // returns true if was replaced
 bool Replace(wstr::Builder& s, WStr toReplace, WStr replaceWith) {
     // fast path: nothing to replace
-    if (!wstr::FindFrom(WStr(s.els), toReplace)) {
+    if (!s.els || !wstr::FindFrom(ToWStr(s), toReplace)) {
         return false;
     }
-    WStr newStr = wstr::Replace(WStr(s.els), toReplace, replaceWith);
+    WStr newStr = wstr::Replace(ToWStr(s), toReplace, replaceWith);
     s.Reset();
     if (newStr) {
         s.Append(newStr);
@@ -2625,7 +2623,13 @@ WStr ToWStr(const wstr::Builder& b) {
     return WStr(b.els, (int)b.len);
 }
 
+// wstr::Builder always keeps its data NUL-terminated, so we can hand out the
+// buffer directly for C/win32 APIs we don't control that want a WCHAR*
 WCHAR* ToWCStr(const wstr::Builder& b) {
+    if (!b.els) {
+        static WCHAR empty = 0;
+        return &empty;
+    }
     return b.els;
 }
 

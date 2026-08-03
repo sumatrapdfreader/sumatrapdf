@@ -298,6 +298,121 @@ void strStrTest() {
     StrBuilderCapHint();
 }
 
+// --- wstr::Builder (same external-buf contract as str::Builder) ---
+
+static void WStrBuilderRunTwice(void (*fn)(wstr::Builder&)) {
+    {
+        wstr::Builder b;
+        fn(b);
+    }
+    {
+        WCHAR stack[128];
+        int n = 1 + (rand() % 128); // 1..128
+        wstr::Builder b(0, nullptr, WStr(stack, n));
+        fn(b);
+    }
+}
+
+static void WStrBuilderContainsAppend(wstr::Builder& str) {
+    utassert(str.IsEmpty());
+    str.Append(L"blah");
+    utassert(str.begin() != nullptr);
+    utassert(wstr::Eq(ToWStr(str), WStrL(L"blah")));
+    str.Append(L"lost");
+    utassert(wstr::Eq(ToWStr(str), WStrL(L"blahlost")));
+    utassert(wstr::ContainsChar(str, L'a'));
+    utassert(!wstr::ContainsChar(str, L'z'));
+}
+
+static void WStrBuilderGrowPastExternal(wstr::Builder& str) {
+    str.Append(L"blah");
+    utassert(wstr::Eq(ToWStr(str), WStrL(L"blah")));
+    str.Append(L"lost");
+    utassert(wstr::Eq(ToWStr(str), WStrL(L"blahlost")));
+    str.Reset();
+    for (int i = 0; i < 200; i++) {
+        str.AppendChar((WCHAR)i);
+    }
+    utassert(!str.UsesExternalBuf());
+    for (int i = 0; i < 200; i++) {
+        utassert(str[i] == (WCHAR)i);
+    }
+}
+
+static void WStrBuilderRemoveAtStaysOnHeap(wstr::Builder& str) {
+    for (int i = 0; i < 200; i++) {
+        str.AppendChar((WCHAR)(L'a' + (i % 26)));
+    }
+    uintptr_t heap = (uintptr_t)str.begin();
+    utassert(!str.UsesExternalBuf());
+    str.RemoveAt(0, 190);
+    utassert(len(str) == 10);
+    utassert((uintptr_t)str.begin() == heap);
+    str.Append(L"xyz");
+    utassert((uintptr_t)str.begin() == heap);
+    utassert(wstr::Eq(ToWStr(str), WStrL(L"ijklmnopqrxyz")));
+}
+
+static void WStrBuilderManyAppends(wstr::Builder& str) {
+    for (int i = 0; i < 50; i++) {
+        str.Append(L"01234567890123456789");
+    }
+    utassert(len(str) == 1000);
+    utassert(wstr::StartsWith(ToWStr(str), WStrL(L"01234567890123456789")));
+    utassert(wstr::EndsWith(ToWStr(str), WStrL(L"01234567890123456789")));
+}
+
+static void WStrBuilderTakeWStr(wstr::Builder& str) {
+    str.Append(L"hello");
+    WCHAR* before = str.begin();
+    bool wasExternal = str.UsesExternalBuf();
+    WStr taken = str.TakeWStr();
+    utassert(wstr::Eq(taken, WStrL(L"hello")));
+    if (wasExternal) {
+        utassert(taken.s != before);
+    }
+    wstr::Free(taken);
+    utassert(str.IsEmpty());
+}
+
+static void WStrBuilderCapHint() {
+    wstr::Builder str(1024);
+    uintptr_t heap = 0;
+    for (int i = 0; i < 50; i++) {
+        str.Append(L"01234567890123456789");
+        if (i == 0) {
+            heap = (uintptr_t)str.begin();
+            utassert(heap != 0);
+        }
+    }
+    utassert((uintptr_t)str.begin() == heap);
+    utassert(str.nReallocs == 1);
+
+    WCHAR stack[16];
+    wstr::Builder str2(1024, nullptr, WStr(stack, (int)dimof(stack)));
+    heap = 0;
+    int reallocsAtHeap = -1;
+    for (int i = 0; i < 50; i++) {
+        str2.Append(L"01234567890123456789");
+        if (!str2.UsesExternalBuf() && reallocsAtHeap < 0) {
+            heap = (uintptr_t)str2.begin();
+            reallocsAtHeap = str2.nReallocs;
+        }
+    }
+    utassert(heap != 0);
+    utassert((uintptr_t)str2.begin() == heap);
+    utassert(str2.nReallocs == reallocsAtHeap);
+}
+
+static void wstrBuilderTest() {
+    WStrBuilderRunTwice(WStrBuilderContainsAppend);
+    WStrBuilderRunTwice(WStrBuilderGrowPastExternal);
+    WStrBuilderRunTwice(WStrBuilderRemoveAtStaysOnHeap);
+    WStrBuilderRunTwice(WStrBuilderManyAppends);
+    WStrBuilderRunTwice(WStrBuilderTakeWStr);
+    WStrBuilderCapHint();
+}
+
 // case-insensitive Find/Contains must work for non-Latin scripts, not just
 // ASCII (issue #5717: TOC "*" palette search was case-sensitive for Cyrillic)
 static void StrFindITest() {
@@ -920,6 +1035,7 @@ void StrTest() {
     }
 
     strStrTest();
+    wstrBuilderTest();
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();
