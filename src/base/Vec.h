@@ -74,18 +74,6 @@ struct Vec {
         }
     }
 
-    bool SetSize(int newSize) {
-        if (newSize <= cap) {
-            len = newSize;
-            if (els) {
-                memset(els + len, 0, (size_t)(cap - len) * sizeof(T));
-            }
-            return true;
-        }
-        auto res = MakeSpaceAt(0, newSize);
-        return res != nullptr;
-    }
-
     explicit Vec() = default;
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
@@ -301,6 +289,25 @@ struct Vec {
 template <typename T>
 inline int len(const Vec<T>& v) {
     return v.len;
+}
+
+// Set logical length to newSize (std::vector::resize). Grows capacity if needed;
+// zeros unused capacity beyond the new length.
+template <typename T>
+bool VecResize(Vec<T>& v, int newSize) {
+    if (newSize < 0) {
+        return false;
+    }
+    if (newSize > v.cap) {
+        if (!v.EnsureCap(newSize)) {
+            return false;
+        }
+    }
+    v.len = newSize;
+    if (v.els && v.cap > v.len) {
+        memset(v.els + v.len, 0, (size_t)(v.cap - v.len) * sizeof(T));
+    }
+    return true;
 }
 
 // only suitable for T that are pointers to C++ objects

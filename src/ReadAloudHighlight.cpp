@@ -803,7 +803,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
 
     int pageCount = dm->GetEngine()->PageCount();
     Vec<RectF> pageUnions;
-    pageUnions.SetSize(pageCount + 1);
+    VecResize(pageUnions, pageCount + 1);
 
     for (int i = wordStartAbs; i < wordEndAbs; i++) {
         ReadAloudByteLoc& loc = map->locs[i];

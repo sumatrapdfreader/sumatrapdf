@@ -36,7 +36,7 @@ static DarkModeProcessCache* PdfDarkModeEnsureProcessCache(DarkModePageAnalysis*
     }
     int n = len(analysis->images);
     if (len(cache->processedImages) != n) {
-        cache->processedImages.SetSize(n);
+        VecResize(cache->processedImages, n);
         for (int i = 0; i < n; i++) {
             cache->processedImages[i] = nullptr;
         }

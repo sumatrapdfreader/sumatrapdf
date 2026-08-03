@@ -54,7 +54,7 @@ static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
 }
 TextSearch::TextSearch(EngineBase* engine) : TextSelection(engine) {
     nPages = engine->PageCount();
-    pagesToSkip.SetSize(nPages);
+    VecResize(pagesToSkip, nPages);
     markAllPagesNonSkip(pagesToSkip);
 }
 

@@ -686,7 +686,7 @@ static void ComputeLayout(ScreenshotOverlayData* data) {
     data->rows = (n + data->cols - 1) / data->cols;
 
     // compute per-column widths (max thumb width in that column + 2*kGridPaddingX)
-    data->colWidths.SetSize(data->cols);
+    VecResize(data->colWidths, data->cols);
     for (int c = 0; c < data->cols; c++) {
         data->colWidths[c] = 0;
     }
@@ -702,7 +702,7 @@ static void ComputeLayout(ScreenshotOverlayData* data) {
     }
 
     // compute per-row heights (max thumb height in that row + label + 2*kGridPaddingY)
-    data->rowHeights.SetSize(data->rows);
+    VecResize(data->rowHeights, data->rows);
     for (int r = 0; r < data->rows; r++) {
         data->rowHeights[r] = 0;
     }
@@ -718,14 +718,14 @@ static void ComputeLayout(ScreenshotOverlayData* data) {
     }
 
     // compute cumulative x/y offsets for each column/row
-    data->colX.SetSize(data->cols);
+    VecResize(data->colX, data->cols);
     int x = kOuterPadding;
     for (int c = 0; c < data->cols; c++) {
         data->colX[c] = x;
         x += data->colWidths[c];
     }
 
-    data->rowY.SetSize(data->rows);
+    VecResize(data->rowY, data->rows);
     int y = kInfoBarHeight + kOuterPadding; // start below info bar
     for (int r = 0; r < data->rows; r++) {
         data->rowY[r] = y;

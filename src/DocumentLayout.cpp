@@ -19,7 +19,7 @@ static int ColumnsFromDisplayMode(DisplayMode displayMode) {
 void DocumentLayout::Reset(int pageCount) {
     pages.Reset();
     if (pageCount > 0) {
-        pages.SetSize(pageCount);
+        VecResize(pages, pageCount);
     }
     canvasSize = {};
     viewPort = {};

@@ -306,7 +306,7 @@ void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
     }
     // Allocate all slots before initializing nested Vec members. AppendBlanks would
     // memmove MarkdownFileToc values and leave headings.els pointing at stale addrs.
-    if (!tocsOut.SetSize(n)) {
+    if (!VecResize(tocsOut, n)) {
         return;
     }
     for (int i = 0; i < n; i++) {
