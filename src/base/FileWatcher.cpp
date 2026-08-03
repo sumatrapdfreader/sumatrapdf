@@ -115,7 +115,7 @@ static Mutex gFileWatcherMutex;
 static WatchedDir* gWatchedDirs = nullptr;
 static WatchedFile* gWatchedFiles = nullptr;
 
-static LONG gRemovalsPending = 0;
+static AtomicInt gRemovalsPending = 0;
 
 static void StartMonitoringDirForChanges(WatchedDir* wd);
 
@@ -198,6 +198,7 @@ static void NotifyAboutFile(WatchedDir* d, Str fileName) {
 }
 
 static void DeleteWatchedDir(WatchedDir* wd) {
+    logf("DeleteWatchedDir() %s\n", wd->dirPath);
     str::Free(wd->dirPath);
     free(wd);
 }
@@ -232,7 +233,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     if (errCode == ERROR_OPERATION_ABORTED) {
         // logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
         DeleteWatchedDir(wd);
-        InterlockedDecrement(&gRemovalsPending);
+        AtomicIntDec(&gRemovalsPending);
         return;
     }
 
@@ -567,12 +568,8 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
     bool ok = ListRemove(&gWatchedDirs, wd);
     ReportIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
-    InterlockedIncrement(&gRemovalsPending);
+    AtomicIntInc(&gRemovalsPending);
     QueueUserAPC(StopMonitoringDirAPC, gThreadHandle, (ULONG_PTR)wd);
-}
-
-static LONG GetRemovalsPending() {
-    return InterlockedCompareExchange(&gRemovalsPending, 0, 0);
 }
 
 void FileWatcherWaitForShutdown(void) {
@@ -585,13 +582,13 @@ void FileWatcherWaitForShutdown(void) {
     ReportIf(gWatchedDirs != nullptr);
 
     u64 timeStart = GetTickCount64();
-    int nPending = GetRemovalsPending();
+    int nPending = AtomicIntGet(&gRemovalsPending);
     while (nPending > 0 && (GetTickCount64() - timeStart) < 15000) {
         if (IsDebuggerPresent()) {
             logf("FileWatcherWaitForShutdown: %d removals pending\n", nPending);
         }
         Sleep(100);
-        nPending = GetRemovalsPending();
+        nPending = AtomicIntGet(&gRemovalsPending);
     }
 
     // Signal from this thread and wake the watcher through the control event.
