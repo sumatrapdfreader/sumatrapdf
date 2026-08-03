@@ -20,10 +20,6 @@ class Vec {
     // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
-    static constexpr int kPadding = 1;
-    // byte size of a single element; kept int because it's used in
-    // allocation-size arithmetic that must not overflow
-    static constexpr int kElSize = sizeofi(T);
 
   private:
     NO_INLINE bool EnsureCapSlow(int needed, int elSize) {
@@ -32,7 +28,7 @@ class Vec {
             newCap = needed;
         }
 
-        int newElCount = newCap + kPadding;
+        int newElCount = newCap + 1;
         if (newElCount >= (INT_MAX / elSize)) {
             return false;
         }
@@ -72,7 +68,7 @@ class Vec {
             return els;
         }
         // slow path
-        if (!EnsureCapSlow(capNeeded, kElSize)) {
+        if (!EnsureCapSlow(capNeeded, (int)sizeof(T))) {
             return nullptr;
         }
         return els;
@@ -88,7 +84,7 @@ class Vec {
         if (len > idx) {
             T* src = els + idx;
             T* dst = els + idx + count;
-            memmove(dst, src, (size_t)(len - idx) * kElSize);
+            memmove(dst, src, (size_t)(len - idx) * sizeof(T));
         }
         len = newLen;
         return res;
@@ -114,7 +110,7 @@ class Vec {
     void Clear() {
         len = 0;
         if (els && cap > 0) {
-            memset(els, 0, (size_t)cap * kElSize);
+            memset(els, 0, (size_t)cap * sizeof(T));
         }
     }
 
@@ -122,7 +118,7 @@ class Vec {
         if (newSize <= cap) {
             len = newSize;
             if (els) {
-                memset(els + len, 0, (size_t)(cap - len) * kElSize);
+                memset(els + len, 0, (size_t)(cap - len) * sizeof(T));
             }
             return true;
         }
@@ -140,7 +136,7 @@ class Vec {
         len = other.len;
         // using memcpy, as Vec only supports POD types
         if (other.len > 0) {
-            memcpy(els, other.els, (size_t)kElSize * other.len);
+            memcpy(els, other.els, sizeof(T) * (size_t)other.len);
         }
     }
 
@@ -156,8 +152,8 @@ class Vec {
         // using memcpy, as Vec only supports POD types
         len = other.len;
         if (other.len > 0) {
-            memcpy(els, other.els, (size_t)kElSize * len);
-            memset(els + len, 0, (size_t)kElSize * (cap - len));
+            memcpy(els, other.els, sizeof(T) * (size_t)len);
+            memset(els + len, 0, sizeof(T) * (size_t)(cap - len));
         }
         return *this;
     }
@@ -201,7 +197,7 @@ class Vec {
         if (!dst) {
             return false;
         }
-        memcpy(dst, src, (size_t)(count * kElSize));
+        memcpy(dst, src, (size_t)count * sizeof(T));
         return true;
     }
 
@@ -218,10 +214,10 @@ class Vec {
         if (len > idx + count) {
             T* dst = els + idx;
             T* src = els + idx + count;
-            memmove(dst, src, (size_t)((len - idx - count) * kElSize));
+            memmove(dst, src, (size_t)(len - idx - count) * sizeof(T));
         }
         len -= count;
-        memset(els + len, 0, ((size_t)count * kElSize));
+        memset(els + len, 0, (size_t)count * sizeof(T));
     }
 
     void RemoveLast() {
@@ -244,9 +240,9 @@ class Vec {
         T* toRemove = els + idx;
         T* last = els + len - 1;
         if (toRemove != last) {
-            memcpy(toRemove, last, (size_t)kElSize);
+            memcpy(toRemove, last, sizeof(T));
         }
-        memset(last, 0, (size_t)kElSize);
+        memset(last, 0, sizeof(T));
         --len;
     }
 
@@ -314,14 +310,14 @@ class Vec {
 
     void Sort(int (*cmpFunc)(const void* a, const void* b)) {
         if (len > 0) {
-            qsort(els, len, kElSize, cmpFunc);
+            qsort(els, len, sizeof(T), cmpFunc);
         }
     }
 
     void SortTyped(int (*cmpFunc)(const T* a, const T* b)) {
         if (len > 0) {
             auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
-            qsort(els, len, kElSize, cmpFunc2);
+            qsort(els, len, sizeof(T), cmpFunc2);
         }
     }
 
