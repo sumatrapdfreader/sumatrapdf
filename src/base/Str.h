@@ -208,23 +208,28 @@ namespace str {
 struct Builder {
     // arena is not owned by Builder and must outlive it
     Arena* a = nullptr;
-    // TODO: to save space (8 bytes), combine els and buf?
     char* els = nullptr;
     u32 len = 0;
     u32 cap = 0;
-    char buf[32];
+    // Optional external scratch (not owned; default empty = allocate on first use).
+    // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
+    Str buf{};
 
     int nReallocs = 0;
 
-    static constexpr size_t kBufChars = dimof(buf);
-
-    explicit Builder(int capHint = 0, Arena* a = nullptr);
+    // capHint: preferred capacity after first grow; a: optional arena for heap allocs.
+    // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
+    explicit Builder(int capHint = 0, Arena* a = nullptr, Str externalBuf = {});
+    // initialize content from s (no external buf)
     Builder(Str s);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
     Builder& operator=(const Builder&) = delete;
 
     ~Builder();
+
+    // true while storage is the external buf (or no storage yet)
+    bool UsesExternalBuf() const { return !els || (buf.s && els == buf.s); }
 
     void Reset(Str s = {});
     char& operator[](int idx) const;
@@ -242,8 +247,8 @@ struct Builder {
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = char*;
 
-    iterator begin() const { return &(els[0]); }
-    iterator end() const { return &(els[len]); }
+    iterator begin() const { return els ? &(els[0]) : nullptr; }
+    iterator end() const { return els ? &(els[len]) : nullptr; }
 };
 
 bool Contains(const Builder& b, Str sub);

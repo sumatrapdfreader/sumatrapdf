@@ -1482,24 +1482,28 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr size_t kPadding = 1;
 
+// using external scratch, or no storage yet (not heap)
+static bool IsExternalOrEmpty(const str::Builder* s) {
+    return !s->els || (s->buf.s && s->els == s->buf.s);
+}
+
 static char* EnsureCap(str::Builder* s, size_t needed) {
-    bool isInlineBuf = !s->els || (s->els == s->buf);
-    // only use the inline buffer if we haven't moved to the heap yet.
-    // RemoveAt() can shrink len enough for needed to fit in buf again and
-    // switching back would lose the data and leak the heap allocation
-    if (isInlineBuf && (needed + kPadding <= str::Builder::kBufChars)) {
-        s->els = s->buf;
-        return s->buf;
+    // only use external buf if we haven't moved to the heap yet.
+    // RemoveAt() can shrink len enough for needed to fit again and switching
+    // back would lose the data and leak the heap allocation.
+    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= (size_t)s->buf.len) {
+        s->els = s->buf.s;
+        return s->els;
     }
 
     size_t capacityHint = s->cap;
-    // tricky: to save sapce we reuse cap for capacityHint
-    if (isInlineBuf) {
-        // on first expand cap might be capacityHint
+    // tricky: to save space we reuse cap for capacityHint while still on
+    // external/empty storage (cap was set from constructor hint)
+    if (IsExternalOrEmpty(s)) {
         s->cap = 0;
     }
 
-    if (s->cap >= needed) {
+    if (s->els && s->cap >= needed) {
         return s->els;
     }
 
@@ -1517,10 +1521,12 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
 
     size_t allocSize = newElCount;
     char* newEls;
-    if (s->buf == s->els) {
+    if (IsExternalOrEmpty(s)) {
         newEls = (char*)Alloc(s->a, allocSize);
-        if (newEls) {
-            memcpy(newEls, s->buf, s->len + 1);
+        if (newEls && s->els && s->len > 0) {
+            memcpy(newEls, s->els, s->len + 1);
+        } else if (newEls) {
+            newEls[0] = 0;
         }
     } else {
         newEls = (char*)Realloc(s->a, s->els, allocSize, s->len + kPadding);
@@ -1556,23 +1562,26 @@ static char* MakeSpaceAt(str::Builder* s, size_t idx, size_t count) {
 
 static void StrBuilderReset(str::Builder* s) {
     s->len = 0;
-    // keep an existing heap buffer for re-use; only default to the
-    // inline buf when we have not allocated yet (e.g. constructor)
-    if (!s->els) {
-        s->els = s->buf;
+    // keep an existing heap buffer for re-use; only bind external buf when
+    // we have not allocated heap yet
+    if (!s->els || (s->buf.s && s->els == s->buf.s)) {
+        s->els = s->buf.s; // may be null when no external buf
     }
-    s->els[0] = 0;
+    if (s->els) {
+        s->els[0] = 0;
+    }
 }
 
 static void StrBuilderFree(str::Builder* s) {
-    bool isInlineBuf = !s->els || (s->els == s->buf);
-    if (!isInlineBuf) {
+    if (s->els && !(s->buf.s && s->els == s->buf.s)) {
         Free(s->a, s->els);
     }
     s->len = 0;
     s->cap = 0;
-    s->els = s->buf;
-    s->buf[0] = 0;
+    s->els = s->buf.s;
+    if (s->els) {
+        s->els[0] = 0;
+    }
 }
 
 void str::Builder::Reset(Str s) {
@@ -1581,8 +1590,9 @@ void str::Builder::Reset(Str s) {
 }
 
 // arena is not owned by Builder and must outlive it
-str::Builder::Builder(int capHint, Arena* a) {
+str::Builder::Builder(int capHint, Arena* a, Str externalBuf) {
     this->a = a;
+    this->buf = externalBuf;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
@@ -1662,12 +1672,17 @@ char& str::Builder::Last() const {
 Str str::Builder::TakeStr() {
     int n = (int)len;
     char* res = els;
-    if (els == buf) {
-        // data is in the inline buffer, so we have to duplicate it
+    if (!els || n == 0) {
+        Reset();
+        return Str{};
+    }
+    if (buf.s && els == buf.s) {
+        // data is in the external buffer, so we have to duplicate it
         res = (char*)MemDup(this->a, els, len + kPadding);
+        els = buf.s;
     } else {
-        // we're returning els, so reset to small buf
-        els = buf;
+        // we're returning the heap allocation; rebind to external if any
+        els = buf.s;
     }
 
     Reset();
@@ -2599,6 +2614,10 @@ NO_INLINE TempStr ToStrTemp(const str::Builder& b) {
 // str::Builder always keeps its data NUL-terminated, so we can hand out the
 // buffer directly for C/win32 APIs we don't control that want a char*
 char* ToCStr(const str::Builder& b) {
+    if (!b.els) {
+        static char empty = 0;
+        return &empty;
+    }
     return b.els;
 }
 

@@ -166,77 +166,136 @@ static void StrUrlExtractTest() {
                                    "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD")));
 }
 
+// Run fn once with no external buf, once with a stack buf of random size 1..128.
+static void StrBuilderRunTwice(void (*fn)(str::Builder&)) {
+    {
+        str::Builder b;
+        fn(b);
+    }
+    {
+        char stack[128];
+        int n = 1 + (rand() % 128); // 1..128
+        str::Builder b(0, nullptr, Str(stack, n));
+        fn(b);
+    }
+}
+
+static void StrBuilderContainsAppend(str::Builder& str) {
+    utassert(str.IsEmpty());
+    str.Append("blah");
+    utassert(str.begin() != nullptr);
+    utassert(str::Contains(str, StrL("blah")));
+    utassert(str::Contains(str, StrL("ah")));
+    utassert(str::Contains(str, StrL("h")));
+    utassert(!str::Contains(str, StrL("lahd")));
+    utassert(!str::Contains(str, StrL("blahd")));
+    utassert(!str::Contains(str, StrL("blas")));
+    utassert(str::Eq(ToStr(str), StrL("blah")));
+    str.Append("lost");
+    utassert(str::Eq(ToStr(str), StrL("blahlost")));
+    utassert(str::Contains(str, StrL("blahlost")));
+    utassert(str::Contains(str, StrL("ahlo")));
+}
+
+static void StrBuilderGrowPastExternal(str::Builder& str) {
+    str.Append("blah");
+    utassert(str::Eq(ToStr(str), StrL("blah")));
+    str.Append("lost");
+    utassert(str::Eq(ToStr(str), StrL("blahlost")));
+    str.Reset();
+    // 200 chars always exceeds external scratch of at most 128
+    for (int i = 0; i < 200; i++) {
+        str.AppendChar((char)i);
+    }
+    utassert(!str.UsesExternalBuf());
+    for (int i = 0; i < 200; i++) {
+        utassert(str[i] == (char)i);
+    }
+}
+
+static void StrBuilderRemoveAtStaysOnHeap(str::Builder& str) {
+    // Grow past any external buf (max 128) so storage is on the heap.
+    for (int i = 0; i < 200; i++) {
+        str.AppendChar((char)('a' + (i % 26)));
+    }
+    uintptr_t heap = (uintptr_t)str.begin();
+    utassert(!str.UsesExternalBuf());
+    // RemoveAt shrinks len; further appends must not switch back to external
+    // (that would lose data and leak the heap allocation).
+    str.RemoveAt(0, 190);
+    utassert(len(str) == 10);
+    utassert((uintptr_t)str.begin() == heap);
+    str.Append("xyz");
+    utassert((uintptr_t)str.begin() == heap);
+    // last 10 of 200 chars (i=190..199): i%26 => 8..17 => "ijklmnopqr"
+    utassert(str::Eq(ToStr(str), StrL("ijklmnopqrxyz")));
+}
+
+static void StrBuilderManyAppends(str::Builder& str) {
+    for (int i = 0; i < 50; i++) {
+        str.Append("01234567890123456789");
+    }
+    utassert(len(str) == 1000);
+    utassert(str::StartsWith(ToStr(str), StrL("01234567890123456789")));
+    utassert(str::EndsWith(ToStr(str), StrL("01234567890123456789")));
+}
+
+static void StrBuilderTakeStr(str::Builder& str) {
+    str.Append("hello");
+    char* before = str.begin();
+    bool wasExternal = str.UsesExternalBuf();
+    Str taken = str.TakeStr();
+    utassert(str::Eq(taken, StrL("hello")));
+    if (wasExternal) {
+        // data was in the external buffer; TakeStr must copy
+        utassert(taken.s != before);
+    }
+    str::Free(taken);
+    utassert(str.IsEmpty());
+}
+
+// capHint is independent of external buf: large hint should avoid realloc while
+// content stays under the hint (and ignore a small external scratch once heap
+// is allocated with that hint).
+static void StrBuilderCapHint() {
+    str::Builder str(1024);
+    uintptr_t heap = 0;
+    for (int i = 0; i < 50; i++) {
+        str.Append("01234567890123456789");
+        if (i == 0) {
+            heap = (uintptr_t)str.begin();
+            utassert(heap != 0);
+        }
+    }
+    // 50*20 = 1000 chars < 1024, so no further realloc
+    utassert((uintptr_t)str.begin() == heap);
+    utassert(str.nReallocs == 1);
+
+    // same with a small external buf: once content needs heap, capHint applies
+    char stack[16];
+    str::Builder str2(1024, nullptr, Str(stack, (int)sizeof(stack)));
+    heap = 0;
+    int reallocsAtHeap = -1;
+    for (int i = 0; i < 50; i++) {
+        str2.Append("01234567890123456789");
+        if (!str2.UsesExternalBuf() && reallocsAtHeap < 0) {
+            heap = (uintptr_t)str2.begin();
+            reallocsAtHeap = str2.nReallocs;
+        }
+    }
+    utassert(heap != 0);
+    utassert((uintptr_t)str2.begin() == heap);
+    // only the grow-from-external realloc, no further ones for 1000 chars
+    utassert(str2.nReallocs == reallocsAtHeap);
+}
+
 void strStrTest() {
-    {
-        // verify that we use buf for initial allocations
-        str::Builder str;
-        uintptr_t buf = (uintptr_t)str.begin();
-        str.Append("blah");
-        utassert(str::Contains(str, StrL("blah")));
-        utassert(str::Contains(str, StrL("ah")));
-        utassert(str::Contains(str, StrL("h")));
-        utassert(!str::Contains(str, StrL("lahd")));
-        utassert(!str::Contains(str, StrL("blahd")));
-        utassert(!str::Contains(str, StrL("blas")));
-
-        uintptr_t buf2 = (uintptr_t)str.begin();
-        utassert(buf == buf2);
-        utassert(str::Eq(ToStr(str), StrL("blah")));
-        str.Append("lost");
-        buf2 = (uintptr_t)str.begin();
-        utassert(str::Eq(ToStr(str), StrL("blahlost")));
-        utassert(str::Contains(str, StrL("blahlost")));
-        utassert(str::Contains(str, StrL("ahlo")));
-        utassert(buf == buf2);
-        str.Reset();
-        for (int i = 0; i < str::Builder::kBufChars + 4; i++) {
-            str.AppendChar((char)i);
-        }
-        buf2 = (uintptr_t)str.begin();
-        // we should have allocated buf on the heap
-        utassert(buf != buf2);
-        for (int i = 0; i < str::Builder::kBufChars + 4; i++) {
-            char c = str[i];
-            utassert(c == (char)i);
-        }
-    }
-
-    {
-        // RemoveAt() shrinks len; appending after that must not switch
-        // back to the inline buf (which would lose data and leak the heap alloc)
-        str::Builder str;
-        uintptr_t buf = (uintptr_t)str.begin();
-        for (int i = 0; i < 40; i++) {
-            str.AppendChar((char)('a' + (i % 26)));
-        }
-        uintptr_t heap = (uintptr_t)str.begin();
-        utassert(buf != heap);
-        str.RemoveAt(0, 30);
-        utassert(len(str) == 10);
-        utassert((uintptr_t)str.begin() == heap);
-        str.Append("xyz");
-        utassert((uintptr_t)str.begin() == heap);
-        utassert(str::Eq(ToStr(str), StrL("efghijklmnxyz")));
-    }
-
-    {
-        // verify that initialCapacity hint works
-        str::Builder str(1024);
-        uintptr_t buf = 0;
-
-        for (int i = 0; i < 50; i++) {
-            str.Append("01234567890123456789");
-            if (i == 2) {
-                // we filled Str::buf (32 bytes) by putting 20 bytes
-                // and allocated heap for 1024 bytes. Remember the
-                buf = (uintptr_t)str.begin();
-            }
-        }
-        // we've appended 100*10 = 1000 chars, which is less than 1024
-        // so Str::buf should be the same as buf
-        uintptr_t buf2 = (uintptr_t)str.begin();
-        utassert(buf == buf2);
-    }
+    StrBuilderRunTwice(StrBuilderContainsAppend);
+    StrBuilderRunTwice(StrBuilderGrowPastExternal);
+    StrBuilderRunTwice(StrBuilderRemoveAtStaysOnHeap);
+    StrBuilderRunTwice(StrBuilderManyAppends);
+    StrBuilderRunTwice(StrBuilderTakeStr);
+    StrBuilderCapHint();
 }
 
 // case-insensitive Find/Contains must work for non-Latin scripts, not just
