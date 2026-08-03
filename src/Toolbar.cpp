@@ -1180,7 +1180,7 @@ static void PopulateCustomToolbarButtons() {
     for (auto cc = gFirstCustomCommand; cc; cc = cc->next) {
         customCmds.Append(cc);
     }
-    customCmds.Reverse();
+    VecReverse(customCmds);
     for (CustomCommand* cc : customCmds) {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;

@@ -67,7 +67,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
         RectF isectD = dm->CvtFromScreen(intersect, pageNo);
         sel->Append(SelectionOnPage(pageNo, &isectD));
     }
-    sel->Reverse();
+    VecReverse(*sel);
 
     if (len(*sel) == 0) {
         delete sel;
@@ -84,7 +84,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
         RectF rect = ToRectF(textSel->rects[i]);
         sel->Append(SelectionOnPage(textSel->pages[i], &rect));
     }
-    sel->Reverse();
+    VecReverse(*sel);
 
     if (len(*sel) == 0) {
         delete sel;

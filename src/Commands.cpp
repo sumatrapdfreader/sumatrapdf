@@ -1136,7 +1136,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
         curr = curr->next;
     }
     // reverse so that they are returned in the order they were inserted
-    commands.Reverse();
+    VecReverse(commands);
 }
 
 static CommandArg* NewArg(CommandArg::Type type, Str name) {

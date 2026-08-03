@@ -20,6 +20,10 @@ bool VecReserve(Arena* arena, T& v, int wantedSize);
 template <typename T>
 inline T* VecReserve(Vec<T>& v, int capNeeded);
 
+// Open a hole of `count` elements at `idx`; updates len. Returns &v.els[idx].
+template <typename T>
+T* VecInsertSpace(Vec<T>& v, int idx, int count);
+
 template <typename T>
 struct Vec {
     int len = 0;
@@ -30,22 +34,6 @@ struct Vec {
     // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
-
-    T* MakeSpaceAt(int idx, int count) {
-        int newLen = std::max(len, idx) + count;
-        T* ok = VecReserve(*this, newLen);
-        if (!ok) {
-            return nullptr;
-        }
-        T* res = &(els[idx]);
-        if (len > idx) {
-            T* src = els + idx;
-            T* dst = els + idx + count;
-            memmove(dst, src, (size_t)(len - idx) * sizeof(T));
-        }
-        len = newLen;
-        return res;
-    }
 
     void FreeEls() {
         if (els) {
@@ -122,7 +110,7 @@ struct Vec {
     bool isValidIndex(int idx) const { return (idx >= 0) && (idx < len); }
 
     bool InsertAt(int idx, const T& el) {
-        T* p = MakeSpaceAt(idx, 1);
+        T* p = VecInsertSpace(*this, idx, 1);
         if (!p) {
             return false;
         }
@@ -136,7 +124,7 @@ struct Vec {
         if (0 == count) {
             return true;
         }
-        T* dst = MakeSpaceAt(len, count);
+        T* dst = VecInsertSpace(*this, len, count);
         if (!dst) {
             return false;
         }
@@ -151,7 +139,7 @@ struct Vec {
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(int count) { return MakeSpaceAt(len, count); }
+    T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
 
     void RemoveAt(int idx, int count = 1) {
         if (len > idx + count) {
@@ -264,12 +252,6 @@ struct Vec {
         }
     }
 
-    void Reverse() {
-        for (int i = 0; i < len / 2; i++) {
-            std::swap(els[i], els[len - i - 1]);
-        }
-    }
-
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = T*;
@@ -285,6 +267,13 @@ struct Vec {
 template <typename T>
 inline int len(const Vec<T>& v) {
     return v.len;
+}
+
+template <typename T>
+void VecReverse(Vec<T>& v) {
+    for (int i = 0; i < v.len / 2; i++) {
+        std::swap(v.els[i], v.els[v.len - i - 1]);
+    }
 }
 
 template <typename T>
@@ -305,6 +294,23 @@ inline T* VecReserve(Vec<T>& v, int capNeeded) {
         return nullptr;
     }
     return v.els;
+}
+
+template <typename T>
+T* VecInsertSpace(Vec<T>& v, int idx, int count) {
+    int newLen = std::max(v.len, idx) + count;
+    T* ok = VecReserve(v, newLen);
+    if (!ok) {
+        return nullptr;
+    }
+    T* res = &(v.els[idx]);
+    if (v.len > idx) {
+        T* src = v.els + idx;
+        T* dst = v.els + idx + count;
+        memmove(dst, src, (size_t)(v.len - idx) * sizeof(T));
+    }
+    v.len = newLen;
+    return res;
 }
 
 // Set logical length to newSize (std::vector::resize). Grows capacity if needed;

@@ -156,10 +156,10 @@ void VecTest() {
         v.Append(2);
         for (int i = 0; i < 500; i++) v.Append(4);
         v[250] = 5;
-        v.Reverse();
+        VecReverse(v);
         utassert(len(v) == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);
         v.Remove(4);
-        v.Reverse();
+        VecReverse(v);
         utassert(len(v) == 500 && v[0] == 2 && v[249] == v[251] && v[250] == 5 && v[499] == 4);
     }
 

@@ -1789,7 +1789,7 @@ static void BuildElementsInfo(FzPageInfo* pageInfo) {
     for (auto& comment : pageInfo->comments) {
         els.Append(comment);
     }
-    els.Reverse();
+    VecReverse(els);
 }
 
 static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
@@ -3960,7 +3960,7 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
     }
 
     // re-order list into top-to-bottom order (i.e. last-to-first)
-    comments.Reverse();
+    VecReverse(comments);
 }
 
 /* SumatraPDF */
