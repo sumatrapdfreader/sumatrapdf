@@ -446,8 +446,12 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         return;
     }
     TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and install latest version"));
-    TempStr msg =
-        fmt(_TRA("Version %s available (you have %s). %s").s, updateInfo->latestVer, StrL(CURR_VERSION_STRA), link);
+    // pre-release "Latest" is a build number (e.g. 17616); show as 3.7.17616
+    TempStr displayVer = updateInfo->latestVer;
+    if (!str::ContainsChar(displayVer, '.')) {
+        displayVer = fmt("%s.%s", StrL(CURR_VERSION_MAJOR_STRA), displayVer);
+    }
+    TempStr msg = fmt(_TRA("Version %s available. %s").s, displayVer, link);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
