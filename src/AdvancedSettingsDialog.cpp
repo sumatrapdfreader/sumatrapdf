@@ -37,7 +37,9 @@
 constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
 
 // enum settings: string settings restricted to a fixed set of values.
-// the values come from the documentation comments in Settings.h
+// Fixed string values for the in-place enum drop-down. Matched by full path
+// or by the last path segment so nested settings reuse the same list
+// (e.g. Fullscreen.Toolbar → Toolbar).
 // clang-format off
 static const char* gEnumDisplayMode[] = {
     "automatic", "single page", "facing", "book view",
@@ -49,9 +51,11 @@ static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden",
 static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
 static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
 static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
+static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
+static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
 
 struct EnumSettingDef {
-    const char* name; // dotted path of the setting
+    const char* name; // full path or leaf name (last dotted segment)
     const char** values;
 };
 static const EnumSettingDef gEnumSettings[] = {
@@ -62,12 +66,30 @@ static const EnumSettingDef gEnumSettings[] = {
     {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
     {"DocumentColorsFollowTheme", gEnumDocumentColorsFollowTheme},
     {"HomePageViewMode", gEnumHomePageViewMode},
+    {"PrintScale", gEnumPrintScale},
+    {"Collate", gEnumCollate},
 };
 // clang-format on
 
+// Leaf name of a dotted path: "Fullscreen.Toolbar" → "Toolbar"
+static Str SettingPathLeaf(Str name) {
+    if (!name || name.len == 0) {
+        return name;
+    }
+    const char* s = name.s;
+    const char* last = s;
+    for (int i = 0; i < name.len; i++) {
+        if (s[i] == '.') {
+            last = s + i + 1;
+        }
+    }
+    return Str(last, name.len - (int)(last - s));
+}
+
 static const char** GetEnumValuesForSetting(Str name) {
+    Str leaf = SettingPathLeaf(name);
     for (auto& def : gEnumSettings) {
-        if (str::EqI(name, def.name)) {
+        if (str::EqI(name, def.name) || str::EqI(leaf, def.name)) {
             return def.values;
         }
     }
