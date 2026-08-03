@@ -422,7 +422,9 @@ u16 ReadLE16(const u8* p) {
 }
 
 TempStr Utf16LeToUtf8Temp(Str data) {
-    str::Builder out;
+    // UTF-8 is at most 3x UTF-16 code units for BMP; EXIF strings are usually short.
+    char outScratch[512]{};
+    str::Builder out(0, nullptr, Str(outScratch, (int)sizeof(outScratch)));
     int n = data.len & ~1;
     for (int i = 0; i + 1 < n; i += 2) {
         u32 c = ReadLE16((const u8*)data.s + i);
@@ -524,7 +526,9 @@ TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) {
 
 TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
     static SeqStrings compNames = "Y\0Cb\0Cr\0R\0G\0B\0";
-    str::Builder s;
+    // "Y, Cb, Cr" etc. — a few components.
+    char sScratch[64]{};
+    str::Builder s(0, nullptr, Str(sScratch, (int)sizeof(sScratch)));
     for (u32 i = 0; i < count && off + (int)i < r.len; i++) {
         u8 c = r.UInt8(off + (int)i);
         if (c == 0) {
@@ -568,7 +572,9 @@ TempStr FormatUndefinedBytesTemp(ByteReader r, int off, u32 count, bool asList) 
     if (!asList) {
         return fmt("[%u bytes]", count);
     }
-    str::Builder s;
+    // At most 20 bytes as "255, " ~ 80 chars + brackets.
+    char sScratch[128]{};
+    str::Builder s(0, nullptr, Str(sScratch, (int)sizeof(sScratch)));
     s.Append("[");
     u32 show = count > 20 ? 20 : count;
     for (u32 i = 0; i < show; i++) {
@@ -675,7 +681,9 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
     }
 
     if (type == TiffRational || type == TiffSRational) {
-        str::Builder s;
+        // Multi-rational lists (GPS DMS, lens) are usually a few short fractions.
+        char sScratch[256]{};
+        str::Builder s(0, nullptr, Str(sScratch, (int)sizeof(sScratch)));
         bool sr = type == TiffSRational;
         for (u32 i = 0; i < count; i++) {
             int eoff = off + ((int)i * 8);
@@ -718,7 +726,8 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
     }
 
     if (type == TiffShort || type == TiffSShort) {
-        str::Builder s;
+        char sScratch[256]{};
+        str::Builder s(0, nullptr, Str(sScratch, (int)sizeof(sScratch)));
         for (u32 i = 0; i < count; i++) {
             int eoff = off + ((int)i * 2);
             if (i > 0) {
@@ -744,7 +753,8 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
     }
 
     if (type == TiffLong || type == TiffSLong) {
-        str::Builder s;
+        char sScratch[256]{};
+        str::Builder s(0, nullptr, Str(sScratch, (int)sizeof(sScratch)));
         for (u32 i = 0; i < count; i++) {
             int eoff = off + ((int)i * 4);
             if (i > 0) {
@@ -760,7 +770,8 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
     }
 
     if (type == TiffByte || type == TiffSByte) {
-        str::Builder s;
+        char sScratch[256]{};
+        str::Builder s(0, nullptr, Str(sScratch, (int)sizeof(sScratch)));
         s.Append("[");
         for (u32 i = 0; i < count; i++) {
             if (i > 0) {

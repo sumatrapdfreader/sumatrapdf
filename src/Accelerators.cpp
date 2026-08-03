@@ -510,7 +510,9 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     bool isGerman = str::Eq(lang, StrL("de"));
     bool isAscii = false;
 
-    str::Builder str;
+    // "\tCtrl + Shift + Alt + F24" / localized variants fit in ~64 bytes.
+    char strScratch[64]{};
+    str::Builder str(0, nullptr, Str(strScratch, (int)sizeof(strScratch)));
     str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if (virt & FALT) {

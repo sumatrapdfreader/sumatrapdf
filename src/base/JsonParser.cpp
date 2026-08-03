@@ -24,11 +24,14 @@ static inline int SkipDigits(Str data, int off) {
 
 class ParseArgs {
   public:
+    // JSON paths are usually short ("/foo/bar/0/name"); grow to heap if deeper.
+    char pathScratch[256]{};
     str::Builder path;
     bool canceled = false;
     ValueVisitor* visitor = nullptr;
 
-    explicit ParseArgs(ValueVisitor* visitor) : visitor(visitor) {}
+    explicit ParseArgs(ValueVisitor* visitor)
+        : path(0, nullptr, Str(pathScratch, (int)sizeof(pathScratch))), visitor(visitor) {}
 };
 
 static int ParseValue(ParseArgs& args, Str data, int off, int depth);
@@ -93,7 +96,9 @@ static int ExtractString(str::Builder& string, Str data, int off) {
 }
 
 static int ParseString(ParseArgs& args, Str data, int off) {
-    str::Builder string;
+    // Most JSON string values fit in a few hundred bytes; grow to heap if not.
+    char stringScratch[512]{};
+    str::Builder string(0, nullptr, Str(stringScratch, (int)sizeof(stringScratch)));
     int end = ExtractString(string, data, off);
     if (end >= 0) {
         Str path = ToStr(args.path);

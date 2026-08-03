@@ -597,7 +597,9 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
     HANDLE hPipe = ctx->hReadPipe;
     AIChatProvider* p = GetAIChatProvider(ctx->stream.providerId);
 
-    str::Builder lineBuf;
+    // Most SSE/provider lines are well under 4KB; grow to heap for rare large lines.
+    char lineScratch[4096]{};
+    str::Builder lineBuf(0, nullptr, Str(lineScratch, (int)sizeof(lineScratch)));
     constexpr int kMaxProviderLineSize = 1024 * 1024;
     bool lineTooLong = false;
     char buf[4096];
