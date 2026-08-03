@@ -213,22 +213,22 @@ void FreePtr(WStr* s) {
 } // namespace wstr
 namespace str {
 
-static Str WrapAllocated(char* s, size_t cch = (size_t)-1) {
+static Str WrapAllocated(char* s, int cch = -1) {
     if (!s) {
         return {};
     }
-    if (cch == (size_t)-1) {
+    if (cch < 0) {
         return Str(s);
     }
-    return Str(s, (int)cch);
+    return Str(s, cch);
 }
 
 Str Dup(Arena* a, Str s) {
     if (str::IsNull(s) || s.len < 0) {
         return {};
     }
-    size_t cch = (size_t)s.len;
-    return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch);
+    int cch = s.len;
+    return WrapAllocated((char*)MemDup(a, s.s, (size_t)cch * sizeof(char), sizeof(char)), cch);
 }
 
 Str Dup(Str s) {
@@ -238,22 +238,22 @@ Str Dup(Str s) {
 } // namespace str
 namespace wstr {
 
-static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) {
+static WStr WrapAllocatedW(WCHAR* s, int cch = -1) {
     if (!s) {
         return {};
     }
-    if (cch == (size_t)-1) {
+    if (cch < 0) {
         return WStr(s);
     }
-    return WStr(s, (int)cch);
+    return WStr(s, cch);
 }
 
 WStr Dup(Arena* a, WStr s) {
     if (wstr::IsNull(s) || s.len < 0) {
         return {};
     }
-    size_t cch = (size_t)s.len;
-    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch);
+    int cch = s.len;
+    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, (size_t)cch * sizeof(WCHAR), sizeof(WCHAR)), cch);
 }
 
 WStr Dup(WStr s) {
@@ -619,12 +619,12 @@ namespace wstr {
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 WStr Join(Arena* a, WStr s1, WStr s2, WStr s3) {
-    size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
-    size_t n = s1Len + s2Len + s3Len + 1;
-    WCHAR* res = (WCHAR*)Alloc(a, n * sizeof(WCHAR));
-    memcpy(res, s1.s, s1Len * sizeof(WCHAR));
-    memcpy(res + s1Len, s2.s, s2Len * sizeof(WCHAR));
-    memcpy(res + s1Len + s2Len, s3.s, s3Len * sizeof(WCHAR));
+    int s1Len = s1.len, s2Len = s2.len, s3Len = s3.len;
+    int n = s1Len + s2Len + s3Len + 1;
+    WCHAR* res = (WCHAR*)Alloc(a, n * (int)sizeof(WCHAR));
+    memcpy(res, s1.s, (size_t)s1Len * sizeof(WCHAR));
+    memcpy(res + s1Len, s2.s, (size_t)s2Len * sizeof(WCHAR));
+    memcpy(res + s1Len + s2Len, s3.s, (size_t)s3Len * sizeof(WCHAR));
     res[s1Len + s2Len + s3Len] = '\0';
     return WStr(res);
 }
@@ -1017,13 +1017,13 @@ static int HexDigitVal(char c) {
 }
 
 bool HexToMem(Str s, Str buf) {
-    size_t bufLen = (size_t)buf.len;
-    size_t needed = bufLen * 2;
-    if (s.len < (int)needed) {
+    int bufLen = buf.len;
+    int needed = bufLen * 2;
+    if (s.len < needed) {
         return false;
     }
-    for (size_t i = 0; i < bufLen; i++) {
-        int off = (int)(i * 2);
+    for (int i = 0; i < bufLen; i++) {
+        int off = i * 2;
         int hi = HexDigitVal(s.s[off]);
         int lo = HexDigitVal(s.s[off + 1]);
         if (hi < 0 || lo < 0) {
@@ -1031,7 +1031,7 @@ bool HexToMem(Str s, Str buf) {
         }
         buf.s[i] = (char)((hi << 4) | lo);
     }
-    return s.len == (int)needed || (s.len > (int)needed && s.s[needed] == '\0');
+    return s.len == needed || (s.len > needed && s.s[needed] == '\0');
 }
 
 bool IsAlNum(char c) {
@@ -1312,9 +1312,9 @@ TempStr MimeTypeFromExtTemp(Str ext, Str imgExt) {
 }
 
 // unsigned LEB128 of zigzag-encoded i64
-static size_t VarIntEncode(u8* dst, i64 val) {
+static int VarIntEncode(u8* dst, i64 val) {
     u64 n = ((u64)val << 1) ^ (u64)(val >> 63);
-    size_t i = 0;
+    int i = 0;
     for (;;) {
         u8 b = (u8)(n & 0x7f);
         n >>= 7;
@@ -1371,8 +1371,8 @@ void SeqStrNumAppend(str::Builder* b, Str s, i64 num) {
     b->Append(s);
     b->AppendChar('\0');
     u8 buf[12];
-    size_t n = VarIntEncode(buf, num);
-    b->Append(Str((char*)buf, (int)n));
+    int n = VarIntEncode(buf, num);
+    b->Append(Str((char*)buf, n));
 }
 
 void SeqStrNumFinish(str::Builder* b) {
@@ -1480,34 +1480,34 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 
 // for compatibility with C string, the last character is always 0
 // kPadding is number of characters needed for terminating character
-static constexpr size_t kPadding = 1;
+static constexpr int kPadding = 1;
 
 // using external scratch, or no storage yet (not heap)
 static bool IsExternalOrEmpty(const str::Builder* s) {
     return !s->els || (s->buf.s && s->els == s->buf.s);
 }
 
-static char* EnsureCap(str::Builder* s, size_t needed) {
+static char* EnsureCap(str::Builder* s, int needed) {
     // only use external buf if we haven't moved to the heap yet.
     // RemoveAt() can shrink len enough for needed to fit again and switching
     // back would lose the data and leak the heap allocation.
-    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= (size_t)s->buf.len) {
+    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= s->buf.len) {
         s->els = s->buf.s;
         return s->els;
     }
 
-    size_t capacityHint = s->cap;
+    int capacityHint = (int)s->cap;
     // tricky: to save space we reuse cap for capacityHint while still on
     // external/empty storage (cap was set from constructor hint)
     if (IsExternalOrEmpty(s)) {
         s->cap = 0;
     }
 
-    if (s->els && s->cap >= needed) {
+    if (s->els && (int)s->cap >= needed) {
         return s->els;
     }
 
-    size_t newCap = (size_t)s->cap * 2;
+    int newCap = (int)s->cap * 2;
     if (needed > newCap) {
         newCap = needed;
     }
@@ -1515,21 +1515,21 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
         newCap = capacityHint;
     }
 
-    size_t newElCount = newCap + kPadding;
+    int newElCount = newCap + kPadding;
 
     s->nReallocs++;
 
-    size_t allocSize = newElCount;
+    int allocSize = newElCount;
     char* newEls;
     if (IsExternalOrEmpty(s)) {
         newEls = (char*)Alloc(s->a, allocSize);
         if (newEls && s->els && s->len > 0) {
-            memcpy(newEls, s->els, s->len + 1);
+            memcpy(newEls, s->els, (size_t)s->len + 1);
         } else if (newEls) {
             newEls[0] = 0;
         }
     } else {
-        newEls = (char*)Realloc(s->a, s->els, allocSize, s->len + kPadding);
+        newEls = (char*)Realloc(s->a, s->els, (size_t)allocSize, (size_t)s->len + kPadding);
     }
     if (!newEls) {
         ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
@@ -1540,22 +1540,22 @@ static char* EnsureCap(str::Builder* s, size_t needed) {
     return newEls;
 }
 
-static char* MakeSpaceAt(str::Builder* s, size_t idx, size_t count) {
+static char* MakeSpaceAt(str::Builder* s, int idx, int count) {
     ReportIf(count == 0);
-    u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
+    int newLen = std::max((int)s->len, idx) + count;
     char* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
     char* res = &(buf[idx]);
-    if (s->len > idx) {
+    if ((int)s->len > idx) {
         // inserting in the middle of string, have to copy
         char* src = buf + idx;
         char* dst = buf + idx + count;
-        memmove(dst, src, s->len - idx);
+        memmove(dst, src, (size_t)((int)s->len - idx));
     }
-    s->len = newLen;
+    s->len = (u32)newLen;
     // ZeroMemory(res, count);
     return res;
 }
@@ -1632,11 +1632,11 @@ bool str::Builder::Append(Str src) {
     if (str::IsNull(src) || 0 == src.len) {
         return true;
     }
-    char* dst = MakeSpaceAt(this, len, src.len);
+    char* dst = MakeSpaceAt(this, (int)len, src.len);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src.s, src.len);
+    memcpy(dst, src.s, (size_t)src.len);
     return true;
 }
 
@@ -1646,10 +1646,10 @@ char str::Builder::RemoveAt(int idx, int count) {
         char* dst = els + idx;
         char* src = els + idx + count;
         int nToMove = (int)len - idx - count;
-        memmove(dst, src, nToMove);
+        memmove(dst, src, (size_t)nToMove);
     }
     len -= (u32)count;
-    memset(els + len, 0, count);
+    memset(els + len, 0, (size_t)count);
     return res;
 }
 
@@ -1678,7 +1678,7 @@ Str str::Builder::TakeStr() {
     }
     if (buf.s && els == buf.s) {
         // data is in the external buffer, so we have to duplicate it
-        res = (char*)MemDup(this->a, els, len + kPadding);
+        res = (char*)MemDup(this->a, els, (size_t)n + kPadding);
         els = buf.s;
     } else {
         // we're returning the heap allocation; rebind to external if any
@@ -1710,27 +1710,27 @@ static bool IsExternalOrEmpty(const wstr::Builder* s) {
     return !s->els || (s->buf.s && s->els == s->buf.s);
 }
 
-static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
+static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
     // only use external buf if we haven't moved to the heap yet.
     // RemoveAt() can shrink len enough for needed to fit again and switching
     // back would lose the data and leak the heap allocation.
-    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= (size_t)s->buf.len) {
+    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= s->buf.len) {
         s->els = s->buf.s;
         return s->els;
     }
 
-    size_t capacityHint = s->cap;
+    int capacityHint = (int)s->cap;
     // tricky: to save space we reuse cap for capacityHint while still on
     // external/empty storage (cap was set from constructor hint)
     if (IsExternalOrEmpty(s)) {
         s->cap = 0;
     }
 
-    if (s->els && s->cap >= needed) {
+    if (s->els && (int)s->cap >= needed) {
         return s->els;
     }
 
-    size_t newCap = (size_t)s->cap * 2;
+    int newCap = (int)s->cap * 2;
     if (needed > newCap) {
         newCap = needed;
     }
@@ -1738,21 +1738,21 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
         newCap = capacityHint;
     }
 
-    size_t newElCount = newCap + kPadding;
+    int newElCount = newCap + kPadding;
 
     s->nReallocs++;
 
-    size_t allocSize = newElCount * wstr::Builder::kElSize;
+    int allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
     if (IsExternalOrEmpty(s)) {
         newEls = (WCHAR*)Alloc(s->a, allocSize);
         if (newEls && s->els && s->len > 0) {
-            memcpy(newEls, s->els, wstr::Builder::kElSize * (s->len + 1));
+            memcpy(newEls, s->els, (size_t)wstr::Builder::kElSize * (s->len + 1));
         } else if (newEls) {
             newEls[0] = 0;
         }
     } else {
-        newEls = (WCHAR*)Realloc(s->a, s->els, allocSize, wstr::Builder::kElSize * (s->len + kPadding));
+        newEls = (WCHAR*)Realloc(s->a, s->els, (size_t)allocSize, (size_t)wstr::Builder::kElSize * (s->len + kPadding));
     }
 
     if (!newEls) {
@@ -1764,21 +1764,21 @@ static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
     return newEls;
 }
 
-static WCHAR* MakeSpaceAt(wstr::Builder* s, size_t idx, size_t count) {
+static WCHAR* MakeSpaceAt(wstr::Builder* s, int idx, int count) {
     ReportIf(count == 0);
-    u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
+    int newLen = std::max((int)s->len, idx) + count;
     WCHAR* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
     WCHAR* res = &(buf[idx]);
-    if (s->len > idx) {
+    if ((int)s->len > idx) {
         WCHAR* src = buf + idx;
         WCHAR* dst = buf + idx + count;
-        memmove(dst, src, (s->len - idx) * wstr::Builder::kElSize);
+        memmove(dst, src, (size_t)((int)s->len - idx) * wstr::Builder::kElSize);
     }
-    s->len = newLen;
+    s->len = (u32)newLen;
     return res;
 }
 
@@ -1854,11 +1854,11 @@ bool wstr::Builder::Append(WStr src) {
     if (wstr::IsNull(src) || 0 == src.len) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(this, len, src.len);
+    WCHAR* dst = MakeSpaceAt(this, (int)len, src.len);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src.s, src.len * kElSize);
+    memcpy(dst, src.s, (size_t)src.len * kElSize);
     return true;
 }
 
@@ -1867,10 +1867,10 @@ WCHAR wstr::Builder::RemoveAt(int idx, int count) {
     if ((int)len > idx + count) {
         WCHAR* dst = els + idx;
         WCHAR* src = els + idx + count;
-        memmove(dst, src, ((int)len - idx - count) * kElSize);
+        memmove(dst, src, (size_t)((int)len - idx - count) * kElSize);
     }
     len -= (u32)count;
-    memset(els + len, 0, count * kElSize);
+    memset(els + len, 0, (size_t)count * kElSize);
     return res;
 }
 
@@ -1894,7 +1894,7 @@ WStr wstr::Builder::TakeWStr() {
     }
     if (buf.s && els == buf.s) {
         // data is in the external buffer, so we have to duplicate it
-        res = (WCHAR*)MemDup(a, els, (len + kPadding) * kElSize);
+        res = (WCHAR*)MemDup(a, els, (size_t)(n + kPadding) * kElSize);
         els = buf.s;
     } else {
         // we're returning the heap allocation; rebind to external if any
@@ -2087,7 +2087,7 @@ bool StartsWith(WStr str, WStr prefix) {
     if (!str || prefix.len > str.len) {
         return false;
     }
-    return EqN(str, prefix, (int)(size_t)prefix.len);
+    return EqN(str, prefix, prefix.len);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
@@ -2204,7 +2204,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         return {};
     }
 
-    wstr::Builder result((int)(size_t)s.len);
+    wstr::Builder result(s.len);
     int findLen = toReplace.len;
     int start = 0;
     while (start < s.len) {
