@@ -698,6 +698,20 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     return Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword);
 }
 
+// True while a tab is mid-load (async open). Used so we don't treat a plain
+// home/empty window as "still loading" for WindowState bookkeeping.
+static bool WindowHasDocumentLoading(MainWindow* win) {
+    if (!win) {
+        return false;
+    }
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->loadState == WindowTab::LoadState::Loading || tab->loadState == WindowTab::LoadState::LoadedPending) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // update global windowState for next default launch when either
 // no pdf is opened or a document without window dimension information
 void RememberDefaultWindowPosition(MainWindow* win) {
@@ -709,8 +723,10 @@ void RememberDefaultWindowPosition(MainWindow* win) {
     // While a document is still loading, the frame may be briefly shown at the
     // restored (non-maximized) WindowPos size before SW_MAXIMIZE/fullscreen is
     // applied. Do not persist that transient size over a maximized/fullscreen
-    // WindowState preference (fixes #5529).
-    if (!win->IsDocLoaded()) {
+    // WindowState preference (fixes #5529). Only apply this while a tab is
+    // actually loading — a home/empty window must still record the user's
+    // normal (non-maximized) size when they resize or close it.
+    if (!win->IsDocLoaded() && WindowHasDocumentLoading(win)) {
         int intended = gGlobalPrefs->windowState;
         if (intended == WIN_STATE_MAXIMIZED && !IsZoomed(win->hwndFrame)) {
             return;
@@ -12621,8 +12637,20 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
         ShowWindow(win->hwndFrame, SW_RESTORE);
     }
     gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+    // Simulate mid-load so the #5529 guard applies (empty home alone must not).
+    WindowTab* tab = win->CurrentTab();
+    if (!tab && win->TabCount() > 0) {
+        tab = win->GetTab(0);
+    }
+    WindowTab::LoadState prevLoad = tab ? tab->loadState : WindowTab::LoadState::None;
+    if (tab) {
+        tab->loadState = WindowTab::LoadState::Loading;
+    }
     RememberDefaultWindowPosition(win);
     int observed = gGlobalPrefs->windowState;
+    if (tab) {
+        tab->loadState = prevLoad;
+    }
     gGlobalPrefs->windowState = prevState;
     bool ok = observed == WIN_STATE_MAXIMIZED;
     if (ok) {
