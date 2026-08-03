@@ -807,9 +807,14 @@ static bool IsTrackingSpace(const fz_stext_char* prevNonSpace, const fz_stext_ch
     if (size <= 0) {
         size = 1.f;
     }
-    // Measured gap/size over both a tracking-space PDF (#5627) and an ordinary
-    // one: tracking spaces sit at 0.00-0.02em while real word spaces start
-    // around 0.20em, so 0.1em separates them with room on both sides.
+    // Measured gap/size across tracking (#5627), ordinary body text, and
+    // condensed headers (#5871 CompTIA / MyriadPro-BoldCond):
+    //   tracking syllables: ~0.00-0.02em (often near zero)
+    //   condensed real word spaces: ~0.16em
+    //   body / TJ-synthesized word spaces: ~0.20-0.30em (#5868)
+    // 0.1em sits between tracking and the tightest real word spaces. A higher
+    // threshold (0.2em) correctly kills #5627 tracking but also deletes spaces
+    // in condensed titles ("CompTIAA+Certification…") — #5871.
     //
     // Don't treat synthetic (MuPDF-inserted) spaces as more suspicious than
     // real ones: a PDF that positions words with TJ offsets instead of space

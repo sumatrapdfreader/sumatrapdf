@@ -23,6 +23,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - fix parts of the document being left painted over the tab bar and toolbar after leaving full screen in a maximized window, when the taskbar is set to auto-hide (fixes #5866)
 - fix custom toolbar buttons that share a command (e.g. several `Shortcuts` entries using `Cmd = CmdNone` with a `ToolbarSvgIcon`): only one of them had a working tooltip, and it showed the wrong name. `ExternalViewers` toolbar buttons also showed up in the reverse of the order they are listed in (fixes #5869)
 - fix copy/extract of Russian text from some Distiller Type1 PDFs (Literaturnaya, Academy, …) that advertise Latin ToUnicode maps for CP1251 glyph codes (fixes #5873)
+- fix copied text losing spaces in condensed titles/headers (and other tight real word gaps ~0.16em) after the #5627 tracking-space filter; the threshold stays at 0.1em so syllable-tracking PDFs (#5627) and TJ-synthesized word spaces (#5868) keep working (fixes #5871)
 - the compact Find bar can be resized: drag its left edge to make the search field wider or narrower (the bar stays anchored to the right edge and keeps its height)
 - fix the Bookmarks sidebar's "current page" highlight staying on the previous page after clicking a bookmark, until the sidebar was rebuilt
 - fix stale pixels left in the Bookmarks / Favorites trees to the right of an entry's label when the selection moved
