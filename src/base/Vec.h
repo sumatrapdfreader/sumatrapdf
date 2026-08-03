@@ -14,7 +14,6 @@ class Vec {
     Arena* a = nullptr;
     int len = 0;
     int cap = 0;
-    int capacityHint = 0;
     T* els = nullptr;
     T buf[16];
 
@@ -32,9 +31,6 @@ class Vec {
         int newCap = cap * 2;
         if (needed > newCap) {
             newCap = needed;
-        }
-        if (newCap < capacityHint) {
-            newCap = capacityHint;
         }
 
         size_t newElCount = (size_t)newCap + kPadding;
@@ -129,9 +125,8 @@ class Vec {
     }
 
     // arena is not owned by Vec and must outlive it
-    explicit Vec(int capHint = 0, Arena* a = nullptr) {
+    explicit Vec(Arena* a = nullptr) {
         this->a = a;
-        capacityHint = capHint;
         els = buf;
         Reset();
     }
@@ -160,7 +155,6 @@ class Vec {
         EnsureCap(other.len);
         // using memcpy, as Vec only supports POD types
         len = other.len;
-        capacityHint = other.capacityHint;
         memcpy(els, other.els, kElSize * len);
         memset(els + len, 0, kElSize * (cap - len));
         return *this;

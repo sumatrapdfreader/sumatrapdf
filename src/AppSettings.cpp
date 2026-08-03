@@ -258,7 +258,8 @@ static void CreateZoomCommands() {
     if (n <= 0) {
         return;
     }
-    Vec<int>* cmdIds = new Vec<int>(n);
+    Vec<int>* cmdIds = new Vec<int>();
+    cmdIds->EnsureCap(n);
     prefs->zoomLevelsCmdIds = cmdIds;
     for (int i = 0; i < n; i++) {
         float zoomLevel = (*prefs->zoomLevels)[i];
