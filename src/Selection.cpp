@@ -29,6 +29,8 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
+#include "SumatraLog.h"
+
 SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect) {
     this->pageNo = pageNo;
     if (rect) {
@@ -520,10 +522,22 @@ void CopySelectionToClipboard(MainWindow* win) {
     int rotation = dm->GetRotation();
     RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
     Pixmap* bmp = dm->GetEngine()->RenderPage(args);
-    if (bmp) {
-        CopyImageToClipboard(bmp->hbmp, true);
+    if (!bmp) {
+        logf("CopySelectionToClipboard: RenderPage(page %d) failed\n", selOnPage->pageNo);
+        return;
     }
-    FreePixmap(bmp);
+    // EngineImages (image files, cbz/cbr) renders sub-rects through GDI+ and
+    // returns a malloc-backed Pixmap with no DIB section, so bmp->hbmp is null.
+    // RenderedBitmapFromPixmap() makes one when needed (and consumes bmp).
+    RenderedBitmap* rbmp = RenderedBitmapFromPixmap(bmp);
+    if (!rbmp) {
+        logf("CopySelectionToClipboard: RenderedBitmapFromPixmap() failed\n");
+        return;
+    }
+    if (!CopyImageToClipboard(rbmp->GetBitmap(), true)) {
+        logf("CopySelectionToClipboard: CopyImageToClipboard() failed\n");
+    }
+    delete rbmp;
 }
 
 void OnSelectAll(MainWindow* win, bool textOnly) {
