@@ -1,9 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SUMATRA_GUMBO_HELPERS_H_
-#define SUMATRA_GUMBO_HELPERS_H_
-
 extern "C" {
 #include "../ext/a-gumbo/gumbo.h"
 }
@@ -36,5 +33,3 @@ TempStr GumboTextContentTemp(const GumboNode* node);
 // extern because it's awkward to import across the libsumatrapdf.dll boundary.
 GumboOptions GumboMakeOptions();
 GumboOptions GumboMakeXmlFragmentOptions();
-
-#endif // SUMATRA_GUMBO_HELPERS_H_

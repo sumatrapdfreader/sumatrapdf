@@ -4,6 +4,8 @@
 #include "base/Base.h"
 #include "base/Archive.h"
 #include "base/HtmlTags.h"
+
+#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 
 #include "DocProperties.h"

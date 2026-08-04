@@ -6,6 +6,8 @@
 #include "base/HtmlTags.h"
 #include "base/Pixmap.h"
 #include "base/CssParser.h"
+
+#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 #include "ImageReader.h"
 

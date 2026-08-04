@@ -11,8 +11,8 @@
 #include "base/HtmlTags.h"
 #include "base/Pixmap.h"
 
-#include "GumboHtmlParser.h"
 #include "GumboHelpers.h"
+#include "GumboHtmlParser.h"
 
 #include "DocProperties.h"
 #include "ImageReader.h"

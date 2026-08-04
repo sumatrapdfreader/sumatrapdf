@@ -14,6 +14,7 @@
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
+#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 
 #include "FilterBase.h"
