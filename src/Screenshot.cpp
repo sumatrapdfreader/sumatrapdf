@@ -31,8 +31,6 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 
-extern Vec<MainWindow*> gWindows;
-
 static const WCHAR* kScreenshotOverlayClassName = L"SumatraScreenshotOverlay";
 static bool gScreenshotClassRegistered = false;
 

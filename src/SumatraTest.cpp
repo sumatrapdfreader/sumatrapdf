@@ -34,8 +34,6 @@
 // internal LZX test hook, defined in chm.c but not exposed in chm.h
 extern "C" int LZX_test_pretree_make_decode_table(void);
 
-Str CleanRemoteDestName(Str destName);
-
 static void EnsureTestGlobalPrefs() {
     // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
     if (!gGlobalPrefs) {

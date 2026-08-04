@@ -19,7 +19,6 @@ void MarkMenuOwnerDraw(HMENU, bool isMenuBar = false);
 void FreeMenuOwnerDrawInfoData(HMENU);
 void MenuCustomDrawMesureItem(HWND, MEASUREITEMSTRUCT*);
 void MenuCustomDrawItem(HWND, DRAWITEMSTRUCT*);
-HFONT GetMenuFont();
 
 HMENU BuildMenuFromDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
 void RemoveBadMenuSeparators(HMENU menu);

@@ -1801,9 +1801,6 @@ void fz_free_argv(int argc, char** argv);
 int fz_redirect_io_to_existing_console();
 }
 
-// in src/base/Win.cpp (part of the base lib)
-bool WasLaunchedByPowershellWithPipeRedirect();
-
 // must match premake5.lua
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1

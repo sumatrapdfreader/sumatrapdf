@@ -22,8 +22,6 @@
 #include "Toolbar.h"
 #include "LinkFollow.h"
 
-extern Flags* gCli;
-
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
     if (!win || !win->IsDocLoaded() || !win->ctrl) {

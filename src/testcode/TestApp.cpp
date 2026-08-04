@@ -47,9 +47,6 @@ static void OnDestroy(Wnd::DestroyEvent*) {
     ::PostQuitMessage(0);
 }
 
-// in Window.cpp
-int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
-
 void TestApp() {
     auto w = new TestWnd();
     auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);

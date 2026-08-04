@@ -25,9 +25,6 @@ using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
 
-// defined in MainWindow.cpp
-HWND GetHwndForNotification();
-
 static StrNode* gDelayedNotifications = nullptr;
 
 Kind kNotifCursorPos = "cursorPosHelper";

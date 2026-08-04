@@ -45,9 +45,6 @@ int PdfDarkModeTakeShadeForwardCount();
 void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModePalette& palette, float strength,
                                       float* outR, float* outG, float* outB);
 
-// Margin strips, drop shadows, and similar layout art — not photos to preserve.
-bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds);
-
 void PdfDarkModeFreeProcessCache(fz_context* ctx, DarkModePageAnalysis* analysis);
 
 // Returns a kept fz_image for fill_image, or nullptr to use the source image.
