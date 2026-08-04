@@ -539,6 +539,80 @@ TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Regression test for the rectangular-selection drag: a Ctrl+drag rectangle is
+// normally drawn over text, and the "clicking already selected text starts a
+// drag-out" check used to run first and claim every press inside it, so the
+// rectangle could never be moved or resized. Builds a rectangle around `word`
+// on page 1 and presses the left button in the middle of it (over text), then
+// reports what the canvas decided to do.
+TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail("ERROR missing word");
+    }
+    if (len(gWindows) == 0) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(engine, pageNo, word, &wx, &wy)) {
+        return fail("ERROR word-not-found");
+    }
+    Point center = dm->CvtToScreen(pageNo, PointF((float)wx, (float)wy));
+
+    // a rectangle around the word, as a Ctrl+drag would leave it. No glyphs in
+    // the text selection, which is what makes it a rectangular selection
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win, true);
+    int half = 40;
+    Rect rc(center.x - half, center.y - (half / 2), half * 2, half);
+    tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
+    win->showSelection = tab->selectionOnPage != nullptr;
+    if (!win->showSelection) {
+        return fail("ERROR no-rect-selection");
+    }
+    if (!IsRectangularSelection(win)) {
+        return fail("ERROR not-rectangular");
+    }
+    // the point we press must be over text, otherwise this doesn't test anything
+    if (!dm->IsOverText(center)) {
+        return fail("ERROR press-point-not-over-text");
+    }
+
+    SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(center.x, center.y));
+    SelectionDragEdge edge = win->selectionDragEdge;
+    bool dragging = (win->mouseAction == MouseAction::Selecting) && (edge != SelectionDragEdge::None);
+    bool textDrag = win->textDragPending;
+    SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, MAKELPARAM(center.x, center.y));
+
+    bool ok = dragging && !textDrag;
+    if (ok) {
+        out.Append(fmt("OK moving rect selection, edge=%d\n", (int)edge));
+    } else {
+        out.Append(
+            fmt("FAIL edge=%d mouseAction=%d textDragPending=%d\n", (int)edge, (int)win->mouseAction, (int)textDrag));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 // find the [start, end) glyph range of the first occurrence of `word` on a page
 static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* startOut, int* endOut) {
     if (!engine || !word || !startOut || !endOut) {

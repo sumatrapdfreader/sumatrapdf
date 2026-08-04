@@ -10,6 +10,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut = nullptr);
 TempStr TripleClickLineSelectResultTemp(Str pdfPath, Str clickWord, Str expectedLine, int* exitCodeOut = nullptr);
 TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int* exitCodeOut = nullptr);
 TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut = nullptr);
+TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut = nullptr);
 TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut = nullptr);
 TempStr I18nErrorStringResultTemp(int* exitCodeOut = nullptr);

@@ -1786,16 +1786,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    // if clicking on already selected text, prepare for drag-out instead of new selection
-    if (canCopy && !isShift && !isCtrl && isOverText && win->showSelection && IsPointInSelection(win, pt)) {
-        win->textDragPending = true;
-        win->linkOnLastButtonDown = nullptr;
-        SetCapture(win->hwndCanvas);
-        return;
-    }
-
-    // move / resize an existing rectangular (Ctrl+drag) selection, like the
-    // crop rectangle in the save-crop-resize image dialog
+    // Move / resize an existing rectangular (Ctrl+drag) selection, like the crop
+    // rectangle in the save-crop-resize image dialog. Before the drag-out check
+    // below: a rectangle is usually drawn over text, and that check would claim
+    // every press inside it, so the rectangle could never be moved or resized.
+    // Dragging out has nothing to offer here anyway -- a rectangular selection
+    // holds no glyphs (that is what IsRectangularSelection tests).
     if (canCopy && !isShift && !isCtrl && IsRectangularSelection(win)) {
         SelectionDragEdge edge = HitTestRectangularSelection(win, x, y);
         if (edge != SelectionDragEdge::None) {
@@ -1803,6 +1799,14 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
                 return;
             }
         }
+    }
+
+    // if clicking on already selected text, prepare for drag-out instead of new selection
+    if (canCopy && !isShift && !isCtrl && isOverText && win->showSelection && IsPointInSelection(win, pt)) {
+        win->textDragPending = true;
+        win->linkOnLastButtonDown = nullptr;
+        SetCapture(win->hwndCanvas);
+        return;
     }
 
     // if clicking on an image, prepare for image drag-out. skip full-page

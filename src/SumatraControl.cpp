@@ -128,6 +128,7 @@ enum class ControlCmd : u16 {
     TestKeyboardLinkFollow = 36,
     TestFindResultsOrder = 37,
     TestClickClearsSelection = 38,
+    TestRectSelectionDrag = 39,
 };
 
 enum class ControlArgType : u16 {
@@ -528,6 +529,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ClickClearsSelectionResultTemp(word, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRectSelectionDrag: {
+            Str word = StringArg(req, 0);
+            if (!word) {
+                AppendError(req, "TestRectSelectionDrag expects string word");
+                break;
+            }
+            int exitCode = 0;
+            Str res = RectSelectionDragResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
