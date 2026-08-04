@@ -10,6 +10,14 @@
 //   **text**            bold text
 // note: include Base.h before this
 
+// Supplied by the app: its command table and the key each command is bound to.
+// Both SumatraPDF and other apps have their own, with these signatures.
+int GetCommandIdByName(Str cmdName);
+TempStr AppendAccelKeyToMenuStringTemp(TempStr str, int cmdId);
+
+// how the app opens a url link; without it, url links do nothing
+extern void (*gTipOpenUrl)(Str url);
+
 // a word in a parsed tip; can be part of a link
 struct TipWord {
     Str text; // owned
@@ -62,5 +70,8 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
 void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol);
 // returns index into tip.links of the link at (x, y) in layout coords, or -1
 int HitTestTipLink(ParsedTip& tip, int x, int y);
-// runs a link target: "Cmd..." sends the command to hwnd, a url opens the browser
+// runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl
 void ExecuteTipLink(HWND hwnd, Str cmd);
+
+// how the app opens a url; without it, url links do nothing
+extern void (*gTipOpenUrl)(Str url);

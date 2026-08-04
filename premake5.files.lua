@@ -680,7 +680,7 @@ function sumatrapdf_files()
     "PdfSync.*",
     "PdfTools.*",
     "PngOptimizer.*",
-    "TipText.h",
+    "TipText.*",
     "Print.*",
     "ProgressUpdateUI.*",
     "ReadAloudHighlight.*",
