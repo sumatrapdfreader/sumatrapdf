@@ -71,8 +71,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1F2937
         ErrorBackgroundColor = #7F1D1D
         NotificationBackgroundColor = #111827
-        NotificationHighlightColor = #374151
-        NotificationHighlightTextColor = #F9FAFB
+        NotificationHighlightColor = #422006
+        NotificationHighlightTextColor = #fde68a
         ColorizeControls = true
     ]
     [
@@ -107,8 +107,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1e272c
         ErrorBackgroundColor = #5c2b2b
         NotificationBackgroundColor = #2e3c43
-        NotificationHighlightColor = #455a64
-        NotificationHighlightTextColor = #eceff1
+        NotificationHighlightColor = #4a3a12
+        NotificationHighlightTextColor = #ffdf9e
         ColorizeControls = true
     ]
     [
@@ -125,8 +125,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #252528
         ErrorBackgroundColor = #5a1d1d
         NotificationBackgroundColor = #38383c
-        NotificationHighlightColor = #505058
-        NotificationHighlightTextColor = #ffffff
+        NotificationHighlightColor = #4a3c16
+        NotificationHighlightTextColor = #ffe2a0
         ColorizeControls = true
     ]
     [
@@ -143,8 +143,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #eee8d5
         ErrorBackgroundColor = #f8d0c8
         NotificationBackgroundColor = #f5efdc
-        NotificationHighlightColor = #eee8d5
-        NotificationHighlightTextColor = #073642
+        NotificationHighlightColor = #f3e2b3
+        NotificationHighlightTextColor = #5c4405
         ColorizeControls = true
     ]
     [
@@ -161,8 +161,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #002b36
         ErrorBackgroundColor = #5c1a1a
         NotificationBackgroundColor = #003543
-        NotificationHighlightColor = #073642
-        NotificationHighlightTextColor = #fdf6e3
+        NotificationHighlightColor = #3d3208
+        NotificationHighlightTextColor = #eec97a
         ColorizeControls = true
     ]
     [
@@ -179,8 +179,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #343746
         ErrorBackgroundColor = #ff5555
         NotificationBackgroundColor = #343746
-        NotificationHighlightColor = #bd93f9
-        NotificationHighlightTextColor = #f8f8f2
+        NotificationHighlightColor = #4a3c14
+        NotificationHighlightTextColor = #f1fa8c
         ColorizeControls = true
     ]
     [
@@ -197,8 +197,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #15132a
         ErrorBackgroundColor = #5c1a2e
         NotificationBackgroundColor = #1a1830
-        NotificationHighlightColor = #3e3a5c
-        NotificationHighlightTextColor = #CBE3E7
+        NotificationHighlightColor = #3d2f12
+        NotificationHighlightTextColor = #f0d9a0
         ColorizeControls = true
     ]
     [
@@ -215,8 +215,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #152808
         ErrorBackgroundColor = #5c2810
         NotificationBackgroundColor = #3a4a28
-        NotificationHighlightColor = #6a7a40
-        NotificationHighlightTextColor = #FDD085
+        NotificationHighlightColor = #5c4a18
+        NotificationHighlightTextColor = #fde7b0
         ColorizeControls = true
     ]
     [
@@ -233,8 +233,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #0e1820
         ErrorBackgroundColor = #5c2010
         NotificationBackgroundColor = #1e2e3c
-        NotificationHighlightColor = #3a4a58
-        NotificationHighlightTextColor = #D7AD62
+        NotificationHighlightColor = #4a3208
+        NotificationHighlightTextColor = #f5d89b
         ColorizeControls = true
     ]
     [
@@ -251,8 +251,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #140018
         ErrorBackgroundColor = #5c1a2a
         NotificationBackgroundColor = #28203a
-        NotificationHighlightColor = #4a3060
-        NotificationHighlightTextColor = #E2C3C3
+        NotificationHighlightColor = #46360f
+        NotificationHighlightTextColor = #f0d9a8
         ColorizeControls = true
     ]
     [
@@ -269,8 +269,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1b1d23
         ErrorBackgroundColor = #be5046
         NotificationBackgroundColor = #2c313a
-        NotificationHighlightColor = #3e4451
-        NotificationHighlightTextColor = #abb2bf
+        NotificationHighlightColor = #40351a
+        NotificationHighlightTextColor = #e5c07b
         ColorizeControls = true
     ]
     [
@@ -287,8 +287,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1e1f1c
         ErrorBackgroundColor = #f92672
         NotificationBackgroundColor = #34352f
-        NotificationHighlightColor = #49483e
-        NotificationHighlightTextColor = #f8f8f2
+        NotificationHighlightColor = #46411c
+        NotificationHighlightTextColor = #e6db74
         ColorizeControls = true
     ]
     [
@@ -305,8 +305,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #2e3440
         ErrorBackgroundColor = #bf616a
         NotificationBackgroundColor = #3b4252
-        NotificationHighlightColor = #434c5e
-        NotificationHighlightTextColor = #eceff4
+        NotificationHighlightColor = #4a3f26
+        NotificationHighlightTextColor = #ebcb8b
         ColorizeControls = true
     ]
     [
@@ -323,8 +323,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #21262d
         ErrorBackgroundColor = #da3633
         NotificationBackgroundColor = #161b22
-        NotificationHighlightColor = #1f6feb
-        NotificationHighlightTextColor = #ffffff
+        NotificationHighlightColor = #3d2a04
+        NotificationHighlightTextColor = #e3b341
         ColorizeControls = true
     ]
     [
@@ -341,8 +341,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #11111b
         ErrorBackgroundColor = #f38ba8
         NotificationBackgroundColor = #181825
-        NotificationHighlightColor = #45475a
-        NotificationHighlightTextColor = #cdd6f4
+        NotificationHighlightColor = #45391f
+        NotificationHighlightTextColor = #f9e2af
         ColorizeControls = true
     ]
     [
@@ -359,8 +359,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #0f0f14
         ErrorBackgroundColor = #f7768e
         NotificationBackgroundColor = #16161e
-        NotificationHighlightColor = #33467c
-        NotificationHighlightTextColor = #c0caf5
+        NotificationHighlightColor = #3d3117
+        NotificationHighlightTextColor = #e0af68
         ColorizeControls = true
     ]
     [
@@ -377,8 +377,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1d2021
         ErrorBackgroundColor = #fb4934
         NotificationBackgroundColor = #3c3836
-        NotificationHighlightColor = #504945
-        NotificationHighlightTextColor = #ebdbb2
+        NotificationHighlightColor = #4a3a1a
+        NotificationHighlightTextColor = #fabd2f
         ColorizeControls = true
     ]
     [
@@ -395,8 +395,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #01111d
         ErrorBackgroundColor = #ef5350
         NotificationBackgroundColor = #0b2942
-        NotificationHighlightColor = #1d3b53
-        NotificationHighlightTextColor = #d6deeb
+        NotificationHighlightColor = #3a2d16
+        NotificationHighlightTextColor = #ecc48d
         ColorizeControls = true
     ]
     [
@@ -413,8 +413,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #06070a
         ErrorBackgroundColor = #f07178
         NotificationBackgroundColor = #0d1017
-        NotificationHighlightColor = #1b2733
-        NotificationHighlightTextColor = #bfbdb6
+        NotificationHighlightColor = #362a12
+        NotificationHighlightTextColor = #e6b450
         ColorizeControls = true
     ]
     [
@@ -431,8 +431,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #151820
         ErrorBackgroundColor = #ff5370
         NotificationBackgroundColor = #1b1e2b
-        NotificationHighlightColor = #32374d
-        NotificationHighlightTextColor = #a6accd
+        NotificationHighlightColor = #3f3520
+        NotificationHighlightTextColor = #ffcb6b
         ColorizeControls = true
     ]
 ]
@@ -858,24 +858,36 @@ COLORREF ThemeNotificationsTextColor() {
     return ThemeWindowTextColor();
 }
 
+// Warning notifications are meant to read as warnings, so the fallback is amber
+// in both directions: light themes get the classic yellow, dark themes a muted
+// dark amber. Deriving it from the theme's own accent (as we used to) produced
+// saturated, unrelated hues -- Dracula's warnings came out bright purple.
 COLORREF ThemeNotificationsHighlightColor() {
     COLORREF fallback;
-    if (gCurrentTheme->colorizeControls) {
-        fallback = AccentColor(ThemeWindowBackgroundColor(), 20);
-    } else {
+    if (IsLightColor(ThemeNotificationsBackgroundColor())) {
         fallback = RgbToCOLORREF(0xFFEE70); // yellowish
+    } else {
+        fallback = RgbToCOLORREF(0x422006); // dark amber
     }
     return GetThemeCol(gCurrentTheme->notificationHighlightColor, fallback);
 }
 
 COLORREF ThemeNotificationsHighlightTextColor() {
     COLORREF fallback;
-    if (gCurrentTheme->colorizeControls) {
-        fallback = AccentColor(ThemeWindowTextColor(), 20);
-    } else {
+    if (IsLightColor(ThemeNotificationsBackgroundColor())) {
         fallback = RgbToCOLORREF(0x8d0801); // reddish
+    } else {
+        fallback = RgbToCOLORREF(0xFDE68A); // light amber
     }
     return GetThemeCol(gCurrentTheme->notificationHighlightTextColor, fallback);
+}
+
+// Links inside a warning notification. The theme's link color is picked to sit on
+// the window background and can vanish on the amber warning background (Dracula's
+// cyan, Choco's yellow). Links are underlined, so reusing the warning text color
+// stays legible and still reads as a link.
+COLORREF ThemeNotificationsHighlightLinkColor() {
+    return ThemeNotificationsHighlightTextColor();
 }
 
 COLORREF ThemeNotificationsProgressColor() {

@@ -30,6 +30,7 @@ COLORREF ThemeNotificationsBackgroundColor();
 COLORREF ThemeNotificationsTextColor();
 COLORREF ThemeNotificationsHighlightColor();
 COLORREF ThemeNotificationsHighlightTextColor();
+COLORREF ThemeNotificationsHighlightLinkColor();
 COLORREF ThemeNotificationsProgressColor();
 bool ThemeColorizeControls();
 bool IsCurrentThemeDefault();

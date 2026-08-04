@@ -485,9 +485,11 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
 
     COLORREF colBg = ThemeNotificationsBackgroundColor();
     COLORREF colTxt = ThemeNotificationsTextColor();
+    COLORREF colLink = ThemeWindowLinkColor();
     if (highlight) {
         colBg = ThemeNotificationsHighlightColor();
         colTxt = ThemeNotificationsHighlightTextColor();
+        colLink = ThemeNotificationsHighlightLinkColor();
     }
     // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
     // COLORREF colBg = MkGray(0xff);
@@ -503,7 +505,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
         // words were laid out at (0,0); shift the origin to rTxt and draw
         POINT oldOrg;
         SetViewportOrgEx(hdc, rTxt.x, rTxt.y, &oldOrg);
-        DrawTipWords(hdc, parsedMsg, font, colTxt, ThemeWindowLinkColor());
+        DrawTipWords(hdc, parsedMsg, font, colTxt, colLink);
         SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
     } else {
         TempStr text = HwndGetTextTemp(hwnd);
