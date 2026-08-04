@@ -36,6 +36,12 @@ jobs:
       - name: Install bun
         uses: oven-sh/setup-bun@v2
 
+      # Seconds, and the failure names the missing file. The cross-compile below
+      # would catch it too, but only after ~9 minutes and as undefined-reference
+      # noise from the linker.
+      - name: Check the mingw source list matches premake
+        run: bun tests/lint-mingw-sources.ts
+
       - name: Cross-compile SumatraPDF.exe
         run: bun cmd/build-linux-wine.ts
 
