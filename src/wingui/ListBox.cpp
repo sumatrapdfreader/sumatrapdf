@@ -151,7 +151,8 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         if (hdc) {
             RECT rc{};
             GetClientRect(hwnd, &rc);
-            // Owner-draw items are inset by 1px so they do not cover the ring.
+            // Owner-draw items are clipped to leave this 1px border alone, so
+            // they never cover the ring (see WM_DRAWITEM in OnMessageReflect).
             // DrawFocusRect is XOR: if the 1px border still holds a previous
             // ring (not erased by item paint), the next draw toggles it off —
             // which made the ring appear only every other focus. Clear the
@@ -169,6 +170,21 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
                 DrawFocusRect(hdc, &rc);
             }
             ReleaseDC(hwnd, hdc);
+        }
+        return res;
+    }
+
+    // Scrolling moves the existing pixels and only invalidates the strip that
+    // was newly uncovered. Anything a row didn't paint (the row cut off by the
+    // client edge, the 1px focus-ring border) then travels up into the middle of
+    // the list as stale pixels. Repaint the lot whenever the top item changes;
+    // these lists are small and items paint their own background, so there's
+    // nothing to flicker (issue #5882).
+    if (msg == WM_VSCROLL || msg == WM_MOUSEWHEEL || msg == WM_KEYDOWN) {
+        int topBefore = LbGetTopIndex(hwnd);
+        LRESULT res = WndProcDefault(hwnd, msg, wparam, lparam);
+        if (LbGetTopIndex(hwnd) != topBefore) {
+            InvalidateRect(hwnd, nullptr, FALSE);
         }
         return res;
     }
@@ -195,6 +211,9 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             if (topAfter != topBefore) {
                 LbSetTopIndex(hwnd, topBefore);
             }
+        }
+        if (LbGetTopIndex(hwnd) != topBefore) {
+            InvalidateRect(hwnd, nullptr, FALSE); // clicking a cut-off row scrolls; see above
         }
         return res;
     }
@@ -250,40 +269,24 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         DrawItemEvent ev;
         ev.listBox = this;
         ev.hdc = dis->hDC;
-        // Inset by 1px from the client edge so a solid selection fill does not
-        // paint over the focus ring that WM_PAINT draws around the control.
         Rect itemRc = ToRect(dis->rcItem);
         Rect client = HwndClientRect(hwnd);
-        // note before clamping: with LBS_NOINTEGRALHEIGHT the last row can be cut
-        // in half by the bottom of the list, which owner-draw handlers may want
-        // to paint differently
+        // with LBS_NOINTEGRALHEIGHT the last row can be cut in half by the bottom
+        // of the list, which owner-draw handlers may want to paint differently
         ev.clippedAtBottom = (itemRc.y + itemRc.dy) > (client.y + client.dy);
-        if (itemRc.x <= client.x) {
-            int d = client.x + 1 - itemRc.x;
-            itemRc.x += d;
-            itemRc.dx -= d;
-        }
-        if (itemRc.y <= client.y) {
-            int d = client.y + 1 - itemRc.y;
-            itemRc.y += d;
-            itemRc.dy -= d;
-        }
-        if (itemRc.x + itemRc.dx >= client.x + client.dx) {
-            itemRc.dx = client.x + client.dx - 1 - itemRc.x;
-        }
-        if (itemRc.y + itemRc.dy >= client.y + client.dy) {
-            itemRc.dy = client.y + client.dy - 1 - itemRc.y;
-        }
-        if (itemRc.dx < 0) {
-            itemRc.dx = 0;
-        }
-        if (itemRc.dy < 0) {
-            itemRc.dy = 0;
-        }
+        // The handler gets the row's true rectangle, not one shrunk to fit the
+        // client: it has to fill the whole row (or DT_VCENTER lands the text off
+        // center and the unpainted strip keeps whatever scrolled under it --
+        // rows drawn over each other, issue #5882). The 1px client border, where
+        // WM_PAINT draws the focus ring, is kept free by clipping instead, so a
+        // solid selection fill can't paint the ring away.
         ev.itemRect = itemRc;
         ev.itemIndex = (int)dis->itemID;
         ev.selected = (dis->itemState & ODS_SELECTED) != 0;
+        int savedDC = SaveDC(dis->hDC);
+        IntersectClipRect(dis->hDC, client.x + 1, client.y + 1, client.x + client.dx - 1, client.y + client.dy - 1);
         onDrawItem.Call(&ev);
+        RestoreDC(dis->hDC, savedDC);
         return TRUE;
     }
 

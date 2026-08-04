@@ -487,6 +487,13 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     SetBkColor(hdc, colBg);
     HdcFillRectWithBkColor(hdc, rc);
 
+    // With LBS_NOINTEGRALHEIGHT the last row can be cut in half by the bottom of
+    // the list; half a line of text there reads as a rendering glitch, so leave
+    // it as plain background (same as the Find and Navigate Files lists, #5796)
+    if (ev->clippedAtBottom && rc.y > 0) {
+        return;
+    }
+
     HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
     // bold name => changed this session; bold value => differs from default.
