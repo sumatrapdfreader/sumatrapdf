@@ -266,6 +266,7 @@ const sumatraFiles: FileGroup[] = [
     dir: "src",
     patterns: [
       "Accelerators.*",
+      "ShortcutParse.*",
       "Actions.*",
       "AvifReader.*",
       "AppSettings.*",
