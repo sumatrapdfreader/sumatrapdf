@@ -139,12 +139,18 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         return copy;
     }
     if (k == kindDestinationScrollTo) {
+        int pageNo = PageDestGetPageNo(dest);
+        if (pageNo <= 0) {
+            pageNo = tocPageNo;
+        }
+        if (pageNo < 1) {
+            logf("SnapshotDestForDeferredNav: skip scrollTo pageNo=%d (tocPageNo=%d)\n", PageDestGetPageNo(dest),
+                 tocPageNo);
+            return nullptr;
+        }
         auto* copy = new PageDestination();
         copy->kind = k;
-        copy->pageNo = PageDestGetPageNo(dest);
-        if (copy->pageNo <= 0) {
-            copy->pageNo = tocPageNo;
-        }
+        copy->pageNo = pageNo;
         copy->rect = PageDestGetRect(dest);
         copy->zoom = PageDestGetZoom(dest);
         copy->value = str::Dup(PageDestGetValue(dest));
@@ -156,11 +162,13 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     if (pageNo <= 0) {
         pageNo = tocPageNo;
     }
-    if (pageNo <= 0) {
+    if (pageNo < 1) {
         Str val = PageDestGetValue(dest);
         if (val && IsExternalUrl(val)) {
             return new PageDestinationURL(val);
         }
+        logf("SnapshotDestForDeferredNav: skip dest kind pageNo=%d (tocPageNo=%d)\n", PageDestGetPageNo(dest),
+             tocPageNo);
         return nullptr;
     }
     RectF r = PageDestGetRect(dest);
@@ -235,12 +243,38 @@ struct GoToTocLinkData {
     }
 };
 
+// URL / file / embedded targets keep pageNo = -1 by design; only page-nav dests need pageNo >= 1.
+static bool DestNeedsValidPageNo(IPageDestination* dest) {
+    if (!dest) {
+        return false;
+    }
+    Kind k = dest->GetKind();
+    return k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded &&
+           k != kindDestinationAttachment;
+}
+
 static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree) {
+    int pageNo = tocItem->pageNo;
+    IPageDestination* dest = SnapshotDestForDeferredNav(tocItem->GetPageDestination(), pageNo);
+
+    // drop page-navigation destinations that still have no valid page
+    if (dest && DestNeedsValidPageNo(dest) && PageDestGetPageNo(dest) < 1) {
+        logf("NewGoToTocLinkData: skip dest with pageNo=%d\n", PageDestGetPageNo(dest));
+        delete dest;
+        dest = nullptr;
+    }
+
+    // nothing to navigate to: no dest and no valid page number
+    if (!dest && pageNo < 1) {
+        logf("NewGoToTocLinkData: skip toc item pageNo=%d title='%s'\n", pageNo, tocItem->title);
+        return nullptr;
+    }
+
     auto* data = new GoToTocLinkData;
     data->ctrl = win->ctrl;
     data->tab = win->CurrentTab();
-    data->pageNo = tocItem->pageNo;
-    data->dest = SnapshotDestForDeferredNav(tocItem->GetPageDestination(), tocItem->pageNo);
+    data->pageNo = pageNo;
+    data->dest = dest;
     data->selectInTree = selectInTree;
     if (selectInTree && tocItem->title) {
         data->title = str::Dup(tocItem->title);
@@ -270,7 +304,7 @@ static void GoToTocLink(GoToTocLinkData* d) {
     win->tocKeepSelection = true;
     if (d->dest) {
         ctrl->HandleLink(d->dest, win->linkHandler);
-    } else if (d->pageNo) {
+    } else if (d->pageNo > 0) {
         ctrl->GoToPage(d->pageNo, true);
     }
     win->tocKeepSelection = false;
@@ -304,6 +338,9 @@ void GoToTocItem(MainWindow* win, TocItem* tocItem) {
         return;
     }
     auto data = NewGoToTocLinkData(win, tocItem, true);
+    if (!data) {
+        return;
+    }
     auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
     uitask::Post(fn, "TaskGoToTocFromPalette");
 }
@@ -326,6 +363,9 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
         auto data = NewGoToTocLinkData(win, tocItem, false);
+        if (!data) {
+            return;
+        }
         auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
         uitask::Post(fn, "TaskGoToTocTreeItem");
     }
