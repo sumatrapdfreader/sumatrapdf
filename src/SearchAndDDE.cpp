@@ -870,8 +870,8 @@ static void CountEndTask(CountEndTaskData* d) {
 // enough; reset when a scan starts.
 static int gFindCountCurPage = 0;
 
-// status while a scan is in flight: matches so far plus the page being scanned,
-// e.g. "12... 34". ShowMatchCount replaces it with "n / m" when the scan ends.
+// status while a scan is in flight: matches so far and the page being scanned,
+// e.g. "12 34". ShowMatchCount replaces it with "n / m" when the scan ends.
 static void SetFindCountProgressStatus(MainWindow* win, int nFound, int pageNo) {
     if (pageNo > 0) {
         gFindCountCurPage = pageNo;
@@ -879,12 +879,12 @@ static void SetFindCountProgressStatus(MainWindow* win, int nFound, int pageNo) 
     pageNo = gFindCountCurPage;
     TempStr pageStr = {};
     if (pageNo > 0 && win->ctrl) {
-        pageStr = fmt(" %s", win->ctrl->GetPageLabeTemp(pageNo));
+        pageStr = win->ctrl->GetPageLabeTemp(pageNo);
     }
     if (nFound > 0) {
-        FindBarSetStatus(win, fmt("%d...%s", nFound, pageStr));
+        FindBarSetStatus(win, fmt("%d %s", nFound, pageStr));
     } else {
-        FindBarSetStatus(win, fmt("...%s", pageStr));
+        FindBarSetStatus(win, pageStr);
     }
 }
 
@@ -1113,8 +1113,11 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
         return;
     }
     win->findCountValid = false;
+    // seed the progress status with the page the scan starts from, so it shows a
+    // page right away instead of going blank until the first progress tick;
+    // replaced with "n / m" when the scan finishes
     gFindCountCurPage = 0;
-    FindBarSetStatus(win, "..."); // counting; replaced with "n / m" when done
+    SetFindCountProgressStatus(win, 0, win->ctrl ? win->ctrl->CurrentPageNo() : 0);
 
     if (win->findCountThread) {
         // a scan is in flight: cancel it and queue this request; the running
