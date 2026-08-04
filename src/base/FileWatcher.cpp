@@ -78,6 +78,8 @@ struct WatchedDir {
     Str dirPath;
     HANDLE hDir = nullptr;
     bool startMonitoring = true;
+    // when removal was queued (GetTickCount64()), for shutdown diagnostics
+    u64 removalQueuedAt = 0;
     OverlappedEx overlapped;
     char buf[16 * 1024]{};
 };
@@ -116,6 +118,11 @@ static WatchedDir* gWatchedDirs = nullptr;
 static WatchedFile* gWatchedFiles = nullptr;
 
 static AtomicInt gRemovalsPending = 0;
+
+// dirs unlinked from gWatchedDirs whose StopMonitoringDirAPC / cancel-io round
+// trip hasn't completed yet. Only used to report what shutdown is waiting for.
+// Protected by gFileWatcherMutex; reuses WatchedDir::next (it's off gWatchedDirs).
+static WatchedDir* gRemovalsPendingDirs = nullptr;
 
 static void StartMonitoringDirForChanges(WatchedDir* wd);
 
@@ -232,6 +239,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
     if (errCode == ERROR_OPERATION_ABORTED) {
         // logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
+        ListRemove(&gRemovalsPendingDirs, wd);
         DeleteWatchedDir(wd);
         AtomicIntDec(&gRemovalsPending);
         return;
@@ -569,7 +577,42 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
     ReportIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
     AtomicIntInc(&gRemovalsPending);
-    QueueUserAPC(StopMonitoringDirAPC, gThreadHandle, (ULONG_PTR)wd);
+    wd->removalQueuedAt = GetTickCount64();
+    ListInsertFront(&gRemovalsPendingDirs, wd);
+    DWORD res = QueueUserAPC(StopMonitoringDirAPC, gThreadHandle, (ULONG_PTR)wd);
+    if (!res) {
+        LogLastError();
+        logf("RemoveWatchedDirIfNotReferenced: QueueUserAPC failed for '%s'\n", wd->dirPath);
+    }
+}
+
+// A pending removal is a WatchedDir that was unlinked from gWatchedDirs and handed
+// to StopMonitoringDirAPC(); it lives until CancelIo() reports back through
+// ReadDirectoryChangesNotification(ERROR_OPERATION_ABORTED). If that never happens
+// (APC not delivered because the watcher thread isn't alertable, or the handle is
+// on an unresponsive network share) shutdown spins here, so name the culprits.
+// returns false (and logs nothing) if nothing is pending anymore
+static bool LogPendingRemovals(Str when) {
+    // hold the mutex while reading the count too: ReadDirectoryChangesNotification()
+    // unlinks the dir and decrements under the same mutex, so an unlocked read of
+    // gRemovalsPending can disagree with the list
+    ScopedMutex cs(&gFileWatcherMutex);
+    int nPending = AtomicIntGet(&gRemovalsPending);
+    if (nPending <= 0) {
+        return false;
+    }
+    u64 now = GetTickCount64();
+    logf("FileWatcher: %s, %d removals pending\n", when, nPending);
+    int n = 0;
+    for (WatchedDir* wd = gRemovalsPendingDirs; wd; wd = wd->next) {
+        n++;
+        logf("  %d: dir '%s' hDir=%p startMonitoring=%d queued %d ms ago\n", n, wd->dirPath, (const void*)wd->hDir,
+             (int)wd->startMonitoring, (int)(now - wd->removalQueuedAt));
+    }
+    if (n != nPending) {
+        logf("  note: %d dirs on the pending list but gRemovalsPending is %d\n", n, nPending);
+    }
+    return true;
 }
 
 void FileWatcherWaitForShutdown(void) {
@@ -582,13 +625,19 @@ void FileWatcherWaitForShutdown(void) {
     ReportIf(gWatchedDirs != nullptr);
 
     u64 timeStart = GetTickCount64();
-    int nPending = AtomicIntGet(&gRemovalsPending);
-    while (nPending > 0 && (GetTickCount64() - timeStart) < 15000) {
-        if (IsDebuggerPresent()) {
-            logf("FileWatcherWaitForShutdown: %d removals pending\n", nPending);
+    bool loggedPending = false;
+    while (AtomicIntGet(&gRemovalsPending) > 0 && (GetTickCount64() - timeStart) < 15000) {
+        if (!loggedPending) {
+            loggedPending = LogPendingRemovals(StrL("waiting for shutdown"));
         }
         Sleep(100);
-        nPending = AtomicIntGet(&gRemovalsPending);
+    }
+    if (loggedPending) {
+        u64 waitedMs = GetTickCount64() - timeStart;
+        TempStr when = fmt("gave up waiting after %d ms", (int)waitedMs);
+        if (!LogPendingRemovals(when)) {
+            logf("FileWatcher: all removals drained after %d ms\n", (int)waitedMs);
+        }
     }
 
     // Signal from this thread and wake the watcher through the control event.
