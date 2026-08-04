@@ -1035,6 +1035,15 @@ static void CountThread(CountThreadData* d) {
         // first; wrap around to cover pages 1..startPage-1 at the end
         bool wrapped = false;
         TextSel* m = ts.FindFirst(d->startPage, d->text);
+        if (!m && d->startPage > 1) {
+            // Nothing at or after startPage. The wrap-around below only runs
+            // from inside the loop, so without this the loop is never entered
+            // and the scan reports zero matches even though earlier pages have
+            // them -- no "n / m", no highlights, empty results list until the
+            // view moves to a page that has one (issue #5874)
+            wrapped = true;
+            m = ts.FindFirst(1, d->text);
+        }
         // check the epoch at the top so a cancel (AbortCount, which joins us on
         // the UI thread) bails before the expensive snippet build / next scan
         while (m && win->findCountEpoch == d->epoch) {
