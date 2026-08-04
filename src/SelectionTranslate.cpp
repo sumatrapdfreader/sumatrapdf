@@ -126,8 +126,11 @@ struct SelectionTranslateWnd : Wnd {
     void OnCloseClicked();
     void ScheduleDelete();
 
+    void UpdateFont();
+
     void OnSize(UINT msg, UINT type, Size size) override;
     void OnGetMinMaxInfo(MINMAXINFO* mmi) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
 };
 
 static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
@@ -875,6 +878,30 @@ void SelectionTranslateWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
+// re-pick the app font for the window's current DPI and push it to every child.
+// GetAppFont() caches per DPI, so the HFONT stays owned by AppSettings.
+void SelectionTranslateWnd::UpdateFont() {
+    font = GetAppFont(hwnd);
+    HwndSetFontForWindowAndItsChildren(hwnd, font);
+}
+
+// Moving the dialog to a monitor with a different scaling changes this window's
+// DPI, so re-pick the font and re-run the layout: each control's ideal size is
+// measured from its font, so they resize with it. Note the Padding insets were
+// DpiScale()d once when the layout tree was built and keep their old scale.
+LRESULT SelectionTranslateWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_DPICHANGED) {
+        RECT* r = (RECT*)lp;
+        SetWindowPos(hwndIn, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+        UpdateFont();
+        Relayout();
+        HwndInvalidate(hwndIn, true);
+        return 0;
+    }
+    return WndProcDefault(hwndIn, msg, wp, lp);
+}
+
 void SelectionTranslateWnd::Relayout(bool initial) {
     if (!layout) {
         return;
@@ -1262,9 +1289,20 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
 
-        btnClose = CreateButton(hwnd, _TRA("Close"),
-                                MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::OnCloseClicked>(this), isRtl);
-        btnRow->AddChild(btnClose);
+        {
+            // not CreateButton(): it doesn't take a font, so the button would
+            // keep the system default instead of our DPI-scaled one
+            auto* btn = new Button();
+            btn->onClick = MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::OnCloseClicked>(this);
+            Button::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = _TRA("Close");
+            args.isRtl = isRtl;
+            btn->Create(args);
+            btnClose = btn;
+            btnRow->AddChild(btnClose);
+        }
         {
             auto* btn = new Button();
             btn->isDefault = true;

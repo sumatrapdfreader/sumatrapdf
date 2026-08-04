@@ -98,6 +98,7 @@ void HwndSetText(HWND, Str s);
 void HwndSetDlgItemText(HWND, int, Str s);
 HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);
+void HwndSetFontForWindowAndItsChildren(HWND, HFONT);
 void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi);
 void HwndSetTreeFont(HWND hwndTree, HFONT font);
 HICON HwndGetIcon(HWND);

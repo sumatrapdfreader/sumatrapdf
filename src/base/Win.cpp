@@ -3416,6 +3416,21 @@ void HwndSetFont(HWND hwnd, HFONT font) {
     SetWindowFont(hwnd, font, TRUE);
 }
 
+static BOOL CALLBACK SetFontChildProc(HWND hwnd, LPARAM lp) {
+    SetWindowFont(hwnd, (HFONT)lp, TRUE);
+    return TRUE;
+}
+
+// Set the font on hwnd and every descendant. Handy after a DPI change, when the
+// whole dialog has to move to a font scaled for the new DPI.
+void HwndSetFontForWindowAndItsChildren(HWND hwnd, HFONT font) {
+    if (!hwnd || !font) {
+        return;
+    }
+    SetWindowFont(hwnd, font, TRUE);
+    EnumChildWindows(hwnd, SetFontChildProc, (LPARAM)font);
+}
+
 void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
     if (!hwndTree || !font) {
         return;
