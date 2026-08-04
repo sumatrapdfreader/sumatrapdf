@@ -125,6 +125,13 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
     return str::DupTemp(cmd);
 }
 
+// Text from outside the app -- a clipboard string, a file name -- can contain
+// anything the markup uses, so this adds it as plain words with nothing
+// interpreted.
+void AddTipPlainText(ParsedTip& tip, Str text) {
+    AppendTipWordsFromText(tip, text, false, -1);
+}
+
 void ParseTip(ParsedTip& tip, Str s) {
     if (!s) {
         return;

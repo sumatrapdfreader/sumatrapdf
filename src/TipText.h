@@ -63,6 +63,8 @@ TempStr TipPlainTextTemp(ParsedTip& tip);
 bool TipHasLinks(ParsedTip& tip);
 
 void ParseTip(ParsedTip& tip, Str s);
+// adds text with no markup interpreted, for strings from outside the app
+void AddTipPlainText(ParsedTip& tip, Str text);
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font);
 // lays out words within areaWidth (wrapping); sets per-word x/y and tip.totalDx/totalDy
 void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
