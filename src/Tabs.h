@@ -16,6 +16,8 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse);
 void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void RemoveTab(WindowTab*);
+// copy tab->tabColor into the tab control's TabInfo (what it paints from)
+void SetTabInfoColor(WindowTab*);
 // full path + size (if available); optional dirty suffix for unsaved annotations
 TempStr MakeTabTooltipTemp(Str path, bool dirty = false);
 // create a new window if win==nullptr

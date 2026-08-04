@@ -2016,6 +2016,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         ParsedColor* tabColParsed = GetPrefsColor(fs->tabCol);
         if (tabColParsed->parsedOk) {
             tab->tabColor = tabColParsed->col;
+            // AddTabToWindow() copied tab->tabColor into the TabInfo before the
+            // document loaded, when it was still unset, so push it again now -
+            // the tab control paints from the TabInfo (issue #5884)
+            SetTabInfoColor(tab);
         }
     }
 
@@ -10218,11 +10222,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             colorTab->tabColor = newIsUnset ? kColorUnset : newColor;
-            // update TabInfo
-            TabInfo* ti = win->tabsCtrl->GetTab(win->GetTabIdx(colorTab));
-            if (ti) {
-                ti->tabColor = colorTab->tabColor;
-            }
+            SetTabInfoColor(colorTab);
             // persist to FileState
             FileState* fs = gFileHistory.FindByPath(colorTab->filePath);
             if (fs) {

@@ -748,6 +748,23 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     return tab;
 }
 
+// The tab control paints from TabInfo::tabColor, so WindowTab::tabColor has to
+// be pushed into it whenever it changes. AddTabToWindow() does it at insert
+// time, but a document's saved color is only known once it has loaded, well
+// after that (issue #5884).
+void SetTabInfoColor(WindowTab* tab) {
+    if (!tab || !tab->win || !tab->win->tabsCtrl) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    TabInfo* ti = win->tabsCtrl->GetTab(win->GetTabIdx(tab));
+    if (!ti || ti->tabColor == tab->tabColor) {
+        return;
+    }
+    ti->tabColor = tab->tabColor;
+    win->tabsCtrl->ScheduleRepaint();
+}
+
 // Refresh the tab's title
 void TabsOnChangedDoc(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
