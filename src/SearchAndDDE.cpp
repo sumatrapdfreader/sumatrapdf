@@ -652,9 +652,28 @@ static u64 MatchKey(int page, int offset) {
     return ((u64)(u32)page << 32) | (u32)offset;
 }
 
+// The scan starts at the page that was current when it began and wraps around,
+// so it produces matches out of document order (e.g. 89, 104, 47). Both the
+// results list and the "n / m" counter present matches in document order, so
+// re-sort by (page, glyph) as matches are installed. MatchKey packs page into
+// the high half, so sorting the u64 keys sorts by (page, glyph) too.
+static int CmpFindMatchByPos(const FindMatch* a, const FindMatch* b) {
+    if (a->startPage != b->startPage) {
+        return a->startPage - b->startPage;
+    }
+    return a->startGlyph - b->startGlyph;
+}
+
+static int CmpMatchKey(const u64* a, const u64* b) {
+    if (*a == *b) {
+        return 0;
+    }
+    return (*a < *b) ? -1 : 1;
+}
+
 // 1-based index of `key` within the positions cache, or 0 if not found.
-// positions are in scan order (starting at the page current when the scan
-// started, wrapping around), so this is a linear lookup (n <= kMaxFindCount)
+// positions are in document order, but a linear lookup is cheap enough here
+// (n <= kMaxFindCount)
 static int MatchIndexInCache(MainWindow* win, u64 key) {
     Vec<u64>& pos = win->findCountPositions;
     int n = len(pos);
@@ -836,15 +855,18 @@ static void CountEndTask(CountEndTaskData* d) {
         win->findCountMatchWholeWord = ctd->matchWholeWord;
         win->findCountEngine = ctd->engine;
         win->findCountPositions = *d->positions;
+        VecSort(win->findCountPositions, CmpMatchKey);
         win->findCountCapped = d->capped;
         win->findCountValid = true;
         if (d->matches) {
             // install the snippet list (steal ownership of the snippet strings)
+            FindWindowSaveSelectedMatch(win);
             ClearFindMatches(win);
             win->findMatches = *d->matches;
             for (int i = 0; i < len(*d->matches); i++) {
                 (*d->matches)[i].snippet = Str(); // transferred to win->findMatches
             }
+            VecSort(win->findMatches, CmpFindMatchByPos);
             win->findCountHasSnippets = ctd->wantSnippets;
             if (ctd->wantSnippets) {
                 FindWindowRefreshResults(win);
@@ -963,6 +985,10 @@ static void CountPartialTask(CountPartialTaskData* d) {
     // progress callback last reported instead of clearing it.
     SetFindCountProgressStatus(win, d->nFoundSoFar, 0);
     if (len(*d->matches) > 0) {
+        // the sort below can move rows above the selection (once the scan wraps
+        // around, every new batch belongs at the front), so keep the selection
+        // pinned to its match rather than to its row number
+        FindWindowSaveSelectedMatch(win);
         if (d->firstBatch) {
             ClearFindMatches(win);
         }
@@ -970,6 +996,7 @@ static void CountPartialTask(CountPartialTaskData* d) {
             win->findMatches.Append((*d->matches)[i]);
             (*d->matches)[i].snippet = Str(); // transferred to win->findMatches
         }
+        VecSort(win->findMatches, CmpFindMatchByPos);
         win->findCountHasSnippets = true;
         InvalidateFindMatchPaintCache();
         FindWindowRefreshResults(win, false /* allowNavigation */);

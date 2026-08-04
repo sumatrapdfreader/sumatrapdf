@@ -64,6 +64,18 @@ struct FindResultsModel : ListBoxModel {
     Str Item(int i) override { return win->findMatches[i].snippet; }
 };
 
+// list index of the match starting at (page, glyph), or -1 if there is none
+static int FindMatchIndex(MainWindow* win, int page, int glyph) {
+    int n = len(win->findMatches);
+    for (int i = 0; i < n; i++) {
+        const FindMatch& fm = win->findMatches[i];
+        if (fm.startPage == page && fm.startGlyph == glyph) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 struct FindWindowWnd : Wnd {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
@@ -75,6 +87,13 @@ struct FindWindowWnd : Wnd {
     Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
     // coalesce rapid list selections: only the latest deferred navigation runs
     AtomicInt pendingNavEpoch = 0;
+    // the match the list was selected on, saved before win->findMatches is
+    // rebuilt. The list is sorted by page while the scan wraps around, so a
+    // later batch inserts rows *above* the selection; restoring by match
+    // identity keeps the selection on the same result instead of the same row.
+    // One-shot: RefreshResults consumes and clears it. <= 0: nothing saved
+    int savedSelPage = -1;
+    int savedSelGlyph = -1;
     // in an interactive size/move loop (between WM_ENTERSIZEMOVE/EXITSIZEMOVE)
     bool inSizeMove = false;
     // list redraw is paused only while interactively *resizing* (a WM_SIZE
@@ -93,6 +112,7 @@ struct FindWindowWnd : Wnd {
     void OnTextChanged();
     void DrawResultItem(ListBox::DrawItemEvent* ev);
     void OnResultSelected();
+    void SaveSelectedMatch();
     bool MoveResultSelection(WPARAM vkey);
     int CurrentMatchIndex();         // list index of the document's current match, or -1
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
@@ -330,7 +350,17 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
     FillWithItems(results->hwnd, results->model);
     // keep a result selected so it's visible as you type and Next/Prev have a
     // sensible starting point.
-    int sel = CurrentMatchIndex();
+    int sel = -1;
+    if (savedSelPage > 0) {
+        // the list was re-sorted (or grew at the front) under an existing
+        // selection: stay on that match, not on that row number
+        sel = FindMatchIndex(win, savedSelPage, savedSelGlyph);
+        savedSelPage = -1;
+        savedSelGlyph = -1;
+    }
+    if (sel < 0) {
+        sel = CurrentMatchIndex();
+    }
     if (sel >= 0) {
         // the document already sits on a match (find-as-you-type found it): just
         // mirror it in the list, no navigation
@@ -464,6 +494,21 @@ void FindWindowWnd::OnResultSelected() {
     uitask::Post(MkFunc0<DeferredGoToFindMatchData>(DeferredGoToFindMatch, data), "GoToFindMatch");
 }
 
+// remember which match the list is on, by identity rather than by row, so the
+// next RefreshResults can restore it after the list is re-sorted or grows at
+// the front. Called before win->findMatches is rebuilt
+void FindWindowWnd::SaveSelectedMatch() {
+    savedSelPage = -1;
+    savedSelGlyph = -1;
+    int idx = results ? results->GetCurrentSelection() : -1;
+    if (idx < 0 || idx >= len(win->findMatches)) {
+        return;
+    }
+    const FindMatch& fm = win->findMatches[idx];
+    savedSelPage = fm.startPage;
+    savedSelGlyph = fm.startGlyph;
+}
+
 // list index of the match the document is currently on (so the selection can
 // track the current match), or -1 if it isn't in the list
 int FindWindowWnd::CurrentMatchIndex() {
@@ -476,21 +521,12 @@ int FindWindowWnd::CurrentMatchIndex() {
     if (!dm || !dm->textSearch) {
         return -1;
     }
-    int page = dm->textSearch->startPage;
-    int glyph = dm->textSearch->startGlyph;
-    int n = len(win->findMatches);
-    for (int i = 0; i < n; i++) {
-        const FindMatch& fm = win->findMatches[i];
-        if (fm.startPage == page && fm.startGlyph == glyph) {
-            return i;
-        }
-    }
-    return -1;
+    return FindMatchIndex(win, dm->textSearch->startPage, dm->textSearch->startGlyph);
 }
 
-// first match at/after the current page. The matches are in scan order (the
-// scan starts at the page that was current at the time and wraps around), so
-// pick the match with the smallest forward page distance from the current page.
+// first match at/after the current page, wrapping to the start of the document
+// if there is none: the match with the smallest forward page distance from the
+// current page (the list itself is in document order)
 int FindWindowWnd::FirstMatchFromCurrentPage() {
     int n = len(win->findMatches);
     if (n == 0) {
@@ -904,10 +940,82 @@ void FindWindowRefreshResults(MainWindow* win, bool allowNavigation) {
     }
 }
 
+void FindWindowSaveSelectedMatch(MainWindow* win) {
+    if (IsFindWindowVisible(win)) {
+        win->findWindow->SaveSelectedMatch();
+    }
+}
+
 void UpdateFindWindowTheme(MainWindow* win) {
     if (win->findWindow) {
         win->findWindow->UpdateTheme();
     }
+}
+
+// term the pending / finished FindResultsOrderResultTemp scan was started for
+static Str gFindOrderTerm;
+
+// Report the order of the floating results list, to verify results are always
+// listed in document order. The count scan starts at the page that is current
+// when it begins and wraps around, so it finds matches out of order (e.g. 89,
+// 104, 47 when starting on page 89) -- they get re-sorted before being
+// installed. The scan is async, so the first call starts it and every call
+// reports NOTREADY until it finishes; the test polls.
+TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(term)) {
+        return fail("ERROR missing term");
+    }
+    if (len(gWindows) == 0) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->AsFixed()) {
+        return fail("NOTREADY no-doc");
+    }
+    if (!str::Eq(gFindOrderTerm, term)) {
+        str::ReplaceWithCopy(&gFindOrderTerm, term);
+        // start the search the way find-as-you-type does, from `startPage`
+        gGlobalPrefs->searchUIFloating = true;
+        if (startPage > 0) {
+            win->ctrl->GoToPage(startPage, false);
+        }
+        ShowFindWindow(win);
+        HwndSetText(win->hwndFindEdit, term);
+        OnFindBarTextChanged(win);
+        FindFlushPendingSearch(win); // run it now instead of waiting out the debounce
+        return fail("NOTREADY scan-started");
+    }
+    if (!win->findCountValid) {
+        return fail("NOTREADY scanning");
+    }
+    FindWindowWnd* fw = win->findWindow;
+    if (!fw || !fw->results) {
+        return fail("ERROR no-find-window");
+    }
+
+    int n = len(win->findMatches);
+    out.Append(fmt("OK n=%d sel=%d pages=", n, fw->results->GetCurrentSelection()));
+    for (int i = 0; i < n; i++) {
+        if (i > 0) {
+            out.AppendChar(',');
+        }
+        out.Append(fmt("%d", win->findMatches[i].startPage));
+    }
+    out.AppendChar('\n');
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
 }
 
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {

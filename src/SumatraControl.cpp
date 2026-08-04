@@ -126,6 +126,7 @@ enum class ControlCmd : u16 {
     TestFavoriteNav = 34,
     TestToolbarButtons = 35,
     TestKeyboardLinkFollow = 36,
+    TestFindResultsOrder = 37,
 };
 
 enum class ControlArgType : u16 {
@@ -514,6 +515,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageResizeArrowKeyResultTemp(imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFindResultsOrder: {
+            Str term = StringArg(req, 0);
+            if (!term) {
+                AppendError(req, "TestFindResultsOrder expects string term, int startPage");
+                break;
+            }
+            i32 startPage = 0;
+            IntArg(req, 1, startPage);
+            int exitCode = 0;
+            Str res = FindResultsOrderResultTemp(term, startPage, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -18,8 +18,14 @@ void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked);
 // allowNavigation=false for streamed partial updates: don't navigate the
 // document (navigation would cancel the in-flight count scan)
 void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);
+// remember the selected result by match identity (page + glyph) so the next
+// FindWindowRefreshResults can restore it even though the list was re-sorted
+// or grew at the front. Call before changing win->findMatches
+void FindWindowSaveSelectedMatch(MainWindow* win);
 // re-apply theme colors/icons to the floating window after a theme change
 void UpdateFindWindowTheme(MainWindow* win);
 
 // Headless draw test for issue #5736: match highlights must not bleed into the page column.
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);
+// Test hook: run a search from startPage and report the results list order.
+TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut = nullptr);
