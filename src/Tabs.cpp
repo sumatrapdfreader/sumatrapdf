@@ -76,25 +76,29 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     if (fontDyWithPadding > tabDy) {
         tabDy = fontDyWithPadding;
     }
-    // guard against bad per-window DPI (e.g. under Wine)
-    int minDy = DpiScale(HWND_DESKTOP, kTabBarDy);
-    int minFontDy = FontDyPx(hwnd, hfont) + DpiScale(HWND_DESKTOP, 2);
-    if (minFontDy > minDy) {
-        minDy = minFontDy;
-    }
-    if (tabDy < minDy) {
-        tabDy = minDy;
-    }
-    int res = (int)((float)tabDy * factor);
+    // Guard against the bad per-window DPI Wine reports (93e5b4e47: the tab bar
+    // and caption came out tiny). Wine only, deliberately: we are PerMonitorV2,
+    // so DpiScale(HWND_DESKTOP) is the *system* (primary monitor) DPI, which
+    // doesn't follow the window between monitors. Using it as a floor made the
+    // tab bar too tall on any monitor scaled lower than the primary
+    // (discussion #4831).
     if (IsRunningOnWine()) {
-        int dpi = DpiGet(hwnd);
-        int desktopDpi = DpiGet(HWND_DESKTOP);
+        int minDy = DpiScale(HWND_DESKTOP, kTabBarDy);
+        int minFontDy = FontDyPx(hwnd, hfont) + DpiScale(HWND_DESKTOP, 2);
+        if (minFontDy > minDy) {
+            minDy = minFontDy;
+        }
+        if (tabDy < minDy) {
+            tabDy = minDy;
+        }
+        int res = (int)((float)tabDy * factor);
         logf(
             "GetTabbarHeight: hwnd=%p factor=%g dpi=%d desktopDpi=%d tabDyScaled=%d fontDy=%d "
             "minDy=%d result=%d\n",
-            hwnd, factor, dpi, desktopDpi, DpiScale(hwnd, kTabBarDy), fontDyWithPadding, minDy, res);
+            hwnd, factor, DpiGet(hwnd), DpiGet(HWND_DESKTOP), DpiScale(hwnd, kTabBarDy), fontDyWithPadding, minDy, res);
+        return res;
     }
-    return res;
+    return (int)((float)tabDy * factor);
 }
 
 #if 0

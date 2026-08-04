@@ -14,8 +14,9 @@ void DpiSetWineOverride(int dpi) {
     }
 }
 
-int DpiGetForHwnd(HWND) {
-    if (gDpiOverride > 0) {
+int DpiGetForHwnd(HWND hwnd) {
+    // see the note in Dpi.h: the override doesn't apply to the desktop
+    if (gDpiOverride > 0 && hwnd) {
         return (96 * gDpiOverride) / 100;
     }
     return gDpi;

@@ -6521,9 +6521,12 @@ static BOOL CALLBACK CollectTopWindowsProc(HWND hwnd, LPARAM lp) {
 }
 
 // Debug: pretend the app moved to a monitor with a different scaling. Cycles
-// gDpiOverride 0 (system) -> 125% -> 150% and sends every top-level window a
-// WM_DPICHANGED with a suggested rect scaled the way Windows would, so DPI
-// change handling can be exercised without a second monitor.
+// gDpiOverride 0 (system) -> 125% -> 150% -> 75% and sends every top-level
+// window a WM_DPICHANGED with a suggested rect scaled the way Windows would, so
+// DPI change handling can be exercised without a second monitor. 75% is there
+// because the interesting bugs are in the direction where the window's DPI is
+// *below* the system DPI (code that floors a per-window size with a system-DPI
+// one only breaks that way).
 // Debug builds only (gCommandsDebugOnly hides it from the palette elsewhere;
 // this also covers a Shortcuts entry naming the command directly).
 static void ToggleDpiOverride() {
@@ -6534,12 +6537,15 @@ static void ToggleDpiOverride() {
     if (gDpiOverride == 125) {
         next = 150;
     } else if (gDpiOverride == 150) {
+        next = 75;
+    } else if (gDpiOverride == 75) {
         next = 0;
     }
 
     Vec<HWND> hwnds;
     CollectTopWindowsCtx ctx{&hwnds};
     EnumThreadWindows(GetCurrentThreadId(), CollectTopWindowsProc, (LPARAM)&ctx);
+    int n = len(hwnds);
 
     // snapshot geometry and DPI before switching: the suggested rect scales by
     // the ratio of the old to the new DPI
@@ -6551,10 +6557,11 @@ static void ToggleDpiOverride() {
     }
 
     gDpiOverride = next;
-    int newDpi = DpiGet(HWND_DESKTOP);
-    logf("ToggleDpiOverride: gDpiOverride=%d, dpi=%d\n", gDpiOverride, newDpi);
+    // not DpiGet(HWND_DESKTOP): the override deliberately doesn't apply there,
+    // so that still reports the (unchanged) system DPI
+    int newDpi = n > 0 ? DpiGet(hwnds[0]) : DpiGet(HWND_DESKTOP);
+    logf("ToggleDpiOverride: gDpiOverride=%d, windowDpi=%d systemDpi=%d\n", gDpiOverride, newDpi, DpiGet(HWND_DESKTOP));
 
-    int n = len(hwnds);
     for (int i = 0; i < n; i++) {
         int oldDpi = dpis[i] > 0 ? dpis[i] : 96;
         Rect r = rects[i];

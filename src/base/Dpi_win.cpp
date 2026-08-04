@@ -39,7 +39,12 @@ static int DpiApplyWineOverride(int dpi) {
 
 // get uncached dpi
 int DpiGetForHwnd(HWND hwnd) {
-    if (gDpiOverride > 0) {
+    // Deliberately not applied to HWND_DESKTOP: that reports the *system* DPI
+    // (the primary monitor's), which doesn't change when a window moves to
+    // another monitor. Leaving it alone is what makes the override model a real
+    // multi-monitor setup, where per-window and system DPI disagree.
+    bool isDesktop = !hwnd || hwnd == HWND_DESKTOP || hwnd == GetDesktopWindow();
+    if (gDpiOverride > 0 && !isDesktop) {
         return MulDiv(96, gDpiOverride, 100);
     }
     // GetDpiForWindow() returns defult 96 DPI for desktop window
