@@ -771,6 +771,9 @@ struct CountThreadData {
     int startPage = 1;          // scan from here (the current page), wrapping around
     LONG epoch = 0;
     ThreadHandle thread = nullptr;
+    // worker-thread only: drive the "<found>... <page>" progress status
+    int nFoundSoFar = 0;
+    DWORD lastProgressMs = 0;
 
     CountThreadData(MainWindow* win, EngineBase* engine, Str text, bool matchCase, bool matchWholeWord,
                     bool wantMatchList, bool wantSnippets, int startPage, LONG epoch) {
@@ -862,10 +865,68 @@ static void CountEndTask(CountEndTaskData* d) {
     }
 }
 
+// Page the running scan is on, so the in-progress status can show it. Only one
+// scan runs at a time (older ones are canceled by epoch), so a single global is
+// enough; reset when a scan starts.
+static int gFindCountCurPage = 0;
+
+// status while a scan is in flight: matches so far plus the page being scanned,
+// e.g. "12... 34". ShowMatchCount replaces it with "n / m" when the scan ends.
+static void SetFindCountProgressStatus(MainWindow* win, int nFound, int pageNo) {
+    if (pageNo > 0) {
+        gFindCountCurPage = pageNo;
+    }
+    pageNo = gFindCountCurPage;
+    TempStr pageStr = {};
+    if (pageNo > 0 && win->ctrl) {
+        pageStr = fmt(" %s", win->ctrl->GetPageLabeTemp(pageNo));
+    }
+    if (nFound > 0) {
+        FindBarSetStatus(win, fmt("%d...%s", nFound, pageStr));
+    } else {
+        FindBarSetStatus(win, fmt("...%s", pageStr));
+    }
+}
+
+struct CountProgressTaskData {
+    MainWindow* win = nullptr;
+    LONG epoch = 0;
+    int nFound = 0;
+    int pageNo = 0;
+};
+
+static void CountProgressTask(CountProgressTaskData* d) {
+    AutoDelete delData(d);
+    MainWindow* win = d->win;
+    if (!IsMainWindowValid(win) || win->findCountEpoch != d->epoch) {
+        return;
+    }
+    SetFindCountProgressStatus(win, d->nFound, d->pageNo);
+}
+
+// don't post a status update more often than this while scanning
+constexpr DWORD kFindProgressMs = 100;
+
 static void CountProgress(CountThreadData* d, ProgressUpdateData* data) {
     if (data->wasCancelled) {
         *data->wasCancelled = (d->win->findCountEpoch != d->epoch);
     }
+    // TextSearch reports once per page, which is often enough to show where the
+    // scan is even when a long stretch of pages has no match at all
+    if (data->current <= 0) {
+        return;
+    }
+    DWORD now = GetTickCount();
+    if (d->lastProgressMs != 0 && now - d->lastProgressMs < kFindProgressMs) {
+        return;
+    }
+    d->lastProgressMs = now;
+    auto pd = new CountProgressTaskData;
+    pd->win = d->win;
+    pd->epoch = d->epoch;
+    pd->nFound = d->nFoundSoFar;
+    pd->pageNo = data->current;
+    uitask::Post(MkFunc0<CountProgressTaskData>(CountProgressTask, pd), "TaskFindCountProgress");
 }
 
 // streaming partial results to the floating results list while the scan runs:
@@ -898,8 +959,9 @@ static void CountPartialTask(CountPartialTaskData* d) {
         return; // canceled or superseded; drop stale partial results
     }
     // running count while the scan is in flight; ShowMatchCount switches this
-    // to "n / m" when the scan finishes
-    FindBarSetStatus(win, fmt("%d...", d->nFoundSoFar));
+    // to "n / m" when the scan finishes. Pass 0 for the page: keep whatever the
+    // progress callback last reported instead of clearing it.
+    SetFindCountProgressStatus(win, d->nFoundSoFar, 0);
     if (len(*d->matches) > 0) {
         if (d->firstBatch) {
             ClearFindMatches(win);
@@ -954,6 +1016,7 @@ static void CountThread(CountThreadData* d) {
                 break;
             }
             positions->Append(MatchKey(ts.startPage, ts.startGlyph));
+            d->nFoundSoFar = len(*positions); // read by CountProgress
             if (matches && len(*matches) < kMaxFindResults) {
                 FindMatch fm;
                 fm.startPage = ts.startPage;
@@ -1050,6 +1113,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
         return;
     }
     win->findCountValid = false;
+    gFindCountCurPage = 0;
     FindBarSetStatus(win, "..."); // counting; replaced with "n / m" when done
 
     if (win->findCountThread) {
