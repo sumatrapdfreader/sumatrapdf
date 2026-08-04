@@ -4,6 +4,7 @@
 #include "base/Base.h"
 
 #include "Commands.h"
+#include "ShortcutParse.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"

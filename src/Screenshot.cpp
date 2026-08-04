@@ -19,6 +19,7 @@
 #include "Notifications.h"
 #include "AppTools.h"
 #include "ScreenshotCapture.h"
+#include "ShortcutParse.h"
 #include "Screenshot.h"
 #include "Theme.h"
 #include "SumatraConfig.h"

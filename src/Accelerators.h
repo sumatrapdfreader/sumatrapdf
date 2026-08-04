@@ -4,9 +4,9 @@
 void FreeAcceleratorTables();
 void CreateSumatraAcceleratorTable();
 HACCEL* GetAcceleratorTables();
+// the key cmdId is bound to, appended to a menu string. Parsing shortcut
+// strings lives in ShortcutParse.h.
 TempStr AppendAccelKeyToMenuStringTemp(TempStr str, int cmdId);
-bool IsValidShortcutString(Str shortcut);
-bool ParseShortcutString(Str shortcut, ACCEL& accel);
 
 // Command bound to a key+modifiers among the accelerators that are "safe" to
 // process while a custom control (edit / tree / WebView2-hosted CHM) has focus.
