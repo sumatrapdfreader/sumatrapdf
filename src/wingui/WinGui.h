@@ -363,7 +363,10 @@ struct ListBox : Wnd {
     struct DrawItemEvent {
         ListBox* listBox = nullptr;
         HDC hdc = nullptr;
-        Rect itemRect{};
+        Rect itemRect{}; // clamped to the client rect; use this to draw
+        // true when the row is cut off by the bottom of the list
+        // (LBS_NOINTEGRALHEIGHT), so itemRect is shorter than a full row
+        bool clippedAtBottom = false;
         int itemIndex = -1;
         bool selected = false;
     };

@@ -562,6 +562,16 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+
+    // a row cut in half by the bottom of the list (LBS_NOINTEGRALHEIGHT) is
+    // painted as plain background rather than half a line of text, like the
+    // find window's results (#5796)
+    if (ev->clippedAtBottom && rc.y > 0) {
+        SetBkColor(hdc, colBg);
+        HdcFillRectWithBkColor(hdc, rc);
+        return;
+    }
+
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }

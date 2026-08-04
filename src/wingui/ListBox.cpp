@@ -254,6 +254,10 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         // paint over the focus ring that WM_PAINT draws around the control.
         Rect itemRc = ToRect(dis->rcItem);
         Rect client = HwndClientRect(hwnd);
+        // note before clamping: with LBS_NOINTEGRALHEIGHT the last row can be cut
+        // in half by the bottom of the list, which owner-draw handlers may want
+        // to paint differently
+        ev.clippedAtBottom = (itemRc.y + itemRc.dy) > (client.y + client.dy);
         if (itemRc.x <= client.x) {
             int d = client.x + 1 - itemRc.x;
             itemRc.x += d;

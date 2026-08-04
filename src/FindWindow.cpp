@@ -366,6 +366,18 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+
+    // With LBS_NOINTEGRALHEIGHT the last row can be cut in half by the bottom of
+    // the list. Half a line of text there reads as a rendering glitch (#5796), so
+    // fill it with plain background instead. Only when another row is fully
+    // visible above it -- if the list is shorter than one row, still draw it.
+    if (ev->clippedAtBottom && rc.y > 0) {
+        SetBkColor(hdc, colBg);
+        HdcFillRectWithBkColor(hdc, rc);
+        RestoreDC(hdc, rowDC);
+        return;
+    }
+
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
