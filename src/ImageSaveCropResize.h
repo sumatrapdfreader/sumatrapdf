@@ -2,6 +2,39 @@
    License: GPLv3 */
 
 struct RenderedBitmap;
+namespace Gdiplus {
+class Bitmap;
+}
+
+// Hooks the app provides to the shared image editor. Every member is optional;
+// each one describes what is lost by leaving it out.
+struct ImageEditHost {
+    // Decodes an image file. Without it the editor can only work on a bitmap it
+    // was handed (a screenshot), not one loaded from disk.
+    Gdiplus::Bitmap* (*LoadImageFile)(Str path) = nullptr;
+    // Writes a single-page PDF. Without it PDF isn't offered as a destination
+    // format, since nothing could produce one.
+    bool (*SaveBitmapAsPdf)(Gdiplus::Bitmap* bmp, Str destPath) = nullptr;
+    // Called with what was just written, for a host that can display it.
+    void (*OpenSavedFile)(HWND parent, Str path) = nullptr;
+    // Translates a UI string; without it the English source string is used.
+    Str (*Translate)(Str) = nullptr;
+    // Applies the host's dark mode to a window the editor created.
+    void (*ApplyDarkMode)(HWND) = nullptr;
+    // Font for the editor's controls; without it the default GUI font is used.
+    HFONT (*GetFont)(HWND) = nullptr;
+    // Window the editor falls back to as a parent (used by the headless test).
+    HWND (*GetOwnerHwnd)() = nullptr;
+    // Icon resource id for the editor window; 0 leaves it without one.
+    int appIconId = 0;
+    // whether Esc closes the editor from its save mode
+    bool escToExit = false;
+};
+
+extern ImageEditHost gImageEditHost;
+
+// fills the hooks above in with SumatraPDF's implementations
+void InitImageEditHost();
 
 enum class ImageEditMode {
     Save,

@@ -1448,6 +1448,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\ImageSaveCropResize.cpp" />
+    <ClCompile Include="..\src\ImageEditHostSumatra.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />

@@ -2593,6 +2593,7 @@ static MainWindow* CreateMainWindow() {
 
     if (len(gWindows) == 0) {
         InitScreenshotHost();
+        InitImageEditHost();
         if (!NeedsWindowEmbeddingHacks()) {
             RegisterScreenshotHotkey(win->hwndFrame);
         }

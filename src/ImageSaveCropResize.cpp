@@ -7,28 +7,38 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/GdiPlusUtil.h"
-#include "ImageReader.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "Settings.h"
-#include "AppSettings.h"
-#include "GlobalPrefs.h"
-#include "DocProperties.h"
-#include "DocController.h"
-#include "EngineBase.h"
-#include "PdfCreator.h"
 #include "PngOptimizer.h"
-#include "SumatraPDF.h"
-#include "MainWindow.h"
-#include "WindowTab.h"
-#include "SumatraConfig.h"
-#include "Theme.h"
-#include "DarkModeSubclass.h"
-#include "Translations.h"
 #include "ImageSaveCropResize.h"
+
+ImageEditHost gImageEditHost;
+
+// The host's translation of s, or s itself when it has none.
+// A warning box. The host may have a styled one, but a plain one is fine here.
+static void WarnBox(HWND hwnd, Str msg, Str title) {
+    MessageBoxWarningSimple(hwnd, ToWStrTemp(msg), ToWStrTemp(title));
+}
+
+static HFONT ImageEditFont(HWND hwnd) {
+    if (gImageEditHost.GetFont) {
+        return gImageEditHost.GetFont(hwnd);
+    }
+    return (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+}
+
+static Str Tr(Str s) {
+    if (gImageEditHost.Translate) {
+        Str t = gImageEditHost.Translate(s);
+        if (t) {
+            return t;
+        }
+    }
+    return s;
+}
 
 #include <commctrl.h>
 #include <wincodec.h>
@@ -510,7 +520,7 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
         return;
     }
     TempStr dest = ew->destEdit->GetTextTemp();
-    Str text = file::Exists(dest) ? Str(_TRA("&Overwrite")) : Str(_TRA("&Save"));
+    Str text = file::Exists(dest) ? Str(Tr("&Overwrite")) : Str(Tr("&Save"));
     ew->btnSave->SetText(text);
     // re-layout since button width may have changed
     LayoutControls(ew);
@@ -1224,53 +1234,6 @@ Done:
     return ok;
 }
 
-// PDF date format is "D:YYYYMMDDHHmmSSOHH'mm'" where O is the relationship of
-// local time to UTC (+, - or Z). Used to stamp CreationDate/ModDate (issue #949).
-static TempStr FormatPdfDateTemp() {
-    SYSTEMTIME lt{};
-    GetLocalTime(&lt);
-
-    TIME_ZONE_INFORMATION tzi{};
-    DWORD r = GetTimeZoneInformation(&tzi);
-    LONG bias = tzi.Bias; // UTC = local + bias (minutes)
-    if (r == TIME_ZONE_ID_DAYLIGHT) {
-        bias += tzi.DaylightBias;
-    } else if (r == TIME_ZONE_ID_STANDARD) {
-        bias += tzi.StandardBias;
-    }
-    // offset of local time from UTC, in minutes
-    int off = -(int)bias;
-    char sign = '+';
-    if (off < 0) {
-        sign = '-';
-        off = -off;
-    }
-    int offH = off / 60;
-    int offM = off % 60;
-    return fmt("D:%04d%02d%02d%02d%02d%02d%c%02d'%02d'", (int)lt.wYear, (int)lt.wMonth, (int)lt.wDay, (int)lt.wHour,
-               (int)lt.wMinute, (int)lt.wSecond, sign, offH, offM);
-}
-
-// Create a single-page PDF from a bitmap using PdfCreator. The image is
-// converted to a 24-bit RGB pixmap (a format PDF supports) and stamped with
-// the current time as CreationDate/ModDate (issue #949).
-static bool SaveBitmapAsPdf(Bitmap* bmp, Str destPath) {
-    if (!bmp || !destPath) {
-        return false;
-    }
-    PdfCreator* c = new PdfCreator();
-    bool ok = c->AddPageFromGdiplusBitmap(bmp, 0);
-    if (ok) {
-        TempStr now = FormatPdfDateTemp();
-        c->SetProperty(DocProp::CreationDate, now);
-        c->SetProperty(DocProp::ModificationDate, now);
-        c->SetProperty(DocProp::CreatorApp, StrL("SumatraPDF"));
-        ok = c->SaveToFile(destPath);
-    }
-    delete c;
-    return ok;
-}
-
 static void OnSave(ImageEditWindow* ew) {
     if (!ew->srcBitmap) {
         return;
@@ -1305,7 +1268,7 @@ static void OnSave(ImageEditWindow* ew) {
         // save as-is
         result = ew->srcBitmap->Clone(0, 0, ew->imgW, ew->imgH, ew->srcBitmap->GetPixelFormat());
         if (!result) {
-            MessageBoxWarning(ew->hwnd, "Failed to save image", "Save Image");
+            WarnBox(ew->hwnd, "Failed to save image", "Save Image");
             return;
         }
     } else if (ew->mode == ImageEditMode::Crop) {
@@ -1313,14 +1276,14 @@ static void OnSave(ImageEditWindow* ew) {
         Gdiplus::Rect srcRect(ew->cropX, ew->cropY, ew->cropW, ew->cropH);
         result = ew->srcBitmap->Clone(srcRect, ew->srcBitmap->GetPixelFormat());
         if (!result) {
-            MessageBoxWarning(ew->hwnd, "Failed to create cropped image", _TRA("Crop Image"));
+            WarnBox(ew->hwnd, "Failed to create cropped image", Tr("Crop Image"));
             return;
         }
     } else {
         // create resized bitmap
         result = new Bitmap(ew->newW, ew->newH, ew->srcBitmap->GetPixelFormat());
         if (!result) {
-            MessageBoxWarning(ew->hwnd, "Failed to create resized image", _TRA("Resize Image"));
+            WarnBox(ew->hwnd, "Failed to create resized image", Tr("Resize Image"));
             return;
         }
         Graphics g(result);
@@ -1330,7 +1293,7 @@ static void OnSave(ImageEditWindow* ew) {
 
     bool saved;
     if (gImageFormats[fmtIdx].isPdf) {
-        saved = SaveBitmapAsPdf(result, dest);
+        saved = gImageEditHost.SaveBitmapAsPdf && gImageEditHost.SaveBitmapAsPdf(result, dest);
     } else {
         TempWStr destW = ToWStrTemp(dest);
         saved = SaveBitmapWithWIC(result, destW, gImageFormats[fmtIdx].containerFormat);
@@ -1338,7 +1301,7 @@ static void OnSave(ImageEditWindow* ew) {
     delete result;
 
     if (!saved) {
-        MessageBoxWarning(ew->hwnd, "Failed to save image", "Save Image");
+        WarnBox(ew->hwnd, "Failed to save image", "Save Image");
         return;
     }
     OptimizePngFileAsync(dest);
@@ -1348,13 +1311,8 @@ static void OnSave(ImageEditWindow* ew) {
     Str savedPath = str::Dup(dest);
     DestroyWindow(ew->hwnd);
 
-    MainWindow* win = FindMainWindowByHwnd(hwndParent);
-    if (!win && len(gWindows) > 0) {
-        win = gWindows[0];
-    }
-    if (win) {
-        LoadArgs args(savedPath, win);
-        StartLoadDocument(&args);
+    if (gImageEditHost.OpenSavedFile) {
+        gImageEditHost.OpenSavedFile(hwndParent, savedPath);
     }
     str::Free(savedPath);
 }
@@ -1396,20 +1354,20 @@ static bool IsResizeChanged(ImageEditWindow* ew) {
 
 static void UpdateModeButtons(ImageEditWindow* ew) {
     if (ew->mode == ImageEditMode::Crop) {
-        ew->btnCrop->SetText(_TRA("&Apply Crop"));
+        ew->btnCrop->SetText(Tr("&Apply Crop"));
         ew->btnCrop->SetIsEnabled(IsCropChanged(ew));
-        ew->btnResize->SetText(_TRA("&Resize"));
+        ew->btnResize->SetText(Tr("&Resize"));
         ew->btnResize->SetIsEnabled(true);
     } else if (ew->mode == ImageEditMode::Resize) {
-        ew->btnCrop->SetText(_TRA("&Crop"));
+        ew->btnCrop->SetText(Tr("&Crop"));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetText(_TRA("&Apply Resize"));
+        ew->btnResize->SetText(Tr("&Apply Resize"));
         ew->btnResize->SetIsEnabled(IsResizeChanged(ew));
     } else {
         // Save mode
-        ew->btnCrop->SetText(_TRA("&Crop"));
+        ew->btnCrop->SetText(Tr("&Crop"));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetText(_TRA("&Resize"));
+        ew->btnResize->SetText(Tr("&Resize"));
         ew->btnResize->SetIsEnabled(true);
     }
 }
@@ -1583,7 +1541,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 RECT* r = (RECT*)lp;
                 SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
                              SWP_NOZORDER | SWP_NOACTIVATE);
-                ew->hFont = GetAppFont(hwnd);
+                ew->hFont = ImageEditFont(hwnd);
                 ImageEditApplyFont(ew);
                 CalcImageLayout(ew);
                 LayoutControls(ew);
@@ -1913,7 +1871,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (wp == VK_ESCAPE) {
                 if (ew->mode != ImageEditMode::Save) {
                     SwitchToSaveMode(ew);
-                } else if (gGlobalPrefs->escToExit) {
+                } else if (gImageEditHost.escToExit) {
                     DestroyWindow(hwnd);
                 }
                 return 0;
@@ -1990,8 +1948,11 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         if (len(data) == 0) {
             return;
         }
-        bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));
         str::Free(data);
+        if (!gImageEditHost.LoadImageFile) {
+            return;
+        }
+        bmp = gImageEditHost.LoadImageFile(filePath);
         if (!bmp) {
             return;
         }
@@ -2029,8 +1990,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kImageEditWinClassName, WndProcImageEdit);
     wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    wcex.hIcon = LoadIconW(h, iconName);
+    if (gImageEditHost.appIconId) {
+        wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(gImageEditHost.appIconId));
+    }
     RegisterClassEx(&wcex);
 
     Size winSize = CalcImageEditWindowSizeEx(parent, parent, fromRenderedBitmap, imgW, imgH, nullptr);
@@ -2053,7 +2015,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     ew->hwnd = hwnd;
     ew->hwndParent = parent;
 
-    ew->hFont = GetAppFont(hwnd);
+    ew->hFont = ImageEditFont(hwnd);
 
     // create child controls
     TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
@@ -2118,7 +2080,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         Button::CreateArgs args;
         args.parent = hwnd;
         args.font = ew->hFont;
-        args.text = _TRA("&Save");
+        args.text = Tr("&Save");
         btn->Create(args);
         btn->onClick = MkFunc0<ImageEditWindow>(OnSave, ew);
         ew->btnSave = btn;
@@ -2128,7 +2090,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         Button::CreateArgs args;
         args.parent = hwnd;
         args.font = ew->hFont;
-        args.text = _TRA("&Crop");
+        args.text = Tr("&Crop");
         btn->Create(args);
         btn->onClick = MkFunc0<ImageEditWindow>(OnCropButton, ew);
         ew->btnCrop = btn;
@@ -2138,7 +2100,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         Button::CreateArgs args;
         args.parent = hwnd;
         args.font = ew->hFont;
-        args.text = _TRA("&Resize");
+        args.text = Tr("&Resize");
         btn->Create(args);
         btn->onClick = MkFunc0<ImageEditWindow>(OnResizeButton, ew);
         ew->btnResize = btn;
@@ -2228,9 +2190,8 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
 
     HwndCenterDialog(hwnd, parent);
     HwndEnsureOnScreen(hwnd);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
+    if (gImageEditHost.ApplyDarkMode) {
+        gImageEditHost.ApplyDarkMode(hwnd);
     }
     HideKeyboardCues(hwnd);
     ShowWindow(hwnd, SW_SHOW);
@@ -2253,12 +2214,13 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     if (len(imagePath) == 0 || !file::Exists(imagePath)) {
         return fail(StrL("ERROR missing-image"));
     }
-    if (len(gWindows) == 0 || !gWindows[0]) {
+    HWND parent = gImageEditHost.GetOwnerHwnd ? gImageEditHost.GetOwnerHwnd() : nullptr;
+    if (!parent) {
         return fail(StrL("NOTREADY no-window"));
     }
 
     int beforeCount = len(gImageEditWindows);
-    ShowImageEditWindow(gWindows[0]->hwndFrame, ImageEditMode::Resize, imagePath);
+    ShowImageEditWindow(parent, ImageEditMode::Resize, imagePath);
     if (len(gImageEditWindows) != beforeCount + 1) {
         return fail(StrL("ERROR dialog-not-opened"));
     }

@@ -645,6 +645,7 @@ function sumatrapdf_files()
     "Commands.*",
     "CrashHandler.*",
     "ImageSaveCropResize.*",
+    "ImageEditHostSumatra.cpp",
     "DisplayMode.*",
     "DisplayModel.*",
     "DocumentLayout.*",
