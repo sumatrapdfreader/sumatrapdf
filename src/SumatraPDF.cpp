@@ -80,6 +80,7 @@
 #include "Selection.h"
 #include "LinkFollow.h"
 #include "SelectionToolbar.h"
+#include "ScreenshotCapture.h"
 #include "Screenshot.h"
 #include "ImageSaveCropResize.h"
 #include "StressTesting.h"
@@ -2590,8 +2591,11 @@ static MainWindow* CreateMainWindow() {
         RegisterCanvasDropTarget(win->hwndCanvas);
     }
 
-    if (len(gWindows) == 0 && !NeedsWindowEmbeddingHacks()) {
-        RegisterScreenshotHotkey(win->hwndFrame);
+    if (len(gWindows) == 0) {
+        InitScreenshotHost();
+        if (!NeedsWindowEmbeddingHacks()) {
+            RegisterScreenshotHotkey(win->hwndFrame);
+        }
     }
     gWindows.Append(win);
     ShowMaybeDelayedNotifications(win->hwndCanvas);
@@ -8816,6 +8820,22 @@ static bool ShouldToggle(CustomCommand* cmd, bool curState) {
     return GetCommandBoolArg(cmd, kCmdArgState, !curState) != curState;
 }
 
+// The image file the current tab is showing, or empty when it isn't showing
+// one. The image editor takes a path rather than reaching into the tab itself.
+static Str CurrentImageTabPathTemp(MainWindow* win) {
+    if (!win) {
+        return {};
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return {};
+    }
+    if (tab->GetEngineType() != kindEngineImage) {
+        return {};
+    }
+    return tab->filePath;
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
     bool openAnnotationEdit = false;
@@ -9055,15 +9075,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdCropImage:
-            ShowImageEditWindow(win, ImageEditMode::Crop);
+            ShowImageEditWindow(win->hwndFrame, ImageEditMode::Crop, CurrentImageTabPathTemp(win));
             break;
 
         case CmdResizeImage:
-            ShowImageEditWindow(win, ImageEditMode::Resize);
+            ShowImageEditWindow(win->hwndFrame, ImageEditMode::Resize, CurrentImageTabPathTemp(win));
             break;
 
         case CmdConvertImageToPdf:
-            ShowImageEditWindow(win, ImageEditMode::Save, nullptr, nullptr, /* selectPdf */ true);
+            ShowImageEditWindow(win->hwndFrame, ImageEditMode::Save, CurrentImageTabPathTemp(win), nullptr,
+                                /* selectPdf */ true);
             break;
 
         case CmdPasteClipboardImage:

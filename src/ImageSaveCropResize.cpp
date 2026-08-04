@@ -1964,11 +1964,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf) {
-    if (!win) {
-        return;
-    }
-
+void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf) {
     ProbeImageFormats();
 
     Bitmap* bmp = nullptr;
@@ -1986,17 +1982,9 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
             return;
         }
     } else {
-        // load from current tab's file
+        // the caller names the image; there is nothing to edit without one
         if (!filePath) {
-            WindowTab* tab = win->CurrentTab();
-            if (!tab || !tab->filePath) {
-                return;
-            }
-            Kind engineType = tab->GetEngineType();
-            if (engineType != kindEngineImage) {
-                return;
-            }
-            filePath = tab->filePath;
+            return;
         }
         Str data = file::ReadFile(filePath);
         if (len(data) == 0) {
@@ -2045,8 +2033,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     wcex.hIcon = LoadIconW(h, iconName);
     RegisterClassEx(&wcex);
 
-    HWND dpiHwnd = win->hwndFrame;
-    Size winSize = CalcImageEditWindowSizeEx(dpiHwnd, win->hwndFrame, fromRenderedBitmap, imgW, imgH, nullptr);
+    Size winSize = CalcImageEditWindowSizeEx(parent, parent, fromRenderedBitmap, imgW, imgH, nullptr);
 
     WStr title = L"Save Image";
     if (mode == ImageEditMode::Crop) {
@@ -2064,7 +2051,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     }
 
     ew->hwnd = hwnd;
-    ew->hwndParent = win->hwndFrame;
+    ew->hwndParent = parent;
 
     ew->hFont = GetAppFont(hwnd);
 
@@ -2239,7 +2226,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     LayoutControls(ew);
     UpdateSaveButtonText(ew);
 
-    HwndCenterDialog(hwnd, win->hwndFrame);
+    HwndCenterDialog(hwnd, parent);
     HwndEnsureOnScreen(hwnd);
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
@@ -2266,16 +2253,12 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     if (len(imagePath) == 0 || !file::Exists(imagePath)) {
         return fail(StrL("ERROR missing-image"));
     }
-    if (len(gWindows) == 0) {
-        return fail(StrL("NOTREADY no-window"));
-    }
-    MainWindow* win = gWindows[0];
-    if (!win) {
+    if (len(gWindows) == 0 || !gWindows[0]) {
         return fail(StrL("NOTREADY no-window"));
     }
 
     int beforeCount = len(gImageEditWindows);
-    ShowImageEditWindow(win, ImageEditMode::Resize, imagePath);
+    ShowImageEditWindow(gWindows[0]->hwndFrame, ImageEditMode::Resize, imagePath);
     if (len(gImageEditWindows) != beforeCount + 1) {
         return fail(StrL("ERROR dialog-not-opened"));
     }

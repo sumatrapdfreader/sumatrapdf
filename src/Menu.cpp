@@ -2115,7 +2115,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             } else if (cmdId == CmdConvertImageToPdf) {
                 selectPdf = true;
             }
-            ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
+            ShowImageEditWindow(win->hwndFrame, m, destPath, bmp, selectPdf);
             delete bmp;
             return;
         };

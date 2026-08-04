@@ -1260,6 +1260,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\Scratch.h" />
     <ClInclude Include="..\src\Screenshot.h" />
+    <ClInclude Include="..\src\ScreenshotCapture.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\SelectionToolbar.h" />
@@ -1477,6 +1478,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\Screenshot.cpp" />
+    <ClCompile Include="..\src\ScreenshotCapture.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />

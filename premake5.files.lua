@@ -700,6 +700,7 @@ function sumatrapdf_files()
     "SearchAndDDE.*",
     "OverlayScrollbar.*",
     "Screenshot.*",
+    "ScreenshotCapture.*",
     "Selection.*",
     "SelectionToolbar.*",
     "SelectionTranslate.*",
