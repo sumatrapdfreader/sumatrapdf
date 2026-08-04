@@ -7506,6 +7506,18 @@ static void OnFrameKeyEsc(MainWindow* win) {
         ToggleFullScreen(win, win->presentation != PM_DISABLED);
         return;
     }
+    if (gPluginMode) {
+        // We're a child window of a host (Total Commander's Lister, a browser
+        // plugin, ...). Closing our own window would leave the host with an
+        // empty pane, and escToExit is forced off in plugin mode, so nothing
+        // happened at all. Hand the key to the host instead -- Lister's
+        // convention is that Esc closes the viewer, like its other plugins.
+        HWND hwndParent = GetParent(win->hwndFrame);
+        if (hwndParent) {
+            PostMessageW(hwndParent, WM_KEYDOWN, VK_ESCAPE, 0);
+        }
+        return;
+    }
 }
 
 static void OnFrameKeyB(MainWindow* win) {
