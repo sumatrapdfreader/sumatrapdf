@@ -86,6 +86,7 @@ struct NavFilesInFolderWnd : Wnd {
     bool Create(MainWindow* win);
     void SetDir(Str dir, Str selectPath);
     void ExecuteCurrentSelection();
+    void DeleteCurrentSelection();
     void OnListDoubleClick();
     void GoUp();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
@@ -386,6 +387,52 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection() {
     StartLoadDocument(&args);
 }
 
+// Del on a file moves it to the recycle bin (issue #5877), without a
+// confirmation prompt -- the recycle bin is the undo. Directories are left
+// alone: recursively deleting a folder from a file picker is too easy to
+// trigger by accident, and "Show in Folder" + Explorer covers it.
+void NavFilesInFolderWnd::DeleteCurrentSelection() {
+    if (!CanAccessDisk() || gPluginMode) {
+        return;
+    }
+    int idx = listBox->GetCurrentSelection();
+    auto m = (ListBoxModelNav*)listBox->model;
+    if (!m || idx < 0 || idx >= m->ItemsCount()) {
+        return;
+    }
+    NavFileEntry& e = m->entries[idx];
+    if (e.isDir || str::Eq(e.name, StrL(".."))) {
+        return;
+    }
+    // own the path: deleting re-fills the model, which frees the entry
+    TempStr path = str::DupTemp(NavEntryPathTemp(this, e));
+    if (!file::Exists(path)) {
+        return;
+    }
+
+    // no confirmation prompt: the file goes to the recycle bin, so it's undoable
+
+    // a document open in a tab keeps the file mapped, so the delete would fail;
+    // close that tab first, like CmdDeleteFile does for the current document
+    WindowTab* tab = FindTabByFilePath(path);
+    if (tab) {
+        if (!MaybeSaveAnnotations(tab)) {
+            return;
+        }
+        CloseTab(tab, false);
+    }
+    DeleteFileFromDiskAndHistory(path);
+
+    if (file::Exists(path)) {
+        MessageBoxWarning(hwnd, fmt(_TRA("Couldn't delete %s").s, path));
+    }
+    // re-list; keep the selection where the deleted entry was
+    TempStr dir = str::DupTemp(currDir);
+    SetDir(dir, Str{});
+    SelectAndEnsureVisible(listBox, idx);
+    HwndSetFocus(listBox->hwnd);
+}
+
 void NavFilesInFolderWnd::OnListDoubleClick() {
     ExecuteCurrentSelection();
 }
@@ -413,6 +460,10 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
     }
     if (msg.wParam == VK_BACK) {
         GoUp();
+        return true;
+    }
+    if (msg.wParam == VK_DELETE) {
+        DeleteCurrentSelection();
         return true;
     }
     return false;
@@ -647,6 +698,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
         args.title = _TRA("Navigate Files in Folder");
         args.font = font;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.isRtl = IsUIRtl();
         CreateCustom(args);
     }
@@ -699,7 +751,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        Str strings[3] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open"), _TRA("Esc to close")};
+        Str strings[4] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open"), _TRA("Del to delete"), _TRA("Esc to close")};
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
@@ -777,7 +829,7 @@ void ShowNavFilesInFolder(MainWindow* win) {
     auto wnd = new NavFilesInFolderWnd();
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);
-    wnd->font = GetAppBiggerFont(win->hwndFrame);
+    wnd->font = GetAppFont(win->hwndFrame);
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;
     gHwndToActivateOnNavClose = win->hwndFrame;

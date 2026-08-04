@@ -144,6 +144,10 @@ void CloseTab(WindowTab* tab, bool quitIfLast);
 bool CanContinueReadAloud(WindowTab* tab);
 // false if the user canceled (don't proceed with closing/replacing the doc)
 bool MaybeSaveAnnotations(WindowTab* tab);
+// move to the recycle bin and forget it in the file history / thumbnail cache
+void DeleteFileFromDiskAndHistory(Str path);
+// tab showing path in any main window, or nullptr
+WindowTab* FindTabByFilePath(Str path);
 WindowTab* GetReadAloudSourceTab();
 
 constexpr UINT CmdTtsVoiceDefault = 0x7100;

@@ -5088,7 +5088,21 @@ static void ShowGeneratedMarkdownHtml(MainWindow* win) {
     }
 }
 
-static void DeleteFileFromDiskAndHistory(Str path) {
+WindowTab* FindTabByFilePath(Str path) {
+    if (len(path) == 0) {
+        return nullptr;
+    }
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (path::IsSame(tab->filePath, path)) {
+                return tab;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void DeleteFileFromDiskAndHistory(Str path) {
     file::DeleteFileToTrash(path);
     DeleteThumbnailForFile(path);
     FileState* fs = gFileHistory.FindByPath(path);
