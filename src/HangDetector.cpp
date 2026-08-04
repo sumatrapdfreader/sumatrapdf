@@ -19,7 +19,6 @@
 
 #include "SumatraConfig.h"
 #include "CrashHandler.h"
-#include "SumatraLog.h"
 #include "HangDetector.h"
 
 // how long the UI thread can ignore our ping before we call it blocked

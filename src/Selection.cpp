@@ -29,8 +29,6 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
-#include "SumatraLog.h"
-
 SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect) {
     this->pageNo = pageNo;
     if (rect) {
