@@ -227,6 +227,122 @@ void LbInitStorage(HWND hwnd, int count) {
     SendMessageW(hwnd, LB_INITSTORAGE, (WPARAM)count, 0);
 }
 
+//--- list view
+
+int LvGetItemCount(HWND hwnd) {
+    return (int)SendMessageW(hwnd, LVM_GETITEMCOUNT, 0, 0);
+}
+
+int LvGetNextItem(HWND hwnd, int start, UINT flags) {
+    return (int)SendMessageW(hwnd, LVM_GETNEXTITEM, (WPARAM)start, MAKELPARAM(flags, 0));
+}
+
+void LvSetItemState(HWND hwnd, int i, UINT state, UINT mask) {
+    LVITEMW item = {};
+    item.stateMask = mask;
+    item.state = state;
+    SendMessageW(hwnd, LVM_SETITEMSTATE, (WPARAM)i, (LPARAM)&item);
+}
+
+UINT LvGetItemState(HWND hwnd, int i, UINT mask) {
+    return (UINT)SendMessageW(hwnd, LVM_GETITEMSTATE, (WPARAM)i, (LPARAM)mask);
+}
+
+void LvEnsureVisible(HWND hwnd, int i, bool partialOk) {
+    SendMessageW(hwnd, LVM_ENSUREVISIBLE, (WPARAM)i, (LPARAM)(partialOk ? TRUE : FALSE));
+}
+
+HWND LvGetEditControl(HWND hwnd) {
+    return (HWND)SendMessageW(hwnd, LVM_GETEDITCONTROL, 0, 0);
+}
+
+int LvInsertItem(HWND hwnd, const LVITEMW* item) {
+    return (int)SendMessageW(hwnd, LVM_INSERTITEMW, 0, (LPARAM)item);
+}
+
+bool LvEditLabel(HWND hwnd, int i) {
+    return SendMessageW(hwnd, LVM_EDITLABELW, (WPARAM)i, 0) != 0;
+}
+
+void LvDeleteItem(HWND hwnd, int i) {
+    SendMessageW(hwnd, LVM_DELETEITEM, (WPARAM)i, 0);
+}
+
+void LvDeleteAllItems(HWND hwnd) {
+    SendMessageW(hwnd, LVM_DELETEALLITEMS, 0, 0);
+}
+
+Rect LvGetItemRect(HWND hwnd, int i, int code) {
+    RECT rc = {};
+    rc.left = code;
+    if (!SendMessageW(hwnd, LVM_GETITEMRECT, (WPARAM)i, (LPARAM)&rc)) {
+        return {};
+    }
+    return Rect(rc);
+}
+
+Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code) {
+    RECT rc = {};
+    rc.top = iSub;
+    rc.left = code;
+    if (!SendMessageW(hwnd, LVM_GETSUBITEMRECT, (WPARAM)iItem, (LPARAM)&rc)) {
+        return {};
+    }
+    return Rect(rc);
+}
+
+void LvSetColumnWidth(HWND hwnd, int iCol, int cx) {
+    SendMessageW(hwnd, LVM_SETCOLUMNWIDTH, (WPARAM)iCol, MAKELPARAM(cx, 0));
+}
+
+void LvSetItemText(HWND hwnd, int i, int iSub, WStr text) {
+    LVITEMW item = {};
+    item.iSubItem = iSub;
+    item.pszText = CWStrTemp(text);
+    SendMessageW(hwnd, LVM_SETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
+}
+
+void LvSetItemText(HWND hwnd, int i, int iSub, Str text) {
+    LvSetItemText(hwnd, i, iSub, ToWStrTemp(text));
+}
+
+TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub) {
+    // LVM_GETITEMTEXT needs a buffer; grow until it fits
+    int cch = 256;
+    for (;;) {
+        TempWStr text = AllocArrayTemp<WCHAR>(cch);
+        LVITEMW item = {};
+        item.iSubItem = iSub;
+        item.pszText = text.s;
+        item.cchTextMax = cch;
+        int n = (int)SendMessageW(hwnd, LVM_GETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
+        if (n + 1 < cch || cch >= 32 * 1024) {
+            text.len = n;
+            return text;
+        }
+        cch *= 2;
+    }
+}
+
+int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut) {
+    LVHITTESTINFO info = {};
+    info.pt.x = pt.x;
+    info.pt.y = pt.y;
+    int i = (int)SendMessageW(hwnd, LVM_HITTEST, 0, (LPARAM)&info);
+    if (flagsOut) {
+        *flagsOut = info.flags;
+    }
+    return i;
+}
+
+DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex) {
+    return (DWORD)SendMessageW(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)ex);
+}
+
+int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col) {
+    return (int)SendMessageW(hwnd, LVM_INSERTCOLUMNW, (WPARAM)iCol, (LPARAM)col);
+}
+
 //--- resources / instance / common controls
 
 void InitAllCommonControls() {

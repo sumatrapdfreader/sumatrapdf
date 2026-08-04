@@ -139,6 +139,30 @@ int LbGetTopIndex(HWND hwnd);
 bool LbSetTopIndex(HWND hwnd, int idx);
 void LbInitStorage(HWND hwnd, int count);
 
+//--- list view
+
+int LvGetItemCount(HWND hwnd);
+int LvGetNextItem(HWND hwnd, int start, UINT flags);
+void LvSetItemState(HWND hwnd, int i, UINT state, UINT mask);
+UINT LvGetItemState(HWND hwnd, int i, UINT mask);
+void LvEnsureVisible(HWND hwnd, int i, bool partialOk = false);
+HWND LvGetEditControl(HWND hwnd);
+int LvInsertItem(HWND hwnd, const LVITEMW* item);
+bool LvEditLabel(HWND hwnd, int i);
+void LvDeleteItem(HWND hwnd, int i);
+void LvDeleteAllItems(HWND hwnd);
+// empty Rect on failure
+Rect LvGetItemRect(HWND hwnd, int i, int code);
+Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code);
+void LvSetColumnWidth(HWND hwnd, int iCol, int cx);
+void LvSetItemText(HWND hwnd, int i, int iSub, WStr text);
+void LvSetItemText(HWND hwnd, int i, int iSub, Str text);
+TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub);
+// client coords; flagsOut optional (LVHT_*)
+int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut = nullptr);
+DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex);
+int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col);
+
 //--- combo box
 
 void CbAddString(HWND, Str s);
@@ -400,7 +424,6 @@ TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 TempStr GetTempDirTemp();
 Str GetAppLocalDataDirTemp();
 void ChangeCurrDirToDocuments();
-int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 TempStr ResolveLnkTemp(Str path);
 bool CreateShortcut(Str shortcutPath, Str exePath, Str args = Str(), Str description = Str(), int iconIndex = 0);
 IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd = nullptr);
