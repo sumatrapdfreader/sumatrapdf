@@ -208,6 +208,7 @@ To add a new cmd-line flag:
 
 When documenting a release (usually the **next** section at the top):
 
+- **Do not document bug fixes.** Version history is for features and behavior changes, not a changelog of defects. A plain `fix <something>` bullet does not belong there — the commit message and the GitHub issue already record it. Only mention a fix when it comes with a user-visible change worth describing on its own (a new setting, a new command, a different default), and then describe *that*, not the bug.
 - Main bullets describe features and behavior changes in prose. Mention menus, shortcuts, and user-visible effects — not a stream of `add CmdFoo` / `add -flag` bullets.
 - At the **end** of the version section, add consolidated lists (only for things **new** in that version):
 
