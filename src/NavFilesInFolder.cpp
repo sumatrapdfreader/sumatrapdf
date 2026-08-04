@@ -512,7 +512,9 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
         ExecuteCurrentSelection(IsCtrlPressed());
         return true;
     }
-    if (msg.wParam == VK_BACK) {
+    // Alt + Up goes to the parent directory, like Explorer. It arrives as
+    // WM_SYSKEYDOWN; swallowing it also avoids the system-menu beep
+    if (msg.wParam == VK_UP && IsAltPressed()) {
         GoUp();
         return true;
     }
