@@ -96,7 +96,10 @@ static void EnsureCmarkPluginsRegistered() {
 }
 
 static void AttachGfmExtensions(cmark_parser* parser) {
-    const char* exts[] = {"table", "strikethrough", "autolink", "tagfilter", "tasklist", "autoheaderid"};
+    // no "autoheaderid": its slug rules differ from GitHub's, so the ids it
+    // makes don't match the "#anchor" links such documents carry.
+    // AddHeadingAnchors() emits them instead (#5883).
+    const char* exts[] = {"table", "strikethrough", "autolink", "tagfilter", "tasklist"};
     for (const char* ext : exts) {
         cmark_syntax_extension* syntax = cmark_find_syntax_extension(ext);
         if (syntax) {
@@ -105,85 +108,53 @@ static void AttachGfmExtensions(cmark_parser* parser) {
     }
 }
 
+// GitHub's slugger (github-slugger), which is what generated docs link against:
+// lowercase, drop anything that isn't a letter / digit / '_' / '-', and turn
+// each whitespace run character into its own '-'. Notably '_' survives and
+// separators are NOT collapsed, so "## adc_intr_ctl . TRANS_EN" is
+// "#adc_intr_ctl--trans_en" (issue #5883). cmark-gfm's autoheaderid extension
+// uses different rules (maps '_' and punctuation to '-', then collapses runs),
+// so we don't use it -- MarkdownAddHeadingAnchors() emits the ids from here,
+// keeping the ToC anchors and the html ids one implementation.
 static void AppendSlugChar(str::Builder* out, unsigned int c) {
     if (c >= 'A' && c <= 'Z') {
         c += 'a' - 'A';
     }
-    if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+    if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
         out->AppendChar((char)c);
         return;
     }
-    if (c >= 0x80) {
-        out->AppendChar((char)c);
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+        out->AppendChar('-');
         return;
     }
-    out->AppendChar('-');
+    // everything else (ascii punctuation) is dropped
 }
 
-// Matches ext/cmark-gfm/extensions/autoheaderid.c slug rules.
 Str MarkdownHeadingSlug(Arena* a, Str title) {
     str::Builder out;
-    bool minusPending = false;
     const u8* p = (const u8*)title.s;
     const u8* e = p + title.len;
+    // GitHub trims the title before slugging, so leading/trailing spaces don't
+    // become hyphens
+    while (p < e && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) {
+        p++;
+    }
+    while (e > p && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\n' || e[-1] == '\r')) {
+        e--;
+    }
     while (p < e) {
         unsigned int c = *p++;
         if (c >= 0x80) {
-            if (c >= 0xF0) {
-                goto bad;
+            // non-ascii is kept as-is (GitHub keeps accented letters); copy the
+            // continuation bytes through unchanged
+            out.AppendChar((char)c);
+            while (p < e && (*p & 0xC0) == 0x80) {
+                out.AppendChar((char)*p++);
             }
-            if (c >= 0xE0) {
-                if (p + 2 > e) {
-                    goto bad;
-                }
-                c = ((c & 0x0F) << 12) + ((p[0] & 0x3f) << 6) + (p[1] & 0x3f);
-                p += 2;
-            } else if (c >= 0xC0) {
-                if (p + 1 > e) {
-                    goto bad;
-                }
-                c = ((c & 0x1F) << 6) + (p[0] & 0x3f);
-                p += 1;
-            } else {
-                goto bad;
-            }
+            continue;
         }
-
-        if (c >= 'A' && c <= 'Z') {
-            c += 'a' - 'A';
-        } else if (c >= 'a' && c <= 'z') {
-        } else if (c >= '0' && c <= '9') {
-        } else if (c >= 0xa0 && c <= 0xbf) {
-            goto bad;
-        } else if ((c >= 0xc0 && c <= 0xc5) || (c >= 0xE0 && c <= 0xeb) || (c >= 0x100 && c <= 0x105)) {
-            c = 'a';
-        } else if (c == 0xC7 || c == 0xE7) {
-            c = 'c';
-        } else if ((c >= 0xc8 && c <= 0xCB) || (c >= 0xE8 && c <= 0xeb)) {
-            c = 'e';
-        } else if ((c >= 0xcc && c <= 0xcf) || (c >= 0xEC && c <= 0xef)) {
-            c = 'i';
-        } else if (c == 0xD1 || c == 0xF1) {
-            c = 'n';
-        } else if ((c >= 0xd2 && c <= 0xd8) || (c >= 0xEC && c <= 0xef)) {
-            c = 'o';
-        } else if ((c >= 0xd9 && c <= 0xdc) || (c >= 0xF9 && c <= 0xfc)) {
-            c = 'u';
-        } else if (c >= 0x80) {
-        } else {
-        bad:
-            c = '-';
-        }
-
-        if (c == '-') {
-            minusPending = true;
-        } else if (c) {
-            if (minusPending && out.len > 0) {
-                out.AppendChar('-');
-            }
-            AppendSlugChar(&out, c);
-            minusPending = false;
-        }
+        AppendSlugChar(&out, c);
     }
     Str res = out.TakeStr();
     if (a) {
@@ -556,6 +527,32 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
     }
 }
 
+// Give every heading an "<a id="slug"></a>" so in-document links like
+// "[INTR_STATE](#intr_state)" have something to jump to (#5883). Uses the same
+// MarkdownHeadingSlug() as the ToC, so the two can't disagree, and the same
+// validated-anchor node as PreserveSafeEmptyAnchors() so cmark's safe renderer
+// keeps it.
+static void AddHeadingAnchors(cmark_node* doc) {
+    for (cmark_node* node = cmark_node_first_child(doc); node; node = cmark_node_next(node)) {
+        if (cmark_node_get_type(node) != CMARK_NODE_HEADING) {
+            continue;
+        }
+        Str title = ExtractHeadingTitle(node);
+        if (!title) {
+            continue;
+        }
+        Str slug = MarkdownHeadingSlug(nullptr, title);
+        if (slug) {
+            cmark_node* anchor = NewSafeAnchorNode(CMARK_NODE_CUSTOM_BLOCK, slug);
+            if (anchor && !cmark_node_insert_before(node, anchor)) {
+                cmark_node_free(anchor);
+            }
+        }
+        str::Free(slug);
+        str::Free(title);
+    }
+}
+
 static char* MarkdownToHtmlBody(Str markdown) {
     if (!markdown) {
         return nullptr;
@@ -575,6 +572,7 @@ static char* MarkdownToHtmlBody(Str markdown) {
 
     RewriteMarkdownLinks(doc);
     PreserveSafeEmptyAnchors(doc);
+    AddHeadingAnchors(doc);
 
     // Render before cmark_parser_free(); the extensions list is owned by the parser.
     cmark_llist* extensions = cmark_parser_get_syntax_extensions(parser);
@@ -606,6 +604,43 @@ Str MarkdownToHtmlPage(Str markdown) {
 }
 
 bool MarkdownToc_UnitTestHtmlLinks() {
+    // GitHub's slug rules: '_' survives, punctuation is dropped, each space
+    // becomes its own '-'. Generated register docs link to "#intr_state" and
+    // "#adc_intr_ctl--trans_en" (#5883).
+    struct {
+        Str title;
+        Str want;
+    } slugs[] = {
+        {StrL("INTR_STATE"), StrL("intr_state")},
+        {StrL("adc_chn0_filter_ctl"), StrL("adc_chn0_filter_ctl")},
+        {StrL("adc_intr_ctl . TRANS_EN"), StrL("adc_intr_ctl--trans_en")},
+        {StrL("Hello World! (again)"), StrL("hello-world-again")},
+        {StrL("Advanced options / settings"), StrL("advanced-options--settings")},
+        {StrL("  padded  "), StrL("padded")},
+    };
+    for (auto& t : slugs) {
+        Str slug = MarkdownHeadingSlug(nullptr, t.title);
+        bool ok = str::Eq(slug, t.want);
+        str::Free(slug);
+        if (!ok) {
+            return false;
+        }
+    }
+
+    // headings get an anchor with that slug, so "#intr_state" has a target
+    Str headings = StrL("## INTR_STATE\n\ntext\n\n### adc_intr_ctl . TRANS_EN\n\nmore\n");
+    char* headingsHtml = MarkdownToHtmlBody(headings);
+    if (!headingsHtml) {
+        return false;
+    }
+    Str hh(headingsHtml);
+    bool headingAnchorsOk = str::Contains(hh, StrL("<a id=\"intr_state\"></a>")) &&
+                            str::Contains(hh, StrL("<a id=\"adc_intr_ctl--trans_en\"></a>"));
+    cmark_get_default_mem_allocator()->free(headingsHtml);
+    if (!headingAnchorsOk) {
+        return false;
+    }
+
     TempStr url = MarkdownLinkToHtmlTemp(StrL("other.md"));
     if (!str::Eq(url, StrL("other.html"))) {
         return false;
