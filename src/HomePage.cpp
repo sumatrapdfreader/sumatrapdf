@@ -1143,6 +1143,7 @@ struct HomePageLayout {
     HIMAGELIST himlOpen = nullptr;
     VirtWndText* freqRead = nullptr;
     VirtWndText* openDoc = nullptr;
+    VirtWndText* browseFolder = nullptr; // null when it doesn't fit the header row
     VirtWndText* hideShowFreqRead = nullptr;
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
     int totalContentDy = 0;          // total height of all thumbnail rows
@@ -1164,6 +1165,7 @@ struct HomePageLayout {
 HomePageLayout::~HomePageLayout() {
     delete freqRead;
     delete openDoc;
+    delete browseFolder;
 }
 
 constexpr int kOpenDocumentYShift = 7;
@@ -1329,6 +1331,7 @@ struct HomePageLayoutCache {
     Rect rcLine{};
     Rect rcFreqRead{};
     Rect rcOpenDoc{};
+    Rect rcBrowseFolder{}; // empty when the link doesn't fit
     int totalContentDy = 0;
     int thumbsVisibleDy = 0;
     ParsedTip* tip = nullptr;
@@ -1411,6 +1414,13 @@ static void HomePageAppendChromeStaticLinks(HomePageLayout& l) {
     }
     rcOpen.Inflate(10, 10);
     win->staticLinks.Append(new StaticLink(rcOpen, kLinkOpenFile));
+
+    if (l.browseFolder) {
+        // urls starting with "Cmd" are dispatched as commands (CanvasAboutUI.cpp)
+        Rect rcBrowse = l.browseFolder->lastBounds;
+        rcBrowse.Inflate(6, 10);
+        win->staticLinks.Append(new StaticLink(rcBrowse, StrL("CmdNavigateFilesInFolder")));
+    }
 
     if (l.tip) {
         for (auto& link : l.tip->links) {
@@ -1529,6 +1539,7 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.rcLine = l.rcLine;
     c.rcFreqRead = l.freqRead ? l.freqRead->lastBounds : Rect{};
     c.rcOpenDoc = l.openDoc ? l.openDoc->lastBounds : Rect{};
+    c.rcBrowseFolder = l.browseFolder ? l.browseFolder->lastBounds : Rect{};
     c.totalContentDy = l.totalContentDy;
     c.thumbsVisibleDy = l.thumbsVisibleDy;
     c.tip = l.tip;
@@ -1595,6 +1606,14 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     openDoc->withUnderline = true;
     openDoc->SetBounds(c.rcOpenDoc);
     l.openDoc = openDoc;
+
+    if (!c.rcBrowseFolder.IsEmpty()) {
+        auto browse = new VirtWndText(hwnd, _TRA("Navigate Files in Folder"), fontText);
+        browse->isRtl = isRtl;
+        browse->withUnderline = true;
+        browse->SetBounds(c.rcBrowseFolder);
+        l.browseFolder = browse;
+    }
 
     HomePageAppendChromeStaticLinks(l);
     HomePageAppendFileStaticLinks(l);
@@ -1746,9 +1765,29 @@ void LayoutHomePage(HomePageLayout& l) {
     }
     openDoc->SetBounds(rcOpenDoc);
 
+    l.openDoc = openDoc;
+
+    /* "Navigate Files in Folder" link after it; dropped when the header row is
+       too narrow to hold it (the row doesn't wrap) */
+    {
+        auto browse = new VirtWndText(hwnd, _TRA("Navigate Files in Folder"), fontText);
+        browse->isRtl = isRtl;
+        browse->withUnderline = true;
+        Size browseSize = browse->GetIdealSize(true);
+        int x = isRtl ? rcOpenDoc.x - openDocSpacing - browseSize.dx : rcOpenDoc.x + rcOpenDoc.dx + openDocSpacing;
+        Rect rcBrowse(x, rcOpenDoc.y, browseSize.dx, browseSize.dy);
+        int margin = DpiScale(hdc, 8);
+        bool fits = isRtl ? (rcBrowse.x >= margin) : (rcBrowse.x + rcBrowse.dx <= rc.dx - margin);
+        if (fits) {
+            browse->SetBounds(rcBrowse);
+            l.browseFolder = browse;
+        } else {
+            delete browse;
+        }
+    }
+
     rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
     rcOpenDoc.Inflate(10, 10);
-    l.openDoc = openDoc;
     auto sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
     win->staticLinks.Append(sl);
 
@@ -2482,6 +2521,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     ImageList_Draw(l.himlOpen, openIconIdx, hdc, x, y, ILD_NORMAL);
 
     l.openDoc->Paint(hdc);
+    if (l.browseFolder) {
+        l.browseFolder->Paint(hdc);
+    }
 
     if (false) {
         Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));

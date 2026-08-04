@@ -18,6 +18,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
+#include "FileHistory.h"
 #include "SumatraConfig.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
@@ -728,6 +729,28 @@ static void OnNavFilesWndDestroy(Wnd::DestroyEvent*) {
     ScheduleDeleteNavFilesWnd();
 }
 
+// Start directory when no document is open (home page). The file-open dialog
+// deliberately doesn't set an initial directory, letting the shell reopen the
+// folder of the last file opened through it; the closest equivalent we can
+// compute is the newest still-existing entry in our own file history.
+static TempStr NavStartDirNoDocTemp() {
+    for (int i = 0;; i++) {
+        FileState* fs = gFileHistory.Get(i);
+        if (!fs) {
+            break;
+        }
+        TempStr dir = path::GetDirTemp(fs->filePath);
+        if (len(dir) > 0 && dir::Exists(dir)) {
+            return dir;
+        }
+    }
+    TempStr docs = GetSpecialFolderTemp(CSIDL_PERSONAL);
+    if (len(docs) > 0 && dir::Exists(docs)) {
+        return docs;
+    }
+    return GetSelfExeDirTemp();
+}
+
 bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     {
@@ -814,8 +837,8 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     layout = padding;
 
     WindowTab* tab = mainWin->CurrentTab();
-    Str filePath = tab ? tab->filePath : Str{};
-    TempStr dir = path::GetDirTemp(filePath);
+    Str filePath = (tab && !tab->IsAboutTab()) ? tab->filePath : Str{};
+    TempStr dir = len(filePath) > 0 ? path::GetDirTemp(filePath) : NavStartDirNoDocTemp();
     SetDir(dir, filePath);
     // remember selection: layout below changes listbox size, so LB_SETCURSEL
     // during SetDir may not leave the item visible in the final viewport
@@ -852,10 +875,11 @@ void ShowNavFilesInFolder(MainWindow* win) {
             // the command means "browse the current document's folder", so re-sync
             // to it (and re-read it: the file may have been renamed since, #5878)
             WindowTab* tab = win->CurrentTab();
-            Str filePath = tab ? tab->filePath : Str{};
+            Str filePath = (tab && !tab->IsAboutTab()) ? tab->filePath : Str{};
             if (len(filePath) > 0) {
                 gNavFilesWnd->SetDir(path::GetDirTemp(filePath), filePath);
             } else {
+                // on the home page keep whatever directory is being browsed
                 gNavFilesWnd->RefreshList();
             }
             ShowWindow(gNavFilesWnd->hwnd, SW_SHOW);
@@ -869,11 +893,6 @@ void ShowNavFilesInFolder(MainWindow* win) {
         }
         ScheduleDeleteNavFilesWnd();
     }
-    WindowTab* tab = win->CurrentTab();
-    if (!tab || len(tab->filePath) == 0) {
-        return;
-    }
-
     auto wnd = new NavFilesInFolderWnd();
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);

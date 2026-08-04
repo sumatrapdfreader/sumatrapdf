@@ -8967,9 +8967,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdNavigateFilesInFolder:
-            if (!win->IsCurrentTabAbout()) {
-                ShowNavFilesInFolder(win);
-            }
+            // also works on the home page, where it starts in the folder of the
+            // most recently opened document
+            ShowNavFilesInFolder(win);
             break;
 
         case CmdRenameFile:
