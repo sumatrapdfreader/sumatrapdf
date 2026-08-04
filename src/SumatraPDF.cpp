@@ -8752,18 +8752,10 @@ static void PasteImageFromClipboard(MainWindow* win) {
         return;
     }
 
-    // get Downloads folder
-    WCHAR* downloadsW = nullptr;
-    HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &downloadsW);
-    if (FAILED(hr) || !downloadsW) {
-        CoTaskMemFree(downloadsW);
-        return;
-    }
-    TempStr downloadsDir = ToUtf8Temp(downloadsW);
-    CoTaskMemFree(downloadsW);
-
-    // generate unique path: clipboard.png, clipboard.1.png, etc.
-    TempStr basePath = path::JoinTemp(downloadsDir, StrL("clipboard.png"));
+    // generate unique path in our data dir: clipboard.png, clipboard.1.png, etc.
+    TempStr dataDir = GetAppDataDirTemp();
+    dir::CreateAll(dataDir);
+    TempStr basePath = path::JoinTemp(dataDir, StrL("clipboard.png"));
     TempStr destPath = MakeUniqueFilePathTemp(basePath);
 
     // save as PNG
