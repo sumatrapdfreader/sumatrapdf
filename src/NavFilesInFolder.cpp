@@ -85,6 +85,8 @@ struct NavFilesInFolderWnd : Wnd {
 
     bool Create(MainWindow* win);
     void SetDir(Str dir, Str selectPath);
+    TempStr SelectedPathTemp();
+    void RefreshList();
     void ExecuteCurrentSelection();
     void DeleteCurrentSelection();
     void OnListDoubleClick();
@@ -344,6 +346,37 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     HwndScheduleRepaint(listBox->hwnd);
 }
 
+// full path of the selected entry, or empty. Owned copy: callers pass it back
+// into SetDir(), which frees the entries the path would otherwise point into.
+TempStr NavFilesInFolderWnd::SelectedPathTemp() {
+    if (!listBox || !listBox->hwnd) {
+        return {};
+    }
+    int idx = listBox->GetCurrentSelection();
+    auto m = (ListBoxModelNav*)listBox->model;
+    if (!m || idx < 0 || idx >= m->ItemsCount()) {
+        return {};
+    }
+    NavFileEntry& e = m->entries[idx];
+    if (str::Eq(e.name, StrL(".."))) {
+        return {};
+    }
+    return str::DupTemp(NavEntryPathTemp(this, e));
+}
+
+// re-read the directory, keeping the selection on the same file. The listing is
+// a snapshot, so files renamed / added / removed after it was taken (by F2 in
+// the main window, by another app, ...) would otherwise linger (issue #5878).
+void NavFilesInFolderWnd::RefreshList() {
+    // WM_ACTIVATE can arrive during CreateCustom(), before the list exists
+    if (!listBox || !listBox->hwnd || len(currDir) == 0) {
+        return;
+    }
+    TempStr sel = SelectedPathTemp();
+    TempStr dir = str::DupTemp(currDir);
+    SetDir(dir, sel);
+}
+
 void NavFilesInFolderWnd::GoUp() {
     TempStr parent = path::GetDirTemp(currDir);
     if (path::IsSame(parent, currDir)) {
@@ -466,6 +499,10 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
         DeleteCurrentSelection();
         return true;
     }
+    if (msg.wParam == VK_F5) {
+        RefreshList();
+        return true;
+    }
     return false;
 }
 
@@ -474,6 +511,8 @@ LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp
         LRESULT res = WndProcDefault(hwndIn, msg, wp, lp);
         // defer: Windows assigns focus after WM_ACTIVATE during Alt-Tab
         if (LOWORD(wp) != WA_INACTIVE) {
+            // the directory may have changed while we were in the background
+            RefreshList();
             ScheduleFocusNavListBox();
         }
         return res;
@@ -810,6 +849,15 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
 void ShowNavFilesInFolder(MainWindow* win) {
     if (gNavFilesWnd) {
         if (gNavFilesWnd->hwnd && IsWindow(gNavFilesWnd->hwnd)) {
+            // the command means "browse the current document's folder", so re-sync
+            // to it (and re-read it: the file may have been renamed since, #5878)
+            WindowTab* tab = win->CurrentTab();
+            Str filePath = tab ? tab->filePath : Str{};
+            if (len(filePath) > 0) {
+                gNavFilesWnd->SetDir(path::GetDirTemp(filePath), filePath);
+            } else {
+                gNavFilesWnd->RefreshList();
+            }
             ShowWindow(gNavFilesWnd->hwnd, SW_SHOW);
             SetForegroundWindow(gNavFilesWnd->hwnd);
             if (gNavFilesWnd->listBox) {
