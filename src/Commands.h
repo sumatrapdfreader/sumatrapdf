@@ -267,7 +267,8 @@ enum {
     CmdShowGeneratedHTML = 456,
     CmdDeleteCachedFiles = 457,
     CmdToggleKeyboardLinkFollowing = 458,
-    CmdNone = 459,
+    CmdDebugToggleDpiOverride = 459,
+    CmdNone = 460,
 
     /* range for file history */
     CmdFileHistoryFirst,

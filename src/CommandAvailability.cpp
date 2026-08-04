@@ -58,6 +58,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdDebugToggleRenderInfo,
     CmdDebugToggleCacheInfo,
     CmdDebugToggleRtl,
+    CmdDebugToggleDpiOverride,
     CmdChangeScrollbar,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
@@ -275,6 +276,7 @@ static i32 gCommandsDebugOnly[] = {
     CmdDebugTestApp,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
+    CmdDebugToggleDpiOverride,
     0,
 };
 

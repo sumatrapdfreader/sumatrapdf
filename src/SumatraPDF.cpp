@@ -6508,6 +6508,65 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, 
     ApplyMainWindowDpiChromeRefresh(win, hwnd);
 }
 
+struct CollectTopWindowsCtx {
+    Vec<HWND>* hwnds;
+};
+
+static BOOL CALLBACK CollectTopWindowsProc(HWND hwnd, LPARAM lp) {
+    auto* ctx = (CollectTopWindowsCtx*)lp;
+    if (HwndIsVisible(hwnd)) {
+        ctx->hwnds->Append(hwnd);
+    }
+    return TRUE;
+}
+
+// Debug: pretend the app moved to a monitor with a different scaling. Cycles
+// gDpiOverride 0 (system) -> 125% -> 150% and sends every top-level window a
+// WM_DPICHANGED with a suggested rect scaled the way Windows would, so DPI
+// change handling can be exercised without a second monitor.
+// Debug builds only (gCommandsDebugOnly hides it from the palette elsewhere;
+// this also covers a Shortcuts entry naming the command directly).
+static void ToggleDpiOverride() {
+    if (!gIsDebugBuild) {
+        return;
+    }
+    int next = 125;
+    if (gDpiOverride == 125) {
+        next = 150;
+    } else if (gDpiOverride == 150) {
+        next = 0;
+    }
+
+    Vec<HWND> hwnds;
+    CollectTopWindowsCtx ctx{&hwnds};
+    EnumThreadWindows(GetCurrentThreadId(), CollectTopWindowsProc, (LPARAM)&ctx);
+
+    // snapshot geometry and DPI before switching: the suggested rect scales by
+    // the ratio of the old to the new DPI
+    Vec<Rect> rects;
+    Vec<int> dpis;
+    for (HWND hwnd : hwnds) {
+        rects.Append(HwndWindowRect(hwnd));
+        dpis.Append(DpiGet(hwnd));
+    }
+
+    gDpiOverride = next;
+    int newDpi = DpiGet(HWND_DESKTOP);
+    logf("ToggleDpiOverride: gDpiOverride=%d, dpi=%d\n", gDpiOverride, newDpi);
+
+    int n = len(hwnds);
+    for (int i = 0; i < n; i++) {
+        int oldDpi = dpis[i] > 0 ? dpis[i] : 96;
+        Rect r = rects[i];
+        RECT suggested;
+        suggested.left = r.x;
+        suggested.top = r.y;
+        suggested.right = r.x + MulDiv(r.dx, newDpi, oldDpi);
+        suggested.bottom = r.y + MulDiv(r.dy, newDpi, oldDpi);
+        SendMessageW(hwnds[i], WM_DPICHANGED, MAKEWPARAM(newDpi, newDpi), (LPARAM)&suggested);
+    }
+}
+
 static void FinishDeferredMainWindowDpiRefresh(MainWindow* win, HWND hwnd) {
     if (!win) {
         return;
@@ -9844,6 +9903,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             for (auto w : gWindows) {
                 UpdateWindowRtlLayout(w);
             }
+            break;
+
+        case CmdDebugToggleDpiOverride:
+            ToggleDpiOverride();
             break;
 
         case CmdDebugDownloadSymbols:

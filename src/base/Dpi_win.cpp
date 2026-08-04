@@ -22,6 +22,8 @@ Per-Monitor DPI Aware:
 
 constexpr int kMdtEffectiveDpi = 0;
 
+int gDpiOverride = 0;
+
 static int gWineDpiOverride = 0;
 
 void DpiSetWineOverride(int dpi) {
@@ -37,6 +39,9 @@ static int DpiApplyWineOverride(int dpi) {
 
 // get uncached dpi
 int DpiGetForHwnd(HWND hwnd) {
+    if (gDpiOverride > 0) {
+        return MulDiv(96, gDpiOverride, 100);
+    }
     // GetDpiForWindow() returns defult 96 DPI for desktop window
     // (most likely desktop has DPI_AWARENESS set to UNAWARE)
     if (hwnd && hwnd != HWND_DESKTOP && hwnd != GetDesktopWindow()) {

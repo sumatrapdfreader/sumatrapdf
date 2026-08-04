@@ -4,6 +4,8 @@
 #include "base/Base.h"
 #include "base/Dpi.h"
 
+int gDpiOverride = 0;
+
 static int gDpi = 96;
 
 void DpiSetWineOverride(int dpi) {
@@ -13,6 +15,9 @@ void DpiSetWineOverride(int dpi) {
 }
 
 int DpiGetForHwnd(HWND) {
+    if (gDpiOverride > 0) {
+        return (96 * gDpiOverride) / 100;
+    }
     return gDpi;
 }
 

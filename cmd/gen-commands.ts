@@ -267,6 +267,7 @@ export const commands = [
     "CmdShowGeneratedHTML", "Show Generated HTML",
     "CmdDeleteCachedFiles", "Delete Cached Files",
     "CmdToggleKeyboardLinkFollowing", "Follow Link With Keyboard",
+    "CmdDebugToggleDpiOverride", "Debug: Toggle DPI Override",
     "CmdNone", "Do nothing",
 ];
 
