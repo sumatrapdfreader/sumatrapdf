@@ -1958,8 +1958,13 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     if (win->showSelection) {
-        /* if we had a selection and this was just a click, hide the selection */
-        ClearSearchResult(win);
+        // A click that wasn't a drag, on empty space (clicking text starts a new
+        // selection instead): drop the selection, like every other text UI does.
+        // This used to go through ClearSearchResult(), which cleared the
+        // selection as a side effect until #5737 made find highlights and the
+        // selection independent -- leaving Esc as the only way out (issue #5881)
+        DeleteOldSelectionInfo(win, true);
+        ScheduleRepaint(win, 0);
         return;
     }
 

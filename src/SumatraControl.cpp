@@ -127,6 +127,7 @@ enum class ControlCmd : u16 {
     TestToolbarButtons = 35,
     TestKeyboardLinkFollow = 36,
     TestFindResultsOrder = 37,
+    TestClickClearsSelection = 38,
 };
 
 enum class ControlArgType : u16 {
@@ -515,6 +516,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageResizeArrowKeyResultTemp(imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestClickClearsSelection: {
+            Str word = StringArg(req, 0);
+            if (!word) {
+                AppendError(req, "TestClickClearsSelection expects string word");
+                break;
+            }
+            int exitCode = 0;
+            Str res = ClickClearsSelectionResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

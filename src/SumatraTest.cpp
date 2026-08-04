@@ -441,6 +441,104 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
     return ToStrTemp(out);
 }
 
+// a spot on `pageNo` with no text (and no link / image) under it, in screen
+// coords, or an empty Point if the visible part of the page is all text
+static Point FindEmptySpotOnPage(MainWindow* win, DisplayModel* dm, int pageNo) {
+    Rect client = win->canvasRc;
+    constexpr int kStep = 8;
+    for (int y = client.y + kStep; y < client.y + client.dy; y += kStep) {
+        for (int x = client.x + kStep; x < client.x + client.dx; x += kStep) {
+            Point pt{x, y};
+            if (dm->GetPageNoByPoint(pt) != pageNo) {
+                continue;
+            }
+            if (dm->IsOverText(pt)) {
+                continue;
+            }
+            // a link or image under the cursor makes the click do something else
+            if (dm->GetElementAtPos(pt, nullptr)) {
+                continue;
+            }
+            return pt;
+        }
+    }
+    return Point{};
+}
+
+// Regression test for issue #5881: clicking empty space clears the text
+// selection. #5737 made find highlights independent of the selection, which
+// meant ClearSearchResult() -- what the "click, not a drag" path in
+// OnMouseLeftButtonUp called -- no longer cleared the selection, leaving Esc as
+// the only way to drop it. Selects `word` on page 1 the way a drag would, then
+// sends a real left click (down + up, no movement) at a spot with no text under
+// it, so the whole canvas mouse path runs, and reports what is still selected.
+TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail("ERROR missing word");
+    }
+    if (len(gWindows) == 0) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(engine, pageNo, word, &wx, &wy)) {
+        return fail("ERROR word-not-found");
+    }
+
+    // select the word, the way a left-drag across it would
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win, true);
+    dm->textSelection->StartAt(pageNo, wx, wy);
+    dm->textSelection->SelectUpTo(pageNo, wx, wy);
+    dm->textSelection->SelectWordAt(pageNo, wx, wy);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+
+    bool isTextOnly = false;
+    TempStr selected = str::DupTemp(GetSelectedTextTemp(tab, " ", isTextOnly));
+    if (len(selected) == 0) {
+        return fail("ERROR empty-selection");
+    }
+
+    Point pt = FindEmptySpotOnPage(win, dm, pageNo);
+    if (pt.IsEmpty()) {
+        return fail("ERROR no-empty-spot");
+    }
+
+    // a real click: down and up at the same point, so it isn't a drag
+    LPARAM lp = MAKELPARAM(pt.x, pt.y);
+    SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, 0, lp);
+    SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, lp);
+
+    TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);
+    bool cleared = (len(after) == 0) && !win->showSelection;
+    if (cleared) {
+        out.Append(fmt("OK selected=%s cleared at %d,%d\n", selected, pt.x, pt.y));
+    } else {
+        out.Append(fmt("FAIL selected=%s still=%s showSelection=%d\n", selected, after, (int)win->showSelection));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = cleared ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 // find the [start, end) glyph range of the first occurrence of `word` on a page
 static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* startOut, int* endOut) {
     if (!engine || !word || !startOut || !endOut) {
