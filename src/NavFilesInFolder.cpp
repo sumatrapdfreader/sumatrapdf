@@ -31,9 +31,10 @@
 
 // A modeless directory browser listing sub-directories and files SumatraPDF
 // can open (judged by extension). Enter / double-click replaces the document
-// in the current tab or descends into a directory; ".." goes one directory up.
-// The window stays open so you can open several files in succession; Esc or
-// the close button dismisses it.
+// in the current tab or descends into a directory; Ctrl + Enter / Ctrl +
+// double-click switches to the tab already showing the file or opens it in a
+// new tab; ".." goes one directory up. The window stays open so you can open
+// several files in succession; Esc or the close button dismisses it.
 
 // logical (pre-DPI) sizes for placement / sizing of the nav window
 constexpr int kNavDockMinFreeDx = 320;  // free strip beside main must be wider than this to dock
@@ -88,7 +89,7 @@ struct NavFilesInFolderWnd : Wnd {
     void SetDir(Str dir, Str selectPath);
     TempStr SelectedPathTemp();
     void RefreshList();
-    void ExecuteCurrentSelection();
+    void ExecuteCurrentSelection(bool inNewTab = false);
     void DeleteCurrentSelection();
     void OnListDoubleClick();
     void GoUp();
@@ -388,7 +389,9 @@ void NavFilesInFolderWnd::GoUp() {
     SetDir(str::DupTemp(parent), cameFrom);
 }
 
-void NavFilesInFolderWnd::ExecuteCurrentSelection() {
+// inNewTab: Ctrl+Enter / Ctrl+double-click. Switches to the tab already showing
+// the file, or opens it in a new tab, instead of replacing the current document.
+void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
     int idx = listBox->GetCurrentSelection();
     auto m = (ListBoxModelNav*)listBox->model;
     if (!m || idx < 0 || idx >= m->ItemsCount()) {
@@ -410,6 +413,23 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection() {
         ScheduleDeleteNavFilesWnd();
         return;
     }
+
+    if (inNewTab) {
+        WindowTab* existing = FindTabByFilePath(path);
+        if (existing) {
+            SelectTabInWindow(existing);
+            if (existing->win) {
+                SetForegroundWindow(existing->win->hwndFrame);
+            }
+            return;
+        }
+        DismissNextFileScrollHint(mainWin);
+        LoadArgs args(path, mainWin);
+        // no forceReuse: opens in a new tab, leaving the current document alone
+        StartLoadDocument(&args);
+        return;
+    }
+
     WindowTab* tab = mainWin->CurrentTab();
     if (tab && !MaybeSaveAnnotations(tab)) {
         return;
@@ -468,7 +488,7 @@ void NavFilesInFolderWnd::DeleteCurrentSelection() {
 }
 
 void NavFilesInFolderWnd::OnListDoubleClick() {
-    ExecuteCurrentSelection();
+    ExecuteCurrentSelection(IsCtrlPressed());
 }
 
 bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
@@ -489,7 +509,7 @@ bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
         return false;
     }
     if (msg.wParam == VK_RETURN) {
-        ExecuteCurrentSelection();
+        ExecuteCurrentSelection(IsCtrlPressed());
         return true;
     }
     if (msg.wParam == VK_BACK) {
@@ -823,7 +843,8 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        Str strings[4] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open"), _TRA("Del to delete"), _TRA("Esc to close")};
+        Str strings[4] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open, Ctrl + Enter in a tab"), _TRA("Del to delete"),
+                          _TRA("Esc to close")};
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
