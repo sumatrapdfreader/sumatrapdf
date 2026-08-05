@@ -510,7 +510,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         return false;
     }
 
-    int cursorY = coords[cursorIdx].y;
     int lineTol = coords[cursorIdx].dy + 4;
     if (lineTol < 12) {
         lineTol = 14;

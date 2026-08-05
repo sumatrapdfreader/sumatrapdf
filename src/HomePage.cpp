@@ -1553,7 +1553,6 @@ void LayoutHomePage(HomePageLayout& l) {
         }
         int listIconDx = l.rcIconListView.dx;
         int listIconGap = DpiScale(hdc, 6);
-        HFONT fontRow = HdcCreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
         // fixed size column — never call file::GetSize during layout (disk/network I/O)
         int listSizeDx = DpiScale(hdc, 56);
         // one-row margin so a quick scroll still has measured name/path splits ready
@@ -2047,7 +2046,6 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto hdc = l.hdc;
     auto win = l.win;
-    auto textColor = ThemeWindowTextColor();
     auto backgroundColor = ThemeMainWindowBackgroundColor();
 
     {
@@ -2637,7 +2635,6 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
 }
 
 void HomePageOnMouseWheel(MainWindow* win, int delta) {
-    Rect rc = HwndClientRect(win->hwndCanvas);
     HDC hdc = GetDC(win->hwndCanvas);
     int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
     ReleaseDC(win->hwndCanvas, hdc);

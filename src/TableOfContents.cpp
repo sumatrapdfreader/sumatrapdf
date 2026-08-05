@@ -45,7 +45,6 @@ bool gShowAllMatchingTOC = true;
 // TODO: I might have lost something in translation
 static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     auto treeView = ev->treeView;
-    auto tm = treeView->treeModel;
     auto ti = ev->treeItem;
     auto nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
@@ -84,7 +83,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
 
     // TODO: this causes a duplicate. Not sure what changed
     if (false && rcLine.x + rcLine.dx + 2 < rcLabel.x + rcLabel.dx) {
-        Str currInfoTip = tm->Text(ti);
+        Str currInfoTip = treeView->treeModel->Text(ti);
         infotip.Append(currInfoTip);
         infotip.Append("\r\n");
     }
@@ -909,7 +908,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     Point pt{};
 
-    TreeView* treeView = (TreeView*)ev->w;
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (ti == TreeModel::kNullItem) {
         pt = {ev->mouseScreen.x, ev->mouseScreen.y};

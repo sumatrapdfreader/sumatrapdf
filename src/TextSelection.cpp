@@ -49,7 +49,8 @@ void TextSelection::Reset() {
 static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     Rect* coords;
     int textLen = 0;
-    Str text = ts->engine->GetTextForPage(pageNo, &textLen, &coords);
+    // called for the side effect of filling textLen and coords
+    ts->engine->GetTextForPage(pageNo, &textLen, &coords);
     PointF pt = PointF((float)x, (float)y);
 
     unsigned int maxDist = UINT_MAX;

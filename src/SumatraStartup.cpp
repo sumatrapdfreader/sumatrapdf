@@ -117,7 +117,6 @@ static HBRUSH gWinClassBgBrush = nullptr;
 
 static bool RegisterWinClass() {
     WNDCLASSEX wcex;
-    ATOM atom;
 
     HMODULE h = GetModuleHandleW(nullptr);
     HBRUSH bgBrush = CreateSolidBrush(ThemeMainWindowBackgroundColor());
@@ -127,13 +126,13 @@ static bool RegisterWinClass() {
     wcex.style = 0;
     wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     wcex.hbrBackground = bgBrush;
-    atom = RegisterClassEx(&wcex);
+    RegisterClassEx(&wcex);
 
     FillWndClassEx(wcex, CANVAS_CLASS_NAME, WndProcCanvas);
     // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on resize
     wcex.style = CS_DBLCLKS;
     wcex.hbrBackground = bgBrush;
-    atom = RegisterClassEx(&wcex);
+    RegisterClassEx(&wcex);
 
     return true;
 }
@@ -1398,7 +1397,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     dialogConfig.dwCommonButtons = TDCBF_CLOSE_BUTTON;
     dialogConfig.pszMainIcon = TD_ERROR_ICON;
 
-    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
     HandleRedirectedConsoleOnShutdown();
     ::ExitProcess(1);
 }

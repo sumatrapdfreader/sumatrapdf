@@ -558,7 +558,6 @@ static void UpdateInfoLabel(ImageEditWindow* ew) {
 static void InvalidateImageArea(ImageEditWindow* ew) {
     Rect imageRect = HwndClientRect(ew->hwnd);
     imageRect.dy = ew->imgAreaH;
-    RECT rc = ToRECT(imageRect);
     HwndInvalidateRect(ew->hwnd, imageRect, false);
 }
 

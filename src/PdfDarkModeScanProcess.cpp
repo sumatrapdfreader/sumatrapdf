@@ -135,7 +135,6 @@ void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysi
     float paperLum = (0.2126f * paperR) + (0.7152f * paperG) + (0.0722f * paperB);
     if (paperLum < 0.35f) {
         paperLum = 0.72f;
-        paperR = paperG = paperB = paperLum;
     }
 
     const float lowChroma = 0.10f;

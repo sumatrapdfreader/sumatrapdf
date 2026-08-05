@@ -837,7 +837,6 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             int idx = TbHitTest(hwnd, pt);
             if (idx < 0) {
                 // also check we're not over a child control (find box, page box)
-                Point ptScreen = HwndClientToScreen(hwnd, pt);
                 HWND childAtPoint = ChildWindowFromPoint(hwnd, ToPOINT(pt));
                 if (!childAtPoint || childAtPoint == hwnd) {
                     HWND hwndFrame = GetAncestor(hwnd, GA_ROOT);
@@ -867,7 +866,6 @@ void UpdateToolbarState(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    HWND hwnd = win->hwndToolbar;
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
     {

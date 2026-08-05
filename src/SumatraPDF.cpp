@@ -1462,7 +1462,6 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     }
     bool showScrollbar = !hideScrollbar;
     BOOL showWinScrollbar = showScrollbar && !useOverlay;
-    BOOL showOverScrollbar = showScrollbar && useOverlay;
 
     if (useOverlay || hideScrollbar) {
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, FALSE);
@@ -4544,7 +4543,8 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
             // const char* path = engine->FileName();
             ShowErrorData data{tab, path};
             auto fn = MkFunc1(ShowSaveAnnotationError, &data);
-            bool ok = EngineMupdfSaveUpdated(engine, nullptr, fn);
+            // failure is surfaced by fn (ShowSaveAnnotationError)
+            EngineMupdfSaveUpdated(engine, nullptr, fn);
         } break;
         case SaveChoice::Cancel:
             tab->askedToSaveAnnotations = false;
@@ -7721,8 +7721,6 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
         key = (WPARAM)SingleCharLowerW((WCHAR)key);
     }
 
-    DocController* ctrl = win->ctrl;
-
     switch (key) {
         // per https://en.wikipedia.org/wiki/Keyboard_layout
         // almost all keyboard layouts allow to press either
@@ -10624,8 +10622,9 @@ void RelayoutCaption(MainWindow* win) {
         int row1X = 0;
         int row1Dx = 0;
         int buttonsWidth = 3 * btnDx;
-        int tabsX = rc.x;
-        int tabsDx = rc.dx;
+        // both branches below set these
+        int tabsX;
+        int tabsDx;
 
         if (isRtl) {
             int x = rc.x;
@@ -10862,8 +10861,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
             if (isClose) {
                 bgCol = isPushed ? Color(200, 196, 43, 28) : Color(255, 196, 43, 28);
             } else {
-                COLORREF hotBg = bgc;
-                hotBg = isPushed ? AccentColor(bgc, 40) : AccentColor(bgc, 20);
+                COLORREF hotBg = isPushed ? AccentColor(bgc, 40) : AccentColor(bgc, 20);
                 bgCol = GdiRgbFromCOLORREF(hotBg);
             }
             SolidBrush bgBr(bgCol);

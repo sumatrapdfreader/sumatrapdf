@@ -108,8 +108,9 @@ bool VerifySHA1Signature(Str data, Str hexSignature, Str pubkey) {
     BOOL ok = false;
     ScopedMem<BYTE> signature;
     size_t signatureLen;
-    const BYTE* dataPtr = (const BYTE*)data.s;
-    size_t dataLen = (size_t)data.len;
+    // set after ExtractSignature below, which shortens data
+    const BYTE* dataPtr = nullptr;
+    size_t dataLen = 0;
 
 #define Check(val)                     \
     do {                               \
