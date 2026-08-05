@@ -252,9 +252,9 @@ static void cad_analysis_note_stroke(CadPageStats* stats, const fz_stroke_state*
     }
 }
 
-static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_path*, const fz_stroke_state* stroke,
-                                     fz_matrix, fz_colorspace* colorspace, const float* color, float,
-                                     fz_color_params color_params) {
+static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* /*path*/,
+                                     const fz_stroke_state* stroke, fz_matrix /*ctm*/, fz_colorspace* colorspace,
+                                     const float* color, float /*alpha*/, fz_color_params color_params) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     float rgb[FZ_MAX_COLORS] = {};
     fz_colorspace* ds = fz_device_rgb(ctx);
@@ -262,14 +262,16 @@ static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_p
     cad_analysis_note_stroke(d->stats, stroke, rgb[0], rgb[1], rgb[2]);
 }
 
-static void cad_analysis_fill_path(fz_context*, fz_device* dev, const fz_path*, int, fz_matrix, fz_colorspace*,
-                                   const float*, float, fz_color_params) {
+static void cad_analysis_fill_path(fz_context* /*ctx*/, fz_device* dev, const fz_path* /*path*/, int /*even_odd*/,
+                                   fz_matrix /*ctm*/, fz_colorspace* /*colorspace*/, const float* /*color*/,
+                                   float /*alpha*/, fz_color_params /*color_params*/) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     d->stats->fills++;
 }
 
-static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_text*, fz_matrix,
-                                   fz_colorspace* colorspace, const float* color, float, fz_color_params color_params) {
+static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_text* /*text*/, fz_matrix /*ctm*/,
+                                   fz_colorspace* colorspace, const float* color, float /*alpha*/,
+                                   fz_color_params color_params) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     d->stats->textOps++;
     float rgb[FZ_MAX_COLORS] = {};
@@ -278,13 +280,14 @@ static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_tex
     cad_analysis_note_stroke(d->stats, nullptr, rgb[0], rgb[1], rgb[2]);
 }
 
-static void cad_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text, const fz_stroke_state*,
-                                     fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
-                                     fz_color_params color_params) {
+static void cad_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text,
+                                     const fz_stroke_state* /*stroke*/, fz_matrix ctm, fz_colorspace* colorspace,
+                                     const float* color, float alpha, fz_color_params color_params) {
     cad_analysis_fill_text(ctx, dev, text, ctm, colorspace, color, alpha, color_params);
 }
 
-static void cad_analysis_fill_image(fz_context*, fz_device* dev, fz_image*, fz_matrix ctm, float, fz_color_params) {
+static void cad_analysis_fill_image(fz_context* /*ctx*/, fz_device* dev, fz_image* /*image*/, fz_matrix ctm,
+                                    float /*alpha*/, fz_color_params /*color_params*/) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     fz_rect bbox = fz_transform_rect(fz_unit_rect, ctm);
     if (d->stats->pageArea > 0.f) {

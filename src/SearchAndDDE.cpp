@@ -2758,7 +2758,7 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM) {
+LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM /*lp*/) {
     PostMessageW((HWND)wp, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }

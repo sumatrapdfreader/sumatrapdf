@@ -1096,7 +1096,7 @@ static void UpdatePrintProgress(UpdatePrintProgressData* d) {
 }
 
 class PrintThreadData;
-static void RemovePrintNotif(PrintThreadData* self, NotificationWnd*);
+static void RemovePrintNotif(PrintThreadData* self, NotificationWnd* wnd);
 
 class PrintThreadData {
   public:
@@ -1152,7 +1152,7 @@ class PrintThreadData {
     bool WasCanceled() { return isCanceled || !IsMainWindowValid(win) || win->printCanceled; }
 };
 
-void RemovePrintNotif(PrintThreadData* self, NotificationWnd*) {
+void RemovePrintNotif(PrintThreadData* self, NotificationWnd* /*wnd*/) {
     self->RemovePrintNotification();
 }
 

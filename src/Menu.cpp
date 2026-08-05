@@ -2234,7 +2234,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     };
 }
 #if 1
-void MarkMenuOwnerDraw(HMENU, bool) {
+void MarkMenuOwnerDraw(HMENU /*hmenu*/, bool /*isMenuBar*/) {
     // our painting isn't good enough so disable for now
     // rely on darkmodelib for menu theming, which only does light / dark theme from os
 }

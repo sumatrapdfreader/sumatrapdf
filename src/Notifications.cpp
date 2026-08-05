@@ -43,7 +43,7 @@ struct NotificationWnd : Wnd {
     NotificationWnd() = default;
     ~NotificationWnd() override;
 
-    HWND Create(const NotificationCreateArgs&);
+    HWND Create(const NotificationCreateArgs& args);
 
     void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
     void OnTimer(UINT_PTR timerId) override;

@@ -465,7 +465,7 @@ static void RestartSmartThinAutoHide(OverlayScrollbar* sb) {
 
 // ---- Global mouse tracking ----
 
-static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
+static void CALLBACK MouseTrackTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR /*idEvent*/, DWORD /*time*/) {
     // e.g. splitter drag uses SetCapture(); don't react to cursor proximity then
     if (GetCapture()) {
         return;

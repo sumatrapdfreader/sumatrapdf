@@ -81,7 +81,7 @@ struct NavFilesInFolderWnd : Wnd {
     ListBox* listBox = nullptr;
     Str currDir; // owned
 
-    bool PreTranslateMessage(MSG&) override;
+    bool PreTranslateMessage(MSG& msg) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     void OnSize(UINT msg, UINT type, Size size) override;
 
@@ -548,7 +548,7 @@ LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp
 }
 
 // re-layout the controls when the (resizable) window is resized
-void NavFilesInFolderWnd::OnSize(UINT, UINT, Size size) {
+void NavFilesInFolderWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
     // before the child controls exist; ignore layout until they're created
     if (!layout || !listBox) {
@@ -738,11 +738,11 @@ static void PositionNavFilesWnd(HWND hwnd, HWND hwndMain, bool docked, bool plac
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-static void OnNavFilesWndClose(Wnd::CloseEvent*) {
+static void OnNavFilesWndClose(Wnd::CloseEvent* /*ev*/) {
     ScheduleDeleteNavFilesWnd();
 }
 
-static void OnNavFilesWndDestroy(Wnd::DestroyEvent*) {
+static void OnNavFilesWndDestroy(Wnd::DestroyEvent* /*ev*/) {
     ScheduleDeleteNavFilesWnd();
 }
 
