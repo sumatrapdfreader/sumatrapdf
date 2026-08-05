@@ -1061,7 +1061,10 @@ static void AutoExpandTopLevelItems(TocItem* root) {
 
 void LoadTocTree(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-    ReportIf(!tab);
+    if (!tab) {
+        ReportIf(true);
+        return;
+    }
 
     if (win->tocLoaded) {
         return;
@@ -1360,13 +1363,19 @@ void TocTreeClick(TreeView::ClickEvent* ev) {
         return;
     }
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
-    ReportIf(!win);
+    if (!win) {
+        ReportIf(true);
+        return;
+    }
     GoToTocTreeItem(win, ev->treeItem, true);
 }
 
 static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
-    ReportIf(!win);
+    if (!win) {
+        ReportIf(true);
+        return;
+    }
 
     // When the focus is set to the toc window the first item in the treeview is automatically
     // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==

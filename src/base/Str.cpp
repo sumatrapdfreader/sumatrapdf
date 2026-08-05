@@ -2289,7 +2289,10 @@ namespace str {
 // excluding the terminator.
 int BufSet(Str dst, Str src) {
     int cchDst = dst.len;
-    ReportIf(0 == cchDst || !dst.s);
+    if (0 == cchDst || !dst.s) {
+        ReportIf(true);
+        return 0;
+    }
     if (!src) {
         *dst.s = 0;
         return 0;
@@ -2309,7 +2312,10 @@ namespace wstr {
 // WCHAR overload of BufSet — replaces lstrcpynW / wcscpy_s / wcsncpy_s / StringCchCopyW.
 int BufSet(WStr dst, WStr src) {
     int cchDst = dst.len;
-    ReportIf(0 == cchDst || !dst.s);
+    if (0 == cchDst || !dst.s) {
+        ReportIf(true);
+        return 0;
+    }
     if (!src) {
         *dst.s = 0;
         return 0;

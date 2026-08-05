@@ -1537,6 +1537,9 @@ static fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspac
 
 #if OS_WIN
 static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
+    if (!pixmap) {
+        return nullptr;
+    }
     if (pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
         RenderedBitmap* res = TryRenderAsPaletteImage(pixmap);
         if (res) {
@@ -4710,11 +4713,11 @@ bool EngineMupdf::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
 void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
     ReportIf(kindDestinationMupdf != dest->GetKind());
     PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
-    ReportIf(!(link->outline || link->link));
-    Str uri = link->outline ? Str(link->outline->uri) : Str{};
-    if (!link->outline) {
-        uri = Str(link->link->uri);
+    if (!link->outline && !link->link) {
+        ReportIf(true);
+        return;
     }
+    Str uri = link->outline ? Str(link->outline->uri) : Str(link->link->uri);
     if (!uri) {
         return;
     }

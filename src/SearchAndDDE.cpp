@@ -262,7 +262,10 @@ void FindFirst(MainWindow* win) {
     // when a real search begins (non-empty term in FindTextOnThread /
     // BrowserFindStartSearch), not merely when the find box is opened
     // (issue #5862 / #5726).
-    bool hadFindFocus = win && win->hwndFindEdit && HwndIsFocused(win->hwndFindEdit);
+    if (!win) {
+        return;
+    }
+    bool hadFindFocus = win->hwndFindEdit && HwndIsFocused(win->hwndFindEdit);
 
     if (BrowserFindCtrl(win)) {
         // chm / markdown in a webview: our own find bar drives the search

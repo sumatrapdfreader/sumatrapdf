@@ -1962,7 +1962,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    ReportIf(!tab);
+    if (!tab) {
+        ReportIf(true);
+        return;
+    }
 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)

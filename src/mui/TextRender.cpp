@@ -312,12 +312,14 @@ float TextRenderGdiplus::GetCurrFontLineSpacing() {
 }
 
 RectF TextRenderGdiplus::Measure(WStr s) {
-    ReportIf(!currFont);
+    if (!currFont) {
+        ReportIf(true);
+        return {};
+    }
     return MeasureText(gfx, currFont->font, s, measureAlgo);
 }
 
 RectF TextRenderGdiplus::Measure(Str s) {
-    ReportIf(!currFont);
     TempWStr buf = ToWStrTemp(s);
     return Measure(buf);
 }

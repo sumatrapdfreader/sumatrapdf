@@ -230,6 +230,11 @@ void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
 }
 
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
+    if (!annot) {
+        // the listbox selection can be stale (see DeleteSelectedAnnotation), and
+        // FindAnnotationOnSamePage() below dereferences annot
+        return;
+    }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     Annotation* selectNext = nullptr;
     if (annot != tab->selectedAnnotation) {
@@ -369,7 +374,8 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
 
     if (tab->selectedAnnotation != nullptr) {
         tab->selectedAnnotation = nullptr;
-        if (!tab->win->isBeingClosed) {
+        // tab->win can be null (SafeDeleteEditAnnotationsWindow checks it too)
+        if (tab->win && !tab->win->isBeingClosed) {
             MainWindowRerender(tab->win);
             ToolbarUpdateStateForWindow(tab->win, false);
         }

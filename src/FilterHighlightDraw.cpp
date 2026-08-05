@@ -159,7 +159,10 @@ static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
 
 void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
                                  bool hasFocus, COLORREF* bgOut, COLORREF* txtOut) {
-    ReportIf(!bgOut || !txtOut);
+    if (!bgOut || !txtOut) {
+        ReportIf(true);
+        return;
+    }
     if (isSelected && hasFocus) {
         *bgOut = GetSysColor(COLOR_HIGHLIGHT);
         *txtOut = GetSysColor(COLOR_HIGHLIGHTTEXT);
