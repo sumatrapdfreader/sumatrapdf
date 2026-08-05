@@ -8553,6 +8553,10 @@ ShowMessage:
     MessageBoxWarning(nullptr, msg, _TRA("Downloading symbols"));
 }
 
+// CmdDebugCorruptMemory, the only caller, is behind #if defined(DEBUG), so
+// defining this in a release build leaves an unreferenced static: C4505, which
+// /WX turns into an error
+#if defined(DEBUG)
 #if 1
 static void DebugCorruptMemory() {}
 #else
@@ -8561,10 +8565,7 @@ static void DebugCorruptMemory() {}
 // as corrupted memory migh prevent crash handler from working
 // this can be used to test that crash handler still works
 // TODO: maybe corrupt some more
-void DebugCorruptMemory() {
-    if (!gIsDebugBuild) {
-        return;
-    }
+static void DebugCorruptMemory() {
     char* s = (char*)malloc(23);
     char* d = (char*)malloc(34);
     free(s);
@@ -8574,6 +8575,7 @@ void DebugCorruptMemory() {
     // the double free is deliberate; silence /analyze C6001
     free(s);
 }
+#endif
 #endif
 
 constexpr const char* kManualDefaultDocURI = "/SumatraPDF-documentation";
