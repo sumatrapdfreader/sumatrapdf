@@ -2892,6 +2892,19 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     // logf("delta: %d, accumDelta: %d, factor: %f, newZoom: %f\n", delta, accumDelta, factor, newZoom);
 }
 
+// Where the view is headed vertically. A smooth wheel scroll moves the view on
+// a timer and OnVScroll deliberately doesn't hand the pending position to the
+// scrollbar (the thumb would run ahead of the view), so GetScrollPos() still
+// reads the old value right after WM_VSCROLL returns. Callers that ask "did
+// that scroll do anything" have to compare the target instead, or they see no
+// movement on every wheel event.
+static int WheelScrollPosOrTarget(MainWindow* win) {
+    if (gGlobalPrefs->smoothScroll && win->scrollAnimActive) {
+        return win->scrollTargetY;
+    }
+    return GetScrollPos(win->hwndCanvas, SB_VERT);
+}
+
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->uiState.tocVisible && HwndIsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
@@ -3143,7 +3156,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     win->wheelAccumDelta += delta;
-    int prevScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+    int prevScrollPos = WheelScrollPosOrTarget(win);
 
     UINT scrollMsg = hScroll ? WM_HSCROLL : WM_VSCROLL;
     bool didScrollByLine = false;
@@ -3175,7 +3188,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return 0;
     }
 
-    int currScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+    int currScrollPos = WheelScrollPosOrTarget(win);
     bool didScroll = (currScrollPos != prevScrollPos);
     if (didScroll) {
         // we don't flip a page if we did scroll by line
