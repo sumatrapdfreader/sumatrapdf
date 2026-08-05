@@ -11,6 +11,8 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
+#include "Theme.h"
+
 //--- Edit
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
@@ -27,16 +29,15 @@ Kind kindEdit = "edit";
 // area: edit client paint on typing would overwrite a WM_PAINT GetDC line)
 static constexpr int kEditBottomBorderDy = 1;
 
-static COLORREF EditBottomBorderColor(COLORREF textColor, COLORREF bgColor) {
-    COLORREF col = IsSpecialColor(textColor) ? GetSysColor(COLOR_GRAYTEXT) : textColor;
-    // muted line: blend text color toward background
-    if (!IsSpecialColor(bgColor)) {
-        u8 r, g, b, br, bg, bb;
-        UnpackColor(col, r, g, b);
-        UnpackColor(bgColor, br, bg, bb);
-        col = RGB((r + (br * 2)) / 3, (g + (bg * 2)) / 3, (b + (bb * 2)) / 3);
-    }
-    return col;
+// The underline is a separator, so it takes the theme's edge color like every
+// other border and divider. It used to blend the control's own text color
+// toward its background, which lands wherever those two happen to be rather
+// than anywhere in the theme's palette: on the Dark theme's black sidebar that
+// gave a bright #535353 line instead of the theme's #374151 (issue #5893).
+// ThemeEdgeColor() derives a color from the control background when the theme
+// doesn't name one, so there is always something sensible to draw.
+static COLORREF EditBottomBorderColor() {
+    return ThemeEdgeColor();
 }
 
 static bool EditSetCueText(HWND hwnd, Str s) {
@@ -229,7 +230,7 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 GetWindowRect(hwnd, &wr);
                 int w = wr.right - wr.left;
                 int h = wr.bottom - wr.top;
-                COLORREF col = EditBottomBorderColor(textColor, bgColor);
+                COLORREF col = EditBottomBorderColor();
                 HPEN pen = CreatePen(PS_SOLID, 1, col);
                 HGDIOBJ old = SelectObject(hdc, pen);
                 MoveToEx(hdc, 0, h - 1, nullptr);

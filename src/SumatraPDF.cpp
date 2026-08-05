@@ -12293,6 +12293,25 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     }
 
     switch (msg) {
+        case WM_CTLCOLORSTATIC: {
+            // The Bookmarks and Favorites panels are plain WC_STATIC containers,
+            // so a static paints its background with the brush its parent
+            // returns here - including the strips its children don't cover, like
+            // the gap between the filter field and the tree. Without this the
+            // default COLOR_BTNFACE brush puts a bright #f0f0f0 band across a
+            // dark sidebar, which reads as a light divider (issue #5893)
+            HWND hwndCtl = (HWND)lp;
+            if (!win || (hwndCtl != win->hwndTocBox && hwndCtl != win->hwndFavBox)) {
+                break;
+            }
+            if (!win->brControlBgColor) {
+                win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
+            }
+            SetTextColor((HDC)wp, ThemeWindowTextColor());
+            SetBkMode((HDC)wp, TRANSPARENT);
+            return (LRESULT)win->brControlBgColor;
+        }
+
         case WM_CREATE:
             // do nothing
             TtsSetNotifyWindow(hwnd, WM_TTS_EVENT, 0, 0);
