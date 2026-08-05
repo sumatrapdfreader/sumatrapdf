@@ -145,7 +145,11 @@ HWND Edit::Create(const CreateArgs& args) {
     if (args.maxWidthChars > 0) {
         SetMaxWidthChars(args.maxWidthChars);
     }
+    if (args.textPadding > 0) {
+        textPadding = DpiScale(hwnd, args.textPadding);
+    }
     SizeToIdealSize(this);
+    ApplyTextPadding();
 
     if (createdWithBottomBorder) {
         // apply the 1px bottom NC strip from WM_NCCALCSIZE
@@ -162,8 +166,30 @@ HWND Edit::Create(const CreateArgs& args) {
     return hwnd;
 }
 
+// inset the text from the client edges by textPadding. The edit control resets
+// its formatting rectangle to the full client area on every resize, so this has
+// to be re-applied after each WM_SIZE. Ignored by single-line edit controls.
+void Edit::ApplyTextPadding() {
+    if (!hwnd || textPadding <= 0) {
+        return;
+    }
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    InflateRect(&rc, -textPadding, -textPadding);
+    if (rc.right <= rc.left || rc.bottom <= rc.top) {
+        return;
+    }
+    SendMessageW(hwnd, EM_SETRECTNP, 0, (LPARAM)&rc);
+}
+
 LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
+        case WM_SIZE: {
+            LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
+            ApplyTextPadding();
+            return res;
+        }
+
         case WM_KEYDOWN: {
             bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed();
             if (isCtrlBack) {
@@ -264,6 +290,10 @@ Size Edit::GetIdealSize() {
     if (createdWithBottomBorder) {
         dy += kEditBottomBorderDy;
     }
+    // the text is inset on all 4 sides, so the client area has to grow to still
+    // show idealSizeLines lines
+    dx += textPadding * 2;
+    dy += textPadding * 2;
     // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
     return {dx, dy};
 }

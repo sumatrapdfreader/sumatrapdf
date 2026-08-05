@@ -1101,7 +1101,9 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.isMultiLine = true;
         args.withBorder = false;
-        args.idealSizeLines = 3;
+        args.idealSizeLines = 5;
+        // don't let the doc text touch the edges of the control
+        args.textPadding = 4;
         args.font = font;
         args.isRtl = isRtl;
         auto c = new Edit();
@@ -1113,22 +1115,30 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 2)));
     }
 
-    // centered hint telling the user how to edit a setting, above the buttons
+    // centered hints, above the buttons: how to edit a setting and what the
+    // bold text in the list means
     {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainCenter;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        Str hints[] = {
+            _TRA("double-click or Enter to edit"),
+            _TRA("value bold? different from default"),
+            _TRA("name bold? value changed and unsaved"),
+        };
+        for (const Str& hint : hints) {
+            auto hbox = new HBox();
+            hbox->alignMain = MainAxisAlign::MainCenter;
+            hbox->alignCross = CrossAxisAlign::CrossCenter;
 
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.text = _TRA("double-click or Enter to edit");
-        args.isRtl = isRtl;
-        auto c = new Static();
-        c->SetColors(colTxt, colBg);
-        c->Create(args);
-        hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 2, 8)));
-        vbox->AddChild(hbox);
+            Static::CreateArgs args;
+            args.parent = hwnd;
+            args.font = font;
+            args.text = hint;
+            args.isRtl = isRtl;
+            auto c = new Static();
+            c->SetColors(colTxt, colBg);
+            c->Create(args);
+            hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 1, 8)));
+            vbox->AddChild(hbox);
+        }
     }
 
     {

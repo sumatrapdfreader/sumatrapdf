@@ -305,6 +305,9 @@ struct Edit : Wnd {
         int idealWidthChars = 0;
         // if > 0: ideal width is capped at ~N average character widths
         int maxWidthChars = 0;
+        // if > 0: unscaled px of space between the text and all 4 client edges
+        // (multi-line only; the edit control ignores EM_SETRECT otherwise)
+        int textPadding = 0;
         HFONT font = nullptr;
         bool isRtl = false;
     };
@@ -318,6 +321,8 @@ struct Edit : Wnd {
     int idealSizeLines = 1;
     int idealDx = 0;
     int maxDx = 0;
+    // DPI-scaled CreateArgs.textPadding
+    int textPadding = 0;
 
     // remembers CreateArgs.withBorder: with themes darkmodelib strips
     // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, so
@@ -348,6 +353,7 @@ struct Edit : Wnd {
     void SetCursorPosition(int pos);
     void SetCursorPositionAtEnd();
     bool HasBorder();
+    void ApplyTextPadding();
 };
 
 //--- ListBox
