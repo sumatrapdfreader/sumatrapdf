@@ -212,13 +212,13 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     } else if (bins == (DWORD)-1) {
         out.Append(fmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError()));
     } else {
-        ScopedMem<WORD> binValues(AllocArray<WORD>((int)bins));
-        DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
-        ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (int)binNames));
-        DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
+        WORD* binValues = AllocArrayTemp<WORD>((int)bins);
+        DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues, nullptr);
+        WCHAR* binNameValues = AllocArrayTemp<WCHAR>(24 * (int)binNames);
+        DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues, nullptr);
         for (DWORD j = 0; j < bins; j++) {
-            TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + (24 * (size_t)j)));
-            out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues.Get()[j]));
+            TempStr s = ToUtf8Temp(WStr(binNameValues + (24 * (size_t)j)));
+            out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues[j]));
         }
     }
 
@@ -226,19 +226,19 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     DWORD papers = DeviceCapabilitiesW(nameW, portW, DC_PAPERS, nullptr, nullptr);
     DWORD paperNames = DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, nullptr, nullptr);
     if (papers > 0 && papers != (DWORD)-1) {
-        ScopedMem<WORD> paperValues(AllocArray<WORD>((int)papers));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr);
+        WORD* paperValues = AllocArrayTemp<WORD>((int)papers);
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues, nullptr);
         // paper names are 64 WCHARs each
-        ScopedMem<WCHAR> paperNameValues(AllocArray<WCHAR>(64 * (int)paperNames));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues.Get(), nullptr);
+        WCHAR* paperNameValues = AllocArrayTemp<WCHAR>(64 * (int)paperNames);
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues, nullptr);
         // paper sizes in tenths of a millimeter
-        ScopedMem<POINT> paperSizes(AllocArray<POINT>((int)papers));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr);
+        POINT* paperSizes = AllocArrayTemp<POINT>((int)papers);
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes, nullptr);
         out.Append("  paper sizes:\n");
         for (DWORD j = 0; j < papers; j++) {
-            TempStr s = ToUtf8Temp(WStr(paperNameValues.Get() + (64 * (size_t)j)));
-            POINT sz = paperSizes.Get()[j];
-            out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0));
+            TempStr s = ToUtf8Temp(WStr(paperNameValues + (64 * (size_t)j)));
+            POINT sz = paperSizes[j];
+            out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues[j], sz.x / 10.0, sz.y / 10.0));
         }
     }
 
@@ -279,12 +279,12 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     // resolutions
     DWORD nRes = DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, nullptr, nullptr);
     if (nRes > 0 && nRes != (DWORD)-1) {
-        ScopedMem<LONG> resPairs(AllocArray<LONG>(2 * (int)nRes));
-        DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr);
+        LONG* resPairs = AllocArrayTemp<LONG>(2 * (int)nRes);
+        DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs, nullptr);
         out.Append("  resolutions:");
         for (DWORD j = 0; j < nRes; j++) {
-            LONG xDpi = resPairs.Get()[(size_t)j * 2];
-            LONG yDpi = resPairs.Get()[(j * 2) + 1];
+            LONG xDpi = resPairs[(size_t)j * 2];
+            LONG yDpi = resPairs[(j * 2) + 1];
             out.Append(fmt(" %dx%d", (int)xDpi, (int)yDpi));
         }
         out.Append("\n");
@@ -293,11 +293,11 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     // N-up (pages per sheet)
     DWORD nup = DeviceCapabilitiesW(nameW, portW, DC_NUP, nullptr, nullptr);
     if (nup > 0 && nup != (DWORD)-1) {
-        ScopedMem<DWORD> nupValues(AllocArray<DWORD>((int)nup));
-        DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr);
+        DWORD* nupValues = AllocArrayTemp<DWORD>((int)nup);
+        DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues, nullptr);
         out.Append("  pages per sheet (N-up):");
         for (DWORD j = 0; j < nup; j++) {
-            out.Append(fmt(" %d", (int)nupValues.Get()[j]));
+            out.Append(fmt(" %d", (int)nupValues[j]));
         }
         out.Append("\n");
     }
@@ -306,14 +306,14 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     DWORD nMedia = DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, nullptr, nullptr);
     if (nMedia > 0 && nMedia != (DWORD)-1) {
         // media type names are 64 WCHARs each
-        ScopedMem<WCHAR> mediaNames(AllocArray<WCHAR>(64 * (int)nMedia));
-        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames.Get(), nullptr);
-        ScopedMem<DWORD> mediaValues(AllocArray<DWORD>((int)nMedia));
-        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
+        WCHAR* mediaNames = AllocArrayTemp<WCHAR>(64 * (int)nMedia);
+        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames, nullptr);
+        DWORD* mediaValues = AllocArrayTemp<DWORD>((int)nMedia);
+        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues, nullptr);
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
-            TempStr s = ToUtf8Temp(WStr(mediaNames.Get() + (64 * (size_t)j)));
-            out.Append(fmt("    '%s' (%d)\n", s, (int)mediaValues.Get()[j]));
+            TempStr s = ToUtf8Temp(WStr(mediaNames + (64 * (size_t)j)));
+            out.Append(fmt("    '%s' (%d)\n", s, (int)mediaValues[j]));
         }
     }
 }
@@ -483,7 +483,7 @@ Printer* NewPrinter(Str printerName) {
         printer->nPaperSizes = (int)n;
         int paperNameSize = 64;
         printer->papers = AllocArray<WORD>((int)n);
-        WCHAR* paperNamesSeq = AllocArray<WCHAR>((paperNameSize * (int)n) + 1);
+        WCHAR* paperNamesSeq = AllocArrayTemp<WCHAR>((paperNameSize * (int)n) + 1);
         printer->paperSizes = AllocArray<POINT>((int)n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
@@ -494,7 +494,6 @@ Printer* NewPrinter(Str printerName) {
             TempStr name = ToUtf8Temp(WStr(paperNamesSeq + ((size_t)i * paperNameSize)));
             printer->paperNames.Append(name);
         }
-        free(paperNamesSeq);
     }
 
     {
@@ -509,14 +508,13 @@ Printer* NewPrinter(Str printerName) {
         if (n > 0) {
             int binNameSize = 24;
             printer->bins = AllocArray<WORD>((int)n);
-            WCHAR* binNamesSeq = AllocArray<WCHAR>((binNameSize * (int)n) + 1);
+            WCHAR* binNamesSeq = AllocArrayTemp<WCHAR>((binNameSize * (int)n) + 1);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             for (int i = 0; i < (int)n; i++) {
                 TempStr name = ToUtf8Temp(WStr(binNamesSeq + ((size_t)i * binNameSize)));
                 printer->binNames.Append(name);
             }
-            free(binNamesSeq);
         }
     }
 
