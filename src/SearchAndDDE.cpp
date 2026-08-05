@@ -1202,6 +1202,9 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
     }
 }
 
+static void CancelPendingFind(MainWindow* win);
+static bool JoinFindThread(MainWindow* win, bool hideMessage);
+
 // navigate to a match chosen from the floating results list and select it, so
 // Find Next/Prev and the n/m counter continue from there
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph) {
@@ -1219,13 +1222,16 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     if (!win->AsFixed()) {
         return;
     }
-    // join any in-flight find/count worker first: we're about to mutate
-    // dm->textSearch and read engine page text on the UI thread, which must not
-    // race a background thread doing the same (mupdf text extraction isn't
-    // reentrant, and textSearch is shared state). skip the join when idle so
-    // stepping through the floating results list stays responsive.
-    if (win->findThread || win->findCountThread || win->findDebouncePending) {
-        AbortFinding(win, true);
+    // Join an in-flight interactive find first: it drives dm->textSearch, which
+    // we're about to mutate. Deliberately not AbortFinding(): the counting scan
+    // has its own TextSearch and reads page text through the engine's locked
+    // text cache, so picking a match doesn't have to stop the rest of the
+    // document from being searched - that only happens when the find window is
+    // closed. Skip the join when idle so stepping through the floating results
+    // list stays responsive.
+    if (win->findThread || win->findDebouncePending) {
+        CancelPendingFind(win);
+        JoinFindThread(win, true);
     }
     DisplayModel* dm = win->AsFixed();
     TextSearch* ts = dm->textSearch;
@@ -1361,19 +1367,25 @@ static void FindThread(FindThreadData* ftd) {
 }
 
 // returns true if did abort a thread or hidden the notification
-bool AbortFinding(MainWindow* win, bool hideMessage) {
-    bool res = false;
-    // cancel any pending debounced find-as-you-type search
-    if (win->findDebouncePending) {
-        win->findDebouncePending = false;
-        if (win->hwndFrame) {
-            KillTimer(win->hwndFrame, kFindDebounceTimerId);
-        }
+// cancel a pending debounced find-as-you-type search
+static void CancelPendingFind(MainWindow* win) {
+    if (!win->findDebouncePending) {
+        return;
     }
-    AbortCount(win);
+    win->findDebouncePending = false;
+    if (win->hwndFrame) {
+        KillTimer(win->hwndFrame, kFindDebounceTimerId);
+    }
+}
+
+// join the interactive find worker, which drives dm->textSearch. Leaves a
+// counting scan running: that one has its own TextSearch, so only callers that
+// mean to stop searching the document need AbortFinding()
+static bool JoinFindThread(MainWindow* win, bool hideMessage) {
+    bool res = false;
     if (win->findThread) {
         res = true;
-        logf("AboftFinding: setting win->findCancelled to true\n");
+        logf("JoinFindThread: setting win->findCancelled to true\n");
         win->findCancelled = true;
         WaitForSingleObject(win->findThread, INFINITE);
         win->findThread = nullptr;
@@ -1387,6 +1399,12 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
         }
     }
     return res;
+}
+
+bool AbortFinding(MainWindow* win, bool hideMessage) {
+    CancelPendingFind(win);
+    AbortCount(win);
+    return JoinFindThread(win, hideMessage);
 }
 
 // wasModified
