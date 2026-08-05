@@ -333,7 +333,7 @@ struct AdvancedSettingsWnd : Wnd {
     Vec<SettingItem*> items;
 
     bool Create(MainWindow* win);
-    bool PreTranslateMessage(MSG&) override;
+    bool PreTranslateMessage(MSG& msg) override;
     void OnSize(UINT msg, UINT type, Size size) override;
     void AdvanceFocus(bool forward);
 
@@ -989,13 +989,13 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
 // following WM_DESTROY never reaches onDestroy - leaving gAdvancedSettingsWnd
 // dangling and blocking reopen. CloseEvent::didHandle defaults to true, so
 // returning from here skips that default Destroy().
-static void OnClose(Wnd::CloseEvent*) {
+static void OnClose(Wnd::CloseEvent* /*ev*/) {
     if (gAdvancedSettingsWnd) {
         gAdvancedSettingsWnd->ScheduleDelete();
     }
 }
 
-static void OnDestroy(Wnd::DestroyEvent*) {
+static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
     if (gAdvancedSettingsWnd) {
         gAdvancedSettingsWnd->ScheduleDelete();
     }
@@ -1007,7 +1007,7 @@ static int gAdvSettingsLastClientDx = 0;
 static int gAdvSettingsLastClientDy = 0;
 
 // re-layout the controls when the (resizable) window is resized
-void AdvancedSettingsWnd::OnSize(UINT, UINT, Size size) {
+void AdvancedSettingsWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
     // before the child controls exist; ignore layout until they're created
     if (!layout || !listBox) {

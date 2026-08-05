@@ -442,7 +442,7 @@ static void UpdateAIChatPanelForCurrentTab(MainWindow* win) {
     LayoutAIChatBox(win);
 }
 
-static void SetAIChatWorking(MainWindow* win, bool) {
+static void SetAIChatWorking(MainWindow* win, bool /*working*/) {
     UpdateAIChatPanelForCurrentTab(win);
 }
 
@@ -746,7 +746,8 @@ static void SendAIChatMessage(MainWindow* win) {
 
 // --- WndProcs ---
 
-static LRESULT CALLBACK WndProcAIChatInput(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR data) {
+static LRESULT CALLBACK WndProcAIChatInput(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
+                                           DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
     if (msg == WM_KEYDOWN && wp == VK_RETURN && !IsShiftPressed()) {
         SendAIChatMessage(win);
@@ -757,7 +758,8 @@ static LRESULT CALLBACK WndProcAIChatInput(HWND hwnd, UINT msg, WPARAM wp, LPARA
 
 static void CloseAIChatPanelFromLabel(MainWindow* win);
 
-static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR data) {
+static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
+                                         DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
     if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);

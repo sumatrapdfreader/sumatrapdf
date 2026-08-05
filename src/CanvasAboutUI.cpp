@@ -47,7 +47,7 @@ static void OnPaintAbout(MainWindow* win) {
     }
 }
 
-static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // lf("Left button clicked on %d %d", x, y);
 
     // remember a link under so that on mouse up we only activate
@@ -78,7 +78,7 @@ static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
     TrackMouseEvent(&tme);
 }
 
-static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // a click on the thumbnail's ✕ close button removes the file instead of
     // opening it
     if (HomePageOnCloseButtonClick(win, x, y)) {
@@ -145,13 +145,13 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     // HwndSetFocus(win->hwndFrame);
 }
 
-static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // lf("Right button clicked on %d %d", x, y);
     HwndSetFocus(win->hwndFrame);
     win->dragStart = Point(x, y);
 }
 
-static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
     int isDrag = IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (isDrag) {
         return;

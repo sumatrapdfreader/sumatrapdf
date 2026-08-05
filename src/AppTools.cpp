@@ -413,7 +413,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
 // selects all text in an edit box if it's selected either
 // through a keyboard shortcut or a non-selecting mouse click
 // (or responds to Ctrl+Backspace as nowadays expected)
-bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
+bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM /*lp*/) {
     static bool delayFocus = false;
 
     switch (msg) {

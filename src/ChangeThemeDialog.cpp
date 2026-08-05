@@ -38,7 +38,7 @@ struct ChangeThemeWnd : Wnd {
     DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
-    bool PreTranslateMessage(MSG&) override;
+    bool PreTranslateMessage(MSG& msg) override;
 
     void UpdateTheme();
     void OnSelectionChanged();
@@ -200,13 +200,13 @@ bool ChangeThemeWnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-static void OnClose(Wnd::CloseEvent*) {
+static void OnClose(Wnd::CloseEvent* /*ev*/) {
     if (gChangeThemeWnd) {
         gChangeThemeWnd->OnCancel();
     }
 }
 
-static void OnDestroy(Wnd::DestroyEvent*) {
+static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
     if (gChangeThemeWnd) {
         gChangeThemeWnd->ScheduleDelete();
     }

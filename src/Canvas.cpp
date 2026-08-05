@@ -101,7 +101,7 @@ class TextDropSource : public IDropSource {
         }
         return S_OK;
     }
-    STDMETHODIMP GiveFeedback(__unused DWORD) override { return DRAGDROP_S_USEDEFAULTCURSORS; }
+    STDMETHODIMP GiveFeedback(__unused DWORD dwEffect) override { return DRAGDROP_S_USEDEFAULTCURSORS; }
 };
 
 // Drop source that paints a proportional thumbnail via ImageList_BeginDrag
@@ -173,7 +173,7 @@ class ImageDropSource : public IDropSource {
         }
         return S_OK;
     }
-    STDMETHODIMP GiveFeedback(__unused DWORD) override {
+    STDMETHODIMP GiveFeedback(__unused DWORD dwEffect) override {
         if (dragStarted) {
             Point pt = GetCursorPosition();
             ImageList_DragMove(pt.x, pt.y);
@@ -326,24 +326,29 @@ class TextDataObject : public IDataObject {
         pMedium->pUnkForRelease = nullptr;
         return S_OK;
     }
-    STDMETHODIMP GetDataHere(__unused FORMATETC*, __unused STGMEDIUM*) override { return E_NOTIMPL; }
+    STDMETHODIMP GetDataHere(__unused FORMATETC* pFE, __unused STGMEDIUM* pMed) override { return E_NOTIMPL; }
     STDMETHODIMP QueryGetData(FORMATETC* pFE) override {
         if (pFE->cfFormat == CF_UNICODETEXT && (pFE->tymed & TYMED_HGLOBAL)) {
             return S_OK;
         }
         return DV_E_FORMATETC;
     }
-    STDMETHODIMP GetCanonicalFormatEtc(__unused FORMATETC*, FORMATETC* pOut) override {
+    STDMETHODIMP GetCanonicalFormatEtc(__unused FORMATETC* pIn, FORMATETC* pOut) override {
         pOut->ptd = nullptr;
         return E_NOTIMPL;
     }
-    STDMETHODIMP SetData(__unused FORMATETC*, __unused STGMEDIUM*, __unused BOOL) override { return E_NOTIMPL; }
-    STDMETHODIMP EnumFormatEtc(__unused DWORD, __unused IEnumFORMATETC**) override { return E_NOTIMPL; }
-    STDMETHODIMP DAdvise(__unused FORMATETC*, __unused DWORD, __unused IAdviseSink*, __unused DWORD*) override {
+    STDMETHODIMP SetData(__unused FORMATETC* pFE, __unused STGMEDIUM* pMed, __unused BOOL fRelease) override {
         return E_NOTIMPL;
     }
-    STDMETHODIMP DUnadvise(__unused DWORD) override { return E_NOTIMPL; }
-    STDMETHODIMP EnumDAdvise(__unused IEnumSTATDATA**) override { return E_NOTIMPL; }
+    STDMETHODIMP EnumFormatEtc(__unused DWORD dwDirection, __unused IEnumFORMATETC** ppEnum) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP DAdvise(__unused FORMATETC* pFE, __unused DWORD advf, __unused IAdviseSink* pAdvSink,
+                         __unused DWORD* pdwConn) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP DUnadvise(__unused DWORD dwConn) override { return E_NOTIMPL; }
+    STDMETHODIMP EnumDAdvise(__unused IEnumSTATDATA** ppEnumAdvise) override { return E_NOTIMPL; }
 };
 
 static bool IsPointInSelection(MainWindow* win, Point pt) {
@@ -593,13 +598,15 @@ class ImageDataObject : public IDataObject {
 
         return DV_E_FORMATETC;
     }
-    STDMETHODIMP GetDataHere(__unused FORMATETC*, __unused STGMEDIUM*) override { return E_NOTIMPL; }
+    STDMETHODIMP GetDataHere(__unused FORMATETC* pFE, __unused STGMEDIUM* pMed) override { return E_NOTIMPL; }
     STDMETHODIMP QueryGetData(FORMATETC* pFE) override { return QueryFormatSupported(pFE) ? S_OK : DV_E_FORMATETC; }
-    STDMETHODIMP GetCanonicalFormatEtc(__unused FORMATETC*, FORMATETC* pOut) override {
+    STDMETHODIMP GetCanonicalFormatEtc(__unused FORMATETC* pIn, FORMATETC* pOut) override {
         pOut->ptd = nullptr;
         return E_NOTIMPL;
     }
-    STDMETHODIMP SetData(__unused FORMATETC*, __unused STGMEDIUM*, __unused BOOL) override { return E_NOTIMPL; }
+    STDMETHODIMP SetData(__unused FORMATETC* pFE, __unused STGMEDIUM* pMed, __unused BOOL fRelease) override {
+        return E_NOTIMPL;
+    }
     STDMETHODIMP EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppEnum) override {
         if (!ppEnum) {
             return E_POINTER;
@@ -610,11 +617,12 @@ class ImageDataObject : public IDataObject {
         *ppEnum = new SimpleEnumFormatEtc(fmts, fmtCount);
         return S_OK;
     }
-    STDMETHODIMP DAdvise(__unused FORMATETC*, __unused DWORD, __unused IAdviseSink*, __unused DWORD*) override {
+    STDMETHODIMP DAdvise(__unused FORMATETC* pFE, __unused DWORD advf, __unused IAdviseSink* pAdvSink,
+                         __unused DWORD* pdwConn) override {
         return E_NOTIMPL;
     }
-    STDMETHODIMP DUnadvise(__unused DWORD) override { return E_NOTIMPL; }
-    STDMETHODIMP EnumDAdvise(__unused IEnumSTATDATA**) override { return E_NOTIMPL; }
+    STDMETHODIMP DUnadvise(__unused DWORD dwConn) override { return E_NOTIMPL; }
+    STDMETHODIMP EnumDAdvise(__unused IEnumSTATDATA** ppEnumAdvise) override { return E_NOTIMPL; }
 };
 
 // Longest edge of the proportional drag-out thumbnail (logical px; DPI-scaled).
@@ -1314,7 +1322,7 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
 // Forward declaration
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
-static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
     DisplayModel* dm = win->AsFixed();
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
     if (!dm) return;
@@ -2049,7 +2057,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     }
 }
 
-static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
+static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // Handle message by recording placement then moving document as mouse moves.
 
     switch (win->mouseAction) {
@@ -2090,7 +2098,7 @@ void StartAutoScrollAtCursor(MainWindow* win) {
     ToggleAutoScroll(win, pt.x, pt.y);
 }
 
-static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM) {
+static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM /*key*/) {
     switch (win->mouseAction) {
         case MouseAction::Scrolling:
             if (!win->dragStartPending) {
@@ -2162,7 +2170,7 @@ static void OnMouseRightButtonDblClick(MainWindow* win, int x, int y, WPARAM key
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE 1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation, COLORREF) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation, COLORREF /*bgCol*/) {
     // Frame info
     Rect frame = bounds;
     frame.Inflate(BORDER_SIZE, BORDER_SIZE);
@@ -2197,7 +2205,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool, COLORREF bgCol) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& /*pageRect*/, bool /*presentation*/, COLORREF bgCol) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
     AutoDeleteBrush brush(CreateSolidBrush(bgCol));
     ScopedSelectPen restorePen(hdc, pen);
