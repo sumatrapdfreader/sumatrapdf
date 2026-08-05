@@ -381,7 +381,15 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #if defined(DEBUG)
 #define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #else
-#define ReportDebugIf(cond)
+// In release the check is gone, but the condition must still be *read*, or a
+// variable whose only consumer is a ReportDebugIf looks unused: the compiler
+// warns and clang-analyzer-deadcode.DeadStores reports a dead store, tempting
+// someone to "clean up" the variable and delete the debug assert with it.
+// Passing it to an empty inline function is a real read that costs nothing --
+// the call and the (side-effect-free) condition both optimize away.
+inline void ReportDebugIfNoOp(bool) {
+}
+#define ReportDebugIf(cond) ReportDebugIfNoOp(!!(cond))
 #endif
 
 /* Logging macros are defined here but must be implemented by the app because different apps have different logging
