@@ -342,7 +342,7 @@ CLSID GetGdiPlusEncoderClsid(WStr format) {
     if (ok != Ok || 0 == size) {
         return null;
     }
-    ScopedMem<Gdiplus::ImageCodecInfo> codecInfo((Gdiplus::ImageCodecInfo*)malloc(size));
+    auto* codecInfo = (Gdiplus::ImageCodecInfo*)AllocTemp((int)size);
     if (!codecInfo) {
         return null;
     }

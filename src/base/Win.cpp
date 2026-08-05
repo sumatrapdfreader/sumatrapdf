@@ -1247,9 +1247,8 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
 }
 
 TempStr ResolveLnkTemp(Str path) {
-    WStr pathW = ToWStr(path);
-    ScopedMem<OLECHAR> olePath(pathW.s);
-    if (!olePath) {
+    TempWStr pathW = ToWStrTemp(path);
+    if (!pathW.s) {
         return nullptr;
     }
 
@@ -1263,7 +1262,7 @@ TempStr ResolveLnkTemp(Str path) {
         return nullptr;
     }
 
-    HRESULT hRes = file->Load(olePath, STGM_READ);
+    HRESULT hRes = file->Load(pathW.s, STGM_READ);
     if (FAILED(hRes)) {
         return nullptr;
     }

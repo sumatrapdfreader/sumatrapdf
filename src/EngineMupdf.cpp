@@ -1403,11 +1403,11 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
     int stride = ((w + 3) / 4) * 4;
 
     size_t sz = sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD));
-    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sz));
-    if (!bmi.Get()) {
+    auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>((int)sz);
+    if (!bmi) {
         return nullptr;
     }
-    BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;
+    BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
     bmih->biSize = sizeof(*bmih);
     bmih->biWidth = w;
     bmih->biHeight = -h;
@@ -1427,7 +1427,7 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
         return nullptr;
     }
 
-    u32* palette = (u32*)bmi.Get()->bmiColors;
+    u32* palette = (u32*)bmi->bmiColors;
 
     // open-addressed hash table for color -> palette index lookup.
     // key is RGB in source byte order (R | G<<8 | B<<16); empty slot = -1.
@@ -1548,7 +1548,7 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
         }
     }
 
-    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD))));
+    auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(sizeofi(BITMAPINFO) + (255 * sizeofi(RGBQUAD)));
 
     fz_pixmap* bgrPixmap = nullptr;
     fz_colorspace* csdest = nullptr;
@@ -1582,7 +1582,7 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     int imgSize = (int)bgrPixmap->stride * h;
     int bitsCount = n * 8;
 
-    BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;
+    BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
     bmih->biSize = sizeof(*bmih);
     bmih->biWidth = w;
     bmih->biHeight = -h;
