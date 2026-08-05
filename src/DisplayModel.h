@@ -194,6 +194,7 @@ struct DisplayModel : DocController {
     void CopyNavHistory(DisplayModel& orig);
 
     void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, Size viewPort, int screenDPI);
+    void SetUiDpi(int dpi);
     void SetDisplayR2L(bool r2l);
     bool GetDisplayR2L() const;
     bool GoToPageHorizontal(bool toRight);
@@ -238,8 +239,10 @@ struct DisplayModel : DocController {
     /* total size of view port (draw area), including scroll bars */
     Size totalViewPortSize;
 
+    // WindowMargin / PageSpacing settings scaled to uiDpi (see SetUiDpi)
     WindowMargin windowMargin;
     Size pageSpacing;
+    int uiDpi = 96;
 
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor

@@ -386,7 +386,7 @@ bool LoadSettings() {
     setMin(gprefs->tocDy, 0);
     setMin(gprefs->treeFontSize, 0);
     if (gprefs->toolbarSize == 0) {
-        gprefs->toolbarSize = 18; // same as kDefaultIconSize in Toolbar.cpp
+        gprefs->toolbarSize = 18; // same as the ToolbarSize default in gen-settings.ts
     }
     setMinMax(gprefs->toolbarSize, 8, 64);
     setMinMax(gprefs->annotations.freeTextOpacity, 0, 100);

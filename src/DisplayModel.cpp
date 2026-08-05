@@ -447,24 +447,41 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
     ReportIf(!engine || engine->PageCount() <= 0);
     engineType = engine->kind;
 
-    if (!engine->IsImageCollection()) {
-        windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
-        pageSpacing = gGlobalPrefs->fixedPageUI.pageSpacing;
-    } else {
-        windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
-        pageSpacing = gGlobalPrefs->comicBookUI.pageSpacing;
-    }
-#ifdef DRAW_PAGE_SHADOWS
-    windowMargin.top += 3;
-    windowMargin.bottom += 5;
-    windowMargin.right += 3;
-    windowMargin.left += 1;
-    pageSpacing.dx += 4;
-    pageSpacing.dy += 4;
-#endif
+    SetUiDpi(96);
 
     textSelection = new TextSelection(engine);
     textSearch = new TextSearch(engine);
+}
+
+// WindowMargin and PageSpacing are screen-space sizes written by the user at
+// 100% scaling, so they have to be scaled to the dpi of the window showing the
+// document. Called again from the WM_DPICHANGED path so moving the window to a
+// monitor with different scaling re-scales them (the caller relayouts).
+void DisplayModel::SetUiDpi(int dpi) {
+    if (dpi <= 0) {
+        dpi = 96;
+    }
+    uiDpi = dpi;
+    WindowMargin m;
+    Size sp;
+    if (!engine->IsImageCollection()) {
+        m = gGlobalPrefs->fixedPageUI.windowMargin;
+        sp = gGlobalPrefs->fixedPageUI.pageSpacing;
+    } else {
+        m = gGlobalPrefs->comicBookUI.windowMargin;
+        sp = gGlobalPrefs->comicBookUI.pageSpacing;
+    }
+    auto scale = [dpi](int n) -> int { return MulDiv(n, dpi, 96); };
+    windowMargin = {scale(m.top), scale(m.right), scale(m.bottom), scale(m.left)};
+    pageSpacing = {scale(sp.dx), scale(sp.dy)};
+#ifdef DRAW_PAGE_SHADOWS
+    windowMargin.top += scale(3);
+    windowMargin.bottom += scale(5);
+    windowMargin.right += scale(3);
+    windowMargin.left += scale(1);
+    pageSpacing.dx += scale(4);
+    pageSpacing.dy += scale(4);
+#endif
 }
 
 DisplayModel::~DisplayModel() {

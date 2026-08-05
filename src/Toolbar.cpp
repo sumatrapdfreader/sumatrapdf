@@ -1351,19 +1351,14 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
     return hbmp;
 }
 
-constexpr int kDefaultIconSize = 18;
-
 static int SetToolbarIconsImageList(MainWindow* win) {
     HWND hwndToolbar = win->hwndToolbar;
     HWND hwndParent = GetParent(hwndToolbar);
 
     // we call it ToolbarSize for users, but it's really size of the icon
     // toolbar size is iconSize + padding (seems to be 6)
-    int iconSize = gGlobalPrefs->toolbarSize;
-    if (iconSize == kDefaultIconSize) {
-        // scale if default size
-        iconSize = DpiScale(hwndParent, iconSize);
-    }
+    // the setting is a size at 100% scaling, so it's scaled to the window's dpi
+    int iconSize = DpiScale(hwndParent, gGlobalPrefs->toolbarSize);
     // icon sizes must be multiple of 4 or else they are sheared
     // TODO: I must be doing something wrong, any size should be ok
     // it might be about size of buttons / bitmaps

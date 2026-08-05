@@ -2069,6 +2069,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             if (dpi <= 0) {
                 dpi = DpiGetForHwnd(win->hwndFrame);
             }
+            // WindowMargin / PageSpacing follow the window's dpi, not the
+            // (physical-size) CustomScreenDPI used for zoom
+            dm->SetUiDpi(win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame));
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
             if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
@@ -6447,6 +6450,12 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
         UpdateTabWidth(win);
     }
     ApplySidebarDpiFonts(win, dpi);
+
+    // window margin / page spacing are dpi-scaled, so they change too
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        dm->SetUiDpi(dpi);
+    }
 
     win->uiState.layout = {};
     RelayoutFrame(win, true, -1);

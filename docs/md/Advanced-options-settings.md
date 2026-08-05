@@ -49,8 +49,9 @@ DisableJavaScript = false
 ; for security (matches Acrobat) (introduced in version 3.7)
 AllowExternalImages = false
 
-; if true, we expose the SyncTeX inverse search command line in Settings ->
-; Options
+; if true, show the SyncTeX inverse search command line in Settings -> Options,
+; so a double-click in the document can jump to the matching line in a LaTeX
+; editor
 EnableTeXEnhancements = false
 
 ; if true, Esc key closes SumatraPDF
@@ -67,14 +68,17 @@ InverseSearchCmdLine =
 ; (introduced in version 3.6)
 LazyLoading = false
 
-; background color of the non-document windows, traditionally yellow
+; background color of the area around the document, traditionally yellow. Only
+; applies to the Light theme; the default #80fff200 is a marker meaning "use the
+; theme's color", so setting any other value also colorizes the toolbar and
+; sidebars
 MainWindowBackground = #80fff200
 
 ; if true, doesn't open Home tab
 NoHomeTab = false
 
-; if true implements pre-3.6 behavior of showing opened files by frequently used
-; count. If false, shows most recently opened first
+; if true, the home page lists documents by how often they've been opened (the
+; pre-3.6 behavior); if false, the most recently opened come first
 HomePageSortByFrequentlyRead = false
 
 ; Valid values: thumbnails, list (introduced in version 3.7)
@@ -162,7 +166,8 @@ ShowTocPageNumbers = true
 ; loaded
 ShowStartPage = true
 
-; width of favorites/bookmarks sidebar (if shown)
+; width of the favorites / bookmarks sidebar in screen pixels, as last resized
+; (0 means the default)
 SidebarDx = 0
 
 ; scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar
@@ -206,7 +211,7 @@ FastScrollOverScrollbar = false
 ; presentation mode
 PreventSleepInFullscreen = true
 
-; maximum width of a single tab
+; maximum width of a single tab, in pixels at 100% display scaling (at least 60)
 TabWidth = 300
 
 ; Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized
@@ -233,27 +238,29 @@ LastDarkTheme =
 ; 3.7)
 DocumentColorsFollowTheme = off
 
-; if both favorites and bookmarks parts of sidebar are visible, this is the
-; height of bookmarks (table of contents) part
+; if both the favorites and the bookmarks part of the sidebar are visible, this
+; is the height of the bookmarks (table of contents) part, in screen pixels
 TocDy = 0
 
-; height of toolbar (introduced in version 3.4)
+; size of the toolbar icons in pixels at 100% display scaling (8-64); the
+; toolbar itself is a few pixels taller (introduced in version 3.4)
 ToolbarSize = 18
 
 ; font name for bookmarks and favorites tree views. automatic means Windows
 ; default
 TreeFontName = automatic
 
-; font size for bookmarks and favorites tree views. 0 means Windows default
-; (introduced in version 3.3)
+; font size for bookmarks and favorites tree views, in pixels; 0 means the
+; Windows default. Not scaled by the display scaling (introduced in version 3.3)
 TreeFontSize = 0
 
-; over-ride application font size. 0 means Windows default (introduced in
+; overrides the font size used for menus, toolbar and dialogs, in pixels; 0
+; means the Windows default. Not scaled by the display scaling (introduced in
 ; version 3.6)
 UIFontSize = 0
 
-; if true, disables anti-aliasing for rendering PDF documents (introduced in
-; version 3.6)
+; if true, render MuPDF-based documents (PDF, XPS, DjVu, EPUB etc.) without
+; anti-aliasing, giving sharper but jagged edges (introduced in version 3.6)
 DisableAntiAlias = false
 
 ; CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is
@@ -264,8 +271,8 @@ EngineeringDrawingEnhance = auto
 ; (introduced in version 3.7)
 DisableAutoLinks = false
 
-; if true, we use Windows system colors for background/text color. Over-rides
-; other settings
+; if true, use the Windows system colors for the document background and text.
+; Overrides other color settings
 UseSysColors = false
 
 ; if true, documents are opened in tabs instead of new windows (introduced in
@@ -285,16 +292,17 @@ TabsMru = false
 ; and 6400
 ZoomLevels = 
 
-; zoom step size in percents relative to the current zoom level. if zero or
-; negative, the values from ZoomLevels are used instead
+; how much a single zoom in / zoom out step changes the zoom, as a percentage of
+; the current zoom level. If 0 or negative, zooming steps through ZoomLevels
+; instead
 ZoomIncrement = 0
 
 ; customization options for PDF, XPS, DjVu and PostScript UI
 FixedPageUI [
-    ; color value with which black (text) will be substituted
+    ; color used instead of black for the document's text
     TextColor = #000000
 
-    ; color value with which white (background) will be substituted
+    ; color used instead of white for the document's page background
     BackgroundColor = #ffffff
 
     ; color value for the text selection rectangle (also used to highlight found
@@ -311,11 +319,11 @@ FixedPageUI [
     ; modes
     PageSpacing = 4 4
 
-    ; colors to use for the gradient from top to bottom (stops will be inserted
-    ; at regular intervals throughout the document); currently only up to three
-    ; colors are supported; the idea behind this experimental feature is that
-    ; the background might allow to subconsciously determine reading progress;
-    ; suggested values: #2828aa #28aa28 #aa2828
+    ; experimental: instead of a single background color, fade through these
+    ; colors from the top of the document to the bottom (stops are spread
+    ; evenly, at most 3 colors). The shifting background is meant to give a
+    ; subconscious sense of reading progress. Suggested values: #2828aa #28aa28
+    ; #aa2828
     GradientColors =
 
     ; if given, sets the canvas background color for PDF files (introduced in
@@ -323,21 +331,24 @@ FixedPageUI [
     WindowBgCol = 
 ]
 
-; customization options for eBookUI
+; customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)
 EBookUI [
-    ; font size, default 8.0
+    ; font size in points; 0 means the default (8.0)
     FontSize = 0
 
-    ; default is 420
+    ; width of the page the ebook is laid out into, in points (not screen
+    ; pixels); 0 means the default (420)
     LayoutDx = 0
 
-    ; default is 595
+    ; height of the page the ebook is laid out into, in points (not screen
+    ; pixels); 0 means the default (595)
     LayoutDy = 0
 
-    ; if true, we ignore ebook's CSS
+    ; if true, the CSS in the ebook is ignored and only CustomCSS applies
     IgnoreDocumentCSS = false
 
-    ; custom CSS. Might need to set IgnoreDocumentCSS = true
+    ; additional CSS applied to ebooks; set IgnoreDocumentCSS = true if the
+    ; document's own CSS overrides it
     CustomCSS =
 
     ; if given, sets the canvas background color for ebook documents (epub, mobi
@@ -469,22 +480,25 @@ TranslateEngine =
 
 ; default values for annotations in PDF documents (introduced in version 3.3)
 Annotations [
-    ; highlight annotation color
+    ; color of newly created highlight annotations
     HighlightColor = #ffff00
 
-    ; underline annotation color
+    ; color of newly created underline annotations
     UnderlineColor = #00ff00
 
-    ; squiggly annotation color (introduced in version 3.5)
+    ; color of newly created squiggly underline annotations (introduced in
+    ; version 3.5)
     SquigglyColor = #ff00ff
 
-    ; strike out annotation color (introduced in version 3.5)
+    ; color of newly created strike out annotations (introduced in version 3.5)
     StrikeOutColor = #ff0000
 
-    ; text color of free text annotation (introduced in version 3.5)
+    ; text color of newly created free text annotations (introduced in version
+    ; 3.5)
     FreeTextColor = 
 
-    ; background color of free text annotation (introduced in version 3.6)
+    ; background color of newly created free text annotations (introduced in
+    ; version 3.6)
     FreeTextBackgroundColor = 
 
     ; opacity of free text annotation in percent (0-100); 0 - fully transparent
@@ -492,21 +506,23 @@ Annotations [
     ; version 3.6)
     FreeTextOpacity = 100
 
-    ; size of free text annotation (introduced in version 3.5)
+    ; font size of free text annotations, in points (introduced in version 3.5)
     FreeTextSize = 12
 
-    ; width of free text annotation border (introduced in version 3.5)
+    ; border width of free text annotations, in points (introduced in version
+    ; 3.5)
     FreeTextBorderWidth = 1
 
-    ; text icon annotation color
+    ; color of newly created text (sticky note) annotations
     TextIconColor = 
 
-    ; type of text annotation icon: comment, help, insert, key, new paragraph,
-    ; note, paragraph. If not set: note.
+    ; icon shown for text (sticky note) annotations: comment, help, insert, key,
+    ; new paragraph, note or paragraph. If not set, note is used
     TextIconType = 
 
-    ; default author for created annotations, use (none) to not add an author at
-    ; all. If not set will use Windows user name (introduced in version 3.4)
+    ; author recorded on newly created annotations. If not set, the Windows user
+    ; name is used; set it to (none) to leave the author out entirely
+    ; (introduced in version 3.4)
     DefaultAuthor = 
 ]
 
@@ -542,19 +558,20 @@ ExternalViewers [
 ; customization options for how we show forward search results (used from LaTeX
 ; editors)
 ForwardSearch [
-    ; when set to a positive value, the forward search highlight style will be
-    ; changed to a rectangle at the left of the page (with the indicated amount
-    ; of margin from the page margin)
+    ; if greater than 0, the forward search result is marked with a bar down the
+    ; left side of the page instead of highlighting the matched text. The value
+    ; is how far the bar sits from the left edge of the page, in document units
     HighlightOffset = 0
 
-    ; width of the highlight rectangle (if HighlightOffset is > 0)
+    ; width of that bar in document units (only used when HighlightOffset is
+    ; greater than 0)
     HighlightWidth = 15
 
     ; color used for the forward search highlight
     HighlightColor = #6581ff
 
-    ; if true, highlight remains visible until the next mouse click (instead of
-    ; fading away immediately)
+    ; if true, the highlight stays visible until the next mouse click instead of
+    ; fading away after a few seconds
     HighlightPermanent = false
 ]
 
@@ -603,7 +620,7 @@ SelectionHandlers [
 ; custom keyboard shortcuts
 Shortcuts [
   [
-    ; command
+    ; command to run, e.g. CmdOpenFile. See the list of commands (https://www.sumatrapdfreader.org/docs/Commands)
     Cmd = 
 
     ; keyboard shortcut (e.g. Ctrl-Alt-F)
@@ -624,52 +641,62 @@ Shortcuts [
 ; color themes (introduced in version 3.6)
 Themes [
   [
-    ; name of the theme
+    ; name of the theme, as shown in the Settings / Theme menu
     Name = 
 
-    ; text color
+    ; color of text in menus, toolbar, tabs and sidebars
     TextColor = 
 
-    ; background color
+    ; background color of the window around the document
     BackgroundColor = 
 
-    ; control background color
+    ; background color of toolbar, tabs, sidebars and dialogs
     ControlBackgroundColor = 
 
-    ; link color
+    ; color of clickable links in the UI
     LinkColor = 
 
-    ; disabled / grayed text color (introduced in version 3.7)
+    ; color of disabled (grayed out) text; if empty, derived from the colors
+    ; above (introduced in version 3.7)
     DisabledTextColor = 
 
-    ; secondary / muted text color (introduced in version 3.7)
+    ; color of secondary / muted text like the page label; if empty, derived
+    ; from the colors above (introduced in version 3.7)
     DarkerTextColor = 
 
-    ; hovered control background color (introduced in version 3.7)
+    ; background color of a control the mouse is over; if empty, derived from
+    ; the colors above (introduced in version 3.7)
     HotBackgroundColor = 
 
-    ; control border / edge color (introduced in version 3.7)
+    ; color of control borders and separators; if empty, derived from the colors
+    ; above (introduced in version 3.7)
     EdgeColor = 
 
-    ; hovered control border color (introduced in version 3.7)
+    ; border color of a control the mouse is over; if empty, derived from the
+    ; colors above (introduced in version 3.7)
     HotEdgeColor = 
 
-    ; disabled control border color (introduced in version 3.7)
+    ; border color of a disabled control; if empty, derived from the colors
+    ; above (introduced in version 3.7)
     DisabledEdgeColor = 
 
-    ; error background color (introduced in version 3.7)
+    ; background color of error messages; if empty, derived from the colors
+    ; above (introduced in version 3.7)
     ErrorBackgroundColor = 
 
-    ; notification tip background color (introduced in version 3.7)
+    ; background color of notification tips; if empty, derived from the colors
+    ; above (introduced in version 3.7)
     NotificationBackgroundColor = 
 
-    ; notification tip highlight background color (introduced in version 3.7)
+    ; background color of a highlighted notification tip; if empty, derived from
+    ; the colors above (introduced in version 3.7)
     NotificationHighlightColor = 
 
-    ; notification tip highlight text color (introduced in version 3.7)
+    ; text color of a highlighted notification tip; if empty, derived from the
+    ; colors above (introduced in version 3.7)
     NotificationHighlightTextColor = 
 
-    ; should we colorize Windows controls and window areas
+    ; if true, apply the theme colors to Windows controls and window areas too
     ColorizeControls = false
   ]
 ]
@@ -677,21 +704,22 @@ Themes [
 ; saved groups of tabs (introduced in version 3.7)
 TabGroups [
   [
-    ; name of the tab group
+    ; name of the tab group, as shown when restoring it
     Name = 
 
-    ; files in the tab group
+    ; documents that belong to this tab group
     TabFiles [
       [
-        ; file path
+        ; path of the document
         Path = 
       ]
     ]
   ]
 ]
 
-; actual resolution of the main screen in DPI (if this value isn't positive, the
-; system's UI setting is used) (introduced in version 2.5)
+; actual resolution of the main screen in DPI, used to show documents at their
+; physical size; if 0 or negative, the resolution reported by Windows is used
+; (introduced in version 2.5)
 CustomScreenDPI = 0
 
 ; a whitespace separated list of passwords to try when opening a password
@@ -721,7 +749,7 @@ FileStates [
     ; path of the document
     FilePath =
 
-    ; Values which are persisted for bookmarks/favorites
+    ; pages of this document bookmarked in the Favorites menu
     Favorites [
       [
         ; name of this favorite as shown in the menu
@@ -786,7 +814,8 @@ FileStates [
     ; the document
     ShowToc = true
 
-    ; width of the left sidebar panel containing the table of contents
+    ; width of the left sidebar (table of contents / favorites) in screen
+    ; pixels, as last resized
     SidebarDx = 0
 
     ; if true, the document is displayed right-to-left in facing and book view
@@ -820,16 +849,18 @@ SessionData [
         ; path of the document
         FilePath =
 
-        ; same as FileStates -> DisplayMode
+        ; layout of pages in this tab. valid values: automatic, single page,
+        ; facing, book view, continuous, continuous facing, continuous book view
         DisplayMode = automatic
 
         ; number of the last read page
         PageNo = 1
 
-        ; same as FileStates -> Zoom
+        ; zoom (in %) or one of those values: fit page, fit width, fit height,
+        ; fit content
         Zoom = fit page
 
-        ; same as FileStates -> Rotation
+        ; how far pages have been rotated as a multiple of 90 degrees
         Rotation = 0
 
         ; how far this document has been scrolled (in x and y direction)
@@ -838,7 +869,8 @@ SessionData [
         ; if true, the table of contents was shown when the document was closed
         ShowToc = true
 
-        ; same as FileStates -> TocState
+        ; which table of contents items were expanded (see FileStates ->
+        ; TocState)
         TocState =
       ]
     ]
@@ -846,13 +878,15 @@ SessionData [
     ; index of the currently selected tab (1-based)
     TabIndex = 1
 
-    ; same as FileState -> WindowState
+    ; state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is
+    ; minimized
     WindowState = 0
 
-    ; default position (can be on any monitor)
+    ; position of the window (can be on any monitor)
     WindowPos = 0 0 0 0
 
-    ; width of favorites/bookmarks sidebar (if shown)
+    ; width of the favorites / bookmarks sidebar in screen pixels (0 if it
+    ; wasn't shown)
     SidebarDx = 0
   ]
 ]
