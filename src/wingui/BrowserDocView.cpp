@@ -589,12 +589,8 @@ void BrowserDocView::SetScrollPos(Point pos) {
     if (pos.x < 0 && pos.y < 0) {
         return;
     }
-    if (pos.x < 0) {
-        pos.x = 0;
-    }
-    if (pos.y < 0) {
-        pos.y = 0;
-    }
+    pos.x = std::max(pos.x, 0);
+    pos.y = std::max(pos.y, 0);
     if (backend == Backend::WebView2 && wv) {
         TempStr js = fmt("window.scrollTo(%d, %d);", pos.x, pos.y);
         wv->Eval(js);

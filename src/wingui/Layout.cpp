@@ -1195,9 +1195,7 @@ int TableLayout::MinIntrinsicHeight(int width) {
             }
             // Uses full table width per cell; column widths are not modeled yet.
             int h = el->MinIntrinsicHeight(width);
-            if (h > maxRowHeight) {
-                maxRowHeight = h;
-            }
+            maxRowHeight = std::max(h, maxRowHeight);
         }
         minHeight += maxRowHeight;
     }
@@ -1216,9 +1214,7 @@ int TableLayout::MinIntrinsicWidth(int height) {
             }
             // Uses full table height per cell; row heights are not modeled yet.
             int h = el->MinIntrinsicWidth(height);
-            if (h > maxColWidth) {
-                maxColWidth = h;
-            }
+            maxColWidth = std::max(h, maxColWidth);
         }
         minWidth += maxColWidth;
     }

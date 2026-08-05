@@ -165,21 +165,13 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     int bottomBound = mi.rcWork.bottom;
     Rect pr = s->pending.pageScreenRect;
     if (pr.dy > 0) {
-        if (pr.y > topBound) {
-            topBound = pr.y;
-        }
-        if (pr.y + pr.dy < bottomBound) {
-            bottomBound = pr.y + pr.dy;
-        }
+        topBound = std::max(pr.y, topBound);
+        bottomBound = std::min(pr.y + pr.dy, bottomBound);
     }
     int boundW = rightBound - leftBound;
     int boundH = bottomBound - topBound;
-    if (popupW > boundW) {
-        popupW = boundW;
-    }
-    if (popupH > boundH) {
-        popupH = boundH;
-    }
+    popupW = std::min(popupW, boundW);
+    popupH = std::min(popupH, boundH);
 
     int pageCenterX = (pr.dx > 0) ? (pr.x + (pr.dx / 2)) : screenPt.x;
     int anchorX = pageCenterX;
@@ -209,15 +201,11 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         }
         y = screenPt.y - popupH - cursorPad;
     }
-    if (x < leftBound) {
-        x = leftBound;
-    }
+    x = std::max(x, leftBound);
     if (x + popupW > rightBound) {
         x = rightBound - popupW;
     }
-    if (y < topBound) {
-        y = topBound;
-    }
+    y = std::max(y, topBound);
     if (y + popupH > bottomBound) {
         popupH = bottomBound - y;
     }
@@ -317,9 +305,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
             page--;
             mediabox = engine->PageMediabox(page);
             newY = mediabox.dy - region.dy - overflow;
-            if (newY < 0.f) {
-                newY = 0.f;
-            }
+            newY = std::max(newY, 0.f);
         } else {
             newY = 0.f;
         }
@@ -332,14 +318,10 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
             if (newY + region.dy > mediabox.dy) {
                 newY = mediabox.dy - region.dy;
             }
-            if (newY < 0.f) {
-                newY = 0.f;
-            }
+            newY = std::max(newY, 0.f);
         } else {
             newY = mediabox.dy - region.dy;
-            if (newY < 0.f) {
-                newY = 0.f;
-            }
+            newY = std::max(newY, 0.f);
         }
     }
 
@@ -347,9 +329,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         return false;
     }
     region.y = newY;
-    if (region.dy > mediabox.dy) {
-        region.dy = mediabox.dy;
-    }
+    region.dy = std::min(region.dy, mediabox.dy);
     if (region.x + region.dx > mediabox.dx) {
         region.x = mediabox.dx - region.dx;
         if (region.x < 0.f) {

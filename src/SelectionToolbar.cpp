@@ -188,12 +188,8 @@ static void StrokeRoundedRect(HDC hdc, const Rect& rc, int radius, COLORREF col)
 // HwndClientRect — because CreateWindow starts at 0x0 and client rect is still empty
 // until after SetWindowPos (a 1x1 region left the toolbar invisible).
 static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius, int dx, int dy) {
-    if (dx < 1) {
-        dx = 1;
-    }
-    if (dy < 1) {
-        dy = 1;
-    }
+    dx = std::max(dx, 1);
+    dy = std::max(dy, 1);
     int radius = DpiScale(hwnd, cornerRadius);
     HRGN rgn = CreateRoundRectRgn(0, 0, dx + 1, dy + 1, radius, radius);
     if (!SetWindowRgn(hwnd, rgn, TRUE)) {
@@ -229,9 +225,7 @@ static void LayoutToolbar(SelectionToolbar* tb) {
         int dy = s.dy + (2 * padY);
         b.rc = Rect(x, margin, dx, dy);
         x += dx + gap;
-        if (dy > maxDy) {
-            maxDy = dy;
-        }
+        maxDy = std::max(dy, maxDy);
     }
     if (n > 0) {
         x -= gap;
@@ -460,19 +454,11 @@ static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
     }
 
     int maxX = canvas.x + canvas.dx - w;
-    if (x > maxX) {
-        x = maxX;
-    }
-    if (x < canvas.x) {
-        x = canvas.x;
-    }
+    x = std::min(x, maxX);
+    x = std::max(x, canvas.x);
     int maxY = canvas.y + canvas.dy - h;
-    if (y > maxY) {
-        y = maxY;
-    }
-    if (y < canvas.y) {
-        y = canvas.y;
-    }
+    y = std::min(y, maxY);
+    y = std::max(y, canvas.y);
 
     Point p = HwndClientToScreen(win->hwndCanvas, Point(x, y));
     Rect placed(p.x, p.y, w, h);

@@ -73,9 +73,7 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     int tabDy = DpiScale(hwnd, kTabBarDy);
     HFONT hfont = GetAppFont(hwnd);
     int fontDyWithPadding = FontDyPx(hwnd, hfont) + DpiScale(hwnd, 2);
-    if (fontDyWithPadding > tabDy) {
-        tabDy = fontDyWithPadding;
-    }
+    tabDy = std::max(fontDyWithPadding, tabDy);
     // Guard against the bad per-window DPI Wine reports (93e5b4e47: the tab bar
     // and caption came out tiny). Wine only, deliberately: we are PerMonitorV2,
     // so DpiScale(HWND_DESKTOP) is the *system* (primary monitor) DPI, which
@@ -85,12 +83,8 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     if (IsRunningOnWine()) {
         int minDy = DpiScale(HWND_DESKTOP, kTabBarDy);
         int minFontDy = FontDyPx(hwnd, hfont) + DpiScale(HWND_DESKTOP, 2);
-        if (minFontDy > minDy) {
-            minDy = minFontDy;
-        }
-        if (tabDy < minDy) {
-            tabDy = minDy;
-        }
+        minDy = std::max(minFontDy, minDy);
+        tabDy = std::max(tabDy, minDy);
         int res = (int)((float)tabDy * factor);
         logf(
             "GetTabbarHeight: hwnd=%p factor=%g dpi=%d desktopDpi=%d tabDyScaled=%d fontDy=%d "
@@ -199,9 +193,7 @@ void RemoveTab(WindowTab* tab) {
     // select tab to the right or to the left if nothing to the right
     int newIdx = idx;
     int lastIdx = nTabs - 1;
-    if (newIdx > lastIdx) {
-        newIdx = lastIdx;
-    }
+    newIdx = std::min(newIdx, lastIdx);
     win->tabsCtrl->SetSelected(newIdx);
     tab = win->CurrentTab();
     // seen in crash report that tab was WindowTab::Type::None

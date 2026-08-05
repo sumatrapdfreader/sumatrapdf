@@ -1118,9 +1118,7 @@ bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
     WCHAR* prefixW = CWStrTemp(dstName);
     WCHAR prefix[4] = L"tmp";
     int prefixLen = (int)wcslen(prefixW);
-    if (prefixLen > 3) {
-        prefixLen = 3;
-    }
+    prefixLen = std::min(prefixLen, 3);
     for (int i = 0; i < prefixLen; i++) {
         prefix[i] = prefixW[i];
     }
@@ -1140,9 +1138,7 @@ bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
         return false;
     }
 
-    if (retryCount < 1) {
-        retryCount = 1;
-    }
+    retryCount = std::max(retryCount, 1);
     for (int i = 0; i < retryCount; i++) {
         BOOL ok = MoveFileExW(CWStrTemp(tempPath), CWStrTemp(dst), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
         if (ok) {

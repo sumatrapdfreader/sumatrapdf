@@ -402,9 +402,7 @@ static Str StartTagInner(Str raw, bool selfClosing) {
             end = slash;
         }
     }
-    if (end < start) {
-        end = start;
-    }
+    end = std::max(end, start);
     return Str(raw.s + start, end - start);
 }
 
@@ -548,12 +546,8 @@ HtmlToken* GumboHtmlParser::TokenFromEvent(Event& ev) {
 }
 
 void GumboHtmlParser::SetCurrPosOff(ptrdiff_t off) {
-    if (off < 0) {
-        off = 0;
-    }
-    if (off > html.len) {
-        off = html.len;
-    }
+    off = std::max<ptrdiff_t>(off, 0);
+    off = std::min<ptrdiff_t>(off, html.len);
 
     textStartOff = -1;
     eventIdx = (size_t)len(events);

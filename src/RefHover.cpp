@@ -103,9 +103,7 @@ void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs) {
         s->displayed.destPage = -1;
         return;
     }
-    if (delayMs < kRefHoverHideMinMs) {
-        delayMs = kRefHoverHideMinMs;
-    }
+    delayMs = std::max(delayMs, kRefHoverHideMinMs);
     SetTimer(hwndCanvas, kRefHoverHideTimerID, (UINT)delayMs, nullptr);
 }
 

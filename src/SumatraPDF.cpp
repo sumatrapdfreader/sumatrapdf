@@ -1084,9 +1084,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
     float zoom = (float)size.dx / (float)pageRect.dx;
-    if (pageRect.dy > (float)size.dy / zoom) {
-        pageRect.dy = (float)size.dy / zoom;
-    }
+    pageRect.dy = std::min(pageRect.dy, (float)size.dy / zoom);
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
 
     // always render thumbnails with anti-aliasing for quality
@@ -1129,9 +1127,7 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
     }
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
     float zoom = (float)kThumbnailDx / (float)pageRect.dx;
-    if (pageRect.dy > (float)kThumbnailDy / zoom) {
-        pageRect.dy = (float)kThumbnailDy / zoom;
-    }
+    pageRect.dy = std::min(pageRect.dy, (float)kThumbnailDy / zoom);
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
     RenderPageArgs args(1, zoom, 0, &pageRect);
     d->bmp = engine->RenderPage(args);
@@ -3896,12 +3892,8 @@ enum class MeasurementUnit {
 };
 
 static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, MeasurementUnit unit) {
-    if (pt.x < 0) {
-        pt.x = 0;
-    }
-    if (pt.y < 0) {
-        pt.y = 0;
-    }
+    pt.x = std::max(pt.x, 0.0f);
+    pt.y = std::max(pt.y, 0.0f);
     pt.x /= engine->GetFileDPI();
     pt.y /= engine->GetFileDPI();
 
@@ -11463,9 +11455,7 @@ static int ReadAloudFindChunkEnd(Str text, int start, int maxLen) {
     }
     if (end <= start) {
         end = start + maxLen;
-        if (end > textLen) {
-            end = textLen;
-        }
+        end = std::min(end, textLen);
     }
     return end;
 }

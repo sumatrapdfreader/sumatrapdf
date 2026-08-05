@@ -565,9 +565,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
     int menuId = CmdFavoriteFirst;
 
     int menusCount = len(filePathsSorted);
-    if (menusCount > MAX_FAV_MENUS) {
-        menusCount = MAX_FAV_MENUS;
-    }
+    menusCount = std::min(menusCount, MAX_FAV_MENUS);
 
     for (int i = 0; i < menusCount; i++) {
         Str filePath = filePathsSorted[i];

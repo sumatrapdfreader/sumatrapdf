@@ -161,9 +161,7 @@ Size Button::GetIdealSize() {
     int dx = sz.dx + DpiScale(hwnd, 2 * 12);
     int dy = sz.dy + DpiScale(hwnd, 2 * 5);
     int minDx = DpiScale(hwnd, 70);
-    if (dx < minDx) {
-        dx = minDx;
-    }
+    dx = std::max(dx, minDx);
     return {dx, dy};
 }
 

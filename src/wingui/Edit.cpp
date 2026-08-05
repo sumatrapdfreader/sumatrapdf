@@ -119,9 +119,7 @@ HWND Edit::Create(const CreateArgs& args) {
         cargs.style |= ES_AUTOHSCROLL;
     }
     idealSizeLines = args.idealSizeLines;
-    if (idealSizeLines < 1) {
-        idealSizeLines = 1;
-    }
+    idealSizeLines = std::max(idealSizeLines, 1);
     Wnd::CreateControl(cargs);
     if (!hwnd) {
         return nullptr;

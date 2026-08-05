@@ -31,9 +31,7 @@ HWND ListBox::Create(const CreateArgs& args) {
     cargs.isRtl = args.isRtl;
 
     idealSizeLines = args.idealSizeLines;
-    if (idealSizeLines < 0) {
-        idealSizeLines = 0;
-    }
+    idealSizeLines = std::max(idealSizeLines, 0);
     idealSize = {DpiScale(args.parent, 120), DpiScale(args.parent, 32)};
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles

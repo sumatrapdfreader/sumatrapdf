@@ -447,9 +447,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         } else {
             ReportIf(leftDy != el->leftPos.dy);
         }
-        if (leftLargestDx < el->leftPos.dx) {
-            leftLargestDx = el->leftPos.dx;
-        }
+        leftLargestDx = std::max(leftLargestDx, el->leftPos.dx);
     }
 
     /* calculate right text dimensions */
@@ -466,9 +464,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         } else {
             ReportIf(rightDy != el->rightPos.dy);
         }
-        if (rightLargestDx < el->rightPos.dx) {
-            rightLargestDx = el->rightPos.dx;
-        }
+        rightLargestDx = std::max(rightLargestDx, el->rightPos.dx);
     }
 
     int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
@@ -477,9 +473,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     /* calculate total dimension and position */
     Rect minRect;
     minRect.dx = leftRightSpaceDx + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + leftRightSpaceDx;
-    if (minRect.dx < headerSize.dx) {
-        minRect.dx = headerSize.dx;
-    }
+    minRect.dx = std::max(minRect.dx, headerSize.dx);
     minRect.dx += (2 * ABOUT_LINE_OUTER_SIZE) + (2 * marginDx);
 
     minRect.dy = headerSize.dy;
@@ -1466,9 +1460,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     int searchThumbsGap = DpiScale(hdc, kSearchThumbnailsGapY);
     {
         int borderDx = thumbsContentWidth * 3 / 4;
-        if (borderDx < DpiScale(hdc, 200)) {
-            borderDx = DpiScale(hdc, 200);
-        }
+        borderDx = std::max(borderDx, DpiScale(hdc, 200));
         int borderX = thumbsStartX + ((thumbsContentWidth - borderDx) / 2);
         int borderY = headerBottomY + headerSearchGap;
         int borderDy = searchEditDy + 2; // 1px border on each side
@@ -1581,9 +1573,7 @@ static void LayoutHomePage(HomePageLayout& l) {
                 rcFileName.x = rcSize.x + rcSize.dx + kHomeListRowGapDx;
                 rcFileName.dx = rcThumb.x - rcFileName.x - kHomeListRowGapDx;
             }
-            if (rcFileName.dx < 0) {
-                rcFileName.dx = 0;
-            }
+            rcFileName.dx = std::max(rcFileName.dx, 0);
             // rcFileName is the whole name+path span; MeasureHomeListRowText()
             // splits it when the row is first painted. Doing it here would
             // measure text for every history entry on every layout, and doing it
@@ -2311,13 +2301,9 @@ static void HomeSelectFromSearchReturnCol(MainWindow* win) {
         return;
     }
     int nCols = HomeGridColumnCount();
-    if (nCols < 1) {
-        nCols = 1;
-    }
+    nCols = std::max(nCols, 1);
     int col = win->homePageSearchReturnCol;
-    if (col < 0) {
-        col = 0;
-    }
+    col = std::max(col, 0);
     if (col >= nCols) {
         col = nCols - 1;
     }
@@ -2376,9 +2362,7 @@ static void HomeScrollSelectionIntoView(MainWindow* win) {
         return;
     }
     int newScrollY = win->homePageScrollY + dy;
-    if (newScrollY < 0) {
-        newScrollY = 0;
-    }
+    newScrollY = std::max(newScrollY, 0);
     win->homePageScrollY = newScrollY; // layout clamps against content height
     HomeSyncLayoutCacheScroll(win);
 }
@@ -2437,9 +2421,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     if (!HomePageIsListView()) {
         int n = len(c.thumbs);
         int nCols = HomeGridColumnCount();
-        if (nCols < 1) {
-            nCols = 1;
-        }
+        nCols = std::max(nCols, 1);
         int col = idx % nCols;
         int rowStart = idx - col;
         int lastInRow = rowStart + nCols - 1;
@@ -2625,9 +2607,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
             newScrollY = INT_MAX; // will be clamped by layout
             break;
     }
-    if (newScrollY < 0) {
-        newScrollY = 0;
-    }
+    newScrollY = std::max(newScrollY, 0);
     if (newScrollY != win->homePageScrollY) {
         win->homePageScrollY = newScrollY;
         HwndInvalidate(win->hwndCanvas);
@@ -2644,9 +2624,7 @@ void HomePageOnMouseWheel(MainWindow* win, int delta) {
         scrollBy = -scrollBy;
     }
     int newScrollY = win->homePageScrollY + scrollBy;
-    if (newScrollY < 0) {
-        newScrollY = 0;
-    }
+    newScrollY = std::max(newScrollY, 0);
     if (newScrollY != win->homePageScrollY) {
         win->homePageScrollY = newScrollY;
         HwndInvalidate(win->hwndCanvas);

@@ -97,9 +97,7 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     GetSystemInfo(&si);
     int numCores = (int)si.dwNumberOfProcessors;
     maxRenderThreads = std::max(gMaxRenderThreads, numCores);
-    if (maxRenderThreads > kMaxRenderThreads) {
-        maxRenderThreads = kMaxRenderThreads;
-    }
+    maxRenderThreads = std::min(maxRenderThreads, kMaxRenderThreads);
 
     // use a semaphore so each queued request wakes one thread.
     // threads themselves are spawned lazily in Render() when work appears
@@ -1140,9 +1138,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
     float zoom = dm->GetZoomReal(pageNo);
     USHORT targetRes = GetTileRes(dm, pageNo);
     USHORT maxRes = GetMaxTileRes(dm, pageNo, rotation);
-    if (maxRes < targetRes) {
-        maxRes = targetRes;
-    }
+    maxRes = std::max(maxRes, targetRes);
 
     Vec<TilePosition> queue;
     queue.Append(TilePosition(0, 0, 0));

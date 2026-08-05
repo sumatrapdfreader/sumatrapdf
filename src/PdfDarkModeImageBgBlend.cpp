@@ -276,12 +276,8 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
             maskW = (maskW * kMaxMaskDim) / maskH;
             maskH = kMaxMaskDim;
         }
-        if (maskW < 1) {
-            maskW = 1;
-        }
-        if (maskH < 1) {
-            maskH = 1;
-        }
+        maskW = std::max(maskW, 1);
+        maskH = std::max(maskH, 1);
     }
 
     int maskN = maskW * maskH;
@@ -333,22 +329,12 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
                 fz_convert_color(ctx, rgb, outRgb, cs, back, cs, fz_default_color_params);
                 for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
                     int vpx = (int)lroundf(back[c] * 255.f);
-                    if (vpx < 0) {
-                        vpx = 0;
-                    }
-                    if (vpx > 255) {
-                        vpx = 255;
-                    }
+                    vpx = limitValue(vpx, 0, 255);
                     px[c] = (unsigned char)vpx;
                 }
                 if (dst->alpha) {
                     int av = (int)lroundf(a * fgConf * 255.f);
-                    if (av < 0) {
-                        av = 0;
-                    }
-                    if (av > 255) {
-                        av = 255;
-                    }
+                    av = limitValue(av, 0, 255);
                     px[components] = (unsigned char)av;
                 }
             }

@@ -254,9 +254,7 @@ int Utf8CodepointPrev(Str s, int& byteIdx) {
     if (!s || byteIdx <= 0) {
         return 0;
     }
-    if (byteIdx > s.len) {
-        byteIdx = s.len;
-    }
+    byteIdx = std::min(byteIdx, s.len);
     int prevByte = byteIdx - 1;
     while (prevByte > 0 && (((u8)s.s[prevByte] & 0xc0) == 0x80)) {
         prevByte--;
@@ -295,9 +293,7 @@ Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
     if (!s || nCodepoints <= 0) {
         return {};
     }
-    if (startCodepoint < 0) {
-        startCodepoint = 0;
-    }
+    startCodepoint = std::max(startCodepoint, 0);
     int startByte = Utf8CodepointToByteIndex(s, startCodepoint);
     int endByte = Utf8AdvanceCodepoints(s, startByte, nCodepoints);
     return Str(s.s + startByte, endByte - startByte);
@@ -326,9 +322,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
             return s;
         }
         int keep = maxRunes - 3;
-        if (keep < 0) {
-            keep = 0;
-        }
+        keep = std::max(keep, 0);
         char* ret = AllocArrayTemp<char>(keep + 4);
         memcpy(ret, s.s, keep);
         ret[keep] = '.';
@@ -341,9 +335,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         return s;
     }
     int keep = maxRunes - 3;
-    if (keep < 0) {
-        keep = 0;
-    }
+    keep = std::max(keep, 0);
     char* ret = AllocArrayTemp<char>((maxRunes * 4) + 1);
     int src = 0;
     int tmp = 0;

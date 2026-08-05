@@ -287,12 +287,8 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
         w.x = x;
         w.y = y;
         x += w.dx + spaceWidth;
-        if (x - spaceWidth > maxX) {
-            maxX = x - spaceWidth;
-        }
-        if (w.dy > lineHeight) {
-            lineHeight = w.dy;
-        }
+        maxX = std::max(x - spaceWidth, maxX);
+        lineHeight = std::max(w.dy, lineHeight);
     }
     tip.totalDx = maxX - startX;
     tip.totalDy = (y - startY) + lineHeight;

@@ -38,9 +38,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         float resolved = RefHoverResolveDestYFromSourceText(engine, s->pending.srcPage, s->pending.srcRect, destPage);
         if (resolved >= 0.f) {
             destY = resolved;
-            if (destX < 0.f) {
-                destX = 0.f;
-            }
+            destX = std::max(destX, 0.f);
         }
     }
 
@@ -104,9 +102,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         if (GetMonitorInfoW(hmon, &mi)) {
             int monW = mi.rcWork.right - mi.rcWork.left;
             int dyn = monW * 95 / 100;
-            if (dyn > popupWCap) {
-                popupWCap = dyn;
-            }
+            popupWCap = std::max(dyn, popupWCap);
         }
     }
     // Combined content extent (region stacked above continuation, if any) used
@@ -122,18 +118,14 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         int spaceAbove = curY - pr.y - cursorPad;
         int spaceBelow = (pr.y + pr.dy) - curY - cursorPad;
         int maxSpace = (spaceAbove > spaceBelow) ? spaceAbove : spaceBelow;
-        if (maxSpace < 0) {
-            maxSpace = 0;
-        }
+        maxSpace = std::max(maxSpace, 0);
         int pageBased = pr.dy * 75 / 100;
         popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
     } else {
         popupHCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupHeight);
         if (s->pending.pageScreenRect.dy > 0) {
             int pageBased = s->pending.pageScreenRect.dy * 45 / 100;
-            if (pageBased < popupHCap) {
-                popupHCap = pageBased;
-            }
+            popupHCap = std::min(pageBased, popupHCap);
         }
     }
     int border = DpiScale(s->hwndPopup, kRefHoverBorder);
@@ -144,18 +136,10 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         float wantH = availH / baseZoom;
         float maxW = mediabox.dx - region.x;
         float maxH = mediabox.dy - region.y;
-        if (wantW > maxW) {
-            wantW = maxW;
-        }
-        if (wantH > maxH) {
-            wantH = maxH;
-        }
-        if (wantW < 1.f) {
-            wantW = 1.f;
-        }
-        if (wantH < 1.f) {
-            wantH = 1.f;
-        }
+        wantW = std::min(wantW, maxW);
+        wantH = std::min(wantH, maxH);
+        wantW = std::max(wantW, 1.f);
+        wantH = std::max(wantH, 1.f);
         region.dx = wantW;
         region.dy = wantH;
     } else {
@@ -166,9 +150,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             baseZoom = availW / contentDx;
         }
     }
-    if (baseZoom < kRefHoverMinUserZoom) {
-        baseZoom = kRefHoverMinUserZoom;
-    }
+    baseZoom = std::max(baseZoom, kRefHoverMinUserZoom);
     s->displayed.baseZoom = baseZoom;
 
     RefHoverState::RenderRequest req;

@@ -269,16 +269,12 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
     // center underlay height on the glyph height (labelRect can be taller than
     // the font, which made yellow bars spill into neighboring rows)
     int textTop = labelRect.y + ((labelRect.dy - sizeFull.dy) / 2);
-    if (textTop < labelRect.y) {
-        textTop = labelRect.y;
-    }
+    textTop = std::max(textTop, labelRect.y);
     int textBottom = textTop + sizeFull.dy;
     if (textBottom > labelRect.y + labelRect.dy) {
         textBottom = labelRect.y + labelRect.dy;
         textTop = textBottom - sizeFull.dy;
-        if (textTop < labelRect.y) {
-            textTop = labelRect.y;
-        }
+        textTop = std::max(textTop, labelRect.y);
     }
 
     // clear label so we do not stack on top of the control's text

@@ -1833,12 +1833,8 @@ static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative,
     int nonClientDy = RectDy(wi.rcWindow) - RectDy(wi.rcClient);
     int maxClientDx = work.dx - nonClientDx;
     int maxClientDy = work.dy - nonClientDy;
-    if (size.dx > maxClientDx) {
-        size.dx = maxClientDx;
-    }
-    if (size.dy > maxClientDy) {
-        size.dy = maxClientDy;
-    }
+    size.dx = std::min(size.dx, maxClientDx);
+    size.dy = std::min(size.dy, maxClientDy);
 }
 
 void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus focus) {

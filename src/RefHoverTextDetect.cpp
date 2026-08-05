@@ -37,12 +37,8 @@ static Rect GlyphSpanBounds(const Rect* coords, int textLen, int startIdx, int e
             dy = r.dy;
             any = true;
         }
-        if (r.x < xMin) {
-            xMin = r.x;
-        }
-        if (r.x + r.dx > xMax) {
-            xMax = r.x + r.dx;
-        }
+        xMin = std::min(r.x, xMin);
+        xMax = std::max(r.x + r.dx, xMax);
     }
     if (!any) {
         return {};
@@ -387,9 +383,7 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
-        if (coords[i].x < leftX) {
-            leftX = coords[i].x;
-        }
+        leftX = std::min(coords[i].x, leftX);
     }
     if (leftX == INT_MAX) {
         return false;
@@ -703,9 +697,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         int val = 0;
         while (k < closePos && iswdigit(text.s[seq[k]])) {
             val = (val * 10) + (text.s[seq[k]] - L'0');
-            if (val > 99999) {
-                val = 99999; // guard against pathological runs
-            }
+            val = std::min(val, 99999); // guard against pathological runs
             k++;
         }
         int end = k - 1;
@@ -735,18 +727,10 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
             if (r.dx <= 0 && r.dy <= 0) {
                 continue;
             }
-            if (r.x < xMin) {
-                xMin = r.x;
-            }
-            if (r.y < sMinY) {
-                sMinY = r.y;
-            }
-            if (r.x + r.dx > xMax) {
-                xMax = r.x + r.dx;
-            }
-            if (r.y + r.dy > sMaxY) {
-                sMaxY = r.y + r.dy;
-            }
+            xMin = std::min(r.x, xMin);
+            sMinY = std::min(r.y, sMinY);
+            xMax = std::max(r.x + r.dx, xMax);
+            sMaxY = std::max(r.y + r.dy, sMaxY);
         }
         *srcRectOut = (xMin != INT_MAX) ? Rect{xMin, sMinY, xMax - xMin, sMaxY - sMinY} : Rect{};
     }

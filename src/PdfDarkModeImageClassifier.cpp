@@ -79,16 +79,10 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
 
         int blockW = pix->w / kGridBlocks;
         int blockH = pix->h / kGridBlocks;
-        if (blockW < 1) {
-            blockW = 1;
-        }
-        if (blockH < 1) {
-            blockH = 1;
-        }
+        blockW = std::max(blockW, 1);
+        blockH = std::max(blockH, 1);
         int samplesPerBlock = (blockW * blockH > 0) ? (kMaxImageSamples / (kGridBlocks * kGridBlocks)) + 1 : 1;
-        if (samplesPerBlock < 1) {
-            samplesPerBlock = 1;
-        }
+        samplesPerBlock = std::max(samplesPerBlock, 1);
 
         float blockLum[kGridBlocks * kGridBlocks] = {};
         int blockCount[kGridBlocks * kGridBlocks] = {};
@@ -234,12 +228,7 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
             }
             borderVar /= (float)borderN;
             outFeatures->borderUniformity = 1.f - (borderVar / 0.12f);
-            if (outFeatures->borderUniformity < 0.f) {
-                outFeatures->borderUniformity = 0.f;
-            }
-            if (outFeatures->borderUniformity > 1.f) {
-                outFeatures->borderUniformity = 1.f;
-            }
+            outFeatures->borderUniformity = limitValue(outFeatures->borderUniformity, 0.f, 1.f);
         }
     }
     fz_always(ctx) {

@@ -48,9 +48,7 @@ static fz_matrix CadEmboldenTinyTextMatrix(fz_matrix ctm, bool hairlineDoc) {
         boost = 1.55f;
     } else {
         boost = 1.f + ((0.22f - expansion) * 2.5f);
-        if (boost > 1.55f) {
-            boost = 1.55f;
-        }
+        boost = std::min(boost, 1.55f);
     }
     return fz_concat(ctm, fz_scale(boost, boost));
 }
@@ -61,12 +59,7 @@ static float CadEnhanceBlendForExpansion(float expansion) {
         expansion = 1.f;
     }
     float blend = (0.84f - expansion) / 0.60f;
-    if (blend < 0.f) {
-        blend = 0.f;
-    }
-    if (blend > 1.f) {
-        blend = 1.f;
-    }
+    blend = limitValue(blend, 0.f, 1.f);
     return blend;
 }
 
@@ -93,9 +86,7 @@ static void CadAcrobatGrayRgb(float r, float g, float b, float* outR, float* out
         return;
     }
     float t = (lum - 0.50f) / 0.32f;
-    if (t > 1.f) {
-        t = 1.f;
-    }
+    t = std::min(t, 1.f);
     float targetLum = 0.15f + (t * 0.21f);
     if (targetLum >= lum || lum < 0.0001f) {
         *outR = r;
@@ -369,9 +360,7 @@ void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool raste
 
     float expansion = zoom > 0.01f ? 1.f / zoom : 1.f;
     float blend = CadEnhanceBlendForExpansion(expansion);
-    if (blend < 0.55f) {
-        blend = 0.55f;
-    }
+    blend = std::max(blend, 0.55f);
 
     unsigned char* s = pix->samples;
     int n = pix->n;
@@ -410,19 +399,13 @@ void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool raste
 
 static float CadMinLineWidthForZoom(float zoom, bool hairlineDoc) {
     float z = zoom;
-    if (z < 0.20f) {
-        z = 0.20f;
-    }
+    z = std::max(z, 0.20f);
     // Device pixels. Hairline CAD needs a modest floor; avoid double-boosting with stroke rewrites.
     float minLw = hairlineDoc ? (0.50f + (0.55f / z)) : (0.14f + (0.38f / z));
     float maxLw = hairlineDoc ? 1.25f : 0.62f;
     float minFloor = hairlineDoc ? 0.50f : 0.14f;
-    if (minLw > maxLw) {
-        minLw = maxLw;
-    }
-    if (minLw < minFloor) {
-        minLw = minFloor;
-    }
+    minLw = std::min(minLw, maxLw);
+    minLw = std::max(minLw, minFloor);
     return minLw;
 }
 

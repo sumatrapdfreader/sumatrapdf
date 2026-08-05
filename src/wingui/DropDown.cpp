@@ -135,8 +135,6 @@ Size DropDown::GetIdealSize() {
     int dyPad = DpiScale(hwnd, 4);
     int dy = s1.dy + dyPad;
     Rect rc = HwndWindowRect(hwnd);
-    if (rc.dy > dy) {
-        dy = rc.dy;
-    }
+    dy = std::max(rc.dy, dy);
     return {dx, dy};
 }

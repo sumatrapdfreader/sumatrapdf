@@ -649,9 +649,7 @@ static void AlignPropertiesText(str::Builder& text) {
         int lineLen = nl >= 0 ? nl : rest.len;
         int labelBytes = 0;
         int labelWidth = GetPropertyLabelWidth(Str(rest.s, lineLen), &labelBytes);
-        if (labelWidth > maxLabelWidth) {
-            maxLabelWidth = labelWidth;
-        }
+        maxLabelWidth = std::max(labelWidth, maxLabelWidth);
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
     if (maxLabelWidth == 0) {
@@ -721,9 +719,7 @@ void PropertiesWnd::SizeToContent() {
         int nl = str::IndexOfChar(rest, '\n');
         int lineLen = nl >= 0 ? nl : rest.len;
         Size size = HdcGetTextExtentPoint32(hdcEdit, Str(rest.s, lineLen));
-        if (size.dx > maxLineDx) {
-            maxLineDx = size.dx;
-        }
+        maxLineDx = std::max(size.dx, maxLineDx);
         nLines++;
         off += lineLen + (nl >= 0 ? 1 : 0);
     }

@@ -1019,9 +1019,7 @@ bool LooksLikeTiffExif(const u8* p, int n) {
 bool CopyTiffBlob(const u8* data, int n, int tiffOff, Str& out, u8** ownedOut) {
     int blobLen = n - tiffOff;
     constexpr int kMaxExifBytes = 256 * 1024;
-    if (blobLen > kMaxExifBytes) {
-        blobLen = kMaxExifBytes;
-    }
+    blobLen = std::min(blobLen, kMaxExifBytes);
     u8* copy = (u8*)malloc((size_t)blobLen);
     if (!copy) {
         return false;

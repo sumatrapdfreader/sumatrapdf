@@ -1718,13 +1718,9 @@ Size HwndLimitSizeToScreen(HWND hwnd, Size size) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
     }
     int dx = RectDx(mi.rcWork);
-    if (size.dx > dx) {
-        size.dx = dx;
-    }
+    size.dx = std::min(size.dx, dx);
     int dy = RectDy(mi.rcWork);
-    if (size.dy > dy) {
-        size.dy = dy;
-    }
+    size.dy = std::min(size.dy, dy);
     return size;
 }
 

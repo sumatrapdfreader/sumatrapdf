@@ -309,20 +309,12 @@ static void SelectAndEnsureVisible(ListBox* lb, int idx) {
     }
     Rect client = HwndClientRect(lb->hwnd);
     int visible = client.dy / itemH;
-    if (visible < 1) {
-        visible = 1;
-    }
+    visible = std::max(visible, 1);
     int top = idx - visible / 2;
-    if (top < 0) {
-        top = 0;
-    }
+    top = std::max(top, 0);
     int maxTop = n - visible;
-    if (maxTop < 0) {
-        maxTop = 0;
-    }
-    if (top > maxTop) {
-        top = maxTop;
-    }
+    maxTop = std::max(maxTop, 0);
+    top = std::min(top, maxTop);
     LbSetTopIndex(lb->hwnd, top);
 }
 
@@ -678,12 +670,8 @@ static void NavFreeSpaceBeside(HWND hwndMain, int* freeLeftOut, int* freeRightOu
     Rect work = GetWorkAreaRect(main, hwndMain);
     *freeLeftOut = main.x - work.x;
     *freeRightOut = (work.x + work.dx) - (main.x + main.dx);
-    if (*freeLeftOut < 0) {
-        *freeLeftOut = 0;
-    }
-    if (*freeRightOut < 0) {
-        *freeRightOut = 0;
-    }
+    *freeLeftOut = std::max(*freeLeftOut, 0);
+    *freeRightOut = std::max(*freeRightOut, 0);
 }
 
 // pick docked client size when there is enough free space beside the main window.
@@ -721,12 +709,8 @@ static bool NavDockedClientSize(HWND hwnd, HWND hwndMain, int* clientDxOut, int*
     int clientDy = outerDy - chrome.dy;
     int minClientDx = DpiScale(hwndMain, kNavMinClientDx);
     int minClientDy = DpiScale(hwndMain, kNavMinClientDy);
-    if (clientDx < minClientDx) {
-        clientDx = minClientDx;
-    }
-    if (clientDy < minClientDy) {
-        clientDy = minClientDy;
-    }
+    clientDx = std::max(clientDx, minClientDx);
+    clientDy = std::max(clientDy, minClientDy);
     *clientDxOut = clientDx;
     *clientDyOut = clientDy;
     *placeLeftOut = placeLeft;
@@ -885,9 +869,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     if (!docked) {
         auto rc = HwndClientRect(mainWin->hwndFrame);
         dy = rc.dy - DpiScale(hwnd, kNavFallbackMainDyMargin);
-        if (dy < DpiScale(hwnd, kNavFallbackMinDy)) {
-            dy = DpiScale(hwnd, kNavFallbackMinDy);
-        }
+        dy = std::max(dy, DpiScale(hwnd, kNavFallbackMinDy));
         dx = limitValue(rc.dx - DpiScale(hwnd, kNavFallbackMainDxMargin), DpiScale(hwnd, kNavFallbackMinDx),
                         DpiScale(hwnd, kNavFallbackMaxDx));
     }

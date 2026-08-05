@@ -60,9 +60,7 @@ static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
     }
 
     u64 available = current->cmt - pos;
-    if (available > 0x7fffffff) {
-        available = 0x7fffffff;
-    }
+    available = std::min<u64>(available, 0x7fffffff);
     *bufSizeOut = (int)available;
     return (char*)current + pos;
 }
@@ -141,12 +139,8 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     arena->nAllocsLifetime++;
     arena->nAllocsSinceReset++;
     u64 used = current->base_pos + posPost;
-    if (used > arena->peakBytesLifetime) {
-        arena->peakBytesLifetime = used;
-    }
-    if (used > arena->peakBytesSinceReset) {
-        arena->peakBytesSinceReset = used;
-    }
+    arena->peakBytesLifetime = std::max(used, arena->peakBytesLifetime);
+    arena->peakBytesSinceReset = std::max(used, arena->peakBytesSinceReset);
 
     if (sizeToZero) {
         memset(result, 0, (size_t)sizeToZero);
@@ -483,9 +477,7 @@ void* Realloc(Arena* arena, void* mem, size_t newSize, size_t copySize) {
         // Arena bump allocations can end up adjacent to (and overlapping) the
         // old block; memmove handles that. copySize is the caller's used bytes.
         size_t n = copySize;
-        if (n > newSize) {
-            n = newSize;
-        }
+        n = std::min(n, newSize);
         memmove(newMem, mem, n);
     }
     return newMem;
@@ -574,12 +566,8 @@ NO_INLINE bool VecRealloc(Arena* a, void** els, int len, int* cap, int newCap, i
     }
 
     int keep = len;
-    if (keep < 0) {
-        keep = 0;
-    }
-    if (keep > newCap) {
-        keep = newCap;
-    }
+    keep = std::max(keep, 0);
+    keep = std::min(keep, newCap);
     int oldSize = keep * elSize;
     int allocSize = newElCount * elSize;
 

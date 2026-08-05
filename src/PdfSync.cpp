@@ -408,9 +408,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
 
     *line = (int)found->line;
     *col = (int)found->column;
-    if (*col < 0) {
-        *col = 0;
-    }
+    *col = std::max(*col, 0);
 
     return PDFSYNCERR_SUCCESS;
 }
@@ -864,9 +862,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
 
     *line = synctex_node_line(node);
     *col = synctex_node_column(node);
-    if (*col < 0) {
-        *col = 0;
-    }
+    *col = std::max(*col, 0);
 
     return PDFSYNCERR_SUCCESS;
 }

@@ -121,9 +121,7 @@ void TabsCtrl::LayoutTabs() {
         }
         int y = (dy - ti->titleSize.dy) / 2;
         // logfa("  ti->titleSize.dy: %d\n", ti->titleSize.dy);
-        if (y < 0) {
-            y = 0;
-        }
+        y = std::max(y, 0);
         if (isRtl) {
             ti->titlePos = {xEnd + dx - 2 - ti->titleSize.dx, y};
         } else {
@@ -312,9 +310,7 @@ void TabsCtrl::Paint(HDC hdc, const Rect& rc) {
             int dotX = (int)(bounds.X + bounds.Width) + dotRadius;
             // clamp to not exceed the text area
             int maxX = (int)(rTxt.X + rTxt.Width) - (dotRadius * 2);
-            if (dotX > maxX) {
-                dotX = maxX;
-            }
+            dotX = std::min(dotX, maxX);
             int dotY = ti->r.y + ((ti->r.dy - (dotRadius * 2)) / 2);
             SolidBrush redBr(Color(255, 0xEE, 0x22, 0x22));
             gfx.FillEllipse(&redBr, dotX, dotY, dotRadius * 2, dotRadius * 2);

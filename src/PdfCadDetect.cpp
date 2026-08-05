@@ -289,9 +289,7 @@ static void cad_analysis_fill_image(fz_context*, fz_device* dev, fz_image*, fz_m
     fz_rect bbox = fz_transform_rect(fz_unit_rect, ctm);
     if (d->stats->pageArea > 0.f) {
         float coverage = CadRectArea(bbox) / d->stats->pageArea;
-        if (coverage > d->stats->maxImageCoverage) {
-            d->stats->maxImageCoverage = coverage;
-        }
+        d->stats->maxImageCoverage = std::max(coverage, d->stats->maxImageCoverage);
     }
 }
 
@@ -495,12 +493,8 @@ CadDetectResult DetectCadPdf(fz_context* ctx, pdf_document* doc) {
             fz_rect bounds = pdf_bound_page(ctx, page, FZ_CROP_BOX);
             float side = bounds.x1 - bounds.x0;
             float sideY = bounds.y1 - bounds.y0;
-            if (sideY > side) {
-                side = sideY;
-            }
-            if (side > maxPageSide) {
-                maxPageSide = side;
-            }
+            side = std::max(sideY, side);
+            maxPageSide = std::max(side, maxPageSide);
         }
         fz_always(ctx) {
             fz_drop_page(ctx, (fz_page*)page);

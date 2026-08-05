@@ -524,12 +524,8 @@ void MarkdownModel::RestoreHtmlScrollPos() {
     }
     int x = (int)htmlScrollPos.x;
     int y = (int)htmlScrollPos.y;
-    if (x < 0) {
-        x = 0;
-    }
-    if (y < 0) {
-        y = 0;
-    }
+    x = std::max(x, 0);
+    y = std::max(y, 0);
     docView->SetScrollPos(Point(x, y));
 }
 
@@ -718,9 +714,7 @@ IPageDestination* MarkdownModel::GetNamedDest(Str name) {
     if (filePath) {
         pageNo = pages.Find(filePath) + 1;
     }
-    if (pageNo < 1) {
-        pageNo = 1;
-    }
+    pageNo = std::max(pageNo, 1);
     return NewMarkdownNamedDest(url, pageNo);
 }
 

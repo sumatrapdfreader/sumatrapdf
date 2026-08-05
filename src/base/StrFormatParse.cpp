@@ -320,9 +320,7 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
         if (o.instructions[i].t == FmtArg::Kind::RawStr) {
             continue;
         }
-        if (o.instructions[i].argNo > maxArgNo) {
-            maxArgNo = o.instructions[i].argNo;
-        }
+        maxArgNo = std::max(o.instructions[i].argNo, maxArgNo);
     }
 
     // instructions[i].argNo can be duplicate
@@ -414,9 +412,7 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
             slen = inst.prec;
         }
         int pad = inst.width - slen;
-        if (pad < 0) {
-            pad = 0;
-        }
+        pad = std::max(pad, 0);
         if (!inst.leftJust) {
             for (int j = 0; j < pad; j++) {
                 fmt.res.AppendChar(' ');

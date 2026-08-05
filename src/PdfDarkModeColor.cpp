@@ -280,13 +280,9 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
 
     float cappedV = lum;
     const float maxBright = 0.82f;
-    if (cappedV > maxBright) {
-        cappedV = maxBright;
-    }
+    cappedV = std::min(cappedV, maxBright);
     const float minBright = 0.12f;
-    if (cappedV < minBright) {
-        cappedV = minBright;
-    }
+    cappedV = std::max(cappedV, minBright);
 
     float s = maxC > 0.f ? delta / maxC : 0.f;
     float c = cappedV * s;
@@ -392,9 +388,7 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
         paperW = SmoothStep(0.72f, 0.94f, lum);
     } else {
         float chromaFactor = 1.f - (chroma / 0.45f);
-        if (chromaFactor < 0.f) {
-            chromaFactor = 0.f;
-        }
+        chromaFactor = std::max(chromaFactor, 0.f);
         paperW = SmoothStep(0.72f, 0.94f, lum) * chromaFactor;
     }
     paperW *= strength;

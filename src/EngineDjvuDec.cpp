@@ -539,12 +539,8 @@ static int DjvuDecPickSubsample(int uprightW, int uprightH, int targetDx, int ta
            (uprightH + subsample) / (subsample + 1) >= targetDy) {
         subsample++; // ceil(uprightW/(s+1)) >= targetDx && ceil(uprightH/(s+1)) >= targetDy
     }
-    if (subsample > uprightW) {
-        subsample = uprightW;
-    }
-    if (subsample > uprightH) {
-        subsample = uprightH;
-    }
+    subsample = std::min(subsample, uprightW);
+    subsample = std::min(subsample, uprightH);
     return subsample;
 }
 

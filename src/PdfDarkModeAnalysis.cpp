@@ -78,9 +78,7 @@ static void dm_analysis_record_image(fz_context* ctx, fz_device* dev, fz_image* 
 
     float pageArea = dm_rectf_area(d->analysis->pageBounds);
     float coverage = pageArea > 0.f ? dm_rect_area(bbox) / pageArea : 0.f;
-    if (coverage > d->maxImageCoverage) {
-        d->maxImageCoverage = coverage;
-    }
+    d->maxImageCoverage = std::max(coverage, d->maxImageCoverage);
 
     ImageOccurrenceInfo info;
     info.occurrenceIndex = len(d->analysis->images);

@@ -226,9 +226,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
         return;
     }
 
-    if (startGlyph < 0) {
-        startGlyph = 0;
-    }
+    startGlyph = std::max(startGlyph, 0);
     if (endGlyph < 0 || endGlyph > textLen) {
         endGlyph = textLen;
     }
@@ -595,9 +593,7 @@ static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, in
     if (wordStartAbs < 0 || wordStartAbs >= map->len) {
         return false;
     }
-    if (wordEndAbs > map->len) {
-        wordEndAbs = map->len;
-    }
+    wordEndAbs = std::min(wordEndAbs, map->len);
     if (wordEndAbs <= wordStartAbs) {
         return false;
     }
@@ -793,9 +789,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
         ReadAloudPaintLogOnce(5, "ReadAloud: PaintHighlight: wordStartAbs out of range");
         return;
     }
-    if (wordEndAbs > map->len) {
-        wordEndAbs = map->len;
-    }
+    wordEndAbs = std::min(wordEndAbs, map->len);
     if (wordEndAbs <= wordStartAbs) {
         ReadAloudPaintLogOnce(6, "ReadAloud: PaintHighlight: empty word range");
         return;

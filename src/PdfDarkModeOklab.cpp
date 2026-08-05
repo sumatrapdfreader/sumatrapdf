@@ -87,18 +87,12 @@ void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& pa
 
     const float minL = 0.08f;
     const float maxL = 0.92f;
-    if (outL < minL) {
-        outL = minL;
-    }
-    if (outL > maxL) {
-        outL = maxL;
-    }
+    outL = std::max(outL, minL);
+    outL = std::min(outL, maxL);
 
     float chroma = OklabChroma(src);
     const float maxChroma = 0.38f;
-    if (chroma > maxChroma) {
-        chroma = maxChroma;
-    }
+    chroma = std::min(chroma, maxChroma);
 
     float outA = 0.f;
     float outB = 0.f;
@@ -112,9 +106,7 @@ void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& pa
     // Pull extreme highlights down slightly on dark backgrounds.
     if (src.L > 0.82f && chroma < 0.06f) {
         float paperMix = (src.L - 0.82f) / 0.18f;
-        if (paperMix > 1.f) {
-            paperMix = 1.f;
-        }
+        paperMix = std::min(paperMix, 1.f);
         outL = (outL * (1.f - (0.35f * paperMix))) + (bg.L * (0.35f * paperMix));
     }
 

@@ -154,15 +154,11 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     int btnSpeedDx = szSpeed.dx + (2 * btnPadX);
     int barDy = std::max(szStatus.dy, btnDy) + (2 * padY);
     int barDx = canvas.dx - (2 * margin);
-    if (barDx < 0) {
-        barDx = 0;
-    }
+    barDx = std::max(barDx, 0);
 
     int x = margin;
     int y = canvas.dy - barDy - margin;
-    if (y < margin) {
-        y = margin;
-    }
+    y = std::max(y, margin);
 
     int rowY = padY;
     if (barDy > (2 * padY) + btnDy) {

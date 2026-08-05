@@ -485,9 +485,7 @@ bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
         return false;
     }
 
-    if (retryCount < 1) {
-        retryCount = 1;
-    }
+    retryCount = std::max(retryCount, 1);
     for (int i = 0; i < retryCount; i++) {
         if (rename(PathZTemp(tempPath), PathZTemp(dst)) == 0) {
             return true;

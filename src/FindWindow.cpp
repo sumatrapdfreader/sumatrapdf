@@ -431,9 +431,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     int pageGap = DpiScale(lb->hwnd, 10);
     int pageColDx = DpiScale(lb->hwnd, 40);
     Size pageSize = HdcGetTextExtentPoint32(hdc, pageStr);
-    if (pageSize.dx + DpiScale(lb->hwnd, 4) > pageColDx) {
-        pageColDx = pageSize.dx + DpiScale(lb->hwnd, 4);
-    }
+    pageColDx = std::max(pageSize.dx + DpiScale(lb->hwnd, 4), pageColDx);
     Rect rcPage = rcText;
     rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
     rcPage.dx = rcText.x + rcText.dx - rcPage.x;
@@ -603,9 +601,7 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
                 idx = n - 1;
             } else {
                 idx = cur - kPage;
-                if (idx < 0) {
-                    idx = 0;
-                }
+                idx = std::max(idx, 0);
             }
             break;
         default:

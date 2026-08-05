@@ -2397,9 +2397,7 @@ static void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec
         pli.type = pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S"));
         pli.prefix = pdf_dict_gets(ctx, info, "P");
         pli.countFrom = pdf_to_int(ctx, pdf_dict_gets(ctx, info, "St"));
-        if (pli.countFrom < 1) {
-            pli.countFrom = 1;
-        }
+        pli.countFrom = std::max(pli.countFrom, 1);
         data.Append(pli);
     }
 }
@@ -4360,9 +4358,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
         if (!r.IsEmpty()) {
             pageInfo->darkLegacySkipDevAbs.Append(r);
             float bottom = imgOnPage.y + imgOnPage.dy;
-            if (bottom > pageInfo->darkLegacyArtworkPageBottom) {
-                pageInfo->darkLegacyArtworkPageBottom = bottom;
-            }
+            pageInfo->darkLegacyArtworkPageBottom = std::max(bottom, pageInfo->darkLegacyArtworkPageBottom);
         }
         if (image) {
             fz_drop_image(ctx, image);

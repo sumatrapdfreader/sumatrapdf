@@ -144,9 +144,7 @@ static void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int te
         ReportIf(left < 0);
         if (left == 0) {
             int newCap = result->cap * 2;
-            if (newCap < 64) {
-                newCap = 64;
-            }
+            newCap = std::max(newCap, 64);
             int* newPages = (int*)realloc(result->pages, sizeof(int) * newCap);
             Rect* newRects = (Rect*)realloc(result->rects, sizeof(Rect) * newCap);
             ReportIf(!newPages);
@@ -172,12 +170,8 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         length += glyph;
         glyph = 0;
     }
-    if (length < 0) {
-        length = 0;
-    }
-    if (glyph > textLen) {
-        glyph = textLen;
-    }
+    length = std::max(length, 0);
+    glyph = std::min(glyph, textLen);
     if (glyph + length > textLen) {
         length = textLen - glyph;
     }
@@ -326,12 +320,8 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 
         int glyph = page == fromPage ? fromGlyph : 0;
         int end = page == toPage ? toGlyph : textLen;
-        if (glyph < 0) {
-            glyph = 0;
-        }
-        if (end > textLen) {
-            end = textLen;
-        }
+        glyph = std::max(glyph, 0);
+        end = std::min(end, textLen);
         int length = end - glyph;
         if (length > 0) {
             FillResultRects(this, page, glyph, length);
@@ -499,9 +489,7 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         }
         // extend backward across comma groups
         wordStart = ExtendBackAcrossCommaGroups(text, wordStart);
-        if (maybeNumberStart < wordStart) {
-            wordStart = maybeNumberStart;
-        }
+        wordStart = std::min(maybeNumberStart, wordStart);
     }
     *wordStartOut = wordStart;
     *wordEndOut = wordEnd;

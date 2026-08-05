@@ -411,9 +411,7 @@ static HBITMAP CaptureWindowBmp(HWND hwnd, int* outW, int* outH) {
         int baseRadius = (cornerPref == DWMWCP_ROUNDSMALL) ? 4 : 8;
         int dpi = DpiGetForHwnd(hwnd);
         int radius = MulDiv(baseRadius, dpi, 96);
-        if (radius < baseRadius) {
-            radius = baseRadius;
-        }
+        radius = std::max(radius, baseRadius);
         FixRoundedCorners(hbmFull, fullW, fullH, bgColor, radius);
     }
 
@@ -473,12 +471,8 @@ static HBITMAP CreateThumbnail(HBITMAP src, int srcW, int srcH, int* outW, int* 
         th = kMaxThumbSize;
         tw = MulDiv(srcW, kMaxThumbSize, srcH);
     }
-    if (tw < 1) {
-        tw = 1;
-    }
-    if (th < 1) {
-        th = 1;
-    }
+    tw = std::max(tw, 1);
+    th = std::max(th, 1);
 
     HDC hdcScreen = GetDC(nullptr);
     HDC hdcSrc = CreateCompatibleDC(hdcScreen);
@@ -630,9 +624,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
     // 6: 134, 8: 136. PrintWindow serializes inside DWM, so per-window
     // captures slow each other down and gains saturate at ~3 threads
     int numThreads = std::min(CpuCoreCount() - 2, 4);
-    if (numThreads > nItems) {
-        numThreads = nItems;
-    }
+    numThreads = std::min(numThreads, nItems);
     if (numThreads <= 1) {
         CaptureWorker(&ctx);
     } else {
@@ -677,9 +669,7 @@ static void ComputeLayout(ScreenshotOverlayData* data) {
     for (int i = 0; i < n; i++) {
         int col = i % data->cols;
         int tw = data->captures[i].thumbW;
-        if (tw > data->colWidths[col]) {
-            data->colWidths[col] = tw;
-        }
+        data->colWidths[col] = std::max(tw, data->colWidths[col]);
     }
     for (int c = 0; c < data->cols; c++) {
         data->colWidths[c] += 2 * kGridPaddingX;
@@ -693,9 +683,7 @@ static void ComputeLayout(ScreenshotOverlayData* data) {
     for (int i = 0; i < n; i++) {
         int row = i / data->cols;
         int th = data->captures[i].thumbH;
-        if (th > data->rowHeights[row]) {
-            data->rowHeights[row] = th;
-        }
+        data->rowHeights[row] = std::max(th, data->rowHeights[row]);
     }
     for (int r = 0; r < data->rows; r++) {
         data->rowHeights[r] += kLabelGap + kLabelHeight + (2 * kGridPaddingY);
@@ -1163,12 +1151,8 @@ void TakeScreenshots() {
     ComputeLayout(data);
 
     // Clamp to screen size
-    if (data->winW > screenW) {
-        data->winW = screenW;
-    }
-    if (data->winH > screenH) {
-        data->winH = screenH;
-    }
+    data->winW = std::min(data->winW, screenW);
+    data->winH = std::min(data->winH, screenH);
 
     // Center on screen
     int x = (screenW - data->winW) / 2;

@@ -250,12 +250,8 @@ static bool HandleImageEditArrowKey(ImageEditWindow* ew, WPARAM wp) {
         } else {
             return false;
         }
-        if (ew->newW < 1) {
-            ew->newW = 1;
-        }
-        if (ew->newH < 1) {
-            ew->newH = 1;
-        }
+        ew->newW = std::max(ew->newW, 1);
+        ew->newH = std::max(ew->newH, 1);
         UpdateInfoLabel(ew);
         UpdateModeButtons(ew);
         InvalidateImageArea(ew);
@@ -283,12 +279,8 @@ static bool HandleImageEditArrowKey(ImageEditWindow* ew, WPARAM wp) {
     if (edge == DragEdge::Move) {
         ew->cropX += dx;
         ew->cropY += dy;
-        if (ew->cropX < 0) {
-            ew->cropX = 0;
-        }
-        if (ew->cropY < 0) {
-            ew->cropY = 0;
-        }
+        ew->cropX = std::max(ew->cropX, 0);
+        ew->cropY = std::max(ew->cropY, 0);
         if (ew->cropX + ew->cropW > ew->imgW) {
             ew->cropX = ew->imgW - ew->cropW;
         }
@@ -318,12 +310,8 @@ static bool HandleImageEditArrowKey(ImageEditWindow* ew, WPARAM wp) {
             ew->cropH += ew->cropY;
             ew->cropY = 0;
         }
-        if (ew->cropW < 1) {
-            ew->cropW = 1;
-        }
-        if (ew->cropH < 1) {
-            ew->cropH = 1;
-        }
+        ew->cropW = std::max(ew->cropW, 1);
+        ew->cropH = std::max(ew->cropH, 1);
         if (ew->cropX + ew->cropW > ew->imgW) {
             ew->cropW = ew->imgW - ew->cropX;
         }
@@ -591,21 +579,15 @@ static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRe
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     int winW = rc.right - rc.left;
     int minWinW = DpiScale(dpiHwnd, kMinWindowWidth);
-    if (winW < minWinW) {
-        winW = minWinW;
-    }
+    winW = std::max(winW, minWinW);
     int winH = rc.bottom - rc.top;
     HMONITOR hMon = MonitorFromWindow(hwndParent ? hwndParent : dpiHwnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi = {sizeof(mi)};
     GetMonitorInfo(hMon, &mi);
     int screenW = mi.rcWork.right - mi.rcWork.left;
     int screenH = mi.rcWork.bottom - mi.rcWork.top;
-    if (winW > screenW) {
-        winW = screenW;
-    }
-    if (winH > screenH) {
-        winH = screenH;
-    }
+    winW = std::min(winW, screenW);
+    winH = std::min(winH, screenH);
     return {winW, winH};
 }
 
@@ -636,9 +618,7 @@ static void ResizeImageEditWindowToImage(ImageEditWindow* ew, int prevW, int pre
 static void CalcImageLayout(ImageEditWindow* ew) {
     Rect cRc = HwndClientRect(ew->hwnd);
     ew->imgAreaH = cRc.dy - GetControlAreaDy(ew);
-    if (ew->imgAreaH < 10) {
-        ew->imgAreaH = 10;
-    }
+    ew->imgAreaH = std::max(ew->imgAreaH, 10);
 
     int imgPad = ImageEditImagePadding(ew);
     // fit image within image area with padding
@@ -656,9 +636,7 @@ static void CalcImageLayout(ImageEditWindow* ew) {
     float scaleY = (float)availH / (float)ew->imgH;
     float scale = std::min(scaleX, scaleY);
     // don't upscale beyond 100%
-    if (scale > 1.0f) {
-        scale = 1.0f;
-    }
+    scale = std::min(scale, 1.0f);
 
     ew->imgDisplayW = (int)((float)ew->imgW * scale);
     ew->imgDisplayH = (int)((float)ew->imgH * scale);
@@ -685,12 +663,8 @@ static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
     if (extraW <= 0 && extraH <= 0) {
         return;
     }
-    if (extraW < 0) {
-        extraW = 0;
-    }
-    if (extraH < 0) {
-        extraH = 0;
-    }
+    extraW = std::max(extraW, 0);
+    extraH = std::max(extraH, 0);
 
     // get screen work area
     HMONITOR hMon = MonitorFromWindow(ew->hwnd, MONITOR_DEFAULTTONEAREST);
@@ -713,12 +687,8 @@ static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
     // don't exceed screen size
     int maxW = screenR - screenL;
     int maxH = screenB - screenT;
-    if (newWinW > maxW) {
-        newWinW = maxW;
-    }
-    if (newWinH > maxH) {
-        newWinH = maxH;
-    }
+    newWinW = std::min(newWinW, maxW);
+    newWinH = std::min(newWinH, maxH);
 
     int deltaW = newWinW - winW;
     int deltaH = newWinH - winH;
@@ -735,31 +705,23 @@ static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
 
     if (growLeft && deltaW > 0) {
         newX = winX - deltaW;
-        if (newX < screenL) {
-            newX = screenL;
-        }
+        newX = std::max(newX, screenL);
     } else if (deltaW > 0) {
         // grow right - check we don't go past screen edge
         if (newX + newWinW > screenR) {
             newX = screenR - newWinW;
-            if (newX < screenL) {
-                newX = screenL;
-            }
+            newX = std::max(newX, screenL);
         }
     }
 
     if (growUp && deltaH > 0) {
         newY = winY - deltaH;
-        if (newY < screenT) {
-            newY = screenT;
-        }
+        newY = std::max(newY, screenT);
     } else if (deltaH > 0) {
         // grow down
         if (newY + newWinH > screenB) {
             newY = screenB - newWinH;
-            if (newY < screenT) {
-                newY = screenT;
-            }
+            newY = std::max(newY, screenT);
         }
     }
 
@@ -1566,9 +1528,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // double-buffer only the image area to avoid flicker
             Rect cRc = HwndClientRect(hwnd);
             int paintH = ew->imgAreaH;
-            if (paintH > cRc.dy) {
-                paintH = cRc.dy;
-            }
+            paintH = std::min(paintH, cRc.dy);
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBmp = CreateCompatibleBitmap(hdc, cRc.dx, paintH);
             HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
@@ -1648,12 +1608,8 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                             nx = ew->dragCropX + imgDx;
                             ny = ew->dragCropY + imgDy;
                             // clamp to image bounds
-                            if (nx < 0) {
-                                nx = 0;
-                            }
-                            if (ny < 0) {
-                                ny = 0;
-                            }
+                            nx = std::max(nx, 0);
+                            ny = std::max(ny, 0);
                             if (nx + nw > ew->imgW) {
                                 nx = ew->imgW - nw;
                             }
@@ -1720,12 +1676,8 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                         nh = ew->dragNewH + (imgDy * 2);
                     }
 
-                    if (nw < 1) {
-                        nw = 1;
-                    }
-                    if (nh < 1) {
-                        nh = 1;
-                    }
+                    nw = std::max(nw, 1);
+                    nh = std::max(nh, 1);
 
                     ew->newW = nw;
                     ew->newH = nh;

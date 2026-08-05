@@ -53,12 +53,8 @@ static Size GetIdealSize(FrameRateWnd* w) {
 
     // we wan't to avoid the window to grow/shrink when the number changes
     // so we keep the largest size so far, since the difference isn't big
-    if (s.dx > w->maxSizeSoFar.dx) {
-        w->maxSizeSoFar.dx = s.dx;
-    }
-    if (s.dy > w->maxSizeSoFar.dy) {
-        w->maxSizeSoFar.dy = s.dy;
-    }
+    w->maxSizeSoFar.dx = std::max(s.dx, w->maxSizeSoFar.dx);
+    w->maxSizeSoFar.dy = std::max(s.dy, w->maxSizeSoFar.dy);
     return w->maxSizeSoFar;
 }
 

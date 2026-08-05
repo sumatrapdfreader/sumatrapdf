@@ -77,9 +77,7 @@ StrArena StrArenaDupStr(Arena* a, Str s) {
         return 0;
     }
     int size = s.len;
-    if (size < 0) {
-        size = 0;
-    }
+    size = std::max(size, 0);
     StrArena sa = StrArenaAlloc(a, size);
     if (!sa) {
         return 0;
@@ -183,9 +181,7 @@ static bool IsLtrCodepoint(wchar_t c) {
 
 StrNode* AllocStrNode(Arena* a, Str s) {
     int n = s.len;
-    if (n < 0) {
-        n = 0;
-    }
+    n = std::max(n, 0);
     int cb = sizeofi(StrNode) + n + 1;
     auto* node = (StrNode*)Alloc(a, cb);
     if (!node) {
@@ -1536,12 +1532,8 @@ static char* EnsureCap(str::Builder* s, int needed) {
     }
 
     int newCap = (int)s->cap * 2;
-    if (needed > newCap) {
-        newCap = needed;
-    }
-    if (newCap < capacityHint) {
-        newCap = capacityHint;
-    }
+    newCap = std::max(needed, newCap);
+    newCap = std::max(newCap, capacityHint);
 
     int newElCount = newCap + kPadding;
 
@@ -1757,12 +1749,8 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
     }
 
     int newCap = (int)s->cap * 2;
-    if (needed > newCap) {
-        newCap = needed;
-    }
-    if (newCap < capacityHint) {
-        newCap = capacityHint;
-    }
+    newCap = std::max(needed, newCap);
+    newCap = std::max(newCap, capacityHint);
 
     int newElCount = newCap + kPadding;
 

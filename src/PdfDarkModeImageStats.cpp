@@ -186,16 +186,12 @@ RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH
     // Bbox taller than bitmap → trim height (painting drawn in top of tall column).
     if (bboxAspect < imageAspect / maxSkew) {
         newDy = imgPage.dx / imageAspect;
-        if (newDy > imgPage.dy) {
-            newDy = imgPage.dy;
-        }
+        newDy = std::min(newDy, imgPage.dy);
     }
     // Bbox wider than bitmap → trim width (avoids preserving a whole page column).
     if (bboxAspect > imageAspect * maxSkew) {
         float clampedDx = imgPage.dy * imageAspect;
-        if (clampedDx < newDx) {
-            newDx = clampedDx;
-        }
+        newDx = std::min(clampedDx, newDx);
     }
     if (newDx == imgPage.dx && newDy == imgPage.dy) {
         return imgPage;

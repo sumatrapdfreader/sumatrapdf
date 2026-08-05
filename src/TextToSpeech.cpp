@@ -965,9 +965,7 @@ static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** 
 
         if (str::EqN(chunkId, StrL("fmt "), 4) && chunkSize >= 16) {
             size_t toCopy = (size_t)chunkSize;
-            if (toCopy > sizeof(WAVEFORMATEX)) {
-                toCopy = sizeof(WAVEFORMATEX);
-            }
+            toCopy = std::min(toCopy, sizeof(WAVEFORMATEX));
             *wfx = {};
             memcpy(wfx, d + off, toCopy);
             wfx->cbSize = 0;

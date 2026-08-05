@@ -97,9 +97,7 @@ static Rect GetThumbRect(OverlayScrollbar* sb) {
 
     int trackLen = IsVert(sb) ? track.dy : track.dx;
     int thumbLen = MulDiv(trackLen, (int)sb->nPage, range);
-    if (thumbLen < DpiScale(sb->hwndOwner, kMinThumbSize)) {
-        thumbLen = DpiScale(sb->hwndOwner, kMinThumbSize);
-    }
+    thumbLen = std::max(thumbLen, DpiScale(sb->hwndOwner, kMinThumbSize));
 
     int scrollableTrack = trackLen - thumbLen;
     int scrollableRange = range - (int)sb->nPage;
@@ -615,9 +613,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int range = sb->nMax - sb->nMin + 1;
                 int thumbLen = MulDiv(IsVert(sb) ? track.dy : track.dx, (int)sb->nPage, range);
                 int minThumb = DpiScale(sb->hwndOwner, kMinThumbSize);
-                if (thumbLen < minThumb) {
-                    thumbLen = minThumb;
-                }
+                thumbLen = std::max(thumbLen, minThumb);
                 int trackLen = IsVert(sb) ? track.dy : track.dx;
                 int scrollableTrack = trackLen - thumbLen;
                 int scrollableRange = range - (int)sb->nPage;
@@ -690,9 +686,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int trackLen = IsVert(sb) ? track.dy : track.dx;
                 int thumbLen = MulDiv(trackLen, (int)sb->nPage, range);
                 int minThumb = DpiScale(sb->hwndOwner, kMinThumbSize);
-                if (thumbLen < minThumb) {
-                    thumbLen = minThumb;
-                }
+                thumbLen = std::max(thumbLen, minThumb);
                 int scrollableTrack = trackLen - thumbLen;
                 int scrollableRange = range - (int)sb->nPage;
                 int clickInTrack = (IsVert(sb) ? my : mx) - (IsVert(sb) ? track.y : track.x);

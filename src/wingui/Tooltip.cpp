@@ -313,15 +313,11 @@ int Tooltip::SetSingleAt(Str s, const Rect& rc, Point screenPos, bool multiline,
             if (x + tipSz.dx > wa.right) {
                 x = wa.right - tipSz.dx;
             }
-            if (x < wa.left) {
-                x = wa.left;
-            }
+            x = std::max<LONG>(x, wa.left);
             if (y + tipSz.dy > wa.bottom) {
                 y = wa.bottom - tipSz.dy;
             }
-            if (y < wa.top) {
-                y = wa.top;
-            }
+            y = std::max<LONG>(y, wa.top);
         }
     }
     TooltipTrackActivateAtScreen(hwnd, parent, id, x, y);

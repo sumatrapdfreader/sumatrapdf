@@ -195,9 +195,7 @@ Size LabelWithCloseWnd::GetIdealSize() {
     size.dx += btnDx;
     size.dx += DpiScale(this->hwnd, kButtonSpaceDx);
     size.dx += 2 * DpiScale(this->hwnd, this->padX);
-    if (size.dy < btnDy) {
-        size.dy = btnDy;
-    }
+    size.dy = std::max(size.dy, btnDy);
     size.dy += 2 * DpiScale(this->hwnd, this->padY);
     return size;
 }

@@ -292,12 +292,8 @@ void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
     AtomicIntSet(&ctx.nextIdx, 0);
 
     int numThreads = CpuCoreCount() - 2;
-    if (numThreads < 1) {
-        numThreads = 1;
-    }
-    if (numThreads > n) {
-        numThreads = n;
-    }
+    numThreads = std::max(numThreads, 1);
+    numThreads = std::min(numThreads, n);
 
     Vec<ThreadHandle> threads;
     for (int t = 0; t < numThreads; t++) {

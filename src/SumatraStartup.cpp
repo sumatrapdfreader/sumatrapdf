@@ -1699,9 +1699,7 @@ static int WineDpiFromEnv() {
             continue;
         }
         int dpi = (int)lroundf(96.f * scale);
-        if (dpi > bestDpi) {
-            bestDpi = dpi;
-        }
+        bestDpi = std::max(dpi, bestDpi);
     }
     return bestDpi;
 }

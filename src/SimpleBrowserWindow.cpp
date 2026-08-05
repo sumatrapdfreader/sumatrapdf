@@ -62,9 +62,7 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     Size backSize = w->btnBack->GetIdealSize();
     Size fwdSize = w->btnForward->GetIdealSize();
     int rowH = backSize.dy;
-    if (fwdSize.dy > rowH) {
-        rowH = fwdSize.dy;
-    }
+    rowH = std::max(fwdSize.dy, rowH);
 
     MoveWindow(w->btnBack->hwnd, x, y, backSize.dx, backSize.dy, TRUE);
     x += backSize.dx + gap;
@@ -73,9 +71,7 @@ static void LayoutControls(SimpleBrowserWindow* w) {
 
     int urlX = x;
     int urlDx = rc.dx - urlX - pad;
-    if (urlDx < 0) {
-        urlDx = 0;
-    }
+    urlDx = std::max(urlDx, 0);
     int urlDy = FontDyPx(w->hwnd, w->hFont);
     if (urlDy <= 0) {
         urlDy = rowH;
@@ -85,13 +81,9 @@ static void LayoutControls(SimpleBrowserWindow* w) {
 
     int navRowDy = rowH + (2 * pad);
     int webDy = rc.dy - navRowDy - pad;
-    if (webDy < 0) {
-        webDy = 0;
-    }
+    webDy = std::max(webDy, 0);
     int webDx = rc.dx - (2 * pad);
-    if (webDx < 0) {
-        webDx = 0;
-    }
+    webDx = std::max(webDx, 0);
     if (w->webView) {
         w->webView->SetBounds({pad, navRowDy, webDx, webDy});
         w->webView->UpdateWebviewSize();

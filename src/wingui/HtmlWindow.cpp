@@ -1204,9 +1204,7 @@ HtmlWindow::HtmlWindow(HWND parent, HtmlWindowCallback* cb) {
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
     zoomDPI = DpiGet(parent);
-    if (zoomDPI < 96) {
-        zoomDPI = 96;
-    }
+    zoomDPI = std::max(zoomDPI, 96);
 }
 
 bool HtmlWindow::CreateBrowser() {
@@ -1627,12 +1625,8 @@ void HtmlWindow::SetScrollPos(Point pos) {
     if (pos.x < 0 && pos.y < 0) {
         return;
     }
-    if (pos.x < 0) {
-        pos.x = 0;
-    }
-    if (pos.y < 0) {
-        pos.y = 0;
-    }
+    pos.x = std::max(pos.x, 0);
+    pos.y = std::max(pos.y, 0);
 
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);

@@ -178,12 +178,8 @@ void RelayoutNotifications(HWND hwndCanvas) {
         int idx = (int)corner;
         int y = atBottom ? (frame.dy - rect.dy - yMargin - yOffset[idx]) : (yMargin + yOffset[idx]);
         // keep fully inside the canvas (guards empty/partial layout races)
-        if (x < 0) {
-            x = 0;
-        }
-        if (y < 0) {
-            y = 0;
-        }
+        x = std::max(x, 0);
+        y = std::max(y, 0);
         // SWP_NOCOPYBITS: repaint from scratch instead of copying stale bits, so
         // notifications that shift when another is dismissed draw correctly
         // (OnPaint is double-buffered, so no flicker)
@@ -382,9 +378,7 @@ void NotificationWnd::Layout(Str message) {
             // words too long to wrap (e.g. long file paths)
             txtFmt = DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX;
             szText = HdcMeasureText(hdc, message, maxTextDx, txtFmt, font);
-            if (szText.dx > maxTextDx) {
-                szText.dx = maxTextDx;
-            }
+            szText.dx = std::min(szText.dx, maxTextDx);
         }
         ReleaseDC(hwnd, hdc);
     }

@@ -202,12 +202,8 @@ void TextRenderGdi::FreeMemBmp() {
 
 void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
     // set minimums for less allocations
-    if (dx < 128) {
-        dx = 128;
-    }
-    if (dy < 48) {
-        dy = 48;
-    }
+    dx = std::max(dx, 128);
+    dy = std::max(dy, 48);
 
     if (dx <= memBmpDx && dy <= memBmpDy) {
         ZeroMemory(memBmpData, (size_t)memBmpDx * (size_t)memBmpDy * 4);
