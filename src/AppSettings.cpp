@@ -80,6 +80,10 @@ static DocumentColorsFollowTheme MapLegacyDocumentColorMode(Str v) {
     return DocumentColorsFollowTheme::Off;
 }
 
+// the black-on-white a document renders as when FixedPageUI says nothing
+constexpr COLORREF kColBlackDefault = 0x000000;
+constexpr COLORREF kColWhiteDefault = 0xFFFFFF;
+
 // Migrate FixedPageUI.InvertColors and DocumentColorMode to DocumentColorsFollowTheme
 static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
     if (!prefsData) {
@@ -115,7 +119,19 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
         return true;
     }
     if (hadInvertColors) {
-        SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Smart);
+        // InvertColors meant "swap FixedPageUI TextColor and BackgroundColor",
+        // so swap them: that's still what those two settings do, it doesn't
+        // depend on the theme, and it's what the user was looking at in 3.6.
+        //
+        // This used to map to DocumentColorsFollowTheme::Smart, which inverted
+        // back when the mapping was written. 37f920ff0 then redefined smart as
+        // "match the UI theme, don't swap black/white", which quietly turned
+        // this migration into "light pages" for anyone on a light theme.
+        COLORREF text = ParseColor(gGlobalPrefs->fixedPageUI.textColor, kColBlackDefault);
+        COLORREF bg = ParseColor(gGlobalPrefs->fixedPageUI.backgroundColor, kColWhiteDefault);
+        str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.textColor, SerializeColorTemp(bg));
+        str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.backgroundColor, SerializeColorTemp(text));
+        SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Off);
         return true;
     }
     return false;
