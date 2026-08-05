@@ -334,6 +334,10 @@ struct AdvancedSettingsWnd : Wnd {
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG& msg) override;
+    bool HandleEscapeKey(bool isEditingValue, bool isEditingEnum);
+    bool HandleTabKey(bool isEditingValue, bool isEditingEnum);
+    bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
+    bool HandleUpDownKey(const MSG& msg);
     void OnSize(UINT msg, UINT type, Size size) override;
     void AdvanceFocus(bool forward);
 
@@ -908,79 +912,96 @@ void AdvancedSettingsWnd::AdvanceFocus(bool forward) {
     HwndSetFocus(order[next]);
 }
 
-bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN) {
-        bool isEditingValue = editValue && msg.hwnd == editValue->hwnd;
-        bool isEditingEnum = dropDownValue && msg.hwnd == dropDownValue->hwnd;
-        if (msg.wParam == VK_ESCAPE) {
-            if (isEditingValue) {
-                CancelEditValue();
-            } else if (isEditingEnum) {
-                CloseEnumEdit(false);
-            } else {
-                ScheduleDelete();
-            }
+bool AdvancedSettingsWnd::HandleEscapeKey(bool isEditingValue, bool isEditingEnum) {
+    if (isEditingValue) {
+        CancelEditValue();
+    } else if (isEditingEnum) {
+        CloseEnumEdit(false);
+    } else {
+        ScheduleDelete();
+    }
+    return true;
+}
+
+bool AdvancedSettingsWnd::HandleTabKey(bool isEditingValue, bool isEditingEnum) {
+    // leave in-place editors before moving focus (Enter would commit too)
+    if (isEditingValue) {
+        CommitEditValue();
+    } else if (isEditingEnum) {
+        CloseEnumEdit(true);
+    }
+    AdvanceFocus(!IsShiftPressed());
+    return true;
+}
+
+bool AdvancedSettingsWnd::HandleEnterKey(bool isEditingValue, bool isEditingEnum) {
+    if (isEditingValue) {
+        CommitEditValue();
+        return true;
+    }
+    if (isEditingEnum) {
+        CloseEnumEdit(true);
+        return true;
+    }
+    // focused button: Enter = click (PreTranslate would otherwise steal
+    // Enter for list-item activation)
+    HWND focused = ::GetFocus();
+    Button* buttons[] = {btnSave, btnCancel, btnOpenSettingsFile, btnHelp};
+    for (Button* b : buttons) {
+        if (b && b->hwnd && b->hwnd == focused) {
+            SendMessageW(b->hwnd, BM_CLICK, 0, 0);
             return true;
         }
-        if (msg.wParam == VK_TAB) {
-            // leave in-place editors before moving focus (Enter would commit too)
-            if (isEditingValue) {
-                CommitEditValue();
-            } else if (isEditingEnum) {
-                CloseEnumEdit(true);
-            }
-            AdvanceFocus(!IsShiftPressed());
-            return true;
-        }
-        if (msg.wParam == VK_RETURN) {
-            if (isEditingValue) {
-                CommitEditValue();
-                return true;
-            }
-            if (isEditingEnum) {
-                CloseEnumEdit(true);
-                return true;
-            }
-            // focused button: Enter = click (PreTranslate would otherwise steal
-            // Enter for list-item activation)
-            HWND focused = ::GetFocus();
-            Button* buttons[] = {btnSave, btnCancel, btnOpenSettingsFile, btnHelp};
-            for (Button* b : buttons) {
-                if (b && b->hwnd && b->hwnd == focused) {
-                    SendMessageW(b->hwnd, BM_CLICK, 0, 0);
-                    return true;
-                }
-            }
-            // Activate the selected row (bool: toggle true↔false; else edit).
-            // Do not require list focus: after filter/arrow navigation the
-            // selection can be valid while focus is still on the filter.
-            int lbIdx = listBox->GetCurrentSelection();
-            if (lbIdx >= 0) {
-                ActivateItem(lbIdx);
-                return true;
-            }
-            return false;
-        }
-        int dir = 0;
-        if (msg.wParam == VK_UP) {
-            dir = -1;
-        } else if (msg.wParam == VK_DOWN) {
-            dir = 1;
-        }
-        if (dir != 0 && msg.hwnd == editFilter->hwnd) {
-            int n = listBox->GetCount();
-            if (n > 0) {
-                int sel = (listBox->GetCurrentSelection() + dir + n) % n;
-                listBox->SetCurrentSelection(sel);
-                OnSelectionChanged(); // programmatic selection: no LBN_SELCHANGE
-            }
-            return true;
-        }
+    }
+    // Activate the selected row (bool: toggle true↔false; else edit).
+    // Do not require list focus: after filter/arrow navigation the
+    // selection can be valid while focus is still on the filter.
+    int lbIdx = listBox->GetCurrentSelection();
+    if (lbIdx < 0) {
         return false;
     }
+    ActivateItem(lbIdx);
+    return true;
+}
+
+// up/down in the filter edit moves the list selection (wrapping)
+bool AdvancedSettingsWnd::HandleUpDownKey(const MSG& msg) {
+    int dir = 0;
+    if (msg.wParam == VK_UP) {
+        dir = -1;
+    } else if (msg.wParam == VK_DOWN) {
+        dir = 1;
+    }
+    if (dir == 0 || msg.hwnd != editFilter->hwnd) {
+        return false;
+    }
+    int n = listBox->GetCount();
+    if (n > 0) {
+        int sel = (listBox->GetCurrentSelection() + dir + n) % n;
+        listBox->SetCurrentSelection(sel);
+        OnSelectionChanged(); // programmatic selection: no LBN_SELCHANGE
+    }
+    return true;
+}
+
+bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
     // a single click only selects; activation (toggle / edit) is on double-click
     // (OnItemDoubleClicked) or Enter, so there's no WM_LBUTTONUP handling here
-    return false;
+    if (msg.message != WM_KEYDOWN) {
+        return false;
+    }
+    bool isEditingValue = editValue && msg.hwnd == editValue->hwnd;
+    bool isEditingEnum = dropDownValue && msg.hwnd == dropDownValue->hwnd;
+    if (msg.wParam == VK_ESCAPE) {
+        return HandleEscapeKey(isEditingValue, isEditingEnum);
+    }
+    if (msg.wParam == VK_TAB) {
+        return HandleTabKey(isEditingValue, isEditingEnum);
+    }
+    if (msg.wParam == VK_RETURN) {
+        return HandleEnterKey(isEditingValue, isEditingEnum);
+    }
+    return HandleUpDownKey(msg);
 }
 
 // clicking the window's close box sends WM_CLOSE. We must schedule our own
