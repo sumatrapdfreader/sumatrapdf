@@ -30,4 +30,14 @@ Checks: >
   -readability-make-member-function-const,
   -readability-convert-member-functions-to-static,
   -readability-use-anyofallof
+
+# Diagnose our own headers, but not vendored ones. Matching '/src/' positively
+# would misfire: the checkout itself lives under a path containing 'src'
+# (~/src/sumatrapdf), so every mupdf header would match. Exclude by vendor dir
+# name instead.
+HeaderFilterRegex: '.*'
+ExcludeHeaderFilterRegex: '[/\\](mupdf|ext|packages)[/\\]'
+
+# so --fix reformats what it rewrites, using our .clang-format
+FormatStyle: file
 ...
