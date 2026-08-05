@@ -257,7 +257,7 @@ struct ExternalViewer {
     Str toolbarSvgIcon;
 };
 
-// customization options for how we show forward search results (used
+// customization options for how forward search results are shown (used
 // from LaTeX editors)
 struct ForwardSearch {
     // if greater than 0, the forward search result is marked with a bar
@@ -426,24 +426,21 @@ struct FileState {
     Str filePath;
     // pages of this document bookmarked in the Favorites menu
     Vec<Favorite*>* favorites;
-    // a document can be "pinned" to the Frequently Read list so that it
-    // isn't displaced by recently opened documents
+    // if true, the document is "pinned" to the Frequently Read list, so
+    // that recently opened documents don't displace it
     bool isPinned;
-    // if a document can no longer be found but we still remember valuable
-    // state, it's classified as missing so that it can be hidden instead
-    // of removed
+    // if true, the document can no longer be found. State worth keeping is
+    // still remembered, so the entry is hidden rather than removed
     bool isMissing;
-    // in order to prevent documents that haven't been opened for a while
-    // but used to be opened very frequently constantly remain in top
-    // positions, the openCount will be cut in half after every week, so
-    // that the Frequently Read list hopefully better reflects the
-    // currently relevant documents
+    // how often the document was opened, halved every week so that the
+    // Frequently Read list reflects what's relevant now instead of what
+    // used to be opened a lot
     int openCount;
-    // Hex encoded MD5 fingerprint of file content (32 chars) followed by
-    // crypt key (64 chars) - only applies for PDF documents
+    // hex encoded MD5 fingerprint of the file content (32 chars) followed
+    // by the crypt key (64 chars); only applies to PDF documents
     Str decryptionKey;
-    // if true, we use global defaults when opening this file (instead of
-    // the values below)
+    // if true, this document opens with the global defaults instead of the
+    // values below
     bool useDefaultState;
     // how pages are laid out for this document. The string is the
     // persisted form of DisplayModel::displayMode, so it's parsed after
@@ -463,8 +460,8 @@ struct FileState {
     int windowState;
     // default position (can be on any monitor)
     Rect windowPos;
-    // if true, we show table of contents (Bookmarks) sidebar if it's
-    // present in the document
+    // if true, show the table of contents (Bookmarks) sidebar when the
+    // document has one
     bool showToc;
     // width of the left sidebar (table of contents / favorites) in screen
     // pixels, as last resized
@@ -485,7 +482,7 @@ struct FileState {
     // tocState is an array of ids for ToC items that have been toggled by
     // the user (i.e. aren't in their default expansion state). - Note: We
     // intentionally track toggle state as opposed to expansion state so
-    // that we only have to save a diff instead of all states for the whole
+    // that only a diff has to be saved instead of all states for the whole
     // tree (which can be quite large) (internal)
     Vec<int>* tocState;
     // thumbnails are saved as PNG files in sumatrapdfcache directory
@@ -563,12 +560,12 @@ struct GlobalPrefs {
     bool enableTeXEnhancements;
     // if true, Esc key closes SumatraPDF
     bool escToExit;
-    // if true, we show the full path to a file in the title bar
+    // if true, show the full path to the document in the title bar
     bool fullPathInTitle;
     // pattern used to launch the LaTeX editor when doing inverse search
     Str inverseSearchCmdLine;
-    // when restoring session, delay loading of documents until their tab
-    // is selected
+    // if true, restoring a session delays loading each document until its
+    // tab is selected
     bool lazyLoading;
     // background color of the area around the document, traditionally
     // yellow. Only applies to the Light theme; the default #80fff200 is a
@@ -588,23 +585,24 @@ struct GlobalPrefs {
     // if true, a document will be reloaded automatically whenever it's
     // changed (currently doesn't work for documents shown in the ebook UI)
     bool reloadModifiedDocuments;
-    // if true, we remember which files we opened and their display
+    // if true, remember which documents were opened and their display
     // settings
     bool rememberOpenedFiles;
-    // if true, we store display settings for each document separately
-    // (i.e. everything after UseDefaultState in FileStates)
+    // if true, store display settings for each document separately (i.e.
+    // everything after UseDefaultState in FileStates)
     bool rememberStatePerDocument;
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
-    // if true, we'll always open files using existing SumatraPDF process
+    // if true, open documents in the already running SumatraPDF instead of
+    // starting a new one
     bool reuseInstance;
-    // if false, the menu bar will be hidden (use F9 to toggle, persisted
+    // if true, show the menu bar (F9 toggles it; the choice is remembered
     // across sessions)
     bool showMenubar;
     // if true, show the menu bar when using tabs (useTabs = true)
     bool showMenubarWithTabs;
-    // if true, we show tips on the home page
+    // if true, show tips on the home page
     bool showTips;
     // up to 13 custom colors for the background color picker, separated by
     // space (e.g. '#ff0000 #00ff00 #0000ff')
@@ -622,16 +620,16 @@ struct GlobalPrefs {
     // if true, the find UI is a floating, movable window with a results
     // list instead of the compact toolbar overlay
     bool searchUIFloating;
-    // if true, we show the Favorites sidebar
+    // if true, show the Favorites sidebar
     bool showFavorites;
     // if true, favorites within each file are sorted alphabetically by
     // name (or page label); if false (the default), they are sorted by
     // page number
     bool sortFavoritesByName;
-    // if true, we show table of contents (Bookmarks) sidebar if it's
-    // present in the document
+    // if true, show the table of contents (Bookmarks) sidebar when the
+    // document has one
     bool showToc;
-    // if true we draw a blue border around links in the document
+    // if true, draw a blue border around links in the document
     bool showLinks;
     // if true, draw a focus ring around the document when it has keyboard
     // focus (Tab to the page area)
@@ -642,8 +640,8 @@ struct GlobalPrefs {
     // if true, show page numbers (labels) right-aligned on bookmark /
     // table-of-contents entries
     bool showTocPageNumbers;
-    // if true, we show a list of frequently read documents when no
-    // document is loaded
+    // if true, show a list of frequently read documents when no document
+    // is loaded
     bool showStartPage;
     // width of the favorites / bookmarks sidebar in screen pixels, as last
     // resized (0 means the default)
@@ -652,7 +650,7 @@ struct GlobalPrefs {
     // scrollbar with auto-hide), overlay (always visible overlay
     // scrollbar), hidden (no scrollbars)
     Str scrollbars;
-    // if true, we show scrollbar in single page mode
+    // if true, show a scrollbar in single page mode as well
     bool scrollbarInSinglePage;
     // if true, smooth mouse-wheel scrolling (exponential chase of the
     // target; continuous wheel input stays fluid)
@@ -660,10 +658,10 @@ struct GlobalPrefs {
     // if true, continuous view has extra scroll room after the last page
     // so you can scroll the end of the document to the top of the window
     bool paddingAfterLastPage;
-    // how long to hover an internal-document link (in ms) before we show a
-    // popup rendering the destination region (citation entry, figure,
-    // footnote). -1 (the default) disables the popup; set a positive value
-    // like 300 to enable it
+    // how long an internal-document link has to be hovered, in
+    // milliseconds, before a popup rendering the destination region
+    // (citation entry, figure, footnote) appears. -1 (the default)
+    // disables the popup; set a positive value like 300 to enable it
     int citationHoverDelay;
     // voice id for Read Aloud text-to-speech; empty or unset means system
     // default. Voice ids match those used internally by the Read Aloud
@@ -699,9 +697,9 @@ struct GlobalPrefs {
     // (document's own colors; default); smart (recolor text and page
     // background, keep photos/images as-is — best for dark reading);
     // legacy (also recolor images; pre-3.7 invert-style). Does not change
-    // menus/toolbars — use Theme for UI chrome. Shift+I toggles off and
-    // smart. Also Settings / Theme and CmdSetDocumentColorsFollowTheme for
-    // all three values
+    // menus/toolbars — use Theme for UI chrome. Shift+I toggles between
+    // off and smart; Settings / Theme and the
+    // CmdSetDocumentColorsFollowTheme command can set all three values
     Str documentColorsFollowTheme;
     // if both the favorites and the bookmarks part of the sidebar are
     // visible, this is the height of the bookmarks (table of contents)
@@ -790,7 +788,7 @@ struct GlobalPrefs {
     // [docs for more
     // information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
     Vec<ExternalViewer*>* externalViewers;
-    // customization options for how we show forward search results (used
+    // customization options for how forward search results are shown (used
     // from LaTeX editors)
     ForwardSearch forwardSearch;
     // these override the default settings in the Print dialog
@@ -815,7 +813,7 @@ struct GlobalPrefs {
     Vec<Str>* defaultPasswords;
     // ISO code of the current UI language
     Str uiLanguage;
-    // we won't ask again to update to this version
+    // SumatraPDF won't offer to update to this version again
     Str versionToSkip;
     // default state of new windows (same as the last closed)
     int windowState;
@@ -844,7 +842,7 @@ struct GlobalPrefs {
     float defaultZoomFloat;
     // position of the document properties window
     Point propWinPos;
-    // if true, we check once a day if an update is available
+    // if true, check once a day whether an update is available
     bool checkForUpdates;
 };
 // for parsing themes
@@ -1348,20 +1346,21 @@ static StructInfo gFileStateInfo = {
     gFileStateFields,
     "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0BgCol\0TabCol\0ReparseIdx\0TocState",
-    "path of the document\0pages of this document bookmarked in the Favorites menu\0a document can be \"pinned\" to "
-    "the Frequently Read list so that it isn't displaced by recently opened documents\0if true, the file is considered "
-    "missing and won't be shown in any list\0number of times this document has been opened recently\0data required to "
-    "open a password protected document without having to ask for the password again\0if true, we use global defaults "
-    "when opening this file (instead of the values below)\0layout of pages. valid values: automatic, single page, "
-    "facing, book view, continuous, continuous facing, continuous book view\0how far this document has been scrolled "
-    "(in x and y direction)\0number of the last read page\0zoom (in %) or one of those values: fit page, fit width, "
-    "fit height, fit content\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is "
-    "normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0default position (can be on any monitor)\0if true, we "
-    "show table of contents (Bookmarks) sidebar if it's present in the document\0width of the left sidebar (table of "
-    "contents / favorites) in screen pixels, as last resized\0if true, the document is displayed right-to-left in "
-    "facing and book view modes (only used for comic book documents)\0if given, overrides the background color for "
-    "this document\0if given, overrides the tab color for this document\0data required to restore the last read page "
-    "in the ebook UI\0data required to determine which parts of the table of contents have been expanded",
+    "path of the document\0pages of this document bookmarked in the Favorites menu\0if true, the document is "
+    "\"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, the file is "
+    "considered missing and won't be shown in any list\0number of times this document has been opened recently\0data "
+    "required to open a password protected document without having to ask for the password again\0if true, this "
+    "document opens with the global defaults instead of the values below\0layout of pages. valid values: automatic, "
+    "single page, facing, book view, continuous, continuous facing, continuous book view\0how far this document has "
+    "been scrolled (in x and y direction)\0number of the last read page\0zoom (in %) or one of those values: fit page, "
+    "fit width, fit height, fit content\0how far pages have been rotated as a multiple of 90 degrees\0state of the "
+    "window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0default position (can be on any "
+    "monitor)\0if true, show the table of contents (Bookmarks) sidebar when the document has one\0width of the left "
+    "sidebar (table of contents / favorites) in screen pixels, as last resized\0if true, the document is displayed "
+    "right-to-left in facing and book view modes (only used for comic book documents)\0if given, overrides the "
+    "background color for this document\0if given, overrides the tab color for this document\0data required to restore "
+    "the last read page in the ebook UI\0data required to determine which parts of the table of contents have been "
+    "expanded",
     false};
 
 static const FieldInfo gPointF_1_Fields[] = {
@@ -1602,77 +1601,78 @@ static const StructInfo gGlobalPrefsInfo = {
     "PDF may load an image stored in a separate file referenced by name (an external image stream); the file must sit "
     "next to the PDF. Off by default for security (matches Acrobat)\0if true, show the SyncTeX inverse search command "
     "line in Settings -> Options, so a double-click in the document can jump to the matching line in a LaTeX "
-    "editor\0if true, Esc key closes SumatraPDF\0if true, we show the full path to a file in the title bar\0pattern "
-    "used to launch the LaTeX editor when doing inverse search\0when restoring session, delay loading of documents "
-    "until their tab is selected\0background color of the area around the document, traditionally yellow. Only applies "
-    "to the Light theme; the default #80fff200 is a marker meaning \"use the theme's color\", so setting any other "
-    "value also colorizes the toolbar and sidebars\0if true, doesn't open Home tab\0if true, the home page lists "
+    "editor\0if true, Esc key closes SumatraPDF\0if true, show the full path to the document in the title bar\0pattern "
+    "used to launch the LaTeX editor when doing inverse search\0if true, restoring a session delays loading each "
+    "document until its tab is selected\0background color of the area around the document, traditionally yellow. Only "
+    "applies to the Light theme; the default #80fff200 is a marker meaning \"use the theme's color\", so setting any "
+    "other value also colorizes the toolbar and sidebars\0if true, doesn't open Home tab\0if true, the home page lists "
     "documents by how often they've been opened (the pre-3.6 behavior); if false, the most recently opened come "
-    "first\0Valid values: thumbnails, list\0if true, a document will be reloaded automatically whenever it's changed "
-    "(currently doesn't work for documents shown in the ebook UI)\0if true, we remember which files we opened and "
-    "their display settings\0if true, we store display settings for each document separately (i.e. everything after "
+    "first\0valid values: thumbnails, list\0if true, a document will be reloaded automatically whenever it's changed "
+    "(currently doesn't work for documents shown in the ebook UI)\0if true, remember which documents were opened and "
+    "their display settings\0if true, store display settings for each document separately (i.e. everything after "
     "UseDefaultState in FileStates)\0if true and SessionData isn't empty, that session will be restored at startup\0if "
-    "true, we'll always open files using existing SumatraPDF process\0if false, the menu bar will be hidden (use F9 to "
-    "toggle, persisted across sessions)\0if true, show the menu bar when using tabs (useTabs = true)\0if true, we show "
-    "tips on the home page\0up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 "
-    "#00ff00 #0000ff')\0legacy bool for toolbar; if Toolbar is empty, derived as show/hide (internal; use Toolbar "
-    "instead)\0toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over the page, sized to its "
-    "natural width and centered, only shown when the mouse is near it). if empty, derived from ShowToolbar\0where the "
-    "toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the find UI is a floating, "
-    "movable window with a results list instead of the compact toolbar overlay\0if true, we show the Favorites "
-    "sidebar\0if true, favorites within each file are sorted alphabetically by name (or page label); if false (the "
-    "default), they are sorted by page number\0if true, we show table of contents (Bookmarks) sidebar if it's present "
-    "in the document\0if true we draw a blue border around links in the document\0if true, draw a focus ring around "
+    "true, open documents in the already running SumatraPDF instead of starting a new one\0if true, show the menu bar "
+    "(F9 toggles it; the choice is remembered across sessions)\0if true, show the menu bar when using tabs (useTabs = "
+    "true)\0if true, show tips on the home page\0up to 13 custom colors for the background color picker, separated by "
+    "space (e.g. '#ff0000 #00ff00 #0000ff')\0legacy bool for toolbar; if Toolbar is empty, derived as show/hide "
+    "(internal; use Toolbar instead)\0toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over the "
+    "page, sized to its natural width and centered, only shown when the mouse is near it). if empty, derived from "
+    "ShowToolbar\0where the toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the "
+    "find UI is a floating, movable window with a results list instead of the compact toolbar overlay\0if true, show "
+    "the Favorites sidebar\0if true, favorites within each file are sorted alphabetically by name (or page label); if "
+    "false (the default), they are sorted by page number\0if true, show the table of contents (Bookmarks) sidebar when "
+    "the document has one\0if true, draw a blue border around links in the document\0if true, draw a focus ring around "
     "the document when it has keyboard focus (Tab to the page area)\0if true, show a tip when hovering an annotation "
     "(e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if true, show page numbers (labels) right-aligned on "
-    "bookmark / table-of-contents entries\0if true, we show a list of frequently read documents when no document is "
+    "bookmark / table-of-contents entries\0if true, show a list of frequently read documents when no document is "
     "loaded\0width of the favorites / bookmarks sidebar in screen pixels, as last resized (0 means the "
     "default)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay "
-    "(always visible overlay scrollbar), hidden (no scrollbars)\0if true, we show scrollbar in single page mode\0if "
-    "true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)\0if "
-    "true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the "
-    "top of the window\0how long to hover an internal-document link (in ms) before we show a popup rendering the "
-    "destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value "
-    "like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids "
-    "match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed "
-    "multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud "
-    "playback bar\0if true, mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the "
-    "screen from turning off when in fullscreen or presentation mode\0maximum width of a single tab, in pixels at 100% "
-    "display scaling (at least 60)\0Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, "
-    "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, "
-    "Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System\0the light theme the light/dark toggle and the System "
-    "theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0how MuPDF-rendered "
-    "documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI colors for the page. Values: "
-    "off (document's own colors; default); smart (recolor text and page background, keep photos/images as-is — best "
-    "for dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme "
-    "for UI chrome. Shift+I toggles off and smart. Also Settings / Theme and CmdSetDocumentColorsFollowTheme for all "
-    "three values\0if both the favorites and the bookmarks part of the sidebar are visible, this is the height of the "
-    "bookmarks (table of contents) part, in screen pixels\0size of the toolbar icons in pixels at 100% display scaling "
-    "(8-64); the toolbar itself is a few pixels taller\0font name for bookmarks and favorites tree views. automatic "
-    "means Windows default\0font size for bookmarks and favorites tree views, in pixels; 0 means the Windows default. "
-    "Not scaled by the display scaling\0overrides the font size used for menus, toolbar and dialogs, in pixels; 0 "
-    "means the Windows default. Not scaled by the display scaling\0if true, render MuPDF-based documents (PDF, XPS, "
-    "DjVu, EPUB etc.) without anti-aliasing, giving sharper but jagged edges\0CAD/engineering PDF line rendering: off, "
-    "auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses "
-    "found in PDF text\0if true, use the Windows system colors for the document background and text. Overrides other "
-    "color settings\0if true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar "
-    "with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable "
-    "it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
-    "order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0how much a single "
-    "zoom in / zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, zooming "
-    "steps through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization "
-    "options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization options for Comic Book "
-    "UI\0\0customization options for image files UI\0\0customization options for CHM UI. If UseFixedPageUI is true, "
-    "FixedPageUI settings apply instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is "
-    "used; otherwise WebView2 browser view is used when available\0\0settings for the Claude Code chat "
-    "sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the "
-    "AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered "
-    "destination language for selection translation; empty uses OS UI language\0remembered source language for "
-    "selection translation; empty means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, "
-    "Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of additional external "
-    "viewers for various file types. See [docs for more "
+    "(always visible overlay scrollbar), hidden (no scrollbars)\0if true, show a scrollbar in single page mode as "
+    "well\0if true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays "
+    "fluid)\0if true, continuous view has extra scroll room after the last page so you can scroll the end of the "
+    "document to the top of the window\0how long an internal-document link has to be hovered, in milliseconds, before "
+    "a popup rendering the destination region (citation entry, figure, footnote) appears. -1 (the default) disables "
+    "the popup; set a positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset "
+    "means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI "
+    "token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be "
+    "changed from the Read Aloud playback bar\0if true, mouse wheel scrolling is faster when mouse is over a "
+    "scrollbar\0if true, prevents the screen from turning off when in fullscreen or presentation mode\0maximum width "
+    "of a single tab, in pixels at 100% display scaling (at least 60)\0valid themes: Light, Dark, Light Warm, Dark "
+    "from 3.5, Charcoal, Solarized Light, Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, "
+    "Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System\0the light theme the "
+    "light/dark toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme "
+    "switch to\0how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI "
+    "colors for the page. Values: off (document's own colors; default); smart (recolor text and page background, keep "
+    "photos/images as-is — best for dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change "
+    "menus/toolbars — use Theme for UI chrome. Shift+I toggles between off and smart; Settings / Theme and the "
+    "CmdSetDocumentColorsFollowTheme command can set all three values\0if both the favorites and the bookmarks part of "
+    "the sidebar are visible, this is the height of the bookmarks (table of contents) part, in screen pixels\0size of "
+    "the toolbar icons in pixels at 100% display scaling (8-64); the toolbar itself is a few pixels taller\0font name "
+    "for bookmarks and favorites tree views. automatic means Windows default\0font size for bookmarks and favorites "
+    "tree views, in pixels; 0 means the Windows default. Not scaled by the display scaling\0overrides the font size "
+    "used for menus, toolbar and dialogs, in pixels; 0 means the Windows default. Not scaled by the display "
+    "scaling\0if true, render MuPDF-based documents (PDF, XPS, DjVu, EPUB etc.) without anti-aliasing, giving sharper "
+    "but jagged edges\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on\0if "
+    "true, disables auto-linking of URLs and email addresses found in PDF text\0if true, use the Windows system colors "
+    "for the document background and text. Overrides other color settings\0if true, documents are opened in tabs "
+    "instead of new windows\0if true, a small floating toolbar with selection actions (copy, read aloud, highlight "
+    "etc.) pops up after selecting text. Set to false to disable it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab "
+    "switcher in most recently used order instead of tab-strip order\0sequence of zoom levels when zooming in/out; all "
+    "values must lie between 8.33 and 6400\0how much a single zoom in / zoom out step changes the zoom, as a "
+    "percentage of the current zoom level. If 0 or negative, zooming steps through ZoomLevels instead\0\0customization "
+    "options for PDF, XPS, DjVu and PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and "
+    "plain text)\0\0customization options for Comic Book UI\0\0customization options for image files "
+    "UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
+    "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
+    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
+    "shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
+    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
+    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
+    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
+    "types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
-    "we show forward search results (used from LaTeX editors)\0\0these override the default settings in the Print "
+    "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
     "selection is active. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)\0\0custom keyboard "
@@ -1680,13 +1680,14 @@ static const StructInfo gGlobalPrefsInfo = {
     "documents at their physical size; if 0 or negative, the resolution reported by Windows is used\0\0You're not "
     "expected to change those manually\0a whitespace separated list of passwords to try when opening a password "
     "protected document (passwords containing spaces must be quoted)\0[ISO code](langs.html) of the current UI "
-    "language\0we won't ask again to update to this version\0default state of the window. 1 is normal, 2 is maximized, "
-    "3 is fullscreen, 4 is minimized\0default position (x, y) and size (width, height) of the window\0position/size of "
-    "the floating find window (see SearchUIFloating)\0information about opened files (in most recently used "
-    "order)\0state of the last session, usage depends on RestoreSession\0data required for reloading documents after "
-    "an auto-update\0data required to determine when SumatraPDF last checked for updates\0value required to determine "
-    "recency for the OpenCount value in FileStates\0position of the document properties window\0if true, we check once "
-    "a day if an update is available\0\0Settings below are not recognized by the current version",
+    "language\0SumatraPDF won't offer to update to this version again\0default state of the window. 1 is normal, 2 is "
+    "maximized, 3 is fullscreen, 4 is minimized\0default position (x, y) and size (width, height) of the "
+    "window\0position/size of the floating find window (see SearchUIFloating)\0information about opened files (in most "
+    "recently used order)\0state of the last session, usage depends on RestoreSession\0data required for reloading "
+    "documents after an auto-update\0data required to determine when SumatraPDF last checked for updates\0value "
+    "required to determine recency for the OpenCount value in FileStates\0position of the document properties "
+    "window\0if true, check once a day whether an update is available\0\0Settings below are not recognized by the "
+    "current version",
     false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},

@@ -187,8 +187,12 @@ const theme: Field[] = [
   field("BackgroundColor", Color, "", "background color of the window around the document"),
   field("ControlBackgroundColor", Color, "", "background color of toolbar, tabs, sidebars and dialogs"),
   field("LinkColor", Color, "", "color of clickable links in the UI"),
-  field("DisabledTextColor", Color, "", "color of disabled (grayed out) text; if empty, derived from the colors above")
-    .ver("3.7"),
+  field(
+    "DisabledTextColor",
+    Color,
+    "",
+    "color of disabled (grayed out) text; if empty, derived from the colors above",
+  ).ver("3.7"),
   field(
     "DarkerTextColor",
     Color,
@@ -592,37 +596,35 @@ const fileSettings: Field[] = [
     "IsPinned",
     Bool,
     false,
-    'a document can be "pinned" to the Frequently Read list so that it ' +
-      "isn't displaced by recently opened documents",
+    'if true, the document is "pinned" to the Frequently Read list, so that ' +
+      "recently opened documents don't displace it",
   ),
   field(
     "IsMissing",
     Bool,
     false,
-    "if a document can no longer be found but we still remember valuable state, " +
-      "it's classified as missing so that it can be hidden instead of removed",
+    "if true, the document can no longer be found. State worth keeping is still " +
+      "remembered, so the entry is hidden rather than removed",
   ).doc("if true, the file is considered missing and won't be shown in any list"),
   field(
     "OpenCount",
     Int,
     0,
-    "in order to prevent documents that haven't been opened for a while " +
-      "but used to be opened very frequently constantly remain in top positions, " +
-      "the openCount will be cut in half after every week, so that the " +
-      "Frequently Read list hopefully better reflects the currently relevant documents",
+    "how often the document was opened, halved every week so that the Frequently Read " +
+      "list reflects what's relevant now instead of what used to be opened a lot",
   ).doc("number of times this document has been opened recently"),
   field(
     "DecryptionKey",
     Str,
     null,
-    "Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
-      "crypt key (64 chars) - only applies for PDF documents",
+    "hex encoded MD5 fingerprint of the file content (32 chars) followed by the " +
+      "crypt key (64 chars); only applies to PDF documents",
   ).doc("data required to open a password protected document without having to " + "ask for the password again"),
   field(
     "UseDefaultState",
     Bool,
     false,
-    "if true, we use global defaults when opening this file (instead of " + "the values below)",
+    "if true, this document opens with the global defaults instead of the values below",
   ),
   field(
     "DisplayMode",
@@ -648,12 +650,7 @@ const fileSettings: Field[] = [
     "state of the window. 1 is normal, 2 is maximized, " + "3 is fullscreen, 4 is minimized",
   ),
   compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
-  field(
-    "ShowToc",
-    Bool,
-    true,
-    "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
-  ),
+  field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
   field(
     "SidebarDx",
     Int,
@@ -683,7 +680,7 @@ const fileSettings: Field[] = [
     "tocState is an array of ids for ToC items that have been toggled by " +
       "the user (i.e. aren't in their default expansion state). - " +
       "Note: We intentionally track toggle state as opposed to expansion state " +
-      "so that we only have to save a diff instead of all states for the whole " +
+      "so that only a diff has to be saved instead of all states for the whole " +
       "tree (which can be quite large) (internal)",
   ).doc("data required to determine which parts of the table of contents have been expanded"),
   field(
@@ -771,20 +768,20 @@ const globalPrefs: Field[] = [
       "double-click in the document can jump to the matching line in a LaTeX editor",
   ),
   field("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF"),
-  field("FullPathInTitle", Bool, false, "if true, we show the full path to a file in the title bar").ver("3.0"),
+  field("FullPathInTitle", Bool, false, "if true, show the full path to the document in the title bar").ver("3.0"),
   field("InverseSearchCmdLine", Str, null, "pattern used to launch the LaTeX editor when doing inverse search"),
   field(
     "LazyLoading",
     Bool,
     false,
-    "when restoring session, delay loading of documents until their tab is selected",
+    "if true, restoring a session delays loading each document until its tab is selected",
   ).ver("3.6"),
   field(
     "MainWindowBackground",
     Color,
     rgba(0xff, 0xf2, 0x00, 0x80),
     "background color of the area around the document, traditionally yellow. Only applies to the " +
-      "Light theme; the default #80fff200 is a marker meaning \"use the theme's color\", so setting " +
+      'Light theme; the default #80fff200 is a marker meaning "use the theme\'s color", so setting ' +
       "any other value also colorizes the toolbar and sidebars",
   ),
   field("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
@@ -802,7 +799,7 @@ const globalPrefs: Field[] = [
     "how the home page shows the document history: thumbnails (a grid of page previews) or list (one row per file)",
   )
     .ver("3.7")
-    .doc("Valid values: thumbnails, list"),
+    .doc("valid values: thumbnails, list"),
   field(
     "ReloadModifiedDocuments",
     Bool,
@@ -810,24 +807,29 @@ const globalPrefs: Field[] = [
     "if true, a document will be reloaded automatically whenever it's changed " +
       "(currently doesn't work for documents shown in the ebook UI)",
   ).ver("2.5"),
-  field("RememberOpenedFiles", Bool, true, "if true, we remember which files we opened and their display settings"),
+  field("RememberOpenedFiles", Bool, true, "if true, remember which documents were opened and their display settings"),
   field(
     "RememberStatePerDocument",
     Bool,
     true,
-    "if true, we store display settings for each document separately (i.e. everything " +
+    "if true, store display settings for each document separately (i.e. everything " +
       "after UseDefaultState in FileStates)",
   ),
   field("RestoreSession", Bool, true, "if true and SessionData isn't empty, that session will be restored at startup"),
-  field("ReuseInstance", Bool, true, "if true, we'll always open files using existing SumatraPDF process"),
+  field(
+    "ReuseInstance",
+    Bool,
+    true,
+    "if true, open documents in the already running SumatraPDF instead of starting a new one",
+  ),
   field(
     "ShowMenubar",
     Bool,
     true,
-    "if false, the menu bar will be hidden (use F9 to toggle, persisted across sessions)",
+    "if true, show the menu bar (F9 toggles it; the choice is remembered across sessions)",
   ).ver("2.5"),
   field("ShowMenubarWithTabs", Bool, false, "if true, show the menu bar when using tabs (useTabs = true)").ver("3.7"),
-  field("ShowTips", Bool, true, "if true, we show tips on the home page").ver("3.7"),
+  field("ShowTips", Bool, true, "if true, show tips on the home page").ver("3.7"),
   field(
     "CustomColors",
     Str,
@@ -840,8 +842,7 @@ const globalPrefs: Field[] = [
     "ShowToolbar",
     Bool,
     true,
-    "legacy bool for toolbar; if Toolbar is empty, derived as show/hide " +
-      "(internal; use Toolbar instead)",
+    "legacy bool for toolbar; if Toolbar is empty, derived as show/hide " + "(internal; use Toolbar instead)",
   ).internal(),
   field(
     "Toolbar",
@@ -864,7 +865,7 @@ const globalPrefs: Field[] = [
     "if true, the find UI is a floating, movable window with a results list " +
       "instead of the compact toolbar overlay",
   ).ver("3.7"),
-  field("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
+  field("ShowFavorites", Bool, false, "if true, show the Favorites sidebar"),
   field(
     "SortFavoritesByName",
     Bool,
@@ -872,13 +873,8 @@ const globalPrefs: Field[] = [
     "if true, favorites within each file are sorted alphabetically by name " +
       "(or page label); if false (the default), they are sorted by page number",
   ).ver("3.7"),
-  field(
-    "ShowToc",
-    Bool,
-    true,
-    "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
-  ),
-  field("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").ver("3.6"),
+  field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
+  field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
     "ShowDocumentFocusIndicator",
     Bool,
@@ -897,7 +893,7 @@ const globalPrefs: Field[] = [
     true,
     "if true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries",
   ).ver("3.7"),
-  field("ShowStartPage", Bool, true, "if true, we show a list of frequently read documents when no document is loaded"),
+  field("ShowStartPage", Bool, true, "if true, show a list of frequently read documents when no document is loaded"),
   field(
     "SidebarDx",
     Int,
@@ -910,7 +906,7 @@ const globalPrefs: Field[] = [
     "windows",
     "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
   ).ver("3.7"),
-  field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
+  field("ScrollbarInSinglePage", Bool, false, "if true, show a scrollbar in single page mode as well").ver("3.6"),
   field(
     "SmoothScroll",
     Bool,
@@ -927,7 +923,9 @@ const globalPrefs: Field[] = [
     "CitationHoverDelay",
     Int,
     -1,
-    "how long to hover an internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it",
+    "how long an internal-document link has to be hovered, in milliseconds, before a popup " +
+      "rendering the destination region (citation entry, figure, footnote) appears. -1 (the " +
+      "default) disables the popup; set a positive value like 300 to enable it",
   ).ver("3.7"),
   field(
     "ReadAloudVoiceId",
@@ -968,7 +966,7 @@ const globalPrefs: Field[] = [
   )
     .ver("3.5")
     .doc(
-      "Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
+      "valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
         "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, " +
         "GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System",
     ),
@@ -989,8 +987,8 @@ const globalPrefs: Field[] = [
       "use UI / FixedPageUI colors for the page. Values: off (document's own colors; default); " +
       "smart (recolor text and page background, keep photos/images as-is — best for dark reading); " +
       "legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme " +
-      "for UI chrome. Shift+I toggles off and smart. Also Settings / Theme and " +
-      "CmdSetDocumentColorsFollowTheme for all three values",
+      "for UI chrome. Shift+I toggles between off and smart; Settings / Theme and the " +
+      "CmdSetDocumentColorsFollowTheme command can set all three values",
   ).ver("3.7"),
   field(
     "TocDy",
@@ -1151,7 +1149,7 @@ const globalPrefs: Field[] = [
   struct(
     "ForwardSearch",
     forwardSearch,
-    "customization options for how we show forward search results (used from " + "LaTeX editors)",
+    "customization options for how forward search results are shown (used from LaTeX editors)",
   ),
   emptyLine(),
   struct("PrinterDefaults", printerDefaults, "these override the default settings in the Print dialog"),
@@ -1190,7 +1188,7 @@ const globalPrefs: Field[] = [
   field("UiLanguage", Str, null, "ISO code of the current UI language").doc(
     "[ISO code](langs.html) of the current UI language",
   ),
-  field("VersionToSkip", Str, null, "we won't ask again to update to this version"),
+  field("VersionToSkip", Str, null, "SumatraPDF won't offer to update to this version again"),
   field("WindowState", Int, 1, "default state of new windows (same as the last closed)").doc(
     "default state of the window. 1 is normal, 2 is maximized, " + "3 is fullscreen, 4 is minimized",
   ),
@@ -1236,7 +1234,7 @@ const globalPrefs: Field[] = [
   compactStruct("PropWinPos", pointPos, "position of the document properties window").structName("Point"),
   // saved & honored, but hidden from the advanced settings dialog (edited via
   // the "Automatically check for updates" checkbox in Options instead)
-  field("CheckForUpdates", Bool, true, "if true, we check once a day if an update is available").internal(),
+  field("CheckForUpdates", Bool, true, "if true, check once a day whether an update is available").internal(),
   emptyLine(),
   comment("Settings below are not recognized by the current version"),
 ];

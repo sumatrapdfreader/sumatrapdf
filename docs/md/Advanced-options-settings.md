@@ -57,15 +57,15 @@ EnableTeXEnhancements = false
 ; if true, Esc key closes SumatraPDF
 EscToExit = false
 
-; if true, we show the full path to a file in the title bar (introduced in
+; if true, show the full path to the document in the title bar (introduced in
 ; version 3.0)
 FullPathInTitle = false
 
 ; pattern used to launch the LaTeX editor when doing inverse search
 InverseSearchCmdLine =
 
-; when restoring session, delay loading of documents until their tab is selected
-; (introduced in version 3.6)
+; if true, restoring a session delays loading each document until its tab is
+; selected (introduced in version 3.6)
 LazyLoading = false
 
 ; background color of the area around the document, traditionally yellow. Only
@@ -81,7 +81,7 @@ NoHomeTab = false
 ; pre-3.6 behavior); if false, the most recently opened come first
 HomePageSortByFrequentlyRead = false
 
-; Valid values: thumbnails, list (introduced in version 3.7)
+; valid values: thumbnails, list (introduced in version 3.7)
 HomePageViewMode = thumbnails
 
 ; if true, a document will be reloaded automatically whenever it's changed
@@ -89,20 +89,21 @@ HomePageViewMode = thumbnails
 ; version 2.5)
 ReloadModifiedDocuments = true
 
-; if true, we remember which files we opened and their display settings
+; if true, remember which documents were opened and their display settings
 RememberOpenedFiles = true
 
-; if true, we store display settings for each document separately (i.e.
-; everything after UseDefaultState in FileStates)
+; if true, store display settings for each document separately (i.e. everything
+; after UseDefaultState in FileStates)
 RememberStatePerDocument = true
 
 ; if true and SessionData isn't empty, that session will be restored at startup
 RestoreSession = true
 
-; if true, we'll always open files using existing SumatraPDF process
+; if true, open documents in the already running SumatraPDF instead of starting
+; a new one
 ReuseInstance = true
 
-; if false, the menu bar will be hidden (use F9 to toggle, persisted across
+; if true, show the menu bar (F9 toggles it; the choice is remembered across
 ; sessions) (introduced in version 2.5)
 ShowMenubar = true
 
@@ -110,7 +111,7 @@ ShowMenubar = true
 ; version 3.7)
 ShowMenubarWithTabs = false
 
-; if true, we show tips on the home page (introduced in version 3.7)
+; if true, show tips on the home page (introduced in version 3.7)
 ShowTips = true
 
 ; up to 13 custom colors for the background color picker, separated by space
@@ -134,7 +135,7 @@ ToolbarPosition = top
 ; of the compact toolbar overlay (introduced in version 3.7)
 SearchUIFloating = false
 
-; if true, we show the Favorites sidebar
+; if true, show the Favorites sidebar
 ShowFavorites = false
 
 ; if true, favorites within each file are sorted alphabetically by name (or page
@@ -142,11 +143,11 @@ ShowFavorites = false
 ; version 3.7)
 SortFavoritesByName = false
 
-; if true, we show table of contents (Bookmarks) sidebar if it's present in the
-; document
+; if true, show the table of contents (Bookmarks) sidebar when the document has
+; one
 ShowToc = true
 
-; if true we draw a blue border around links in the document (introduced in
+; if true, draw a blue border around links in the document (introduced in
 ; version 3.6)
 ShowLinks = false
 
@@ -162,8 +163,7 @@ ShowAnnotationNotification = true
 ; table-of-contents entries (introduced in version 3.7)
 ShowTocPageNumbers = true
 
-; if true, we show a list of frequently read documents when no document is
-; loaded
+; if true, show a list of frequently read documents when no document is loaded
 ShowStartPage = true
 
 ; width of the favorites / bookmarks sidebar in screen pixels, as last resized
@@ -175,7 +175,8 @@ SidebarDx = 0
 ; scrollbars) (introduced in version 3.7)
 Scrollbars = windows
 
-; if true, we show scrollbar in single page mode (introduced in version 3.6)
+; if true, show a scrollbar in single page mode as well (introduced in version
+; 3.6)
 ScrollbarInSinglePage = false
 
 ; if true, smooth mouse-wheel scrolling (exponential chase of the target;
@@ -187,10 +188,10 @@ SmoothScroll = true
 ; 3.7)
 PaddingAfterLastPage = false
 
-; how long to hover an internal-document link (in ms) before we show a popup
-; rendering the destination region (citation entry, figure, footnote). -1 (the
-; default) disables the popup; set a positive value like 300 to enable it
-; (introduced in version 3.7)
+; how long an internal-document link has to be hovered, in milliseconds, before
+; a popup rendering the destination region (citation entry, figure, footnote)
+; appears. -1 (the default) disables the popup; set a positive value like 300 to
+; enable it (introduced in version 3.7)
 CitationHoverDelay = -1
 
 ; voice id for Read Aloud text-to-speech; empty or unset means system default.
@@ -214,7 +215,7 @@ PreventSleepInFullscreen = true
 ; maximum width of a single tab, in pixels at 100% display scaling (at least 60)
 TabWidth = 300
 
-; Valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized
+; valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized
 ; Light, Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark,
 ; Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl,
 ; Ayu, Palenight, System (introduced in version 3.5)
@@ -233,9 +234,9 @@ LastDarkTheme =
 ; colors; default); smart (recolor text and page background, keep photos/images
 ; as-is — best for dark reading); legacy (also recolor images; pre-3.7
 ; invert-style). Does not change menus/toolbars — use Theme for UI chrome.
-; Shift+I toggles off and smart. Also Settings / Theme and
-; CmdSetDocumentColorsFollowTheme for all three values (introduced in version
-; 3.7)
+; Shift+I toggles between off and smart; Settings / Theme and the
+; CmdSetDocumentColorsFollowTheme command can set all three values (introduced
+; in version 3.7)
 DocumentColorsFollowTheme = off
 
 ; if both the favorites and the bookmarks part of the sidebar are visible, this
@@ -555,8 +556,8 @@ ExternalViewers [
   ]
 ]
 
-; customization options for how we show forward search results (used from LaTeX
-; editors)
+; customization options for how forward search results are shown (used from
+; LaTeX editors)
 ForwardSearch [
     ; if greater than 0, the forward search result is marked with a bar down the
     ; left side of the page instead of highlighting the matched text. The value
@@ -730,7 +731,7 @@ DefaultPasswords =
 ; ISO code (langs.html) of the current UI language
 UiLanguage =
 
-; we won't ask again to update to this version
+; SumatraPDF won't offer to update to this version again
 VersionToSkip =
 
 ; default state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
@@ -768,8 +769,8 @@ FileStates [
       ]
     ]
 
-    ; a document can be "pinned" to the Frequently Read list so that it isn't
-    ; displaced by recently opened documents
+    ; if true, the document is "pinned" to the Frequently Read list, so that
+    ; recently opened documents don't displace it
     IsPinned = false
 
     ; if true, the file is considered missing and won't be shown in any list
@@ -782,8 +783,8 @@ FileStates [
     ; for the password again
     DecryptionKey =
 
-    ; if true, we use global defaults when opening this file (instead of the
-    ; values below)
+    ; if true, this document opens with the global defaults instead of the
+    ; values below
     UseDefaultState = false
 
     ; layout of pages. valid values: automatic, single page, facing, book view,
@@ -810,8 +811,8 @@ FileStates [
     ; default position (can be on any monitor)
     WindowPos = 0 0 0 0
 
-    ; if true, we show table of contents (Bookmarks) sidebar if it's present in
-    ; the document
+    ; if true, show the table of contents (Bookmarks) sidebar when the document
+    ; has one
     ShowToc = true
 
     ; width of the left sidebar (table of contents / favorites) in screen
@@ -904,7 +905,7 @@ OpenCountWeek = 0
 ; position of the document properties window
 PropWinPos = 0 0
 
-; if true, we check once a day if an update is available
+; if true, check once a day whether an update is available
 CheckForUpdates = true
 ```
 
