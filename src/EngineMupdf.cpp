@@ -1971,13 +1971,16 @@ static void fz_img_collect_fill_image(fz_context* ctx, fz_device* dev, fz_image*
     fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), false, image);
 }
 
-static void fz_img_collect_fill_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
-                                           fz_colorspace*, const float*, float, fz_color_params) {
-    (void)image;
-    // Image masks are knockouts/clip shapes, not photos — track only for clipping
-    // so dark-mode preserve does not treat them as artwork (#5806 / plus 3.5.16).
-    fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), true, nullptr);
-}
+// Image masks are knockouts / stencil shapes, not photos, so dark-mode preserve
+// must not treat them as artwork (#5806). Ignoring them is the whole job: this
+// used to call fz_img_collect_add() with clip=true, which pushed a clip that
+// nothing ever pops - fill_image_mask is not a clipping operation and has no
+// matching pop_clip, unlike clip_image_mask below. Every mask on a page then
+// narrowed the rect of every image drawn after it (often below the preserve
+// min size, so a full-page image stopped being preserved and got recolored)
+// and left d->top too high for the rest of the page (#5887).
+static void fz_img_collect_fill_image_mask(fz_context*, fz_device*, fz_image*, fz_matrix, fz_colorspace*, const float*,
+                                           float, fz_color_params) {}
 
 static void fz_img_collect_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int, fz_matrix ctm,
                                      fz_rect) {
