@@ -702,7 +702,11 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
             requests[0].errorCode = 0;
             requests[0].renderFinishedCb.Call(&requests[0]);
         }
-        memmove(&(requests[0]), &(requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
+        // PageRenderRequest holds a Func1, so it isn't trivially copyable and
+        // memmove() over it is undefined; shift with assignment instead
+        for (int i = 0; i < MAX_PAGE_REQUESTS - 1; i++) {
+            requests[i] = requests[i + 1];
+        }
         newRequest = &(requests[MAX_PAGE_REQUESTS - 1]);
     } else {
         newRequest = &(requests[requestCount]);

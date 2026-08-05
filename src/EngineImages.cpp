@@ -960,7 +960,6 @@ class EngineImage : public EngineImages {
 
     TempStr GetPropertyTemp(DocProp prop) override;
     void GetProperties(Props& propsOut) override;
-    void GetImageProperties(int pageNo, Props& propsOut);
 
     static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
@@ -1381,11 +1380,6 @@ void EngineImages::GetImageProperties(int pageNo, Props& propsOut) {
     if (imgPath) {
         AddProp(propsOut, DocProp::ImagePath, imgPath);
     }
-    Str data = GetImageData(pageNo);
-    GetExifPropertiesFromData(data, propsOut);
-}
-
-void EngineImage::GetImageProperties(int pageNo, Props& propsOut) {
     Str data = GetImageData(pageNo);
     GetExifPropertiesFromData(data, propsOut);
 }

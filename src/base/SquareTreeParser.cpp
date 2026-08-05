@@ -118,7 +118,7 @@ Str SquareTreeNode::GetValue(Str key, size_t* startIdx) const {
         DataItem& item = data[i];
         if (str::EqI(key, item.key) && !item.child) {
             if (startIdx) {
-                *startIdx = (size_t)(i + 1);
+                *startIdx = (size_t)i + 1;
             }
             return item.str;
         }
@@ -133,7 +133,7 @@ SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
         DataItem& item = data[i];
         if (str::EqI(key, item.key) && item.child) {
             if (startIdx) {
-                *startIdx = (size_t)(i + 1);
+                *startIdx = (size_t)i + 1;
             }
             return item.child;
         }

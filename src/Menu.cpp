@@ -1171,7 +1171,7 @@ static UINT_PTR menusNoTranslate[] = {
 };
 // clang-format on
 
-static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
+static bool CmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     for (int i = 0; i < n; i++) {
         UINT_PTR id = idsList[i];
         if (id == cmdId) {
@@ -1181,7 +1181,7 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     return false;
 }
 
-#define cmdIdInList(name) __cmdIdInList(cmdId, name, dimof(name))
+#define cmdIdInList(name) CmdIdInList(cmdId, name, dimof(name))
 
 static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
     ReportIf(!filePath || !menuFile);

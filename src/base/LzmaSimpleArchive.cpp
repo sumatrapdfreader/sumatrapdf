@@ -29,18 +29,18 @@ namespace lzma {
 struct ISzAllocatorAlloc : ISzAlloc {
     Arena* a;
 
-    static void* _Alloc(void* p, size_t size) {
+    static void* AllocCb(void* p, size_t size) {
         ISzAllocatorAlloc* alloc = (ISzAllocatorAlloc*)p;
         return ::Alloc(alloc->a, size);
     }
-    static void _Free(void* p, void* address) {
+    static void FreeCb(void* p, void* address) {
         ISzAllocatorAlloc* alloc = (ISzAllocatorAlloc*)p;
         ::Free(alloc->a, address);
     }
 
     explicit ISzAllocatorAlloc(Arena* a) {
-        this->Alloc = _Alloc;
-        this->Free = _Free;
+        this->Alloc = AllocCb;
+        this->Free = FreeCb;
         this->a = a;
     }
 };
