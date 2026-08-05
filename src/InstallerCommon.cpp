@@ -859,28 +859,25 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
         return;
     }
 
-    LetterInfo* li;
     StringFormat sfmt;
     const float letterSpacing = -12.f;
     float totalDx = -letterSpacing; // counter last iteration of the loop
     WCHAR s[2]{};
     Gdiplus::PointF origin(0.f, 0.f);
     Gdiplus::RectF bbox;
-    for (int i = 0; i < dimofi(gLetters); i++) {
-        li = &gLetters[i];
-        s[0] = li->c;
+    for (LetterInfo& li : gLetters) {
+        s[0] = li.c;
         g.MeasureString(s, 1, f, origin, &sfmt, &bbox);
-        li->dx = bbox.Width;
-        li->dy = bbox.Height;
-        totalDx += li->dx;
+        li.dx = bbox.Width;
+        li.dy = bbox.Height;
+        totalDx += li.dx;
         totalDx += letterSpacing;
     }
 
     float x = ((float)dx - totalDx) / 2.f;
-    for (int i = 0; i < dimofi(gLetters); i++) {
-        li = &gLetters[i];
-        li->x = x;
-        x += li->dx;
+    for (LetterInfo& li : gLetters) {
+        li.x = x;
+        x += li.dx;
         x += letterSpacing;
     }
     RevealingLettersAnimStart();
@@ -918,27 +915,25 @@ static float DrawMessage(Graphics& g, Str msg, float y, float dx, Color color) {
 }
 
 static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
-    LetterInfo* li;
     WCHAR s[2]{};
-    for (int i = 0; i < dimofi(gLetters); i++) {
-        li = &gLetters[i];
-        s[0] = li->c;
+    for (const LetterInfo& li : gLetters) {
+        s[0] = li.c;
         if (s[0] == ' ') {
             return;
         }
 
-        g.RotateTransform(li->rotation, MatrixOrderAppend);
+        g.RotateTransform(li.rotation, MatrixOrderAppend);
         if (kDrawTextShadow) {
             // draw shadow first
-            SolidBrush b2(li->colShadow);
-            Gdiplus::PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
+            SolidBrush b2(li.colShadow);
+            Gdiplus::PointF o2(li.x - 3.f, y + 4.f + li.dyOff);
             g.DrawString(s, 1, f, o2, &b2);
         }
 
-        SolidBrush b1(li->col);
-        Gdiplus::PointF o1(li->x, y + li->dyOff);
+        SolidBrush b1(li.col);
+        Gdiplus::PointF o1(li.x, y + li.dyOff);
         g.DrawString(s, 1, f, o1, &b1);
-        g.RotateTransform(li->rotation, MatrixOrderAppend);
+        g.RotateTransform(li.rotation, MatrixOrderAppend);
         g.ResetTransform();
     }
 

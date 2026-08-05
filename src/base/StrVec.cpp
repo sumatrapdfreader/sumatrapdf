@@ -802,8 +802,7 @@ static int CalcCapForJoin(const StrVec* v, Str joint) {
     // it's ok to over-estimate
     int cap = 0;
     int jointLen = joint.len;
-    for (auto it = v->begin(); it != v->end(); it++) {
-        Str s = *it;
+    for (auto s : *v) {
         cap += s.len + 1 + jointLen;
     }
     return cap + 32; // +32 arbitrary buffer
@@ -814,8 +813,7 @@ static void JoinInner(const StrVec* v, Str joint, str::Builder& res) {
     // TODO: possibly not handling null values in the middle. need to add more tests and fix
     int firstForJoint = 0;
     int i = 0;
-    for (auto it = v->begin(); it != v->end(); it++) {
-        Str s = *it;
+    for (auto s : *v) {
         if (str::IsNull(s)) {
             firstForJoint++;
             i++;

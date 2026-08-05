@@ -631,8 +631,8 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
 
     bool isValidURL = false;
-    for (int i = 0; i < dimof(updateInfoURLs); i++) {
-        if (str::StartsWith(url, updateInfoURLs[i])) {
+    for (auto updateInfoURL : updateInfoURLs) {
+        if (str::StartsWith(url, updateInfoURL)) {
             isValidURL = true;
             break;
         }
@@ -783,12 +783,12 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
 static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
     HttpRsp* rsp = nullptr;
-    for (int i = 0; i < dimof(updateInfoURLs); i++) {
+    for (auto updateInfoURL : updateInfoURLs) {
         if (rsp) {
             delete rsp;
         }
         str::Builder url;
-        BuildUpdateURL(url, updateInfoURLs[i], updateCheckType);
+        BuildUpdateURL(url, updateInfoURL, updateCheckType);
         Str uri = ToStr(url);
         rsp = new HttpRsp;
         str::ReplaceWithCopy(&rsp->url, uri);

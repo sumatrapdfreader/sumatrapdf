@@ -45,10 +45,10 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
 #endif
     };
     HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    for (int i = 0; i < dimof(regVals); i++) {
-        auto key = regVals[i].key;
-        auto val = regVals[i].value;
-        auto data = regVals[i].data;
+    for (auto& regVal : regVals) {
+        auto key = regVal.key;
+        auto val = regVal.value;
+        auto data = regVal.data;
         bool ok = LoggedWriteRegStr(hkey, key, val, data);
         if (!ok) {
             return false;
@@ -74,9 +74,9 @@ bool UninstallSearchFilter() {
 
     bool ok = true;
 
-    for (int i = 0; i < dimof(regKeys); i++) {
-        LoggedDeleteRegKey(HKEY_LOCAL_MACHINE, regKeys[i]);
-        ok &= LoggedDeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
+    for (auto regKey : regKeys) {
+        LoggedDeleteRegKey(HKEY_LOCAL_MACHINE, regKey);
+        ok &= LoggedDeleteRegKey(HKEY_CURRENT_USER, regKey);
     }
     return ok;
 }

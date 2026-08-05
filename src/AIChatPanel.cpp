@@ -1219,8 +1219,8 @@ static bool AIChatTabHasRunningProcess(WindowTab* tab) {
     if (!tab) {
         return false;
     }
-    for (int i = 0; i < kAIChatProviderCount; i++) {
-        if (tab->aiChat[i].process) {
+    for (const AIChatTabState& chat : tab->aiChat) {
+        if (chat.process) {
             return true;
         }
     }
@@ -1235,8 +1235,8 @@ void ShutdownAIChatForMainWindow(MainWindow* win) {
         if (!tab) {
             continue;
         }
-        for (int i = 0; i < kAIChatProviderCount; i++) {
-            AIChatCloseProcess(&tab->aiChat[i].process, true);
+        for (AIChatTabState& chat : tab->aiChat) {
+            AIChatCloseProcess(&chat.process, true);
         }
     }
     AIChatWaitForTabProcessesToFinish(win, AIChatTabHasRunningProcess);

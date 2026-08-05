@@ -100,8 +100,8 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
         }
 
         int significantBuckets = 0;
-        for (int i = 0; i < 4096; i++) {
-            if (buckets[i] * 100 > n) {
+        for (int bucket : buckets) {
+            if (bucket * 100 > n) {
                 significantBuckets++;
             }
         }

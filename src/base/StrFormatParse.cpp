@@ -977,8 +977,7 @@ TempStr FormatRomanNumeralTemp(int n) {
     // Page numbers in roman are short (e.g. 3999 -> "MMMCMXCIX" = 9 chars).
     char romanScratch[32]{};
     str::Builder roman(Str(romanScratch, sizeofi(romanScratch)));
-    for (int i = 0; i < dimof(romandata); i++) {
-        auto&& el = romandata[i];
+    for (auto& el : romandata) {
         for (; n >= el.value; n -= el.value) {
             roman.Append(el.numeral);
         }

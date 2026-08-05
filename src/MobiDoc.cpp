@@ -345,11 +345,11 @@ bool HuffDicDecompressor::SetHuffData(u8* huffData, int huffDataLen) {
         return false;
     }
     // we conservatively use the big-endian version of the data,
-    for (int i = 0; i < kCacheItemCount; i++) {
-        cacheTable[i] = d.UInt32BE();
+    for (u32& v : cacheTable) {
+        v = d.UInt32BE();
     }
-    for (int i = 0; i < kBaseTableItemCount; i++) {
-        baseTable[i] = d.UInt32BE();
+    for (u32& v : baseTable) {
+        v = d.UInt32BE();
     }
     ReportIf(d.Offset() != kHuffRecordMinLen);
     return true;

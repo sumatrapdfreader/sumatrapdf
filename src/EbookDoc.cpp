@@ -103,9 +103,9 @@ static uint GetCodepageFromPI(Str xmlPI) {
         {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
-    for (int i = 0; i < dimof(encodings); i++) {
-        if (str::Contains(encoding, encodings[i].namePart)) {
-            return encodings[i].codePage;
+    for (auto& enc : encodings) {
+        if (str::Contains(encoding, enc.namePart)) {
+            return enc.codePage;
         }
     }
     return CP_ACP;
@@ -1607,11 +1607,11 @@ static TempStr DecompressTcrTextTemp(Str data) {
     Str end = Str(data.s + data.len, 0);
 
     Str dict[256];
-    for (int n = 0; n < dimofi(dict); n++) {
+    for (Str& entry : dict) {
         if (!curr.len) {
             return str::DupTemp(data);
         }
-        dict[n] = curr;
+        entry = curr;
         int step = 1 + (u8)curr.s[0];
         if (step > curr.len) {
             return str::DupTemp(data);

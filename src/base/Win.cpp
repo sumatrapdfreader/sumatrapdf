@@ -1632,10 +1632,9 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
     SID_IDENTIFIER_AUTHORITY systemSid = {SECURITY_NT_AUTHORITY};
     if (validTokenGroups || checkTokenForGroupDeny) {
         PSID psid = nullptr;
-        for (size_t i = 0; i < dimof(groupsToCheck); i++) {
+        for (DWORD groupID : groupsToCheck) {
             // Create a SID for the local group and then check if it exists in our token
             DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
-            DWORD groupID = groupsToCheck[i];
             ok = AllocateAndInitializeSid(&systemSid, 2, sub1, groupID, 0, 0, 0, 0, 0, 0, &psid);
             if (!ok) {
                 continue;
@@ -3240,11 +3239,10 @@ void SetCursorCached(LPWSTR cursorId) {
 }
 
 void DeleteCachedCursors() {
-    for (int i = 0; i < dimof(knownCursorIds); i++) {
-        HCURSOR cur = cachedCursors[i];
+    for (HCURSOR& cur : cachedCursors) {
         if (cur) {
             DestroyCursor(cur);
-            cachedCursors[i] = nullptr;
+            cur = nullptr;
         }
     }
 }

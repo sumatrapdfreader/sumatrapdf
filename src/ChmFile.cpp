@@ -370,9 +370,9 @@ bool ChmFile::Load(Str path) {
 
     if (!HasData(homePath)) {
         Str pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
-        for (int i = 0; i < dimof(pathsToTest); i++) {
-            if (HasData(pathsToTest[i])) {
-                str::ReplaceWithCopy(&homePath, pathsToTest[i]);
+        for (Str testPath : pathsToTest) {
+            if (HasData(testPath)) {
+                str::ReplaceWithCopy(&homePath, testPath);
             }
         }
         if (!HasData(homePath)) {
