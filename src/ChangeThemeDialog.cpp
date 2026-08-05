@@ -174,8 +174,27 @@ void ChangeThemeWnd::OnChange() {
 }
 
 bool ChangeThemeWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE) {
+    if (msg.message != WM_KEYDOWN) {
+        return false;
+    }
+    if (msg.wParam == VK_ESCAPE) {
         OnCancel();
+        return true;
+    }
+    if (msg.wParam == VK_RETURN) {
+        // an open drop-down list gets Enter first: there it commits the
+        // highlighted entry rather than the dialog
+        HWND hwndDrop = dropDownDocumentColorsFollowTheme ? dropDownDocumentColorsFollowTheme->hwnd : nullptr;
+        if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
+            return false;
+        }
+        // Enter presses the focused button, like a real dialog does; anywhere
+        // else it's the default action
+        if (btnCancel && GetFocus() == btnCancel->hwnd) {
+            OnCancel();
+        } else {
+            OnChange();
+        }
         return true;
     }
     return false;
@@ -278,6 +297,9 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         hbox->AddChild(new Padding(btnCancel, pad));
         btnChange =
             CreateButton(hwnd, _TRA("Change"), MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnChange>(this), isRtl);
+        // Enter runs this one (see PreTranslateMessage), so draw it as the
+        // default button to say so
+        btnChange->isDefault = true;
         hbox->AddChild(new Padding(btnChange, pad));
         vbox->AddChild(hbox);
     }
