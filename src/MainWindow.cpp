@@ -59,15 +59,15 @@ struct LinkHandler : ILinkHandler {
     }
     ~LinkHandler() override;
 
-    void GotoLink(IPageDestination*) override;
-    void GotoNamedDest(Str) override;
+    void GotoLink(IPageDestination* dest) override;
+    void GotoNamedDest(Str name) override;
     void GoToPage(int pageNo, bool addNavPoint) override;
     bool GoToNextPage() override;
     bool GoToPrevPage(bool toBottom = false) override;
-    void ScrollTo(IPageDestination*) override;
+    void ScrollTo(IPageDestination* dest) override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
-    void LaunchURL(Str) override;
-    void LaunchFile(Str path, IPageDestination*) override;
+    void LaunchURL(Str uri) override;
+    void LaunchFile(Str path, IPageDestination* remoteLink) override;
     TocItem* FindTocItem(TocItem* item, Str name, bool partially) override;
 };
 

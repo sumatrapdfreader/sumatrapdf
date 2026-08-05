@@ -370,7 +370,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
     return true;
 }
 
-void MarkdownModel::GoToPage(int pageNo, bool) {
+void MarkdownModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
     if (!ValidPageNo(pageNo)) {
         return;
     }
@@ -396,7 +396,7 @@ void MarkdownModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     GoToPage(pageNo, false);
 }
 
-bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler*) {
+bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
     Str url = PageDestGetName(link);
     if (DisplayPage(url)) {
         return true;
@@ -431,21 +431,21 @@ void MarkdownModel::Navigate(int dir) {
     }
 }
 
-void MarkdownModel::SetDisplayMode(DisplayMode, bool) {}
+void MarkdownModel::SetDisplayMode(DisplayMode /*mode*/, bool /*keepContinuous*/) {}
 
 DisplayMode MarkdownModel::GetDisplayMode() const {
     return DisplayMode::SinglePage;
 }
 
-void MarkdownModel::SetInPresentation(bool) {}
+void MarkdownModel::SetInPresentation(bool /*enable*/) {}
 
-void MarkdownModel::SetViewPortSize(Size) {}
+void MarkdownModel::SetViewPortSize(Size /*size*/) {}
 
 MarkdownModel* MarkdownModel::AsMarkdown() {
     return this;
 }
 
-void MarkdownModel::SetZoomVirtual(float zoom, Point*) {
+void MarkdownModel::SetZoomVirtual(float zoom, Point* /*fixPt*/) {
     if (zoom > 0) {
         zoom = limitValue(zoom, kZoomMin, kZoomMax);
     }
@@ -535,7 +535,7 @@ void MarkdownModel::ZoomTo(float zoomLevel) const {
     }
 }
 
-float MarkdownModel::GetZoomVirtual(bool) const {
+float MarkdownModel::GetZoomVirtual(bool /*absolute*/) const {
     if (!docView) {
         return 100;
     }
@@ -735,7 +735,7 @@ void MarkdownModel::GetDisplayState(FileState* fs) {
     fs->scrollPos = htmlScrollPos;
 }
 
-void MarkdownModel::CreateThumbnail(Size, const OnBitmapRendered*) {}
+void MarkdownModel::CreateThumbnail(Size /*size*/, const OnBitmapRendered* /*saveThumbnail*/) {}
 
 bool MarkdownModel::IsSupportedFileType(FileType kind) {
     return kind == FileType::Markdown;

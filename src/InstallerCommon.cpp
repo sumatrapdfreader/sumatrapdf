@@ -985,7 +985,7 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
     }
 }
 
-static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*, bool skipMessage) {
+static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT* /*ps*/, bool skipMessage) {
     // TODO: cache bmp object?
     Graphics g(dc);
     Rect rc = HwndClientRect(hwnd);

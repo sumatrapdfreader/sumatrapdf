@@ -206,7 +206,8 @@ static void UpdateModeButtons(ImageEditWindow* ew);
 static void InvalidateImageArea(ImageEditWindow* ew);
 static bool HandleImageEditArrowKey(ImageEditWindow* ew, WPARAM wp);
 
-static LRESULT CALLBACK WndProcDestEditSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR data) {
+static LRESULT CALLBACK WndProcDestEditSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
+                                                DWORD_PTR data) {
     ImageEditWindow* ew = (ImageEditWindow*)data;
     if (msg == WM_KEYDOWN && ew && HandleImageEditArrowKey(ew, wp)) {
         return 0;

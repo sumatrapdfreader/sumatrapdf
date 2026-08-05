@@ -35,7 +35,7 @@ static void fz_unlock_context_cs(void* user, int lock) {
 // route mupdf's warnings/errors through our log() instead of the default
 // callback, which does fputs() to stderr; that first fputs makes the CRT
 // allocate a stdio buffer it never frees, which shows up as a leak
-static void fz_log_cb(void*, const char* msg) {
+static void fz_log_cb(void* /*user*/, const char* msg) {
     log(Str(msg));
 }
 

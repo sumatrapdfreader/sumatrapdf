@@ -19,6 +19,6 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     return res;
 }
 
-RenderedBitmap* LoadRenderedBitmap(Str) {
+RenderedBitmap* LoadRenderedBitmap(Str /*path*/) {
     return nullptr;
 }

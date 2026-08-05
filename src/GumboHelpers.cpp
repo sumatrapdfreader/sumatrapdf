@@ -33,7 +33,7 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
     return str::EqI(GumboElementTagName(node), name);
 }
 
-bool GumboTagNameIsNS(const GumboNode* node, Str name, Str) {
+bool GumboTagNameIsNS(const GumboNode* node, Str name, Str /*ns*/) {
     // Preserve the old parser's compatibility: namespace URI is ignored,
     // and a prefix in the source tag name is treated as optional.
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
@@ -131,10 +131,10 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
     return ToStrTemp(sb);
 }
 
-static void* GumboMallocWrapper(void*, size_t size) {
+static void* GumboMallocWrapper(void* /*userdata*/, size_t size) {
     return malloc(size);
 }
-static void GumboFreeWrapper(void*, void* ptr) {
+static void GumboFreeWrapper(void* /*userdata*/, void* ptr) {
     free(ptr);
 }
 
