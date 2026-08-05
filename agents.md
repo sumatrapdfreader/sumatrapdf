@@ -20,6 +20,8 @@ When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing`
 
 After making a change to a .cpp, .c or .h file under `src/` (and before running build.ts), run clang-format on those files to reformat them in place. Do **not** clang-format third-party / vendored code (`mupdf/`, `ext/`, etc.) — keep edits there minimal and match the existing local style.
 
+For .ts / .js / .json / .md files, the equivalent is `bunx prettier --write <files>`. Settings live in `.prettierrc.json` (`printWidth` 120, `endOfLine` lf) and `.prettierignore` (vendored code, build output, and the generated `docs/md/Advanced-options-settings.md`). Format only the files you touched: most of `cmd/` and `tests/` predates the config and would produce large unrelated diffs.
+
 Never commit changes automatically. Always wait for explicit command to commit changes.
 
 When committing a fix for a GitHub issue, include `(fixes #<issue-no>)` at the end of the commit message.
@@ -49,12 +51,12 @@ We are making non-UI library code compile on macOS and Linux while keeping the W
 
 When a source file needs platform-specific code, keep the files in the same module directory and use a platform suffix:
 
-| Suffix     | Used on              | Purpose                                      |
-|------------|----------------------|----------------------------------------------|
-| `_win`     | Windows              | Win32 and other Windows-only implementations |
-| `_posix`   | macOS **and** Linux  | Code shared by both Unix-like targets        |
-| `_mac`     | macOS only           | Darwin-specific code not shared with Linux   |
-| `_linux`   | Linux only           | Linux-specific code not shared with macOS    |
+| Suffix   | Used on             | Purpose                                      |
+| -------- | ------------------- | -------------------------------------------- |
+| `_win`   | Windows             | Win32 and other Windows-only implementations |
+| `_posix` | macOS **and** Linux | Code shared by both Unix-like targets        |
+| `_mac`   | macOS only          | Darwin-specific code not shared with Linux   |
+| `_linux` | Linux only          | Linux-specific code not shared with macOS    |
 
 **`_posix` is for code common to Linux and macOS** — prefer it over duplicating the same logic in `_mac` and `_linux`. Use `_mac` or `_linux` only when the two Unix platforms genuinely diverge.
 
@@ -110,7 +112,7 @@ and defined in `Foo.cpp`, the doc comment lives above the definition in
 
 Comments that have no `.cpp` counterpart stay in the header: those documenting a
 struct/class, an `enum`, a macro, a constant, or an `inline`/templated function
-that is *defined* in the header (there is nowhere else to put them).
+that is _defined_ in the header (there is nowhere else to put them).
 
 ## `fmt()` is the type-safe formatter
 
@@ -180,12 +182,14 @@ across calls) — keep the caller's stable string instead.
 ## Adding a new advanced setting
 
 To add a new advanced setting:
+
 - add definition in cmd/gen-settings.ts
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-settings.ts") to regenerate src/Settings.h and src/Settings.cpp
 
 ## Adding a new command
 
 To add a new command:
+
 - add to cmd/gen-commands.ts, always at the end of the list (before the "CmdNone" command)
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-commands.ts") to regenerate src/Commands.h and src/Commands.cpp
 - document in docs/md/Commands.md
@@ -198,6 +202,7 @@ The name↔`DocProp` `SeqStrNum` maps (`epubPropsMap`, `pdfCreatorPropsMap`, `mu
 ## Adding a new cmd-line flag
 
 To add a new cmd-line flag:
+
 - add to cmd/gen-flags.ts
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-flags.ts") to regenerate src/Flags.cpp
 - implement handling in Flags.cpp
@@ -208,7 +213,7 @@ To add a new cmd-line flag:
 
 When documenting a release (usually the **next** section at the top):
 
-- **Do not document bug fixes.** Version history is for features and behavior changes, not a changelog of defects. A plain `fix <something>` bullet does not belong there — the commit message and the GitHub issue already record it. Only mention a fix when it comes with a user-visible change worth describing on its own (a new setting, a new command, a different default), and then describe *that*, not the bug.
+- **Do not document bug fixes.** Version history is for features and behavior changes, not a changelog of defects. A plain `fix <something>` bullet does not belong there — the commit message and the GitHub issue already record it. Only mention a fix when it comes with a user-visible change worth describing on its own (a new setting, a new command, a different default), and then describe _that_, not the bug.
 - Main bullets describe features and behavior changes in prose. Mention menus, shortcuts, and user-visible effects — not a stream of `add CmdFoo` / `add -flag` bullets.
 - At the **end** of the version section, add consolidated lists (only for things **new** in that version):
 
@@ -228,6 +233,7 @@ When documenting a release (usually the **next** section at the top):
 ## Bug reproduction / test files
 
 We keep test and reproduction files for bugs in `C:\Users\kjk\OneDrive\!sumatra\bugs\`, named after the GitHub issue number:
+
 - a single file is `bug-<bug-no><rest>` (e.g. `bug-534.pdf`)
 - if a repro needs more than one file, use a directory `bug-<bug-no><rest>\`
 
@@ -236,6 +242,7 @@ When fixing a bug, look there first for an existing repro file for that issue an
 ## Writing tests
 
 Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Naming convention, keyed by the GitHub issue number being tested:
+
 - the test script is `tests/issue-<number>.ts`
 - if it needs a small number (one or two) of extra files, name them `tests/issue-<number>.<rest>`
 - if it needs more files, or a file must live in a directory, put them in `tests/issue-<number>-data/`
@@ -243,6 +250,7 @@ Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Nami
 After making a change, do **not** run the full test suites (`tests/all.ts`, `tests/before-release.ts`, or unrelated unit tests) as routine verification. Run only the test or tests directly related to the feature changed. Run broader suites only when the user explicitly requests them.
 
 Structure of each test (so they compose in tests/all.ts):
+
 - each `tests/issue-<number>.ts` exports `export async function testit(): Promise<void>` that runs the test logic and THROWS on failure (returns normally on success). It must NOT call `process.exit` or build the app itself.
 - end the file with a standalone runner so it can still be run directly:
   ```ts
@@ -268,6 +276,7 @@ Some checks are too slow, need large external corpora, or require network/git an
 Example: `tests/ad-hoc-exif.ts` clones/updates `../exif-py` and compares `-dump-exif` output to exif-py's `dump.txt`.
 
 Guidelines for test scripts:
+
 - build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF.exe
 - if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/all.ts` continues
 - a good test fails when the fix is reverted (verify this) — not just passes with the fix present
@@ -275,7 +284,7 @@ Guidelines for test scripts:
   - `tests/winapi.ts` = raw winapi: FFI bindings + thin wrappers + constants (enum/find windows, SendMessage/PostMessage, getWindow{Text,Rect}, sendText, `captureWindowToPng` which uses PrintWindow+GDI+ so it works on occluded/background windows).
   - `tests/win-automation.ts` = high-level actions built on winapi: `launchSumatra` (passes `-for-testing`), `waitForFrame`/`findCanvas`, `clickAt`, `pressEnter/Tab/Escape`, `typeIntoInput` / `fillFormFieldAt`, `openContextMenu`/`waitForContextMenu`, `sendCommand`.
   - on this machine injected SendInput mouse/keyboard is dropped, but posting window messages cross-process works; see the project memory `env-gui-automation`.
-- resolve command ids by name with `cmdId("CmdName")` (from `tests/util.ts`), never hardcode the numeric id. Command ids are auto-numbered in `src/Commands.h` and shift whenever commands are added or removed, so a hardcoded constant silently starts sending a *different* command. This broke `tests/issue-5780.ts` (it sent `CmdCommandPalette` instead of `CmdOpenNextFileInFolder` after ids shifted) and had stale ids lurking in several ad-hoc tests. `tests/lint-command-ids.ts` (runs first in `tests/all.ts`) enforces this — it fails the suite on any hardcoded `const Cmd... = <number>` or numeric `sendCommand(win, <number>)`.
+- resolve command ids by name with `cmdId("CmdName")` (from `tests/util.ts`), never hardcode the numeric id. Command ids are auto-numbered in `src/Commands.h` and shift whenever commands are added or removed, so a hardcoded constant silently starts sending a _different_ command. This broke `tests/issue-5780.ts` (it sent `CmdCommandPalette` instead of `CmdOpenNextFileInFolder` after ids shifted) and had stale ids lurking in several ad-hoc tests. `tests/lint-command-ids.ts` (runs first in `tests/all.ts`) enforces this — it fails the suite on any hardcoded `const Cmd... = <number>` or numeric `sendCommand(win, <number>)`.
 - prefer driving the app through `-dbg-control <named-pipe>` and `cmd/control.ts` over GUI automation or adding new test-only command-line flags. Tests should pick a unique pipe name, launch `SumatraPDF.exe -for-testing -dbg-control <name>`, send binary request/response commands, and quit the app through the control client.
 - `-dbg-control` protocol: requests are `[u32 payloadSize][u16 command][u16 requestId][args...]`; responses are `[u32 payloadSize][u16 requestId][results...]`. Arguments/results are encoded as `[u16 type]` where `0=end`, `1=i32` plus 4 bytes, `2=bytes` plus u32 length and data, `3=utf8 string` plus u32 length, bytes, and a zero terminator, and `4=list` plus u16 element count followed by encoded elements.
 - never write runtime scratch / result files directly into `tests/` — that leaves the repo dirty. Write them under `tests/tmp/` (gitignored), using `tmpPath("name")` from `tests/util.ts` (it creates the dir on demand); the OS temp dir (`os.tmpdir()`) is also fine if you clean up after
