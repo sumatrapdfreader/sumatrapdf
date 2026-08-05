@@ -362,7 +362,7 @@ CmdSetTheme,,don't use,
 CmdViewWithExternalViewer,,don't use,
 CmdSaveAttachment,,don't use,
 CmdOpenAttachment,,don't use,
-CmdExec,,internal,"runs an external program with optional filter; used internally (e.g. selection handlers), not for normal shortcuts or DDE",
+CmdExec,,internal,"runs an external program with optional filter; used internally (e.g. selection handlers), not for normal shortcuts or DDE"
 ```
 
 `CmdFindMatch` is an old name for `CmdFindToggleMatchCase`. It is not a generated command ID, but SumatraPDF still accepts it in old shortcut settings for compatibility.
