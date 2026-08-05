@@ -479,7 +479,7 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
 }
 
 // Load conversation history from Codex rollout JSONL
-static void LoadCodexSessionHistory(MainWindow* win, Str sessionId, Str) {
+static void LoadCodexSessionHistory(MainWindow* win, Str sessionId, Str /*dir*/) {
     TempStr sessionPath = FindCodexRolloutPathTemp(sessionId);
     if (!sessionPath || !file::Exists(sessionPath)) {
         return;

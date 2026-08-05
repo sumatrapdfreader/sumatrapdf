@@ -606,7 +606,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     loga("_uploadDebugReport() finished\n");
 }
 
-static DWORD WINAPI CrashDumpThread(LPVOID) {
+static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed) {
         return 0;
@@ -874,7 +874,7 @@ bool SetSymbolsDir(Str symDir) {
     return true;
 }
 
-static void __cdecl onSignalAbort(int) {
+static void __cdecl onSignalAbort(int /*sig*/) {
     // put the signal back because can be called many times
     // (from multiple threads) and raise() resets the handler
     signal(SIGABRT, onSignalAbort);

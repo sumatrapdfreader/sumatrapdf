@@ -150,7 +150,7 @@ struct EditAnnotationsWindow : Wnd {
 
     void OnSize(UINT msg, UINT type, Size size) override;
     void OnFocus() override;
-    bool PreTranslateMessage(MSG&) override;
+    bool PreTranslateMessage(MSG& msg) override;
 
     void ListBoxSelectionChanged();
 
@@ -1367,7 +1367,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     });
 }
 
-void EditAnnotationsWindow::OnSize(UINT msg, UINT, Size size) {
+void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
     if (msg != WM_SIZE) {
         return;
     }

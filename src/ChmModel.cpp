@@ -112,7 +112,7 @@ int ChmModel::CurrentPageNo() const {
     return currentPageNo;
 }
 
-void ChmModel::GoToPage(int pageNo, bool) {
+void ChmModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
     ReportIf(!ValidPageNo(pageNo));
     if (!ValidPageNo(pageNo)) {
         return;
@@ -319,7 +319,7 @@ void ChmModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     GoToPage(pageNo, false);
 }
 
-bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
+bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
     Kind k = link->GetKind();
     if (k != kindDestinationScrollTo) {
         logf("ChmModel::HandleLink: unsupported kind '%s'\n", Str(k));
@@ -360,7 +360,7 @@ void ChmModel::Navigate(int dir) {
     }
 }
 
-void ChmModel::SetDisplayMode(DisplayMode, bool) {
+void ChmModel::SetDisplayMode(DisplayMode /*mode*/, bool /*keepContinuous*/) {
     // no-op
 }
 
@@ -368,11 +368,11 @@ DisplayMode ChmModel::GetDisplayMode() const {
     return DisplayMode::SinglePage;
 }
 
-void ChmModel::SetInPresentation(bool) {
+void ChmModel::SetInPresentation(bool /*enable*/) {
     // no-op
 }
 
-void ChmModel::SetViewPortSize(Size) {
+void ChmModel::SetViewPortSize(Size /*size*/) {
     // no-op
 }
 
@@ -380,7 +380,7 @@ ChmModel* ChmModel::AsChm() {
     return this;
 }
 
-void ChmModel::SetZoomVirtual(float zoom, Point*) {
+void ChmModel::SetZoomVirtual(float zoom, Point* /*fixPt*/) {
     if (zoom > 0) {
         zoom = limitValue(zoom, kZoomMin, kZoomMax);
     }
@@ -475,7 +475,7 @@ void ChmModel::ZoomTo(float zoomLevel) const {
     }
 }
 
-float ChmModel::GetZoomVirtual(bool) const {
+float ChmModel::GetZoomVirtual(bool /*absolute*/) const {
     if (!docView) {
         return 100;
     }
@@ -922,11 +922,11 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnBitmapRendered* saveThumbnail);
     ~ChmThumbnailTask() override;
     void StartCreateThumbnail(HtmlWindow* hw);
-    bool OnBeforeNavigate(Str, bool newWindow) override;
+    bool OnBeforeNavigate(Str url, bool newWindow) override;
     void OnDocumentComplete(Str url) override;
     Str GetDataForUrl(Str url) override;
     void OnLButtonDown() override;
-    void DownloadData(Str, Str) override;
+    void DownloadData(Str url, Str data) override;
 };
 
 static void SafeDeleteChmThumbnailTask(ChmThumbnailTask* d) {
@@ -955,7 +955,7 @@ ChmThumbnailTask::~ChmThumbnailTask() {
     str::Free(homeUrl);
 }
 
-bool ChmThumbnailTask::OnBeforeNavigate(Str, bool newWindow) {
+bool ChmThumbnailTask::OnBeforeNavigate(Str /*url*/, bool newWindow) {
     return !newWindow;
 }
 
@@ -1007,7 +1007,7 @@ void ChmThumbnailTask::OnDocumentComplete(Str url) {
 
 void ChmThumbnailTask::OnLButtonDown() {}
 
-void ChmThumbnailTask::DownloadData(Str, Str) {}
+void ChmThumbnailTask::DownloadData(Str /*url*/, Str /*data*/) {}
 
 static void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendered* saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked

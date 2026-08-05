@@ -1300,7 +1300,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, int n, uint) {
+static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, int n, uint /*codePage*/) {
     if (n < 9) {
     Fallback:
         builder.Append("&lt;");
@@ -1431,7 +1431,7 @@ Str PalmDoc::GetHtmlData() const {
     return ToStr(htmlData);
 }
 
-TempStr PalmDoc::GetPropertyTemp(DocProp) const {
+TempStr PalmDoc::GetPropertyTemp(DocProp /*prop*/) const {
     return {};
 }
 
@@ -1875,7 +1875,7 @@ Str TxtDoc::GetHtmlData() const {
     return ToStr(htmlData);
 }
 
-TempStr TxtDoc::GetPropertyTemp(DocProp) const {
+TempStr TxtDoc::GetPropertyTemp(DocProp /*prop*/) const {
     return {};
 }
 

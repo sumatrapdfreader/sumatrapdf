@@ -2151,7 +2151,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     }
 }
 
-bool DisplayModel::ShouldCacheRendering(int) const {
+bool DisplayModel::ShouldCacheRendering(int /*pageNo*/) const {
     // recommend caching for all documents
     return true;
 }

@@ -411,11 +411,11 @@ void CommandPaletteWnd::OnListDoubleClick() {
     ExecuteCurrentSelection();
 }
 
-static void OnClose(Wnd::CloseEvent*) {
+static void OnClose(Wnd::CloseEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
 
-static void OnDestroy(Wnd::DestroyEvent*) {
+static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
 
