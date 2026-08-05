@@ -182,6 +182,10 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
     int fwpEnd = off;
     // length modifier; determine integer width (32/64 on LLP64 / win64)
     int bits = 32;
+    char lenMod = (off < f.len) ? f.s[off] : 0;
+    bool is32BitLenMod = lenMod == 'l' || lenMod == 'h' || lenMod == 'L' || lenMod == 'w';
+    // size_t / intmax_t / ptrdiff_t / MS size_t
+    bool is64BitLenMod = lenMod == 'z' || lenMod == 'j' || lenMod == 't' || lenMod == 'I';
     if (startsWith(f, off, "I64")) {
         bits = 64;
         off += 3;
@@ -192,10 +196,10 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
         off += 2;
     } else if (startsWith(f, off, "hh")) {
         off += 2;
-    } else if (off < f.len && (f.s[off] == 'l' || f.s[off] == 'h' || f.s[off] == 'L' || f.s[off] == 'w')) {
+    } else if (is32BitLenMod) {
         off++; // long is 32-bit on win64
-    } else if (off < f.len && (f.s[off] == 'z' || f.s[off] == 'j' || f.s[off] == 't' || f.s[off] == 'I')) {
-        bits = 64; // size_t / intmax_t / ptrdiff_t / MS size_t
+    } else if (is64BitLenMod) {
+        bits = 64;
         off++;
     }
     char conv = (off < f.len) ? f.s[off] : 0;

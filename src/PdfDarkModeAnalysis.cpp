@@ -378,9 +378,10 @@ static void PdfDarkModeAssignPolicies(DarkModePageAnalysis* analysis, const Dark
                 img.analysis.kind = DarkImageKind::Photo;
                 img.policy = DarkImagePolicy::Preserve;
             }
-            if (!PdfDarkModeImageMeetsPreserveMinSize(img) ||
-                PdfDarkModeIsDecorativeStripImage(img.pageBounds, analysis->pageBounds) ||
-                (img.pageCoverage >= kMaxPreserveImagePageCoverage && !preserveArt)) {
+            bool tooSmallOrDominant = !PdfDarkModeImageMeetsPreserveMinSize(img) ||
+                                      PdfDarkModeIsDecorativeStripImage(img.pageBounds, analysis->pageBounds) ||
+                                      (img.pageCoverage >= kMaxPreserveImagePageCoverage && !preserveArt);
+            if (tooSmallOrDominant) {
                 img.policy = DarkImagePolicy::AdaptiveDocument;
             }
             if (isPureScan && img.pageCoverage >= options.minScanDominantCoverage && !preserveArt) {

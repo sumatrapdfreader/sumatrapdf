@@ -596,10 +596,8 @@ void DisplayModel::BuildPagesInfo() {
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo* pageInfo = &pagesInfo[pageNo - 1];
         pageInfo->visibleRatio = 0.0;
-        pagesInfo[pageNo - 1].isShown = false;
-        if (isCont || (newStartPage <= pageNo && pageNo < newStartPage + columns)) {
-            pagesInfo[pageNo - 1].isShown = true;
-        }
+        bool isShown = isCont || (newStartPage <= pageNo && pageNo < newStartPage + columns);
+        pagesInfo[pageNo - 1].isShown = isShown;
     }
 
     if (isCont) {

@@ -141,9 +141,10 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
     if (shift) {
         s.Append("Shift+");
     }
+    bool isAlphaNumKey = (vk >= 'A' && vk <= 'Z') || (vk >= '0' && vk <= '9');
     if (vk >= VK_F1 && vk <= VK_F24) {
         s.Append(fmt("F%d", (int)(vk - VK_F1 + 1)));
-    } else if ((vk >= 'A' && vk <= 'Z') || (vk >= '0' && vk <= '9')) {
+    } else if (isAlphaNumKey) {
         s.AppendChar((char)vk);
     } else if (vk == VK_SNAPSHOT) {
         s.Append("PrtSc");

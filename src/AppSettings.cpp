@@ -449,7 +449,8 @@ bool LoadSettings() {
     ApplySettingsToOpenWindows();
     bool readAloudVoiceCleared = ApplyReadAloudVoiceFromSettings();
 
-    if (!file::Exists(settingsPath) || readAloudVoiceCleared || migratedDocumentColorsFollowTheme) {
+    bool needsSave = !file::Exists(settingsPath) || readAloudVoiceCleared || migratedDocumentColorsFollowTheme;
+    if (needsSave) {
         SaveSettings();
     }
 

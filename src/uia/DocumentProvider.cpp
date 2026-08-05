@@ -237,14 +237,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         return E_FAIL;
     }
 
+    // properties that are simply TRUE for a document element
+    bool isTrueBoolProp = propertyId == UIA_IsTextPatternAvailablePropertyId ||
+                          propertyId == UIA_IsContentElementPropertyId || propertyId == UIA_IsControlElementPropertyId;
     if (propertyId == UIA_NamePropertyId) {
         // typically filename
         pRetVal->vt = VT_BSTR;
         TempStr s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
         pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
-    } else if (propertyId == UIA_IsTextPatternAvailablePropertyId || propertyId == UIA_IsContentElementPropertyId ||
-               propertyId == UIA_IsControlElementPropertyId) {
+    } else if (isTrueBoolProp) {
         pRetVal->vt = VT_BOOL;
         pRetVal->boolVal = TRUE;
         return S_OK;

@@ -1166,7 +1166,8 @@ TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
         return str::IsEmptyOrWhiteSpace(res) && altProp != ExifProp::None ? GetStringProp(altProp) : res;
     }
     TempStr res = nullptr;
-    if (entry->type == TiffAscii || (entry->type == TiffUndefined && IsAsciiUndefinedProp(prop))) {
+    bool isAsciiText = entry->type == TiffAscii || (entry->type == TiffUndefined && IsAsciiUndefinedProp(prop));
+    if (isAsciiText) {
         res = TrimmedAsciiTemp(r, entry->dataOff, entry->count);
     } else if (prop == ExifProp::UserComment && entry->type == TiffUndefined && EntryBoundsOk(*this, *entry, 8)) {
         Str bytes((char*)(r.d + entry->dataOff), (int)entry->count);
