@@ -29,6 +29,7 @@
 #include "AppSettings.h"
 #include "AppTools.h"
 #include "Favorites.h"
+#include "HomePage.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "Accelerators.h"
@@ -731,6 +732,10 @@ static void ReloadSettings() {
 
     TempStr uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
+
+    // the home page layout cache points at FileState objects owned by
+    // gGlobalPrefs; CleanUpSettings() frees them (crash 8c34d7eda)
+    HomePageInvalidateLayoutCache();
 
     gFileHistory.UpdateStatesSource(nullptr);
     CleanUpSettings();

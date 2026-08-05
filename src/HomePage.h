@@ -32,6 +32,8 @@ constexpr const char* kLinkHomePinFilePrefix = "<HomePage,PinFile>";
 
 void SetPromoString(Str s);
 void FreeHomePageTips();
+// must be called before the FileState objects the cache points at are freed
+void HomePageInvalidateLayoutCache();
 
 void DrawHomePage(MainWindow* win, HDC hdc);
 void PickAnotherRandomPromotion();

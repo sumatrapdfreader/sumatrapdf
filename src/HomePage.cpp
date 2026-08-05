@@ -1010,6 +1010,14 @@ static void ClearHomeLayoutCache() {
     gHomeLayoutCache.scrollY = 0;
 }
 
+// The cache holds raw FileState* (ThumbnailLayout::fs) owned by gGlobalPrefs.
+// Reloading settings frees and rebuilds those, so the cache has to be dropped
+// first or hover / selection reads freed memory (crash 8c34d7eda). It is
+// rebuilt on the next paint.
+void HomePageInvalidateLayoutCache() {
+    ClearHomeLayoutCache();
+}
+
 static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
     if (dy == 0) {
         return;
