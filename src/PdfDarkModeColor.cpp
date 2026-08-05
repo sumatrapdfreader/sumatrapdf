@@ -218,8 +218,8 @@ static float SmoothStep(float edge0, float edge1, float x) {
 
 void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePalette& palette, float* outR, float* outG,
                                    float* outB) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 
@@ -337,8 +337,8 @@ void MapFillColorToDarkTheme(fz_context* ctx, fz_colorspace* cs, const float* co
 }
 
 void MapRgbFillToDarkTheme(float r, float g, float b, const DarkModePalette& palette, float* outRgb) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
     DarkModeOptions opts = PdfDarkModeCurrentOptions();
@@ -360,8 +360,8 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
     }
 
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float chroma = maxC - minC;
 
     const float lowChroma = 0.10f;

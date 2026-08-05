@@ -1054,15 +1054,27 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             }
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, _TRA("Compatibility"));
 
-            CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
-                             data->range == PrintRangeAdv::Even  ? IDC_PRINT_RANGE_EVEN
-                             : data->range == PrintRangeAdv::Odd ? IDC_PRINT_RANGE_ODD
-                                                                 : IDC_PRINT_RANGE_ALL);
-            CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_STRETCH,
-                             data->scale == PrintScaleAdv::Fit       ? IDC_PRINT_SCALE_FIT
-                             : data->scale == PrintScaleAdv::Stretch ? IDC_PRINT_SCALE_STRETCH
-                             : data->scale == PrintScaleAdv::Shrink  ? IDC_PRINT_SCALE_SHRINK
-                                                                     : IDC_PRINT_SCALE_NONE);
+            {
+                int rangeId = IDC_PRINT_RANGE_ALL;
+                if (data->range == PrintRangeAdv::Even) {
+                    rangeId = IDC_PRINT_RANGE_EVEN;
+                } else if (data->range == PrintRangeAdv::Odd) {
+                    rangeId = IDC_PRINT_RANGE_ODD;
+                }
+                CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD, rangeId);
+            }
+            {
+                int scaleId = IDC_PRINT_SCALE_NONE;
+                if (data->scale == PrintScaleAdv::Fit) {
+                    scaleId = IDC_PRINT_SCALE_FIT;
+                } else if (data->scale == PrintScaleAdv::Stretch) {
+                    scaleId = IDC_PRINT_SCALE_STRETCH;
+                } else if (data->scale == PrintScaleAdv::Shrink) {
+                    scaleId = IDC_PRINT_SCALE_SHRINK;
+                }
+                CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_STRETCH, scaleId);
+            }
+
             CheckDlgButton(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, data->centerHorizontally ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
                            data->paperSourceByPageSize ? BST_CHECKED : BST_UNCHECKED);

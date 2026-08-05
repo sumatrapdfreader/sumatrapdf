@@ -1327,7 +1327,13 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         int hx = 2;
         AttrInfo* attr = tok->GetAttrByName(StrL("FONT"));
         if (attr && attr->val) {
-            hx = '0' == attr->val.s[0] ? 5 : '2' == attr->val.s[0] ? 1 : 3;
+            char font = attr->val.s[0];
+            hx = 3;
+            if (font == '0') {
+                hx = 5;
+            } else if (font == '2') {
+                hx = 1;
+            }
         }
         attr = tok->GetAttrByName(StrL("TEXT"));
         if (attr) {

@@ -232,8 +232,11 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
     memset(bits, 0, (size_t)w * h * 4);
 
     bool thick = IsThick(sb);
-    // non-default themes define exact colors, so draw thick scrollbar fully opaque
-    u8 alpha = thick ? (IsCurrentThemeDefault() ? kAlphaThick : 255) : kAlphaThin;
+    u8 alpha = kAlphaThin;
+    if (thick) {
+        // non-default themes define exact colors, so draw thick scrollbar fully opaque
+        alpha = IsCurrentThemeDefault() ? kAlphaThick : 255;
+    }
 
     auto fillRect = [&](Rect r, COLORREF color) {
         DWORD pixel = PremultiplyPixel(color, alpha);

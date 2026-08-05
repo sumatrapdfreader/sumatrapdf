@@ -124,8 +124,8 @@ static PixelColor EstimatePaperFromPixmap(fz_context* ctx, fz_pixmap* pix, const
 
 void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysis& analysis,
                                const DarkModePalette& palette, float* outR, float* outG, float* outB) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 

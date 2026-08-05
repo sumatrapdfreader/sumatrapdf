@@ -50,9 +50,13 @@ static Str ParseHtmlNumericEntity(Str str, int& rune) {
     bool any = false;
     bool overflow = false;
     while (off < str.len) {
-        int digit = base == 16                               ? HtmlEntityHexDigit(str.s[off])
-                    : str.s[off] >= '0' && str.s[off] <= '9' ? (int)(str.s[off] - '0')
-                                                             : -1;
+        char c = str.s[off];
+        int digit = -1;
+        if (base == 16) {
+            digit = HtmlEntityHexDigit(c);
+        } else if (c >= '0' && c <= '9') {
+            digit = (int)(c - '0');
+        }
         if (digit < 0 || digit >= base) {
             break;
         }

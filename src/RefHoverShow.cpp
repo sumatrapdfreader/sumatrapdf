@@ -88,7 +88,12 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     }
     bool hasContinuation = continuation.dx > 0.f && continuation.dy > 0.f;
     s->displayed.userZoom = 1.f;
-    float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRefHoverRenderZoom);
+    float baseZoom = kRefHoverRenderZoom;
+    if (useLinkZoom) {
+        baseZoom = linkZoom;
+    } else if (pageZoom > 0.f) {
+        baseZoom = pageZoom;
+    }
 
     int popupWCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupWidth);
     {

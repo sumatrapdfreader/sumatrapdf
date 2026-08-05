@@ -248,7 +248,12 @@ void SetHotkeyWnd::ScheduleDelete() {
 }
 
 void SetHotkeyWnd::UpdateUI() {
-    Str display = newHotkey ? newHotkey : (currentHotkey ? currentHotkey : StrL("None"));
+    Str display = StrL("None");
+    if (newHotkey) {
+        display = newHotkey;
+    } else if (currentHotkey) {
+        display = currentHotkey;
+    }
     if (editHotkey) {
         editHotkey->SetText(display);
     }

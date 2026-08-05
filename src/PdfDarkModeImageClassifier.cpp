@@ -115,8 +115,8 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                         int bi = (int)lroundf(b * 255.f);
                         buckets[((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4)]++;
 
-                        float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-                        float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                        float maxC = std::max({r, g, b});
+                        float minC = std::min({r, g, b});
                         float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
                         lumSum += lum;
                         lumSqSum += lum * lum;

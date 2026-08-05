@@ -20,8 +20,8 @@ typedef struct {
 } pdf_cad_enhance_device;
 
 static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     if (outLum) {
         *outLum = lum;
@@ -386,8 +386,8 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
             CadBlendRgb(fr, fg, fb, outR, outG, outB, blend, &outR, &outG, &outB);
 
             float lum = (0.2126f * outR) + (0.7152f * outG) + (0.0722f * outB);
-            float maxC = outR > outG ? (outR > outB ? outR : outB) : (outG > outB ? outG : outB);
-            float minC = outR < outG ? (outR < outB ? outR : outB) : (outG < outB ? outG : outB);
+            float maxC = std::max({outR, outG, outB});
+            float minC = std::min({outR, outG, outB});
             if (lum > 0.40f && lum < 0.90f && maxC - minC < 0.15f) {
                 float factor = 1.f - (0.28f * blend * (lum - 0.40f) / 0.50f);
                 outR *= factor;
@@ -395,9 +395,10 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
                 outB *= factor;
             }
 
+            // channels past the third (if any) get outB, as before
+            float outRgb[3] = {outR, outG, outB};
             for (int k = 0; k < n1; k++) {
-                float c = k == 0 ? outR : (k == 1 ? outG : outB);
-                s[k] = CadClampByte(c * 255.f);
+                s[k] = CadClampByte(outRgb[std::min(k, 2)] * 255.f);
             }
             s += n;
         }

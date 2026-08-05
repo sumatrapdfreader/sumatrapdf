@@ -1098,7 +1098,13 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
 }
 
 static int cmpTilePosition(const TilePosition* a, const TilePosition* b) {
-    return a->res != b->res ? a->res - b->res : a->row != b->row ? a->row - b->row : a->col - b->col;
+    if (a->res != b->res) {
+        return a->res - b->res;
+    }
+    if (a->row != b->row) {
+        return a->row - b->row;
+    }
+    return a->col - b->col;
 }
 
 int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue) {

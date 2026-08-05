@@ -81,8 +81,8 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
                 int bucket = ((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4);
                 buckets[bucket]++;
 
-                float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-                float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                float maxC = std::max({r, g, b});
+                float minC = std::min({r, g, b});
                 float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
                 lumSum += lum;
                 lumSqSum += lum * lum;

@@ -65,8 +65,8 @@ static void ReadPixmapPixel(fz_context* ctx, fz_pixmap* pix, int x, int y, float
 
 static void RemapForegroundPixel(float r, float g, float b, const DarkModePalette& palette, float* outR, float* outG,
                                  float* outB) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 

@@ -1335,7 +1335,12 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, Props& p
     AddExifStringProp(propsOut, DocProp::FlashpixVersion, parser, ExifProp::FlashpixVersion);
 
     if (GetExifInt(parser, ExifProp::ColorSpace, intVal)) {
-        Str csStr = (intVal == 1) ? StrL("sRGB") : (intVal == 0xFFFF) ? StrL("Uncalibrated") : StrL("Unknown");
+        Str csStr = StrL("Unknown");
+        if (intVal == 1) {
+            csStr = StrL("sRGB");
+        } else if (intVal == 0xFFFF) {
+            csStr = StrL("Uncalibrated");
+        }
         AddProp(propsOut, DocProp::ColorSpace, csStr);
     }
 

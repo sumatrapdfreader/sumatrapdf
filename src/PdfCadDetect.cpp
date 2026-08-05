@@ -232,8 +232,8 @@ static float CadRectArea(fz_rect r) {
 
 // Mid-luminance, low-chroma colors typical of CAD line work.
 static bool CadIsGrayRgb(float r, float g, float b) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
     if (chroma > 0.12f) {
