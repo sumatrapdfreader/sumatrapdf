@@ -366,6 +366,11 @@ workspace "SumatraPDF"
     architecture "ARM64"
   filter {}
 
+  -- Tracy profiling is opt-in; define it everywhere so `#if IS_TRACY` compiles
+  -- without C4668 ("not defined as a preprocessor macro, replacing with 0"),
+  -- which is an error under /W4 /WX. Set to 1 to build with Tracy zones.
+  defines { "IS_TRACY=0" }
+
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
   -- /utf-8 sets both source and execution charset to UTF-8
   -- fixes compilation on non-English Windows (e.g. Chinese) where
