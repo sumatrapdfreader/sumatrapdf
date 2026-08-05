@@ -218,7 +218,9 @@ const fileTime: Field[] = [field("DwHighDateTime", Int, 0, ""), field("DwLowDate
 
 const printerDefaults: Field[] = [
   field("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)"),
-  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)"),
+  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)").ver(
+    "3.7",
+  ),
 ];
 
 const forwardSearch: Field[] = [
@@ -483,7 +485,8 @@ const favorite: Field[] = [
   // SerializeStruct can skip array elements with IsTemporary=true; the field
   // itself is never written (SettingsUtil) (issue #5862)
   field("IsTemporary", Bool, false, "session-only favorite; omitted when serializing array elements")
-    .internal(),
+    .internal()
+    .ver("3.7"),
 ];
 
 const fileSettings: Field[] = [
@@ -899,7 +902,7 @@ const globalPrefs: Field[] = [
     Bool,
     false,
     "if true, disables auto-linking of URLs and email addresses found in PDF text",
-  ),
+  ).ver("3.7"),
   field(
     "UseSysColors",
     Bool,
@@ -918,7 +921,7 @@ const globalPrefs: Field[] = [
     Bool,
     false,
     "if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order",
-  ),
+  ).ver("3.7"),
   compactArray(
     "ZoomLevels",
     Float,

@@ -261,6 +261,7 @@ DisableAntiAlias = false
 EngineeringDrawingEnhance = auto
 
 ; if true, disables auto-linking of URLs and email addresses found in PDF text
+; (introduced in version 3.7)
 DisableAutoLinks = false
 
 ; if true, we use Windows system colors for background/text color. Over-rides
@@ -277,7 +278,7 @@ UseTabs = true
 SelectionToolbar = true
 
 ; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
-; used order instead of tab-strip order
+; used order instead of tab-strip order (introduced in version 3.7)
 TabsMru = false
 
 ; sequence of zoom levels when zooming in/out; all values must lie between 8.33
@@ -563,7 +564,7 @@ PrinterDefaults [
     PrintScale = shrink
 
     ; default value for collate in the print dialog (default, collate,
-    ; nocollate)
+    ; nocollate) (introduced in version 3.7)
     Collate = default
 ]
 
@@ -734,6 +735,7 @@ FileStates [
         PageLabel =
 
         ; session-only favorite; omitted when serializing array elements
+        ; (introduced in version 3.7)
         IsTemporary = false
       ]
     ]
