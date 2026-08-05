@@ -468,104 +468,110 @@ struct AIChatUpdateData {
     AIChatUpdateType updateType = AIChatUpdateType::Text;
 };
 
+static void FreeAIChatUpdateData(AIChatUpdateData* data) {
+    str::Free(data->text);
+    str::Free(data->sessionId);
+    delete data;
+}
+
+// the tab an update belongs to; prefer tabs with a running process
+static WindowTab* FindAIChatUpdateTab(MainWindow* win, int pid, Str sessionId) {
+    for (WindowTab* t : win->Tabs()) {
+        AIChatTabState* st = GetTabState(t, pid);
+        if (!st || !st->process) {
+            continue;
+        }
+        if (sessionId && st->sessionId && str::Eq(st->sessionId, sessionId)) {
+            return t;
+        }
+        if (sessionId && str::Eq(sessionId, kAIChatPendingSessionId()) && !st->sessionId) {
+            return t;
+        }
+    }
+    for (WindowTab* t : win->Tabs()) {
+        AIChatTabState* st = GetTabState(t, pid);
+        if (st && st->sessionId && sessionId && str::Eq(st->sessionId, sessionId)) {
+            return t;
+        }
+    }
+    return nullptr;
+}
+
+static void OnAIChatFinished(MainWindow* win, AIChatProvider* p, AIChatTabState* st, bool isActiveTab) {
+    if (st && st->process) {
+        if (WaitForSingleObject(st->process, 0) == WAIT_OBJECT_0) {
+            DWORD exitCode = 0;
+            GetExitCodeProcess(st->process, &exitCode);
+            AIChatLog(p->logger, "exit", fmt("%lu", exitCode));
+        }
+        AIChatCloseProcess(&st->process, p->terminateOnFinish);
+    }
+    if (isActiveTab) {
+        WebViewFlushBlock(win);
+        SetAIChatWorking(win, false);
+        PopulateSessionCombo(win);
+    }
+}
+
+// isActiveTab: the panel currently shows this provider and this tab, so the
+// WebView reflects the update; otherwise it's only logged / recorded
+static void ApplyAIChatUpdate(MainWindow* win, AIChatProvider* p, AIChatUpdateData* data, AIChatTabState* st,
+                              bool isActiveTab) {
+    switch (data->updateType) {
+        case AIChatUpdateType::Text:
+            if (data->text) {
+                AIChatLog(p->logger, "<<< text", data->text);
+            }
+            if (isActiveTab) {
+                WebViewAppendText(win, data->text);
+            }
+            break;
+        case AIChatUpdateType::Tool:
+            if (data->text) {
+                AIChatLog(p->logger, "<<< tool", data->text);
+            }
+            if (isActiveTab) {
+                WebViewAddTool(win, data->text);
+            }
+            break;
+        case AIChatUpdateType::Error:
+            if (isActiveTab) {
+                WebViewAddError(win, data->text);
+            } else if (data->text) {
+                AIChatLog(p->logger, "error", data->text);
+            }
+            break;
+        case AIChatUpdateType::Flush:
+            if (isActiveTab) {
+                WebViewFlushBlock(win);
+            }
+            break;
+        case AIChatUpdateType::SessionId:
+            if (data->text) {
+                AIChatLog(p->logger, "<<< session", data->text);
+            }
+            if (st && data->text) {
+                str::ReplaceWithCopy(&st->sessionId, data->text);
+            }
+            break;
+        case AIChatUpdateType::Finished:
+            OnAIChatFinished(win, p, st, isActiveTab);
+            break;
+    }
+}
+
 static void OnAIChatUpdate(AIChatUpdateData* data) {
     MainWindow* win = AIChatFindMainWindowByFrame(data->hwndFrame);
     int pid = data->providerId;
     AIChatProvider* p = GetAIChatProvider(pid);
     if (!win || !IsMainWindowValid(win) || !win->hwndAiChatBox || !p) {
-        str::Free(data->text);
-        str::Free(data->sessionId);
-        delete data;
+        FreeAIChatUpdateData(data);
         return;
     }
-    {
-        // find the tab this update belongs to; prefer tabs with a running process
-        WindowTab* tab = nullptr;
-        for (WindowTab* t : win->Tabs()) {
-            AIChatTabState* st = GetTabState(t, pid);
-            if (!st || !st->process) {
-                continue;
-            }
-            if (data->sessionId && st->sessionId && str::Eq(st->sessionId, data->sessionId)) {
-                tab = t;
-                break;
-            }
-            if (data->sessionId && str::Eq(data->sessionId, kAIChatPendingSessionId()) && !st->sessionId) {
-                tab = t;
-                break;
-            }
-        }
-        if (!tab) {
-            for (WindowTab* t : win->Tabs()) {
-                AIChatTabState* st = GetTabState(t, pid);
-                if (st && st->sessionId && data->sessionId && str::Eq(st->sessionId, data->sessionId)) {
-                    tab = t;
-                    break;
-                }
-            }
-        }
-        // only update the WebView if the panel currently shows this
-        // provider and this tab
-        bool isActiveTab = tab && tab == win->CurrentTab() && win->aiChatProvider == pid;
-        AIChatTabState* st = GetTabState(tab, pid);
-
-        switch (data->updateType) {
-            case AIChatUpdateType::Text:
-                if (data->text) {
-                    AIChatLog(p->logger, "<<< text", data->text);
-                }
-                if (isActiveTab) {
-                    WebViewAppendText(win, data->text);
-                }
-                break;
-            case AIChatUpdateType::Tool:
-                if (data->text) {
-                    AIChatLog(p->logger, "<<< tool", data->text);
-                }
-                if (isActiveTab) {
-                    WebViewAddTool(win, data->text);
-                }
-                break;
-            case AIChatUpdateType::Error:
-                if (isActiveTab) {
-                    WebViewAddError(win, data->text);
-                } else if (data->text) {
-                    AIChatLog(p->logger, "error", data->text);
-                }
-                break;
-            case AIChatUpdateType::Flush:
-                if (isActiveTab) {
-                    WebViewFlushBlock(win);
-                }
-                break;
-            case AIChatUpdateType::SessionId:
-                if (data->text) {
-                    AIChatLog(p->logger, "<<< session", data->text);
-                }
-                if (st && data->text) {
-                    str::ReplaceWithCopy(&st->sessionId, data->text);
-                }
-                break;
-            case AIChatUpdateType::Finished:
-                if (st && st->process) {
-                    if (WaitForSingleObject(st->process, 0) == WAIT_OBJECT_0) {
-                        DWORD exitCode = 0;
-                        GetExitCodeProcess(st->process, &exitCode);
-                        AIChatLog(p->logger, "exit", fmt("%lu", exitCode));
-                    }
-                    AIChatCloseProcess(&st->process, p->terminateOnFinish);
-                }
-                if (isActiveTab) {
-                    WebViewFlushBlock(win);
-                    SetAIChatWorking(win, false);
-                    PopulateSessionCombo(win);
-                }
-                break;
-        }
-    }
-    str::Free(data->text);
-    str::Free(data->sessionId);
-    delete data;
+    WindowTab* tab = FindAIChatUpdateTab(win, pid, data->sessionId);
+    bool isActiveTab = tab && tab == win->CurrentTab() && win->aiChatProvider == pid;
+    ApplyAIChatUpdate(win, p, data, GetTabState(tab, pid), isActiveTab);
+    FreeAIChatUpdateData(data);
 }
 
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
