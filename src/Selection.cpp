@@ -589,6 +589,45 @@ bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
            y < SELECT_AUTOSCROLL_AREA_WIDTH || y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH;
 }
 
+// Horizontal auto-scroll while selecting text exists to reveal text the
+// selection has reached. Once the selected text's leading edge is on screen
+// there is nothing left to reveal, and scrolling on just pans the page out from
+// under the user: at high zoom the cursor sits in the right margin long before
+// the line ends, so the view runs away while the selection stays put (#5497).
+// Vertical auto-scroll is untouched - there the next line really is off screen.
+// Returns how much of `dx` is still needed, 0 once the selection is visible.
+static int LimitTextSelectionAutoscrollDx(MainWindow* win, int dx) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection) {
+        return dx;
+    }
+    TextSel* sel = &dm->textSelection->result;
+    if (sel->len == 0 || !sel->pages || !sel->rects) {
+        return dx;
+    }
+    int selLeft = INT_MAX;
+    int selRight = INT_MIN;
+    for (int i = 0; i < sel->len; i++) {
+        int pageNo = sel->pages[i];
+        if (!dm->PageVisible(pageNo)) {
+            continue;
+        }
+        Rect rc = dm->CvtToScreen(pageNo, ToRectF(sel->rects[i]));
+        selLeft = std::min(selLeft, rc.x);
+        selRight = std::max(selRight, rc.x + rc.dx);
+    }
+    if (selLeft > selRight) {
+        return dx; // nothing selected on a visible page
+    }
+    int margin = SELECT_AUTOSCROLL_AREA_WIDTH;
+    if (dx > 0) {
+        int needed = selRight - (win->canvasRc.dx - margin);
+        return limitValue(needed, 0, dx);
+    }
+    int needed = selLeft - margin;
+    return limitValue(needed, dx, 0);
+}
+
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     int dx = 0, dy = 0;
 
@@ -604,6 +643,11 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     }
 
     ReportIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
+    // after the assert: clamping can legitimately leave dx at 0 while the
+    // cursor is still in the auto-scroll strip
+    if (dx != 0 && MouseAction::SelectingText == win->mouseAction) {
+        dx = LimitTextSelectionAutoscrollDx(win, dx);
+    }
     if (dx != 0 || dy != 0) {
         ReportIf(!win->AsFixed());
         DisplayModel* dm = win->AsFixed();
