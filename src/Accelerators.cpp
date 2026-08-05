@@ -6,6 +6,7 @@
 #include "Commands.h"
 #include "ShortcutParse.h"
 #include "Translations.h"
+#include "Accelerators.h"
 
 // note: even letter shortcuts like 'k' are marked as FVIRTKEY so that they
 // work even on non-english keyboards (cyrillic, hebrew)
@@ -13,7 +14,7 @@
 // To get 'A' need explicitly use FSHIFT.
 // https://learn.microsoft.com/en-us/windows/win32/menurc/using-keyboard-accelerators?referrer=grok.com
 // https://grok.com/share/bGVnYWN5_d83c2956-4ce2-4c74-ba4d-9794d1760ccb?rid=746312cc-7d0f-4479-abec-25c394652cac
-ACCEL gBuiltInAccelerators[] = {
+static ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, 'K', CmdScrollUp},
     {FVIRTKEY, 'J', CmdScrollDown},
     {FVIRTKEY, 'H', CmdScrollLeft},
@@ -159,8 +160,8 @@ ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, 'C', CmdToggleContinuousView},
 };
 
-ACCEL* gAccels = nullptr;
-int gAccelsCount = 0;
+static ACCEL* gAccels = nullptr;
+static int gAccelsCount = 0;
 
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     ACCEL a;

@@ -55,10 +55,12 @@ static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
 static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
 static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
 
+namespace {
 struct EnumSettingDef {
     const char* name; // full path or leaf name (last dotted segment)
     const char** values;
 };
+} // namespace
 static const EnumSettingDef gEnumSettings[] = {
     {"DefaultDisplayMode", gEnumDisplayMode},
     {"Toolbar", gEnumToolbar},
@@ -99,6 +101,7 @@ static const char** GetEnumValuesForSetting(Str name) {
 
 // a single editable setting; fieldPtr points into gGlobalPrefs, the pending
 // (possibly edited) value is kept here and only written back on Save
+namespace {
 struct SettingItem {
     Str name;    // dotted path, e.g. "FixedPageUI.TextColor", owned
     Str comment; // doc comment describing the setting, owned
@@ -127,6 +130,7 @@ struct SettingItem {
         str::Free(defStr);
     }
 };
+} // namespace
 
 static bool StrValsEq(Str a, Str b) {
     if (len(a) == 0 && len(b) == 0) {
