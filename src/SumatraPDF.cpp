@@ -2500,6 +2500,20 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
     SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
 }
 
+// The infotip is the tooltip for home page thumbnails, links and the like. It
+// was left un-themed because applying a visual style to a tooltip resets its
+// font to the theme's, which is wrong for a control we size and populate
+// ourselves - so put our font back afterwards (issue #5894).
+static void ApplyDarkModeToInfotip(MainWindow* win) {
+    if (!win || !win->infotip || !win->infotip->hwnd) {
+        return;
+    }
+    DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
+    HFONT font = GetAppFont(win->hwndCanvas);
+    win->infotip->SetFont(font);
+    HwndSetFont(win->infotip->hwnd, font);
+}
+
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
@@ -2648,10 +2662,7 @@ static MainWindow* CreateMainWindow() {
         DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
         DarkMode::setDarkScrollBar(win->hwndCanvas);
         DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
-        // TODO: this over-rides the font in the control
-        // this will only happen with themes
-        // could custom paint instead of using DarkMode
-        // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
+        ApplyDarkModeToInfotip(win);
     }
 
     // show menu bar rebar now that layout is done
@@ -2786,7 +2797,7 @@ void UpdateAfterThemeChange() {
             }
             DarkMode::setDarkScrollBar(win->hwndCanvas);
             DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
-            // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
+            ApplyDarkModeToInfotip(win);
         }
         UpdateWindowFrameBorderColor(win);
         // TODO: this only rerenders canvas, not frame, even with

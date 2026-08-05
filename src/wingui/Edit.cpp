@@ -11,8 +11,6 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "Theme.h"
-
 //--- Edit
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
@@ -28,17 +26,6 @@ Kind kindEdit = "edit";
 // 1px non-client underline for withBottomBorder (must not sit in the client
 // area: edit client paint on typing would overwrite a WM_PAINT GetDC line)
 static constexpr int kEditBottomBorderDy = 1;
-
-// The underline is a separator, so it takes the theme's edge color like every
-// other border and divider. It used to blend the control's own text color
-// toward its background, which lands wherever those two happen to be rather
-// than anywhere in the theme's palette: on the Dark theme's black sidebar that
-// gave a bright #535353 line instead of the theme's #374151 (issue #5893).
-// ThemeEdgeColor() derives a color from the control background when the theme
-// doesn't name one, so there is always something sensible to draw.
-static COLORREF EditBottomBorderColor() {
-    return ThemeEdgeColor();
-}
 
 static bool EditSetCueText(HWND hwnd, Str s) {
     if (!hwnd) {

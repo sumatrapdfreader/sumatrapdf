@@ -291,6 +291,12 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools);
 //--- Edit
 using TextChangedHandler = Func0;
 
+// Color of the 1px underline an Edit created withBottomBorder draws, so wingui
+// doesn't have to know about the app's palette. The app implements it (Sumatra
+// returns the theme's edge color); an app that doesn't theme anything can
+// return a fixed gray.
+COLORREF EditBottomBorderColor();
+
 struct Edit : Wnd {
     struct CreateArgs {
         HWND parent = nullptr;
@@ -357,6 +363,11 @@ struct Edit : Wnd {
 };
 
 //--- ListBox
+
+// Called from ListBox::Create() so wingui doesn't have to know about the app's
+// theming. The app implements it (Sumatra gives the list a dark scrollbar);
+// an app that doesn't theme anything can implement it as a no-op.
+void ListBoxMaybeApplyTheme(HWND);
 
 struct ListBox : Wnd {
     struct CreateArgs {

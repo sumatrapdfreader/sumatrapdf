@@ -58,6 +58,10 @@ HWND ListBox::Create(const CreateArgs& args) {
         if (model != nullptr) {
             FillWithItems(this->hwnd, model);
         }
+        // every list box scrolls, and the stock scrollbar doesn't follow the
+        // app's theme on its own. Doing it here rather than at each call site
+        // is why the find window's results list was the odd one out (#5894)
+        ListBoxMaybeApplyTheme(hwnd);
     }
 
     return hwnd;

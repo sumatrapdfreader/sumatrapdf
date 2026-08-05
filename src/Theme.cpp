@@ -3,6 +3,10 @@ License: GPLv3 */
 
 #include "base/Base.h"
 
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Commands.h"
@@ -22,6 +26,24 @@ bool gUseDarkModeLib = false;
 
 bool UseDarkModeLib() {
     return gUseDarkModeLib;
+}
+
+// wingui calls this from ListBox::Create(); see the declaration in WinGui.h
+void ListBoxMaybeApplyTheme(HWND hwnd) {
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkScrollBar(hwnd);
+    }
+}
+
+// The underline under a borderless Edit is a separator, so it takes the edge
+// color like every other border and divider. wingui used to blend the control's
+// own text color toward its background, which lands wherever those two happen
+// to be rather than anywhere in the palette: on the Dark theme's black sidebar
+// that gave a bright #535353 line instead of the theme's #374151 (issue #5893).
+// ThemeEdgeColor() derives a color from the control background when the theme
+// doesn't name one, so there is always something sensible to draw.
+COLORREF EditBottomBorderColor() {
+    return ThemeEdgeColor();
 }
 
 /*
