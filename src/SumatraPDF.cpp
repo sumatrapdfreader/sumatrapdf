@@ -8926,6 +8926,22 @@ static Str CurrentImageTabPathTemp(MainWindow* win) {
     return tab->filePath;
 }
 
+// Run the print dialog from the message loop rather than from whatever loop
+// delivered the WM_COMMAND. TranslateAcceleratorW sends it from inside a win32k
+// user-mode callback, and menu commands come from the menu's modal loop, so
+// calling PrintCurrentFile() directly nests the modal dialog inside one of
+// those. That matters more than it used to: on Windows 11 PrintDlgExW shows the
+// out-of-process unified print dialog and blocks on it with
+// CoWaitForMultipleHandles, and it has been seen to never return - the dialog
+// vanishes and the app hangs with PrintDlgExW still on the stack.
+static void PrintCurrentFileDeferred(MainWindow* win) {
+    // the window can be closed between posting this and running it
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        return;
+    }
+    PrintCurrentFile(win);
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
     bool openAnnotationEdit = false;
@@ -9099,7 +9115,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdPrint:
-            PrintCurrentFile(win);
+            // not PrintCurrentFile(win): see PrintCurrentFileDeferred
+            uitask::Post(MkFunc0(PrintCurrentFileDeferred, win), "CmdPrint");
             break;
 
         case CmdCopyFilePath:
