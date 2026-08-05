@@ -14,4 +14,4 @@ void RemoveThumbnail(FileState* fs);
 TempStr GetThumbnailCacheDirTemp();
 TempStr GetThumbnailPathTemp(Str filePath);
 void DeleteThumbnailForFile(Str path);
-void DeleteThumbnailCacheDirectory();
+void EmptyThumbnailCacheDirectory();

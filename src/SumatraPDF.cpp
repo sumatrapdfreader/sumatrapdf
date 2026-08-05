@@ -6788,7 +6788,7 @@ static void ShowOptionsDialog(HWND hwnd) {
 
     if (!SettingsRememberOpenedFiles()) {
         gFileHistory.Clear(true);
-        DeleteThumbnailCacheDirectory();
+        EmptyThumbnailCacheDirectory();
     }
     UpdateDocumentColors();
     ApplySettingsToOpenWindows();
@@ -8377,9 +8377,9 @@ static void ClearHistoryFinish(ClearHistoryData* d) {
 }
 
 static void ClearHistoryAsync(ClearHistoryData* d) {
-    DeleteThumbnailCacheDirectory();
+    EmptyThumbnailCacheDirectory();
     TempStr symDir = GetCrashInfoDirTemp();
-    dir::RemoveAll(symDir);
+    dir::Empty(symDir);
     auto fn = MkFunc0<ClearHistoryData>(ClearHistoryFinish, d);
     uitask::Post(fn, "TaksClearHistoryAsyncPart");
     DestroyTempArena();

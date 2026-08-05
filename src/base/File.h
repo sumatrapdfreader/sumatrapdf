@@ -164,6 +164,7 @@ bool Create(Str dir);
 bool CreateForFile(Str path, int* errOut = nullptr);
 bool CreateAll(Str dir, int* errOut = nullptr);
 bool RemoveAll(Str dir);
+bool Empty(Str dir);
 bool HasWriteAccess(Str dir);
 
 } // namespace dir

@@ -551,7 +551,9 @@ bool CreateAll(Str dir, int* errOut) {
     return false;
 }
 
-static bool RemoveAllZ(const char* dir) {
+// deletes everything inside dir; also removes dir itself when removeDir.
+// a missing dir counts as success, matching the previous RemoveAll behavior.
+static bool RemoveDirContentsZ(const char* dir, bool removeDir) {
     DIR* d = opendir(dir);
     if (!d) {
         return errno == ENOENT;
@@ -574,7 +576,7 @@ static bool RemoveAllZ(const char* dir) {
             return false;
         }
         if (S_ISDIR(st.st_mode)) {
-            if (!RemoveAllZ(child.s)) {
+            if (!RemoveDirContentsZ(child.s, true)) {
                 return false;
             }
         } else if (unlink(child.s) != 0) {
@@ -584,11 +586,20 @@ static bool RemoveAllZ(const char* dir) {
     if (errno != 0) {
         return false;
     }
+    if (!removeDir) {
+        return true;
+    }
     return rmdir(dir) == 0;
 }
 
 bool RemoveAll(Str dir) {
-    return RemoveAllZ(PathZTemp(dir));
+    return RemoveDirContentsZ(PathZTemp(dir), true);
+}
+
+// Delete everything inside dir but keep dir itself, so code that races with us
+// still finds the directory there (see SaveThumbnail / dir::CreateAll).
+bool Empty(Str dir) {
+    return RemoveDirContentsZ(PathZTemp(dir), false);
 }
 
 bool HasWriteAccess(Str dir) {

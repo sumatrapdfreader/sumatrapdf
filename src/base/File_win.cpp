@@ -1226,16 +1226,31 @@ bool CreateAll(Str dir, int* errOut) {
     return false;
 }
 
-bool RemoveAll(Str dir) {
-    TempWStr dirW = ToWStrTemp(dir);
-    int n = len(dirW) + 2;
-    TempWStr dirDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
-    wstr::BufSet(dirDoubleTerminated, dirW);
+// SHFileOperation wants a double-NUL-terminated path list
+static bool ShDelete(Str path) {
+    TempWStr pathW = ToWStrTemp(path);
+    int n = len(pathW) + 2;
+    TempWStr doubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
+    wstr::BufSet(doubleTerminated, pathW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
+    SHFILEOPSTRUCTW shfo = {nullptr, op, doubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
     int res = SHFileOperationW(&shfo);
     return res == 0;
+}
+
+bool RemoveAll(Str dir) {
+    return ShDelete(dir);
+}
+
+// Delete everything inside dir but keep dir itself, so code that races with us
+// still finds the directory there (see SaveThumbnail / dir::CreateAll).
+// A "dir\*" wildcard is how SHFileOperation spells "contents but not the dir".
+bool Empty(Str dir) {
+    if (!Exists(dir)) {
+        return false;
+    }
+    return ShDelete(path::JoinTemp(dir, StrL("*")));
 }
 
 bool HasWriteAccess(Str dir) {

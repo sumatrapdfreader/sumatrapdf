@@ -46,9 +46,12 @@ TempStr GetThumbnailCacheDirTemp() {
     return thumbsDir;
 }
 
-void DeleteThumbnailCacheDirectory() {
+// Empty rather than remove: SaveThumbnail runs on the UI thread and re-creates
+// this directory, so deleting it out from under a save in flight made
+// dir::CreateAll fail (crash 2026-08-05/8c3bf9e1f000001).
+void EmptyThumbnailCacheDirectory() {
     TempStr thumbsDir = GetThumbnailCacheDirTemp();
-    dir::RemoveAll(thumbsDir);
+    dir::Empty(thumbsDir);
 }
 
 void DeleteThumbnailForFile(Str filePath) {
