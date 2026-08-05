@@ -4543,8 +4543,14 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
             // const char* path = engine->FileName();
             ShowErrorData data{tab, path};
             auto fn = MkFunc1(ShowSaveAnnotationError, &data);
-            // failure is surfaced by fn (ShowSaveAnnotationError)
-            EngineMupdfSaveUpdated(engine, nullptr, fn);
+            bool didSave = EngineMupdfSaveUpdated(engine, nullptr, fn);
+            if (!didSave) {
+                // fn reported the error. Don't close: that would discard the
+                // annotations. Re-arm the prompt so the user can retry or pick
+                // Discard, same as the SaveNew case above.
+                tab->askedToSaveAnnotations = false;
+                return false;
+            }
         } break;
         case SaveChoice::Cancel:
             tab->askedToSaveAnnotations = false;
