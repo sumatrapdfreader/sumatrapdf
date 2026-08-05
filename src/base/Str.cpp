@@ -445,10 +445,6 @@ bool EqNI(Str s1, Str s2, int n) {
     return true;
 }
 
-bool IsNull(const Str& s) {
-    return !s.s;
-}
-
 bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, len(prefix));
 }
@@ -2104,10 +2100,6 @@ bool EqN(WStr s1, WStr s2, int n) {
     return 0 == wcsncmp(s1.s, s2.s, (size_t)n);
 }
 
-bool IsNull(const WStr& s) {
-    return !s.s;
-}
-
 bool StartsWith(WStr str, WStr prefix) {
     if (!prefix) {
         return true;
@@ -2464,7 +2456,11 @@ bool IsValidProgramVersion(Str ver) {
 
 static unsigned int ExtractNextNumber(Str txt, int& off) {
     unsigned int val = 0;
-    Str slice = off < txt.len ? Str(txt.s + off, txt.len - off) : Str{};
+    if (off >= txt.len) {
+        off = txt.len;
+        return 0;
+    }
+    Str slice(txt.s + off, txt.len - off);
     Str next = str::Parse(slice, "%u%?.", &val);
     if (next) {
         off += (int)(next.s - slice.s);

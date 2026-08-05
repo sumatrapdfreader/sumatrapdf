@@ -155,7 +155,7 @@ bool IsSpaceOnly(Str s) {
 }
 
 static void MemAppend(char* buf, int& off, Str src) {
-    if (!src) {
+    if (!buf || !src) {
         return;
     }
     memcpy(buf + off, src.s, src.len);

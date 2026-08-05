@@ -167,7 +167,11 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
 }
 
 TempStr NormalizeURLTemp(Str url, Str base) {
-    ReportIf(!url || !base);
+    if (!url || !base) {
+        // nothing to resolve against; url is already as normalized as it gets
+        ReportIf(true);
+        return str::DupTemp(url);
+    }
     if (url.s[0] == '/' || str::ContainsChar(url, ':')) {
         return str::DupTemp(url);
     }

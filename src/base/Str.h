@@ -66,7 +66,10 @@ bool EqI(Str s1, Str s2);
 bool EqIS(Str s1, Str s2);
 bool EqN(Str s1, Str s2, int n);
 bool EqNI(Str s1, Str s2, int n);
-bool IsNull(const Str& s);
+// inline so callers (and the static analyzer) can see the guard
+inline bool IsNull(const Str& s) {
+    return !s.s;
+}
 bool StartsWith(Str str, Str prefix);
 bool TrimPrefix(Str& s, Str prefix);
 
@@ -155,7 +158,10 @@ bool EqN(WStr s1, WStr s2, int n);
 bool EqNI(WStr s1, WStr s2, int n);
 int Cmp(WStr a, WStr b);
 int CmpI(WStr a, WStr b);
-bool IsNull(const WStr& s);
+// inline so callers (and the static analyzer) can see the guard
+inline bool IsNull(const WStr& s) {
+    return !s.s;
+}
 bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);
 bool EndsWith(WStr txt, WStr end);
