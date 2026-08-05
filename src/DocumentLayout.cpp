@@ -101,9 +101,7 @@ static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
             if (!page->isShown) {
                 continue;
             }
-            if (minZoom > page->zoomReal) {
-                minZoom = page->zoomReal;
-            }
+            minZoom = std::min(minZoom, page->zoomReal);
         }
         layout.zoomReal = minZoom == (float)HUGE_VAL ? 1 : minZoom;
         return;
@@ -118,9 +116,7 @@ static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
             }
             float zoom = ZoomRealFromVirtualForPage(layout, zoomVirtual, pageNo);
             page->zoomReal = zoom;
-            if (minZoom > zoom) {
-                minZoom = zoom;
-            }
+            minZoom = std::min(minZoom, zoom);
         }
         layout.zoomReal = minZoom == (float)HUGE_VAL ? 1 : minZoom;
     } else {
@@ -139,12 +135,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 
     params = newParams;
     params.rotation = NormalizeRotation(params.rotation);
-    if (params.startPage < 1) {
-        params.startPage = 1;
-    }
-    if (params.startPage > pages.len) {
-        params.startPage = pages.len;
-    }
+    params.startPage = limitValue(params.startPage, 1, pages.len);
     if (params.dpiFactor <= 0) {
         params.dpiFactor = 1;
     }
@@ -296,9 +287,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         }
         if (lastPageTop >= 0) {
             int minCanvasDy = lastPageTop + viewPort.dy;
-            if (canvasDy < minCanvasDy) {
-                canvasDy = minCanvasDy;
-            }
+            canvasDy = std::max(canvasDy, minCanvasDy);
         }
     }
 

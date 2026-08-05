@@ -574,9 +574,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
     auto rc = HwndClientRect(win->hwndFrame);
     int dy = rc.dy - 72;
-    if (dy < 480) {
-        dy = 480;
-    }
+    dy = std::max(dy, 480);
     int dx = rc.dx - 256;
     dx = limitValue(dx, 640, 1024);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);

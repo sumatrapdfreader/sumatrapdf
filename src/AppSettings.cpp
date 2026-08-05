@@ -191,9 +191,7 @@ TempStr GetSettingsPathTemp() {
 }
 
 static void setMin(int& i, int minVal) {
-    if (i < minVal) {
-        i = minVal;
-    }
+    i = std::max(i, minVal);
 }
 
 /* for every selection handler defined by user in advanced settings, create
@@ -869,9 +867,7 @@ static int GetAppBiggerFontSizeForDpi(int dpi) {
     if (fntSize < kMinFontSize) {
         fntSize = GetAppMenuFontSizeForDpi(dpi);
         fntSize = (fntSize * 12) / 10;
-        if (fntSize < kMinBiggerFontSize) {
-            fntSize = kMinBiggerFontSize;
-        }
+        fntSize = std::max(fntSize, kMinBiggerFontSize);
     }
     return fntSize;
 }

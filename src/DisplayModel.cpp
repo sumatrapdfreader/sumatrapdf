@@ -766,9 +766,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     }
     if (isShrinkToFit) {
         float maxZoom = 1.0f * dpiFactor;
-        if (zoom > maxZoom) {
-            zoom = maxZoom;
-        }
+        zoom = std::min(zoom, maxZoom);
     }
     return zoom;
 }
@@ -842,9 +840,7 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
                 float zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
                 ReportDebugIf(zoom < 0.01f);
                 pi->zoomReal = zoom;
-                if (minZoom > zoom) {
-                    minZoom = zoom;
-                }
+                minZoom = std::min(minZoom, zoom);
             }
         }
         ReportIf(minZoom == (float)HUGE_VAL);
@@ -852,9 +848,7 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     } else if (kZoomFitContent == newZoomVirtual) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
         // limit zooming in to 800% on almost empty pages
-        if (newZoom > 8.0) {
-            newZoom = 8.0;
-        }
+        newZoom = std::min(newZoom, 8.0f);
         // don't zoom in by just a few pixels (throwing away a prerendered page)
         if (newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
             zoomReal < ZoomRealFromVirtualForPage(kZoomFitPage, CurrentPageNo())) {
@@ -1669,9 +1663,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
                 ReportIf(!ValidPageNo(newPageNo));
                 pageInfo = GetPageInfo(newPageNo);
                 newYOff = pageInfo->pos.dy - viewPort.dy;
-                if (newYOff < 0) {
-                    newYOff = 0; /* TODO: center instead? */
-                }
+                newYOff = std::max(newYOff, 0); /* TODO: center instead? */
                 GoToPrevPage(newYOff);
                 return;
             }
@@ -2231,9 +2223,7 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         scroll.y = (int)scrollD.y;
     }
     // TODO: prevent scroll.y from getting too large?
-    if (scroll.y < 0) {
-        scroll.y = 0; // Adobe Reader never shows the previous page
-    }
+    scroll.y = std::max(scroll.y, 0); // Adobe Reader never shows the previous page
     if (isVirtualZoom) {
         // already on pageNo; only adjust scroll after fit zoom
         if (scroll.y > 0) {

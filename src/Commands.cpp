@@ -921,13 +921,9 @@ static bool IsArgName(Str name, Str argName) {
 // name.s / strVal.s point into the same block (do not free them separately).
 CommandArg* AllocCommandArg(Str name, Str strVal) {
     int nameN = name.len;
-    if (nameN < 0) {
-        nameN = 0;
-    }
+    nameN = std::max(nameN, 0);
     int strN = strVal.len;
-    if (strN < 0) {
-        strN = 0;
-    }
+    strN = std::max(strN, 0);
     int cb = sizeofi(CommandArg) + nameN + 1 + strN + 1;
     auto* arg = (CommandArg*)malloc((size_t)cb);
     if (!arg) {
@@ -989,17 +985,11 @@ static int gNextCustomCommandId = (int)CmdFirstCustom;
 // definition/name/key.s point into the same block (do not free them separately).
 CustomCommand* AllocCustomCommand(Str definition, Str name, Str key) {
     int defN = definition.len;
-    if (defN < 0) {
-        defN = 0;
-    }
+    defN = std::max(defN, 0);
     int nameN = name.len;
-    if (nameN < 0) {
-        nameN = 0;
-    }
+    nameN = std::max(nameN, 0);
     int keyN = key.len;
-    if (keyN < 0) {
-        keyN = 0;
-    }
+    keyN = std::max(keyN, 0);
     int cb = sizeofi(CustomCommand) + defN + 1 + nameN + 1 + keyN + 1;
     auto* cmd = (CustomCommand*)malloc((size_t)cb);
     if (!cmd) {

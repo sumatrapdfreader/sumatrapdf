@@ -464,12 +464,8 @@ void ChmModel::RestoreHtmlScrollPos() {
     }
     int x = (int)htmlScrollPos.x;
     int y = (int)htmlScrollPos.y;
-    if (x < 0) {
-        x = 0;
-    }
-    if (y < 0) {
-        y = 0;
-    }
+    x = std::max(x, 0);
+    y = std::max(y, 0);
     docView->SetScrollPos(Point(x, y));
 }
 
@@ -806,12 +802,10 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
         return nullptr;
     }
     pageNo = pages.Find(url) + 1;
-    if (pageNo < 1) {
-        // some documents use redirection URLs which aren't listed in the ToC
-        // return pageNo=1 for these, as HandleLink will ignore that anyway
-        // but LinkHandler::ScrollTo doesn't
-        pageNo = 1;
-    }
+    // some documents use redirection URLs which aren't listed in the ToC
+    // return pageNo=1 for these, as HandleLink will ignore that anyway
+    // but LinkHandler::ScrollTo doesn't
+    pageNo = std::max(pageNo, 1);
     return NewChmNamedDest(url, pageNo);
 }
 

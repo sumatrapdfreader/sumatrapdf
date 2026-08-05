@@ -639,12 +639,8 @@ static HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge) {
     if (maxDim > maxEdge) {
         dw = (int)((i64)sw * maxEdge / maxDim);
         dh = (int)((i64)sh * maxEdge / maxDim);
-        if (dw < 1) {
-            dw = 1;
-        }
-        if (dh < 1) {
-            dh = 1;
-        }
+        dw = std::max(dw, 1);
+        dh = std::max(dh, 1);
     }
 
     Gdiplus::Bitmap srcGdip(src, nullptr);
@@ -773,18 +769,8 @@ static void StartImageDragDrop(MainWindow* win) {
             if (screenRc.dx > 0 && screenRc.dy > 0) {
                 int relX = win->dragStart.x - screenRc.x;
                 int relY = win->dragStart.y - screenRc.y;
-                if (relX < 0) {
-                    relX = 0;
-                }
-                if (relY < 0) {
-                    relY = 0;
-                }
-                if (relX > screenRc.dx) {
-                    relX = screenRc.dx;
-                }
-                if (relY > screenRc.dy) {
-                    relY = screenRc.dy;
-                }
+                relX = limitValue(relX, 0, screenRc.dx);
+                relY = limitValue(relY, 0, screenRc.dy);
                 hot.x = (int)((i64)relX * tbm.bmWidth / screenRc.dx);
                 hot.y = (int)((i64)relY * tbm.bmHeight / screenRc.dy);
             }
@@ -3566,12 +3552,8 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
                 y = pt.y;
             }
             // super defensive
-            if (x < 0) {
-                x = 0;
-            }
-            if (y < 0) {
-                y = 0;
-            }
+            x = std::max(x, 0);
+            y = std::max(y, 0);
             OnWindowContextMenu(win, x, y);
             return 0;
 
@@ -3884,9 +3866,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 
             // Exponential approach: pos += (target-pos) * (1 - e^(-k*dt))
             double a = 1.0 - exp(-kSmoothScrollRate * dt);
-            if (a > 1.0) {
-                a = 1.0;
-            }
+            a = std::min(a, 1.0);
             win->scrollAnimY += remaining * a;
 
             int y = (int)lround(win->scrollAnimY);

@@ -272,9 +272,7 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
     i64 ts = AIChatFileTimeToMs(ft);
     for (int i = 0; i < len(sessions); i++) {
         if (str::Eq(sessions[i].sessionId, sessionId)) {
-            if (ts > sessions[i].timestamp) {
-                sessions[i].timestamp = ts;
-            }
+            sessions[i].timestamp = std::max(ts, sessions[i].timestamp);
             str::Free(sessionId);
             str::Free(data);
             return;
