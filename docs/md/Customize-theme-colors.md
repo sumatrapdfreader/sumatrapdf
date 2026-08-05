@@ -74,9 +74,10 @@ UI themes only recolor chrome (menus, tabs, toolbars). Separately, **document pa
 
 How to change it:
 
-- **`Shift + I`** (`CmdInvertColors`) toggles between **`off`** and **`smart`**.
 - **Settings → Theme…** or **Settings → Make Document Colors Follow Theme** (command palette / `CmdSetDocumentColorsFollowTheme`) for a drop-down including **`legacy`**.
 - Advanced settings: `DocumentColorsFollowTheme = off` / `smart` / `legacy`.
+
+`Shift + I` (`CmdInvertColors`) is a different thing: it swaps the page colors for the rest of the session, whatever `DocumentColorsFollowTheme` and `FixedPageUI` are set to, and is not saved to the settings file.
 
 This is independent of `Theme = ...`. You can use a dark UI theme with `DocumentColorsFollowTheme = off` (original white PDF pages) or a light UI with `smart` page recoloring.
 

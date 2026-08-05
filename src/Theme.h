@@ -37,6 +37,8 @@ bool IsCurrentThemeDefault();
 void FreeThemes();
 bool UseDarkModeLib();
 void ApplyDarkModeToPopupWindow(HWND hwnd);
+bool GetInvertPageColors();
+void SetInvertPageColors(bool);
 
 extern int gFirstSetThemeCmdId;
 extern int gLastSetThemeCmdId;

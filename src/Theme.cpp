@@ -772,9 +772,25 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
     return text;
 }
 
+// CmdInvertColors: session-only, not a setting. Before 3.7 it swapped the page
+// colors outright and had nothing to do with theming; 37f920ff0 reduced it to a
+// DocumentColorsFollowTheme toggle, which does nothing at all when the page
+// colors don't come from the theme - custom FixedPageUI colors, for instance,
+// are used as-is in every mode, so pressing it only repainted the same pixels
+// (issue #5887). Swapping the effective page colors works whatever they are.
+static bool gInvertPageColors = false;
+
+bool GetInvertPageColors() {
+    return gInvertPageColors;
+}
+
+void SetInvertPageColors(bool invert) {
+    gInvertPageColors = invert;
+}
+
 // colors for page bitmap recoloring (render cache)
 // TextColor substitutes black, BackgroundColor substitutes white in rendered pages
-COLORREF ThemePageRenderColors(COLORREF& bg) {
+static COLORREF ThemePageRenderColorsNoInvert(COLORREF& bg) {
     COLORREF text = kColBlack;
     bg = kColWhite;
 
@@ -810,6 +826,15 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
     if (gCurrThemeIndex < 3) {
         bg = AccentColor(bg, 8);
     }
+    return text;
+}
+
+COLORREF ThemePageRenderColors(COLORREF& bg) {
+    COLORREF text = ThemePageRenderColorsNoInvert(bg);
+    if (!gInvertPageColors) {
+        return text;
+    }
+    std::swap(text, bg);
     return text;
 }
 

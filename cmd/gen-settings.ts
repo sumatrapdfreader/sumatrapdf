@@ -987,8 +987,9 @@ const globalPrefs: Field[] = [
       "use UI / FixedPageUI colors for the page. Values: off (document's own colors; default); " +
       "smart (recolor text and page background, keep photos/images as-is — best for dark reading); " +
       "legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme " +
-      "for UI chrome. Shift+I toggles between off and smart; Settings / Theme and the " +
-      "CmdSetDocumentColorsFollowTheme command can set all three values",
+      "for UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set " +
+      "all three values. Shift+I (Invert Colors) is separate: it swaps the page colors for " +
+      "the session whatever this is set to",
   ).ver("3.7"),
   field(
     "TocDy",

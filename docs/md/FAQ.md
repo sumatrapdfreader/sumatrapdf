@@ -32,7 +32,7 @@ Some settings (for example `UseTabs`) require restarting SumatraPDF. Per-documen
 
 **I accidentally inverted document colors — how do I undo?**
 
-Press `Shift + I` again (`CmdInvertColors`), or set `DocumentColorsFollowTheme = off` in advanced settings. See [Customize theme colors](Customize-theme-colors.md).
+Press `Shift + I` again (`CmdInvertColors`) — it is a session-only swap of the page colors. If the pages are recolored even without it, set `DocumentColorsFollowTheme = off` in advanced settings. See [Customize theme colors](Customize-theme-colors.md).
 
 **How do I get dark page colors without crushing photos and figures?**
 

@@ -10135,15 +10135,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdInvertColors: {
-            DocumentColorsFollowTheme mode = GetDocumentColorsFollowTheme();
-            if (mode == DocumentColorsFollowTheme::Off) {
-                SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Smart);
-            } else {
-                SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Off);
-            }
+            // swaps the page colors for this session, whatever they are and
+            // whatever the theme is. Use CmdSetDocumentColorsFollowTheme to
+            // change how (or whether) pages follow the theme (issue #5887)
+            SetInvertPageColors(!GetInvertPageColors());
             UpdateDocumentColors();
-            UpdateControlsColors(win);
-            SaveSettings();
             break;
         }
 
