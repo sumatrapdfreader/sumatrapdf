@@ -9,6 +9,7 @@ Checks: >
   performance-*,
   portability-*,
   readability-*,
+  -bugprone-easily-swappable-parameters,
   -misc-const-correctness,
   -misc-include-cleaner,
   -misc-no-recursion,
