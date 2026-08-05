@@ -352,7 +352,7 @@ UnregisterFromBeingDefaultViewer() and RemoveInstallRegistryKeys() in Installer.
 #define kRegExplorerPdfExt "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
 #define kRegClassesPdf "Software\\Classes\\.pdf"
 
-TempStr GetRegClassesAppsTemp(Str appName) {
+static TempStr GetRegClassesAppsTemp(Str appName) {
     return str::JoinTemp(StrL("Software\\Classes\\Applications\\"), appName, StrL(".exe"));
 }
 

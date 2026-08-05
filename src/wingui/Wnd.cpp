@@ -11,7 +11,7 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-Kind kindWnd = "wnd";
+static Kind kindWnd = "wnd";
 
 TempStr WinMsgNameTemp(UINT msg) {
     return fmt("0x%x", (int)msg);
@@ -20,13 +20,13 @@ TempStr WinMsgNameTemp(UINT msg) {
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 
-Vec<HWND> gHwndDestroyed;
+static Vec<HWND> gHwndDestroyed;
 
 void MarkHWNDDestroyed(HWND hwnd) {
     gHwndDestroyed.Append(hwnd);
 }
 
-Vec<Wnd*> gWndList;
+static Vec<Wnd*> gWndList;
 
 Wnd* WndListFindByHwnd(HWND hwnd) {
     for (auto& wnd : gWndList) {
@@ -1150,7 +1150,7 @@ void PositionCloseTo(Wnd* w, HWND hwnd) {
 // IsDialogMessage(hwnd) in message loop.
 // hwnd has to be current top-level window that is modeless dialog
 // we need to manually maintain this window
-HWND g_currentModelessDialog = nullptr;
+static HWND g_currentModelessDialog = nullptr;
 
 HWND GetCurrentModelessDialog() {
     return g_currentModelessDialog;

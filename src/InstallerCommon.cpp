@@ -60,7 +60,7 @@ Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
 Str gFirstError;
-bool gForceCrash = false;
+__unused static bool gForceCrash = false;
 Str gMsgError;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
@@ -717,7 +717,7 @@ void SetDefaultMsg() {
     SetMsg(gDefaultMsg, COLOR_MSG_WELCOME);
 }
 
-void InvalidateFrame() {
+static void InvalidateFrame() {
     HwndRepaintNow(gHwndFrame);
 }
 
@@ -760,7 +760,7 @@ typedef struct {
 } LetterInfo;
 
 // clang-format off
-LetterInfo gLetters[] = {
+static LetterInfo gLetters[] = {
     {'S', gCol1, gCol1Shadow, -3.f, 0, 0, 0},
     {'U', gCol2, gCol2Shadow, 0.f, 0, 0, 0},
     {'M', gCol3, gCol3Shadow, 2.f, -2.f, 0, 0},
@@ -817,7 +817,7 @@ static void SetLettersSumatra() {
 
 static FrameTimeoutCalculator* gRevealingLettersAnim = nullptr;
 
-int gRevealingLettersAnimLettersToShow;
+static int gRevealingLettersAnimLettersToShow;
 
 static void RevealingLettersAnimStart() {
     int framesPerSec = (int)(double(kSumatraLettersCount) / REVEALING_ANIM_DUR);

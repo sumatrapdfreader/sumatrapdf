@@ -337,7 +337,7 @@ void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
     textColorBrush = new SolidBrush(col);
 }
 
-Gdiplus::PointF ToGdipPointF(const PointF p) {
+static Gdiplus::PointF ToGdipPointF(const PointF p) {
     return Gdiplus::PointF(p.x, p.y);
 }
 

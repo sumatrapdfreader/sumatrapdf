@@ -21,7 +21,7 @@
 // - fuller border decorations via WM_NCCALCSIZE / WM_NCPAINT / WM_NCHITTEST
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
 
-Kind kindEdit = "edit";
+static Kind kindEdit = "edit";
 
 // 1px non-client underline for withBottomBorder (must not sit in the client
 // area: edit client paint on typing would overwrite a WM_PAINT GetDC line)

@@ -186,7 +186,7 @@ static void OnButtonExit() {
     SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
-void OnUninstallationFinished() {
+static void OnUninstallationFinished() {
     auto isRtl = IsUIRtl();
     delete gButtonUninstaller;
     gButtonUninstaller = nullptr;

@@ -13,7 +13,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
 
-Kind kindStatic = "static";
+static Kind kindStatic = "static";
 
 Static::Static() {
     kind = kindStatic;

@@ -32,10 +32,10 @@ bool gDestroyedLogging = false;
 
 // if true, doesn't log if the same text has already been logged
 // reduces logging but also can be confusing i.e. log lines are not showing up
-bool gSkipDuplicateLines = false;
+static bool gSkipDuplicateLines = false;
 
 bool gLogToPipe = true;
-HANDLE hLogPipe = INVALID_HANDLE_VALUE;
+static HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 static Mutex gPipeMutex;
 
 Str gLogFilePath;

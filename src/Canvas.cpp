@@ -64,7 +64,7 @@
 // if set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates
 // impression of lag
-bool gNoFlickerRender = true;
+static bool gNoFlickerRender = true;
 
 Kind kNotifAnnotation = "notifAnnotation";
 
@@ -910,7 +910,7 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-Str scrollMsgStr(USHORT msg) {
+__unused static Str scrollMsgStr(USHORT msg) {
     switch (msg) {
         case SB_LINEDOWN:
             return StrL("SB_LINEDOWN");
@@ -2821,7 +2821,7 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     return win->presentation ? TRUE : FALSE;
 }
 
-float ScaleZoomBy(MainWindow* win, float factor) {
+static float ScaleZoomBy(MainWindow* win, float factor) {
     auto zoomVirt = win->ctrl->GetZoomVirtual(true);
     return factor * zoomVirt;
 }
@@ -2829,7 +2829,7 @@ float ScaleZoomBy(MainWindow* win, float factor) {
 static bool gWheelZoomRelative = true;
 
 // we guess this is part of continous zoom action if WM_MOUSEWHEEL
-bool IsFirstWheelMsg(LARGE_INTEGER& lastTime) {
+static bool IsFirstWheelMsg(LARGE_INTEGER& lastTime) {
     auto currTime = TimeGet();
     auto elapsedMs = TimeDiffMs(lastTime, currTime);
     // 150 ms is a heuristic based on looking at logs
@@ -3230,7 +3230,7 @@ static u32 LowerU64(ULONGLONG v) {
     return res;
 }
 
-Str GiFlagsToStr(DWORD flags) {
+__unused static Str GiFlagsToStr(DWORD flags) {
     switch (flags) {
         case 0:
             return StrL("");

@@ -109,7 +109,7 @@ Kind kindTocDjvu = "tocDjvu";
 // bookmark/TOC label): drop soft hyphens and turn control chars / line
 // separators into spaces, so they don't render as a stray hyphen or as
 // boxes (#2647).
-TempStr CleanupTreeViewControlStringTemp(Str s) {
+static TempStr CleanupTreeViewControlStringTemp(Str s) {
     if (!s) {
         return {};
     }

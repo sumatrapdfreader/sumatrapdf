@@ -242,7 +242,7 @@ static void NotifsRemoveNotification(NotificationWnd* wnd) {
     delete wnd;
 }
 
-int GetWndX(NotificationWnd* wnd) {
+__unused static int GetWndX(NotificationWnd* wnd) {
     Rect rect = HwndWindowRect(wnd->hwnd);
     rect = HwndMapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
     return rect.x;
@@ -721,7 +721,7 @@ static bool NotifsAdd(NotificationWnd* wnd, Kind groupId) {
     return NotifsAdd(wnds, nWnds, wnd, groupId);
 }
 
-NotificationWnd* NotifsGetForGroup(NotificationWnd** wnds, int nWnds, Kind groupId) {
+static NotificationWnd* NotifsGetForGroup(NotificationWnd** wnds, int nWnds, Kind groupId) {
     ReportIf(!groupId);
     for (int i = 0; i < nWnds; i++) {
         if (wnds[i]->groupId == groupId) {

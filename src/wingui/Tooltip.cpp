@@ -13,9 +13,9 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
 
-Kind kindTooltip = "tooltip";
+static Kind kindTooltip = "tooltip";
 
-AtomicInt gTolltipID = 0;
+static AtomicInt gTolltipID = 0;
 
 // Canvas infotips (home thumbnails, page elements) are shown from WM_SETCURSOR
 // via SetSingle. TTF_SUBCLASS on the canvas breaks after open→close→home
@@ -119,7 +119,7 @@ static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, Str s, bool multili
     return true;
 }
 
-void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
+static void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
     TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;

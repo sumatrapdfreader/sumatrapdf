@@ -474,7 +474,7 @@ static bool IsPointInRect(fz_rect rect, fz_point pt) {
     return ToRectF(rect).Contains(PointF(pt.x, pt.y));
 }
 
-fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
+static fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
     // TODO: this is happening quite often so don't report it
@@ -1245,12 +1245,12 @@ static int LinkifyMultilineText(LinkRectList* list, Utf8PageText pageText, int s
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
-inline bool IsEmailUsernameChar(int c) {
+static inline bool IsEmailUsernameChar(int c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
     return IsAlphaNumRune(c) || ContainsAsciiChar(StrL(".!#$%&'*+=?^_`{|}~-"), c);
 }
-inline bool IsEmailDomainChar(int c) {
+static inline bool IsEmailDomainChar(int c) {
     return IsAlphaNumRune(c) || '-' == c;
 }
 
@@ -2167,7 +2167,7 @@ static fz_link* FixupPageLinks(fz_link* root) {
     return new_root;
 }
 
-pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* dict) {
+static pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
         pdf_obj* val = pdf_dict_get_val(ctx, copy, i);
@@ -2303,7 +2303,7 @@ struct PageLabelInfo {
     pdf_obj* prefix = nullptr;
 };
 
-int CmpPageLabelInfo(const PageLabelInfo* a, const PageLabelInfo* b) {
+static int CmpPageLabelInfo(const PageLabelInfo* a, const PageLabelInfo* b) {
     return a->startAt - b->startAt;
 }
 
@@ -2367,7 +2367,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     return str::DupTemp(prefix);
 }
 
-void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data, int depth) {
+static void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data, int depth) {
     if (depth >= 64) {
         return;
     }
@@ -2536,7 +2536,7 @@ static void DeInitializeEngineMupdf() {
     gPerThreadContexts = nullptr;
 }
 
-fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
+static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
     ThreadId threadID = GetCurrentThreadId();
     {
         ScopedMutex cs(&gPerThreadContextsCs);
@@ -2563,7 +2563,7 @@ fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
     return newCtx;
 }
 
-void ReleasePerThreadContext(EngineMupdf* engine) {
+static void ReleasePerThreadContext(EngineMupdf* engine) {
     ThreadId threadID = GetCurrentThreadId();
     fz_context* ctxToDrop = nullptr;
     {
@@ -3970,8 +3970,8 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
 }
 
 /* SumatraPDF */
-fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
-                                            fz_cookie* cookie) {
+static fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
+                                                   fz_cookie* cookie) {
     fz_stext_page* text;
     fz_device* dev = NULL;
 
@@ -4710,7 +4710,7 @@ bool EngineMupdf::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
     return true;
 }
 
-void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
+static void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
     ReportIf(kindDestinationMupdf != dest->GetKind());
     PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
     if (!link->outline && !link->link) {
@@ -6005,7 +6005,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
 static bool gSkipAnnotatoinValidation = true;
 
 // check that pageInfo->annotations has the same info as in mupdf
-NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* /*e*/, FzPageInfo* /*pageInfo*/) {
+static NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* /*e*/, FzPageInfo* /*pageInfo*/) {
     if (gSkipAnnotatoinValidation) {
         return;
     }

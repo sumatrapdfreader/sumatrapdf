@@ -10,7 +10,7 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-Kind kindListBox = "listbox";
+static Kind kindListBox = "listbox";
 
 ListBox::ListBox() {
     kind = kindListBox;

@@ -7,7 +7,7 @@
 
 #include "Layout.h"
 
-bool gEnableDebugLayout = false;
+static bool gEnableDebugLayout = false;
 
 void dbglayout(Str s) {
     if (!gEnableDebugLayout) {
@@ -284,7 +284,7 @@ bool IsLayoutOfKind(ILayout* l, Kind kind) {
 
 // padding.go
 
-Kind paddingKind = "padding";
+static Kind paddingKind = "padding";
 bool IsPadding(Kind kind) {
     return kind == paddingKind;
 }
@@ -338,7 +338,7 @@ void Padding::SetBounds(Rect bounds) {
 
 // vbox.go
 
-Kind kindVBox = "vbox";
+static Kind kindVBox = "vbox";
 
 VBox::VBox() {
     kind = kindVBox;
@@ -364,7 +364,7 @@ int VBox::NonCollapsedChildrenCount() {
     return n;
 }
 
-int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
+static int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         return 0;
     }
@@ -690,7 +690,7 @@ boxElementInfo& VBox::AddChild(ILayout* child) {
 }
 
 // hbox.go
-Kind kindHBox = "hbox";
+__unused static Kind kindHBox = "hbox";
 
 HBox::~HBox() {
     for (auto& c : children) {
@@ -1019,7 +1019,7 @@ boxElementInfo& HBox::AddChild(ILayout* child) {
 
 // align.go
 
-Kind kindAlign = "align";
+static Kind kindAlign = "align";
 
 Align::Align(ILayout* c) {
     Child = c;
@@ -1134,7 +1134,7 @@ Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
     return DpiScaledInsetsAll(hwnd, top, right, bottom, left);
 }
 
-Kind kindSpacer = "spacer";
+static Kind kindSpacer = "spacer";
 
 Spacer::Spacer(int dx, int dy) {
     kind = kindSpacer;
@@ -1161,7 +1161,7 @@ void Spacer::SetBounds(Rect) {
     // do nothing
 }
 
-Kind kindTableLayout = "tableLayout";
+static Kind kindTableLayout = "tableLayout";
 
 TableLayout::TableLayout() {
     kind = kindTableLayout;

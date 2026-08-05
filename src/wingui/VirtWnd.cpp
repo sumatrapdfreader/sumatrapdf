@@ -10,7 +10,7 @@
 #include "wingui/Layout.h"
 #include "wingui/VirtWnd.h"
 
-Kind kindVirtWnd = "kindVirtWnd";
+static Kind kindVirtWnd = "kindVirtWnd";
 
 VirtWnd::VirtWnd() {
     kind = kindVirtWnd;
@@ -34,7 +34,7 @@ Size VirtWnd::GetIdealSize() {
 
 void VirtWnd::Paint(HDC) {}
 
-Kind kindVirWndText = "virtWndText";
+static Kind kindVirWndText = "virtWndText";
 
 VirtWndText::VirtWndText(HWND hwnd, Str s, HFONT font) {
     kind = kindVirWndText;

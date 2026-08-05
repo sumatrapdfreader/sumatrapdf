@@ -477,7 +477,7 @@ static MenuDef menuDefZoom[] = {
 //] ACCESSKEY_GROUP Zoom Menu
 
 // TODO: replace with CmdetTheme
-MenuDef menuDefThemes[] = {
+static MenuDef menuDefThemes[] = {
     {
         nullptr,
         0,
@@ -529,7 +529,7 @@ static MenuDef menuDefTabGroups[] = {
     },
 };
 
-MenuDef menuDefFavorites[] = {
+static MenuDef menuDefFavorites[] = {
     {
         _TRN("Add to favorites"),
         CmdFavoriteAdd,
@@ -1631,7 +1631,7 @@ static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
     }
 }
 
-void MenuUpdateZoom(MainWindow* win) {
+static void MenuUpdateZoom(MainWindow* win) {
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
@@ -1649,7 +1649,7 @@ void MenuUpdateZoom(MainWindow* win) {
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
 
-void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) {
+static void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) {
     bool filePrintEnabled = win->IsDocLoaded();
 #if defined(DISABLE_DOCUMENT_RESTRICTIONS)
     bool filePrintAllowed = true;
@@ -1707,7 +1707,7 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     }
 }
 
-void MenuUpdateDisplayMode(MainWindow* win) {
+static void MenuUpdateDisplayMode(MainWindow* win) {
     bool enabled = win->IsDocLoaded();
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
     if (enabled) {
@@ -2183,7 +2183,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 }
 
 // so that we can do free everything at exit
-Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
+static Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
 
 void FreeAllMenuDrawInfos() {
     while (len(g_menuDrawInfos) != 0) {

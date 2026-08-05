@@ -855,7 +855,7 @@ TempStr RegKeyNameTemp(HKEY key) {
     return "RegKeyName: unknown key";
 }
 
-TempStr RegKeyNameWTemp(HKEY key) {
+static TempStr RegKeyNameWTemp(HKEY key) {
     auto k = RegKeyNameTemp(key);
     return str::Dup(k);
 }
@@ -2670,7 +2670,7 @@ Size GetBitmapSize(HBITMAP hbmp) {
 }
 
 // cf. fz_mul255 in fitz.h
-inline int mul255(int a, int b) {
+static inline int mul255(int a, int b) {
     int x = (a * b) + 128;
     x += x >> 8;
     return x >> 8;

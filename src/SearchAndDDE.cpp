@@ -80,7 +80,7 @@ void InvalidateFindMatchPaintCache() {
     gFindMatchPaintCache.countEpoch = 0;
 }
 
-Kind kNotifFindProgress = "findProgress";
+static Kind kNotifFindProgress = "findProgress";
 
 // the controller if the current document is rendered in a webview that
 // supports our in-page find (chm / markdown with a WebView2 backend: native
@@ -1447,7 +1447,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
 }
 
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
-TempStr ReverseTextTemp(Str s) {
+__unused static TempStr ReverseTextTemp(Str s) {
     TempWStr ws = ToWStrTemp(s);
     int n = len(ws);
     for (int i = 0; i < n / 2; i++) {

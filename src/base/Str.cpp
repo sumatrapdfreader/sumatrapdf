@@ -2700,18 +2700,6 @@ int WStrCmpNoCase(WStr a, WStr b) {
     return a.len - b.len;
 }
 
-bool IsWhiteSpace(char c) {
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\n':
-        case '\r':
-            return true;
-        default:
-            return false;
-    }
-}
-
 // Format file size with comma separators, returns Str
 Str FormatFileSize(Arena* arena, u64 size) {
     char buf[32];

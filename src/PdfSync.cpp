@@ -572,7 +572,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     return Str(utf8Buf, utf8Len - 1);
 }
 
-TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
+static TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
     if (!pathSync) {
         return {};
     }
@@ -607,7 +607,7 @@ TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
     return tempPathSync;
 }
 
-TempStr DealPlainSync(TempStr pathSync) {
+static TempStr DealPlainSync(TempStr pathSync) {
     if (!pathSync) {
         return {};
     }
@@ -667,7 +667,7 @@ static bool IsGzipFile(Str path) {
 }
 
 // returns path of ungzipped file
-TempStr ungzipToTempSync(Str gzPath) {
+static TempStr ungzipToTempSync(Str gzPath) {
     if (!gzPath) {
         return {};
     }

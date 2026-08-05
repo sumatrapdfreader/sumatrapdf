@@ -97,7 +97,7 @@ constexpr int kButtonsCount = dimof(gToolbarButtons);
 constexpr int kMaxCustomButtons = 127;
 // +1 to ensure there's always space for WarningsMsgId button
 static ToolbarButtonInfo gCustomButtons[kMaxCustomButtons + 1];
-int gCustomButtonsCount = 0;
+static int gCustomButtonsCount = 0;
 
 static bool SkipBuiltInButton(const ToolbarButtonInfo& tbi) {
     return tbi.bmpIndex == TbIcon::None;
@@ -714,8 +714,8 @@ void UpdateFindbox(MainWindow* win) {
     }
 }
 
-LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
-                              DWORD_PTR /*dwRefData*/) {
+static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
+                                     DWORD_PTR /*dwRefData*/) {
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
         HDC hdc = (HDC)wParam;
         SetTextColor(hdc, ThemeWindowTextColor());
@@ -1101,7 +1101,7 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     win->hwndPageTotal = total;
 }
 
-void LogBitmapInfo(HBITMAP hbmp) {
+__unused static void LogBitmapInfo(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
     logf("dx: %d, dy: %d, stride: %d, bitsPerPixel: %d\n", (int)bmpInfo.bmWidth, (int)bmpInfo.bmHeight,

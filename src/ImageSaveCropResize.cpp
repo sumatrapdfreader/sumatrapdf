@@ -1515,7 +1515,7 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
     return CopyImageToClipboard(tmp, false);
 }
 
-LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+static LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     ImageEditWindow* ew;

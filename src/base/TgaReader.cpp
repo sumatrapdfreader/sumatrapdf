@@ -361,7 +361,7 @@ Pixmap* PixmapFromData(Str d) {
     return pixmap;
 }
 
-inline bool memeq3(const char* pix1, const char* pix2) {
+static inline bool memeq3(const char* pix1, const char* pix2) {
     return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
 }
 

@@ -113,12 +113,12 @@ class HW_IDocHostUIHandler;
 class HW_IDropTarget;
 class HW_IServiceProvider;
 
-inline void VariantSetBool(VARIANT* res, bool val) {
+static inline void VariantSetBool(VARIANT* res, bool val) {
     res->vt = VT_BOOL;
     res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;
 }
 
-inline void VariantSetLong(VARIANT* res, long val) {
+static inline void VariantSetLong(VARIANT* res, long val) {
     res->vt = VT_I4;
     res->lVal = val;
 }
@@ -198,7 +198,7 @@ class FrameSite : public IUnknown {
 // (1 thousand objects is just 4K of memory for the vector)
 static Vec<HtmlWindow*> gHtmlWindows;
 
-HtmlWindow* FindHtmlWindowById(int windowId) {
+static HtmlWindow* FindHtmlWindowById(int windowId) {
     // windowId comes from the its:// URL host (a signed %d parsed from a CHM),
     // so a crafted document can pass a negative or out-of-range value. Reject it
     // instead of indexing out of bounds (Vec::operator[]'s ReportIf is
@@ -501,7 +501,7 @@ STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown* pUnkOuter, RE
 }
 
 static AtomicInt gProtocolFactoryRefCount = 0;
-HW_IInternetProtocolFactory* gInternetProtocolFactory = nullptr;
+static HW_IInternetProtocolFactory* gInternetProtocolFactory = nullptr;
 
 // Register our protocol so that urlmon will call us for every
 // url that starts with HW_PROTO_PREFIX

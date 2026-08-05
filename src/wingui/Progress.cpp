@@ -12,7 +12,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/progress-bar-control-reference
 
-Kind kindProgress = "progress";
+static Kind kindProgress = "progress";
 
 Progress::Progress() {
     kind = kindProgress;

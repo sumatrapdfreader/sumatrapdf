@@ -80,7 +80,7 @@ static AnnotationType gAnnotsIsColorBackground[] = {
 };
 // clang-format on
 
-TempStr GetKnownColorNameTemp(PdfColor c) {
+static TempStr GetKnownColorNameTemp(PdfColor c) {
     int n = dimofi(gColorsValues);
     for (int i = 0; i < n; i++) {
         if (c == gColorsValues[i]) {
@@ -654,7 +654,7 @@ static PdfColor GetDropDownColor(Str sv) {
     return col.pdfCol;
 }
 
-bool gShowRect = true;
+static bool gShowRect = true;
 
 // TODO: only limit to widgets that have rect?
 static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {

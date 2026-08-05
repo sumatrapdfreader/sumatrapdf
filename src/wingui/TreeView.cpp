@@ -27,7 +27,7 @@ Tree view, checkboxes and other info:
 https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
 */
 
-Kind kindTreeView = "treeView";
+static Kind kindTreeView = "treeView";
 
 TreeView::TreeView() {
     kind = kindTreeView;
@@ -109,13 +109,13 @@ static TVITEMW* GetTVITEM(TreeView* tree, HTREEITEM hItem) {
     return ti;
 }
 
-TVITEMW* GetTVITEM(TreeView* tree, TreeItem ti) {
+static TVITEMW* GetTVITEM(TreeView* tree, TreeItem ti) {
     HTREEITEM hi = tree->GetHandleByTreeItem(ti);
     return GetTVITEM(tree, hi);
 }
 
 // expand if collapse, collapse if expanded
-void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
+static void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
     HWND hTree = tree->hwnd;
     HTREEITEM child = TreeView_GetChild(hTree, hItem);
     if (!child) {
@@ -139,7 +139,7 @@ void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
     }
 }
 
-void SetTreeItemState(uint uState, TreeItemState& state) {
+static void SetTreeItemState(uint uState, TreeItemState& state) {
     state.isExpanded = bitmask::IsSet(uState, TVIS_EXPANDED);
     state.isSelected = bitmask::IsSet(uState, TVIS_SELECTED);
     uint n = (uState >> 12) - 1;
@@ -361,7 +361,7 @@ static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
 
 // inserting in front is faster:
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM parent) {
+static HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM parent) {
     TVINSERTSTRUCTW toInsert{};
 
     toInsert.hParent = parent;
@@ -389,7 +389,7 @@ bool TreeView::UpdateItem(TreeItem ti) {
 
 // complicated because it inserts items backwards, as described in
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
+static void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
     auto tm = treeView->treeModel;
     int n = tm->ChildCount(item);
     TreeItem* a = AllocArrayTemp<TreeItem>(n);

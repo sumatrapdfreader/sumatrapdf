@@ -15,7 +15,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
 
-Kind kindButton = "button";
+static Kind kindButton = "button";
 
 constexpr uint kBtnTextFmt = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS;
 

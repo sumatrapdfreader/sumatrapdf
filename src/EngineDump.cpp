@@ -71,7 +71,7 @@ static TempStr EscapeTemp(Str str) {
     return ToStrTemp(escaped);
 }
 
-void DumpProperties(EngineBase* engine, bool fullDump) {
+static void DumpProperties(EngineBase* engine, bool fullDump) {
     Out1("\t<Properties\n");
     TempStr str = EscapeTemp(engine->FilePath());
     Out("\t\tFilePath=\"%s\"\n", str.s);
@@ -174,7 +174,7 @@ static TempStr DestRectToStrTemp(EngineBase* engine, IPageDestination* dest) {
     return nullptr;
 }
 
-void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
+static void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
         TempStr title = EscapeTemp(item->title);
         for (int i = 0; i < level; i++) {
@@ -217,7 +217,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
     }
 }
 
-void DumpToc(EngineBase* engine) {
+static void DumpToc(EngineBase* engine) {
     TocTree* tree = engine->GetToc();
     if (!tree) {
         return;
@@ -233,7 +233,7 @@ void DumpToc(EngineBase* engine) {
     }
 }
 
-Str ElementTypeToStr(IPageElement* el) {
+static Str ElementTypeToStr(IPageElement* el) {
     Kind kind = el->GetKind();
     if (kind) {
         return Str(kind);
@@ -241,11 +241,11 @@ Str ElementTypeToStr(IPageElement* el) {
     return StrL("unknown");
 }
 
-Str PageDestToStr(Kind kind) {
+__unused static Str PageDestToStr(Kind kind) {
     return Str(kind);
 }
 
-void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
+static void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     // ensure that the page is loaded
     engine->BenchLoadPage(pageNo);
 
@@ -312,7 +312,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     Out1("\t</Page>\n");
 }
 
-void DumpThumbnail(EngineBase* engine) {
+static void DumpThumbnail(EngineBase* engine) {
     RectF rect = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     if (rect.IsEmpty()) {
         Out1("\t<Thumbnail />\n");
@@ -340,7 +340,7 @@ void DumpThumbnail(EngineBase* engine) {
     FreePixmap(bmp);
 }
 
-void DumpData(EngineBase* engine, bool fullDump) {
+__unused static void DumpData(EngineBase* engine, bool fullDump) {
     Out1(UTF8_BOM);
     Out1("<?xml version=\"1.0\"?>\n");
     Out1("<EngineDump>\n");
@@ -390,7 +390,7 @@ static bool CheckRenderPath(Str path) {
 }
 
 // static
-bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool silent = false) {
+__unused static bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool silent = false) {
     if (!CheckRenderPath(renderPath)) {
         return false;
     }

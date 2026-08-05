@@ -10,7 +10,7 @@ namespace uitask {
 
 static HWND gTaskDispatchHwnd = nullptr;
 
-UINT gExecuteTaskMessage = 0;
+static UINT gExecuteTaskMessage = 0;
 
 static ThreadId gMainUIThreadId = 0;
 

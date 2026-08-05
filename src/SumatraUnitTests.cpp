@@ -226,7 +226,7 @@ static void assertGoToNextPage3(int cmdId) {
     utassert(arg->intVal == 3);
 }
 
-void parseCommandsTest() {
+static void parseCommandsTest() {
     CommandArg* arg;
 
     {

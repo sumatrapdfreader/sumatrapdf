@@ -17,7 +17,7 @@
 #endif
 #include "SumatraLog.h"
 
-AtomicInt g_lRefCount = 0;
+static AtomicInt g_lRefCount = 0;
 
 class FilterClassFactory : public IClassFactory {
   public:

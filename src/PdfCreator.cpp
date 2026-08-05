@@ -119,7 +119,8 @@ PdfCreator::~PdfCreator() {
     fz_drop_context_windows(ctx);
 }
 
-pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, Str name, fz_image* image) {
+__unused static pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, Str name,
+                                       fz_image* image) {
     pdf_obj *subres, *ref;
 
     subres = pdf_dict_get(ctx, resources, PDF_NAME(XObject));

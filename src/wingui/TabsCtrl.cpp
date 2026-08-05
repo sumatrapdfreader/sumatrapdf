@@ -18,7 +18,7 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 //--- Tabs
 
-Kind kindTabs = "tabs";
+static Kind kindTabs = "tabs";
 
 // non-selected tabs narrower than this hide their close button so that
 // clicks drag/select instead of accidentally closing the tab
@@ -180,7 +180,7 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     return res;
 }
 
-Gdiplus::Color GdipCol(COLORREF c) {
+static Gdiplus::Color GdipCol(COLORREF c) {
     return GdiRgbFromCOLORREF(c);
 }
 

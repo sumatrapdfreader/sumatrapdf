@@ -415,7 +415,7 @@ struct VistorForPageNoData {
     int nItems = 0;
 };
 
-void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd) {
+static void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd) {
     auto tocItem = (TocItem*)vd->item;
     if (!tocItem) {
         return;
@@ -1037,7 +1037,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 }
 
-void OnTocCustomDraw(TreeView::CustomDrawEvent*);
+static void OnTocCustomDraw(TreeView::CustomDrawEvent*);
 
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {
@@ -1352,7 +1352,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 // TocTreeSelectionChanged), so the NM_CLICK that follows doesn't navigate again
 static bool gTocSelChangedByMouseClick = false;
 
-void TocTreeClick(TreeView::ClickEvent* ev) {
+static void TocTreeClick(TreeView::ClickEvent* ev) {
     bool handledBySelChange = gTocSelChangedByMouseClick;
     gTocSelChangedByMouseClick = false;
     // A normal click changes the selection and is handled by

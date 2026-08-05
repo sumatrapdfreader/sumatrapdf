@@ -47,7 +47,7 @@ static bool gInstallStarted = false; // a bit of a hack
 static bool gInstallFailed = false;
 
 static PreviousInstallationInfo gPrevInstall;
-Flags gCliNew;
+static Flags gCliNew;
 
 struct InstallerWnd {
     HWND hwnd = nullptr;

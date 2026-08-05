@@ -968,7 +968,7 @@ void FreeCommandArgs(CommandArg* first) {
     }
 }
 
-CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
+__unused static CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
     CommandArg* curr = first;
     while (curr) {
         if (IsArgName(curr->name, name)) {
@@ -1198,7 +1198,7 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
 
 static int ParseBool(Str s);
 
-CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
+static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     // first is default value
     Str rest = *argsInOut;
     str::SkipChar(rest, ' ');
@@ -1248,7 +1248,7 @@ static int ParseBool(Str s) {
 //   <name>: <value>
 //   <name>=<value>
 // for booleans only <name> works as well and represents true
-CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
+static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
     Str valStart;
     Str argName;
     CommandArg::Type type = CommandArg::Type::None;

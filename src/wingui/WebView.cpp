@@ -17,7 +17,7 @@
 #endif
 #include "wingui/WebView.h"
 
-Kind kindWebView = "webView";
+static Kind kindWebView = "webView";
 
 #ifndef _MSC_VER
 TempStr GetWebView2VersionTemp() {

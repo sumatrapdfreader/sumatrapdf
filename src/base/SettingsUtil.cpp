@@ -198,7 +198,7 @@ static void FreeArray(Vec<void*>* array, const FieldInfo& field) {
     delete array;
 }
 
-bool IsCompactable(const StructInfo* info) {
+static bool IsCompactable(const StructInfo* info) {
     for (size_t i = 0; i < info->fieldCount; i++) {
         switch (info->fields[i].type) {
             case SettingType::Bool:

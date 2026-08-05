@@ -219,7 +219,8 @@ SeqStrings gFileActionNames =
     "FILE_ACTION_RENAMED_NEW_NAME\0";
 // clang-format on
 
-TempStr GetFileActionNameTemp(int actionId) {
+// only used by the commented-out log in ReadDirectoryChangesNotification()
+__unused static TempStr GetFileActionNameTemp(int actionId) {
     if (actionId < 1 || actionId > 5) {
         return StrL("(unknown)");
     }

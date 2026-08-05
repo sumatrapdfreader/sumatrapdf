@@ -239,7 +239,7 @@ static Arg GetArg(Str s) {
 // https://stackoverflow.com/questions/619158/adobe-reader-command-line-reference
 // https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
 // with Sumatra extensions
-void ParseAdobeFlags(FileArgs& i, Str s) {
+static void ParseAdobeFlags(FileArgs& i, Str s) {
     StrVec parts;
     StrVec parts2;
     Str name;

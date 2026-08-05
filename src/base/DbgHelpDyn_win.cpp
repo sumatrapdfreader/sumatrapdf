@@ -26,7 +26,7 @@ namespace dbghelp {
 
 static char excNameBuf[512];
 
-Str ExceptionNameFromCode(DWORD excCode) {
+static Str ExceptionNameFromCode(DWORD excCode) {
 #define EXC(x) \
     case x:    \
         return Str(#x);
@@ -107,7 +107,7 @@ static bool CanStackWalk() {
 constexpr int kMaxSymLen = 512;
 
 // check if has access to valid .pdb symbols file by trying to resolve a symbol
-NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
+static NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
     char buf[sizeof(SYMBOL_INFO) + (kMaxSymLen * sizeof(char))];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
@@ -491,7 +491,7 @@ NO_INLINE bool GetCurrentThreadCallstack(str::Builder& s) {
 }
 #pragma optimize("", off)
 
-str::Builder* gCallstackLogs = nullptr;
+static str::Builder* gCallstackLogs = nullptr;
 
 TempStr GetCurrentThreadCallstackTemp() {
     str::Builder s(2048);

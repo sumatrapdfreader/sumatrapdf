@@ -270,7 +270,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
     return s.TakeStr();
 }
 
-void SaveCrashInfo(Str d) {
+static void SaveCrashInfo(Str d) {
     if (!gCrashFilePath) {
         logf("SaveCrashInfo: skipping because !gCrashFilePath");
         return;
@@ -292,7 +292,7 @@ static void WriteCrashInfoToStdErr(Str d) {
     WriteFile(h, (u8*)d.s, (DWORD)d.len, &written, nullptr);
 }
 
-void UploadCrashReport(Str d) {
+static void UploadCrashReport(Str d) {
     log("UploadCrashReport()\n");
     if (len(d) == 0) {
         return;
@@ -874,22 +874,23 @@ bool SetSymbolsDir(Str symDir) {
     return true;
 }
 
-void __cdecl onSignalAbort(int) {
+static void __cdecl onSignalAbort(int) {
     // put the signal back because can be called many times
     // (from multiple threads) and raise() resets the handler
     signal(SIGABRT, onSignalAbort);
     CrashMe();
 }
 
-void onTerminate() {
+static void onTerminate() {
     CrashMe();
 }
 
-void onUnexpected() {
+__unused static void onUnexpected() {
     CrashMe();
 }
 
-// shadow crt's _purecall() so that we're called instead of CRT
+// shadow crt's _purecall() so that we're called instead of CRT.
+// must keep external linkage: that's how it overrides the CRT's definition
 int __cdecl _purecall() {
     CrashMe();
     return 0;

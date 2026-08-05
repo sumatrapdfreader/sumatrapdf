@@ -584,7 +584,7 @@ static void DeleteInfotip() {
     gAboutTooltip = nullptr;
 }
 
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TempStr url;
     Point pt;
 
@@ -1302,7 +1302,7 @@ static void SyncHomeLayoutCacheFileSizes(const HomePageLayout& l) {
     }
 }
 
-void LayoutHomePage(HomePageLayout& l) {
+static void LayoutHomePage(HomePageLayout& l) {
     EnsureTipsParsed();
 
     Vec<FileState*> allFileStates;

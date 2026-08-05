@@ -632,7 +632,7 @@ MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab) {
     return nullptr;
 }
 
-bool gShowPassword = false;
+static bool gShowPassword = false;
 
 class HwndPasswordUI : public PasswordUI {
     HWND hwnd;
@@ -4430,7 +4430,7 @@ enum class SaveChoice {
     Cancel,
 };
 
-SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
+static SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     TempStr fileName = path::GetBaseNameTemp(filePath);
     TempStr mainInstrA = fmt(_TRA("Unsaved changes in '%s'").s, fileName);
     WCHAR* mainInstr = CWStrTemp(mainInstrA);
@@ -8066,7 +8066,7 @@ TempStr GetCrashInfoDirTemp() {
     return path::JoinTemp(buildDir, StrL("crashinfo"));
 }
 
-void ShowLogFileSmart() {
+static void ShowLogFileSmart() {
     TempStr path = gLogFilePath;
     if (len(path) == 0) {
         path = GetLogFilePathTemp();
@@ -8348,7 +8348,7 @@ static void ListPrintersThread(HWND* hwndPtr) {
     uitask::Post(MkFunc0<ListPrintersResult>(ListPrintersShowResult, d));
 }
 
-void ReopenLastClosedFile(MainWindow* win) {
+static void ReopenLastClosedFile(MainWindow* win) {
     Str path = PopRecentlyClosedDocument();
     if (!path) {
         return;
@@ -8365,7 +8365,7 @@ void CopyFilePath(WindowTab* tab) {
     CopyTextToClipboard(path);
 }
 
-Kind kNotifClearHistory = "clearHistry";
+static Kind kNotifClearHistory = "clearHistry";
 
 struct ClearHistoryData {
     MainWindow* win = nullptr;
@@ -8393,7 +8393,7 @@ static void ClearHistoryAsync(ClearHistoryData* d) {
     DestroyTempArena();
 }
 
-void ClearHistory(MainWindow* win) {
+static void ClearHistory(MainWindow* win) {
     if (!win) {
         // TODO: find current active MainWindow ?
         return;
@@ -8439,7 +8439,7 @@ void ClearHistory(MainWindow* win) {
 
 // looks through the file history and removes entries for files that no
 // longer exist on disk. Done synchronously on the main thread for simplicity.
-void RemoveDeletedFilesFromHistory(MainWindow* win) {
+static void RemoveDeletedFilesFromHistory(MainWindow* win) {
     if (!win || !gFileHistory.states) {
         return;
     }
@@ -8482,7 +8482,7 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
 // cached under <data>/cbx-cache/ when opening them from a network drive.
 // Safe to call with no open document; open documents may still hold a lock
 // on a cache file so some deletes can fail (logged).
-void DeleteCachedFiles(MainWindow* win) {
+static void DeleteCachedFiles(MainWindow* win) {
     int nDeleted = 0;
     int nFailed = 0;
     TempStr dataDir = GetSumatraDataDirTemp();
@@ -8554,7 +8554,7 @@ ShowMessage:
 }
 
 #if 1
-void DebugCorruptMemory() {}
+static void DebugCorruptMemory() {}
 #else
 // try to trigger a crash due to corrupting allocator
 // this is a different kind of a crash than just referencing invalid memory

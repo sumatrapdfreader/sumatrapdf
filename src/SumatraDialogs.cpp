@@ -41,7 +41,7 @@ struct DLGTEMPLATEEX {
 };
 #pragma pack(pop)
 
-DLGTEMPLATE* DupTemplate(int dlgId) {
+static DLGTEMPLATE* DupTemplate(int dlgId) {
     HRSRC dialogRC = FindResourceW(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
     ReportIf(!dialogRC);
     HGLOBAL dlgTemplate = LoadResource(nullptr, dialogRC);
@@ -140,7 +140,7 @@ static void SetDlgTemplateExFont(DLGTEMPLATE* tmp, bool isRtl, int fontSize) {
     *wd = (WORD)fontSize;
 }
 
-DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
+static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
     DLGTEMPLATE* tpl = DupTemplate(dlgId);
     SetDlgTemplateRtl(tpl);
     return tpl;

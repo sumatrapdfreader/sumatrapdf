@@ -223,7 +223,7 @@ TempStr NormalizeURLTemp(Str url, Str base) {
     return norm;
 }
 
-inline char decode64(char c) {
+static inline char decode64(char c) {
     if ('A' <= c && c <= 'Z') {
         return (char)(c - 'A');
     }
@@ -1680,12 +1680,12 @@ static Str TextFindLinkEnd(str::Builder& htmlData, Str curr, char prevChar, bool
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
-inline bool IsEmailUsernameChar(char c) {
+static inline bool IsEmailUsernameChar(char c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
     return isalnum((u8)c) || str::ContainsChar(StrL(".!#$%&'*+=?^_`{|}~-"), c);
 }
-inline bool IsEmailDomainChar(char c) {
+static inline bool IsEmailDomainChar(char c) {
     return isalnum((u8)c) || '-' == c;
 }
 

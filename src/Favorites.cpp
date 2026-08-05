@@ -30,7 +30,7 @@
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
 
-void RememberFavTreeExpansionStateForAllWindows();
+static void RememberFavTreeExpansionStateForAllWindows();
 void LayoutFavoritesContainer(MainWindow* win);
 void PopulateFavTreeIfNeeded(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();

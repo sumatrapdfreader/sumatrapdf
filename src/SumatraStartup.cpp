@@ -971,7 +971,7 @@ static HRESULT CALLBACK LoadLibsumatrapdfDialogCallback(HWND /*hwnd*/, UINT msg,
 // if true, and libsumatrapdf.dll is not next to the exe, extract it to the build data
 // dir and load from there (portable / single-exe). if false, only try next to
 // the exe; missing dll is handled by ForceRunningAsInstaller.
-bool gSingleExe = true;
+static bool gSingleExe = true;
 
 static HMODULE gLibsumatrapdfDll = nullptr;
 // Last LoadLibrary(Ex) failure for libsumatrapdf.dll (0 if none / size mismatch skip).

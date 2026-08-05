@@ -568,7 +568,7 @@ bool CanSendAsEmailAttachment(WindowTab* tab) {
 
 // Use MAPISendMailW to send email with attachment.
 // Works with Outlook, Thunderbird and other MAPI-registered email clients.
-bool SendAsEmailAttachmentWithMapi(HWND hwndParent, Str filePath) {
+static bool SendAsEmailAttachmentWithMapi(HWND hwndParent, Str filePath) {
     HMODULE hMapi = LoadLibraryW(L"mapi32.dll");
     if (!hMapi) {
         return false;

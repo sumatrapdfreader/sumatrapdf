@@ -128,7 +128,7 @@ extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem* psd, BOO
     return TRUE;
 }
 
-void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
+static void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
     const int nDeltaX = cx - pdd->sizeClient.dx;
     const int nDeltaY = cy - pdd->sizeClient.dy;
 

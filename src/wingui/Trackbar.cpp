@@ -13,7 +13,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/trackbar-control-reference
 
-Kind kindTrackbar = "trackbar";
+static Kind kindTrackbar = "trackbar";
 
 Trackbar::Trackbar() {
     kind = kindTrackbar;

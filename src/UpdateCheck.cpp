@@ -58,7 +58,7 @@ static const Str updateInfoURLs[] = {
 
 // prevent multiple update tasks from happening simultaneously
 // (this might e.g. happen if a user checks manually very quickly after startup)
-bool gUpdateCheckInProgress = false;
+static bool gUpdateCheckInProgress = false;
 
 // when true, NotifyUserOfUpdate skips the install-confirmation dialog and just
 // installs (set when the user clicks "Download and update" in the pre-release

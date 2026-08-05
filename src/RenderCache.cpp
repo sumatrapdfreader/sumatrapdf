@@ -30,14 +30,14 @@
 #define CONSERVE_MEMORY
 
 #if defined(CONSERVE_MEMORY)
-bool gConserveMemory = true;
+static bool gConserveMemory = true;
 #else
 bool gConserveMemory = false;
 #endif
 
 static DWORD WINAPI RenderCacheThread(LPVOID data);
 
-bool gShowTileLayout = false;
+static bool gShowTileLayout = false;
 int gMaxRenderThreads = 8;
 
 // Whether to run the bitmap recolor pass when no dark profile applies.

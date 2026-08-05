@@ -1096,7 +1096,7 @@ static void UpdatePrintProgress(UpdatePrintProgressData* d) {
 }
 
 class PrintThreadData;
-void RemovePrintNotif(PrintThreadData* self, NotificationWnd*);
+static void RemovePrintNotif(PrintThreadData* self, NotificationWnd*);
 
 class PrintThreadData {
   public:

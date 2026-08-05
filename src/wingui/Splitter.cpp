@@ -14,7 +14,7 @@
 
 //- Splitter
 
-Kind kindSplitter = "splitter";
+static Kind kindSplitter = "splitter";
 
 static const WCHAR* kResizeOverlayClass = L"SplitterResizeOverlayWnd";
 

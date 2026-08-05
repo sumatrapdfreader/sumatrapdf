@@ -14,7 +14,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/combo-boxes
 
-Kind kindDropDown = "dropdown";
+static Kind kindDropDown = "dropdown";
 
 DropDown::DropDown() {
     kind = kindDropDown;

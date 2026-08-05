@@ -482,7 +482,7 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
     }
 }
 
-void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
+static void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
     SYSTEMTIME date;
     int timeZone = 0;
     bool ok = false;
