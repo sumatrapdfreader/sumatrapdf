@@ -5,6 +5,10 @@
 #include "base/File.h"
 #include "base/StrQueue.h"
 
+#if IS_TRACY
+#include "tracy/Tracy.hpp"
+#endif
+
 #include "base/DirScan.h"
 
 void AdvanceDirIter(DirIter::iterator* it, int n);
@@ -466,6 +470,9 @@ int GetDirScanProgress(DirScanCtx* ctx, DirScanProgress* out, int maxOut) {
 }
 
 static void DirScanWorkerThread(DirScanWorker* w) {
+#if IS_TRACY
+    tracy::SetThreadName("Directory scan");
+#endif
     DirScanCtx* ctx = w->ctx;
     auto* tempAlloc = GetTempArena();
 
@@ -509,7 +516,19 @@ static void DirScanWorkerThread(DirScanWorker* w) {
         bool nonRecursive = node->nonRecursive;
         w->cs.Unlock();
 
-        ReadDirectory(ctx->a, dv, &ctx->shouldExit);
+#if IS_TRACY
+        ZoneTransientN(scanZone, "Scan directory", true);
+        ZoneTextV(scanZone, dv->fullDir.s, dv->fullDir.len);
+#endif
+        {
+#if IS_TRACY
+            ZoneTransientN(readZone, "ReadDirectory", true);
+#endif
+            ReadDirectory(ctx->a, dv, &ctx->shouldExit);
+        }
+#if IS_TRACY
+        ZoneValueV(scanZone, dv->len);
+#endif
 
         if (AtomicBoolGet(&ctx->shouldExit)) {
             break;
