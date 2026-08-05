@@ -349,17 +349,19 @@ void CreateSumatraAcceleratorTable() {
     gShortcutLangCode = CurrentLangCode;
     ReportIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
 
+    // an upper bound for all three tables: Add() appends at most one entry to
+    // each per call, and it's called once per built-in and once per custom shortcut
     int nMax = dimofi(gBuiltInAccelerators) + CountCustomShortcuts();
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/2981
-    // sizeof(ACCEL) is 6 so odd number will cause treeViewAccels to
-    // be mis-aligined. Rounding to 2 should be enoug, do 4 for extra safety
-    nMax = RoundUp(nMax, 4);
 
     AccelTablesBuilder b;
+    // accels outlives us in gAccels, so it has to be a real allocation. the edit /
+    // tree view arrays are only read by CreateAcceleratorTableW below, so they come
+    // from the temp arena. They're allocated separately: sizeof(ACCEL) is 6, so
+    // carving them out of one block needed the count rounded up to keep the second
+    // one aligned (https://github.com/sumatrapdfreader/sumatrapdf/issues/2981)
     b.accels = AllocArray<ACCEL>(nMax);
-    // perf: only 1 allocation for 2 arrays
-    b.editAccels = AllocArray<ACCEL>(nMax * 2);
-    b.treeViewAccels = b.editAccels + nMax;
+    b.editAccels = push_array<ACCEL>(GetTempArena(), (u64)nMax);
+    b.treeViewAccels = push_array<ACCEL>(GetTempArena(), (u64)nMax);
 
     AddCustomShortcuts(b);
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
@@ -376,8 +378,6 @@ void CreateSumatraAcceleratorTable() {
     ReportIf(gAccelTables[1] == nullptr);
     gAccelTables[2] = CreateAcceleratorTableW(b.treeViewAccels, b.nTreeViewAccels);
     ReportIf(gAccelTables[2] == nullptr);
-
-    free(b.editAccels);
 }
 
 void FreeAcceleratorTables() {
