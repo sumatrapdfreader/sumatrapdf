@@ -240,6 +240,15 @@ static void testPositional() {
     check(FormatTemp("%v %v %v", 'c', 5, StrL("s")), "c 5 s");
 }
 
+// A '{' with no closing '}' used to walk past the end of the format string
+// (ASAN: global-buffer-overflow in parseArgDefPositional). Malformed input must
+// fail safe instead. Reachable via a translated format string.
+static void testUnterminatedPositional() {
+    check(FormatTemp("{1"), "");
+    check(FormatTemp("abc{12"), "");
+    check(FormatTemp("{"), "{"); // '{' not followed by a digit stays raw text
+}
+
 void StrFormatTest() {
     testStrings();
     testChars();
@@ -251,4 +260,5 @@ void StrFormatTest() {
     testCrossType();
     testEscapeAndRaw();
     testPositional();
+    testUnterminatedPositional();
 }

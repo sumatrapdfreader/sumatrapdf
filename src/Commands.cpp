@@ -863,7 +863,11 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, Str s) {
     if (idx < 0) {
         return -1;
     }
+    // ReportIf only reports, it doesn't stop the release build, so bail for real
     ReportIf(idx >= dimofi(gCommandIds));
+    if (idx >= dimofi(gCommandIds)) {
+        return -1;
+    }
     int cmdId = gCommandIds[idx];
     return cmdId;
 }

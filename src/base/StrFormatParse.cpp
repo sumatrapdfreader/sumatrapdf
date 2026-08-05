@@ -92,11 +92,21 @@ static int parseArgDefPositional(Fmt& fmt, int off) {
     ReportIf(fmt.format.s[off] != '{');
     off++;
     int n = 0;
-    while (fmt.format.s[off] != '}') {
+    // a '{' with no closing '}' must not walk past the end of the format string.
+    // Reachable via a translated format string (fmt(_TRA("...").s, ...)).
+    while (off < fmt.format.len && fmt.format.s[off] != '}') {
         // TODO: this could be more featurful
         ReportIf(!str::IsDigit(fmt.format.s[off]));
         n = (n * 10) + (fmt.format.s[off] - '0');
         off++;
+    }
+    if (off >= fmt.format.len) {
+        fmt.isOk = false;
+        return off;
+    }
+    if (fmt.nInst >= dimofi(fmt.instructions)) {
+        fmt.isOk = false;
+        return off;
     }
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = FmtArg::Kind::Any;
@@ -512,8 +522,8 @@ bool Fmt::Eval(const FmtArg** args, int nArgs) {
         }
 
         int argNo = inst.argNo;
-        ReportIf(argNo >= nArgs);
-        if (argNo >= nArgs) {
+        ReportIf(argNo < 0 || argNo >= nArgs);
+        if (argNo < 0 || argNo >= nArgs) {
             isOk = false;
             return false;
         }

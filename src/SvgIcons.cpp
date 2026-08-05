@@ -294,7 +294,7 @@ static const char* gIcons[] = {
 Str GetSvgIcon(TbIcon idx) {
     int n = (int)idx;
     ReportIf(n < 0 || n >= dimofi(gIcons));
-    if (n >= dimofi(gIcons)) {
+    if (n < 0 || n >= dimofi(gIcons)) {
         return {};
     }
     return Str(gIcons[n]);
