@@ -225,10 +225,10 @@ static StrVec gAllowedFileTypes;
 static Str gNextPrevDir = {};
 static StrVec gNextPrevDirCache; // cached files in gNextPrevDir
 
-static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
+static void CloseDocumentInCurrentTab(MainWindow* /*win*/, bool keepUIEnabled, bool deleteModel);
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
-static void OnSidebarSplitterMove(Splitter::MoveEvent*);
-static void OnFavSplitterMove(Splitter::MoveEvent*);
+static void OnSidebarSplitterMove(Splitter::MoveEvent* /*ev*/);
+static void OnFavSplitterMove(Splitter::MoveEvent* /*ev*/);
 
 EBookUI* GetEBookUI() {
     if (!gGlobalPrefs) return nullptr;
@@ -1045,10 +1045,10 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void RequestRendering(DisplayModel* dm, int pageNo) override;
     void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages) override;
     void CleanUp(DisplayModel* dm) override;
-    void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) override;
+    void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered* /*saveThumbnail*/) override;
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
     void FocusFrame(bool always) override;
-    void SaveDownload(Str url, Str) override;
+    void SaveDownload(Str url, Str /*data*/) override;
     void FindResultReceived(int gen, int current, int total) override {
         BrowserFindResultReceived(win, gen, current, total);
     }
@@ -3193,7 +3193,7 @@ static Vec<LoadDocumentAsyncData*> gLoadQueue;
 static bool gLoadQueueDispatchPosted = false;
 static UINT_PTR gLoadingMessageTimer = 0;
 
-static void CALLBACK LoadingMessageTimerProc(HWND, UINT, UINT_PTR timerId, DWORD) {
+static void CALLBACK LoadingMessageTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR timerId, DWORD /*time*/) {
     bool hasLoadingTabs = false;
     u64 now = GetTickCount64();
     for (MainWindow* win : gWindows) {
@@ -8578,7 +8578,7 @@ static LoadedDataResource gManualArchiveData;
 static lzma::SimpleArchive gManualArchive{};
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
 
-static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent*) {
+static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent* /*ev*/) {
     gManualBrowserWindow = nullptr;
 }
 

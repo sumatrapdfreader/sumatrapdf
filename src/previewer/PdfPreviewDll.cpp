@@ -113,7 +113,7 @@ static Str GetReason(DWORD dwReason) {
     return "Unknown reason";
 }
 
-STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void*) {
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* /*lpReserved*/) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
     }

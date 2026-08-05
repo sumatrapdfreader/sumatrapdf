@@ -744,7 +744,7 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
     return true;
 }
 
-static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM) {
+static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM /*lp*/) {
     switch (msg) {
         case WM_INITDIALOG: {
             if (UseDarkModeLib()) {

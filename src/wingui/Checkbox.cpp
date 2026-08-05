@@ -43,7 +43,7 @@ HWND Checkbox::Create(const CreateArgs& args) {
     return hwnd;
 }
 
-bool Checkbox::OnCommand(WPARAM wp, LPARAM) {
+bool Checkbox::OnCommand(WPARAM wp, LPARAM /*lparam*/) {
     auto code = HIWORD(wp);
     if (code == BN_CLICKED && onStateChanged.IsValid()) {
         onStateChanged.Call();

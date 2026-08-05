@@ -35,6 +35,6 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
     x2 = DpiScale(hwnd, x2);
 }
 
-int DpiScale(HDC, int x) {
+int DpiScale(HDC /*hdc*/, int x) {
     return DpiScale((HWND) nullptr, x);
 }

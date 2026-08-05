@@ -55,7 +55,7 @@ HWND Trackbar::Create(const CreateArgs& args) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
-LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
+LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
     if (!onPositionChanging.IsValid()) {
         return 0;
     }

@@ -8,7 +8,7 @@
 
 #define DIALOG_DATA_PROPERTY L"GipsySoftDialogSizerData"
 
-static LRESULT CALLBACK SizingProc(HWND, UINT, WPARAM, LPARAM);
+static LRESULT CALLBACK SizingProc(HWND /*hwnd*/, UINT /*msg*/, WPARAM /*wp*/, LPARAM /*lp*/);
 
 class DialogData {
   public:

@@ -6,7 +6,7 @@
 
 namespace dbghelp {
 
-bool Initialize(WStr, bool) {
+bool Initialize(WStr /*symPath*/, bool /*force*/) {
     return true;
 }
 
@@ -14,20 +14,20 @@ bool HasSymbols() {
     return false;
 }
 
-void GetAddressInfo(str::Builder& s, DWORD64 addr, bool) {
+void GetAddressInfo(str::Builder& s, DWORD64 addr, bool /*compact*/) {
     void* p = reinterpret_cast<void*>((uintptr_t)addr);
     s.Append(fmt("%p\n", p));
 }
 
-void WriteMiniDump(WStr, MINIDUMP_EXCEPTION_INFORMATION*, bool) {}
+void WriteMiniDump(WStr /*crashDumpFilePath*/, MINIDUMP_EXCEPTION_INFORMATION* /*mei*/, bool /*fullDump*/) {}
 
-void GetThreadCallstack(str::Builder&, ThreadId) {}
+void GetThreadCallstack(str::Builder& /*s*/, ThreadId /*threadId*/) {}
 
-int GetSuspendedThreadCallstackAddrs(ThreadHandle, u64*, int) {
+int GetSuspendedThreadCallstackAddrs(ThreadHandle /*hThread*/, u64* /*addrs*/, int /*maxAddrs*/) {
     return 0;
 }
 
-bool GetCurrentThreadCallstack(str::Builder&) {
+bool GetCurrentThreadCallstack(str::Builder& /*s*/) {
     return false;
 }
 
@@ -45,10 +45,10 @@ Str GetCallstacks() {
     return {};
 }
 
-void GetAllThreadsCallstacks(str::Builder&) {}
+void GetAllThreadsCallstacks(str::Builder& /*s*/) {}
 
-void GetAllThreadsCallstacksExcept(str::Builder&, ThreadId) {}
+void GetAllThreadsCallstacksExcept(str::Builder& /*s*/, ThreadId /*skipThreadId*/) {}
 
-void GetExceptionInfo(str::Builder&, EXCEPTION_POINTERS*) {}
+void GetExceptionInfo(str::Builder& /*s*/, EXCEPTION_POINTERS* /*excPointers*/) {}
 
 } // namespace dbghelp

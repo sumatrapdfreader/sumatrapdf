@@ -131,23 +131,23 @@ bool IsSame(Str path1, Str path2) {
     return npath1 && str::Eq(npath1, npath2);
 }
 
-bool HasVariableDriveLetter(Str) {
+bool HasVariableDriveLetter(Str /*path*/) {
     return false;
 }
 
-bool IsOnNetworkDrive(Str) {
+bool IsOnNetworkDrive(Str /*path*/) {
     return false;
 }
 
-bool IsCloudPlaceholder(Str) {
+bool IsCloudPlaceholder(Str /*path*/) {
     return false;
 }
 
-bool IsOnFixedDrive(Str) {
+bool IsOnFixedDrive(Str /*path*/) {
     return true;
 }
 
-bool SupportsChangeNotifications(Str) {
+bool SupportsChangeNotifications(Str /*path*/) {
     return false;
 }
 
@@ -445,15 +445,15 @@ bool SetAttributes(Str path, DWORD attrs) {
     return chmod(PathZTemp(path), (mode_t)(attrs & 07777)) == 0;
 }
 
-int GetZoneIdentifier(Str) {
+int GetZoneIdentifier(Str /*path*/) {
     return URLZONE_INVALID;
 }
 
-bool SetZoneIdentifier(Str, int) {
+bool SetZoneIdentifier(Str /*path*/, int /*zoneId*/) {
     return true;
 }
 
-bool DeleteZoneIdentifier(Str) {
+bool DeleteZoneIdentifier(Str /*path*/) {
     return true;
 }
 

@@ -37,18 +37,18 @@ void CalcSHA2Digest(Str data, u8 digest[32]) {
 
 #endif
 
-bool VerifySHA1Signature(Str, Str, Str) {
+bool VerifySHA1Signature(Str /*data*/, Str /*hexSignature*/, Str /*pubkey*/) {
     return false;
 }
 
-Str ExtractP7m(Str) {
+Str ExtractP7m(Str /*d*/) {
     return {};
 }
 
-bool IsPEFileSigned(Str) {
+bool IsPEFileSigned(Str /*filePath*/) {
     return false;
 }
 
-TempStr GetExecutableSignerTemp(Str) {
+TempStr GetExecutableSignerTemp(Str /*exePath*/) {
     return {};
 }

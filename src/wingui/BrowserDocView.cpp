@@ -241,7 +241,7 @@ struct NotifyArgsVisitor : json::ValueVisitor {
     static constexpr int kMaxArgs = 4;
     TempStr args[kMaxArgs] = {};
 
-    bool Visit(Str path, Str value, json::Type) override {
+    bool Visit(Str path, Str value, json::Type /*type*/) override {
         for (int i = 0; i < kMaxArgs; i++) {
             if (str::Eq(path, fmt("[%d]", i))) {
                 args[i] = str::DupTemp(value);
@@ -367,7 +367,7 @@ void BrowserDocView::HistoryChanged(void* ctx, bool canGoBack, bool canGoForward
 // to run, so app keyboard shortcuts (Ctrl+F, F1, F2, F3, F5, ...) keep working
 // when focus is in the document (issue #5735). Esc isn't an accelerator -- it's
 // handled by the frame's key handler -- so forward the key itself.
-static int ChmResolveAccelCmd(void*, u16 vk, bool ctrl, bool shift, bool alt) {
+static int ChmResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, bool alt) {
     if (vk == VK_ESCAPE) {
         return kWebViewForwardKey;
     }

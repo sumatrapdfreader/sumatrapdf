@@ -24,7 +24,7 @@ that it's actually a part of that window.
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
 #define COL_BLACK RGB(0, 0, 0)
 
-static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT&) {
+static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT& /*ps*/) {
     Rect rc = HwndClientRect(w->hwnd);
     RECT r = ToRECT(rc);
     AutoDeleteBrush brush = CreateSolidBrush(COL_BLACK);
@@ -65,7 +65,7 @@ static void FrameRateOnPaint(FrameRateWnd* w) {
     EndPaint(w->hwnd, &ps);
 }
 
-static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR,
+static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
                                                    DWORD_PTR dwRefData) {
     if (WM_MOVING == msg || WM_SIZING == msg || WM_SIZE == msg || WM_WINDOWPOSCHANGED == msg || WM_MOVE == msg) {
         FrameRateWnd* w = (FrameRateWnd*)dwRefData;

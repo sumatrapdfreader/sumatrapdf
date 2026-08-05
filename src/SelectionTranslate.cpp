@@ -918,7 +918,7 @@ void SelectionTranslateWnd::Relayout(bool initial) {
 }
 
 // reflow controls when the user resizes the window
-void SelectionTranslateWnd::OnSize(UINT msg, UINT, Size size) {
+void SelectionTranslateWnd::OnSize(UINT msg, UINT /*type*/, Size size) {
     if (msg != WM_SIZE) {
         return;
     }

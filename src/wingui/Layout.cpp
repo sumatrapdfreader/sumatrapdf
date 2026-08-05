@@ -378,11 +378,11 @@ static int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
 }
 
 // Inter-child gap for VBox/HBox; margin support not implemented yet (always 0).
-static int CalculateVGap(ILayout*, ILayout*) {
+static int CalculateVGap(ILayout* /*prev*/, ILayout* /*current*/) {
     return 0;
 }
 
-static int CalculateHGap(ILayout*, ILayout*) {
+static int CalculateHGap(ILayout* /*prev*/, ILayout* /*current*/) {
     return 0;
 }
 
@@ -1157,7 +1157,7 @@ int Spacer::MinIntrinsicHeight(int /*width*/) {
 int Spacer::MinIntrinsicWidth(int /*height*/) {
     return dx;
 }
-void Spacer::SetBounds(Rect) {
+void Spacer::SetBounds(Rect /*bounds*/) {
     // do nothing
 }
 
@@ -1221,7 +1221,7 @@ int TableLayout::MinIntrinsicWidth(int height) {
     return minWidth;
 }
 
-void TableLayout::SetBounds(Rect) {
+void TableLayout::SetBounds(Rect /*bounds*/) {
     // Not implemented: no caller should reach this yet.
     CrashMe();
 }

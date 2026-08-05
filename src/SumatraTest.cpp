@@ -124,7 +124,7 @@ class TestPasswordUI : public PasswordUI {
   public:
     explicit TestPasswordUI(Str password) : password(password) {}
 
-    Str GetPassword(Str, u8*, u8[32], bool* saveKey) override {
+    Str GetPassword(Str /*path*/, u8* /*fileDigest*/, u8 /*decryptionKeyOut*/[32], bool* saveKey) override {
         *saveKey = false;
         if (triedPassword || !password) {
             return nullptr;

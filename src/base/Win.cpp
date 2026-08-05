@@ -1783,7 +1783,7 @@ Rect HwndGetFullscreenRect(HWND hwnd) {
     return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
-static BOOL CALLBACK GetMonitorRectProc(HMONITOR, HDC, LPRECT rcMonitor, LPARAM data) {
+static BOOL CALLBACK GetMonitorRectProc(HMONITOR /*hMonitor*/, HDC /*hdc*/, LPRECT rcMonitor, LPARAM data) {
     Rect* rcAll = (Rect*)data;
     *rcAll = rcAll->Union(ToRect(*rcMonitor));
     return TRUE;
@@ -3113,7 +3113,8 @@ void VariantInitBstr(VARIANT& urlVar, WStr s) {
     urlVar.bstrVal = SysAllocStringLen(s.s, s.len);
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT, UINT, HCONV, HSZ, HSZ, HDDEDATA, ULONG_PTR, ULONG_PTR) {
+static HDDEDATA CALLBACK DdeCallback(UINT /*type*/, UINT /*fmt*/, HCONV /*hconv*/, HSZ /*hsz1*/, HSZ /*hsz2*/,
+                                     HDDEDATA /*hdata*/, ULONG_PTR /*data1*/, ULONG_PTR /*data2*/) {
     return nullptr;
 }
 
@@ -3206,7 +3207,7 @@ static void LogCursor(LPWSTR cursorId) {
     n++;
 }
 #else
-static void LogCursor(LPWSTR) {
+static void LogCursor(LPWSTR /*cursorId*/) {
     // no-op
 }
 #endif

@@ -110,16 +110,18 @@ class ForwardingDropTarget : public IDropTarget {
         return dataObj->QueryGetData(&fe) == S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE DragEnter(IDataObject* dataObj, DWORD, POINTL, DWORD* pdwEffect) override {
+    HRESULT STDMETHODCALLTYPE DragEnter(IDataObject* dataObj, DWORD /*grfKeyState*/, POINTL /*pt*/,
+                                        DWORD* pdwEffect) override {
         *pdwEffect = HasFiles(dataObj) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
         return S_OK;
     }
-    HRESULT STDMETHODCALLTYPE DragOver(DWORD, POINTL, DWORD* pdwEffect) override {
+    HRESULT STDMETHODCALLTYPE DragOver(DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect) override {
         *pdwEffect = DROPEFFECT_COPY;
         return S_OK;
     }
     HRESULT STDMETHODCALLTYPE DragLeave() override { return S_OK; }
-    HRESULT STDMETHODCALLTYPE Drop(IDataObject* dataObj, DWORD, POINTL, DWORD* pdwEffect) override {
+    HRESULT STDMETHODCALLTYPE Drop(IDataObject* dataObj, DWORD /*grfKeyState*/, POINTL /*pt*/,
+                                   DWORD* pdwEffect) override {
         *pdwEffect = DROPEFFECT_COPY;
         if (!dataObj || !forwardTo) {
             return S_OK;

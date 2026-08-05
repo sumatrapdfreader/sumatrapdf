@@ -80,10 +80,10 @@ struct StrVecPage {
     // strings (allocated from the end)
 
     Str AtStr(int i) const;
-    void* AtDataRaw(int) const;
+    void* AtDataRaw(int /*idx*/) const;
 
-    Str RemoveAt(int);
-    Str RemoveAtFast(int);
+    Str RemoveAt(int /*idx*/);
+    Str RemoveAtFast(int /*idx*/);
 
     int BytesLeft();
     PageOpResult Append(Str s);

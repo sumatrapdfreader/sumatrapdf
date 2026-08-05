@@ -546,22 +546,26 @@ class HW_IOleInPlaceFrame : public IOleInPlaceFrame {
     ULONG STDMETHODCALLTYPE Release() override { return fs->Release(); }
 
     // IOleWindow
-    STDMETHODIMP GetWindow(HWND*) override;
-    STDMETHODIMP ContextSensitiveHelp(BOOL) override { return S_OK; }
+    STDMETHODIMP GetWindow(HWND* /*phwnd*/) override;
+    STDMETHODIMP ContextSensitiveHelp(BOOL /*fEnterMode*/) override { return S_OK; }
 
     // IOleInPlaceUIWindow
-    STDMETHODIMP GetBorder(LPRECT) override;
-    STDMETHODIMP RequestBorderSpace(LPCBORDERWIDTHS) override;
-    STDMETHODIMP SetBorderSpace(LPCBORDERWIDTHS) override { return S_OK; }
-    STDMETHODIMP SetActiveObject(IOleInPlaceActiveObject*, LPCOLESTR) override { return S_OK; }
+    STDMETHODIMP GetBorder(LPRECT /*lprectBorder*/) override;
+    STDMETHODIMP RequestBorderSpace(LPCBORDERWIDTHS /*pborderwidths*/) override;
+    STDMETHODIMP SetBorderSpace(LPCBORDERWIDTHS /*pborderwidths*/) override { return S_OK; }
+    STDMETHODIMP SetActiveObject(IOleInPlaceActiveObject* /*pActiveObject*/, LPCOLESTR /*pszObjName*/) override {
+        return S_OK;
+    }
 
     // IOleInPlaceFrame
-    STDMETHODIMP InsertMenus(HMENU, LPOLEMENUGROUPWIDTHS) override { return S_OK; }
-    STDMETHODIMP SetMenu(HMENU, HOLEMENU, HWND) override { return S_OK; }
-    STDMETHODIMP RemoveMenus(HMENU) override { return S_OK; }
-    STDMETHODIMP SetStatusText(LPCOLESTR) override { return S_OK; }
-    STDMETHODIMP EnableModeless(BOOL) override { return S_OK; }
-    STDMETHODIMP TranslateAccelerator(LPMSG, WORD) { return E_NOTIMPL; }
+    STDMETHODIMP InsertMenus(HMENU /*hmenuShared*/, LPOLEMENUGROUPWIDTHS /*lpMenuWidths*/) override { return S_OK; }
+    STDMETHODIMP SetMenu(HMENU /*hmenuShared*/, HOLEMENU /*holemenu*/, HWND /*hwndActiveObject*/) override {
+        return S_OK;
+    }
+    STDMETHODIMP RemoveMenus(HMENU /*hmenuShared*/) override { return S_OK; }
+    STDMETHODIMP SetStatusText(LPCOLESTR /*pszStatusText*/) override { return S_OK; }
+    STDMETHODIMP EnableModeless(BOOL /*fEnable*/) override { return S_OK; }
+    STDMETHODIMP TranslateAccelerator(LPMSG /*lpmsg*/, WORD /*wID*/) { return E_NOTIMPL; }
 
   protected:
     FrameSite* fs;
@@ -585,33 +589,39 @@ class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless {
     STDMETHODIMP CanInPlaceActivate() override { return S_OK; }
     STDMETHODIMP OnInPlaceActivate() override;
     STDMETHODIMP OnUIActivate() override;
-    STDMETHODIMP GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**, LPRECT, LPRECT,
-                                  LPOLEINPLACEFRAMEINFO) override;
-    STDMETHODIMP Scroll(SIZE) override { return S_OK; }
-    STDMETHODIMP OnUIDeactivate(BOOL) override;
+    STDMETHODIMP GetWindowContext(IOleInPlaceFrame** /*ppFrame*/, IOleInPlaceUIWindow** /*ppDoc*/,
+                                  LPRECT /*lprcPosRect*/, LPRECT /*lprcClipRect*/,
+                                  LPOLEINPLACEFRAMEINFO /*lpFrameInfo*/) override;
+    STDMETHODIMP Scroll(SIZE /*scrollExtant*/) override { return S_OK; }
+    STDMETHODIMP OnUIDeactivate(BOOL /*fUndoable*/) override;
     STDMETHODIMP OnInPlaceDeactivate() override;
     STDMETHODIMP DiscardUndoState() override { return S_OK; }
     STDMETHODIMP DeactivateAndUndo() override { return S_OK; }
-    STDMETHODIMP OnPosRectChange(LPCRECT) override { return S_OK; }
+    STDMETHODIMP OnPosRectChange(LPCRECT /*lprcPosRect*/) override { return S_OK; }
 
     // IOleInPlaceSiteEx
-    STDMETHODIMP OnInPlaceActivateEx(BOOL*, DWORD) override;
-    STDMETHODIMP OnInPlaceDeactivateEx(BOOL) override { return S_OK; }
+    STDMETHODIMP OnInPlaceActivateEx(BOOL* /*pfNoRedraw*/, DWORD /*dwFlags*/) override;
+    STDMETHODIMP OnInPlaceDeactivateEx(BOOL /*fNoRedraw*/) override { return S_OK; }
     STDMETHODIMP RequestUIActivate() override { return S_FALSE; }
 
     // IOleInPlaceSiteWindowless
     STDMETHODIMP CanWindowlessActivate() override;
     STDMETHODIMP GetCapture() override { return S_FALSE; }
-    STDMETHODIMP SetCapture(BOOL) override { return S_FALSE; }
+    STDMETHODIMP SetCapture(BOOL /*fCapture*/) override { return S_FALSE; }
     STDMETHODIMP GetFocus() override { return S_OK; }
-    STDMETHODIMP SetFocus(BOOL) override { return S_OK; }
-    STDMETHODIMP GetDC(LPCRECT, DWORD, HDC*) override;
-    STDMETHODIMP ReleaseDC(HDC) override { return E_NOTIMPL; }
-    STDMETHODIMP InvalidateRect(LPCRECT, BOOL) override;
-    STDMETHODIMP InvalidateRgn(HRGN, BOOL) override { return E_NOTIMPL; }
-    STDMETHODIMP ScrollRect(INT, INT, LPCRECT, LPCRECT) override { return E_NOTIMPL; }
-    STDMETHODIMP AdjustRect(LPRECT) override { return E_NOTIMPL; }
-    STDMETHODIMP OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*) override { return E_NOTIMPL; }
+    STDMETHODIMP SetFocus(BOOL /*fFocus*/) override { return S_OK; }
+    STDMETHODIMP GetDC(LPCRECT /*pRect*/, DWORD /*grfFlags*/, HDC* /*phDC*/) override;
+    STDMETHODIMP ReleaseDC(HDC /*hDC*/) override { return E_NOTIMPL; }
+    STDMETHODIMP InvalidateRect(LPCRECT /*pRect*/, BOOL /*fErase*/) override;
+    STDMETHODIMP InvalidateRgn(HRGN /*hRGN*/, BOOL /*fErase*/) override { return E_NOTIMPL; }
+    STDMETHODIMP ScrollRect(INT /*dx*/, INT /*dy*/, LPCRECT /*pRectScroll*/, LPCRECT /*pRectClip*/) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP AdjustRect(LPRECT /*prc*/) override { return E_NOTIMPL; }
+    STDMETHODIMP OnDefWindowMessage(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
+                                    LRESULT* /*plResult*/) override {
+        return E_NOTIMPL;
+    }
 
   protected:
     FrameSite* fs;
@@ -629,10 +639,12 @@ class HW_IOleClientSite : public IOleClientSite {
 
     // IOleClientSite
     STDMETHODIMP SaveObject() override { return S_OK; }
-    STDMETHODIMP GetMoniker(DWORD, DWORD, IMoniker**) override { return E_NOTIMPL; }
-    STDMETHODIMP GetContainer(LPOLECONTAINER FAR*) override;
+    STDMETHODIMP GetMoniker(DWORD /*dwAssign*/, DWORD /*dwWhichMoniker*/, IMoniker** /*ppmk*/) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP GetContainer(LPOLECONTAINER FAR* /*ppContainer*/) override;
     STDMETHODIMP ShowObject() override { return S_OK; }
-    STDMETHODIMP OnShowWindow(BOOL) override { return S_OK; }
+    STDMETHODIMP OnShowWindow(BOOL /*fShow*/) override { return S_OK; }
     STDMETHODIMP RequestNewObjectLayout() override { return E_NOTIMPL; }
 
   protected:
@@ -651,11 +663,11 @@ class HW_IOleControlSite : public IOleControlSite {
 
     // IOleControlSite
     STDMETHODIMP OnControlInfoChanged() override { return S_OK; }
-    STDMETHODIMP LockInPlaceActive(BOOL) override;
-    STDMETHODIMP GetExtendedControl(IDispatch**) override { return E_NOTIMPL; }
-    STDMETHODIMP TransformCoords(POINTL*, POINTF*, DWORD) override;
-    STDMETHODIMP TranslateAccelerator(LPMSG, DWORD) { return E_NOTIMPL; }
-    STDMETHODIMP OnFocus(BOOL) override { return S_OK; }
+    STDMETHODIMP LockInPlaceActive(BOOL /*fLock*/) override;
+    STDMETHODIMP GetExtendedControl(IDispatch** /*ppDisp*/) override { return E_NOTIMPL; }
+    STDMETHODIMP TransformCoords(POINTL* /*pPtlHimetric*/, POINTF* /*pPtfContainer*/, DWORD /*dwFlags*/) override;
+    STDMETHODIMP TranslateAccelerator(LPMSG /*pMsg*/, DWORD /*grfModifiers*/) { return E_NOTIMPL; }
+    STDMETHODIMP OnFocus(BOOL /*fGotFocus*/) override { return S_OK; }
     STDMETHODIMP ShowPropertyFrame() override { return E_NOTIMPL; }
 
   protected:
@@ -673,8 +685,12 @@ class HW_IOleCommandTarget : public IOleCommandTarget {
     ULONG STDMETHODCALLTYPE Release() override { return fs->Release(); }
 
     // IOleCommandTarget
-    STDMETHODIMP QueryStatus(const GUID*, ULONG, OLECMD[], OLECMDTEXT*) override;
-    STDMETHODIMP Exec(const GUID*, DWORD, DWORD, VARIANTARG*, VARIANTARG*) override { return OLECMDERR_E_NOTSUPPORTED; }
+    STDMETHODIMP QueryStatus(const GUID* /*pguidCmdGroup*/, ULONG /*cCmds*/, OLECMD /*prgCmds*/[],
+                             OLECMDTEXT* /*pCmdTet*/) override;
+    STDMETHODIMP Exec(const GUID* /*pguidCmdGroup*/, DWORD /*nCmdID*/, DWORD /*nCmdexecopt*/, VARIANTARG* /*pvaIn*/,
+                      VARIANTARG* /*pvaOut*/) override {
+        return OLECMDERR_E_NOTSUPPORTED;
+    }
 
   protected:
     FrameSite* fs;
@@ -691,16 +707,20 @@ class HW_IOleItemContainer : public IOleItemContainer {
     ULONG STDMETHODCALLTYPE Release() override { return fs->Release(); }
 
     // IParseDisplayName
-    STDMETHODIMP ParseDisplayName(IBindCtx*, LPOLESTR, ULONG*, IMoniker**) override { return E_NOTIMPL; }
+    STDMETHODIMP ParseDisplayName(IBindCtx* /*pbc*/, LPOLESTR /*pszDisplayName*/, ULONG* /*pchEaten*/,
+                                  IMoniker** /*ppmkOut*/) override {
+        return E_NOTIMPL;
+    }
 
     // IOleContainer
-    STDMETHODIMP EnumObjects(DWORD, IEnumUnknown**) override { return E_NOTIMPL; }
-    STDMETHODIMP LockContainer(BOOL) override { return S_OK; }
+    STDMETHODIMP EnumObjects(DWORD /*grfFlags*/, IEnumUnknown** /*ppenum*/) override { return E_NOTIMPL; }
+    STDMETHODIMP LockContainer(BOOL /*fLock*/) override { return S_OK; }
 
     // IOleItemContainer
-    STDMETHODIMP GetObject(LPOLESTR, DWORD, IBindCtx*, REFIID, void**);
-    STDMETHODIMP GetObjectStorage(LPOLESTR, IBindCtx*, REFIID, void**) override;
-    STDMETHODIMP IsRunning(LPOLESTR) override;
+    STDMETHODIMP GetObject(LPOLESTR /*pszItem*/, DWORD /*dwSpeedNeeded*/, IBindCtx* /*pbc*/, REFIID,
+                           void** /*ppvObject*/);
+    STDMETHODIMP GetObjectStorage(LPOLESTR /*pszItem*/, IBindCtx* /*pbc*/, REFIID, void** /*ppvStorage*/) override;
+    STDMETHODIMP IsRunning(LPOLESTR /*pszItem*/) override;
 
   protected:
     FrameSite* fs;
@@ -721,10 +741,16 @@ class HW_DWebBrowserEvents2 : public DWebBrowserEvents2 {
     ULONG STDMETHODCALLTYPE Release() override { return fs->Release(); }
 
     // IDispatch
-    STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR**, unsigned int, LCID, DISPID*) override { return E_NOTIMPL; }
-    STDMETHODIMP GetTypeInfo(unsigned int, LCID, ITypeInfo**) override { return E_NOTIMPL; }
-    STDMETHODIMP GetTypeInfoCount(unsigned int*) override { return E_NOTIMPL; }
-    STDMETHODIMP Invoke(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*) override;
+    STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR** /*rgszNames*/, unsigned int /*cNames*/, LCID /*lcid*/,
+                               DISPID* /*rgDispId*/) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP GetTypeInfo(unsigned int /*iTInfo*/, LCID /*lcid*/, ITypeInfo** /*ppTInfo*/) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP GetTypeInfoCount(unsigned int* /*pctinfo*/) override { return E_NOTIMPL; }
+    STDMETHODIMP Invoke(DISPID /*dispIdMember*/, REFIID, LCID /*lcid*/, WORD /*flags*/, DISPPARAMS* /*pDispParams*/,
+                        VARIANT* /*pVarResult*/, EXCEPINFO* /*pExcepInfo*/, UINT* /*puArgErr*/) override;
 };
 
 class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx {
@@ -740,20 +766,20 @@ class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx {
     ULONG STDMETHODCALLTYPE Release() override { return fs->Release(); }
 
     // IAdviseSink
-    void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) override {}
-    void STDMETHODCALLTYPE OnViewChange(DWORD, LONG) override {
+    void STDMETHODCALLTYPE OnDataChange(FORMATETC* /*pFormatetc*/, STGMEDIUM* /*pStgmed*/) override {}
+    void STDMETHODCALLTYPE OnViewChange(DWORD /*dwAspect*/, LONG /*lindex*/) override {
         // redraw the control
         fs->oleInPlaceSiteWindowless->InvalidateRect(nullptr, FALSE);
     }
-    void STDMETHODCALLTYPE OnRename(IMoniker*) override {}
+    void STDMETHODCALLTYPE OnRename(IMoniker* /*pmk*/) override {}
     void STDMETHODCALLTYPE OnSave() override {}
     void STDMETHODCALLTYPE OnClose() override {}
 
     // IAdviseSink2
-    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*) override {}
+    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker* /*pmk*/) override {}
 
     // IAdviseSinkEx
-    void STDMETHODCALLTYPE OnViewStatusChange(DWORD) override {}
+    void STDMETHODCALLTYPE OnViewStatusChange(DWORD /*dwViewStatus*/) override {}
 };
 
 // http://www.popkistopki.ru/ch09b.shtml
@@ -972,7 +998,7 @@ class HtmlMoniker : public IMoniker {
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(Str);
+    HRESULT SetHtml(Str /*d*/);
     HRESULT SetBaseUrl(WStr baseUrl);
 
     // IUnknown

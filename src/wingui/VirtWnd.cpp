@@ -16,15 +16,15 @@ VirtWnd::VirtWnd() {
     kind = kindVirtWnd;
 }
 
-int VirtWnd::MinIntrinsicHeight(int) {
+int VirtWnd::MinIntrinsicHeight(int /*width*/) {
     return 0;
 }
 
-int VirtWnd::MinIntrinsicWidth(int) {
+int VirtWnd::MinIntrinsicWidth(int /*height*/) {
     return 0;
 }
 
-Size VirtWnd::Layout(Constraints) {
+Size VirtWnd::Layout(Constraints /*bc*/) {
     return {};
 }
 
@@ -32,7 +32,7 @@ Size VirtWnd::GetIdealSize() {
     return {};
 }
 
-void VirtWnd::Paint(HDC) {}
+void VirtWnd::Paint(HDC /*hdc*/) {}
 
 static Kind kindVirWndText = "virtWndText";
 

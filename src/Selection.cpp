@@ -630,7 +630,7 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     }
 }
 
-void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/) {
     ReportIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 

@@ -172,7 +172,8 @@ bool Initialize(WStr symPathW, bool force) {
     return true;
 }
 
-static BOOL CALLBACK OpenMiniDumpCallback(void*, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output) {
+static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input,
+                                          PMINIDUMP_CALLBACK_OUTPUT output) {
     if (!input || !output) {
         return FALSE;
     }

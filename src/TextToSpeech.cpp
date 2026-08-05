@@ -519,7 +519,7 @@ class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
 
     // can be called on a background thread; actual handling happens
     // on the UI thread in WinTtsProcessEvents()
-    STDMETHODIMP Invoke(SynthAsyncOp*, AsyncStatus) override {
+    STDMETHODIMP Invoke(SynthAsyncOp* /*asyncInfo*/, AsyncStatus /*status*/) override {
         TtsPostNotifyMsg();
         return S_OK;
     }
@@ -987,7 +987,8 @@ static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** 
     return true;
 }
 
-static void CALLBACK WinTtsWaveOutCb(HWAVEOUT, UINT msg, DWORD_PTR, DWORD_PTR, DWORD_PTR) {
+static void CALLBACK WinTtsWaveOutCb(HWAVEOUT /*hwo*/, UINT msg, DWORD_PTR /*instance*/, DWORD_PTR /*param1*/,
+                                     DWORD_PTR /*param2*/) {
     if (msg != WOM_DONE) {
         return;
     }

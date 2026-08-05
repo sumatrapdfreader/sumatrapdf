@@ -30,7 +30,7 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
     }
 }
 
-bool DropDown::OnCommand(WPARAM wp, LPARAM) {
+bool DropDown::OnCommand(WPARAM wp, LPARAM /*lparam*/) {
     auto code = HIWORD(wp);
     if (code == CBN_EDITCHANGE && onTextChanged.IsValid()) {
         onTextChanged.Call();

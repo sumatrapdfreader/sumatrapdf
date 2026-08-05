@@ -1037,7 +1037,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 }
 
-static void OnTocCustomDraw(TreeView::CustomDrawEvent*);
+static void OnTocCustomDraw(TreeView::CustomDrawEvent* /*ev*/);
 
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {

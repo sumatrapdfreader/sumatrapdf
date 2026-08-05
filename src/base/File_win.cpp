@@ -1012,7 +1012,9 @@ bool Copy(Str dst, Str src, bool dontOverwrite) {
 }
 
 static DWORD CALLBACK CopyProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INTEGER TotalBytesTransferred,
-                                          LARGE_INTEGER, LARGE_INTEGER, DWORD, DWORD, HANDLE, HANDLE, LPVOID lpData) {
+                                          LARGE_INTEGER /*StreamSize*/, LARGE_INTEGER /*StreamBytesTransferred*/,
+                                          DWORD /*dwStreamNumber*/, DWORD /*dwCallbackReason*/, HANDLE /*hSourceFile*/,
+                                          HANDLE /*hDestinationFile*/, LPVOID lpData) {
     auto* cb = (const CopyProgressCb*)lpData;
     CopyProgress p;
     p.bytesCopied = TotalBytesTransferred.QuadPart;

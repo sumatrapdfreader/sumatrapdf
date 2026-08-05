@@ -193,7 +193,7 @@ bool Wnd::OnCommand(WPARAM /*wparam*/, LPARAM /*lparam*/) {
 
 // Called during window creation. Override this functions to perform tasks
 // such as creating child windows.
-int Wnd::OnCreate(CREATESTRUCT*) {
+int Wnd::OnCreate(CREATESTRUCT* /*cs*/) {
     // This function is called when a WM_CREATE message is received
     // Override it to automatically perform tasks during window creation.
     // Return 0 to continue creating the window.
@@ -237,7 +237,7 @@ LRESULT Wnd::OnMouseEvent(UINT /*msg*/, WPARAM /*wparam*/, LPARAM /*lparam*/) {
     return -1;
 }
 
-void Wnd::OnMove(POINTS*) {}
+void Wnd::OnMove(POINTS* /*pts*/) {}
 
 // Processes notification (WM_NOTIFY) messages from a child window.
 LRESULT Wnd::OnNotify(int /*controlId*/, NMHDR* /*nmh*/) {
@@ -263,7 +263,7 @@ LRESULT Wnd::OnNotify(int /*controlId*/, NMHDR* /*nmh*/) {
 }
 
 // Processes the notification (WM_NOTIFY) messages in the child window that originated them.
-LRESULT Wnd::OnNotifyReflect(WPARAM, LPARAM) {
+LRESULT Wnd::OnNotifyReflect(WPARAM /*wparam*/, LPARAM /*lparam*/) {
     // Override OnNotifyReflect to handle notifications in the CWnd class that
     //   generated the notification.
 
@@ -303,7 +303,7 @@ void Wnd::OnWindowPosChanging(WINDOWPOS* window_pos) {}
 // WM_CTLCOLORSCROLLBAR, WM_CTLCOLORSTATIC, WM_CHARTOITEM,  WM_VKEYTOITEM,
 // WM_HSCROLL, WM_VSCROLL, WM_DRAWITEM, WM_MEASUREITEM, WM_DELETEITEM,
 // WM_COMPAREITEM, WM_PARENTNOTIFY.
-LRESULT Wnd::OnMessageReflect(UINT, WPARAM, LPARAM) {
+LRESULT Wnd::OnMessageReflect(UINT /*msg*/, WPARAM /*wparam*/, LPARAM /*lparam*/) {
     // This function processes those special messages (see above) sent
     // by some older controls, and reflects them back to the originating CWnd object.
     // Override this function in your derived class to handle these special messages.
@@ -341,7 +341,7 @@ Size Wnd::Layout(const Constraints bc) {
     return res;
 }
 
-int Wnd::MinIntrinsicHeight(int) {
+int Wnd::MinIntrinsicHeight(int /*width*/) {
 #if 0
     auto vinset = insets.top + insets.bottom;
     Size s = GetIdealSize();
@@ -352,7 +352,7 @@ int Wnd::MinIntrinsicHeight(int) {
 #endif
 }
 
-int Wnd::MinIntrinsicWidth(int) {
+int Wnd::MinIntrinsicWidth(int /*height*/) {
 #if 0
     auto hinset = insets.left + insets.right;
     Size s = GetIdealSize();

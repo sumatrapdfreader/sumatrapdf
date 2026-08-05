@@ -18,7 +18,7 @@ Str gLogFilePath;
 static Mutex gLogMutex;
 static bool gDestroyedLogging = false;
 
-static void log2(Str s, bool) {
+static void log2(Str s, bool /*always*/) {
     if (!s || gDestroyedLogging) {
         return;
     }

@@ -22,7 +22,8 @@
 constexpr int kNavRowPadding = 6;
 constexpr int kNavBtnGap = 4;
 
-static LRESULT CALLBACK UrlStaticSubclassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+static LRESULT CALLBACK UrlStaticSubclassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
+                                              DWORD_PTR /*refData*/) {
     if (msg == WM_ERASEBKGND) {
         return 1;
     }
@@ -155,7 +156,7 @@ static void HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
     }
 }
 
-static int ResolveAccelCmd(void*, u16 vk, bool ctrl, bool shift, bool alt) {
+static int ResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, bool alt) {
     if (vk == 'W' && ctrl && !shift && !alt) {
         return CmdClose;
     }
