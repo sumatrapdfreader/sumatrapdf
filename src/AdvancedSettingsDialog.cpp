@@ -1200,6 +1200,8 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(hbox);
     }
 
+    ApplyDarkModeToPopupWindow(hwnd);
+
     auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 

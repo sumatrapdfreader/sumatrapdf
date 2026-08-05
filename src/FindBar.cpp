@@ -210,7 +210,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         TbAutosIZE(hwndBtns);
     }
 
-    ApplyDarkModeToFindUI(hwnd);
+    ApplyDarkModeToPopupWindow(hwnd);
     Layout();
     return true;
 }

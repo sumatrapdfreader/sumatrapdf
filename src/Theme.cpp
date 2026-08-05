@@ -28,6 +28,25 @@ bool UseDarkModeLib() {
     return gUseDarkModeLib;
 }
 
+// CreateMainWindow hands the frame to darkmodelib (dark caption, themed
+// children, toolbar custom draw) but a top-level window we create ourselves is
+// not a child of the frame, so none of that reaches it: buttons and edits keep
+// their stock light borders and hover highlights, list boxes and multi-line
+// edits keep a light scrollbar, and the caption stays white. Every such window
+// - the find bar, the find window, the advanced settings dialog - calls this
+// once its children exist (issues #5894, #5895).
+void ApplyDarkModeToPopupWindow(HWND hwnd) {
+    if (!UseDarkModeLib()) {
+        return;
+    }
+    DarkMode::setDarkTitleBarEx(hwnd, true);
+    if (IsCurrentThemeDefault()) {
+        return;
+    }
+    DarkMode::setChildCtrlsSubclassAndTheme(hwnd);
+    DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
+}
+
 // wingui calls this from ListBox::Create(); see the declaration in WinGui.h
 void ListBoxMaybeApplyTheme(HWND hwnd) {
     if (UseDarkModeLib()) {

@@ -36,6 +36,7 @@ bool ThemeColorizeControls();
 bool IsCurrentThemeDefault();
 void FreeThemes();
 bool UseDarkModeLib();
+void ApplyDarkModeToPopupWindow(HWND hwnd);
 
 extern int gFirstSetThemeCmdId;
 extern int gLastSetThemeCmdId;

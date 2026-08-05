@@ -319,7 +319,11 @@ bool Edit::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
 }
 
 LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
-    if (msg == WM_CTLCOLOREDIT) {
+    // a read-only edit is coloured with WM_CTLCOLORSTATIC, not WM_CTLCOLOREDIT,
+    // so handling only the latter left read-only edits with the default white
+    // background whatever SetColors() said - like the advanced settings dialog's
+    // description field on a dark theme (issue #5895)
+    if (msg == WM_CTLCOLOREDIT || msg == WM_CTLCOLORSTATIC) {
         HDC hdc = (HDC)wp;
         if (!IsSpecialColor(textColor)) {
             SetTextColor(hdc, textColor);
@@ -328,9 +332,7 @@ LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
             SetBkColor(hdc, bgColor);
             SetBkMode(hdc, TRANSPARENT);
         }
-        auto br = BackgroundBrush();
-        return (LRESULT)br;
-        return 0;
+        return (LRESULT)BackgroundBrush();
     }
     return 0;
 }

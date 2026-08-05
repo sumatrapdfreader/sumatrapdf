@@ -41,20 +41,6 @@ static void ApplyTitleBarTheme(HWND hwnd) {
     }
 }
 
-// The find bar and the find window are owned popups, not children of the frame,
-// so CreateMainWindow's setChildCtrlsSubclassAndTheme(hwndFrame) never reaches
-// them: their toolbar buttons kept the stock light hover highlight and tooltip,
-// and the edit kept a white WS_EX_CLIENTEDGE border, while the main toolbar -
-// which gets both of these calls via the frame and its rebar - looked right
-// (issue #5894). Call it after the children exist.
-void ApplyDarkModeToFindUI(HWND hwnd) {
-    if (!UseDarkModeLib() || IsCurrentThemeDefault()) {
-        return;
-    }
-    DarkMode::setChildCtrlsSubclassAndTheme(hwnd);
-    DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
-}
-
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 
@@ -290,7 +276,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         results->SetModel(new FindResultsModel(win));
     }
 
-    ApplyDarkModeToFindUI(hwnd);
+    ApplyDarkModeToPopupWindow(hwnd);
     return true;
 }
 

@@ -24,8 +24,6 @@ void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);
 void FindWindowSaveSelectedMatch(MainWindow* win);
 // re-apply theme colors/icons to the floating window after a theme change
 void UpdateFindWindowTheme(MainWindow* win);
-// hand a find UI popup to darkmodelib, the way the frame's children already are
-void ApplyDarkModeToFindUI(HWND hwnd);
 
 // Headless draw test for issue #5736: match highlights must not bleed into the page column.
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);
