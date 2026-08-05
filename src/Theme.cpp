@@ -653,6 +653,46 @@ static Str ResolveThemeAlias(Str name) {
     return name;
 }
 
+// a Themes[] entry the user wrote themselves; that theme does exist, whatever
+// we once shipped under the same name, so it must not be migrated away
+static bool HasCustomThemeNamed(Str name) {
+    if (!gGlobalPrefs || !gGlobalPrefs->themes) {
+        return false;
+    }
+    for (Theme* theme : *gGlobalPrefs->themes) {
+        if (str::EqI(theme->name, name)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Rewrite the theme names dropped in 971623174 to what replaced them.
+// ResolveThemeAlias() already makes them work, but only in memory: the settings
+// file keeps naming a theme that no longer exists, is saved back that way every
+// time, and shows a stale name to anyone who looks (#5887). Returns true if
+// anything changed, so the caller can save.
+bool MigrateRenamedThemeNames() {
+    if (!gGlobalPrefs) {
+        return false;
+    }
+    Str* names[] = {&gGlobalPrefs->theme, &gGlobalPrefs->lastLightTheme, &gGlobalPrefs->lastDarkTheme};
+    bool changed = false;
+    for (Str* name : names) {
+        if (str::IsEmptyOrWhiteSpace(*name)) {
+            continue;
+        }
+        Str newName = ResolveThemeAlias(*name);
+        if (str::EqI(*name, newName) || HasCustomThemeNamed(*name)) {
+            continue;
+        }
+        logf("MigrateRenamedThemeNames: '%s' -> '%s'\n", *name, newName);
+        str::ReplaceWithCopy(name, newName);
+        changed = true;
+    }
+    return changed;
+}
+
 // not case sensitive
 static int GetThemeByName(Str name) {
     name = ResolveThemeAlias(name);

@@ -311,6 +311,10 @@ bool LoadSettings() {
         migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
         str::Free(prefsData);
     }
+    if (MigrateRenamedThemeNames()) {
+        // the file still named a theme we dropped; save so it stops doing that
+        migratedDocumentColorsFollowTheme = true;
+    }
 
     // takes effect for PDFs loaded after this (startup, and on settings reload)
     EngineMupdfSetDisableJavaScript(gGlobalPrefs->disableJavaScript);
