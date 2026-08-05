@@ -118,9 +118,20 @@ DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
     return DocumentColorsFollowTheme::Off;
 }
 
+DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
+    (void)v;
+    return DocumentColorsFollowTheme::Off;
+}
+
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     (void)mode;
 }
+
+void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode) {
+    (void)mode;
+}
+
+void ClearDocumentColorsFollowThemePreview() {}
 
 bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds) {
     (void)imgRect;

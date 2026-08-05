@@ -31,7 +31,7 @@ static bool DarkChromeActive() {
     return !IsLightColor(bg);
 }
 
-static DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
+DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
     if (!v || str::EqI(v, StrL("off"))) {
         return DocumentColorsFollowTheme::Off;
     }
@@ -98,11 +98,32 @@ bool DocumentColorsFollowThemeEnabled() {
     return GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Off;
 }
 
+// an unsaved value the advanced settings dialog is previewing; -1 when there is
+// none and the saved setting applies
+static int gDocumentColorsFollowThemePreview = -1;
+
 DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
+    if (gDocumentColorsFollowThemePreview >= 0) {
+        return (DocumentColorsFollowTheme)gDocumentColorsFollowThemePreview;
+    }
     if (!gGlobalPrefs || !gGlobalPrefs->documentColorsFollowTheme) {
         return DocumentColorsFollowTheme::Off;
     }
     return DocumentColorsFollowThemeFromString(gGlobalPrefs->documentColorsFollowTheme);
+}
+
+// Render pages as if the setting had this value, without touching gGlobalPrefs,
+// so the advanced settings dialog can show what a value does before it's saved
+// (and go back to the saved one when it's cancelled). The caller re-renders.
+void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode) {
+    if (mode < DocumentColorsFollowTheme::Off || mode > DocumentColorsFollowTheme::Legacy) {
+        mode = DocumentColorsFollowTheme::Off;
+    }
+    gDocumentColorsFollowThemePreview = (int)mode;
+}
+
+void ClearDocumentColorsFollowThemePreview() {
+    gDocumentColorsFollowThemePreview = -1;
 }
 
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {

@@ -27,6 +27,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "MainWindow.h"
+#include "PdfDarkMode.h"
 #include "Theme.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
@@ -160,6 +161,24 @@ static TempStr FormatSettingValueTemp(SettingItem* item) {
         default:
             return str::DupTemp(item->strVal);
     }
+}
+
+// Show what a setting does before it's saved: some settings change how pages
+// are rendered, and picking a value from a list is guesswork without seeing it.
+// The value is previewed without touching gGlobalPrefs, so Cancel (or closing
+// the dialog) puts the saved value back - see EndPreviewSettingChange().
+static void PreviewSettingChange(SettingItem* item) {
+    if (!str::EqI(item->name, StrL("DocumentColorsFollowTheme"))) {
+        return;
+    }
+    SetDocumentColorsFollowThemePreview(DocumentColorsFollowThemeFromString(item->strVal));
+    UpdateDocumentColors();
+}
+
+// drop every preview and render with the saved settings again
+static void EndPreviewSettingChange() {
+    ClearDocumentColorsFollowThemePreview();
+    UpdateDocumentColors();
 }
 
 static void SetItemChanged(SettingItem* item) {
@@ -347,6 +366,10 @@ AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     // they must not be deleted here (doing so is a double-free). editValue and
     // dropDownValue are created on demand and are not part of the layout, so
     // they are freed explicitly.
+    // covers every way the dialog goes away (Save, Cancel, Esc, the close box).
+    // On Save the value is in gGlobalPrefs by now, so dropping the preview
+    // renders the same thing; on every other path it undoes the preview.
+    EndPreviewSettingChange();
     delete editValue;
     delete dropDownValue;
     DeleteVecMembers(items);
@@ -671,6 +694,8 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
     if (sel >= 0) {
         str::ReplaceWithCopy(&item->strVal, item->enumValues[sel]);
         SetItemChanged(item);
+        // browsing the list with the arrow keys previews each value in turn
+        PreviewSettingChange(item);
         HwndInvalidate(listBox->hwnd, true);
     }
     // selecting with the mouse closes the list: dispose of the control then.
@@ -704,6 +729,7 @@ void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
         SettingItem* item = items[editItemIdx];
         str::ReplaceWithCopy(&item->strVal, dropDownOrigVal);
         SetItemChanged(item);
+        PreviewSettingChange(item);
     }
     editItemIdx = -1;
     delete tmp;
@@ -732,6 +758,7 @@ void AdvancedSettingsWnd::CommitEditValue() {
             break;
     }
     SetItemChanged(item);
+    PreviewSettingChange(item);
     CancelEditValue();
     HwndInvalidate(listBox->hwnd, true);
 }
