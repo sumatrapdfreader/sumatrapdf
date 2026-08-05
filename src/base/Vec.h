@@ -282,10 +282,7 @@ bool VecReserve(Arena* arena, T& v, int wantedSize) {
     if (wantedSize <= v.cap) {
         return true;
     }
-    int newCap = v.cap * 2;
-    if (wantedSize > newCap) {
-        newCap = wantedSize;
-    }
+    int newCap = std::max(v.cap * 2, wantedSize);
     return VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
 }
 

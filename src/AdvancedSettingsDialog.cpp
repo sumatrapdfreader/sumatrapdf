@@ -470,20 +470,14 @@ static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect
     // ellipsis when the dialog is narrow.
     int minVal = DpiScale(hwnd, 100);
     int valW = std::max(totalW * 45 / 100, minVal);
-    if (valW > totalW * 3 / 5) {
-        valW = totalW * 3 / 5;
-    }
+    valW = std::min(valW, totalW * 3 / 5);
     int nameW = totalW - valW - gap;
     if (nameW < DpiScale(hwnd, 72)) {
         nameW = (totalW / 2) - (gap / 2);
         valW = totalW - nameW - gap;
     }
-    if (nameW < 1) {
-        nameW = 1;
-    }
-    if (valW < 1) {
-        valW = 1;
-    }
+    nameW = std::max(nameW, 1);
+    valW = std::max(valW, 1);
 
     rcName = rc;
     rcName.x += pad;
