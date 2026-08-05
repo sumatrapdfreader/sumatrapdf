@@ -1181,7 +1181,6 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClInclude Include="..\src\AIChatCommon.h" />
     <ClInclude Include="..\src\AIChatPanel.h" />
     <ClInclude Include="..\src\Accelerators.h" />
-    <ClInclude Include="..\src\ShortcutParse.h" />
     <ClInclude Include="..\src\AdvancedSettingsDialog.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
@@ -1267,6 +1266,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClInclude Include="..\src\SelectionToolbar.h" />
     <ClInclude Include="..\src\SelectionTranslate.h" />
     <ClInclude Include="..\src\Settings.h" />
+    <ClInclude Include="..\src\ShortcutParse.h" />
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\StressTesting.h" />
     <ClInclude Include="..\src\SumatraControl.h" />
@@ -1352,7 +1352,6 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\AIChatPanel.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
-    <ClCompile Include="..\src\ShortcutParse.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
     <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />
@@ -1418,12 +1417,11 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HangDetector.cpp" />
     <ClCompile Include="..\src\HomePage.cpp" />
-    <ClCompile Include="..\src\TipText.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
+    <ClCompile Include="..\src\ImageEditHostSumatra.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\ImageSaveCropResize.cpp" />
-    <ClCompile Include="..\src\ImageEditHostSumatra.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
@@ -1487,6 +1485,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
+    <ClCompile Include="..\src\ShortcutParse.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
@@ -1528,6 +1527,7 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClCompile Include="..\src\TextToSpeech.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
+    <ClCompile Include="..\src\TipText.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />

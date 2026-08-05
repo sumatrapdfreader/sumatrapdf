@@ -336,6 +336,9 @@
     <ClInclude Include="..\src\Screenshot.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ScreenshotCapture.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SearchAndDDE.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -349,6 +352,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Settings.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ShortcutParse.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SimpleBrowserWindow.h">
@@ -695,6 +701,9 @@
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ImageEditHostSumatra.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ImageReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -854,6 +863,9 @@
     <ClCompile Include="..\src\Screenshot.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ScreenshotCapture.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SearchAndDDE.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -864,6 +876,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SelectionTranslate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ShortcutParse.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp">
@@ -933,6 +948,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Theme.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TipText.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Toolbar.cpp">
