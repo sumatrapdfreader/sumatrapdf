@@ -91,7 +91,7 @@ void SafeDeleteCommandPaletteWnd() {
     }
 
     MainWindow* win = gCommandPaletteWnd->win;
-    auto tmp = gCommandPaletteWnd;
+    auto* tmp = gCommandPaletteWnd;
     gCommandPaletteWnd = nullptr;
     gCommandPaletteHwnd = nullptr;
     delete tmp;
@@ -210,7 +210,7 @@ void CommandPaletteWnd::OnSelectionChange() {
     if (!smartTabMode) {
         return;
     }
-    auto m = (ListBoxModelCP*)listBox->model;
+    auto* m = (ListBoxModelCP*)listBox->model;
     ItemDataCP* data = m->strings.AtData(idx);
     HighlightTab(win, data->tab);
 }
@@ -247,7 +247,7 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
     if (currSel < 0) {
         return false;
     }
-    auto m = (ListBoxModelCP*)listBox->model;
+    auto* m = (ListBoxModelCP*)listBox->model;
     int n = m->ItemsCount();
     if (currSel >= n) {
         return false;
@@ -353,7 +353,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     if (idx < 0) {
         return;
     }
-    auto m = (ListBoxModelCP*)listBox->model;
+    auto* m = (ListBoxModelCP*)listBox->model;
     ItemDataCP* data = m->strings.AtData(idx);
     i32 cmdId = data->cmdId;
     if (cmdId != 0) {
@@ -425,8 +425,8 @@ static Static* CreateStatic(HWND parent, HFONT font, Str s) {
     args.font = font;
     args.text = s;
     args.isRtl = IsUIRtl();
-    auto c = new Static();
-    auto wnd = c->Create(args);
+    auto* c = new Static();
+    auto* wnd = c->Create(args);
     ReportIf(!wnd);
     return c;
 }
@@ -452,7 +452,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     auto colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
 
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -465,7 +465,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         args.text = prefix;
         args.font = font;
         args.isRtl = IsUIRtl();
-        auto c = new Edit();
+        auto* c = new Edit();
         c->SetColors(colTxt, colBg);
         c->maxDx = 150;
         HWND ok = c->Create(args);
@@ -476,42 +476,42 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     if (!smartTabMode) {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
         {
-            auto c = CreateStatic(hwnd, font, _TRA("# File History"));
+            auto* c = CreateStatic(hwnd, font, _TRA("# File History"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFileHistory>(this);
             hbox->AddChild(new Padding(c, pad));
         }
         {
-            auto c = CreateStatic(hwnd, font, _TRA("> Commands"));
+            auto* c = CreateStatic(hwnd, font, _TRA("> Commands"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToCommands>(this);
             hbox->AddChild(new Padding(c, pad));
         }
         {
-            auto c = CreateStatic(hwnd, font, _TRA("@ Tabs"));
+            auto* c = CreateStatic(hwnd, font, _TRA("@ Tabs"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
             hbox->AddChild(new Padding(c, pad));
         }
         {
-            auto c = CreateStatic(hwnd, font, _TRA(": Everything"));
+            auto* c = CreateStatic(hwnd, font, _TRA(": Everything"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToEverything>(this);
             hbox->AddChild(new Padding(c, pad));
         }
         if (len(toc) > 0) {
-            auto c = CreateStatic(hwnd, font, _TRA("* TOC"));
+            auto* c = CreateStatic(hwnd, font, _TRA("* TOC"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTOC>(this);
             hbox->AddChild(new Padding(c, pad));
         }
         if (len(favorites) > 0) {
-            auto c = CreateStatic(hwnd, font, _TRA("$ Favorites"));
+            auto* c = CreateStatic(hwnd, font, _TRA("$ Favorites"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFavorites>(this);
             hbox->AddChild(new Padding(c, pad));
@@ -524,7 +524,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         args.parent = hwnd;
         args.font = font;
         args.isRtl = IsUIRtl();
-        auto c = new ListBox();
+        auto* c = new ListBox();
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<CommandPaletteWnd, ListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
@@ -532,7 +532,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         c->Create(args);
         c->SetColors(colTxt, colBg);
         c->onSelectionChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
-        auto m = new ListBoxModelCP();
+        auto* m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);
         c->SetModel(m);
         listBox = c;
@@ -556,20 +556,20 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             strings[nHelp++] = _TRA("Del to remove item");
             strings[nHelp++] = _TRA("Esc to close");
         }
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
         for (int i = 0; i < nHelp; i++) {
-            auto c = CreateStatic(hwnd, font, strings[i]);
+            auto* c = CreateStatic(hwnd, font, strings[i]);
             c->SetColors(colTxt, colBg);
-            auto p = new Padding(c, pad);
+            auto* p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         vbox->AddChild(hbox);
     }
 
-    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
     auto rc = HwndClientRect(win->hwndFrame);
@@ -606,7 +606,7 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
         ScheduleDeleteAndExecCommand();
     }
 
-    auto wnd = new CommandPaletteWnd();
+    auto* wnd = new CommandPaletteWnd();
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppBiggerFont(win->hwndFrame);
@@ -622,7 +622,7 @@ HWND CommandPaletteHwndForAccelerator(HWND hwnd) {
     if (!gCommandPaletteWnd) {
         return nullptr;
     }
-    auto wnd = gCommandPaletteWnd;
+    auto* wnd = gCommandPaletteWnd;
     HWND wHwnd = wnd->hwnd;
     if (hwnd == wHwnd) {
         return wHwnd;

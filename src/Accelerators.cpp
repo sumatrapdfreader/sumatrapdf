@@ -320,7 +320,7 @@ void AccelTablesBuilder::Add(ACCEL accel) {
 // custom commands that define a shortcut; an upper bound for the tables
 static int CountCustomShortcuts() {
     int n = 0;
-    for (auto curr = gFirstCustomCommand; curr; curr = curr->next) {
+    for (auto* curr = gFirstCustomCommand; curr; curr = curr->next) {
         if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {
             n++;
         }
@@ -329,7 +329,7 @@ static int CountCustomShortcuts() {
 }
 
 static void AddCustomShortcuts(AccelTablesBuilder& b) {
-    for (auto curr = gFirstCustomCommand; curr; curr = curr->next) {
+    for (auto* curr = gFirstCustomCommand; curr; curr = curr->next) {
         if ((curr->id <= 0) || str::IsEmptyOrWhiteSpace(curr->key)) {
             continue;
         }

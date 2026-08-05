@@ -52,7 +52,7 @@ static bool IsFb2Archive(Archive* archive) {
     if (len(files) != 1) {
         return false;
     }
-    auto fi = files[0];
+    auto* fi = files[0];
     auto name = fi->name;
     return str::EndsWithI(name, StrL(".fb2"));
 }

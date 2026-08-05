@@ -130,7 +130,7 @@ void SumatraUIAutomationTextRange::ValidateEndEndpoint() {
 int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, bool dontReturnInitial) {
     // based on TextSelection::SelectWordAt
     int textLen;
-    auto engine = document->GetDM()->GetEngine();
+    auto* engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
@@ -160,7 +160,7 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
 
 int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
-    auto engine = document->GetDM()->GetEngine();
+    auto* engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
@@ -190,7 +190,7 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
 
 int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
-    auto engine = document->GetDM()->GetEngine();
+    auto* engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
@@ -220,7 +220,7 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
 
 int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
-    auto engine = document->GetDM()->GetEngine();
+    auto* engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     int byteIdx = Utf8CodepointToByteIndex(pageText, idx);

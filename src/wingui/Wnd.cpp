@@ -282,7 +282,7 @@ LRESULT Wnd::OnNotifyReflect(WPARAM /*wparam*/, LPARAM /*lparam*/) {
 }
 
 void Wnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
-    auto br = BackgroundBrush();
+    auto* br = BackgroundBrush();
     if (br != nullptr) {
         HdcFillRect(hdc, ToRect(ps->rcPaint), br);
     }
@@ -1042,7 +1042,7 @@ bool PreTranslateMessage(MSG& msg) {
         return false;
     }
     for (HWND hwnd = msg.hwnd; hwnd != nullptr; hwnd = ::GetParent(hwnd)) {
-        auto wnd = WndListFindByHwnd(hwnd);
+        auto* wnd = WndListFindByHwnd(hwnd);
         if (wnd && wnd->PreTranslateMessage(msg)) {
             return true;
         }

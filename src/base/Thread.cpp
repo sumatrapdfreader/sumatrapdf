@@ -112,7 +112,7 @@ static DWORD WINAPI ThreadFunc0(void* data) {
 }
 
 ThreadHandle StartThread(const Func0& fn, Str threadName) {
-    auto fp = new Func0(fn);
+    auto* fp = new Func0(fn);
     ThreadId threadId = 0;
     ThreadHandle hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
     if (!hThread) {

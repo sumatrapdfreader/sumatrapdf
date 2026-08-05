@@ -88,7 +88,7 @@ IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, Str value) {
     if (value) {
         return new PageDestinationURL(value);
     }
-    auto res = new PageDestination();
+    auto* res = new PageDestination();
     res->pageNo = pageNo;
     res->rect = rect;
     res->kind = kindDestinationScrollTo;
@@ -131,7 +131,7 @@ static TempStr CleanupTreeViewControlStringTemp(Str s) {
 }
 
 TocItem* AllocTocItem(Arena* arena, Str title, int pageNo) {
-    auto item = (TocItem*)AllocZero(arena, sizeof(TocItem));
+    auto* item = (TocItem*)AllocZero(arena, sizeof(TocItem));
     item->title = str::Dup(arena, CleanupTreeViewControlStringTemp(title));
     item->pageNo = pageNo;
     item->color = kColorUnset;
@@ -183,7 +183,7 @@ IPageDestination* TocItem::GetPageDestination() const {
 
 int TocItem::ChildCount() {
     int n = 0;
-    auto node = child;
+    auto* node = child;
     while (node) {
         n++;
         node = node->next;
@@ -203,7 +203,7 @@ TocItem* TocItem::ChildAt(int n) {
         ++currChildNo;
         return currChild;
     }
-    auto node = child;
+    auto* node = child;
     while (n > 0) {
         n--;
         node = node->next;
@@ -248,32 +248,32 @@ TreeItem TocTree::Root() {
 }
 
 Str TocTree::Text(TreeItem ti) {
-    auto tocItem = (TocItem*)ti;
+    auto* tocItem = (TocItem*)ti;
     return tocItem->title;
 }
 
 TreeItem TocTree::Parent(TreeItem ti) {
-    auto tocItem = (TocItem*)ti;
+    auto* tocItem = (TocItem*)ti;
     return (TreeItem)tocItem->parent;
 }
 
 int TocTree::ChildCount(TreeItem ti) {
-    auto tocItem = (TocItem*)ti;
+    auto* tocItem = (TocItem*)ti;
     return tocItem->ChildCount();
 }
 
 TreeItem TocTree::ChildAt(TreeItem ti, int idx) {
-    auto tocItem = (TocItem*)ti;
+    auto* tocItem = (TocItem*)ti;
     return (TreeItem)tocItem->ChildAt(idx);
 }
 
 bool TocTree::IsExpanded(TreeItem ti) {
-    auto tocItem = (TocItem*)ti;
+    auto* tocItem = (TocItem*)ti;
     return tocItem->IsExpanded();
 }
 
 bool TocTree::IsChecked(TreeItem ti) {
-    auto tocItem = (TocItem*)ti;
+    auto* tocItem = (TocItem*)ti;
     return !tocItem->isUnchecked;
 }
 
@@ -447,7 +447,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
 
     AddRef();
     AtomicIntInc(&gDangerousThreadCount);
-    auto data = new TextExtractionThreadData();
+    auto* data = new TextExtractionThreadData();
     data->engine = this;
     data->pageNo = pageNo;
     auto fn = MkFunc0<TextExtractionThreadData>(ExtractTextThread, data);

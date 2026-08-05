@@ -482,7 +482,7 @@ void FindWindowWnd::OnResultSelected() {
     }
     // defer document navigation so the results list can scroll/repaint first
     // (issue #5692). Coalesce rapid F3 / arrow presses to the latest selection.
-    auto data = new DeferredGoToFindMatchData;
+    auto* data = new DeferredGoToFindMatchData;
     data->win = win;
     data->findWindow = this;
     data->startPage = fm.startPage;
@@ -688,7 +688,7 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             SavePos();
             break;
         case WM_GETMINMAXINFO: {
-            auto mmi = (MINMAXINFO*)lp;
+            auto* mmi = (MINMAXINFO*)lp;
             int pad = DpiScale(h, 8);
             int gap = DpiScale(h, 6);
             int editDy = edit ? edit->GetIdealSize().dy : DpiScale(h, 22);
@@ -713,9 +713,9 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             // the embedded toolbar paints a light button background in dark
             // themes; repaint it with the window's theme background so the icons
             // sit on the same color as the rest of the window
-            auto nmh = (NMHDR*)lp;
+            auto* nmh = (NMHDR*)lp;
             if (nmh->hwndFrom == hwndBtns && nmh->code == NM_CUSTOMDRAW) {
-                auto cd = (NMTBCUSTOMDRAW*)nmh;
+                auto* cd = (NMTBCUSTOMDRAW*)nmh;
                 auto stage = cd->nmcd.dwDrawStage;
                 if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
                     // reuse the window's cached background brush (rebuilt on theme
@@ -732,7 +732,7 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
 
 LRESULT FindWindowWnd::OnNotify(int /*controlId*/, NMHDR* nmh) {
     if (nmh->code == TTN_GETDISPINFOW) {
-        auto di = (NMTTDISPINFOW*)nmh;
+        auto* di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindWindowButtonTooltip((int)nmh->idFrom);
         if (s) {
             str::BufSet(di->szText, dimof(di->szText), s);
@@ -833,7 +833,7 @@ bool FindWindowWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
 //--- public API
 
 FindWindowWnd* CreateFindWindow(MainWindow* win) {
-    auto w = new FindWindowWnd();
+    auto* w = new FindWindowWnd();
     if (!w->Create(win)) {
         delete w;
         return nullptr;

@@ -830,7 +830,7 @@ static bool WinTtsSpeak(WStr textW) {
         return false;
     }
 
-    auto handler = new WinTtsSynthCompletedHandler();
+    auto* handler = new WinTtsSynthCompletedHandler();
     op->put_Completed(handler);
     handler->Release();
 

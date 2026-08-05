@@ -454,7 +454,7 @@ static void FillPixmapWhite(Pixmap* pixmap) {
 
 Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
-    auto pageRect = args.pageRect;
+    auto* pageRect = args.pageRect;
     auto zoom = args.zoom;
     auto rotation = args.rotation;
 
@@ -694,9 +694,9 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
     return nullptr;
 #else
     ReportIf(pel->GetKind() != kindPageElementImage);
-    auto ipel = (PageElementImage*)pel;
+    auto* ipel = (PageElementImage*)pel;
     int pageNo = ipel->pageNo;
-    auto page = GetPage(pageNo);
+    auto* page = GetPage(pageNo);
     if (!page || page->failedToLoad) {
         if (page) {
             DropPage(page, false);
@@ -860,7 +860,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
 // Get content box for image by cropping out margins of similar color
 RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
     // try to load bitmap for the image
-    auto page = GetPage(pageNo, true);
+    auto* page = GetPage(pageNo, true);
     if (!page) return RectF{};
     defer {
         DropPage(page, false);
@@ -879,7 +879,7 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
         }
     }
 
-    auto pixmap = page->pixmap;
+    auto* pixmap = page->pixmap;
     if (!pixmap || !pixmap->data) return RectF{};
 
     const int w = pixmap->width, h = pixmap->height;
@@ -1086,7 +1086,7 @@ bool EngineImage::FinishLoading(Size fallbackSize) {
         fileDPI = p0->xres;
     }
 
-    auto pi = new ImagePageInfo();
+    auto* pi = new ImagePageInfo();
     int w = p0 ? p0->width : fallbackSize.dx;
     int h = p0 ? p0->height : fallbackSize.dy;
     pi->mediabox = RectF(0, 0, (float)w, (float)h);
@@ -1397,7 +1397,7 @@ Pixmap* EngineImage::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
 
 Str EngineImage::GetImageData(int /*pageNo*/) {
     ScopedRecursiveMutex scope(&cacheLock);
-    auto pi = pageInfos[0];
+    auto* pi = pageInfos[0];
     if (len(pi->rawData) == 0) {
         Str path = FilePath();
         pi->rawData = path ? file::ReadFile(path) : str::Dup(sourceData);
@@ -1618,7 +1618,7 @@ int EngineImageDir::GetPageByLabel(Str label) const {
 }
 
 static TocItem* newImageDirTocItem(TocItem* parent, Str title, int pageNo) {
-    auto res = AllocTocItem(nullptr, title, pageNo);
+    auto* res = AllocTocItem(nullptr, title, pageNo);
     res->parent = parent;
     return res;
 };
@@ -1636,7 +1636,7 @@ TocTree* EngineImageDir::GetToc() {
         item->id = i;
         root->AddSiblingAtEnd(item);
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1670,7 +1670,7 @@ Pixmap* EngineImageDir::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
 
 Str EngineImageDir::GetImageData(int pageNo) {
     ScopedRecursiveMutex scope(&cacheLock);
-    auto pi = pageInfos[pageNo - 1];
+    auto* pi = pageInfos[pageNo - 1];
     if (len(pi->rawData) == 0) {
         Str path = pageFileNames[pageNo - 1];
         pi->rawData = file::ReadFile(path);
@@ -1956,7 +1956,7 @@ EngineCbx::~EngineCbx() {
 
 EngineBase* EngineCbx::Clone() {
     if (sourceData) {
-        auto clone = CreateFromData(sourceData);
+        auto* clone = CreateFromData(sourceData);
         if (!clone) {
             log("EngineCbx::Clone() failed: CreateFromData() failed\n");
         }
@@ -1965,7 +1965,7 @@ EngineBase* EngineCbx::Clone() {
     Str path = FilePath();
     if (path) {
         // keep the cached-local-copy in play on the clone too
-        auto clone = CreateFromFile(path, {}, nullptr, nullptr, FileType::Unknown, physicalPath);
+        auto* clone = CreateFromFile(path, {}, nullptr, nullptr, FileType::Unknown, physicalPath);
         if (!clone) {
             logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path);
         }
@@ -2036,7 +2036,7 @@ bool EngineCbx::FinishLoading() {
 
     Vec<Archive::FileInfo*> pageFiles;
 
-    auto& fileInfos = cbxArchive->GetFileInfos();
+    const auto& fileInfos = cbxArchive->GetFileInfos();
     int n = len(fileInfos);
     for (int i = 0; i < n; i++) {
         auto* fileInfo = fileInfos[i];
@@ -2111,7 +2111,7 @@ bool EngineCbx::FinishLoading() {
     std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
 
     for (int i = 0; i < nFiles; i++) {
-        auto pi = new ImagePageInfo();
+        auto* pi = new ImagePageInfo();
         pageInfos.Append(pi);
     }
     files = std::move(pageFiles);
@@ -2153,7 +2153,7 @@ bool EngineCbx::FinishLoading() {
         }
     }
     if (tocBuildRoot) {
-        auto realRoot = AllocTocItem(nullptr, {}, 0);
+        auto* realRoot = AllocTocItem(nullptr, {}, 0);
         realRoot->child = tocBuildRoot;
         tocTree = new TocTree(realRoot);
     }
@@ -2215,7 +2215,7 @@ void EngineCbx::GetProperties(Props& propsOut) {
     EngineBase::GetProperties(propsOut);
 
     str::Builder filesStr;
-    auto& fileInfos = cbxArchive->GetFileInfos();
+    const auto& fileInfos = cbxArchive->GetFileInfos();
     int n = len(fileInfos);
     for (int i = 0; i < n; i++) {
         auto* fi = fileInfos[i];
@@ -2243,7 +2243,7 @@ Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
         return nullptr;
     }
     deleteAfterUse = true;
-    auto res = PixmapFromData(img);
+    auto* res = PixmapFromData(img);
     auto dur = TimeSinceInMs(timeStart);
     logf("EngineCbx::LoadPixmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     return res;

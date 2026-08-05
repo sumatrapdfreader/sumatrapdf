@@ -135,7 +135,7 @@ static int GetToolbarButtonsByID(int cmdId, int (&buttons)[4]) {
     for (int idx = 0; idx < n; idx++) {
         ToolbarButtonInfo& tb = GetToolbarButtonInfoByIdx(idx);
         int tbCmdId = tb.cmdId;
-        auto cmd = FindCustomCommand(tbCmdId);
+        auto* cmd = FindCustomCommand(tbCmdId);
         if (cmd) tbCmdId = cmd->origId;
         cmd = FindCustomCommand(cmdId);
         if (cmd) cmdId = cmd->origId;
@@ -196,7 +196,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
         case PageInfoId:
             return true;
     }
-    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
     AutoCall delCtx(DeleteBuildMenuCtx, ctx);
     // Toolbar buttons stay visible (but disabled) when no document is open, so
     // decide visibility as if a document were loaded; otherwise the no-document
@@ -210,7 +210,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
 }
 
 static bool IsCmdEnabled(MainWindow* win, int cmdId) {
-    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
     AutoCall delCtx(DeleteBuildMenuCtx, ctx);
 
     switch (cmdId) {
@@ -246,7 +246,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5657
     if (!win->IsDocLoaded()) {
         int realCmdId = cmdId;
-        auto cmd = FindCustomCommand(cmdId);
+        auto* cmd = FindCustomCommand(cmdId);
         if (cmd) {
             realCmdId = cmd->origId;
         }
@@ -708,7 +708,7 @@ void UpdateFindbox(MainWindow* win) {
         UpdateWindow(win->hwndToolbar);
     }
 
-    auto cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
+    auto* cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
     if (win->hwndFindEdit) {
         SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
     }
@@ -721,13 +721,13 @@ static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         SetTextColor(hdc, ThemeWindowTextColor());
         COLORREF bgCol = ThemeControlBackgroundColor();
         SetBkColor(hdc, bgCol);
-        auto bgBrush = CreateSolidBrush(bgCol);
+        auto* bgBrush = CreateSolidBrush(bgCol);
         HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
         DeleteObject(bgBrush);
         return 1;
     }
     if (WM_NOTIFY == uMsg) {
-        auto win = FindMainWindowByHwnd(hWnd);
+        auto* win = FindMainWindowByHwnd(hWnd);
         NMHDR* hdr = (NMHDR*)lParam;
         HWND chwnd = hdr->hwndFrom;
         if (hdr->code == NM_CUSTOMDRAW) {
@@ -756,7 +756,7 @@ static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     }
     // allow window dragging from empty rebar area (main toolbar)
     if (WM_LBUTTONDOWN == uMsg) {
-        auto win = FindMainWindowByHwnd(hWnd);
+        auto* win = FindMainWindowByHwnd(hWnd);
         if (win && win->tabsInTitlebar) {
             HWND hwndFrame = GetAncestor(hWnd, GA_ROOT);
             ReleaseCapture();
@@ -765,7 +765,7 @@ static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         }
     }
     if (WM_LBUTTONDBLCLK == uMsg) {
-        auto win = FindMainWindowByHwnd(hWnd);
+        auto* win = FindMainWindowByHwnd(hWnd);
         if (win && win->tabsInTitlebar) {
             HWND hwndFrame = GetAncestor(hWnd, GA_ROOT);
             WPARAM cmd = IsZoomed(hwndFrame) ? SC_RESTORE : SC_MAXIMIZE;
@@ -776,7 +776,7 @@ static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     // keep the overlay toolbar visible while the mouse is over it, and re-evaluate
     // (likely hiding it) once the mouse leaves
     if (WM_MOUSEMOVE == uMsg || WM_MOUSELEAVE == uMsg) {
-        auto win = FindMainWindowByHwnd(hWnd);
+        auto* win = FindMainWindowByHwnd(hWnd);
         if (win && win->isToolbarOverlay) {
             if (WM_MOUSEMOVE == uMsg) {
                 TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hWnd, 0};
@@ -1053,15 +1053,15 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     bool isRtl = IsUIRtl();
 
-    auto hwndFrame = win->hwndFrame;
-    auto hwndToolbar = win->hwndToolbar;
+    auto* hwndFrame = win->hwndFrame;
+    auto* hwndToolbar = win->hwndToolbar;
     // Measure a full page number plus edit-control padding; plain measure is
     // too tight for the right-aligned ES_NUMBER box (esp. under high DPI).
     int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
     boxWidth += 2 * GetSystemMetrics(SM_CXEDGE);
     boxWidth += DpiScale(hwndFrame, 12);
     DWORD style = WS_VISIBLE | WS_CHILD;
-    auto h = GetModuleHandle(nullptr);
+    auto* h = GetModuleHandle(nullptr);
     int dx = boxWidth;
     int dy = iconDy + 2;
     DWORD exStyle = 0;
@@ -1171,7 +1171,7 @@ static void PopulateCustomToolbarButtons() {
     // the commands in reverse creation order and the buttons would show up in
     // the reverse of the order the user listed them in (#5869)
     Vec<CustomCommand*> customCmds;
-    for (auto cc = gFirstCustomCommand; cc; cc = cc->next) {
+    for (auto* cc = gFirstCustomCommand; cc; cc = cc->next) {
         customCmds.Append(cc);
     }
     VecReverse(customCmds);
@@ -1306,7 +1306,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
         int bitsCount = n * 8;
 
         int bmiSize = (int)(sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD)));
-        auto bmi = (BITMAPINFO*)AllocArrayTemp<u8>(bmiSize);
+        auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(bmiSize);
         BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
         bmih->biSize = sizeof(*bmih);
         bmih->biWidth = w;
@@ -1582,7 +1582,7 @@ void CreateToolbar(MainWindow* win) {
     } else {
         logfa("CreateToolbar: setting toolbar font size to %d (default size: %d)\n", newSize, defFontSize);
     }
-    auto font = GetDefaultGuiFontOfSize(newSize);
+    auto* font = GetDefaultGuiFontOfSize(newSize);
     HwndSetFont(hwndToolbar, font);
 
     CreatePageBox(win, font, iconSize);
@@ -1648,13 +1648,13 @@ static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
         // always paint background with theme color to avoid gray strips in light theme
         HDC hdc = (HDC)wParam;
         COLORREF bgCol = ThemeControlBackgroundColor();
-        auto bgBrush = CreateSolidBrush(bgCol);
+        auto* bgBrush = CreateSolidBrush(bgCol);
         HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
         DeleteObject(bgBrush);
         return 1;
     }
     if (WM_NOTIFY == uMsg) {
-        auto win = FindMainWindowByHwnd(hWnd);
+        auto* win = FindMainWindowByHwnd(hWnd);
         NMHDR* hdr = (NMHDR*)lParam;
         if (win && hdr->code == NM_CUSTOMDRAW && hdr->hwndFrom == win->hwndMenuToolbar) {
             NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;

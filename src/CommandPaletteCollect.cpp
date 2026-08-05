@@ -348,7 +348,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         }
     }
 
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         TempStr name = curr->name;
         cmdId = curr->id;

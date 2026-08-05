@@ -1472,7 +1472,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     ShowAndEnable(wnd->checkboxRegisterSearchFilter, showOpts);
     ShowAndEnable(wnd->checkboxRegisterPreview, showOpts);
 
-    auto btnOptions = wnd->btnOptions;
+    auto* btnOptions = wnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same access key is used for both
     auto s = _TRA("&Options");
@@ -1549,7 +1549,7 @@ static TempStr BrowseForFolderTemp(HWND hwnd, Str initialFolderA, Str caption) {
 }
 
 static void OnButtonBrowse(InstallerWnd* wnd) {
-    auto editDir = wnd->editInstallationDir;
+    auto* editDir = wnd->editInstallationDir;
     TempStr installDir = HwndGetTextTemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
@@ -1611,7 +1611,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     bool showInstallButton = !cli->fastInstall;
 
     wnd->btnInstall = CreateDefaultButton(hwnd, _TRA("Install SumatraPDF"), isRtl);
-    auto b = wnd->btnInstall;
+    auto* b = wnd->btnInstall;
     b->onClick = MkFunc0(OnButtonInstall, wnd);
     {
         // button position: bottom-right
@@ -1832,7 +1832,7 @@ static bool CreateInstallerWnd(Flags* cli) {
         WNDCLASSEX wcex{};
 
         FillWndClassEx(wcex, kInstallerWindowClassName, WndProcInstallerFrame);
-        auto h = GetModuleHandleW(nullptr);
+        auto* h = GetModuleHandleW(nullptr);
         WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
         wcex.hIcon = LoadIconW(h, resName);
 
@@ -1940,7 +1940,7 @@ static bool OpenEmbeddedFilesArchive() {
         return false;
     }
 
-    auto data = gLoadedArchive.data;
+    const auto* data = gLoadedArchive.data;
     auto size = gLoadedArchive.dataSize;
     ok = lzma::ParseSimpleArchive(data, size, &gArchive);
     if (!ok) {

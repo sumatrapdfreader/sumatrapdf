@@ -108,7 +108,7 @@ static void SafeDeleteNavFilesWnd() {
     if (!gNavFilesWnd) {
         return;
     }
-    auto tmp = gNavFilesWnd;
+    auto* tmp = gNavFilesWnd;
     gNavFilesWnd = nullptr;
     delete tmp;
     if (gHwndToActivateOnNavClose) {
@@ -325,7 +325,7 @@ void NavFilesInFolderWnd::UpdateDirLabel() {
 void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
     str::ReplaceWithCopy(&currDir, dir);
 
-    auto m = (ListBoxModelNav*)listBox->model;
+    auto* m = (ListBoxModelNav*)listBox->model;
     if (!m) {
         m = new ListBoxModelNav();
     }
@@ -347,7 +347,7 @@ TempStr NavFilesInFolderWnd::SelectedPathTemp() {
         return {};
     }
     int idx = listBox->GetCurrentSelection();
-    auto m = (ListBoxModelNav*)listBox->model;
+    auto* m = (ListBoxModelNav*)listBox->model;
     if (!m || idx < 0 || idx >= m->ItemsCount()) {
         return {};
     }
@@ -385,7 +385,7 @@ void NavFilesInFolderWnd::GoUp() {
 // the file, or opens it in a new tab, instead of replacing the current document.
 void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
     int idx = listBox->GetCurrentSelection();
-    auto m = (ListBoxModelNav*)listBox->model;
+    auto* m = (ListBoxModelNav*)listBox->model;
     if (!m || idx < 0 || idx >= m->ItemsCount()) {
         return;
     }
@@ -442,7 +442,7 @@ void NavFilesInFolderWnd::DeleteCurrentSelection() {
         return;
     }
     int idx = listBox->GetCurrentSelection();
-    auto m = (ListBoxModelNav*)listBox->model;
+    auto* m = (ListBoxModelNav*)listBox->model;
     if (!m || idx < 0 || idx >= m->ItemsCount()) {
         return;
     }
@@ -565,7 +565,7 @@ void NavFilesInFolderWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
 
 void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
-    auto m = (ListBoxModelNav*)lb->model;
+    auto* m = (ListBoxModelNav*)lb->model;
     if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
         return;
     }
@@ -793,7 +793,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     auto colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
 
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -802,7 +802,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.font = font;
         args.isRtl = IsUIRtl();
-        auto c = new Static();
+        auto* c = new Static();
         HWND ok = c->Create(args);
         ReportIf(!ok);
         c->SetColors(colTxt, colBg);
@@ -815,7 +815,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.font = font;
         args.isRtl = IsUIRtl();
-        auto c = new ListBox();
+        auto* c = new ListBox();
         c->onDoubleClick = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<NavFilesInFolderWnd, ListBox::DrawItemEvent*, &NavFilesInFolderWnd::DrawListBoxItem>(this);
@@ -832,7 +832,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     {
         Str strings[4] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open, Ctrl + Enter in a tab"), _TRA("Del to delete"),
                           _TRA("Esc to close")};
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
@@ -842,7 +842,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
             args.font = font;
             args.text = s;
             args.isRtl = IsUIRtl();
-            auto c = new Static();
+            auto* c = new Static();
             HWND ok = c->Create(args);
             ReportIf(!ok);
             c->SetColors(colTxt, colBg);
@@ -851,7 +851,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(hbox);
     }
 
-    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
     WindowTab* tab = mainWin->CurrentTab();
@@ -909,7 +909,7 @@ void ShowNavFilesInFolder(MainWindow* win) {
         }
         ScheduleDeleteNavFilesWnd();
     }
-    auto wnd = new NavFilesInFolderWnd();
+    auto* wnd = new NavFilesInFolderWnd();
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);
     wnd->font = GetAppFont(win->hwndFrame);

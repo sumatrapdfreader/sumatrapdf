@@ -698,9 +698,9 @@ static HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge) {
     }
 
     auto* dst = (BYTE*)bits;
-    auto* srcRow = (const BYTE*)bd.Scan0;
+    const auto* srcRow = (const BYTE*)bd.Scan0;
     for (int y = 0; y < dh; y++) {
-        auto* s = srcRow + ((size_t)y * bd.Stride);
+        const auto* s = srcRow + ((size_t)y * bd.Stride);
         auto* d = dst + ((size_t)y * dw * 4);
         for (int x = 0; x < dw; x++) {
             // GDI+ 32bppARGB is B,G,R,A in memory on Windows; full opacity
@@ -3612,7 +3612,7 @@ static void OnPaintDocumentStatus(MainWindow* win) {
     auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
     HdcFillRect(hdc, ToRect(ps.rcPaint), bgBrush);
-    auto tab = win->CurrentTab();
+    auto* tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
         TempStr msg;
@@ -3689,7 +3689,7 @@ struct RepaintTaskData {
 static void RepaintTask(RepaintTaskData* d) {
     AutoDelete delData(d);
 
-    auto win = d->win;
+    auto* win = d->win;
     if (!IsMainWindowValid(win)) {
         return;
     }
@@ -3704,7 +3704,7 @@ void ScheduleRepaint(MainWindow* win, int delayInMs) {
     if (gRedrawLog) {
         logf("redraw: ScheduleRepaint delayMs=%d canvas=0x%p\n", delayInMs, win->hwndCanvas);
     }
-    auto data = new RepaintTaskData;
+    auto* data = new RepaintTaskData;
     data->win = win;
     data->delayInMs = delayInMs;
     auto fn = MkFunc0<RepaintTaskData>(RepaintTask, data);
@@ -3816,7 +3816,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 
         case AUTO_RELOAD_TIMER_ID: {
             KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-            auto tab = win->CurrentTab();
+            auto* tab = win->CurrentTab();
             if (tab && tab->reloadOnFocus) {
                 if (tab->ignoreNextAutoReload) {
                     // consume the save-triggered watcher event; do not leave
@@ -4088,7 +4088,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     // open the file on the UI thread
-    auto pathDup = new Str(str::Dup(destPath));
+    auto* pathDup = new Str(str::Dup(destPath));
     auto fn = MkFunc0<Str>(OpenDownloadedPath, pathDup);
     uitask::Post(fn, "DownloadAndOpenUrl");
 
@@ -4247,7 +4247,7 @@ class CanvasDropTarget : public IDropTarget {
         }
 
         if (url) {
-            auto data = new DownloadAndOpenUrlData();
+            auto* data = new DownloadAndOpenUrlData();
             data->url = str::Dup(url);
             data->hwndCanvas = hwnd;
             auto fn = MkFunc0<DownloadAndOpenUrlData>(DownloadAndOpenUrl, data);

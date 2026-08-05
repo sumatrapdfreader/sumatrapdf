@@ -545,7 +545,7 @@ struct UpdateFindStatusData {
 static void UpdateFindStatus(UpdateFindStatusData* d) {
     AutoDelete delData(d);
 
-    auto win = d->win;
+    auto* win = d->win;
     if (!IsMainWindowValid(win) || win->findCancelled) {
         return;
     }
@@ -620,7 +620,7 @@ struct FindThreadData {
     }
 
     void UpdateProgress(int current, int total) {
-        auto data = new UpdateFindStatusData;
+        auto* data = new UpdateFindStatusData;
         data->win = this->win;
         data->current = current;
         data->total = total;
@@ -946,7 +946,7 @@ static void CountProgress(CountThreadData* d, ProgressUpdateData* data) {
         return;
     }
     d->lastProgressMs = now;
-    auto pd = new CountProgressTaskData;
+    auto* pd = new CountProgressTaskData;
     pd->win = d->win;
     pd->epoch = d->epoch;
     pd->nFound = d->nFoundSoFar;
@@ -1009,7 +1009,7 @@ static void CountPartialTask(CountPartialTaskData* d) {
 
 // clones matches[from..to) incl. copies of the snippet strings
 static Vec<FindMatch>* CloneMatchesRange(Vec<FindMatch>* matches, int from, int to) {
-    auto res = new Vec<FindMatch>();
+    auto* res = new Vec<FindMatch>();
     for (int i = from; i < to; i++) {
         FindMatch fm = (*matches)[i];
         fm.snippet = str::Dup(fm.snippet);
@@ -1022,7 +1022,7 @@ static void CountThread(CountThreadData* d) {
     MainWindow* win = d->win;
     EngineBase* engine = d->engine;
 
-    auto positions = new Vec<u64>();
+    auto* positions = new Vec<u64>();
     Vec<FindMatch>* matches = d->wantMatchList ? new Vec<FindMatch>() : nullptr;
     int nSent = 0;        // positions already reported via a partial batch
     int nSentMatches = 0; // matches already streamed to the results list
@@ -1082,7 +1082,7 @@ static void CountThread(CountThreadData* d) {
                     send = (n - nSent >= kFindResultsBatch) && (GetTickCount() - lastSendMs >= kFindResultsBatchMs);
                 }
                 if (send) {
-                    auto pd = new CountPartialTaskData;
+                    auto* pd = new CountPartialTaskData;
                     pd->win = win;
                     pd->epoch = d->epoch;
                     pd->firstBatch = (nSentMatches == 0);
@@ -1112,7 +1112,7 @@ static void CountThread(CountThreadData* d) {
         Sleep(1);
     }
 
-    auto data = new CountEndTaskData;
+    auto* data = new CountEndTaskData;
     data->win = win;
     data->ctd = d;
     data->positions = positions;
@@ -1176,8 +1176,8 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     bool wantMatchList = true;
     int epoch = AtomicIntInc(&win->findCountEpoch);
     int startPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
-    auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, startPage,
-                                 epoch);
+    auto* d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, startPage,
+                                  epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
     win->findCountThread = StartThread(fn, "FindCountThread");
@@ -1268,9 +1268,9 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
 }
 
 static void FindEndTask(FindEndTaskData* d) {
-    auto win = d->win;
-    auto ftd = d->ftd;
-    auto textSel = d->textSel;
+    auto* win = d->win;
+    auto* ftd = d->ftd;
+    auto* textSel = d->textSel;
     auto wasModifiedCanceled = d->wasModifiedCanceled;
     auto loopedAround = d->loopedAround;
 
@@ -1317,10 +1317,10 @@ static void FindThread(FindThreadData* ftd) {
 
     MainWindow* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
-    auto textSearch = dm->textSearch;
-    auto ctrl = win->ctrl;
+    auto* textSearch = dm->textSearch;
+    auto* ctrl = win->ctrl;
 
-    auto engine = dm->GetEngine();
+    auto* engine = dm->GetEngine();
     engine->AddRef();
     AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engine);
 
@@ -1351,7 +1351,7 @@ static void FindThread(FindThreadData* ftd) {
         Sleep(1);
     }
 
-    auto data = new FindEndTaskData;
+    auto* data = new FindEndTaskData;
     data->win = win;
     data->ftd = ftd;
     data->textSel = nullptr;
@@ -2867,7 +2867,7 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         if (cds->cbData < sizeof(SumatraOpenCopyData) + 1) {
             return FALSE;
         }
-        auto* data = (const SumatraOpenCopyData*)cds->lpData;
+        const auto* data = (const SumatraOpenCopyData*)cds->lpData;
         size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
         Str pathZ = Str((char*)(const u8*)(data + 1), (int)pathMax);
         // require null-terminator within bounds
@@ -2906,7 +2906,7 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         if (cds->cbData < sizeof(SumatraOpenManyCopyData) + 1) {
             return FALSE;
         }
-        auto* data = (const SumatraOpenManyCopyData*)cds->lpData;
+        const auto* data = (const SumatraOpenManyCopyData*)cds->lpData;
         if (data->pathCount == 0) {
             return FALSE;
         }

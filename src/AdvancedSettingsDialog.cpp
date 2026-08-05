@@ -91,7 +91,7 @@ static Str SettingPathLeaf(Str name) {
 
 static const char** GetEnumValuesForSetting(Str name) {
     Str leaf = SettingPathLeaf(name);
-    for (auto& def : gEnumSettings) {
+    for (const auto& def : gEnumSettings) {
         if (str::EqI(name, def.name) || str::EqI(leaf, def.name)) {
             return def.values;
         }
@@ -233,7 +233,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
         TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, name) : str::DupTemp(name);
         switch (field.type) {
             case SettingType::Struct: {
-                auto sub = (const StructInfo*)field.value;
+                const auto* sub = (const StructInfo*)field.value;
                 CollectSettings(items, sub, fieldPtr, path);
                 break;
             }
@@ -242,7 +242,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
             case SettingType::Float:
             case SettingType::String:
             case SettingType::Color: {
-                auto item = new SettingItem();
+                auto* item = new SettingItem();
                 item->name = str::Dup(path);
                 item->comment = str::Dup(comment);
                 item->type = field.type;
@@ -391,7 +391,7 @@ void SafeDeleteAdvancedSettingsDialog() {
     if (!gAdvancedSettingsWnd) {
         return;
     }
-    auto tmp = gAdvancedSettingsWnd;
+    auto* tmp = gAdvancedSettingsWnd;
     gAdvancedSettingsWnd = nullptr;
     delete tmp;
 }
@@ -494,7 +494,7 @@ static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect
 
 void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
-    auto m = (ListBoxModelSettings*)lb->model;
+    auto* m = (ListBoxModelSettings*)lb->model;
     SettingItem* item = m->ItemAt(ev->itemIndex);
     if (!item) {
         return;
@@ -585,7 +585,7 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     args.withBorder = true;
     args.font = font;
     args.text = FormatSettingValueTemp(item);
-    auto c = new Edit();
+    auto* c = new Edit();
     c->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
     // Suppress re-entrant CancelEditValue while Create/show/focus pump messages.
     editCreating = true;
@@ -623,7 +623,7 @@ void AdvancedSettingsWnd::CancelEditValue() {
     if (!editValue) {
         return;
     }
-    auto tmp = editValue;
+    auto* tmp = editValue;
     editValue = nullptr;
     editItemIdx = -1;
     delete tmp;
@@ -648,7 +648,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     // never reach DropDown::OnCommand and the selection would be lost
     args.parent = hwnd;
     args.font = font;
-    auto c = new DropDown();
+    auto* c = new DropDown();
     // Suppress re-entrant CancelEditValue / CloseEnumEdit while Create and
     // CB_SHOWDROPDOWN pump messages (filter EN_CHANGE was freeing c mid-flight).
     editCreating = true;
@@ -725,7 +725,7 @@ void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
     if (!dropDownValue) {
         return;
     }
-    auto tmp = dropDownValue;
+    auto* tmp = dropDownValue;
     dropDownValue = nullptr;
     if (!keepValue) {
         SettingItem* item = items[editItemIdx];
@@ -1092,7 +1092,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     SetColors(colTxt, colBg);
     bool isRtl = IsUIRtl();
 
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -1106,7 +1106,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.cueText = _TRA("enter search term to filter settings");
         args.font = font;
         args.isRtl = isRtl;
-        auto c = new Edit();
+        auto* c = new Edit();
         c->SetColors(colTxt, colBg);
         c->maxDx = 150;
         HWND ok = c->Create(args);
@@ -1121,7 +1121,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.font = font;
         args.isRtl = isRtl;
-        auto c = new ListBox();
+        auto* c = new ListBox();
         c->onDrawItem =
             MkMethod1<AdvancedSettingsWnd, ListBox::DrawItemEvent*, &AdvancedSettingsWnd::DrawListBoxItem>(this);
         c->SetInsetsPt(4, 0);
@@ -1152,7 +1152,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.textPadding = 4;
         args.font = font;
         args.isRtl = isRtl;
-        auto c = new Edit();
+        auto* c = new Edit();
         c->SetColors(colTxt, colBg);
         HWND ok = c->Create(args);
         ReportIf(!ok);
@@ -1170,7 +1170,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             _TRA("name bold? value changed and unsaved"),
         };
         for (const Str& hint : hints) {
-            auto hbox = new HBox();
+            auto* hbox = new HBox();
             hbox->alignMain = MainAxisAlign::MainCenter;
             hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1179,7 +1179,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             args.font = font;
             args.text = hint;
             args.isRtl = isRtl;
-            auto c = new Static();
+            auto* c = new Static();
             c->SetColors(colTxt, colBg);
             c->Create(args);
             hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 1, 8)));
@@ -1189,12 +1189,12 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
 
     {
         // left: Save, Cancel, Open Settings File — right: Help
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::SpaceBetween;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        auto left = new HBox();
+        auto* left = new HBox();
         left->alignMain = MainAxisAlign::MainStart;
         left->alignCross = CrossAxisAlign::CrossCenter;
         btnSave =
@@ -1217,7 +1217,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
 
     ApplyDarkModeToPopupWindow(hwnd);
 
-    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
     auto rc = HwndClientRect(win->hwndFrame);
@@ -1244,7 +1244,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
         HwndSetFocus(gAdvancedSettingsWnd->hwnd);
         return;
     }
-    auto wnd = new AdvancedSettingsWnd();
+    auto* wnd = new AdvancedSettingsWnd();
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppFont(win->hwndFrame);

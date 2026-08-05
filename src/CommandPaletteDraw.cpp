@@ -28,7 +28,7 @@ void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
 
 void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
-    auto m = (ListBoxModelCP*)lb->model;
+    auto* m = (ListBoxModelCP*)lb->model;
     if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
         return;
     }

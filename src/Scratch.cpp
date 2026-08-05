@@ -26,7 +26,7 @@ void TestBrowser() {
     args.title = "Test Browser Window";
     args.url = "https://blog.kowalczyk.info/";
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
-    auto w = new SimpleBrowserWindow();
+    auto* w = new SimpleBrowserWindow();
     w->Create(args);
     // RunMessageLoop(nullptr, w->hwnd);
     // delete w;

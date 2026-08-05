@@ -304,8 +304,8 @@ SimpleBrowserWindow* SimpleBrowserWindowCreate(const SimpleBrowserCreateArgs& ar
     if (!HasWebView()) {
         return nullptr;
     }
-    auto res = new SimpleBrowserWindow();
-    auto hwnd = res->Create(args);
+    auto* res = new SimpleBrowserWindow();
+    auto* hwnd = res->Create(args);
     ReportIfFast(!hwnd);
     if (!hwnd) {
         delete res;

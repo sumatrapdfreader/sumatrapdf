@@ -191,8 +191,8 @@ static void FreeArray(Vec<void*>* array, const FieldInfo& field) {
     if (!array) {
         return;
     }
-    auto structInfo = GetSubstruct(field);
-    for (auto el : *array) {
+    const auto* structInfo = GetSubstruct(field);
+    for (auto* el : *array) {
         FreeStruct(structInfo, el);
     }
     delete array;
@@ -625,7 +625,7 @@ Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
 
 void* DeserializeStruct(const StructInfo* info, Str data, void* strct) {
     SquareTreeNode* root = ParseSquareTree(data);
-    auto res = DeserializeStructRec(info, root, (u8*)strct, !strct);
+    auto* res = DeserializeStructRec(info, root, (u8*)strct, !strct);
     delete root;
     return res;
 }

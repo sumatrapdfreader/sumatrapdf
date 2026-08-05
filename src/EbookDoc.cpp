@@ -963,7 +963,7 @@ static Str loadFromFile(Fb2Doc* doc) {
 
     // we have archive with more than 1 file
     doc->isZipped = true;
-    auto& fileInfos = archive->GetFileInfos();
+    const auto& fileInfos = archive->GetFileInfos();
     int nFiles = len(fileInfos);
 
     if (nFiles == 0) {
@@ -999,7 +999,7 @@ static Str loadFromData(Fb2Doc* doc, Str srcData) {
 
     AutoDelete delArchive(archive);
     doc->isZipped = true;
-    auto& fileInfos = archive->GetFileInfos();
+    const auto& fileInfos = archive->GetFileInfos();
     int nFiles = len(fileInfos);
     if (nFiles == 0) {
         return {};

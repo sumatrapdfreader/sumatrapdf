@@ -2115,7 +2115,7 @@ static CreatedFontInfo* FindCreatedFont(Str name, int size, u16 flags, u16 weigh
 void DeleteCreatedFonts() {
     CreatedFontInfo* curr = gFonts;
     while (curr) {
-        auto next = curr->next;
+        auto* next = curr->next;
         str::Free(curr->name);
         DeleteFont(curr->font);
         delete curr;
@@ -2128,7 +2128,7 @@ void DeleteCreatedFonts() {
 }
 
 static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags, u16 weightOffset) {
-    auto cf = new CreatedFontInfo();
+    auto* cf = new CreatedFontInfo();
     cf->name = str::Dup(name);
     cf->font = font;
     cf->size = (u16)size;
@@ -2156,7 +2156,7 @@ HFONT HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     int realSize = MulDiv(fontSizePt, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
 
     u16 flags = 0;
-    auto f = FindCreatedFont(fontName, realSize, flags, 0);
+    auto* f = FindCreatedFont(fontName, realSize, flags, 0);
     if (f) {
         return f->font;
     }
@@ -2184,7 +2184,7 @@ HFONT HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
 }
 
 HFONT GetDefaultGuiFontOfSize(int size) {
-    auto f = FindCreatedFont(Str(), size, 0, 0);
+    auto* f = FindCreatedFont(Str(), size, 0, 0);
     if (f) {
         return f->font;
     }
@@ -2212,7 +2212,7 @@ HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     if (italic) {
         flags |= kFontFlagItalic;
     }
-    auto f = FindCreatedFont(fontName, size, flags, (u16)0);
+    auto* f = FindCreatedFont(fontName, size, flags, (u16)0);
     if (f) {
         return f->font;
     }
@@ -2251,7 +2251,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     int size = (int)std::abs(ncm.lfMessageFont.lfHeight);
 
-    auto f = FindCreatedFont(Str(), size, flags, 0);
+    auto* f = FindCreatedFont(Str(), size, flags, 0);
     if (f) {
         return f->font;
     }
@@ -3303,7 +3303,7 @@ bool LockDataResource(int resId, LoadedDataResource* res) {
         return res->dataSize != kResourceNotFound;
     }
 
-    auto h = GetModuleHandleW(nullptr);
+    auto* h = GetModuleHandleW(nullptr);
     WCHAR* name = MAKEINTRESOURCEW(resId);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
@@ -3456,7 +3456,7 @@ HFONT HwndGetFont(HWND hwnd) {
     if (!hwnd) {
         return nullptr;
     }
-    auto res = GetWindowFont(hwnd);
+    auto* res = GetWindowFont(hwnd);
     return res;
 }
 
@@ -3511,7 +3511,7 @@ void HwndPostCommand(HWND hwnd, int cmdId, LPARAM lp) {
 }
 
 void HwndDestroyWindowSafe(HWND* hwndPtr) {
-    auto hwnd = *hwndPtr;
+    auto* hwnd = *hwndPtr;
     *hwndPtr = nullptr;
 
     if (!hwnd || !::IsWindow(hwnd)) {

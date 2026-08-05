@@ -110,7 +110,7 @@ int StrVecPage::BytesLeft() {
 }
 
 static StrVecPage* AllocStrVecPage(int pageSize, int dataSize) {
-    auto page = (StrVecPage*)AllocZero(nullptr, pageSize);
+    auto* page = (StrVecPage*)AllocZero(nullptr, pageSize);
     page->next = nullptr;
     page->nStrings = 0;
     page->pageSize = pageSize;
@@ -165,7 +165,7 @@ PageOpResult StrVecPage::SetAt(int idx, Str s) {
         // fast path for when new string is smaller than the current string
         int currLen = (int)offsets[1];
         if (sLen <= currLen) {
-            auto dst = start + off;
+            auto* dst = start + off;
             memcpy(dst, s.s, (size_t)sLen);
             dst[sLen] = 0; // zero-terminate for C compat
             offsets[1] = (u32)sLen;
@@ -285,7 +285,7 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         return nullptr;
     }
     int dataSize = first->dataSize;
-    auto curr = first;
+    auto* curr = first;
     u8 *pageStart, *pageEnd;
     int cbStrings;
     int nStrings = 0;
@@ -304,7 +304,7 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         pageSize += extraSize;
     }
     pageSize = RoundUp(pageSize, 64); // jic
-    auto page = AllocStrVecPage(pageSize, dataSize);
+    auto* page = AllocStrVecPage(pageSize, dataSize);
     int n;
     Str s;
     curr = first;
@@ -328,7 +328,7 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
 }
 
 static void CompactPages(StrVec* v, int extraSize) {
-    auto first = CompactStrVecPages(v->first, extraSize);
+    auto* first = CompactStrVecPages(v->first, extraSize);
     FreePages(v->first);
     v->first = first;
     ReportIf(first && (v->size != first->nStrings));
@@ -413,7 +413,7 @@ static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
         pageSize = v->nextPageSize;
         v->nextPageSize = CalcNextPageSize(v->nextPageSize);
     }
-    auto page = AllocStrVecPage(pageSize, v->dataSize);
+    auto* page = AllocStrVecPage(pageSize, v->dataSize);
     if (last) {
         ReportIf(!v->first);
         last->next = page;
@@ -430,7 +430,7 @@ Str StrVec::Append(Str s) {
     if (!str::IsNull(s)) {
         cbNeeded += (s.len + 1); // +1 for zero termination
     }
-    auto last = first;
+    auto* last = first;
     while (last && last->next) {
         last = last->next;
     }
@@ -455,7 +455,7 @@ int AppendIfNotExists(StrVec* v, Str s) {
 }
 
 static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
-    auto page = v->first;
+    auto* page = v->first;
     while (page) {
         if (page->nStrings > idx) {
             *idxInPageOut = idx;
@@ -474,7 +474,7 @@ static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
 Str StrVec::SetAt(int idx, Str s) {
     {
         int idxInPage;
-        auto page = PageForIdx(this, idx, &idxInPage);
+        auto* page = PageForIdx(this, idx, &idxInPage);
         auto res = page->SetAt(idxInPage, s);
         if (!res.noSpace) {
             InvalidateSortIndexes(this);
@@ -501,7 +501,7 @@ Str StrVec::InsertAt(int idx, Str s) {
 
     {
         int idxInPage;
-        auto page = PageForIdx(this, idx, &idxInPage);
+        auto* page = PageForIdx(this, idx, &idxInPage);
         auto res = page->InsertAt(idxInPage, s);
         if (!res.noSpace) {
             size++;
@@ -525,7 +525,7 @@ Str StrVec::InsertAt(int idx, Str s) {
 // return value is valid as long as StrVec is valid
 Str StrVec::RemoveAt(int idx) {
     int idxInPage;
-    auto page = PageForIdx(this, idx, &idxInPage);
+    auto* page = PageForIdx(this, idx, &idxInPage);
     Str removed = page->AtStr(idxInPage);
     page->RemoveAt(idxInPage);
     size--;
@@ -537,7 +537,7 @@ Str StrVec::RemoveAt(int idx) {
 // return value is valid as long as StrVec is valid
 Str StrVec::RemoveAtFast(int idx) {
     int idxInPage;
-    auto page = PageForIdx(this, idx, &idxInPage);
+    auto* page = PageForIdx(this, idx, &idxInPage);
     Str removed = page->AtStr(idxInPage);
     page->RemoveAtFast(idxInPage);
     size--;
@@ -560,7 +560,7 @@ Str StrVec::At(int idx) const {
         idx = sortIndexes[idx];
     }
     int idxInPage;
-    auto page = PageForIdx(this, idx, &idxInPage);
+    auto* page = PageForIdx(this, idx, &idxInPage);
     return page->AtStr(idxInPage);
 }
 
@@ -570,7 +570,7 @@ void* StrVec::AtDataRaw(int idx) const {
         idx = sortIndexes[idx];
     }
     int idxInPage;
-    auto page = PageForIdx(this, idx, &idxInPage);
+    auto* page = PageForIdx(this, idx, &idxInPage);
     return page->AtDataRaw(idxInPage);
 }
 
@@ -615,7 +615,7 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
         return;
     }
     int idxInPage;
-    auto page = PageForIdx(v, idx, &idxInPage);
+    auto* page = PageForIdx(v, idx, &idxInPage);
     this->page = page;
     this->idxInPage = idxInPage;
 }
@@ -704,7 +704,7 @@ static void SortNoData(StrVec* v, StrLessFunc lessFn) {
 static int* AllocateSortIndexes(StrVec* v) {
     InvalidateSortIndexes(v);
     int n = len(*v);
-    auto res = AllocArray<int>(n);
+    auto* res = AllocArray<int>(n);
     for (int i = 0; i < n; i++) {
         res[i] = i;
     }

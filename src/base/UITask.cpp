@@ -17,7 +17,7 @@ static ThreadId gMainUIThreadId = 0;
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage == msg) {
         Kind kind = (Kind)wp;
-        auto func = (Func0*)lp;
+        auto* func = (Func0*)lp;
         bool shouldLog = (kind != nullptr) && !str::Eq(Str(kind), StrL("RenderFinished")) &&
                          !str::Eq(Str(kind), StrL("CopyProgress"));
         if (shouldLog) {
@@ -45,9 +45,9 @@ void Initialize() {
     RegisterClassEx(&wcex);
 
     ReportIf(gTaskDispatchHwnd);
-    auto cls = UITASK_CLASS_NAME;
-    auto title = L"UITask Dispatch Window";
-    auto m = GetModuleHandleW(nullptr);
+    const auto* cls = UITASK_CLASS_NAME;
+    const auto* title = L"UITask Dispatch Window";
+    auto* m = GetModuleHandleW(nullptr);
     DWORD style = WS_OVERLAPPED;
     gTaskDispatchHwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
 }
@@ -68,7 +68,7 @@ void Destroy() {
 }
 
 void Post(const Func0& f, Kind kind) {
-    auto func = new Func0(f);
+    auto* func = new Func0(f);
     PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, (WPARAM)kind, (LPARAM)func);
 } // NOLINT
 

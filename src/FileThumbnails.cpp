@@ -57,7 +57,7 @@ void DeleteThumbnailForFile(Str filePath) {
         return;
     }
     bool ok = file::Delete(thumbPath);
-    auto status = ok ? "ok" : "failed";
+    const auto* status = ok ? "ok" : "failed";
     logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, Str(status));
 }
 

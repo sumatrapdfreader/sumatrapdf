@@ -231,7 +231,7 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
     }
     if (nDocTabs == 1 && !newWin) return;
 
-    auto engine = tab->GetEngine();
+    auto* engine = tab->GetEngine();
     if (EngineHasUnsavedAnnotations(engine)) {
         return;
     }
@@ -702,7 +702,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
         return nullptr;
     }
 
-    auto tabs = win->tabsCtrl;
+    auto* tabs = win->tabsCtrl;
     int idx = win->TabCount();
     bool useTabs = SettingsUseTabs();
     bool noHomeTab = gGlobalPrefs->noHomeTab;

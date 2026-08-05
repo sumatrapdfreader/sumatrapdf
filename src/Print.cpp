@@ -545,7 +545,7 @@ Exit:
 }
 
 static void SetCustomPaperSize(Printer* printer, SizeF size) {
-    auto devMode = printer->devMode;
+    auto* devMode = printer->devMode;
     devMode->dmPaperSize = 0;
     devMode->dmPaperWidth = (short)size.dx;
     devMode->dmPaperLength = (short)size.dy;
@@ -706,7 +706,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     logf("PrintToDevice: printer: '%s', file: '%s'\n", pd.printer->name, pd.engine->FilePath());
     auto progressCb = pd.progressCb;
-    auto abortCookie = pd.abortCookie;
+    auto* abortCookie = pd.abortCookie;
     int res;
 
     EngineBase& engine = *pd.engine;
@@ -761,7 +761,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     UpdateProgress(progressCb, current, total);
 
-    auto devMode = pd.printer->devMode;
+    auto* devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
     WCHAR* printerName = CWStrTemp(pd.printer->name);
 
@@ -1141,7 +1141,7 @@ class PrintThreadData {
     }
 
     void UpdateProgress(int current, int total) {
-        auto data = new UpdatePrintProgressData;
+        auto* data = new UpdatePrintProgressData;
         data->wnd = wnd;
         data->current = current;
         data->total = total;
@@ -1163,7 +1163,7 @@ struct DeletePrinterThreadData {
 };
 
 static void DeletePrinterThread(DeletePrinterThreadData* d) {
-    auto win = d->win;
+    auto* win = d->win;
     if (IsMainWindowValid(win) && d->thread == win->printThread) {
         win->printThread = nullptr;
     }
@@ -1196,7 +1196,7 @@ static void PrintThread(PrintThreadData* ptd) {
     pd->abortCookie = &ptd->cookie;
     PrintToDevice(*pd);
 
-    auto data = new DeletePrinterThreadData;
+    auto* data = new DeletePrinterThreadData;
     data->win = win;
     data->thread = thread;
     data->threadData = ptd;
@@ -1365,7 +1365,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     if (!dm) {
         return;
     }
-    auto engine = dm->GetEngine();
+    auto* engine = dm->GetEngine();
     EngineBase* pinnedEngine = nullptr;
     ReportIf(!engine);
     if (!engine) {
@@ -1433,7 +1433,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         TempStr defName = GetDefaultPrinterNameTemp();
         Printer* seed = defName ? NewPrinter(defName) : nullptr;
         if (seed && seed->devMode) {
-            auto p = seed->devMode;
+            auto* p = seed->devMode;
             pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
         }
         delete seed;
@@ -1531,7 +1531,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (devMode) {
-        auto dmCopy = (DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra);
+        auto* dmCopy = (DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra);
         printer->SetDevMode(dmCopy);
         GlobalUnlock(pdex.hDevMode);
     }
@@ -1761,7 +1761,7 @@ static short GetStandardPaperByName(Str paperName) {
 
 // wantedName can be a paper name, like "A6" or number for DMPAPER_* contstants like DMPAPER_LETTER
 static short GetPaperByName(Printer* printer, Str wantedName) {
-    auto devMode = printer->devMode;
+    auto* devMode = printer->devMode;
 
     TempStr name = str::DupTemp(wantedName);
     str::TrimWSInPlace(name, str::TrimOpt::Both);
@@ -1810,7 +1810,7 @@ static short GetPaperKind(Str kindName) {
 }
 
 static short GetPaperSourceByName(Printer* printer, Str binName) {
-    auto devMode = printer->devMode;
+    auto* devMode = printer->devMode;
     // "auto" lets the printer pick the input tray whose paper matches the
     // document's page size (matches Adobe's "Choose paper source by PDF page
     // size"; issues #349, #534)
@@ -1893,7 +1893,7 @@ static void ApplyPdfViewerPrintPrefs(const PdfViewerPrintPrefs& prefs, DEVMODEW*
 
 static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
-    auto devMode = printer->devMode;
+    auto* devMode = printer->devMode;
     auto suffix = [](Str s, int n) -> Str { return Str(s.s + n, s.len - n); };
 
     StrVec rangeList;
@@ -2033,7 +2033,7 @@ static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
     Size sizeP = NormalizePaperSize(Size((int)size.dx, (int)size.dy));
 
     int n = printer->nPaperSizes;
-    auto sizes = printer->paperSizes;
+    auto* sizes = printer->paperSizes;
     // find equivalent paper size with 1mm tolerance
     for (int i = 0; i < n; i++) {
         POINT sz = sizes[i];
@@ -2064,7 +2064,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
     RectF mediabox = engine->PageMediabox(1);
     SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
 
-    auto devMode = printer->devMode;
+    auto* devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
     char* backup = (char*)MemDup(GetTempArena(), devMode, devModeSize);
     SetCustomPaperSize(printer, size);
@@ -2121,7 +2121,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
 
     // set paper size to match the size of the document's first page
     // (will be overridden by any paper= value in -print-settings)
-    auto devMode = printer->devMode;
+    auto* devMode = printer->devMode;
     short printerDefaultPaper = devMode->dmPaperSize;
     devMode->dmPaperSize = GetPaperSize(engine);
     {

@@ -415,7 +415,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
         if (hasUrl) {
             int underlineY = pos.y + pos.dy - 3;
             HdcDrawLine(hdc, Rect(pos.x, underlineY, pos.dx, 0));
-            auto sl = new StaticLink(pos, el->url, el->url);
+            auto* sl = new StaticLink(pos, el->url, el->url);
             staticLinks.Append(sl);
         }
     }
@@ -543,7 +543,7 @@ TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink
     Point pt(x, y);
     for (int i = 0; i < len(linkInfo); i++) {
         if (linkInfo[i]->rect.Contains(pt)) {
-            auto link = linkInfo[i];
+            auto* link = linkInfo[i];
             if (info) {
                 *info = link;
             }
@@ -707,7 +707,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles()) {
         Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Show frequently read"));
-        auto sl = new StaticLink(rect, kLinkShowList);
+        auto* sl = new StaticLink(rect, kLinkShowList);
         win->staticLinks.Append(sl);
     }
 }
@@ -1213,9 +1213,9 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
 // rebuild chrome VirtWndText + copy cached geometry into l (no full layout)
 static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     auto& c = gHomeLayoutCache;
-    auto win = l.win;
-    auto hdc = l.hdc;
-    auto hwnd = l.hwnd;
+    auto* win = l.win;
+    auto* hdc = l.hdc;
+    auto* hwnd = l.hwnd;
     bool isRtl = IsUIRtl();
 
     // clamp scroll using cached content height
@@ -1268,7 +1268,7 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.openDoc = openDoc;
 
     if (!c.rcBrowseFolder.IsEmpty()) {
-        auto browse = new VirtWndText(hwnd, _TRA("Navigate Files in Folder"), fontText);
+        auto* browse = new VirtWndText(hwnd, _TRA("Navigate Files in Folder"), fontText);
         browse->isRtl = isRtl;
         browse->withUnderline = true;
         browse->SetBounds(c.rcBrowseFolder);
@@ -1305,10 +1305,10 @@ static void LayoutHomePage(HomePageLayout& l) {
     } else {
         gFileHistory.GetRecentlyOpenedOrder(allFileStates);
     }
-    auto hwnd = l.hwnd;
-    auto hdc = l.hdc;
+    auto* hwnd = l.hwnd;
+    auto* hdc = l.hdc;
     auto rc = l.rc;
-    auto win = l.win;
+    auto* win = l.win;
 
     // filter by search query if present
     TempStr searchQuery = nullptr;
@@ -1405,7 +1405,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
 
     txt = _TRA("Open a document...");
-    auto openDoc = new VirtWndText(hwnd, txt, fontText);
+    auto* openDoc = new VirtWndText(hwnd, txt, fontText);
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     txtSize = openDoc->GetIdealSize(true);
@@ -1430,7 +1430,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     /* "Navigate Files in Folder" link after it; dropped when the header row is
        too narrow to hold it (the row doesn't wrap) */
     {
-        auto browse = new VirtWndText(hwnd, _TRA("Navigate Files in Folder"), fontText);
+        auto* browse = new VirtWndText(hwnd, _TRA("Navigate Files in Folder"), fontText);
         browse->isRtl = isRtl;
         browse->withUnderline = true;
         Size browseSize = browse->GetIdealSize(true);
@@ -1448,7 +1448,7 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
     rcOpenDoc.Inflate(10, 10);
-    auto sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
+    auto* sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
     win->staticLinks.Append(sl);
 
     int headerBottomY = rcHdr.y + rcHdr.dy;
@@ -1682,11 +1682,11 @@ static void LayoutHomePage(HomePageLayout& l) {
                     linkRect = linkRect.Union(wr);
                 }
             }
-            auto slTip = new StaticLink(linkRect, link.cmd, link.cmd);
+            auto* slTip = new StaticLink(linkRect, link.cmd, link.cmd);
             win->staticLinks.Append(slTip);
         }
         // tip background: clicking outside of links picks another tip
-        auto slBg = new StaticLink(l.rcTip, kLinkNextTip);
+        auto* slBg = new StaticLink(l.rcTip, kLinkNextTip);
         win->staticLinks.Append(slBg);
     }
 }
@@ -2034,8 +2034,8 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
 
 static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
-    auto hdc = l.hdc;
-    auto win = l.win;
+    auto* hdc = l.hdc;
+    auto* win = l.win;
     auto backgroundColor = ThemeMainWindowBackgroundColor();
 
     {
@@ -2181,7 +2181,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
     if (false) {
         Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
-        auto sl = new StaticLink(rcFreqRead, kLinkHideList);
+        auto* sl = new StaticLink(rcFreqRead, kLinkHideList);
         win->staticLinks.Append(sl);
     }
 

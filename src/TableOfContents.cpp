@@ -44,9 +44,9 @@ bool gShowAllMatchingTOC = true;
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
 static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
-    auto treeView = ev->treeView;
+    auto* treeView = ev->treeView;
     auto ti = ev->treeItem;
-    auto nm = ev->info;
+    auto* nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
     IPageDestination* link = tocItem->GetPageDestination();
     if (!link) {
@@ -59,7 +59,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     if (!path) {
         return;
     }
-    auto k = link->GetKind();
+    const auto* k = link->GetKind();
     // TODO: TocItem from Chm contain other types
     // we probably shouldn't set TocItem::dest there
     if (k == kindDestinationScrollTo) {
@@ -284,8 +284,8 @@ static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bo
 static void GoToTocLink(GoToTocLinkData* d) {
     AutoDelete delData(d);
 
-    auto tab = d->tab;
-    auto ctrl = d->ctrl;
+    auto* tab = d->tab;
+    auto* ctrl = d->ctrl;
 
     // validate tab before dereferencing — it may have been freed
     // while this task was queued (e.g. user closed the tab/window)
@@ -336,7 +336,7 @@ void GoToTocItem(MainWindow* win, TocItem* tocItem) {
     if (!win || !tocItem) {
         return;
     }
-    auto data = NewGoToTocLinkData(win, tocItem, true);
+    auto* data = NewGoToTocLinkData(win, tocItem, true);
     if (!data) {
         return;
     }
@@ -348,7 +348,7 @@ static bool IsScrollToLink(IPageDestination* link) {
     if (!link) {
         return false;
     }
-    auto kind = link->GetKind();
+    const auto* kind = link->GetKind();
     return kind == kindDestinationScrollTo;
 }
 
@@ -361,7 +361,7 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
-        auto data = NewGoToTocLinkData(win, tocItem, false);
+        auto* data = NewGoToTocLinkData(win, tocItem, false);
         if (!data) {
             return;
         }
@@ -416,7 +416,7 @@ struct VistorForPageNoData {
 };
 
 static void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd) {
-    auto tocItem = (TocItem*)vd->item;
+    auto* tocItem = (TocItem*)vd->item;
     if (!tocItem) {
         return;
     }
@@ -461,7 +461,7 @@ struct CollectSamePageData {
 };
 
 static void visitCollectSamePage(CollectSamePageData* d, TreeItemVisitorData* vd) {
-    auto tocItem = (TocItem*)vd->item;
+    auto* tocItem = (TocItem*)vd->item;
     if (!tocItem || tocItem->pageNo < 1) {
         return;
     }
@@ -527,7 +527,7 @@ static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
         return nullptr;
     }
     while (true) {
-        auto parent = ti->parent;
+        auto* parent = ti->parent;
         if (parent == nullptr) {
             // ti is a root node
             return ti;
@@ -541,12 +541,12 @@ static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
 }
 
 void UpdateTocSelection(MainWindow* win, int currPageNo) {
-    auto treeView = win->tocTreeView;
+    auto* treeView = win->tocTreeView;
     if (!win->tocLoaded || !win->uiState.tocVisible || !treeView) {
         return;
     }
 
-    auto item = TreeItemForPageNo(treeView, currPageNo);
+    auto* item = TreeItemForPageNo(treeView, currPageNo);
     if (win->tocKeepSelection) {
         // the tree selection is deliberately left alone: the user clicked a
         // bookmark and GoToTocLink set tocKeepSelection so the page change
@@ -928,7 +928,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     // TODO: this is pontentially not used at all
     if (destKind == kindDestinationLaunchEmbedded) {
-        auto embeddedFile = (PageDestinationFile*)dest;
+        auto* embeddedFile = (PageDestinationFile*)dest;
         // this is a path to a file on disk, e.g. a path to opened PDF
         // with the embedded stream number
         path = embeddedFile->path;
@@ -946,7 +946,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     int attachmentNo = -1;
     if (destKind == kindDestinationAttachment) {
-        auto attachment = (PageDestinationFile*)dest;
+        auto* attachment = (PageDestinationFile*)dest;
         // this is a path to a file on disk, e.g. a path to opened PDF
         // with the embedded stream number
         path = attachment->path;
@@ -1701,7 +1701,7 @@ void CreateToc(MainWindow* win) {
     HWND parent = win->hwndFrame;
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
-    auto l = new LabelWithCloseWnd();
+    auto* l = new LabelWithCloseWnd();
     {
         LabelWithCloseWnd::CreateArgs args;
         args.parent = win->hwndTocBox;
@@ -1714,7 +1714,7 @@ void CreateToc(MainWindow* win) {
     l->SetPaddingXY(2, 2);
     // label is set in UpdateToolbarSidebarText()
 
-    auto filterEdit = new Edit();
+    auto* filterEdit = new Edit();
     {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndTocBox;
@@ -1729,7 +1729,7 @@ void CreateToc(MainWindow* win) {
     filterEdit->onTextChanged = MkFunc0(OnTocFilterTextChanged, win);
     SetWindowSubclass(filterEdit->hwnd, WndProcTocFilterEdit, NextSubclassId(), (DWORD_PTR)win);
 
-    auto treeView = new TreeView();
+    auto* treeView = new TreeView();
     TreeView::CreateArgs args;
     args.parent = win->hwndTocBox;
     args.font = GetAppTreeFont(win->hwndFrame);
@@ -1750,7 +1750,7 @@ void CreateToc(MainWindow* win) {
 
     // stack label, filter edit and tree vertically; the tree flexes to fill the
     // remaining height. The VBox owns these controls/spacer (freed in ~MainWindow).
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(l);

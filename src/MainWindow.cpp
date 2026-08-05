@@ -228,7 +228,7 @@ bool MainWindow::HasDocsLoaded() const {
         return true;
     }
     for (int i = 0; i < nTabs; i++) {
-        auto tab = GetTab(i);
+        auto* tab = GetTab(i);
         if (!tab->IsAboutTab()) {
             // logf("HasDocsLoaded: true because GetTab(i) !IsAboutTab()\n");
             return true;
@@ -519,7 +519,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
     if (kindDestinationLaunchURL == kind) {
-        auto d = (PageDestinationURL*)dest;
+        auto* d = (PageDestinationURL*)dest;
         LaunchURL(d->url);
         return;
     }
@@ -727,7 +727,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
     }
     path::Type pathType = path::GetType(fullPath);
     if (pathType == path::Type::None) {
-        auto win = gWindows[0];
+        auto* win = gWindows[0];
         ShowErrorLoadingNotification(win, fullPath, true);
         return;
     }
@@ -932,7 +932,7 @@ void UpdateControlsColors(MainWindow* win) {
     COLORREF splitterCol = ThemeControlBackgroundColor();
 
     {
-        auto tocTreeView = win->tocTreeView;
+        auto* tocTreeView = win->tocTreeView;
         tocTreeView->SetColors(txtCol, bgCol);
 
         win->tocLabelWithClose->SetColors(txtCol, bgCol);
@@ -942,7 +942,7 @@ void UpdateControlsColors(MainWindow* win) {
         win->sidebarSplitter->SetColors(kColorNoChange, splitterCol);
     }
 
-    auto favTreeView = win->favTreeView;
+    auto* favTreeView = win->favTreeView;
     if (favTreeView) {
         favTreeView->SetColors(txtCol, bgCol);
         win->favLabelWithClose->SetColors(txtCol, bgCol);

@@ -543,7 +543,7 @@ void CreateThemeCommands() {
     for (int i = 0; i < gThemeCount; i++) {
         Theme* theme = (*gThemes)[i];
         Str themeName = theme->name;
-        auto args = NewStringArg(kCmdArgTheme, themeName);
+        auto* args = NewStringArg(kCmdArgTheme, themeName);
         cmd = CreateCustomCommand(themeName, CmdSetTheme, args, fmt(_TRA("Set theme '%s'").s, themeName));
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;

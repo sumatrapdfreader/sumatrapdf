@@ -223,15 +223,15 @@ static void CreateExternalViewersCommands() {
         }
         CommandArg* args = NewStringArg(kCmdArgCommandLine, ev->commandLine);
         if (!str::IsEmptyOrWhiteSpace(ev->filter)) {
-            auto arg = NewStringArg(kCmdArgFilter, ev->filter);
+            auto* arg = NewStringArg(kCmdArgFilter, ev->filter);
             InsertArg(&args, arg);
         }
         if (!str::IsEmptyOrWhiteSpace(ev->toolbarText)) {
-            auto arg = NewStringArg(kCmdArgToolbarText, ev->toolbarText);
+            auto* arg = NewStringArg(kCmdArgToolbarText, ev->toolbarText);
             InsertArg(&args, arg);
         }
         if (!str::IsEmptyOrWhiteSpace(ev->toolbarSvgIcon)) {
-            auto arg = NewStringArg(kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
+            auto* arg = NewStringArg(kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
             InsertArg(&args, arg);
         }
         CreateCustomCommand("", CmdViewWithExternalViewer, args, ev->name, ev->key);
@@ -239,7 +239,7 @@ static void CreateExternalViewersCommands() {
 }
 
 static void CreateZoomCommands() {
-    auto prefs = gGlobalPrefs;
+    auto* prefs = gGlobalPrefs;
     delete prefs->zoomLevelsCmdIds;
     int n = len(*prefs->zoomLevels);
     if (n <= 0) {
@@ -251,7 +251,7 @@ static void CreateZoomCommands() {
     for (int i = 0; i < n; i++) {
         float zoomLevel = (*prefs->zoomLevels)[i];
         CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
-        auto cmd = CreateCustomCommand("CmdZoomCustom", CmdZoomCustom, arg);
+        auto* cmd = CreateCustomCommand("CmdZoomCustom", CmdZoomCustom, arg);
         cmdIds->InsertAt(i, cmd->id);
     }
 }
@@ -267,11 +267,11 @@ static void CreateZoomCommands() {
 // each shortcut gets a unique id with its name/key packed into the allocation.
 static void CreateCustomShortcuts() {
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
-        auto base = CreateCommandFromDefinition(shortcut->cmd);
+        auto* base = CreateCommandFromDefinition(shortcut->cmd);
         if (!base) {
             continue;
         }
-        auto cmd = CloneCustomCommand(base, shortcut->name, shortcut->key);
+        auto* cmd = CloneCustomCommand(base, shortcut->name, shortcut->key);
         shortcut->cmdId = cmd->id;
     }
 }

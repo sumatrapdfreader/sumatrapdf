@@ -477,7 +477,7 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
         return win->selectionToolbar;
     }
     RegisterSelectionToolbarClass();
-    auto tb = new SelectionToolbar();
+    auto* tb = new SelectionToolbar();
     tb->win = win;
     DWORD style = WS_POPUP;
     DWORD styleEx = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;

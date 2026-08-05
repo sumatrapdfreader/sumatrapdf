@@ -958,7 +958,7 @@ struct GetFontsData {
 
 static void GetFontsThread(GetFontsData* data) {
     TempStr val = data->engine->GetPropertyTemp(DocProp::FontList);
-    auto result = new GetFontsResult;
+    auto* result = new GetFontsResult;
     result->hwnd = data->hwnd;
     if (val) {
         result->fontsText.Append("\n");
@@ -1015,12 +1015,12 @@ void ShowProperties(HWND parent, DocController* ctrl) {
 
     DisplayModel* dm = ctrl->AsFixed();
     if (!dm || !dm->engine) {
-        auto result = new GetFontsResult;
+        auto* result = new GetFontsResult;
         result->hwnd = wnd->hwnd;
         OnGetFontsFinished(result);
         return;
     }
-    auto data = new GetFontsData;
+    auto* data = new GetFontsData;
     data->hwnd = wnd->hwnd;
     data->engine = dm->engine;
     data->engine->AddRef();

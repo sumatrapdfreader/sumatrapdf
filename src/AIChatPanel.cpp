@@ -575,7 +575,7 @@ static void OnAIChatUpdate(AIChatUpdateData* data) {
 }
 
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
-    auto data = new AIChatUpdateData();
+    auto* data = new AIChatUpdateData();
     data->hwndFrame = ctx->hwndFrame;
     data->providerId = ctx->providerId;
     data->sessionId = ctx->sessionId ? str::Dup(ctx->sessionId) : Str{};
@@ -742,7 +742,7 @@ static void SendAIChatMessage(MainWindow* win) {
     st->process = launch.hProcess;
     AIChatLog(p->logger, ">>> start", fmt("pid %lu", launch.processId));
 
-    auto ctx = new AIChatReadThreadCtx();
+    auto* ctx = new AIChatReadThreadCtx();
     ctx->hReadPipe = launch.hReadPipe;
     ctx->stream.hwndFrame = win->hwndFrame;
     ctx->stream.providerId = win->aiChatProvider;
@@ -872,7 +872,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     if (!p) {
         return;
     }
-    auto webView = new WebviewWnd();
+    auto* webView = new WebviewWnd();
     TempStr localAppData = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
     webView->dataDir =
@@ -987,7 +987,7 @@ void CreateAIChatPanel(MainWindow* win) {
     HFONT font = GetDefaultGuiFont();
 
     // label
-    auto label = new LabelWithCloseWnd();
+    auto* label = new LabelWithCloseWnd();
     {
         LabelWithCloseWnd::CreateArgs args;
         args.parent = win->hwndAiChatBox;
@@ -1077,12 +1077,12 @@ void CreateAIChatPanel(MainWindow* win) {
 
     // layout: label, session combo, webview area (flex), input row, options row
     {
-        auto inputRow = new HBox();
+        auto* inputRow = new HBox();
         inputRow->alignCross = CrossAxisAlign::Stretch;
         inputRow->AddChild(win->aiChatInput, 1);
         inputRow->AddChild(win->aiChatStopBtn);
 
-        auto optionsRow = new HBox();
+        auto* optionsRow = new HBox();
         optionsRow->alignCross = CrossAxisAlign::CrossCenter;
         optionsRow->AddChild(win->aiChatModelCombo, 1);
         optionsRow->AddChild(new Spacer(2, 0));
@@ -1090,7 +1090,7 @@ void CreateAIChatPanel(MainWindow* win) {
         optionsRow->AddChild(new Spacer(8, 0));
         optionsRow->AddChild(win->aiChatCheckbox, 1);
 
-        auto vbox = new VBox();
+        auto* vbox = new VBox();
         vbox->alignCross = CrossAxisAlign::Stretch;
         vbox->AddChild(win->aiChatLabel);
         vbox->AddChild(win->aiChatSessionCombo);

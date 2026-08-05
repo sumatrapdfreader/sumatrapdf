@@ -249,7 +249,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
         if (len(frequencyList) > kFileHistoryMaxFrequent) {
-            auto el = frequencyList[kFileHistoryMaxFrequent];
+            auto* el = frequencyList[kFileHistoryMaxFrequent];
             minOpenCount = el->openCount / 2;
         }
     }
@@ -407,7 +407,7 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
 }
 
 void RemoveNonExistentFilesAsync() {
-    auto d = new CheckFilesExistData();
+    auto* d = new CheckFilesExistData();
     GetFilePathsToCheck(d->toCheck);
     if (len(d->toCheck) == 0) {
         // nothing to check, so no CheckFilesExistAsync to hand ownership to

@@ -1015,7 +1015,7 @@ static DWORD CALLBACK CopyProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INT
                                           LARGE_INTEGER /*StreamSize*/, LARGE_INTEGER /*StreamBytesTransferred*/,
                                           DWORD /*dwStreamNumber*/, DWORD /*dwCallbackReason*/, HANDLE /*hSourceFile*/,
                                           HANDLE /*hDestinationFile*/, LPVOID lpData) {
-    auto* cb = (const CopyProgressCb*)lpData;
+    const auto* cb = (const CopyProgressCb*)lpData;
     CopyProgress p;
     p.bytesCopied = TotalBytesTransferred.QuadPart;
     p.bytesTotal = TotalFileSize.QuadPart;

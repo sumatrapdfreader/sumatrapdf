@@ -150,7 +150,7 @@ void OptimizePngFileAsync(Str path) {
     if (!str::EndsWithI(path, StrL(".png"))) {
         return;
     }
-    auto d = new OptimizePngData();
+    auto* d = new OptimizePngData();
     d->path = str::Dup(path);
     RunAsync(MkFunc0(OptimizePngThread, d), "OptimizePngThread");
 }

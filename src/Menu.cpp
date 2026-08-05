@@ -1519,8 +1519,8 @@ static struct {
 // clang-format on
 
 static void BuildMenuZoom(HMENU m) {
-    auto prefs = gGlobalPrefs;
-    auto customZoomLevels = prefs->zoomLevels;
+    auto* prefs = gGlobalPrefs;
+    auto* customZoomLevels = prefs->zoomLevels;
     int n = len(*customZoomLevels);
     if (n <= 0) {
         return;
@@ -1553,7 +1553,7 @@ int CmdIdFromVirtualZoom(float virtualZoom) {
 // Custom ZoomLevels menu items use dynamically allocated command ids (not in
 // CmdZoomFirst..CmdZoomLast). Map an absolute zoom % to that custom id, or 0.
 static int CustomZoomCmdIdFromLevel(float zoomVirtual) {
-    auto prefs = gGlobalPrefs;
+    auto* prefs = gGlobalPrefs;
     if (!prefs || !prefs->zoomLevels || !prefs->zoomLevelsCmdIds) {
         return 0;
     }
@@ -1587,7 +1587,7 @@ static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
         MenuSetEnabled(m, it.cmdId, canZoom);
     }
 
-    auto prefs = gGlobalPrefs;
+    auto* prefs = gGlobalPrefs;
     Vec<int>* customIds = prefs ? prefs->zoomLevelsCmdIds : nullptr;
     int nCustom = customIds ? len(*customIds) : 0;
     for (int i = 0; i < nCustom; i++) {
@@ -1677,7 +1677,7 @@ static void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = 
 
 static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
     MenuEmpty(menu);
-    auto ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    auto* ctx = NewBuildMenuCtx(tab, Point{0, 0});
     AutoDelete delCtx(ctx);
     BuildMenuFromDef(menuDefFile, menu, ctx);
     DynamicPartOfFileMenu(menu, ctx);
@@ -1698,7 +1698,7 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     for (int i = 0; disableIfNoSelection[i]; i++) {
         MenuSetEnabled(menu, (int)disableIfNoSelection[i], isTextSelected);
     }
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdSelectionHandler) {
             MenuSetEnabled(menu, curr->id, isTextSelected);
@@ -1908,7 +1908,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         value = pageEl->GetValue();
     }
 
-    auto ctx = NewBuildMenuCtx(tab, cursorPos);
+    auto* ctx = NewBuildMenuCtx(tab, cursorPos);
     AutoDelete delCtx(ctx);
     HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), ctx);
 
@@ -2068,7 +2068,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         HwndRepaintNow(win->hwndCanvas);
     }
 
-    auto cmd = FindCustomCommand(cmdId);
+    auto* cmd = FindCustomCommand(cmdId);
     if (cmd && cmd->origId == CmdSelectionHandler) {
         HwndSendCommand(win->hwndFrame, cmd->id);
         return;
@@ -2221,7 +2221,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_SUBMENU;
         BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
         ReportIf(!ok);
-        auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
+        auto* modi = (MenuOwnerDrawInfo*)mii.dwItemData;
         if (modi != nullptr) {
             FreeMenuOwnerDrawInfo(modi);
             mii.dwItemData = 0;
@@ -2331,7 +2331,7 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {
         return;
     }
-    auto modi = (MenuOwnerDrawInfo*)mis->itemData;
+    auto* modi = (MenuOwnerDrawInfo*)mis->itemData;
 
     bool isSeparator = bit::IsMaskSet(modi->fType, (uint)MFT_SEPARATOR);
     if (isSeparator) {
@@ -2374,7 +2374,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     if (ODT_MENU != dis->CtlType) {
         return;
     }
-    auto modi = (MenuOwnerDrawInfo*)dis->itemData;
+    auto* modi = (MenuOwnerDrawInfo*)dis->itemData;
     if (!modi) {
         return;
     }
@@ -2408,7 +2408,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // if isChecked, show as radio button (i.e. circle)
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
-    auto hdc = dis->hDC;
+    auto* hdc = dis->hDC;
     HFONT font = GetAppMenuFont(hwnd);
     ScopedSelectFont restoreFont(hdc, font);
 
@@ -2440,9 +2440,9 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         SetBkColor(hdc, prevBgCol);
     };
 
-    auto brBg = CreateSolidBrush(bgCol);
+    auto* brBg = CreateSolidBrush(bgCol);
     HdcFillRect(hdc, ToRect(rc), brBg);
-    auto brTxt = CreateSolidBrush(txtCol);
+    auto* brTxt = CreateSolidBrush(txtCol);
 
     AutoDeleteObject deleteBgBrush(brBg);
     AutoDeleteObject deleteTxtBrush(brTxt);
@@ -2452,8 +2452,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         int sx = rc.left + cxCheckMark;
         int y = rc.top + (rcDy / 2);
         int ex = rc.right - padX;
-        auto pen = CreatePen(PS_SOLID, 1, txtCol);
-        auto prevPen = SelectObject(hdc, pen);
+        auto* pen = CreatePen(PS_SOLID, 1, txtCol);
+        auto* prevPen = SelectObject(hdc, pen);
         MoveToEx(hdc, sx, y, nullptr);
         LineTo(hdc, ex, y);
         SelectObject(hdc, prevPen);
@@ -2513,7 +2513,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 HMENU BuildMenu(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
-    auto ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    auto* ctx = NewBuildMenuCtx(tab, Point{0, 0});
     AutoDelete delCtx(ctx);
     HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), ctx);
 
@@ -2535,7 +2535,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         // document-dependent commands when no document is loaded, and a null ctx
         // looks like "no document" -- which dropped CmdFavoriteAdd/CmdFavoriteDel
         // from the rebuilt menu, so RebuildFavMenu's MenuSetText then failed
-        auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+        auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
         AutoDelete delCtx(ctx);
         BuildMenuFromDef(menuDefFavorites, m, ctx);
         RebuildFavMenu(win, m);

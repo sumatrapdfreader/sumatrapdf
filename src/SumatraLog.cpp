@@ -152,7 +152,7 @@ static void log2(Str s, bool always) {
     }
 
     if (gLogFilePath) {
-        auto f = fopen(gLogFilePath.s, "a");
+        auto* f = fopen(gLogFilePath.s, "a");
         if (f != nullptr) {
             fwrite(s.s, 1, n, f);
             fflush(f);

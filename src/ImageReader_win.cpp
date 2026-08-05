@@ -114,7 +114,7 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
         bmp->GetLastStatus(); // clear last status
         return;
     }
-    auto propItem = (Gdiplus::PropertyItem*)buf;
+    auto* propItem = (Gdiplus::PropertyItem*)buf;
     // guard against a malformed/short property before reading the first value
     if (!propItem->value || propItem->length < sizeof(u16)) {
         return;
@@ -124,7 +124,7 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
 }
 
 static Bitmap* DecodeWithWIC(Str bmpData) {
-    auto strm = CreateStreamFromData(bmpData);
+    auto* strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;
@@ -133,7 +133,7 @@ static Bitmap* DecodeWithWIC(Str bmpData) {
 }
 
 static Bitmap* DecodeWithGdiplus(Str bmpData) {
-    auto strm = CreateStreamFromData(bmpData);
+    auto* strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;

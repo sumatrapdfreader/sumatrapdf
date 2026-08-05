@@ -93,7 +93,7 @@ static Static* CreatePathLabel(HWND parent, HFONT font, Str path, bool isRtl) {
     args.font = font;
     args.text = path;
     args.isRtl = isRtl;
-    auto c = new Static();
+    auto* c = new Static();
     c->Create(args);
     DWORD style = (DWORD)GetWindowLongPtrW(c->hwnd, GWL_STYLE);
     SetWindowLongPtrW(c->hwnd, GWL_STYLE, style | SS_PATHELLIPSIS);
@@ -165,7 +165,7 @@ void PdfBakeDialog::DoBake() {
 }
 
 static void PdfBakeOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfBakeDialog*)ev->e->self;
+    auto* dlg = (PdfBakeDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -194,7 +194,7 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -204,7 +204,7 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -233,7 +233,7 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 3: Bake + Cancel buttons (right-aligned), each sized to its label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -298,7 +298,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
     }
     logf("ShowPdfBakeDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfBakeDialog();
+    auto* dlg = new PdfBakeDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -415,7 +415,7 @@ void PdfExtractTextDialog::DoExtract() {
 }
 
 static void PdfExtractTextOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfExtractTextDialog*)ev->e->self;
+    auto* dlg = (PdfExtractTextDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -443,7 +443,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -453,7 +453,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -484,7 +484,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 3: "Pages:" label + pages edit (flex)
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -513,7 +513,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 4: Extract Text + Cancel buttons (right-aligned), each sized to its label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -573,7 +573,7 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     }
     logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfExtractTextDialog();
+    auto* dlg = new PdfExtractTextDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -644,7 +644,7 @@ void PdfCompressDialog::DoCompress() {
 }
 
 static void PdfCompressOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfCompressDialog*)ev->e->self;
+    auto* dlg = (PdfCompressDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -672,7 +672,7 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -682,7 +682,7 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -711,7 +711,7 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 3: Compress + Cancel buttons (right-aligned), each sized to its label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -774,7 +774,7 @@ void ShowPdfCompressDialog(MainWindow* win) {
     }
     logf("ShowPdfCompressDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfCompressDialog();
+    auto* dlg = new PdfCompressDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -844,7 +844,7 @@ void PdfDecompressDialog::DoDecompress() {
 }
 
 static void PdfDecompressOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfDecompressDialog*)ev->e->self;
+    auto* dlg = (PdfDecompressDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -872,7 +872,7 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -882,7 +882,7 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -911,7 +911,7 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 3: Decompress + Cancel buttons (right-aligned), each sized to its label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -974,7 +974,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
     }
     logf("ShowPdfDecompressDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfDecompressDialog();
+    auto* dlg = new PdfDecompressDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -1232,7 +1232,7 @@ void PdfDeletePageDialog::DoIt() {
 }
 
 static void PdfDeletePageOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfDeletePageDialog*)ev->e->self;
+    auto* dlg = (PdfDeletePageDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -1262,7 +1262,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -1272,7 +1272,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1301,7 +1301,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
 
     // row 3: pages label + pages edit (flex) + total pages label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1339,7 +1339,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
 
     // row 4: syntax hint (left) + action + Cancel buttons (right)
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1425,7 +1425,7 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     logf("ShowPdfPageRangeDialog: opening %s dialog for '%s', %d pages\n", Str(isExtract ? "extract" : "delete"),
          tab->filePath, pageCount);
 
-    auto dlg = new PdfDeletePageDialog();
+    auto* dlg = new PdfDeletePageDialog();
     if (!dlg->Create(win, tab, isExtract)) {
         delete dlg;
     }
@@ -1518,7 +1518,7 @@ void PdfEncryptDialog::DoEncrypt() {
 }
 
 static void PdfEncryptOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfEncryptDialog*)ev->e->self;
+    auto* dlg = (PdfEncryptDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -1546,7 +1546,7 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -1556,7 +1556,7 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1585,7 +1585,7 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 3: "Password:" label + password edit (flex)
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1612,7 +1612,7 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
 
     // row 4: Encrypt PDF + Cancel buttons (right-aligned), each sized to its label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1685,7 +1685,7 @@ void ShowPdfEncryptDialog(MainWindow* win) {
     }
     logf("ShowPdfEncryptDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfEncryptDialog();
+    auto* dlg = new PdfEncryptDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -1760,7 +1760,7 @@ void PdfDecryptDialog::DoDecrypt() {
 }
 
 static void PdfDecryptOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfDecryptDialog*)ev->e->self;
+    auto* dlg = (PdfDecryptDialog*)ev->e->self;
     delete dlg;
 }
 
@@ -1789,7 +1789,7 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -1799,7 +1799,7 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
 
     // row 2: dest edit (flex) + browse button
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1828,7 +1828,7 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
 
     // row 3: Decrypt + Cancel buttons (right-aligned), each sized to its label
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -1901,7 +1901,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
     }
     logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath, len(pwd));
 
-    auto dlg = new PdfDecryptDialog();
+    auto* dlg = new PdfDecryptDialog();
     if (!dlg->Create(win, tab, pwd)) {
         delete dlg;
     }

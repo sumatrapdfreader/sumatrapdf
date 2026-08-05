@@ -221,7 +221,7 @@ static void CreateUninstallerWindow() {
     int dy = kInstallerWinDy;
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
-    auto winCls = kInstallerWindowClassName;
+    const auto* winCls = kInstallerWindowClassName;
     gHwndFrame = CreateWindowW(winCls, CWStrTemp(title), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 
     DpiScale(gHwndFrame, dx, dy);
@@ -302,7 +302,7 @@ static bool RegisterWinClass() {
     WNDCLASSEX wcex{};
 
     FillWndClassEx(wcex, kInstallerWindowClassName, WndProcUninstallerFrame);
-    auto h = GetModuleHandle(nullptr);
+    auto* h = GetModuleHandle(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);
 

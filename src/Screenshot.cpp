@@ -79,7 +79,7 @@ static Str FindScreenshotShortcut() {
         }
     }
     // fall back to custom commands (built at startup)
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdScreenshot && curr->key) {
             return curr->key;
@@ -319,7 +319,7 @@ void SetHotkeyWnd::DoRemove() {
     if (sc) {
         gGlobalPrefs->shortcuts->Remove(sc);
     }
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdScreenshot) {
             str::ReplaceWithCopy(&curr->key, Str{});

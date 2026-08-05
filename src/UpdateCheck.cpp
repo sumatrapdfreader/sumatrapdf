@@ -150,7 +150,7 @@ static UpdateInfo* ParseUpdateInfo(Str d) {
     if (!IsValidProgramVersion(latestVer)) {
         return nullptr;
     }
-    auto res = new UpdateInfo();
+    auto* res = new UpdateInfo();
     res->latestVer = str::Dup(latestVer);
 
     // those are optional. if missing, we'll just tell the user to go to website to download
@@ -378,8 +378,8 @@ struct DownloadUpdateAsyncData {
 };
 
 static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
-    auto hwndForNotif = data->hwndForNotif;
-    auto updateInfo = data->updateInfo;
+    auto* hwndForNotif = data->hwndForNotif;
+    auto* updateInfo = data->updateInfo;
     data->updateInfo = nullptr;
     RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
     NotifyUserOfUpdate(updateInfo);
@@ -391,7 +391,7 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
 static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
     TempStr size = FormatFileSizeTransTemp(data->nDownloaded);
     logf("UpdateDownloadProgressNotif: %s\n", size);
-    auto wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
+    auto* wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
         TempStr msg = fmt("Downloading update: %s\n", size);
         NotificationUpdateMessage(wnd, msg, 0, true);
@@ -403,7 +403,7 @@ static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
 
 static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
     logf("UpdateProgressCb: n: %d\n", (int)progress->nDownloaded);
-    auto fnData = new UpdateProgressData;
+    auto* fnData = new UpdateProgressData;
     fnData->hwndForNotif = data->hwndForNotif;
     fnData->nDownloaded = progress->nDownloaded;
     auto fn = MkFunc0<UpdateProgressData>(UpdateDownloadProgressNotif, fnData);
@@ -411,8 +411,8 @@ static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
 }
 
 static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
-    auto hwndForNotif = data->hwndForNotif;
-    auto updateInfo = data->updateInfo;
+    auto* hwndForNotif = data->hwndForNotif;
+    auto* updateInfo = data->updateInfo;
 
     TempStr installerPath = GetTempFilePathTemp("sumatra-installer");
     // the installer must be named .exe or it won't be able to self-elevate
@@ -492,7 +492,7 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
     ShowNotification(nargs);
 
     gUpdateCheckInProgress = true;
-    auto fnData = new DownloadUpdateAsyncData;
+    auto* fnData = new DownloadUpdateAsyncData;
     fnData->hwndForNotif = hwndForNotif;
     fnData->updateInfo = updateInfo;
     auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateAsync, fnData);
@@ -666,7 +666,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
-            auto wnd = GetNotificationForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
+            auto* wnd = GetNotificationForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
             if (wnd) {
                 NotificationUpdateMessage(wnd, _TRA("You have the latest version."), 5 * 1000, true);
             }
@@ -705,7 +705,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
 
-    auto fnData = new DownloadUpdateAsyncData;
+    auto* fnData = new DownloadUpdateAsyncData;
     fnData->hwndForNotif = hwndForNotif;
     fnData->updateInfo = updateInfo;
     auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateAsync, fnData);
@@ -758,7 +758,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     AutoDelete delData(data);
 
     auto updateCheckType = data->updateCheckType;
-    auto rsp = data->rsp;
+    auto* rsp = data->rsp;
     MainWindow* win = nullptr;
     if (IsMainWindowValid(data->win)) {
         win = data->win;
@@ -823,7 +823,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
     gUpdateCheckInProgress = true;
 
     // data freed in UpdateCheckFinish()
-    auto data = new UpdateCheckAsyncData();
+    auto* data = new UpdateCheckAsyncData();
     data->win = win;
     data->updateCheckType = updateCheckType;
     auto fn = MkFunc0<UpdateCheckAsyncData>(UpdateCheckAsync, data);

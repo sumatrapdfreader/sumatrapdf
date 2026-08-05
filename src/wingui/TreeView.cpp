@@ -268,14 +268,14 @@ void TreeView::SetColors(COLORREF textCol, COLORREF bgCol) {
 
 void TreeView::ExpandAll() {
     SuspendRedraw();
-    auto root = TreeView_GetRoot(this->hwnd);
+    auto* root = TreeView_GetRoot(this->hwnd);
     TreeViewExpandRecursively(this->hwnd, root, TVE_EXPAND, false);
     ResumeRedraw();
 }
 
 void TreeView::CollapseAll() {
     SuspendRedraw();
-    auto root = TreeView_GetRoot(this->hwnd);
+    auto* root = TreeView_GetRoot(this->hwnd);
     TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
     ResumeRedraw();
 }
@@ -309,7 +309,7 @@ void TreeView::Clear() {
 }
 
 TempStr TreeView::GetDefaultTooltipTemp(TreeItem ti) {
-    auto hItem = GetHandleByTreeItem(ti);
+    auto* hItem = GetHandleByTreeItem(ti);
     WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
 
     TVITEMW it{};
@@ -334,7 +334,7 @@ TreeItem TreeView::GetTreeItemByHandle(HTREEITEM item) {
     if (item == nullptr) {
         return TreeModel::kNullItem;
     }
-    auto tvi = GetTVITEM(this, item);
+    auto* tvi = GetTVITEM(this, item);
     if (!tvi) {
         return TreeModel::kNullItem;
     }
@@ -390,7 +390,7 @@ bool TreeView::UpdateItem(TreeItem ti) {
 // complicated because it inserts items backwards, as described in
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
 static void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
-    auto tm = treeView->treeModel;
+    auto* tm = treeView->treeModel;
     int n = tm->ChildCount(item);
     TreeItem* a = AllocArrayTemp<TreeItem>(n);
     // ChildAt() is optimized for sequential access and we need to

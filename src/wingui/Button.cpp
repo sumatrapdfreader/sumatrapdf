@@ -181,7 +181,7 @@ Button* CreateButton(HWND parent, Str s, const Func0& onClick, bool isRtl) {
     args.text = s;
     args.isRtl = isRtl;
 
-    auto b = new Button();
+    auto* b = new Button();
     b->onClick = onClick;
     b->Create(args);
     return b;

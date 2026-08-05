@@ -626,9 +626,9 @@ static void AddZoomLevel(float zoomLevel, HWND hwnd, Vec<float>* levels) {
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
     HWND hwnd = GetDlgItem(hDlg, (int)idComboBox);
 
-    auto prefs = gGlobalPrefs;
-    auto customZoomLevels = prefs->zoomLevels;
-    auto currZoomLevels = new Vec<float>();
+    auto* prefs = gGlobalPrefs;
+    auto* customZoomLevels = prefs->zoomLevels;
+    auto* currZoomLevels = new Vec<float>();
     int n = len(*customZoomLevels);
     if (n > 0) {
         if (!forChm) {
@@ -799,7 +799,7 @@ static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     Vec<TextEditor*> textEditors;
     DetectTextEditors(textEditors);
     StrVec detected;
-    for (auto e : textEditors) {
+    for (auto* e : textEditors) {
         AppendIfNotExists(&detected, e->openFileCmd);
     }
     if (cmdLine) {

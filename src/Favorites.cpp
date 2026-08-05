@@ -80,17 +80,17 @@ TreeItem FavTreeModel::Root() {
 }
 
 Str FavTreeModel::Text(TreeItem ti) {
-    auto fti = (FavTreeItem*)ti;
+    auto* fti = (FavTreeItem*)ti;
     return fti->text;
 }
 
 TreeItem FavTreeModel::Parent(TreeItem ti) {
-    auto fti = (FavTreeItem*)ti;
+    auto* fti = (FavTreeItem*)ti;
     return (TreeItem)fti->parent;
 }
 
 int FavTreeModel::ChildCount(TreeItem ti) {
-    auto fti = (FavTreeItem*)ti;
+    auto* fti = (FavTreeItem*)ti;
     if (!fti) {
         return 0;
     }
@@ -99,13 +99,13 @@ int FavTreeModel::ChildCount(TreeItem ti) {
 }
 
 TreeItem FavTreeModel::ChildAt(TreeItem ti, int idx) {
-    auto fti = (FavTreeItem*)ti;
-    auto res = fti->children[idx];
+    auto* fti = (FavTreeItem*)ti;
+    auto* res = fti->children[idx];
     return (TreeItem)res;
 }
 
 bool FavTreeModel::IsExpanded(TreeItem ti) {
-    auto fti = (FavTreeItem*)ti;
+    auto* fti = (FavTreeItem*)ti;
     return fti->isExpanded;
 }
 
@@ -231,18 +231,18 @@ static Favorite* FindByPage(FileState* ds, int pageNo, Str pageLabel = {}) {
     if (!ds || !ds->favorites) {
         return nullptr;
     }
-    auto favs = ds->favorites;
+    auto* favs = ds->favorites;
     int n = len(*favs);
     if (pageLabel) {
         for (int i = 0; i < n; i++) {
-            auto fav = (*favs)[i];
+            auto* fav = (*favs)[i];
             if (str::Eq(fav->pageLabel, pageLabel)) {
                 return fav;
             }
         }
     }
     for (int i = 0; i < n; i++) {
-        auto fav = (*favs)[i];
+        auto* fav = (*favs)[i];
         if (pageNo == fav->pageNo) {
             return fav;
         }
@@ -667,7 +667,7 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     Str fp = fs->filePath;
     MainWindow* existingWin = FindMainWindowByFile(fp, true);
     if (existingWin) {
-        auto data = new GoToFavoritePageData;
+        auto* data = new GoToFavoritePageData;
         data->pageNo = fav->pageNo;
         data->win = existingWin;
         auto fn = MkFunc0<GoToFavoritePageData>(GoToFavoritePage, data);
@@ -694,7 +694,7 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     LoadArgs args(fs->filePath, win);
     win = LoadDocument(&args);
     if (win) {
-        auto data = new GoToFavoritePageData;
+        auto* data = new GoToFavoritePageData;
         data->pageNo = pageNo;
         data->win = win;
         auto fn = MkFunc0<GoToFavoritePageData>(GoToFavoritePage, data);
@@ -1107,7 +1107,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str
 
 void AddFavoriteForPage(MainWindow* win, int pageNo) {
     Str name;
-    auto tab = win->CurrentTab();
+    auto* tab = win->CurrentTab();
     auto* ctrl = tab->ctrl;
     if (ctrl->HasToc()) {
         // use the current ToC heading as default name
@@ -1446,7 +1446,7 @@ void CreateFavorites(MainWindow* win) {
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
     win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 
-    auto l = new LabelWithCloseWnd();
+    auto* l = new LabelWithCloseWnd();
     {
         LabelWithCloseWnd::CreateArgs args;
         args.parent = win->hwndFavBox;
@@ -1460,7 +1460,7 @@ void CreateFavorites(MainWindow* win) {
     l->SetPaddingXY(2, 2);
     // label is set in UpdateToolbarSidebarText()
 
-    auto filterEdit = new Edit();
+    auto* filterEdit = new Edit();
     {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndFavBox;
@@ -1475,7 +1475,7 @@ void CreateFavorites(MainWindow* win) {
     filterEdit->onTextChanged = MkFunc0(OnFavFilterTextChanged, win);
     SetWindowSubclass(filterEdit->hwnd, WndProcFavFilterEdit, NextSubclassId(), (DWORD_PTR)win);
 
-    auto treeView = new TreeView();
+    auto* treeView = new TreeView();
     TreeView::CreateArgs args;
     args.parent = win->hwndFavBox;
     args.font = GetAppTreeFont(win->hwndFrame);
@@ -1497,7 +1497,7 @@ void CreateFavorites(MainWindow* win) {
 
     // stack label, filter edit and tree vertically; the tree flexes to fill
     // the remaining height. The VBox owns these controls/spacer (freed in ~MainWindow).
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(l);

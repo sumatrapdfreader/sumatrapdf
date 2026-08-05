@@ -85,7 +85,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
 
     delete gTranslationCache;
     gTranslationCache = new StrVec();
-    auto c = gTranslationCache;
+    auto* c = gTranslationCache;
     int nUntranslated = 0;
 
     Str orig;
@@ -130,7 +130,7 @@ Str GetTranslation(Str s) {
         // 0 is english, no translation needed
         return s;
     }
-    auto c = gTranslationCache;
+    auto* c = gTranslationCache;
     if (!c) {
         // translations failed to load (e.g. corrupted resource data)
         return s;

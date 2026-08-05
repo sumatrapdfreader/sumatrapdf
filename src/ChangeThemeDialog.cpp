@@ -85,7 +85,7 @@ void SafeDeleteChangeThemeDialog() {
     if (!gChangeThemeWnd) {
         return;
     }
-    auto tmp = gChangeThemeWnd;
+    auto* tmp = gChangeThemeWnd;
     gChangeThemeWnd = nullptr;
     delete tmp;
 }
@@ -232,7 +232,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
 
     bool isRtl = IsUIRtl();
 
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
@@ -242,7 +242,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.font = font;
         args.isRtl = isRtl;
-        auto c = new ListBox();
+        auto* c = new ListBox();
         c->Create(args);
         listBox = c;
         model = new ListBoxModelStrings();
@@ -264,7 +264,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.font = font;
         args.text = _TRA("Document colors follow theme");
         args.isRtl = isRtl;
-        auto c = new Static();
+        auto* c = new Static();
         c->SetInsetsPt(8, 0, 0, 0);
         c->Create(args);
         staticDocumentColorsFollowTheme = c;
@@ -276,7 +276,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.font = font;
         args.isRtl = isRtl;
-        auto c = new DropDown();
+        auto* c = new DropDown();
         c->SetInsetsPt(4, 0, 0, 0);
         c->Create(args);
         c->SetItemsSeqStrings(gDocumentColorsFollowThemeNames);
@@ -287,7 +287,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        auto hbox = new HBox();
+        auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
@@ -304,7 +304,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(hbox);
     }
 
-    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
     int dx = DpiScale(hwnd, 280);
@@ -325,7 +325,7 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
         HwndSetFocus(gChangeThemeWnd->hwnd);
         return;
     }
-    auto wnd = new ChangeThemeWnd();
+    auto* wnd = new ChangeThemeWnd();
     wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
     wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);

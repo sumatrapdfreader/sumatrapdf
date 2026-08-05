@@ -144,7 +144,7 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
-        auto ts = new TextSearch(engine);
+        auto* ts = new TextSearch(engine);
         ts->SetDirection(TextSearch::Direction::Forward);
         ts->SetMatchCase(false);
         TextSel* sel = ts->FindFirst(1, needle);

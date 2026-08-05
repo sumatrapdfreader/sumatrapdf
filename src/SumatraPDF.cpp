@@ -518,7 +518,7 @@ void SelectTabInWindow(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    auto win = tab->win;
+    auto* win = tab->win;
     if (tab == win->CurrentTab()) {
         return;
     }
@@ -612,7 +612,7 @@ MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab) {
     for (MainWindow* win : gWindows) {
         Vec<Rect> rects;
         int page;
-        auto dm = win->AsFixed();
+        auto* dm = win->AsFixed();
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
@@ -1074,7 +1074,7 @@ static void ThumbnailRenderFinished(ThumbnailRenderData* d, PageRenderRequest* r
 }
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered* saveThumbnail) {
-    auto engine = dm->GetEngine();
+    auto* engine = dm->GetEngine();
     RectF pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
         // saveThumbnail must always be called for clean-up code
@@ -1828,7 +1828,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     if (!mdInFixedUI && !engine) {
         FileType kind = GuessFileTypeFromName(path);
         if (MarkdownModel::IsSupportedFileType(kind)) {
-            auto mdCtrl = CreateControllerForMarkdown(path, win);
+            auto* mdCtrl = CreateControllerForMarkdown(path, win);
             if (mdCtrl) {
                 gMostRecentlyOpenedDoc = mdCtrl;
                 return mdCtrl;
@@ -1841,7 +1841,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     }
     if (!engine) {
         // as a last resort, try to open as chm file
-        auto ctrl = CreateControllerForChm(path, pwdUI, win);
+        auto* ctrl = CreateControllerForChm(path, pwdUI, win);
         gMostRecentlyOpenedDoc = ctrl;
         return ctrl;
     }
@@ -2775,7 +2775,7 @@ void DeleteMainWindow(MainWindow* win) {
 }
 
 void UpdateAfterThemeChange() {
-    for (auto win : gWindows) {
+    for (auto* win : gWindows) {
         DeleteObject(win->brControlBgColor);
         win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
 
@@ -3074,7 +3074,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         return win;
     }
 
-    auto currTab = win->CurrentTab();
+    auto* currTab = win->CurrentTab();
     currTab->loadState = WindowTab::LoadState::None;
     currTab->loadCopyBytesCopied = -1;
     currTab->loadCopyBytesTotal = 0;
@@ -3329,7 +3329,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     AutoDelete delData(d);
     OnLoadDocumentThreadFinished();
 
-    auto args = d->args;
+    auto* args = d->args;
     Str path = args->FilePath();
     EndDocumentLoad(path);
     MainWindow* win = args->win;
@@ -3436,7 +3436,7 @@ static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
 // are in CreateEngineFromFile (ASan heap-use-after-free on win->cbHandler).
 // DisplayModel is built on the UI thread in LoadDocumentAsyncFinish.
 static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
-    auto args = d->args;
+    auto* args = d->args;
     AtomicIntInc(&gDangerousThreadCount);
     Str path = args->FilePath();
     EngineBase* engine = args->engine;
@@ -3600,7 +3600,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         }
     }
 
-    auto data = new LoadDocumentAsyncData;
+    auto* data = new LoadDocumentAsyncData;
     data->args = args;
     StartOrQueueLoadDocument(data);
 }
@@ -4232,7 +4232,7 @@ struct ShowErrorData {
 };
 
 static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
-    auto tab = d->tab;
+    auto* tab = d->tab;
     auto path = d->path;
     ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, err);
 }
@@ -4393,7 +4393,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     // a reference to deleted Engine
     bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
 
-    auto win = tab->win;
+    auto* win = tab->win;
     UpdateTabFileDisplayStateForTab(tab);
     CloseDocumentInCurrentTab(win, true, true);
     HwndSetFocus(win->hwndFrame);
@@ -5840,7 +5840,7 @@ again:
     UpdateTabFileDisplayStateForTab(tab);
     // load on a background thread; if the file fails to load, the
     // callback marks it as failed and advances to the next/prev file
-    auto d = new NextPrevFileInFolderData;
+    auto* d = new NextPrevFileInFolderData;
     d->win = win;
     d->forward = forward;
     d->path = str::Dup(path);
@@ -7598,7 +7598,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
     if (!dm) {
         return nullptr;
     }
-    auto engine = dm->GetEngine();
+    auto* engine = dm->GetEngine();
     bool supportsAnnots = EngineSupportsAnnotations(engine);
     MainWindow* win = tab->win;
     bool ok = supportsAnnots && win->showSelection && tab->selectionOnPage;
@@ -7665,7 +7665,7 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
     if (!win->AsFixed()) {
         return;
     }
-    auto notif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
+    auto* notif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
     if (!notif) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
@@ -8333,7 +8333,7 @@ static void ListPrintersShowResult(ListPrintersResult* d) {
 static void ListPrintersThread(HWND* hwndPtr) {
     str::Builder out;
     GetPrintersInfo(out);
-    auto d = new ListPrintersResult;
+    auto* d = new ListPrintersResult;
     d->hwndParent = *hwndPtr;
     d->text = str::Dup(ToStr(out));
     delete hwndPtr;
@@ -8422,7 +8422,7 @@ static void ClearHistory(MainWindow* win) {
     args.timeoutMs = kNotif5SecsTimeOut;
     args.msg = _TRA("Clearing history...");
     ShowNotification(args);
-    auto data = new ClearHistoryData;
+    auto* data = new ClearHistoryData;
     data->win = win;
     data->nFiles = nFiles;
     auto fn = MkFunc0<ClearHistoryData>(ClearHistoryAsync, data);
@@ -8677,7 +8677,7 @@ static bool EnsureManualArchiveLoaded() {
         logf("EnsureManualArchiveLoaded(): LockDataResource() failed\n");
         return false;
     }
-    auto data = gManualArchiveData.data;
+    const auto* data = gManualArchiveData.data;
     auto size = gManualArchiveData.dataSize;
     ok = lzma::ParseSimpleArchive(data, size, &gManualArchive);
     if (!ok) {
@@ -8780,17 +8780,17 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
     args.copyToClipboard = GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false);
     args.setContentToSelection = GetCommandBoolArg(cmd, kCmdArgSetContent, false);
 
-    auto col = GetCommandArg(cmd, kCmdArgColor);
+    auto* col = GetCommandArg(cmd, kCmdArgColor);
     if (col && col->colorVal.parsedOk) {
         args.col = col->colorVal;
     }
 
-    auto bgCol = GetCommandArg(cmd, kCmdArgBgColor);
+    auto* bgCol = GetCommandArg(cmd, kCmdArgBgColor);
     if (bgCol && bgCol->colorVal.parsedOk) {
         args.bgCol = bgCol->colorVal;
     }
 
-    auto interiorCol = GetCommandArg(cmd, kCmdArgInteriorColor);
+    auto* interiorCol = GetCommandArg(cmd, kCmdArgInteriorColor);
     if (interiorCol && interiorCol->colorVal.parsedOk) {
         args.interiorCol = interiorCol->colorVal;
     }
@@ -9217,7 +9217,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             nargs.hwndParent = win->hwndCanvas;
             nargs.msg = _TRA("Collecting list of printers");
             ShowNotification(nargs);
-            auto data = new HWND(win->hwndCanvas);
+            auto* data = new HWND(win->hwndCanvas);
             RunAsync(MkFunc0<HWND>(ListPrintersThread, data), "ListPrinters");
             break;
         }
@@ -9961,7 +9961,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDebugToggleRtl:
             gForceRtl = !gForceRtl;
-            for (auto w : gWindows) {
+            for (auto* w : gWindows) {
                 UpdateWindowRtlLayout(w);
             }
             break;
@@ -12782,7 +12782,7 @@ void ShowCrashHandlerMessage() {
         return;
     }
     LaunchFileIfExists(gCrashFilePath);
-    auto url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
+    const auto* url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
     LaunchFileShell(url, nullptr, "open");
 }
 

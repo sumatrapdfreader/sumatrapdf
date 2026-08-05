@@ -1195,7 +1195,7 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
 static LRESULT CALLBACK WndProcParent2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
                                        DWORD_PTR data) {
-    auto win = reinterpret_cast<HtmlWindow*>(data);
+    auto* win = reinterpret_cast<HtmlWindow*>(data);
     return WndProcParent(hwnd, msg, wp, lp, win);
 }
 
@@ -1216,7 +1216,7 @@ void HtmlWindow::UnsubclassHwnd() {
         return;
     }
     RemoveWindowSubclass(hwndParent, WndProcParent2, subclassId);
-    auto curr = (HtmlWindow*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
+    auto* curr = (HtmlWindow*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
     if (curr == this) {
         SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
     }
@@ -1361,12 +1361,12 @@ HtmlWindow* HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback* cb) {
 
 HtmlWindow::~HtmlWindow() {
     UnsubclassHwnd();
-    auto inPlaceObj = oleInPlaceObject;
-    auto cp = connectionPoint;
-    auto obj = oleObject;
-    auto view = viewObject;
-    auto content = htmlContent;
-    auto browser = webBrowser;
+    auto* inPlaceObj = oleInPlaceObject;
+    auto* cp = connectionPoint;
+    auto* obj = oleObject;
+    auto* view = viewObject;
+    auto* content = htmlContent;
+    auto* browser = webBrowser;
     oleInPlaceObject = nullptr;
     connectionPoint = nullptr;
     oleObject = nullptr;

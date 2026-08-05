@@ -238,7 +238,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     DisplayModel* dm = req.dm;
     // free an invisible page of the same DisplayModel ...
     for (int i = 0; i < n; i++) {
-        auto entry = rc->cache[i];
+        auto* entry = rc->cache[i];
         if (entry->dm == dm && !dm->PageVisibleNearby(entry->pageNo)) {
             bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
             if (didDrop) {
@@ -249,7 +249,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
 
     // ... or just the oldest cached page
     for (int i = 0; i < n; i++) {
-        auto entry = rc->cache[i];
+        auto* entry = rc->cache[i];
         if (entry->dm == dm) {
             // don't free pages from the document we're currently displaying
             // as it leads to flicker
@@ -285,7 +285,7 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     }
 
     // Copy the PageRenderRequest as it will be reused
-    auto entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
+    auto* entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
     entry->darkModeEpoch = darkModeEpoch;
     entry->cacheIdx = cacheCount;
     cache[cacheCount] = entry;
@@ -437,7 +437,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
 
     RectF mediabox = dm->GetEngine()->PageMediabox(pageNo);
     for (int i = 0; i < cacheCount; i++) {
-        auto e = cache[i];
+        auto* e = cache[i];
         if (e->dm == dm && e->pageNo == pageNo && !GetTileRect(mediabox, e->tile).Intersect(rect).IsEmpty()) {
             e->zoom = kInvalidZoom;
             e->outOfDate = true;
@@ -447,7 +447,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
 
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
-    auto engine = dm->GetEngine();
+    auto* engine = dm->GetEngine();
     RectF mediabox = engine->PageMediabox(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
     float zoomVirt = dm->GetZoomVirtual();
@@ -483,7 +483,7 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
     ScopedRecursiveMutex scope(&cacheAccess);
     USHORT maxRes = 0;
     for (int i = 0; i < cacheCount; i++) {
-        auto e = cache[i];
+        auto* e = cache[i];
         if (e->dm == dm && e->pageNo == pageNo && e->rotation == rotation) {
             maxRes = std::max(e->tile.res, maxRes);
         }
@@ -1486,7 +1486,7 @@ void RenderCache::UpdateRenderInfo() {
     SerializeQueueState(s);
     // marshal to the UI thread: updating the window from a render thread while
     // holding requestAccess could deadlock if the UI thread is blocked on it
-    auto dup = new Str(str::Dup(ToStr(s)));
+    auto* dup = new Str(str::Dup(ToStr(s)));
     auto fn = MkFunc0<Str>(SetRenderInfoTextOnUI, dup);
     uitask::Post(fn, "RenderInfo");
 }
@@ -1609,7 +1609,7 @@ void RenderCache::UpdateCacheInfo() {
     }
     str::Builder s;
     SerializeCacheState(s);
-    auto dup = new Str(str::Dup(ToStr(s)));
+    auto* dup = new Str(str::Dup(ToStr(s)));
     auto fn = MkFunc0<Str>(SetCacheInfoTextOnUI, dup);
     uitask::Post(fn, "CacheInfo");
 }

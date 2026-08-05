@@ -1037,7 +1037,7 @@ void SelectionTranslateWnd::StartTranslation() {
         Relayout();
     }
 
-    auto task = new SelectionTranslateTaskData();
+    auto* task = new SelectionTranslateTaskData();
     task->hwndDlg = hwnd;
     task->backend = backend;
     task->srcLang = str::Dup(srcLang);
@@ -1086,7 +1086,7 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
         result = str::Dup(_TRA("Translation failed."));
     }
 
-    auto done = new SelectionTranslateDoneData();
+    auto* done = new SelectionTranslateDoneData();
     done->hwndDlg = data->hwndDlg;
     done->ok = ok;
     done->msg = result;

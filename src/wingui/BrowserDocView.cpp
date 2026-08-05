@@ -379,7 +379,7 @@ void BrowserDocView::UnsubclassParent() {
         return;
     }
     RemoveWindowSubclass(hwndParent, ParentWndProc, subclassId);
-    auto curr = (BrowserDocView*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
+    auto* curr = (BrowserDocView*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
     if (curr == this) {
         SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
     }

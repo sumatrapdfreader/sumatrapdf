@@ -29,7 +29,7 @@ static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
     if (IsExternalUrl(url)) {
         dest = new PageDestinationURL(url);
     } else {
-        auto pdest = new PageDestination();
+        auto* pdest = new PageDestination();
         pdest->kind = kindDestinationScrollTo;
         pdest->name = str::Dup(url);
         dest = pdest;
@@ -41,7 +41,7 @@ static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
 }
 
 static TocItem* NewChmTocItem(TocItem* parent, Str title, int pageNo, Str url) {
-    auto res = AllocTocItem(nullptr, title, pageNo);
+    auto* res = AllocTocItem(nullptr, title, pageNo);
     res->parent = parent;
     res->dest = NewChmNamedDest(url, pageNo);
     return res;
@@ -259,7 +259,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
             // TODO: optimize, create just destination
-            auto item = NewChmTocItem(nullptr, nullptr, 0, pageUrl);
+            auto* item = NewChmTocItem(nullptr, nullptr, 0, pageUrl);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -651,7 +651,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     // instead pass the URL to the system's default browser
     if (url && cb) {
         // TODO: optimize, create just destination
-        auto item = NewChmTocItem(nullptr, nullptr, 1, url);
+        auto* item = NewChmTocItem(nullptr, nullptr, 1, url);
         cb->GotoLink(item->dest);
         FreeTocItemRec(nullptr, item);
     }
@@ -842,7 +842,7 @@ TocTree* ChmModel::GetToc() {
     if (!foundRoot) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;

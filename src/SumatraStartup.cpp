@@ -88,7 +88,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
         return false;
     }
 
-    auto hwndFrame = win->hwndFrame;
+    auto* hwndFrame = win->hwndFrame;
 
     // first SetParent as top-level window (may fail but primes the window manager)
     SetParent(hwndFrame, hwndParent);
@@ -138,7 +138,7 @@ static bool RegisterWinClass() {
 }
 
 static bool InstanceInit() {
-    auto h = GetModuleHandleA(nullptr);
+    auto* h = GetModuleHandleA(nullptr);
     gCursorDrag = LoadCursor(h, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gBitmapReloadingCue = LoadBitmap(h, MAKEINTRESOURCE(IDB_RELOADING_CUE));
     return true;
@@ -373,7 +373,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
         return;
     }
 
-    auto win = tab->win;
+    auto* win = tab->win;
     DocController* ctrl = tab->ctrl;
     DisplayModel* dm = tab->AsFixed();
 
@@ -1377,7 +1377,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
         printf("%s", corruptedInstallationConsole.s);
     }
 
-    auto title = L"SumatraPDF installer";
+    const auto* title = L"SumatraPDF installer";
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -2683,7 +2683,7 @@ ContinueOpenWindow:
 
     for (Str path : flags.fileNames) {
         if (restoreSession) {
-            auto tab = FindTabByFile(path);
+            auto* tab = FindTabByFile(path);
             if (tab) {
                 tabToSelect = tab;
                 if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
@@ -2700,7 +2700,7 @@ ContinueOpenWindow:
         // or already be mid-load from a reuseInstance open that arrived during
         // an earlier password dialog.
         if (IsDocumentOpenOrLoading(path)) {
-            if (auto existing = FindMainWindowByFile(path, true)) {
+            if (auto* existing = FindMainWindowByFile(path, true)) {
                 win = existing;
                 tabToSelect = FindTabByFile(path);
             }

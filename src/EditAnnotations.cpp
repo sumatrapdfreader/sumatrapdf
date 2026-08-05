@@ -356,7 +356,7 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
     if (!tab->editAnnotsWindow) {
         return false;
     }
-    auto ew = tab->editAnnotsWindow;
+    auto* ew = tab->editAnnotsWindow;
     FlushContentsFromEdit(ew);
     tab->editAnnotsWindow = nullptr;
     // this will trigger closing the window
@@ -426,13 +426,13 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
 }
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
-    auto model = new ListBoxModelStrings();
+    auto* model = new ListBoxModelStrings();
     int n = 0;
     n = len(ew->annotations);
 
     str::Builder s;
     for (int i = 0; i < n; i++) {
-        auto annot = ew->annotations[i];
+        auto* annot = ew->annotations[i];
         s.Reset();
         s.Append(fmt(_TRA("page %d,").s, annot->pageNo));
         Str name = AnnotationReadableNameTemp(annot->type);
@@ -487,7 +487,7 @@ static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
 // Destroy(); we own teardown via the scheduled delete (which runs ~Wnd and
 // DestroyWindow).
 static void OnClose(Wnd::CloseEvent* ev) {
-    auto w = (EditAnnotationsWindow*)ev->e->self;
+    auto* w = (EditAnnotationsWindow*)ev->e->self;
     FlushContentsFromEdit(w);
     ScheduleDeleteEditAnnotationsWindow(w);
 }
@@ -496,7 +496,7 @@ static void OnClose(Wnd::CloseEvent* ev) {
 // deletes; only schedule if this is an unexpected destroy with the pointer
 // still set.
 static void OnDestroy(Wnd::DestroyEvent* ev) {
-    auto w = (EditAnnotationsWindow*)ev->e->self;
+    auto* w = (EditAnnotationsWindow*)ev->e->self;
     if (w->tab && w->tab->editAnnotsWindow == w) {
         ScheduleDeleteEditAnnotationsWindow(w);
     }
@@ -757,7 +757,7 @@ static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextAlignmentSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -785,7 +785,7 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -813,7 +813,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSizeChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -836,7 +836,7 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -862,7 +862,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void BorderWidthChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -892,7 +892,7 @@ static void DoLineStartEnd(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -906,7 +906,7 @@ static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
 }
 
 static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -950,7 +950,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void IconSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -979,7 +979,7 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -1002,7 +1002,7 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -1035,7 +1035,7 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -1268,7 +1268,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     // but not do the rest of the logic as it triggers infinite loop
     // TODO: maybe if we already have selected annotation, do not auto-pick
     MainWindow* win = tab->win;
-    auto ew = tab->editAnnotsWindow;
+    auto* ew = tab->editAnnotsWindow;
     if (annot == tab->selectedAnnotation) {
         MainWindowRerender(win);
         if (ew) {
@@ -1296,7 +1296,7 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     if (!ew) {
         return;
     }
-    auto engine = GetEngineMupdf(ew);
+    auto* engine = GetEngineMupdf(ew);
     EngineMupdfGetAnnotations(engine, ew->annotations);
     RebuildAnnotationsListBox(ew);
 }
@@ -1388,7 +1388,7 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
 }
 
 static Static* CreateStatic(HWND parent, Str s = nullptr) {
-    auto w = new Static();
+    auto* w = new Static();
     Static::CreateArgs args;
     args.parent = parent;
     args.text = s;
@@ -1401,7 +1401,7 @@ static Static* CreateStatic(HWND parent, Str s = nullptr) {
 
 static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HWND parent = ew->hwnd;
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     HFONT fnt = GetAppFont(parent);
@@ -1412,10 +1412,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.idealSizeLines = 5;
         args.font = fnt;
         args.isRtl = IsUIRtl();
-        auto w = new ListBox();
+        auto* w = new ListBox();
         w->SetInsetsPt(4, 0);
         w->Create(args);
-        auto lbModel = new ListBoxModelStrings();
+        auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
         w->onSelectionChanged = MkFunc0(ListBoxSelectionChanged, ew);
         ew->listBox = w;
@@ -1423,13 +1423,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic(parent);
         ew->staticRect = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic(parent);
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
         ew->staticAuthor = w;
@@ -1437,19 +1437,19 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic(parent);
         ew->staticModificationDate = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic(parent);
         ew->staticPopup = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Contents:"));
+        auto* w = CreateStatic(parent, _TRA("Contents:"));
         ew->staticContents = w;
         w->SetInsetsPt(4, 0, 0, 0);
         vbox->AddChild(w);
@@ -1462,7 +1462,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.idealSizeLines = 5;
         args.font = fnt;
         args.isRtl = IsUIRtl();
-        auto w = new Edit();
+        auto* w = new Edit();
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
         w->maxDx = 150;
@@ -1475,7 +1475,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Alignment:"));
+        auto* w = CreateStatic(parent, _TRA("Text Alignment:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticTextAlignment = w;
         vbox->AddChild(w);
@@ -1487,7 +1487,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1498,7 +1498,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Font:"));
+        auto* w = CreateStatic(parent, _TRA("Text Font:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticTextFont = w;
         vbox->AddChild(w);
@@ -1509,7 +1509,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.parent = parent;
         args.font = fnt;
         args.isRtl = IsUIRtl();
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
 
         w->Create(args);
@@ -1520,7 +1520,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Size:"));
+        auto* w = CreateStatic(parent, _TRA("Text Size:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticTextSize = w;
         vbox->AddChild(w);
@@ -1534,7 +1534,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Trackbar();
+        auto* w = new Trackbar();
         w->SetInsetsPt(4, 0, 0, 0);
 
         w->Create(args);
@@ -1545,7 +1545,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Color:"));
+        auto* w = CreateStatic(parent, _TRA("Text Color:"));
         ew->staticTextColor = w;
         vbox->AddChild(w);
     }
@@ -1556,7 +1556,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1567,7 +1567,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Line Start:"));
+        auto* w = CreateStatic(parent, _TRA("Line Start:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticLineStart = w;
         vbox->AddChild(w);
@@ -1579,7 +1579,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1589,7 +1589,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Line End:"));
+        auto* w = CreateStatic(parent, _TRA("Line End:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticLineEnd = w;
         vbox->AddChild(w);
@@ -1601,7 +1601,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1611,7 +1611,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Icon:"));
+        auto* w = CreateStatic(parent, _TRA("Icon:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticIcon = w;
         vbox->AddChild(w);
@@ -1623,7 +1623,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1633,7 +1633,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, "Border:");
+        auto* w = CreateStatic(parent, "Border:");
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticBorder = w;
         vbox->AddChild(w);
@@ -1647,7 +1647,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Trackbar();
+        auto* w = new Trackbar();
         w->Create(args);
         w->onPositionChanging = MkFunc1(BorderWidthChanging, ew);
         ew->trackbarBorder = w;
@@ -1655,7 +1655,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Color:"));
+        auto* w = CreateStatic(parent, _TRA("Color:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticColor = w;
         vbox->AddChild(w);
@@ -1667,7 +1667,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
         w->SetItemsSeqStrings(gColors);
@@ -1677,7 +1677,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Interior Color:"));
+        auto* w = CreateStatic(parent, _TRA("Interior Color:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticInteriorColor = w;
         vbox->AddChild(w);
@@ -1689,7 +1689,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1700,7 +1700,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Opacity:"));
+        auto* w = CreateStatic(parent, _TRA("Opacity:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticOpacity = w;
         vbox->AddChild(w);
@@ -1714,7 +1714,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Trackbar();
+        auto* w = new Trackbar();
         w->Create(args);
 
         w->onPositionChanging = MkFunc1(OpacityChanging, ew);
@@ -1729,7 +1729,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Button();
+        auto* w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
@@ -1746,7 +1746,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Button();
+        auto* w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
@@ -1763,7 +1763,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Button();
+        auto* w = new Button();
         w->SetInsetsPt(11, 0, 0, 0);
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
@@ -1775,7 +1775,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         // used to take all available space between the what's above and below
-        auto w = new Spacer(0, 0);
+        auto* w = new Spacer(0, 0);
         vbox->AddChild(w, 1);
     }
 
@@ -1787,7 +1787,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Button();
+        auto* w = new Button();
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
 
@@ -1804,7 +1804,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Button();
+        auto* w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
@@ -1815,7 +1815,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         vbox->AddChild(w);
     }
 
-    auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
     ew->mainLayout = padding;
     HidePerAnnotControls(ew);
 }
@@ -1839,7 +1839,7 @@ static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative,
 
 void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus focus) {
     if (!tab) return;
-    auto engine = tab->GetEngine();
+    auto* engine = tab->GetEngine();
     auto canAnnotate = EngineSupportsAnnotations(engine);
     if (!canAnnotate) {
         ReportDebugIf(true);

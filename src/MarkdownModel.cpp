@@ -101,7 +101,7 @@ static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
     if (IsMarkdownExternalUrl(url)) {
         dest = new PageDestinationURL(url);
     } else {
-        auto pdest = new PageDestination();
+        auto* pdest = new PageDestination();
         pdest->kind = kindDestinationScrollTo;
         pdest->name = str::Dup(url);
         dest = pdest;
@@ -112,7 +112,7 @@ static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
 }
 
 static TocItem* NewMarkdownTocItem(TocItem* parent, Str title, int pageNo, Str url) {
-    auto res = AllocTocItem(nullptr, title, pageNo);
+    auto* res = AllocTocItem(nullptr, title, pageNo);
     res->parent = parent;
     res->dest = NewMarkdownNamedDest(url, pageNo);
     return res;
@@ -347,7 +347,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
     pageUrl = str::DupTemp(pageUrl);
     if (IsMarkdownExternalUrl(pageUrl)) {
         if (cb) {
-            auto item = NewMarkdownTocItem(nullptr, nullptr, 1, pageUrl);
+            auto* item = NewMarkdownTocItem(nullptr, nullptr, 1, pageUrl);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -606,7 +606,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
         return false;
     }
     if (url && cb) {
-        auto item = NewMarkdownTocItem(nullptr, nullptr, 1, url);
+        auto* item = NewMarkdownTocItem(nullptr, nullptr, 1, url);
         cb->GotoLink(item->dest);
         FreeTocItemRec(nullptr, item);
     }
@@ -822,7 +822,7 @@ bool MarkdownModel::Load(Str fileName) {
     }
 
     if (foundRoot) {
-        auto realRoot = AllocTocItem(nullptr, {}, 0);
+        auto* realRoot = AllocTocItem(nullptr, {}, 0);
         realRoot->child = root;
         tocTree = new TocTree(realRoot);
     }

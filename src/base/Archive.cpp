@@ -298,7 +298,7 @@ Vec<Archive::FileInfo*> const& Archive::GetFileInfos() {
 }
 
 static int getFileIdByName(Vec<Archive::FileInfo*>& fileInfos, Str name) {
-    for (auto fileInfo : fileInfos) {
+    for (auto* fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
         }

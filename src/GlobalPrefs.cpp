@@ -24,7 +24,7 @@ void DeleteFileState(FileState* fs) {
 }
 
 void DeleteFileStates(Vec<FileState*>* a) {
-    for (auto fs : *a) {
+    for (auto* fs : *a) {
         DeleteFileState(fs);
     }
     delete a;

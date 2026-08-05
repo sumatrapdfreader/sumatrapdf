@@ -524,7 +524,7 @@ int VBox::MinIntrinsicHeight(int width) {
     }
     auto size = children[0].layout->MinIntrinsicHeight(width);
     if (IsPacked(alignMain)) {
-        auto previous = children[0].layout;
+        auto* previous = children[0].layout;
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
             // Add the preferred gap between this pair of widgets
@@ -881,7 +881,7 @@ int HBox::MinIntrinsicWidth(int height) {
     }
 
     for (int i = 1; i < n; i++) {
-        auto l = children[i].layout;
+        auto* l = children[i].layout;
         if (IsCollapsed(l)) {
             continue;
         }
@@ -913,7 +913,7 @@ void HBox::SetBounds(Rect bounds) {
         auto count = i64(n);
 
         for (int i = 0; i < n; i++) {
-            auto v = children[i].layout;
+            auto* v = children[i].layout;
             auto x1 = bounds.x + Scale(dx, i, count);
             auto x2 = bounds.x + Scale(dx, i + 1, count) - gap;
             SetBoundsForChild(i, v, x1, bounds.y, x2, bounds.Bottom());
@@ -1170,7 +1170,7 @@ TableLayout::TableLayout() {
 TableLayout::~TableLayout() {
     int n = rows * cols;
     for (int i = 0; i < n; i++) {
-        auto child = cells[i].child;
+        auto* child = cells[i].child;
         delete child;
     }
     free(cells);
@@ -1255,6 +1255,6 @@ void TableLayout::SetCell(int row, int col, ILayout* el) {
 
 ILayout* TableLayout::GetCell(int row, int col) {
     int idx = CellIdx(row, col);
-    auto child = cells[idx].child;
+    auto* child = cells[idx].child;
     return child;
 }

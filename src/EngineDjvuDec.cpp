@@ -84,25 +84,25 @@ static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
     if (!link || str::Eq(link, StrL("#"))) {
         return nullptr;
     }
-    auto res = new PageDestinationDjvuDec(link, comment);
+    auto* res = new PageDestinationDjvuDec(link, comment);
     res->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
     res->pageNo = ParseDjvuDecLink(link);
     return res;
 }
 
 static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, Str link, Str comment) {
-    auto dest = NewDjvuDecDestination(link, comment);
+    auto* dest = NewDjvuDecDestination(link, comment);
     if (!dest) {
         return nullptr;
     }
-    auto res = new PageElementDestination(dest);
+    auto* res = new PageElementDestination(dest);
     res->rect = ToRectF(rect);
     res->pageNo = pageNo;
     return res;
 }
 
 static TocItem* NewDjvuDecTocItem(TocItem* parent, Str title, Str link) {
-    auto res = AllocTocItem(nullptr, title, 0);
+    auto* res = AllocTocItem(nullptr, title, 0);
     res->parent = parent;
     res->dest = NewDjvuDecDestination(link, {});
     if (res->dest) {
@@ -350,7 +350,7 @@ bool EngineDjvuDec::FinishLoading() {
     }
 
     for (int i = 0; i < pageCount; i++) {
-        auto pi = new DjvuDecPageInfo();
+        auto* pi = new DjvuDecPageInfo();
         djvu_page_info info{};
         RectF mbox(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI()); // fallback: letter size
         if (djvu_doc_page_info(doc, i, &info) == 0) {
@@ -654,7 +654,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    auto pi = pages[pageNo - 1];
+    auto* pi = pages[pageNo - 1];
     int subsample = DjvuDecPickSubsample(pi->uprightW, pi->uprightH, full.dx, full.dy);
     // The decoder applies the page's intrinsic rotation at every subsample (via
     // a fast tiled transpose) and djvu_page_render_info already reports the
@@ -797,7 +797,7 @@ static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
 
 Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > PageCount());
-    auto pi = pages[pageNo - 1];
+    auto* pi = pages[pageNo - 1];
     if (pi->gotElements) {
         return pi->allElements;
     }
@@ -825,7 +825,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
         if (!link) {
             link = url;
         }
-        auto el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));
+        auto* el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));
         if (el) {
             els.Append(el);
         }
@@ -838,7 +838,7 @@ IPageElement* EngineDjvuDec::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
     int n = len(els);
     for (int i = n - 1; i >= 0; i--) {
-        auto el = els[i];
+        auto* el = els[i];
         if (el->GetRect().Contains(pt)) {
             return el;
         }
@@ -850,7 +850,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
     if (dest->GetKind() != kindDestinationDjVu) {
         return false;
     }
-    auto ddest = (PageDestinationDjvuDec*)dest;
+    auto* ddest = (PageDestinationDjvuDec*)dest;
     Str link = ddest->link;
     if (str::Eq(link, StrL("#+1"))) {
         linkHandler->GoToNextPage();
@@ -935,7 +935,7 @@ TocTree* EngineDjvuDec::GetToc() {
     if (!rootItem) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = rootItem;
     tocTree = new TocTree(realRoot);
     return tocTree;

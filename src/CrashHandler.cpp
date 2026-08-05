@@ -697,7 +697,7 @@ static void GetOsVersion(str::Builder& s) {
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     int buildNumber = (int)ver.dwBuildNumber & 0xFFFF;
-    auto arch = "64-bit";
+    const auto* arch = "64-bit";
     if (IsProcess32()) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
@@ -712,7 +712,7 @@ static void GetOsVersion(str::Builder& s) {
 }
 
 static void GetProcessorName(str::Builder& s) {
-    auto key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
+    const auto* key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
     TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
         // if more than one processor

@@ -247,7 +247,7 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         if (!IsSpecialColor(bgColor)) {
             SetBkColor(hdc, bgColor);
         }
-        auto br = BackgroundBrush();
+        auto* br = BackgroundBrush();
         return (LRESULT)br;
     }
 

@@ -892,7 +892,7 @@ int GetCommandIdByDesc(Str cmdDesc) {
     if (cmdId >= 0) {
         return cmdId;
     }
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->name && str::EqI(cmdDesc, curr->name)) {
             return curr->id;
@@ -1061,7 +1061,7 @@ CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* ar
 #endif
     }
     NormalizeCommandNameAndKey(definition, &name, &key);
-    auto cmd = AllocCustomCommand(definition, name, key);
+    auto* cmd = AllocCustomCommand(definition, name, key);
     cmd->id = id;
     cmd->origId = origCmdId;
     cmd->firstArg = args;
@@ -1074,7 +1074,7 @@ static CommandArg* CopyCommandArgs(CommandArg* first) {
     CommandArg* res = nullptr;
     CommandArg** tail = &res;
     for (CommandArg* curr = first; curr; curr = curr->next) {
-        auto arg = AllocCommandArg(curr->name, curr->strVal);
+        auto* arg = AllocCommandArg(curr->name, curr->strVal);
         arg->type = curr->type;
         arg->boolVal = curr->boolVal;
         arg->intVal = curr->intVal;
@@ -1094,7 +1094,7 @@ static CommandArg* CopyCommandArgs(CommandArg* first) {
 // settings entry (not copied from cmd).
 CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name, Str key) {
     NormalizeCommandNameAndKey(cmd->definition, &name, &key);
-    auto res = AllocCustomCommand(cmd->definition, name, key);
+    auto* res = AllocCustomCommand(cmd->definition, name, key);
     res->id = gNextCustomCommandId++;
     res->origId = cmd->origId;
     res->firstArg = CopyCommandArgs(cmd->firstArg);
@@ -1104,7 +1104,7 @@ CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name, Str key) {
 }
 
 CustomCommand* FindCustomCommand(int cmdId) {
-    auto cmd = gFirstCustomCommand;
+    auto* cmd = gFirstCustomCommand;
     while (cmd) {
         if (cmd->id == cmdId) {
             return cmd;
@@ -1138,19 +1138,19 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
 }
 
 static CommandArg* NewArg(CommandArg::Type type, Str name) {
-    auto res = AllocCommandArg(name, {});
+    auto* res = AllocCommandArg(name, {});
     res->type = type;
     return res;
 }
 
 CommandArg* NewStringArg(Str name, Str val) {
-    auto res = AllocCommandArg(name, val);
+    auto* res = AllocCommandArg(name, val);
     res->type = CommandArg::Type::String;
     return res;
 }
 
 CommandArg* NewFloatArg(Str name, float val) {
-    auto res = AllocCommandArg(name, {});
+    auto* res = AllocCommandArg(name, {});
     res->type = CommandArg::Type::Float;
     res->floatVal = val;
     return res;
@@ -1165,19 +1165,19 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
             logf("parseArgOfType: invalid color value '%s'\n", val);
             return nullptr;
         }
-        auto arg = NewArg(type, argName);
+        auto* arg = NewArg(type, argName);
         arg->colorVal = col;
         return arg;
     }
 
     if (type == CommandArg::Type::Int) {
-        auto arg = NewArg(type, argName);
+        auto* arg = NewArg(type, argName);
         arg->intVal = ParseInt(val);
         return arg;
     }
 
     if (type == CommandArg::Type::String) {
-        auto arg = AllocCommandArg(argName, val);
+        auto* arg = AllocCommandArg(argName, val);
         arg->type = type;
         return arg;
     }
@@ -1212,7 +1212,7 @@ static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
 
     if (type == CommandArg::Type::Bool) {
         // a default (positional) bool, e.g. [CmdToggleFullscreen on] (issue #5067)
-        auto arg = NewArg(type, argName);
+        auto* arg = NewArg(type, argName);
         arg->boolVal = ParseBool(val) != 0; // 1 -> true, 0 -> false, -1 (unrecognized) -> true
         return arg;
     }
@@ -1261,7 +1261,7 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
             *argsInOut = {};
-            auto arg = NewArg(type, argName);
+            auto* arg = NewArg(type, argName);
             arg->boolVal = true;
             return arg;
         }
@@ -1270,7 +1270,7 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
             // name of bool arg followed by nothing is true
             str::SkipChar(rest, ' ');
             *argsInOut = rest;
-            auto arg = NewArg(type, argName);
+            auto* arg = NewArg(type, argName);
             arg->boolVal = true;
             return arg;
         }
@@ -1312,7 +1312,7 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
             b = true;
             *argsInOut = valStart;
         }
-        auto arg = NewArg(type, argName);
+        auto* arg = NewArg(type, argName);
         arg->boolVal = b;
         return arg;
     }
@@ -1341,7 +1341,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
 
     // the same command can be sent via DDE many times
     // we don't want to create duplicate CustomCommand
-    for (auto cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
+    for (auto* cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
         if (str::Eq(definition, cmd->definition)) {
             return cmd;
         }
@@ -1459,7 +1459,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         firstArg->type = CommandArg::Type::Float;
         firstArg->floatVal = zoomVal;
     }
-    auto res = CreateCustomCommand(definition, cmdId, firstArg);
+    auto* res = CreateCustomCommand(definition, cmdId, firstArg);
     return res;
 }
 
@@ -1478,7 +1478,7 @@ CommandArg* GetCommandArg(CustomCommand* cmd, Str name) {
 }
 
 int GetCommandIntArg(CustomCommand* cmd, Str name, int defValue) {
-    auto arg = GetCommandArg(cmd, name);
+    auto* arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->intVal;
     }
@@ -1486,7 +1486,7 @@ int GetCommandIntArg(CustomCommand* cmd, Str name, int defValue) {
 }
 
 bool GetCommandBoolArg(CustomCommand* cmd, Str name, bool defValue) {
-    auto arg = GetCommandArg(cmd, name);
+    auto* arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->boolVal;
     }
@@ -1494,7 +1494,7 @@ bool GetCommandBoolArg(CustomCommand* cmd, Str name, bool defValue) {
 }
 
 Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue) {
-    auto arg = GetCommandArg(cmd, name);
+    auto* arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->strVal;
     }

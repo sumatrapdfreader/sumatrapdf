@@ -132,7 +132,7 @@ u32 MurmurHash2(WStr s) {
 // variation of MurmurHash2 which deals with strings that are
 // mostly ASCII and should be treated case independently
 u32 MurmurHashWStrI(WStr str) {
-    auto a = GetTempArena();
+    auto* a = GetTempArena();
     u8* data = (u8*)a->Alloc(str.len);
     u8* dst = data;
     for (int i = 0; i < str.len; i++) {

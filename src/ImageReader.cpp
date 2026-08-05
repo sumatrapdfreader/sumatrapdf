@@ -40,7 +40,7 @@ static void fz_log_cb(void* /*user*/, const char* msg) {
 }
 
 fz_context* fz_new_context_windows(size_t maxStore) {
-    auto c = new MupdfContext();
+    auto* c = new MupdfContext();
     c->fz_locks_ctx.user = c;
     c->fz_locks_ctx.lock = fz_lock_context_cs;
     c->fz_locks_ctx.unlock = fz_unlock_context_cs;
@@ -53,7 +53,7 @@ fz_context* fz_new_context_windows(size_t maxStore) {
 }
 
 void fz_drop_context_windows(fz_context* ctx) {
-    auto c = (MupdfContext*)ctx->locks.user;
+    auto* c = (MupdfContext*)ctx->locks.user;
     ReportIf(ctx != c->ctx);
     fz_drop_context(ctx);
     delete c;
