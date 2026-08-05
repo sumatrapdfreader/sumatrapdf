@@ -336,7 +336,7 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(h, msg, wp, lp);
 }
 
-LRESULT FindBarWnd::OnNotify(int, NMHDR* nmh) {
+LRESULT FindBarWnd::OnNotify(int /*controlId*/, NMHDR* nmh) {
     if (nmh->code == TTN_GETDISPINFOW) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindBarButtonTooltip((int)nmh->idFrom);
@@ -382,7 +382,7 @@ bool FindBarWnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM) {
+bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
     int cmd = LOWORD(wparam);
     switch (cmd) {
         case CmdFindPrev:

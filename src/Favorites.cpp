@@ -59,14 +59,14 @@ struct FavTreeModel : TreeModel {
 
     TreeItem Root() override;
 
-    Str Text(TreeItem) override;
-    TreeItem Parent(TreeItem) override;
-    int ChildCount(TreeItem) override;
-    TreeItem ChildAt(TreeItem, int idx) override;
-    bool IsExpanded(TreeItem) override;
-    bool IsChecked(TreeItem) override;
-    void SetHandle(TreeItem, HTREEITEM) override;
-    HTREEITEM GetHandle(TreeItem) override;
+    Str Text(TreeItem ti) override;
+    TreeItem Parent(TreeItem ti) override;
+    int ChildCount(TreeItem ti) override;
+    TreeItem ChildAt(TreeItem ti, int idx) override;
+    bool IsExpanded(TreeItem ti) override;
+    bool IsChecked(TreeItem ti) override;
+    void SetHandle(TreeItem ti, HTREEITEM hItem) override;
+    HTREEITEM GetHandle(TreeItem ti) override;
 
     FavTreeItem* root = nullptr;
 };
@@ -109,7 +109,7 @@ bool FavTreeModel::IsExpanded(TreeItem ti) {
     return fti->isExpanded;
 }
 
-bool FavTreeModel::IsChecked(TreeItem) {
+bool FavTreeModel::IsChecked(TreeItem /*ti*/) {
     return false;
 }
 

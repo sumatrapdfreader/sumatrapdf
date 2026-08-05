@@ -607,7 +607,7 @@ int EngineBase::PageCount() const {
     return pageCount;
 }
 
-RectF EngineBase::PageContentBox(int pageNo, RenderTarget) {
+RectF EngineBase::PageContentBox(int pageNo, RenderTarget /*target*/) {
     return PageMediabox(pageNo);
 }
 
@@ -627,7 +627,7 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-IPageDestination* EngineBase::GetNamedDest(Str) {
+IPageDestination* EngineBase::GetNamedDest(Str /*name*/) {
     return nullptr;
 }
 
@@ -679,7 +679,7 @@ Str EngineBase::FilePath() const {
     return fileNameBase;
 }
 
-RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
+RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement* /*ipel*/) {
     CrashMe();
     return nullptr;
 }
@@ -694,7 +694,7 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     return rect.TL();
 }
 
-bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*) {
+bool EngineBase::HandleLink(IPageDestination* /*dest*/, ILinkHandler* /*linkHandler*/) {
     // if not implemented in derived classes
     return false;
 }

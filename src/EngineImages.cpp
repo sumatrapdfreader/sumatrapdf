@@ -107,13 +107,13 @@ class EngineImages : public EngineBase {
 
     Str GetFileData() override;
     bool SaveFileAs(Str dstPath) override;
-    PageText ExtractPageText(int) override { return {}; }
-    bool HasClipOptimizations(int) override { return false; }
+    PageText ExtractPageText(int /*pageNo*/) override { return {}; }
+    bool HasClipOptimizations(int /*pageNo*/) override { return false; }
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
-    RenderedBitmap* GetImageForPageElement(IPageElement*) override;
+    RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override;
 
     bool BenchLoadPage(int pageNo) override {
         ImagePage* page = GetPage(pageNo);
@@ -165,7 +165,7 @@ class EngineImages : public EngineBase {
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
     void DropPage(ImagePage* page, bool forceRemove);
 
-    RectF PageContentBox(int pageNo, RenderTarget) override;
+    RectF PageContentBox(int pageNo, RenderTarget target) override;
     void GetImageProperties(int pageNo, Props& propsOut);
 };
 
@@ -1401,7 +1401,7 @@ Pixmap* EngineImage::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     return frames[idx];
 }
 
-Str EngineImage::GetImageData(int) {
+Str EngineImage::GetImageData(int /*pageNo*/) {
     ScopedRecursiveMutex scope(&cacheLock);
     auto pi = pageInfos[0];
     if (len(pi->rawData) == 0) {
@@ -1411,7 +1411,7 @@ Str EngineImage::GetImageData(int) {
     return pi->rawData;
 }
 
-i64 EngineImage::GetImageByteSize(int) {
+i64 EngineImage::GetImageByteSize(int /*pageNo*/) {
     Str path = FilePath();
     if (path) {
         i64 n = file::GetSize(path);
@@ -1527,7 +1527,7 @@ class EngineImageDir : public EngineImages {
     Str GetFileData() override { return {}; }
     bool SaveFileAs(Str dstPath) override;
 
-    TempStr GetPropertyTemp(DocProp) override { return nullptr; }
+    TempStr GetPropertyTemp(DocProp /*prop*/) override { return nullptr; }
 
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
@@ -1723,7 +1723,7 @@ EngineBase* EngineImageDir::CreateFromFile(Str path) {
     return engine;
 }
 
-bool IsEngineImageDirSupportedFile(Str fileName, bool) {
+bool IsEngineImageDirSupportedFile(Str fileName, bool /*sniff*/) {
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }

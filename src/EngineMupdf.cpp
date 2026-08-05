@@ -823,7 +823,8 @@ static bool IsTrackingSpace(const fz_stext_char* prevNonSpace, const fz_stext_ch
     return gap < size * 0.1f;
 }
 
-static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
+static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects,
+                        Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
     int rune = c->c;
@@ -1969,8 +1970,8 @@ static void fz_img_collect_add(fz_context* ctx, fz_device* dev, fz_rect rect, bo
     }
 }
 
-static void fz_img_collect_fill_image(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm, float,
-                                      fz_color_params) {
+static void fz_img_collect_fill_image(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm, float /*alpha*/,
+                                      fz_color_params /*colorParams*/) {
     fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), false, image);
 }
 
@@ -1982,50 +1983,53 @@ static void fz_img_collect_fill_image(fz_context* ctx, fz_device* dev, fz_image*
 // narrowed the rect of every image drawn after it (often below the preserve
 // min size, so a full-page image stopped being preserved and got recolored)
 // and left d->top too high for the rest of the page (#5887).
-static void fz_img_collect_fill_image_mask(fz_context*, fz_device*, fz_image*, fz_matrix, fz_colorspace*, const float*,
-                                           float, fz_color_params) {}
+static void fz_img_collect_fill_image_mask(fz_context* /*ctx*/, fz_device* /*dev*/, fz_image* /*img*/,
+                                           fz_matrix /*ctm*/, fz_colorspace* /*cs*/, const float* /*color*/,
+                                           float /*alpha*/, fz_color_params /*colorParams*/) {}
 
-static void fz_img_collect_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int, fz_matrix ctm,
-                                     fz_rect) {
+static void fz_img_collect_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int /*evenOdd*/,
+                                     fz_matrix ctm, fz_rect /*scissor*/) {
     fz_img_collect_add(ctx, dev, fz_bound_path(ctx, path, nullptr, ctm), true, nullptr);
 }
 
 static void fz_img_collect_clip_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
-                                            const fz_stroke_state* stroke, fz_matrix ctm, fz_rect) {
+                                            const fz_stroke_state* stroke, fz_matrix ctm, fz_rect /*scissor*/) {
     fz_img_collect_add(ctx, dev, fz_bound_path(ctx, path, stroke, ctm), true, nullptr);
 }
 
-static void fz_img_collect_clip_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm, fz_rect) {
+static void fz_img_collect_clip_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm,
+                                     fz_rect /*scissor*/) {
     fz_img_collect_add(ctx, dev, fz_bound_text(ctx, text, nullptr, ctm), true, nullptr);
 }
 
 static void fz_img_collect_clip_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text,
-                                            const fz_stroke_state* stroke, fz_matrix ctm, fz_rect) {
+                                            const fz_stroke_state* stroke, fz_matrix ctm, fz_rect /*scissor*/) {
     fz_img_collect_add(ctx, dev, fz_bound_text(ctx, text, stroke, ctm), true, nullptr);
 }
 
-static void fz_img_collect_clip_image_mask(fz_context* ctx, fz_device* dev, fz_image*, fz_matrix ctm, fz_rect) {
+static void fz_img_collect_clip_image_mask(fz_context* ctx, fz_device* dev, fz_image* /*img*/, fz_matrix ctm,
+                                           fz_rect /*scissor*/) {
     fz_img_collect_add(ctx, dev, fz_transform_rect(fz_unit_rect, ctm), true, nullptr);
 }
 
-static void fz_img_collect_pop_clip(fz_context*, fz_device* dev) {
+static void fz_img_collect_pop_clip(fz_context* /*ctx*/, fz_device* dev) {
     fz_image_collect_device* d = (fz_image_collect_device*)dev;
     if (d->top > 0) {
         d->top--;
     }
 }
 
-static void fz_img_collect_begin_mask(fz_context* ctx, fz_device* dev, fz_rect rect, int, fz_colorspace*, const float*,
-                                      fz_color_params) {
+static void fz_img_collect_begin_mask(fz_context* ctx, fz_device* dev, fz_rect rect, int /*luminosity*/,
+                                      fz_colorspace* /*cs*/, const float* /*bc*/, fz_color_params /*colorParams*/) {
     fz_img_collect_add(ctx, dev, rect, true, nullptr);
 }
 
-static void fz_img_collect_end_mask(fz_context* ctx, fz_device* dev, fz_function*) {
+static void fz_img_collect_end_mask(fz_context* ctx, fz_device* dev, fz_function* /*fn*/) {
     fz_img_collect_pop_clip(ctx, dev);
 }
 
-static void fz_img_collect_begin_group(fz_context* ctx, fz_device* dev, fz_rect rect, fz_colorspace*, int, int, int,
-                                       float) {
+static void fz_img_collect_begin_group(fz_context* ctx, fz_device* dev, fz_rect rect, fz_colorspace* /*cs*/,
+                                       int /*isolated*/, int /*knockout*/, int /*blendmode*/, float /*alpha*/) {
     fz_img_collect_add(ctx, dev, rect, true, nullptr);
 }
 
@@ -2033,13 +2037,13 @@ static void fz_img_collect_end_group(fz_context* ctx, fz_device* dev) {
     fz_img_collect_pop_clip(ctx, dev);
 }
 
-static int fz_img_collect_begin_tile(fz_context* ctx, fz_device* dev, fz_rect area, fz_rect, float, float,
-                                     fz_matrix ctm, int, int) {
+static int fz_img_collect_begin_tile(fz_context* ctx, fz_device* dev, fz_rect area, fz_rect /*view*/, float /*xstep*/,
+                                     float /*ystep*/, fz_matrix ctm, int /*id*/, int /*docId*/) {
     fz_img_collect_add(ctx, dev, fz_transform_rect(area, ctm), false, nullptr);
     return 0;
 }
 
-static void fz_img_collect_end_tile(fz_context*, fz_device*) {}
+static void fz_img_collect_end_tile(fz_context* /*ctx*/, fz_device* /*dev*/) {}
 
 static fz_device* FzNewImageCollectDevice(fz_context* ctx, Vec<FitzPageImageInfo*>* images, int pageNo) {
     fz_image_collect_device* dev = fz_new_derived_device(ctx, fz_image_collect_device);
@@ -2702,7 +2706,7 @@ class PasswordCloner : public PasswordUI {
   public:
     explicit PasswordCloner(u8* cryptKey) { this->cryptKey = cryptKey; }
 
-    Str GetPassword(Str, u8*, u8 decryptionKeyOut[32], bool* saveKey) override {
+    Str GetPassword(Str /*path*/, u8* /*fileDigest*/, u8 decryptionKeyOut[32], bool* saveKey) override {
         memcpy(decryptionKeyOut, cryptKey, 32);
         *saveKey = true;
         return {};

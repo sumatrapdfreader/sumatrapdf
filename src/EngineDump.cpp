@@ -456,7 +456,9 @@ class PasswordHolder : public PasswordUI {
 
   public:
     explicit PasswordHolder(Str password) : password(password) {}
-    Str GetPassword(Str, u8*, __unused u8 decryptionKeyOut[32], bool*) override { return str::Dup(password); }
+    Str GetPassword(Str /*path*/, u8* /*fileDigest*/, __unused u8 decryptionKeyOut[32], bool* /*saveKey*/) override {
+        return str::Dup(password);
+    }
 };
 
 void EngineDump(const Flags& flags) {

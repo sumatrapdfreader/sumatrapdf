@@ -146,7 +146,7 @@ class EngineDjvuDec : public EngineBase {
 
     RectF PageMediabox(int pageNo) override;
 
-    Pixmap* RenderPage(RenderPageArgs&) override;
+    Pixmap* RenderPage(RenderPageArgs& args) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
@@ -160,7 +160,7 @@ class EngineDjvuDec : public EngineBase {
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageDestination*, ILinkHandler*) override;
+    bool HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) override;
 
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
@@ -286,17 +286,17 @@ bool EngineDjvuDec::LoadFromData(Str data) {
     return FinishLoading();
 }
 
-static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
+static void DjvuDecErrorCb(void* /*user*/, djvu_severity sev, const char* msg) {
     if (sev >= DJVU_SEVERITY_ERROR) {
         logf("djvudec: %s\n", Str(msg));
     }
 }
 
-void EngineDjvuDec::CacheLockCb(void* user, void*) {
+void EngineDjvuDec::CacheLockCb(void* user, void* /*ctx*/) {
     ((EngineDjvuDec*)user)->djvuCacheLock.Lock();
 }
 
-void EngineDjvuDec::CacheUnlockCb(void* user, void*) {
+void EngineDjvuDec::CacheUnlockCb(void* user, void* /*ctx*/) {
     ((EngineDjvuDec*)user)->djvuCacheLock.Unlock();
 }
 
@@ -394,15 +394,15 @@ RectF EngineDjvuDec::PageMediabox(int pageNo) {
     return pages[pageNo - 1]->mediabox;
 }
 
-bool EngineDjvuDec::HasClipOptimizations(int) {
+bool EngineDjvuDec::HasClipOptimizations(int /*pageNo*/) {
     return false;
 }
 
-TempStr EngineDjvuDec::GetPropertyTemp(DocProp) {
+TempStr EngineDjvuDec::GetPropertyTemp(DocProp /*prop*/) {
     return {};
 }
 
-bool EngineDjvuDec::BenchLoadPage(int) {
+bool EngineDjvuDec::BenchLoadPage(int /*pageNo*/) {
     return true;
 }
 
