@@ -526,7 +526,10 @@ bool Create(Str dir) {
 }
 
 // Create dir and all missing parents (like mkdir -p).
-bool CreateAll(Str dir) {
+bool CreateAll(Str dir, int* errOut) {
+    if (errOut) {
+        *errOut = 0;
+    }
     if (!dir) {
         return false;
     }
@@ -535,11 +538,17 @@ bool CreateAll(Str dir) {
     }
     TempStr parent = path::GetDirTemp(dir);
     if (!str::Eq(parent, dir) && parent && !str::Eq(parent, StrL("."))) {
-        if (!Exists(parent) && !CreateAll(parent)) {
+        if (!Exists(parent) && !CreateAll(parent, errOut)) {
             return false;
         }
     }
-    return Create(dir);
+    if (Create(dir)) {
+        return true;
+    }
+    if (errOut) {
+        *errOut = errno;
+    }
+    return false;
 }
 
 static bool RemoveAllZ(const char* dir) {

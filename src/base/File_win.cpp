@@ -1203,7 +1203,10 @@ bool Create(Str dir) {
 
 // Create dir and all missing parents (like mkdir -p). Uses SHCreateDirectoryExW
 // so intermediates are created in one call instead of recursive CreateDirectory.
-bool CreateAll(Str dir) {
+bool CreateAll(Str dir, int* errOut) {
+    if (errOut) {
+        *errOut = 0;
+    }
     if (!dir) {
         return false;
     }
@@ -1211,7 +1214,12 @@ bool CreateAll(Str dir) {
         return true;
     }
     int err = (int)SHCreateDirectoryExW(nullptr, CWStrTemp(dir), nullptr);
+    if (errOut) {
+        *errOut = err;
+    }
     // ALREADY_EXISTS / FILE_EXISTS can mean a file is in the way; require a directory.
+    // A false here with err == ERROR_SUCCESS means the create reported success but the
+    // directory was gone by the time we looked (e.g. removed by another thread).
     if (err == ERROR_SUCCESS || err == ERROR_ALREADY_EXISTS || err == ERROR_FILE_EXISTS) {
         return Exists(dir);
     }

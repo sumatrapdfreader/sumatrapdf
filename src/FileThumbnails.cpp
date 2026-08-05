@@ -128,9 +128,15 @@ void SaveThumbnail(FileState* fs) {
     if (!thumbnailPath) {
         return;
     }
-    if (!dir::CreateForFile(thumbnailPath)) {
-        logf("SaveThumbnail: dir::CreateForFile('%s') failed, file path: '%s'\n", thumbnailPath, fs->filePath);
-        ReportIfFast(true);
+    // failing to create the cache dir is environmental (antivirus, ACLs, disk full,
+    // a file occupying the name) rather than a bug, so log and skip the thumbnail -
+    // same as the other dir::CreateForFile callers. err == 0 means the create
+    // reported success but the directory was gone when we looked.
+    int err = 0;
+    if (!dir::CreateForFile(thumbnailPath, &err)) {
+        logf("SaveThumbnail: dir::CreateForFile('%s') failed, err=%d, file path: '%s'\n", thumbnailPath, err,
+             fs->filePath);
+        return;
     }
     ReportIfFast(!str::EndsWithI(thumbnailPath, StrL(".png")));
 

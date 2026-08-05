@@ -161,8 +161,8 @@ bool Exists(WStr dir);
 bool Exists(Str dir);
 
 bool Create(Str dir);
-bool CreateForFile(Str path);
-bool CreateAll(Str dir);
+bool CreateForFile(Str path, int* errOut = nullptr);
+bool CreateAll(Str dir, int* errOut = nullptr);
 bool RemoveAll(Str dir);
 bool HasWriteAccess(Str dir);
 

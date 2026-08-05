@@ -382,9 +382,12 @@ namespace dir {
 
 // CreateAll is platform-specific (File_win.cpp / File_posix.cpp).
 
-bool CreateForFile(Str path) {
+// errOut (optional) gets the OS error when creation fails, so callers can log why.
+// 0 there means the create itself reported success but the directory wasn't there
+// afterwards.
+bool CreateForFile(Str path, int* errOut) {
     TempStr dir = path::GetDirTemp(path);
-    return CreateAll(dir);
+    return CreateAll(dir, errOut);
 }
 
 } // namespace dir
