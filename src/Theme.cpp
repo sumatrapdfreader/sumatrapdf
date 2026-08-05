@@ -47,6 +47,22 @@ void ApplyDarkModeToPopupWindow(HWND hwnd) {
     DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
 }
 
+// wingui calls this from Button's WM_DRAWITEM; see the declaration in WinGui.h.
+// Every theme, including the default one, has colors for this, and using them
+// everywhere keeps one code path and makes buttons match the rest of the UI
+// (the light theme's flat white button replaces Windows' beveled one).
+bool ButtonGetColors(ButtonColors* out) {
+    out->bg = ThemeWindowControlBackgroundColor();
+    out->bgHot = ThemeHotBackgroundColor();
+    out->bgPressed = ThemeEdgeColor();
+    out->text = ThemeWindowTextColor();
+    out->textDisabled = ThemeWindowTextDisabledColor();
+    out->edge = ThemeEdgeColor();
+    out->edgeHot = ThemeHotEdgeColor();
+    out->edgeDisabled = ThemeDisabledEdgeColor();
+    return true;
+}
+
 // wingui calls this from ListBox::Create(); see the declaration in WinGui.h
 void ListBoxMaybeApplyTheme(HWND hwnd) {
     if (UseDarkModeLib()) {

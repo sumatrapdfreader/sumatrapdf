@@ -217,6 +217,25 @@ struct Static : Wnd {
 
 //--- Button
 
+// Colors an owner-drawn push button paints itself with. Windows' own dark
+// button face is a fixed color that no app palette can move, so the app hands
+// us its own; see ButtonGetColors().
+struct ButtonColors {
+    COLORREF bg;
+    COLORREF bgHot;     // mouse over
+    COLORREF bgPressed; // held down
+    COLORREF text;
+    COLORREF textDisabled;
+    COLORREF edge;
+    COLORREF edgeHot;
+    COLORREF edgeDisabled;
+};
+
+// Called from Button's WM_DRAWITEM so wingui doesn't have to know about the
+// app's palette. The app implements it; returning false leaves the button to
+// Windows, which is what an app that doesn't theme anything should do.
+bool ButtonGetColors(ButtonColors*);
+
 struct Button : Wnd {
     struct CreateArgs {
         HWND parent = nullptr;
@@ -228,6 +247,10 @@ struct Button : Wnd {
     Func0 onClick{};
 
     bool isDefault = false;
+    // mouse is over the button; owner-draw has to track this itself because
+    // WM_DRAWITEM never reports a hot state
+    bool isHot = false;
+    bool trackingMouse = false;
 
     Button();
 
@@ -235,6 +258,8 @@ struct Button : Wnd {
 
     Size GetIdealSize() override;
 
+    void PaintOwnerDrawn(DRAWITEMSTRUCT*);
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
