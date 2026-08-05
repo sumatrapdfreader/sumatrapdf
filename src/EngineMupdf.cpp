@@ -4894,6 +4894,8 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
+        // we own bmp if it was already created, so drop it rather than just forgetting it
+        delete bmp;
         bmp = nullptr;
     }
 

@@ -410,6 +410,8 @@ void RemoveNonExistentFilesAsync() {
     auto d = new CheckFilesExistData();
     GetFilePathsToCheck(d->toCheck);
     if (len(d->toCheck) == 0) {
+        // nothing to check, so no CheckFilesExistAsync to hand ownership to
+        delete d;
         return;
     }
     logf("RemoveNonExistentFilesAsync: starting CheckFilesExistAsync to check %d files\n", len(d->toCheck));
