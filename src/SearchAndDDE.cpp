@@ -1245,6 +1245,16 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     // bookkeeping (so we don't poke internals or leave pageText null). The match's
     // glyph range (start/end) survives this, so the bookkeeping stays correct.
     ts->SetLastResult(ts);
+    // ...and put the result back if SetText() dropped it. PaintAllFindMatches
+    // only treats a match as the current one (selection color) when ts->result
+    // is populated, so without this the match we just navigated to paints as a
+    // plain match - and with the find UI closed it isn't highlighted at all.
+    // Only bites when the document text differs from what was typed, which is
+    // why it looked intermittent (issue #5889)
+    if (ts->result.len == 0) {
+        ts->StartAt(startPage, startGlyph);
+        ts->SelectUpTo(endPage, endGlyph);
+    }
     ShowMatchCount(win);
 }
 

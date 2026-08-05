@@ -732,13 +732,21 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
         visible = !vp.Intersect(sr).IsEmpty();
     }
 
+    // PaintAllFindMatches only paints a match in the selection color (rather
+    // than as one of the plain matches) while textSearch->result is populated,
+    // so an empty result here means the match we navigated to doesn't read as
+    // the current one - and with the find UI closed isn't highlighted at all
+    // (issue #5889). SetLastResult()->SetText() drops it exactly when the
+    // document text differs from what was typed, which is this test's case.
+    bool hasResult = ts->result.len > 0;
+
     bool matchOk = (curPage == pageNo) && (curStart == startGlyph) && (curEnd == endGlyph) && str::Eq(matched, word);
-    bool ok = matchOk && visible;
+    bool ok = matchOk && visible && hasResult;
     if (ok) {
-        out.Append(fmt("OK match=%s page=%d visible=1\n", matched, pageNo));
+        out.Append(fmt("OK match=%s page=%d visible=1 highlighted=1\n", matched, pageNo));
     } else {
-        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d\n", word, matched ? matched : StrL("(none)"),
-                       pageNo, visible ? 1 : 0));
+        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d highlighted=%d\n", word,
+                       matched ? matched : StrL("(none)"), pageNo, visible ? 1 : 0, hasResult ? 1 : 0));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
