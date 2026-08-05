@@ -67,22 +67,17 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             // Strip the page watermark on the raw glyphs first (its true height
             // is only visible pre-normalization), then normalize the survivors
             // so the detectors below see clean, baseline-flattened text.
-            cleanText = AllocArray<WCHAR>(textLen);
-            cleanCoords = AllocArray<Rect>(textLen);
+            cleanText = AllocArrayTemp<WCHAR>(textLen);
+            cleanCoords = AllocArrayTemp<Rect>(textLen);
             int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
             text = WStr(cleanText, cleanLen);
-            normCoords = AllocArray<Rect>(cleanLen);
+            normCoords = AllocArrayTemp<Rect>(cleanLen);
             NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
         }
         region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
         if (region.dx <= 0.f || region.dy <= 0.f) {
             region = DetectEntryBox(text, normCoords, mediabox, destX, destY, &continuation);
         }
-        if (normCoords != coords) {
-            free(normCoords);
-        }
-        free(cleanText);
-        free(cleanCoords);
     }
     bool hasContinuation = continuation.dx > 0.f && continuation.dy > 0.f;
     s->displayed.userZoom = 1.f;

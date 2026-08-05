@@ -360,8 +360,8 @@ void CreateSumatraAcceleratorTable() {
     // carving them out of one block needed the count rounded up to keep the second
     // one aligned (https://github.com/sumatrapdfreader/sumatrapdf/issues/2981)
     b.accels = AllocArray<ACCEL>(nMax);
-    b.editAccels = push_array<ACCEL>(GetTempArena(), (u64)nMax);
-    b.treeViewAccels = push_array<ACCEL>(GetTempArena(), (u64)nMax);
+    b.editAccels = AllocArrayTemp<ACCEL>(nMax);
+    b.treeViewAccels = AllocArrayTemp<ACCEL>(nMax);
 
     AddCustomShortcuts(b);
     // add built-in but only if the shortcut doesn't conflict with custom shortcut

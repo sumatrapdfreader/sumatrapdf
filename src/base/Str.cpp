@@ -2489,7 +2489,7 @@ bool IsTextRtl(WStr s) {
     int nRtl = 0;
     int nLtr = 0;
 #if OS_WIN
-    WORD* charTypes = AllocArray<WORD>(GetTempArena(), n + 1);
+    WORD* charTypes = AllocArrayTemp<WORD>(n + 1);
     if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s.s, n, charTypes)) {
         return false; // API failure
     }

@@ -178,10 +178,10 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     }
     constexpr int kBaselineTolPt = 4;
     constexpr int kMaxLines = 4096;
-    int* lineBaseline = AllocArray<int>(kMaxLines);
-    int* lineTop = AllocArray<int>(kMaxLines);
-    int* lineBottom = AllocArray<int>(kMaxLines);
-    int* lineId = AllocArray<int>(glyphCount);
+    int* lineBaseline = AllocArrayTemp<int>(kMaxLines);
+    int* lineTop = AllocArrayTemp<int>(kMaxLines);
+    int* lineBottom = AllocArrayTemp<int>(kMaxLines);
+    int* lineId = AllocArrayTemp<int>(glyphCount);
     int nLines = 0;
     for (int i = 0; i < glyphCount; i++) {
         int bl = coords[i].y + coords[i].dy;
@@ -219,10 +219,6 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
         out[i].y = lineTop[L];
         out[i].dy = lineBottom[L] - lineTop[L];
     }
-    free(lineBaseline);
-    free(lineTop);
-    free(lineBottom);
-    free(lineId);
 }
 
 // Drop diagonal draft / "under review" watermark glyphs from a page's *raw*
@@ -254,7 +250,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     }
     int modeDy = 0;
     if (maxDy > 0) {
-        int* hist = AllocArray<int>(maxDy + 1);
+        int* hist = AllocArrayTemp<int>(maxDy + 1);
         if (hist) {
             for (int i = 0; i < n; i++) {
                 WCHAR c = text.s[i];
@@ -273,7 +269,6 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
                     modeDy = d;
                 }
             }
-            free(hist);
         }
     }
 
@@ -761,7 +756,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>(n);
+            char* occ = AllocArrayTemp<char>(n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
@@ -791,7 +786,6 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
                     break;
                 }
             }
-            free(occ);
             if (lastOcc > nextColLeftX) {
                 colRightX = lastOcc;
             }
@@ -1144,7 +1138,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>(n);
+            char* occ = AllocArrayTemp<char>(n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
@@ -1174,7 +1168,6 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                     break;
                 }
             }
-            free(occ);
             if (lastOcc > firstLineLeftX) {
                 columnRightX = lastOcc;
             }
