@@ -133,6 +133,7 @@ void TextSearch::SetText(Str text) {
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
+    // NOLINTNEXTLINE(bugprone-branch-clone): homoglyph case is distinct from the empty-anchor fallback
     else if (searchTextLen > 0 && (firstChar == '-' || firstChar == '\'' || firstChar == '"')) {
         anchor = {};
     } else if (searchTextLen > 0) {
@@ -471,6 +472,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                 }
             }
         }
+        // NOLINTNEXTLINE(bugprone-branch-clone): each empty branch documents a different normalization
         if (isMatch) {
             /* characters are identical */;
         } else if (str::IsWs((char)matchCh) && lookingAtWs) {

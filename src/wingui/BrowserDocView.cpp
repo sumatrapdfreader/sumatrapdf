@@ -608,11 +608,8 @@ void BrowserDocView::SetScrollPos(Point pos) {
 
 void BrowserDocView::PrintCurrentPage(bool showUI) {
     if (backend == Backend::WebView2 && wv) {
-        if (showUI) {
-            wv->Eval("window.print()");
-        } else {
-            wv->Eval("window.print()");
-        }
+        // WebView2 has no silent-print API; window.print() always shows the dialog
+        wv->Eval("window.print()");
         return;
     }
     if (backend == Backend::IE && ie) {

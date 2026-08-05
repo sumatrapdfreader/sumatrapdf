@@ -537,10 +537,8 @@ static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
             }
         } else if (overOwner && mouseMoved) {
             // Mouse is over owner and moving, but not near scrollbar - show thin
-            if (IsThick(sb)) {
-                // Transition from thick to thin
-                ShowScrollbarWindow(sb, false);
-            } else if (sb->state != State::SmartThin) {
+            // IsThick() means transitioning from thick to thin
+            if (IsThick(sb) || sb->state != State::SmartThin) {
                 ShowScrollbarWindow(sb, false);
             }
             // Reset the auto-hide timer since mouse is moving
@@ -657,7 +655,8 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 Point pt(mx, my);
 
                 if (arrowTop.Contains(pt)) {
-                    UINT code = IsVert(sb) ? SB_LINEUP : SB_LINELEFT;
+                    // SB_LINEUP == SB_LINELEFT, but spell out which axis we mean
+                    UINT code = IsVert(sb) ? SB_LINEUP : SB_LINELEFT; // NOLINT(bugprone-branch-clone)
                     SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(code, 0));
                     sb->repeatScrollCode = code;
                     sb->repeatIsInitial = true;
@@ -668,7 +667,8 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                     return 0;
                 }
                 if (arrowBot.Contains(pt)) {
-                    UINT code = IsVert(sb) ? SB_LINEDOWN : SB_LINERIGHT;
+                    // SB_LINEDOWN == SB_LINERIGHT, but spell out which axis we mean
+                    UINT code = IsVert(sb) ? SB_LINEDOWN : SB_LINERIGHT; // NOLINT(bugprone-branch-clone)
                     SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(code, 0));
                     sb->repeatScrollCode = code;
                     sb->repeatIsInitial = true;
@@ -722,9 +722,10 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int thumbMid = IsVert(sb) ? (thumbRc.y + (thumbRc.dy / 2)) : (thumbRc.x + (thumbRc.dx / 2));
                 UINT code;
                 if (clickPos < thumbMid) {
-                    code = IsVert(sb) ? SB_PAGEUP : SB_PAGELEFT;
+                    // SB_PAGEUP == SB_PAGELEFT (same for DOWN/RIGHT); spell out the axis
+                    code = IsVert(sb) ? SB_PAGEUP : SB_PAGELEFT; // NOLINT(bugprone-branch-clone)
                 } else {
-                    code = IsVert(sb) ? SB_PAGEDOWN : SB_PAGERIGHT;
+                    code = IsVert(sb) ? SB_PAGEDOWN : SB_PAGERIGHT; // NOLINT(bugprone-branch-clone)
                 }
                 SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(code, 0));
                 sb->repeatScrollCode = code;

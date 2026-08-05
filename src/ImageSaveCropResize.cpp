@@ -869,6 +869,15 @@ static bool IsPointInDisplayedImage(ImageEditWindow* ew, int mx, int my) {
            my <= ew->imgDisplayY + ew->imgDisplayH;
 }
 
+// like HitTestCropEdge(), but a hit on a not-yet-changed crop rect, or anywhere
+// in the image outside it, starts a new crop instead
+static DragEdge HitTestCropEdgeOrNewCrop(ImageEditWindow* ew, int mx, int my) {
+    DragEdge edge = HitTestCropEdge(ew, mx, my);
+    bool startsNewCrop = (edge == DragEdge::Move && !IsCropChanged(ew)) ||
+                         (edge == DragEdge::None && IsPointInDisplayedImage(ew, mx, my));
+    return startsNewCrop ? DragEdge::NewCrop : edge;
+}
+
 static bool IsImageEditDragDistance(POINT start, int mx, int my) {
     int dragDx = GetSystemMetrics(SM_CXDRAG);
     int dragDy = GetSystemMetrics(SM_CYDRAG);
@@ -1728,12 +1737,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             } else {
                 DragEdge edge;
                 if (ew->mode == ImageEditMode::Crop) {
-                    edge = HitTestCropEdge(ew, mx, my);
-                    if (edge == DragEdge::Move && !IsCropChanged(ew)) {
-                        edge = DragEdge::NewCrop;
-                    } else if (edge == DragEdge::None && IsPointInDisplayedImage(ew, mx, my)) {
-                        edge = DragEdge::NewCrop;
-                    }
+                    edge = HitTestCropEdgeOrNewCrop(ew, mx, my);
                 } else {
                     edge = HitTestResizeEdge(ew, mx, my);
                 }
@@ -1752,12 +1756,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int my = GET_Y_LPARAM(lp);
             DragEdge edge = DragEdge::None;
             if (ew->mode == ImageEditMode::Crop) {
-                edge = HitTestCropEdge(ew, mx, my);
-                if (edge == DragEdge::Move && !IsCropChanged(ew)) {
-                    edge = DragEdge::NewCrop;
-                } else if (edge == DragEdge::None && IsPointInDisplayedImage(ew, mx, my)) {
-                    edge = DragEdge::NewCrop;
-                }
+                edge = HitTestCropEdgeOrNewCrop(ew, mx, my);
             } else if (ew->mode == ImageEditMode::Save) {
                 if (IsPointInDisplayedImage(ew, mx, my)) {
                     SwitchToCropMode(ew);
@@ -1813,12 +1812,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 Point pt = HwndGetCursorPos(hwnd);
                 DragEdge edge;
                 if (ew->mode == ImageEditMode::Crop) {
-                    edge = HitTestCropEdge(ew, pt.x, pt.y);
-                    if (edge == DragEdge::Move && !IsCropChanged(ew)) {
-                        edge = DragEdge::NewCrop;
-                    } else if (edge == DragEdge::None && IsPointInDisplayedImage(ew, pt.x, pt.y)) {
-                        edge = DragEdge::NewCrop;
-                    }
+                    edge = HitTestCropEdgeOrNewCrop(ew, pt.x, pt.y);
                 } else {
                     edge = HitTestResizeEdge(ew, pt.x, pt.y);
                 }

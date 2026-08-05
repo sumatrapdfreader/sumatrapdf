@@ -899,6 +899,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // NOLINTNEXTLINE(bugprone-branch-clone): both empty branches are handled elsewhere, for different reasons
     if (ExtendedEditWndProc(hwnd, msg, wp, lp)) {
         // select the whole page box on a non-selecting click
     } else if (WM_CHAR == msg) {
@@ -965,19 +966,14 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     Size minSize = HwndMeasureText(win->hwndPageTotal, "999 / 999");
     minSize.dx += padX;
     int labelDx = 0;
-    if (-1 == pageCount) {
+    if (-1 == pageCount || !pageCount) {
 #if 0
-        // preserve hwndPageTotal's text and size
+        // for pageCount == -1: preserve hwndPageTotal's text and size
         txt = HwndGetTextTemp(win->hwndPageTotal);
         size2 = HwndClientRect(win->hwndPageTotal).Size();
         size2.dx -= padX;
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
 #endif
-        // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
-        txt = " ";
-        minSize.dx = 0;
-        size2.dx = 0;
-    } else if (!pageCount) {
         // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
         txt = " ";
         minSize.dx = 0;

@@ -272,9 +272,8 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 pspoint.page = page;
                 if (0 == page || page > maxPageNo) {
                     /* ignore point for invalid page number */;
-                } else if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
-                    points.Append(pspoint);
-                } else if (!str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
+                } else if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) ||
+                           !str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
                     points.Append(pspoint);
                 }
                 // else dbg("Bad 'p' line in the pdfsync file");

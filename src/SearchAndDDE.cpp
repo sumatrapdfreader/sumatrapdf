@@ -1860,9 +1860,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         buf = fmt(_TRA("Unknown source file (%s)").s, fileName);
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
         buf = fmt(_TRA("Source file %s has no synchronization point").s, fileName);
-    } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE) {
-        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName);
-    } else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
+    } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE || ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
         buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName);
     }
     if (buf) {

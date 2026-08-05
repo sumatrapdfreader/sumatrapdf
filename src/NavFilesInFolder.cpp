@@ -696,6 +696,7 @@ static bool NavDockedClientSize(HWND hwnd, HWND hwndMain, int* clientDxOut, int*
     int minFree = DpiScale(hwndMain, kNavDockMinFreeDx);
     int free = 0;
     bool placeLeft = false;
+    // NOLINTNEXTLINE(bugprone-branch-clone): left is preferred first, then falls back after right
     if (freeLeft > freeRight && freeLeft > minFree) {
         free = freeLeft;
         placeLeft = true;

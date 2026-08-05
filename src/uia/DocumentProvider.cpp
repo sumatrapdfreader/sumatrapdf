@@ -243,17 +243,14 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         TempStr s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
         pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
-    } else if (propertyId == UIA_IsTextPatternAvailablePropertyId) {
+    } else if (propertyId == UIA_IsTextPatternAvailablePropertyId || propertyId == UIA_IsContentElementPropertyId ||
+               propertyId == UIA_IsControlElementPropertyId) {
         pRetVal->vt = VT_BOOL;
         pRetVal->boolVal = TRUE;
         return S_OK;
     } else if (propertyId == UIA_ControlTypePropertyId) {
         pRetVal->vt = VT_I4;
         pRetVal->lVal = UIA_DocumentControlTypeId;
-        return S_OK;
-    } else if (propertyId == UIA_IsContentElementPropertyId || propertyId == UIA_IsControlElementPropertyId) {
-        pRetVal->vt = VT_BOOL;
-        pRetVal->boolVal = TRUE;
         return S_OK;
     } else if (propertyId == UIA_NativeWindowHandlePropertyId) {
         pRetVal->vt = VT_I4;

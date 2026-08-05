@@ -4814,7 +4814,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
     auto ext = ctrl->GetDefaultFileExt();
     if (str::EqI(ext, StrL(".xps"))) {
         fileFilter.Append(_TRA("XPS documents"));
-    } else if (str::EqI(ext, StrL(".epub"))) {
+    } else if (str::EqI(ext, StrL(".epub"))) { // NOLINT(bugprone-branch-clone): see kindEngineEpub below
         // .epub can be handled by kindEngineMupdf
         fileFilter.Append(_TRA("EPUB ebooks"));
     } else if (type == kindEngineDjVu) {
@@ -12373,13 +12373,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             break;
 
         case WM_SETFOCUS:
-            // document keyboard focus is on the frame; repaint canvas focus ring (#4644)
-            if (win) {
-                InvalidateCanvasKeyboardFocus(win);
-            }
-            break;
-
         case WM_KILLFOCUS:
+            // document keyboard focus is on the frame; repaint canvas focus ring (#4644)
             if (win) {
                 InvalidateCanvasKeyboardFocus(win);
             }

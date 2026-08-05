@@ -383,12 +383,8 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     }
     for (int i = 0; i < ncands - 1; i++) {
         for (int j = i + 1; j < ncands; j++) {
-            bool swap = false;
-            if (cands[j].flanked && !cands[i].flanked) {
-                swap = true;
-            } else if (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len) {
-                swap = true;
-            }
+            bool swap = (cands[j].flanked && !cands[i].flanked) ||
+                        (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len);
             if (swap) {
                 Cand t = cands[i];
                 cands[i] = cands[j];

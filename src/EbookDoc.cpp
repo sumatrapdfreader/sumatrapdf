@@ -117,7 +117,7 @@ static bool IsValidUtf8(Str string) {
         int skip;
         if (c < 0x80) {
             skip = 0;
-        } else if (c < 0xC0) {
+        } else if (c < 0xC0) { // NOLINT(bugprone-branch-clone): continuation byte, distinct from the >= 0xF5 case
             return false;
         } else if (c < 0xE0) {
             skip = 1;
@@ -1057,7 +1057,7 @@ bool Fb2Doc::Load(Str srcData) {
             }
         } else if (inBody && tok->IsStartTag() && Tag_Title == tok->tag) {
             hasToc = true;
-        } else if (inBody) {
+        } else if (inBody) { // NOLINT(bugprone-branch-clone): skipping body content is its own case
             continue;
         } else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS(StrL("title-info"), FB2_MAIN_NS())) {
             inTitleInfo--;
@@ -1791,7 +1791,7 @@ bool TxtDoc::Load() {
         if (linkEndPos == i) {
             htmlData.Append("</a>");
             linkEndPos = -1;
-        } else if (linkEndPos >= 0) {
+        } else if (linkEndPos >= 0) { // NOLINT(bugprone-branch-clone): each empty branch has its own reason
             /* don't check for hyperlinks inside a link */;
         } else if ('@' == c) {
             Str end = TextFindEmailEnd(htmlData, curr);

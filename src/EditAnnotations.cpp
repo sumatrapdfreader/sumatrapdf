@@ -1077,10 +1077,11 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
 
+        // NOLINTNEXTLINE(bugprone-branch-clone): branch order matters, an explicit focus wins over isNew
         if (focus == EditAnnotFocus::Edit) {
             HwndSetFocus(ew->editContents->hwnd);
             ew->editContents->SelectAll();
-        } else if (focus == EditAnnotFocus::List) {
+        } else if (focus == EditAnnotFocus::List) { // NOLINT(bugprone-branch-clone)
             HwndSetFocus(ew->listBox->hwnd);
         } else if (isNew && annot->type == AnnotationType::FreeText) {
             HwndSetFocus(ew->editContents->hwnd);

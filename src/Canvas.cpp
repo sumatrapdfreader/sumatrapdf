@@ -2434,9 +2434,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         }
     };
 
-    if (paintOnBlackWithoutShadow) {
-        paintBgOrCheckerboard(colDocBg, rcArea);
-    } else if (colDocBg == kColorUnset) {
+    if (paintOnBlackWithoutShadow || colDocBg == kColorUnset) {
         paintBgOrCheckerboard(colDocBg, rcArea);
     } else if (0 == nGCols) {
         AutoDeleteBrush brush = CreateSolidBrush(colDocBg);
@@ -3156,7 +3154,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     UINT scrollMsg = hScroll ? WM_HSCROLL : WM_VSCROLL;
     bool didScrollByLine = false;
     if (win->wheelAccumDelta < 0) {
-        WPARAM scrollWp = hScroll ? SB_LINERIGHT : SB_LINEDOWN;
+        // SB_LINERIGHT == SB_LINEDOWN, but spell out which axis we mean
+        WPARAM scrollWp = hScroll ? SB_LINERIGHT : SB_LINEDOWN; // NOLINT(bugprone-branch-clone)
         while (win->wheelAccumDelta <= -gDeltaPerLine) {
             SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
             win->wheelAccumDelta += gDeltaPerLine;
@@ -3164,7 +3163,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             didScrollByLine = true;
         }
     } else {
-        WPARAM scrollWp = hScroll ? SB_LINELEFT : SB_LINEUP;
+        // SB_LINELEFT == SB_LINEUP, but spell out which axis we mean
+        WPARAM scrollWp = hScroll ? SB_LINELEFT : SB_LINEUP; // NOLINT(bugprone-branch-clone)
         while (win->wheelAccumDelta >= gDeltaPerLine) {
             SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
             win->wheelAccumDelta -= gDeltaPerLine;

@@ -738,8 +738,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // invalidates native (LTR) item rects while we lay out tabs manually in RTL.
             return TRUE;
 
-        case WM_NCPAINT:
-            return 0; // prevent native tab control from drawing its edge
+        case WM_NCPAINT: // NOLINT(bugprone-branch-clone): same return, different reasons
+            return 0;    // prevent native tab control from drawing its edge
 
         case WM_NCCALCSIZE:
             return 0; // remove non-client area so no edge is reserved

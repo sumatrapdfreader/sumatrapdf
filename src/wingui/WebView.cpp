@@ -285,6 +285,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
             return E_POINTER;
         }
         *ppv = nullptr;
+        // NOLINTNEXTLINE(bugprone-branch-clone): each branch casts to a different base, not a clone
         if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler)) {
             *ppv = static_cast<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler*>(this);
         } else if (riid == __uuidof(ICoreWebView2WebMessageReceivedEventHandler)) {
@@ -1168,11 +1169,8 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     {
         webview2_accel_handler* accelHandler = new webview2_accel_handler(hwnd, this);
         ::EventRegistrationToken token = {};
-        if (SUCCEEDED(controller->add_AcceleratorKeyPressed(accelHandler, &token))) {
-            accelHandler->Release();
-        } else {
-            accelHandler->Release();
-        }
+        controller->add_AcceleratorKeyPressed(accelHandler, &token);
+        accelHandler->Release();
     }
 
     if (resourceProvider.getResource && resourceUriPrefix) {
@@ -1180,44 +1178,29 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
         webview->AddWebResourceRequestedFilter(filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
         auto* resourceHandler = new webview2_resource_handler(this);
         ::EventRegistrationToken resourceToken = {};
-        if (SUCCEEDED(webview->add_WebResourceRequested(resourceHandler, &resourceToken))) {
-            resourceHandler->Release();
-        } else {
-            resourceHandler->Release();
-        }
+        webview->add_WebResourceRequested(resourceHandler, &resourceToken);
+        resourceHandler->Release();
     }
 
     if (events.navigationStarting || events.navigationCompleted || events.historyChanged) {
         ::EventRegistrationToken token = {};
         if (events.navigationStarting) {
             auto* handler = new webview2_navigation_starting_handler(this);
-            if (SUCCEEDED(webview->add_NavigationStarting(handler, &token))) {
-                handler->Release();
-            } else {
-                handler->Release();
-            }
+            webview->add_NavigationStarting(handler, &token);
+            handler->Release();
             auto* newWindowHandler = new webview2_new_window_handler(this);
-            if (SUCCEEDED(webview->add_NewWindowRequested(newWindowHandler, &token))) {
-                newWindowHandler->Release();
-            } else {
-                newWindowHandler->Release();
-            }
+            webview->add_NewWindowRequested(newWindowHandler, &token);
+            newWindowHandler->Release();
         }
         if (events.navigationCompleted) {
             auto* handler = new webview2_navigation_completed_handler(this);
-            if (SUCCEEDED(webview->add_NavigationCompleted(handler, &token))) {
-                handler->Release();
-            } else {
-                handler->Release();
-            }
+            webview->add_NavigationCompleted(handler, &token);
+            handler->Release();
         }
         if (events.historyChanged) {
             auto* handler = new webview2_history_changed_handler(this);
-            if (SUCCEEDED(webview->add_HistoryChanged(handler, &token))) {
-                handler->Release();
-            } else {
-                handler->Release();
-            }
+            webview->add_HistoryChanged(handler, &token);
+            handler->Release();
         }
     }
 

@@ -192,16 +192,10 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
         off += 2;
     } else if (startsWith(f, off, "hh")) {
         off += 2;
-    } else if (off < f.len && f.s[off] == 'l') {
+    } else if (off < f.len && (f.s[off] == 'l' || f.s[off] == 'h' || f.s[off] == 'L' || f.s[off] == 'w')) {
         off++; // long is 32-bit on win64
-    } else if (off < f.len && f.s[off] == 'h') {
-        off++;
-    } else if (off < f.len && f.s[off] == 'L') {
-        off++;
     } else if (off < f.len && (f.s[off] == 'z' || f.s[off] == 'j' || f.s[off] == 't' || f.s[off] == 'I')) {
         bits = 64; // size_t / intmax_t / ptrdiff_t / MS size_t
-        off++;
-    } else if (off < f.len && f.s[off] == 'w') {
         off++;
     }
     char conv = (off < f.len) ? f.s[off] : 0;

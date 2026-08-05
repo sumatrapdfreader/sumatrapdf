@@ -597,9 +597,7 @@ void DisplayModel::BuildPagesInfo() {
         PageInfo* pageInfo = &pagesInfo[pageNo - 1];
         pageInfo->visibleRatio = 0.0;
         pagesInfo[pageNo - 1].isShown = false;
-        if (isCont) {
-            pagesInfo[pageNo - 1].isShown = true;
-        } else if (newStartPage <= pageNo && pageNo < newStartPage + columns) {
+        if (isCont || (newStartPage <= pageNo && pageNo < newStartPage + columns)) {
             pagesInfo[pageNo - 1].isShown = true;
         }
     }
@@ -741,10 +739,11 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     float zoomX = (float)areaForPagesDx / row.dx;
     float zoomY = (float)areaForPagesDy / row.dy;
     float zoom;
+    // NOLINTNEXTLINE(bugprone-branch-clone): distinct fit modes that happen to pick the same axis
     if (kZoomFitWidth == zoomVirtual) {
         zoom = zoomX;
-    } else if (kZoomFitHeight == zoomVirtual) {
-        zoom = zoomY; // issue #1714
+    } else if (kZoomFitHeight == zoomVirtual) { // NOLINT(bugprone-branch-clone)
+        zoom = zoomY;                           // issue #1714
     } else if (zoomX < zoomY) {
         zoom = zoomX; // Fit Page / Fit Content: fit both axes
     } else {
@@ -966,13 +965,8 @@ void DisplayModel::ChangeStartPage(int newStartPage) {
         newStartPage--;
     }
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        if (IsContinuous(GetDisplayMode())) {
-            pagesInfo[pageNo - 1].isShown = true;
-        } else if (pageNo >= newStartPage && pageNo < newStartPage + columns) {
-            pagesInfo[pageNo - 1].isShown = true;
-        } else {
-            pagesInfo[pageNo - 1].isShown = false;
-        }
+        bool isShown = IsContinuous(GetDisplayMode()) || (pageNo >= newStartPage && pageNo < newStartPage + columns);
+        pagesInfo[pageNo - 1].isShown = isShown;
         PageInfo* pageInfo = GetPageInfo(pageNo);
         pageInfo->visibleRatio = 0.0;
     }
@@ -1336,9 +1330,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         return;
     }
 
-    if (addNavPt) {
-        AddNavPoint();
-    } else if (ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
+    if (addNavPt || ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
         AddNavPoint();
     }
 

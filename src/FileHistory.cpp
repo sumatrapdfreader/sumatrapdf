@@ -261,6 +261,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         if (state->isPinned || len(state->decryptionKey) > 0 || len(*state->favorites) > 0) {
             continue;
         }
+        // NOLINTNEXTLINE(bugprone-branch-clone): each branch documents a different reason to forget
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
             // forget about missing documents without valuable state
             states->RemoveAt(j - 1);

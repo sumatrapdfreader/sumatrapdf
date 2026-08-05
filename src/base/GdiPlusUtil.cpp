@@ -101,8 +101,6 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                 case 't':
                 case 'f':
                 case 'I':
-                    correct += 0.1f;
-                    break;
                 case '.':
                 case ',':
                 case '!':

@@ -469,9 +469,8 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
         return;
     }
     TempStr name = nullptr;
-    if (str::Contains(line, StrL("\"type\":\"function_call\""))) {
-        name = AIChatJsonStrTemp(line, "name");
-    } else if (str::Contains(line, StrL("\"type\":\"custom_tool_call\""))) {
+    if (str::Contains(line, StrL("\"type\":\"function_call\"")) ||
+        str::Contains(line, StrL("\"type\":\"custom_tool_call\""))) {
         name = AIChatJsonStrTemp(line, "name");
     }
     if (len(name) > 0) {

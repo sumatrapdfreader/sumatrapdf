@@ -113,7 +113,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showFavorites;
         } break;
-        case CmdToggleZoom: {
+        case CmdToggleZoom: { // NOLINT(bugprone-branch-clone): distinct TODOs, not a copy-paste
             // TODO: this toggles via different values
         } break;
         case CmdToggleCursorPosition: {

@@ -1754,11 +1754,7 @@ void HtmlWindow::OnDocumentComplete(Str url) {
             // which we should ignore?
             SetHtmlReal(htmlSetInProgress);
             if (htmlWinCb) {
-                if (htmlSetInProgressUrl) {
-                    htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
-                } else {
-                    htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
-                }
+                htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
             }
 
             FreeHtmlSetInProgressData();

@@ -352,11 +352,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
         return S_OK;
     }
 
-    if (textUnit == TextUnit_Character) {
-        // done
-        return S_OK;
-    } else if (textUnit == TextUnit_Format) {
-        // what is a "format" anyway?
+    // Character: already done. Format: what is a "format" anyway?
+    if (textUnit == TextUnit_Character || textUnit == TextUnit_Format) {
         return S_OK;
     } else if (textUnit == TextUnit_Word) {
         // select current word at start endpoint
