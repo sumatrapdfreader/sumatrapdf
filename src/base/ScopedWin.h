@@ -225,16 +225,32 @@ class ScopedSelectBrush {
 
     ~ScopedSelectBrush() { SelectObject(hdc, prevBrush); }
 };
+// CoUninitialize() / OleUninitialize() must only be called when the matching
+// Initialize succeeded. On failure (RPC_E_CHANGED_MODE when the thread is
+// already in the other apartment kind) it would decrement an apartment count
+// we never incremented, tearing COM down for the whole thread while other code
+// still expects it. S_FALSE ("already initialized") is a success and does need
+// the matching Uninitialize, so test with SUCCEEDED, not == S_OK.
 class ScopedCom {
   public:
-    ScopedCom() { (void)CoInitialize(nullptr); }
-    ~ScopedCom() { CoUninitialize(); }
+    HRESULT hr;
+    ScopedCom() { hr = CoInitialize(nullptr); }
+    ~ScopedCom() {
+        if (SUCCEEDED(hr)) {
+            CoUninitialize();
+        }
+    }
 };
 
 class ScopedOle {
   public:
-    ScopedOle() { (void)OleInitialize(nullptr); }
-    ~ScopedOle() { OleUninitialize(); }
+    HRESULT hr;
+    ScopedOle() { hr = OleInitialize(nullptr); }
+    ~ScopedOle() {
+        if (SUCCEEDED(hr)) {
+            OleUninitialize();
+        }
+    }
 };
 
 class ScopedGdiPlus {
