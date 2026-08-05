@@ -547,9 +547,13 @@ void SetThemeByIndex(int themeIdx) {
         // but in Solarized Light in Find dialog's input field text is invisible i.e. black
         // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
         const bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
-        const UINT mode = static_cast<UINT>(isDarkCol         ? DarkMode::DarkModeType::dark
-                                            : (themeIdx == 0) ? DarkMode::DarkModeType::classic
-                                                              : DarkMode::DarkModeType::light);
+        DarkMode::DarkModeType modeType = DarkMode::DarkModeType::light;
+        if (isDarkCol) {
+            modeType = DarkMode::DarkModeType::dark;
+        } else if (themeIdx == 0) {
+            modeType = DarkMode::DarkModeType::classic;
+        }
+        const UINT mode = static_cast<UINT>(modeType);
         DarkMode::setDarkModeConfigEx(mode);
         DarkMode::setDefaultColors(false);
 

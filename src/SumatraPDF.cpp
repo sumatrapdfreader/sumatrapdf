@@ -5482,19 +5482,19 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
     };
 
     str::Builder allPat;
-    for (int i = 0; i < dimof(fileFormats); i++) {
-        if (!fileFormats[i].available) {
+    for (const auto& ff : fileFormats) {
+        if (!ff.available) {
             continue;
         }
         if (!allPat.IsEmpty()) {
             allPat.AppendChar(';');
         }
-        allPat.Append(fileFormats[i].filter);
+        allPat.Append(ff.filter);
     }
     out.Add(_TRA("All supported documents"), ToStr(allPat));
-    for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available && fileFormats[i].name) {
-            out.Add(fileFormats[i].name, fileFormats[i].filter);
+    for (const auto& ff : fileFormats) {
+        if (ff.available && ff.name) {
+            out.Add(ff.name, ff.filter);
         }
     }
     out.Add(_TRA("All files"), StrL("*.*"));
