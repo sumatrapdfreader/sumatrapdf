@@ -357,8 +357,13 @@ static unsigned char CadClampByte(float v) {
 // mid-gray pixels toward Acrobat-like line contrast, leaving near-white
 // background alone. Used instead of the wrap device for pages whose content
 // is one big embedded image.
-void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDominant) {
-    if (!pix || pix->n < 3 || !rasterDominant) {
+void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool rasterDominant) {
+    if (!pix || !rasterDominant) {
+        return;
+    }
+    // we read s[0], s[1], s[2] as R, G, B, so anything else (e.g. CMYK, which
+    // also passes an n >= 3 test) would be misinterpreted
+    if (!fz_colorspace_is_rgb(ctx, pix->colorspace)) {
         return;
     }
 
@@ -370,7 +375,6 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
 
     unsigned char* s = pix->samples;
     int n = pix->n;
-    int n1 = pix->n - pix->alpha;
     for (int y = 0; y < pix->h; y++) {
         for (int x = 0; x < pix->w; x++) {
             float fr = (float)s[0] / 255.f;
@@ -395,11 +399,9 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
                 outB *= factor;
             }
 
-            // channels past the third (if any) get outB, as before
-            float outRgb[3] = {outR, outG, outB};
-            for (int k = 0; k < n1; k++) {
-                s[k] = CadClampByte(outRgb[std::min(k, 2)] * 255.f);
-            }
+            s[0] = CadClampByte(outR * 255.f);
+            s[1] = CadClampByte(outG * 255.f);
+            s[2] = CadClampByte(outB * 255.f);
             s += n;
         }
         s += pix->stride - ((size_t)pix->w * n);
