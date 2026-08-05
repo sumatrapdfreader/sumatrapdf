@@ -246,6 +246,18 @@ bool IsNearBlack(COLORREF c) {
     return r < 10 && g < 10 && b < 10;
 }
 
+// Darken a light color, lighten a dark one, so the result stands out from `col`
+// whatever the theme. `dark` defaults to `light` when 0.
+COLORREF AccentColor(COLORREF col, int light, int dark) {
+    if (dark == 0) {
+        dark = light;
+    }
+    if (IsLightColor(col)) {
+        return AdjustLightness2(col, (float)-light);
+    }
+    return AdjustLightness2(col, (float)dark);
+}
+
 DWORD PremultiplyPixel(COLORREF c, u8 alpha) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);

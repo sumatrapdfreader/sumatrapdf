@@ -691,16 +691,6 @@ void SetCurrentThemeFromSettings() {
     }
 }
 
-COLORREF AccentColor(COLORREF col, int light, int dark) {
-    if (dark == 0) {
-        dark = light;
-    }
-    if (IsLightColor(col)) {
-        return AdjustLightness2(col, (float)-light);
-    }
-    return AdjustLightness2(col, (float)dark);
-}
-
 #define GetThemeCol(name, def) GetParsedCOLORREF(name, name##Parsed, def)
 
 // canvas/window background color around the document pages
