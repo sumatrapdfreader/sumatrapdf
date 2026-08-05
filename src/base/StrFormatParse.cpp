@@ -885,7 +885,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTrailingZero) {
-    i64 num = (i64)((number * 100) + 0.5);
+    i64 num = (i64)llround(number * 100);
 
     TempStr tmp = FormatNumWithThousandSepTemp(num / 100, locale);
 #if OS_WIN

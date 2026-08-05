@@ -332,7 +332,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
                 float back[FZ_MAX_COLORS] = {};
                 fz_convert_color(ctx, rgb, outRgb, cs, back, cs, fz_default_color_params);
                 for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                    int vpx = (int)((back[c] * 255.f) + 0.5f);
+                    int vpx = (int)lroundf(back[c] * 255.f);
                     if (vpx < 0) {
                         vpx = 0;
                     }
@@ -342,7 +342,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
                     px[c] = (unsigned char)vpx;
                 }
                 if (dst->alpha) {
-                    int av = (int)((a * fgConf * 255.f) + 0.5f);
+                    int av = (int)lroundf(a * fgConf * 255.f);
                     if (av < 0) {
                         av = 0;
                     }

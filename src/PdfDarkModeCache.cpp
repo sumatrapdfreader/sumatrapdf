@@ -95,7 +95,7 @@ static void dm_transform_pixmap_rgb(fz_context* ctx, fz_pixmap* pix, const DarkM
             float back[FZ_MAX_COLORS] = {};
             fz_convert_color(ctx, rgb, out, cs, back, cs, fz_default_color_params);
             for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                int v = (int)((back[c] * 255.f) + 0.5f);
+                int v = (int)lroundf(back[c] * 255.f);
                 if (v < 0) {
                     v = 0;
                 }

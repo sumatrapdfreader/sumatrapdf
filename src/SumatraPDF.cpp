@@ -1572,8 +1572,8 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
         if (engine->kind == kindEngineImage) {
             // Single image file (or multi-frame TIFF/GIF): resolution · size · non-default DPI
             RectF box = engine->PageMediabox(pageNo);
-            int w = (int)(box.dx + 0.5f);
-            int h = (int)(box.dy + 0.5f);
+            int w = (int)lroundf(box.dx);
+            int h = (int)lroundf(box.dy);
             i64 imgSize = -1;
             EngineImagesGetPageFileInfo(engine, pageNo, nullptr, &imgSize);
             TempStr detail{};
@@ -1605,8 +1605,8 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
                     continue;
                 }
                 RectF box = engine->PageMediabox(p);
-                int w = (int)(box.dx + 0.5f);
-                int h = (int)(box.dy + 0.5f);
+                int w = (int)lroundf(box.dx);
+                int h = (int)lroundf(box.dy);
                 TempStr detail{};
                 auto appendPart = [&](TempStr part) {
                     if (!part) {
@@ -10926,7 +10926,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         UnpackColor(c, r, g, b);
         float width = floorf((float)rc.dy / 8.0f);
         Pen p(Color(r, g, b), width);
-        rc.Inflate(-int(((float)rc.dx * 0.2f) + 0.5f), -int(((float)rc.dy * 0.3f) + 0.5f));
+        rc.Inflate(-(int)lroundf((float)rc.dx * 0.2f), -(int)lroundf((float)rc.dy * 0.3f));
         for (int i = 0; i < 3; i++) {
             gfx.DrawLine(&p, rc.x, rc.y + (i * rc.dy / 2), rc.x + rc.dx, rc.y + (i * rc.dy / 2));
         }
@@ -11705,7 +11705,7 @@ constexpr float kReadAloudSpeeds[] = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f
 
 // e.g. "1x", "0.75x", "1.5x"
 TempStr ReadAloudSpeedLabelTemp(float speed) {
-    int hundredths = (int)((speed * 100.0f) + 0.5f);
+    int hundredths = (int)lroundf(speed * 100.0f);
     int whole = hundredths / 100;
     int frac = hundredths % 100;
     if (frac == 0) {

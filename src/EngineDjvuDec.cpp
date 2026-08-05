@@ -561,7 +561,7 @@ static inline u8 BilinearByte(float v00, float v10, float v01, float v11, float 
     float v0 = v00 + ((v10 - v00) * tx);
     float v1 = v01 + ((v11 - v01) * tx);
     float v = v0 + ((v1 - v0) * ty);
-    return (u8)ClampInt((int)(v + 0.5f), 0, 255);
+    return (u8)ClampInt((int)lroundf(v), 0, 255);
 }
 
 // Map decoded page pixels into the target pixmap with bilinear filtering. The

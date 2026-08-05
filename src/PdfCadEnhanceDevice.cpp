@@ -350,7 +350,7 @@ static unsigned char CadClampByte(float v) {
     if (v >= 255.f) {
         return 255;
     }
-    return (unsigned char)(v + 0.5f);
+    return (unsigned char)lroundf(v);
 }
 
 // Post-process a rendered page bitmap for raster/screenshot CAD PDFs: darken

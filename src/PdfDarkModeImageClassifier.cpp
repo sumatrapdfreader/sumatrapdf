@@ -110,9 +110,9 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                             n++;
                             continue;
                         }
-                        int ri = (int)((r * 255.f) + 0.5f);
-                        int gi = (int)((g * 255.f) + 0.5f);
-                        int bi = (int)((b * 255.f) + 0.5f);
+                        int ri = (int)lroundf(r * 255.f);
+                        int gi = (int)lroundf(g * 255.f);
+                        int bi = (int)lroundf(b * 255.f);
                         buckets[((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4)]++;
 
                         float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);

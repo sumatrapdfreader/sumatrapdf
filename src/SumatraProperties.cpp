@@ -308,8 +308,8 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     TempStr mmStr = FormatPageSizeUnitTemp(size, 25.4, StrL("mm"));
 
     // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
-    int pxW = (int)((size.dx * fileDpi) + 0.5f);
-    int pxH = (int)((size.dy * fileDpi) + 0.5f);
+    int pxW = (int)lroundf(size.dx * fileDpi);
+    int pxH = (int)lroundf(size.dy * fileDpi);
     TempStr pxStr = fmt("%dx%d px", pxW, pxH);
 
     // Locale unit first, then the other two, then pixels (issue #2186)

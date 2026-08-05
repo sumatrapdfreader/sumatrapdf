@@ -629,8 +629,8 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
         return false;
     }
     RectF devFull = engine.Transform(pageRectFull, pageNo, zoom, rotation);
-    int fullW = (int)(devFull.dx + 0.5f);
-    int fullH = (int)(devFull.dy + 0.5f);
+    int fullW = (int)lroundf(devFull.dx);
+    int fullH = (int)lroundf(devFull.dy);
     if (fullW <= 0 || fullH <= 0) {
         return false;
     }

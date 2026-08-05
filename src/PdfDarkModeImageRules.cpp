@@ -6,7 +6,7 @@
 #include "PdfDarkMode.h"
 
 static int PdfDarkModeFeatureColorBuckets(const DarkImageFeatures& f) {
-    return (int)((f.colorBucketRatio * 4096.f) + 0.5f);
+    return (int)lroundf(f.colorBucketRatio * 4096.f);
 }
 
 // Mirrors PdfDarkModeStatsLookLikePhoto in PdfDarkModeImageStats.cpp.

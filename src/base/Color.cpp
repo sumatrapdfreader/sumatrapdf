@@ -216,7 +216,7 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
     float lightness = GetLightness(c);
     units = limitValue(units, -lightness, 255.0f - lightness);
     if (0.0f == lightness) {
-        u8 x = u8(units + 0.5f);
+        u8 x = (u8)lroundf(units);
         return MkColor(x, x, x);
     }
     return AdjustLightness(c, 1.0f + (units / lightness));

@@ -144,9 +144,9 @@ void PdfDarkModeClearPixmapToThemeBackground(fz_context* /*ctx*/, fz_pixmap* pix
     if (!pix || !pix->samples) {
         return;
     }
-    byte rb = (byte)((palette.bgR * 255.f) + 0.5f);
-    byte gb = (byte)((palette.bgG * 255.f) + 0.5f);
-    byte bb = (byte)((palette.bgB * 255.f) + 0.5f);
+    byte rb = (byte)lroundf(palette.bgR * 255.f);
+    byte gb = (byte)lroundf(palette.bgG * 255.f);
+    byte bb = (byte)lroundf(palette.bgB * 255.f);
     int w = pix->w;
     int h = pix->h;
     int n = pix->n;
@@ -185,9 +185,9 @@ DarkModePalette PdfDarkModeBuildPalette() {
 }
 
 static bool IsLikelyLinkRgb(float r, float g, float b) {
-    int ri = (int)((r * 255.f) + 0.5f);
-    int gi = (int)((g * 255.f) + 0.5f);
-    int bi = (int)((b * 255.f) + 0.5f);
+    int ri = (int)lroundf(r * 255.f);
+    int gi = (int)lroundf(g * 255.f);
+    int bi = (int)lroundf(b * 255.f);
     int maxRG = ri > gi ? ri : gi;
     if (bi < maxRG + 25) {
         return false;
