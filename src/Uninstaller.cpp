@@ -369,6 +369,20 @@ static TempStr GetUninstallerPathInTemp() {
     return path::JoinTemp(dirA, StrL("Sumatra-Uninstaller.exe"));
 }
 
+// %SystemRoot%\Temp, used instead of the per-user temp directory for the
+// elevated copy. A file an elevated process creates there is owned by
+// Administrators, so a non-elevated process running as the same user can't
+// swap it for something else before we launch it.
+static TempStr GetUninstallerPathInSystemTemp() {
+    WCHAR winDir[MAX_PATH]{};
+    UINT n = GetWindowsDirectoryW(winDir, dimof(winDir));
+    if (n == 0 || n >= dimof(winDir)) {
+        return {};
+    }
+    TempStr dir = path::JoinTemp(ToUtf8Temp(winDir), StrL("Temp"));
+    return path::JoinTemp(dir, StrL("Sumatra-Uninstaller.exe"));
+}
+
 // to be able to delete installation directory we must copy
 // ourselves to temp directory and re-launch
 static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
@@ -395,22 +409,67 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     }
     Str cl = ToStr(cmdLine);
 
-    // Elevate the installed executable directly. Copying it to a user-writable
-    // temporary path before elevation would let another process replace it
-    // between the copy and ShellExecute.
     if (cli->allUsers) {
-        if (IsProcessRunningElevated()) {
-            log("  already running elevated\n");
+        if (!IsProcessRunningElevated()) {
+            // Elevate the installed executable directly. Copying it to a
+            // user-writable temporary path before elevation would let another
+            // process replace it between the copy and ShellExecute.
+            logf("LaunchElevated('%s', '%s')\n", ownPath, cl);
+            bool okElev = LaunchElevated(ownPath, cl);
+            if (!okElev) {
+                logf("LaunchElevated() failed to launch '%s' '%s'\n", ownPath, cl);
+                LogLastError();
+            } else {
+                logf("LaunchElevated() launched '%s' '%s' ok!\n", ownPath, cl);
+            }
+            ::ExitProcess(0);
+        }
+
+        // Elevated, but still running out of the directory we're about to
+        // delete. Windows keeps a running image's file open, so dir::RemoveAll()
+        // fails on our own exe and leaves the whole installation directory
+        // behind (issue #5904). Re-launch from somewhere else first.
+        //
+        // Not the per-user temp directory: a copy there can be swapped for
+        // something else before it runs, which is the elevation hole that
+        // launching the installed exe directly closed. Use %SystemRoot%\Temp,
+        // where a non-elevated process can create a file but cannot list the
+        // directory or delete what's in it.
+        //
+        // "Can create" is enough for an attacker to plant a file at our path
+        // ahead of time and keep write access to it through CREATOR OWNER, so
+        // getting the directory right isn't sufficient on its own:
+        //  - delete anything already there (we're elevated, they can't)
+        //  - copy with dontOverwrite, so we only continue if we created it
+        //  - hold it open denying writers while we launch it
+        TempStr sysTempPath = GetUninstallerPathInSystemTemp();
+        if (str::IsEmptyOrWhiteSpace(sysTempPath) || str::EqI(sysTempPath, ownPath)) {
+            log("  already running from the system temp dir (or couldn't find it)\n");
             return;
         }
-        logf("LaunchElevated('%s', '%s')\n", ownPath, cl);
-        bool ok = LaunchElevated(ownPath, cl);
-        if (!ok) {
-            logf("LaunchElevated() failed to launch '%s' '%s'\n", ownPath, cl);
-            LogLastError();
-        } else {
-            logf("LaunchElevated() launched '%s' '%s' ok!\n", ownPath, cl);
+        file::Delete(sysTempPath);
+        logf("  copying uninstaller '%s' to '%s'\n", ownPath, sysTempPath);
+        if (!file::Copy(sysTempPath, ownPath, true)) {
+            // best effort: uninstalling from the install dir still removes the
+            // registry entries and most files, it just can't remove the folder
+            logf("  failed to copy uninstaller to '%s', uninstalling in place\n", sysTempPath);
+            return;
         }
+        // deny writers for as long as the path is a launch target
+        HANDLE hLock = CreateFileW(CWStrTemp(sysTempPath), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL, nullptr);
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", sysTempPath, cl);
+        HANDLE hElev = LaunchProcessWithCmdLine(sysTempPath, cl);
+        if (hLock != INVALID_HANDLE_VALUE) {
+            CloseHandle(hLock);
+        }
+        if (!hElev) {
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", sysTempPath, cl);
+            LogLastError();
+            // the copy never ran, so keep going here rather than doing nothing
+            return;
+        }
+        logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", sysTempPath, cl);
         ::ExitProcess(0);
     }
 
