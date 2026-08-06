@@ -28,6 +28,13 @@ bool UseDarkModeLib() {
     return gUseDarkModeLib;
 }
 
+// The installer and uninstaller never load settings, so CreateThemeCommands()
+// doesn't run and there is no current theme - every Theme*Color() accessor
+// dereferences gCurrentTheme and would crash. They still create buttons and
+// edits, and wingui asks the app for their colors, so the two hooks that need a
+// theme have to be able to answer without one. Defined next to gCurrentTheme.
+static bool HasCurrentTheme();
+
 // CreateMainWindow hands the frame to darkmodelib (dark caption, themed
 // children, toolbar custom draw) but a top-level window we create ourselves is
 // not a child of the frame, so none of that reaches it: buttons and edits keep
@@ -52,6 +59,10 @@ void ApplyDarkModeToPopupWindow(HWND hwnd) {
 // everywhere keeps one code path and makes buttons match the rest of the UI
 // (the light theme's flat white button replaces Windows' beveled one).
 bool ButtonGetColors(ButtonColors* out) {
+    if (!HasCurrentTheme()) {
+        // installer / uninstaller: no palette, so wingui draws a stock button
+        return false;
+    }
     out->bg = ThemeWindowControlBackgroundColor();
     out->bgHot = ThemeHotBackgroundColor();
     out->bgPressed = ThemeEdgeColor();
@@ -78,6 +89,9 @@ void ListBoxMaybeApplyTheme(HWND hwnd) {
 // ThemeEdgeColor() derives a color from the control background when the theme
 // doesn't name one, so there is always something sensible to draw.
 COLORREF EditBottomBorderColor() {
+    if (!HasCurrentTheme()) {
+        return GetSysColor(COLOR_WINDOWFRAME);
+    }
     return ThemeEdgeColor();
 }
 
@@ -507,6 +521,10 @@ static int gCurrThemeIndex = 0;
 static Theme* gCurrentTheme = nullptr;
 static Theme* gThemeLight = nullptr;
 static Themes* gParsedThemes = nullptr;
+
+static bool HasCurrentTheme() {
+    return gCurrentTheme != nullptr;
+}
 
 bool IsCurrentThemeDefault() {
     return gCurrThemeIndex == 0;
