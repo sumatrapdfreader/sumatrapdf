@@ -427,15 +427,6 @@ static inline void Indent(str::Builder& out, int indent) {
     }
 }
 
-// removes the item from node->data, freeing what ~SquareTreeNode would
-static void RemoveDataItemAt(SquareTreeNode* node, size_t idx) {
-    SquareTreeNode::DataItem& item = node->data[(int)idx];
-    str::Free(item.key);
-    str::Free(item.str);
-    delete item.child;
-    node->data.RemoveAt((int)idx);
-}
-
 static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type) {
     if (!node) {
         return;
@@ -443,17 +434,17 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
     size_t off = 0;
     if (SettingType::Struct == type) {
         if (node->GetChild(fieldName, &off)) {
-            RemoveDataItemAt(node, off - 1);
+            node->RemoveDataAt((int)off - 1);
         }
     } else if (SettingType::Array == type) {
         while (node->GetChild(fieldName, &off)) {
-            RemoveDataItemAt(node, off - 1);
+            node->RemoveDataAt((int)off - 1);
             off--;
         }
     } else {
         Str value = node->GetValue(fieldName, &off);
         if (!str::IsNull(value)) {
-            RemoveDataItemAt(node, off - 1);
+            node->RemoveDataAt((int)off - 1);
         }
     }
 }
@@ -463,17 +454,17 @@ static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int 
         return;
     }
     for (int i = 0; i < len(node->data); i++) {
-        SquareTreeNode::DataItem& item = node->data[i];
+        SquareTreeNode::DataItem* item = node->data[i];
         Indent(out, indent);
-        out.Append(item.key);
-        if (item.child) {
+        out.Append(item->key);
+        if (item->child) {
             out.Append(" [\r\n");
-            SerializeUnknownFields(out, item.child, indent + 1);
+            SerializeUnknownFields(out, item->child, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         } else {
             out.Append(" = ");
-            out.Append(item.str);
+            out.Append(item->str);
             out.Append("\r\n");
         }
     }
