@@ -52,15 +52,27 @@ Final note: Whitespace at the start and end of a line as well as around key-valu
 separators is always ignored.
 */
 
+// Safe read: '\0' when i is outside [0, data.len). Never use data.s[i] without a bound.
+static char Peek(Str data, int i) {
+    if (i < 0 || i >= data.len) {
+        return '\0';
+    }
+    return data.s[i];
+}
+
 static int SkipWs(Str data, int off, bool stopAtLineEnd = false) {
-    for (; off < data.len && str::IsWs(data.s[off]) && (!stopAtLineEnd || data.s[off] != '\n'); off++) {
-        ;
+    for (;;) {
+        char c = Peek(data, off);
+        if (!c || !str::IsWs(c) || (stopAtLineEnd && c == '\n')) {
+            break;
+        }
+        off++;
     }
     return off;
 }
 
 static int SkipWsRev(Str data, int begin, int off) {
-    for (; off > begin && str::IsWs(data.s[off - 1]); off--) {
+    for (; off > begin && str::IsWs(Peek(data, off - 1)); off--) {
         ;
     }
     return off;
@@ -69,8 +81,9 @@ static int SkipWsRev(Str data, int begin, int off) {
 static int SkipWsAndComments(Str data, int off) {
     for (;;) {
         off = SkipWs(data, off);
-        if (off < data.len && (data.s[off] == '#' || data.s[off] == ';')) {
-            for (; off < data.len && data.s[off] != '\n'; off++) {
+        char c = Peek(data, off);
+        if (c == '#' || c == ';') {
+            for (; Peek(data, off) && Peek(data, off) != '\n'; off++) {
                 ;
             }
         } else {
@@ -81,11 +94,11 @@ static int SkipWsAndComments(Str data, int off) {
 }
 
 static bool IsBracketLine(Str data, int off) {
-    if (off >= data.len || data.s[off] != '[') {
+    if (Peek(data, off) != '[') {
         return false;
     }
-    for (off++; off < data.len && data.s[off] != '\n' && data.s[off] != '#' && data.s[off] != ';'; off++) {
-        if (!str::IsWs(data.s[off])) {
+    for (off++; Peek(data, off) && Peek(data, off) != '\n' && Peek(data, off) != '#' && Peek(data, off) != ';'; off++) {
+        if (!str::IsWs(Peek(data, off))) {
             return false;
         }
     }
@@ -96,7 +109,7 @@ static Str ExtractTrimmed(Str data, int begin, int end) {
     begin = std::max(0, std::min(begin, data.len));
     end = std::max(begin, std::min(end, data.len));
     end = SkipWsRev(data, begin, end);
-    while (begin < end && str::IsWs(data.s[begin])) {
+    while (begin < end && str::IsWs(Peek(data, begin))) {
         begin++;
     }
     return Str(data.s + begin, end - begin);
@@ -206,47 +219,53 @@ static bool IsNodeOpenLine(Str data, int sepOff, int valOff, int lineEnd) {
     }
     // also tolerate "key \n [ \n ... \n ]" (else the key gets an empty value
     // and the child node an empty key)
-    return str::IsWs(data.s[sepOff]) && valOff < data.len && data.s[valOff] == '\n' &&
+    return str::IsWs(Peek(data, sepOff)) && Peek(data, valOff) == '\n' &&
            IsBracketLine(data, SkipWsAndComments(data, lineEnd));
 }
 
 static bool IsIniSectionLine(Str data, int keyOff, int valOff, int lineEnd) {
-    return data.s[keyOff] == '[' && data.s[SkipWsRev(data, valOff, lineEnd) - 1] == ']';
+    if (Peek(data, keyOff) != '[') {
+        return false;
+    }
+    int closeOff = SkipWsRev(data, valOff, lineEnd) - 1;
+    return Peek(data, closeOff) == ']';
 }
 
 // Scans one non-empty line starting at off (already past comments/ws).
 static LineScan ScanLine(Str data, int off) {
     LineScan line;
     line.keyOff = off;
-    for (; off < data.len && data.s[off] != '=' && data.s[off] != ':' && data.s[off] != '[' && data.s[off] != ']' &&
-           data.s[off] != '\n';
-         off++) {
-        ;
+    for (;;) {
+        char c = Peek(data, off);
+        if (!c || c == '=' || c == ':' || c == '[' || c == ']' || c == '\n') {
+            break;
+        }
+        off++;
     }
-    if (off >= data.len || data.s[off] == '\n') {
+    if (!Peek(data, off) || Peek(data, off) == '\n') {
         // use first whitespace as a fallback separator
-        for (off = line.keyOff; off < data.len && !str::IsWs(data.s[off]); off++) {
+        for (off = line.keyOff; Peek(data, off) && !str::IsWs(Peek(data, off)); off++) {
             ;
         }
     }
     line.sepOff = off;
-    if (off < data.len && data.s[off] != '\n') {
+    if (Peek(data, off) && Peek(data, off) != '\n') {
         // skip to the first non-whitespace character on the same line (value)
         off = SkipWs(data, off + 1, true);
     }
     line.valOff = off;
-    for (; off < data.len && data.s[off] != '\n'; off++) {
+    for (; Peek(data, off) && Peek(data, off) != '\n'; off++) {
         ;
     }
     line.lineEnd = off;
 
     if (IsNodeOpenLine(data, line.sepOff, line.valOff, line.lineEnd)) {
         line.kind = LineKind::NodeOpen;
-    } else if (data.s[line.keyOff] == ']') {
+    } else if (Peek(data, line.keyOff) == ']') {
         line.kind = LineKind::CloseBracket;
     } else if (IsIniSectionLine(data, line.keyOff, line.valOff, line.lineEnd)) {
         line.kind = LineKind::IniSection;
-    } else if ((line.lineEnd < data.len && data.s[line.sepOff] == '[') || data.s[line.sepOff] == ']') {
+    } else if ((line.lineEnd < data.len && Peek(data, line.sepOff) == '[') || Peek(data, line.sepOff) == ']') {
         line.kind = LineKind::Invalid;
     } else {
         line.kind = LineKind::KeyValue;
@@ -290,9 +309,9 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, i
         return node;
     }
 
-    while (off < data.len && data.s[off]) {
+    while (Peek(data, off)) {
         off = SkipWsAndComments(data, off);
-        if (off >= data.len || !data.s[off]) {
+        if (!Peek(data, off)) {
             break;
         }
 
@@ -327,7 +346,7 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, i
             case LineKind::KeyValue:
                 AppendKeyValue(node, data, line);
                 off = line.lineEnd;
-                if (off < data.len && data.s[off] == '\n') {
+                if (Peek(data, off) == '\n') {
                     off++;
                 }
                 break;

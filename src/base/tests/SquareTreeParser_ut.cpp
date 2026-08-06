@@ -187,4 +187,27 @@ void SquareTreeTest() {
         utassert(str::Eq(root->GetChild(StrL("node2"))->GetValue(StrL("Key")), StrL("value")));
         delete root;
     }
+
+    // EOF without trailing newline / separator: must not read past data.len
+    {
+        Str s = UTF8_BOM "key";
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 1 == len(root->data));
+        utassert(!root->data[0]->child && str::Eq(root->data[0]->key, StrL("key")));
+        utassert(str::Eq(root->data[0]->str, StrL("")));
+        delete root;
+    }
+    {
+        Str s = UTF8_BOM "key=";
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 1 == len(root->data));
+        utassert(str::Eq(root->data[0]->key, StrL("key")) && str::Eq(root->data[0]->str, StrL("")));
+        delete root;
+    }
+    {
+        Str s = UTF8_BOM "key=value";
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && str::Eq(root->GetValue(StrL("key")), StrL("value")));
+        delete root;
+    }
 }
