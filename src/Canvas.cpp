@@ -2099,13 +2099,12 @@ void StartAutoScrollAtCursor(MainWindow* win) {
 }
 
 static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM /*key*/) {
-    switch (win->mouseAction) {
-        case MouseAction::Scrolling:
-            if (!win->dragStartPending) {
-                win->mouseAction = MouseAction::None;
-                SetCursorCached(IDC_ARROW);
-                break;
-            }
+    // a middle-click that started auto-scrolling and then moved is a drag, and
+    // releasing it ends the scroll; releasing without moving leaves auto-scroll
+    // latched on, which is what dragStartPending still being set means
+    if (win->mouseAction == MouseAction::Scrolling && !win->dragStartPending) {
+        win->mouseAction = MouseAction::None;
+        SetCursorCached(IDC_ARROW);
     }
 }
 
