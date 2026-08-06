@@ -27,29 +27,6 @@ import { ptr } from "bun:ffi";
 
 const FB2 = join(import.meta.dir, "issue-2254.fb2");
 
-async function waitForTopWindowTitle(pid: number, titleSubstr: string, timeoutMs = 8000): Promise<number> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    let found = 0;
-    enumWindows((hwnd) => {
-      if (getWindowPid(hwnd) !== pid) {
-        return true;
-      }
-      const title = getWindowText(hwnd);
-      if (title.includes(titleSubstr)) {
-        found = hwnd;
-        return false;
-      }
-      return true;
-    });
-    if (found) {
-      return found;
-    }
-    await sleep(100);
-  }
-  return 0;
-}
-
 function findFirstEdit(parent: number): number {
   let found = 0;
   enumChildWindows(parent, (hwnd) => {
@@ -60,6 +37,36 @@ function findFirstEdit(parent: number): number {
     return true;
   });
   return found;
+}
+
+// PropertiesWnd::Create sets the title before creating the Edit child. Polling only
+// for the title can observe the shell without an Edit (race → flaky "no Edit control").
+// Wait until both the titled top-level window and its Edit exist.
+async function waitForPropertiesEdit(pid: number, timeoutMs = 8000): Promise<{ props: number; edit: number }> {
+  const deadline = Date.now() + timeoutMs;
+  let lastProps = 0;
+  while (Date.now() < deadline) {
+    let props = 0;
+    enumWindows((hwnd) => {
+      if (getWindowPid(hwnd) !== pid) {
+        return true;
+      }
+      if (getWindowText(hwnd).includes("Document Properties")) {
+        props = hwnd;
+        return false;
+      }
+      return true;
+    });
+    if (props) {
+      lastProps = props;
+      const edit = findFirstEdit(props);
+      if (edit) {
+        return { props, edit };
+      }
+    }
+    await sleep(100);
+  }
+  return { props: lastProps, edit: 0 };
 }
 
 function getEditText(hwnd: number): string {
@@ -96,17 +103,22 @@ export async function testit(): Promise<void> {
     await sleep(2000); // let FB2 load / reflow
 
     sendCommand(frame, cmdId("CmdProperties"));
-    const props = await waitForTopWindowTitle(proc.pid!, "Document Properties");
+    const { props, edit } = await waitForPropertiesEdit(proc.pid!);
     if (!props) {
       throw new Error("issue-2254: Document Properties window did not open");
     }
-
-    const edit = findFirstEdit(props);
     if (!edit) {
       throw new Error("issue-2254: no Edit control in Document Properties");
     }
-    await sleep(200);
-    const text = getEditText(edit);
+    // Text is set during Create; retry briefly if WM_GETTEXT races SetPropsText.
+    let text = "";
+    for (let i = 0; i < 20; i++) {
+      text = getEditText(edit);
+      if (text.includes("Title:") || text.includes("Author:")) {
+        break;
+      }
+      await sleep(100);
+    }
     console.log(`issue-2254 properties text (${text.length} chars):\n${text.slice(0, 800)}`);
 
     if (!text.includes("Annotation Prop Test")) {
