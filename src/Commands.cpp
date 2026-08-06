@@ -839,6 +839,7 @@ static const ArgSpec argSpecs[] = {
     {CmdCreateAnnotText, kCmdArgSetContent, CommandArg::Type::Bool},
     {CmdCreateAnnotText, kCmdArgTextSize, CommandArg::Type::Int},
     {CmdCreateAnnotText, kCmdArgBorderWidth, CommandArg::Type::Int},
+    {CmdCreateAnnotText, kCmdArgAlignment, CommandArg::Type::String},
     {CmdCreateAnnotText, kCmdArgInteriorColor, CommandArg::Type::Color},
     {CmdCreateAnnotText, kCmdArgFocusEdit, CommandArg::Type::Bool},
     {CmdCreateAnnotText, kCmdArgFocusList, CommandArg::Type::Bool},

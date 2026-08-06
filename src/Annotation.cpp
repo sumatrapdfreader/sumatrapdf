@@ -259,6 +259,14 @@ Str Author(Annotation* annot) {
     return res;
 }
 
+SeqStrings gQuaddingNames = "Left\0Center\0Right\0";
+
+// name of a text alignment as used by the FreeTextAlignment setting and the
+// `alignment` command argument -> PDF /Q value, -1 if not a known name
+int QuaddingFromName(Str s) {
+    return SeqStrIndexIS(gQuaddingNames, s);
+}
+
 int Quadding(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
@@ -1584,6 +1592,10 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             if (typ == AnnotationType::FreeText) {
                 if (args->borderWidth >= 0) {
                     pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
+                }
+                // left is MuPDF's default; leave /Q out of the file for it
+                if (args->quadding > kQuaddingLeft) {
+                    pdf_set_annot_quadding(ctx, annot, args->quadding);
                 }
                 const char* content = CStrTemp(args->content);
                 if (!str::IsEmptyOrWhiteSpace(content)) {

@@ -393,6 +393,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 #define kCmdArgOpenEdit StrL("openedit")
 #define kCmdArgTextSize StrL("textsize")
 #define kCmdArgBorderWidth StrL("borderwidth")
+#define kCmdArgAlignment StrL("alignment")
 #define kCmdArgInteriorColor StrL("interiorcolor")
 
 #define kCmdArgCopyToClipboard StrL("copytoclipboard")

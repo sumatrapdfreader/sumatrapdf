@@ -220,6 +220,10 @@ struct Annotations {
     int freeTextSize;
     // border width of free text annotations, in points
     int freeTextBorderWidth;
+    // how text is aligned in newly created free text annotations (Text
+    // Alignment in the annotation editor): left, center or right.
+    // Right-to-left scripts (Arabic, Hebrew, Persian) want right
+    Str freeTextAlignment;
     // color of newly created text (sticky note) annotations
     Str textIconColor;
     ParsedColor textIconColorParsed;
@@ -1105,24 +1109,27 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, freeTextOpacity), SettingType::Int, 100},
     {offsetof(Annotations, freeTextSize), SettingType::Int, 12},
     {offsetof(Annotations, freeTextBorderWidth), SettingType::Int, 1},
+    {offsetof(Annotations, freeTextAlignment), SettingType::String, (intptr_t)"left"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations),
-    12,
+    13,
     gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0TextIconColor\0TextIconType\0DefaultAuthor",
+    "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0TextIconColor\0TextIconType\0DefaultAuthor",
     "color of newly created highlight annotations\0color of newly created underline annotations\0color of newly "
     "created squiggly underline annotations\0color of newly created strike out annotations\0text color of newly "
     "created free text annotations\0background color of newly created free text annotations\0opacity of free text "
     "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0font "
-    "size of free text annotations, in points\0border width of free text annotations, in points\0color of newly "
-    "created text (sticky note) annotations\0icon shown for text (sticky note) annotations: comment, help, insert, "
-    "key, new paragraph, note or paragraph. If not set, note is used\0author recorded on newly created annotations. If "
-    "not set, the Windows user name is used; set it to (none) to leave the author out entirely",
+    "size of free text annotations, in points\0border width of free text annotations, in points\0how text is aligned "
+    "in newly created free text annotations (Text Alignment in the annotation editor): left, center or right. "
+    "Right-to-left scripts (Arabic, Hebrew, Persian) want right\0color of newly created text (sticky note) "
+    "annotations\0icon shown for text (sticky note) annotations: comment, help, insert, key, new paragraph, note or "
+    "paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, the Windows user "
+    "name is used; set it to (none) to leave the author out entirely",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

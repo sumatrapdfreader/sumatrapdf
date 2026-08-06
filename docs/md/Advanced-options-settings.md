@@ -524,6 +524,11 @@ Annotations [
     ; 3.5)
     FreeTextBorderWidth = 1
 
+    ; how text is aligned in newly created free text annotations (Text Alignment
+    ; in the annotation editor): left, center or right. Right-to-left scripts
+    ; (Arabic, Hebrew, Persian) want right (introduced in version 3.7)
+    FreeTextAlignment = left
+
     ; color of newly created text (sticky note) annotations
     TextIconColor = 
 

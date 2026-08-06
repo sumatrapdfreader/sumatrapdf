@@ -85,6 +85,8 @@ struct AnnotCreateArgs {
     int textSize = -1;
     // for free text, < 0 means not given
     int borderWidth = -1;
+    // for free text, PDF /Q text alignment, < 0 means not given (MuPDF's left)
+    int quadding = -1;
     bool setContentToSelection = false;
     Str content;
     Pixmap* stampImage = nullptr;
@@ -109,6 +111,14 @@ int DefaultAppearanceTextSize(Annotation*);
 Str Contents(Annotation*);
 PdfColor GetColor(Annotation*);      // kColorUnset if no color
 PdfColor InteriorColor(Annotation*); // kColorUnset if no color
+// PDF /Q: how free text is aligned in its box ("Text Alignment" in the
+// annotation editor). Right is also what right-to-left scripts want.
+constexpr int kQuaddingLeft = 0;
+constexpr int kQuaddingCenter = 1;
+constexpr int kQuaddingRight = 2;
+extern SeqStrings gQuaddingNames; // "Left\0Center\0Right\0"
+
+int QuaddingFromName(Str);
 int Quadding(Annotation*);
 int BorderWidth(Annotation*);
 Str IconName(Annotation*); // empty if no icon

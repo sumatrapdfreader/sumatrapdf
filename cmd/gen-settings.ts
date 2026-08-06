@@ -595,6 +595,13 @@ const annotations: Field[] = [
   // part of the document, so they must not be DPI-scaled
   field("FreeTextSize", Int, 12, "font size of free text annotations, in points").ver("3.5"),
   field("FreeTextBorderWidth", Int, 1, "border width of free text annotations, in points").ver("3.5"),
+  field(
+    "FreeTextAlignment",
+    Str,
+    "left",
+    "how text is aligned in newly created free text annotations (Text Alignment in the annotation " +
+      "editor): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right",
+  ).ver("3.7"),
   field("TextIconColor", Color, "", "color of newly created text (sticky note) annotations"),
   field(
     "TextIconType",

@@ -468,6 +468,7 @@ Arguments for `CmdCreateAnnotHighlight` plus:
 - `bgcolor` : background color of annotation, fully transparent if not given
 - `textsize` : size of annotation text, 12 if not given
 - `borderwidth` : border width, 1 if not given
+- `alignment` : **ver 3.7+**, how free text is aligned in its box: `left`, `center` or `right`. Left if not given
 - `opacity` : opacity of annotation, 0 - fully transparent (i.e. invisible), 100 - fully opaque (default if not given)
 - `interiorcolor` : interior color for circle, square etc. annotations, fully transparent if not given
 - `focusedit` : boolean, when annotation edit window opens, focus the contents edit control

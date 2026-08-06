@@ -54,6 +54,7 @@ static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy",
 static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
 static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
 static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
+static const char* gEnumFreeTextAlignment[] = {"left", "center", "right", nullptr};
 
 namespace {
 struct EnumSettingDef {
@@ -71,6 +72,7 @@ static const EnumSettingDef gEnumSettings[] = {
     {"HomePageViewMode", gEnumHomePageViewMode},
     {"PrintScale", gEnumPrintScale},
     {"Collate", gEnumCollate},
+    {"FreeTextAlignment", gEnumFreeTextAlignment},
 };
 // clang-format on
 

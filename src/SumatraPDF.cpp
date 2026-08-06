@@ -8803,6 +8803,8 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
         // set some reasonable limits
         setMinMax(args.borderWidth, 0, 128);
     }
+
+    args.quadding = QuaddingFromName(GetCommandStringArg(cmd, kCmdArgAlignment, {}));
 }
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
@@ -8838,6 +8840,7 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         args.opacity = a.freeTextOpacity;
         args.textSize = a.freeTextSize;
         args.borderWidth = a.freeTextBorderWidth;
+        args.quadding = QuaddingFromName(a.freeTextAlignment);
     } else if (typ == AnnotationType::Stamp || typ == AnnotationType::Caret || typ == AnnotationType::Square ||
                typ == AnnotationType::Circle || typ == AnnotationType::Line) {
         // MuPDF defaults these to red on create; no separate prefs color.

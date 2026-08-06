@@ -50,7 +50,6 @@ static SeqStrings gColors =
     "Transparent\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
 static SeqStrings gFontNames = "Cour\0Helv\0TiRo\0";
 static SeqStrings gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
-static SeqStrings gQuaddingNames = "Left\0Center\0Right\0";
 
 static PdfColor gColorsValues[] = {
 	0x00000000, /* transparent */
