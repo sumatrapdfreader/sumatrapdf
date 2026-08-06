@@ -25,6 +25,7 @@
 #include "Annotation.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
+#include "Canvas.h"
 #include "SumatraDialogs.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -612,6 +613,10 @@ static MenuDef menuDefDebug[] = {
     {
         "Show links",
         CmdToggleLinks,
+    },
+    {
+        "Show images",
+        CmdToggleImages,
     },
     {
         "Download symbols",
@@ -1803,6 +1808,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     CheckMenuRadioItem(win->menu, gFirstSetThemeCmdId, gLastSetThemeCmdId, gCurrSetThemeCmdId, MF_BYCOMMAND);
 
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
+    MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));
 }
 

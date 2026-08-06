@@ -8,6 +8,7 @@ int ThemeGetCount();
 Str ThemeGetNameAt(int idx);
 int ThemeGetCurrentIndex();
 void ToggleLightDarkTheme();
+Str ToggleLightDarkThemeTargetName();
 void UpdateThemeAfterSystemColorChange();
 void CreateThemeCommands();
 

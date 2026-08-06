@@ -2214,15 +2214,26 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& /*pageRect*/, b
 }
 #endif
 
-/* debug code to visualize links (can block while rendering) */
-static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
-    if (!gGlobalPrefs->showLinks) {
-        return;
-    }
+// CmdToggleImages. Like showLinks this is a debug aid (both live in the debug
+// menu, so both are debug / pre-release only), and like it the outlines are
+// only drawn, never saved - see CmdToggleImages in FrameOnCommand
+static bool gShowImages = false;
 
+bool ShowImageOutlines() {
+    return gShowImages;
+}
+
+void ToggleShowImageOutlines() {
+    gShowImages = !gShowImages;
+}
+
+/* debug code to visualize links and images (can block while rendering) */
+static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
 
-    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, RGB(0x00, 0x00, 0xff)), true);
+    // blue for links, green for images, so both can be on at once
+    COLORREF col = images ? RGB(0x00, 0xa0, 0x00) : RGB(0x00, 0x00, 0xff);
+    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pi = dm->GetPageInfo(pageNo);
@@ -2236,7 +2247,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
         dm->GetEngine()->TryGetElements(pageNo, &els);
 
         for (auto& el : els) {
-            if (el->Is(kindPageElementImage)) {
+            if (el->Is(kindPageElementImage) != images) {
                 continue;
             }
             Rect rect = dm->CvtToScreen(pageNo, el->GetRect());
@@ -2247,6 +2258,16 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             }
         }
     }
+}
+
+static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
+    if (gShowImages) {
+        DebugOutlinePageElements(dm, hdc, true);
+    }
+    if (!gGlobalPrefs->showLinks) {
+        return;
+    }
+    DebugOutlinePageElements(dm, hdc, false);
 
     if (false && dm->GetZoomVirtual() == kZoomFitContent) {
         // also display the content box when fitting content

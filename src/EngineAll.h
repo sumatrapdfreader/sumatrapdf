@@ -80,6 +80,8 @@ void EngineMupdfSetDisableJavaScript(bool disable);
 void EngineMupdfSetAllowExternalImages(bool allow);
 // toggle CAD/engineering-drawing line enhancement for this document
 void EngineMupdfToggleCadEnhance(EngineBase* engine);
+// is CAD/engineering-drawing line enhancement in effect for this document?
+bool EngineMupdfCadEnhanceActive(EngineBase* engine);
 // drop cached dark-mode analyses/images (call when dark-mode options change)
 void EngineMupdfInvalidateDarkMode(EngineBase* engine);
 // PDF documents support the object-level smart dark renderer

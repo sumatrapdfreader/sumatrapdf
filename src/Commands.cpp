@@ -274,6 +274,7 @@ static SeqStrings gCommandNames =
     "CmdDeleteCachedFiles\0"
     "CmdToggleKeyboardLinkFollowing\0"
     "CmdDebugToggleDpiOverride\0"
+    "CmdToggleImages\0"
     "CmdNone\0"
     "\0";
 
@@ -537,6 +538,7 @@ static i32 gCommandIds[] = {
     CmdDeleteCachedFiles,
     CmdToggleKeyboardLinkFollowing,
     CmdDebugToggleDpiOverride,
+    CmdToggleImages,
     CmdNone,
 };
 
@@ -800,6 +802,7 @@ SeqStrings gCommandDescriptions =
     "Delete Cached Files\0"
     "Follow Link With Keyboard\0"
     "Debug: Toggle DPI Override\0"
+    "Toggle Show Images\0"
     "Do nothing\0"
     "\0";
 // clang-format on

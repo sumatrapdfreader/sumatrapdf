@@ -268,6 +268,7 @@ export const commands = [
     "CmdDeleteCachedFiles", "Delete Cached Files",
     "CmdToggleKeyboardLinkFollowing", "Follow Link With Keyboard",
     "CmdDebugToggleDpiOverride", "Debug: Toggle DPI Override",
+    "CmdToggleImages", "Toggle Show Images",
     "CmdNone", "Do nothing",
 ];
 

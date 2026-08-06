@@ -5843,6 +5843,17 @@ bool EngineSupportsSmartDarkMode(EngineBase* engine) {
 // Toggle CAD/engineering-drawing line enhancement for this document
 // (CmdToggleEngineeringDrawingEnhance); caller re-renders. Runs the detection
 // pass lazily for documents loaded while the mode pref was "off".
+// the state CmdToggleEngineeringDrawingEnhance would flip. Deliberately doesn't
+// run detection - that takes the document locks - so before it has run this
+// reads as off, which is what the toggle would flip away from anyway
+bool EngineMupdfCadEnhanceActive(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
+        return false;
+    }
+    return epdf->CadEnhanceActive();
+}
+
 void EngineMupdfToggleCadEnhance(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf || !epdf->pdfdoc) {

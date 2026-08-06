@@ -765,6 +765,14 @@ void ToggleLightDarkTheme() {
     SetThemeByIndex(idx);
 }
 
+// name of the theme ToggleLightDarkTheme() would switch to, for the command
+// palette: ": set to true" says nothing useful when a toggle picks a theme
+Str ToggleLightDarkThemeTargetName() {
+    bool isDark = !IsLightColor(ThemeWindowBackgroundColor());
+    int idx = isDark ? GetPreferredLightThemeIndex() : GetPreferredDarkThemeIndex();
+    return ThemeGetNameAt(idx);
+}
+
 // call on WM_SETTINGCHANGE "ImmersiveColorSet": re-resolves the System theme
 // when the user switches Windows between light and dark mode
 void UpdateThemeAfterSystemColorChange() {

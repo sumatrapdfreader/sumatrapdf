@@ -8515,15 +8515,6 @@ static void DeleteCachedFiles(MainWindow* win) {
     ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 }
 
-static void TogglePredictiveRender(MainWindow* win) {
-    gPredictiveRender = !gPredictiveRender;
-    NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
-    args.msg = gPredictiveRender ? "Enabled predictive render" : "Disabled predictie render";
-    args.timeoutMs = 3000;
-    ShowNotification(args);
-}
-
 static void DownloadDebugSymbols() {
     TempStr msg = "Symbols were already downloaded";
 
@@ -9975,7 +9966,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdDebugTogglePredictiveRender:
-            TogglePredictiveRender(win);
+            // no notification: the command palette shows the state it will
+            // switch to, so announcing the same thing again is redundant
+            gPredictiveRender = !gPredictiveRender;
             break;
 
         case CmdDebugToggleRenderInfo:
@@ -9988,6 +9981,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleLinks:
             gGlobalPrefs->showLinks = !gGlobalPrefs->showLinks;
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
+            }
+            break;
+
+        case CmdToggleImages:
+            // not a setting like showLinks: this is a debug aid, so it lasts
+            // for the session and doesn't end up in everyone's settings file
+            ToggleShowImageOutlines();
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }

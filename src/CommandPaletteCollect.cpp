@@ -19,6 +19,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
+#include "Canvas.h"
 #include "Commands.h"
 #include "Favorites.h"
 #include "FileHistory.h"
@@ -28,6 +29,10 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "Notifications.h"
+#include "PdfDarkMode.h"
+#include "Theme.h"
+#include "base/GuessFileType.h"
+#include "EngineAll.h"
 #include "CommandAvailability.h"
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
@@ -81,6 +86,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showLinks;
         } break;
+        case CmdToggleImages: {
+            isToggle = true;
+            newIsOn = !ShowImageOutlines();
+        } break;
         case CmdToggleShowAnnotations: {
             WindowTab* tab = win->CurrentTab();
             if (tab) {
@@ -123,10 +132,33 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !win->pageInfoWanted;
         } break;
+        case CmdTogglePreservePdfImages: {
+            isToggle = true;
+            newIsOn = !GetPreservePdfImagesInDarkMode();
+        } break;
+        case CmdDebugTogglePredictiveRender: {
+            isToggle = true;
+            newIsOn = !gPredictiveRender;
+        } break;
+        case CmdToggleEngineeringDrawingEnhance: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !EngineMupdfCadEnhanceActive(dm->GetEngine());
+            }
+        } break;
     }
 
     if (isToggle) {
         return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
+    }
+
+    if (cmdId == CmdToggleLightDarkTheme) {
+        // this toggle picks a theme, so name it instead of saying true / false
+        Str target = ToggleLightDarkThemeTargetName();
+        if (target) {
+            return str::JoinTemp(s, StrL(": switch to "), target);
+        }
     }
 
     if (cmdId == CmdToggleWindowsPreviewer) {

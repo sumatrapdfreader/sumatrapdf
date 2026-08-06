@@ -268,7 +268,8 @@ enum {
     CmdDeleteCachedFiles = 457,
     CmdToggleKeyboardLinkFollowing = 458,
     CmdDebugToggleDpiOverride = 459,
-    CmdNone = 460,
+    CmdToggleImages = 460,
+    CmdNone = 461,
 
     /* range for file history */
     CmdFileHistoryFirst,
