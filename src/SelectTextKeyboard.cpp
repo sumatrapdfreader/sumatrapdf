@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Dpi.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -96,10 +97,12 @@ static int NearestGlyphWithBox(Rect* coords, int textLen, int ix, bool* isBefore
     return -1;
 }
 
-// Screen rect of the caret: a thin bar on the leading edge of the glyph the
-// caret sits before, or on the trailing edge of the glyph to its left when that
-// glyph is the last one with a box (end of line, end of text).
-static bool CaretScreenRect(MainWindow* win, Rect& out) {
+// Screen rects for the caret: the bar itself - on the leading edge of the glyph
+// the caret sits before, or on the trailing edge of the glyph to its left when
+// that glyph is the last one with a box (end of line, end of text) - and the
+// glyph it is on, which is highlighted so the eye finds the caret in a page
+// full of text. The bar sticks out above and below the line for the same reason.
+static bool CaretScreenRects(MainWindow* win, Rect& barOut, Rect& glyphOut) {
     DisplayModel* dm = win->AsFixed();
     if (!dm || !dm->ValidPageNo(win->textSelectPage)) {
         return false;
@@ -122,9 +125,16 @@ static bool CaretScreenRect(MainWindow* win, Rect& out) {
     // past the last glyph the caret belongs after it, not before it
     trailing = trailing || win->textSelectGlyph >= textLen;
     Rect r = dm->CvtToScreen(win->textSelectPage, ToRectF(coords[ix]));
-    int caretDx = std::max(DpiScale(win->hwndCanvas, 2), 2);
-    out = Rect{trailing ? r.x + r.dx : r.x, r.y, caretDx, r.dy};
+    glyphOut = r;
+    int caretDx = std::max(DpiScale(win->hwndCanvas, 3), 3);
+    int overhang = std::max(r.dy / 3, DpiScale(win->hwndCanvas, 3));
+    barOut = Rect{trailing ? r.x + r.dx : r.x, r.y - overhang, caretDx, r.dy + (2 * overhang)};
     return true;
+}
+
+static bool CaretScreenRect(MainWindow* win, Rect& out) {
+    Rect glyph;
+    return CaretScreenRects(win, out, glyph);
 }
 
 static void ScrollCaretIntoView(MainWindow* win) {
@@ -529,19 +539,33 @@ TempStr SelectTextKeyboardResultTemp(int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// A thin inverted bar the size of one character is hard to find on a page of
+// text, so the caret is deliberately louder than a text-editor one: a blue bar
+// (no printed text is that color, so it reads as UI rather than content) that
+// overhangs the line, plus a translucent yellow wash over the character it is
+// on, like a highlighter pen. The wash marks the position even while the bar is
+// blinking, so only the bar blinks.
+constexpr COLORREF kCaretBarCol = RGB(0x19, 0x76, 0xd2);
+constexpr COLORREF kCaretGlyphCol = RGB(0xff, 0xf1, 0x00);
+constexpr u8 kCaretGlyphAlpha = 120;
+
 void PaintKeyboardTextCaret(MainWindow* win, HDC hdc) {
-    if (!SelectTextWithKeyboardActive(win) || !win->textSelectCaretVisible) {
+    if (!SelectTextWithKeyboardActive(win)) {
         return;
     }
-    Rect r;
-    if (!CaretScreenRect(win, r)) {
+    Rect bar, glyph;
+    if (!CaretScreenRects(win, bar, glyph)) {
         return;
     }
-    if (win->canvasRc.Intersect(r).IsEmpty()) {
+    if (!win->canvasRc.Intersect(glyph).IsEmpty()) {
+        Vec<Rect> rects;
+        rects.Append(glyph);
+        PaintTransparentRectangles(hdc, win->canvasRc, rects, kCaretGlyphCol, kCaretGlyphAlpha, 1, false);
+    }
+    if (!win->textSelectCaretVisible || win->canvasRc.Intersect(bar).IsEmpty()) {
         return;
     }
-    // invert instead of painting a color: the caret then shows up on any page
-    // background, in any theme, without a contrast calculation
-    RECT rc = ToRECT(r);
-    PatBlt(hdc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, DSTINVERT);
+    AutoDeleteBrush brush(CreateSolidBrush(kCaretBarCol));
+    RECT rc = ToRECT(bar);
+    FillRect(hdc, &rc, brush);
 }
