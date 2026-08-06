@@ -179,6 +179,8 @@ void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(Str langCode);
 void UpdateDocumentColors();
+// next state of the cursor-position tip, for the command palette
+Str NextCursorPositionUnitName(MainWindow*);
 void UpdateFixedPageScrollbarsVisibility();
 
 // scrollbar mode values: "windows\0smart\0overlay\0hidden\0"

@@ -185,24 +185,32 @@ void WindowTab::MoveDocBy(int dx, int dy) const {
     }
 }
 
+// the zoom ToggleZoom() would switch to. Split out so the command palette can
+// name it without repeating (and drifting from) the cycle
+float WindowTab::NextToggleZoom() const {
+    // TODO: maybe move to DocController?
+    float currZoom = ctrl ? ctrl->GetZoomVirtual() : kInvalidZoom;
+    if (kZoomFitPage == currZoom) {
+        return kZoomFitWidth;
+    }
+    if (kZoomFitWidth == currZoom) {
+        return kZoomFitHeight;
+    }
+    if (kZoomFitHeight == currZoom) {
+        return kZoomFitContent;
+    }
+    if (kZoomFitContent == currZoom) {
+        return kZoomShrinkToFit;
+    }
+    return kZoomFitPage;
+}
+
 void WindowTab::ToggleZoom() const {
     ReportIf(!ctrl);
     if (!IsDocLoaded()) {
         return;
     }
-    // TODO: maybe move to DocController?
-    float newZoom = kZoomFitPage;
-    float currZoom = ctrl->GetZoomVirtual();
-    if (kZoomFitPage == currZoom) {
-        newZoom = kZoomFitWidth;
-    } else if (kZoomFitWidth == currZoom) {
-        newZoom = kZoomFitHeight;
-    } else if (kZoomFitHeight == currZoom) {
-        newZoom = kZoomFitContent;
-    } else if (kZoomFitContent == currZoom) {
-        newZoom = kZoomShrinkToFit;
-    }
-    ctrl->SetZoomVirtual(newZoom, nullptr);
+    ctrl->SetZoomVirtual(NextToggleZoom(), nullptr);
 }
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336

@@ -7659,6 +7659,26 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
     return annot;
 }
 
+// what CmdToggleCursorPosition would switch to. The tip cycles pt -> mm -> in
+// and then closes, so the command palette can't say true / false; naming the
+// next unit here keeps it in step with ToggleCursorPositionInDoc() below
+Str NextCursorPositionUnitName(MainWindow* win) {
+    if (!win || !win->AsFixed()) {
+        return {};
+    }
+    if (!GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos)) {
+        return StrL("pt");
+    }
+    switch (cursorPosUnit) {
+        case MeasurementUnit::pt:
+            return StrL("mm");
+        case MeasurementUnit::mm:
+            return StrL("in");
+        default:
+            return StrL("off");
+    }
+}
+
 static void ToggleCursorPositionInDoc(MainWindow* win) {
     // "cursor position" tip: make figuring out the current
     // cursor position in cm/in/pt possible (for exact layouting)

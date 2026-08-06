@@ -122,12 +122,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showFavorites;
         } break;
-        case CmdToggleZoom: { // NOLINT(bugprone-branch-clone): distinct TODOs, not a copy-paste
-            // TODO: this toggles via different values
-        } break;
-        case CmdToggleCursorPosition: {
-            // TODO: this toggles 3 states
-        } break;
         case CmdTogglePageInfo: {
             isToggle = true;
             newIsOn = !win->pageInfoWanted;
@@ -151,6 +145,26 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
 
     if (isToggle) {
         return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
+    }
+
+    // these two cycle through values rather than on and off, so they name what
+    // comes next instead of saying set to true / false
+    if (cmdId == CmdToggleZoom) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->IsDocLoaded()) {
+            Str zoomName;
+            ZoomToString(&zoomName, tab->NextToggleZoom(), nullptr);
+            TempStr res = str::JoinTemp(s, StrL(": switch to "), zoomName);
+            str::Free(zoomName);
+            return res;
+        }
+    }
+
+    if (cmdId == CmdToggleCursorPosition) {
+        Str unit = NextCursorPositionUnitName(win);
+        if (unit) {
+            return str::JoinTemp(s, StrL(": switch to "), unit);
+        }
     }
 
     if (cmdId == CmdToggleLightDarkTheme) {

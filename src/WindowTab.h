@@ -159,6 +159,7 @@ struct WindowTab {
     Str GetTabTitle() const;
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
+    float NextToggleZoom() const;
     void ToggleZoom() const;
 };
 
