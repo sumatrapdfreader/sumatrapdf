@@ -1916,6 +1916,9 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
     auto* ctx = NewBuildMenuCtx(tab, cursorPos);
     AutoDelete delCtx(ctx);
+    // avoid a dangling handle if the Read Aloud submenu ends up empty this
+    // time (e.g. EnableReadAloud is off) and BuildMenuFromDef never re-sets it
+    SetReadAloudContextSubmenu(nullptr);
     HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), ctx);
 
     // in fullscreen, add "Menu" as first item containing the full menu bar

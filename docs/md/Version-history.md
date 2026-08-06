@@ -28,6 +28,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Markdown documents have a **Show Generated HTML** command (`Ctrl + K` command palette) that saves the rendered HTML to a temporary `.html` file and opens it in Notepad
 - HEIC / HEIF still images now decode with a built-in decoder (no Windows HEIC codec required for most phone photos); AVIF still uses dav1d. The system WIC path remains as a fallback if built-in decode fails
 - Read Aloud: adjustable playback speed — pick 0.5x .. 3x in the new `Speed` submenu (next to `Voice` in the Read Aloud menu, toolbar dropdown and context menu) or click the speed button on the playback bar to cycle presets (right-click cycles backwards); the speed persists across sessions via the `ReadAloudSpeed` advanced setting
+- Read Aloud can be hidden entirely (toolbar button, menu, and command palette entries) by setting `EnableReadAloud = false` in `SumatraPDF-settings.txt`, for people who don't use text-to-speech and want a leaner toolbar/menu (discussion #5670)
 - updated the bundled MuPDF rendering engine to 1.28.0
 - add [AI Chat with document](AI-Chat-with-document.md) sidebar (in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open PDF or image via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
 - add `ClaudeCode` advanced settings (`Model`, `Effort`, `SkipPermissions`, `BgColor`, `SidebarDx`) in `SumatraPDF-settings.txt`

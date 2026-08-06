@@ -12173,6 +12173,9 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
 }
 
 static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCursorItem, bool canReadFromCursor) {
+    if (!gGlobalPrefs->enableReadAloud) {
+        return;
+    }
     WindowTab* currTab = win ? win->CurrentTab() : nullptr;
     bool isSpeaking = TtsIsSpeaking();
     bool canContinue = CanContinueReadAloud(currTab);

@@ -880,6 +880,12 @@ const globalPrefs: Field[] = [
     .internal()
     .ver("3.7"),
   field(
+    "EnableReadAloud",
+    Bool,
+    true,
+    "if false, hide the Read Aloud (text-to-speech) toolbar button, menu, and command palette entries",
+  ).ver("3.7"),
+  field(
     "ShowToolbar",
     Bool,
     true,

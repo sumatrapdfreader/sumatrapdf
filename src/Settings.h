@@ -633,6 +633,9 @@ struct GlobalPrefs {
     // up to 13 custom colors for the background color picker, separated by
     // space (e.g. '#ff0000 #00ff00 #0000ff')
     Str customColors;
+    // if false, hide the Read Aloud (text-to-speech) toolbar button, menu,
+    // and command palette entries
+    bool enableReadAloud;
     // legacy bool for toolbar; if Toolbar is empty, derived as show/hide
     // (internal; use Toolbar instead)
     bool showToolbar;
@@ -1521,6 +1524,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showMenubarWithTabs), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showTips), SettingType::Bool, true},
     {offsetof(GlobalPrefs, customColors), SettingType::String, 0, true},
+    {offsetof(GlobalPrefs, enableReadAloud), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true, true},
     {offsetof(GlobalPrefs, toolbar), SettingType::String, 0},
     {offsetof(GlobalPrefs, toolbarPosition), SettingType::String, (intptr_t)"top"},
@@ -1632,18 +1636,18 @@ static const StructInfo gGlobalPrefsInfo = {
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInsta"
-    "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloa"
-    "ting\0ShowFavorites\0SortFavoritesByName\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotificati"
-    "on\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0PaddingAfterLas"
-    "tPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0Ta"
-    "bWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAloud\0ToolbarSize"
-    "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
-    "ors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Ima"
-    "geUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0Transl"
-    "ateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0"
-    "\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0Vers"
-    "ionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
-    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "nce\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0EnableReadAloud\0ShowToolbar\0Toolbar\0ToolbarPosit"
+    "ion\0SearchUIFloating\0ShowFavorites\0SortFavoritesByName\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnn"
+    "otationNotification\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll"
+    "\0PaddingAfterLastPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSlee"
+    "pInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAl"
+    "oud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAuto"
+    "Links\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0Co"
+    "micBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0Transla"
+    "teToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults"
+    "\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0"
+    "UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfL"
+    "astUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1663,12 +1667,13 @@ static const StructInfo gGlobalPrefsInfo = {
     "true, open documents in the already running SumatraPDF instead of starting a new one\0if true, show the menu bar "
     "(F9 toggles it; the choice is remembered across sessions)\0if true, show the menu bar when using tabs (useTabs = "
     "true)\0if true, show tips on the home page\0up to 13 custom colors for the background color picker, separated by "
-    "space (e.g. '#ff0000 #00ff00 #0000ff')\0legacy bool for toolbar; if Toolbar is empty, derived as show/hide "
-    "(internal; use Toolbar instead)\0toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over the "
-    "page, sized to its natural width and centered, only shown when the mouse is near it). if empty, derived from "
-    "ShowToolbar\0where the toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the "
-    "find UI is a floating, movable window with a results list instead of the compact toolbar overlay\0if true, show "
-    "the Favorites sidebar\0if true, favorites within each file are sorted alphabetically by name (or page label); if "
+    "space (e.g. '#ff0000 #00ff00 #0000ff')\0if false, hide the Read Aloud (text-to-speech) toolbar button, menu, and "
+    "command palette entries\0legacy bool for toolbar; if Toolbar is empty, derived as show/hide (internal; use "
+    "Toolbar instead)\0toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over the page, sized "
+    "to its natural width and centered, only shown when the mouse is near it). if empty, derived from ShowToolbar\0"
+    "where the toolbar is placed: top or bottom (applies to both show and overlay modes)\0if true, the find UI is a "
+    "floating, movable window with a results list instead of the compact toolbar overlay\0if true, show the "
+    "Favorites sidebar\0if true, favorites within each file are sorted alphabetically by name (or page label); if "
     "false (the default), they are sorted by page number\0if true, show the table of contents (Bookmarks) sidebar when "
     "the document has one\0if true, draw a blue border around links in the document\0if true, draw a focus ring around "
     "the document when it has keyboard focus (Tab to the page area)\0if true, show a tip when hovering an annotation "

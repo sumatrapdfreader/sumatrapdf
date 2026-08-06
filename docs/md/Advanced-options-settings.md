@@ -118,6 +118,10 @@ ShowTips = true
 ; (e.g. '#ff0000 #00ff00 #0000ff') (introduced in version 3.7)
 CustomColors =
 
+; if false, hide the Read Aloud (text-to-speech) toolbar button, menu, and
+; command palette entries (introduced in version 3.7)
+EnableReadAloud = true
+
 ; legacy bool for toolbar; if Toolbar is empty, derived as show/hide (internal;
 ; use Toolbar instead)
 ShowToolbar = true

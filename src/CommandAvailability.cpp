@@ -134,6 +134,18 @@ static UINT_PTR removeIfNoFullscreenPerms[] = {
     0,
 };
 
+// hidden from toolbar, menu, context menu and command palette when the
+// EnableReadAloud advanced setting is turned off
+static UINT_PTR removeIfReadAloudDisabled[] = {
+    CmdReadAloud,
+    CmdPauseReadAloud,
+    CmdContinueReadAloud,
+    CmdStopReadAloud,
+    CmdReadAloudFromTopPage,
+    CmdReadAloudSelection,
+    0,
+};
+
 static UINT_PTR removeIfNoPrefsPerms[] = {
     CmdOptions,
     CmdSetInverseSearch,
@@ -636,6 +648,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
     if (!HasPermission(Perm::PrinterAccess) && cmdId == CmdPrint) {
+        return CommandVisibility::Hide;
+    }
+    if (!gGlobalPrefs->enableReadAloud && CmdIdInList(cmdId, removeIfReadAloudDisabled)) {
         return CommandVisibility::Hide;
     }
     if (!CanAccessDisk()) {
