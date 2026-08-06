@@ -215,13 +215,7 @@ const sumatraFiles: FileGroup[] = [
   // uia
   {
     dir: "src/uia",
-    patterns: [
-      "Provider.*",
-      "StartPageProvider.*",
-      "DocumentProvider.*",
-      "PageProvider.*",
-      "TextRange.*",
-    ],
+    patterns: ["Provider.*", "StartPageProvider.*", "DocumentProvider.*", "PageProvider.*", "TextRange.*"],
   },
   // engines
   {
@@ -413,6 +407,7 @@ const SYSTEM_LIBS = [
   "version",
   "windowscodecs",
   "wininet",
+  "winhttp", // HttpPostUrl (Http_win.cpp); not pulled via #pragma on mingw
   "uiautomationcore",
   "uxtheme",
   "wintrust",
@@ -438,11 +433,7 @@ const SYSTEM_LIBS = [
 
 // ── Build SumatraPDF main executable sources ────────────────────────────────
 
-async function buildSumatraExe(
-  outDir: string,
-  isRelease: boolean,
-  archives: string[],
-): Promise<void> {
+async function buildSumatraExe(outDir: string, isRelease: boolean, archives: string[]): Promise<void> {
   console.log("Building SumatraPDF executable sources...");
 
   // Resolve source files
@@ -522,7 +513,9 @@ async function buildSumatraExe(
   // ── Compile _com_util stub (mingw doesn't ship comsuppw.lib) ─────────
   const comUtilSrc = join(outDir, "obj", "_com_util_stub.cpp");
   const comUtilObj = join(outDir, "obj", "_com_util_stub.o");
-  await writeFile(comUtilSrc, `
+  await writeFile(
+    comUtilSrc,
+    `
 #include <windows.h>
 #include <oleauto.h>
 namespace _com_util {
@@ -541,7 +534,8 @@ namespace _com_util {
     return str;
   }
 }
-`);
+`,
+  );
   const comRes = await spawnCmd([mingwTools.cxx, "-Os", ...MINGW_CXX_FLAGS, "-c", comUtilSrc, "-o", comUtilObj]);
   if (!comRes.ok) {
     console.error(`Failed to compile _com_util stub: ${comRes.stderr}`);
@@ -551,7 +545,9 @@ namespace _com_util {
   // ── TextToSpeech stub (WinRT headers unavailable for mingw cross-compile) ──
   const ttsStubSrc = join(outDir, "obj", "_tts_stub.cpp");
   const ttsStubObj = join(outDir, "obj", "_tts_stub.o");
-  await writeFile(ttsStubSrc, `
+  await writeFile(
+    ttsStubSrc,
+    `
 #include "base/Base.h"
 #include "TextToSpeech.h"
 
@@ -568,7 +564,8 @@ bool TtsSetVoiceById(Str) { return false; }
 Str TtsGetVoiceId() { return Str(); }
 void TtsSetSpeed(float) {}
 float TtsGetSpeed() { return 1.0f; }
-`);
+`,
+  );
   const ttsRes = await spawnCmd([
     mingwTools.cxx,
     "-Os",
@@ -588,12 +585,24 @@ float TtsGetSpeed() { return 1.0f; }
   // ── debug test stubs (TestPlugin/TestPreview don't build cleanly with mingw GDI+) ──
   const testStubSrc = join(outDir, "obj", "_test_stub.cpp");
   const testStubObj = join(outDir, "obj", "_test_stub.o");
-  await writeFile(testStubSrc, `
+  await writeFile(
+    testStubSrc,
+    `
 #include "base/Base.h"
 void TestPlugin(WStr) {}
 void TestPreview(WStr) {}
-`);
-  const testRes = await spawnCmd([mingwTools.cxx, "-Os", ...MINGW_CXX_FLAGS, "-Isrc", "-c", testStubSrc, "-o", testStubObj]);
+`,
+  );
+  const testRes = await spawnCmd([
+    mingwTools.cxx,
+    "-Os",
+    ...MINGW_CXX_FLAGS,
+    "-Isrc",
+    "-c",
+    testStubSrc,
+    "-o",
+    testStubObj,
+  ]);
   if (!testRes.ok) {
     console.error(`Failed to compile test stub: ${testRes.stderr}`);
     throw new Error("test stub compile failed");
@@ -626,16 +635,10 @@ void TestPreview(WStr) {}
   const rcTmpPath = join(outDir, "obj", "sumatrapdf", "SumatraPDF_mingw.rc");
   await writeFile(rcTmpPath, rcFixed);
   const rcTmpAbsolute = join(process.cwd(), rcTmpPath);
-  const rcRes = await spawnCmd([
-    mingwTools.windres,
-    "-I",
-    ".",
-    "-D_WIN64",
-    ...defineFlags,
-    rcTmpAbsolute,
-    "-o",
-    rcObjAbsolute,
-  ], { cwd: "src" });
+  const rcRes = await spawnCmd(
+    [mingwTools.windres, "-I", ".", "-D_WIN64", ...defineFlags, rcTmpAbsolute, "-o", rcObjAbsolute],
+    { cwd: "src" },
+  );
   const rcObjs: string[] = [];
   if (rcRes.ok) {
     rcObjs.push(rcObj);

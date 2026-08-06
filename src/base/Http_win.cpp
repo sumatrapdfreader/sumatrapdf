@@ -7,9 +7,56 @@
 #include "base/Win.h"
 #include "base/Http.h"
 
+// MinGW's winhttp.h redefines INTERNET_SCHEME as int after wininet.h (via Base.h)
+// already typedef'd it as an enum, which is a hard error. MSVC headers are fine
+// together. On MinGW declare only the WinHTTP bits HttpPostUrl needs and link
+// -lwinhttp (see build-with-mingw.ts).
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#ifndef WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY
+#define WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY 4
+#endif
+#ifndef WINHTTP_NO_PROXY_NAME
+#define WINHTTP_NO_PROXY_NAME ((LPCWSTR) nullptr)
+#endif
+#ifndef WINHTTP_NO_PROXY_BYPASS
+#define WINHTTP_NO_PROXY_BYPASS ((LPCWSTR) nullptr)
+#endif
+#ifndef WINHTTP_NO_REFERER
+#define WINHTTP_NO_REFERER ((LPCWSTR) nullptr)
+#endif
+#ifndef WINHTTP_DEFAULT_ACCEPT_TYPES
+#define WINHTTP_DEFAULT_ACCEPT_TYPES ((LPCWSTR*)nullptr)
+#endif
+#ifndef WINHTTP_FLAG_SECURE
+#define WINHTTP_FLAG_SECURE 0x00800000
+#endif
+#ifndef WINHTTP_QUERY_STATUS_CODE
+#define WINHTTP_QUERY_STATUS_CODE 19
+#endif
+#ifndef WINHTTP_QUERY_FLAG_NUMBER
+#define WINHTTP_QUERY_FLAG_NUMBER 0x20000000
+#endif
+#ifndef WINHTTP_HEADER_NAME_BY_INDEX
+#define WINHTTP_HEADER_NAME_BY_INDEX ((LPCWSTR) nullptr)
+#endif
+#ifndef WINHTTP_NO_HEADER_INDEX
+#define WINHTTP_NO_HEADER_INDEX ((LPDWORD) nullptr)
+#endif
+extern "C" {
+HINTERNET WINAPI WinHttpOpen(LPCWSTR, DWORD, LPCWSTR, LPCWSTR, DWORD);
+HINTERNET WINAPI WinHttpConnect(HINTERNET, LPCWSTR, INTERNET_PORT, DWORD);
+HINTERNET WINAPI WinHttpOpenRequest(HINTERNET, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR*, DWORD);
+BOOL WINAPI WinHttpSendRequest(HINTERNET, LPCWSTR, DWORD, LPVOID, DWORD, DWORD, DWORD_PTR);
+BOOL WINAPI WinHttpReceiveResponse(HINTERNET, LPVOID);
+BOOL WINAPI WinHttpQueryHeaders(HINTERNET, DWORD, LPCWSTR, LPVOID, LPDWORD, LPDWORD);
+BOOL WINAPI WinHttpQueryDataAvailable(HINTERNET, LPDWORD);
+BOOL WINAPI WinHttpReadData(HINTERNET, LPVOID, DWORD, LPDWORD);
+BOOL WINAPI WinHttpCloseHandle(HINTERNET);
+}
+#else
 #include <winhttp.h>
-
 #pragma comment(lib, "winhttp.lib")
+#endif
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
@@ -385,6 +432,8 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
     HINTERNET hSession = nullptr, hConnect = nullptr, hRequest = nullptr;
     rspOut->error = ERROR_SUCCESS;
 
+    // InternetCrackUrl (WinINet) rather than WinHttpCrackUrl: same URL_COMPONENTS,
+    // and avoids needing the full winhttp.h URL crack API on MinGW.
     URL_COMPONENTS uc{};
     uc.dwStructSize = sizeof(uc);
     uc.dwSchemeLength = (DWORD)-1;
@@ -392,7 +441,7 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
     uc.dwUrlPathLength = (DWORD)-1;
     uc.dwExtraInfoLength = (DWORD)-1;
     WCHAR* urlW = CWStrTemp(url);
-    if (!WinHttpCrackUrl(urlW, 0, 0, &uc)) {
+    if (!InternetCrackUrlW(urlW, 0, 0, &uc)) {
         rspOut->error = GetLastError();
         return false;
     }
