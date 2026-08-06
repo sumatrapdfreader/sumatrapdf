@@ -174,6 +174,7 @@ void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysi
 
 bool PdfDarkModeImageLooksLikePhoto(fz_context* ctx, fz_image* image);
 bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, float pageCoverage);
+bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage);
 
 RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH);
 

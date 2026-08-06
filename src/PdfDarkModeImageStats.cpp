@@ -282,9 +282,21 @@ bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float 
     return false;
 }
 
+// A page-sized image is normally a scan or a full-bleed background, and those
+// should recolor along with the page. Artwork shouldn't: keeping pictures as
+// they are is what smart mode is for, and a cover illustration is no less a
+// picture for filling the page (issue #5887). LooksLikeDarkArtwork is the
+// discriminator - a scanned page is mostly bright paper, which it rejects.
+bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage) {
+    if (pageCoverage < kMaxPreserveImagePageCoverage) {
+        return false; // not page-dominant, the ordinary rules decide
+    }
+    return !PdfDarkModeImageLooksLikeDarkArtwork(ctx, image, pageCoverage);
+}
+
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH) {
-    if (pageCoverage >= kMaxPreserveImagePageCoverage) {
+    if (PdfDarkModePageDominantImageRecolors(ctx, image, pageCoverage)) {
         return false;
     }
     int minPx = GetPreservePdfImagesMinSize();

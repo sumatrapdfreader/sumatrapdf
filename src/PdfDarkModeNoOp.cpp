@@ -157,6 +157,13 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
     return imgPage;
 }
 
+bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage) {
+    (void)ctx;
+    (void)image;
+    (void)pageCoverage;
+    return false;
+}
+
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH) {
     (void)ctx;

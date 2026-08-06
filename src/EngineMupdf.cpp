@@ -4323,8 +4323,9 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
         }
         RectF imgOnPage = imgPage.Intersect(pageBounds);
         float coverage = (imgOnPage.dx * imgOnPage.dy) / pageArea;
-        if (coverage >= kMaxPreserveImagePageCoverage) {
-            // full-bleed backgrounds / scans recolor with the page
+        if (PdfDarkModePageDominantImageRecolors(ctx, image, coverage)) {
+            // full-bleed backgrounds / scans recolor with the page; artwork
+            // that happens to fill the page does not
             if (image) {
                 fz_drop_image(ctx, image);
             }
