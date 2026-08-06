@@ -243,9 +243,6 @@
     <ClInclude Include="..\src\LinkFollow.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SelectTextKeyboard.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\MainWindow.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -343,6 +340,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SearchAndDDE.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SelectTextKeyboard.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Selection.h">
@@ -731,9 +731,6 @@
     <ClCompile Include="..\src\LinkFollow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SelectTextKeyboard.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -876,6 +873,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SearchAndDDE.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SelectTextKeyboard.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Selection.cpp">

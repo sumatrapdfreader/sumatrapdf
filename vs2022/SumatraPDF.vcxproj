@@ -1257,7 +1257,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\JxlReader.h" />
     <ClInclude Include="..\src\LinkFollow.h" />
-    <ClInclude Include="..\src\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\MarkdownModel.h" />
     <ClInclude Include="..\src\MarkdownToc.h" />
@@ -1291,6 +1290,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\Screenshot.h" />
     <ClInclude Include="..\src\ScreenshotCapture.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
+    <ClInclude Include="..\src\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\SelectionHandlers.h" />
     <ClInclude Include="..\src\SelectionToolbar.h" />
@@ -1456,7 +1456,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\LinkFollow.cpp" />
-    <ClCompile Include="..\src\SelectTextKeyboard.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
     <ClCompile Include="..\src\MarkdownModel.cpp" />
     <ClCompile Include="..\src\MarkdownToc.cpp" />
@@ -1514,6 +1513,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\ScreenshotCapture.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
+    <ClCompile Include="..\src\SelectTextKeyboard.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SelectionHandlers.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />

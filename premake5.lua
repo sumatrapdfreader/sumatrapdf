@@ -1076,7 +1076,9 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
-    disablewarnings { "4838" }
+    -- FZ_UNUSED is a no-op outside gcc/clang, so mupdf's headers trip 4100;
+    -- every other project including them disables it too
+    disablewarnings { "4100", "4838" }
     includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "mupdf/include" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
     test_engines_files()

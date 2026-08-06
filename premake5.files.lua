@@ -703,6 +703,7 @@ function sumatrapdf_files()
     "OverlayScrollbar.*",
     "Screenshot.*",
     "ScreenshotCapture.*",
+    "SelectTextKeyboard.*",
     "Selection.*",
     "SelectionHandlers.*",
     "SelectionToolbar.*",
