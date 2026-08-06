@@ -411,6 +411,21 @@ void CommandPaletteWnd::OnListDoubleClick() {
     ExecuteCurrentSelection();
 }
 
+// The tab switcher shows a checkbox for restoring the pre-3.6 Ctrl+Tab behavior
+// (switch tabs immediately, no switcher window). Checking it makes this window
+// obsolete, so we close it without switching tabs.
+void CommandPaletteWnd::OnPre36CheckboxChanged() {
+    bool isChecked = checkboxPre36->IsChecked();
+    if (gGlobalPrefs->ctrlTabPre36Behavior == isChecked) {
+        return;
+    }
+    gGlobalPrefs->ctrlTabPre36Behavior = isChecked;
+    SaveSettings();
+    if (isChecked) {
+        ScheduleDeleteAndExecCommand();
+    }
+}
+
 static void OnClose(Wnd::CloseEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
@@ -560,12 +575,37 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
+        // the hints are secondary information, so they use the regular (smaller)
+        // app font, not the bigger font of the query / list
+        HFONT fontHelp = GetAppFont(hwnd);
         for (int i = 0; i < nHelp; i++) {
-            auto* c = CreateStatic(hwnd, font, strings[i]);
+            auto* c = CreateStatic(hwnd, fontHelp, strings[i]);
             c->SetColors(colTxt, colBg);
             auto* p = new Padding(c, pad);
             hbox->AddChild(p);
         }
+        vbox->AddChild(hbox);
+    }
+
+    if (smartTabMode) {
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        Checkbox::CreateArgs args;
+        args.parent = hwnd;
+        args.text = _TRA("Ctrl+Tab switches tabs directly (like before version 3.6)");
+        args.isRtl = IsUIRtl();
+        auto* c = new Checkbox();
+        c->Create(args);
+        HwndSetFont(c->hwnd, GetAppFont(hwnd));
+        c->SetColors(colTxt, colBg);
+        if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
+            // otherwise the box glyph stays a light Windows checkbox
+            DarkMode::setDarkThemeExperimental(c->hwnd);
+        }
+        c->onStateChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnPre36CheckboxChanged>(this);
+        checkboxPre36 = c;
+        hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 8, 0, 8)));
         vbox->AddChild(hbox);
     }
 
@@ -577,6 +617,16 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     dy = std::max(dy, 480);
     int dx = rc.dx - 256;
     dx = limitValue(dx, 640, 1024);
+    if (smartTabMode) {
+        // size the window to the number of tabs instead of using a fixed height
+        int itemDy = listBox->GetItemHeight(0);
+        int maxLines = 16;
+        if (itemDy > 0) {
+            maxLines = std::max((rc.dy - DpiScale(hwnd, 160)) / itemDy, 3);
+        }
+        listBox->idealSizeLines = std::min(listBox->model->ItemsCount(), maxLines);
+        dy = 0;
+    }
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 

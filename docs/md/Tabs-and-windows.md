@@ -65,7 +65,9 @@ Use the [command palette](Command-Palette.md): type `@` to switch tabs by name.
 
 In **3.5 and earlier**, `Ctrl + Tab` / `Ctrl + Shift + Tab` switched tabs immediately in tab-strip order (no overlay list). In **3.6+** those keys run **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held.
 
-If you prefer the old behavior (useful when flicking quickly between two documents), either:
+If you prefer the old behavior (useful when flicking quickly between two documents), the simplest way (**ver 3.7+**) is to tick **Ctrl+Tab switches tabs directly (like before version 3.6)** at the bottom of the switcher window, which sets the `CtrlTabPre36Behavior` advanced setting to `true`. From then on `Ctrl + Tab` / `Ctrl + Shift + Tab` switch tabs immediately in tab-strip order and the switcher no longer shows up (set it back to `false` to get the switcher back).
+
+Alternatively:
 
 1. Use **`Ctrl + PageDown` / `Ctrl + PageUp`** instead, or
 2. [Rebind the keys](Customize-keyboard-shortcuts.md) in advanced settings so `Ctrl + Tab` runs plain next/prev tab again:
@@ -83,7 +85,7 @@ Shortcuts [
 ]
 ```
 
-Note: the advanced setting `TabsMru` only changes the **order** of tabs inside the Smart Tab Switch list (most-recently-used vs strip order). It does **not** hide the switcher; use the shortcut rebind above for that.
+Note: the advanced setting `TabsMru` only changes the **order** of tabs inside the Smart Tab Switch list (most-recently-used vs strip order). It does **not** hide the switcher; use `CtrlTabPre36Behavior` or the shortcut rebind above for that.
 
 ## Home tab
 

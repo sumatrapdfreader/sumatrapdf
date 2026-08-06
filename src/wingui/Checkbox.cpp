@@ -43,6 +43,24 @@ HWND Checkbox::Create(const CreateArgs& args) {
     return hwnd;
 }
 
+// A checkbox draws its label on the parent's background, which by default is
+// the gray button face. Answer the reflected WM_CTLCOLORSTATIC with our own
+// colors so the control blends into a themed (or plain white) parent.
+LRESULT Checkbox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
+    if (msg == WM_CTLCOLORSTATIC || msg == WM_CTLCOLORBTN) {
+        HDC hdc = (HDC)wp;
+        if (!IsSpecialColor(textColor)) {
+            SetTextColor(hdc, textColor);
+        }
+        if (!IsSpecialColor(bgColor)) {
+            SetBkColor(hdc, bgColor);
+        }
+        auto* br = BackgroundBrush();
+        return (LRESULT)br;
+    }
+    return 0;
+}
+
 bool Checkbox::OnCommand(WPARAM wp, LPARAM /*lparam*/) {
     auto code = HIWORD(wp);
     if (code == BN_CLICKED && onStateChanged.IsValid()) {

@@ -43,6 +43,7 @@ struct CommandPaletteWnd : Wnd {
     StrVecCP favorites;
     ListBox* listBox = nullptr;
     Static* staticInfo = nullptr;
+    Checkbox* checkboxPre36 = nullptr;
 
     StrVec filterWords;
     Vec<u8> highlighted;
@@ -79,6 +80,7 @@ struct CommandPaletteWnd : Wnd {
     void SwitchToFavorites();
     void OnSelectionChange();
     void OnListDoubleClick();
+    void OnPre36CheckboxChanged();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
 };
 

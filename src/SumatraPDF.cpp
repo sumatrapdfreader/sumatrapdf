@@ -9259,6 +9259,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdNextTabSmart:
         case CmdPrevTabSmart: {
+            if (gGlobalPrefs->ctrlTabPre36Behavior) {
+                // pre-3.6 behavior: switch tabs immediately, in tab-strip order
+                TabsOnCtrlTab(win, cmdId == CmdPrevTabSmart);
+                break;
+            }
             if (win && win->TabCount() > 1) {
                 int advance = cmdId == CmdNextTabSmart ? 1 : -1;
                 RunCommandPalette(win, kPalettePrefixTabs, advance);

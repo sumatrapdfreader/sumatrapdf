@@ -1113,6 +1113,13 @@ const globalPrefs: Field[] = [
     false,
     "if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order",
   ).ver("3.7"),
+  field(
+    "CtrlTabPre36Behavior",
+    Bool,
+    false,
+    "if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order " +
+      "(the behavior before version 3.6) instead of showing the tab switcher",
+  ).ver("3.7"),
   compactArray(
     "ZoomLevels",
     Float,

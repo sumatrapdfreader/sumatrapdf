@@ -475,6 +475,7 @@ struct Checkbox : Wnd {
     HWND Create(const CreateArgs&);
 
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     Size GetIdealSize() override;
 

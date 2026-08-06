@@ -770,6 +770,10 @@ struct GlobalPrefs {
     // if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most
     // recently used order instead of tab-strip order
     bool tabsMru;
+    // if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next
+    // / previous tab in tab-strip order (the behavior before version 3.6)
+    // instead of showing the tab switcher
+    bool ctrlTabPre36Behavior;
     // zoom levels which zooming steps through in addition to Fit Page, Fit
     // Width and the minimum and maximum allowed values (8.33 and 6400)
     Vec<float>* zoomLevels;
@@ -1561,6 +1565,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
     {offsetof(GlobalPrefs, selectionToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabsMru), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, ctrlTabPre36Behavior), SettingType::Bool, false},
     {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t)""},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t)"0"},
     {(size_t)-1, SettingType::Comment, 0},
@@ -1627,7 +1632,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    127,
+    128,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -1638,12 +1643,12 @@ static const StructInfo gGlobalPrefsInfo = {
     "tPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0Ta"
     "bWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAloud\0ToolbarSize"
     "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
-    "ors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Ima"
-    "geUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0Transl"
-    "ateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0"
-    "\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0Vers"
-    "ionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
-    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "ors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabPre36Behavior\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI"
+    "\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0T"
+    "ranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDe"
+    "faults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPassw"
+    "ords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0T"
+    "imeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1708,20 +1713,21 @@ static const StructInfo gGlobalPrefsInfo = {
     "true, use the Windows system colors for the document background and text. Overrides other color settings\0if "
     "true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar with selection "
     "actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it\0if true, "
-    "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
-    "order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0how much a single "
-    "zoom in / zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, zooming "
-    "steps through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization "
-    "options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization options for Comic Book "
-    "UI\0\0customization options for image files UI\0\0customization options for CHM UI. If UseFixedPageUI is true, "
-    "FixedPageUI settings apply instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is "
-    "used; otherwise WebView2 browser view is used when available\0\0settings for the Claude Code chat "
-    "sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the "
-    "AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered "
-    "destination language for selection translation; empty uses OS UI language\0remembered source language for "
-    "selection translation; empty means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, "
-    "Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of additional external "
-    "viewers for various file types. See [docs for more "
+    "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order\0if "
+    "true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order (the behavior "
+    "before version 3.6) instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; all values "
+    "must lie between 8.33 and 6400\0how much a single zoom in / zoom out step changes the zoom, as a percentage of "
+    "the current zoom level. If 0 or negative, zooming steps through ZoomLevels instead\0\0customization options for "
+    "PDF, XPS, DjVu and PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain "
+    "text)\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
+    "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
+    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
+    "available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings "
+    "for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok "
+    "Build, and OpenAI Codex (internal)\0\0remembered destination language for selection translation; empty uses OS UI "
+    "language\0remembered source language for selection translation; empty means Auto\0remembered engine for Translate "
+    "Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF "
+    "documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
