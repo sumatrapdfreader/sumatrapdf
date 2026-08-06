@@ -18,8 +18,8 @@ struct SquareTreeNode {
 
     void RemoveDataAt(int idx);
 
-    Str GetValue(Str key, size_t* startIdx = nullptr) const;
-    SquareTreeNode* GetChild(Str key, size_t* startIdx = nullptr) const;
+    Str GetValue(Str key, int* startIdx = nullptr) const;
+    SquareTreeNode* GetChild(Str key, int* startIdx = nullptr) const;
 };
 
 SquareTreeNode* ParseSquareTree(Str s);

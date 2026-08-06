@@ -23,7 +23,7 @@ void SquareTreeTest() {
         utassert(!item->child && str::Eq(item->key, StrL("key")) && str::Eq(item->str, StrL("value")));
         utassert(!root->GetChild(StrL("key")));
         utassert(str::Eq(root->GetValue(StrL("KEY")), StrL("value")));
-        size_t off = 0;
+        int off = 0;
         utassert(str::Eq(root->GetValue(StrL("key"), &off), StrL("value")));
         utassert(!root->GetValue(StrL("key"), &off));
         delete root;
@@ -43,7 +43,7 @@ void SquareTreeTest() {
         SquareTreeNode::DataItem* item = root->data[0];
         utassert(item->child && str::Eq(item->key, StrL("node")));
         utassert(item->child == root->GetChild(StrL("NODE")));
-        size_t off = 0;
+        int off = 0;
         utassert(item->child == root->GetChild(StrL("node"), &off));
         utassert(!root->GetChild(StrL("node"), &off));
         utassert(str::Eq(item->child->GetValue(StrL("key")), StrL("value")));
@@ -61,7 +61,7 @@ void SquareTreeTest() {
         Str s = arrayData[i];
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == len(root->data));
-        size_t off = 0;
+        int off = 0;
         SquareTreeNode* node = root->GetChild(StrL("array"), &off);
         utassert(node && 1 == len(node->data) && str::Eq(node->GetValue(StrL("item")), StrL("0")));
         node = root->GetChild(StrL("array"), &off);
@@ -88,7 +88,7 @@ void SquareTreeTest() {
         utassert(root && 1 == len(root->data));
         SquareTreeNode* array = root->GetChild(StrL("array"));
         utassert(2 == len(array->data));
-        size_t off = 0;
+        int off = 0;
         SquareTreeNode* node = array->GetChild(StrL(""), &off);
         utassert(node && 1 == len(node->data) && str::Eq(node->GetValue(StrL("item")), StrL("0")));
         node = array->GetChild(StrL(""), &off);
@@ -107,7 +107,7 @@ void SquareTreeTest() {
     for (Str s : valueArrayData) {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == len(root->data));
-        size_t off = 0;
+        int off = 0;
         Str value = root->GetValue(StrL("count"), &off);
         utassert(str::Eq(value, StrL("0")) && 1 == off);
         value = root->GetValue(StrL("count"), &off);

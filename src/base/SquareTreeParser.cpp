@@ -166,34 +166,36 @@ void SquareTreeNode::RemoveDataAt(int idx) {
     data.RemoveAt(idx);
 }
 
-Str SquareTreeNode::GetValue(Str key, size_t* startIdx) const {
-    int start = startIdx ? (int)*startIdx : 0;
-    int n = len(data);
+// wantChild: match items with a child node; otherwise match value items (no child).
+// On match, advances *startIdx to i+1 so the next call continues the search.
+static SquareTreeNode::DataItem* FindDataItem(const SquareTreeNode* node, Str key, bool wantChild, int* startIdx) {
+    int start = startIdx ? *startIdx : 0;
+    int n = len(node->data);
     for (int i = start; i < n; i++) {
-        DataItem* item = data[i];
-        if (str::EqI(key, item->key) && !item->child) {
-            if (startIdx) {
-                *startIdx = (size_t)i + 1;
-            }
-            return item->str;
+        SquareTreeNode::DataItem* item = node->data[i];
+        if (!str::EqI(key, item->key)) {
+            continue;
         }
-    }
-    return {};
-}
-
-SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
-    int start = startIdx ? (int)*startIdx : 0;
-    int n = len(data);
-    for (int i = start; i < n; i++) {
-        DataItem* item = data[i];
-        if (str::EqI(key, item->key) && item->child) {
-            if (startIdx) {
-                *startIdx = (size_t)i + 1;
-            }
-            return item->child;
+        if (wantChild != (item->child != nullptr)) {
+            continue;
         }
+        if (startIdx) {
+            *startIdx = i + 1;
+        }
+        return item;
     }
     return nullptr;
+}
+
+// Returned Str aliases the node's storage; valid until the node is mutated or destroyed.
+Str SquareTreeNode::GetValue(Str key, int* startIdx) const {
+    DataItem* item = FindDataItem(this, key, false, startIdx);
+    return item ? item->str : Str{};
+}
+
+SquareTreeNode* SquareTreeNode::GetChild(Str key, int* startIdx) const {
+    DataItem* item = FindDataItem(this, key, true, startIdx);
+    return item ? item->child : nullptr;
 }
 
 // Line classification after scanning key / separator / value span.

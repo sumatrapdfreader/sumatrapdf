@@ -431,20 +431,20 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
     if (!node) {
         return;
     }
-    size_t off = 0;
+    int off = 0;
     if (SettingType::Struct == type) {
         if (node->GetChild(fieldName, &off)) {
-            node->RemoveDataAt((int)off - 1);
+            node->RemoveDataAt(off - 1);
         }
     } else if (SettingType::Array == type) {
         while (node->GetChild(fieldName, &off)) {
-            node->RemoveDataAt((int)off - 1);
+            node->RemoveDataAt(off - 1);
             off--;
         }
     } else {
         Str value = node->GetValue(fieldName, &off);
         if (!str::IsNull(value)) {
-            node->RemoveDataAt((int)off - 1);
+            node->RemoveDataAt(off - 1);
         }
     }
 }
@@ -583,7 +583,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
             }
             if (child || useDefaults || !*(Vec<void*>**)fieldPtr) {
                 Vec<void*>* array = new Vec<void*>();
-                size_t idx = 0;
+                int idx = 0;
                 while (parent) {
                     child = parent->GetChild(fieldNameStr, &idx);
                     if (child == nullptr) {
