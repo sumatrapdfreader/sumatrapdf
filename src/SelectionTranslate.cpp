@@ -6,6 +6,7 @@
 #include "base/ScopedWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "base/Http.h"
 #include "base/Dpi.h"
 
 #include "wingui/UIModels.h"

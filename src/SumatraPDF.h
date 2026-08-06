@@ -134,7 +134,6 @@ bool CanAccessDisk();
 bool AnnotationsAreDisabled();
 bool IsUIRtl();
 bool SumatraLaunchBrowser(Str url);
-TempStr URLEncodeMayTruncateTemp(Str s);
 void LaunchDocumentation(Str docURI);
 bool MaybeLaunchDocumentation(Str url);
 bool OpenFileExternally(Str path);

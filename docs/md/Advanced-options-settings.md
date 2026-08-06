@@ -620,6 +620,37 @@ SelectionHandlers [
 
     ; keyboard shortcut (introduced in version 3.6)
     Key =
+
+    ; command line of a program to run instead of opening a URL. Use
+    ; ${selectionfile} to pass the selection as a temporary utf-8 file, which
+    ; has no length limit. If set, URL is ignored (introduced in version 3.7)
+    Exe =
+
+    ; how to send the selection. GET (default) puts it in the URL, which limits
+    ; how much text fits. POST sends it in the request body with no length limit
+    ; and shows the response. POST-VIA-BROWSER submits a form from your browser
+    ; instead, so the service sees your normal browser session (cookies, logins)
+    ; (introduced in version 3.7)
+    Method = GET
+
+    ; request body for POST / POST-VIA-BROWSER; the same ${selection},
+    ; ${selectionjson} and ${userlang} substitutions apply. If unset, the body
+    ; is the raw selection (introduced in version 3.7)
+    Body =
+
+    ; value of the Content-Type header for POST. Defaults to 'text/plain;
+    ; charset=utf-8', which matches the default raw-selection body. Use
+    ; 'application/json' or 'application/x-www-form-urlencoded' when Body is in
+    ; that format. Ignored by POST-VIA-BROWSER, which always submits a form
+    ; (introduced in version 3.7)
+    ContentType =
+
+    ; extra HTTP headers for POST, one per line as 'Name: value' (use \n to
+    ; separate them in this file). Needed for services that authenticate with an
+    ; api key, e.g. 'Authorization: Bearer sk-...'. Ignored by POST-VIA-BROWSER.
+    ; Note that anything you put here is stored in plain text in this settings
+    ; file (introduced in version 3.7)
+    Headers =
   ]
 ]
 

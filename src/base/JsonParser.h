@@ -29,4 +29,6 @@ struct ValueVisitor {
 
 bool Parse(Str data, ValueVisitor* visitor);
 
+TempStr EscapeStrTemp(Str s);
+
 } // namespace json

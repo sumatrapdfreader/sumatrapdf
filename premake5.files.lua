@@ -704,6 +704,7 @@ function sumatrapdf_files()
     "Screenshot.*",
     "ScreenshotCapture.*",
     "Selection.*",
+    "SelectionHandlers.*",
     "SelectionToolbar.*",
     "SelectionTranslate.*",
     "Settings.h",

@@ -13,6 +13,7 @@
 #include "base/SquareTreeParser.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "base/Http.h"
 #include "base/Crypto.h"
 #include "base/ScopedWin.h"
 #include "base/GdiPlusUtil.h"
@@ -100,6 +101,7 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "SelectionTranslate.h"
+#include "SelectionHandlers.h"
 #include "CommandPalette.h"
 #include "AdvancedSettingsDialog.h"
 #include "ChangeThemeDialog.h"
@@ -7895,44 +7897,6 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
 }
 
-// if url-encoded s is bigger than a reasonable URL path,
-// we don't want to fail but truncate and encode less
-TempStr URLEncodeMayTruncateTemp(Str s) {
-    constexpr int kMaxURLLen = 1500;
-
-    HRESULT hr;
-    DWORD diff;
-    WCHAR buf[kMaxURLLen + 1]{};
-    DWORD flags = URL_ESCAPE_AS_UTF8;
-    TempWStr ws = ToWStrTemp(s);
-    // we can't predict the length of encoded string so we try
-    // with increasingly smaller input strings, from 1500 down to 1000
-    int maxLen = kMaxURLLen;
-    for (int i = 0; i < 10; i++) {
-        if (len(ws) >= maxLen) {
-            ws.s[maxLen - 1] = 0;
-        }
-        DWORD cchSizeInOut = kMaxURLLen;
-        hr = UrlEscapeW(ws.s, buf, &cchSizeInOut, flags);
-        if (SUCCEEDED(hr)) {
-            return ToUtf8Temp(buf);
-        }
-        // cchSizeInOut involves url-encoded characters
-        // we can reduce ws by less characters than that
-        // but don't know how many, so we use conservative guess
-        diff = cchSizeInOut - kMaxURLLen;
-        if (diff > 10) {
-            diff = (diff * 2) / 3;
-        }
-        if ((int)diff >= maxLen) {
-            // can't reduce further
-            return {};
-        }
-        maxLen -= (int)diff;
-    }
-    return {};
-}
-
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
 
@@ -7956,6 +7920,22 @@ static TempStr GetISO639LangCodeFromLangTemp(Str lang) {
     return SeqStrByIndex(gLangsMap, idx + 1);
 }
 
+// A URL can only carry so much text, and quietly sending less than the user
+// selected looks like the service ignored half the request (discussion #5900).
+static void NotifyUrlSelectionTruncated(WindowTab* tab) {
+    if (!tab || !tab->win) {
+        return;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = tab->win->hwndCanvas;
+    args.tab = tab;
+    args.warning = true;
+    args.timeoutMs = 5000;
+    args.msg =
+        _TRA("Selection was too long for a URL and was shortened. Use a POST selection handler to send all of it.");
+    ShowNotification(args);
+}
+
 static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
@@ -7975,13 +7955,16 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     if (!selText) {
         return;
     }
-    // Cap raw selection before URL-encoding so huge rectangular selections
-    // don't blow the URL. URLEncodeMayTruncateTemp also trims the encoded form.
-    constexpr int kMaxSelForUrl = 1024;
-    if (len(selText) > kMaxSelForUrl) {
-        selText = str::DupTemp(Str(selText.s, kMaxSelForUrl));
+    // The budget is for the whole URL, so subtract the pattern around the
+    // selection. (There used to be a second, 1024-*byte* cut applied to the raw
+    // utf-8 before this, which both shortened the text far more than necessary
+    // and could slice a multi-byte character in half.)
+    int budget = kMaxUrlEncodedLen - len(urlPattern);
+    bool didTruncate = false;
+    TempStr encodedSelection = URLEncodeMayTruncateTemp(selText, budget, &didTruncate);
+    if (didTruncate) {
+        NotifyUrlSelectionTruncated(tab);
     }
-    TempStr encodedSelection = URLEncodeMayTruncateTemp(selText);
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
     Str lang = trans::GetCurrentLangCode();
@@ -9051,7 +9034,22 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdSelectionHandler: {
-            // TODO: handle kCmdArgExe
+            if (!HasPermission(Perm::CopySelection)) {
+                return 0;
+            }
+            auto exe = GetCommandStringArg(cmd, kCmdArgExe, nullptr);
+            if (exe) {
+                // ${selectionfile} lets a helper program read arbitrarily long
+                // text without going near a command-line length limit
+                bool isTextOnly;
+                TempStr sel = GetSelectedTextTemp(tab, "\n", isTextOnly);
+                if (!sel) {
+                    return 0;
+                }
+                TempStr cmdLine = ExpandSelectionVarsTemp(exe, sel, false);
+                RunWithExe(tab, cmdLine, nullptr);
+                return 0;
+            }
             auto url = GetCommandStringArg(cmd, kCmdArgURL, nullptr);
             if (!url) {
                 return 0;
@@ -9061,7 +9059,27 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!isValidURL) {
                 url = str::JoinTemp(StrL("https://"), url);
             }
-            LaunchBrowserWithSelection(tab, url);
+            auto method = ParseSelectionSendMethod(GetCommandStringArg(cmd, kCmdArgMethod, nullptr));
+            if (method == SelectionSendMethod::Get) {
+                LaunchBrowserWithSelection(tab, url);
+                return 0;
+            }
+            if (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
+                return 0;
+            }
+            bool isTextOnlySelection;
+            TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelection);
+            if (!selText) {
+                return 0;
+            }
+            auto body = GetCommandStringArg(cmd, kCmdArgBody, nullptr);
+            if (method == SelectionSendMethod::PostViaBrowser) {
+                SelectionHandlerPostViaBrowser(tab, url, body, selText);
+                return 0;
+            }
+            auto contentType = GetCommandStringArg(cmd, kCmdArgContentType, nullptr);
+            auto headers = GetCommandStringArg(cmd, kCmdArgHeaders, nullptr);
+            SelectionHandlerPost(tab, url, body, contentType, headers, selText);
             return 0;
         }
 

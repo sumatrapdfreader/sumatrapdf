@@ -1399,39 +1399,6 @@ static bool IsJsNotifyMessage(Str msg) {
     return str::StartsWith(msg, kJsNotifyPrefix);
 }
 
-// escape for embedding inside a double-quoted JS string literal
-static TempStr JsStrEscapeTemp(Str s) {
-    str::Builder buf;
-    for (int i = 0; i < s.len; i++) {
-        u8 c = (u8)s.s[i];
-        switch (c) {
-            case '\\':
-                buf.Append("\\\\");
-                break;
-            case '"':
-                buf.Append("\\\"");
-                break;
-            case '\n':
-                buf.Append("\\n");
-                break;
-            case '\r':
-                buf.Append("\\r");
-                break;
-            case '\t':
-                buf.Append("\\t");
-                break;
-            default:
-                if (c < 0x20) {
-                    buf.Append(fmt("\\u%04x", (int)c));
-                } else {
-                    buf.AppendChar((char)c);
-                }
-                break;
-        }
-    }
-    return ToStrTemp(buf);
-}
-
 namespace {
 // json::Parse hands the visitor values that live in a Builder owned by the
 // parser, so anything we keep has to be copied out
@@ -1494,8 +1461,8 @@ void WebviewWnd::Resolve(Str id, int status, Str resultJson) {
     if (len(id) == 0) {
         return;
     }
-    TempStr js = fmt("if (window.__sumatra__) window.__sumatra__.onReply(\"%s\", %d, \"%s\");", JsStrEscapeTemp(id),
-                     status, JsStrEscapeTemp(resultJson));
+    TempStr js = fmt("if (window.__sumatra__) window.__sumatra__.onReply(\"%s\", %d, \"%s\");", json::EscapeStrTemp(id),
+                     status, json::EscapeStrTemp(resultJson));
     Eval(js);
 }
 
@@ -1517,7 +1484,7 @@ void WebviewWnd::RebuildBindScript() {
             js.Append(",");
         }
         first = false;
-        js.Append(fmt("\"%s\"", JsStrEscapeTemp(name)));
+        js.Append(fmt("\"%s\"", json::EscapeStrTemp(name)));
     }
     js.Append("];m.forEach(function(n){window.__sumatra__.onBind(n)})})()");
     bindScriptToken = AddInitScript(ToStr(js));
@@ -1535,7 +1502,7 @@ void WebviewWnd::Bind(Str name) {
     boundNames.Append(str::Dup(name));
     RebuildBindScript();
     // also expose it in the document that's already loaded
-    Eval(fmt("if (window.__sumatra__) window.__sumatra__.onBind(\"%s\");", JsStrEscapeTemp(name)));
+    Eval(fmt("if (window.__sumatra__) window.__sumatra__.onBind(\"%s\");", json::EscapeStrTemp(name)));
 }
 
 void WebviewWnd::Unbind(Str name) {
@@ -1545,7 +1512,7 @@ void WebviewWnd::Unbind(Str name) {
             str::Free(boundNames[i]);
             boundNames.RemoveAt(i);
             RebuildBindScript();
-            Eval(fmt("if (window.__sumatra__) window.__sumatra__.onUnbind(\"%s\");", JsStrEscapeTemp(name)));
+            Eval(fmt("if (window.__sumatra__) window.__sumatra__.onUnbind(\"%s\");", json::EscapeStrTemp(name)));
             return;
         }
     }

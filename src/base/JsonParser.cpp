@@ -277,4 +277,54 @@ bool Parse(Str data, ValueVisitor* visitor) {
     return args.canceled || end >= data.len;
 }
 
+// Escapes s so it can sit inside a double-quoted JSON string; the surrounding
+// quotes are not added. Text that gets pasted into a JSON body routinely
+// contains quotes and newlines, and either produces invalid JSON if copied in
+// raw.
+//
+// utf-8 continuation bytes pass through untouched: JSON is utf-8, so multi-byte
+// characters need no escaping. Everything below 0x20 must be escaped, and the
+// ones without a short form get \u00XX.
+//
+// This is also a valid escape for a double-quoted JavaScript string literal,
+// which is what WebView.cpp uses it for.
+TempStr EscapeStrTemp(Str s) {
+    str::Builder b;
+    int n = len(s);
+    for (int i = 0; i < n; i++) {
+        u8 c = (u8)s.s[i];
+        switch (c) {
+            case '"':
+                b.Append("\\\"");
+                break;
+            case '\\':
+                b.Append("\\\\");
+                break;
+            case '\n':
+                b.Append("\\n");
+                break;
+            case '\r':
+                b.Append("\\r");
+                break;
+            case '\t':
+                b.Append("\\t");
+                break;
+            case '\b':
+                b.Append("\\b");
+                break;
+            case '\f':
+                b.Append("\\f");
+                break;
+            default:
+                if (c < 0x20) {
+                    b.Append(fmt("\\u%04x", (int)c));
+                } else {
+                    b.AppendChar((char)c);
+                }
+                break;
+        }
+    }
+    return ToStrTemp(b);
+}
+
 } // namespace json

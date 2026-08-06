@@ -822,6 +822,10 @@ struct ArgSpec {
 static const ArgSpec argSpecs[] = {
     {CmdSelectionHandler, kCmdArgURL, CommandArg::Type::String}, // default
     {CmdSelectionHandler, kCmdArgExe, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgMethod, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgBody, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgContentType, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgHeaders, CommandArg::Type::String},
 
     {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},

@@ -310,6 +310,32 @@ struct SelectionHandler {
     Str name;
     // keyboard shortcut
     Str key;
+    // command line of a program to run instead of opening a URL. Use
+    // ${selectionfile} to pass the selection as a temporary utf-8 file,
+    // which has no length limit. If set, URL is ignored
+    Str exe;
+    // how to send the selection. GET (default) puts it in the URL, which
+    // limits how much text fits. POST sends it in the request body with no
+    // length limit and shows the response. POST-VIA-BROWSER submits a form
+    // from your browser instead, so the service sees your normal browser
+    // session (cookies, logins)
+    Str method;
+    // request body for POST / POST-VIA-BROWSER; the same ${selection},
+    // ${selectionjson} and ${userlang} substitutions apply. If unset, the
+    // body is the raw selection
+    Str body;
+    // value of the Content-Type header for POST. Defaults to 'text/plain;
+    // charset=utf-8', which matches the default raw-selection body. Use
+    // 'application/json' or 'application/x-www-form-urlencoded' when Body
+    // is in that format. Ignored by POST-VIA-BROWSER, which always submits
+    // a form
+    Str contentType;
+    // extra HTTP headers for POST, one per line as 'Name: value' (use \n
+    // to separate them in this file). Needed for services that
+    // authenticate with an api key, e.g. 'Authorization: Bearer sk-...'.
+    // Ignored by POST-VIA-BROWSER. Note that anything you put here is
+    // stored in plain text in this settings file
+    Str headers;
 };
 
 // custom keyboard shortcuts
@@ -1166,14 +1192,31 @@ static const FieldInfo gSelectionHandlerFields[] = {
     {offsetof(SelectionHandler, url), SettingType::String, 0},
     {offsetof(SelectionHandler, name), SettingType::String, 0},
     {offsetof(SelectionHandler, key), SettingType::String, 0},
+    {offsetof(SelectionHandler, exe), SettingType::String, 0},
+    {offsetof(SelectionHandler, method), SettingType::String, (intptr_t)"GET"},
+    {offsetof(SelectionHandler, body), SettingType::String, 0},
+    {offsetof(SelectionHandler, contentType), SettingType::String, 0},
+    {offsetof(SelectionHandler, headers), SettingType::String, 0},
 };
 static const StructInfo gSelectionHandlerInfo = {
     sizeof(SelectionHandler),
-    3,
+    8,
     gSelectionHandlerFields,
-    "URL\0Name\0Key",
+    "URL\0Name\0Key\0Exe\0Method\0Body\0ContentType\0Headers",
     "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with "
-    "language code for current UI (e.g. 'de' for German)\0name shown in context menu\0keyboard shortcut",
+    "language code for current UI (e.g. 'de' for German)\0name shown in context menu\0keyboard shortcut\0command line "
+    "of a program to run instead of opening a URL. Use ${selectionfile} to pass the selection as a temporary utf-8 "
+    "file, which has no length limit. If set, URL is ignored\0how to send the selection. GET (default) puts it in the "
+    "URL, which limits how much text fits. POST sends it in the request body with no length limit and shows the "
+    "response. POST-VIA-BROWSER submits a form from your browser instead, so the service sees your normal browser "
+    "session (cookies, logins)\0request body for POST / POST-VIA-BROWSER; the same ${selection}, ${selectionjson} and "
+    "${userlang} substitutions apply. If unset, the body is the raw selection\0value of the Content-Type header for "
+    "POST. Defaults to 'text/plain; charset=utf-8', which matches the default raw-selection body. Use "
+    "'application/json' or 'application/x-www-form-urlencoded' when Body is in that format. Ignored by "
+    "POST-VIA-BROWSER, which always submits a form\0extra HTTP headers for POST, one per line as 'Name: value' (use "
+    "\\n to separate them in this file). Needed for services that authenticate with an api key, e.g. 'Authorization: "
+    "Bearer sk-...'. Ignored by POST-VIA-BROWSER. Note that anything you put here is stored in plain text in this "
+    "settings file",
     false};
 
 static const FieldInfo gShortcutFields[] = {

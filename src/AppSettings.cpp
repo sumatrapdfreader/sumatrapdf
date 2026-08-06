@@ -213,22 +213,46 @@ static void setMin(int& i, int minVal) {
 /* for every selection handler defined by user in advanced settings, create
     a command that will be inserted into a menu item */
 static void CreateSelectionHandlerCommands() {
-    if (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
-        // TODO: when we add exe handlers, only filter the URL ones
+    // every handler reads the selection; only the ones that talk to a web
+    // service need network access, so an Exe handler still works without it
+    if (!HasPermission(Perm::CopySelection)) {
         return;
     }
+    bool canUseInternet = HasPermission(Perm::InternetAccess);
 
     for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-        if (!sh || !sh->url || !sh->name) {
+        if (!sh || !sh->name || str::IsEmptyOrWhiteSpace(sh->name)) {
             // can happen for bad selection handler definition
             continue;
         }
-        if (str::IsEmptyOrWhiteSpace(sh->url) || str::IsEmptyOrWhiteSpace(sh->name)) {
+        bool hasExe = !str::IsEmptyOrWhiteSpace(sh->exe);
+        bool hasUrl = !str::IsEmptyOrWhiteSpace(sh->url);
+        if (!hasExe && !hasUrl) {
+            continue;
+        }
+        if (!hasExe && !canUseInternet) {
             continue;
         }
 
-        CommandArg* args = NewStringArg(kCmdArgURL, sh->url);
-        CreateCustomCommand(sh->url, CmdSelectionHandler, args, sh->name, sh->key);
+        // args are a linked list; only attach the optional ones that are set so
+        // a handler with just URL/Name/Key behaves exactly as it did before
+        Str definition = hasExe ? sh->exe : sh->url;
+        CommandArg* args = hasExe ? NewStringArg(kCmdArgExe, sh->exe) : NewStringArg(kCmdArgURL, sh->url);
+        auto addArg = [&args](Str name, Str val) {
+            if (str::IsEmptyOrWhiteSpace(val)) {
+                return;
+            }
+            CommandArg* a = NewStringArg(name, val);
+            a->next = args;
+            args = a;
+        };
+        if (!hasExe) {
+            addArg(kCmdArgMethod, sh->method);
+            addArg(kCmdArgBody, sh->body);
+            addArg(kCmdArgContentType, sh->contentType);
+            addArg(kCmdArgHeaders, sh->headers);
+        }
+        CreateCustomCommand(definition, CmdSelectionHandler, args, sh->name, sh->key);
     }
 }
 
