@@ -46,13 +46,40 @@ GlobalPrefs* NewGlobalPrefs(Str data) {
     return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
+// With file history turned off the only thing worth keeping about a file is a
+// favorite the user added on purpose. Everything else in a FileState is history
+// by definition, and some entries have no user content at all: searching
+// creates one just to hang the session-only "jump back here" favorite on
+// (SetSearchStartFavorite), which left a bare FilePath in the settings file of
+// someone who asked us not to remember opened files (issue #5899).
+static bool FileStateWorthKeepingWithoutHistory(FileState* fs) {
+    if (!fs || !fs->favorites) {
+        return false;
+    }
+    for (Favorite* fav : *fs->favorites) {
+        if (!fav->isTemporary) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
 // caller has to free()
 Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
+    Vec<FileState*>* allFileStates = prefs->fileStates;
+    Vec<FileState*> withFavorites;
+
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         for (FileState* fs : *prefs->fileStates) {
             fs->useDefaultState = true;
+            if (FileStateWorthKeepingWithoutHistory(fs)) {
+                withFavorites.Append(fs);
+            }
         }
+        // serialize the filtered list, then put the real one back below - the
+        // in-memory history is still needed for this session
+        prefs->fileStates = &withFavorites;
         // prevent unnecessary settings from being written out
         u16 fieldCount = 0;
         while (++fieldCount <= dimof(gFileStateFields)) {
@@ -69,6 +96,7 @@ Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
 
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
+        prefs->fileStates = allFileStates;
     }
 
     return serialized;
