@@ -357,6 +357,7 @@ const sumatraFiles: FileGroup[] = [
       "Selection.*",
       "SelectionHandlers.*",
       "SelectionToolbar.*",
+      "SelectTextKeyboard.*",
       "SettingsStructs.*",
       "SimpleBrowserWindow.*",
       "SumatraControl.*",

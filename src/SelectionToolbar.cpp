@@ -18,6 +18,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#include "Canvas.h"
 #include "Selection.h"
 #include "Commands.h"
 #include "CommandAvailability.h"
@@ -496,13 +497,15 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
 // Show the floating selection toolbar for the current text selection. Does
 // nothing if the feature is disabled (Annotations.SelectionToolbar) or there
 // is no on-screen text selection in a fixed-page document.
-void ShowSelectionToolbar(MainWindow* win) {
+static void ShowSelectionToolbarNow(MainWindow* win) {
     if (!win || !gGlobalPrefs->selectionToolbar) {
         return;
     }
-    // Do not check IsActivelySelecting here: OnSelectionStop calls us while
-    // mouseAction is still SelectingText (cleared only after we return). Hide-
-    // during-drag is handled in UpdateSelectionToolbarPosition instead.
+    // Do not check IsActivelySelecting here: OnSelectionStop schedules the show
+    // while mouseAction is still SelectingText (cleared only after it returns);
+    // by the time the debounce timer runs it is clear, and that is where a drag
+    // that is still going gets filtered out. Hide-during-drag is handled in
+    // UpdateSelectionToolbarPosition.
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -533,6 +536,48 @@ void ShowSelectionToolbar(MainWindow* win) {
     PositionToolbar(tb, sel);
     ShowWindow(tb->hwnd, SW_SHOWNOACTIVATE);
     HwndScheduleRepaint(tb->hwnd);
+}
+
+// The toolbar pops up over the document, right where the user is reading, so
+// showing it the instant a selection exists makes it flash in and out while
+// selecting word by word or nudging the selection with the keyboard. Wait for
+// the selection to settle first. Repeated requests during the wait keep the
+// original deadline instead of pushing it back, so a stream of canvas repaints
+// (UpdateSelectionToolbarPosition asks on every one) can't starve the timer.
+void ShowSelectionToolbar(MainWindow* win) {
+    if (!win || !win->hwndCanvas || !gGlobalPrefs->selectionToolbar) {
+        return;
+    }
+    if (win->selectionToolbarShowPending) {
+        return;
+    }
+    win->selectionToolbarShowPending = true;
+    SetTimer(win->hwndCanvas, kSelectionToolbarShowTimerID, kSelectionToolbarShowDelayInMs, nullptr);
+}
+
+// fired by kSelectionToolbarShowTimerID
+void SelectionToolbarOnShowTimer(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    KillTimer(win->hwndCanvas, kSelectionToolbarShowTimerID);
+    win->selectionToolbarShowPending = false;
+    // the selection may be gone or still being dragged by now; both self-guard
+    if (IsActivelySelecting(win)) {
+        return;
+    }
+    ShowSelectionToolbarNow(win);
+}
+
+// cancel a pending debounced show (the selection went away or is being redone)
+static void CancelPendingShow(MainWindow* win) {
+    if (!win || !win->selectionToolbarShowPending) {
+        return;
+    }
+    win->selectionToolbarShowPending = false;
+    if (win->hwndCanvas) {
+        KillTimer(win->hwndCanvas, kSelectionToolbarShowTimerID);
+    }
 }
 
 // Reposition the toolbar so it keeps following the selection (called from the
@@ -591,6 +636,7 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
 
 // Hide the toolbar but keep the window around for reuse.
 void HideSelectionToolbar(MainWindow* win) {
+    CancelPendingShow(win);
     SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
     if (!tb || !tb->hwnd) {
         return;
@@ -607,6 +653,7 @@ void HideSelectionToolbar(MainWindow* win) {
 
 // Destroy the toolbar window and free its state.
 void DeleteSelectionToolbar(MainWindow* win) {
+    CancelPendingShow(win);
     SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
     if (!tb) {
         return;

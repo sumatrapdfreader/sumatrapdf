@@ -42,6 +42,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `F8` Show / Hide Toolbar
 - `Ctrl + A` Select All
 - `Ctrl + C` Copy Selection
+- `F7` Select text with the keyboard (**ver 3.7+**): puts a caret in the page text; arrows move it, `Shift + arrows` select, `v` toggles visual mode (arrows select without Shift), `Ctrl + C` or `y` copies, `Esc` or `F7` leaves
 
 ### Zoom menu
 

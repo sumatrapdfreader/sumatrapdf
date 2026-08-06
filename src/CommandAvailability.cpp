@@ -595,6 +595,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    if (cmdId == CmdSelectTextViaKeyboard) {
+        // needs a fixed-page engine with extractable text: image collections
+        // have none and CHM / markdown do their own selection (#4684, #4116)
+        Kind k = ctx.engineKind;
+        bool isImage = k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks;
+        if (ctx.isImageCollection || isImage || ctx.isChm || !k) {
+            return CommandVisibility::Hide;
+        }
+    }
+
     if (cmdId == CmdToggleKeyboardLinkFollowing) {
         // pages of image collections (comic books, image folders, single
         // images) can't carry links; CHM / markdown handle their own (#2629)

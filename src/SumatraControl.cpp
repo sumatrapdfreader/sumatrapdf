@@ -21,6 +21,7 @@
 #include "FindWindow.h"
 #include "Toolbar.h"
 #include "LinkFollow.h"
+#include "SelectTextKeyboard.h"
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -129,6 +130,7 @@ enum class ControlCmd : u16 {
     TestFindResultsOrder = 37,
     TestClickClearsSelection = 38,
     TestRectSelectionDrag = 39,
+    TestSelectTextKeyboard = 40,
 };
 
 enum class ControlArgType : u16 {
@@ -689,6 +691,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestKeyboardLinkFollow: {
             int exitCode = 0;
             Str res = KeyboardLinkFollowResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectTextKeyboard: {
+            int exitCode = 0;
+            Str res = SelectTextKeyboardResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

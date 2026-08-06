@@ -270,7 +270,8 @@ enum {
     CmdToggleKeyboardLinkFollowing = 459,
     CmdDebugToggleDpiOverride = 460,
     CmdToggleImages = 461,
-    CmdNone = 462,
+    CmdSelectTextViaKeyboard = 462,
+    CmdNone = 463,
 
     /* range for file history */
     CmdFileHistoryFirst,

@@ -270,6 +270,7 @@ export const commands = [
     "CmdToggleKeyboardLinkFollowing", "Follow Link With Keyboard",
     "CmdDebugToggleDpiOverride", "Debug: Toggle DPI Override",
     "CmdToggleImages", "Toggle Show Images",
+    "CmdSelectTextViaKeyboard", "Select Text With Keyboard",
     "CmdNone", "Do nothing",
 ];
 

@@ -465,6 +465,17 @@ struct MainWindow {
     bool linkFollowActive = false;
     Vec<KeyboardLinkTarget> linkFollowTargets;
 
+    // keyboard text selection: a caret you move with the arrow keys to select
+    // text without the mouse (see SelectTextKeyboard.cpp)
+    bool textSelectModeActive = false;
+    // in visual mode plain movement extends the selection (like Shift+arrows)
+    bool textSelectModeVisual = false;
+    bool textSelectCaretVisible = true; // toggled by the blink timer
+    int textSelectPage = 0;             // caret position, 0 if not set yet
+    int textSelectGlyph = 0;
+    int textSelectAnchorPage = 0; // where the selection started
+    int textSelectAnchorGlyph = 0;
+
     IPageElement* linkOnLastButtonDown = nullptr;
     Str urlOnLastButtonDown;
     Annotation* annotationUnderCursor = nullptr;
@@ -510,6 +521,8 @@ struct MainWindow {
     // small floating toolbar shown after a text selection in fixed-page
     // floating selection actions bar (controlled by the SelectionToolbar setting)
     SelectionToolbar* selectionToolbar = nullptr;
+    // a debounced show of the selection toolbar is waiting on its timer
+    bool selectionToolbarShowPending = false;
 
     // set at the beginning of CloseWindow() to prevent
     // processing commands while closing (e.g. reentrancy

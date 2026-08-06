@@ -69,6 +69,7 @@
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 #include "CommandPalette.h"
+#include "SelectTextKeyboard.h"
 #include "SumatraControl.h"
 #include "SumatraLog.h"
 
@@ -711,6 +712,19 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
                      (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
     if (!doAccels) return false;
+
+    // Arrows, Home/End and PageUp/PageDown normally accelerate to scroll /
+    // go-to-page commands. While the keyboard selection caret is up they move
+    // the caret instead, so skip the accelerator and let FrameOnKeydown see the
+    // key (issues #4684, #4116).
+    if (msg.message == WM_KEYDOWN && !IsAltPressed()) {
+        WPARAM key = msg.wParam;
+        bool isCaretKey = key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_HOME ||
+                          key == VK_END || key == VK_PRIOR || key == VK_NEXT;
+        if (isCaretKey && SelectTextWithKeyboardActive(FindMainWindowByHwnd(msg.hwnd))) {
+            return false;
+        }
+    }
 
     // Shift+arrows normally accelerate to scroll. When a PDF text selection is
     // active, skip the accelerator so FrameOnKeydown can extend the selection

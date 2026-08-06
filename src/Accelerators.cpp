@@ -110,6 +110,7 @@ static ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, VK_F3, CmdFindPrevSel},
     {FCONTROL | FVIRTKEY, VK_F4, CmdClose},
     {FVIRTKEY, VK_F6, CmdMoveFrameFocus},
+    {FVIRTKEY, VK_F7, CmdSelectTextViaKeyboard},
     {FVIRTKEY, VK_F8, CmdToggleToolbar},
     {FVIRTKEY, VK_F9, CmdToggleMenuBar},
     {FCONTROL | FVIRTKEY, 'L', CmdTogglePresentationMode},

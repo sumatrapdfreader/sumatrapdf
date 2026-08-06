@@ -80,6 +80,7 @@
 #include "SearchAndDDE.h"
 #include "Selection.h"
 #include "LinkFollow.h"
+#include "SelectTextKeyboard.h"
 #include "SelectionToolbar.h"
 #include "ScreenshotCapture.h"
 #include "Screenshot.h"
@@ -3746,8 +3747,10 @@ void LoadModelIntoTab(WindowTab* tab) {
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
-    // the numbered link overlay belongs to the outgoing document
+    // the numbered link overlay and the selection caret belong to the outgoing
+    // document
     StopKeyboardLinkFollowing(win);
+    StopSelectTextWithKeyboard(win);
     if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
         tab->loadState == WindowTab::LoadState::None) {
         NotificationCreateArgs args;
@@ -7464,6 +7467,12 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     }
     // lf("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
+    // while the keyboard selection caret is up, movement keys move it instead
+    // of scrolling the view
+    if (SelectTextWithKeyboardOnKeyDown(win, key)) {
+        return true;
+    }
+
     if (TryExtendTextSelectionFromKey(win, key)) {
         return true;
     }
@@ -7495,6 +7504,9 @@ static WCHAR SingleCharLowerW(WCHAR c) {
 
 static void OnFrameKeyEsc(MainWindow* win) {
     if (StopKeyboardLinkFollowing(win)) {
+        return;
+    }
+    if (StopSelectTextWithKeyboard(win)) {
         return;
     }
     if (AbortFinding(win, true)) {
@@ -7748,6 +7760,11 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
 
     // while keyboard link following is on, 1..9 pick a numbered link
     if (!isCtrl && !isAlt && KeyboardLinkFollowingOnChar(win, key)) {
+        return;
+    }
+
+    // while the selection caret is up, 'v' toggles visual mode and 'y' copies
+    if (!isCtrl && !isAlt && SelectTextWithKeyboardOnChar(win, key)) {
         return;
     }
 
@@ -10245,6 +10262,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleKeyboardLinkFollowing:
             ToggleKeyboardLinkFollowing(win);
+            break;
+
+        case CmdSelectTextViaKeyboard:
+            ToggleSelectTextWithKeyboard(win);
             break;
 
         case CmdPresentationBlackBackground:

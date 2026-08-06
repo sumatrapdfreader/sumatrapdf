@@ -789,6 +789,20 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
     return true;
 }
 
+// Move a (page, glyph) position one unit in reading order, without touching any
+// selection. Keyboard selection drives its caret with this; ExtendBy() moves the
+// selection's free end with the same steps.
+bool TextPosMoveBy(EngineBase* engine, int& page, int& glyph, TextSelectUnit unit, int dir) {
+    if (!engine || page < 1 || glyph < 0 || dir == 0) {
+        return false;
+    }
+    int d = dir > 0 ? 1 : -1;
+    if (unit == TextSelectUnit::Glyph) {
+        return MoveFreeEndByGlyph(engine, page, glyph, d);
+    }
+    return MoveFreeEndByLine(engine, page, glyph, d);
+}
+
 bool TextSelection::ExtendBy(TextSelectUnit unit, int delta) {
     if (!engine || startPage < 1 || endPage < 1 || delta == 0) {
         return false;

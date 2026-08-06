@@ -64,3 +64,4 @@ struct TextSelection {
 
 uint distSq(int x, int y);
 bool isWordChar(int c);
+bool TextPosMoveBy(EngineBase*, int& page, int& glyph, TextSelectUnit unit, int dir);

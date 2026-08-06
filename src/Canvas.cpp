@@ -51,6 +51,7 @@
 #include "SearchAndDDE.h"
 #include "Selection.h"
 #include "LinkFollow.h"
+#include "SelectTextKeyboard.h"
 #include "SelectionToolbar.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
@@ -2635,6 +2636,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     }
 
     PaintKeyboardLinkTargets(win, hdc);
+    PaintKeyboardTextCaret(win, hdc);
 
     if (!rendering) {
         DebugShowLinks(dm, hdc);
@@ -3821,6 +3823,15 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             KillTimer(hwnd, kLinkFollowTimerID);
             KeyboardLinkFollowingRecompute(win);
             ScheduleRepaint(win, 0);
+            break;
+
+        case kTextSelectCaretTimerID:
+            SelectTextWithKeyboardBlinkCaret(win);
+            break;
+
+        case kSelectionToolbarShowTimerID:
+            // the selection settled: pop up the floating selection toolbar
+            SelectionToolbarOnShowTimer(win);
             break;
 
         case HIDE_FWDSRCHMARK_TIMER_ID:
