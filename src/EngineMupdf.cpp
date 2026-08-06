@@ -4284,6 +4284,100 @@ static void DarkLegacySkipKeepLargestArtwork(FzPageInfo* pageInfo) {
     pageInfo->darkLegacyArtworkPageBottom = 0.f;
 }
 
+static int DarkLegacyTileFindRoot(Vec<int>& parent, int i) {
+    while (parent[i] != i) {
+        parent[i] = parent[parent[i]];
+        i = parent[i];
+    }
+    return i;
+}
+
+// Some PDFs slice a single illustration into a grid of image tiles. Judged one
+// at a time each tile is just a small picture: the page-dominance rule never
+// fires, the decorative-strip rule throws away the thin edge pieces, and
+// DarkLegacySkipKeepLargestArtwork keeps only one tile of the set. Group tiles
+// that touch into one region and let the rest of the code treat that region as
+// the image.
+//
+// A group only counts as a tiling if its tiles actually fill its bounding box.
+// Without that check, scattered figures on a busy page would chain together
+// into one huge region covering unrelated page content.
+//
+// Fills groupOf (one entry per rect, indexing groupRect) and groupRect. Rects
+// that don't group land in a group of their own, so callers see no difference
+// from the ungrouped case.
+static void DarkLegacyGroupImageTiles(const Vec<RectF>& rects, float tol, Vec<int>& groupOf, Vec<RectF>& groupRect) {
+    groupOf.Clear();
+    groupRect.Clear();
+    int n = len(rects);
+    Vec<int> parent;
+    for (int i = 0; i < n; i++) {
+        parent.Append(i);
+    }
+    for (int i = 0; i < n; i++) {
+        if (rects[i].IsEmpty()) {
+            continue;
+        }
+        RectF grown = rects[i];
+        grown.Inflate(tol, tol);
+        for (int j = i + 1; j < n; j++) {
+            if (rects[j].IsEmpty() || grown.Intersect(rects[j]).IsEmpty()) {
+                continue;
+            }
+            int ri = DarkLegacyTileFindRoot(parent, i);
+            int rj = DarkLegacyTileFindRoot(parent, j);
+            if (ri != rj) {
+                parent[ri] = rj;
+            }
+        }
+    }
+
+    Vec<RectF> bbox;
+    Vec<float> tileArea;
+    Vec<int> nTiles;
+    for (int i = 0; i < n; i++) {
+        bbox.Append(RectF());
+        tileArea.Append(0.f);
+        nTiles.Append(0);
+    }
+    for (int i = 0; i < n; i++) {
+        if (rects[i].IsEmpty()) {
+            continue;
+        }
+        int r = DarkLegacyTileFindRoot(parent, i);
+        bbox[r] = nTiles[r] == 0 ? rects[i] : bbox[r].Union(rects[i]);
+        tileArea[r] += rects[i].dx * rects[i].dy;
+        nTiles[r]++;
+    }
+    for (int i = 0; i < n; i++) {
+        if (nTiles[i] < 2) {
+            continue;
+        }
+        float bboxArea = bbox[i].dx * bbox[i].dy;
+        if (bboxArea <= 0.f || tileArea[i] < bboxArea * 0.85f) {
+            nTiles[i] = 0; // scattered images, not a tiling - dissolve the group
+        }
+    }
+
+    Vec<int> rootToGroup;
+    for (int i = 0; i < n; i++) {
+        rootToGroup.Append(-1);
+    }
+    for (int i = 0; i < n; i++) {
+        int r = DarkLegacyTileFindRoot(parent, i);
+        if (rects[i].IsEmpty() || nTiles[r] < 2) {
+            groupOf.Append(len(groupRect));
+            groupRect.Append(rects[i]);
+            continue;
+        }
+        if (rootToGroup[r] < 0) {
+            rootToGroup[r] = len(groupRect);
+            groupRect.Append(bbox[r]);
+        }
+        groupOf.Append(rootToGroup[r]);
+    }
+}
+
 // find the images on the page whose colors the dark-mode bitmap recolor
 // should preserve (photos, artwork) and cache their absolute device rects
 static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageInfo, float zoom, int rotation,
@@ -4312,16 +4406,38 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
         pageArea = 1.f;
     }
 
-    for (int imgIdx = 0; imgIdx < len(pageInfo->images); imgIdx++) {
-        FitzPageImageInfo* img = pageInfo->images[imgIdx];
-        RectF imgPage = ToRectF(img->rect);
+    int nImages = len(pageInfo->images);
+    Vec<RectF> imgPageRects;
+    Vec<RectF> imgOnPageRects;
+    for (int imgIdx = 0; imgIdx < nImages; imgIdx++) {
+        RectF imgPage = ToRectF(pageInfo->images[imgIdx]->rect);
         fz_image* image = FzGetKeptPageImage(ctx, pageInfo, imgIdx);
         if (image && image->w > 0 && image->h > 0) {
             imgPage = PdfDarkModeClampImagePageRect(imgPage, image->w, image->h);
         } else {
             imgPage = PdfDarkModeCapUnknownImagePageRect(imgPage, pageBounds.dy);
         }
-        RectF imgOnPage = imgPage.Intersect(pageBounds);
+        if (image) {
+            fz_drop_image(ctx, image);
+        }
+        imgPageRects.Append(imgPage);
+        imgOnPageRects.Append(imgPage.Intersect(pageBounds));
+    }
+    // tiles of one sliced illustration are judged as the region they form
+    float tileTol = std::max(1.0f, std::min(pageBounds.dx, pageBounds.dy) * 0.005f);
+    Vec<int> groupOf;
+    Vec<RectF> groupRect;
+    DarkLegacyGroupImageTiles(imgOnPageRects, tileTol, groupOf, groupRect);
+    Vec<int> groupAppended;
+    for (int i = 0; i < len(groupRect); i++) {
+        groupAppended.Append(0);
+    }
+
+    for (int imgIdx = 0; imgIdx < nImages; imgIdx++) {
+        RectF imgPage = imgPageRects[imgIdx];
+        int groupIdx = groupOf[imgIdx];
+        RectF imgOnPage = groupRect[groupIdx];
+        fz_image* image = FzGetKeptPageImage(ctx, pageInfo, imgIdx);
         float coverage = (imgOnPage.dx * imgOnPage.dy) / pageArea;
         if (PdfDarkModePageDominantImageRecolors(ctx, image, coverage)) {
             // full-bleed backgrounds / scans recolor with the page; artwork
@@ -4360,7 +4476,9 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
         }
         fz_irect dev = fz_round_rect(fz_transform_rect(ToFzRect(imgOnPage), ctm));
         Rect r(dev.x0, dev.y0, dev.x1 - dev.x0, dev.y1 - dev.y0);
-        if (!r.IsEmpty()) {
+        // tiles of one sliced illustration share a region - append it once
+        if (!r.IsEmpty() && !groupAppended[groupIdx]) {
+            groupAppended[groupIdx] = 1;
             pageInfo->darkLegacySkipDevAbs.Append(r);
             float bottom = imgOnPage.y + imgOnPage.dy;
             pageInfo->darkLegacyArtworkPageBottom = std::max(bottom, pageInfo->darkLegacyArtworkPageBottom);
