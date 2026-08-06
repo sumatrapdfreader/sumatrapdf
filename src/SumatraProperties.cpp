@@ -735,8 +735,8 @@ void PropertiesWnd::SizeToContent() {
     ReleaseDC(hwndEdit, hdcEdit);
 
     // add padding for scrollbar, border, window frame
-    int editPadding = GetSystemMetrics(SM_CXVSCROLL) + (2 * GetSystemMetrics(SM_CXEDGE)) + 16;
-    int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
+    int editPadding = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL) + (2 * DpiGetSystemMetrics(hwnd, SM_CXEDGE)) + 16;
+    int frameDx = DpiGetSystemMetrics(hwnd, SM_CXFRAME) * 2;
     int wantedClientDx = maxLineDx + editPadding;
     if (btnCopyToClipboard) {
         Size buttonSize = btnCopyToClipboard->GetIdealSize();
@@ -745,8 +745,8 @@ void PropertiesWnd::SizeToContent() {
     int wantedDx = wantedClientDx + frameDx;
 
     // calculate height to fit all lines
-    int editBorderDy = 2 * GetSystemMetrics(SM_CYEDGE);
-    int frameDy = (GetSystemMetrics(SM_CYFRAME) * 2) + GetSystemMetrics(SM_CYCAPTION);
+    int editBorderDy = 2 * DpiGetSystemMetrics(hwnd, SM_CYEDGE);
+    int frameDy = (DpiGetSystemMetrics(hwnd, SM_CYFRAME) * 2) + DpiGetSystemMetrics(hwnd, SM_CYCAPTION);
     int btnAreaDy = DpiScale(hwnd, 40);
     if (btnCopyToClipboard) {
         btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding(hwnd)));

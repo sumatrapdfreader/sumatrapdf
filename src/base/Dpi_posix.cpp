@@ -38,3 +38,11 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
 int DpiScale(HDC /*hdc*/, int x) {
     return DpiScale((HWND) nullptr, x);
 }
+
+int DpiGetSystemMetrics(int /*index*/, int /*dpi*/) {
+    return 0;
+}
+
+int DpiGetSystemMetrics(HWND /*hwnd*/, int /*index*/) {
+    return 0;
+}

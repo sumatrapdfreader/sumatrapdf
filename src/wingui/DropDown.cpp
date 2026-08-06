@@ -129,7 +129,7 @@ Size DropDown::GetIdealSize() {
         s1.dy = std::max(s1.dy, s2.dy);
     }
     // TODO: not sure if I want scrollbar. Only needed if a lot of items
-    int dxPad = GetSystemMetrics(SM_CXVSCROLL);
+    int dxPad = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL);
     int dx = s1.dx + dxPad + DpiScale(hwnd, 8);
     // TODO: 5 is a guessed number.
     int dyPad = DpiScale(hwnd, 4);

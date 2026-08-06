@@ -108,6 +108,31 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
     x2 = nx2;
 }
 
+int DpiGetSystemMetrics(int index, int dpi) {
+    if (dpi <= 0) {
+        dpi = 96;
+    }
+    if (DynGetSystemMetricsForDpi) {
+        // returns 0 on failure, which is never a real answer for a dpi-dependent
+        // metric, so treating it as "fall back" is safe
+        int res = DynGetSystemMetricsForDpi(index, (uint)dpi);
+        if (res > 0) {
+            return res;
+        }
+    }
+    // pre-Win10 1607: scale the system-dpi answer ourselves
+    int res = GetSystemMetrics(index);
+    int sysDpi = DpiGetForHwnd(HWND_DESKTOP);
+    if (sysDpi > 0 && sysDpi != dpi) {
+        res = MulDiv(res, dpi, sysDpi);
+    }
+    return res;
+}
+
+int DpiGetSystemMetrics(HWND hwnd, int index) {
+    return DpiGetSystemMetrics(index, DpiGet(hwnd));
+}
+
 int DpiScale(HDC hdc, int x) {
     int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
     int res = MulDiv(x, dpi, 96);

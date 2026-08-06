@@ -2,6 +2,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "base/Dpi.h"
 #include "DialogSizer.h"
 
 #include <vssym32.h>
@@ -104,8 +105,8 @@ class DialogData {
     bool bShowSizingGrip;
 
     void UpdateGripperRect() {
-        int width = GetSystemMetrics(SM_CXVSCROLL);
-        int height = GetSystemMetrics(SM_CYHSCROLL);
+        int width = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL);
+        int height = DpiGetSystemMetrics(hwnd, SM_CYHSCROLL);
         rcGrip = Rect(sizeClient.dx - width, sizeClient.dy - height, width, height);
     }
 };

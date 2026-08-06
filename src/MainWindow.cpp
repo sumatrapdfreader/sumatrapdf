@@ -7,6 +7,7 @@
 #include <mmsystem.h>
 #include "base/File.h"
 #include "base/Win.h"
+#include "base/Dpi.h"
 #include "base/GuessFileType.h"
 #include "base/UITask.h"
 
@@ -353,10 +354,10 @@ Size MainWindow::GetViewPortSize() const {
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
     if ((style & WS_VSCROLL)) {
-        size.dx += GetSystemMetrics(SM_CXVSCROLL);
+        size.dx += DpiGetSystemMetrics(hwndCanvas, SM_CXVSCROLL);
     }
     if ((style & WS_HSCROLL)) {
-        size.dy += GetSystemMetrics(SM_CYHSCROLL);
+        size.dy += DpiGetSystemMetrics(hwndCanvas, SM_CYHSCROLL);
     }
     ReportIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
     return size;

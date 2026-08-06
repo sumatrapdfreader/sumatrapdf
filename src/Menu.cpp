@@ -2319,7 +2319,9 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
 #endif
 
 static int GetMenuCheckMarkCx(HWND hwnd) {
-    int cx = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
+    // GetSystemMetrics() already answers in pixels for the system dpi, so the
+    // old DpiScale(GetSystemMetrics(...)) scaled it a second time
+    int cx = DpiGetSystemMetrics(hwnd, SM_CXMENUCHECK);
     if (!IsMenuFontSizeDefault()) {
         cx = GetAppMenuFontSize(hwnd);
         // this applies scaling for default values on my win 11 i.e.:

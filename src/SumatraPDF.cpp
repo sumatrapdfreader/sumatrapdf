@@ -10741,7 +10741,8 @@ void RelayoutCaption(MainWindow* win) {
             int btnCount = TbGetButtonCount(win->hwndMenuToolbar);
             if (btnCount > 0) {
                 Rect lastBtn = TbGetItemRect(win->hwndMenuToolbar, btnCount - 1);
-                int naturalWidth = lastBtn.x + lastBtn.dx + (GetSystemMetrics(SM_CXBORDER) * 2);
+                int naturalWidth =
+                    lastBtn.x + lastBtn.dx + (DpiGetSystemMetrics(win->hwndMenuToolbar, SM_CXBORDER) * 2);
                 if (naturalWidth < row1Dx) {
                     menuBarWidth = naturalWidth;
                 }
@@ -10989,8 +10990,8 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
     } else if (button == CB_SYSTEM_MENU) {
         SolidBrush bgBrSys(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
         gfx.FillRectangle(&bgBrSys, rButton.x, rButton.y, rButton.dx, rButton.dy);
-        int xIcon = GetSystemMetrics(SM_CXSMICON);
-        int yIcon = GetSystemMetrics(SM_CYSMICON);
+        int xIcon = DpiGetSystemMetrics(win->hwndFrame, SM_CXSMICON);
+        int yIcon = DpiGetSystemMetrics(win->hwndFrame, SM_CYSMICON);
         HICON hIcon = (HICON)GetClassLongPtr(win->hwndFrame, GCLP_HICONSM);
         int x = rButton.x + ((rButton.dx - xIcon) / 2);
         int y = rButton.y + ((rButton.dy - yIcon) / 2);

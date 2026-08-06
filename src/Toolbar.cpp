@@ -561,7 +561,7 @@ static int OverlayToolbarBottomScrollbarOffset(MainWindow* win) {
         return DpiScale(win->hwndFrame, 16);
     }
     // windows native horizontal scrollbar
-    return GetSystemMetrics(SM_CYHSCROLL);
+    return DpiGetSystemMetrics(win->hwndFrame, SM_CYHSCROLL);
 }
 
 // rectangle (frame-client coords) the overlay toolbar occupies when shown
@@ -1010,7 +1010,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     size2.dx += padX;
     size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
-    int padding = GetSystemMetrics(SM_CXEDGE);
+    int padding = DpiGetSystemMetrics(win->hwndFrame, SM_CXEDGE);
     int x = currX - 1;
     int y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
     MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
@@ -1058,7 +1058,7 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     // Measure a full page number plus edit-control padding; plain measure is
     // too tight for the right-aligned ES_NUMBER box (esp. under high DPI).
     int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
-    boxWidth += 2 * GetSystemMetrics(SM_CXEDGE);
+    boxWidth += 2 * DpiGetSystemMetrics(hwndFrame, SM_CXEDGE);
     boxWidth += DpiScale(hwndFrame, 12);
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto* h = GetModuleHandle(nullptr);

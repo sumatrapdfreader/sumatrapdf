@@ -461,7 +461,7 @@ void NotificationWnd::Layout(Str message) {
     if (IsUIRtl()) {
         HWND parent = GetParent(hwnd);
         Rect r = HwndMapRectToWindow(HwndWindowRect(hwnd), HWND_DESKTOP, parent);
-        int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
+        int cxVScroll = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL);
         r.x = HwndWindowRect(parent).dx - r.dx - DpiScale(hwnd, kTopLeftMargin) - cxVScroll;
         flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_DEFERERASE;
         SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, flags);

@@ -803,7 +803,7 @@ OverlayScrollbar* OverlayScrollbarCreate(HWND hwndOwner, OverlayScrollbar::Type 
     sb->mode = mode;
     sb->thinWidth = DpiScale(hwndOwner, 4);
     sb->thickWidth = DpiScale(hwndOwner, 16);
-    int sysWidth = IsVert(sb) ? GetSystemMetrics(SM_CXVSCROLL) : GetSystemMetrics(SM_CYHSCROLL);
+    int sysWidth = DpiGetSystemMetrics(hwndOwner, IsVert(sb) ? SM_CXVSCROLL : SM_CYHSCROLL);
     if (sysWidth > 0) {
         sb->thickWidth = sysWidth;
     }

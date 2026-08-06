@@ -45,6 +45,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "base/Dpi.h"
 #include "base/Timer.h"
 
 #include "wingui/UIModels.h"
@@ -946,13 +947,13 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         if (!hideScrollbars && !useOverlayScrollbar && !needVScroll && layout.canvasSize.dy > layout.viewPort.dy) {
             needVScroll = true;
             viewPort = layout.viewPort;
-            viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
+            viewPort.dx -= DpiGetSystemMetrics(SM_CXVSCROLL, uiDpi);
             continue;
         }
         if (!hideScrollbars && !useOverlayScrollbar && !needHScroll && layout.canvasSize.dx > layout.viewPort.dx) {
             needHScroll = true;
             viewPort = layout.viewPort;
-            viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
+            viewPort.dy -= DpiGetSystemMetrics(SM_CYHSCROLL, uiDpi);
             continue;
         }
         break;
