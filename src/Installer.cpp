@@ -118,11 +118,19 @@ static void ClearReadOnly(Str path) {
     }
 }
 
+// Last Win32 error from WriteInstallerFileRobust (for user-facing messages).
+static DWORD gLastWriteInstallerErr = 0;
+
+static bool IsDiskFullError(DWORD err) {
+    return err == ERROR_DISK_FULL || err == ERROR_HANDLE_DISK_FULL;
+}
+
 // Write a file during install/upgrade. libsumatrapdf.dll is often locked by
 // SumatraPDF.exe, dllhost/prevhost (preview), or PdfFilter; a plain
 // CreateFile(CREATE_ALWAYS) then fails and leaves the old DLL (size mismatch
 // with the new exe). Retry: direct write, temp+rename, kill holders, delete.
 static bool WriteInstallerFileRobust(Str path, Str data) {
+    gLastWriteInstallerErr = 0;
     if (!path || !data.s) {
         log("WriteInstallerFileRobust: null path or data\n");
         return false;
@@ -150,6 +158,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
         ClearReadOnly(path);
         if (!file::WriteFile(path, data)) {
             DWORD err = GetLastError();
+            gLastWriteInstallerErr = err;
             logf("  direct WriteFile failed lastError=%u\n", err);
             LogLastError(err);
             return false;
@@ -164,6 +173,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
         file::Delete(tmp);
         if (!file::WriteFile(tmp, data)) {
             DWORD err = GetLastError();
+            gLastWriteInstallerErr = err;
             logf("  temp WriteFile failed lastError=%u\n", err);
             LogLastError(err);
             file::Delete(tmp);
@@ -176,6 +186,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
         ClearReadOnly(path);
         if (!MoveFileExW(CWStrTemp(tmp), CWStrTemp(path), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
             DWORD err = GetLastError();
+            gLastWriteInstallerErr = err;
             logf("  MoveFileExW(REPLACE) failed lastError=%u\n", err);
             LogLastError(err);
             file::Delete(tmp);
@@ -190,9 +201,16 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
             logf("WriteInstallerFileRobust: ok (direct) '%s'\n", path);
             return true;
         }
+        if (IsDiskFullError(gLastWriteInstallerErr)) {
+            // Retries will not create free space.
+            break;
+        }
         if (tryTempRename()) {
             logf("WriteInstallerFileRobust: ok (temp+rename) '%s'\n", path);
             return true;
+        }
+        if (IsDiskFullError(gLastWriteInstallerErr)) {
+            break;
         }
 
         int killed = KillProcessesWithModule(path, true);
@@ -213,9 +231,19 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
     }
 
     existing = file::GetSize(path);
-    logf("WriteInstallerFileRobust: FAILED path='%s' finalSize=%lld expected=%d\n", path, (long long)existing,
-         expected);
+    logf("WriteInstallerFileRobust: FAILED path='%s' finalSize=%lld expected=%d lastErr=%u\n", path,
+         (long long)existing, expected, gLastWriteInstallerErr);
     return false;
+}
+
+static TempStr WriteInstallerFileFailureMsgTemp(Str filePath) {
+    if (IsDiskFullError(gLastWriteInstallerErr)) {
+        return fmt(_TRA("Not enough free disk space to write %s.\n\n"
+                        "Free up space on this drive and try again.")
+                       .s,
+                   filePath);
+    }
+    return fmt(_TRA("Couldn't write %s to disk").s, filePath);
 }
 
 // --- Rename locked install files aside before extract ----------------------------
@@ -812,8 +840,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         free(uncompressed);
 
         if (!ok) {
-            TempStr msg = fmt(_TRA("Couldn't write %s to disk").s, filePath);
-            NotifyFailed(msg);
+            NotifyFailed(WriteInstallerFileFailureMsgTemp(filePath));
             return false;
         }
         logf("  extracted '%s'\n", filePath);
@@ -908,6 +935,10 @@ static bool CopySelfToDir(Str destDir) {
             _TRA("Couldn't copy SumatraPDF.exe to the installation directory (file in use). "
                  "Close all SumatraPDF windows and Explorer PDF previews, then try again. "
                  "See https://www.sumatrapdfreader.org/docs/Installation"));
+    } else if (IsDiskFullError(lastErr)) {
+        NotifyFailed(
+            _TRA("Not enough free disk space to copy SumatraPDF.exe to the installation directory.\n\n"
+                 "Free up space on this drive and try again."));
     } else {
         NotifyFailed(_TRA("Couldn't copy SumatraPDF.exe to the installation directory"));
     }
@@ -1987,6 +2018,81 @@ bool ExtractLibsumatrapdfToDir(Str destDir) {
     return true;
 }
 
+// Bytes we expect to write during install (new exe + archive payloads + room for
+// a robust-write .tmp of the largest file + FS margin). During upgrade, *.copy
+// of old files still occupy space, so free space must cover the full new size.
+static i64 EstimateInstallerWriteBytes(const lzma::SimpleArchive* archive) {
+    i64 need = 0;
+    i64 largest = 0;
+    TempStr self = GetSelfExePathTemp();
+    i64 exeSz = file::GetSize(self);
+    if (exeSz > 0) {
+        need += exeSz;
+        largest = exeSz;
+    }
+    if (archive) {
+        for (int i = 0; i < archive->filesCount; i++) {
+            i64 u = (i64)archive->files[i].uncompressedSize;
+            need += u;
+            if (u > largest) {
+                largest = u;
+            }
+        }
+    }
+    need += largest;          // possible concurrent .tmp during robust write
+    need += 16 * 1024 * 1024; // filesystem / safety margin
+    return need;
+}
+
+static bool GetFreeBytesAvailable(Str pathOnVolume, u64* freeOut) {
+    if (!freeOut) {
+        return false;
+    }
+    *freeOut = 0;
+    WCHAR volume[MAX_PATH]{};
+    if (!GetVolumePathNameW(CWStrTemp(pathOnVolume), volume, dimofi(volume))) {
+        TempStr parent = path::GetDirTemp(pathOnVolume);
+        if (!parent || !GetVolumePathNameW(CWStrTemp(parent), volume, dimofi(volume))) {
+            logf("GetFreeBytesAvailable: GetVolumePathNameW failed for '%s' err=%u\n", pathOnVolume, GetLastError());
+            return false;
+        }
+    }
+    ULARGE_INTEGER avail{};
+    ULARGE_INTEGER total{};
+    ULARGE_INTEGER totalFree{};
+    if (!GetDiskFreeSpaceExW(volume, &avail, &total, &totalFree)) {
+        logf("GetFreeBytesAvailable: GetDiskFreeSpaceExW failed err=%u path='%s'\n", GetLastError(), pathOnVolume);
+        return false;
+    }
+    *freeOut = avail.QuadPart;
+    logf("GetFreeBytesAvailable: free=%llu total=%llu path='%s'\n", (unsigned long long)avail.QuadPart,
+         (unsigned long long)total.QuadPart, pathOnVolume);
+    return true;
+}
+
+// Returns false if there is clearly not enough free space (NotifyFailed already called).
+// If free space cannot be queried, returns true so install proceeds.
+static bool EnsureEnoughDiskSpaceForInstall(Str installDir, const lzma::SimpleArchive* archive) {
+    i64 need = EstimateInstallerWriteBytes(archive);
+    u64 freeBytes = 0;
+    if (!GetFreeBytesAvailable(installDir, &freeBytes)) {
+        logf("EnsureEnoughDiskSpaceForInstall: skip check (query failed) need=%lld\n", (long long)need);
+        return true;
+    }
+    logf("EnsureEnoughDiskSpaceForInstall: free=%llu need=%lld\n", (unsigned long long)freeBytes, (long long)need);
+    if ((i64)freeBytes >= need) {
+        return true;
+    }
+    int freeMb = (int)(freeBytes / (1024ull * 1024ull));
+    int needMb = (int)((need + 1024 * 1024 - 1) / (1024 * 1024));
+    NotifyFailed(fmt(_TRA("Not enough free disk space to install SumatraPDF.\n\n"
+                          "Required: about %d MB free\nAvailable: %d MB\n\n"
+                          "Free up space on this drive and try again.")
+                         .s,
+                     needMb, freeMb));
+    return false;
+}
+
 bool ExtractInstallerFiles(Str dir) {
     logf("ExtractInstallerFiles() to '%s'\n", dir);
     bool ok = dir::CreateAll(dir);
@@ -1994,6 +2100,15 @@ bool ExtractInstallerFiles(Str dir) {
         log("  dir::CreateAll() failed\n");
         LogLastError();
         NotifyFailed(_TRA("Couldn't create the installation directory"));
+        return false;
+    }
+
+    // Open archive early so we can estimate write size before rename/copy.
+    ok = OpenEmbeddedFilesArchive();
+    if (!ok) {
+        return false;
+    }
+    if (!EnsureEnoughDiskSpaceForInstall(dir, &gArchive)) {
         return false;
     }
 
@@ -2016,11 +2131,6 @@ bool ExtractInstallerFiles(Str dir) {
     }
     ProgressStep();
 
-    ok = OpenEmbeddedFilesArchive();
-    if (!ok) {
-        RestoreInstallCopyFiles(dir);
-        return false;
-    }
     // on error, ExtractFiles() shows error message itself
     ok = ExtractInstallerFiles(&gArchive, dir);
     if (!ok) {
