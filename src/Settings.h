@@ -706,6 +706,10 @@ struct GlobalPrefs {
     // visible, this is the height of the bookmarks (table of contents)
     // part, in screen pixels
     int tocDy;
+    // if true, the toolbar has a Read Aloud button (with a drop-down for
+    // voice, speed and what to read). Read Aloud is still reachable from
+    // the Read Aloud menu when this is false
+    bool toolbarShowReadAloud;
     // size of the toolbar icons in pixels at 100% display scaling (8-64);
     // the toolbar itself is a few pixels taller
     int toolbarSize;
@@ -1502,6 +1506,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, documentColorsFollowTheme), SettingType::String, (intptr_t)"off"},
     {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0, true},
+    {offsetof(GlobalPrefs, toolbarShowReadAloud), SettingType::Bool, false},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
     {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t)"automatic"},
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
@@ -1579,7 +1584,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    126,
+    127,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -1588,14 +1593,14 @@ static const StructInfo gGlobalPrefsInfo = {
     "ting\0ShowFavorites\0SortFavoritesByName\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotationNotificati"
     "on\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0PaddingAfterLas"
     "tPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0Ta"
-    "bWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFon"
-    "tSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0Selection"
-    "Toolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0Markdo"
-    "wnUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateE"
-    "ngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0"
-    "Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState"
-    "\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWin"
-    "Pos\0CheckForUpdates\0\0",
+    "bWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAloud\0ToolbarSize"
+    "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
+    "ors\0UseTabs\0SelectionToolbar\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Ima"
+    "geUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0Transl"
+    "ateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0"
+    "\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0Vers"
+    "ionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
+    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1648,17 +1653,19 @@ static const StructInfo gGlobalPrefsInfo = {
     "menus/toolbars — use Theme for UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set "
     "all three values. Shift+I (Invert Colors) is separate: it swaps the page colors for the session whatever this is "
     "set to\0if both the favorites and the bookmarks part of the sidebar are visible, this is the height of the "
-    "bookmarks (table of contents) part, in screen pixels\0size of the toolbar icons in pixels at 100% display scaling "
-    "(8-64); the toolbar itself is a few pixels taller\0font name for bookmarks and favorites tree views. automatic "
-    "means Windows default\0font size for bookmarks and favorites tree views, in pixels; 0 means the Windows default. "
-    "Not scaled by the display scaling\0overrides the font size used for menus, toolbar and dialogs, in pixels; 0 "
-    "means the Windows default. Not scaled by the display scaling\0if true, render MuPDF-based documents (PDF, XPS, "
-    "DjVu, EPUB etc.) without anti-aliasing, giving sharper but jagged edges\0CAD/engineering PDF line rendering: off, "
-    "auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses "
-    "found in PDF text\0if true, use the Windows system colors for the document background and text. Overrides other "
-    "color settings\0if true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar "
-    "with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable "
-    "it\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
+    "bookmarks (table of contents) part, in screen pixels\0if true, the toolbar has a Read Aloud button (with a "
+    "drop-down for voice, speed and what to read). Read Aloud is still reachable from the Read Aloud menu when this is "
+    "false\0size of the toolbar icons in pixels at 100% display scaling (8-64); the toolbar itself is a few pixels "
+    "taller\0font name for bookmarks and favorites tree views. automatic means Windows default\0font size for "
+    "bookmarks and favorites tree views, in pixels; 0 means the Windows default. Not scaled by the display "
+    "scaling\0overrides the font size used for menus, toolbar and dialogs, in pixels; 0 means the Windows default. Not "
+    "scaled by the display scaling\0if true, render MuPDF-based documents (PDF, XPS, DjVu, EPUB etc.) without "
+    "anti-aliasing, giving sharper but jagged edges\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD "
+    "drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses found in PDF text\0if "
+    "true, use the Windows system colors for the document background and text. Overrides other color settings\0if "
+    "true, documents are opened in tabs instead of new windows\0if true, a small floating toolbar with selection "
+    "actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it\0if true, "
+    "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
     "order\0sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400\0how much a single "
     "zoom in / zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, zooming "
     "steps through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization "

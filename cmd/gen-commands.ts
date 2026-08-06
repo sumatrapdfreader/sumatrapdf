@@ -230,6 +230,7 @@ export const commands = [
     "CmdStopReadAloud", "Stop Reading",
     "CmdReadAloudFromTopPage", "Start Reading From Top",
     "CmdReadAloudSelection", "Start Reading Selection",
+    "CmdToggleToolbarShowReadAloud", "Read Aloud: Show In Toolbar",
     "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
     "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
     "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",

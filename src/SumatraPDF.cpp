@@ -9384,6 +9384,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdToggleToolbarShowReadAloud: {
+            bool show = !gGlobalPrefs->toolbarShowReadAloud;
+            if (GetCommandArg(cmd, kCmdArgState)) {
+                show = GetCommandBoolArg(cmd, kCmdArgState, true);
+            }
+            gGlobalPrefs->toolbarShowReadAloud = show;
+            for (MainWindow* w : gWindows) {
+                ToolbarUpdateStateForWindow(w, true);
+            }
+            SaveSettings();
+            break;
+        }
+
         case CmdChangeScrollbar:
             OnMenuChangeScrollbar(win->hwndFrame);
             break;
@@ -12184,6 +12197,13 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
         }
         AppendMenuW(menu, MF_POPUP | MF_STRING, (UINT_PTR)speedMenu, CWStrTemp(_TRA("Speed")));
     }
+
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+    UINT showFlags = MF_STRING;
+    if (gGlobalPrefs->toolbarShowReadAloud) {
+        showFlags |= MF_CHECKED;
+    }
+    AppendMenuW(menu, showFlags, CmdToggleToolbarShowReadAloud, CWStrTemp(_TRA("Show In Toolbar")));
 }
 
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem, bool canReadFromCursor) {
@@ -12280,8 +12300,16 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
     UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
                                          win->hwndFrame, nullptr);
 
-    HandleReadAloudMenuSelection(win, selected);
     DestroyMenu(menu);
+    if (selected == 0) {
+        return;
+    }
+    // the menu also carries real Cmd* ids (Show In Toolbar), which
+    // HandleReadAloudMenuSelection knows nothing about - let the frame have them
+    if (HandleReadAloudMenuCommand(win, (int)selected)) {
+        return;
+    }
+    HwndSendCommand(win->hwndFrame, (int)selected);
 }
 
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {

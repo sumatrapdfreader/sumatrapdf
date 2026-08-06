@@ -193,6 +193,9 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
         case CmdFindToggleMatchCase:
         case CmdFindToggleMatchWholeWord:
             return NeedsFindUI(win);
+        case CmdReadAloud:
+            // opt-in: the button and its drop-down only show if asked for
+            return gGlobalPrefs->toolbarShowReadAloud;
         case PageInfoId:
             return true;
     }

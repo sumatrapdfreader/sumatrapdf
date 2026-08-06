@@ -243,6 +243,11 @@ DocumentColorsFollowTheme = off
 ; is the height of the bookmarks (table of contents) part, in screen pixels
 TocDy = 0
 
+; if true, the toolbar has a Read Aloud button (with a drop-down for voice,
+; speed and what to read). Read Aloud is still reachable from the Read Aloud
+; menu when this is false (introduced in version 3.7)
+ToolbarShowReadAloud = false
+
 ; size of the toolbar icons in pixels at 100% display scaling (8-64); the
 ; toolbar itself is a few pixels taller (introduced in version 3.4)
 ToolbarSize = 18

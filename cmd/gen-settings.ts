@@ -999,6 +999,13 @@ const globalPrefs: Field[] = [
       "the height of the bookmarks (table of contents) part, in screen pixels",
   ).internal(),
   field(
+    "ToolbarShowReadAloud",
+    Bool,
+    false,
+    "if true, the toolbar has a Read Aloud button (with a drop-down for voice, speed and " +
+      "what to read). Read Aloud is still reachable from the Read Aloud menu when this is false",
+  ).ver("3.7"),
+  field(
     "ToolbarSize",
     Int,
     18,
