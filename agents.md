@@ -157,6 +157,20 @@ do a runtime `strlen`/`wcslen`. So e.g. `fmt("%s", StrL("done"))`, not
 `fmt("%s", Str("done"))`. Use `Str(x)` / `WStr(x)` only when `x` is a runtime
 `char*` / `wchar_t*` whose length isn't known at compile time.
 
+## Use `len(x)`, not `x.len`
+
+`Str`, `WStr`, `Vec<T>`, `StrVec`, `StrQueue` and `str::Builder` all expose a
+`.len` field, and there is a free `len()` overload for each. Prefer the free
+function:
+
+    for (int i = 0; i < len(s); i++)     // yes
+    for (int i = 0; i < s.len; i++)      // no
+
+It reads the same for every container, it works for the ones whose `.len` is not
+an `int` (`str::Builder::len` is a `u32`, so `.len` drags unsigned arithmetic
+into comparisons), and a type that later hides or renames the field keeps
+working. Reach for `.len` only when you need to **assign** to it.
+
 ## NUL-terminate `Str`/`WStr` before C/Win32 APIs
 
 A `Str`/`WStr` is a `{ptr, len}` view and may be a **substring that is not
