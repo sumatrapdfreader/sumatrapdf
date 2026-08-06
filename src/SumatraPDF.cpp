@@ -1948,6 +1948,8 @@ static bool showTocByDefault(Str path) {
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
+static void SetTabLoadError(WindowTab* tab, Str path);
+
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
@@ -1964,6 +1966,15 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (!tab) {
         ReportIf(true);
         return;
+    }
+    if (ctrl) {
+        // a previous failed load may have left a reason behind
+        str::Free(tab->loadErrorReason);
+        tab->loadErrorReason = {};
+    } else {
+        // no controller means the load failed (e.g. a reload of a file that has
+        // since been deleted or overwritten); record why for the error screen
+        SetTabLoadError(tab, args->FilePath());
     }
 
     // Never load settings from a preexisting state if the user doesn't wish to
@@ -2952,6 +2963,46 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     }
 }
 
+// Why a document failed to load. "Error loading foo.pdf" on its own leaves the
+// user guessing, and the three cases they can actually do something about -
+// the file is gone, they may not read it, another program has it locked - are
+// cheap to tell apart by trying to open it the way the engines do. Anything
+// that opens but doesn't load is a format we don't handle or a damaged file.
+static TempStr FileLoadErrorReasonTemp(Str path) {
+    if (!file::Exists(path)) {
+        return str::DupTemp(_TRA("The file does not exist"));
+    }
+    WCHAR* pathW = CWStrTemp(path);
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    HANDLE h = CreateFileW(pathW, GENERIC_READ, share, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        return str::DupTemp(_TRA("The file format is not supported or the file is damaged"));
+    }
+    DWORD err = GetLastError();
+    switch (err) {
+        case ERROR_FILE_NOT_FOUND:
+        case ERROR_PATH_NOT_FOUND:
+            return str::DupTemp(_TRA("The file does not exist"));
+        case ERROR_ACCESS_DENIED:
+            return str::DupTemp(_TRA("Access denied"));
+        case ERROR_SHARING_VIOLATION:
+        case ERROR_LOCK_VIOLATION:
+            return str::DupTemp(_TRA("The file is in use by another program"));
+    }
+    return GetLastErrorStrTemp(err);
+}
+
+// remember why, so the canvas can show it next to "Error loading <file>"
+static void SetTabLoadError(WindowTab* tab, Str path) {
+    if (!tab) {
+        return;
+    }
+    tab->loadState = WindowTab::LoadState::Error;
+    str::Free(tab->loadErrorReason);
+    tab->loadErrorReason = str::Dup(FileLoadErrorReasonTemp(path));
+}
+
 static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
@@ -2965,7 +3016,7 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, b
     // Same translation as Canvas OnPaintError ("Error loading %s").
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.msg = fmt(_TRA("Error loading %s").s, path);
+    nargs.msg = fmt("%s: %s", fmt(_TRA("Error loading %s").s, path), FileLoadErrorReasonTemp(path));
     nargs.warning = true;
     nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
@@ -3365,7 +3416,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     }
     if (!args->ctrl) {
         if (args->targetTab) {
-            args->targetTab->loadState = WindowTab::LoadState::Error;
+            SetTabLoadError(args->targetTab, path);
             if (args->targetTab == win->CurrentTab()) {
                 HwndInvalidate(win->hwndCanvas);
             }
@@ -3581,7 +3632,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
             EndDocumentLoad(path);
             if (!args->ctrl) {
                 if (args->targetTab) {
-                    args->targetTab->loadState = WindowTab::LoadState::Error;
+                    SetTabLoadError(args->targetTab, path);
                     HwndInvalidate(win->hwndCanvas);
                     LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
                 } else {

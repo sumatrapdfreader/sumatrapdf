@@ -44,6 +44,9 @@ struct WindowTab {
     // network-drive copy progress while loading (-1 = not in copy phase)
     i64 loadCopyBytesCopied = -1;
     i64 loadCopyBytesTotal = 0;
+    // why the load failed, shown under the error message (owned; empty if we
+    // couldn't tell). See FileLoadErrorReasonTemp()
+    Str loadErrorReason;
     LoadArgs* pendingLoadArgs = nullptr;
     // text of win->hwndFrame when the tab is selected
     Str frameTitle;

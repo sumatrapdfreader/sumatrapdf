@@ -89,6 +89,7 @@ WindowTab::~WindowTab() {
     str::Free(displayName);
     displayName = {};
     str::Free(frameTitle);
+    str::Free(loadErrorReason);
     frameTitle = {};
     str::Free(readAloudText);
     readAloudText = {};

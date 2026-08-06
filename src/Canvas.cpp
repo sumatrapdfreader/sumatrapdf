@@ -3638,6 +3638,55 @@ static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM w
 
 ///// methods needed for FixedPageUI canvases with loading error /////
 
+// "Error loading <name>" with the file name in bold, centered in r. The
+// translation decides where the name sits in the sentence, so split its format
+// string around the %s instead of assuming the name comes last. Falls back to
+// one plain run for RTL, where laying runs out left to right would be wrong.
+static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, HFONT font) {
+    Str tmpl = _TRA("Error loading %s");
+    int at = str::IndexOf(tmpl, StrL("%s"));
+    if (at < 0 || IsUIRtl()) {
+        HdcDrawCenteredText(hdc, r, fmt(tmpl.s, name), IsUIRtl());
+        return;
+    }
+    Str prefix = Str(tmpl.s, at);
+    Str suffix = Str(tmpl.s + at + 2, tmpl.len - at - 2);
+
+    LOGFONTW lf{};
+    GetObjectW(font, sizeof(lf), &lf);
+    lf.lfWeight = FW_BOLD;
+    ScopedGdiObj<HFONT> boldFont(CreateFontIndirectW(&lf));
+
+    Size szName = HdcMeasureText(hdc, name, boldFont);
+    int dxPrefix = len(prefix) > 0 ? HdcMeasureText(hdc, prefix, font).dx : 0;
+    int dxSuffix = len(suffix) > 0 ? HdcMeasureText(hdc, suffix, font).dx : 0;
+    int x = r.x + ((r.dx - (dxPrefix + szName.dx + dxSuffix)) / 2);
+    int y = r.y + ((r.dy - szName.dy) / 2);
+
+    uint format = DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP;
+    int prevMode = SetBkMode(hdc, TRANSPARENT);
+    if (len(prefix) > 0) {
+        HdcDrawText(hdc, prefix, Point{x, y}, format, font);
+        x += dxPrefix;
+    }
+    HdcDrawText(hdc, name, Point{x, y}, format, boldFont);
+    x += szName.dx;
+    if (len(suffix) > 0) {
+        HdcDrawText(hdc, suffix, Point{x, y}, format, font);
+    }
+    if (prevMode != 0) {
+        SetBkMode(hdc, prevMode);
+    }
+}
+
+// a red that stays readable on both a light and a dark canvas background
+static COLORREF LoadErrorTextColor() {
+    if (IsLightColor(ThemeMainWindowBackgroundColor())) {
+        return RGB(0xc6, 0x28, 0x28);
+    }
+    return RGB(0xef, 0x9a, 0x9a);
+}
+
 static void OnPaintDocumentStatus(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
@@ -3684,11 +3733,27 @@ static void OnPaintDocumentStatus(MainWindow* win) {
                     msg = fmt("%s %s", msg, elapsed);
                 }
             }
+            SetTextColor(hdc, ThemeWindowTextColor());
+            HdcDrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
         } else {
-            msg = fmt(_TRA("Error loading %s").s, path::GetBaseNameTemp(filePath));
+            // red, with the file name in bold and the reason (file gone, no
+            // permission, locked by another program) on a second line: a bare
+            // "Error loading foo.pdf" left the user with nothing to act on
+            SetTextColor(hdc, LoadErrorTextColor());
+            TempStr name = path::GetBaseNameTemp(filePath);
+            Rect rc = HwndClientRect(win->hwndCanvas);
+            Str reason = tab->loadErrorReason;
+            Rect top = rc;
+            if (len(reason) > 0) {
+                int lineDy = HwndMeasureText(win->hwndCanvas, name, fontRightTxt).dy;
+                top.dy -= lineDy;
+                Rect bottom = rc;
+                bottom.y += lineDy;
+                bottom.dy -= lineDy;
+                HdcDrawCenteredText(hdc, bottom, reason, IsUIRtl());
+            }
+            DrawLoadErrorLine(hdc, top, name, fontRightTxt);
         }
-        SetTextColor(hdc, ThemeWindowTextColor());
-        HdcDrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
     SelectObject(hdc, hPrevFont);
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
