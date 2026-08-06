@@ -431,6 +431,14 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
     // replace the document in the current tab; keep this window open
     args.forceReuse = true;
     StartLoadDocument(&args);
+    // Hand keyboard control back to the document, the way Ctrl + Enter does
+    // when it switches to a tab that already has the file (issue #5903).
+    // Loading is async and LoadModelIntoTab focuses the frame when it lands,
+    // but that only helps if the frame is the foreground window by then - this
+    // window is still on top otherwise, and arrow keys keep driving the list.
+    // The window stays open so browsing can continue; it just isn't focused.
+    SetForegroundWindow(mainWin->hwndFrame);
+    HwndSetFocus(mainWin->hwndFrame);
 }
 
 // Del on a file moves it to the recycle bin (issue #5877), without a
