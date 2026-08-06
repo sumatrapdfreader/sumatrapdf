@@ -106,8 +106,7 @@ static bool IsBracketLine(Str data, int off) {
 }
 
 static Str ExtractTrimmed(Str data, int begin, int end) {
-    begin = std::max(0, std::min(begin, data.len));
-    end = std::max(begin, std::min(end, data.len));
+    ReportIf(begin < 0 || end < begin || end > data.len);
     end = SkipWsRev(data, begin, end);
     while (begin < end && str::IsWs(Peek(data, begin))) {
         begin++;
@@ -358,30 +357,34 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, i
     return node;
 }
 
-static void SerializeRec(SquareTreeNode* node, str::Builder& s, int indent) {
-    int n = len(node->data);
-    for (int i = 0; i < n; i++) {
+static void AppendIndent(str::Builder& out, Str indentUnit, int depth) {
+    for (int i = 0; i < depth; i++) {
+        out.Append(indentUnit);
+    }
+}
+
+// Append a dump of node. indentUnit is one level (e.g. "\t" or "  "); lineEnd is "\r\n" or "\n".
+void SerializeSquareTreeNode(str::Builder& out, SquareTreeNode* node, Str indentUnit, Str lineEnd, int depth) {
+    if (!node) {
+        return;
+    }
+    for (int i = 0; i < len(node->data); i++) {
         SquareTreeNode::DataItem* item = node->data[i];
-        for (int j = 0; j < indent; j++) {
-            s.AppendChar(' ');
-            s.AppendChar(' ');
-        }
+        AppendIndent(out, indentUnit, depth);
+        out.Append(item->key);
         if (item->child) {
-            s.Append(item->key);
-            s.Append(" [\n");
-            SerializeRec(item->child, s, indent + 1);
-            for (int j = 0; j < indent; j++) {
-                s.AppendChar(' ');
-                s.AppendChar(' ');
-            }
-            s.Append("]\n");
+            out.Append(" [");
+            out.Append(lineEnd);
+            SerializeSquareTreeNode(out, item->child, indentUnit, lineEnd, depth + 1);
+            AppendIndent(out, indentUnit, depth);
+            out.Append("]");
+            out.Append(lineEnd);
         } else {
-            s.Append(item->key);
-            s.Append(" = ");
+            out.Append(" = ");
             if (item->str) {
-                s.Append(item->str);
+                out.Append(item->str);
             }
-            s.AppendChar('\n');
+            out.Append(lineEnd);
         }
     }
 }
@@ -391,7 +394,7 @@ TempStr SerializeSquareTreeNodeTemp(SquareTreeNode* node) {
         return {};
     }
     str::Builder s;
-    SerializeRec(node, s, 0);
+    SerializeSquareTreeNode(s, node, StrL("  "), StrL("\n"), 0);
     return ToStrTemp(s);
 }
 

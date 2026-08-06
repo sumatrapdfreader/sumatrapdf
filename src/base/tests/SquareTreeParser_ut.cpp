@@ -210,4 +210,34 @@ void SquareTreeTest() {
         utassert(root && str::Eq(root->GetValue(StrL("key")), StrL("value")));
         delete root;
     }
+
+    // serialize -> parse round-trip (space indent / \n and tab / \r\n styles)
+    {
+        Str s = UTF8_BOM "key = value\nnode [\n  nested = x\n  empty = \n]\ncount = 1\ncount = 2\n";
+        SquareTreeNode* a = ParseSquareTree(s);
+        TempStr ser = SerializeSquareTreeNodeTemp(a);
+        SquareTreeNode* b = ParseSquareTree(ser);
+        utassert(a && b && 4 == len(a->data) && 4 == len(b->data));
+        utassert(str::Eq(b->GetValue(StrL("key")), StrL("value")));
+        SquareTreeNode* node = b->GetChild(StrL("node"));
+        utassert(node && str::Eq(node->GetValue(StrL("nested")), StrL("x")));
+        utassert(str::Eq(node->GetValue(StrL("empty")), StrL("")));
+        int off = 0;
+        utassert(str::Eq(b->GetValue(StrL("count"), &off), StrL("1")));
+        utassert(str::Eq(b->GetValue(StrL("count"), &off), StrL("2")));
+        delete a;
+        delete b;
+    }
+    {
+        Str s = UTF8_BOM "top = 1\nchild [\n  a = b\n]\n";
+        SquareTreeNode* a = ParseSquareTree(s);
+        str::Builder out;
+        SerializeSquareTreeNode(out, a, StrL("\t"), StrL("\r\n"), 0);
+        TempStr ser = ToStrTemp(out);
+        SquareTreeNode* b = ParseSquareTree(ser);
+        utassert(str::Eq(b->GetValue(StrL("top")), StrL("1")));
+        utassert(str::Eq(b->GetChild(StrL("child"))->GetValue(StrL("a")), StrL("b")));
+        delete a;
+        delete b;
+    }
 }

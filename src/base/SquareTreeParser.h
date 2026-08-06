@@ -23,4 +23,5 @@ struct SquareTreeNode {
 };
 
 SquareTreeNode* ParseSquareTree(Str s);
+void SerializeSquareTreeNode(str::Builder& out, SquareTreeNode* node, Str indentUnit, Str lineEnd, int depth = 0);
 TempStr SerializeSquareTreeNodeTemp(SquareTreeNode*);

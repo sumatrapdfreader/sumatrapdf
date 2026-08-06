@@ -450,24 +450,7 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
 }
 
 static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int indent) {
-    if (!node) {
-        return;
-    }
-    for (int i = 0; i < len(node->data); i++) {
-        SquareTreeNode::DataItem* item = node->data[i];
-        Indent(out, indent);
-        out.Append(item->key);
-        if (item->child) {
-            out.Append(" [\r\n");
-            SerializeUnknownFields(out, item->child, indent + 1);
-            Indent(out, indent);
-            out.Append("]\r\n");
-        } else {
-            out.Append(" = ");
-            out.Append(item->str);
-            out.Append("\r\n");
-        }
-    }
+    SerializeSquareTreeNode(out, node, StrL("\t"), StrL("\r\n"), indent);
 }
 
 // If the struct defines a Bool field named IsTemporary and it is true, the
