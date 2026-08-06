@@ -212,6 +212,7 @@ bool StopSelectTextWithKeyboard(MainWindow* win) {
     win->textSelectModeVisual = false;
     if (win->hwndCanvas) {
         KillTimer(win->hwndCanvas, kTextSelectCaretTimerID);
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifTextSelectMode);
     }
     ScheduleRepaint(win, 0);
     return true;
@@ -224,7 +225,10 @@ static void ShowModeNotification(MainWindow* win) {
                                          : _TRA(
                                                "Select text: arrows move the caret, Shift+arrows select, v selects, "
                                                "Ctrl+C copies, Esc exits");
-    args.timeoutMs = 5000;
+    // no timeout: the keys are the whole interface of this mode, so the hint
+    // stays up for as long as the mode does (removed by StopSelectTextWithKeyboard).
+    // The close button is still there for anyone who has learned them.
+    args.timeoutMs = kNotifNoTimeout;
     args.groupId = kNotifTextSelectMode;
     ShowNotification(args);
 }
