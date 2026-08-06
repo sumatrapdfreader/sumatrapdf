@@ -462,7 +462,7 @@ struct LinkRectList {
 };
 
 fz_rect ToFzRect(RectF rect) {
-    fz_rect result = {(float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy)};
+    fz_rect result = {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
     return result;
 }
 
@@ -5855,7 +5855,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, P
         if (!fi || !fi->data) {
             return {};
         }
-        Str d = Str((char*)(fi->data), fi->fileSizeUncompressed);
+        Str d = Str(fi->data, fi->fileSizeUncompressed);
         EngineMupdf* engine = new EngineMupdf();
         if (displayDPI < 70) {
             displayDPI = 96;

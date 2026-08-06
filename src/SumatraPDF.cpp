@@ -1085,7 +1085,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     }
 
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = (float)size.dx / (float)pageRect.dx;
+    float zoom = (float)size.dx / pageRect.dx;
     pageRect.dy = std::min(pageRect.dy, (float)size.dy / zoom);
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
 
@@ -1128,7 +1128,7 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
         return;
     }
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = (float)kThumbnailDx / (float)pageRect.dx;
+    float zoom = (float)kThumbnailDx / pageRect.dx;
     pageRect.dy = std::min(pageRect.dy, (float)kThumbnailDy / zoom);
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
     RenderPageArgs args(1, zoom, 0, &pageRect);
@@ -1453,7 +1453,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
             if (kZoomFitPage != dm->GetZoomVirtual()) {
                 // keep the top/bottom 5% of the previous page visible after paging down/up
                 si.nPage = (uint)(si.nPage * 0.95);
-                si.nMax -= (int)viewPort.dy - (int)si.nPage;
+                si.nMax -= viewPort.dy - (int)si.nPage;
             }
         }
         showVScroll = (viewPort.dy < canvas.dy);

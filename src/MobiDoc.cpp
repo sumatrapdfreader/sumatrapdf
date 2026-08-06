@@ -661,7 +661,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
             case 201:
                 if (length == 12 && imageFirstRec) {
                     d.Unskip(4);
-                    coverImageRec = (int)imageFirstRec + (int)d.UInt32BE();
+                    coverImageRec = imageFirstRec + (int)d.UInt32BE();
                 }
                 continue;
             case 503:

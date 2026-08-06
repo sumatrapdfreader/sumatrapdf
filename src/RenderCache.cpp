@@ -455,8 +455,8 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     int rotation = dm->GetRotation();
     RectF pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
 
-    float factorW = (float)pixelbox.dx / (float)(maxTileSize.dx + 1);
-    float factorH = (float)pixelbox.dy / (float)(maxTileSize.dy + 1);
+    float factorW = pixelbox.dx / (float)(maxTileSize.dx + 1);
+    float factorH = pixelbox.dy / (float)(maxTileSize.dy + 1);
     // using the geometric mean instead of the maximum factor
     // so that the tile area doesn't get too small in comparison
     // to maxTileSize (but remains smaller)
