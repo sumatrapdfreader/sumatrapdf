@@ -36,7 +36,7 @@ list [
 ]
 
 The below parser always tries to recover from errors, usually by ignoring
-faulty lines. One intentional error hanling is the parsing of INI-style headers which
+faulty lines. One intentional error handling is the parsing of INI-style headers which
 allows to parse INI files mostly as expected as well. E.g.
 
 [Section]
@@ -183,6 +183,106 @@ SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
     return nullptr;
 }
 
+// Line classification after scanning key / separator / value span.
+enum class LineKind {
+    NodeOpen,     // key [ ... ]  or  key \n [
+    CloseBracket, // ]
+    IniSection,   // [Section]  (top-level only; nested ends current node)
+    KeyValue,     // key = value
+    Invalid,      // ignore line
+};
+
+struct LineScan {
+    int keyOff = 0;
+    int sepOff = 0;
+    int valOff = 0;
+    int lineEnd = 0; // index of '\n' or data.len
+    LineKind kind = LineKind::Invalid;
+};
+
+static bool IsNodeOpenLine(Str data, int sepOff, int valOff, int lineEnd) {
+    if (IsBracketLine(data, sepOff)) {
+        return true;
+    }
+    // also tolerate "key \n [ \n ... \n ]" (else the key gets an empty value
+    // and the child node an empty key)
+    return str::IsWs(data.s[sepOff]) && valOff < data.len && data.s[valOff] == '\n' &&
+           IsBracketLine(data, SkipWsAndComments(data, lineEnd));
+}
+
+static bool IsIniSectionLine(Str data, int keyOff, int valOff, int lineEnd) {
+    return data.s[keyOff] == '[' && data.s[SkipWsRev(data, valOff, lineEnd) - 1] == ']';
+}
+
+// Scans one non-empty line starting at off (already past comments/ws).
+static LineScan ScanLine(Str data, int off) {
+    LineScan line;
+    line.keyOff = off;
+    for (; off < data.len && data.s[off] != '=' && data.s[off] != ':' && data.s[off] != '[' && data.s[off] != ']' &&
+           data.s[off] != '\n';
+         off++) {
+        ;
+    }
+    if (off >= data.len || data.s[off] == '\n') {
+        // use first whitespace as a fallback separator
+        for (off = line.keyOff; off < data.len && !str::IsWs(data.s[off]); off++) {
+            ;
+        }
+    }
+    line.sepOff = off;
+    if (off < data.len && data.s[off] != '\n') {
+        // skip to the first non-whitespace character on the same line (value)
+        off = SkipWs(data, off + 1, true);
+    }
+    line.valOff = off;
+    for (; off < data.len && data.s[off] != '\n'; off++) {
+        ;
+    }
+    line.lineEnd = off;
+
+    if (IsNodeOpenLine(data, line.sepOff, line.valOff, line.lineEnd)) {
+        line.kind = LineKind::NodeOpen;
+    } else if (data.s[line.keyOff] == ']') {
+        line.kind = LineKind::CloseBracket;
+    } else if (IsIniSectionLine(data, line.keyOff, line.valOff, line.lineEnd)) {
+        line.kind = LineKind::IniSection;
+    } else if ((line.lineEnd < data.len && data.s[line.sepOff] == '[') || data.s[line.sepOff] == ']') {
+        line.kind = LineKind::Invalid;
+    } else {
+        line.kind = LineKind::KeyValue;
+    }
+    return line;
+}
+
+static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, int depth);
+
+// Appends one or more child nodes under keyView. off is the first char after '['.
+static void AppendChildNodes(SquareTreeNode* node, Str data, Str keyView, int& off, int depth) {
+    node->data.Append(AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
+    // arrays: reuse key for more children, or concatenate ("[ \n ] [ \n ]")
+    while (IsBracketLine(data, (off = SkipWsAndComments(data, off)))) {
+        off++;
+        node->data.Append(AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
+    }
+}
+
+static void AppendKeyValue(SquareTreeNode* node, Str data, const LineScan& line) {
+    Str keyView = ExtractTrimmed(data, line.keyOff, line.sepOff);
+    Str valView = ExtractTrimmed(data, line.valOff, line.lineEnd);
+    node->data.Append(AllocDataItem(keyView, valView, nullptr));
+}
+
+// [Section] at top level becomes Section [ ... ] until the next section or EOF.
+static void AppendIniSection(SquareTreeNode* node, Str data, const LineScan& line, int& off, int depth) {
+    int closeOff = SkipWsRev(data, line.valOff, line.lineEnd) - 1;
+    int nameStart = SkipWs(data, line.keyOff + 1);
+    int nameEnd = SkipWsRev(data, nameStart, closeOff);
+    Str sectionKey = Str(data.s + nameStart, nameEnd - nameStart);
+    int sectionChildOff = line.lineEnd;
+    node->data.Append(AllocDataItem(sectionKey, {}, ParseSquareTreeRec(data, sectionChildOff, false, depth + 1)));
+    off = sectionChildOff;
+}
+
 static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, int depth) {
     SquareTreeNode* node = new SquareTreeNode();
     if (depth >= 64) {
@@ -195,86 +295,45 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, i
         if (off >= data.len || !data.s[off]) {
             break;
         }
-        // all non-empty non-comment lines contain a key-value pair
-        // where the value is either a string (separated by '=' or ':')
-        // or a list of child nodes (if the key is followed by '[' alone)
-        int keyOff = off;
-        for (; off < data.len && data.s[off] != '=' && data.s[off] != ':' && data.s[off] != '[' && data.s[off] != ']' &&
-               data.s[off] != '\n';
-             off++) {
-            ;
-        }
-        if (off >= data.len || data.s[off] == '\n') {
-            // use first whitespace as a fallback separator
-            for (off = keyOff; off < data.len && !str::IsWs(data.s[off]); off++) {
-                ;
+
+        LineScan line = ScanLine(data, off);
+        switch (line.kind) {
+            case LineKind::NodeOpen: {
+                int childOff = SkipWsAndComments(data, line.sepOff) + 1;
+                Str keyView = ExtractTrimmed(data, line.keyOff, line.sepOff);
+                AppendChildNodes(node, data, keyView, childOff, depth);
+                off = childOff;
+                break;
             }
-        }
-        int sepOff = off;
-        if (off < data.len && data.s[off] != '\n') {
-            // skip to the first non-whitespace character on the same line (value)
-            off = SkipWs(data, off + 1, true);
-        }
-        int valOff = off;
-        // skip to the end of the line
-        for (; off < data.len && data.s[off] != '\n'; off++) {
-            ;
-        }
-        if (IsBracketLine(data, sepOff) ||
-            // also tolerate "key \n [ \n ... \n ]" (else the key
-            // gets an empty value and the child node an empty key)
-            (str::IsWs(data.s[sepOff]) && valOff < data.len && data.s[valOff] == '\n' &&
-             IsBracketLine(data, SkipWsAndComments(data, off)))) {
-            // parse child node(s)
-            int childOff = SkipWsAndComments(data, sepOff) + 1;
-            Str keyView = ExtractTrimmed(data, keyOff, sepOff);
-            node->data.Append(AllocDataItem(keyView, {}, ParseSquareTreeRec(data, childOff, false, depth + 1)));
-            off = childOff;
-            // arrays are created by either reusing the same key for a different child
-            // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
-            while (IsBracketLine(data, (off = SkipWsAndComments(data, off)))) {
-                off++;
-                node->data.Append(AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
-            }
-        } else if (data.s[keyOff] == ']') {
-            // finish parsing child node
-            off = keyOff + 1;
-            if (!isTopLevel) {
-                return node;
-            }
-            // ignore superfluous closing square brackets instead of
-            // ignoring all content following them
-        } else if (data.s[keyOff] == '[' && data.s[SkipWsRev(data, valOff, off) - 1] == ']') {
-            // treat INI section headers as top-level node names
-            // (else "[Section]" would be ignored)
-            if (!isTopLevel) {
-                off = keyOff;
-                return node;
-            }
-            // trim whitespace around section name (for consistency with GetPrivateProfileString)
-            int closeOff = SkipWsRev(data, valOff, off) - 1;
-            int nameStart = SkipWs(data, keyOff + 1);
-            int nameEnd = SkipWsRev(data, nameStart, closeOff);
-            Str sectionKey = Str(data.s + nameStart, nameEnd - nameStart);
-            int sectionChildOff = off;
-            node->data.Append(
-                AllocDataItem(sectionKey, {}, ParseSquareTreeRec(data, sectionChildOff, false, depth + 1)));
-            off = sectionChildOff;
-        } else if ((off < data.len && data.s[sepOff] == '[') || data.s[sepOff] == ']') {
-            // invalid line (ignored)
-        } else {
-            // string value (decoding is left to the consumer)
-            bool hasMoreLines = off < data.len && data.s[off] == '\n';
-            Str keyView = ExtractTrimmed(data, keyOff, sepOff);
-            Str valView = ExtractTrimmed(data, valOff, off);
-            node->data.Append(AllocDataItem(keyView, valView, nullptr));
-            if (hasMoreLines) {
-                off++;
-            }
+            case LineKind::CloseBracket:
+                // finish parsing child node; ignore extra ] at top level
+                off = line.keyOff + 1;
+                if (!isTopLevel) {
+                    return node;
+                }
+                break;
+            case LineKind::IniSection:
+                // nested: section header ends the current node (INI only at top level)
+                if (!isTopLevel) {
+                    off = line.keyOff;
+                    return node;
+                }
+                AppendIniSection(node, data, line, off, depth);
+                break;
+            case LineKind::Invalid:
+                // leave off at lineEnd; next SkipWsAndComments advances past the newline
+                off = line.lineEnd;
+                break;
+            case LineKind::KeyValue:
+                AppendKeyValue(node, data, line);
+                off = line.lineEnd;
+                if (off < data.len && data.s[off] == '\n') {
+                    off++;
+                }
+                break;
         }
     }
 
-    // assume that all square brackets have been properly balanced
     return node;
 }
 
