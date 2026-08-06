@@ -99,6 +99,10 @@ void Button::PaintOwnerDrawn(DRAWITEMSTRUCT* dis) {
 // WM_DRAWITEM reports pressed / focused / disabled but never a hot state, so
 // track the mouse ourselves and repaint on enter and leave
 LRESULT Button::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (!ownerDrawn) {
+        // Windows paints it, including the hot state
+        return WndProcDefault(hwnd, msg, wp, lp);
+    }
     if (msg == WM_MOUSEMOVE) {
         if (!trackingMouse) {
             TRACKMOUSEEVENT tme{};
@@ -143,8 +147,10 @@ HWND Button::Create(const CreateArgs& args) {
     } else {
         cargs.style |= BS_PUSHBUTTON;
     }
-    // measure the text before BS_OWNERDRAW hides it from BCM_GETIDEALSIZE
-    cargs.style |= BS_OWNERDRAW;
+    ownerDrawn = args.ownerDrawn;
+    if (ownerDrawn) {
+        cargs.style |= BS_OWNERDRAW;
+    }
     cargs.text = args.text;
 
     Wnd::CreateControl(cargs);
@@ -189,11 +195,14 @@ Button* CreateButton(HWND parent, Str s, const Func0& onClick, bool isRtl) {
 
 #define kButtonMargin 8
 
+// Only the installer and uninstaller use this, and neither loads settings, so
+// there is no theme to draw from - let Windows draw its own themed button.
 Button* CreateDefaultButton(HWND parent, Str s, bool isRtl) {
     Button::CreateArgs args;
     args.parent = parent;
     args.text = s;
     args.isRtl = isRtl;
+    args.ownerDrawn = false;
 
     auto* b = new Button();
     b->Create(args);

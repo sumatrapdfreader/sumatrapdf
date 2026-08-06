@@ -242,11 +242,17 @@ struct Button : Wnd {
         HFONT font = nullptr;
         Str text;
         bool isRtl = false;
+        // Draw the button ourselves from the app's palette (ButtonGetColors).
+        // An app with no palette should turn this off rather than let us fall
+        // back to a hand-drawn button: Windows' own themed push button looks
+        // better than anything we can approximate, and it costs nothing.
+        bool ownerDrawn = true;
     };
 
     Func0 onClick{};
 
     bool isDefault = false;
+    bool ownerDrawn = true;
     // mouse is over the button; owner-draw has to track this itself because
     // WM_DRAWITEM never reports a hot state
     bool isHot = false;
