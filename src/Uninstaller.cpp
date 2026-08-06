@@ -495,47 +495,53 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     ::ExitProcess(0);
 }
 
-static TempStr GetSelfDeleteBatchPathInTemp() {
-    WCHAR tempDir[MAX_PATH + 14]{};
-    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
-    ReportIf(res == 0 || res >= dimof(tempDir));
-    TempStr tempDirA = ToUtf8Temp(tempDir);
-    return path::JoinTemp(tempDirA, StrL("sumatra-self-del.bat"));
+static TempStr GetSystem32PathTemp(Str exeName) {
+    WCHAR sysDir[MAX_PATH]{};
+    UINT n = GetSystemDirectoryW(sysDir, dimof(sysDir));
+    if (n == 0 || n >= dimof(sysDir)) {
+        return {};
+    }
+    return path::JoinTemp(ToUtf8Temp(sysDir), exeName);
 }
 
-// a hack to allow deleting our own executable
-// we create a bash script that deletes us
+// A process can't delete its own executable: Windows keeps the image file open
+// for as long as it runs, and even a POSIX-semantics unlink
+// (FileDispositionInfoEx) is refused with ERROR_ACCESS_DENIED. Something else
+// has to do it once we've exited.
+//
+// That something used to be a batch file written to the per-user temp directory
+// and run with cmd.exe. When the uninstaller is elevated that's an escalation:
+// a non-elevated process can rewrite the script between our write and cmd.exe
+// reading it, and its contents then run as admin. 699acf313 closed that by
+// scheduling the delete for the next reboot instead, which is safe but means
+// the uninstaller is still sitting there afterwards.
+//
+// Put the commands on cmd.exe's command line instead. There's no intermediate
+// file for anyone to tamper with, cmd.exe comes from System32 by absolute path
+// so PATH can't redirect it, and the file goes away seconds after we exit
+// rather than at the next boot. Same code path elevated or not.
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
     TempStr exePath = GetSelfExePathTemp();
-    if (IsProcessRunningElevated()) {
-        BOOL ok = MoveFileExW(CWStrTemp(exePath), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
-        if (!ok) {
-            logf("Failed to schedule elevated uninstaller deletion\n");
-            LogLastError();
-        }
+    TempStr cmdExe = GetSystem32PathTemp(StrL("cmd.exe"));
+    if (str::IsEmptyOrWhiteSpace(cmdExe)) {
+        log("InitSelfDelete(): couldn't find cmd.exe\n");
         return;
     }
-    str::Builder script;
-    // wait 2 seconds to give our process time to exit
-    // alternatively use ping,
-    // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
-    script.Append("timeout /t 2 /nobreak >nul\r\n");
-    // delete our executable
-    script.Append(fmt("del \"%s\"\r\n", exePath));
-    // del itself
-    // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
-    script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
-
-    TempStr scriptPath = GetSelfDeleteBatchPathInTemp();
-    bool ok = file::WriteFile(scriptPath, ToStr(script));
-    if (!ok) {
-        logf("Failed to write '%s'\n", scriptPath);
+    // ping, not timeout: timeout.exe exits immediately with "Input redirection
+    // is not supported" whenever stdin isn't a console, which is exactly what a
+    // child of a windowless process gets - the del then ran while we were still
+    // running and failed. 3 pings to loopback is ~2s, enough for us to exit.
+    TempStr cmdLine = fmt("\"%s\" /C ping -n 3 127.0.0.1 >nul & del \"%s\"", cmdExe, exePath);
+    logf("InitSelfDelete(): '%s'\n", cmdLine);
+    HANDLE h = LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
+    if (!h) {
+        logf("InitSelfDelete(): failed to launch, scheduling delete for next reboot\n");
+        LogLastError();
+        MoveFileExW(CWStrTemp(exePath), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
         return;
     }
-    logf("Created self-delete batch script '%s'\n", scriptPath);
-    TempStr cmdLine = fmt("cmd.exe /C \"%s\"", scriptPath);
-    LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
+    CloseHandle(h);
 }
 
 int RunUninstaller() {
