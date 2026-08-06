@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
+#include "base/Timer.h"
 #include "base/UITask.h"
 
 namespace uitask {
@@ -14,20 +15,63 @@ static UINT gExecuteTaskMessage = 0;
 
 static ThreadId gMainUIThreadId = 0;
 
+// What Post() hands to the dispatcher. Bundling these means one allocation per
+// task instead of one for the Func0 plus smuggling the kind through wparam, and
+// it leaves somewhere to record when the task was queued.
+struct TaskInfo {
+    Func0 f;
+    Kind kind = nullptr;
+    TimeStamp queueTime{};
+};
+
+// Post() runs on worker threads and the dispatcher frees on the ui thread, so
+// hand the finished TaskInfo back through a one-slot cache rather than going to
+// the allocator for every task. An exchange is all it takes: taking swaps in
+// nullptr, returning swaps the pointer in and deletes whatever it displaced, so
+// at most one is ever parked here and no thread can see a half-published one.
+static AtomicPtr gTaskInfoCache = nullptr;
+
+static TaskInfo* AllocTaskInfo() {
+    auto* ti = (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, nullptr);
+    if (!ti) {
+        ti = new TaskInfo();
+    }
+    return ti;
+}
+
+static void FreeTaskInfo(TaskInfo* ti) {
+    if (!ti) {
+        return;
+    }
+    *ti = TaskInfo{};
+    auto* prev = (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, ti);
+    delete prev;
+}
+
+// A task that sat in the queue this long is worth reporting even for the kinds
+// that are too frequent to log every time.
+constexpr double kSlowTaskDispatchMs = 50.0;
+
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage == msg) {
-        Kind kind = (Kind)wp;
-        auto* func = (Func0*)lp;
-        bool shouldLog = (kind != nullptr) && !str::Eq(Str(kind), StrL("RenderFinished")) &&
-                         !str::Eq(Str(kind), StrL("CopyProgress"));
+        auto* ti = (TaskInfo*)lp;
+        Kind kind = ti->kind;
+        // how long the task waited between Post() and getting here
+        double queuedMs = TimeSinceInMs(ti->queueTime);
+        Str kindName = kind ? Str(kind) : StrL("(no kind)");
+        bool shouldLog =
+            (kind != nullptr) && !str::Eq(kindName, StrL("RenderFinished")) && !str::Eq(kindName, StrL("CopyProgress"));
         if (shouldLog) {
-            logf("uitask::WndProcTaskDispatch: will execute '%s', func 0x%p\n", Str(kind), (void*)func);
+            logf("uitask::WndProcTaskDispatch: will execute '%s', task 0x%p, queued for %.3f ms\n", kindName, (void*)ti,
+                 queuedMs);
+        } else if (queuedMs >= kSlowTaskDispatchMs) {
+            logf("uitask::WndProcTaskDispatch: slow dispatch of '%s', queued for %.3f ms\n", kindName, queuedMs);
         }
-        func->Call();
+        ti->f.Call();
         if (shouldLog) {
-            logf("uitask::WndProcTaskDispatch: did execute, will delete func 0x%p\n", (void*)func);
+            logf("uitask::WndProcTaskDispatch: did execute task 0x%p\n", (void*)ti);
         }
-        delete func;
+        FreeTaskInfo(ti);
         return 0;
     }
     return DefWindowProc(hwnd, msg, wp, lp);
@@ -65,11 +109,18 @@ void Destroy() {
     DrainQueue();
     DestroyWindow(gTaskDispatchHwnd);
     gTaskDispatchHwnd = nullptr;
+    delete (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, nullptr);
 }
 
 void Post(const Func0& f, Kind kind) {
-    auto* func = new Func0(f);
-    PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, (WPARAM)kind, (LPARAM)func);
+    TaskInfo* ti = AllocTaskInfo();
+    ti->f = f;
+    ti->kind = kind;
+    ti->queueTime = TimeGet();
+    if (!PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
+        // nothing will dispatch it, so don't lose the allocation
+        FreeTaskInfo(ti);
+    }
 } // NOLINT
 
 bool IsMainUIThread() {

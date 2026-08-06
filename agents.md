@@ -247,7 +247,28 @@ Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Nami
 - if it needs a small number (one or two) of extra files, name them `tests/issue-<number>.<rest>`
 - if it needs more files, or a file must live in a directory, put them in `tests/issue-<number>-data/`
 
-After making a change, do **not** run the full test suites (`tests/all.ts`, `tests/before-release.ts`, or unrelated unit tests) as routine verification. Run only the test or tests directly related to the feature changed. Run broader suites only when the user explicitly requests them.
+### Which tests to run after a change
+
+Do **not** run the full suites (`tests/all.ts`, `tests/before-release.ts`, or unrelated
+unit tests) to verify a change. The release process runs them; that is what it is for.
+A full run costs ~4-5 minutes and tells you almost nothing about the ten lines you just
+edited. Run broader suites only when the user explicitly asks.
+
+Instead, run only what the change can plausibly break:
+
+- a named issue fix → `bun tests/issue-<number>.ts`
+- a change to code an existing test covers → that test, found by grepping `tests/` for the
+  feature, command id, or setting name involved
+- base/`test_util` work → `bun cmd/run-unit-tests.ts -dbg`
+- nothing covers it → say so instead of running everything as a substitute. A targeted
+  manual check (launch with `-for-testing`, screenshot, probe log) is worth more than a
+  green suite that never touched the code.
+
+Never edit `tests/all.ts` to skip tests so a run gets further. If a test fails and you
+suspect it is unrelated, check it out on a clean tree (`git stash`) and run it standalone
+several times - some are environment- and focus-dependent and fail intermittently
+regardless of the change (`issue-1136` and `issue-2254` have both done this). One passing
+run and one failing run is not evidence; compare several runs on each side.
 
 Structure of each test (so they compose in tests/all.ts):
 

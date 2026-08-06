@@ -38,3 +38,17 @@ int AtomicIntInc(AtomicInt* p) {
 int AtomicIntDec(AtomicInt* p) {
     return (int)InterlockedDecrement(p);
 }
+
+void* AtomicPtrGet(AtomicPtr* p) {
+    // comparing nullptr against nullptr never stores, so this is just an
+    // atomic read - there is no InterlockedGetPointer
+    return InterlockedCompareExchangePointer(p, nullptr, nullptr);
+}
+
+void AtomicPtrSet(AtomicPtr* p, void* v) {
+    InterlockedExchangePointer(p, v);
+}
+
+void* AtomicPtrExchange(AtomicPtr* p, void* v) {
+    return InterlockedExchangePointer(p, v);
+}

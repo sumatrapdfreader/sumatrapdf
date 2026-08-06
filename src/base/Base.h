@@ -204,10 +204,12 @@ using uint = unsigned int;
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
 using AtomicRefCount = volatile LONG;
+using AtomicPtr = void* volatile;
 #else
 using AtomicBool = volatile int;
 using AtomicInt = volatile int;
 using AtomicRefCount = volatile int;
+using AtomicPtr = void* volatile;
 #endif
 
 bool AtomicBoolGet(AtomicBool* p);
@@ -219,6 +221,10 @@ int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
+void* AtomicPtrGet(AtomicPtr* p);
+void AtomicPtrSet(AtomicPtr* p, void* v);
+// stores v and returns what was there before
+void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 #if !OS_WIN
 // milliseconds since some unspecified epoch, monotonic; a portable stand-in for
@@ -387,8 +393,7 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 // someone to "clean up" the variable and delete the debug assert with it.
 // Passing it to an empty inline function is a real read that costs nothing --
 // the call and the (side-effect-free) condition both optimize away.
-inline void ReportDebugIfNoOp(bool) {
-}
+inline void ReportDebugIfNoOp(bool) {}
 #define ReportDebugIf(cond) ReportDebugIfNoOp(!!(cond))
 #endif
 

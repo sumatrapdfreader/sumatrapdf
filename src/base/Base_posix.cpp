@@ -39,6 +39,18 @@ int AtomicIntDec(AtomicInt* p) {
     return __atomic_sub_fetch(p, 1, __ATOMIC_SEQ_CST);
 }
 
+void* AtomicPtrGet(AtomicPtr* p) {
+    return __atomic_load_n(p, __ATOMIC_SEQ_CST);
+}
+
+void AtomicPtrSet(AtomicPtr* p, void* v) {
+    __atomic_store_n(p, v, __ATOMIC_SEQ_CST);
+}
+
+void* AtomicPtrExchange(AtomicPtr* p, void* v) {
+    return __atomic_exchange_n(p, v, __ATOMIC_SEQ_CST);
+}
+
 // portable stand-in for Win32 GetTickCount64(): monotonic milliseconds.
 u64 GetTickCount64() {
     struct timespec ts;
