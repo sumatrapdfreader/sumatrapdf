@@ -147,6 +147,26 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 
     if (msg == WM_PAINT) {
+        // A listbox scrolls by moving its existing pixels and invalidating only
+        // the strip that was newly uncovered, and it doesn't repaint existing
+        // rows when it's resized. Anything a row didn't paint - the row cut off
+        // by the client edge, the 1px border that holds the focus ring - then
+        // sits in the middle of the list with nothing to erase it: a dotted ring
+        // line and a half-drawn row across the results (issues #5882, #5796).
+        // Rather than chase every path that can scroll (scrollbar, wheel, keys,
+        // LB_SETCURSEL from Next/Prev match while focus is in the search edit,
+        // layout), notice here that the viewport moved or changed size since the
+        // last paint and repaint the lot. Invalidating before the default handler
+        // runs widens the update region that its BeginPaint picks up; BeginPaint
+        // then validates it, so this can't loop. These lists are small and items
+        // paint their own background, so there's nothing to flicker.
+        int topIdx = LbGetTopIndex(hwnd);
+        Rect client = HwndClientRect(hwnd);
+        if (topIdx != prevPaintTopIdx || client.dx != prevPaintSize.dx || client.dy != prevPaintSize.dy) {
+            prevPaintTopIdx = topIdx;
+            prevPaintSize = {client.dx, client.dy};
+            InvalidateRect(hwnd, nullptr, FALSE);
+        }
         // default paints items; then dotted focus ring around the control
         LRESULT res = WndProcDefault(hwnd, msg, wparam, lparam);
         HDC hdc = GetDC(hwnd);
@@ -176,21 +196,6 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         return res;
     }
 
-    // Scrolling moves the existing pixels and only invalidates the strip that
-    // was newly uncovered. Anything a row didn't paint (the row cut off by the
-    // client edge, the 1px focus-ring border) then travels up into the middle of
-    // the list as stale pixels. Repaint the lot whenever the top item changes;
-    // these lists are small and items paint their own background, so there's
-    // nothing to flicker (issue #5882).
-    if (msg == WM_VSCROLL || msg == WM_MOUSEWHEEL || msg == WM_KEYDOWN) {
-        int topBefore = LbGetTopIndex(hwnd);
-        LRESULT res = WndProcDefault(hwnd, msg, wparam, lparam);
-        if (LbGetTopIndex(hwnd) != topBefore) {
-            InvalidateRect(hwnd, nullptr, FALSE);
-        }
-        return res;
-    }
-
     if (msg == WM_LBUTTONDOWN) {
         int topBefore = LbGetTopIndex(hwnd);
         int count = GetCount();
@@ -208,14 +213,11 @@ LRESULT ListBox::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         LRESULT res = FinalWindowProc(msg, wparam, lparam);
 
-        if (wasFullyVisible) {
-            int topAfter = LbGetTopIndex(hwnd);
-            if (topAfter != topBefore) {
-                LbSetTopIndex(hwnd, topBefore);
-            }
-        }
-        if (LbGetTopIndex(hwnd) != topBefore) {
-            InvalidateRect(hwnd, nullptr, FALSE); // clicking a cut-off row scrolls; see above
+        if (LbGetTopIndex(hwnd) != topBefore && wasFullyVisible) {
+            LbSetTopIndex(hwnd, topBefore);
+            // scrolling there and back moved the pixels twice; WM_PAINT only
+            // notices a net change, so ask for the full repaint here
+            InvalidateRect(hwnd, nullptr, FALSE);
         }
         return res;
     }

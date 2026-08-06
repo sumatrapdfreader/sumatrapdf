@@ -430,6 +430,10 @@ struct ListBox : Wnd {
 
     Size idealSize = {};
     int idealSizeLines = 0;
+    // viewport as of the last WM_PAINT; a change means the content was scrolled
+    // or resized and the whole list has to be repainted (see WndProc)
+    Size prevPaintSize = {};
+    int prevPaintTopIdx = -1;
 
     ListBox();
     ~ListBox() override;
