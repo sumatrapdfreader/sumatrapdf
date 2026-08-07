@@ -329,30 +329,20 @@ struct AntiGravityProvider : AIChatProvider {
             effortIdx = 1;
         }
         Str autoApproveFlag = args.flag ? "--dangerously-skip-permissions" : "";
-        TempStr sysPrompt = fmt("The user is currently reading the file: %s", args.filePath);
-        TempStr res;
-        if (args.isNewSession) {
-            if (len(args.sessionId) > 0 && !str::Eq(args.sessionId, StrL("pending"))) {
-                res =
-                    fmt("%s -p --model %s --effort %s --output-format stream-json %s --conversation %s "
-                        "--append-system-prompt %s %s",
-                        QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[effortIdx],
-                        autoApproveFlag, args.sessionId, QuoteCmdLineArgTemp(sysPrompt),
-                        QuoteCmdLineArgTemp(args.escapedInput));
-            } else {
-                res =
-                    fmt("%s -p --model %s --effort %s --output-format stream-json %s "
-                        "--append-system-prompt %s %s",
-                        QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[effortIdx],
-                        autoApproveFlag, QuoteCmdLineArgTemp(sysPrompt), QuoteCmdLineArgTemp(args.escapedInput));
-            }
-        } else {
-            res = fmt(
-                "%s -p --model %s --effort %s --output-format stream-json %s --conversation %s "
-                "--append-system-prompt %s %s",
-                QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[effortIdx], autoApproveFlag,
-                args.sessionId, QuoteCmdLineArgTemp(sysPrompt), QuoteCmdLineArgTemp(args.escapedInput));
+        // agy has no --append-system-prompt (or any system-prompt) flag, so fold
+        // the file context into the user prompt itself.
+        TempStr prompt = fmt("The user is currently reading the file: %s\n\n%s", args.filePath, args.escapedInput);
+        // agy ignores every flag that appears after -p/--print, so -p and the
+        // prompt must come last, after --model/--effort/--output-format/--conversation.
+        // Otherwise --output-format stream-json is dropped and agy prints plain
+        // text the stream parser can't read (response comes back empty).
+        TempStr conversationArg = str::DupTemp("");
+        if (len(args.sessionId) > 0 && !str::Eq(args.sessionId, StrL("pending"))) {
+            conversationArg = fmt("--conversation %s", args.sessionId);
         }
+        TempStr res = fmt("%s --model %s --effort %s --output-format stream-json %s %s -p %s",
+                          QuoteCmdLineArgTemp(args.exePath), QuoteCmdLineArgTemp(args.model), efforts[effortIdx],
+                          autoApproveFlag, conversationArg, QuoteCmdLineArgTemp(prompt));
         logf("AntiGravity BuildCmdLineTemp: %s\n", res);
         return res;
     }
