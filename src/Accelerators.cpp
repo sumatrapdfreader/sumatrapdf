@@ -130,6 +130,8 @@ static ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, VK_TAB, CmdNextTabSmart},
     {FCONTROL | FSHIFT | FVIRTKEY, VK_TAB, CmdPrevTabSmart},
     {FVIRTKEY, VK_F1, CmdHelpOpenManual},
+    // '?' i.e. Shift + '/'
+    {FSHIFT | FVIRTKEY, VK_OEM_2, CmdToggleKeyboardHelp},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
@@ -178,6 +180,40 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     return menuStr;
 }
 
+// All keys bound to cmdId, formatted for display and joined with ", ", e.g.
+// "↑, K" or "Ctrl + F". Returns empty when nothing is bound. maxCount caps how
+// many bindings are listed (a command can have several, like arrows + hjkl).
+// Reads the effective, user-override-aware table, so it shows what actually
+// works right now.
+TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
+    TempStr res = str::DupTemp("");
+    int n = 0;
+    for (int i = 0; i < gAccelsCount && n < maxCount; i++) {
+        ACCEL a = gAccels[i];
+        if (a.cmd != cmdId) {
+            continue;
+        }
+        TempStr withTab = AppendAccelKeyToMenuStringTemp("", a);
+        if (!withTab || withTab.s[0] != '\t') {
+            continue;
+        }
+        TempStr key = Str(withTab.s + 1); // drop the leading '\t'
+        if (key.len == 0) {
+            continue;
+        }
+        // skip a duplicate that formats to the same text (e.g. '+' and numpad '+')
+        if (n > 0 && str::Contains(res, key)) {
+            continue;
+        }
+        if (n > 0) {
+            res = str::JoinTemp(res, ", ");
+        }
+        res = str::JoinTemp(res, key);
+        n++;
+    }
+    return res;
+}
+
 static bool sameAccelKey(const ACCEL& a1, const ACCEL& a2) {
     if (a1.fVirt != a2.fVirt) {
         return false;
@@ -202,7 +238,8 @@ static WORD gNotSafeKeys[] = {
     VK_HOME,
     VK_END,
     VK_OEM_4,
-    VK_OEM_6
+    VK_OEM_6,
+    VK_OEM_2 // '?' opens keyboard help, but must still type into edit controls
 };
 // clang-format on
 

@@ -51,6 +51,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdHelpOpenManual,
     CmdHelpOpenManualOnWebsite,
     CmdHelpOpenKeyboardShortcuts,
+    CmdToggleKeyboardHelp,
     CmdHelpVisitWebsite,
     CmdHelpAbout,
     CmdDebugDownloadSymbols,

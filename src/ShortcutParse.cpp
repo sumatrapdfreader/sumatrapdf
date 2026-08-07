@@ -110,6 +110,7 @@ static SeqStrNum gVirtKeysNum =
     "Decimal\0" "\xdc\x01" \
     "Scroll\0" "\xa2\x02" \
     ";\0" "\xf4\x02" \
+    "/\0" "\xfe\x02" \
     "`\0" "\x80\x03" \
     "[\0" "\xb6\x03" \
     "]\0" "\xba\x03" \

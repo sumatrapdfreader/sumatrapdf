@@ -81,6 +81,7 @@
 #include "Selection.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
+#include "KeyboardHelp.h"
 #include "SelectionToolbar.h"
 #include "ScreenshotCapture.h"
 #include "Screenshot.h"
@@ -10030,6 +10031,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdHelpOpenKeyboardShortcuts:
             LaunchDocumentation("/Keyboard-shortcuts");
+            break;
+
+        case CmdToggleKeyboardHelp:
+            ToggleKeyboardHelp(win);
             break;
 
         case CmdHelpOpenManualOnWebsite:

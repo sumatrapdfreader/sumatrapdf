@@ -147,6 +147,7 @@ static SeqStrings gCommandNames =
     "CmdHelpOpenManual\0"
     "CmdHelpOpenManualOnWebsite\0"
     "CmdHelpOpenKeyboardShortcuts\0"
+    "CmdToggleKeyboardHelp\0"
     "CmdHelpVisitWebsite\0"
     "CmdHelpAbout\0"
     "CmdMoveFrameFocus\0"
@@ -417,6 +418,7 @@ static i32 gCommandIds[] = {
     CmdHelpOpenManual,
     CmdHelpOpenManualOnWebsite,
     CmdHelpOpenKeyboardShortcuts,
+    CmdToggleKeyboardHelp,
     CmdHelpVisitWebsite,
     CmdHelpAbout,
     CmdMoveFrameFocus,
@@ -572,7 +574,7 @@ SeqStrings gCommandDescriptions =
     "Reload Document\0"
     "Create .lnk Shortcut\0"
     "Send Document By Email...\0"
-    "Show Document Properties...\0"
+    "Document Properties...\0"
     "Single Page View\0"
     "Facing View\0"
     "Book View\0"
@@ -597,7 +599,7 @@ SeqStrings gCommandDescriptions =
     "Search Selection with Wikipedia\0"
     "Search Selection with Google Scholar\0"
     "Select All\0"
-    "Open New SumatraPDF Window\0"
+    "New Window\0"
     "Open Current Document In New Window\0"
     "Open Current Document In New Tab\0"
     "Copy Image\0"
@@ -687,6 +689,7 @@ SeqStrings gCommandDescriptions =
     "Help: Manual\0"
     "Help: Manual On Website\0"
     "Help: Keyboard Shortcuts\0"
+    "Show Keyboard Shortcuts\0"
     "Help: SumatraPDF Website\0"
     "Help: About SumatraPDF...\0"
     "Move Frame Focus\0"

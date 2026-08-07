@@ -113,6 +113,7 @@ const virtKeys: [string, string][] = [
     ["VK_DECIMAL", "Decimal"],
     ["VK_SCROLL", "Scroll"],
     ["VK_OEM_1", ";"],
+    ["VK_OEM_2", "/"], // the '/?' key; '?' shows as "Shift + /"
     ["VK_OEM_3", "`"],
     ["VK_OEM_4", "["],
     ["VK_OEM_6", "]"],
@@ -265,16 +266,16 @@ export function genVirtKeys(rootDir: string) {
     const cmdDir = join(rootDir, "cmd");
     const vkIds = fetchVkIdsFromCompiler(cmdDir);
 
-    const accelPath = join(rootDir, "src", "Accelerators.cpp");
-    let content = readFileSync(accelPath, "utf-8");
+    const shortcutPath = join(rootDir, "src", "ShortcutParse.cpp");
+    let content = readFileSync(shortcutPath, "utf-8");
     content = replaceBetweenMarkers(
         content,
         "// @gen-start virt-keys-num",
         "// @gen-end virt-keys-num",
         generateVirtKeysNum(vkIds),
     );
-    writeFileSync(accelPath, content, "utf-8");
-    console.log("Generated gVirtKeysNum in src/Accelerators.cpp");
+    writeFileSync(shortcutPath, content, "utf-8");
+    console.log("Generated gVirtKeysNum in src/ShortcutParse.cpp");
 }
 
 // name<->DocProp maps, previously hand-written as SeqStrNum literals with the
