@@ -501,12 +501,14 @@ DisplayModel::~DisplayModel() {
 
 RectF DisplayModel::PageMediaBox(int pageNo) const {
     PageInfo* pi = GetPageInfo(pageNo);
-    if (!pi) return RectF();
+    if (!pi) {
+        return {};
+    }
     if (pi->state == PageInfoState::Known) {
         return pi->_mediaBox;
     }
     if (pi->state == PageInfoState::Error) {
-        return RectF();
+        return {};
     }
     pi->_mediaBox = engine->PageMediabox(pageNo);
     if (pi->_mediaBox.IsEmpty()) {
@@ -1090,7 +1092,7 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
         Str isValid = ValidPageNo(pageNo) ? "yes" : "no";
         logf("DisplayModel::CvtToScreen: GetPageInfo(%d) failed, is valid page: %s\n", pageNo, isValid);
         ReportIf(!pageInfo);
-        return Point();
+        return {};
     }
 
     float zoom = getZoomSafe(this, pageNo, pageInfo);
@@ -1118,7 +1120,7 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     const PageInfo* pageInfo = GetPageInfo(pageNo);
     ReportIf(!pageInfo);
     if (!pageInfo) {
-        return PointF();
+        return {};
     }
 
     // don't add the full 0.5 for rounding to account for precision errors
@@ -1327,7 +1329,7 @@ RectF DisplayModel::GetContentBox(int pageNo) const {
 Point DisplayModel::GetContentStart(int pageNo) const {
     RectF contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty()) {
-        return Point(0, 0);
+        return {0, 0};
     }
     return ToPoint(contentBox.TL());
 }

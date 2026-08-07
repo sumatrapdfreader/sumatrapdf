@@ -490,7 +490,7 @@ int GetWidgetFieldFlags(Annotation* annot) {
 
 Str GetWidgetValue(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
-        return Str();
+        return {};
     }
     EngineMupdf* e = annot->engine;
     auto* a = annot->pdfannot;

@@ -562,11 +562,11 @@ Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
         }
     }
     if (lbIdx < 0) {
-        return Rect();
+        return {};
     }
     Rect rc = LbGetItemRect(listBox->hwnd, lbIdx);
     if (rc.IsEmpty()) {
-        return Rect();
+        return {};
     }
     Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);

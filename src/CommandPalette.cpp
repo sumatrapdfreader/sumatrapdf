@@ -68,7 +68,7 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
 
 Str CommandPaletteSkipWS(Str s) {
     if (!s.s) {
-        return Str();
+        return {};
     }
     int off = 0;
     while (off < s.len && str::IsWs(s.s[off])) {
