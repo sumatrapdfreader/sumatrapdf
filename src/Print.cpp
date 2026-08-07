@@ -1870,16 +1870,12 @@ static void ApplyPdfViewerPrintPrefs(const PdfViewerPrintPrefs& prefs, DEVMODEW*
         devMode->dmFields |= DM_COPIES;
     }
     if (prefs.hasDuplex) {
-        switch (prefs.duplex) {
-            case PdfDuplexPref::Simplex:
-                devMode->dmDuplex = DMDUP_SIMPLEX;
-                break;
-            case PdfDuplexPref::FlipShortEdge:
-                devMode->dmDuplex = DMDUP_HORIZONTAL;
-                break;
-            case PdfDuplexPref::FlipLongEdge:
-                devMode->dmDuplex = DMDUP_VERTICAL;
-                break;
+        if (prefs.duplex == PdfDuplexPref::Simplex) {
+            devMode->dmDuplex = DMDUP_SIMPLEX;
+        } else if (prefs.duplex == PdfDuplexPref::FlipShortEdge) {
+            devMode->dmDuplex = DMDUP_HORIZONTAL;
+        } else if (prefs.duplex == PdfDuplexPref::FlipLongEdge) {
+            devMode->dmDuplex = DMDUP_VERTICAL;
         }
         devMode->dmFields |= DM_DUPLEX;
     }

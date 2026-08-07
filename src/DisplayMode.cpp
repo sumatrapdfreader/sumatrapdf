@@ -11,13 +11,8 @@ bool IsSingle(DisplayMode mode) {
 }
 
 bool IsContinuous(DisplayMode mode) {
-    switch (mode) {
-        case DisplayMode::Continuous:
-        case DisplayMode::ContinuousFacing:
-        case DisplayMode::ContinuousBookView:
-            return true;
-    }
-    return false;
+    return mode == DisplayMode::Continuous || mode == DisplayMode::ContinuousFacing ||
+           mode == DisplayMode::ContinuousBookView;
 }
 
 bool IsFacing(DisplayMode mode) {

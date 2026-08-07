@@ -106,20 +106,17 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
     }
 
     if (EngineUsesDocumentColorsFollowTheme(engine)) {
-        switch (GetDocumentColorsFollowTheme()) {
-            case DocumentColorsFollowTheme::Legacy:
+        if (GetDocumentColorsFollowTheme() == DocumentColorsFollowTheme::Legacy) {
+            profile->mode = PageColorMode::LegacyInvert;
+        } else {
+            // Smart (or Off with pagesDark already handled above): prefer object-level
+            if (EngineSupportsSmartDarkMode(engine) && PdfDarkModeUsesObjectLevel()) {
+                profile->mode = PageColorMode::SmartDark;
+            } else if (profile->preservePdfImages) {
+                profile->mode = PageColorMode::PreserveImages;
+            } else {
                 profile->mode = PageColorMode::LegacyInvert;
-                break;
-            case DocumentColorsFollowTheme::Smart:
-            default:
-                if (EngineSupportsSmartDarkMode(engine) && PdfDarkModeUsesObjectLevel()) {
-                    profile->mode = PageColorMode::SmartDark;
-                } else if (profile->preservePdfImages) {
-                    profile->mode = PageColorMode::PreserveImages;
-                } else {
-                    profile->mode = PageColorMode::LegacyInvert;
-                }
-                break;
+            }
         }
     }
 

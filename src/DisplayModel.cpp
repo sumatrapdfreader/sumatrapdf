@@ -574,25 +574,21 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
     presDisplayMode = newDisplayMode;
     PageLayout layout = engine->preferredLayout;
     if (DisplayMode::Automatic == displayMode) {
-        switch (layout.type) {
-            case PageLayout::Type::Single:
-                displayMode = DisplayMode::Continuous;
-                if (layout.nonContinuous) {
-                    displayMode = DisplayMode::SinglePage;
-                }
-                break;
-            case PageLayout::Type::Facing:
-                displayMode = DisplayMode::ContinuousFacing;
-                if (layout.nonContinuous) {
-                    displayMode = DisplayMode::Facing;
-                }
-                break;
-            case PageLayout::Type::Book:
-                displayMode = DisplayMode::ContinuousBookView;
-                if (layout.nonContinuous) {
-                    displayMode = DisplayMode::BookView;
-                }
-                break;
+        if (layout.type == PageLayout::Type::Single) {
+            displayMode = DisplayMode::Continuous;
+            if (layout.nonContinuous) {
+                displayMode = DisplayMode::SinglePage;
+            }
+        } else if (layout.type == PageLayout::Type::Facing) {
+            displayMode = DisplayMode::ContinuousFacing;
+            if (layout.nonContinuous) {
+                displayMode = DisplayMode::Facing;
+            }
+        } else if (layout.type == PageLayout::Type::Book) {
+            displayMode = DisplayMode::ContinuousBookView;
+            if (layout.nonContinuous) {
+                displayMode = DisplayMode::BookView;
+            }
         }
     }
     displayR2L = layout.r2l;
@@ -1426,19 +1422,12 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
 void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuous) {
     if (keepContinuous && IsContinuous(displayMode)) {
-        switch (newDisplayMode) {
-            case DisplayMode::SinglePage:
-                newDisplayMode = DisplayMode::Continuous;
-                break;
-            case DisplayMode::Facing:
-                newDisplayMode = DisplayMode::ContinuousFacing;
-                break;
-            case DisplayMode::BookView:
-                newDisplayMode = DisplayMode::ContinuousBookView;
-                break;
-            default:
-                // no-op
-                break;
+        if (newDisplayMode == DisplayMode::SinglePage) {
+            newDisplayMode = DisplayMode::Continuous;
+        } else if (newDisplayMode == DisplayMode::Facing) {
+            newDisplayMode = DisplayMode::ContinuousFacing;
+        } else if (newDisplayMode == DisplayMode::BookView) {
+            newDisplayMode = DisplayMode::ContinuousBookView;
         }
     }
     if (displayMode == newDisplayMode) {

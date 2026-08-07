@@ -25,8 +25,7 @@ static AtomicInt gTolltipID = 0;
 static constexpr UINT kTrackToolFlags = TTF_TRACK | TTF_ABSOLUTE | TTF_TRANSPARENT;
 
 static int GetNextTooltipID() {
-    int res = AtomicIntInc(&gTolltipID);
-    return (int)res;
+    return AtomicIntInc(&gTolltipID);
 }
 
 int TooltipGetCount(HWND hwnd) {

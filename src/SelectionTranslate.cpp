@@ -346,13 +346,14 @@ static bool LanguagesAreSameTemp(Str a, Str b) {
 }
 
 static Str BackendLogName(AIChatBackend backend) {
-    switch (backend) {
-        case AIChatBackend::Grok:
-            return StrL("grok");
-        case AIChatBackend::Claude:
-            return StrL("claude");
-        case AIChatBackend::Codex:
-            return StrL("codex");
+    if (backend == AIChatBackend::Grok) {
+        return StrL("grok");
+    }
+    if (backend == AIChatBackend::Claude) {
+        return StrL("claude");
+    }
+    if (backend == AIChatBackend::Codex) {
+        return StrL("codex");
     }
     return StrL("ai");
 }
@@ -389,15 +390,16 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
     }
     if (str::ContainsI(raw, StrL("failed to authenticate")) || str::ContainsI(raw, StrL("authentication_failed")) ||
         str::ContainsI(raw, StrL("invalid authentication credentials"))) {
-        switch (backend) {
-            case AIChatBackend::Claude:
-                return str::DupTemp(
-                    _TRA("Claude Code is not signed in. Open a terminal, run \"claude auth login\", "
-                         "then try again."));
-            case AIChatBackend::Grok:
-                return str::DupTemp(_TRA("Grok Build is not signed in. Sign in to Grok Build, then try again."));
-            case AIChatBackend::Codex:
-                return str::DupTemp(_TRA("OpenAI Codex is not signed in. Sign in to Codex, then try again."));
+        if (backend == AIChatBackend::Claude) {
+            return str::DupTemp(
+                _TRA("Claude Code is not signed in. Open a terminal, run \"claude auth login\", "
+                     "then try again."));
+        }
+        if (backend == AIChatBackend::Grok) {
+            return str::DupTemp(_TRA("Grok Build is not signed in. Sign in to Grok Build, then try again."));
+        }
+        if (backend == AIChatBackend::Codex) {
+            return str::DupTemp(_TRA("OpenAI Codex is not signed in. Sign in to Codex, then try again."));
         }
     }
     if (str::ContainsI(raw, StrL("model is not supported"))) {
@@ -540,16 +542,12 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
         }
         if (off > lineStart) {
             TempStr line = str::DupTemp(Str(output.s + lineStart, off - lineStart));
-            switch (backend) {
-                case AIChatBackend::Grok:
-                    AppendGrokTranslationText(line, translationOut);
-                    break;
-                case AIChatBackend::Claude:
-                    AppendClaudeTranslationText(line, translationOut);
-                    break;
-                case AIChatBackend::Codex:
-                    AppendCodexTranslationText(line, translationOut);
-                    break;
+            if (backend == AIChatBackend::Grok) {
+                AppendGrokTranslationText(line, translationOut);
+            } else if (backend == AIChatBackend::Claude) {
+                AppendClaudeTranslationText(line, translationOut);
+            } else if (backend == AIChatBackend::Codex) {
+                AppendCodexTranslationText(line, translationOut);
             }
         }
         while (off < output.len && (output.s[off] == '\n' || output.s[off] == '\r')) {
@@ -617,37 +615,40 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
 }
 
 static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
-    switch (backend) {
-        case AIChatBackend::Grok:
-            return GrokBuildExecutablePathTemp();
-        case AIChatBackend::Claude:
-            return ClaudeCodeExecutablePathTemp();
-        case AIChatBackend::Codex:
-            return CodexBuildExecutablePathTemp();
+    if (backend == AIChatBackend::Grok) {
+        return GrokBuildExecutablePathTemp();
+    }
+    if (backend == AIChatBackend::Claude) {
+        return ClaudeCodeExecutablePathTemp();
+    }
+    if (backend == AIChatBackend::Codex) {
+        return CodexBuildExecutablePathTemp();
     }
     return {};
 }
 
 static bool IsBackendInstalled(AIChatBackend backend) {
-    switch (backend) {
-        case AIChatBackend::Grok:
-            return IsGrokBuildInstalled();
-        case AIChatBackend::Claude:
-            return IsClaudeCodeInstalled();
-        case AIChatBackend::Codex:
-            return IsCodexBuildInstalled();
+    if (backend == AIChatBackend::Grok) {
+        return IsGrokBuildInstalled();
+    }
+    if (backend == AIChatBackend::Claude) {
+        return IsClaudeCodeInstalled();
+    }
+    if (backend == AIChatBackend::Codex) {
+        return IsCodexBuildInstalled();
     }
     return false;
 }
 
 static Str BackendDisplayName(AIChatBackend backend) {
-    switch (backend) {
-        case AIChatBackend::Grok:
-            return StrL("Grok Build");
-        case AIChatBackend::Claude:
-            return StrL("Claude Code");
-        case AIChatBackend::Codex:
-            return StrL("OpenAI Codex");
+    if (backend == AIChatBackend::Grok) {
+        return StrL("Grok Build");
+    }
+    if (backend == AIChatBackend::Claude) {
+        return StrL("Claude Code");
+    }
+    if (backend == AIChatBackend::Codex) {
+        return StrL("OpenAI Codex");
     }
     return StrL("AI");
 }
@@ -663,14 +664,13 @@ static bool EngineIsAI(TranslateEngine engine) {
 }
 
 static AIChatBackend BackendFromEngine(TranslateEngine engine) {
-    switch (engine) {
-        case TranslateEngine::Claude:
-            return AIChatBackend::Claude;
-        case TranslateEngine::Codex:
-            return AIChatBackend::Codex;
-        default:
-            return AIChatBackend::Grok;
+    if (engine == TranslateEngine::Claude) {
+        return AIChatBackend::Claude;
     }
+    if (engine == TranslateEngine::Codex) {
+        return AIChatBackend::Codex;
+    }
+    return AIChatBackend::Grok;
 }
 
 static Str EngineDisplayName(TranslateEngine engine) {
@@ -776,16 +776,12 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     TempStr prompt = BuildTranslationPromptTemp(srcLang, dstLang, text);
     TempStr cwd = StripTrailingSlashTemp(GetTempDirTemp());
     TempStr cmdLine;
-    switch (backend) {
-        case AIChatBackend::Grok:
-            cmdLine = BuildGrokTranslateCmdLineTemp(exePath, prompt, cwd);
-            break;
-        case AIChatBackend::Claude:
-            cmdLine = BuildClaudeTranslateCmdLineTemp(exePath, prompt);
-            break;
-        case AIChatBackend::Codex:
-            cmdLine = BuildCodexTranslateCmdLineTemp(exePath, prompt, cwd);
-            break;
+    if (backend == AIChatBackend::Grok) {
+        cmdLine = BuildGrokTranslateCmdLineTemp(exePath, prompt, cwd);
+    } else if (backend == AIChatBackend::Claude) {
+        cmdLine = BuildClaudeTranslateCmdLineTemp(exePath, prompt);
+    } else if (backend == AIChatBackend::Codex) {
+        cmdLine = BuildCodexTranslateCmdLineTemp(exePath, prompt, cwd);
     }
 
     LogTranslation(backend, ">>> backend", BackendDisplayName(backend));

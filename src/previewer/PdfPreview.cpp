@@ -38,7 +38,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     logf("PdfPreview::GetThumbnail(cx=%d, engine: %s\n", (int)cx, Str(engine->kind));
 
     RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
-    float zoom = std::min((float)cx / (float)page.dx, (float)cx / (float)page.dy) - 0.001f;
+    float zoom = std::min((float)cx / page.dx, (float)cx / page.dy) - 0.001f;
     Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
     BITMAPINFO bmi{};
@@ -204,7 +204,7 @@ static LRESULT OnPaint(HWND hwnd) {
         if (!page.IsEmpty()) {
             rect.Inflate(-kPreviewMargin, -kPreviewMargin);
             float zoom = (float)std::min((float)rect.dx / page.dx, (float)rect.dy / page.dy) - 0.001f;
-            Rect onScreen = RectF((float)rect.x, (float)rect.y, (float)page.dx * zoom, (float)page.dy * zoom).Round();
+            Rect onScreen = RectF((float)rect.x, (float)rect.y, page.dx * zoom, page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
             RECT rcPage = ToRECT(onScreen);

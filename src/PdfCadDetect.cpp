@@ -48,23 +48,21 @@ const char* CadEnhanceReasonName(CadEnhanceReason reason) {
 
 // The manual toggle wins over the global mode, which wins over auto-detection.
 bool CadEnhanceEnabledForEngine(const CadDetectResult& detect, CadEnhanceOverride overrideState) {
-    switch (overrideState) {
-        case CadEnhanceOverride::ForceOn:
-            return true;
-        case CadEnhanceOverride::ForceOff:
-            return false;
-        default:
-            break;
+    if (overrideState == CadEnhanceOverride::ForceOn) {
+        return true;
     }
-    switch (GetEngineeringDrawingEnhanceMode()) {
-        case EngineeringDrawingEnhanceMode::On:
-            return true;
-        case EngineeringDrawingEnhanceMode::Off:
-            return false;
-        case EngineeringDrawingEnhanceMode::Auto:
-        default:
-            return detect.enable;
+    if (overrideState == CadEnhanceOverride::ForceOff) {
+        return false;
     }
+    EngineeringDrawingEnhanceMode mode = GetEngineeringDrawingEnhanceMode();
+    if (mode == EngineeringDrawingEnhanceMode::On) {
+        return true;
+    }
+    if (mode == EngineeringDrawingEnhanceMode::Off) {
+        return false;
+    }
+    // Auto (or unknown): follow detection
+    return detect.enable;
 }
 
 static bool ContainsAnyI(Str haystack, const char* const* needles, int count) {

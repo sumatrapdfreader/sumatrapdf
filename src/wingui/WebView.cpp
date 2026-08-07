@@ -966,19 +966,12 @@ class webview2_process_failed_handler : public ICoreWebView2ProcessFailedEventHa
             return S_OK;
         }
         WebViewProcessFailure f = WebViewProcessFailure::Other;
-        switch (kind) {
-            case COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED:
-                f = WebViewProcessFailure::BrowserExited;
-                break;
-            case COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED:
-                f = WebViewProcessFailure::RenderExited;
-                break;
-            case COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE:
-                f = WebViewProcessFailure::RenderUnresponsive;
-                break;
-            default:
-                f = WebViewProcessFailure::Other;
-                break;
+        if (kind == COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED) {
+            f = WebViewProcessFailure::BrowserExited;
+        } else if (kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED) {
+            f = WebViewProcessFailure::RenderExited;
+        } else if (kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE) {
+            f = WebViewProcessFailure::RenderUnresponsive;
         }
         wnd->OnProcessFailed(f);
         return S_OK;

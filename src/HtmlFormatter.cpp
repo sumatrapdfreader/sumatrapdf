@@ -136,14 +136,11 @@ StyleRule StyleRule::Parse(CssPullParser* parser) {
     StyleRule rule;
     const CssProperty* prop;
     while ((prop = parser->NextProperty()) != nullptr) {
-        switch (prop->type) {
-            case Css_Text_Align:
-                rule.textAlign = FindAlignAttr(prop->s);
-                break;
+        if (prop->type == Css_Text_Align) {
+            rule.textAlign = FindAlignAttr(prop->s);
+        } else if (prop->type == Css_Text_Indent) {
             // TODO: some documents use Css_Padding_Left for indentation
-            case Css_Text_Indent:
-                ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
-                break;
+            ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
         }
     }
     return rule;

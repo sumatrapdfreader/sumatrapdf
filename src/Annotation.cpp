@@ -1676,14 +1676,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
         }
     }
     if (col.parsedOk) {
-        switch (typ) {
-            case AnnotationType::FreeText:
-                // do nothing. for free text we set text color via pdf_set_annot_default_appearance
-                // and SetColor() sets background color
-                break;
-            default:
-                SetColor(res, col.pdfCol);
-                break;
+        // FreeText: text color via pdf_set_annot_default_appearance; SetColor is bg
+        if (typ != AnnotationType::FreeText) {
+            SetColor(res, col.pdfCol);
         }
     }
     pdf_drop_annot(ctx, annot);

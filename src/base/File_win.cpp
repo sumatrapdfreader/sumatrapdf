@@ -1223,7 +1223,7 @@ bool CreateAll(Str dir, int* errOut) {
     if (Exists(dir)) {
         return true;
     }
-    int err = (int)SHCreateDirectoryExW(nullptr, CWStrTemp(dir), nullptr);
+    int err = SHCreateDirectoryExW(nullptr, CWStrTemp(dir), nullptr);
     if (errOut) {
         *errOut = err;
     }

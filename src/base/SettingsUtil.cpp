@@ -386,16 +386,12 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             int off = 0;
             while (src && off < src.len) {
                 FieldInfo info{};
-                switch (field.type) {
-                    case SettingType::IntArray:
-                        info.type = SettingType::Int;
-                        break;
-                    case SettingType::FloatArray:
-                        info.type = SettingType::Float;
-                        break;
-                    default:
-                        ReportIf(true);
-                        break;
+                if (field.type == SettingType::IntArray) {
+                    info.type = SettingType::Int;
+                } else if (field.type == SettingType::FloatArray) {
+                    info.type = SettingType::Float;
+                } else {
+                    ReportIf(true);
                 }
                 Str token = Str(src.s + off, src.len - off);
                 deserializeField(info, (u8*)v->AppendBlanks(1), token);

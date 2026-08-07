@@ -45,13 +45,14 @@ static LoadedDataResource gAIChatMarkedJs;
 
 // providerId is an AIChatBackend value (0=Claude, 1=Grok, 2=Codex)
 AIChatProvider* GetAIChatProvider(int providerId) {
-    switch (providerId) {
-        case 0:
-            return GetClaudeCodeProvider();
-        case 1:
-            return GetGrokBuildProvider();
-        case 2:
-            return GetCodexBuildProvider();
+    if (providerId == 0) {
+        return GetClaudeCodeProvider();
+    }
+    if (providerId == 1) {
+        return GetGrokBuildProvider();
+    }
+    if (providerId == 2) {
+        return GetCodexBuildProvider();
     }
     return nullptr;
 }

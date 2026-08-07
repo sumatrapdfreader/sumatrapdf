@@ -2061,20 +2061,16 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
 static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // Handle message by recording placement then moving document as mouse moves.
 
-    switch (win->mouseAction) {
-        case MouseAction::None:
-            win->mouseAction = MouseAction::Scrolling;
+    if (win->mouseAction == MouseAction::None) {
+        win->mouseAction = MouseAction::Scrolling;
 
-            win->dragStartPending = true;
-            // record current mouse position, the farther the mouse is moved
-            // from this position, the faster we scroll the document
-            win->dragStart = Point(x, y);
-            SetCursorCached(IDC_SIZEALL);
-            break;
-
-        case MouseAction::Scrolling:
-            win->mouseAction = MouseAction::None;
-            break;
+        win->dragStartPending = true;
+        // record current mouse position, the farther the mouse is moved
+        // from this position, the faster we scroll the document
+        win->dragStart = Point(x, y);
+        SetCursorCached(IDC_SIZEALL);
+    } else if (win->mouseAction == MouseAction::Scrolling) {
+        win->mouseAction = MouseAction::None;
     }
 }
 
@@ -2695,21 +2691,18 @@ static void OnPaintDocument(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    switch (win->presentation) {
-        case PM_BLACK_SCREEN:
-            HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(BLACK_BRUSH));
-            break;
-        case PM_WHITE_SCREEN:
-            HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(WHITE_BRUSH));
-            break;
-        default:
-            bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), ToRect(ps.rcPaint));
-            // Flush when the focus ring is needed so DrawFocusRect is not XOR'd
-            // on top of a stale frame that already had a ring.
-            bool showFocus = CanvasShouldShowKeyboardFocus(win);
-            if (!gNoFlickerRender || shouldPaint || showFocus) {
-                win->buffer->Flush(hdc);
-            }
+    if (win->presentation == PM_BLACK_SCREEN) {
+        HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(BLACK_BRUSH));
+    } else if (win->presentation == PM_WHITE_SCREEN) {
+        HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(WHITE_BRUSH));
+    } else {
+        bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), ToRect(ps.rcPaint));
+        // Flush when the focus ring is needed so DrawFocusRect is not XOR'd
+        // on top of a stale frame that already had a ring.
+        bool showFocus = CanvasShouldShowKeyboardFocus(win);
+        if (!gNoFlickerRender || shouldPaint || showFocus) {
+            win->buffer->Flush(hdc);
+        }
     }
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
@@ -2753,15 +2746,16 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     // PDF form fields: I-beam over text/choice, hand over checkbox/radio
-    switch (GetWidgetCursorKind(dm->GetWidgetAtPos(pt))) {
-        case WidgetCursorKind::Text:
+    {
+        WidgetCursorKind kind = GetWidgetCursorKind(dm->GetWidgetAtPos(pt));
+        if (kind == WidgetCursorKind::Text) {
             SetCursorCached(IDC_IBEAM);
             return TRUE;
-        case WidgetCursorKind::Button:
+        }
+        if (kind == WidgetCursorKind::Button) {
             SetCursorCached(IDC_HAND);
             return TRUE;
-        case WidgetCursorKind::None:
-            break;
+        }
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);

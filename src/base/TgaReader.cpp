@@ -170,14 +170,13 @@ static ImageAlpha GetAlphaType(const u8* data, size_t n) {
         return Alpha_Normal;
     }
 
-    switch (extAreaLE->alphaType) {
-        case Alpha_Normal:
-            return Alpha_Normal;
-        case Alpha_Premultiplied:
-            return Alpha_Premultiplied;
-        default:
-            return Alpha_Ignore;
+    if (extAreaLE->alphaType == Alpha_Normal) {
+        return Alpha_Normal;
     }
+    if (extAreaLE->alphaType == Alpha_Premultiplied) {
+        return Alpha_Premultiplied;
+    }
+    return Alpha_Ignore;
 }
 
 // checks whether this could be data for a TGA image

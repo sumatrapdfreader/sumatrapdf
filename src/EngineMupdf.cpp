@@ -4593,16 +4593,12 @@ void EngineMupdf::RunCadDetection() {
 // First toggle flips away from the current effective state; after that it
 // alternates between forced on and forced off.
 void EngineMupdf::ToggleCadEnhanceOverride() {
-    switch (cadEnhanceOverride) {
-        case CadEnhanceOverride::Unset:
-            cadEnhanceOverride = CadEnhanceActive() ? CadEnhanceOverride::ForceOff : CadEnhanceOverride::ForceOn;
-            break;
-        case CadEnhanceOverride::ForceOn:
-            cadEnhanceOverride = CadEnhanceOverride::ForceOff;
-            break;
-        case CadEnhanceOverride::ForceOff:
-            cadEnhanceOverride = CadEnhanceOverride::ForceOn;
-            break;
+    if (cadEnhanceOverride == CadEnhanceOverride::Unset) {
+        cadEnhanceOverride = CadEnhanceActive() ? CadEnhanceOverride::ForceOff : CadEnhanceOverride::ForceOn;
+    } else if (cadEnhanceOverride == CadEnhanceOverride::ForceOn) {
+        cadEnhanceOverride = CadEnhanceOverride::ForceOff;
+    } else if (cadEnhanceOverride == CadEnhanceOverride::ForceOff) {
+        cadEnhanceOverride = CadEnhanceOverride::ForceOn;
     }
 }
 
@@ -4735,12 +4731,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     // failed. Run the page directly under per-page lock.
     ScopedMutex cs(&renderLock);
 
-    Str usage = "View";
-    switch (args.target) {
-        case RenderTarget::Print:
-            usage = "Print";
-            break;
-    }
+    Str usage = (args.target == RenderTarget::Print) ? StrL("Print") : StrL("View");
     const char* usageZ = CStrTemp(usage);
 
     pdf_page* pdfpage = nullptr;

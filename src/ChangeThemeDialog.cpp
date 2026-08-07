@@ -54,27 +54,23 @@ static ChangeThemeWnd* gChangeThemeWnd = nullptr;
 static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";
 
 static int DocumentColorsFollowThemeToDropDownIndex(DocumentColorsFollowTheme mode) {
-    switch (mode) {
-        case DocumentColorsFollowTheme::Smart:
-            return 1;
-        case DocumentColorsFollowTheme::Legacy:
-            return 2;
-        case DocumentColorsFollowTheme::Off:
-        default:
-            return 0;
+    if (mode == DocumentColorsFollowTheme::Smart) {
+        return 1;
     }
+    if (mode == DocumentColorsFollowTheme::Legacy) {
+        return 2;
+    }
+    return 0;
 }
 
 static DocumentColorsFollowTheme DocumentColorsFollowThemeFromDropDownIndex(int idx) {
-    switch (idx) {
-        case 1:
-            return DocumentColorsFollowTheme::Smart;
-        case 2:
-            return DocumentColorsFollowTheme::Legacy;
-        case 0:
-        default:
-            return DocumentColorsFollowTheme::Off;
+    if (idx == 1) {
+        return DocumentColorsFollowTheme::Smart;
     }
+    if (idx == 2) {
+        return DocumentColorsFollowTheme::Legacy;
+    }
+    return DocumentColorsFollowTheme::Off;
 }
 
 ChangeThemeWnd::~ChangeThemeWnd() {

@@ -4028,16 +4028,12 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
     // for MeasurementUnit::in
     float factor = 1;
     Str unitName = "in";
-    switch (unit) {
-        case MeasurementUnit::pt:
-            factor = 72;
-            unitName = "pt";
-            break;
-
-        case MeasurementUnit::mm:
-            factor = 25.4f;
-            unitName = "mm";
-            break;
+    if (unit == MeasurementUnit::pt) {
+        factor = 72;
+        unitName = "pt";
+    } else if (unit == MeasurementUnit::mm) {
+        factor = 25.4f;
+        unitName = "mm";
     }
 
     TempStr xPos = str::FormatFloatWithThousandSepTemp((double)pt.x * (double)factor);
@@ -7125,18 +7121,14 @@ static void ShowViewModeNotification(MainWindow* win, int cmdId) {
         return;
     }
     Str viewName;
-    switch (cmdId) {
-        case CmdSinglePageView:
-            viewName = _TRA("Single Page");
-            break;
-        case CmdFacingView:
-            viewName = _TRA("Facing");
-            break;
-        case CmdBookView:
-            viewName = _TRA("Book View");
-            break;
-        default:
-            return;
+    if (cmdId == CmdSinglePageView) {
+        viewName = _TRA("Single Page");
+    } else if (cmdId == CmdFacingView) {
+        viewName = _TRA("Facing");
+    } else if (cmdId == CmdBookView) {
+        viewName = _TRA("Book View");
+    } else {
+        return;
     }
     TempStr msg = fmt("%s: %s", _TRA("View"), viewName);
     NotificationCreateArgs args;
@@ -7849,14 +7841,13 @@ Str NextCursorPositionUnitName(MainWindow* win) {
     if (!GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos)) {
         return StrL("pt");
     }
-    switch (cursorPosUnit) {
-        case MeasurementUnit::pt:
-            return StrL("mm");
-        case MeasurementUnit::mm:
-            return StrL("in");
-        default:
-            return StrL("off");
+    if (cursorPosUnit == MeasurementUnit::pt) {
+        return StrL("mm");
     }
+    if (cursorPosUnit == MeasurementUnit::mm) {
+        return StrL("in");
+    }
+    return StrL("off");
 }
 
 static void ToggleCursorPositionInDoc(MainWindow* win) {
@@ -7875,19 +7866,16 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
         notif = ShowNotification(args);
         cursorPosUnit = MeasurementUnit::pt;
     } else {
-        switch (cursorPosUnit) {
-            case MeasurementUnit::pt:
-                cursorPosUnit = MeasurementUnit::mm;
-                break;
-            case MeasurementUnit::mm:
-                cursorPosUnit = MeasurementUnit::in;
-                break;
-            case MeasurementUnit::in:
-                cursorPosUnit = MeasurementUnit::pt;
-                RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
-                return;
-            default:
-                ReportIf(true);
+        if (cursorPosUnit == MeasurementUnit::pt) {
+            cursorPosUnit = MeasurementUnit::mm;
+        } else if (cursorPosUnit == MeasurementUnit::mm) {
+            cursorPosUnit = MeasurementUnit::in;
+        } else if (cursorPosUnit == MeasurementUnit::in) {
+            cursorPosUnit = MeasurementUnit::pt;
+            RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
+            return;
+        } else {
+            ReportIf(true);
         }
     }
     Point pt = HwndGetCursorPos(win->hwndCanvas);

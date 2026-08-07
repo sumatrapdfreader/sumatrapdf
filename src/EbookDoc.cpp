@@ -1389,15 +1389,9 @@ bool PalmDoc::Load() {
         return false;
     }
     auto docType = mobiDoc->GetDocType();
-    switch (docType) {
-        case PdbDocType::PalmDoc:
-        case PdbDocType::TealDoc:
-        case PdbDocType::Plucker:
-            // no-op
-            break;
-        default:
-            delete mobiDoc;
-            return false;
+    if (docType != PdbDocType::PalmDoc && docType != PdbDocType::TealDoc && docType != PdbDocType::Plucker) {
+        delete mobiDoc;
+        return false;
     }
 
     Str text = mobiDoc->GetHtmlData();

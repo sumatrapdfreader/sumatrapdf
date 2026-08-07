@@ -55,15 +55,13 @@ DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
 }
 
 static const char* DocumentColorsFollowThemeToString(DocumentColorsFollowTheme mode) {
-    switch (mode) {
-        case DocumentColorsFollowTheme::Smart:
-            return "smart";
-        case DocumentColorsFollowTheme::Legacy:
-            return "legacy";
-        case DocumentColorsFollowTheme::Off:
-        default:
-            return "off";
+    if (mode == DocumentColorsFollowTheme::Smart) {
+        return "smart";
     }
+    if (mode == DocumentColorsFollowTheme::Legacy) {
+        return "legacy";
+    }
+    return "off";
 }
 
 static int gShadeForwardCount = 0;
@@ -141,15 +139,13 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
 }
 
 const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode) {
-    switch (mode) {
-        case DocumentColorsFollowTheme::Smart:
-            return _TRN("Document colors follow theme: Smart (recolor text and background, not images)");
-        case DocumentColorsFollowTheme::Legacy:
-            return _TRN("Document colors follow theme: Legacy (recolor text, background and images)");
-        case DocumentColorsFollowTheme::Off:
-        default:
-            return _TRN("Document colors follow theme: Off");
+    if (mode == DocumentColorsFollowTheme::Smart) {
+        return _TRN("Document colors follow theme: Smart (recolor text and background, not images)");
     }
+    if (mode == DocumentColorsFollowTheme::Legacy) {
+        return _TRN("Document colors follow theme: Legacy (recolor text, background and images)");
+    }
+    return _TRN("Document colors follow theme: Off");
 }
 
 bool PdfDarkModeUsesObjectLevel() {

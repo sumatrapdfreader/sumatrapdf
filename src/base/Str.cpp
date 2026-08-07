@@ -1533,18 +1533,18 @@ static char* EnsureCap(str::Builder* s, int needed) {
         return s->els;
     }
 
-    int capacityHint = (int)s->cap;
+    int capacityHint = s->cap;
     // tricky: to save space we reuse cap for capacityHint while still on
     // external/empty storage (cap was set from constructor hint)
     if (IsExternalOrEmpty(s)) {
         s->cap = 0;
     }
 
-    if (s->els && (int)s->cap >= needed) {
+    if (s->els && s->cap >= needed) {
         return s->els;
     }
 
-    int newCap = (int)s->cap * 2;
+    int newCap = s->cap * 2;
     newCap = std::max(needed, newCap);
     newCap = std::max(newCap, capacityHint);
 
@@ -1569,26 +1569,26 @@ static char* EnsureCap(str::Builder* s, int needed) {
         return nullptr;
     }
     s->els = newEls;
-    s->cap = (u32)newCap;
+    s->cap = newCap;
     return newEls;
 }
 
 static char* MakeSpaceAt(str::Builder* s, int idx, int count) {
     ReportIf(count == 0);
-    int newLen = std::max((int)s->len, idx) + count;
+    int newLen = std::max(s->len, idx) + count;
     char* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
     char* res = &(buf[idx]);
-    if ((int)s->len > idx) {
+    if (s->len > idx) {
         // inserting in the middle of string, have to copy
         char* src = buf + idx;
         char* dst = buf + idx + count;
-        memmove(dst, src, (size_t)((int)s->len - idx));
+        memmove(dst, src, (size_t)(s->len - idx));
     }
-    s->len = (u32)newLen;
+    s->len = newLen;
     // ZeroMemory(res, count);
     return res;
 }
@@ -1634,7 +1634,7 @@ str::Builder::Builder(Str externalBuf) {
 // capHint: preferred capacity after first grow
 str::Builder::Builder(int capHint) {
     Reset();
-    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
+    cap = capHint + kPadding; // + kPadding for terminating 0
 }
 
 str::Builder::~Builder() {
@@ -1642,12 +1642,12 @@ str::Builder::~Builder() {
 }
 
 char& str::Builder::operator[](int idx) const {
-    ReportIf(idx < 0 || idx >= (int)len);
+    ReportIf(idx < 0 || idx >= len);
     return els[idx];
 }
 
 int len(const str::Builder& b) {
-    return (int)b.len;
+    return b.len;
 }
 
 bool str::Builder::InsertAt(int idx, char el) {
@@ -1660,14 +1660,14 @@ bool str::Builder::InsertAt(int idx, char el) {
 }
 
 bool str::Builder::AppendChar(char c) {
-    return InsertAt((int)len, c);
+    return InsertAt(len, c);
 }
 
 bool str::Builder::Append(Str src) {
     if (str::IsNull(src) || 0 == src.len) {
         return true;
     }
-    char* dst = MakeSpaceAt(this, (int)len, src.len);
+    char* dst = MakeSpaceAt(this, len, src.len);
     if (!dst) {
         return false;
     }
@@ -1677,13 +1677,13 @@ bool str::Builder::Append(Str src) {
 
 char str::Builder::RemoveAt(int idx, int count) {
     char res = els[idx];
-    if ((int)len > idx + count) {
+    if (len > idx + count) {
         char* dst = els + idx;
         char* src = els + idx + count;
-        int nToMove = (int)len - idx - count;
+        int nToMove = len - idx - count;
         memmove(dst, src, (size_t)nToMove);
     }
-    len -= (u32)count;
+    len -= count;
     memset(els + len, 0, (size_t)count);
     return res;
 }
@@ -1692,7 +1692,7 @@ char str::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
-    return RemoveAt((int)len - 1);
+    return RemoveAt(len - 1);
 }
 
 char& str::Builder::Last() const {
@@ -1705,7 +1705,7 @@ char& str::Builder::Last() const {
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
 Str str::Builder::TakeStr() {
-    int n = (int)len;
+    int n = len;
     char* res = els;
     if (!els || n == 0) {
         Reset();

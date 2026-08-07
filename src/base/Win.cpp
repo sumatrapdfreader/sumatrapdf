@@ -1147,15 +1147,10 @@ static void SendEnterToParentConsole(HWND foregroundWnd) {
 
 void HandleRedirectedConsoleOnShutdown() {
     InitConsoleState();
-    switch (gConsoleState) {
-        case ConsoleState::AllocatedNew:
-            system("pause");
-            break;
-        case ConsoleState::AttachedToParent:
-            SendEnterToParentConsole(nullptr);
-            break;
-        default:
-            break;
+    if (gConsoleState == ConsoleState::AllocatedNew) {
+        system("pause");
+    } else if (gConsoleState == ConsoleState::AttachedToParent) {
+        SendEnterToParentConsole(nullptr);
     }
 }
 
