@@ -26,11 +26,11 @@ TempWStr GetDirTemp(WStr path);
 
 TempStr GetNonVirtualTemp(Str virtualPath);
 
-Str Join(Arena* a, Str path, Str fileName);
-Str Join(Str path, Str fileName);
-WStr Join(WStr path, WStr fileName, WStr fileName2 = WStr());
-TempStr JoinTemp(Str path, Str fileName, Str fileName2 = Str());
-TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2 = WStr());
+Str Join(Arena* a, Str dir, Str name);
+Str Join(Str dir, Str name);
+WStr Join(WStr dir, WStr name, WStr name2 = WStr());
+TempStr JoinTemp(Str dir, Str name, Str name2 = Str());
+TempWStr JoinTemp(WStr dir, WStr name, WStr name2 = WStr());
 
 bool IsDirectory(Str path);
 

@@ -12398,8 +12398,7 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
 
     BuildReadAloudMenuItems(menu, win, false, false);
 
-    UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
-                                         win->hwndFrame, nullptr);
+    UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD, rc.left, rc.bottom, 0, win->hwndFrame, nullptr);
 
     DestroyMenu(menu);
     if (selected == 0) {

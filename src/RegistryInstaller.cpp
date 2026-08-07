@@ -117,8 +117,8 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsWindowsVistaOrGreater()) {
-        TempStr key = str::JoinTemp(kAppName, StrL(" "), CURR_VERSION_STRA);
-        ok &= LoggedWriteRegStr(hkey, regPathUninst, "DisplayName", key);
+        TempStr displayName = str::JoinTemp(kAppName, StrL(" "), CURR_VERSION_STRA);
+        ok &= LoggedWriteRegStr(hkey, regPathUninst, "DisplayName", displayName);
     }
     // non-recursive because we don't want to count space used for thumbnails
     // which is in installDir for local install

@@ -46,10 +46,10 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
     };
     HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     for (auto& regVal : regVals) {
-        auto key = regVal.key;
-        auto val = regVal.value;
-        auto data = regVal.data;
-        bool ok = LoggedWriteRegStr(hkey, key, val, data);
+        auto keyName = regVal.key;
+        auto valName = regVal.value;
+        auto value = regVal.data;
+        bool ok = LoggedWriteRegStr(hkey, keyName, valName, value);
         if (!ok) {
             return false;
         }

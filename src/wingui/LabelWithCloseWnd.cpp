@@ -35,7 +35,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
         SetBkColor(hdc, w->bgColor);
     }
 
-    uint fmt = DT_SINGLELINE | DT_TOP | DT_LEFT;
+    uint fmt = DT_SINGLELINE;
     if (HwndIsRtl(w->hwnd)) {
         fmt |= DT_RTLREADING;
     }

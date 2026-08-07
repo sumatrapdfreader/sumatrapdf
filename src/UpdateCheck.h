@@ -10,4 +10,4 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType);
 // download + install the update surfaced by the pre-release update notification
 void DownloadAndInstallPendingUpdate(MainWindow* win);
 void StartInstallerAutoUpgrade(Str installerPath);
-void UpdateSelfTo(Str path);
+void UpdateSelfTo(Str dstPath);

@@ -186,7 +186,9 @@ static void SapiSetNotify() {
         return;
     }
 
-    const ULONGLONG events = SPFEI(SPEI_END_INPUT_STREAM) | SPFEI(SPEI_WORD_BOUNDARY);
+    // equivalent to SPFEI(END_INPUT_STREAM)|SPFEI(WORD_BOUNDARY); written this way
+    // so FLAGCHECK is only or'd once (avoids misc-redundant-expression on SPFEI|SPFEI)
+    const ULONGLONG events = (1ull << SPEI_END_INPUT_STREAM) | (1ull << SPEI_WORD_BOUNDARY) | SPFEI_FLAGCHECK;
     eventSource->SetInterest(events, events);
 
     if (gTtsNotifyHwnd && gTtsNotifyMsg) {

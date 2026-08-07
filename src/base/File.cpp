@@ -84,15 +84,15 @@ TempStr GetPathNoExtTemp(Str path) {
     return str::DupTemp(Str(path.s, ext));
 }
 
-TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
-    SkipLeadingPathSep(fileName);
+TempStr JoinTemp(Str dir, Str name, Str name2) {
+    SkipLeadingPathSep(name);
     Str sepStr = {};
-    if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
+    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
         sepStr = StrL(PATH_SEP);
     }
-    TempStr res = str::JoinTemp(path, sepStr, fileName);
-    if (fileName2) {
-        res = JoinTemp(res, fileName2);
+    TempStr res = str::JoinTemp(dir, sepStr, name);
+    if (name2) {
+        res = JoinTemp(res, name2);
     }
     return res;
 }
@@ -105,34 +105,34 @@ TempStr ToOSTemp(Str path) {
 #endif
 }
 
-Str Join(Arena* a, Str path, Str fileName) {
-    SkipLeadingPathSep(fileName);
+Str Join(Arena* a, Str dir, Str name) {
+    SkipLeadingPathSep(name);
     Str sepStr = {};
-    if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
+    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
         sepStr = StrL(PATH_SEP);
     }
-    return str::Join(a, path, sepStr, fileName);
+    return str::Join(a, dir, sepStr, name);
 }
 
-Str Join(Str path, Str fileName) {
-    return Join(nullptr, path, fileName);
+Str Join(Str dir, Str name) {
+    return Join(nullptr, dir, name);
 }
 
-TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
-    SkipLeadingPathSep(fileName);
+TempWStr JoinTemp(WStr dir, WStr name, WStr name2) {
+    SkipLeadingPathSep(name);
     WStr sepStr;
-    if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
+    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
         sepStr = PATH_SEP_WSTR;
     }
-    TempWStr res = str::JoinTemp(path, sepStr, fileName);
-    if (fileName2) {
-        res = JoinTemp(res, fileName2);
+    TempWStr res = str::JoinTemp(dir, sepStr, name);
+    if (name2) {
+        res = JoinTemp(res, name2);
     }
     return res;
 }
 
-WStr Join(WStr path, WStr fileName, WStr fileName2) {
-    TempWStr res = JoinTemp(path, fileName, fileName2);
+WStr Join(WStr dir, WStr name, WStr name2) {
+    TempWStr res = JoinTemp(dir, name, name2);
     return wstr::Dup(res);
 }
 
