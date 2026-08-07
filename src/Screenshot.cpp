@@ -396,7 +396,7 @@ static void TeardownSetHotkeyWnd() {
     }
     SetHotkeyWnd* w = gSetHotkeyWnd;
     gSetHotkeyWnd = nullptr;
-    w->CleanupHook();
+    SetHotkeyWnd::CleanupHook();
     if (!w->committed) {
         for (MainWindow* win : gWindows) {
             RegisterScreenshotHotkey(win->hwndFrame);
