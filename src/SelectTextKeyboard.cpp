@@ -261,6 +261,10 @@ static void ShowModeNotification(MainWindow* win) {
     // The close button is still there for anyone who has learned them.
     args.timeoutMs = kNotifNoTimeout;
     args.groupId = kNotifTextSelectMode;
+    // a full-width bar attached to the bottom, out of the way of the text being
+    // selected at the top of the page. warning-colored so the mode is obvious
+    args.corner = NotifCorner::BottomBar;
+    args.warning = true;
     ShowNotification(args);
 }
 

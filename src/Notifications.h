@@ -15,14 +15,18 @@ constexpr const int kNotifDefaultTimeOut = 1000 * 3; // 3 seconds
 constexpr const int kNotif5SecsTimeOut = 1000 * 5;
 constexpr const int kNotifNoTimeout = 0;
 
-// which corner of the canvas the notification is anchored to (multiple
-// notifications in the same corner stack toward the opposite edge)
+// where on the canvas the notification is anchored. The corner variants stack
+// multiple notifications toward the opposite edge. BottomBar is different: it
+// spans the full canvas width along the bottom with centered text, for a status
+// hint (e.g. the F7 keyboard-selection help).
 // fixed underlying type so it can be forward-declared (e.g. in SumatraPDF.h)
 enum class NotifCorner : int {
     TopLeft, // default; how notifications were always positioned
     TopRight,
     BottomLeft,
     BottomRight,
+    BottomBar,
+    Count, // number of positions; used to size per-position stacking state
 };
 
 // default distance (in unscaled px) from the canvas edges

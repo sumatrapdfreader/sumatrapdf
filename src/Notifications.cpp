@@ -139,9 +139,9 @@ void RelayoutNotifications(HWND hwndCanvas) {
     }
     int dyPadding = DpiScale(hwndCanvas, kPadding);
     bool isRtl = IsUIRtl();
-    // running vertical offset per corner so multiple notifications in the same
-    // corner stack toward the opposite edge
-    int yOffset[4] = {};
+    // running vertical offset per position so multiple notifications in the same
+    // spot stack toward the opposite edge
+    int yOffset[(int)NotifCorner::Count] = {};
     for (int i = 0; i < nWnds; i++) {
         NotificationWnd* wnd = wnds[i];
         if (wnd->delayTimerId != 0) {
@@ -159,24 +159,43 @@ void RelayoutNotifications(HWND hwndCanvas) {
         }
         int xMargin = DpiScale(hwndCanvas, wnd->xMargin);
         int yMargin = DpiScale(hwndCanvas, wnd->yMargin);
+        NotifCorner corner = wnd->corner;
+        bool isBar = (corner == NotifCorner::BottomBar);
         Rect rect = HwndWindowRect(wnd->hwnd);
         // re-measure when the canvas is too small for the current size, or when
-        // the notif was first laid out against an empty/wrong parent size
+        // the notif was first laid out against an empty/wrong parent size. A
+        // full-width bar re-measures whenever its width no longer matches the
+        // canvas (i.e. the window was resized).
         int maxDx = frame.dx - (2 * xMargin);
-        if (maxDx > 0 && (rect.dx > maxDx || rect.dx <= 0 || rect.dy <= 0)) {
+        bool needRelayout = rect.dx <= 0 || rect.dy <= 0;
+        if (isBar) {
+            needRelayout |= (rect.dx != frame.dx);
+        } else {
+            needRelayout |= (maxDx > 0 && rect.dx > maxDx);
+        }
+        if (needRelayout) {
             wnd->Layout(HwndGetTextTemp(wnd->hwnd));
             rect = HwndWindowRect(wnd->hwnd);
         }
 
-        NotifCorner corner = wnd->corner;
         bool atRight = (corner == NotifCorner::TopRight) || (corner == NotifCorner::BottomRight);
-        bool atBottom = (corner == NotifCorner::BottomLeft) || (corner == NotifCorner::BottomRight);
-        if (isRtl) {
-            atRight = !atRight; // mirror horizontally for right-to-left UI
+        bool atBottom = isBar || (corner == NotifCorner::BottomLeft) || (corner == NotifCorner::BottomRight);
+        if (isRtl && !isBar) {
+            atRight = !atRight; // mirror horizontally for right-to-left UI (a full-width bar is symmetric)
         }
-        int x = atRight ? (frame.dx - rect.dx - xMargin) : xMargin;
+        // the bottom bar spans the full width, so it always sits flush at the
+        // left edge; Layout() sized it to the canvas width
+        int x = xMargin;
+        if (isBar) {
+            x = 0;
+        } else if (atRight) {
+            x = frame.dx - rect.dx - xMargin;
+        }
         int idx = (int)corner;
-        int y = atBottom ? (frame.dy - rect.dy - yMargin - yOffset[idx]) : (yMargin + yOffset[idx]);
+        // the bar is attached flush to the bottom edge (no margin); corner
+        // toasts keep their margin
+        int barYMargin = isBar ? 0 : yMargin;
+        int y = atBottom ? (frame.dy - rect.dy - barYMargin - yOffset[idx]) : (yMargin + yOffset[idx]);
         // keep fully inside the canvas (guards empty/partial layout races)
         x = std::max(x, 0);
         y = std::max(y, 0);
@@ -443,6 +462,18 @@ void NotificationWnd::Layout(Str message) {
         }
     }
 #endif
+
+    // full-width bottom bar: stretch to the canvas width and center the text
+    // (the close button, if any, stays pinned to the right edge)
+    if (corner == NotifCorner::BottomBar && rParent.dx > 0) {
+        dx = rParent.dx;
+        int reserveRight = noClose ? 0 : closeBlockDx;
+        rTxt.x = std::max((dx - reserveRight - szText.dx) / 2, padX);
+        rTxt.y = padY;
+        if (!noClose) {
+            rClose.x = dx - closeDx - padX;
+        }
+    }
 
     // y-center close
     if (!noClose) {
