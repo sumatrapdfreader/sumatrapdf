@@ -42,7 +42,7 @@ struct FzPageInfo {
     Vec<IPageElement*> allElements;
     bool elementsNeedRebuilding = true;
 
-    RectF mediabox{};
+    RectF mediabox;
     Vec<FitzPageImageInfo*> images;
 
     // if false, only loaded page (fast)

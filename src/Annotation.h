@@ -60,7 +60,7 @@ struct Annotation {
     int pageNo = -1;
 
     // in page coordinates
-    RectF bounds = {};
+    RectF bounds;
 
     EngineMupdf* engine = nullptr;
     pdf_annot* pdfannot = nullptr; // not owned

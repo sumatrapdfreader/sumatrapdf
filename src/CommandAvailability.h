@@ -35,7 +35,7 @@ struct AppCommandCtx {
     bool isSinglePage = false;
     bool hasToc = false;
 
-    Point cursorPos = {};
+    Point cursorPos;
     bool hasSelection = false;
     // selection is text (as opposed to rectangular block selection)
     bool hasTextSelection = false;

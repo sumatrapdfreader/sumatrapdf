@@ -101,7 +101,7 @@ void FreePageText(PageText*);
 struct IPageDestination : KindBase {
     // page the destination points to (-1 for external destinations such as URLs)
     int pageNo = -1;
-    RectF rect = {};
+    RectF rect;
     float zoom = 0.f;
 
     IPageDestination() = default;
@@ -238,7 +238,7 @@ extern Kind kindPageElementComment;
 struct IPageElement {
     Kind kind = nullptr;
     // position of the element on the page
-    RectF rect{};
+    RectF rect;
     int pageNo = -1;
 
     virtual ~IPageElement() = default;

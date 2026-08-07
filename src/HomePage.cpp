@@ -963,7 +963,7 @@ TempStr LinkTooltipTemp(StaticLink* link) {
 // filter changes; pure scrollY changes just offset stored thumb rects ---
 struct HomePageLayoutCache {
     bool valid = false;
-    Rect canvasRc{};
+    Rect canvasRc;
     int scrollY = 0;
     int nFiles = 0;
     bool listView = false;
@@ -971,19 +971,19 @@ struct HomePageLayoutCache {
     bool showTips = false;
     int tipIdx = -1;
     bool tipIsPromo = false;
-    Str filterText{}; // owned
+    Str filterText; // owned
 
-    Rect rcThumbsArea{};
-    Rect rcSearchBorder{};
-    Rect rcIconOpen{};
-    Rect rcIconListView{};
-    Rect rcIconThumbnailView{};
-    Rect rcTip{};
-    Rect rcAppWithVer{};
-    Rect rcLine{};
-    Rect rcFreqRead{};
-    Rect rcOpenDoc{};
-    Rect rcBrowseFolder{}; // empty when the link doesn't fit
+    Rect rcThumbsArea;
+    Rect rcSearchBorder;
+    Rect rcIconOpen;
+    Rect rcIconListView;
+    Rect rcIconThumbnailView;
+    Rect rcTip;
+    Rect rcAppWithVer;
+    Rect rcLine;
+    Rect rcFreqRead;
+    Rect rcOpenDoc;
+    Rect rcBrowseFolder; // empty when the link doesn't fit
     int totalContentDy = 0;
     int thumbsVisibleDy = 0;
     ParsedTip* tip = nullptr;

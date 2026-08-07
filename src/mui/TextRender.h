@@ -101,7 +101,7 @@ class TextRenderGdiplus : public ITextRender {
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
     CachedFont* currFont = nullptr;
-    Gdiplus::Color textColor{};
+    Gdiplus::Color textColor;
     Gdiplus::Brush* textColorBrush = nullptr;
 
     TextRenderGdiplus() = default;
@@ -139,8 +139,8 @@ class TextRenderHdc : public ITextRender {
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
     CachedFont* currFont = nullptr;
-    Gdiplus::Color textColor{};
-    Gdiplus::Color textBgColor{};
+    Gdiplus::Color textColor;
+    Gdiplus::Color textBgColor;
 
     TextRenderHdc() = default;
 

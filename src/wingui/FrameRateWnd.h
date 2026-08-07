@@ -16,7 +16,7 @@ struct FrameRateWnd {
     HWND hwnd = nullptr;
     HFONT font = nullptr;
 
-    Size maxSizeSoFar{};
+    Size maxSizeSoFar;
     int frameRate = -1;
 };
 

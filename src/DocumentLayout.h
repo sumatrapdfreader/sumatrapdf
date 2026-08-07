@@ -11,9 +11,9 @@ struct DocumentLayoutMargin {
 };
 
 struct DocumentLayoutPage {
-    RectF mediaBox{};
-    Rect pos{};
-    Rect pageOnScreen{};
+    RectF mediaBox;
+    Rect pos;
+    Rect pageOnScreen;
     float visibleRatio = 0;
     float zoomReal = 1;
     bool isShown = false;
@@ -22,8 +22,8 @@ struct DocumentLayoutPage {
 struct DocumentLayoutParams {
     DisplayMode displayMode{};
     int startPage = 1;
-    Size viewPortSize{};
-    Point viewPortOffset{};
+    Size viewPortSize;
+    Point viewPortOffset;
     float zoomVirtual = 100;
     float dpiFactor = 1;
     int rotation = 0;
@@ -32,14 +32,14 @@ struct DocumentLayoutParams {
     // extra scroll room after last page in continuous view (issue #411)
     bool paddingAfterLastPage = false;
     DocumentLayoutMargin windowMargin{};
-    Size pageSpacing{};
+    Size pageSpacing;
 };
 
 struct DocumentLayout {
     Vec<DocumentLayoutPage> pages;
     DocumentLayoutParams params;
-    Size canvasSize{};
-    Rect viewPort{};
+    Size canvasSize;
+    Rect viewPort;
     float zoomReal = 1;
 
     void Reset(int pageCount);

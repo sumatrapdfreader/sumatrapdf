@@ -26,7 +26,7 @@ struct LabelWithCloseWnd : Wnd {
 
     int cmdId = 0;
 
-    Rect closeBtnPos{};
+    Rect closeBtnPos;
 
     // in points
     int padX = 0;

@@ -29,7 +29,7 @@ struct RefHoverState {
     // Pending hover request: set by RefHoverSchedule, consumed by
     // RefHoverOnTimer when the hover-delay timer fires.
     struct Pending {
-        Point screenPt{};
+        Point screenPt;
         int destPage = -1;
         float destX = -1.f;
         float destY = -1.f;
@@ -46,11 +46,11 @@ struct RefHoverState {
         // abbreviation / glossary links render the whole abbreviations page
         // from top.
         int srcPage = -1;
-        RectF srcRect{};
+        RectF srcRect;
         // Screen rect of the source page (visible portion). Used to clamp
         // the popup so it stays within the document area and doesn't drift
         // into the gray margins outside the page.
-        Rect pageScreenRect{};
+        Rect pageScreenRect;
     } pending;
 
     // Async rendering: renders run on a background thread (a complex page
@@ -63,7 +63,7 @@ struct RefHoverState {
         EngineBase* engine = nullptr; // AddRef()'ed for the render duration
         int pageNo = -1;
         float zoom = 0.f;
-        RectF region{};
+        RectF region;
         // Second crop stitched below `region` in the delivered bitmap, for a
         // bracket-style entry that wraps across a 2-column page break (see
         // DetectEntryBox's continuationOut). Empty (dx/dy <= 0) when there's
@@ -72,19 +72,19 @@ struct RefHoverState {
         // displayed.region and never populate this, so the stitched strip is
         // dropped as soon as the user interacts (region-shift math for a
         // composited bitmap isn't supported).
-        RectF continuationRegion{};
+        RectF continuationRegion;
         // initial show: commit displayed.* and show the popup on completion.
         // false for wheel zoom / scroll re-renders, which update displayed.*
         // optimistically and only need the new bitmap.
         bool showPopup = false;
-        Point screenPt{};
+        Point screenPt;
         float destXRaw = -1.f;
         float destYRaw = -1.f;
         // source link location (page coords) that triggered this show; carried
         // through so RefHoverSchedule can tell two occurrences of the same
         // reference apart and reposition the popup to the new one
         int srcPageRaw = -1;
-        RectF srcRectRaw{};
+        RectF srcRectRaw;
     };
     // bumped on every new request and on hide, invalidating older results
     int renderGen = 0;
@@ -103,7 +103,7 @@ struct RefHoverState {
         float destY = -1.f;
         // Region of the page rendered into the popup bitmap, kept so the
         // wheel handlers can shift / scale it without re-running detection.
-        RectF region{};
+        RectF region;
         // baseZoom matches the document's current page zoom on first show
         // so popup text height is comparable to page text. userZoom is the
         // multiplier driven by the user's mouse-wheel.
@@ -113,7 +113,7 @@ struct RefHoverState {
         // RefHoverSchedule so hovering a different occurrence of the same
         // reference re-positions the popup instead of skipping as a no-op.
         int srcPage = -1;
-        RectF srcRect{};
+        RectF srcRect;
     } displayed;
 };
 

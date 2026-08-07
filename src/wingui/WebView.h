@@ -160,7 +160,7 @@ struct WebviewWnd : Wnd {
     bool isVisible = true;
     bool isSuspended = false;
     bool isInSizeMove = false;
-    Rect lastBounds{};
+    Rect lastBounds;
     bool hasLastBounds = false;
     WStr userDataFolder;
     WStr resourceUriPrefix;

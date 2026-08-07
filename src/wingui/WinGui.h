@@ -25,9 +25,9 @@ struct ContextMenuEvent {
     Wnd* w = nullptr;
 
     // mouse x,y position relative to the window
-    Point mouseWindow{};
+    Point mouseWindow;
     // global (screen) mouse x,y position
-    Point mouseScreen{};
+    Point mouseScreen;
 };
 
 using ContextMenuHandler = Func1<ContextMenuEvent*>;
@@ -37,7 +37,7 @@ struct CreateControlArgs {
     WStr className;
     DWORD style = 0;
     DWORD exStyle = 0;
-    Rect pos = {};
+    Rect pos;
     HMENU ctrlId = 0;
     bool visible = true;
     HFONT font = nullptr;
@@ -51,7 +51,7 @@ struct CreateCustomArgs {
     Str title;
     DWORD style = 0;
     DWORD exStyle = 0;
-    Rect pos = {};
+    Rect pos;
     // don't set both menu and cmdId
     HMENU menu = nullptr;
     int cmdId = 0; // command sent on click
@@ -166,8 +166,8 @@ struct Wnd : ILayout {
     uintptr_t userData = 0;
 
     Insets insets{};
-    Size childSize{};
-    Rect lastBounds{};
+    Size childSize;
+    Rect lastBounds;
 
     // data that can be set before calling Create()
     Visibility visibility{Visibility::Visible};
@@ -249,7 +249,7 @@ struct Button : Wnd {
         bool ownerDrawn = true;
     };
 
-    Func0 onClick{};
+    Func0 onClick;
 
     bool isDefault = false;
     bool ownerDrawn = true;
@@ -411,7 +411,7 @@ struct ListBox : Wnd {
     struct DrawItemEvent {
         ListBox* listBox = nullptr;
         HDC hdc = nullptr;
-        Rect itemRect{}; // clamped to the client rect; use this to draw
+        Rect itemRect; // clamped to the client rect; use this to draw
         // true when the row is cut off by the bottom of the list
         // (LBS_NOINTEGRALHEIGHT), so itemRect is shorter than a full row
         bool clippedAtBottom = false;
@@ -428,11 +428,11 @@ struct ListBox : Wnd {
     DoubleClickHandler onDoubleClick;
     DrawItemHandler onDrawItem;
 
-    Size idealSize = {};
+    Size idealSize;
     int idealSizeLines = 0;
     // viewport as of the last WM_PAINT; a change means the content was scrolled
     // or resized and the whole list has to be repainted (see WndProc)
-    Size prevPaintSize = {};
+    Size prevPaintSize;
     int prevPaintTopIdx = -1;
 
     ListBox();
@@ -568,7 +568,7 @@ struct Trackbar : Wnd {
 
     using PositionChangingHandler = Func1<PositionChangingEvent*>;
 
-    Size idealSize{};
+    Size idealSize;
 
     // for WM_NOTIFY with TRBN_THUMBPOSCHANGING
     PositionChangingHandler onPositionChanging;
@@ -679,9 +679,9 @@ struct TreeView : Wnd {
         bool isDblClick = false;
 
         // mouse x,y position relative to the window
-        Point mouseWindow{};
+        Point mouseWindow;
         // global (screen) mouse x,y position
-        Point mouseScreen{};
+        Point mouseScreen;
 
         LRESULT result = 0;
     };
@@ -734,7 +734,7 @@ struct TreeView : Wnd {
     TreeItemState GetItemState(TreeItem ti);
 
     bool fullRowSelect = false;
-    Size idealSize{};
+    Size idealSize;
 
     TreeModel* treeModel = nullptr; // not owned by us
 

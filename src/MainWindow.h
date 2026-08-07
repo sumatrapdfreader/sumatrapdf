@@ -61,7 +61,7 @@ enum CaptionButtons {
 
 struct ButtonInfo {
     int id = -1; // CaptionButtons value
-    Rect rect{};
+    Rect rect;
     bool highlighted = false;
     bool pressed = false;
     bool inactive = false;
@@ -263,7 +263,7 @@ struct MainWindow {
 
     ButtonInfo captionBtn[CB_BTN_COUNT];
     bool isMenuOpen = false;
-    Rect captionRect{};
+    Rect captionRect;
 
     Tooltip* infotip = nullptr;
 
@@ -481,9 +481,9 @@ struct MainWindow {
     Annotation* annotationUnderCursor = nullptr;
     RefHoverState* refHover = nullptr;
     // highlight rectangle for element under cursor during context menu (in page coordinates)
-    RectF contextMenuHighlightRect{};
+    RectF contextMenuHighlightRect;
     int contextMenuHighlightPageNo = 0;
-    Point contextMenuPt{};
+    Point contextMenuPt;
     bool contextMenuPtValid = false;
     HBRUSH brControlBgColor = nullptr;
 

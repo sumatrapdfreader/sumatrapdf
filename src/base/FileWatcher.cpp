@@ -338,7 +338,7 @@ static bool WatchedFileStillActive(WatchedFile* wf) {
 static void RunManualChecks() {
     struct ManualCheckItem {
         WatchedFile* wf = nullptr;
-        Str path{};
+        Str path;
         FileWatcherState state{};
         bool changed = false;
     };

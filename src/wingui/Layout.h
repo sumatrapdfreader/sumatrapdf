@@ -13,8 +13,8 @@ int Scale(int v, i64 num, i64 den);
 int GuardInf(int a, int b);
 
 struct Constraints {
-    Size min{};
-    Size max{};
+    Size min;
+    Size max;
 
     Size Constrain(Size) const;
     Size ConstrainAndAttemptToPreserveAspectRatio(Size) const;
@@ -75,7 +75,7 @@ struct LayoutBase : ILayout {
     // without rebuilding the whole layout
     Visibility visibility = Visibility::Visible;
     // for easy debugging, remember last bounds
-    Rect lastBounds{};
+    Rect lastBounds;
 
     LayoutBase() = default;
     explicit LayoutBase(Kind);
@@ -105,7 +105,7 @@ Insets DpiScaledInsets(HWND, int top, int right, int bottom, int left);
 struct Padding : LayoutBase {
     ILayout* child = nullptr;
     Insets insets{};
-    Size childSize{};
+    Size childSize;
 
     Padding(ILayout*, const Insets&);
     ~Padding() override;
@@ -152,7 +152,7 @@ enum class CrossAxisAlign : u8 {
 
 struct boxElementInfo {
     ILayout* layout = nullptr;
-    Size size{};
+    Size size;
     int flex = 0;
 };
 
@@ -219,7 +219,7 @@ struct Align : LayoutBase {
     float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
     float HeightFactor = 0;        // If greater than zero, ratio of container height to child height.
     ILayout* Child = nullptr;
-    Size childSize{};
+    Size childSize;
 
     explicit Align(ILayout*);
     ~Align() override;

@@ -182,7 +182,7 @@ struct RenderCache {
     int maxRenderThreads = 0;
     int idleThreads = 0;
 
-    Size maxTileSize{};
+    Size maxTileSize;
     bool isRemoteSession = false;
 
     COLORREF textColor = 0;

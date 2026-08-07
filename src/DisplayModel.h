@@ -13,22 +13,22 @@ enum class AnnotationType;
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
-    RectF _mediaBox{};
+    RectF _mediaBox;
     PageInfoState state = PageInfoState::Unknown;
 
     /* data that is calculated when needed. actual content size within a page (View target) */
-    RectF contentBox{};
+    RectF contentBox;
 
     /* data that changes when zoom and rotation changes */
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
        Calculated in DisplayModel::Relayout() */
-    Rect pos{};
+    Rect pos;
 
     /* data that changes due to scrolling. Calculated in DisplayModel::RecalcVisibleParts() */
     float visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* position of page relative to visible view port: pos.Offset(-viewPort.x, -viewPort.y) */
-    Rect pageOnScreen{};
+    Rect pageOnScreen;
 
     // when zoomVirtual in DisplayMode is kZoomFitPage, kZoomFitWidth
     // or kZoomFitContent, this is per-page zoom level

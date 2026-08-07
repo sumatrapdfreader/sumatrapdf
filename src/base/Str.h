@@ -230,7 +230,7 @@ struct Builder {
     int cap = 0;
     // Optional external scratch (not owned; default empty = allocate on first use).
     // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
-    Str buf{};
+    Str buf;
 
     int nReallocs = 0;
 
@@ -283,7 +283,7 @@ struct Builder {
     u32 cap = 0;
     // Optional external scratch (not owned; default empty = allocate on first use).
     // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
-    WStr buf{};
+    WStr buf;
 
     int nReallocs = 0;
 

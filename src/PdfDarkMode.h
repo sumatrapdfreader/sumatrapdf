@@ -106,7 +106,7 @@ struct DarkModeProfile {
 
 struct ImageOccurrenceInfo {
     int occurrenceIndex = 0;
-    RectF pageBounds{};
+    RectF pageBounds;
     bool isImageMask = false;
     bool hasAlpha = false;
     float pageCoverage = 0.f;
@@ -117,7 +117,7 @@ struct ImageOccurrenceInfo {
 
 struct DarkModePageAnalysis {
     int pageNumber = 0;
-    RectF pageBounds{};
+    RectF pageBounds;
     bool isScannedPage = false;
     Vec<ImageOccurrenceInfo> images;
     u32 optionsHash = 0;

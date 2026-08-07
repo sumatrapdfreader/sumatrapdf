@@ -3,7 +3,7 @@
 
 struct SimpleBrowserCreateArgs {
     Str title;
-    Rect pos{}; // if empty, will use CW_USEDEFAULT
+    Rect pos; // if empty, will use CW_USEDEFAULT
     Str url;
     Str dataDir;
     WebViewResourceProvider resourceProvider;
