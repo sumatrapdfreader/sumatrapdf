@@ -1,8 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// note: include Base.h instead of including directly
-
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
 bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);

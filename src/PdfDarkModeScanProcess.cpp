@@ -122,6 +122,7 @@ static PixelColor EstimatePaperFromPixmap(fz_context* ctx, fz_pixmap* pix, const
     return paper;
 }
 
+// Phase 5: full-page scan remapping (Smart path only).
 void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysis& analysis,
                                const DarkModePalette& palette, float* outR, float* outG, float* outB) {
     float maxC = std::max({r, g, b});
@@ -204,6 +205,7 @@ static void WritePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float 
     }
 }
 
+// Phase 5: returns processed pixmap for FullPageScan, or nullptr to fall back.
 fz_pixmap* PdfDarkModeProcessScanPixmap(fz_context* ctx, fz_pixmap* src, const DarkImageAnalysis& analysis,
                                         const DarkModePalette& palette) {
     if (!ctx || !src || !src->samples || src->w <= 0 || src->h <= 0) {

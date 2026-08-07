@@ -471,6 +471,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
 // called when the user clicks "Download and update" in the pre-release update
 // notification: download the pending update and (via gUpdateAutoInstall) install
 // it without the confirmation dialog
+// download + install the update surfaced by the pre-release update notification
 void DownloadAndInstallPendingUpdate(MainWindow* win) {
     if (!win || !gPendingUpdate) {
         return;

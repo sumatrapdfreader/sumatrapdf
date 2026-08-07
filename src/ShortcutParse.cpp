@@ -346,16 +346,20 @@ again:
     return true;
 }
 
+// true if shortcut names a key we can bind
 bool IsValidShortcutString(Str shortcut) {
     ACCEL accel = {};
     accel.cmd = (WORD)-1; // for debugging
     return ParseShortcut(shortcut, accel);
 }
 
+// Fills accel with the key and modifiers shortcut names. Returns false if it
+// doesn't name a key; accel.cmd is left alone, the caller owns that.
 bool ParseShortcutString(Str shortcut, ACCEL& accel) {
     return ParseShortcut(shortcut, accel);
 }
 
+// Appends " \tCtrl + O" to a menu string, for the key a is bound to.
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     Str lang = gShortcutLangCode ? gShortcutLangCode() : Str();
     bool isEng = len(lang) == 0 || str::Eq(lang, StrL("en"));

@@ -180,6 +180,7 @@ void SetPdfPreviewLoggingEnabled(bool enable) {
 // this module: in SumatraPDF.exe that's the running exe, in PdfPreview.dll it's
 // the sibling exe -- either way it resolves to the same directory SumatraPDF.exe
 // uses (see GetSumatraBuildSpecificDirTemp), so logs land next to its crashinfo/logs.
+// per-build data dir, same one SumatraPDF.exe uses (...\SumatraPDF-data\<sha1>)
 TempStr GetPdfPreviewLogDirTemp() {
     TempStr exeDir = GetSelfExeDirTemp();
     if (!exeDir) {
@@ -221,6 +222,7 @@ static TempStr GetNewPdfPreviewLogFilePathTemp() {
     return path::JoinTemp(dir.s, name.s);
 }
 
+// if logging is enabled, route this module's log to a fresh unique file
 void StartPdfPreviewLoggingIfEnabled() {
     static bool started = false;
     if (started || !IsPdfPreviewLoggingEnabled()) {

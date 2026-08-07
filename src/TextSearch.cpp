@@ -699,6 +699,7 @@ TextSel* TextSearch::FindFirst(int page, Str text) {
 
 // search only `pageNo` (no wrapping to other pages), mirroring the per-page step
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
+// like FindFirst but searches only the given page (issue #3085)
 TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     SetText(text);
     if (len(findText) == 0 || pageNo < 1 || pageNo > nPages) {

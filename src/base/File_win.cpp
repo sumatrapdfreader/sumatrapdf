@@ -274,6 +274,9 @@ static bool ProbeDriveRootAccessible(Str driveKey) {
     return GetFileAttributesExW(CWStrTemp(root), GetFileExInfoStandard, &data) != 0;
 }
 
+// Like GetFileAttributesExW(..., GetFileExInfoStandard, ...). Network paths
+// share the same 1-hour path cache as GetCachedAttributes; unavailable
+// non-fixed drives use a short drive-level availability cache.
 bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     if (out) {
         *out = {};
@@ -382,6 +385,11 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     return false;
 }
 
+// Like GetFileAttributesW: returns attributes or INVALID_FILE_ATTRIBUTES.
+// On Windows, network-drive path results are cached for 1 hour (shared with
+// GetCachedAttributesEx). Offline non-fixed drives (mapped/UNC/removable) are
+// also remembered for ~4 minutes so later queries fail fast.
+// Non-Windows: no cache (same as an uncached attribute query).
 DWORD GetCachedAttributes(Str path) {
     WIN32_FILE_ATTRIBUTE_DATA data{};
     if (!GetCachedAttributesEx(path, &data)) {
@@ -724,6 +732,7 @@ TempWStr GetSelfExePathW() {
     return wstr::Dup(buf);
 }
 
+// Path of this process image (exe or DLL that contains this code).
 TempStr GetSelfExePathTemp() {
     WCHAR buf[MAX_PATH + 2]{};
     DWORD nChars = dimof(buf) - 1;
@@ -732,6 +741,7 @@ TempStr GetSelfExePathTemp() {
     return ToUtf8Temp(buf);
 }
 
+// Directory containing GetSelfExePathTemp().
 TempStr GetSelfExeDirTemp() {
     TempStr path = GetSelfExePathTemp();
     return path::GetDirTemp(path);

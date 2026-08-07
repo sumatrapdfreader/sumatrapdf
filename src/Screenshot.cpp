@@ -51,6 +51,8 @@ static HWND GetScreenshotOwnerHwnd() {
     return len(gWindows) > 0 ? gWindows[0]->hwndFrame : nullptr;
 }
 
+// wires up the hooks the shared capture code (ScreenshotCapture.h) calls back
+// into; TakeScreenshots() itself is declared there
 void InitScreenshotHost() {
     gScreenshotHost.IsAppFrame = IsAppFrame;
     gScreenshotHost.GetSaveDirTemp = GetScreenshotSaveDirTemp;

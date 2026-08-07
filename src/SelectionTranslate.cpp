@@ -835,6 +835,7 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     return true;
 }
 
+// backend: 0=Claude, 1=Grok, 2=Codex
 TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str text, int* exitCode) {
     AIChatBackend chatBackend = AIChatBackend::Grok;
     if (backend == 0) {

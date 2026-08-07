@@ -134,6 +134,8 @@ static bool IsAnnotationInEngine(EngineMupdf* e, Annotation* annot) {
 }
 
 // Safe to call MuPDF with annot->pdfannot.
+// True if annot is non-null, has a live pdf_annot*, and is still listed in
+// its EngineMupdf page (markup or form widget). Use before any MuPDF call.
 bool AnnotationIsLive(Annotation* annot) {
     if (!annot || !annot->engine || !annot->pdfannot) {
         return false;
@@ -239,6 +241,7 @@ static Str MupdfCStrTemp(const char* s) {
     return str::DupTemp(Str(s));
 }
 
+// EditAnnotations.cpp
 Str Author(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};
@@ -370,6 +373,8 @@ static void UpdateFormFieldPage(fz_context* ctx, pdf_annot* a) {
     }
 }
 
+// PDF form (widget) fields. GetWidgetType returns a pdf_widget_type value
+// (PDF_WIDGET_TYPE_*), or 0 (UNKNOWN) when annot isn't a form widget.
 int GetWidgetType(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return PDF_WIDGET_TYPE_UNKNOWN;
@@ -414,6 +419,8 @@ WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
     return kind;
 }
 
+// Toggle a checkbox / radio-button form field in place. Returns true if it was
+// a (non-read-only) checkbox/radio and got toggled.
 bool ToggleFormButton(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;
@@ -470,6 +477,7 @@ bool ToggleFormButton(Annotation* annot) {
     return changed;
 }
 
+// pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
@@ -488,6 +496,7 @@ int GetWidgetFieldFlags(Annotation* annot) {
     return flags;
 }
 
+// current text value of a form field (owned temp copy), or "" .
 Str GetWidgetValue(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return {};
@@ -506,6 +515,7 @@ Str GetWidgetValue(Annotation* annot) {
     return res;
 }
 
+// font size from the field's /DA (in PDF points), or 0 for auto-size.
 float GetWidgetFontSize(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
@@ -528,6 +538,7 @@ float GetWidgetFontSize(Annotation* annot) {
     return size;
 }
 
+// max length of a text field (chars), or 0 for unlimited.
 int GetWidgetMaxLen(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
@@ -547,6 +558,7 @@ int GetWidgetMaxLen(Annotation* annot) {
     return maxLen;
 }
 
+// set a text field's value (runs validation); returns true if accepted.
 bool SetWidgetTextValue(Annotation* annot, Str value) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;
@@ -577,6 +589,7 @@ bool SetWidgetTextValue(Annotation* annot, Str value) {
     return ok;
 }
 
+// options of a combobox/listbox field (display strings), appended to `out`.
 void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return;
@@ -601,6 +614,7 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     }
 }
 
+// set a choice field's value to one of its options; returns true if applied.
 bool SetWidgetChoiceValue(Annotation* annot, Str value) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;

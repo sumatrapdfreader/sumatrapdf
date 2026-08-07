@@ -194,6 +194,9 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
 
+// Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
+// Call before DeleteAnnotation frees the wrapper, or when the engine is about
+// to die and raw Annotation* must not be used again.
 void DetachAnnotationFromUI(Annotation* annot) {
     if (!annot) {
         return;
@@ -217,6 +220,8 @@ void DetachAnnotationFromUI(Annotation* annot) {
     }
 }
 
+// Clear the edit-annotations list (and listbox) before the engine is destroyed
+// so ReloadDocument cannot leave dangling Annotation* in the open panel.
 void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
     if (!tab || !tab->editAnnotsWindow) {
         return;

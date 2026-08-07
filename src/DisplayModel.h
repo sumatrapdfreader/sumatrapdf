@@ -104,22 +104,17 @@ struct DisplayModel : DocController {
     // asynchronously calls saveThumbnail (fails silently)
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
-    // page labels (optional)
     bool HasPageLabels() const override;
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
 
-    // common shortcuts
     bool ValidPageNo(int pageNo) const override;
     bool GoToNextPage() override;
     bool GoToPrevPage(bool toBottom = false) override;
     bool GoToFirstPage() override;
     bool GoToLastPage() override;
 
-    // for quick type determination and type-safe casting
     DisplayModel* AsFixed() override;
-
-    // the following is specific to DisplayModel
 
     EngineBase* GetEngine() const;
     Kind GetEngineType() const;
@@ -136,7 +131,6 @@ struct DisplayModel : DocController {
     PageInfo* GetPageInfo(int pageNo) const;
     RectF PageMediaBox(int pageNo) const;
 
-    /* current rotation selected by user */
     int GetRotation() const;
     float GetZoomReal(int pageNo) const;
     void Relayout(float zoomVirtual, int rotation);
@@ -150,7 +144,6 @@ struct DisplayModel : DocController {
     bool CanScrollLeft() const;
     bool CanScrollDown() const;
     bool CanScrollUp() const;
-    // true when the view is at the bottom and GoToNextPage would fail
     bool IsAtDocumentEnd() const;
     Size GetCanvasSize() const;
 
@@ -168,9 +161,6 @@ struct DisplayModel : DocController {
 
     int yOffset();
 
-    /* a "virtual" zoom level. Can be either a real zoom level in percent
-       (i.e. 100.0 is original size) or one of virtual values kZoomFitPage,
-       kZoomFitWidth or kZoomFitContent, whose real value depends on draw area size */
     void RotateBy(int rotation);
 
     Str GetTextInRegion(int pageNo, RectF region) const;
@@ -200,7 +190,6 @@ struct DisplayModel : DocController {
     bool GoToPageHorizontal(bool toRight);
 
     bool ShouldCacheRendering(int pageNo) const;
-    // called when we decide that the display needs to be redrawn
     void RepaintDisplay();
 
     bool InPresentation() const;

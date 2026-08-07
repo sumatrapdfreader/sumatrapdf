@@ -243,6 +243,7 @@ TocTree::~TocTree() {
     FreeTocItemRec(nullptr, root);
 }
 
+// TreeModel
 TreeItem TocTree::Root() {
     return (TreeItem)root;
 }
@@ -341,6 +342,7 @@ int EngineBase::AddRef() {
     return AtomicRefCountAdd(&refCount);
 }
 
+// return true if deleted the object
 bool EngineBase::Release() {
     int rc = AtomicRefCountDec(&refCount);
     if (rc == 0) {
@@ -354,6 +356,7 @@ EngineBase::EngineBase() {
     arena = ArenaNew();
 }
 
+// document errors (mupdf warnings/errors may arrive from render threads)
 void EngineBase::AppendError(Str msg) {
     ScopedMutex scope(&errorsLock);
     errors.Append(msg);
@@ -399,6 +402,9 @@ static void ExtractTextThread(TextExtractionThreadData* data) {
     AtomicIntDec(&gDangerousThreadCount);
 }
 
+// cached per-page text. First call on a page extracts text and caches it,
+// subsequent calls return the cached copy. The returned pointers are owned
+// by EngineBase and remain valid for the lifetime of the engine.
 bool EngineBase::HasTextForPage(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
@@ -468,11 +474,15 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     delete data;
 }
 
+// default always succeeds; EngineMupdf fails when locks are contended
 bool EngineBase::TryExtractPageText(int pageNo, PageText* out) {
     *out = ExtractPageText(pageNo);
     return true;
 }
 
+// like GetElements but returns false (and no elements) if the engine can't
+// acquire locks without blocking. Default always succeeds; EngineMupdf fails
+// when a render thread holds them
 bool EngineBase::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
     *out = GetElements(pageNo);
     return true;
@@ -496,6 +506,8 @@ static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut) {
     return text;
 }
 
+// like GetTextForPage but returns false (and empty text) if the engine
+// can't acquire locks without blocking (e.g. render thread is busy)
 bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
@@ -602,40 +614,56 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     return ReturnCachedPageText(pt, lenOut, coordsOut);
 }
 
+// number of pages the loaded document contains
 int EngineBase::PageCount() const {
     ReportIf(pageCount < 0);
     return pageCount;
 }
 
+// the box inside PageMediabox that actually contains any relevant content
+// (used for auto-cropping in Fit Content mode, can be PageMediabox)
 RectF EngineBase::PageContentBox(int pageNo, RenderTarget /*target*/) {
     return PageMediabox(pageNo);
 }
 
+// the layout type this document's author suggests (if the user doesn't care)
+// whether the content should be displayed as images instead of as document pages
+// (e.g. with a black background and less padding in between and without search UI)
 bool EngineBase::IsImageCollection() const {
     return isImageCollection;
 }
 
+// TODO: needs a more general interface
+// whether it is allowed to print the current document
 bool EngineBase::AllowsPrinting() const {
     return allowsPrinting;
 }
 
+// whether it is allowed to extract text from the current document
+// (except for searching an accessibility reasons)
 bool EngineBase::AllowsCopyingText() const {
     return allowsCopyingText;
 }
 
+// the DPI for a file is needed when converting internal measures to physical ones
 float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
+// creates a PageDestination from a name (or nullptr for invalid names)
+// caller must delete the result
 IPageDestination* EngineBase::GetNamedDest(Str /*name*/) {
     return nullptr;
 }
 
+// checks whether this document has an associated Table of Contents
 bool EngineBase::HasToc() {
     TocTree* tree = GetToc();
     return tree != nullptr;
 }
 
+// returns the root element for the loaded document's Table of Contents
+// caller must delete the result (when no longer needed)
 TocTree* EngineBase::GetToc() {
     return nullptr;
 }
@@ -643,6 +671,9 @@ TocTree* EngineBase::GetToc() {
 #include "DocProperties.h"
 
 // default implementation that just sets wanted keys
+// keys are names of properties the caller wants. If given, we append those
+// proerties in this order and potentially add more
+// if keys are empty, we put them in order we want
 void EngineBase::GetProperties(Props& propsOut) {
     for (int i = 0;; i++) {
         DocProp prop = gAllProps[i];
@@ -659,22 +690,29 @@ void EngineBase::GetProperties(Props& propsOut) {
     }
 }
 
+// checks whether this document has explicit labels for pages (such as
+// roman numerals) instead of the default plain arabic numbering
 bool EngineBase::HasPageLabels() const {
     return hasPageLabels;
 }
 
+// returns a label to be displayed instead of the page number
+// caller must free() the result
 TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
     return fmt("%d", pageNo);
 }
 
+// reverts GetPageLabel by returning the first page number having the given label
 int EngineBase::GetPageByLabel(Str label) const {
     return ParseInt(label);
 }
 
+// whether this document required a password in order to be loaded
 bool EngineBase::IsPasswordProtected() const {
     return isPasswordProtected;
 }
 
+// the name of the file this engine handles
 Str EngineBase::FilePath() const {
     return fileNameBase;
 }
@@ -684,16 +722,21 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement* /*ipel*/) {
     return nullptr;
 }
 
+// protected:
 void EngineBase::SetFilePath(Str s) {
     fileNameBase = s ? str::Dup(arena, s) : Str();
 }
 
+// applies zoom and rotation to a point in user/page space converting
+// it into device/screen space - or in the inverse direction
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
     RectF rc = RectF(pt, SizeF());
     RectF rect = Transform(rc, pageNo, zoom, rotation, inverse);
     return rect.TL();
 }
 
+// returns false if didn't perform action (temporary until we move
+// all code there)
 bool EngineBase::HandleLink(IPageDestination* /*dest*/, ILinkHandler* /*linkHandler*/) {
     // if not implemented in derived classes
     return false;

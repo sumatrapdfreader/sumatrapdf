@@ -60,6 +60,7 @@ Kind kindEngineMupdf = "enginePdf";
 // calculate/validate/format). Set by the app from the DisableJavaScript pref;
 // PdfPreview/PdfFilter don't link GlobalPrefs, so they keep the default.
 static bool gDisableFormJavaScript = false;
+// disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable) {
     gDisableFormJavaScript = disable;
 }
@@ -68,6 +69,8 @@ void EngineMupdfSetDisableJavaScript(bool disable) {
 // Set by the app from the AllowExternalImages pref; off by default (and in the
 // PdfPreview/PdfFilter DLLs, which don't link GlobalPrefs).
 static bool gAllowExternalImages = false;
+// allow PDFs to load images from an external sibling file (#3731), for PDFs
+// loaded after this call; set from gGlobalPrefs->allowExternalImages
 void EngineMupdfSetAllowExternalImages(bool allow) {
     gAllowExternalImages = allow;
 }
@@ -3009,6 +3012,8 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
 extern EBookUI* GetEBookUI();
 
 // stm is either freed or retained via _doc
+// TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
+// bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
 bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
@@ -3245,6 +3250,8 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     return layout;
 }
 
+// reads the four print-related /ViewerPreferences entries from a PDF document.
+// returns false for non-PDF engines or when none of the entries are present.
 bool GetPdfViewerPrintPrefs(EngineBase* engineBase, PdfViewerPrintPrefs& prefs) {
     EngineMupdf* engine = AsEngineMupdf(engineBase);
     if (!engine || !engine->pdfdoc) {
@@ -5931,6 +5938,7 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
 
 // Drop cached dark-mode analyses and processed images; call when dark-mode
 // options (theme, color mode, preserve toggle) change.
+// drop cached dark-mode analyses/images (call when dark-mode options change)
 void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf) {
@@ -5948,6 +5956,7 @@ void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
     }
 }
 
+// PDF documents support the object-level smart dark renderer
 bool EngineSupportsSmartDarkMode(EngineBase* engine) {
     if (!engine || engine->kind != kindEngineMupdf) {
         return false;
@@ -5965,6 +5974,7 @@ bool EngineSupportsSmartDarkMode(EngineBase* engine) {
 // the state CmdToggleEngineeringDrawingEnhance would flip. Deliberately doesn't
 // run detection - that takes the document locks - so before it has run this
 // reads as off, which is what the toggle would flip away from anyway
+// is CAD/engineering-drawing line enhancement in effect for this document?
 bool EngineMupdfCadEnhanceActive(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf || !epdf->pdfdoc) {
@@ -5973,6 +5983,7 @@ bool EngineMupdfCadEnhanceActive(EngineBase* engine) {
     return epdf->CadEnhanceActive();
 }
 
+// toggle CAD/engineering-drawing line enhancement for this document
 void EngineMupdfToggleCadEnhance(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf || !epdf->pdfdoc) {

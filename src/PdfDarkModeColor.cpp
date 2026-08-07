@@ -78,6 +78,7 @@ int PdfDarkModeTakeShadeForwardCount() {
     return n;
 }
 
+// PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode() {
     return gPreservePdfImagesInDarkMode;
 }

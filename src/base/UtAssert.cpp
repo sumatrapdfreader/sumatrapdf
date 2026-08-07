@@ -48,6 +48,9 @@ static void PrintStdout(Str s) {
     printf("%.*s", s.len, s.s);
 }
 
+/* This is assert for unit tests that can be used in non-interactive usage.
+Instead of showing a UI to the user, like regular assert(), it simply
+remembers number of failed asserts. */
 void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     ++g_nTotal;
     if (ok) {

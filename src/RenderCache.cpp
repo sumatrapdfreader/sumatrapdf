@@ -617,6 +617,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
 // finishes the next one is requested, and so on - rendering predicted pages one
 // at a time instead of flooding the queue. The chain stops once `originPageNo`
 // (the visible page that started it) is no longer visible.
+// start (or continue) a chained predictive render anchored to originPageNo
 void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages) {
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
@@ -1109,6 +1110,9 @@ static int cmpTilePosition(const TilePosition* a, const TilePosition* b) {
     return a->col - b->col;
 }
 
+// returns how much time in ms has past since the most recent rendering
+// request for the visible part of the page if nothing at all could be
+// painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
 int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue) {
     ReportIf(!pi->isShown || 0.0 == pi->visibleRatio);
 
@@ -1409,6 +1413,7 @@ static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, u64 now) 
     s.Append("\r\n");
 }
 
+// record a just-finished request in finishedHistory (call holding requestAccess)
 void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
     FinishedRequestInfo& fi = finishedHistory[finishedHistoryNext];
     fi.pageNo = r->pageNo;
@@ -1434,6 +1439,8 @@ void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
     }
 }
 
+// serialize the queue (in-progress + queued requests) as plain text, one
+// line per request, for the render-info debug window
 void RenderCache::SerializeQueueState(str::Builder& s) {
     ScopedRecursiveMutex scope(&requestAccess);
     u64 now = GetTickCount64();
@@ -1478,6 +1485,9 @@ static void SetRenderInfoTextOnUI(Str* s) {
     delete s;
 }
 
+// if the render-info debug window is shown, refresh it with the current
+// queue state. Cheap no-op when the window is hidden. Safe to call from
+// any thread (and while holding requestAccess).
 void RenderCache::UpdateRenderInfo() {
     if (!IsRenderInfoWindowVisible()) {
         return;
@@ -1502,6 +1512,7 @@ static void CreateRenderInfoWindow() {
     gRenderInfoWnd = wnd;
 }
 
+// render queue debug window (CmdDebugToggleRenderInfo)
 void ToggleRenderInfoWindow() {
     if (gRenderInfoWnd) {
         CloseDebugTextWnd(&gRenderInfoWnd);
@@ -1537,6 +1548,7 @@ static void SetDmFileName(DisplayModel* dm, char* buf, int bufLen) {
     }
 }
 
+// record a cache add/remove in cacheHistory (call holding cacheAccess)
 void RenderCache::RecordCacheChange(bool isAdd, BitmapCacheEntry* entry) {
     ReportIf(!entry);
     if (!entry) {
@@ -1569,6 +1581,8 @@ static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, u64 now) {
     s.Append("\r\n");
 }
 
+// serialize cache stats and recent changes as plain text for the cache-info
+// debug window
 void RenderCache::SerializeCacheState(str::Builder& s) {
     ScopedRecursiveMutex scope(&cacheAccess);
     u64 now = GetTickCount64();
@@ -1603,6 +1617,8 @@ static void SetCacheInfoTextOnUI(Str* s) {
     delete s;
 }
 
+// if the cache-info debug window is shown, refresh it. Cheap no-op when
+// hidden. Safe to call from any thread (and while holding cacheAccess).
 void RenderCache::UpdateCacheInfo() {
     if (!IsCacheInfoWindowVisible()) {
         return;
@@ -1625,6 +1641,7 @@ static void CreateCacheInfoWindow() {
     gCacheInfoWnd = wnd;
 }
 
+// bitmap cache debug window (CmdDebugToggleCacheInfo)
 void ToggleCacheInfoWindow() {
     if (gCacheInfoWnd) {
         CloseDebugTextWnd(&gCacheInfoWnd);

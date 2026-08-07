@@ -426,6 +426,7 @@ TempStr HttpNormalizeHeadersTemp(Str headers) {
 // shares Internet Explorer's cookie jar, so a request would carry whatever
 // cookies happen to be lying around to a third-party endpoint. For a call meant
 // to be authenticated only by an explicit api key that's a privacy leak.
+// blocking; extraHeaders is "Name: value" per line (\n or \r\n separated)
 bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut) {
     bool ok = false;
     DWORD sc = 0;

@@ -125,6 +125,7 @@ void StartDirTraverseAsync(StrQueue* queue, Str dir, bool recurse) {
 }
 
 // Find entry by name in a DirEntries
+// Directory utilities (paths are UTF-8)
 DirEntry* FindEntryByName(DirEntries* dv, Str name) {
     if (!dv) return nullptr;
     for (int i = 0; i < dv->len; i++) {
@@ -312,6 +313,7 @@ static void AppendNode(DirEntriesNode** head, DirEntriesNode** last, DirEntriesN
 
 // Request a directory scan - adds to FRONT of list (priority for user requests)
 // Returns DirEntries* (either existing from queue or newly allocated)
+// nonRecursive scans just this directory, without walking into it
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive) {
     ctx->cs.Lock();
     DirScanWorker* w = FindOrCreateWorker(ctx, dir);
@@ -402,6 +404,9 @@ static void RepartitionWorkerQueues(DirScanWorker* w, Str dir) {
     }
 }
 
+// Scan what's under dir before the rest of the walk, so the sizes filling in
+// are the ones being looked at. Re-orders what's already queued. An empty dir
+// goes back to plain breadth-first order.
 void SetDirScanPriorityDir(DirScanCtx* ctx, Str dir) {
     if (!ctx) {
         return;
@@ -430,6 +435,7 @@ void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv) {
     RequestDirScan(ctx, dv->fullDir, true);
 }
 
+// true when no worker has anything left to do
 bool DirScanIsIdle(DirScanCtx* ctx) {
     if (!ctx) return true;
     bool idle = true;
@@ -443,6 +449,7 @@ bool DirScanIsIdle(DirScanCtx* ctx) {
     return idle;
 }
 
+// Fills up to maxOut entries, one per worker, and returns how many were filled.
 int GetDirScanProgress(DirScanCtx* ctx, DirScanProgress* out, int maxOut) {
     if (!ctx) return 0;
     int n = 0;

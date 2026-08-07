@@ -14,5 +14,4 @@ enum class TranslateEngine {
 
 void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engine);
 
-// backend: 0=Claude, 1=Grok, 2=Codex
 TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str text, int* exitCode);

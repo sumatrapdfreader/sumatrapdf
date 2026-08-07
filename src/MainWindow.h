@@ -545,8 +545,6 @@ struct MainWindow {
     void MoveDocBy(int dx, int dy) const;
 
     void ShowToolTip(Str text, Rect& rc, bool multiline = false) const;
-    // Track-mode tip at a fixed screen position (keyboard home-page selection).
-    // maxRightScreen > 0 clamps the bubble so it does not extend past that x.
     void ShowToolTipAt(Str text, const Rect& rc, Point screenPos, bool multiline = false, int maxRightScreen = 0) const;
     void DeleteToolTip() const;
 
@@ -570,6 +568,4 @@ HWND GetHwndForNotification();
 void RelayoutCaption(MainWindow* win);
 void OpenSystemMenu(MainWindow* win);
 
-// strips mupdf's "nameddest=" prefix from a remote link's destination name
-// so it can be passed to GetNamedDest (issue #5642)
 Str CleanRemoteDestName(Str destName);

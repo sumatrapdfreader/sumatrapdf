@@ -17,7 +17,6 @@ void TocFilterChanged(MainWindow*);
 // Flip to false to restore single-highlight-only behavior.
 extern bool gShowAllMatchingTOC;
 
-// navigate to a TocItem (used by the command palette's TOC mode)
 void GoToTocItem(MainWindow*, TocItem*);
 
 // shared with Favorites.cpp

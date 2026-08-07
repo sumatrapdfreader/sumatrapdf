@@ -1457,6 +1457,8 @@ void WebviewWnd::OnJsNotify(Str msg) {
     events.jsNotify(events.ctx, visitor.method, params);
 }
 
+// status 0 resolves the JS promise, non-0 rejects it. resultJson must be
+// valid JSON (or empty for undefined)
 void WebviewWnd::Resolve(Str id, int status, Str resultJson) {
     if (len(id) == 0) {
         return;
@@ -1490,6 +1492,8 @@ void WebviewWnd::RebuildBindScript() {
     bindScriptToken = AddInitScript(ToStr(js));
 }
 
+// makes window.<name>(...) available to page JS, returning a promise that
+// WebViewEvents::jsCall resolves via Resolve()
 void WebviewWnd::Bind(Str name) {
     if (len(name) == 0) {
         return;
@@ -1586,6 +1590,7 @@ void WebviewWnd::Focus() {
     }
 }
 
+// open the WebView2 (Chromium) find-on-page bar, like a browser's Ctrl+F
 void WebviewWnd::ShowFindUI() {
     if (!webview || !gSharedEnvironment) {
         return;
@@ -2039,8 +2044,12 @@ int WebviewWnd::FindInitScript(int) const {
 void WebviewWnd::RemoveInitScript(int) {}
 void WebviewWnd::RemoveAllInitScripts() {}
 void WebviewWnd::OnInitScriptAdded(int, const WCHAR*) {}
+// makes window.<name>(...) available to page JS, returning a promise that
+// WebViewEvents::jsCall resolves via Resolve()
 void WebviewWnd::Bind(Str) {}
 void WebviewWnd::Unbind(Str) {}
+// status 0 resolves the JS promise, non-0 rejects it. resultJson must be
+// valid JSON (or empty for undefined)
 void WebviewWnd::Resolve(Str, int, Str) {}
 void WebviewWnd::OnJsCall(Str) {}
 void WebviewWnd::OnJsNotify(Str) {}
@@ -2062,6 +2071,7 @@ bool WebviewWnd::CanGoForward() const {
     return false;
 }
 void WebviewWnd::Focus() {}
+// open the WebView2 (Chromium) find-on-page bar, like a browser's Ctrl+F
 void WebviewWnd::ShowFindUI() {}
 bool WebviewWnd::Embed(WebViewMsgCb&) {
     return false;

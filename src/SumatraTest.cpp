@@ -890,6 +890,8 @@ static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
 // Navigate to the n-th (1-based) outline destination that has a dest, then
 // report CurrentPageNo vs the destination page. Used by tests/issue-2799.ts.
 // Expects a document already open in gWindows[0] (withControlledSumatra args).
+// Navigate to the n-th (1-based) outline destination in the open document and
+// report landed page vs destination page (issue #2799).
 TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {

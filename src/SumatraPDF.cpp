@@ -529,6 +529,8 @@ void SelectTabInWindow(WindowTab* tab) {
 }
 
 // Find the first window showing a given PDF file
+// note: background tabs are only searched if focusTab is true
+// when limitWin is set, only that window's tabs are considered
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) {
     WindowTab* tab = nullptr;
     if (!file) {
@@ -583,6 +585,8 @@ static int IndexOfLoadingFile(Str path) {
     return -1;
 }
 
+// True if a tab already shows this file, or a load for it is already in progress
+// (tab is only created when load finishes, so mid-password / async loads need this).
 bool IsDocumentOpenOrLoading(Str file) {
     if (!file) {
         return false;
@@ -593,6 +597,7 @@ bool IsDocumentOpenOrLoading(Str file) {
     return IndexOfLoadingFile(file) >= 0;
 }
 
+// Mark/unmark a path as currently loading. Call from the UI thread only.
 void BeginDocumentLoad(Str file) {
     if (!file) {
         return;
@@ -3724,6 +3729,7 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
 // open a file doesn't block next/prev file in
 static StrVec gFilesFailedToOpen;
 
+// reads page count and creates a child element for each page
 MainWindow* LoadDocument(LoadArgs* args) {
     if (gCrashOnOpen) {
         log("LoadDocument: about to call CrashMe()\n");
@@ -4559,6 +4565,7 @@ static SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
 
 // if returns true, can proceed with closing
 // if returns false, should cancel closing
+// false if the user canceled (don't proceed with closing/replacing the doc)
 bool MaybeSaveAnnotations(WindowTab* tab) {
     if (!tab) {
         return true;
@@ -5179,6 +5186,7 @@ static void ShowGeneratedMarkdownHtml(MainWindow* win) {
     }
 }
 
+// tab showing path in any main window, or nullptr
 WindowTab* FindTabByFilePath(Str path) {
     if (len(path) == 0) {
         return nullptr;
@@ -5193,6 +5201,7 @@ WindowTab* FindTabByFilePath(Str path) {
     return nullptr;
 }
 
+// move to the recycle bin and forget it in the file history / thumbnail cache
 void DeleteFileFromDiskAndHistory(Str path) {
     file::DeleteFileToTrash(path);
     DeleteThumbnailForFile(path);
@@ -5802,6 +5811,8 @@ void DismissNextFileScrollHint(MainWindow* win) {
 
 // scroll-down at document end: show open-next-file tip; scroll-up: dismiss.
 // Called after vertical scroll / page-change intents.
+// vertical scroll intent for discoverability of "open next file in folder":
+// scroll-down at document end may show a next-file hint; scroll-up dismisses it
 void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
     if (!win || !IsMainWindowValid(win) || win->isBeingClosed) {
         return;
@@ -6460,6 +6471,11 @@ static void FrameUpdateUi(MainWindow* win) {
     }
 }
 
+// Request an async, coalesced UI update: records what needs to happen and
+// posts WM_UPDATE_UI once; any further requests before it's handled are
+// folded into the same pass. Prefer this over direct relayout/RedrawWindow
+// calls to avoid excessive repaints. sidebarDx >= 0 relayouts with a new
+// sidebar width (splitter dragging).
 void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
     if (!win || !win->hwndFrame) {
         return;
@@ -7770,6 +7786,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
 // what CmdToggleCursorPosition would switch to. The tip cycles pt -> mm -> in
 // and then closes, so the command palette can't say true / false; naming the
 // next unit here keeps it in step with ToggleCursorPositionInDoc() below
+// next state of the cursor-position tip, for the command palette
 Str NextCursorPositionUnitName(MainWindow* win) {
     if (!win || !win->AsFixed()) {
         return {};
@@ -12221,6 +12238,7 @@ static void ReadAloudSelectionInTab(WindowTab* tab) {
     ReadAloudStartFromSelection(tab, _TRA("No text available to read aloud"));
 }
 
+// true if read aloud was paused and can be resumed in this tab
 bool CanContinueReadAloud(WindowTab* tab) {
     if (!tab || len(tab->readAloudText) == 0) {
         return false;

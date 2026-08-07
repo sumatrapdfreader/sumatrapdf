@@ -1015,6 +1015,7 @@ static int shortcutDirsPre34[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_D
 static int shortcutDirs34To36[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP,
                                    CSIDL_STARTMENU};
 
+// Installer.cpp
 void RemoveAppShortcuts() {
     for (int csidl : shortcutDirs) {
         RemoveShortcutFile(csidl);

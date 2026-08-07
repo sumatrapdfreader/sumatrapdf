@@ -114,6 +114,7 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
     return cachePath;
 }
 
+/* EngineCreate.cpp */
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
     if (kind == FileType::Unknown) {
         return false;

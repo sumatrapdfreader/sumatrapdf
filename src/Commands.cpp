@@ -901,6 +901,14 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, Str s) {
 
 // cmdName is "CmdOpenFile" etc.
 // returns -1 if not found
+// Shared "tip" text: a small markup understood by the home page tips and by
+// notifications. Supports:
+//   [text](Cmd...)      a link that runs a command on click
+//   [text](Help/Page)   a link that opens a docs page in the browser
+//   [text](https://..)  a link that opens a url in the browser
+//   (Key/Cmd...)        expanded inline to the command's keyboard shortcut
+//   **text**            bold text
+// note: include Base.h before this
 int GetCommandIdByName(Str cmdName) {
     int cmdId = GetCommandIdByNameOrDesc(gCommandNames, cmdName);
     if (cmdId >= 0) {

@@ -23,8 +23,6 @@ struct ByteReader {
     int off = 0;
     bool ok = true;
 
-    // Unpacks a structure from the data according to the given format
-    // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
     bool Unpack(void* strct, int size, Str format, int off, bool isBE) const;
 
     explicit ByteReader(Str data);

@@ -18,9 +18,7 @@ struct StrNode {
     StrNode* next = nullptr;
     Str s;
 };
-// One allocation: sizeofi(StrNode) + s.len + 1. a==null => malloc; else arena.
 StrNode* AllocStrNode(Arena* a, Str s);
-// Frees the list with free() when a==null (malloc path). Arena path is a no-op.
 void FreeStrNode(Arena* a, StrNode* head);
 
 namespace str {
@@ -238,7 +236,6 @@ struct Builder {
     // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
     // Set .a after construction if heap allocs should use an arena.
     explicit Builder(Str externalBuf = {});
-    // capHint: preferred capacity after first grow
     explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
@@ -293,7 +290,6 @@ struct Builder {
     // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
     // Set .a after construction if heap allocs should use an arena.
     explicit Builder(WStr externalBuf = {});
-    // capHint: preferred capacity after first grow
     explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
@@ -338,26 +334,16 @@ int CompareProgramVersion(Str ver1, Str ver2);
 bool IsTextRtl(WStr s);
 bool IsTextRtl(Str s);
 
-// Temporary, guaranteed zero-terminated copy of s (lives in the temp arena).
-// Use when passing a Str/WStr to a C or win32 API that requires a
-// NUL-terminated string; the name documents that intent at the call site.
-// Returns non-const so it implicitly converts to both char* and const char*
-// (some C/win32 APIs take non-const), avoiding casts at the call site.
 char* CStrTemp(Str s);
 WCHAR* CWStrTemp(WStr s);
 
 WCHAR* CWStrTemp(WStr s, int& cch);
 
-// str::Builder/wstr::Builder always keep their data NUL-terminated.
-// ToStr() returns a {ptr,len} view (may contain embedded NULs).
-// ToCStr() returns the NUL-terminated buffer, for passing to C/win32 code we
-// don't control that expects a zero-terminated char*/WCHAR*.
 Str ToStr(const str::Builder&);
 char* ToCStr(const str::Builder&);
 WStr ToWStr(const wstr::Builder&);
 WCHAR* ToWCStr(const wstr::Builder&);
 
-// owning temp-arena copy of the builder's content (unlike ToStr()'s view)
 TempStr ToStrTemp(const str::Builder&);
 
 int len(const str::Builder&);
@@ -367,7 +353,6 @@ wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);
 int WStrCmpNoCase(WStr a, WStr b);
 
-// Str utilities
 Str FormatFileSize(Arena* arena, u64 size);
 void FormatFileSizeToWstrBuf(u64 size, WStr buf);
 int FormatSizeHumanIntoBuf(u64 size, Str buf);

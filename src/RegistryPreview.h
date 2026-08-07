@@ -23,7 +23,5 @@ bool IsPreviewInstalled();
 
 bool IsPdfPreviewLoggingEnabled();
 void SetPdfPreviewLoggingEnabled(bool enable);
-// per-build data dir, same one SumatraPDF.exe uses (...\SumatraPDF-data\<sha1>)
 TempStr GetPdfPreviewLogDirTemp();
-// if logging is enabled, route this module's log to a fresh unique file
 void StartPdfPreviewLoggingIfEnabled();

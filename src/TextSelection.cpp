@@ -271,6 +271,8 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     return coords[glyphIx].Contains(pt);
 }
 
+// index of the glyph closest to (x, y) on pageNo, without mutating the
+// selection (unlike StartAt, which stores it in startGlyph)
 int TextSelection::FindClosestGlyphAt(int pageNo, double x, double y) {
     return FindClosestGlyph(this, pageNo, x, y);
 }
@@ -507,6 +509,7 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
+// select the whole line of text at (x, y) (triple-click; issue #694)
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     int i = FindClosestGlyph(this, pageNo, x, y);
     if (i < 0) {
@@ -553,6 +556,8 @@ static bool PosBefore(int pageA, int glyphA, int pageB, int glyphB) {
     return glyphA < glyphB;
 }
 
+// extend the selection so it spans whole words from the anchor word (set by
+// the last SelectWordAt) to the word at (x, y)
 void TextSelection::SelectWordsUpTo(int pageNo, double x, double y) {
     // no anchor word yet (shouldn't happen) - fall back to glyph selection
     if (wordStartGlyph == -1) {
@@ -803,6 +808,9 @@ bool TextPosMoveBy(EngineBase* engine, int& page, int& glyph, TextSelectUnit uni
     return MoveFreeEndByLine(engine, page, glyph, d);
 }
 
+// Move the free end (endPage/endGlyph) by delta units in reading order.
+// delta > 0 toward document end, delta < 0 toward document start.
+// Returns true if the free end moved. Platform code maps keys to unit+delta.
 bool TextSelection::ExtendBy(TextSelectUnit unit, int delta) {
     if (!engine || startPage < 1 || endPage < 1 || delta == 0) {
         return false;

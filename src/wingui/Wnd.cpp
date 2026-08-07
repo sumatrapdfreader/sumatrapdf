@@ -105,6 +105,7 @@ Wnd::~Wnd() {
     DeleteBrushSafe(&bgBrush);
 }
 
+// ILayout
 Kind Wnd::GetKind() {
     return kind;
 }
@@ -165,6 +166,7 @@ void Wnd::Destroy() {
     HwndDestroyWindowSafe(&hwnd);
 }
 
+// over-ride those to hook into message processing
 LRESULT Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
@@ -1152,6 +1154,7 @@ void PositionCloseTo(Wnd* w, HWND hwnd) {
 // we need to manually maintain this window
 static HWND g_currentModelessDialog = nullptr;
 
+// TODO: those are hacks
 HWND GetCurrentModelessDialog() {
     return g_currentModelessDialog;
 }

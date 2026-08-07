@@ -137,7 +137,6 @@ struct Flags {
 #if OS_WIN
 void ParseFlags(Arena* a, WStr cmdLine, Flags&, Str toolNames = {});
 #endif
-// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool consoleOnly = false);
 
 bool IsValidPageRange(Str ranges);

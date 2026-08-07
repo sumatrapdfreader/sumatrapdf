@@ -147,6 +147,7 @@ int utf8RuneLen(const u8* s) {
     return n;
 }
 
+// note: include Base.h instead of including directly
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
     int n = utf8RuneLen(source);
     if (source + n > sourceEnd) {

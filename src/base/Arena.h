@@ -142,8 +142,6 @@ inline T* push_array(Arena* arena, u64 count) {
 void* Alloc(struct Arena* arena, int size);
 void Free(struct Arena* arena, void* mem);
 
-// size_t overloads that match the legacy Allocator::* static helper API
-// and fall back to malloc/free when arena is nullptr.
 void* Alloc(struct Arena* arena, size_t size);
 void* AllocZero(struct Arena* arena, size_t size);
 void* Realloc(struct Arena* arena, void* mem, size_t newSize, size_t copySize);
@@ -162,8 +160,6 @@ inline T* AllocArrayTemp(int n = 1) {
 
 void* AllocTemp(int size, u64 align = 8);
 
-// Grow/shrink vec-like storage to newCap elements (+1 trailing zero pad).
-// Updates *els and *cap; keeps min(len, newCap) elements.
 bool VecRealloc(struct Arena* a, void** els, int len, int* cap, int newCap, int elSize);
 
 // Allocate and construct object using placement new (supports constructor args)

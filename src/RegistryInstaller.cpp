@@ -94,6 +94,7 @@ static DWORD GetDirSize(Str dir, bool recur) {
     return (DWORD)totalSize;
 }
 
+// RegistryInstaller.cpp
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
          (int)allUsers, installDir);

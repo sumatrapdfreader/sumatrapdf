@@ -212,9 +212,6 @@ struct RenderCache {
     void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
     void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
-    // returns how much time in ms has past since the most recent rendering
-    // request for the visible part of the page if nothing at all could be
-    // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue);
 
     bool ClearCurrentRequest(int threadIdx);
@@ -229,7 +226,6 @@ struct RenderCache {
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true,
                           const PredictiveChain* chain = nullptr);
-    // start (or continue) a chained predictive render anchored to originPageNo
     void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                 const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain = nullptr);
@@ -247,30 +243,17 @@ struct RenderCache {
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
     void LogCacheSize();
 
-    // record a just-finished request in finishedHistory (call holding requestAccess)
     void RecordFinishedRequest(PageRenderRequest* req);
-    // serialize the queue (in-progress + queued requests) as plain text, one
-    // line per request, for the render-info debug window
     void SerializeQueueState(str::Builder& s);
-    // if the render-info debug window is shown, refresh it with the current
-    // queue state. Cheap no-op when the window is hidden. Safe to call from
-    // any thread (and while holding requestAccess).
     void UpdateRenderInfo();
 
-    // record a cache add/remove in cacheHistory (call holding cacheAccess)
     void RecordCacheChange(bool isAdd, BitmapCacheEntry* entry);
-    // serialize cache stats and recent changes as plain text for the cache-info
-    // debug window
     void SerializeCacheState(str::Builder& s);
-    // if the cache-info debug window is shown, refresh it. Cheap no-op when
-    // hidden. Safe to call from any thread (and while holding cacheAccess).
     void UpdateCacheInfo();
 };
 
-// render queue debug window (CmdDebugToggleRenderInfo)
 void ToggleRenderInfoWindow();
 bool IsRenderInfoWindowVisible();
 
-// bitmap cache debug window (CmdDebugToggleCacheInfo)
 void ToggleCacheInfoWindow();
 bool IsCacheInfoWindowVisible();

@@ -179,6 +179,7 @@ static bool IsLtrCodepoint(wchar_t c) {
 }
 #endif
 
+// One allocation: sizeofi(StrNode) + s.len + 1. a==null => malloc; else arena.
 StrNode* AllocStrNode(Arena* a, Str s) {
     int n = s.len;
     n = std::max(n, 0);
@@ -198,6 +199,7 @@ StrNode* AllocStrNode(Arena* a, Str s) {
 }
 
 // Malloc path (a==null): free each node. Arena path: no per-node free.
+// Frees the list with free() when a==null (malloc path). Arena path is a no-op.
 void FreeStrNode(Arena* a, StrNode* head) {
     if (a) {
         return;
@@ -1621,11 +1623,15 @@ void str::Builder::Reset(Str s) {
 }
 
 // arena is not owned by Builder; set .a after construction if needed
+// capHint: preferred capacity after first grow
+// capHint: preferred capacity after first grow
 str::Builder::Builder(Str externalBuf) {
     this->buf = externalBuf;
     Reset();
 }
 
+// capHint: preferred capacity after first grow
+// capHint: preferred capacity after first grow
 str::Builder::Builder(int capHint) {
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
@@ -1837,11 +1843,15 @@ void wstr::Builder::Reset(WStr s) {
 }
 
 // arena is not owned by Builder; set .a after construction if needed
+// capHint: preferred capacity after first grow
+// capHint: preferred capacity after first grow
 wstr::Builder::Builder(WStr externalBuf) {
     this->buf = externalBuf;
     Reset();
 }
 
+// capHint: preferred capacity after first grow
+// capHint: preferred capacity after first grow
 wstr::Builder::Builder(int capHint) {
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
@@ -2614,6 +2624,11 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
 
 // Temporary, guaranteed zero-terminated copy, for passing to C / win32 APIs
 // that require a NUL-terminated string.
+// Temporary, guaranteed zero-terminated copy of s (lives in the temp arena).
+// Use when passing a Str/WStr to a C or win32 API that requires a
+// NUL-terminated string; the name documents that intent at the call site.
+// Returns non-const so it implicitly converts to both char* and const char*
+// (some C/win32 APIs take non-const), avoiding casts at the call site.
 char* CStrTemp(Str s) {
     return str::DupTemp(s).s;
 }
@@ -2629,11 +2644,16 @@ WCHAR* CWStrTemp(WStr s, int& cch) {
 }
 
 // handles embedded 0 in the string
+// str::Builder/wstr::Builder always keep their data NUL-terminated.
+// ToStr() returns a {ptr,len} view (may contain embedded NULs).
+// ToCStr() returns the NUL-terminated buffer, for passing to C/win32 code we
+// don't control that expects a zero-terminated char*/WCHAR*.
 Str ToStr(const str::Builder& b) {
     return Str(b.els, (int)b.len);
 }
 
 // NO_INLINE: this is called in many places; keeping it out of line trims code size
+// owning temp-arena copy of the builder's content (unlike ToStr()'s view)
 NO_INLINE TempStr ToStrTemp(const str::Builder& b) {
     return str::DupTemp(ToStr(b));
 }
@@ -2696,6 +2716,7 @@ int WStrCmpNoCase(WStr a, WStr b) {
 }
 
 // Format file size with comma separators, returns Str
+// Str utilities
 Str FormatFileSize(Arena* arena, u64 size) {
     char buf[32];
 

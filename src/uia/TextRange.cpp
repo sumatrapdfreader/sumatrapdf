@@ -15,6 +15,10 @@
 #include "uia/PageProvider.h"
 #include "TextSelection.h"
 
+// creates a copy of give range
+// creates range containing the given TextSelection range
+// creates range containing the given page
+// creates empty range
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document)
     : refCount(1), document(document) {
     document->AddRef();
@@ -22,6 +26,10 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
     SetToNullRange();
 }
 
+// creates a copy of give range
+// creates range containing the given TextSelection range
+// creates range containing the given page
+// creates empty range
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, int pageNum)
     : refCount(1), document(document) {
     document->AddRef();
@@ -32,6 +40,10 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
     endGlyph = GetPageGlyphCount(pageNum);
 }
 
+// creates a copy of give range
+// creates range containing the given TextSelection range
+// creates range containing the given page
+// creates empty range
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document,
                                                            TextSelection* range)
     : refCount(1), document(document) {
@@ -44,6 +56,10 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
     }
 }
 
+// creates a copy of give range
+// creates range containing the given TextSelection range
+// creates range containing the given page
+// creates empty range
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange& b)
     : refCount(1), document(b.document) {
     document->AddRef();
@@ -267,6 +283,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release() {
     return res;
 }
 
+// ITextRangeProvider
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Clone(ITextRangeProvider** clonedRange) {
     if (clonedRange == nullptr) {
         return E_POINTER;

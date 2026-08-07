@@ -24,7 +24,6 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
     SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
     ~SumatraUIAutomationDocumentProvider();
 
-    // reads page count and creates a child element for each page
     void LoadDocument(DisplayModel* dm);
     void FreeDocument();
     bool IsDocumentLoaded() const;

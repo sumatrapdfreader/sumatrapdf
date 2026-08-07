@@ -115,6 +115,8 @@ class DialogData {
 // WM_SIZE messages.
 //
 // Returns non-zero for success and zero if it fails
+// SumatraPDF: removed the fourth argument and fixed the comment:
+//	Set a window as sizeable, passing the sizing data for each control.
 extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem* psd, BOOL bShowSizingGrip) {
     DialogData* pdd = (DialogData*)GetProp(hwnd, DIALOG_DATA_PROPERTY);
     // Overwrite previous settings (if there are any)

@@ -208,6 +208,8 @@ void RelayoutNotifications(HWND hwndCanvas) {
     }
 }
 
+// show notifications tied to activeTab (and untied ones), hide those tied to
+// other tabs; call when the active tab changes
 void ShowNotificationsForActiveTab(HWND hwndCanvas, WindowTab* activeTab) {
     NotificationWnd* wnds[kMaxNotifs];
     int nWnds = GetForHwnd(hwndCanvas, wnds);
@@ -227,6 +229,7 @@ void ShowNotificationsForActiveTab(HWND hwndCanvas, WindowTab* activeTab) {
 
 static void NotifsRemoveNotification(NotificationWnd* wnd);
 
+// remove notifications tied to a tab (call when the tab is closed)
 void RemoveNotificationsForTab(WindowTab* tab) {
     if (!tab) {
         return;

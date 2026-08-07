@@ -15,11 +15,8 @@ void SetToolbarButtonCheckedState(MainWindow*, int cmdId, bool isChecked);
 bool ShouldShowToolbar(MainWindow*);
 bool ShouldOverlayToolbar(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
-// position/show the floating overlay toolbar; called on relayout and mouse move
 void PositionOverlayToolbar(MainWindow*);
-// re-evaluate overlay toolbar visibility based on the cursor's screen position
 void UpdateOverlayToolbarForMouse(MainWindow*);
-// handle the delayed-hide timer firing (kHideOverlayToolbarTimerId)
 void OverlayToolbarHideTimerFired(MainWindow*);
 
 // delay before the overlay toolbar hides after the mouse moves away

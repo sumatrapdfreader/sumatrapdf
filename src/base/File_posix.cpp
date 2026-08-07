@@ -88,6 +88,11 @@ bool IsDirectory(Str path) {
 }
 
 // No cache on non-Windows — same as an uncached attribute query.
+// Like GetFileAttributesW: returns attributes or INVALID_FILE_ATTRIBUTES.
+// On Windows, network-drive path results are cached for 1 hour (shared with
+// GetCachedAttributesEx). Offline non-fixed drives (mapped/UNC/removable) are
+// also remembered for ~4 minutes so later queries fail fast.
+// Non-Windows: no cache (same as an uncached attribute query).
 DWORD GetCachedAttributes(Str path) {
     struct stat st;
     if (!StatPath(path, st)) {
@@ -181,6 +186,7 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
     return Str(pathZ);
 }
 
+// Path of this process image (exe or DLL that contains this code).
 TempStr GetSelfExePathTemp() {
 #if OS_DARWIN
     char buf[PATH_MAX];
@@ -204,6 +210,7 @@ TempStr GetSelfExePathTemp() {
 #endif
 }
 
+// Directory containing GetSelfExePathTemp().
 TempStr GetSelfExeDirTemp() {
     TempStr path = GetSelfExePathTemp();
     if (!path) {

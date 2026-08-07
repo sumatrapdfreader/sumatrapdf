@@ -2146,6 +2146,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     RestoreImageEditFocus(ew);
 }
 
+// Headless test for issue #5734: arrow keys must resize even when focus is on the dest path edit.
 TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {

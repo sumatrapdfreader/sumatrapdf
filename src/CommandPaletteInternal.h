@@ -69,7 +69,6 @@ struct CommandPaletteWnd : Wnd {
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
-    // remove selected history / tab / favorite; keeps selection index stable
     bool RemoveSelectedItem();
     void SwitchToPrefix(Str prefix);
     void SwitchToCommands();

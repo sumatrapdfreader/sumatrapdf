@@ -128,7 +128,6 @@ struct DarkModeReplayState {
     int nextImageOccurrence = 0;
 };
 
-// PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode();
 void SetPreservePdfImagesInDarkMode(bool preserve);
 int GetPreservePdfImagesMinSize();
@@ -159,16 +158,12 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
 
 bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds);
 
-// OKLab perceptual remap for SmartDark text/vector colors (Phase 2).
 void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& palette, float* outRgb);
 
-// Perceptual distance in OKLab (Phase 4 background matching).
 float PdfDarkModeOklabDistance(float r1, float g1, float b1, float r2, float g2, float b2);
 
-// Phase 4: edge-connected light background removal for LightBackgroundArtwork.
 bool PdfDarkModeShouldBlendLightBackground(const DarkImageAnalysis& analysis);
 
-// Phase 5: full-page scan remapping (Smart path only).
 void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysis& analysis,
                                const DarkModePalette& palette, float* outR, float* outG, float* outB);
 
@@ -178,14 +173,11 @@ bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, floa
 
 RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH);
 
-// Cap bbox when embedded image dimensions are unknown (common with content-stream tiles).
 RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight);
 
-// Gate for Legacy skip-rect preserve: combines bbox size, pixel stats, and artwork heuristics.
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH);
 
-// Stricter pixel gate used by PdfDarkModeShouldPreserveEmbeddedImageRect.
 bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage = 0.f, int devW = 0,
                                             int devH = 0);
 

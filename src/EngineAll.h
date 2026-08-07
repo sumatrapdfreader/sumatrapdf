@@ -9,13 +9,11 @@ struct FileArgs;
 struct AnnotCreateArgs;
 struct PropValue;
 
-/* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(FileType kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromData(Str data);
 extern bool gMemoryMapLargeFiles;
 
-/* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(Str fileName);
 EngineBase* CreateEngineEpubFromData(Str data);
 EngineBase* CreateEngineFb2FromFile(Str fileName);
@@ -50,8 +48,6 @@ EngineBase* CreateEngineCbxFromData(Str data);
 
 bool IsEngineImages(EngineBase*);
 void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);
-// Image base name and uncompressed size for page-info tip; does not decode.
-// Returns false when engine is not an image collection or pageNo is invalid.
 bool EngineImagesGetPageFileInfo(EngineBase*, int pageNo, TempStr* nameOut, i64* sizeOut);
 
 /* EngineMupdf.cpp */
@@ -73,31 +69,20 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
-// disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable);
-// allow PDFs to load images from an external sibling file (#3731), for PDFs
-// loaded after this call; set from gGlobalPrefs->allowExternalImages
 void EngineMupdfSetAllowExternalImages(bool allow);
-// toggle CAD/engineering-drawing line enhancement for this document
 void EngineMupdfToggleCadEnhance(EngineBase* engine);
-// is CAD/engineering-drawing line enhancement in effect for this document?
 bool EngineMupdfCadEnhanceActive(EngineBase* engine);
-// drop cached dark-mode analyses/images (call when dark-mode options change)
 void EngineMupdfInvalidateDarkMode(EngineBase* engine);
-// PDF documents support the object-level smart dark renderer
 bool EngineSupportsSmartDarkMode(EngineBase* engine);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(Str path);
 TempStr EngineMupdfGetPdfOutline(Str path);
 
-/* EnginePs.cpp */
-
 bool IsEnginePsAvailable();
 bool IsEnginePsSupportedFileType(FileType);
 EngineBase* CreateEnginePsFromFile(Str fileName);
-
-/* EngineCreate.cpp */
 
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 

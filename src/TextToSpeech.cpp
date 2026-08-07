@@ -1195,6 +1195,8 @@ bool TtsIsSpeaking() {
     return gTtsActive;
 }
 
+// utf8 offset of the most recently spoken word within the text passed
+// to TtsSpeakUtf8, -1 if not known
 int TtsGetSpokenPosUtf8() {
     int wpos;
     if (gTtsBackend == TtsBackend::WinRt) {

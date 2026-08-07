@@ -12,15 +12,11 @@ void TabsOnCloseWindow(MainWindow*);
 void TabsOnChangedDoc(MainWindow*);
 void TabsSelect(MainWindow* win, int tabIndex);
 void TabsOnCtrlTab(MainWindow* win, bool reverse);
-// also shows/hides the tabbar when necessary
 void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void RemoveTab(WindowTab*);
-// copy tab->tabColor into the tab control's TabInfo (what it paints from)
 void SetTabInfoColor(WindowTab*);
-// full path + size (if available); optional dirty suffix for unsaved annotations
 TempStr MakeTabTooltipTemp(Str path, bool dirty = false);
-// create a new window if win==nullptr
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft);
 void CloseAllTabs(MainWindow*);

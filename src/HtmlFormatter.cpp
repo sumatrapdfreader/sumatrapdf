@@ -70,6 +70,7 @@ bool ValidReparseIdx(ptrdiff_t idx, GumboHtmlParser* parser) {
     return !((idx < 0) || (idx > (int)parser->Len()));
 }
 
+// helper constructors for instructions that need additional arguments
 DrawInstr DrawInstr::Text(::Str s, RectF bbox, bool rtl) {
     DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
     di.str = s;
@@ -965,6 +966,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
 // position. Unlike EmitTextRun, s isn't part of the source HTML, so it must
 // stay valid for the lifetime of the page: pass a string literal or one
 // allocated in textAllocator.
+// emits a synthetic, persistent string (e.g. a list bullet/number)
 void HtmlFormatter::EmitTextMarker(Str s) {
     if (!s) {
         return;

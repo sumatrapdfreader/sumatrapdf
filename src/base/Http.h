@@ -21,7 +21,6 @@ bool HttpPost(Str server, int port, Str url, str::Builder* headers, str::Builder
 bool HttpGet(Str url, HttpRsp* rspOut);
 bool HttpGetToFile(Str url, Str destFilePath, const Func1<HttpProgress*>& cbProgress, i64 maxSize = -1);
 
-// blocking; extraHeaders is "Name: value" per line (\n or \r\n separated)
 bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut);
 TempStr HttpNormalizeHeadersTemp(Str headers);
 

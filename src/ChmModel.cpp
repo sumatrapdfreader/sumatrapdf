@@ -92,6 +92,7 @@ ChmModel::~ChmModel() {
     str::Free(pendingFindTerm);
 }
 
+// meta data
 Str ChmModel::GetFilePath() const {
     return fileName;
 }
@@ -108,6 +109,7 @@ TempStr ChmModel::GetPropertyTemp(DocProp prop) {
     return doc->GetPropertyTemp(prop);
 }
 
+// page navigation (stateful)
 int ChmModel::CurrentPageNo() const {
     return currentPageNo;
 }
@@ -126,6 +128,7 @@ void ChmModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
     DisplayPage(pages[pageNo - 1]);
 }
 
+// the following is specific to ChmModel
 bool ChmModel::SetParentHwnd(HWND hwnd) {
     // can be already set if tab was restored at startup and then switched away
     // without going through the normal CloseDocumentInCurrentTab path
@@ -360,6 +363,7 @@ void ChmModel::Navigate(int dir) {
     }
 }
 
+// view settings
 void ChmModel::SetDisplayMode(DisplayMode /*mode*/, bool /*keepContinuous*/) {
     // no-op
 }
@@ -376,6 +380,7 @@ void ChmModel::SetViewPortSize(Size /*size*/) {
     // no-op
 }
 
+// for quick type determination and type-safe casting
 ChmModel* ChmModel::AsChm() {
     return this;
 }
@@ -626,6 +631,7 @@ void ChmModel::OnDocumentComplete(Str url) {
 
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
+// for HtmlWindowCallback (called through htmlWindowCb)
 bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     // save scroll pos of the page we're leaving, unless DisplayPage() already
     // saved it before triggering this programmatic navigation
@@ -809,6 +815,7 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
     return NewChmNamedDest(url, pageNo);
 }
 
+// table of contents
 TocTree* ChmModel::GetToc() {
     if (tocTree) {
         return tocTree;
@@ -1043,6 +1050,7 @@ static void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendere
 
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it.
+// asynchronously calls saveThumbnail (fails silently)
 void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
     CreateChmThumbnail(fileName, size, saveThumbnail);
 }

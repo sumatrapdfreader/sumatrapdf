@@ -40,8 +40,6 @@ COLORREF AdjustLightness(COLORREF c, float factor);
 COLORREF AdjustLightness2(COLORREF c, float units);
 float GetLightness(COLORREF c);
 bool IsLightColor(COLORREF c);
-// shift a color away from itself by `light` units when it's light, `dark` when
-// it's dark (dark defaults to `light`), for hover / selected / accent states
 COLORREF AccentColor(COLORREF col, int light, int dark = 0);
 bool IsNearBlack(COLORREF c);
 DWORD PremultiplyPixel(COLORREF c, u8 alpha);
@@ -57,9 +55,6 @@ constexpr COLORREF RgbToCOLORREF(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
 }
 
-/* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
-This adds equivalent functions that don't have this problem and ugly
-substitutions to make sure we don't use Get*Value() in the future */
 u8 GetRed(COLORREF rgb);
 u8 GetGreen(COLORREF rgb);
 u8 GetBlue(COLORREF rgb);

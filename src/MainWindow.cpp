@@ -452,6 +452,8 @@ void MainWindow::ShowToolTip(Str text, Rect& rc, bool multiline) const {
     infotip->SetSingle(text, rc, multiline);
 }
 
+// Track-mode tip at a fixed screen position (keyboard home-page selection).
+// maxRightScreen > 0 clamps the bubble so it does not extend past that x.
 void MainWindow::ShowToolTipAt(Str text, const Rect& rc, Point screenPos, bool multiline, int maxRightScreen) const {
     if (len(text) == 0) {
         DeleteToolTip();
@@ -690,6 +692,8 @@ static bool IsFileSupportedByContent(Str filePath) {
 // fragment, but EngineBase::GetNamedDest prepends "#nameddest=" itself -- so the
 // prefix must be stripped or the lookup becomes "#nameddest=nameddest=<name>"
 // and fails, leaving the remote PDF on page 1 (issue #5642).
+// strips mupdf's "nameddest=" prefix from a remote link's destination name
+// so it can be passed to GetNamedDest (issue #5642)
 Str CleanRemoteDestName(Str destName) {
     if (destName && str::StartsWithI(destName, StrL("nameddest="))) {
         return Str(destName.s + 10, destName.len - 10);

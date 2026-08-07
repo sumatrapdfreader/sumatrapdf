@@ -85,6 +85,4 @@ TempStr GetExtForFileTypeTemp(FileType);
 
 int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft);
 
-// Headless test helper: compare GuessFileTypeFromName's canonical extension
-// to an expected one (e.g. "sample.ai" -> ".pdf").
 TempStr FileKindResultTemp(Str path, Str expectedExt, int* exitCodeOut = nullptr);

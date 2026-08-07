@@ -41,6 +41,16 @@ static HMODULE SafeLoadLibrary(Str dllName) {
     return LoadLibraryW(dllPath);
 }
 
+/*
+A centrialized location for all APIs that we need to load dynamically.
+The convention is: for a function like SetThreadDescription(), we define
+a function pointer DynSetThreadDescription() (with a signature matching
+SetThreadDescription()).
+
+You can test if a function is available with if (DynSetThreadDescription).
+
+APIs available on our minimum OS (Windows 7) are called directly, not via Dyn*.
+*/
 void InitDynCalls() {
     HMODULE h = SafeLoadLibrary("kernel32.dll");
     ReportIf(!h);

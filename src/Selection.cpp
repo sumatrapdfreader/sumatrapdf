@@ -110,6 +110,7 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     }
 }
 
+// Rectangular (Ctrl+drag) selection: move/resize after it exists.
 bool IsRectangularSelection(MainWindow* win) {
     if (!win || !win->showSelection) {
         return false;

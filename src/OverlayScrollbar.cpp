@@ -842,6 +842,7 @@ void OverlayScrollbarDestroy(OverlayScrollbar* sb) {
     delete sb;
 }
 
+// Same API as SetScrollInfo / GetScrollInfo
 void OverlayScrollbarSetInfo(OverlayScrollbar* sb, const SCROLLINFO* si, bool redraw) {
     if (!sb) {
         return;
@@ -921,6 +922,7 @@ void OverlayScrollbarGetInfo(OverlayScrollbar* sb, SCROLLINFO* si) {
     }
 }
 
+// Call when owner window moves/resizes
 void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     if (!sb || !sb->hwnd || !sb->hwndOwner) {
         return;
@@ -990,6 +992,7 @@ void OverlayScrollbarHide(OverlayScrollbar* sb) {
                  SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 }
 
+// Show/hide
 void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
     if (!sb) {
         return;
@@ -1018,6 +1021,7 @@ void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
     PaintScrollbar(sb);
 }
 
+// Change the scrollbar mode (Smart vs Thick)
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode) {
     if (!sb || sb->mode == mode) {
         return;
@@ -1035,6 +1039,7 @@ void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode) 
     }
 }
 
+// returns true if scrollbar is visible (thin, thick, or always thick)
 bool IsOverlayScrollbarVisible(OverlayScrollbar* sb) {
     return sb && IsVisible(sb);
 }

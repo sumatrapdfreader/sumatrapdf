@@ -239,6 +239,7 @@ bool CommandPaletteWnd::AdvanceSelection(int dir) {
 // or favorite. Commands and TOC entries are not removable (caller should let
 // the edit control handle Delete). After removal, refilter and keep selection
 // on the same index (or the new last item if we deleted the last row).
+// remove selected history / tab / favorite; keeps selection index stable
 bool CommandPaletteWnd::RemoveSelectedItem() {
     if (!listBox || !listBox->model) {
         return false;

@@ -63,7 +63,6 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
                    Vec<Rect>* skipRects = nullptr);
 
-// frees a DIB-section-backed Pixmap's native handles (and its pixels).
 void FreePixmapNativeBitmap(Pixmap* p);
 #endif
 
@@ -108,7 +107,6 @@ inline void FreePixmap(Pixmap* p) {
     }
 #if defined(_WIN32)
     if (p->hbmp) {
-        // DIB-section-backed: GDI owns the pixels, free via the native handles
         FreePixmapNativeBitmap(p);
         delete p;
         return;

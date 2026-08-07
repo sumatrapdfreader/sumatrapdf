@@ -7,7 +7,6 @@ struct VirtWnd : LayoutBase {
     VirtWnd();
     ~VirtWnd() = default;
 
-    // ILayout
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     Size Layout(Constraints bc) override;
@@ -39,7 +38,6 @@ struct VirtWndText : VirtWnd {
     VirtWndText(HWND hwnd, Str s, HFONT font = nullptr);
     ~VirtWndText();
 
-    // ILayout
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     Size Layout(const Constraints bc) override;

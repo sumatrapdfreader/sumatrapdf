@@ -396,6 +396,8 @@ bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
     return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
 }
 
+// global file utilities (paths are UTF-8); moved here from Base.h
+// (formerly src/common/file_util.cpp)
 bool FileSystemEntryExists(Str s) {
     return path::GetType(s) != path::Type::None;
 }

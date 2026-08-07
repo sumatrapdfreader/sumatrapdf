@@ -58,9 +58,7 @@ struct AIChatStreamCtx {
     Str sessionId; // owned; the session the output belongs to
 };
 
-// post an update to be applied on the UI thread (implemented in AIChatPanel.cpp)
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text);
-// record a session id the provider assigned mid-stream
 void AIChatStreamSetSessionId(AIChatStreamCtx* ctx, Str sessionId);
 
 // everything needed to build a provider's command line

@@ -59,10 +59,7 @@ void RemoveNotificationsForHwnd(HWND);
 NotificationWnd* GetNotificationForGroup(HWND, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, Str msg, int perc);
 void RelayoutNotifications(HWND hwnd);
-// show notifications tied to activeTab (and untied ones), hide those tied to
-// other tabs; call when the active tab changes
 void ShowNotificationsForActiveTab(HWND hwndCanvas, WindowTab* activeTab);
-// remove notifications tied to a tab (call when the tab is closed)
 void RemoveNotificationsForTab(WindowTab* tab);
 
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args);

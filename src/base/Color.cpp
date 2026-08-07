@@ -250,6 +250,8 @@ bool IsNearBlack(COLORREF c) {
 
 // Darken a light color, lighten a dark one, so the result stands out from `col`
 // whatever the theme. `dark` defaults to `light` when 0.
+// shift a color away from itself by `light` units when it's light, `dark` when
+// it's dark (dark defaults to `light`), for hover / selected / accent states
 COLORREF AccentColor(COLORREF col, int light, int dark) {
     if (dark == 0) {
         dark = light;
@@ -269,6 +271,9 @@ DWORD PremultiplyPixel(COLORREF c, u8 alpha) {
     return (alpha << 24) | (r << 16) | (g << 8) | b;
 }
 
+/* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
+This adds equivalent functions that don't have this problem and ugly
+substitutions to make sure we don't use Get*Value() in the future */
 u8 GetRed(COLORREF rgb) {
     rgb = rgb & 0xff;
     return (u8)rgb;

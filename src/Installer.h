@@ -68,9 +68,7 @@ TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 bool IsOurExeInstalled();
 
-// true if path is under Program Files / Program Files (x86)
 bool IsPathUnderProgramFiles(Str path);
-// true if install needs a UAC elevation (all-users, Program Files, or not writable)
 bool InstallNeedsElevation(Str installDir, bool allUsers);
 
 TempStr GetInstallationFilePathTemp(Str installDir, Str name);
@@ -99,17 +97,12 @@ void RestoreShellExtensions(const ShellExtInstallState& state);
 bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
 Str GetInstallerLogPath();
 
-// case-insensitive check whether dir is a ';'-delimited component of a PATH-like string
 bool IsDirInPath(Str path, Str dir);
-// write value as REG_EXPAND_SZ (PATH may contain %vars%) under root\keyName:valueName
 bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value);
 
 TempStr GetRegPathUninstTemp(Str appName);
 
-// Installer.cpp
 void RemoveAppShortcuts();
-
-// RegistryInstaller.cpp
 
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir);
 bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath);

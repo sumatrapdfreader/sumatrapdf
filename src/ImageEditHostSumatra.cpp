@@ -118,6 +118,7 @@ static HWND GetOwnerHwnd() {
     return len(gWindows) > 0 ? gWindows[0]->hwndFrame : nullptr;
 }
 
+// fills the hooks above in with SumatraPDF's implementations
 void InitImageEditHost() {
     gImageEditHost.LoadImageFile = LoadImageFile;
     gImageEditHost.SaveBitmapAsPdf = SaveBitmapAsPdf;

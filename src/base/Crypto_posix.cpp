@@ -41,10 +41,12 @@ bool VerifySHA1Signature(Str /*data*/, Str /*hexSignature*/, Str /*pubkey*/) {
     return false;
 }
 
+// extracts the content (e.g. PDF) from a PKCS#7 / .p7m wrapper using Win32 crypto APIs
 Str ExtractP7m(Str /*d*/) {
     return {};
 }
 
+// Authenticode / PE signature helpers (Windows only; stubs return false/null on POSIX)
 bool IsPEFileSigned(Str /*filePath*/) {
     return false;
 }

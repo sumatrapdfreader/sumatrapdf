@@ -152,14 +152,12 @@ int LvInsertItem(HWND hwnd, const LVITEMW* item);
 bool LvEditLabel(HWND hwnd, int i);
 void LvDeleteItem(HWND hwnd, int i);
 void LvDeleteAllItems(HWND hwnd);
-// empty Rect on failure
 Rect LvGetItemRect(HWND hwnd, int i, int code);
 Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code);
 void LvSetColumnWidth(HWND hwnd, int iCol, int cx);
 void LvSetItemText(HWND hwnd, int i, int iSub, WStr text);
 void LvSetItemText(HWND hwnd, int i, int iSub, Str text);
 TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub);
-// client coords; flagsOut optional (LVHT_*)
 int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut = nullptr);
 DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex);
 int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col);
@@ -348,8 +346,6 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 void MenuSetChecked(HMENU m, int id, bool isChecked);
 bool MenuSetEnabled(HMENU m, int id, bool isEnabled);
 void MenuRemove(HMENU m, int id);
-// TODO: this doesn't recognize enum Cmd, why?
-// void Remove(HMENU m, enum Cmd id);
 void MenuEmpty(HMENU m);
 void MenuSetText(HMENU m, int id, WStr s);
 void MenuSetText(HMENU m, int id, Str s);

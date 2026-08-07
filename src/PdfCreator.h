@@ -23,9 +23,7 @@ class PdfCreator {
 
     bool SaveToFile(Str filePath) const;
 
-    // this name is included in all saved PDF files
     static void SetProducerName(Str name);
 
-    // creates a simple PDF with all pages rendered as a single image
     static bool RenderToFile(Str pdfFileName, EngineBase* engine, int dpi = 150);
 };

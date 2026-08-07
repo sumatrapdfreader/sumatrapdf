@@ -2420,6 +2420,8 @@ void EngineImagesGetImageProperties(EngineBase* engine, int pageNo, Props& props
     ((EngineImages*)engine)->GetImageProperties(pageNo, propsOut);
 }
 
+// Image base name and uncompressed size for page-info tip; does not decode.
+// Returns false when engine is not an image collection or pageNo is invalid.
 bool EngineImagesGetPageFileInfo(EngineBase* engine, int pageNo, TempStr* nameOut, i64* sizeOut) {
     if (!IsEngineImages(engine) || pageNo < 1 || pageNo > engine->PageCount()) {
         return false;

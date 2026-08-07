@@ -58,6 +58,9 @@ void ApplyDarkModeToPopupWindow(HWND hwnd) {
 // Every theme, including the default one, has colors for this, and using them
 // everywhere keeps one code path and makes buttons match the rest of the UI
 // (the light theme's flat white button replaces Windows' beveled one).
+// Called from Button's WM_DRAWITEM so wingui doesn't have to know about the
+// app's palette. The app implements it; returning false leaves the button to
+// Windows, which is what an app that doesn't theme anything should do.
 bool ButtonGetColors(ButtonColors* out) {
     if (!HasCurrentTheme()) {
         // installer / uninstaller: no palette, so wingui draws a stock button
@@ -75,6 +78,9 @@ bool ButtonGetColors(ButtonColors* out) {
 }
 
 // wingui calls this from ListBox::Create(); see the declaration in WinGui.h
+// Called from ListBox::Create() so wingui doesn't have to know about the app's
+// theming. The app implements it (Sumatra gives the list a dark scrollbar);
+// an app that doesn't theme anything can implement it as a no-op.
 void ListBoxMaybeApplyTheme(HWND hwnd) {
     if (UseDarkModeLib()) {
         DarkMode::setDarkScrollBar(hwnd);
@@ -88,6 +94,10 @@ void ListBoxMaybeApplyTheme(HWND hwnd) {
 // that gave a bright #535353 line instead of the theme's #374151 (issue #5893).
 // ThemeEdgeColor() derives a color from the control background when the theme
 // doesn't name one, so there is always something sensible to draw.
+// Color of the 1px underline an Edit created withBottomBorder draws, so wingui
+// doesn't have to know about the app's palette. The app implements it (Sumatra
+// returns the theme's edge color); an app that doesn't theme anything can
+// return a fixed gray.
 COLORREF EditBottomBorderColor() {
     if (!HasCurrentTheme()) {
         return GetSysColor(COLOR_WINDOWFRAME);

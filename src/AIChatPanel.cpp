@@ -43,6 +43,7 @@ constexpr UINT_PTR kTimerReplayChat = 44;
 
 static LoadedDataResource gAIChatMarkedJs;
 
+// providerId is an AIChatBackend value (0=Claude, 1=Grok, 2=Codex)
 AIChatProvider* GetAIChatProvider(int providerId) {
     switch (providerId) {
         case 0:
@@ -138,6 +139,7 @@ static void WebViewShowUnsupportedFileType(MainWindow* win) {
 }
 
 // history replay helpers used by providers
+// used by providers to replay session history into the chat
 void AIChatHistoryAddUser(MainWindow* win, Str text) {
     WebViewAddUser(win, text);
 }
@@ -574,6 +576,7 @@ static void OnAIChatUpdate(AIChatUpdateData* data) {
     FreeAIChatUpdateData(data);
 }
 
+// post an update to be applied on the UI thread (implemented in AIChatPanel.cpp)
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
     auto* data = new AIChatUpdateData();
     data->hwndFrame = ctx->hwndFrame;
@@ -584,6 +587,7 @@ void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
     uitask::Post(MkFunc0(OnAIChatUpdate, data));
 }
 
+// record a session id the provider assigned mid-stream
 void AIChatStreamSetSessionId(AIChatStreamCtx* ctx, Str sessionId) {
     AIChatPostUpdate(ctx, AIChatUpdateType::SessionId, sessionId);
     str::ReplaceWithCopy(&ctx->sessionId, sessionId);
@@ -838,6 +842,8 @@ static void OnAIChatSplitterMove(Splitter::MoveEvent* ev) {
     }
 }
 
+// called from SumatraPDF.cpp for width change relayout
+// reposition children and repaint after the container is moved/resized
 void RelayoutAIChatPanel(MainWindow* win) {
     if (!win || !win->hwndAiChatBox || !win->uiState.aiChatVisible) {
         return;
@@ -1121,6 +1127,7 @@ static void CloseAIChatPanelFromLabel(MainWindow* win) {
     ScheduleUiUpdate(win);
 }
 
+// command entry point: toggle the panel for the given provider
 void OnAIChatToggle(MainWindow* win, int providerId) {
     AIChatProvider* p = GetAIChatProvider(providerId);
     if (!p || !IsAIChatAvailable()) {

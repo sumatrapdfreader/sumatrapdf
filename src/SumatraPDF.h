@@ -139,13 +139,9 @@ bool MaybeLaunchDocumentation(Str url);
 bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
-// true if read aloud was paused and can be resumed in this tab
 bool CanContinueReadAloud(WindowTab* tab);
-// false if the user canceled (don't proceed with closing/replacing the doc)
 bool MaybeSaveAnnotations(WindowTab* tab);
-// move to the recycle bin and forget it in the file history / thumbnail cache
 void DeleteFileFromDiskAndHistory(Str path);
-// tab showing path in any main window, or nullptr
 WindowTab* FindTabByFilePath(Str path);
 WindowTab* GetReadAloudSourceTab();
 
@@ -178,7 +174,6 @@ void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(Str langCode);
 void UpdateDocumentColors();
-// next state of the cursor-position tip, for the command palette
 Str NextCursorPositionUnitName(MainWindow*);
 void UpdateFixedPageScrollbarsVisibility();
 
@@ -233,26 +228,16 @@ constexpr u32 kUiTabsDirty = 0x8;    // repaint the tab bar
 constexpr u32 kUiNoToolbars = 0x10;
 constexpr u32 kUiSidebarDirty = 0x20; // repaint toc/favorites boxes and their splitters
 
-// Request an async, coalesced UI update: records what needs to happen and
-// posts WM_UPDATE_UI once; any further requests before it's handled are
-// folded into the same pass. Prefer this over direct relayout/RedrawWindow
-// calls to avoid excessive repaints. sidebarDx >= 0 relayouts with a new
-// sidebar width (splitter dragging).
 void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout, int sidebarDx = -1);
 void DuplicateTabInNewWindow(WindowTab* tab);
 void CopyFilePath(WindowTab*);
 
-// note: background tabs are only searched if focusTab is true
-// when limitWin is set, only that window's tabs are considered
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
 MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 WindowTab* FindTabByFile(Str file, MainWindow* limitWin = nullptr);
 void SelectTabInWindow(WindowTab*);
 
-// True if a tab already shows this file, or a load for it is already in progress
-// (tab is only created when load finishes, so mid-password / async loads need this).
 bool IsDocumentOpenOrLoading(Str file);
-// Mark/unmark a path as currently loading. Call from the UI thread only.
 void BeginDocumentLoad(Str file);
 void EndDocumentLoad(Str file);
 
@@ -348,8 +333,6 @@ SettingsApplyState GetSettingsApplyState();
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before);
 
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
-// vertical scroll intent for discoverability of "open next file in folder":
-// scroll-down at document end may show a next-file hint; scroll-up dismisses it
 void OnDocumentVerticalScrollIntent(MainWindow* win, bool down);
 void DismissNextFileScrollHint(MainWindow* win);
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);

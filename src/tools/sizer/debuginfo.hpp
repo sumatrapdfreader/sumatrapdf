@@ -82,7 +82,6 @@ class DebugInfo {
     void Init();
     void Exit();
 
-    // only use those before reading is finished!!
     sInt MakeString(const char* s);
     const char* GetStringPrep(sInt index) const { return m_StringByIndex[index].c_str(); }
     void SetBaseAddress(sU32 base) { BaseAddress = base; }

@@ -423,6 +423,8 @@ void* Arena::CommitReserved(void* mem, int size) {
     return dst;
 }
 
+// size_t overloads that match the legacy Allocator::* static helper API
+// and fall back to malloc/free when arena is nullptr.
 void* Alloc(Arena* arena, int size) {
     if (size <= 0) {
         return nullptr;
@@ -439,6 +441,8 @@ void Free(Arena* arena, void* mem) {
     free(mem);
 }
 
+// size_t overloads that match the legacy Allocator::* static helper API
+// and fall back to malloc/free when arena is nullptr.
 void* Alloc(Arena* arena, size_t size) {
     if (size == 0) {
         return nullptr;
@@ -555,6 +559,8 @@ Str AllocStrTemp(int size) {
 // element (so Vec<char>/Vec<WCHAR> stay C-string compatible).
 // Keeps the first min(len, newCap) elements; zeros the rest of the new block.
 // Updates *els and *cap. len is not modified (caller owns logical length).
+// Grow/shrink vec-like storage to newCap elements (+1 trailing zero pad).
+// Updates *els and *cap; keeps min(len, newCap) elements.
 NO_INLINE bool VecRealloc(Arena* a, void** els, int len, int* cap, int newCap, int elSize) {
     // newCap+1 must fit in int; newElCount * elSize must not overflow.
     if (elSize <= 0 || newCap < 0 || newCap > INT_MAX - 1) {

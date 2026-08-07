@@ -197,6 +197,8 @@ bool IsPageInFavorites(Str filePath, int pageNo) {
     return false;
 }
 
+// navigate to the nearest favorite (bookmark) page after / before the current
+// page in the open document (issue #3744)
 void GoToNextFavorite(MainWindow* win, bool forward) {
     if (!win || !win->IsDocLoaded()) {
         return;
@@ -303,6 +305,7 @@ static void SortAllFavorites() {
     }
 }
 
+// toggle SortFavoritesByName, re-sort, refresh trees, and save settings
 void ToggleSortFavoritesByName() {
     gGlobalPrefs->sortFavoritesByName = !gGlobalPrefs->sortFavoritesByName;
     SortAllFavorites();
@@ -452,6 +455,7 @@ bool HasFavorites() {
 }
 
 // caller has to free() the result
+// shared with CommandPalette.cpp (favorites mode)
 TempStr FavReadableNameTemp(Favorite* fn) {
     Str label = fn->pageLabel;
     if (!label) {
@@ -620,6 +624,7 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
     MenuSetEnabled(menu, CmdFavoriteToggle, HasFavorites());
 }
 
+// find the Favorites tab in this window, or nullptr
 WindowTab* FindFavoritesTab(MainWindow* win) {
     if (!win) {
         return nullptr;
@@ -996,6 +1001,7 @@ void ToggleFavorites(MainWindow* win) {
     }
 }
 
+// open/select full-window Favorites tab (can use with sidebar Favorites)
 void ToggleFavoritesTab(MainWindow* win) {
     // Full-window Favorites tab (independent of the sidebar Favorites panel).
     // Always switches to / creates the tab (close with the tab's ✕).
@@ -1397,6 +1403,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
 static WNDPROC gWndProcFavBox = nullptr;
 // Position label, filter edit and tree within favorites container using the
 // wingui layout engine (VBox built in CreateFavorites).
+// layout label + tree inside hwndFavBox (call after resizing the box)
 void LayoutFavoritesContainer(MainWindow* win) {
     if (!win || !win->favLayout || !win->hwndFavBox) {
         return;

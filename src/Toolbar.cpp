@@ -583,6 +583,7 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     return Rect(x, y, natW, h);
 }
 
+// position/show the floating overlay toolbar; called on relayout and mouse move
 void PositionOverlayToolbar(MainWindow* win) {
     if (!win->isToolbarOverlay || !win->hwndReBar) {
         return;
@@ -643,6 +644,7 @@ static void SetOverlayShown(MainWindow* win, bool shown) {
     PositionOverlayToolbar(win);
 }
 
+// re-evaluate overlay toolbar visibility based on the cursor's screen position
 void UpdateOverlayToolbarForMouse(MainWindow* win) {
     if (!win->isToolbarOverlay || !win->hwndReBar) {
         return;
@@ -657,6 +659,7 @@ void UpdateOverlayToolbarForMouse(MainWindow* win) {
     }
 }
 
+// handle the delayed-hide timer firing (kHideOverlayToolbarTimerId)
 void OverlayToolbarHideTimerFired(MainWindow* win) {
     win->toolbarOverlayHidePending = false;
     KillTimer(win->hwndFrame, kHideOverlayToolbarTimerId);

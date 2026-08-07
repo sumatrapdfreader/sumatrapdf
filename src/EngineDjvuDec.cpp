@@ -985,6 +985,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
     }
 }
 
+/* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(FileType kind) {
     return kind == FileType::DjVu;
 }

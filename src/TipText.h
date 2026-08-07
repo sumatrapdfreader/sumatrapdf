@@ -1,15 +1,6 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Shared "tip" text: a small markup understood by the home page tips and by
-// notifications. Supports:
-//   [text](Cmd...)      a link that runs a command on click
-//   [text](Help/Page)   a link that opens a docs page in the browser
-//   [text](https://..)  a link that opens a url in the browser
-//   (Key/Cmd...)        expanded inline to the command's keyboard shortcut
-//   **text**            bold text
-// note: include Base.h before this
-
 // Supplied by the app: its command table and the key each command is bound to.
 // Both SumatraPDF and other apps have their own, with these signatures.
 // (also declared in Commands.h / Accelerators.h; repeated here so TipText.cpp
@@ -60,19 +51,13 @@ struct ParsedTip {
     ~ParsedTip() { Reset(); }
 };
 
-// reconstructs the plain (link markup removed, Key/ expanded) text from a parse
 TempStr TipPlainTextTemp(ParsedTip& tip);
 bool TipHasLinks(ParsedTip& tip);
 
 void ParseTip(ParsedTip& tip, Str s);
-// adds text with no markup interpreted, for strings from outside the app
 void AddTipPlainText(ParsedTip& tip, Str text);
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font);
-// lays out words within areaWidth (wrapping); sets per-word x/y and tip.totalDx/totalDy
 void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
-// draws the words (link words in linkCol, underlined; others in textCol)
 void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol);
-// returns index into tip.links of the link at (x, y) in layout coords, or -1
 int HitTestTipLink(ParsedTip& tip, int x, int y);
-// runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl
 void ExecuteTipLink(HWND hwnd, Str cmd);

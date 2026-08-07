@@ -70,7 +70,6 @@ class TextRenderGdi : public ITextRender {
 
   public:
     void CreateHdcForTextMeasure();
-    // note: Draw() ignores any transformation set on gfx
     static TextRenderGdi* Create(Gdiplus::Graphics* gfx);
 
     void SetFont(CachedFont* font) override;

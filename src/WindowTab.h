@@ -144,7 +144,6 @@ struct WindowTab {
 
     bool IsAboutTab() const;
     bool IsFavoritesTab() const;
-    // About or Favorites: no document controller
     bool IsNonDocumentTab() const;
 
     DisplayModel* AsFixed() const;
@@ -152,7 +151,6 @@ struct WindowTab {
     void SetFilePath(Str path);
     void SetDisplayName(Str name);
 
-    // only if AsFixed()
     EngineBase* GetEngine() const;
     Kind GetEngineType() const;
 

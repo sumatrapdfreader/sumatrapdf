@@ -73,6 +73,7 @@ static SeqStrings gArgNames =
 // @gen-end flags
 
 #if OS_WIN
+// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool consoleOnly) {
     str::Builder out;
 
@@ -109,6 +110,7 @@ static TempStr ResolveLnkTemp(Str path) {
     return str::DupTemp(path);
 }
 
+// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool) {}
 #endif
 

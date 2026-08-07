@@ -114,6 +114,8 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
     return rb;
 }
 
+// DIB-section-backed: GDI owns the pixels, free via the native handles
+// frees a DIB-section-backed Pixmap's native handles (and its pixels).
 void FreePixmapNativeBitmap(Pixmap* p) {
     if (!p) {
         return;

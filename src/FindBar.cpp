@@ -409,6 +409,8 @@ bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
 
 //--- public API
 
+// Chrome-style floating search bar. Created hidden together with the toolbar;
+// owns win->hwndFindEdit. Shown via Ctrl+F or the toolbar search icon.
 FindBarWnd* CreateFindBar(MainWindow* win) {
     auto* bar = new FindBarWnd();
     if (!bar->Create(win)) {
@@ -538,10 +540,12 @@ bool IsFindBarVisible(MainWindow* win) {
     return win->findBar && HwndIsVisible(win->findBar->hwnd);
 }
 
+// true if either the compact bar or the floating find window is visible
 bool IsFindUIVisible(MainWindow* win) {
     return IsFindBarVisible(win) || IsFindWindowVisible(win);
 }
 
+// focus the find edit and select all text (Ctrl+F when find UI is already open)
 void FocusFindEditSelectAll(MainWindow* win) {
     if (!win->hwndFindEdit) {
         return;
@@ -550,6 +554,8 @@ void FocusFindEditSelectAll(MainWindow* win) {
     Edit_SetSel(win->hwndFindEdit, 0, -1);
 }
 
+// switch the find UI between the compact toolbar overlay and the floating
+// window (persists the choice in gGlobalPrefs->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win) {
     TempStr text = win->hwndFindEdit ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
     // remember the caret/selection (LOWORD start, HIWORD end) so it survives the switch
@@ -573,6 +579,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
     Edit_SetSel(win->hwndFindEdit, LOWORD(sel), HIWORD(sel));
 }
 
+// reposition over the search toolbar icon (no-op if not visible)
 void FindBarReposition(MainWindow* win) {
     if (!IsFindBarVisible(win)) {
         return;
@@ -586,6 +593,7 @@ void FindBarReposition(MainWindow* win) {
     PositionFindBar(win->findBar);
 }
 
+// show n/m or "No matches" style status in the bar
 void FindBarSetStatus(MainWindow* win, Str s) {
     if (gGlobalPrefs->searchUIFloating) {
         FindWindowSetStatus(win, s);
@@ -596,6 +604,7 @@ void FindBarSetStatus(MainWindow* win, Str s) {
     }
 }
 
+// reflect match-case toggle state on the bar's button
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
     if (gGlobalPrefs->searchUIFloating) {
         FindWindowSetMatchCaseChecked(win, checked);
@@ -606,6 +615,7 @@ void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
     }
 }
 
+// reflect match-whole-word toggle state on the bar's button
 void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked) {
     if (gGlobalPrefs->searchUIFloating) {
         FindWindowSetMatchWholeWordChecked(win, checked);

@@ -67,21 +67,16 @@ OverlayScrollbar* OverlayScrollbarCreate(HWND hwndOwner, OverlayScrollbar::Type 
                                          OverlayScrollbar::Mode mode = OverlayScrollbar::Mode::Smart);
 void OverlayScrollbarDestroy(OverlayScrollbar* sb);
 
-// Same API as SetScrollInfo / GetScrollInfo
 void OverlayScrollbarSetInfo(OverlayScrollbar* sb, const SCROLLINFO* si, bool redraw);
 void OverlayScrollbarGetInfo(OverlayScrollbar* sb, SCROLLINFO* si);
 
-// Call when owner window moves/resizes
 void OverlayScrollbarUpdatePos(OverlayScrollbar* sb);
 
-// Show/hide
 void OverlayScrollbarShow(OverlayScrollbar* sb, bool show);
 void OverlayScrollbarHide(OverlayScrollbar* sb);
 
 void OverlayScrollbarNotifyScroll(OverlayScrollbar* sb);
 
-// Change the scrollbar mode (Smart vs Thick)
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode);
 
-// returns true if scrollbar is visible (thin, thick, or always thick)
 bool IsOverlayScrollbarVisible(OverlayScrollbar* sb);

@@ -77,6 +77,8 @@ static bool SkipBlock(Str data, int& off) {
     return false;
 }
 
+// call NextRule first for parsing a style element and
+// NextProperty only for parsing a single style attribute
 bool CssPullParser::NextRule() {
     if (inProps) {
         while (NextProperty()) {

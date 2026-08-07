@@ -46,6 +46,8 @@ void RefHoverDestroy(RefHoverState* s) {
     delete s;
 }
 
+// delayMs: how long the cursor must hover before the popup shows
+// (the CitationHoverDelay advanced setting)
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point screenPt, int destPage, float destX,
                       float destY, float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect) {
     if (!s || delayMs < 0) {
@@ -91,6 +93,11 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
 static constexpr UINT kRefHoverHidePollMs = 150;
 static constexpr int kRefHoverHideMinMs = 250;
 
+// Like RefHoverHide but deferred: cancels any pending show immediately, then
+// hides the visible popup after delayMs. While the timer is pending, moving
+// the cursor onto the popup (e.g. to click a DOI link inside it) keeps it
+// alive. Lets the cursor cross the gap between the link and the popup without
+// the popup vanishing. Cancelled by a new RefHoverSchedule / RefHoverHide.
 void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs) {
     if (!s) {
         return;
@@ -107,6 +114,8 @@ void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs) {
     SetTimer(hwndCanvas, kRefHoverHideTimerID, (UINT)delayMs, nullptr);
 }
 
+// Fired by kRefHoverHideTimerID: hides the popup unless the cursor is now
+// over it (in which case it re-arms and keeps the popup up).
 void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas) {
     if (!s) {
         return;
@@ -126,6 +135,7 @@ void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas) {
     s->displayed.destPage = -1;
 }
 
+// Open a launch link (external URL / file) hit-tested inside the popup.
 void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest) {
     if (!s || !dest || !s->ctrl) {
         return;

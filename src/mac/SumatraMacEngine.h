@@ -49,20 +49,14 @@ struct MacDocumentLayout {
     MacLayoutPage* pages;
 };
 
-// Opens a document. Returns an opaque handle, or nullptr on failure; on failure
-// *errorOut (if non-null) is set to a malloc'd message the caller must free().
 void* MacOpenDocument(const char* path, char** errorOut);
 
-// Number of pages, or 0 if the handle is invalid.
 int MacPageCount(void* document);
 
-// Mediabox size of pageNo (1-based) in points. Returns false if invalid.
 bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut);
 
 double MacFileDPI(void* document);
 
-// Renders pageNo (1-based) at the given zoom and rotation (0/90/180/270).
-// Fills *page (caller frees with MacFreeRenderedPage); returns false on failure.
 bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page);
 
 bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumentLayout* layout);

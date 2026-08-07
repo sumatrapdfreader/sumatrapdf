@@ -49,6 +49,7 @@ void AtomicPtrSet(AtomicPtr* p, void* v) {
     InterlockedExchangePointer(p, v);
 }
 
+// stores v and returns what was there before
 void* AtomicPtrExchange(AtomicPtr* p, void* v) {
     return InterlockedExchangePointer(p, v);
 }

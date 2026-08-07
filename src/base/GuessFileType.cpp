@@ -1336,6 +1336,8 @@ TempStr GfxFileExtFromDataTemp(Str d) {
 
 // compares the guessed type's canonical extension (the first extension
 // registered for it, e.g. ".pdf" for sample.ai) to expectedExt
+// Headless test helper: compare GuessFileTypeFromName's canonical extension
+// to an expected one (e.g. "sample.ai" -> ".pdf").
 TempStr FileKindResultTemp(Str path, Str expectedExt, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {

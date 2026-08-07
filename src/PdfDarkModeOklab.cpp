@@ -77,6 +77,7 @@ static float OklabChroma(const OklabColor& lab) {
     return sqrtf((lab.a * lab.a) + (lab.b * lab.b));
 }
 
+// OKLab perceptual remap for SmartDark text/vector colors (Phase 2).
 void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& palette, float* outRgb) {
     OklabColor src = SrgbToOklab(r, g, b);
     OklabColor text = SrgbToOklab(palette.textR, palette.textG, palette.textB);
@@ -114,6 +115,7 @@ void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& pa
     OklabToSrgb(out, &outRgb[0], &outRgb[1], &outRgb[2]);
 }
 
+// Perceptual distance in OKLab (Phase 4 background matching).
 float PdfDarkModeOklabDistance(float r1, float g1, float b1, float r2, float g2, float b2) {
     OklabColor a = SrgbToOklab(r1, g1, b1);
     OklabColor c = SrgbToOklab(r2, g2, b2);

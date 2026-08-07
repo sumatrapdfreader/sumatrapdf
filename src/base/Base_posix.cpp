@@ -47,11 +47,14 @@ void AtomicPtrSet(AtomicPtr* p, void* v) {
     __atomic_store_n(p, v, __ATOMIC_SEQ_CST);
 }
 
+// stores v and returns what was there before
 void* AtomicPtrExchange(AtomicPtr* p, void* v) {
     return __atomic_exchange_n(p, v, __ATOMIC_SEQ_CST);
 }
 
 // portable stand-in for Win32 GetTickCount64(): monotonic milliseconds.
+// milliseconds since some unspecified epoch, monotonic; a portable stand-in for
+// the Win32 GetTickCount64() (which <windows.h> already declares on Windows).
 u64 GetTickCount64() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);

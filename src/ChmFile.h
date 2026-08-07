@@ -1,8 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Strip a UTF-8 BOM if present; otherwise convert from `codepage` to UTF-8
-// (unless already UTF-8). Returns a TempStr owned by the temp allocator.
 TempStr SmartToUtf8Temp(Str s, uint codepage);
 
 enum class DocProp : u8;

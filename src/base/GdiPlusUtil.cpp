@@ -190,6 +190,9 @@ float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
 #endif
 }
 
+// float     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
+// int   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
+// algo=nullptr);
 void GetBaseTransform(Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation) {
     rotation = rotation % 360;
     if (rotation < 0) {

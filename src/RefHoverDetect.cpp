@@ -172,6 +172,19 @@ static void ClipToMediabox(RectF& box, RectF mediabox) {
 // flatten each line to a uniform top-aligned row — the shape the detectors
 // assume. `out` must have room for glyphCount rects; aliasing `coords` is not
 // allowed.
+// Pure-function region detectors used by RefHover to decide what slice of the
+// destination page to render into the hover popup. Kept engine-independent so
+// the heuristics can be unit-tested with synthetic glyph arrays (see
+// src/base/tests/RefHover_ut.cpp).
+//
+// All three functions take:
+//   text     — per-glyph WCHAR view, one WCHAR per engine text codepoint
+//   coords   — per-glyph Rect array, parallel to `text` (second out-ptr)
+//   textLen  — glyph count
+//   mediabox — page bounds in PDF user space
+//   destX, destY — link's destination coordinates (PDF user space)
+//
+// Returned RectF is in PDF user space, clipped to mediabox.
 void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     if (!coords || !out || glyphCount <= 0) {
         return;
@@ -233,6 +246,11 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
 //
 // `outText`/`outCoords` are caller-allocated with room for glyphCount entries;
 // returns the number of glyphs kept (written to the front of the out arrays).
+// Remove diagonal draft / "under review" watermark glyphs (oversized + sitting
+// on sparse baselines) from a page's raw glyph arrays, so 2-column gutter and
+// entry-bound detection see clean text. Run on the engine's raw coords *before*
+// NormalizeGlyphLines. `outText`/`outCoords` need room for glyphCount entries;
+// returns the kept-glyph count, written to the front of the out arrays.
 int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* outCoords) {
     int n = text.len;
     if (n <= 0 || !coords || !outText || !outCoords) {
@@ -335,6 +353,9 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
 // Auto-fit in RefHoverOnTimer + the monitor-based popup height cap keep
 // the popup a sensible size; the user can wheel-zoom in if text is too
 // small.
+// Landscape view: full page width strip anchored at destY, extending downward
+// to the last text glyph or a recognised caption block. Fallback when no
+// recognisable entry or equation is found.
 RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords) {
     (void)destX;
     float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
@@ -511,6 +532,9 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
 // bounding box (full page width, ~one eq line tall) when found, empty rect
 // otherwise. Used to avoid the landscape-style 200pt slice that sweeps in
 // the paragraph and the next equation below an equation cross-reference.
+// Equation cross-ref: tight one-line box around a "(N)" or "(N.M)" label
+// sitting at the right column edge near destY. Returns empty rect when no
+// equation label is detected.
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     (void)destX;
     RectF empty{};
@@ -877,6 +901,16 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
 // (TOC, topbar, cross-ref, table caption). The landscape box renders a half-
 // page-tall slice of the page anchored on the destination so the user sees
 // surrounding context (e.g. the table rows under a caption).
+// Bibliography / glossary / abbreviation entry box. Tries bracket-style
+// ("[Foo+09]"), hanging-indent author-year, and single-line description-list
+// layouts. Falls back to LandscapeBox when the destination doesn't look like
+// a list entry.
+//
+// continuationOut, if non-null, is set to a second box when a bracket-style
+// entry runs off the bottom of its 2-column-layout column with no natural
+// close and continues at the top of the next column (e.g. "[63]"-style
+// entries wrapping across a column break); empty when there's no such
+// continuation. Ignored (left untouched) by callers that don't need it.
 RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY, RectF* continuationOut) {
     if (continuationOut) {
         *continuationOut = RectF{};

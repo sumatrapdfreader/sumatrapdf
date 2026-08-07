@@ -106,12 +106,8 @@ struct WebviewWnd : Wnd {
     void RemoveAllInitScripts();
     void OnInitScriptAdded(int token, const WCHAR* id);
     void Navigate(Str url);
-    // makes window.<name>(...) available to page JS, returning a promise that
-    // WebViewEvents::jsCall resolves via Resolve()
     void Bind(Str name);
     void Unbind(Str name);
-    // status 0 resolves the JS promise, non-0 rejects it. resultJson must be
-    // valid JSON (or empty for undefined)
     void Resolve(Str id, int status, Str resultJson);
     void OnJsCall(Str msg);
     void OnJsNotify(Str msg);
@@ -123,7 +119,6 @@ struct WebviewWnd : Wnd {
     bool CanGoBack() const;
     bool CanGoForward() const;
     void Focus();
-    // open the WebView2 (Chromium) find-on-page bar, like a browser's Ctrl+F
     void ShowFindUI();
     void RegisterForwardingDropTarget();
     void RevokeForwardingDropTarget();

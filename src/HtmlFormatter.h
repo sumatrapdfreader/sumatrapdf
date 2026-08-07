@@ -112,7 +112,6 @@ struct DrawInstr {
         return Str((char*)str.s, (int)str.len);
     }
 
-    // helper constructors for instructions that need additional arguments
     static DrawInstr Text(::Str s, RectF bbox, bool rtl = false);
     static DrawInstr Image(Str, RectF bbox);
     static DrawInstr SetFont(PlatformFont* font);
@@ -244,7 +243,6 @@ struct HtmlFormatter {
     bool EmitImage(Str img);
     void EmitHr();
     void EmitTextRun(::Str s);
-    // emits a synthetic, persistent string (e.g. a list bullet/number)
     void EmitTextMarker(::Str s);
     void EmitElasticSpace();
     void EmitParagraph(float indent);

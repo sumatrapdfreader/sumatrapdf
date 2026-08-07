@@ -86,6 +86,7 @@ void DestroyLogging() {
     str::FreePtr(&gLogFilePath);
 }
 
+// Walk parent PIDs and log path + command line for each (startup diagnostics).
 void LogParentProcessChain() {
     // TODO: implement with getppid / /proc on POSIX if needed
 }

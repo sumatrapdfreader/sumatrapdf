@@ -164,6 +164,8 @@ static ACCEL gBuiltInAccelerators[] = {
 static ACCEL* gAccels = nullptr;
 static int gAccelsCount = 0;
 
+// the key cmdId is bound to, appended to a menu string. Parsing shortcut
+// strings lives in ShortcutParse.h.
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     ACCEL a;
     for (int i = 0; i < gAccelsCount; i++) {
@@ -254,6 +256,10 @@ static bool isSafeAccel(const ACCEL& a) {
 // Command bound to vk + modifiers among the "safe" accelerators (those allowed
 // while a custom control has focus). 0 if none. Lets custom controls (e.g. the
 // WebView2-hosted CHM) forward app shortcuts they'd otherwise swallow.
+// Command bound to a key+modifiers among the accelerators that are "safe" to
+// process while a custom control (edit / tree / WebView2-hosted CHM) has focus.
+// Returns the command id, or 0 if none. Used to forward app shortcuts that a
+// focused control would otherwise swallow.
 int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt) {
     BYTE fVirt = FVIRTKEY;
     if (ctrl) {

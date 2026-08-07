@@ -82,6 +82,7 @@ void Edit::SetCursorPositionAtEnd() {
 }
 
 // preferred GetIdealSize width ≈ nChars average character widths (0 clears)
+// set preferred / max width to ~nChars average character widths (0 clears)
 void Edit::SetIdealWidthChars(int nChars) {
     if (!hwnd || nChars <= 0) {
         idealDx = 0;
@@ -287,6 +288,8 @@ Size Edit::GetIdealSize() {
 // horizontal offset of the text from the control's left (window) edge: the
 // border (WS_EX_CLIENTEDGE) plus the internal left margin. Useful to align a
 // borderless Static label's text with this edit's text.
+// horizontal offset of the text from the control's left edge (border +
+// internal margin); used to align a borderless label with the edit's text
 int Edit::GetLeftTextMargin() {
     int border = 0;
     if (HasBorder()) {

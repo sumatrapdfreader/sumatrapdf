@@ -237,6 +237,10 @@ bool RefHoverRerenderDisplayedRegion(RefHoverState* s, EngineBase* engine, int p
     return true;
 }
 
+// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
+// Popup window keeps its initial size; only the rendered content scales.
+// Positive delta zooms in, negative zooms out. Returns true if the zoom
+// changed and a re-render happened.
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     if (!s || !s->hwndPopup || s->displayed.destPage <= 0 || !engine) {
         return false;
@@ -279,6 +283,11 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
 }
 
+// Scroll the popup's rendered region by a wheel notch. Positive delta scrolls
+// toward earlier content (up); negative scrolls toward later content (down).
+// Rolls over to the previous / next page when the viewport hits a page edge
+// (continuous scrolling). Popup window keeps its initial size; only the
+// rendered region's Y (and possibly page number) changes.
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     if (!s || !s->hwndPopup || s->displayed.destPage <= 0 || !engine) {
         return false;

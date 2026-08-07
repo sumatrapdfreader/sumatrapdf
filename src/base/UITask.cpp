@@ -79,6 +79,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
 
 constexpr const WCHAR* UITASK_CLASS_NAME = L"UITask_Wnd_Class";
 
+// Call Initialize() at program startup and Destroy() at the end
 void Initialize() {
     gMainUIThreadId = GetCurrentThreadId();
 
@@ -96,6 +97,7 @@ void Initialize() {
     gTaskDispatchHwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
 }
 
+// call only from the same thread as Initialize() and Destroy()
 void DrainQueue() {
     ReportIf(!gTaskDispatchHwnd);
     MSG msg;

@@ -310,6 +310,20 @@ int Archive::GetFileId(Str fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
+// Return the FileInfo record for a given entry, loading its data into
+// fileInfo->data on demand (on a miss, re-opens the archive unless
+// that was disabled by eager-load mode).
+//
+// Ownership: the returned FileInfo* is owned by this archive. By
+// default fileInfo->data is *not* transferred to the caller — a later
+// call for the same entry returns the same cached buffer, and the
+// archive destructor frees it. If the caller wants the buffer to
+// outlive the archive, they should set fileInfo->data = nullptr after
+// saving the pointer; they then become responsible for free()ing it.
+//
+// Returns nullptr for an unknown name / out-of-range fileId. For an
+// entry whose decompression failed check fileInfo->failed — data will
+// be nullptr in that case.
 Archive::FileInfo* Archive::GetFileDataByName(Str fileName) {
     int fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
@@ -554,6 +568,8 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
     }
 }
 
+// Populate fileInfos_[fileId]->data via the respective backend; set
+// ->failed when extraction didn't produce the expected bytes.
 void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
@@ -790,6 +806,8 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
     return true;
 }
 #else
+// Populate fileInfos_[fileId]->data via the respective backend; set
+// ->failed when extraction didn't produce the expected bytes.
 void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     fileInfos_[fileId]->failed = true;
 }

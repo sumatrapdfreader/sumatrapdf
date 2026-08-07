@@ -289,6 +289,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena*
     return ok;
 }
 
+// files is an array of Str entries, last element must be empty
 bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* a) {
     auto d = file::ReadFileWithArena(archivePath, a);
     if (len(d) == 0) {

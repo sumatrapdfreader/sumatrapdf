@@ -110,7 +110,6 @@ struct Padding : LayoutBase {
     Padding(ILayout*, const Insets&);
     ~Padding() override;
 
-    // ILayout
     Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -166,7 +165,6 @@ struct VBox : LayoutBase {
     VBox();
     ~VBox() override;
 
-    // ILayout
     Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -224,7 +222,6 @@ struct Align : LayoutBase {
     explicit Align(ILayout*);
     ~Align() override;
 
-    // ILayout
     Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;

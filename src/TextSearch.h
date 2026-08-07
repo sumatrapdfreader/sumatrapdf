@@ -15,7 +15,6 @@ struct TextSearch : public TextSelection {
     void SetDirection(Direction direction);
     void SetLastResult(TextSelection* sel);
     TextSel* FindFirst(int page, Str text);
-    // like FindFirst but searches only the given page (issue #3085)
     TextSel* FindFirstOnPage(int pageNo, Str text);
     TextSel* FindNext();
 

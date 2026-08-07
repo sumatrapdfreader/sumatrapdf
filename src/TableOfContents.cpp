@@ -332,6 +332,7 @@ static void GoToTocLink(GoToTocLinkData* d) {
 // navigate to a TocItem regardless of whether it points to a page in this
 // document or to an external destination (used by the command palette, where
 // the user explicitly picked the item so we always honor it)
+// navigate to a TocItem (used by the command palette's TOC mode)
 void GoToTocItem(MainWindow* win, TocItem* tocItem) {
     if (!win || !tocItem) {
         return;

@@ -771,6 +771,7 @@ static bool IsHomeThumbOnScreen(const Rect& r, const Rect& thumbsArea, int margi
     return !r.Intersect(band).IsEmpty();
 }
 
+// HomePageViewMode setting ("thumbnails" or "list")
 bool HomePageIsListView() {
     return gGlobalPrefs && str::EqI(gGlobalPrefs->homePageViewMode, StrL("list"));
 }
@@ -1006,6 +1007,7 @@ static void ClearHomeLayoutCache() {
 // Reloading settings frees and rebuilds those, so the cache has to be dropped
 // first or hover / selection reads freed memory (crash 8c34d7eda). It is
 // rebuilt on the next paint.
+// must be called before the FileState objects the cache points at are freed
 void HomePageInvalidateLayoutCache() {
     ClearHomeLayoutCache();
 }
@@ -1788,6 +1790,7 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
     return Rect(bx, by, sz, sz);
 }
 
+// per-thumbnail ✕ close button (issue #283)
 void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
     if (!win || !CanAccessDisk() || HomePageIsListView()) {
         HomePageHideCloseButton();
@@ -2400,11 +2403,13 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     win->ShowToolTipAt(tip, outline, Point(tl.x, tl.y), false, tr.x);
 }
 
+// select the first entry, e.g. after the filter changed the list
 void HomePageSelectFirst(MainWindow* win) {
     win->homePageSelIdx = 0;
     win->homePageSearchReturnCol = 0;
 }
 
+// hide keyboard-selection tip on deactivate; restore it when the frame is active
 void HomePageOnWindowActivate(MainWindow* win, bool active) {
     if (!win) {
         return;
@@ -2441,6 +2446,8 @@ static int HomeEntryIndexAt(int x, int y) {
 // coordinates — ignore those so selection does not snap back under the cursor.
 static Point gHomeHoverLastPt{-1, -1};
 
+// mouse over a file entry: update homePageSelIdx and show tip at that entry
+// (not at the cursor). Returns true if (x,y) is over a file thumbnail/list row
 bool HomePageOnHover(MainWindow* win, int x, int y) {
     if (!win) {
         return false;
@@ -2466,6 +2473,7 @@ bool HomePageOnHover(MainWindow* win, int x, int y) {
     return true;
 }
 
+// file of the keyboard-selected entry, empty if there's no selection
 Str HomePageSelectedFilePathTemp(MainWindow* win) {
     auto& c = gHomeLayoutCache;
     int idx = win->homePageSelIdx;
@@ -2479,6 +2487,9 @@ Str HomePageSelectedFilePathTemp(MainWindow* win) {
     return str::DupTemp(fs->filePath);
 }
 
+// keyboard navigation of the file list (issue #1136). dCol/dRow are in grid
+// steps; in list view only dRow matters. Moving up past the first row puts
+// focus in the search box
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
     int n = HomeSelectableCount();
     if (n == 0) {

@@ -366,6 +366,7 @@ EngineBase* CreateEnginePsFromFile(Str fileName) {
     return engine;
 }
 
+/* EnginePs.cpp */
 bool IsEnginePsAvailable() {
     TempStr gswin32c = GetGhostscriptPathTemp();
     return len(gswin32c) > 0;

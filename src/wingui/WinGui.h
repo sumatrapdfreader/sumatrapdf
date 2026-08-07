@@ -94,7 +94,6 @@ struct Wnd : ILayout {
 
     virtual Size GetIdealSize();
 
-    // ILayout
     Kind GetKind() override;
     void SetVisibility(Visibility) override;
     Visibility GetVisibility() override;
@@ -116,7 +115,6 @@ struct Wnd : ILayout {
 
     void Cleanup();
 
-    // over-ride those to hook into message processing
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
     virtual bool PreTranslateMessage(MSG& msg);
     virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
@@ -231,9 +229,6 @@ struct ButtonColors {
     COLORREF edgeDisabled;
 };
 
-// Called from Button's WM_DRAWITEM so wingui doesn't have to know about the
-// app's palette. The app implements it; returning false leaves the button to
-// Windows, which is what an app that doesn't theme anything should do.
 bool ButtonGetColors(ButtonColors*);
 
 struct Button : Wnd {
@@ -322,10 +317,6 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools);
 //--- Edit
 using TextChangedHandler = Func0;
 
-// Color of the 1px underline an Edit created withBottomBorder draws, so wingui
-// doesn't have to know about the app's palette. The app implements it (Sumatra
-// returns the theme's edge color); an app that doesn't theme anything can
-// return a fixed gray.
 COLORREF EditBottomBorderColor();
 
 struct Edit : Wnd {
@@ -377,12 +368,9 @@ struct Edit : Wnd {
 
     Size GetIdealSize() override;
 
-    // set preferred / max width to ~nChars average character widths (0 clears)
     void SetIdealWidthChars(int nChars);
     void SetMaxWidthChars(int nChars);
 
-    // horizontal offset of the text from the control's left edge (border +
-    // internal margin); used to align a borderless label with the edit's text
     int GetLeftTextMargin();
 
     void SetSelection(int start, int end);
@@ -395,9 +383,6 @@ struct Edit : Wnd {
 
 //--- ListBox
 
-// Called from ListBox::Create() so wingui doesn't have to know about the app's
-// theming. The app implements it (Sumatra gives the list a dark scrollbar);
-// an app that doesn't theme anything can implement it as a no-op.
 void ListBoxMaybeApplyTheme(HWND);
 
 struct ListBox : Wnd {
@@ -957,7 +942,6 @@ void DeleteWnd(T** wnd) {
 
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 
-// TODO: those are hacks
 HWND GetCurrentModelessDialog();
 void SetCurrentModelessDialog(HWND);
 

@@ -242,6 +242,8 @@ Str Utf8ToAnsi(Str s) {
 } // namespace strconv
 
 // short names because frequently used
+// shorter names
+// TODO: eventually we want to migrate all strconv:: to them
 Str ToUtf8(WStr s, Arena* a) {
     return strconv::WStrToUtf8(s, a);
 }

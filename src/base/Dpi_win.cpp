@@ -108,6 +108,12 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
     x2 = nx2;
 }
 
+// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
+// GetSystemMetrics() always answers for the *system* dpi (the primary
+// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
+// sizes etc. come out wrong on any monitor scaled differently from the primary.
+// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
+// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
 int DpiGetSystemMetrics(int index, int dpi) {
     if (dpi <= 0) {
         dpi = 96;
@@ -129,6 +135,12 @@ int DpiGetSystemMetrics(int index, int dpi) {
     return res;
 }
 
+// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
+// GetSystemMetrics() always answers for the *system* dpi (the primary
+// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
+// sizes etc. come out wrong on any monitor scaled differently from the primary.
+// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
+// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
 int DpiGetSystemMetrics(HWND hwnd, int index) {
     return DpiGetSystemMetrics(index, DpiGet(hwnd));
 }

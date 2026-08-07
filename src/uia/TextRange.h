@@ -17,13 +17,9 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     int startGlyph, endGlyph;
 
   public:
-    // creates empty range
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document);
-    // creates range containing the given page
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, int pageNum);
-    // creates range containing the given TextSelection range
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, TextSelection* range);
-    // creates a copy of give range
     SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&);
     SumatraUIAutomationTextRange& operator=(const SumatraUIAutomationTextRange&) = delete;
 
@@ -47,12 +43,10 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     int FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial = false);
     int FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial = false);
 
-    // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
     ULONG STDMETHODCALLTYPE AddRef();
     ULONG STDMETHODCALLTYPE Release();
 
-    // ITextRangeProvider
     HRESULT STDMETHODCALLTYPE Clone(ITextRangeProvider** clonedRange);
     HRESULT STDMETHODCALLTYPE Compare(ITextRangeProvider* range, BOOL* areSame);
     HRESULT STDMETHODCALLTYPE CompareEndpoints(enum TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider* range,

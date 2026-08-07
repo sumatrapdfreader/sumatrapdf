@@ -18,6 +18,4 @@ struct ScreenshotHost {
 
 extern ScreenshotHost gScreenshotHost;
 
-// Captures every eligible window plus the desktop, then puts up the picker
-// overlay. Choosing one opens it in the image editor.
 void TakeScreenshots();

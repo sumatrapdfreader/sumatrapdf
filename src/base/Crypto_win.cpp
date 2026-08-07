@@ -143,6 +143,7 @@ CleanUp:
     return ok;
 }
 
+// extracts the content (e.g. PDF) from a PKCS#7 / .p7m wrapper using Win32 crypto APIs
 Str ExtractP7m(Str d) {
     if (len(d) == 0) {
         return {};
@@ -178,6 +179,7 @@ Str ExtractP7m(Str d) {
     return Str((char*)(content), (int)(cbContent));
 }
 
+// Authenticode / PE signature helpers (Windows only; stubs return false/null on POSIX)
 bool IsPEFileSigned(Str filePath) {
     WCHAR* ws = CWStrTemp(filePath);
     WINTRUST_FILE_INFO fileInfo = {};

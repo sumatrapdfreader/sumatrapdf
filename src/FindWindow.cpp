@@ -832,6 +832,8 @@ bool FindWindowWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
 
 //--- public API
 
+// The floating, movable/resizable variant of the find UI (see SearchUIFloating).
+// Phase 1: search controls only; a results list is added in a later phase.
 FindWindowWnd* CreateFindWindow(MainWindow* win) {
     auto* w = new FindWindowWnd();
     if (!w->Create(win)) {
@@ -931,18 +933,25 @@ void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked) {
     }
 }
 
+// repopulate the results list from win->findMatches (no-op if not visible).
+// allowNavigation=false for streamed partial updates: don't navigate the
+// document (navigation would cancel the in-flight count scan)
 void FindWindowRefreshResults(MainWindow* win, bool allowNavigation) {
     if (IsFindWindowVisible(win)) {
         win->findWindow->RefreshResults(allowNavigation);
     }
 }
 
+// remember the selected result by match identity (page + glyph) so the next
+// FindWindowRefreshResults can restore it even though the list was re-sorted
+// or grew at the front. Call before changing win->findMatches
 void FindWindowSaveSelectedMatch(MainWindow* win) {
     if (IsFindWindowVisible(win)) {
         win->findWindow->SaveSelectedMatch();
     }
 }
 
+// re-apply theme colors/icons to the floating window after a theme change
 void UpdateFindWindowTheme(MainWindow* win) {
     if (win->findWindow) {
         win->findWindow->UpdateTheme();
@@ -958,6 +967,7 @@ static Str gFindOrderTerm;
 // 104, 47 when starting on page 89) -- they get re-sorted before being
 // installed. The scan is async, so the first call starts it and every call
 // reports NOTREADY until it finishes; the test polls.
+// Test hook: run a search from startPage and report the results list order.
 TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
@@ -1015,6 +1025,7 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Headless draw test for issue #5736: match highlights must not bleed into the page column.
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {

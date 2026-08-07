@@ -20,6 +20,7 @@ extern "C" {
 
 static Str gPdfProducer;
 
+// this name is included in all saved PDF files
 void PdfCreator::SetProducerName(Str name) {
     if (!str::Eq(gPdfProducer, name)) {
         gPdfProducer = str::Dup(GetPermArena(), name);
@@ -350,6 +351,7 @@ bool PdfCreator::SaveToFile(Str filePath) const {
     return true;
 }
 
+// creates a simple PDF with all pages rendered as a single image
 bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
     PdfCreator* c = new PdfCreator();
     bool ok = true;

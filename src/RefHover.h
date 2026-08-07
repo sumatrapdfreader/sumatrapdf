@@ -122,40 +122,18 @@ constexpr UINT_PTR kRefHoverHideTimerID = 10;
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
-// Canvas wiring entry points (RefHoverCanvas.cpp) — keep Canvas.cpp thin.
 bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm);
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs);
 void RefHoverOnCanvasMouseLeave(RefHoverState* s, HWND hwndCanvas, int hoverDelayMs);
 void RefHoverOnCanvasLeftButtonDown(RefHoverState* s, HWND hwndCanvas);
 bool RefHoverOnCanvasTimer(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, UINT_PTR timerId);
-// delayMs: how long the cursor must hover before the popup shows
-// (the CitationHoverDelay advanced setting)
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point screenPt, int destPage, float destX,
                       float destY, float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect);
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
-// Like RefHoverHide but deferred: cancels any pending show immediately, then
-// hides the visible popup after delayMs. While the timer is pending, moving
-// the cursor onto the popup (e.g. to click a DOI link inside it) keeps it
-// alive. Lets the cursor cross the gap between the link and the popup without
-// the popup vanishing. Cancelled by a new RefHoverSchedule / RefHoverHide.
 void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs);
-// Fired by kRefHoverHideTimerID: hides the popup unless the cursor is now
-// over it (in which case it re-arms and keeps the popup up).
 void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas);
-// Open a launch link (external URL / file) hit-tested inside the popup.
 void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest);
-// pageZoom is the destination page's current display zoom (px-per-pt) —
-// used as the initial render zoom so popup text height matches the page.
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom);
-// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
-// Popup window keeps its initial size; only the rendered content scales.
-// Positive delta zooms in, negative zooms out. Returns true if the zoom
-// changed and a re-render happened.
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta);
-// Scroll the popup's rendered region by a wheel notch. Positive delta scrolls
-// toward earlier content (up); negative scrolls toward later content (down).
-// Rolls over to the previous / next page when the viewport hits a page edge
-// (continuous scrolling). Popup window keeps its initial size; only the
-// rendered region's Y (and possibly page number) changes.
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta);

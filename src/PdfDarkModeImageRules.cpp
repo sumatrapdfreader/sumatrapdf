@@ -172,6 +172,7 @@ const char* PdfDarkModeKindDebugLabel(DarkImageKind kind) {
     }
 }
 
+// Phase 4: edge-connected light background removal for LightBackgroundArtwork.
 bool PdfDarkModeShouldBlendLightBackground(const DarkImageAnalysis& analysis) {
     if (analysis.kind != DarkImageKind::LightBackgroundArtwork) {
         return false;

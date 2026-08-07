@@ -38,6 +38,7 @@ using Gdiplus::StringFormatFlagsDirectionRightToLeft;
 
 namespace mui {
 
+// note: Draw() ignores any transformation set on gfx
 TextRenderGdi* TextRenderGdi::Create(Graphics* gfx) {
     TextRenderGdi* res = new TextRenderGdi();
     res->gfx = gfx;

@@ -142,6 +142,7 @@ static void BrowserFindUpdateStatus(MainWindow* win, DocController* md, int page
     FindWindowRefreshResults(win); // mirror the current match in the results list
 }
 
+// in-page find result posted by a chm / markdown webview: update the find bar status
 void BrowserFindResultReceived(MainWindow* win, int gen, int current, int total) {
     if (gen != win->browserFindGen || !IsFindUIVisible(win)) {
         // result of a superseded search or the find UI was closed
@@ -158,6 +159,7 @@ void BrowserFindResultReceived(MainWindow* win, int gen, int current, int total)
 // payload: "<gen> <total> <records>", records separated by \x1e (record sep),
 // each "<page>\x1f<idx>\x1f<snippet>" (\x1f: unit sep). Built by searchAll()
 // in kFindInPageJs (BrowserDocView.cpp)
+// all-pages find result posted by a chm / markdown webview: rebuild win->findMatches
 void BrowserFindAllResultReceived(MainWindow* win, Str payload) {
     int gen = 0;
     int total = 0;
@@ -343,6 +345,7 @@ static void StartIncrementalFind(MainWindow* win) {
 // find-as-you-type: called when the find bar's edit text changes. Instead of
 // searching on every keystroke, (re)arm a debounce timer; the search starts a
 // short while after the user stops typing (issue #4626).
+// called when the user edits the find bar's text (find-as-you-type)
 void OnFindBarTextChanged(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
@@ -368,6 +371,7 @@ void OnFindBarTextChanged(MainWindow* win) {
     win->findDebouncePending = true;
 }
 
+// fired by the debounce WM_TIMER on hwndFrame: runs the deferred search
 void FindDebounceTimerFired(MainWindow* win) {
     KillTimer(win->hwndFrame, kFindDebounceTimerId);
     if (!win->findDebouncePending) {
@@ -386,6 +390,8 @@ static bool HasFindText(MainWindow* win) {
     return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
 }
 
+// if a debounced search is pending, cancel the timer and start it now (so Enter
+// forces the search to start immediately). Returns true if one was pending.
 bool FindFlushPendingSearch(MainWindow* win) {
     if (!win->findDebouncePending) {
         return false;
@@ -712,6 +718,7 @@ constexpr int kMaxFindResults = 5000;
 // isn't useful, only slow. The status then shows "n / 999+".
 constexpr int kMaxFindCount = 999;
 
+// free the cached per-match snippets (win->findMatches)
 void ClearFindMatches(MainWindow* win) {
     int n = len(win->findMatches);
     for (int i = 0; i < n; i++) {
@@ -730,6 +737,9 @@ void ClearFindMatches(MainWindow* win) {
 
 static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWord);
 
+// Drop find-match / match-count state that only applies to the previous document
+// (tab switch, close-current, reload). Keeps find box text (#5308). If the find
+// UI is still open, starts a new count so all-match highlights rebuild.
 void InvalidateFindForDocumentChange(MainWindow* win) {
     if (!win) {
         return;
@@ -1210,6 +1220,7 @@ static bool JoinFindThread(MainWindow* win, bool hideMessage);
 
 // navigate to a match chosen from the floating results list and select it, so
 // Find Next/Prev and the n/m counter continue from there
+// navigate to and select a match chosen from the floating results list
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph) {
     if (!win->IsDocLoaded()) {
         return;

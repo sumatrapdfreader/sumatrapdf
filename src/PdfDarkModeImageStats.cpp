@@ -199,6 +199,7 @@ RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH
     return RectF(imgPage.x, imgPage.y, newDx, newDy);
 }
 
+// Cap bbox when embedded image dimensions are unknown (common with content-stream tiles).
 RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight) {
     if (imgPage.IsEmpty() || pageHeight <= 0.f) {
         return imgPage;
@@ -234,6 +235,7 @@ bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, floa
     return PdfDarkModeStatsLookLikeDarkArtwork(PdfDarkModeSampleImageStats(ctx, image), pageCoverage);
 }
 
+// Stricter pixel gate used by PdfDarkModeShouldPreserveEmbeddedImageRect.
 bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
                                             int /*devH*/) {
     if (!ctx || !image) {
@@ -294,6 +296,7 @@ bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, floa
     return !PdfDarkModeImageLooksLikeDarkArtwork(ctx, image, pageCoverage);
 }
 
+// Gate for Legacy skip-rect preserve: combines bbox size, pixel stats, and artwork heuristics.
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH) {
     if (PdfDarkModePageDominantImageRecolors(ctx, image, pageCoverage)) {

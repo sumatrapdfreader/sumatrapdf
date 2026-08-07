@@ -156,10 +156,12 @@ bool DisplayModel::GoToPrevPage(bool toBottom) {
     return GoToPrevPage(toBottom ? -1 : 0);
 }
 
+// for quick type determination and type-safe casting
 DisplayModel* DisplayModel::AsFixed() {
     return this;
 }
 
+// the following is specific to DisplayModel
 EngineBase* DisplayModel::GetEngine() const {
     return engine;
 }
@@ -171,6 +173,7 @@ Kind DisplayModel::GetEngineType() const {
     return engine->kind;
 }
 
+/* current rotation selected by user */
 int DisplayModel::GetRotation() const {
     return rotation;
 }
@@ -236,6 +239,7 @@ bool DisplayModel::GoToPageHorizontal(bool toRight) {
     return GoToPrevPage();
 }
 
+// called when we decide that the display needs to be redrawn
 void DisplayModel::RepaintDisplay() {
     cb->Repaint();
 }
@@ -1511,6 +1515,7 @@ bool DisplayModel::GoToNextPage() {
     return true;
 }
 
+// true when the view is at the bottom and GoToNextPage would fail
 bool DisplayModel::IsAtDocumentEnd() const {
     if (CanScrollDown()) {
         return false;
@@ -1870,6 +1875,9 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     return newZoom;
 }
 
+/* a "virtual" zoom level. Can be either a real zoom level in percent
+       (i.e. 100.0 is original size) or one of virtual values kZoomFitPage,
+kZoomFitWidth or kZoomFitContent, whose real value depends on draw area size */
 void DisplayModel::RotateBy(int newRotation) {
     newRotation = NormalizeRotation(newRotation);
     ReportIf(0 == newRotation);

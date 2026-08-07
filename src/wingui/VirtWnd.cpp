@@ -16,6 +16,7 @@ VirtWnd::VirtWnd() {
     kind = kindVirtWnd;
 }
 
+// ILayout
 int VirtWnd::MinIntrinsicHeight(int /*width*/) {
     return 0;
 }
@@ -52,6 +53,7 @@ Size VirtWndText::Layout(const Constraints bc) {
     return bc.Constrain({sz.dx, sz.dy});
 }
 
+// ILayout
 int VirtWndText::MinIntrinsicHeight(int /*width*/) {
     GetIdealSize(true);
     return sz.dy;

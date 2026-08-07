@@ -301,6 +301,7 @@ Padding::~Padding() {
     delete child;
 }
 
+// ILayout
 Size Padding::Layout(const Constraints bc) {
     dbglayout("Padding::Layout() ");
     LogConstraints(bc, "\n");
@@ -386,6 +387,7 @@ static int CalculateHGap(ILayout* /*prev*/, ILayout* /*current*/) {
     return 0;
 }
 
+// ILayout
 Size VBox::Layout(const Constraints bc) {
     auto n = ChildrenCount();
     if (n == 0) {
@@ -1030,6 +1032,7 @@ Align::~Align() {
     delete Child;
 }
 
+// ILayout
 Size Align::Layout(const Constraints bc) {
     dbglayout("Align::Layout() ");
     LogConstraints(bc, "\n");

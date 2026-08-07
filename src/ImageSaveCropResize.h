@@ -33,7 +33,6 @@ struct ImageEditHost {
 
 extern ImageEditHost gImageEditHost;
 
-// fills the hooks above in with SumatraPDF's implementations
 void InitImageEditHost();
 
 enum class ImageEditMode {
@@ -48,5 +47,4 @@ enum class ImageEditMode {
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,
                          bool selectPdf = false);
 
-// Headless test for issue #5734: arrow keys must resize even when focus is on the dest path edit.
 TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut = nullptr);

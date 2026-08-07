@@ -37,6 +37,7 @@
 // always full path (FullPathInTitle only affects tab/window title text).
 // Append size when GetSize succeeds (may fail for offline network paths).
 // Used by Tabs and Toolbar (toolbar was overwriting tooltips with path-only).
+// full path + size (if available); optional dirty suffix for unsaved annotations
 TempStr MakeTabTooltipTemp(Str path, bool dirty) {
     if (!path) {
         return Str{};
@@ -114,6 +115,7 @@ static void ShowTabBar(MainWindow* win, bool show) {
     ScheduleUiUpdate(win);
 }
 
+// also shows/hides the tabbar when necessary
 void UpdateTabWidth(MainWindow* win) {
     int nTabs = win->TabCount();
     // Count real documents only: Home (and Favorites) alone should not keep the
@@ -410,6 +412,7 @@ static MenuDef menuDefContextTab[] = {
 };
 // clang-format on
 
+// create a new window if win==nullptr
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft) {
     int nTabs = win->TabCount();
@@ -744,6 +747,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
 // be pushed into it whenever it changes. AddTabToWindow() does it at insert
 // time, but a document's saved color is only known once it has loaded, well
 // after that (issue #5884).
+// copy tab->tabColor into the tab control's TabInfo (what it paints from)
 void SetTabInfoColor(WindowTab* tab) {
     if (!tab || !tab->win || !tab->win->tabsCtrl) {
         return;

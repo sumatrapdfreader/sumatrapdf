@@ -169,21 +169,14 @@ struct DirScanProgress {
 
 DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* userData);
 void AskDirScanThreadToQuit(DirScanCtx* ctx);
-// nonRecursive scans just this directory, without walking into it
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive = false);
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive = false);
 void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
-// Scan what's under dir before the rest of the walk, so the sizes filling in
-// are the ones being looked at. Re-orders what's already queued. An empty dir
-// goes back to plain breadth-first order.
 void SetDirScanPriorityDir(DirScanCtx* ctx, Str dir);
 
-// true when no worker has anything left to do
 bool DirScanIsIdle(DirScanCtx* ctx);
-// Fills up to maxOut entries, one per worker, and returns how many were filled.
 int GetDirScanProgress(DirScanCtx* ctx, DirScanProgress* out, int maxOut);
 
-// Directory utilities (paths are UTF-8)
 DirEntry* FindEntryByName(DirEntries* dv, Str name);
 
 DirEntries* AllocDirEntries(Arena* arena, Str fullDir);

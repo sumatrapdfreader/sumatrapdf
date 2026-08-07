@@ -2219,6 +2219,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& /*pageRect*/, b
 // only drawn, never saved - see CmdToggleImages in FrameOnCommand
 static bool gShowImages = false;
 
+// CmdToggleImages: outline images the way showLinks outlines links (debug aid)
 bool ShowImageOutlines() {
     return gShowImages;
 }
@@ -2661,6 +2662,8 @@ static bool CanvasShouldShowKeyboardFocus(MainWindow* win) {
     return GetFocus() == win->hwndFrame;
 }
 
+// Draw a keyboard-focus ring on the canvas when document focus is on the frame
+// (AdvanceFocus tab target). Call after painting the canvas client area (#4644).
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc) {
     if (!hdc || !CanvasShouldShowKeyboardFocus(win)) {
         return;
@@ -2674,6 +2677,7 @@ void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc) {
     }
 }
 
+// Invalidate the canvas so the focus ring is shown/hidden after focus changes.
 void InvalidateCanvasKeyboardFocus(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return;

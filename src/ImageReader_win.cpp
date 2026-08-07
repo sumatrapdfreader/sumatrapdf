@@ -254,6 +254,9 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
 //   WebP     → libwebp (beats WIC; GDI+ often missing)
 //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
 // Other formats: TGA / JXL / GDI+/WIC via PixmapFromDataWin.
+// Decode image bytes to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
+// Windows: JPEG→turbo, WebP→libwebp, JXL→jxldec; HEIC/AVIF→heicdec then WIC in
+// Debug, WIC then heicdec in Release; else TGA/GDI+/WIC. POSIX: MuPDF for now.
 Pixmap* PixmapFromData(Str bmpData) {
     Pixmap* px = PixmapFromDataFz(bmpData);
     if (px) {
@@ -271,6 +274,7 @@ Pixmap* PixmapFromData(Str bmpData) {
 
 // Multi-page TIFF / animated GIF: Windows multi-frame path first. Everything
 // else is a single Pixmap via PixmapFromData (native codec then Win).
+// One Pixmap per frame (multi-page TIFF / animated GIF yield >1); caller owns each.
 Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     FileType kind = GuessFileTypeFromData(bmpData);
     if (FileType::Tiff == kind || FileType::Gif == kind) {
@@ -288,6 +292,7 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     return res;
 }
 
+// Load path into a RenderedBitmap (Windows); nullptr on POSIX for now.
 RenderedBitmap* LoadRenderedBitmap(Str path) {
     if (!path) {
         return nullptr;

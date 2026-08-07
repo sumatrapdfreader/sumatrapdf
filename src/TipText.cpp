@@ -128,6 +128,7 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
 // Text from outside the app -- a clipboard string, a file name -- can contain
 // anything the markup uses, so this adds it as plain words with nothing
 // interpreted.
+// adds text with no markup interpreted, for strings from outside the app
 void AddTipPlainText(ParsedTip& tip, Str text) {
     AppendTipWordsFromText(tip, text, false, -1);
 }
@@ -271,6 +272,7 @@ void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
     }
 }
 
+// lays out words within areaWidth (wrapping); sets per-word x/y and tip.totalDx/totalDy
 void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
     int x = startX;
     int y = startY;
@@ -294,6 +296,7 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
     tip.totalDy = (y - startY) + lineHeight;
 }
 
+// draws the words (link words in linkCol, underlined; others in textCol)
 void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol) {
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     HFONT boldFont = nullptr;
@@ -324,6 +327,7 @@ void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORRE
     DeleteObject(pen);
 }
 
+// returns index into tip.links of the link at (x, y) in layout coords, or -1
 int HitTestTipLink(ParsedTip& tip, int x, int y) {
     for (auto& w : tip.words) {
         if (!w.isLink) {
@@ -337,6 +341,7 @@ int HitTestTipLink(ParsedTip& tip, int x, int y) {
     return -1;
 }
 
+// runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl
 void ExecuteTipLink(HWND hwnd, Str cmd) {
     if (len(cmd) == 0) {
         return;
@@ -359,6 +364,7 @@ bool TipHasLinks(ParsedTip& tip) {
     return len(tip.links) > 0;
 }
 
+// reconstructs the plain (link markup removed, Key/ expanded) text from a parse
 TempStr TipPlainTextTemp(ParsedTip& tip) {
     str::Builder sb;
     for (int i = 0; i < len(tip.words); i++) {

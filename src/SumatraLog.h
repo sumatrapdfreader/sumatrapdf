@@ -9,5 +9,4 @@ extern Str gLogFilePath;
 void StartLogToFile(Str path, bool removeIfExists);
 bool WriteCurrentLogToFile(Str path);
 void DestroyLogging();
-// Walk parent PIDs and log path + command line for each (startup diagnostics).
 void LogParentProcessChain();

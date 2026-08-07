@@ -31,8 +31,6 @@ class CssPullParser {
   public:
     explicit CssPullParser(Str s) : src(s) {}
 
-    // call NextRule first for parsing a style element and
-    // NextProperty only for parsing a single style attribute
     bool NextRule();
     const CssSelector* NextSelector();
     const CssProperty* NextProperty();

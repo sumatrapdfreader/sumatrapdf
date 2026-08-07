@@ -272,6 +272,7 @@ void LvDeleteAllItems(HWND hwnd) {
     SendMessageW(hwnd, LVM_DELETEALLITEMS, 0, 0);
 }
 
+// empty Rect on failure
 Rect LvGetItemRect(HWND hwnd, int i, int code) {
     RECT rc = {};
     rc.left = code;
@@ -324,6 +325,7 @@ TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub) {
     }
 }
 
+// client coords; flagsOut optional (LVHT_*)
 int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut) {
     LVHITTESTINFO info = {};
     info.pt.x = pt.x;
@@ -2423,6 +2425,8 @@ void MenuRemove(HMENU m, int id) {
     RemoveMenu(m, (UINT)id, MF_BYCOMMAND);
 }
 
+// TODO: this doesn't recognize enum Cmd, why?
+// void Remove(HMENU m, enum Cmd id);
 void MenuEmpty(HMENU m) {
     while (RemoveMenu(m, 0, MF_BYPOSITION)) {
         // no-op

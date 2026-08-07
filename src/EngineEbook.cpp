@@ -918,6 +918,7 @@ EngineBase* EngineEpub::CreateFromData(Str data) {
     return engine;
 }
 
+/* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(Str fileName) {
     return EngineEpub::CreateFromFile(fileName);
 }

@@ -43,6 +43,4 @@ typedef struct DialogSizerSizingItem {
     }                          \
     ;
 
-// SumatraPDF: removed the fourth argument and fixed the comment:
-//	Set a window as sizeable, passing the sizing data for each control.
 extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem* psd, BOOL bShowSizingGrip);

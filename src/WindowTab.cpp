@@ -47,6 +47,7 @@ bool WindowTab::IsFavoritesTab() const {
     return type == WindowTab::Type::Favorites;
 }
 
+// About or Favorites: no document controller
 bool WindowTab::IsNonDocumentTab() const {
     return IsAboutTab() || IsFavoritesTab();
 }
@@ -130,6 +131,7 @@ Kind WindowTab::GetEngineType() const {
     return nullptr;
 }
 
+// only if AsFixed()
 EngineBase* WindowTab::GetEngine() const {
     if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->GetEngine();

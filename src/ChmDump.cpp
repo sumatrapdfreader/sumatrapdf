@@ -233,6 +233,8 @@ static bool DumpChmFile(Str path) {
     return ok;
 }
 
+// Dump CHM metadata, file table, and TOC/index information to stdout.
+// Returns 0 if every requested CHM opened, enumerated, and unpacked successfully.
 int DumpChm(const Flags& flags) {
     if (len(flags.fileNames) == 0) {
         CliPrint("No file specified for -dump-chm");

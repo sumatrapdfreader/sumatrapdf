@@ -24,6 +24,7 @@ void DebugInfo::Init() {
 
 void DebugInfo::Exit() {}
 
+// only use those before reading is finished!!
 sInt DebugInfo::MakeString(const char* s) {
     string str(s);
     IndexByStringMap::iterator it = m_IndexByString.find(str);

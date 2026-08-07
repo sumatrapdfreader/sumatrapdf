@@ -72,6 +72,7 @@ Str gDefaultMsg; // Note: translation, not freeing
 // case-insensitive check whether dir is a ';'-delimited component of path.
 // substring matching would wrongly match a longer sibling entry (e.g.
 // "...\SumatraPDFViewer" contains "...\SumatraPDF"), so compare whole entries.
+// case-insensitive check whether dir is a ';'-delimited component of a PATH-like string
 bool IsDirInPath(Str path, Str dir) {
     StrVec parts;
     Split(&parts, path, ";");
@@ -185,6 +186,7 @@ static bool IsPathUnderOrEqualDir(Str path, Str dir) {
     return false;
 }
 
+// true if path is under Program Files / Program Files (x86)
 bool IsPathUnderProgramFiles(Str path) {
     if (!path) {
         return false;
@@ -227,6 +229,7 @@ static bool CanWriteToDirectory(Str dir) {
     return true;
 }
 
+// true if install needs a UAC elevation (all-users, Program Files, or not writable)
 bool InstallNeedsElevation(Str installDir, bool allUsers) {
     if (allUsers) {
         return true;

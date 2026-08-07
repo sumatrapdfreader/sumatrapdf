@@ -222,12 +222,9 @@ int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
 void* AtomicPtrGet(AtomicPtr* p);
 void AtomicPtrSet(AtomicPtr* p, void* v);
-// stores v and returns what was there before
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 #if !OS_WIN
-// milliseconds since some unspecified epoch, monotonic; a portable stand-in for
-// the Win32 GetTickCount64() (which <windows.h> already declares on Windows).
 u64 GetTickCount64();
 #endif
 
@@ -397,7 +394,9 @@ inline void ReportDebugIfNoOp(bool) {}
 #endif
 
 // ugly hack: logf() is our logging macro so we must provide a way to call logf() from math library
-inline float math_logf(float f) { return logf(f); }
+inline float math_logf(float f) {
+    return logf(f);
+}
 
 /* Logging macros are defined here but must be implemented by the app because different apps have different logging
  * needs. */

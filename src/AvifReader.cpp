@@ -124,6 +124,7 @@ Pixmap* PixmapFromAvifData(Str d) {
     return px;
 }
 
+// Returns TIFF EXIF payload (caller frees *outData). Skips 4-byte HEIF Exif prefix.
 bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
     *outData = nullptr;
     *outSize = 0;
@@ -167,6 +168,7 @@ Size AvifSizeFromData(Str) {
 Pixmap* PixmapFromAvifData(Str) {
     return nullptr;
 }
+// Returns TIFF EXIF payload (caller frees *outData). Skips 4-byte HEIF Exif prefix.
 bool AvifExifBlobFromData(Str, u8**, size_t*) {
     return false;
 }

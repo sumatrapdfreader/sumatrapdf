@@ -303,6 +303,8 @@ bool ByteReader::UnpackBE(void* strct, int size, Str format, int off) const {
     return Unpack(strct, size, format, off, true);
 }
 
+// Unpacks a structure from the data according to the given format
+// e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
 bool ByteReader::Unpack(void* strct, int size, Str format, bool isBE, int off) const {
     return Unpack(strct, size, format, off, isBE);
 }

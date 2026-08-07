@@ -39,10 +39,22 @@ int DpiScale(HDC /*hdc*/, int x) {
     return DpiScale((HWND) nullptr, x);
 }
 
+// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
+// GetSystemMetrics() always answers for the *system* dpi (the primary
+// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
+// sizes etc. come out wrong on any monitor scaled differently from the primary.
+// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
+// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
 int DpiGetSystemMetrics(int /*index*/, int /*dpi*/) {
     return 0;
 }
 
+// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
+// GetSystemMetrics() always answers for the *system* dpi (the primary
+// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
+// sizes etc. come out wrong on any monitor scaled differently from the primary.
+// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
+// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
 int DpiGetSystemMetrics(HWND /*hwnd*/, int /*index*/) {
     return 0;
 }

@@ -98,7 +98,6 @@ RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 
-// EditAnnotations.cpp
 Str Author(Annotation*);
 time_t ModificationDate(Annotation*);
 int PopupId(Annotation*); // -1 if not exist
@@ -138,8 +137,6 @@ void SetIconName(Annotation*, Str);
 void SetLineEndStyles(Annotation*, int end);
 void SetLineStartStyles(Annotation*, int start);
 
-// PDF form (widget) fields. GetWidgetType returns a pdf_widget_type value
-// (PDF_WIDGET_TYPE_*), or 0 (UNKNOWN) when annot isn't a form widget.
 int GetWidgetType(Annotation*);
 // which mouse cursor a form field warrants on hover. None for non-widgets and
 // read-only fields, Text (I-beam) for text/combo/listbox, Button (hand) for
@@ -150,26 +147,15 @@ enum class WidgetCursorKind {
     Button
 };
 WidgetCursorKind GetWidgetCursorKind(Annotation*);
-// pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation*);
-// current text value of a form field (owned temp copy), or "" .
 Str GetWidgetValue(Annotation*);
-// font size from the field's /DA (in PDF points), or 0 for auto-size.
 float GetWidgetFontSize(Annotation*);
-// max length of a text field (chars), or 0 for unlimited.
 int GetWidgetMaxLen(Annotation*);
-// set a text field's value (runs validation); returns true if accepted.
 bool SetWidgetTextValue(Annotation*, Str value);
-// options of a combobox/listbox field (display strings), appended to `out`.
 void GetWidgetChoiceOptions(Annotation*, StrVec& out);
-// set a choice field's value to one of its options; returns true if applied.
 bool SetWidgetChoiceValue(Annotation*, Str value);
-// Toggle a checkbox / radio-button form field in place. Returns true if it was
-// a (non-read-only) checkbox/radio and got toggled.
 bool ToggleFormButton(Annotation*);
 
-// True if annot is non-null, has a live pdf_annot*, and is still listed in
-// its EngineMupdf page (markup or form widget). Use before any MuPDF call.
 bool AnnotationIsLive(Annotation*);
 
 void DeleteAnnotation(Annotation*);

@@ -256,6 +256,7 @@ static fz_image* dm_build_processed_shade(fz_context* ctx, fz_shade* shade, fz_m
     return result;
 }
 
+// Returns a kept fz_image for fill_image, or nullptr to use the source image.
 fz_image* PdfDarkModeGetCachedImage(fz_context* ctx, DarkModeEngineCache* engineCache, DarkModePageAnalysis* analysis,
                                     int occurrenceIndex, fz_image* srcImage, DarkImagePolicy policy,
                                     const DarkModePalette& palette, u32 profileHash) {
@@ -301,6 +302,7 @@ fz_image* PdfDarkModeGetCachedImage(fz_context* ctx, DarkModeEngineCache* engine
     return fz_keep_image(ctx, built);
 }
 
+// Returns a kept fz_image covering bounds, or nullptr to fall back to direct shade fill.
 fz_image* PdfDarkModeGetCachedShade(fz_context* ctx, DarkModePageAnalysis* analysis, fz_shade* shade, fz_matrix ctm,
                                     float alpha, fz_irect bounds, const DarkModePalette& palette) {
     if (!analysis || !shade) {

@@ -36,10 +36,13 @@ static ActiveFormEdit gEdit;
 static WNDPROC gDefCtrlProc = nullptr;
 static bool gCommitting = false;
 
+// True while a form field is being edited in place.
 bool IsFormFieldEditActive() {
     return gEdit.hwnd != nullptr;
 }
 
+// Cancel the active form edit if it is for this widget (no save). Safe no-op
+// when no edit is active or the widget does not match.
 void CancelFormFieldEditIfWidget(Annotation* widget) {
     if (!widget || !gEdit.hwnd || gEdit.widget != widget) {
         return;
@@ -47,6 +50,7 @@ void CancelFormFieldEditIfWidget(Annotation* widget) {
     CommitFormFieldEdit(false);
 }
 
+// Commit (save=true) or cancel (save=false) the active form-field edit, if any.
 void CommitFormFieldEdit(bool save) {
     if (!gEdit.hwnd || gCommitting) {
         return;
@@ -262,6 +266,8 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     return true;
 }
 
+// Start editing a text form field in place (floats an edit box over the field).
+// Returns false if `widget` isn't an editable (non-read-only) text widget.
 bool StartFormFieldEdit(MainWindow* win, Annotation* widget) {
     if (!win || !AnnotationIsLive(widget)) {
         return false;

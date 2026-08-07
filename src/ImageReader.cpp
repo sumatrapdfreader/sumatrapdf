@@ -123,6 +123,7 @@ static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
     return px;
 }
 
+// Decode via MuPDF (JPEG / JPEG2000 currently).
 Pixmap* PixmapFromDataFz(Str d) {
     const u8* data = (const u8*)d.s;
     size_t n = (size_t)d.len;
@@ -147,6 +148,7 @@ Pixmap* PixmapFromDataFz(Str d) {
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
+// Cheap size probe (header parse, else full decode). Returns empty Size on failure.
 Size ImageSizeFromData(Str d) {
     Size result;
     FileTypeInfo fti = GuessFileInfoFromData(d);

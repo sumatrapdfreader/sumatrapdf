@@ -109,6 +109,8 @@ static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
     return true;
 }
 
+// Opens a document. Returns an opaque handle, or nullptr on failure; on failure
+// *errorOut (if non-null) is set to a malloc'd message the caller must free().
 void* MacOpenDocument(const char* path, char** errorOut) {
     if (!path || !path[0]) {
         if (errorOut) {
@@ -134,6 +136,7 @@ void* MacOpenDocument(const char* path, char** errorOut) {
     return engine;
 }
 
+// Number of pages, or 0 if the handle is invalid.
 int MacPageCount(void* document) {
     if (!document) {
         return 0;
@@ -141,6 +144,7 @@ int MacPageCount(void* document) {
     return ((EngineBase*)document)->PageCount();
 }
 
+// Mediabox size of pageNo (1-based) in points. Returns false if invalid.
 bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut) {
     if (!document) {
         return false;
@@ -227,6 +231,8 @@ bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumen
     return true;
 }
 
+// Renders pageNo (1-based) at the given zoom and rotation (0/90/180/270).
+// Fills *page (caller frees with MacFreeRenderedPage); returns false on failure.
 bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page) {
     if (!page) {
         return false;

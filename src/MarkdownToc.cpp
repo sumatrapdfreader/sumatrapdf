@@ -32,6 +32,7 @@ static void CollectMdInDir(Str dir, StrVec& out) {
     }
 }
 
+// Collect .md / .markdown files under baseDir, at most two subdirectory levels deep.
 void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut) {
     filesOut.Reset();
     if (len(baseDir) == 0) {
@@ -131,6 +132,7 @@ static void AppendSlugChar(str::Builder* out, unsigned int c) {
     // everything else (ascii punctuation) is dropped
 }
 
+// Slug for a heading title, matching cmark-gfm autoheaderid. Pass arena to allocate there.
 Str MarkdownHeadingSlug(Arena* a, Str title) {
     str::Builder out;
     const u8* p = (const u8*)title.s;
@@ -269,6 +271,7 @@ static void InitMarkdownFileToc(MarkdownFileToc* ft) {
     ft->headings.Reset();
 }
 
+// Parse headings from all files in parallel (up to CpuCoreCount() - 2 threads).
 void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
     int n = len(files);
     tocsOut.Reset();
@@ -578,6 +581,7 @@ static char* MarkdownToHtmlBody(Str markdown) {
     return body;
 }
 
+// Convert markdown source to a full HTML page (body only is rendered with cmark-gfm).
 Str MarkdownToHtmlPage(Str markdown) {
     char* body = MarkdownToHtmlBody(markdown);
     if (!body) {

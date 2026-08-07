@@ -247,6 +247,7 @@ static bool BuildEdgeConnectedBgMask(fz_context* ctx, fz_pixmap* src, float bgR,
     return true;
 }
 
+// Phase 4: returns kept fz_image with alpha, or nullptr to fall back to per-pixel adaptive recolor.
 fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* src, const DarkImageAnalysis& analysis,
                                                    const DarkModePalette& palette) {
     if (!ctx || !src || !src->samples || src->w <= 0 || src->h <= 0) {
