@@ -2381,7 +2381,35 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
 
 void MenuSetChecked(HMENU m, int id, bool isChecked) {
     ReportIf(id < 0);
-    CheckMenuItem(m, (UINT)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
+    if (!m || id < 0) {
+        return;
+    }
+    // CheckMenuItem(MF_BYCOMMAND) only hits the first item with that id. The
+    // same command can appear twice (e.g. File and Settings "Use SumatraPDF
+    // File Picker"), so walk the whole menu tree and update every match.
+    int n = GetMenuItemCount(m);
+    for (int i = 0; i < n; i++) {
+        MENUITEMINFOW mii{};
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_ID | MIIM_SUBMENU | MIIM_STATE | MIIM_FTYPE;
+        if (!GetMenuItemInfoW(m, (UINT)i, TRUE, &mii)) {
+            continue;
+        }
+        if (mii.hSubMenu) {
+            MenuSetChecked(mii.hSubMenu, id, isChecked);
+            continue;
+        }
+        if ((int)mii.wID != id) {
+            continue;
+        }
+        mii.fMask = MIIM_STATE;
+        if (isChecked) {
+            mii.fState |= MFS_CHECKED;
+        } else {
+            mii.fState &= ~MFS_CHECKED;
+        }
+        SetMenuItemInfoW(m, (UINT)i, TRUE, &mii);
+    }
 }
 
 bool MenuSetEnabled(HMENU m, int id, bool isEnabled) {

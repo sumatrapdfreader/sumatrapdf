@@ -5575,7 +5575,8 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
     out.Add(_TRA("All files"), StrL("*.*"));
 }
 
-static void OpenFile(MainWindow* win) {
+// Standard Windows IFileOpenDialog multi-select open.
+static void OpenFileWithOSFilePicker(MainWindow* win) {
     if (!CanAccessDisk()) {
         return;
     }
@@ -5588,7 +5589,7 @@ static void OpenFile(MainWindow* win) {
     ScopedComPtr<IFileOpenDialog> dlg;
     HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg));
     if (FAILED(hr) || !dlg) {
-        logf("OpenFile: CoCreateInstance(CLSID_FileOpenDialog) failed: 0x%x\n", (uint)hr);
+        logf("OpenFileWithOSFilePicker: CoCreateInstance(CLSID_FileOpenDialog) failed: 0x%x\n", (uint)hr);
         return;
     }
 
@@ -5607,7 +5608,7 @@ static void OpenFile(MainWindow* win) {
         return;
     }
     if (FAILED(hr)) {
-        logf("OpenFile: IFileOpenDialog::Show failed: 0x%x\n", (uint)hr);
+        logf("OpenFileWithOSFilePicker: IFileOpenDialog::Show failed: 0x%x\n", (uint)hr);
         return;
     }
 
@@ -5643,6 +5644,34 @@ static void OpenFile(MainWindow* win) {
         paths.Append(path);
     }
     StartLoadDocuments(paths, win);
+}
+
+// FilePicker: empty/os = Windows dialog; sumatrapdf = Navigate Files in Folder.
+static bool FilePickerIsSumatraPDF() {
+    return gGlobalPrefs && str::EqI(gGlobalPrefs->filePicker, StrL("sumatrapdf"));
+}
+
+static void ToggleFilePicker() {
+    if (FilePickerIsSumatraPDF()) {
+        str::ReplaceWithCopy(&gGlobalPrefs->filePicker, StrL("os"));
+    } else {
+        // empty or "os" (or anything else) → sumatrapdf
+        str::ReplaceWithCopy(&gGlobalPrefs->filePicker, StrL("sumatrapdf"));
+    }
+    SaveSettings();
+}
+
+static void OpenFile(MainWindow* win) {
+    if (!CanAccessDisk() || gPluginMode) {
+        return;
+    }
+
+    if (FilePickerIsSumatraPDF()) {
+        ShowNavFilesInFolder(win);
+        return;
+    }
+    // empty, "os", or unrecognized: Windows file picker
+    OpenFileWithOSFilePicker(win);
 }
 
 static void RemoveFailedFiles(StrVec& files) {
@@ -9196,6 +9225,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdOpenFile:
             OpenFile(win);
+            break;
+
+        case CmdOpenFileWithOSFilePicker:
+            OpenFileWithOSFilePicker(win);
+            break;
+
+        case CmdToggleFilePicker:
+            ToggleFilePicker();
+            for (MainWindow* w : gWindows) {
+                UpdateAppMenu(w, w->menu);
+            }
             break;
 
         case CmdShowInFolder:

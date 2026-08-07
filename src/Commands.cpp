@@ -277,6 +277,8 @@ static SeqStrings gCommandNames =
     "CmdDebugToggleDpiOverride\0"
     "CmdToggleImages\0"
     "CmdSelectTextViaKeyboard\0"
+    "CmdOpenFileWithOSFilePicker\0"
+    "CmdToggleFilePicker\0"
     "CmdNone\0"
     "\0";
 
@@ -543,6 +545,8 @@ static i32 gCommandIds[] = {
     CmdDebugToggleDpiOverride,
     CmdToggleImages,
     CmdSelectTextViaKeyboard,
+    CmdOpenFileWithOSFilePicker,
+    CmdToggleFilePicker,
     CmdNone,
 };
 
@@ -809,6 +813,8 @@ SeqStrings gCommandDescriptions =
     "Debug: Toggle DPI Override\0"
     "Toggle Show Images\0"
     "Select Text With Keyboard\0"
+    "Open File With Windows File Picker...\0"
+    "SumatraPDF File Picker\0"
     "Do nothing\0"
     "\0";
 // clang-format on

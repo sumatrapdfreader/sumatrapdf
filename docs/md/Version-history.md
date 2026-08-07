@@ -57,6 +57,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - case-insensitive search now treats German ß as equivalent to `ss`, so searching `Strasse` finds `Straße` and vice versa (fixes #933)
 - hovering a thumbnail on the Frequently Read home page now shows a ✕ button in its top-right corner to remove that document from the list, without going through the right-click menu (fixes #283)
 - home page document history: `Del` removes the keyboard-selected entry from history (shown as a shortcut on **Remove From History** in the right-click menu); the menu also has **Delete File** (recycle bin + drop from history) and **Show in folder** opens the in-app Navigate Files in Folder picker on that file's directory
+- Open File (`Ctrl + O`) can use either the standard Windows file picker or the in-app Navigate Files in Folder window (`FilePicker = os | sumatrapdf`, empty means Windows). Toggle with **Settings / SumatraPDF File Picker** or the same check under **File** (below Open). **Open File With Windows File Picker** (`CmdOpenFileWithOSFilePicker`) always uses the system dialog. The home page no longer shows a separate Navigate Files in Folder link
 
 - the home page document history can be shown as a list instead of thumbnails (toggle buttons next to the header, or the `HomePageViewMode = thumbnails | list` advanced setting). Each list row shows a small preview, the file name, the file's directory (right-aligned, muted), the file size, and remove/pin buttons (fixes #4909)
 - new zoom mode `Fit by Orientation` (in the View / Zoom menu) that automatically fits width when the view is landscape and fits page when portrait, updating as you resize the window or rotate the screen (fixes #702)
@@ -157,6 +158,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdToggleFavoritesSort` : "Sort Favorites By Name" — Favorites tree context menu checkbox; toggles `SortFavoritesByName` (fixes #2277)
 - `CmdZoomFitHeight` : "Zoom: Fit Height" — scale page height to the window (fixes #1714)
 - `CmdSelectTextViaKeyboard` : "Select Text With Keyboard" (`F7`) — caret browsing: move a text caret with the arrows and select without the mouse (fixes #4684, #4116)
+- `CmdOpenFileWithOSFilePicker` : "Open File With Windows File Picker..." — always the system multi-select open dialog (when `FilePicker = sumatrapdf`, use this to force the Windows picker)
+- `CmdToggleFilePicker` : "SumatraPDF File Picker" — check under Settings and File menus; toggles `FilePicker` between Windows and SumatraPDF
 - `CmdToggleKeyboardLinkFollowing` : "Follow Link With Keyboard" (`Shift + F`) — numbers the links on screen 1..9, a digit follows one (fixes #2629)
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"

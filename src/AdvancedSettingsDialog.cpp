@@ -52,6 +52,7 @@ static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden",
 static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
 static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
 static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
+static const char* gEnumFilePicker[] = {"", "os", "sumatrapdf", nullptr};
 static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
 static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
 static const char* gEnumFreeTextAlignment[] = {"left", "center", "right", nullptr};
@@ -70,6 +71,7 @@ static const EnumSettingDef gEnumSettings[] = {
     {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
     {"DocumentColorsFollowTheme", gEnumDocumentColorsFollowTheme},
     {"HomePageViewMode", gEnumHomePageViewMode},
+    {"FilePicker", gEnumFilePicker},
     {"PrintScale", gEnumPrintScale},
     {"Collate", gEnumCollate},
     {"FreeTextAlignment", gEnumFreeTextAlignment},
@@ -1167,9 +1169,9 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     // bold text in the list means
     {
         Str hints[] = {
-            _TRA("double-click or Enter to edit"),
-            _TRA("value bold? different from default"),
-            _TRA("name bold? value changed and unsaved"),
+            _TRA("Enger or double-click to edit"),
+            _TRA("Value bold? different from default"),
+            _TRA("Name bold? value changed and unsaved"),
         };
         for (const Str& hint : hints) {
             auto* hbox = new HBox();

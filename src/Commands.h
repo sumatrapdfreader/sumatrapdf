@@ -271,7 +271,9 @@ enum {
     CmdDebugToggleDpiOverride = 460,
     CmdToggleImages = 461,
     CmdSelectTextViaKeyboard = 462,
-    CmdNone = 463,
+    CmdOpenFileWithOSFilePicker = 463,
+    CmdToggleFilePicker = 464,
+    CmdNone = 465,
 
     /* range for file history */
     CmdFileHistoryFirst,

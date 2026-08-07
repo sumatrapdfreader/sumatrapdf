@@ -849,6 +849,15 @@ const globalPrefs: Field[] = [
     .ver("3.7")
     .doc("valid values: thumbnails, list"),
   field(
+    "FilePicker",
+    Str,
+    "",
+    "file open dialog used by Open File: empty or os (standard Windows file picker), " +
+      "or sumatrapdf (Navigate Files in Folder). Toggled by Settings / SumatraPDF File Picker",
+  )
+    .ver("3.7")
+    .doc("valid values: (empty), os, sumatrapdf"),
+  field(
     "ReloadModifiedDocuments",
     Bool,
     true,

@@ -271,6 +271,8 @@ export const commands = [
     "CmdDebugToggleDpiOverride", "Debug: Toggle DPI Override",
     "CmdToggleImages", "Toggle Show Images",
     "CmdSelectTextViaKeyboard", "Select Text With Keyboard",
+    "CmdOpenFileWithOSFilePicker", "Open File With Windows File Picker...",
+    "CmdToggleFilePicker", "SumatraPDF File Picker",
     "CmdNone", "Do nothing",
 ];
 

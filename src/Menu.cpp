@@ -78,6 +78,10 @@ static MenuDef menuDefFile[] = {
         CmdOpenFile,
     },
     {
+        _TRN("Use SumatraPDF File Picker"),
+        CmdToggleFilePicker,
+    },
+    {
         _TRN("&Close"),
         CmdClose,
     },
@@ -496,6 +500,10 @@ static MenuDef menuDefSettings[] = {
     { _TRN("Contribute Translation"),       CmdContributeTranslation },
     { kMenuSeparator,                             0                  },
 #endif
+    {
+        _TRN("Use SumatraPDF File Picker"),
+        CmdToggleFilePicker,
+    },
     {
         _TRN("&Options..."),
         CmdOptions,
@@ -1815,6 +1823,8 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
     MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));
+    MenuSetChecked(win->menu, CmdToggleFilePicker,
+                   gGlobalPrefs && str::EqI(gGlobalPrefs->filePicker, StrL("sumatrapdf")));
 }
 
 void OnAboutContextMenu(MainWindow* win, int x, int y) {

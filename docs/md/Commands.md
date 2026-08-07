@@ -23,9 +23,11 @@ CmdDuplicateInNewTab,,Open Current Document In New Tab,ver 3.6+
 CmdExit,Ctrl + Q,Exit Application,
 CmdMoveFrameFocus,F6,Move Frame Focus,
 CmdNewWindow,Ctrl + N,Open New SumatraPDF Window,
-CmdOpenFile,Ctrl + O,Open File...,
+CmdOpenFile,Ctrl + O,Open File...,"uses the Windows file picker or Navigate Files in Folder according to the `FilePicker` advanced setting (empty/os = Windows, sumatrapdf = in-app), ver 3.7+"
+CmdOpenFileWithOSFilePicker,,Open File With Windows File Picker...,"always the standard Windows multi-select file open dialog, ver 3.7+"
+CmdToggleFilePicker,,SumatraPDF File Picker,"checkbox under File and Settings; toggles `FilePicker` empty/os ↔ sumatrapdf, ver 3.7+"
 CmdOpenNextFileInFolder,Shift + Ctrl + Right,Open Next File In Folder,
-CmdNavigateFilesInFolder,Shift + Ctrl + Up,Navigate Files in Folder,"directory browser for openable files in the current file's folder (stays open; Enter/double-click replaces the current tab, Ctrl+Enter/Ctrl+double-click switches to the tab already showing the file or opens a new tab, Alt+Up goes to the parent directory, Del moves the selected file to the recycle bin, F5 re-reads the directory); also available on the home page, where it starts in the folder of the most recently opened document, ver 3.7+"
+CmdNavigateFilesInFolder,Shift + Ctrl + Up,Navigate Files in Folder,"directory browser for openable files in the current file's folder (stays open; Enter/double-click replaces the current tab, Ctrl+Enter/Ctrl+double-click switches to the tab already showing the file or opens a new tab, Alt+Up goes to the parent directory, Del moves the selected file to the recycle bin, F5 re-reads the directory); also used when `FilePicker = sumatrapdf`, ver 3.7+"
 CmdOpenPrevFileInFolder,Shift + Ctrl + Left,Open Previous File In Folder,
 CmdOpenSelectedDocument,,Open Selected Document,
 CmdPinSelectedDocument,,Pin Selected Document,

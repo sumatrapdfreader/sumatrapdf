@@ -84,6 +84,9 @@ HomePageSortByFrequentlyRead = false
 ; valid values: thumbnails, list (introduced in version 3.7)
 HomePageViewMode = thumbnails
 
+; valid values: (empty), os, sumatrapdf (introduced in version 3.7)
+FilePicker = 
+
 ; if true, a document will be reloaded automatically whenever it's changed
 ; (currently doesn't work for documents shown in the ebook UI) (introduced in
 ; version 2.5)
