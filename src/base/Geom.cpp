@@ -302,8 +302,8 @@ RectF RectF::FromXY(PointF TL, PointF BR) {
 }
 
 Rect RectF::Round() const {
-    return Rect::FromXY((int)floor(x + FLT_EPSILON), (int)floor(y + FLT_EPSILON), (int)ceil(x + dx - FLT_EPSILON),
-                        (int)ceil(y + dy - FLT_EPSILON));
+    return Rect::FromXY((int)floorf(x + FLT_EPSILON), (int)floorf(y + FLT_EPSILON), (int)ceilf(x + dx - FLT_EPSILON),
+                        (int)ceilf(y + dy - FLT_EPSILON));
 }
 
 bool RectF::IsEmpty() const {
