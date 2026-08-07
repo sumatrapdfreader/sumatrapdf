@@ -20,6 +20,10 @@ struct TipWord {
     int y = 0;
     bool isLink = false;
     bool isBold = false;
+    // no inter-word space before this word: it abutted the previous token in the
+    // source with no whitespace, e.g. the ':' in "**foo**:" (issue: bold ran into
+    // following punctuation with a stray space)
+    bool noSpaceBefore = false;
     int linkIdx = -1; // index into ParsedTip::links
 };
 

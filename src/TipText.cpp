@@ -93,6 +93,14 @@ static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int li
     }
 }
 
+// mark the first word emitted for a token as having no space before it, so the
+// layout draws it flush against the preceding word (e.g. "**foo**:" -> "foo:")
+static void SetNoSpaceBefore(ParsedTip& tip, int firstWordIdx, bool noSpace) {
+    if (noSpace && firstWordIdx >= 0 && firstWordIdx < len(tip.words)) {
+        tip.words[firstWordIdx].noSpaceBefore = true;
+    }
+}
+
 // resolve (Key/CmdXxx) to keyboard shortcut string
 static TempStr ResolveKeyShortcutTemp(Str cmdName) {
     int cmdId = GetCommandIdByName(cmdName);
@@ -160,10 +168,15 @@ void ParseTip(ParsedTip& tip, Str s) {
     // second pass: split into words, detecting [text](link) markdown links
     Str p = ToStr(expanded);
     while (len(p) > 0) {
+        const char* beforeWs = p.s;
         SkipTipWhitespace(p);
         if (len(p) == 0) {
             break;
         }
+        // this token abuts the previous with no whitespace between them (e.g. the
+        // ':' right after "**foo**"), so it draws with no space before it
+        int firstWordIdx = len(tip.words);
+        bool noSpace = (p.s == beforeWs) && firstWordIdx > 0;
 
         // **bold text**
         if (p.len >= 4 && p.s[0] == '*' && p.s[1] == '*') {
@@ -172,6 +185,7 @@ void ParseTip(ParsedTip& tip, Str s) {
             if (end >= 0) {
                 Str boldText(after.s, end);
                 AppendTipWordsFromText(tip, boldText, false, -1, true);
+                SetNoSpaceBefore(tip, firstWordIdx, noSpace);
                 AdvanceTipText(p, 2 + end + 2);
                 continue;
             }
@@ -182,6 +196,7 @@ void ParseTip(ParsedTip& tip, Str s) {
         if (p.s[0] == '*' && (p.len == 1 || IsTipWhitespace(p.s[1]))) {
             TipWord w;
             str::ReplaceWithCopy(&w.text, StrL("\xc2\xb7")); // U+00B7 MIDDLE DOT
+            w.noSpaceBefore = noSpace;
             tip.words.Append(w);
             AdvanceTipText(p, 1);
             continue;
@@ -206,6 +221,7 @@ void ParseTip(ParsedTip& tip, Str s) {
                         if (link.firstWord < len(tip.words)) {
                             link.lastWord = len(tip.words) - 1;
                             tip.links.Append(link);
+                            SetNoSpaceBefore(tip, firstWordIdx, noSpace);
                             AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                             continue;
                         }
@@ -214,6 +230,7 @@ void ParseTip(ParsedTip& tip, Str s) {
                         // empty [text]: treat the whole markup as literal text
                         TipWord w;
                         str::ReplaceWithCopy(&w.text, Str(p.s, (int)(cmdEnd.s - p.s) + 1));
+                        w.noSpaceBefore = noSpace;
                         tip.words.Append(w);
                         AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                         continue;
@@ -243,6 +260,7 @@ void ParseTip(ParsedTip& tip, Str s) {
         if (i > wordStart) {
             TipWord w;
             str::ReplaceWithCopy(&w.text, Str(p.s + wordStart, i - wordStart));
+            w.noSpaceBefore = noSpace;
             tip.words.Append(w);
         }
         if (i < p.len) {
@@ -290,16 +308,21 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
     int spaceWidth = 4; // approximate space between words
     int maxX = startX;
     for (auto& w : tip.words) {
-        if (x > startX && x + w.dx > startX + areaWidth) {
+        // space goes before the word, so words abutting the previous token
+        // (w.noSpaceBefore, e.g. the ':' in "**foo**:") draw flush against it
+        int space = (x > startX && !w.noSpaceBefore) ? spaceWidth : 0;
+        if (x > startX && x + space + w.dx > startX + areaWidth) {
             // wrap to next line
             x = startX;
             y += lineHeight + 2;
             lineHeight = 0;
+            space = 0;
         }
+        x += space;
         w.x = x;
         w.y = y;
-        x += w.dx + spaceWidth;
-        maxX = std::max(x - spaceWidth, maxX);
+        x += w.dx;
+        maxX = std::max(x, maxX);
         lineHeight = std::max(w.dy, lineHeight);
     }
     tip.totalDx = maxX - startX;
