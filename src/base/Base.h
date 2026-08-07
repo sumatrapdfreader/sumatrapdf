@@ -396,6 +396,9 @@ inline void ReportDebugIfNoOp(bool) {}
 #define ReportDebugIf(cond) ReportDebugIfNoOp(!!(cond))
 #endif
 
+// ugly hack: logf() is our logging macro so we must provide a way to call logf() from math library
+inline float math_logf(float f) { return logf(f); }
+
 /* Logging macros are defined here but must be implemented by the app because different apps have different logging
  * needs. */
 void log(Str s);

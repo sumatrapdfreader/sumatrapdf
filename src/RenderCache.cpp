@@ -472,7 +472,7 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
 
     USHORT res = 0;
     if (factorAvg > 1.5) {
-        res = (USHORT)ceilf(logf(factorAvg) / logf(2.0f));
+        res = (USHORT)ceilf(math_logf(factorAvg) / math_logf(2.0f));
     }
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
     return std::min(res, (USHORT)30);
