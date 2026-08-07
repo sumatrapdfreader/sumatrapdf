@@ -5707,8 +5707,11 @@ static bool IsAtDocumentBottom(MainWindow* win) {
     if (dm) {
         return dm->IsAtDocumentEnd();
     }
-    // CHM / Markdown: page-based only
-    return ctrl->CurrentPageNo() >= ctrl->PageCount();
+    // CHM / Markdown render in a browser control that scrolls itself, so we
+    // can't tell how far down it is. Comparing page numbers instead said "at
+    // the end" for a document the user had barely started reading, which put
+    // the open-next-file tip on screen on the first scroll down.
+    return false;
 }
 
 // next openable file after the current tab's path (no wrap), or empty if none.
