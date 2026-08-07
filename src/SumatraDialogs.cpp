@@ -671,9 +671,10 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
 
 static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom) {
     float newZoom = defaultZoom;
-    int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
+    HWND dlg = GetDlgItem(hDlg, idComboBox);
+    int idx = ComboBox_GetCurSel(dlg);
     if (idx == -1) {
-        TempStr customZoom = HwndGetTextTemp(GetDlgItem(hDlg, (int)idComboBox));
+        TempStr customZoom = HwndGetTextTemp(dlg);
         // an emptied zoom box has no text at all, and atof(nullptr) trips the
         // CRT's invalid-parameter handler, which kills the process (#5909).
         // Text that isn't a number at all parses as 0, which is no more of a
