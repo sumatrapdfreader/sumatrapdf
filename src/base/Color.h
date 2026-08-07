@@ -46,9 +46,12 @@ COLORREF AccentColor(COLORREF col, int light, int dark = 0);
 bool IsNearBlack(COLORREF c);
 DWORD PremultiplyPixel(COLORREF c, u8 alpha);
 
+// GDI+ only exists on Windows; portable code works with COLORREF
+#if OS_WIN
 Gdiplus::Color Unblend(COLORREF c, u8 alpha);
 Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
+#endif
 
 constexpr COLORREF RgbToCOLORREF(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);

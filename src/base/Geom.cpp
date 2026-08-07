@@ -77,6 +77,7 @@ bool SizeF::operator!=(const SizeF& other) const {
 
 // ------------- Rect
 
+#if OS_WIN
 Rect::Rect(const RECT r) {
     x = r.left;
     y = r.top;
@@ -90,6 +91,7 @@ Rect::Rect(const Gdiplus::RectF r) {
     dx = (int)r.Width;
     dy = (int)r.Height;
 }
+#endif
 
 Rect::Rect(int x, int y, int dx, int dy) : x(x), y(y), dx(dx), dy(dy) {}
 
@@ -251,6 +253,7 @@ bool Rect::operator!=(const Rect& other) const {
 #define FLT_EPSILON 1.192092896e-07f
 #endif
 
+#if OS_WIN
 RectF::RectF(const RECT r) {
     x = (float)r.left;
     y = (float)r.top;
@@ -264,6 +267,7 @@ RectF::RectF(const Gdiplus::RectF r) {
     dx = r.Width;
     dy = r.Height;
 }
+#endif
 
 RectF::RectF(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {}
 
@@ -401,10 +405,6 @@ Point ToPoint(const PointF p) {
     return Point{(int)p.x, (int)p.y};
 }
 
-POINT ToPOINT(const Point& p) {
-    return {p.x, p.y};
-}
-
 SizeF ToSizeFl(const Size s) {
     return {(float)s.dx, (float)s.dy};
 }
@@ -419,28 +419,26 @@ RectF ToRectF(const Rect& r) {
     return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
 }
 
-RECT ToRECT(const Rect& r) {
-    return {r.x, r.y, r.x + r.dx, r.y + r.dy};
-}
-
-Gdiplus::Rect ToGdipRect(const Rect& r) {
-    return Gdiplus::Rect(r.x, r.y, r.dx, r.dy);
-}
-
-Gdiplus::RectF ToGdipRectF(const Rect& r) {
-    return Gdiplus::RectF((float)r.x, (float)r.y, (float)r.dx, (float)r.dy);
-}
-
-RECT ToRECT(const RectF& r) {
-    return {(int)r.x, (int)r.y, (int)(r.x + r.dx), (int)(r.y + r.dy)};
-}
-
 Rect ToRect(const RectF& r) {
     int x = (int)floor(r.x + 0.5);
     int y = (int)floor(r.y + 0.5);
     int dx = (int)floor(r.dx + 0.5);
     int dy = (int)floor(r.dy + 0.5);
     return Rect(x, y, dx, dy);
+}
+
+// conversions to and from the Win32 / GDI+ geometry types; see Geom.h
+#if OS_WIN
+POINT ToPOINT(const Point& p) {
+    return {p.x, p.y};
+}
+
+RECT ToRECT(const Rect& r) {
+    return {r.x, r.y, r.x + r.dx, r.y + r.dy};
+}
+
+RECT ToRECT(const RectF& r) {
+    return {(int)r.x, (int)r.y, (int)(r.x + r.dx), (int)(r.y + r.dy)};
 }
 
 int RectDx(const RECT& r) {
@@ -455,6 +453,14 @@ Rect ToRect(const RECT& r) {
     return r2;
 }
 
+Gdiplus::Rect ToGdipRect(const Rect& r) {
+    return Gdiplus::Rect(r.x, r.y, r.dx, r.dy);
+}
+
+Gdiplus::RectF ToGdipRectF(const Rect& r) {
+    return Gdiplus::RectF((float)r.x, (float)r.y, (float)r.dx, (float)r.dy);
+}
+
 Gdiplus::Rect ToGdipRect(const RectF& r) {
     Rect rect = ToRect(r);
     return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
@@ -463,6 +469,7 @@ Gdiplus::Rect ToGdipRect(const RectF& r) {
 Gdiplus::RectF ToGdipRectF(const RectF& r) {
     return Gdiplus::RectF(r.x, r.y, r.dx, r.dy);
 }
+#endif
 
 int NormalizeRotation(int rotation) {
     while (rotation < 0) {

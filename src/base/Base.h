@@ -185,7 +185,6 @@ struct FILETIME {
 constexpr int MAX_PATH = 4096;
 constexpr int URLZONE_INVALID = -1;
 constexpr int URLZONE_INTERNET = 3;
-} // namespace Gdiplus
 
 #define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
 #endif

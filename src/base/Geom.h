@@ -63,8 +63,10 @@ struct Rect {
     int dy = 0;
 
     Rect() = default;
+#if OS_WIN
     Rect(RECT r);           // NOLINT
     Rect(Gdiplus::RectF r); // NOLINT
+#endif
     Rect(int x, int y, int dx, int dy);
     // TODO: why not working if in .cpp? Confused by Size also being a method?
     Rect(const Point pt, const Size sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {}
@@ -103,8 +105,10 @@ struct RectF {
 
     RectF() = default;
 
+#if OS_WIN
     explicit RectF(RECT r);
     RectF(Gdiplus::RectF r); // NOLINT
+#endif
     RectF(float x, float y, float dx, float dy);
     RectF(PointF pt, SizeF size);
     RectF(PointF min, PointF max);
@@ -128,22 +132,27 @@ struct RectF {
     bool operator!=(const RectF& other) const;
 };
 
-int RectDx(const RECT& r);
-int RectDy(const RECT& r);
-
 PointF ToPointFl(Point p);
 Point ToPoint(PointF p);
-POINT ToPOINT(const Point& p);
 
 SizeF ToSizeFl(Size s);
 Size ToSize(SizeF s);
 
 RectF ToRectF(const Rect& r);
+Rect ToRect(const RectF& r);
+
+// conversions to and from the Win32 / GDI+ geometry types. Those types only
+// exist on Windows, so the whole group is Windows-only; portable code uses the
+// types above
+#if OS_WIN
+int RectDx(const RECT& r);
+int RectDy(const RECT& r);
+
+POINT ToPOINT(const Point& p);
 
 RECT ToRECT(const Rect& r);
 RECT ToRECT(const RectF& r);
 
-Rect ToRect(const RectF& r);
 Rect ToRect(const RECT& r);
 
 Gdiplus::Rect ToGdipRect(const Rect& r);
@@ -151,5 +160,6 @@ Gdiplus::RectF ToGdipRectF(const Rect& r);
 
 Gdiplus::Rect ToGdipRect(const RectF& r);
 Gdiplus::RectF ToGdipRectF(const RectF& r);
+#endif
 
 int NormalizeRotation(int rotation);

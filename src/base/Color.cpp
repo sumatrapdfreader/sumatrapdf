@@ -39,6 +39,7 @@ void UnpackColor(COLORREF c, u8& r, u8& g, u8& b) {
     b = (u8)(c & 0xff);
 }
 
+#if OS_WIN
 Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
@@ -60,6 +61,7 @@ Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c) {
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
     return Gdiplus::Color(c);
 }
+#endif
 
 #if 0
 static Gdiplus::Color Unblend(PageAnnotation::Color c, u8 alpha) {
