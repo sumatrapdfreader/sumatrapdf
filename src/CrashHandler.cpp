@@ -6,6 +6,7 @@
 #pragma warning(disable : 4668)
 #include <signal.h>
 #include <memory>
+#include <new.h> // _set_new_handler
 
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
@@ -894,6 +895,16 @@ static void __cdecl onInvalidParameter(const wchar_t*, const wchar_t*, const wch
     CrashMe();
 }
 
+// new couldn't get the memory. Without a handler this ends in std::bad_alloc,
+// which with _HAS_EXCEPTIONS=0 aborts somewhere down in the CRT; crashing here
+// keeps the frame that asked for the memory on the stack, which is the only
+// interesting part of an out-of-memory report. Never returns (returning 0 would
+// tell new to give up, 1 to retry the allocation).
+static int __cdecl onNewFailed(size_t) {
+    CrashMe();
+    return 0;
+}
+
 __unused static void onUnexpected() {
     CrashMe();
 }
@@ -1011,6 +1022,16 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     // must be the global one: threads that never call the thread-local setter
     // (i.e. all of ours) fall back to it
     _set_invalid_parameter_handler(onInvalidParameter);
+    _set_new_handler(onNewFailed);
+    // deliberately not _set_new_mode(1): that would route failed malloc() to the
+    // new handler too, and plenty of code here checks malloc for null and
+    // recovers instead of dying
+    //
+    // abort() runs the SIGABRT handler above, which crashes and reports. Take
+    // the CRT's own reactions out of the way: _CALL_REPORTFAULT would hand the
+    // process to WER, _WRITE_ABORT_MSG prints a message no user of a GUI app
+    // ever sees
+    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
     ::set_terminate(onTerminate);
     // set_unexpected() is unavailable with MSVC 17.3+ (_HAS_CXX17 / P0003R5).
     //::set_unexpected(onUnexpected);
