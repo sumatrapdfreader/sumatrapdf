@@ -883,6 +883,17 @@ static void onTerminate() {
     CrashMe();
 }
 
+// The CRT calls this when an API is handed something it refuses to work with -
+// atof(nullptr), a bad printf format, an out-of-range index in a checked
+// iterator... The default handler is _invoke_watson(), which fails the process
+// fast without going through SetUnhandledExceptionFilter or the vectored
+// handler, so those crashes died silently with no report (#5909). Crash the way
+// everything else here does, so the normal machinery walks the stack and sends
+// a report. The arguments only carry anything in a debug CRT, so ignore them.
+static void __cdecl onInvalidParameter(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t) {
+    CrashMe();
+}
+
 __unused static void onUnexpected() {
     CrashMe();
 }
@@ -997,6 +1008,9 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
 
     signal(SIGABRT, onSignalAbort);
 #if COMPILER_MSVC
+    // must be the global one: threads that never call the thread-local setter
+    // (i.e. all of ours) fall back to it
+    _set_invalid_parameter_handler(onInvalidParameter);
     ::set_terminate(onTerminate);
     // set_unexpected() is unavailable with MSVC 17.3+ (_HAS_CXX17 / P0003R5).
     //::set_unexpected(onUnexpected);
