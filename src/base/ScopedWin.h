@@ -91,20 +91,27 @@ class ScopedComQIPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
-    T* operator=(IUnknown* newUnk) {
-        if (ptr) ptr->Release();
+    ScopedComQIPtr<T>& operator=(IUnknown* newUnk) {
+        if (ptr) {
+            ptr->Release();
+        }
         HRESULT hr = newUnk->QueryInterface(&ptr);
-        if (FAILED(hr)) ptr = nullptr;
-        return ptr;
+        if (FAILED(hr)) {
+            ptr = nullptr;
+        }
+        return *this;
     }
     operator T*() const { // NOLINT
         return ptr;
     }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
-    T* operator=(T* newPtr) {
-        if (ptr) ptr->Release();
-        return (ptr = newPtr);
+    ScopedComQIPtr<T>& operator=(T* newPtr) {
+        if (ptr) {
+            ptr->Release();
+        }
+        ptr = newPtr;
+        return *this;
     }
 };
 
