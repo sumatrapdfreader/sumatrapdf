@@ -701,6 +701,17 @@ bool ContainsChar(Str s, char c) {
     return IndexOfChar(s, c) >= 0;
 }
 
+// true if s contains any one of the chars (each char of `chars` is a candidate,
+// not a substring to find)
+bool ContainsCharAny(Str s, Str chars) {
+    for (int i = 0; i < s.len; i++) {
+        if (IndexOfChar(chars, s.s[i]) >= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Str SliceFromChar(Str str, char c) {
     int idx = IndexOfChar(str, c);
     if (idx < 0) {

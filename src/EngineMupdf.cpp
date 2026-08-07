@@ -3398,7 +3398,7 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
     }
     // sibling-only: reject anything with a path separator or drive spec so the
     // PDF can only pull a file from its own directory
-    if (str::ContainsChar(spec, '/') || str::ContainsChar(spec, '\\') || str::ContainsChar(spec, ':')) {
+    if (str::ContainsCharAny(spec, StrL("/\\:"))) {
         return nullptr;
     }
     TempStr full = path::JoinTemp(path::GetDirTemp(pdfPath), spec);

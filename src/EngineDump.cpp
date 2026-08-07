@@ -23,17 +23,7 @@ static void Out1(Str msg) {
 }
 
 static bool NeedsEscape(Str s) {
-    // TODO: optimize to do a single loop over s
-    if (str::ContainsChar(s, '<')) {
-        return true;
-    }
-    if (str::ContainsChar(s, '&')) {
-        return true;
-    }
-    if (str::ContainsChar(s, '"')) {
-        return true;
-    }
-    return false;
+    return str::ContainsCharAny(s, StrL("<&\""));
 }
 
 static TempStr EscapeTemp(Str str) {

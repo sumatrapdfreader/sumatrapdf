@@ -613,6 +613,11 @@ void StrTest() {
     utassert(str::IndexOfChar(str, 'g') == 7);
     utassert(!str::ContainsChar(str, 'x'));
     utassert(!str::ContainsChar(Str{}, 'a'));
+    utassert(str::ContainsCharAny(str, StrL("xyz g")));  // matches the space and 'g'
+    utassert(str::ContainsCharAny(str, StrL("s")));      // single candidate
+    utassert(!str::ContainsCharAny(str, StrL("XYZ")));   // none present (case-sensitive)
+    utassert(!str::ContainsCharAny(str, Str{}));         // no candidates
+    utassert(!str::ContainsCharAny(Str{}, StrL("abc"))); // empty subject
     int n = str::BufSet(Str(buf, dimof(buf)), str);
     utassert(n == len(buf) && str::Eq(buf, str));
     n = str::BufSet(Str(buf, 6), str);

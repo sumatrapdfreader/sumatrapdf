@@ -19,8 +19,7 @@ static bool NeedsEscaping(Str s) {
     if (!s) {
         return false;
     }
-    return str::IsWs(s.s[0]) || str::IsWs(s.s[s.len - 1]) || str::ContainsChar(s, '\n') || str::ContainsChar(s, '\r') ||
-           str::ContainsChar(s, '$');
+    return str::IsWs(s.s[0]) || str::IsWs(s.s[s.len - 1]) || str::ContainsCharAny(s, StrL("\n\r$"));
 }
 
 static void EscapeStr(str::Builder& out, Str s) {
@@ -480,9 +479,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         Str fieldNameStr = Str(fieldName);
-        ReportIf(str::ContainsChar(fieldNameStr, '=') || str::ContainsChar(fieldNameStr, ':') ||
-                 str::ContainsChar(fieldNameStr, '[') || str::ContainsChar(fieldNameStr, ']') ||
-                 NeedsEscaping(fieldNameStr));
+        ReportIf(str::ContainsCharAny(fieldNameStr, StrL("=:[]")) || NeedsEscaping(fieldNameStr));
         // Never write IsTemporary itself; it only gates array-element omission.
         if (SettingType::Bool == field.type && str::Eq(fieldNameStr, StrL("IsTemporary"))) {
             MarkFieldKnown(prevNode, fieldNameStr, field.type);

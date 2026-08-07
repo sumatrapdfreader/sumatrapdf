@@ -102,6 +102,7 @@ bool NextLine(Str s, Str& line, Str& rest);
 bool Contains(Str s, Str sub);
 bool ContainsI(Str s, Str sub);
 bool ContainsChar(Str s, char c);
+bool ContainsCharAny(Str s, Str chars);
 
 Str TrimSuffix(Str s, Str suffix);
 int LastIndexOfChar(Str s, char c);
