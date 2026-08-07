@@ -10,6 +10,7 @@
 
 #if defined(DEBUG)
 void TextSelection_UnitTests();
+void Layout_UnitTests();
 bool TableOfContents_UnitTestSnapshotNamedDest();
 bool MarkdownModel_UnitTestBrowserNavigationUrl();
 bool MarkdownToc_UnitTestHtmlLinks();
@@ -80,6 +81,7 @@ int RunAppUnitTests() {
     ParseTip_UnitTests();
 #if defined(DEBUG)
     TextSelection_UnitTests();
+    Layout_UnitTests();
     utassert(TableOfContents_UnitTestSnapshotNamedDest());
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
     utassert(MarkdownToc_UnitTestHtmlLinks());
