@@ -110,10 +110,11 @@ struct WindowTab {
     u64 autoReloadStartMs = 0;
 
     // per-provider AI chat state, indexed by AIChatBackend
-    // (0 = Claude, 1 = Grok, 2 = Codex)
-    AIChatTabState aiChat[3];
+    // (0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
+    AIChatTabState aiChat[4];
 
-    // which AI chat sidebar is open for this tab (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex)
+    // which AI chat sidebar is open for this tab
+    // (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
     int aiChatPanelOpen = -1;
 
     // read aloud: cleaned text that was being read and the utf8 offset

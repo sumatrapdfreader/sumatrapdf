@@ -198,6 +198,9 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     if (cmdId == CmdAIChatWithOpenAICodex) {
         return _TRA("AI Codex chat with document");
     }
+    if (cmdId == CmdAIChatWithAntiGravity) {
+        return _TRA("AI Antigravity chat with document");
+    }
 
     return s;
 }

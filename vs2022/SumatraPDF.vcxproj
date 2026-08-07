@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1382,6 +1382,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     </ClCompile>
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\AIChatPanel.cpp" />
+    <ClCompile Include="..\src\AIAntiGravity.cpp" />
     <ClCompile Include="..\src\AIClaudeCode.cpp" />
     <ClCompile Include="..\src\AICodexBuild.cpp" />
     <ClCompile Include="..\src\AIGrokBuild.cpp" />

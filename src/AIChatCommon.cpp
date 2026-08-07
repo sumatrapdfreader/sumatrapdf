@@ -580,7 +580,7 @@ TempStr AIChatGenerateSessionIdTemp() {
 }
 
 static AIChatBackend BackendFromTabStorage(int v) {
-    if (v < 0 || v > 2) {
+    if (v < 0 || v >= kAIChatProviderCount) {
         return AIChatBackend::None;
     }
     return (AIChatBackend)v;

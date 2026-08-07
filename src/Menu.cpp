@@ -287,6 +287,10 @@ static MenuDef menuDefView[] = {
         CmdAIChatWithOpenAICodex,
     },
     {
+        _TRN("Antigravity chat"),
+        CmdAIChatWithAntiGravity,
+    },
+    {
         nullptr,
         0,
     },
@@ -669,6 +673,10 @@ static MenuDef menuDefSelection[] = {
         CmdTranslateSelectionWithOpenAICodex,
     },
     {
+        _TRN("Translate with &Antigravity"),
+        CmdTranslateSelectionWithAntiGravity,
+    },
+    {
         _TRN("Search With &Google"),
         CmdSearchSelectionWithGoogle,
     },
@@ -720,6 +728,10 @@ static MenuDef menuDefMainSelection[] = {
     {
         _TRN("Translate with OpenAI &Codex"),
         CmdTranslateSelectionWithOpenAICodex,
+    },
+    {
+        _TRN("Translate with &Antigravity"),
+        CmdTranslateSelectionWithAntiGravity,
     },
     {
         _TRN("&Search With Google"),
@@ -947,6 +959,10 @@ static MenuDef menuDefDocumentAIChat[] = {
         CmdAIChatWithClaudeCode,
     },
     {
+        _TRN("Antigravity"),
+        CmdAIChatWithAntiGravity,
+    },
+    {
         nullptr,
         0,
     },
@@ -1166,6 +1182,7 @@ static UINT_PTR selectionTextCmds[] = {
     CmdTranslateSelectionWithGrokBuild,
     CmdTranslateSelectionWithClaudeCode,
     CmdTranslateSelectionWithOpenAICodex,
+    CmdTranslateSelectionWithAntiGravity,
     CmdSearchSelectionWithGoogle,
     CmdSearchSelectionWithBing,
     CmdSearchSelectionWithWikipedia,

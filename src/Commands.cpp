@@ -283,6 +283,8 @@ static SeqStrings gCommandNames =
     "CmdToggleFilePicker\0"
     "CmdToggleBoolSetting\0"
     "CmdFixDefaultApp\0"
+    "CmdAIChatWithAntiGravity\0"
+    "CmdTranslateSelectionWithAntiGravity\0"
     "CmdNone\0"
     "\0";
 
@@ -554,6 +556,8 @@ static i32 gCommandIds[] = {
     CmdToggleFilePicker,
     CmdToggleBoolSetting,
     CmdFixDefaultApp,
+    CmdAIChatWithAntiGravity,
+    CmdTranslateSelectionWithAntiGravity,
     CmdNone,
 };
 
@@ -825,6 +829,8 @@ SeqStrings gCommandDescriptions =
     "SumatraPDF File Picker\0"
     "Toggle Boolean Setting\0"
     "Fix Default App For Extension\0"
+    "Antigravity chat...\0"
+    "Translate Selection with Antigravity...\0"
     "Do nothing\0"
     "\0";
 // clang-format on

@@ -5,12 +5,13 @@ struct MainWindow;
 struct WindowTab;
 struct WebViewResourceResult;
 
-constexpr int kAIChatProviderCount = 3;
+constexpr int kAIChatProviderCount = 4;
 
 enum class AIChatBackend {
     Claude,
     Grok,
     Codex,
+    AntiGravity,
     None,
 };
 

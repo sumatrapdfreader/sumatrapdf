@@ -355,6 +355,9 @@ static Str BackendLogName(AIChatBackend backend) {
     if (backend == AIChatBackend::Codex) {
         return StrL("codex");
     }
+    if (backend == AIChatBackend::AntiGravity) {
+        return StrL("antigravity");
+    }
     return StrL("ai");
 }
 
@@ -400,6 +403,10 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
         }
         if (backend == AIChatBackend::Codex) {
             return str::DupTemp(_TRA("OpenAI Codex is not signed in. Sign in to Codex, then try again."));
+        }
+        if (backend == AIChatBackend::AntiGravity) {
+            return str::DupTemp(_TRA(
+                "Antigravity CLI is not signed in. Open a terminal, run \"antigravity auth login\", then try again."));
         }
     }
     if (str::ContainsI(raw, StrL("model is not supported"))) {
@@ -530,6 +537,35 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
     }
 }
 
+// antigravity's stream-json isn't claude's: text arrives as `text_delta` in
+// `event:step_update` lines with `step_type:agent_response`, and errors as an
+// `event:result` with status ERROR (see AIAntiGravity.cpp::ParseStreamLine).
+static void AppendAntiGravityTranslationText(Str line, str::Builder& out) {
+    TempStr eventName = AIChatJsonStrTemp(line, "event");
+    if (!eventName) {
+        return;
+    }
+    if (str::Eq(eventName, StrL("step_update"))) {
+        if (str::Contains(line, StrL("\"step_type\":\"agent_response\""))) {
+            TempStr delta = AIChatJsonStrTemp(line, "text_delta");
+            if (len(delta) > 0) {
+                out.Append(delta);
+            }
+        }
+        return;
+    }
+    if (str::Eq(eventName, StrL("result"))) {
+        TempStr status = AIChatJsonStrTemp(line, "status");
+        if (status && str::Eq(status, StrL("ERROR"))) {
+            TempStr err = AIChatJsonStrTemp(line, "error");
+            if (len(err) > 0) {
+                out.Reset();
+                out.Append(err);
+            }
+        }
+    }
+}
+
 static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Builder& translationOut) {
     if (str::IsEmptyOrWhiteSpace(output)) {
         return;
@@ -548,6 +584,8 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
                 AppendClaudeTranslationText(line, translationOut);
             } else if (backend == AIChatBackend::Codex) {
                 AppendCodexTranslationText(line, translationOut);
+            } else if (backend == AIChatBackend::AntiGravity) {
+                AppendAntiGravityTranslationText(line, translationOut);
             }
         }
         while (off < output.len && (output.s[off] == '\n' || output.s[off] == '\r')) {
@@ -559,7 +597,8 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
         str::TrimWSInPlace(s, str::TrimOpt::Both);
         translationOut.len = (u32)s.len;
     }
-    if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":"))) {
+    if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":")) &&
+        !str::Contains(output, StrL("{\"event\":"))) {
         TempStr trimmed = str::DupTemp(output.s);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
         if (!str::IsEmptyOrWhiteSpace(trimmed)) {
@@ -614,6 +653,20 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
                QuoteCmdLineArgTemp(cwd), QuoteCmdLineArgTemp(prompt));
 }
 
+static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
+    Str model = gGlobalPrefs->antiGravity.model;
+    if (str::IsEmptyOrWhiteSpace(model)) {
+        model = "gemini-3.6-flash";
+    }
+    // the antigravity CLI takes different flags than claude (see the chat
+    // provider in AIAntiGravity.cpp): --effort instead of --session-id, and
+    // --dangerously-skip-permissions instead of --auto-approve. A one-shot
+    // translation needs no --conversation.
+    Str permsFlag = gGlobalPrefs->antiGravity.autoApprove ? StrL("--dangerously-skip-permissions") : Str{};
+    return fmt("%s -p --model %s --effort low --output-format stream-json %s %s", QuoteCmdLineArgTemp(exePath),
+               QuoteCmdLineArgTemp(model), permsFlag, QuoteCmdLineArgTemp(prompt));
+}
+
 static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
     if (backend == AIChatBackend::Grok) {
         return GrokBuildExecutablePathTemp();
@@ -623,6 +676,9 @@ static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
     }
     if (backend == AIChatBackend::Codex) {
         return CodexBuildExecutablePathTemp();
+    }
+    if (backend == AIChatBackend::AntiGravity) {
+        return AntiGravityExecutablePathTemp();
     }
     return {};
 }
@@ -637,6 +693,9 @@ static bool IsBackendInstalled(AIChatBackend backend) {
     if (backend == AIChatBackend::Codex) {
         return IsCodexBuildInstalled();
     }
+    if (backend == AIChatBackend::AntiGravity) {
+        return IsAntiGravityInstalled();
+    }
     return false;
 }
 
@@ -650,17 +709,21 @@ static Str BackendDisplayName(AIChatBackend backend) {
     if (backend == AIChatBackend::Codex) {
         return StrL("OpenAI Codex");
     }
+    if (backend == AIChatBackend::AntiGravity) {
+        return StrL("Antigravity");
+    }
     return StrL("AI");
 }
 
 // in dropdown order
 static const TranslateEngine gAllEngines[] = {
     TranslateEngine::Google, TranslateEngine::DeepL, TranslateEngine::Grok,
-    TranslateEngine::Claude, TranslateEngine::Codex,
+    TranslateEngine::Claude, TranslateEngine::Codex, TranslateEngine::AntiGravity,
 };
 
 static bool EngineIsAI(TranslateEngine engine) {
-    return engine == TranslateEngine::Grok || engine == TranslateEngine::Claude || engine == TranslateEngine::Codex;
+    return engine == TranslateEngine::Grok || engine == TranslateEngine::Claude || engine == TranslateEngine::Codex ||
+           engine == TranslateEngine::AntiGravity;
 }
 
 static AIChatBackend BackendFromEngine(TranslateEngine engine) {
@@ -669,6 +732,9 @@ static AIChatBackend BackendFromEngine(TranslateEngine engine) {
     }
     if (engine == TranslateEngine::Codex) {
         return AIChatBackend::Codex;
+    }
+    if (engine == TranslateEngine::AntiGravity) {
+        return AIChatBackend::AntiGravity;
     }
     return AIChatBackend::Grok;
 }
@@ -782,6 +848,8 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
         cmdLine = BuildClaudeTranslateCmdLineTemp(exePath, prompt);
     } else if (backend == AIChatBackend::Codex) {
         cmdLine = BuildCodexTranslateCmdLineTemp(exePath, prompt, cwd);
+    } else if (backend == AIChatBackend::AntiGravity) {
+        cmdLine = BuildAntiGravityTranslateCmdLineTemp(exePath, prompt);
     }
 
     LogTranslation(backend, ">>> backend", BackendDisplayName(backend));

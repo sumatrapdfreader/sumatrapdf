@@ -276,6 +276,8 @@ export const commands = [
     "CmdToggleFilePicker", "SumatraPDF File Picker",
     "CmdToggleBoolSetting", "Toggle Boolean Setting",
     "CmdFixDefaultApp", "Fix Default App For Extension",
+    "CmdAIChatWithAntiGravity", "Antigravity chat...",
+    "CmdTranslateSelectionWithAntiGravity", "Translate Selection with Antigravity...",
     "CmdNone", "Do nothing",
 ];
 

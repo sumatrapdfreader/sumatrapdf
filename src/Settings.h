@@ -193,6 +193,21 @@ struct CodexBuild {
     ParsedColor bgColorParsed;
 };
 
+// settings for the Antigravity chat sidebar
+struct AntiGravity {
+    // Antigravity model ID for --model (e.g. gemini-3.6-flash, gemini-3.6-pro, claude-3-5-sonnet, gpt-4o)
+    Str model;
+    // extra Antigravity model IDs for the dropdown, comma-separated
+    Str models;
+    // Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max
+    int effort;
+    // if true, pass --auto-approve to Antigravity CLI
+    bool autoApprove;
+    // background color of the Antigravity chat panel
+    Str bgColor;
+    ParsedColor bgColorParsed;
+};
+
 // default values for annotations in PDF documents
 struct Annotations {
     // color of newly created highlight annotations
@@ -813,6 +828,8 @@ struct GlobalPrefs {
     GrokBuild grokBuild;
     // settings for the OpenAI Codex chat sidebar
     CodexBuild codexBuild;
+    // settings for the Antigravity chat sidebar
+    AntiGravity antiGravity;
     // width of the AI chat sidebar (0 = use default); shared by Claude
     // Code, Grok Build, and OpenAI Codex (internal)
     int aiChatSidebarDx;
@@ -1101,6 +1118,23 @@ static const StructInfo gCodexBuildInfo = {
     "in addition to models reported by Codex\0Codex sandbox mode: 0=read-only, 1=workspace-write, "
     "2=danger-full-access\0if true, pass --dangerously-bypass-approvals-and-sandbox to Codex\0background color of the "
     "OpenAI Codex chat panel",
+    false};
+
+static const FieldInfo gAntiGravityFields[] = {
+    {offsetof(AntiGravity, model), SettingType::String, (intptr_t)"gemini-3.6-flash"},
+    {offsetof(AntiGravity, models), SettingType::String, (intptr_t)""},
+    {offsetof(AntiGravity, effort), SettingType::Int, 1},
+    {offsetof(AntiGravity, autoApprove), SettingType::Bool, false},
+    {offsetof(AntiGravity, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
+};
+static const StructInfo gAntiGravityInfo = {
+    sizeof(AntiGravity),
+    5,
+    gAntiGravityFields,
+    "Model\0Models\0Effort\0AutoApprove\0BgColor",
+    "Antigravity model ID for --model (e.g. gemini-3.6-flash)\0extra Antigravity model IDs for the dropdown, comma-separated\0"
+    "Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max\0if true, pass --auto-approve to Antigravity CLI\0"
+    "background color of the Antigravity chat panel",
     false};
 
 static const FieldInfo gAnnotationsFields[] = {
@@ -1599,6 +1633,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, codexBuild), SettingType::Struct, (intptr_t)&gCodexBuildInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, antiGravity), SettingType::Struct, (intptr_t)&gAntiGravityInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, aiChatSidebarDx), SettingType::Int, 0, true},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)"", true},
@@ -1644,7 +1680,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    129,
+    131,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -1656,7 +1692,7 @@ static const StructInfo gGlobalPrefsInfo = {
     "llscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAloud\0"
     "ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks"
     "\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabPre36Behavior\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI"
-    "\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSid"
+    "\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSid"
     "ebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0"
     "\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0D"
     "efaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0Re"

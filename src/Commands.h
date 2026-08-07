@@ -276,7 +276,9 @@ enum {
     CmdToggleFilePicker = 465,
     CmdToggleBoolSetting = 466,
     CmdFixDefaultApp = 467,
-    CmdNone = 468,
+    CmdAIChatWithAntiGravity = 468,
+    CmdTranslateSelectionWithAntiGravity = 469,
+    CmdNone = 470,
 
     /* range for file history */
     CmdFileHistoryFirst,

@@ -43,7 +43,7 @@ constexpr UINT_PTR kTimerReplayChat = 44;
 
 static LoadedDataResource gAIChatMarkedJs;
 
-// providerId is an AIChatBackend value (0=Claude, 1=Grok, 2=Codex)
+// providerId is an AIChatBackend value (0=Claude, 1=Grok, 2=Codex, 3=AntiGravity)
 AIChatProvider* GetAIChatProvider(int providerId) {
     if (providerId == 0) {
         return GetClaudeCodeProvider();
@@ -53,6 +53,9 @@ AIChatProvider* GetAIChatProvider(int providerId) {
     }
     if (providerId == 2) {
         return GetCodexBuildProvider();
+    }
+    if (providerId == 3) {
+        return GetAntiGravityProvider();
     }
     return nullptr;
 }
@@ -1130,11 +1133,18 @@ static void CloseAIChatPanelFromLabel(MainWindow* win) {
 
 // command entry point: toggle the panel for the given provider
 void OnAIChatToggle(MainWindow* win, int providerId) {
+    logf("OnAIChatToggle: providerId=%d\n", providerId);
     AIChatProvider* p = GetAIChatProvider(providerId);
-    if (!p || !IsAIChatAvailable()) {
+    if (!p) {
+        logf("OnAIChatToggle: GetAIChatProvider(%d) returned null\n", providerId);
+        return;
+    }
+    if (!IsAIChatAvailable()) {
+        logf("OnAIChatToggle: IsAIChatAvailable() returned false (HasWebView=false)\n");
         return;
     }
     if (!p->IsInstalled()) {
+        logf("OnAIChatToggle: provider %s is not installed (exePath=%s)\n", p->name, p->FindExecutableTemp());
         AIChatNotInstalledDialogArgs args;
         args.windowTitle = p->TitleTemp();
         args.mainInstruction = p->NotInstalledInstructionTemp();
@@ -1143,18 +1153,23 @@ void OnAIChatToggle(MainWindow* win, int providerId) {
         return;
     }
     if (!win->hwndAiChatBox) {
+        logf("OnAIChatToggle: win->hwndAiChatBox is null\n");
         return;
     }
     WindowTab* tab = win->CurrentTab();
     if (!tab) {
+        logf("OnAIChatToggle: win->CurrentTab() returned null\n");
         return;
     }
     if (AIChatGetTabPanelOpen(tab) == p->backend) {
+        logf("OnAIChatToggle: closing panel for backend %d\n", (int)p->backend);
         AIChatSetTabPanelOpen(tab, AIChatBackend::None);
     } else {
         if (!IsAIChatSupportedForTab(tab)) {
+            logf("OnAIChatToggle: IsAIChatSupportedForTab returned false for tab (filePath=%s)\n", tab->filePath);
             return;
         }
+        logf("OnAIChatToggle: opening panel for backend %d\n", (int)p->backend);
         AIChatSetTabPanelOpen(tab, p->backend);
     }
     AIChatSyncPanelsToCurrentTab(win);

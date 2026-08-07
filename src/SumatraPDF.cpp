@@ -9405,15 +9405,23 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdAIChatWithClaudeCode:
+            logf("CmdAIChatWithClaudeCode dispatched\n");
             OnAIChatToggle(win, (int)AIChatBackend::Claude);
             break;
 
         case CmdAIChatWithGrokBuild:
+            logf("CmdAIChatWithGrokBuild dispatched\n");
             OnAIChatToggle(win, (int)AIChatBackend::Grok);
             break;
 
         case CmdAIChatWithOpenAICodex:
+            logf("CmdAIChatWithOpenAICodex dispatched\n");
             OnAIChatToggle(win, (int)AIChatBackend::Codex);
+            break;
+
+        case CmdAIChatWithAntiGravity:
+            logf("CmdAIChatWithAntiGravity dispatched\n");
+            OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);
             break;
 
         case CmdClearHistory:
@@ -10204,6 +10212,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdTranslateSelectionWithOpenAICodex:
             ShowSelectionTranslateDialog(tab, TranslateEngine::Codex);
+            break;
+
+        case CmdTranslateSelectionWithAntiGravity:
+            ShowSelectionTranslateDialog(tab, TranslateEngine::AntiGravity);
             break;
 
         case CmdSearchSelectionWithGoogle:

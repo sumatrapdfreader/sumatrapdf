@@ -634,6 +634,7 @@ function sumatrapdf_files()
     "MarkdownToc.*",
     "AIChatCommon.*",
     "AIChatPanel.*",
+    "AIAntiGravity.*",
     "AIClaudeCode.*",
     "AICodexBuild.*",
     "AIGrokBuild.*",

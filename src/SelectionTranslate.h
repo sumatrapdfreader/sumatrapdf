@@ -10,6 +10,7 @@ enum class TranslateEngine {
     Grok,
     Claude,
     Codex,
+    AntiGravity,
 };
 
 void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engine);

@@ -16,6 +16,10 @@ bool IsCodexBuildInstalled();
 TempStr CodexBuildExecutablePathTemp();
 AIChatProvider* GetCodexBuildProvider();
 
+bool IsAntiGravityInstalled();
+TempStr AntiGravityExecutablePathTemp();
+AIChatProvider* GetAntiGravityProvider();
+
 AIChatProvider* GetAIChatProvider(int providerId);
 
 void CreateAIChatPanel(MainWindow* win);

@@ -100,6 +100,7 @@ UINT_PTR disableIfNoSelection[] = {
     CmdTranslateSelectionWithGrokBuild,
     CmdTranslateSelectionWithClaudeCode,
     CmdTranslateSelectionWithOpenAICodex,
+    CmdTranslateSelectionWithAntiGravity,
     CmdSearchSelectionWithWikipedia,
     CmdSearchSelectionWithGoogleScholar,
     CmdSearchSelectionWithBing,
@@ -446,7 +447,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Show;
     }
 
-    if (cmdId == CmdAIChatWithClaudeCode || cmdId == CmdAIChatWithGrokBuild || cmdId == CmdAIChatWithOpenAICodex) {
+    if (cmdId == CmdAIChatWithClaudeCode || cmdId == CmdAIChatWithGrokBuild || cmdId == CmdAIChatWithOpenAICodex ||
+        cmdId == CmdAIChatWithAntiGravity) {
         if (!IsAIChatAvailable()) {
             return CommandVisibility::Hide;
         }
@@ -461,6 +463,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
     if (cmdId == CmdTranslateSelectionWithOpenAICodex && !IsCodexBuildInstalled()) {
+        return CommandVisibility::Hide;
+    }
+    if (cmdId == CmdTranslateSelectionWithAntiGravity && !IsAntiGravityInstalled()) {
         return CommandVisibility::Hide;
     }
 
