@@ -42,6 +42,50 @@ constexpr UINT_PTR kTimerWebViewSize = 43;
 
 static LoadedDataResource gAIChatMarkedJs;
 
+// The chat page and its marked.min.js are both served to WebView2 from the
+// provider's virtual host (https://<provider>/). NavigateToString/SetHtml does
+// not reliably load in the current WebView2 runtime (the page stays blank),
+// whereas Navigate() to a resource-served URL does - the same mechanism the
+// in-app manual and CHM viewers use.
+struct AIChatWebResources {
+    const LoadedDataResource* marked = nullptr; // marked.min.js bytes (not owned)
+    Str html;                                   // owned; the chat page HTML
+};
+static AIChatWebResources gAIChatWebResources;
+
+// path is host-relative, without a leading slash (e.g. "index.html")
+static bool AIChatPathIs(Str path, Str name) {
+    if (str::EqI(path, name)) {
+        return true;
+    }
+    return path.len > 0 && path.s[0] == '/' && str::EqI(Str(path.s + 1, path.len - 1), name);
+}
+
+static bool AIChatGetResource(void* ctx, Str path, WebViewResourceResult* res) {
+    auto* r = (AIChatWebResources*)ctx;
+    if (!r || !res || len(path) == 0) {
+        return false;
+    }
+    if (AIChatPathIs(path, StrL("index.html")) || str::Eq(path, StrL("/")) || str::Eq(path, StrL(""))) {
+        if (len(r->html) == 0) {
+            return false;
+        }
+        res->data = (const u8*)r->html.s;
+        res->dataLen = (size_t)r->html.len;
+        res->contentType = str::Dup(StrL("text/html; charset=utf-8"));
+        res->ownsData = false;
+        return true;
+    }
+    if (r->marked && AIChatPathIs(path, StrL("marked.min.js"))) {
+        res->data = r->marked->data;
+        res->dataLen = (size_t)r->marked->dataSize;
+        res->contentType = str::Dup(StrL("text/javascript"));
+        res->ownsData = false;
+        return res->dataLen > 0;
+    }
+    return false;
+}
+
 // providerId is an AIChatBackend value (0=Claude, 1=Grok, 2=Codex, 3=AntiGravity)
 AIChatProvider* GetAIChatProvider(int providerId) {
     if (providerId == 0) {
@@ -816,6 +860,32 @@ TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCo
     return str::DupTemp(ToStr(res));
 }
 
+// Inject a canned (user, assistant) turn into the chat webview, taking the exact
+// same WebView* path a real turn does (addUser + appendText + flushBlock), so the
+// rendering can be debugged fast without a live provider round-trip. Opens the
+// grok panel first if it isn't already showing. For the -dbg-control replay test.
+TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode) {
+    if (len(gWindows) == 0) {
+        if (exitCode) {
+            *exitCode = 2;
+        }
+        return str::DupTemp("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    AIChatDebugReset();
+    bool grokOpen = win->uiState.aiChatVisible && win->aiChatProvider == (int)AIChatBackend::Grok;
+    if (!grokOpen) {
+        OnAIChatToggle(win, (int)AIChatBackend::Grok);
+    }
+    WebViewAddUser(win, userMsg);
+    WebViewAppendText(win, response);
+    WebViewFlushBlock(win);
+    if (exitCode) {
+        *exitCode = 0;
+    }
+    return str::DupTemp("OK replayed");
+}
+
 // --- Sending a message ---
 
 static void SendAIChatMessage(MainWindow* win) {
@@ -1035,6 +1105,14 @@ static void OnAIChatWebViewNavigated(void* ctx, Str, bool) {
     if (!win || !IsMainWindowValid(win) || !win->hwndAiChatBox) {
         return;
     }
+    if (win->aiChatWebView) {
+        // the webview is created lazily, often before the panel has its final
+        // size, leaving its window (and so the WebView2 controller) at 0x0. Now
+        // that the page has loaded and the panel is laid out, re-run the layout
+        // to move/size the webview into its slot and make its controller visible.
+        win->aiChatWebView->SetControllerVisible(true);
+        RelayoutAIChatPanel(win);
+    }
     OnAIChatTabChanged(win);
 }
 
@@ -1062,8 +1140,11 @@ static void EnsureWebViewReady(MainWindow* win) {
     }
     wstr::Free(webView->resourceUriPrefix);
     webView->resourceUriPrefix = wstr::Dup(p->virtualHostW);
-    webView->resourceProvider.ctx = &gAIChatMarkedJs;
-    webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
+    // serve both the chat page and marked.min.js from the virtual host
+    gAIChatWebResources.marked = &gAIChatMarkedJs;
+    str::ReplaceWithCopy(&gAIChatWebResources.html, AIChatFormatChatHtmlTemp(p->virtualHost, BgColorForProvider(p)));
+    webView->resourceProvider.ctx = &gAIChatWebResources;
+    webView->resourceProvider.getResource = AIChatGetResource;
 
     Rect rc = HwndClientRect(win->hwndAiChatBox);
     CreateWebViewArgs wvArgs;
@@ -1072,8 +1153,12 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = AIChatFormatChatHtmlTemp(p->virtualHost, BgColorForProvider(p));
-        webView->SetHtml(chatHtml);
+        TempStr url = fmt("%sindex.html", p->virtualHost);
+        webView->Navigate(url);
+        // make the webview visible, like the manual browser does; without this
+        // the embedded controller stays hidden (isVisible defaults to false) and
+        // the loaded page never paints
+        webView->SetIsVisible(true);
         win->aiChatWebView = webView;
         win->aiChatWebViewReady = true;
         RelayoutAIChatPanel(win);

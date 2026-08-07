@@ -149,6 +149,10 @@ TempStr AIChatDebugGetTemp();
 // message, using the same provider code the panel does; returns "OK\n<text>" or
 // "FAIL: <reason>\n--- debug log ---\n<log>". For -dbg-control tests.
 TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCode);
+
+// Inject a canned (user, assistant) turn into the chat webview (opening the grok
+// panel if needed) to debug webview rendering without a live provider call.
+TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode);
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 
 TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt = nullptr);

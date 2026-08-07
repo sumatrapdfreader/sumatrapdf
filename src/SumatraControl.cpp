@@ -133,6 +133,7 @@ enum class ControlCmd : u16 {
     TestRectSelectionDrag = 39,
     TestSelectTextKeyboard = 40,
     TestAIChat = 41,
+    TestAIChatReplay = 42,
 };
 
 enum class ControlArgType : u16 {
@@ -714,6 +715,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = AIChatTestResultTemp(backend, filePath, message, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestAIChatReplay: {
+            Str userMsg = StringArg(req, 0);
+            Str response = StringArg(req, 1);
+            if (!userMsg || !response) {
+                AppendError(req, "TestAIChatReplay expects string userMsg, string response");
+                break;
+            }
+            int exitCode = 0;
+            Str res = AIChatTestReplayResultTemp(userMsg, response, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

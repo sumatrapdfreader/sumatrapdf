@@ -1160,8 +1160,11 @@ int Spacer::MinIntrinsicHeight(int /*width*/) {
 int Spacer::MinIntrinsicWidth(int /*height*/) {
     return dx;
 }
-void Spacer::SetBounds(Rect /*bounds*/) {
-    // do nothing
+void Spacer::SetBounds(Rect bounds) {
+    // a Spacer paints nothing, but callers that use it as a layout slot (e.g.
+    // the AI chat panel positions its lazily-created webview into the slot) read
+    // lastBounds, so record it
+    lastBounds = bounds;
 }
 
 static Kind kindTableLayout = "tableLayout";
