@@ -32,7 +32,7 @@ static TempStr FindClaudeExecutableTemp() {
     return AIChatFindExecutableTemp(candidates, WStr(L"claude.exe"), WStr(L"claude"));
 }
 
-// the providers (implemented in ClaudeCode.cpp, GrokBuild.cpp, CodexBuild.cpp)
+// the providers (implemented in AIClaudeCode.cpp, AIGrokBuild.cpp, AICodexBuild.cpp)
 bool IsClaudeCodeInstalled() {
     return len(FindClaudeExecutableTemp()) > 0;
 }

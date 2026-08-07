@@ -1353,6 +1353,9 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     </ClCompile>
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\AIChatPanel.cpp" />
+    <ClCompile Include="..\src\AIClaudeCode.cpp" />
+    <ClCompile Include="..\src\AICodexBuild.cpp" />
+    <ClCompile Include="..\src\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
     <ClCompile Include="..\src\Annotation.cpp" />
@@ -1379,8 +1382,6 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClCompile Include="..\src\ChmDump.cpp" />
     <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
-    <ClCompile Include="..\src\ClaudeCode.cpp" />
-    <ClCompile Include="..\src\CodexBuild.cpp" />
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\CommandPaletteCollect.cpp" />
@@ -1414,7 +1415,6 @@ if not exist ..\.work\translations.txt type nul &gt; ..\.work\translations.txt
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\FormFields.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
-    <ClCompile Include="..\src\GrokBuild.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HangDetector.cpp" />
