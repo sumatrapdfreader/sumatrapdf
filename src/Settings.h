@@ -195,13 +195,15 @@ struct CodexBuild {
 
 // settings for the Antigravity chat sidebar
 struct AntiGravity {
-    // Antigravity model ID for --model (e.g. gemini-3.6-flash, gemini-3.6-pro, claude-3-5-sonnet, gpt-4o)
+    // Antigravity model ID for --model (e.g. gemini-3.6-flash)
     Str model;
     // extra Antigravity model IDs for the dropdown, comma-separated
     Str models;
     // Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max
     int effort;
-    // if true, pass --auto-approve to Antigravity CLI
+    // if true, pass --dangerously-skip-permissions to Antigravity CLI so
+    // it can read the current file etc. in headless print mode (agy cannot
+    // prompt for permissions with -p)
     bool autoApprove;
     // background color of the Antigravity chat panel
     Str bgColor;
@@ -1124,7 +1126,7 @@ static const FieldInfo gAntiGravityFields[] = {
     {offsetof(AntiGravity, model), SettingType::String, (intptr_t)"gemini-3.6-flash"},
     {offsetof(AntiGravity, models), SettingType::String, (intptr_t)""},
     {offsetof(AntiGravity, effort), SettingType::Int, 1},
-    {offsetof(AntiGravity, autoApprove), SettingType::Bool, false},
+    {offsetof(AntiGravity, autoApprove), SettingType::Bool, true},
     {offsetof(AntiGravity, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
 };
 static const StructInfo gAntiGravityInfo = {
@@ -1132,9 +1134,10 @@ static const StructInfo gAntiGravityInfo = {
     5,
     gAntiGravityFields,
     "Model\0Models\0Effort\0AutoApprove\0BgColor",
-    "Antigravity model ID for --model (e.g. gemini-3.6-flash)\0extra Antigravity model IDs for the dropdown, comma-separated\0"
-    "Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max\0if true, pass --auto-approve to Antigravity CLI\0"
-    "background color of the Antigravity chat panel",
+    "Antigravity model ID for --model (e.g. gemini-3.6-flash)\0extra Antigravity model IDs for the dropdown, "
+    "comma-separated\0Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max\0if true, pass "
+    "--dangerously-skip-permissions to Antigravity CLI so it can read the current file etc. in headless print mode "
+    "(agy cannot prompt for permissions with -p)\0background color of the Antigravity chat panel",
     false};
 
 static const FieldInfo gAnnotationsFields[] = {
@@ -1692,11 +1695,11 @@ static const StructInfo gGlobalPrefsInfo = {
     "llscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAloud\0"
     "ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks"
     "\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabPre36Behavior\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI"
-    "\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSid"
-    "ebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0"
-    "\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0D"
-    "efaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0Re"
-    "openOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravi"
+    "ty\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0"
+    "ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomS"
+    "creenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0"
+    "SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1771,12 +1774,12 @@ static const StructInfo gGlobalPrefsInfo = {
     "UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
     "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
     "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
-    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0width of the AI chat sidebar (0 = use default); "
-    "shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
-    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
-    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
-    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
-    "types. See [docs for more "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat sidebar\0\0width "
+    "of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
+    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
+    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
+    "DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of "
+    "additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

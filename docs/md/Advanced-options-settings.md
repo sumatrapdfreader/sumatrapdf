@@ -476,6 +476,26 @@ CodexBuild [
     BgColor = #ffffff
 ]
 
+; settings for the Antigravity chat sidebar (introduced in version 3.7)
+AntiGravity [
+    ; Antigravity model ID for --model (e.g. gemini-3.6-flash)
+    Model = gemini-3.6-flash
+
+    ; extra Antigravity model IDs for the dropdown, comma-separated
+    Models = 
+
+    ; Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max
+    Effort = 1
+
+    ; if true, pass --dangerously-skip-permissions to Antigravity CLI so it can
+    ; read the current file etc. in headless print mode (agy cannot prompt for
+    ; permissions with -p)
+    AutoApprove = true
+
+    ; background color of the Antigravity chat panel
+    BgColor = #ffffff
+]
+
 ; width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok
 ; Build, and OpenAI Codex (internal) (introduced in version 3.7)
 AIChatSidebarDx = 0

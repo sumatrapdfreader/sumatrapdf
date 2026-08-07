@@ -479,6 +479,20 @@ const claudeCode: Field[] = [
   field("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
 ];
 
+const antiGravity: Field[] = [
+  field("Model", Str, "gemini-3.6-flash", "Antigravity model ID for --model (e.g. gemini-3.6-flash)"),
+  field("Models", Str, "", "extra Antigravity model IDs for the dropdown, comma-separated"),
+  field("Effort", Int, 1, "Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
+  field(
+    "AutoApprove",
+    Bool,
+    true,
+    "if true, pass --dangerously-skip-permissions to Antigravity CLI so it can read the current file " +
+      "etc. in headless print mode (agy cannot prompt for permissions with -p)",
+  ),
+  field("BgColor", Color, "#ffffff", "background color of the Antigravity chat panel"),
+];
+
 const fullscreen: Field[] = [
   field(
     "ShowToolbar",
@@ -1179,6 +1193,8 @@ const globalPrefs: Field[] = [
   struct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar").ver("3.7"),
   emptyLine(),
   struct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar").ver("3.7"),
+  emptyLine(),
+  struct("AntiGravity", antiGravity, "settings for the Antigravity chat sidebar").ver("3.7"),
   emptyLine(),
   field(
     "AIChatSidebarDx",
