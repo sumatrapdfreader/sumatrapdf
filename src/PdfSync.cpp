@@ -827,6 +827,19 @@ int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
+    // The name comes verbatim from the .synctex file, which travels with the PDF
+    // and is entirely attacker-controlled. It ends up on the command line of the
+    // configured inverse-search editor (BuildOpenFileCmdTemp), so a name like
+    //   foo.tex" --install-extension evil.vsix --
+    // breaks out of the editor template's quotes and injects arguments
+    // (GHSA-jf4v-rw66-j4w2). None of these characters can occur in a real
+    // Windows path, so a name that has one is not a source file we should act
+    // on. A '*' is legitimate here - SyncTeX encodes spaces as '*'.
+    if (str::ContainsCharAny(name, StrL("\"<>|\r\n\t"))) {
+        logf("SyncTex::DocToSource: rejecting source name with an illegal char: '%s'\n", name);
+        return PDFSYNCERR_UNKNOWN_SOURCEFILE;
+    }
+
     filename = str::Dup(name);
     if (!filename) {
         return PDFSYNCERR_OUTOFMEMORY;

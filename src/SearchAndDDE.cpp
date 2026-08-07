@@ -1737,7 +1737,17 @@ static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
         }
         char spec = s.s[percIdx + 1];
         if (spec == 'f') {
-            cmdline.Append(path);
+            // Defense in depth against argument injection via a crafted synctex
+            // source name (GHSA-jf4v-rw66-j4w2). Every built-in editor template
+            // wraps %f in quotes, so a '"' in the path would close that quote and
+            // turn the rest into separate argv tokens for the editor. Double each
+            // '"' so it stays one token. The primary fix rejects such names in
+            // SyncTex::DocToSource; this covers other callers and user templates.
+            if (str::ContainsChar(path, '"')) {
+                cmdline.Append(str::ReplaceTemp(path, StrL("\""), StrL("\"\"")));
+            } else {
+                cmdline.Append(path);
+            }
         } else if (spec == 'l') {
             cmdline.Append(fmt("%d", line));
         } else if (spec == 'c') {
