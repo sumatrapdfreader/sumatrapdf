@@ -187,8 +187,10 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
 #if defined(FORCE_AUTO_UPDATE)
     if (updateCheckType == UpdateCheck::UserInitiated) {
+        logf("CheckForUpdate: checking, user initiated (FORCE_AUTO_UPDATE)\n");
         return true;
     } else {
+        logf("CheckForUpdate: skipping auto check, FORCE_AUTO_UPDATE downloads pre-release\n");
         return false;
     }
 #endif
@@ -199,6 +201,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     }
 
     if (updateCheckType == UpdateCheck::UserInitiated) {
+        logf("CheckForUpdate: checking, user initiated\n");
         return true;
     }
 
@@ -211,6 +214,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
     // only applies to automatic update check
     if (!gGlobalPrefs->checkForUpdates) {
+        logf("CheckForUpdate: skipping auto check because CheckForUpdates is false\n");
         return false;
     }
 
@@ -218,12 +222,14 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     // sensitive users can disable the update check in time
     FILETIME never{};
     if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never)) {
+        logf("CheckForUpdate: skipping auto check, first start (TimeOfLastUpdateCheck not set)\n");
         return false;
     }
 
     // pre-release builds check on every startup (testers want the newest build);
     // skip the daily/weekly throttle below
     if (gIsPreReleaseBuild) {
+        logf("CheckForUpdate: checking, pre-release build checks on every startup\n");
         return true;
     }
 
@@ -237,10 +243,8 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
     int secsBetweenChecks = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
     bool checkUpdate = secsSinceLastUpdate > secsBetweenChecks;
-#if 0
-    logf("CheckForUpdate: secsBetweenChecks: %d, secsSinceLastUpdate: %d, checkUpdate: %d\n", secsBetweenChecks,
-         secsSinceLastUpdate, (int)checkUpdate);
-#endif
+    logf("CheckForUpdate: %s auto check, %d secs since the last one, %d secs between checks\n",
+         checkUpdate ? StrL("doing") : StrL("skipping"), secsSinceLastUpdate, secsBetweenChecks);
     return checkUpdate;
 }
 
@@ -810,6 +814,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
         return;
     }
 
+    logf("StartAsyncUpdateCheck: updateCheckType=%d\n", (int)updateCheckType);
     if (UpdateCheck::UserInitiated == updateCheckType) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
