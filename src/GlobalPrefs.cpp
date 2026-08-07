@@ -70,16 +70,26 @@ Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
     Vec<FileState*>* allFileStates = prefs->fileStates;
     Vec<FileState*> withFavorites;
 
-    if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
+    // The two settings mean different things and must not be conflated (#5907):
+    // RememberStatePerDocument = false only drops the per-document state (page,
+    // zoom, scroll, window placement) - the list of files stays, because that is
+    // what the home page shows. RememberOpenedFiles = false drops the list
+    // itself, keeping only files the user hung a favorite on (#5899).
+    bool dropPerDocState = !prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles;
+    bool dropHistory = !prefs->rememberOpenedFiles;
+
+    if (dropPerDocState) {
         for (FileState* fs : *prefs->fileStates) {
             fs->useDefaultState = true;
             if (FileStateWorthKeepingWithoutHistory(fs)) {
                 withFavorites.Append(fs);
             }
         }
-        // serialize the filtered list, then put the real one back below - the
-        // in-memory history is still needed for this session
-        prefs->fileStates = &withFavorites;
+        if (dropHistory) {
+            // serialize the filtered list, then put the real one back below -
+            // the in-memory history is still needed for this session
+            prefs->fileStates = &withFavorites;
+        }
         // prevent unnecessary settings from being written out
         u16 fieldCount = 0;
         while (++fieldCount <= dimof(gFileStateFields)) {
@@ -94,7 +104,7 @@ Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
 
     Str serialized = SerializeStruct(&gGlobalPrefsInfo, prefs, prevData);
 
-    if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
+    if (dropPerDocState) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
         prefs->fileStates = allFileStates;
     }
