@@ -126,9 +126,12 @@ static bool CaretScreenRects(MainWindow* win, Rect& barOut, Rect& glyphOut) {
     trailing = trailing || win->textSelectGlyph >= textLen;
     Rect r = dm->CvtToScreen(win->textSelectPage, ToRectF(coords[ix]));
     glyphOut = r;
-    int caretDx = std::max(DpiScale(win->hwndCanvas, 3), 3);
-    int overhang = std::max(r.dy / 3, DpiScale(win->hwndCanvas, 3));
-    barOut = Rect{trailing ? r.x + r.dx : r.x, r.y - overhang, caretDx, r.dy + (2 * overhang)};
+    // blue cursor: a thin bar centered on the glyph's leading edge (its trailing
+    // edge at the end of a line), twice the glyph's height so it overhangs 50%
+    // above and below - loud enough to find on a page of text
+    int caretDx = std::max(DpiScale(win->hwndCanvas, 5), 5);
+    int edgeX = trailing ? r.x + r.dx : r.x;
+    barOut = Rect{edgeX - (caretDx / 2), r.y - (r.dy / 2), caretDx, r.dy * 2};
     return true;
 }
 
@@ -295,8 +298,8 @@ void ToggleSelectTextWithKeyboard(MainWindow* win) {
 
 // how many lines fit on screen, used for PageUp / PageDown
 static int LinesPerScreen(MainWindow* win) {
-    Rect caret;
-    int lineDy = CaretScreenRect(win, caret) ? caret.dy : 0;
+    Rect bar, glyph;
+    int lineDy = CaretScreenRects(win, bar, glyph) ? glyph.dy : 0;
     if (lineDy <= 0) {
         return 10;
     }
@@ -563,14 +566,16 @@ TempStr SelectTextKeyboardResultTemp(int* exitCodeOut) {
 }
 
 // A thin inverted bar the size of one character is hard to find on a page of
-// text, so the caret is deliberately louder than a text-editor one: a blue bar
-// (no printed text is that color, so it reads as UI rather than content) that
-// overhangs the line, plus a translucent yellow wash over the character it is
-// on, like a highlighter pen. The wash marks the position even while the bar is
-// blinking, so only the bar blinks.
+// text, so the caret is deliberately louder than a text-editor one. In cursor
+// mode a full-width translucent white band marks the line the caret is on, so
+// the eye lands on the right line at a glance, and a blinking blue bar (no
+// printed text is that color, so it reads as UI rather than content) marks the
+// exact position within it, overhanging the line above and below. In selection
+// mode the selection highlight already shows where we are, so only the bar
+// draws. The band doesn't blink, so the caret's line stays marked between blinks.
 constexpr COLORREF kCaretBarCol = RGB(0x19, 0x76, 0xd2);
-constexpr COLORREF kCaretGlyphCol = RGB(0xff, 0xf1, 0x00);
-constexpr u8 kCaretGlyphAlpha = 120;
+constexpr COLORREF kCaretBandCol = RGB(0xff, 0xff, 0xff);
+constexpr u8 kCaretBandAlpha = 90;
 
 void PaintKeyboardTextCaret(MainWindow* win, HDC hdc) {
     if (!SelectTextWithKeyboardActive(win)) {
@@ -580,10 +585,17 @@ void PaintKeyboardTextCaret(MainWindow* win, HDC hdc) {
     if (!CaretScreenRects(win, bar, glyph)) {
         return;
     }
-    if (!win->canvasRc.Intersect(glyph).IsEmpty()) {
-        Vec<Rect> rects;
-        rects.Append(glyph);
-        PaintTransparentRectangles(hdc, win->canvasRc, rects, kCaretGlyphCol, kCaretGlyphAlpha, 1, false);
+    DisplayModel* dm = win->AsFixed();
+    bool selecting = win->textSelectModeVisual || (dm && dm->textSelection && dm->textSelection->result.len > 0);
+    if (!selecting) {
+        // full-width band across the caret's line (its height, whole canvas width)
+        Rect band{win->canvasRc.x, glyph.y, win->canvasRc.dx, glyph.dy};
+        Rect vis = win->canvasRc.Intersect(band);
+        if (!vis.IsEmpty()) {
+            Vec<Rect> rects;
+            rects.Append(vis);
+            PaintTransparentRectangles(hdc, win->canvasRc, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
+        }
     }
     if (!win->textSelectCaretVisible || win->canvasRc.Intersect(bar).IsEmpty()) {
         return;
