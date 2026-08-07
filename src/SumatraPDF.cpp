@@ -2317,7 +2317,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
 }
 
-void ReloadDocument(MainWindow* win, bool autoRefresh) {
+void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     WindowTab* tab = win->CurrentTab();
 
     if (!tab) {
@@ -2360,7 +2360,14 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
-    HwndPasswordUI pwdUI(win->hwndFrame);
+    // A reload nobody asked for must not pop a password dialog. If the file was
+    // replaced by a different, encrypted document - Outlook rewriting an
+    // attachment's temp path is the reported case - every window watching that
+    // path would put a modal dialog on screen out of nowhere (#3493). With a
+    // null hwnd, HwndPasswordUI still tries the remembered decryption key and
+    // DefaultPasswords, then gives up quietly: the tab keeps the document it
+    // has, and the user is asked if they reload it themselves.
+    HwndPasswordUI pwdUI(canAskForPassword ? win->hwndFrame : nullptr);
     Str path = tab->filePath;
     if (len(path) == 0) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);

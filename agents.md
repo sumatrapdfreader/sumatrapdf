@@ -24,7 +24,7 @@ For .ts / .js / .json / .md files, the equivalent is `bunx prettier --write <fil
 
 Never commit changes automatically. Always wait for explicit command to commit changes.
 
-When committing a fix for a GitHub issue, include `(fixes #<issue-no>)` at the end of the commit message.
+When committing a fix for a GitHub issue, end the commit message's **first line** with `(fixes #<issue-no>)`, e.g. `fix crash on committing an empty zoom value (fixes #5909)`. That is the line GitHub shows everywhere, so the link belongs there, not buried in the body.
 
 When committing work done with AI assistance, append the user prompt(s) that produced the change at the very end of the commit message as a single line: `prompt: ...`. If there were multiple prompts, squash them into one concise line. Record the substantive request only — omit meta-instructions such as "commit", "push", "check work", or "verify".
 

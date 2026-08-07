@@ -3939,7 +3939,8 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                     // write finishes. Wait for it to go quiet instead.
                     SetTimer(hwnd, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
                 } else {
-                    ReloadDocument(win, true);
+                    // timer-driven: never ask for a password here (#3493)
+                    ReloadDocument(win, true, false);
                 }
             }
             break;
