@@ -724,8 +724,6 @@ static void GetProcessorName(str::Builder& s) {
     }
 }
 
-// note: don't build this with fmt() - its format grammar treats the '\{' before
-// the GUID as an escape and would drop the backslash, corrupting the key
 #define GFX_DRIVER_KEY_PREFIX "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\"
 
 static void GetGraphicsDriverInfo(str::Builder& s) {

@@ -8,8 +8,14 @@
 #endif
 
 /*
-str::Fmt is type-safe printf()-like system with support for both %-style formatting
-directives and C#-like positional directives ({0}, {1} etc.).
+str::Fmt is type-safe printf()-like system. Every directive starts with '%':
+the usual %d / %s / %f etc., plus two that take an argument of any type:
+
+  %{}   the next argument, whatever its type (same as %v)
+  %{$n} the n-th argument (0-based), whatever its type
+
+%% is the only escape; '{' on its own is ordinary text, so registry paths,
+GUIDs, CSS and JS templates pass through untouched.
 
 Type safety is achieved by using strongly typed methods for adding arguments
 (i(), c(), s() etc.). We also verify that the type of the argument matches
@@ -25,11 +31,11 @@ char *s = fmt.i(5).s("5").Get(); // returns "5 = 5"
 // s is valid until fmt is valid
 // use .GetDup() to get a copy that must be free()d
 // you can re-use fmt as:
-s = fmt.ParseFormat("{1} = {2} + {0}").i(3).s("3").s(L"
+s = fmt.ParseFormat("%{1} = %{2} + %{0}").i(3).s("3").s(L"
 
-You can mix % and {} directives but beware, as the rule for assigning argument
-number to % directive is simple (n-th argument position for n-th % directive)
-but it's easy to mis-count when adding {} to the mix.
+You can mix %-style and %{$n} directives but beware, as the rule for assigning
+argument number to a plain % directive is simple (n-th argument position for
+n-th % directive) but it's easy to mis-count when adding %{$n} to the mix.
 
 TODO: similar approach could be used for type-safe scanf() replacement.
 */
@@ -87,17 +93,22 @@ static void addRawStr(Fmt& fmt, int off, size_t n) {
     i.argNo = -1;
 }
 
-// parse: {$n}
-static int parseArgDefPositional(Fmt& fmt, int off) {
+// parse: %{} (the next argument) or %{$n} (positional). off points at the '{',
+// the '%' has already been consumed. Both take an argument of any type.
+static int parseArgDefBrace(Fmt& fmt, int off) {
     ReportIf(fmt.format.s[off] != '{');
     off++;
     int n = 0;
+    bool positional = false;
     // a '{' with no closing '}' must not walk past the end of the format string.
     // Reachable via a translated format string (fmt(_TRA("...").s, ...)).
     while (off < fmt.format.len && fmt.format.s[off] != '}') {
-        // TODO: this could be more featurful
-        ReportIf(!str::IsDigit(fmt.format.s[off]));
+        if (!str::IsDigit(fmt.format.s[off])) {
+            fmt.isOk = false;
+            return off;
+        }
         n = (n * 10) + (fmt.format.s[off] - '0');
+        positional = true;
         off++;
     }
     if (off >= fmt.format.len) {
@@ -110,7 +121,8 @@ static int parseArgDefPositional(Fmt& fmt, int off) {
     }
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = FmtArg::Kind::Any;
-    i.argNo = n;
+    // %{} consumes arguments in order, like every other % directive
+    i.argNo = positional ? n : fmt.currPercArgNo++;
     return off + 1;
 }
 
@@ -267,36 +279,12 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     o.currArgNo = 0;
     o.res.Reset();
 
-    // parse formatting string, until a %$c or {$n}
-    // %% is how we escape %, \{ is how we escape {
+    // parse formatting string, until a %$c, %{} or %{$n}
+    // %% is how we escape %; nothing else is special, so a bare '{' is text
     int start = 0;
     int off = 0;
     while (off < fmtStr.len && fmtStr.s[off]) {
         char c = fmtStr.s[off];
-        if ('\\' == c) {
-            // handle \{
-            if (off + 1 < fmtStr.len && '{' == fmtStr.s[off + 1]) {
-                addRawStr(o, start, off - start);
-                start = off + 1;
-                off += 2; // skip '{'
-                continue;
-            }
-            off++;
-            continue;
-        }
-        if ('{' == c) {
-            // only "{N}" is an argument reference; a '{' not followed by a
-            // digit is raw text (e.g. CSS / JS braces in html templates that
-            // are run through fmt)
-            if (off + 1 < fmtStr.len && str::IsDigit(fmtStr.s[off + 1])) {
-                addRawStr(o, start, off - start);
-                off = parseArgDefPositional(o, off);
-                start = off;
-                continue;
-            }
-            off++;
-            continue;
-        }
         if ('%' == c) {
             // handle %%
             if (off + 1 < fmtStr.len && '%' == fmtStr.s[off + 1]) {
@@ -306,7 +294,11 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
                 continue;
             }
             addRawStr(o, start, off - start);
-            off = parseArgDefPerc(o, off);
+            if (off + 1 < fmtStr.len && '{' == fmtStr.s[off + 1]) {
+                off = parseArgDefBrace(o, off + 1);
+            } else {
+                off = parseArgDefPerc(o, off);
+            }
             start = off;
             continue;
         }
@@ -315,7 +307,7 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     addRawStr(o, start, off - start);
 
     int maxArgNo = -1; // -1 so an escape/literal-only format requires no args
-    // check that arg numbers in {$n} makes sense
+    // check that arg numbers in %{$n} makes sense
     for (int i = 0; i < o.nInst; i++) {
         if (o.instructions[i].t == FmtArg::Kind::RawStr) {
             continue;
@@ -552,11 +544,11 @@ Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
     }
 
     if (nArgs == 0) {
-        // no args: if the format has no directives/escapes, return it verbatim
-        // (fast path); otherwise still run it through so %% and \{ are handled.
+        // no args: if the format has no directives, return it verbatim (fast
+        // path); otherwise still run it through so %% is unescaped
         bool hasDirective = false;
         for (const char* p = fmt; p && *p; p++) {
-            if (*p == '%' || *p == '{' || *p == '\\') {
+            if (*p == '%') {
                 hasDirective = true;
                 break;
             }

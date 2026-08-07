@@ -227,26 +227,40 @@ static void testEscapeAndRaw() {
     check(FormatTemp("%d%% done", 50), "50% done");
     check(FormatTemp("no specifiers"), "no specifiers");
     check(FormatTemp(""), "");
-    check(FormatTemp("a\\{b"), "a{b"); // \{ escapes {
+    // '{' is not special, so nothing needs escaping: registry paths, GUIDs and
+    // CSS / JS templates go through fmt unharmed
+    check(FormatTemp("a{b"), "a{b");
+    check(FormatTemp("{}"), "{}");
+    check(FormatTemp("Class\\{4d36e968}\\%d", 7), "Class\\{4d36e968}\\7");
 }
 
 static void testPositional() {
-    check(FormatTemp("c: {0}, i: {1}", 'x', -18), "c: x, i: -18");
-    check(FormatTemp("be{0}-af", 888723), "be888723-af");
-    check(FormatTemp("int: {1}, s: {0}", WStrL(L"hello"), -1), "int: -1, s: hello");
-    check(FormatTemp("{1}-{0}", StrL("so"), WStrL(L"r")), "r-so");
-    check(FormatTemp("{0}{0}{0}", StrL("ab")), "ababab"); // repeated positional
+    check(FormatTemp("c: %{0}, i: %{1}", 'x', -18), "c: x, i: -18");
+    check(FormatTemp("be%{0}-af", 888723), "be888723-af");
+    check(FormatTemp("int: %{1}, s: %{0}", WStrL(L"hello"), -1), "int: -1, s: hello");
+    check(FormatTemp("%{1}-%{0}", StrL("so"), WStrL(L"r")), "r-so");
+    check(FormatTemp("%{0}%{0}%{0}", StrL("ab")), "ababab"); // repeated positional
     check(FormatTemp("foo %v", -23), "foo -23");
     check(FormatTemp("%v %v %v", 'c', 5, StrL("s")), "c 5 s");
 }
 
-// A '{' with no closing '}' used to walk past the end of the format string
+// %{} is "the next argument, whatever its type", like %v
+static void testAnyType() {
+    check(FormatTemp("foo %{}", -23), "foo -23");
+    check(FormatTemp("%{} %{} %{}", 'c', 5, StrL("s")), "c 5 s");
+    check(FormatTemp("%{} = %d", StrL("n"), 7), "n = 7");
+    check(FormatTemp("%d = %{}", 7, WStrL(L"n")), "7 = n");
+}
+
+// A '%{' with no closing '}' used to walk past the end of the format string
 // (ASAN: global-buffer-overflow in parseArgDefPositional). Malformed input must
 // fail safe instead. Reachable via a translated format string.
 static void testUnterminatedPositional() {
-    check(FormatTemp("{1"), "");
-    check(FormatTemp("abc{12"), "");
-    check(FormatTemp("{"), "{"); // '{' not followed by a digit stays raw text
+    check(FormatTemp("%{1"), "");
+    check(FormatTemp("abc%{12"), "");
+    check(FormatTemp("%{"), "");
+    check(FormatTemp("%{x}"), ""); // only digits may go inside
+    check(FormatTemp("{1"), "{1"); // no '%': raw text, not a directive
 }
 
 void StrFormatTest() {
@@ -260,5 +274,6 @@ void StrFormatTest() {
     testCrossType();
     testEscapeAndRaw();
     testPositional();
+    testAnyType();
     testUnterminatedPositional();
 }
