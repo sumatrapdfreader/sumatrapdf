@@ -36,6 +36,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdOpenFile,
     CmdOpenFileWithOSFilePicker,
     CmdToggleFilePicker,
+    CmdToggleBoolSetting,
     CmdNavigateFilesInFolder,
     CmdExit,
     CmdNewWindow,

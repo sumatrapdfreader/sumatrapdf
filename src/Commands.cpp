@@ -10,6 +10,7 @@
 #include "Notifications.h"
 #if !defined(SUMATRA_TEST_UTIL)
 #include "Accelerators.h"
+#include "GlobalPrefs.h"
 #endif
 
 // @gen-start cmd-c
@@ -279,6 +280,7 @@ static SeqStrings gCommandNames =
     "CmdSelectTextViaKeyboard\0"
     "CmdOpenFileWithOSFilePicker\0"
     "CmdToggleFilePicker\0"
+    "CmdToggleBoolSetting\0"
     "CmdNone\0"
     "\0";
 
@@ -547,6 +549,7 @@ static i32 gCommandIds[] = {
     CmdSelectTextViaKeyboard,
     CmdOpenFileWithOSFilePicker,
     CmdToggleFilePicker,
+    CmdToggleBoolSetting,
     CmdNone,
 };
 
@@ -815,6 +818,7 @@ SeqStrings gCommandDescriptions =
     "Select Text With Keyboard\0"
     "Open File With Windows File Picker...\0"
     "SumatraPDF File Picker\0"
+    "Toggle Boolean Setting\0"
     "Do nothing\0"
     "\0";
 // clang-format on
@@ -871,6 +875,9 @@ static const ArgSpec argSpecs[] = {
     {CmdTogglePresentationMode, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool},        // default
     {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool},  // default
+
+    // default string is the setting name, e.g. [CmdToggleBoolSetting Fullscreen.ShowMenubar]
+    {CmdToggleBoolSetting, kCmdArgName, CommandArg::Type::String}, // default
 
     {CmdNone, "", CommandArg::Type::None}, // sentinel
 };
@@ -1479,6 +1486,18 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         firstArg->type = CommandArg::Type::Float;
         firstArg->floatVal = zoomVal;
     }
+#if !defined(SUMATRA_TEST_UTIL)
+    if (cmdId == CmdToggleBoolSetting && firstArg) {
+        // validate the named boolean setting exists (case-insensitive leaf or path)
+        Str settingName = firstArg->strVal;
+        if (len(settingName) == 0 || !FindGlobalPrefsBoolSetting(settingName)) {
+            MaybeDelayedWarningNotification(
+                fmt("Error parsing Shortcuts: unknown boolean setting '%s' in '%s'\n", settingName, defSafe));
+            // still create the command so the shortcut is registered; execute
+            // will warn again if the name is still wrong
+        }
+    }
+#endif
     auto* res = CreateCustomCommand(definition, cmdId, firstArg);
     return res;
 }

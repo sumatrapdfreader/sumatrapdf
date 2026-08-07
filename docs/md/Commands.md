@@ -26,6 +26,7 @@ CmdNewWindow,Ctrl + N,Open New SumatraPDF Window,
 CmdOpenFile,Ctrl + O,Open File...,"uses the Windows file picker or Navigate Files in Folder according to the `FilePicker` advanced setting (empty/os = Windows, sumatrapdf = in-app), ver 3.7+"
 CmdOpenFileWithOSFilePicker,,Open File With Windows File Picker...,"always the standard Windows multi-select file open dialog, ver 3.7+"
 CmdToggleFilePicker,,SumatraPDF File Picker,"checkbox under File and Settings; toggles `FilePicker` empty/os ↔ sumatrapdf, ver 3.7+"
+CmdToggleBoolSetting,,Toggle Boolean Setting,"custom shortcuts: `CmdToggleBoolSetting <SettingName>` toggles a boolean advanced setting (case-insensitive leaf or dotted path), e.g. `Fullscreen.ShowMenubar` (fixes #5912), ver 3.7+"
 CmdOpenNextFileInFolder,Shift + Ctrl + Right,Open Next File In Folder,
 CmdNavigateFilesInFolder,Shift + Ctrl + Up,Navigate Files in Folder,"directory browser for openable files in the current file's folder (stays open; Enter/double-click replaces the current tab, Ctrl+Enter/Ctrl+double-click switches to the tab already showing the file or opens a new tab, Alt+Up goes to the parent directory, Del moves the selected file to the recycle bin, F5 re-reads the directory); also used when `FilePicker = sumatrapdf`, ver 3.7+"
 CmdOpenPrevFileInFolder,Shift + Ctrl + Left,Open Previous File In Folder,
@@ -476,6 +477,28 @@ Arguments for `CmdCreateAnnotHighlight` plus:
 - `interiorcolor` : interior color for circle, square etc. annotations, fully transparent if not given
 - `focusedit` : boolean, when annotation edit window opens, focus the contents edit control
 - `focuslist` : boolean, when annotation edit window opens, focus the annotations list
+
+## `CmdToggleBoolSetting`
+
+**Ver 3.7+**
+
+Arguments:
+
+- `name` : default, string — name of a boolean advanced setting (case-insensitive leaf name or dotted path, e.g. `Fullscreen.ShowMenubar`)
+
+Toggles that setting between `true` and `false`. Useful for custom shortcuts or toolbar buttons. Unknown setting names show a warning when the shortcut is defined and when the command runs.
+
+Example: toggle fullscreen menubar with `t`:
+
+```
+Shortcuts [
+	[
+		Cmd = CmdToggleBoolSetting Fullscreen.ShowMenubar
+		Key = t
+		Name = Toggle Fullscreen Menubar
+	]
+]
+```
 
 ## `CmdZoomCustom`
 

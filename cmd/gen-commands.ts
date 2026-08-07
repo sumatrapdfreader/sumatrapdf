@@ -273,6 +273,7 @@ export const commands = [
     "CmdSelectTextViaKeyboard", "Select Text With Keyboard",
     "CmdOpenFileWithOSFilePicker", "Open File With Windows File Picker...",
     "CmdToggleFilePicker", "SumatraPDF File Picker",
+    "CmdToggleBoolSetting", "Toggle Boolean Setting",
     "CmdNone", "Do nothing",
 ];
 

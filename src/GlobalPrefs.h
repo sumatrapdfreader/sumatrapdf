@@ -3,6 +3,8 @@
 
 extern GlobalPrefs* gGlobalPrefs;
 
+bool* FindGlobalPrefsBoolSetting(Str name);
+
 FileState* NewFileState(Str);
 void DeleteFileState(FileState*);
 void DeleteFileStates(Vec<FileState*>*);

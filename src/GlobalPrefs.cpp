@@ -12,6 +12,48 @@
 
 GlobalPrefs* gGlobalPrefs = nullptr;
 
+// Walk setting metadata for a Bool field matching name (case-insensitive leaf
+// or full dotted path). Returns a pointer into gGlobalPrefs, or nullptr.
+static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathPrefix, Str name) {
+    if (!info || !base || len(name) == 0) {
+        return nullptr;
+    }
+    const char* fieldName = info->fieldNames;
+    for (u16 i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& field = info->fields[i];
+        Str fname(fieldName);
+        fieldName += len(fname) + 1;
+        if (field.type == SettingType::Comment || field.offset == (size_t)-1) {
+            continue;
+        }
+        u8* fieldPtr = base + field.offset;
+        TempStr path = len(pathPrefix) > 0 ? fmt("%s.%s", pathPrefix, fname) : str::DupTemp(fname);
+        if (field.type == SettingType::Struct) {
+            const auto* sub = (const StructInfo*)field.value;
+            bool* found = FindBoolSettingInStruct(sub, fieldPtr, path, name);
+            if (found) {
+                return found;
+            }
+            continue;
+        }
+        if (field.type != SettingType::Bool) {
+            continue;
+        }
+        if (str::EqI(fname, name) || str::EqI(path, name)) {
+            return (bool*)fieldPtr;
+        }
+    }
+    return nullptr;
+}
+
+// Case-insensitive leaf or dotted path (e.g. "SelectionToolbar", "Fullscreen.ShowMenubar").
+bool* FindGlobalPrefsBoolSetting(Str name) {
+    if (!gGlobalPrefs || len(name) == 0) {
+        return nullptr;
+    }
+    return FindBoolSettingInStruct(&gGlobalPrefsInfo, (u8*)gGlobalPrefs, {}, name);
+}
+
 FileState* NewFileState(Str filePath) {
     FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
     SetFileStatePath(fs, filePath);

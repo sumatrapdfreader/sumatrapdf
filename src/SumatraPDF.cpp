@@ -9238,6 +9238,30 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdToggleBoolSetting: {
+            // e.g. [CmdToggleBoolSetting Fullscreen.ShowMenubar] in Shortcuts
+            Str settingName = GetCommandStringArg(cmd, kCmdArgName, {});
+            if (len(settingName) == 0) {
+                MaybeDelayedWarningNotification(StrL(
+                    "CmdToggleBoolSetting requires a setting name, e.g. CmdToggleBoolSetting Fullscreen.ShowMenubar"));
+                break;
+            }
+            bool* p = FindGlobalPrefsBoolSetting(settingName);
+            if (!p) {
+                MaybeDelayedWarningNotification(fmt("CmdToggleBoolSetting: unknown boolean setting '%s'", settingName));
+                break;
+            }
+            *p = !*p;
+            SaveSettings();
+            // selection toolbar respects the setting on next show; hide if turned off
+            if (str::EqI(settingName, StrL("SelectionToolbar")) && !*p) {
+                for (MainWindow* w : gWindows) {
+                    HideSelectionToolbar(w);
+                }
+            }
+            break;
+        }
+
         case CmdShowInFolder:
             ShowCurrentFileInFolder(win);
             break;
