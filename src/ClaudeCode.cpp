@@ -5,6 +5,7 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgsIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -127,39 +128,35 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
     TempStr encodedDir = EncodeClaudeDirTemp(dir);
-    TempStr projectDir = fmt("%s\\.claude\\projects\\%s", userProfile, encodedDir);
-
-    // scan for *.jsonl files in the project directory
-    TempStr pattern = fmt("%s\\*.jsonl", projectDir);
-    WIN32_FIND_DATAW fd;
-    WCHAR* patternW = CWStrTemp(pattern);
-    HANDLE hFind = FindFirstFileW(patternW, &fd);
-    if (hFind == INVALID_HANDLE_VALUE) {
+    TempStr projectDir = path::JoinTemp(userProfile, StrL(".claude"), StrL("projects"));
+    projectDir = path::JoinTemp(projectDir, encodedDir);
+    if (!dir::Exists(projectDir)) {
         return;
     }
 
-    do {
-        TempStr fileName = ToUtf8Temp(fd.cFileName);
+    DirIter di(projectDir);
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
         // session files are named <uuid>.jsonl
-        int nameLen = len(fileName);
+        if (!str::EndsWithI(de->name, StrL(".jsonl"))) {
+            continue;
+        }
+        int nameLen = len(de->name);
         if (nameLen < 42) { // uuid (36) + .jsonl (6) = 42
             continue;
         }
         // extract session ID (remove .jsonl extension)
-        TempStr sessionId = str::DupTemp(Str(fileName.s, nameLen - 6));
-
-        TempStr fullPath = fmt("%s\\%s", projectDir, fileName);
-        Str desc = GetSessionDescription(fullPath);
+        TempStr sessionId = str::DupTemp(Str(de->name.s, nameLen - 6));
+        Str desc = GetSessionDescription(de->filePath);
 
         AIChatSessionInfo si;
         si.sessionId = str::Dup(sessionId);
         si.display = desc;
         si.project = str::Dup(dir);
-        si.timestamp = AIChatFileTimeToMs(fd.ftLastWriteTime);
+        si.timestamp = AIChatFileTimeToMs(de->modificationTime);
         sessions.Append(si);
-    } while (FindNextFileW(hFind, &fd));
-
-    FindClose(hFind);
+    }
 
     AIChatSortSessionsByTimestampDesc(sessions);
 }

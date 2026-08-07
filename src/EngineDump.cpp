@@ -514,16 +514,13 @@ void EngineDump(const Flags& flags) {
     ScopedGdiPlus gdiPlus;
     ScopedMui miniMui;
 
-    WIN32_FIND_DATA fdata;
-    WCHAR* pathW = CWStrTemp(filePath);
-    HANDLE hfind = FindFirstFileW(pathW, &fdata);
-    // embedded documents are referred to by an invalid path
-    // containing more information after a colon (e.g. "C:\file.pdf:3:0")
-    if (INVALID_HANDLE_VALUE != hfind) {
-        TempStr dir = path::GetDirTemp(filePath);
-        TempStr name = ToUtf8Temp(fdata.cFileName);
-        filePath = path::JoinTemp(dir, name);
-        FindClose(hfind);
+    // Normalize casing / short names when the path exists (embedded docs may use
+    // "C:\file.pdf:3:0" which does not exist as a real file path).
+    if (file::Exists(filePath)) {
+        TempStr norm = path::NormalizeTemp(filePath);
+        if (norm) {
+            filePath = norm;
+        }
     }
 
     PasswordHolder pwdUI(password);

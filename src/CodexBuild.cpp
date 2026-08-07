@@ -5,6 +5,7 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgsIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/JsonParser.h"
 #include "base/Win.h"
@@ -287,66 +288,23 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
     str::Free(data);
 }
 
+// Walk ~/.codex/sessions/YYYY/MM/DD/ for a rollout file whose name ends with sessionId.jsonl
 static TempStr FindCodexRolloutPathTemp(Str sessionId) {
     TempStr root = CodexSessionsRootTemp();
     if (!root || !sessionId) {
         return {};
     }
     TempStr suffix = fmt("%s.jsonl", sessionId);
-    TempStr result = nullptr;
-    TempStr yearPat = fmt("%s\\*", root);
-    WIN32_FIND_DATAW fdY;
-    HANDLE hY = FindFirstFileW(CWStrTemp(yearPat), &fdY);
-    if (hY == INVALID_HANDLE_VALUE) {
-        return {};
+    DirIter di(root);
+    di.includeFiles = true;
+    di.includeDirs = false;
+    di.recurse = true;
+    for (DirIterEntry* de : di) {
+        if (str::EndsWithI(de->name, suffix)) {
+            return str::DupTemp(de->filePath);
+        }
     }
-    do {
-        if ((fdY.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-            continue;
-        }
-        TempStr year = ToUtf8Temp(fdY.cFileName);
-        if (str::Eq(year, StrL(".")) || str::Eq(year, StrL(".."))) {
-            continue;
-        }
-        TempStr monthPat = fmt("%s\\%s\\*", root, year);
-        WIN32_FIND_DATAW fdM;
-        HANDLE hM = FindFirstFileW(CWStrTemp(monthPat), &fdM);
-        if (hM == INVALID_HANDLE_VALUE) {
-            continue;
-        }
-        do {
-            if ((fdM.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-                continue;
-            }
-            TempStr month = ToUtf8Temp(fdM.cFileName);
-            if (str::Eq(month, StrL(".")) || str::Eq(month, StrL(".."))) {
-                continue;
-            }
-            TempStr dayPat = fmt("%s\\%s\\%s\\*", root, year, month);
-            WIN32_FIND_DATAW fdD;
-            HANDLE hD = FindFirstFileW(CWStrTemp(dayPat), &fdD);
-            if (hD == INVALID_HANDLE_VALUE) {
-                continue;
-            }
-            do {
-                if (fdD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                    continue;
-                }
-                TempStr name = ToUtf8Temp(fdD.cFileName);
-                if (str::EndsWithI(name, suffix)) {
-                    result = fmt("%s\\%s\\%s\\%s", root, year, month, name);
-                    FindClose(hD);
-                    FindClose(hM);
-                    FindClose(hY);
-                    return result;
-                }
-            } while (FindNextFileW(hD, &fdD));
-            FindClose(hD);
-        } while (FindNextFileW(hM, &fdM));
-        FindClose(hM);
-    } while (FindNextFileW(hY, &fdY));
-    FindClose(hY);
-    return result;
+    return {};
 }
 
 // Scan ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl for sessions with matching cwd
@@ -356,56 +314,16 @@ static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
-    TempStr yearPat = fmt("%s\\*", root);
-    WIN32_FIND_DATAW fdY;
-    HANDLE hY = FindFirstFileW(CWStrTemp(yearPat), &fdY);
-    if (hY == INVALID_HANDLE_VALUE) {
-        return;
+    DirIter di(root);
+    di.includeFiles = true;
+    di.includeDirs = false;
+    di.recurse = true;
+    for (DirIterEntry* de : di) {
+        if (!IsCodexRolloutFileName(de->name)) {
+            continue;
+        }
+        TryAddCodexSession(de->filePath, de->modificationTime, dir, sessions);
     }
-    do {
-        if ((fdY.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-            continue;
-        }
-        TempStr year = ToUtf8Temp(fdY.cFileName);
-        if (str::Eq(year, StrL(".")) || str::Eq(year, StrL(".."))) {
-            continue;
-        }
-        TempStr monthPat = fmt("%s\\%s\\*", root, year);
-        WIN32_FIND_DATAW fdM;
-        HANDLE hM = FindFirstFileW(CWStrTemp(monthPat), &fdM);
-        if (hM == INVALID_HANDLE_VALUE) {
-            continue;
-        }
-        do {
-            if ((fdM.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-                continue;
-            }
-            TempStr month = ToUtf8Temp(fdM.cFileName);
-            if (str::Eq(month, StrL(".")) || str::Eq(month, StrL(".."))) {
-                continue;
-            }
-            TempStr dayPat = fmt("%s\\%s\\%s\\*", root, year, month);
-            WIN32_FIND_DATAW fdD;
-            HANDLE hD = FindFirstFileW(CWStrTemp(dayPat), &fdD);
-            if (hD == INVALID_HANDLE_VALUE) {
-                continue;
-            }
-            do {
-                if (fdD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                    continue;
-                }
-                TempStr name = ToUtf8Temp(fdD.cFileName);
-                if (!IsCodexRolloutFileName(name)) {
-                    continue;
-                }
-                TempStr fullPath = fmt("%s\\%s\\%s\\%s", root, year, month, name);
-                TryAddCodexSession(fullPath, fdD.ftLastWriteTime, dir, sessions);
-            } while (FindNextFileW(hD, &fdD));
-            FindClose(hD);
-        } while (FindNextFileW(hM, &fdM));
-        FindClose(hM);
-    } while (FindNextFileW(hY, &fdY));
-    FindClose(hY);
 
     AIChatSortSessionsByTimestampDesc(sessions);
 }

@@ -5,6 +5,7 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgsIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -195,38 +196,22 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
-    TempStr pattern = fmt("%s\\*", projectDir);
-    WIN32_FIND_DATAW fd;
-    WCHAR* patternW = CWStrTemp(pattern);
-    HANDLE hFind = FindFirstFileW(patternW, &fd);
-    if (hFind == INVALID_HANDLE_VALUE) {
-        return;
-    }
-
-    do {
-        if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-            continue;
-        }
-        TempStr fileName = ToUtf8Temp(fd.cFileName);
-        if (str::Eq(fileName, StrL(".")) || str::Eq(fileName, StrL(".."))) {
-            continue;
-        }
-        if (!IsGrokSessionDirName(fileName)) {
+    DirIter di(projectDir);
+    di.includeFiles = false;
+    di.includeDirs = true;
+    for (DirIterEntry* de : di) {
+        if (!IsGrokSessionDirName(de->name)) {
             continue;
         }
 
-        Str desc = GetGrokSessionDescription(projectDir, fileName);
-        i64 ts = AIChatFileTimeToMs(fd.ftLastWriteTime);
-
+        Str desc = GetGrokSessionDescription(projectDir, de->name);
         AIChatSessionInfo si;
-        si.sessionId = str::Dup(fileName);
+        si.sessionId = str::Dup(de->name);
         si.display = desc;
         si.project = str::Dup(dir);
-        si.timestamp = ts;
+        si.timestamp = AIChatFileTimeToMs(de->modificationTime);
         sessions.Append(si);
-    } while (FindNextFileW(hFind, &fd));
-
-    FindClose(hFind);
+    }
 
     AIChatSortSessionsByTimestampDesc(sessions);
 }
