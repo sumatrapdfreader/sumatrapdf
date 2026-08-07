@@ -101,7 +101,7 @@ static TempStr ExtractUserTextTemp(Str line) {
 static Str GetSessionDescription(Str sessionPath) {
     Str data = file::ReadFile(sessionPath);
     if (len(data) == 0) {
-        return StrL("(empty)");
+        return str::Dup(StrL("(empty)"));
     }
     Str content = data;
     Str rest = content;
@@ -118,7 +118,7 @@ static Str GetSessionDescription(Str sessionPath) {
         }
     }
     str::Free(data);
-    return result ? result : StrL("(no description)");
+    return result ? result : str::Dup(StrL("(no description)"));
 }
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files

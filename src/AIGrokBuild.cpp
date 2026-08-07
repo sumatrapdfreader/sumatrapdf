@@ -169,7 +169,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     TempStr historyPath = fmt("%s\\prompt_history.jsonl", projectDir);
     Str data = file::ReadFile(historyPath);
     if (len(data) == 0) {
-        return StrL("(no description)");
+        return str::Dup(StrL("(no description)"));
     }
     Str content = data;
     Str rest = content;
@@ -186,7 +186,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
         }
     }
     str::Free(data);
-    return result ? result : StrL("(no description)");
+    return result ? result : str::Dup(StrL("(no description)"));
 }
 
 // Scan ~/.grok/sessions/<url-encoded-dir>/ for session subdirectories

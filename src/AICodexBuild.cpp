@@ -214,11 +214,11 @@ static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     TempStr historyPath = userProfile ? fmt("%s\\.codex\\history.jsonl", userProfile) : nullptr;
     if (!historyPath) {
-        return StrL("(no description)");
+        return str::Dup(StrL("(no description)"));
     }
     Str data = file::ReadFile(historyPath);
     if (len(data) == 0) {
-        return StrL("(no description)");
+        return str::Dup(StrL("(no description)"));
     }
     Str content = data;
     Str rest = content;
@@ -235,7 +235,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
         }
     }
     str::Free(data);
-    return result ? result : StrL("(no description)");
+    return result ? result : str::Dup(StrL("(no description)"));
 }
 
 static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut) {
