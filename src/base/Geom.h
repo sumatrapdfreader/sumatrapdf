@@ -76,12 +76,12 @@ struct Rect {
     int Right() const;
     int Bottom() const;
     static Rect FromXY(int xs, int ys, int xe, int ye);
-    static Rect FromXY(const Point TL, const Point BR);
+    static Rect FromXY(Point TL, Point BR);
     bool IsZero() const;
     bool IsEmpty() const;
     bool Contains(int x, int y) const;
-    bool Contains(const Point pt) const;
-    Rect Intersect(const Rect other) const;
+    bool Contains(Point pt) const;
+    Rect Intersect(Rect other) const;
     Rect Union(Rect other) const;
     void Offset(int _x, int _y);
     void Inflate(int _x, int _y);
