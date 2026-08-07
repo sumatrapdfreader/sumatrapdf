@@ -156,10 +156,25 @@ i64 AIChatFileTimeToMs(const FILETIME& ft) {
     return (i64)(uli.QuadPart / 10000);
 }
 
+// In-memory record of the most recent chat traffic (sent commands + received
+// stream), for post-mortem debugging when a chat fails. Fed from AIChatLog, so
+// every ">>>"/"<<<" line the app already logs is captured here too. Bounded: the
+// whole buffer is dropped once it grows past the cap.
+static Mutex gAIChatDbgMu;
+static str::Builder gAIChatDbgLog;
+constexpr int kAIChatDbgMaxBytes = 256 * 1024;
+
+void AIChatDebugReset() {
+    ScopedMutex lk(&gAIChatDbgMu);
+    gAIChatDbgLog.Reset();
+}
+
+TempStr AIChatDebugGetTemp() {
+    ScopedMutex lk(&gAIChatDbgMu);
+    return str::DupTemp(ToStr(gAIChatDbgLog));
+}
+
 void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
-    if (!logger) {
-        return;
-    }
     if (!text) {
         text = "";
     }
@@ -174,6 +189,17 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
         entry.AppendChar('\n');
     }
 
+    {
+        ScopedMutex lk(&gAIChatDbgMu);
+        if (len(gAIChatDbgLog) > kAIChatDbgMaxBytes) {
+            gAIChatDbgLog.Reset();
+        }
+        gAIChatDbgLog.Append(ToStr(entry));
+    }
+
+    if (!logger) {
+        return;
+    }
     if (logger->logTag) {
         logfa("%s %s: %s", logger->logTag, direction, text);
     }

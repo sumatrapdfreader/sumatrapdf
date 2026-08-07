@@ -22,6 +22,7 @@
 #include "Toolbar.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
+#include "AIChatCommon.h"
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -131,6 +132,7 @@ enum class ControlCmd : u16 {
     TestClickClearsSelection = 38,
     TestRectSelectionDrag = 39,
     TestSelectTextKeyboard = 40,
+    TestAIChat = 41,
 };
 
 enum class ControlArgType : u16 {
@@ -698,6 +700,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSelectTextKeyboard: {
             int exitCode = 0;
             Str res = SelectTextKeyboardResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestAIChat: {
+            i32 backend = 0;
+            Str filePath = StringArg(req, 1);
+            Str message = StringArg(req, 2);
+            if (!IntArg(req, 0, backend) || !filePath || !message) {
+                AppendError(req, "TestAIChat expects int backend, string filePath, string message");
+                break;
+            }
+            int exitCode = 0;
+            Str res = AIChatTestResultTemp(backend, filePath, message, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

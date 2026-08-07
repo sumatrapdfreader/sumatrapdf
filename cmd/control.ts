@@ -33,6 +33,7 @@ export enum ControlCommand {
   TestClickClearsSelection = 38,
   TestRectSelectionDrag = 39,
   TestSelectTextKeyboard = 40,
+  TestAIChat = 41,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

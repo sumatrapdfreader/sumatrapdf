@@ -140,6 +140,15 @@ void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
 i64 AIChatFileTimeToMs(const FILETIME& ft);
 
 void AIChatLog(AIChatLogger* logger, Str direction, Str text);
+
+// in-memory record of the most recent chat traffic, for debugging failures
+void AIChatDebugReset();
+TempStr AIChatDebugGetTemp();
+
+// Run one chat turn synchronously (headless) with the given backend, file and
+// message, using the same provider code the panel does; returns "OK\n<text>" or
+// "FAIL: <reason>\n--- debug log ---\n<log>". For -dbg-control tests.
+TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCode);
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 
 TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt = nullptr);
