@@ -740,13 +740,14 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         }
     }
 
-    // On the home page the arrows and Enter drive the keyboard selection of the
-    // file list (issue #1136) rather than scrolling. Send them to the canvas,
-    // which is where that's handled, instead of accelerating them to scroll
-    // commands. The search box is an edit control, so it keeps its own keys.
+    // On the home page the arrows, Enter and Del drive the keyboard selection of
+    // the file list (issue #1136) rather than scrolling / other accelerators.
+    // Send them to the canvas, which is where that's handled. The search box is
+    // an edit control, so it keeps its own keys.
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
         WPARAM key = msg.wParam;
-        bool isNavKey = key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_RETURN;
+        bool isNavKey =
+            key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_RETURN || key == VK_DELETE;
         if (isNavKey) {
             MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
             // only for the frame / canvas: the search box needs its own arrows

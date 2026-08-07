@@ -893,17 +893,24 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     return true;
 }
 
-void ShowNavFilesInFolder(MainWindow* win) {
+void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
+    // Prefer an explicit path (e.g. home-page thumbnail); else the current tab.
+    Str filePath = selectPath;
+    if (len(filePath) == 0) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab && !tab->IsAboutTab()) {
+            filePath = tab->filePath;
+        }
+    }
+
     if (gNavFilesWnd) {
         if (gNavFilesWnd->hwnd && IsWindow(gNavFilesWnd->hwnd)) {
-            // the command means "browse the current document's folder", so re-sync
-            // to it (and re-read it: the file may have been renamed since, #5878)
-            WindowTab* tab = win->CurrentTab();
-            Str filePath = (tab && !tab->IsAboutTab()) ? tab->filePath : Str{};
+            // re-sync to the target folder (and re-read: the file may have been
+            // renamed since, #5878)
             if (len(filePath) > 0) {
                 gNavFilesWnd->SetDir(path::GetDirTemp(filePath), filePath);
             } else {
-                // on the home page keep whatever directory is being browsed
+                // on the home page with no selection keep whatever dir is open
                 gNavFilesWnd->RefreshList();
             }
             ShowWindow(gNavFilesWnd->hwnd, SW_SHOW);
@@ -930,5 +937,17 @@ void ShowNavFilesInFolder(MainWindow* win) {
         gHwndToActivateOnNavClose = nullptr;
         delete wnd;
         return;
+    }
+    // Create() picks the current tab / history start dir; override when the
+    // caller asked for a specific file (home-page thumbnail context menu).
+    if (len(selectPath) > 0) {
+        TempStr dir = path::GetDirTemp(selectPath);
+        if (len(dir) > 0 && dir::Exists(dir)) {
+            wnd->SetDir(dir, selectPath);
+            int selIdx = wnd->listBox ? wnd->listBox->GetCurrentSelection() : -1;
+            if (selIdx >= 0) {
+                SelectAndEnsureVisible(wnd->listBox, selIdx);
+            }
+        }
     }
 }

@@ -40,6 +40,7 @@
 #include "ImageSaveCropResize.h"
 #include "CommandAvailability.h"
 #include "Menu.h"
+#include "NavFilesInFolder.h"
 #include "ReadAloudHighlight.h"
 
 // value associated with menu item for owner-drawn purposes
@@ -1111,7 +1112,7 @@ static MenuDef menuDefContextStart[] = {
     },
     {
         _TRN("Show in folder"),
-        CmdShowInFolder,
+        CmdNavigateFilesInFolder,
     },
     {
         _TRN("&Pin Document"),
@@ -1124,6 +1125,10 @@ static MenuDef menuDefContextStart[] = {
     {
         _TRN("&Remove From History"),
         CmdForgetSelectedDocument,
+    },
+    {
+        _TRN("Delete File"),
+        CmdDeleteFile,
     },
     {
         nullptr,
@@ -1818,10 +1823,20 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
+    // Prefer the file under the click; keyboard/context-menu key falls back to
+    // the keyboard-selected home entry.
     TempStr path = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
-    if (!path || path.s[0] == '<' || str::StartsWith(path, StrL("http://")) ||
-        str::StartsWith(path, StrL("https://"))) {
+    bool fromClick = path && path::IsAbsolute(path);
+    if (!fromClick) {
+        path = str::DupTemp(HomePageSelectedFilePathTemp(win));
+    }
+    if (!path || !path::IsAbsolute(path)) {
         return;
+    }
+
+    // Keep keyboard selection in sync with the right-clicked thumbnail
+    if (fromClick) {
+        HomePageOnHover(win, x, y);
     }
 
     FileState* fs = gFileHistory.FindByPath(path);
@@ -1834,7 +1849,20 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     ctx.filePath = path;
     HMENU popup = BuildMenuFromDef(menuDefContextStart, CreatePopupMenu(), &ctx);
     MenuSetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
+    // Del is home-page-only (not a global accelerator), so AppendAccelKey won't
+    // pick it up — show it next to Remove From History explicitly
+    MenuSetText(popup, CmdForgetSelectedDocument, str::JoinTemp(_TRA("&Remove From History"), StrL("\tDel")));
     Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
+    // keyboard menu (no hit under the cursor): place at cursor or near the frame
+    if (!fromClick) {
+        Point cursor = GetCursorPosition();
+        if (!cursor.IsEmpty()) {
+            pt = cursor;
+        } else {
+            Rect rc = HwndWindowRect(win->hwndFrame);
+            pt = Point(rc.x + 40, rc.y + 80);
+        }
+    }
     MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
@@ -1848,8 +1876,35 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    if (CmdShowInFolder == cmd) {
-        SumatraOpenPathInDefaultFileManager(path);
+    if (CmdNavigateFilesInFolder == cmd) {
+        ShowNavFilesInFolder(win, path);
+        return;
+    }
+
+    if (CmdDeleteFile == cmd) {
+        if (!CanAccessDisk() || gPluginMode) {
+            return;
+        }
+        // own the path: delete closes tabs and rewrites history
+        TempStr pathOwned = str::DupTemp(path);
+        if (file::Exists(pathOwned)) {
+            WindowTab* tab = FindTabByFilePath(pathOwned);
+            if (tab) {
+                if (!MaybeSaveAnnotations(tab)) {
+                    return;
+                }
+                CloseTab(tab, false);
+            }
+            DeleteFileFromDiskAndHistory(pathOwned);
+        } else {
+            // missing file: still drop it from history
+            ForgetFileFromFrequentlyRead(win, pathOwned);
+            return;
+        }
+        if (IsMainWindowValid(win)) {
+            win->DeleteToolTip();
+            win->RedrawAll(true);
+        }
         return;
     }
 

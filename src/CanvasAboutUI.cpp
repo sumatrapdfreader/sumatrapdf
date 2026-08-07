@@ -247,6 +247,14 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
                     StartLoadDocument(&args);
                     return 0;
                 }
+                case VK_DELETE: {
+                    // remove the keyboard-selected entry from file history (not from disk)
+                    Str path = HomePageSelectedFilePathTemp(win);
+                    if (path) {
+                        ForgetFileFromFrequentlyRead(win, path);
+                    }
+                    return 0;
+                }
             }
             break;
 
