@@ -5,6 +5,7 @@
 #include "base/ScopedWin.h"
 #include "base/Dpi.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -1548,7 +1549,7 @@ static void LayoutHomePage(HomePageLayout& l) {
             thumb.rcListFileName = rcFileName;
             // already-cached in-memory thumb size only (no LoadThumbnail / disk)
             if (onScreen && fs->thumbnail) {
-                thumb.szThumb = fs->thumbnail->GetSize();
+                thumb.szThumb = Size(fs->thumbnail->width, fs->thumbnail->height);
             }
             if (!onScreen) {
                 continue;
@@ -1589,7 +1590,7 @@ static void LayoutHomePage(HomePageLayout& l) {
                 // only use already-resident thumbnails for aspect adjust — never LoadThumbnail
                 // during layout (disk I/O dominated scroll/paint CPU)
                 if (onScreen && fs->thumbnail) {
-                    Size szThumb = fs->thumbnail->GetSize();
+                    Size szThumb(fs->thumbnail->width, fs->thumbnail->height);
                     if (szThumb.dx != kThumbnailDx || szThumb.dy != kThumbnailDy) {
                         rcPage.dy = szThumb.dy * kThumbnailDx / szThumb.dx;
                         rcPage.y += kThumbnailDy - rcPage.dy;
@@ -1947,12 +1948,13 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     HdcDrawLine(hdc, Rect(row.x, row.y + row.dy - 1, row.dx, 0));
 
     // LoadThumbnail only hits disk the first time; result stays on fs->thumbnail
-    RenderedBitmap* thumbImg = LoadThumbnail(fs);
+    Pixmap* thumbImg = LoadThumbnail(fs);
     Rect thumbBox = thumb.rcListThumb;
     if (thumbImg) {
-        Rect thumbDst = FitRectInRect(thumbImg->GetSize(), thumbBox);
-        thumbImg->Blit(hdc, thumbDst);
-        thumb.szThumb = thumbImg->GetSize();
+        Size szThumb(thumbImg->width, thumbImg->height);
+        Rect thumbDst = FitRectInRect(szThumb, thumbBox);
+        BlitPixmap(thumbImg, hdc, thumbDst);
+        thumb.szThumb = szThumb;
     }
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
@@ -2083,15 +2085,15 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         }
 
         // disk load only first time; stays on fs->thumbnail afterwards
-        RenderedBitmap* thumbImg = LoadThumbnail(fs);
+        Pixmap* thumbImg = LoadThumbnail(fs);
         if (thumbImg) {
-            thumb.szThumb = thumbImg->GetSize();
+            thumb.szThumb = Size(thumbImg->width, thumbImg->height);
             int savedDC = SaveDC(hdc);
             HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
             ExtSelectClipRgn(hdc, clip, RGN_AND);
             // note: we used to invert bitmaps in dark theme but that doesn't
             // make sense for thumbnails
-            thumbImg->Blit(hdc, page);
+            BlitPixmap(thumbImg, hdc, page);
             RestoreDC(hdc, savedDC);
             DeleteObject(clip);
         }

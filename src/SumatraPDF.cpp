@@ -1104,13 +1104,17 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 struct CreateThumbnailFromFileData {
     Str filePath;
     Pixmap* bmp = nullptr;
-    ~CreateThumbnailFromFileData() { str::Free(filePath); }
+    ~CreateThumbnailFromFileData() {
+        str::Free(filePath);
+        FreePixmap(bmp);
+    }
 };
 
 static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     if (d->bmp) {
         FileState* fs = gFileHistory.FindByPath(d->filePath);
-        SetThumbnail(fs, RenderedBitmapFromPixmap(d->bmp));
+        SetThumbnail(fs, d->bmp);
+        d->bmp = nullptr;
     }
     delete d;
 }
@@ -2852,7 +2856,7 @@ static void RenameFileInHistory(Str oldPath, Str newPath) {
         fs->isPinned = fs->isPinned || oldIsPinned;
         fs->openCount += oldOpenCount;
         // the thumbnail is recreated by LoadDocument
-        delete fs->thumbnail;
+        FreePixmap(fs->thumbnail);
         fs->thumbnail = nullptr;
     }
 }

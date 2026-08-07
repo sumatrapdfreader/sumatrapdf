@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Win.h"
+#include "base/Pixmap.h"
 #include "base/SettingsUtil.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
@@ -61,7 +61,7 @@ FileState* NewFileState(Str filePath) {
 }
 
 void DeleteFileState(FileState* fs) {
-    delete fs->thumbnail;
+    FreePixmap(fs->thumbnail);
     FreeStruct(&gFileStateInfo, fs);
 }
 
@@ -160,7 +160,7 @@ void DeleteGlobalPrefs(GlobalPrefs* gp) {
     }
 
     for (FileState* ds : *gp->fileStates) {
-        delete ds->thumbnail;
+        FreePixmap(ds->thumbnail);
     }
     FreeStruct(&gGlobalPrefsInfo, gp);
 }

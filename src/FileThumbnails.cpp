@@ -5,7 +5,7 @@
 #include "base/Crypto.h"
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
-#include "base/Win.h"
+#include "base/Pixmap.h"
 
 #include "Settings.h"
 #include "ImageReader.h"
@@ -64,7 +64,11 @@ void DeleteThumbnailForFile(Str filePath) {
     logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, Str(status));
 }
 
-RenderedBitmap* LoadThumbnail(FileState* fs) {
+static bool PixmapIsEmpty(const Pixmap* px) {
+    return !px || px->width <= 0 || px->height <= 0 || !px->data;
+}
+
+Pixmap* LoadThumbnail(FileState* fs) {
     if (!fs || len(fs->filePath) == 0) {
         return nullptr;
     }
@@ -76,13 +80,18 @@ RenderedBitmap* LoadThumbnail(FileState* fs) {
         return nullptr;
     }
 
-    RenderedBitmap* bmp = LoadRenderedBitmap(bmpPath);
-    if (!bmp || bmp->GetSize().IsEmpty()) {
-        delete bmp;
+    Str data = file::ReadFile(bmpPath);
+    if (!data) {
+        return nullptr;
+    }
+    Pixmap* px = PixmapFromData(data);
+    str::Free(data);
+    if (PixmapIsEmpty(px)) {
+        FreePixmap(px);
         return nullptr;
     }
 
-    fs->thumbnail = bmp;
+    fs->thumbnail = px;
     return fs->thumbnail;
 }
 
@@ -103,7 +112,7 @@ bool HasThumbnail(FileState* fs) {
     FILETIME fileTime = file::GetModificationTime(fs->filePath);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-        delete fs->thumbnail;
+        FreePixmap(fs->thumbnail);
         fs->thumbnail = nullptr;
     }
 
@@ -111,13 +120,13 @@ bool HasThumbnail(FileState* fs) {
 }
 
 // takes ownership of bmp
-void SetThumbnail(FileState* fs, RenderedBitmap* bmp) {
-    ReportIf(bmp && bmp->GetSize().IsEmpty());
-    if (!fs || len(fs->filePath) == 0 || !bmp || bmp->GetSize().IsEmpty()) {
-        delete bmp;
+void SetThumbnail(FileState* fs, Pixmap* bmp) {
+    ReportIf(bmp && PixmapIsEmpty(bmp));
+    if (!fs || len(fs->filePath) == 0 || PixmapIsEmpty(bmp)) {
+        FreePixmap(bmp);
         return;
     }
-    delete fs->thumbnail;
+    FreePixmap(fs->thumbnail);
     fs->thumbnail = bmp;
     SaveThumbnail(fs);
 }
@@ -143,14 +152,19 @@ void SaveThumbnail(FileState* fs) {
     }
     ReportIfFast(!str::EndsWithI(thumbnailPath, StrL(".png")));
 
-    RenderedBitmap* thumbnail = fs->thumbnail;
-    if (!thumbnail) {
+    Pixmap* thumbnail = fs->thumbnail;
+    if (PixmapIsEmpty(thumbnail)) {
         return;
     }
-    Gdiplus::Bitmap bmp(thumbnail->GetBitmap(), nullptr);
+    // Wrap (don't take ownership) so we can encode the in-memory thumbnail as PNG.
+    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(thumbnail);
+    if (!bmp) {
+        return;
+    }
     CLSID tmpClsid = GetGdiPlusEncoderClsid(L"image/png");
     WCHAR* pathW = CWStrTemp(thumbnailPath);
-    bmp.Save(pathW, &tmpClsid, nullptr);
+    bmp->Save(pathW, &tmpClsid, nullptr);
+    delete bmp;
 }
 
 void RemoveThumbnail(FileState* fs) {
@@ -165,6 +179,6 @@ void RemoveThumbnail(FileState* fs) {
     if (bmpPath) {
         file::Delete(bmpPath);
     }
-    delete fs->thumbnail;
+    FreePixmap(fs->thumbnail);
     fs->thumbnail = nullptr;
 }

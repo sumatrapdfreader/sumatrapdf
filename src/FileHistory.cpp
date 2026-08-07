@@ -3,8 +3,8 @@ License: GPLv3 */
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 #include "base/UITask.h"
-#include "base/Win.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -166,7 +166,7 @@ bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
     }
     // also delete the thumbnail and move the link towards the
     // back in the Frequently Read list
-    delete state->thumbnail;
+    FreePixmap(state->thumbnail);
     state->thumbnail = nullptr;
     state->openCount >>= 2;
     state->isMissing = hide;
@@ -320,7 +320,7 @@ void CleanUpThumbnailCache() {
         }
         logf("CleanUpThumbnailCache: deleting thumb for missing '%s'\n", fs->filePath);
         DeleteThumbnailForFile(fs->filePath);
-        delete fs->thumbnail;
+        FreePixmap(fs->thumbnail);
         fs->thumbnail = nullptr;
     }
 }

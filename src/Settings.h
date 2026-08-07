@@ -3,7 +3,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING) */
 
-struct RenderedBitmap;
+struct Pixmap;
 
 enum class DisplayMode {
     // automatic means: the continuous form of single page, facing or
@@ -516,7 +516,7 @@ struct FileState {
     // tree (which can be quite large) (internal)
     Vec<int>* tocState;
     // thumbnails are saved as PNG files in sumatrapdfcache directory
-    RenderedBitmap* thumbnail;
+    Pixmap* thumbnail;
     // temporary value needed for FileHistory::cmpOpenCount
     int index;
     // image list holding the file's shell icon
