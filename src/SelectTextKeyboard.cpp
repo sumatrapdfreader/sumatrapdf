@@ -191,7 +191,9 @@ void SelectTextWithKeyboardBlinkCaret(MainWindow* win) {
 }
 
 // Where the caret goes when the mode is turned on: continue an existing text
-// selection if there is one, otherwise the start of the current page's text.
+// selection if there is one, otherwise the glyph nearest the top-left of the
+// currently visible page area (so F7 starts where you are looking, not at
+// document glyph 0 on CurrentPageNo).
 static void PlaceInitialCaret(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     TextSelection* ts = dm->textSelection;
@@ -204,14 +206,33 @@ static void PlaceInitialCaret(MainWindow* win) {
         win->textSelectGlyph = toGlyph;
         return;
     }
-    int pageNo = win->ctrl->CurrentPageNo();
+
+    int pageNo = dm->FirstVisiblePageNo();
+    if (!dm->ValidPageNo(pageNo)) {
+        pageNo = win->ctrl->CurrentPageNo();
+    }
     if (!dm->ValidPageNo(pageNo)) {
         pageNo = 1;
     }
+
+    int glyph = 0;
+    PageInfo* pi = dm->GetPageInfo(pageNo);
+    if (pi && pi->isShown && PageTextLen(dm->GetEngine(), pageNo) > 0) {
+        // top-left of the page's visible rectangle (viewport client coords)
+        Rect viewRect(Point(), dm->GetViewPort().Size());
+        Rect vis = pi->pageOnScreen.Intersect(viewRect);
+        Point pt = vis.IsEmpty() ? Point(0, 0) : vis.TL();
+        PointF pagePt = dm->CvtFromScreen(pt, pageNo);
+        glyph = ts->FindClosestGlyphAt(pageNo, pagePt.x, pagePt.y);
+        if (glyph < 0) {
+            glyph = 0;
+        }
+    }
+
     win->textSelectPage = pageNo;
-    win->textSelectGlyph = 0;
+    win->textSelectGlyph = glyph;
     win->textSelectAnchorPage = pageNo;
-    win->textSelectAnchorGlyph = 0;
+    win->textSelectAnchorGlyph = glyph;
 }
 
 bool StopSelectTextWithKeyboard(MainWindow* win) {
@@ -250,7 +271,8 @@ void ToggleSelectTextWithKeyboard(MainWindow* win) {
     if (!CanSelectTextWithKeyboard(win)) {
         return;
     }
-    if (PageTextLen(win->AsFixed()->GetEngine(), win->ctrl->CurrentPageNo()) <= 0) {
+    PlaceInitialCaret(win);
+    if (PageTextLen(win->AsFixed()->GetEngine(), win->textSelectPage) <= 0) {
         // no text to put a caret in: don't leave the user in a mode with no
         // feedback (scanned pages without OCR, blank pages)
         NotificationCreateArgs args;
@@ -263,8 +285,8 @@ void ToggleSelectTextWithKeyboard(MainWindow* win) {
     }
     win->textSelectModeActive = true;
     win->textSelectModeVisual = false;
-    PlaceInitialCaret(win);
     RestartCaretBlink(win);
+    // caret is already on the visible page; only scroll if needed
     ScrollCaretIntoView(win);
     ShowModeNotification(win);
     ScheduleRepaint(win, 0);
