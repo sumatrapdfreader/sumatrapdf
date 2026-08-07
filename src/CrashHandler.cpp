@@ -712,11 +712,11 @@ static void GetOsVersion(str::Builder& s) {
 }
 
 static void GetProcessorName(str::Builder& s) {
-    const auto* key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
+    const auto* key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor)";
     TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
         // if more than one processor
-        key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+        key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)";
         name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     }
     if (name) {
@@ -783,8 +783,8 @@ static void GetSystemInfo(str::Builder& s) {
     }
     {
         // get computer name
-        TempStr s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
-        TempStr s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
+        TempStr s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, R"(HARDWARE\DESCRIPTION\System\BIOS)", "SystemFamily");
+        TempStr s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, R"(HARDWARE\DESCRIPTION\System\BIOS)", "SystemVersion");
 
         if (!s1 && !s2) {
             // no-op

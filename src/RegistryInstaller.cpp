@@ -371,7 +371,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, "Content Type", "application/pdf");
-    key = "Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
+    key = R"(Software\Classes\MIME\Database\Content Type\application/pdf)";
     ok &= LoggedWriteRegStr(hkey, key, "Extension", ".pdf");
 
     if (!ok) {

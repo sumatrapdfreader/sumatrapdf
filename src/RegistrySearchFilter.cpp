@@ -20,7 +20,7 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
         {"Software\\Classes\\CLSID"
          "\\" kPdfFilterHandler "\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
          nullptr, kPdfFilterClsid},
-        {"Software\\Classes\\.pdf\\PersistentHandler", nullptr, kPdfFilterHandler},
+        {R"(Software\Classes\.pdf\PersistentHandler)", nullptr, kPdfFilterHandler},
 #ifdef BUILD_TEX_IFILTER
         {"Software\\Classes\\CLSID\\" kTexFilterClsid, nullptr, "SumatraPDF IFilter"},
         {"Software\\Classes\\CLSID\\" kTexFilterClsid "\\InProcServer32", nullptr, dllPath},
@@ -61,7 +61,7 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
 bool UninstallSearchFilter() {
     Str regKeys[] = {
         "Software\\Classes\\CLSID\\" kPdfFilterClsid,  "Software\\Classes\\CLSID\\" kPdfFilterHandler,
-        "Software\\Classes\\.pdf\\PersistentHandler",
+        R"(Software\Classes\.pdf\PersistentHandler)",
 #ifdef BUILD_TEX_IFILTER
         "Software\\Classes\\CLSID\\" kTexFilterClsid,  "Software\\Classes\\CLSID\\" kTexFilterHandler,
         "Software\\Classes\\.tex\\PersistentHandler",

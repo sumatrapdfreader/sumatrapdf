@@ -1029,7 +1029,7 @@ void RemoveAppShortcuts() {
 
 static Str GetEnvRegKey(bool allUsers) {
     if (allUsers) {
-        return "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+        return R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)";
     }
     return "Environment";
 }

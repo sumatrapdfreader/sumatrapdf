@@ -284,7 +284,7 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
             continue;
         }
         TempStr value = ExpandSelectionVarsTemp(valuePattern, selection, false);
-        html.Append("<input type=\"hidden\" name=\"");
+        html.Append(R"(<input type="hidden" name=")");
         HtmlAttrEscape(html, name);
         html.Append("\" value=\"");
         HtmlAttrEscape(html, value);

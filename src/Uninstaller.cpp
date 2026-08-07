@@ -64,7 +64,7 @@ const char* gInstalledFiles[] = {
 
 static Str GetEnvRegKey(bool allUsers) {
     if (allUsers) {
-        return "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+        return R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)";
     }
     return "Environment";
 }
@@ -566,7 +566,7 @@ int RunUninstaller() {
     logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
     if (false) {
-        Str path = "C:\\Users\\kjk\\AppData\\Local\\Temp\\Sumatra-Uninstaller.exe";
+        Str path = R"(C:\Users\kjk\AppData\Local\Temp\Sumatra-Uninstaller.exe)";
         Str cl = "-uninstall";
         logf("LaunchProcessWithCmdLine('%s' '%s')\n", path, cl);
         HANDLE h = LaunchProcessWithCmdLine(path, cl);
