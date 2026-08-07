@@ -1170,7 +1170,14 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
 
     if (resourceProvider.getResource && resourceUriPrefix) {
         TempWStr filter = str::JoinTemp(resourceUriPrefix, WStrL(L"*"));
-        webview->AddWebResourceRequestedFilter(filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+        ICoreWebView2_22* wv22 = nullptr;
+        if (SUCCEEDED(webview->QueryInterface(IID_PPV_ARGS(&wv22))) && wv22) {
+            wv22->AddWebResourceRequestedFilterWithRequestSourceKinds(
+                filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL, COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL);
+            wv22->Release();
+        } else {
+            webview->AddWebResourceRequestedFilter(filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+        }
         auto* resourceHandler = new webview2_resource_handler(this);
         ::EventRegistrationToken resourceToken = {};
         webview->add_WebResourceRequested(resourceHandler, &resourceToken);
