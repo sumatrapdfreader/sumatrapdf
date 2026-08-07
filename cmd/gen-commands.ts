@@ -274,6 +274,7 @@ export const commands = [
     "CmdOpenFileWithOSFilePicker", "Open File With Windows File Picker...",
     "CmdToggleFilePicker", "SumatraPDF File Picker",
     "CmdToggleBoolSetting", "Toggle Boolean Setting",
+    "CmdFixDefaultApp", "Fix Default App For Extension",
     "CmdNone", "Do nothing",
 ];
 

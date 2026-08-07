@@ -9,6 +9,7 @@
 #include "base/Base.h"
 #include "base/Win.h"
 
+#include "Commands.h"
 #include "TipText.h"
 
 void (*gTipOpenUrl)(Str url) = nullptr;
@@ -374,12 +375,19 @@ int HitTestTipLink(ParsedTip& tip, int x, int y) {
     return -1;
 }
 
-// runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl
+// runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl.
+// Cmd targets may include arguments (e.g. "CmdFixDefaultApp .pdf"); those go through
+// CreateCommandFromDefinition so FrameOnCommand sees a CustomCommand with args.
 void ExecuteTipLink(HWND hwnd, Str cmd) {
     if (len(cmd) == 0) {
         return;
     }
     if (str::StartsWith(cmd, StrL("Cmd"))) {
+        CustomCommand* custom = CreateCommandFromDefinition(cmd);
+        if (custom) {
+            HwndSendCommand(hwnd, custom->id);
+            return;
+        }
         int cmdId = GetCommandIdByName(cmd);
         if (cmdId > 0) {
             HwndSendCommand(hwnd, cmdId);

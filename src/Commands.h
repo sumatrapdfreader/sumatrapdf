@@ -274,7 +274,8 @@ enum {
     CmdOpenFileWithOSFilePicker = 463,
     CmdToggleFilePicker = 464,
     CmdToggleBoolSetting = 465,
-    CmdNone = 466,
+    CmdFixDefaultApp = 466,
+    CmdNone = 467,
 
     /* range for file history */
     CmdFileHistoryFirst,
@@ -422,3 +423,4 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 // optional bool to force a state on a toggle command instead of flipping it (#5067)
 #define kCmdArgState StrL("state")
 #define kCmdArgName StrL("name")
+#define kCmdArgExt StrL("ext")

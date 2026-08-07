@@ -103,16 +103,31 @@ Do **not** use `#pragma once` in `.h` files.
 
 ## Put explanatory comments in `.cpp`, not `.h`
 
-Headers are re-parsed by every translation unit that includes them, so prose
-comments in a `.h` cost compilation time on every include. Keep the header
-declaration terse (ideally a single line) and put the explaining comment on the
-**definition** in the corresponding `.cpp`. For a function declared in `Foo.h`
-and defined in `Foo.cpp`, the doc comment lives above the definition in
-`Foo.cpp`.
+**Do not put prose function comments in headers.** Headers are re-parsed by every
+translation unit that includes them, so comments in a `.h` cost compilation time
+on every include. Keep the header declaration terse (ideally a single line) and
+put the explaining comment on the **definition** in the corresponding `.cpp`.
+
+For a function declared in `Foo.h` and defined in `Foo.cpp` (or `Foo_win.cpp` /
+`Foo_posix.cpp` / etc.), the doc comment lives **only** above the definition in
+the `.cpp` — not on the declaration in the `.h`.
+
+```cpp
+// Foo.h — declaration only, no prose comment
+void CollectNonDefaultRegisteredExtensions(StrVec& out);
+
+// Foo.cpp — comment on the definition
+// Extensions we registered for Open With where something else is the default.
+void CollectNonDefaultRegisteredExtensions(StrVec& out) {
+    ...
+}
+```
 
 Comments that have no `.cpp` counterpart stay in the header: those documenting a
-struct/class, an `enum`, a macro, a constant, or an `inline`/templated function
-that is _defined_ in the header (there is nowhere else to put them).
+struct/class, an `enum`, a macro, a constant, a section banner (`//--- …`), or an
+`inline`/templated function that is _defined_ in the header (there is nowhere
+else to put them). When in doubt for a free function or method with a `.cpp`
+body: put the comment in the `.cpp`.
 
 ## `fmt()` is the type-safe formatter
 

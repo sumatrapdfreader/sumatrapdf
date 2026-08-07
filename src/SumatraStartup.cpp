@@ -2819,6 +2819,11 @@ ContinueOpenWindow:
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5456
     uitask::Post(MkFunc0(LayoutAndFocusOnStartup, win), "LayoutAndFocusOnStartup");
 
+    // home-page bottom bar if we lost default-app status for registered extensions
+    if (showStartPage) {
+        uitask::Post(MkFunc0(MaybeShowDefaultAppNotification, win), "MaybeShowDefaultAppNotification");
+    }
+
     StartSumatraControl(flags.controlPipeName);
 
     // on by default in debug builds; release builds can opt in by calling

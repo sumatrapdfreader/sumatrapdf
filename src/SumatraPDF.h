@@ -308,6 +308,7 @@ void StartLoadDocument(LoadArgs* args);
 void StartLoadDocuments(StrVec& paths, MainWindow* win);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
 void ShowMainWindow(MainWindow* win, int windowState);
+void MaybeShowDefaultAppNotification(MainWindow* win);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);
 
 uint MbRtlReadingMaybe();

@@ -2754,6 +2754,61 @@ void ShowMainWindow(MainWindow* win, int windowState) {
     }
 }
 
+// Kind used so only one default-app bar is shown at a time
+static Kind kNotifDefaultApp = "defaultApp";
+// Cap how many extension links we put in the bar
+constexpr int kMaxDefaultAppLinks = 8;
+
+// On the home page: if we registered as Open With for extensions that no longer
+// open with us, show a bottom bar with per-extension fix links.
+void MaybeShowDefaultAppNotification(MainWindow* win) {
+    if (!win || !win->hwndCanvas || win->isBeingClosed) {
+        return;
+    }
+    if (!win->IsCurrentTabAbout()) {
+        return;
+    }
+    if (!CanAccessDisk() || gPluginMode) {
+        return;
+    }
+    if (!IsOurExeInstalled()) {
+        return;
+    }
+
+    StrVec missing;
+    CollectNonDefaultRegisteredExtensions(missing);
+    if (len(missing) == 0) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifDefaultApp);
+        return;
+    }
+
+    // "SumatraPDF is no longer the default app for opening [pdf](CmdFixDefaultApp .pdf), ..."
+    str::Builder sb;
+    sb.Append(StrL("SumatraPDF is no longer the default app for opening "));
+    int nShow = std::min(len(missing), kMaxDefaultAppLinks);
+    for (int i = 0; i < nShow; i++) {
+        if (i > 0) {
+            sb.Append(StrL(", "));
+        }
+        Str ext = missing[i]; // ".pdf"
+        // link text without the leading dot: "pdf"
+        Str label = (len(ext) > 0 && ext.s[0] == '.') ? Str(ext.s + 1, ext.len - 1) : ext;
+        sb.Append(fmt("[%s](CmdFixDefaultApp %s)", label, ext));
+    }
+    if (len(missing) > nShow) {
+        sb.Append(fmt(" and %d more", len(missing) - nShow));
+    }
+    sb.Append(StrL(". Click a link to fix."));
+
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = ToStrTemp(sb);
+    args.timeoutMs = kNotifNoTimeout;
+    args.groupId = kNotifDefaultApp;
+    args.corner = NotifCorner::BottomBar;
+    ShowNotification(args);
+}
+
 MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
     int windowState = gGlobalPrefs->windowState;
     MainWindow* win = CreateMainWindow();
@@ -9161,6 +9216,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SetTheme(theme);
                 SaveSettings();
             }
+            return 0;
+        }
+
+        case CmdFixDefaultApp: {
+            // open OS "Open with" / Default apps UI for this extension
+            Str ext = GetCommandStringArg(cmd, kCmdArgExt, {});
+            if (len(ext) == 0) {
+                return 0;
+            }
+            LaunchDefaultAppDialogForExtension(win->hwndFrame, ext);
             return 0;
         }
 

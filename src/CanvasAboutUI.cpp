@@ -123,9 +123,15 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key
             win->RedrawAll(true);
         }
     } else if (str::StartsWith(url, StrL("Cmd"))) {
-        int cmdId = GetCommandIdByName(url);
-        if (cmdId > 0) {
-            HwndSendCommand(win->hwndFrame, cmdId);
+        // may include args (e.g. "CmdFixDefaultApp .pdf")
+        CustomCommand* custom = CreateCommandFromDefinition(url);
+        if (custom) {
+            HwndSendCommand(win->hwndFrame, custom->id);
+        } else {
+            int cmdId = GetCommandIdByName(url);
+            if (cmdId > 0) {
+                HwndSendCommand(win->hwndFrame, cmdId);
+            }
         }
     } else if (IsLink(url)) {
         // documentation links open in the embedded manual browser

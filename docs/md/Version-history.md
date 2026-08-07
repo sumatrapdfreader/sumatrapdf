@@ -161,6 +161,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdOpenFileWithOSFilePicker` : "Open File With Windows File Picker..." — always the system multi-select open dialog (when `FilePicker = sumatrapdf`, use this to force the Windows picker)
 - `CmdToggleFilePicker` : "SumatraPDF File Picker" — check under Settings and File menus; toggles `FilePicker` between Windows and SumatraPDF
 - `CmdToggleBoolSetting` : "Toggle Boolean Setting" — custom shortcut/toolbar command with a setting name argument, e.g. `CmdToggleBoolSetting Fullscreen.ShowMenubar` (fixes #5912)
+- `CmdFixDefaultApp` : "Fix Default App For Extension" — `CmdFixDefaultApp .pdf` opens the OS default-app UI for that extension; home page shows a bottom bar with fix links when registered extensions are no longer default
 - `CmdToggleKeyboardLinkFollowing` : "Follow Link With Keyboard" (`Shift + F`) — numbers the links on screen 1..9, a digit follows one (fixes #2629)
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"

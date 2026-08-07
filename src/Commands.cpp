@@ -281,6 +281,7 @@ static SeqStrings gCommandNames =
     "CmdOpenFileWithOSFilePicker\0"
     "CmdToggleFilePicker\0"
     "CmdToggleBoolSetting\0"
+    "CmdFixDefaultApp\0"
     "CmdNone\0"
     "\0";
 
@@ -550,6 +551,7 @@ static i32 gCommandIds[] = {
     CmdOpenFileWithOSFilePicker,
     CmdToggleFilePicker,
     CmdToggleBoolSetting,
+    CmdFixDefaultApp,
     CmdNone,
 };
 
@@ -819,6 +821,7 @@ SeqStrings gCommandDescriptions =
     "Open File With Windows File Picker...\0"
     "SumatraPDF File Picker\0"
     "Toggle Boolean Setting\0"
+    "Fix Default App For Extension\0"
     "Do nothing\0"
     "\0";
 // clang-format on
@@ -878,6 +881,9 @@ static const ArgSpec argSpecs[] = {
 
     // default string is the setting name, e.g. [CmdToggleBoolSetting Fullscreen.ShowMenubar]
     {CmdToggleBoolSetting, kCmdArgName, CommandArg::Type::String}, // default
+
+    // extension including leading dot, e.g. [CmdFixDefaultApp .pdf]
+    {CmdFixDefaultApp, kCmdArgExt, CommandArg::Type::String}, // default
 
     {CmdNone, "", CommandArg::Type::None}, // sentinel
 };
