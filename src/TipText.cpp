@@ -177,6 +177,16 @@ void ParseTip(ParsedTip& tip, Str s) {
             }
         }
 
+        // a standalone '*' (not the '**' that starts bold) is a bullet used to
+        // separate items visually; render it as a middle dot
+        if (p.s[0] == '*' && (p.len == 1 || IsTipWhitespace(p.s[1]))) {
+            TipWord w;
+            str::ReplaceWithCopy(&w.text, StrL("\xc2\xb7")); // U+00B7 MIDDLE DOT
+            tip.words.Append(w);
+            AdvanceTipText(p, 1);
+            continue;
+        }
+
         if (p.s[0] == '[') {
             Str textStart(p.s + 1, p.len - 1);
             Str textEnd = FindMarkdownLinkTextEnd(textStart);
@@ -360,8 +370,16 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
     }
 }
 
-bool TipHasLinks(ParsedTip& tip) {
-    return len(tip.links) > 0;
+bool TipHasRichContent(ParsedTip& tip) {
+    if (len(tip.links) > 0) {
+        return true;
+    }
+    for (TipWord& w : tip.words) {
+        if (w.isBold) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // reconstructs the plain (link markup removed, Key/ expanded) text from a parse

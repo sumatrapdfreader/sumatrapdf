@@ -25,6 +25,7 @@
 #include "WindowTab.h"
 #include "Selection.h"
 #include "SelectionToolbar.h"
+#include "SelectTextKeyboard.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
@@ -677,6 +678,9 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
 
 void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/) {
     ReportIf(!win->AsFixed());
+    // selecting with the mouse takes over: leave keyboard selection mode so its
+    // caret and help bar don't linger over a mouse selection
+    StopSelectTextWithKeyboard(win);
     DeleteOldSelectionInfo(win, true);
 
     win->selectionDragEdge = SelectionDragEdge::None;

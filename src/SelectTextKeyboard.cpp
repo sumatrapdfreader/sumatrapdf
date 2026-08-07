@@ -190,21 +190,15 @@ void SelectTextWithKeyboardBlinkCaret(MainWindow* win) {
     ScheduleRepaint(win, 0);
 }
 
-// Where the caret goes when the mode is turned on: continue an existing text
-// selection if there is one, otherwise the glyph nearest the top-left of the
-// currently visible page area (so F7 starts where you are looking, not at
-// document glyph 0 on CurrentPageNo).
+// Where the caret goes when the mode is turned on: the glyph nearest the
+// top-left of the currently visible page area (so F7 starts where you are
+// looking, not at document glyph 0 on CurrentPageNo). Any existing selection
+// (e.g. one made with the mouse) is cleared - F7 starts fresh.
 static void PlaceInitialCaret(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     TextSelection* ts = dm->textSelection;
-    int fromPage, fromGlyph, toPage, toGlyph;
-    ts->GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
-    if (ts->result.len > 0 && fromPage > 0 && toPage > 0) {
-        win->textSelectAnchorPage = fromPage;
-        win->textSelectAnchorGlyph = fromGlyph;
-        win->textSelectPage = toPage;
-        win->textSelectGlyph = toGlyph;
-        return;
+    if (ts->result.len > 0) {
+        ApplySelection(win, false); // clear the existing selection
     }
 
     int pageNo = dm->FirstVisiblePageNo();
@@ -252,10 +246,13 @@ bool StopSelectTextWithKeyboard(MainWindow* win) {
 static void ShowModeNotification(MainWindow* win) {
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
-    args.msg = win->textSelectModeVisual ? _TRA("Select text: arrows extend the selection, Ctrl+C copies, Esc exits")
-                                         : _TRA(
-                                               "Select text: arrows move the caret, Shift+arrows select, v selects, "
-                                               "Ctrl+C copies, Esc exits");
+    args.msg = win->textSelectModeVisual
+                   ? _TRA(
+                         "**Arrows**: extend selection * **V**: cursor mode * "
+                         "**Esc**: exit keyboard selection")
+                   : _TRA(
+                         "**Arrows**: move the caret * **Shift+Arrows**: select * **V**: selection mode * "
+                         "**Esc**: exit keyboard selection");
     // no timeout: the keys are the whole interface of this mode, so the hint
     // stays up for as long as the mode does (removed by StopSelectTextWithKeyboard).
     // The close button is still there for anyone who has learned them.

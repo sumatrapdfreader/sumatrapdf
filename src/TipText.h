@@ -52,7 +52,9 @@ struct ParsedTip {
 };
 
 TempStr TipPlainTextTemp(ParsedTip& tip);
-bool TipHasLinks(ParsedTip& tip);
+// true if the tip needs the per-word rich draw path: it has links or any bold
+// run (a plain message can take the cheaper single DrawText path)
+bool TipHasRichContent(ParsedTip& tip);
 
 void ParseTip(ParsedTip& tip, Str s);
 void AddTipPlainText(ParsedTip& tip, Str text);

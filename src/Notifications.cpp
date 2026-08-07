@@ -82,7 +82,7 @@ struct NotificationWnd : Wnd {
     UINT_PTR delayTimerId = 0;
 
     // message parsed for the extended tip syntax (links, Key/ shortcuts);
-    // drawRich is true when it contains clickable links
+    // drawRich is true when it has links or bold runs (per-word draw)
     ParsedTip parsedMsg;
     bool drawRich = false;
 
@@ -367,7 +367,8 @@ void NotificationWnd::Layout(Str message) {
     // parse the message for the extended tip syntax (links, Key/ shortcuts)
     parsedMsg.Reset();
     ParseTip(parsedMsg, message);
-    drawRich = TipHasLinks(parsedMsg);
+    // rich path also for bold-only messages (e.g. the F7 help), not just links
+    drawRich = TipHasRichContent(parsedMsg);
 
     Size szText;
     if (drawRich) {
