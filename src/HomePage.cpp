@@ -1999,6 +1999,22 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     ImageList_Draw(l.himlOpen, (int)TbIcon::Pin, hdc, thumb.rcListPin.x, thumb.rcListPin.y, ILD_NORMAL);
 }
 
+// a white circle with a black "?" inside: the home page's affordance for the
+// keyboard-shortcuts sheet. The disc is drawn with GDI+ so its edge is smooth;
+// nothing is painted outside it, so the page background shows through.
+static void DrawHomeHelpButton(HDC hdc, Rect r) {
+    Gdiplus::Graphics g(hdc);
+    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    Gdiplus::SolidBrush white(Gdiplus::Color(255, 255, 255, 255));
+    g.FillEllipse(&white, r.x, r.y, r.dx - 1, r.dy - 1);
+
+    HFONT font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    int oldBk = SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(0, 0, 0));
+    HdcDrawText(hdc, "?", r, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, font);
+    SetBkMode(hdc, oldBk);
+}
+
 static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto* hdc = l.hdc;
@@ -2158,6 +2174,18 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         COLORREF textCol = ThemeWindowTextColor();
         COLORREF linkCol = ThemeWindowLinkColor();
         DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol);
+    }
+
+    // "?" help button in the bottom-right corner, opening the keyboard
+    // shortcuts sheet; sits above the tip band when a tip is showing
+    {
+        int diam = DpiScale(hdc, 30);
+        int margin = DpiScale(hdc, 16);
+        int bottom = l.tip ? l.rcTip.y : l.rc.dy;
+        Rect btn{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
+        DrawHomeHelpButton(hdc, btn);
+        auto* sl = new StaticLink(btn, kLinkKeyboardHelp, _TRA("Keyboard Shortcuts"));
+        l.win->staticLinks.Append(sl);
     }
 }
 

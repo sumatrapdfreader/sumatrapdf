@@ -515,7 +515,7 @@ void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
     // footer hint
     Rect footRc{pad, client.dy - footerH - (pad / 2), client.dx - (2 * pad), footerH};
     SetTextColor(hdc, dim);
-    HdcDrawText(hdc, trans::GetTranslation("Press Esc or ? to close"), footRc,
+    HdcDrawText(hdc, trans::GetTranslation("Press ? to close"), footRc,
                 DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, fontRow);
 }
 
@@ -539,12 +539,6 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             EndPaint(hwnd, &ps);
             return 0;
         }
-        case WM_ACTIVATE:
-            if (wp == WA_INACTIVE) {
-                ScheduleCloseKeyboardHelp();
-                return 0;
-            }
-            break;
         case WM_SETCURSOR: {
             POINT pt;
             GetCursorPos(&pt);
@@ -583,11 +577,9 @@ bool KeyboardHelpWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message != WM_KEYDOWN) {
         return false;
     }
-    if (msg.wParam == VK_ESCAPE) {
-        ScheduleCloseKeyboardHelp();
-        return true;
-    }
-    // '?' (Shift + '/') toggles the sheet back off, matching how it opened
+    // '?' (Shift + '/') toggles the sheet back off, matching how it opened. The
+    // sheet otherwise stays up until '?' or the close button - it doesn't close
+    // on focus loss, so it can sit alongside the document as a reference.
     if (msg.wParam == VK_OEM_2 && IsShiftPressed()) {
         ScheduleCloseKeyboardHelp();
         return true;

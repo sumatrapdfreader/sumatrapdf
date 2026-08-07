@@ -102,6 +102,8 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key
     } else if (str::Eq(url, kLinkNextTip)) {
         PickAnotherRandomPromotion();
         win->RedrawAll(true);
+    } else if (str::Eq(url, kLinkKeyboardHelp)) {
+        HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
     } else if (str::Eq(url, kLinkHomeListView)) {
         SetHomePageListView(true);
         win->homePageScrollY = 0;
