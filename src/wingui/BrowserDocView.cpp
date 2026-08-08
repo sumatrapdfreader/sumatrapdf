@@ -235,8 +235,8 @@ struct BrowserWebviewWnd : WebviewWnd {
 
 namespace {
 // Pulls the positional arguments out of a bridge notification's params, which
-// arrive as a JSON array. json::Parse is a push parser, so collect by path:
-// "[0]", "[1]", ... Values die with the call, hence the temp-arena copies.
+// arrive as a JSON array. json::Parse is a push parser, so collect by path
+// "[0]", "[1]", ... Values are already temp-arena copies from the parser.
 struct NotifyArgsVisitor : json::ValueVisitor {
     static constexpr int kMaxArgs = 4;
     TempStr args[kMaxArgs] = {};
@@ -244,7 +244,7 @@ struct NotifyArgsVisitor : json::ValueVisitor {
     bool Visit(Str path, Str value, json::Type /*type*/) override {
         for (int i = 0; i < kMaxArgs; i++) {
             if (str::Eq(path, fmt("[%d]", i))) {
-                args[i] = str::DupTemp(value);
+                args[i] = value;
                 return true;
             }
         }

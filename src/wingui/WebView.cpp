@@ -1405,8 +1405,8 @@ static bool IsJsNotifyMessage(Str msg) {
 }
 
 namespace {
-// json::Parse hands the visitor values that live in a Builder owned by the
-// parser, so anything we keep has to be copied out
+// json::Parse already hands Visit path/value as temp-arena copies (valid until
+// the temp arena resets). Keep them as-is when only needed for this call.
 struct JsCallVisitor : json::ValueVisitor {
     TempStr id = nullptr;
     TempStr method = nullptr;
@@ -1417,11 +1417,11 @@ struct JsCallVisitor : json::ValueVisitor {
             return true;
         }
         if (str::Eq(path, "/id")) {
-            id = str::DupTemp(value);
+            id = value;
         } else if (str::Eq(path, "/method")) {
-            method = str::DupTemp(value);
+            method = value;
         } else if (str::Eq(path, "/params")) {
-            params = str::DupTemp(value);
+            params = value;
         }
         return true;
     }
