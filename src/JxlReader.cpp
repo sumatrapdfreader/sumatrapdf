@@ -28,6 +28,10 @@ Pixmap* PixmapFromData(Str d) {
     }
     // Decode straight to BGRA for PixmapFormat::BGRA8 (no channel swizzle).
     jxl_ctx_set_bgr(ctx, 1);
+    // We blit the pixels to an sRGB display as-is, so ask for sRGB rather than
+    // whatever the file declares. Images encoded in linear light otherwise come
+    // out dark and over-saturated (issue #5919).
+    jxl_ctx_set_srgb_output(ctx, 1);
     jxl_image* img = jxl_decode(ctx, (const u8*)d.s, (size_t)d.len, JXLDEC_FORMAT_RGBA32);
     Pixmap* px = nullptr;
     if (img && img->data && img->width > 0 && img->height > 0) {

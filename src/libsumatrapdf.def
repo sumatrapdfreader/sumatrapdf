@@ -1788,6 +1788,7 @@ EXPORTS
 	jxl_ctx_new
 	jxl_ctx_free
 	jxl_ctx_set_bgr
+	jxl_ctx_set_srgb_output
 	jxl_decode
 	jxl_decode_size
 	jxl_image_destroy

@@ -54,6 +54,17 @@ void jxl_ctx_set_bgr(jxl_ctx *ctx, int enable);
    to get the raw codestream orientation. */
 void jxl_ctx_set_keep_orientation(jxl_ctx *ctx, int enable);
 
+/* Decode to display-referred sRGB instead of the image's own colour encoding.
+   An xyb-encoded image that declares a linear transfer function decodes to
+   linear light, which looks dark and over-contrasty when handed to a display
+   as if it were sRGB; with this enabled the sRGB transfer curve is applied on
+   the way out, while the samples are still float, so nothing bands.
+   Only the transfer function is handled, and only for xyb-encoded images:
+   primaries are left alone, and an image stored in its original colour space
+   is left as-is (its samples are not ours to reinterpret).
+   Off by default, so `djxl`-compatible output stays the default. */
+void jxl_ctx_set_srgb_output(jxl_ctx *ctx, int enable);
+
 /* Bump the cooperative decode-abort epoch on ctx. All in-flight renders on
    this ctx exit promptly. Thread-safe. */
 void jxl_request_abort(jxl_ctx *ctx);

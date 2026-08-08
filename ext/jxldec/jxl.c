@@ -33,6 +33,8 @@ void jxl_ctx_set_bgr(jxl_ctx *ctx, int enable);
 
 void jxl_ctx_set_keep_orientation(jxl_ctx *ctx, int enable);
 
+void jxl_ctx_set_srgb_output(jxl_ctx *ctx, int enable);
+
 void jxl_request_abort(jxl_ctx *ctx);
 
 typedef enum {
@@ -150,6 +152,7 @@ struct jxl_ctx {
 
     int bgr;
     int keep_orientation;
+    int srgb_output;
     volatile int abort_epoch;
 };
 
@@ -1234,6 +1237,10 @@ void jxl_ctx_set_bgr(jxl_ctx *ctx, int enable) {
 
 void jxl_ctx_set_keep_orientation(jxl_ctx *ctx, int enable) {
     if (ctx) ctx->keep_orientation = enable ? 1 : 0;
+}
+
+void jxl_ctx_set_srgb_output(jxl_ctx *ctx, int enable) {
+    if (ctx) ctx->srgb_output = enable ? 1 : 0;
 }
 
 void jxl_request_abort(jxl_ctx *ctx) {
@@ -10357,7 +10364,13 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
     } else if (apply_ct && meta->xyb_encoded && out->ncolor >= 3) {
         uint32_t row, rows = out->plane[0].h, rw = out->plane[0].w;
         float opsin[9];
+        jxl_colour_encoding out_enc = meta->colour;
         jxl_opsin_matrix_for(meta, opsin);
+
+        if (ctx->srgb_output && !out_enc.tf_have_gamma &&
+            out_enc.tf == JXL_TF_LINEAR) {
+            out_enc.tf = JXL_TF_SRGB;
+        }
         for (row = 0; row < rows; row++) {
             jxl_xyb_to_linear(out->plane[0].data + (size_t)row * out->plane[0].stride,
                               out->plane[1].data + (size_t)row * out->plane[1].stride,
@@ -10367,7 +10380,7 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
             for (i = 0; i < 3; i++) {
                 jxl_linear_to_tf(out->plane[i].data +
                                      (size_t)row * out->plane[i].stride,
-                                 rw, &meta->colour,
+                                 rw, &out_enc,
                                  meta->tone_mapping.intensity_target);
             }
         }
