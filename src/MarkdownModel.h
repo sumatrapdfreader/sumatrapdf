@@ -41,6 +41,8 @@ struct MarkdownModel : DocController {
 
     static MarkdownModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
     static bool IsSupportedFileType(FileType);
+    // a subset of IsSupportedFileType: .html/.htm rendered raw in the browser view
+    static bool IsHtmlFileType(FileType);
 
     bool SetParentHwnd(HWND hwnd);
     void RemoveParentHwnd();
@@ -68,6 +70,9 @@ struct MarkdownModel : DocController {
 
     Str fileName;
     Str baseDir;
+    // true when displaying .html/.htm files: they are served to the browser raw
+    // instead of being rendered from markdown, and the sibling TOC scans .html
+    bool isHtml = false;
     StrVec pages;
     int currentPageNo = 1;
     Str currentPageUrl;

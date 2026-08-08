@@ -13,9 +13,10 @@ struct MarkdownFileToc {
     Vec<MarkdownHeadingItem> headings;
 };
 
-void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut);
+// htmlMode collects/parses sibling .html/.htm files instead of .md/.markdown
+void CollectMarkdownFiles(Str baseDir, Str openedFile, bool htmlMode, StrVec& filesOut);
 
-void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut);
+void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc>& tocsOut);
 
 Str MarkdownToHtmlPage(Str markdown);
 

@@ -156,7 +156,7 @@ Str MarkdownModel::GetFilePath() const {
 }
 
 Str MarkdownModel::GetDefaultFileExt() const {
-    return ".md";
+    return isHtml ? ".html" : ".md";
 }
 
 int MarkdownModel::PageCount() const {
@@ -183,6 +183,10 @@ TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
         rel = path::GetBaseNameTemp(filePath);
     }
     rel = str::ReplaceTemp(rel, StrL("\\"), StrL("/"));
+    if (isHtml) {
+        // .html files are served raw, so keep their real name/extension
+        return fmt("%s%s", Str(kMdVirtualHost, kMdVirtualHostLen), rel);
+    }
     Str relStr = rel;
     if (str::EndsWithI(relStr, StrL(".markdown"))) {
         relStr.len -= 9;
@@ -202,6 +206,10 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
         pathPart = Str(pathPart.s, (int)(fragment.s - pathPart.s));
     }
     TempStr rel = str::ReplaceTemp(pathPart, StrL("/"), StrL("\\"));
+    if (isHtml) {
+        // page urls keep their real name; images/links resolve against baseDir too
+        return path::JoinTemp(baseDir, rel);
+    }
     if (str::EndsWithI(rel, StrL(".html"))) {
         // a page url made by FileToVirtualUrlTemp(): <name>.html for <name>.md
         rel.len -= 5;
@@ -659,8 +667,13 @@ Str MarkdownModel::GetDataForUrl(Str url) {
 
     TempStr filePath = VirtualUrlToFileTemp(plainUrl);
     Str data;
-    if (filePath && (str::EndsWithI(filePath, StrL(".md")) || str::EndsWithI(filePath, StrL(".markdown")) ||
-                     str::EndsWithI(filePath, StrL(".html")))) {
+    // in html mode every resource (the page, images, linked pages) is served raw;
+    // in markdown mode .md/.markdown/.html are rendered to a styled page and other
+    // resources (images) are served raw
+    bool renderMd = !isHtml && filePath &&
+                    (str::EndsWithI(filePath, StrL(".md")) || str::EndsWithI(filePath, StrL(".markdown")) ||
+                     str::EndsWithI(filePath, StrL(".html")));
+    if (renderMd) {
         Str md = file::ReadFile(filePath);
         if (md) {
             data = MarkdownToHtmlPage(md);
@@ -738,7 +751,11 @@ void MarkdownModel::GetDisplayState(FileState* fs) {
 void MarkdownModel::CreateThumbnail(Size /*size*/, const OnBitmapRendered* /*saveThumbnail*/) {}
 
 bool MarkdownModel::IsSupportedFileType(FileType kind) {
-    return kind == FileType::Markdown;
+    return kind == FileType::Markdown || kind == FileType::HTML;
+}
+
+bool MarkdownModel::IsHtmlFileType(FileType kind) {
+    return kind == FileType::HTML;
 }
 
 #if defined(DEBUG)
@@ -751,16 +768,17 @@ bool MarkdownModel_UnitTestBrowserNavigationUrl() {
 bool MarkdownModel::Load(Str fileName) {
     str::ReplaceWithCopy(&this->fileName, fileName);
     str::ReplaceWithCopy(&baseDir, path::GetDirTemp(fileName));
+    isHtml = IsHtmlFileType(GuessFileType(fileName, true));
 
     StrVec mdFiles;
-    CollectMarkdownFiles(baseDir, fileName, mdFiles);
+    CollectMarkdownFiles(baseDir, fileName, isHtml, mdFiles);
     if (len(mdFiles) == 0) {
         return false;
     }
 
     pages = mdFiles;
     Vec<MarkdownFileToc> fileTocs;
-    ParseMarkdownTocsParallel(pages, fileTocs);
+    ParseMarkdownTocsParallel(pages, isHtml, fileTocs);
 
     Vec<MarkdownTocTraceItem> tocTrace;
     int idCounter = 0;

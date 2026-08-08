@@ -435,6 +435,15 @@ const markdownUI: Field[] = [
   ),
 ];
 
+const htmlUI: Field[] = [
+  field(
+    "UseFixedPageUI",
+    Bool,
+    false,
+    "if true, use MuPDF to render HTML; if false, use WebView2 browser view when available",
+  ),
+];
+
 const codexBuild: Field[] = [
   field("Model", Str, "gpt-5.5", "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)"),
   field(
@@ -1187,6 +1196,12 @@ const globalPrefs: Field[] = [
     markdownUI,
     "customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
   ),
+  emptyLine(),
+  struct(
+    "HtmlUI",
+    htmlUI,
+    "customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
+  ).ver("3.7"),
   emptyLine(),
   struct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar").ver("3.7"),
   emptyLine(),

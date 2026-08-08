@@ -142,6 +142,14 @@ struct MarkdownUI {
     bool useFixedPageUI;
 };
 
+// customization options for HTML UI. If UseFixedPageUI is true, MuPDF
+// is used; otherwise WebView2 browser view is used when available
+struct HtmlUI {
+    // if true, use MuPDF to render HTML; if false, use WebView2 browser
+    // view when available
+    bool useFixedPageUI;
+};
+
 // settings for the Claude Code chat sidebar
 struct ClaudeCode {
     // Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus
@@ -824,6 +832,9 @@ struct GlobalPrefs {
     // MuPDF is used; otherwise WebView2 browser view is used when
     // available
     MarkdownUI markdownUI;
+    // customization options for HTML UI. If UseFixedPageUI is true, MuPDF
+    // is used; otherwise WebView2 browser view is used when available
+    HtmlUI htmlUI;
     // settings for the Claude Code chat sidebar
     ClaudeCode claudeCode;
     // settings for the Grok Build chat sidebar
@@ -1067,6 +1078,17 @@ static const StructInfo gMarkdownUIInfo = {
     gMarkdownUIFields,
     "UseFixedPageUI",
     "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available",
+    false};
+
+static const FieldInfo gHtmlUIFields[] = {
+    {offsetof(HtmlUI, useFixedPageUI), SettingType::Bool, false},
+};
+static const StructInfo gHtmlUIInfo = {
+    sizeof(HtmlUI),
+    1,
+    gHtmlUIFields,
+    "UseFixedPageUI",
+    "if true, use MuPDF to render HTML; if false, use WebView2 browser view when available",
     false};
 
 static const FieldInfo gClaudeCodeFields[] = {
@@ -1630,6 +1652,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, markdownUI), SettingType::Struct, (intptr_t)&gMarkdownUIInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, htmlUI), SettingType::Struct, (intptr_t)&gHtmlUIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, claudeCode), SettingType::Struct, (intptr_t)&gClaudeCodeInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, grokBuild), SettingType::Struct, (intptr_t)&gGrokBuildInfo},
@@ -1683,7 +1707,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    131,
+    133,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -1695,11 +1719,11 @@ static const StructInfo gGlobalPrefsInfo = {
     "llscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarShowReadAloud\0"
     "ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks"
     "\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabPre36Behavior\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI"
-    "\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravi"
-    "ty\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0"
-    "ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomS"
-    "creenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0"
-    "SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0"
+    "\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0External"
+    "Viewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups"
+    "\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0F"
+    "ileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1773,13 +1797,14 @@ static const StructInfo gGlobalPrefsInfo = {
     "plain text)\0\0customization options for Comic Book UI\0\0customization options for image files "
     "UI\0\0customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply "
     "instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
-    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
-    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat sidebar\0\0width "
-    "of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
-    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
-    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
-    "DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of "
-    "additional external viewers for various file types. See [docs for more "
+    "browser view is used when available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is "
+    "used; otherwise WebView2 browser view is used when available\0\0settings for the Claude Code chat "
+    "sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for "
+    "the Antigravity chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok "
+    "Build, and OpenAI Codex (internal)\0\0remembered destination language for selection translation; empty uses OS UI "
+    "language\0remembered source language for selection translation; empty means Auto\0remembered engine for Translate "
+    "Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF "
+    "documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

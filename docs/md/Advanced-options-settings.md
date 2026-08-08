@@ -417,6 +417,15 @@ MarkdownUI [
     UseFixedPageUI = false
 ]
 
+; customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used;
+; otherwise WebView2 browser view is used when available (introduced in version
+; 3.7)
+HtmlUI [
+    ; if true, use MuPDF to render HTML; if false, use WebView2 browser view
+    ; when available
+    UseFixedPageUI = false
+]
+
 ; settings for the Claude Code chat sidebar (introduced in version 3.7)
 ClaudeCode [
     ; Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if

@@ -6,7 +6,11 @@
 #include "base/File.h"
 #include "base/Win.h"
 
+#include "base/HtmlTags.h"
+
 #include "Theme.h"
+#include "GumboHelpers.h"
+#include "GumboHtmlParser.h"
 #include "MarkdownToc.h"
 
 extern "C" {
@@ -19,21 +23,31 @@ static bool IsMarkdownExt(Str path) {
     return str::EndsWithI(path, StrL(".md")) || str::EndsWithI(path, StrL(".markdown"));
 }
 
-static void CollectMdInDir(Str dir, StrVec& out) {
+static bool IsHtmlExt(Str path) {
+    return str::EndsWithI(path, StrL(".html")) || str::EndsWithI(path, StrL(".htm")) ||
+           str::EndsWithI(path, StrL(".xhtml"));
+}
+
+static bool IsCollectedExt(Str path, bool htmlMode) {
+    return htmlMode ? IsHtmlExt(path) : IsMarkdownExt(path);
+}
+
+static void CollectMdInDir(Str dir, bool htmlMode, StrVec& out) {
     DirIter di(dir);
     di.includeFiles = true;
     di.includeDirs = false;
     di.recurse = false;
     for (DirIterEntry* de : di) {
-        if (!IsRegularFile(de) || !IsMarkdownExt(de->name)) {
+        if (!IsRegularFile(de) || !IsCollectedExt(de->name, htmlMode)) {
             continue;
         }
         out.Append(de->filePath);
     }
 }
 
-// Collect .md / .markdown files under baseDir, at most two subdirectory levels deep.
-void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut) {
+// Collect .md / .markdown (or, in htmlMode, .html / .htm / .xhtml) files under
+// baseDir, at most two subdirectory levels deep.
+void CollectMarkdownFiles(Str baseDir, Str openedFile, bool htmlMode, StrVec& filesOut) {
     filesOut.Reset();
     if (len(baseDir) == 0) {
         if (openedFile) {
@@ -42,7 +56,7 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut) {
         return;
     }
 
-    CollectMdInDir(baseDir, filesOut);
+    CollectMdInDir(baseDir, htmlMode, filesOut);
 
     DirIter di(baseDir);
     di.includeFiles = false;
@@ -52,7 +66,7 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut) {
         if (!IsDirectory(de)) {
             continue;
         }
-        CollectMdInDir(de->filePath, filesOut);
+        CollectMdInDir(de->filePath, htmlMode, filesOut);
 
         DirIter di2(de->filePath);
         di2.includeFiles = false;
@@ -62,7 +76,7 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, StrVec& filesOut) {
             if (!IsDirectory(de2)) {
                 continue;
             }
-            CollectMdInDir(de2->filePath, filesOut);
+            CollectMdInDir(de2->filePath, htmlMode, filesOut);
         }
     }
 
@@ -245,9 +259,79 @@ static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
     cmark_node_free(doc);
 }
 
+static bool IsHtmlHeadingTag(HtmlTag tag) {
+    return tag >= Tag_H1 && tag <= Tag_H6;
+}
+
+// Extract <h1>..<h6> headings from HTML source, using each heading's id=""
+// attribute (when present) as the in-page anchor. headingsOut items are heap-owned.
+void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
+    headingsOut.Reset();
+    if (!data) {
+        return;
+    }
+    GumboHtmlParser parser(data);
+    int headingLevel = 0;
+    Str headingId; // heap-owned; a view into a reused attr slot isn't safe to keep
+    str::Builder text;
+    HtmlToken* tok;
+    while ((tok = parser.Next()) != nullptr) {
+        if (tok->IsError()) {
+            break;
+        }
+        if (tok->IsStartTag() && IsHtmlHeadingTag(tok->tag)) {
+            headingLevel = (int)(tok->tag - Tag_H1) + 1;
+            str::FreePtr(&headingId);
+            AttrInfo* id = tok->GetAttrByName(StrL("id"));
+            if (id && len(id->val) > 0) {
+                headingId = str::Dup(id->val);
+            }
+            text.Reset();
+            continue;
+        }
+        if (headingLevel == 0) {
+            continue;
+        }
+        if (tok->IsText()) {
+            text.Append(tok->s);
+        } else if (tok->IsEndTag() && IsHtmlHeadingTag(tok->tag)) {
+            Str raw = text.TakeStr();
+            // heap (not Temp) entity resolution: this runs on TOC worker threads
+            // whose thread-local temp arena would leak on thread exit
+            Str title = ResolveHtmlEntities(raw);
+            str::TrimWSInPlace(title, str::TrimOpt::Both);
+            if (len(title) > 0) {
+                MarkdownHeadingItem item;
+                item.title = str::Dup(title);
+                item.anchor = len(headingId) > 0 ? str::Dup(headingId) : Str{};
+                item.level = headingLevel;
+                headingsOut.Append(item);
+            }
+            str::Free(title);
+            str::Free(raw);
+            headingLevel = 0;
+            str::FreePtr(&headingId);
+        }
+    }
+    str::FreePtr(&headingId);
+}
+
+// Build a sibling-file TOC from an HTML file's headings.
+static void ParseHtmlHeadings(Str filePath, MarkdownFileToc* toc) {
+    toc->filePath = str::Dup(filePath);
+    toc->headings.Reset();
+    Str data = file::ReadFile(filePath);
+    if (!data) {
+        return;
+    }
+    ParseHtmlHeadingsData(data, toc->headings);
+    str::Free(data);
+}
+
 struct MdTocParseCtx {
     StrVec* files = nullptr;
     Vec<MarkdownFileToc>* tocs = nullptr;
+    bool htmlMode = false;
     AtomicInt nextIdx;
 };
 
@@ -260,7 +344,11 @@ static void MdTocParseWorker(MdTocParseCtx* ctx) {
         }
         Str path = ctx->files->At(i);
         MarkdownFileToc* toc = &(*ctx->tocs)[i];
-        ParseMarkdownHeadings(path, toc);
+        if (ctx->htmlMode) {
+            ParseHtmlHeadings(path, toc);
+        } else {
+            ParseMarkdownHeadings(path, toc);
+        }
     }
 }
 
@@ -272,7 +360,7 @@ static void InitMarkdownFileToc(MarkdownFileToc* ft) {
 }
 
 // Parse headings from all files in parallel (up to CpuCoreCount() - 2 threads).
-void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
+void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc>& tocsOut) {
     int n = len(files);
     tocsOut.Reset();
     if (n == 0) {
@@ -292,6 +380,7 @@ void ParseMarkdownTocsParallel(StrVec& files, Vec<MarkdownFileToc>& tocsOut) {
     MdTocParseCtx ctx;
     ctx.files = &files;
     ctx.tocs = &tocsOut;
+    ctx.htmlMode = htmlMode;
     AtomicIntSet(&ctx.nextIdx, 0);
 
     int numThreads = CpuCoreCount() - 2;
@@ -673,4 +762,41 @@ bool MarkdownToc_UnitTestHtmlLinks() {
     cmark_mem* mem = cmark_get_default_mem_allocator();
     mem->free(body);
     return linksOk && anchorsOk;
+}
+
+void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut);
+
+bool MarkdownToc_UnitTestHtmlHeadings() {
+    Str html = StrL(
+        "<!DOCTYPE html><html><body>\n"
+        "<h1 id=\"intro\">Introduction</h1>\n"
+        "<p>ignored</p>\n"
+        "<h2 id=\"details\">Details &amp; Notes</h2>\n"
+        "<h3>No Id Here</h3>\n"
+        "<h2 id=\"more\">More <em>emphasis</em></h2>\n"
+        "</body></html>");
+    Vec<MarkdownHeadingItem> hs;
+    ParseHtmlHeadingsData(html, hs);
+
+    struct {
+        Str title;
+        Str anchor;
+        int level;
+    } want[] = {
+        {StrL("Introduction"), StrL("intro"), 1},
+        {StrL("Details & Notes"), StrL("details"), 2}, // &amp; decoded
+        {StrL("No Id Here"), StrL(""), 3},              // no id -> empty anchor
+        {StrL("More emphasis"), StrL("more"), 2},       // nested inline text kept
+    };
+    bool ok = (len(hs) == (int)dimof(want));
+    for (int i = 0; ok && i < len(hs); i++) {
+        MarkdownHeadingItem& h = hs[i];
+        Str anchor = h.anchor ? h.anchor : StrL("");
+        ok = str::Eq(h.title, want[i].title) && str::Eq(anchor, want[i].anchor) && (h.level == want[i].level);
+    }
+    for (MarkdownHeadingItem& h : hs) {
+        str::Free(h.title);
+        str::Free(h.anchor);
+    }
+    return ok;
 }

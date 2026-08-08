@@ -1763,6 +1763,18 @@ static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
     ReportIf(true);
 }
 
+// Markdown and HTML both render in the WebView2 browser view via MarkdownModel,
+// each gated by its own UseFixedPageUI opt-out (fall back to MuPDF/ebook engines).
+static bool ShouldUseBrowserView(FileType kind) {
+    if (MarkdownModel::IsHtmlFileType(kind)) {
+        return !gGlobalPrefs->htmlUI.useFixedPageUI;
+    }
+    if (MarkdownModel::IsSupportedFileType(kind)) {
+        return !gGlobalPrefs->markdownUI.useFixedPageUI;
+    }
+    return false;
+}
+
 static DocController* CreateControllerForMarkdown(Str path, MainWindow* win) {
     FileType kind = GuessFileType(path, true);
     if (!MarkdownModel::IsSupportedFileType(kind)) {
@@ -1837,10 +1849,9 @@ DocController* gMostRecentlyOpenedDoc = nullptr;
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win) {
     auto timeStart = TimeGet();
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
-    bool mdInFixedUI = gGlobalPrefs->markdownUI.useFixedPageUI;
-    if (!mdInFixedUI && !engine) {
+    if (!engine) {
         FileType kind = GuessFileTypeFromName(path);
-        if (MarkdownModel::IsSupportedFileType(kind)) {
+        if (ShouldUseBrowserView(kind)) {
             auto* mdCtrl = CreateControllerForMarkdown(path, win);
             if (mdCtrl) {
                 gMostRecentlyOpenedDoc = mdCtrl;
@@ -3686,10 +3697,10 @@ void StartLoadDocument(LoadArgs* argsIn) {
     // TODO: that's because we create web control on a thread which
     // violates threading rules and that happens as part of CreateControllerForEngineOrFile()
     // we could probably delay creating web control but that's more complicated
-    if (!gGlobalPrefs->chmUI.useFixedPageUI || !gGlobalPrefs->markdownUI.useFixedPageUI) {
+    {
         FileType kind = GuessFileTypeFromName(path);
         bool isChm = !gGlobalPrefs->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind);
-        bool isMd = !gGlobalPrefs->markdownUI.useFixedPageUI && MarkdownModel::IsSupportedFileType(kind);
+        bool isMd = ShouldUseBrowserView(kind);
         if (isChm || isMd) {
             // TODO: repeating the code below
             HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
