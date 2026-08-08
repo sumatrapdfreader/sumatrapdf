@@ -547,6 +547,14 @@ void UpdateTocSelection(MainWindow* win, int currPageNo) {
         return;
     }
 
+    // Browser (WebView2) markdown/HTML docs render a whole file as a single
+    // "page" and we can't detect which heading is scrolled into view, so a
+    // page-based update would select/highlight every heading in the file. Skip
+    // it and leave the TOC selection wherever the user's last click put it.
+    if (win->ctrl && win->ctrl->AsMarkdown()) {
+        return;
+    }
+
     auto* item = TreeItemForPageNo(treeView, currPageNo);
     if (win->tocKeepSelection) {
         // the tree selection is deliberately left alone: the user clicked a
