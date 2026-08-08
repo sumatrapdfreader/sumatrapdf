@@ -513,6 +513,45 @@ static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out
     }
 }
 
+// Types whose name is more than an upper-cased extension. Everything else
+// reads fine as-is (".pdf" -> "PDF"), so only the exceptions live here.
+static Str FileTypeDisplayName(FileType ft) {
+    if (ft == FileType::Jxl) {
+        return StrL("JPEG-XL");
+    }
+    return {};
+}
+
+// The file type as sniffed from the content, which is what the app went by
+// when it picked an engine - the extension can say something else entirely.
+// Only for a plain file on disk: a directory document has no content of its
+// own, an embedded PDF stream isn't a file, and in plugin mode the "path" is
+// a URL we can't read.
+static void AppendFileType(str::Builder& out, Str path) {
+    if (gPluginMode || len(path) == 0) {
+        return;
+    }
+    if (path::IsDirectory(path) || !file::Exists(path)) {
+        return;
+    }
+    FileType ft = GuessFileTypeFromFile(path);
+    if (ft == FileType::Unknown) {
+        return;
+    }
+    Str name = FileTypeDisplayName(ft);
+    if (!name) {
+        TempStr ext = GetExtForFileTypeTemp(ft);
+        if (len(ext) < 2) {
+            return;
+        }
+        // ".pdf" reads better as "PDF" next to the file name it belongs to
+        TempStr fromExt = str::DupTemp(Str(ext.s + 1, ext.len - 1));
+        str::ToUpperInPlace(fromExt);
+        name = fromExt;
+    }
+    AppendProp(out, _TRA("File Type:"), name);
+}
+
 static void GetPropsText(DocController* ctrl, str::Builder& out) {
     ReportIf(!ctrl);
 
@@ -534,6 +573,7 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
         strTemp = FormatFileSizeTransTemp(fileSize);
         AppendProp(out, _TRA("File Size:"), strTemp);
     }
+    AppendFileType(out, path);
 
     Props props;
     GetAllProps(ctrl, props);
