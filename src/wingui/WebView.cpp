@@ -1405,22 +1405,21 @@ static bool IsJsNotifyMessage(Str msg) {
 }
 
 namespace {
-// json::Parse already hands Visit path/value as temp-arena copies (valid until
-// the temp arena resets). Keep them as-is when only needed for this call.
+// json::Parse hands value as a temp-arena copy; path is valid only during Visit.
 struct JsCallVisitor : json::ValueVisitor {
     TempStr id = nullptr;
     TempStr method = nullptr;
     TempStr params = nullptr;
 
-    bool Visit(Str path, Str value, json::Type type) override {
+    bool Visit(StrNode* path, Str value, json::Type type) override {
         if (type != json::Type::String) {
             return true;
         }
-        if (str::Eq(path, "/id")) {
+        if (json::PathMatch(path, StrL("/id"))) {
             id = value;
-        } else if (str::Eq(path, "/method")) {
+        } else if (json::PathMatch(path, StrL("/method"))) {
             method = value;
-        } else if (str::Eq(path, "/params")) {
+        } else if (json::PathMatch(path, StrL("/params"))) {
             params = value;
         }
         return true;

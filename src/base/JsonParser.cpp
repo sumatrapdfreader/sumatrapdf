@@ -11,15 +11,18 @@
 // Return false from Visit to stop early; Parse then returns true (cancel is
 // not an error). Parse returns false only on invalid JSON when not canceled.
 //
-// Path examples for { "key": [false, { "name": "valu\u0065" }] }:
-//   1. "/key[0]", "false", Type::Bool
-//   2. "/key[1]/name", "value", Type::String
-// Object keys are appended raw after '/'; array indices as "[n]". Keys that
-// contain '/' or '[' are not escaped, so path matching should use full strings.
+// Path is a StrNode list (outermost first). Each segment's first char is the
+// kind (kSegKey '/' + key, kSegIdx 'i' + decimal index). Example for
+// { "key": [false, { "name": "valu\u0065" }] }:
+//   1. path "/key" -> "i0", value "false", Type::Bool
+//   2. path "/key" -> "i1" -> "/name", value "value", Type::String
+// Keys are not escaped; a key may contain '/' or digits without ambiguity
+// because each segment carries an explicit kind byte.
 //
-// path and value passed to Visit are temp-arena copies (valid until the temp
-// arena is reset, typically at the end of the message loop). Keep a str::Dup
-// if you need them longer.
+// path nodes live on the temp arena for the duration of Parse (and may be
+// mutated after Visit returns when the parser pops a segment). value is a
+// temp-arena copy valid until the temp arena resets. Keep a str::Dup of value
+// if you need it longer; do not store path pointers past Visit.
 
 namespace json {
 
@@ -41,23 +44,50 @@ static inline int SkipDigits(Str data, int off) {
 
 class ParseArgs {
   public:
-    // JSON paths are usually short ("/foo/bar/0/name"); grow to heap if deeper.
-    char pathScratch[256]{};
-    str::Builder path;
+    Arena* arena = nullptr;
+    Vec<StrNode*> segs;
     bool canceled = false;
     ValueVisitor* visitor = nullptr;
 
-    explicit ParseArgs(ValueVisitor* visitor) : path(Str(pathScratch, sizeofi(pathScratch))), visitor(visitor) {}
+    explicit ParseArgs(ValueVisitor* visitor) : arena(GetTempArena()), visitor(visitor) {}
+
+    StrNode* Path() const { return len(segs) > 0 ? segs[0] : nullptr; }
+
+    void Push(StrNode* n) {
+        n->next = nullptr;
+        if (len(segs) > 0) {
+            segs[len(segs) - 1]->next = n;
+        }
+        segs.Append(n);
+    }
+
+    void PushKey(Str key) {
+        char scratch[512]{};
+        str::Builder b(Str(scratch, sizeofi(scratch)));
+        b.AppendChar(kSegKey);
+        b.Append(key);
+        Push(AllocStrNode(arena, ToStr(b)));
+    }
+
+    void PushIdx(int idx) {
+        // "i" + decimal digits
+        Push(AllocStrNode(arena, fmt("%c%d", kSegIdx, idx)));
+    }
+
+    void Pop() {
+        ReportIf(len(segs) == 0);
+        segs.Pop();
+        if (len(segs) > 0) {
+            segs[len(segs) - 1]->next = nullptr;
+        }
+    }
 };
 
 static int ParseValue(ParseArgs& args, Str data, int off, int depth);
 
-// Hand Visit temp-arena copies so path/value share one lifetime (until the
-// temp arena resets). Builders and stack scratch are never exposed to callers.
 static void VisitValue(ParseArgs& args, Str value, Type type) {
-    TempStr path = str::DupTemp(ToStr(args.path));
     TempStr valueTemp = str::DupTemp(value);
-    args.canceled = !args.visitor->Visit(path, valueTemp, type);
+    args.canceled = !args.visitor->Visit(args.Path(), valueTemp, type);
 }
 
 static int ExtractString(str::Builder& string, Str data, int off) {
@@ -167,7 +197,7 @@ static int ParseNumber(ParseArgs& args, Str data, int off) {
             return kParseFail;
         }
     }
-    // reject empty match and a digit run that continues past our end (e.g. after a failed path)
+    // reject empty match and a digit run that continues past our end
     if (off <= start || (off < data.len && str::IsDigit(data.s[off]))) {
         return kParseFail;
     }
@@ -182,14 +212,14 @@ static int ParseObject(ParseArgs& args, Str data, int off, int depth) {
         return off + 1;
     }
 
-    int pathIdx = len(args.path);
     for (;;) {
         off = SkipWS(data, off);
         if (off >= data.len || '"' != data.s[off]) {
             return kParseFail;
         }
-        args.path.AppendChar('/');
-        off = ExtractString(args.path, data, off);
+        char keyScratch[512]{};
+        str::Builder key(Str(keyScratch, sizeofi(keyScratch)));
+        off = ExtractString(key, data, off);
         if (off < 0) {
             return kParseFail;
         }
@@ -197,12 +227,12 @@ static int ParseObject(ParseArgs& args, Str data, int off, int depth) {
         if (off >= data.len || ':' != data.s[off]) {
             return kParseFail;
         }
-
+        args.PushKey(ToStr(key));
         off = ParseValue(args, data, off + 1, depth + 1);
+        args.Pop();
         if (args.canceled || off < 0) {
             return off;
         }
-        args.path.RemoveAt(pathIdx, len(args.path) - pathIdx);
 
         off = SkipWS(data, off);
         if (off < data.len && '}' == data.s[off]) {
@@ -221,15 +251,13 @@ static int ParseArray(ParseArgs& args, Str data, int off, int depth) {
         return off + 1;
     }
 
-    int pathIdx = len(args.path);
     for (int idx = 0;; idx++) {
-        args.path.Append(fmt("[%d]", idx));
+        args.PushIdx(idx);
         off = ParseValue(args, data, off, depth + 1);
+        args.Pop();
         if (args.canceled || off < 0) {
             return off;
         }
-        int n = len(args.path);
-        args.path.RemoveAt(pathIdx, n - pathIdx);
 
         off = SkipWS(data, off);
         if (off < data.len && ']' == data.s[off]) {
@@ -304,6 +332,103 @@ bool Parse(Str data, ValueVisitor* visitor) {
     }
     end = SkipWS(data, end);
     return args.canceled || end >= data.len;
+}
+
+static bool SegMatches(StrNode* seg, Str pat) {
+    if (!seg || len(pat) == 0) {
+        return false;
+    }
+    if (pat.s[0] == kSegAny) {
+        return true;
+    }
+    return str::Eq(seg->s, pat);
+}
+
+// path matches the pattern segments exactly (same length). Empty args end the
+// pattern; PathMatch(nullptr) is true (root value). Pattern segments use the
+// same encoding as path nodes ('/'+key, 'i'+digits, or '*').
+bool PathMatch(StrNode* path, Str a, Str b, Str c, Str d, Str e, Str f) {
+    Str pats[6] = {a, b, c, d, e, f};
+    int n = 0;
+    while (n < 6 && len(pats[n]) > 0) {
+        n++;
+    }
+    if (n == 0) {
+        return path == nullptr;
+    }
+    StrNode* p = path;
+    for (int i = 0; i < n; i++) {
+        if (!SegMatches(p, pats[i])) {
+            return false;
+        }
+        p = p->next;
+    }
+    return p == nullptr;
+}
+
+StrNode* PathBuildTemp(Str a, Str b, Str c, Str d, Str e, Str f) {
+    Str pats[6] = {a, b, c, d, e, f};
+    Arena* arena = GetTempArena();
+    StrNode* head = nullptr;
+    StrNode* tail = nullptr;
+    for (int i = 0; i < 6 && len(pats[i]) > 0; i++) {
+        StrNode* n = AllocStrNode(arena, pats[i]);
+        if (!head) {
+            head = n;
+        } else {
+            tail->next = n;
+        }
+        tail = n;
+    }
+    return head;
+}
+
+// Legacy string form for tests/logging: /key[0]/name
+TempStr PathFormatTemp(StrNode* path) {
+    str::Builder b;
+    for (StrNode* p = path; p; p = p->next) {
+        if (len(p->s) == 0) {
+            continue;
+        }
+        char kind = p->s.s[0];
+        Str body = Str(p->s.s + 1, p->s.len - 1);
+        if (kind == kSegKey) {
+            b.AppendChar(kSegKey);
+            b.Append(body);
+        } else if (kind == kSegIdx) {
+            b.Append(fmt("[%s]", body));
+        } else if (kind == kSegAny) {
+            b.Append(StrL("[*]"));
+        }
+    }
+    return ToStrTemp(b);
+}
+
+StrNode* PathNth(StrNode* path, int n) {
+    StrNode* p = path;
+    for (int i = 0; p && i < n; i++) {
+        p = p->next;
+    }
+    return p;
+}
+
+int PathSegIndex(StrNode* seg) {
+    if (!seg || len(seg->s) < 2 || seg->s.s[0] != kSegIdx) {
+        return -1;
+    }
+    int v = -1;
+    Str rest = Str(seg->s.s + 1, seg->s.len - 1);
+    if (str::IsNull(str::Parse(rest, "%d", &v))) {
+        return -1;
+    }
+    return v;
+}
+
+Str PathSegKey(StrNode* seg) {
+    if (!seg || len(seg->s) < 1 || seg->s.s[0] != kSegKey) {
+        return {};
+    }
+    return Str(seg->s.s + 1, seg->s.len - 1);
 }
 
 // Escapes s so it can sit inside a double-quoted JSON string; the surrounding

@@ -49,10 +49,10 @@ struct CodexModelsVisitor : json::ValueVisitor {
     bool isModelListResponse = false;
     StrVec models;
 
-    bool Visit(Str path, Str value, json::Type type) override {
-        if (str::Eq(path, StrL("/id")) && type == json::Type::Number && str::Eq(value, StrL("2"))) {
+    bool Visit(StrNode* path, Str value, json::Type type) override {
+        if (json::PathMatch(path, StrL("/id")) && type == json::Type::Number && str::Eq(value, StrL("2"))) {
             isModelListResponse = true;
-        } else if (str::StartsWith(path, StrL("/result/data[")) && str::EndsWith(path, StrL("]/model")) &&
+        } else if (json::PathMatch(path, StrL("/result"), StrL("/data"), StrL("*"), StrL("/model")) &&
                    type == json::Type::String) {
             AIChatAppendModelUnique(models, value);
         }

@@ -1753,7 +1753,7 @@ struct ComicInfoParser : json::ValueVisitor {
     }
 
     // json::ValueVisitor
-    bool Visit(Str path, Str value, json::Type type) override;
+    bool Visit(StrNode* path, Str value, json::Type type) override;
 
     void Parse(Str xmlData);
     void AddBookmark(int imageIdx, Str title);
@@ -1781,34 +1781,44 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
             if (GumboTagNameIs(node, "Title")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit("/ComicBookInfo/1.0/title", v, json::Type::String);
+                    cip->Visit(json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title")), v, json::Type::String);
                 }
             } else if (GumboTagNameIs(node, "Year")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit("/ComicBookInfo/1.0/publicationYear", v, json::Type::Number);
+                    cip->Visit(json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationYear")), v,
+                               json::Type::Number);
                 }
             } else if (GumboTagNameIs(node, "Month")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit("/ComicBookInfo/1.0/publicationMonth", v, json::Type::Number);
+                    cip->Visit(json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth")), v,
+                               json::Type::Number);
                 }
             } else if (GumboTagNameIs(node, "Summary")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit("/X-summary", v, json::Type::String);
+                    cip->Visit(json::PathBuildTemp(StrL("/X-summary")), v, json::Type::String);
                 }
             } else if (GumboTagNameIs(node, "Writer")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit("/ComicBookInfo/1.0/credits[0]/person", v, json::Type::String);
-                    cip->Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool);
+                    cip->Visit(
+                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/person")),
+                        v, json::Type::String);
+                    cip->Visit(
+                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/primary")),
+                        "true", json::Type::Bool);
                 }
             } else if (GumboTagNameIs(node, "Penciller")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit("/ComicBookInfo/1.0/credits[1]/person", v, json::Type::String);
-                    cip->Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type::Bool);
+                    cip->Visit(
+                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/person")),
+                        v, json::Type::String);
+                    cip->Visit(
+                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/primary")),
+                        "true", json::Type::Bool);
                 }
             } else if (GumboTagNameIs(node, "Page")) {
                 const GumboAttribute* imageAttr = gumbo_get_attribute(&node->v.element.attributes, "Image");
@@ -1856,38 +1866,38 @@ void ComicInfoParser::Parse(Str xmlData) {
 
 // extract ComicBookInfo metadata
 // https://code.google.com/archive/p/comicbookinfo/
-bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
-    if (json::Type::String == type && str::Eq(path, StrL("/ComicBookInfo/1.0/title"))) {
+bool ComicInfoParser::Visit(StrNode* path, Str value, json::Type type) {
+    if (json::Type::String == type && json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/title"))) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
-    } else if (json::Type::Number == type && str::Eq(path, StrL("/ComicBookInfo/1.0/publicationYear"))) {
+    } else if (json::Type::Number == type &&
+               json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/publicationYear"))) {
         Str newDate = str::Dup(fmt("%s/%d", len(propDate) == 0 ? "" : propDate, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
-    } else if (json::Type::Number == type && str::Eq(path, StrL("/ComicBookInfo/1.0/publicationMonth"))) {
+    } else if (json::Type::Number == type &&
+               json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth"))) {
         Str newDate = str::Dup(fmt("%d%s", ParseInt(value), len(propDate) == 0 ? "" : propDate));
         str::Free(propDate);
         propDate = newDate;
-    } else if (json::Type::String == type && str::Eq(path, StrL("/appID"))) {
+    } else if (json::Type::String == type && json::PathMatch(path, StrL("/appID"))) {
         str::Free(propCreator);
         propCreator = str::Dup(value);
-    } else if (json::Type::String == type && str::Eq(path, StrL("/lastModified"))) {
+    } else if (json::Type::String == type && json::PathMatch(path, StrL("/lastModified"))) {
         str::Free(propModDate);
         propModDate = str::Dup(value);
-    } else if (json::Type::String == type && str::Eq(path, StrL("/X-summary"))) {
+    } else if (json::Type::String == type && json::PathMatch(path, StrL("/X-summary"))) {
         str::Free(propSummary);
         propSummary = str::Dup(value);
-    } else if (str::StartsWith(path, StrL("/ComicBookInfo/1.0/credits["))) {
-        int idx = -1;
-        Str prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
-        if (prop) {
-            if (json::Type::String == type && str::Eq(prop, StrL("person"))) {
-                str::Free(propAuthorTmp);
-                propAuthorTmp = str::Dup(value);
-            } else if (json::Type::Bool == type && str::Eq(prop, StrL("primary")) && len(propAuthorTmp) > 0 &&
-                       !propAuthors.Contains(propAuthorTmp)) {
-                propAuthors.Append(propAuthorTmp);
-            }
+    } else if (json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("*"), StrL("/person"))) {
+        if (json::Type::String == type) {
+            str::Free(propAuthorTmp);
+            propAuthorTmp = str::Dup(value);
+        }
+        return true;
+    } else if (json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("*"), StrL("/primary"))) {
+        if (json::Type::Bool == type && len(propAuthorTmp) > 0 && !propAuthors.Contains(propAuthorTmp)) {
+            propAuthors.Append(propAuthorTmp);
         }
         return true;
     }

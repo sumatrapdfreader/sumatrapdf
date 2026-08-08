@@ -25,11 +25,11 @@ class JsonVerifier : public json::ValueVisitor {
     JsonVerifier(const JsonValue* data, size_t dataLen) : data(data), dataLen(dataLen), idx(0) {}
     ~JsonVerifier() { utassert(dataLen == idx); }
 
-    virtual bool Visit(Str path, Str value, json::Type type) {
+    virtual bool Visit(StrNode* path, Str value, json::Type type) {
         utassert(idx < dataLen);
         const JsonValue& d = data[idx];
         utassert(type == d.type);
-        utassert(str::Eq(path, d.path));
+        utassert(str::Eq(json::PathFormatTemp(path), d.path));
         utassert(str::Eq(value, d.value));
 
         idx++;
@@ -146,5 +146,18 @@ void JsonTest() {
         utassert(str::Eq(json::EscapeStrTemp(Str(lineSep, 3)), "\\u2028"));
         utassert(str::Eq(json::EscapeStrTemp(Str(paraSep, 3)), "\\u2029"));
         utassert(str::Eq(json::EscapeStrTemp(StrL("a\"b\\c\n")), "a\\\"b\\\\c\\n"));
+    }
+
+    // PathMatch / PathBuildTemp
+    {
+        StrNode* p = json::PathBuildTemp(StrL("/key"), StrL("i0"), StrL("/name"));
+        utassert(str::Eq(json::PathFormatTemp(p), "/key[0]/name"));
+        utassert(json::PathMatch(p, StrL("/key"), StrL("i0"), StrL("/name")));
+        utassert(json::PathMatch(p, StrL("/key"), StrL("*"), StrL("/name")));
+        utassert(!json::PathMatch(p, StrL("/key"), StrL("i1"), StrL("/name")));
+        utassert(json::PathSegIndex(json::PathNth(p, 1)) == 0);
+        utassert(str::Eq(json::PathSegKey(p), "key"));
+        utassert(json::PathMatch(nullptr));
+        utassert(!json::PathMatch(nullptr, StrL("/id")));
     }
 }
