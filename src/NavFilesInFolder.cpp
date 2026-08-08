@@ -838,9 +838,9 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        Str strings[4] = {_TRA("↑ ↓ to navigate"), _TRA("Enter to open, Ctrl + Enter in a tab"), _TRA("Del to delete"),
-                          _TRA("Esc to close")};
-        auto* hbox = new HBox();
+        Str strings[4] = {_TRA("Alt + Up: go to parent directory"), _TRA("Enter: open file in current tab"),
+                          _TRA("Ctrl + Enter: open file in a new tab"), _TRA("Del: delete file")};
+        auto* hbox = new VBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
