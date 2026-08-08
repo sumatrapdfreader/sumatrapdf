@@ -540,6 +540,40 @@ bool IsCurrentThemeDefault() {
     return gCurrThemeIndex == 0;
 }
 
+// Windows high contrast mode. The user picked a system-wide palette because
+// they need it to read the screen, so an app is expected to use those colors
+// instead of its own. We only do that for the default theme: choosing any
+// other theme is an explicit decision about colors and it wins (issue #2124).
+static bool gIsHighContrast = false;
+
+// true when the UI colors have to come from the system palette instead of the
+// theme. Every color accessor tests this, so it's computed once by
+// RecalcUseHighContrast() instead of on every call. Page rendering deliberately
+// does not consult it: recoloring the document is not part of high contrast
+// mode and inverting images was the original complaint in #2124.
+static bool gUseHighContrast = false;
+
+static void DetectHighContrastMode() {
+    HIGHCONTRASTW hc{};
+    hc.cbSize = sizeof(hc);
+    if (!SystemParametersInfoW(SPI_GETHIGHCONTRAST, sizeof(hc), &hc, 0)) {
+        gIsHighContrast = false;
+        return;
+    }
+    gIsHighContrast = (hc.dwFlags & HCF_HIGHCONTRASTON) != 0;
+}
+
+// call whenever the OS high contrast setting or the current theme changes
+static void RecalcUseHighContrast() {
+    gUseHighContrast = gIsHighContrast && HasCurrentTheme() && IsCurrentThemeDefault();
+}
+
+// exported so the few places that hardcode a color for the default theme (a
+// white page box on the toolbar, say) can defer to the palette instead
+bool ThemeUsesHighContrastColors() {
+    return gUseHighContrast;
+}
+
 void FreeThemes() {
     delete gThemes; // no need to free members, they are owned by gParsedThemes
     gThemes = nullptr;
@@ -549,6 +583,7 @@ void FreeThemes() {
 
 void CreateThemeCommands() {
     FreeThemes();
+    DetectHighContrastMode();
 
     gThemes = new Vec<Theme*>();
     gParsedThemes = ParseThemes(themesTxt);
@@ -566,6 +601,7 @@ void CreateThemeCommands() {
     }
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
     gThemeLight = (*gThemes)[0];
+    RecalcUseHighContrast();
 
     CustomCommand* cmd;
     for (int i = 0; i < gThemeCount; i++) {
@@ -593,6 +629,11 @@ static void RememberLastLightDarkTheme() {
     if (!gGlobalPrefs || !gCurrentTheme) {
         return;
     }
+    if (gUseHighContrast) {
+        // the theme's own colors are not in use, so they say nothing about
+        // whether the user's light or dark preference is this theme
+        return;
+    }
     if (IsLightColor(ThemeWindowBackgroundColor())) {
         str::ReplaceWithCopy(&gGlobalPrefs->lastLightTheme, gCurrentTheme->name);
     } else {
@@ -615,6 +656,46 @@ int ThemeGetCurrentIndex() {
     return gCurrThemeIndex;
 }
 
+// push the current palette (which may be the system's, in high contrast mode)
+// to darkmodelib, which draws the controls we don't draw ourselves
+static void ApplyThemeColorsToDarkMode() {
+    if (!UseDarkModeLib()) {
+        return;
+    }
+    // TODO: we should apply themes to every theme other than 0
+    // but in Solarized Light in Find dialog's input field text is invisible i.e. black
+    // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
+    const bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
+    DarkMode::DarkModeType modeType = DarkMode::DarkModeType::light;
+    if (isDarkCol) {
+        modeType = DarkMode::DarkModeType::dark;
+    } else if (IsCurrentThemeDefault()) {
+        modeType = DarkMode::DarkModeType::classic;
+    }
+    const UINT mode = static_cast<UINT>(modeType);
+    DarkMode::setDarkModeConfigEx(mode);
+    DarkMode::setDefaultColors(false);
+
+    DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
+    DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
+    COLORREF ctrlBg = ThemeWindowControlBackgroundColor();
+    DarkMode::setHotBackgroundColor(ThemeHotBackgroundColor());
+    DarkMode::setTextColor(ThemeWindowTextColor());
+    DarkMode::setDarkerTextColor(ThemeWindowDarkerTextColor());
+    DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
+    DarkMode::setDlgBackgroundColor(ctrlBg);
+    DarkMode::setLinkTextColor(ThemeWindowLinkColor());
+    DarkMode::setEdgeColor(ThemeEdgeColor());
+    DarkMode::setHotEdgeColor(ThemeHotEdgeColor());
+    DarkMode::setDisabledEdgeColor(ThemeDisabledEdgeColor());
+    DarkMode::setErrorBackgroundColor(ThemeErrorBackgroundColor());
+    DarkMode::updateThemeBrushesAndPens();
+
+    DarkMode::setViewTextColor(ThemeWindowTextColor());
+    DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
+    DarkMode::calculateTreeViewStyle();
+}
+
 void SetThemeByIndex(int themeIdx) {
     ReportIf((themeIdx < 0) || (themeIdx >= gThemeCount));
     if (themeIdx >= gThemeCount) {
@@ -625,51 +706,15 @@ void SetThemeByIndex(int themeIdx) {
     gCurrThemeIndex = themeIdx;
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
+    RecalcUseHighContrast(); // it depends on which theme is current
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     RememberLastLightDarkTheme();
+    ApplyThemeColorsToDarkMode();
+    if (themeChanged) {
+        UpdateAfterThemeChange();
+    }
     if (UseDarkModeLib()) {
-        // TODO: we should apply themes to every theme other than 0
-        // but in Solarized Light in Find dialog's input field text is invisible i.e. black
-        // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
-        const bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
-        DarkMode::DarkModeType modeType = DarkMode::DarkModeType::light;
-        if (isDarkCol) {
-            modeType = DarkMode::DarkModeType::dark;
-        } else if (themeIdx == 0) {
-            modeType = DarkMode::DarkModeType::classic;
-        }
-        const UINT mode = static_cast<UINT>(modeType);
-        DarkMode::setDarkModeConfigEx(mode);
-        DarkMode::setDefaultColors(false);
-
-        DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
-        DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
-        COLORREF ctrlBg = ThemeWindowControlBackgroundColor();
-        DarkMode::setHotBackgroundColor(ThemeHotBackgroundColor());
-        DarkMode::setTextColor(ThemeWindowTextColor());
-        DarkMode::setDarkerTextColor(ThemeWindowDarkerTextColor());
-        DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
-        DarkMode::setDlgBackgroundColor(ctrlBg);
-        DarkMode::setLinkTextColor(ThemeWindowLinkColor());
-        DarkMode::setEdgeColor(ThemeEdgeColor());
-        DarkMode::setHotEdgeColor(ThemeHotEdgeColor());
-        DarkMode::setDisabledEdgeColor(ThemeDisabledEdgeColor());
-        DarkMode::setErrorBackgroundColor(ThemeErrorBackgroundColor());
-        DarkMode::updateThemeBrushesAndPens();
-
-        DarkMode::setViewTextColor(ThemeWindowTextColor());
-        DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
-        DarkMode::calculateTreeViewStyle();
-
-        if (themeChanged) {
-            UpdateAfterThemeChange();
-        }
-
         DarkMode::setPrevTreeViewStyle();
-    } else {
-        if (themeChanged) {
-            UpdateAfterThemeChange();
-        }
     }
 };
 
@@ -810,6 +855,25 @@ void UpdateThemeAfterSystemColorChange() {
     SetTheme(StrL("System")); // no-op unless the resolved theme changed
 }
 
+// call on WM_SETTINGCHANGE: the user can turn high contrast on and off at any
+// time (Alt+Shift+PrtScr), which swaps the whole palette out from under us
+void UpdateThemeAfterHighContrastChange() {
+    bool wasUsingHighContrast = gUseHighContrast;
+    DetectHighContrastMode();
+    RecalcUseHighContrast();
+    if (wasUsingHighContrast == gUseHighContrast) {
+        // also the common case of toggling it while a custom theme is current,
+        // which changes nothing we draw
+        return;
+    }
+    logf("UpdateThemeAfterHighContrastChange: using high contrast colors: %d\n", (int)gUseHighContrast);
+    ApplyThemeColorsToDarkMode();
+    UpdateAfterThemeChange();
+    if (UseDarkModeLib()) {
+        DarkMode::setPrevTreeViewStyle();
+    }
+}
+
 // call after loading settings
 void SetCurrentThemeFromSettings() {
     SetTheme(gGlobalPrefs->theme);
@@ -842,7 +906,9 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
     COLORREF text = ThemeWindowTextColor();
     bg = ThemeMainWindowBackgroundColor();
 
-    if (gCurrThemeIndex < 3) {
+    // the system palette is exact: tinting it away from COLOR_WINDOW is the
+    // kind of "close enough" color high contrast mode exists to avoid
+    if (gCurrThemeIndex < 3 && !gUseHighContrast) {
         bg = AccentColor(bg, 8);
     }
     return text;
@@ -894,6 +960,13 @@ static COLORREF ThemePageRenderColorsNoInvert(COLORREF& bg) {
         return text;
     }
 
+    if (gUseHighContrast) {
+        // High contrast mode is about the app's own UI. Recoloring the document
+        // is not part of it - that's what made images come out inverted for no
+        // reason (#2124) - so the page keeps its black-on-white default.
+        return text;
+    }
+
     // Defaults: page colors follow the window theme (light theme → dark text on
     // light paper; dark theme → light text on dark paper).
     text = ThemeWindowTextColor();
@@ -915,12 +988,18 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
 }
 
 COLORREF ThemeControlBackgroundColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_WINDOW);
+    }
     // note: we can change it in ThemeUpdateAfterLoadSettings()
     auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kRedColor);
     return col;
 }
 
 COLORREF ThemeMainWindowBackgroundColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_WINDOW);
+    }
     COLORREF bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
     if (gCurrThemeIndex == 0) {
         // Special behavior for light theme.
@@ -933,11 +1012,17 @@ COLORREF ThemeMainWindowBackgroundColor() {
 }
 
 COLORREF ThemeWindowBackgroundColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_WINDOW);
+    }
     auto col = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
     return col;
 }
 
 COLORREF ThemeWindowTextColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_WINDOWTEXT);
+    }
     auto col = GetThemeCol(gCurrentTheme->textColor, kRedColor);
     return col;
 }
@@ -953,46 +1038,76 @@ static COLORREF BlendTextAndBgHalfway() {
 }
 
 COLORREF ThemeWindowTextDisabledColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_GRAYTEXT);
+    }
     return GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
 }
 
 COLORREF ThemeWindowDarkerTextColor() {
+    if (gUseHighContrast) {
+        // high contrast has no muted text: muting it is the opposite of the point
+        return GetSysColor(COLOR_WINDOWTEXT);
+    }
     // fallback: slightly muted primary text (not as flat as disabled)
     COLORREF fallback = AccentColor(ThemeWindowTextColor(), 40);
     return GetThemeCol(gCurrentTheme->darkerTextColor, fallback);
 }
 
 COLORREF ThemeWindowControlBackgroundColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_WINDOW);
+    }
     auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kRedColor);
     return col;
 }
 
 COLORREF ThemeWindowLinkColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_HOTLIGHT);
+    }
     auto col = GetThemeCol(gCurrentTheme->linkColor, kRedColor);
     return col;
 }
 
 COLORREF ThemeHotBackgroundColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_HIGHLIGHT);
+    }
     COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 20);
     return GetThemeCol(gCurrentTheme->hotBackgroundColor, fallback);
 }
 
 COLORREF ThemeEdgeColor() {
+    if (gUseHighContrast) {
+        // borders have to stay visible, so they take the text color
+        return GetSysColor(COLOR_WINDOWTEXT);
+    }
     COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 40);
     return GetThemeCol(gCurrentTheme->edgeColor, fallback);
 }
 
 COLORREF ThemeHotEdgeColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_HIGHLIGHT);
+    }
     COLORREF fallback = AccentColor(ThemeEdgeColor(), 30);
     return GetThemeCol(gCurrentTheme->hotEdgeColor, fallback);
 }
 
 COLORREF ThemeDisabledEdgeColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_GRAYTEXT);
+    }
     COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 15);
     return GetThemeCol(gCurrentTheme->disabledEdgeColor, fallback);
 }
 
 COLORREF ThemeErrorBackgroundColor() {
+    if (gUseHighContrast) {
+        // no error color in the system palette; the text carries the message
+        return GetSysColor(COLOR_WINDOW);
+    }
     // soft red tint of control background when unset
     COLORREF fallback = RgbToCOLORREF(0x5c1a1a);
     if (IsLightColor(ThemeWindowControlBackgroundColor())) {
@@ -1002,6 +1117,9 @@ COLORREF ThemeErrorBackgroundColor() {
 }
 
 COLORREF ThemeNotificationsBackgroundColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_WINDOW);
+    }
     COLORREF fallback = AdjustLightness2(ThemeWindowBackgroundColor(), 10);
     return GetThemeCol(gCurrentTheme->notificationBackgroundColor, fallback);
 }
@@ -1015,6 +1133,9 @@ COLORREF ThemeNotificationsTextColor() {
 // dark amber. Deriving it from the theme's own accent (as we used to) produced
 // saturated, unrelated hues -- Dracula's warnings came out bright purple.
 COLORREF ThemeNotificationsHighlightColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_HIGHLIGHT);
+    }
     COLORREF fallback;
     if (IsLightColor(ThemeNotificationsBackgroundColor())) {
         fallback = RgbToCOLORREF(0xFFEE70); // yellowish
@@ -1025,6 +1146,9 @@ COLORREF ThemeNotificationsHighlightColor() {
 }
 
 COLORREF ThemeNotificationsHighlightTextColor() {
+    if (gUseHighContrast) {
+        return GetSysColor(COLOR_HIGHLIGHTTEXT);
+    }
     COLORREF fallback;
     if (IsLightColor(ThemeNotificationsBackgroundColor())) {
         fallback = RgbToCOLORREF(0x8d0801); // reddish

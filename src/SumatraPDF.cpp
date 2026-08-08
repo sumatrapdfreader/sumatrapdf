@@ -12912,6 +12912,9 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             if (lp && str::EqI(ToUtf8Temp((const WCHAR*)lp), StrL("ImmersiveColorSet"))) {
                 UpdateThemeAfterSystemColorChange();
             }
+            // high contrast can be toggled at any time (Alt+Shift+PrtScr);
+            // SPI_SETHIGHCONTRAST arrives here (no-op unless it changed)
+            UpdateThemeAfterHighContrastChange();
         InitMouseWheelInfo:
             UpdateDeltaPerLine();
 

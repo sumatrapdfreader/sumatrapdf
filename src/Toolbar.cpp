@@ -852,7 +852,10 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             bool isEditCtrl = (win->hwndPageEdit == hwndCtrl);
             SetTextColor(hdc, ThemeWindowTextColor());
             SetBkMode(hdc, TRANSPARENT);
-            if ((isBgCtrl || isEditCtrl) && !ThemeColorizeControls()) {
+            // the page box is a white field on the light theme's gray toolbar.
+            // In high contrast the system palette decides what a field looks
+            // like, and a white one would put white text on white (#2124)
+            if ((isBgCtrl || isEditCtrl) && !ThemeColorizeControls() && !ThemeUsesHighContrastColors()) {
                 SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
                 return (LRESULT)GetStockObject(WHITE_BRUSH);
             }

@@ -10,6 +10,8 @@ int ThemeGetCurrentIndex();
 void ToggleLightDarkTheme();
 Str ToggleLightDarkThemeTargetName();
 void UpdateThemeAfterSystemColorChange();
+void UpdateThemeAfterHighContrastChange();
+bool ThemeUsesHighContrastColors();
 void CreateThemeCommands();
 
 COLORREF ThemeDocumentColors(COLORREF&);
