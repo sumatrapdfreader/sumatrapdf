@@ -43,7 +43,9 @@ static Str TranslateAnnotTypeNameTemp(Str english, Str menuKey = {}) {
     Str key = menuKey ? menuKey : english;
     Str tr = trans::GetTranslation(key);
     if (str::Contains(tr, StrL("&"))) {
-        return str::ReplaceTemp(tr, StrL("&"), Str{});
+        // StrL(""), not Str{}: ReplaceTemp rejects a null replacement and
+        // returns an empty string, which blanked every name with an access key
+        return str::ReplaceTemp(tr, StrL("&"), StrL(""));
     }
     return tr;
 }
