@@ -692,6 +692,22 @@ bool DisplayModel::LastBookPageVisible() const {
     return true;
 }
 
+// ComicBookUI / ImageUI LimitToWindowWidth / LimitToWindowHeight (issue #2197).
+static void GetImageLimitToWindowFlags(EngineBase* engine, bool& limitWidth, bool& limitHeight) {
+    limitWidth = false;
+    limitHeight = false;
+    if (!engine || !engine->IsImageCollection()) {
+        return;
+    }
+    if (engine->kind == kindEngineComicBooks) {
+        limitWidth = gGlobalPrefs->comicBookUI.limitToWindowWidth;
+        limitHeight = gGlobalPrefs->comicBookUI.limitToWindowHeight;
+    } else {
+        limitWidth = gGlobalPrefs->imageUI.limitToWindowWidth;
+        limitHeight = gGlobalPrefs->imageUI.limitToWindowHeight;
+    }
+}
+
 /* Given a zoom level that can include a "virtual" zoom levels like kZoomFitWidth,
    kZoomFitPage or kZoomFitContent, calculate an absolute zoom level */
 float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const {
@@ -707,7 +723,32 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     }
     if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage &&
         zoomVirtual != kZoomFitContent) {
-        return zoomVirtual * 0.01f * dpiFactor;
+        // Absolute zoom (e.g. 150%). Optionally cap each image/comic page so it
+        // never exceeds the window width and/or height — lets single pages stay
+        // large while double-page spreads shrink to fit (issue #2197).
+        float zoom = zoomVirtual * 0.01f * dpiFactor;
+        bool limitWidth = false;
+        bool limitHeight = false;
+        GetImageLimitToWindowFlags(engine, limitWidth, limitHeight);
+        if (limitWidth || limitHeight) {
+            if (limitWidth && limitHeight) {
+                float fit = ZoomRealFromVirtualForPage(kZoomFitPage, pageNo);
+                if (fit > 0) {
+                    zoom = std::min(zoom, fit);
+                }
+            } else if (limitWidth) {
+                float fit = ZoomRealFromVirtualForPage(kZoomFitWidth, pageNo);
+                if (fit > 0) {
+                    zoom = std::min(zoom, fit);
+                }
+            } else {
+                float fit = ZoomRealFromVirtualForPage(kZoomFitHeight, pageNo);
+                if (fit > 0) {
+                    zoom = std::min(zoom, fit);
+                }
+            }
+        }
+        return zoom;
     }
 
     SizeF row;
@@ -863,12 +904,20 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             pageInfo->zoomReal = zoomReal;
         }
     } else {
+        // Absolute zoom. ZoomRealFromVirtualForPage may cap per page when
+        // ComicBookUI/ImageUI LimitToWindowWidth/Height is set (issue #2197).
         zoomReal = zoomVirtual * 0.01f * dpiFactor;
         ReportIf(zoomReal < 0.01f);
+        float minZoom = zoomReal;
         for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             PageInfo* pageInfo = GetPageInfo(pageNo);
-            pageInfo->zoomReal = zoomReal;
+            float z = ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
+            pageInfo->zoomReal = z;
+            if (z > 0 && z < minZoom) {
+                minZoom = z;
+            }
         }
+        zoomReal = minZoom;
     }
 }
 

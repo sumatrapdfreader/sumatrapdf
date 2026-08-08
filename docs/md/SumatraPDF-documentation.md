@@ -59,6 +59,8 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 [Supported document formats](Supported-document-formats.md)
 
+[Comics and manga](Comics-and-manga.md)
+
 [Customize eBook UI](Customize-eBook-UI.md)
 
 [Accessibility](Accessibility.md)

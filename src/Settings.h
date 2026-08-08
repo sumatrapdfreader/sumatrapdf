@@ -112,6 +112,14 @@ struct ComicBookUI {
     // if given, sets the canvas background color for comic book files
     Str windowBgCol;
     ParsedColor windowBgColParsed;
+    // if true, absolute zoom never makes a page wider than the window
+    // (each page is capped at Fit Width). Useful for comics/manga with
+    // double-page spreads that are much wider than regular pages (issue
+    // #2197)
+    bool limitToWindowWidth;
+    // if true, absolute zoom never makes a page taller than the window
+    // (each page is capped at Fit Height)
+    bool limitToWindowHeight;
 };
 
 // customization options for image files UI
@@ -124,6 +132,13 @@ struct ImageUI {
     Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
+    // if true, absolute zoom never makes a page wider than the window
+    // (each page is capped at Fit Width). Useful for image folders with
+    // mixed aspect ratios (issue #2197)
+    bool limitToWindowWidth;
+    // if true, absolute zoom never makes a page taller than the window
+    // (each page is capped at Fit Height)
+    bool limitToWindowHeight;
 };
 
 // customization options for CHM UI. If UseFixedPageUI is true,
@@ -1034,29 +1049,38 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, pageSpacing), SettingType::Compact, (intptr_t)&gSize_1_Info},
     {offsetof(ComicBookUI, cbxMangaMode), SettingType::Bool, false},
     {offsetof(ComicBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
+    {offsetof(ComicBookUI, limitToWindowWidth), SettingType::Bool, false},
+    {offsetof(ComicBookUI, limitToWindowHeight), SettingType::Bool, false},
 };
 static const StructInfo gComicBookUIInfo = {
     sizeof(ComicBookUI),
-    4,
+    6,
     gComicBookUIFields,
-    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol",
+    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
     "between two pages in facing and book view modes\0if true, default to displaying Comic Book files in manga mode "
     "(from right to left if showing 2 pages at a time)\0if given, sets the canvas background color for comic book "
-    "files",
+    "files\0if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). Useful "
+    "for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)\0if true, absolute "
+    "zoom never makes a page taller than the window (each page is capped at Fit Height)",
     false};
 
 static const FieldInfo gImageUIFields[] = {
     {offsetof(ImageUI, windowBgCol), SettingType::Color, (intptr_t)""},
     {offsetof(ImageUI, defaultZoom), SettingType::String, (intptr_t)"shrink to fit"},
+    {offsetof(ImageUI, limitToWindowWidth), SettingType::Bool, false},
+    {offsetof(ImageUI, limitToWindowHeight), SettingType::Bool, false},
 };
 static const StructInfo gImageUIInfo = {
     sizeof(ImageUI),
-    2,
+    4,
     gImageUIFields,
-    "WindowBgCol\0DefaultZoom",
+    "WindowBgCol\0DefaultZoom\0LimitToWindowWidth\0LimitToWindowHeight",
     "if given, sets the canvas background color for image files\0default zoom for image files. valid values: fit page, "
-    "fit width, fit height, fit content, shrink to fit or percent like 100%",
+    "fit width, fit height, fit content, shrink to fit or percent like 100%\0if true, absolute zoom never makes a page "
+    "wider than the window (each page is capped at Fit Width). Useful for image folders with mixed aspect ratios "
+    "(issue #2197)\0if true, absolute zoom never makes a page taller than the window (each page is capped at Fit "
+    "Height)",
     false};
 
 static const FieldInfo gChmUIFields[] = {

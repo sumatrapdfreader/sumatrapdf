@@ -409,6 +409,19 @@ const comicBookUI: Field[] = [
     "if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)",
   ),
   field("WindowBgCol", Color, "", "if given, sets the canvas background color for comic book files").ver("3.7"),
+  field(
+    "LimitToWindowWidth",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). " +
+      "Useful for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)",
+  ).ver("3.7"),
+  field(
+    "LimitToWindowHeight",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
+  ).ver("3.7"),
 ];
 
 const imageUI: Field[] = [
@@ -420,6 +433,19 @@ const imageUI: Field[] = [
     "default zoom for image files. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
+  field(
+    "LimitToWindowWidth",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). " +
+      "Useful for image folders with mixed aspect ratios (issue #2197)",
+  ).ver("3.7"),
+  field(
+    "LimitToWindowHeight",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
+  ).ver("3.7"),
 ];
 
 const chmUI: Field[] = [

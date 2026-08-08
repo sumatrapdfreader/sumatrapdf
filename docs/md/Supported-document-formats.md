@@ -10,7 +10,7 @@ SumatraPDF reader supports the following document types:
   - Palm DOC (.pdb)
   - plain text (.txt, .log, .nfo, .tcr, …)
 - Markdown (.md, .markdown), rendered as GitHub Flavored Markdown
-- comic book files: .cbz, .cbr, .cbt, .cb7 (and .ora)
+- comic book files: .cbz, .cbr, .cbt, .cb7 (and .ora) — see [Comics and manga](Comics-and-manga.md)
 - archive files (.zip, .rar, .7z, .tar) containing images
 - DjVu (.djvu, .djv)
 - Microsoft Compiled HTML Help (.chm)

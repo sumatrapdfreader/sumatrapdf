@@ -387,6 +387,16 @@ ComicBookUI [
     ; if given, sets the canvas background color for comic book files
     ; (introduced in version 3.7)
     WindowBgCol = 
+
+    ; if true, absolute zoom never makes a page wider than the window (each page
+    ; is capped at Fit Width). Useful for comics/manga with double-page spreads
+    ; that are much wider than regular pages (issue #2197) (introduced in
+    ; version 3.7)
+    LimitToWindowWidth = false
+
+    ; if true, absolute zoom never makes a page taller than the window (each
+    ; page is capped at Fit Height) (introduced in version 3.7)
+    LimitToWindowHeight = false
 ]
 
 ; customization options for image files UI
@@ -399,6 +409,15 @@ ImageUI [
     ; height, fit content, shrink to fit or percent like 100% (introduced in
     ; version 3.7)
     DefaultZoom = shrink to fit
+
+    ; if true, absolute zoom never makes a page wider than the window (each page
+    ; is capped at Fit Width). Useful for image folders with mixed aspect ratios
+    ; (issue #2197) (introduced in version 3.7)
+    LimitToWindowWidth = false
+
+    ; if true, absolute zoom never makes a page taller than the window (each
+    ; page is capped at Fit Height) (introduced in version 3.7)
+    LimitToWindowHeight = false
 ]
 
 ; customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI
