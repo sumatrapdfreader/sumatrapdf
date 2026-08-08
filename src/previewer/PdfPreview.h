@@ -49,12 +49,16 @@ class PdfPreview : public IThumbnailProvider,
 
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream* pStm, __unused DWORD grfMode) {
-        m_pStream = pStm;
-        if (!m_pStream) {
+        if (!pStm) {
             return E_INVALIDARG;
         }
-        m_pStream->AddRef();
-        return S_OK;
+        // The shell hands us a deny-write stream, so keeping it alive locks the
+        // file for as long as the preview is on screen and an editor rebuilding
+        // the document can't write over it (issue #1530). We only ever read it
+        // once anyway - every engine is built from a memory buffer - so read it
+        // here and let go of the file.
+        m_data = ReadIStream(pStm);
+        return str::IsNull(m_data) ? E_FAIL : S_OK;
     };
 
     // IObjectWithSite
@@ -134,7 +138,7 @@ class PdfPreview : public IThumbnailProvider,
             DestroyWindow(m_hwnd);
             m_hwnd = nullptr;
         }
-        m_pStream = nullptr;
+        str::FreePtr(&m_data);
         if (m_engine) {
             m_engine->Release();
             m_engine = nullptr;
@@ -153,8 +157,11 @@ class PdfPreview : public IThumbnailProvider,
     IFACEMETHODIMP ContextSensitiveHelp(__unused BOOL fEnterMode) { return E_NOTIMPL; }
 
     EngineBase* GetEngine() {
-        if (!m_engine && m_pStream) {
-            m_engine = LoadEngine(m_pStream);
+        if (!m_engine && !str::IsNull(m_data)) {
+            m_engine = LoadEngine(m_data);
+            // the engine has its own copy; a failed load won't do better on a
+            // second try, so let the bytes go either way
+            str::FreePtr(&m_data);
         }
         return m_engine;
     }
@@ -165,7 +172,8 @@ class PdfPreview : public IThumbnailProvider,
     AtomicInt m_lRef = 1;
     AtomicInt* m_plModuleRef = nullptr;
     PreviewType m_type;
-    ScopedComPtr<IStream> m_pStream;
+    // the file's bytes, owned; freed once the engine has been built from them
+    Str m_data;
     EngineBase* m_engine = nullptr;
     ScopedGdiPlus* m_gdiScope = nullptr;
     bool m_muiInitialized = false;
@@ -175,5 +183,5 @@ class PdfPreview : public IThumbnailProvider,
     HWND m_hwndParent = nullptr;
     Rect m_rcParent;
 
-    EngineBase* LoadEngine(IStream* stream);
+    EngineBase* LoadEngine(const Str& data);
 };

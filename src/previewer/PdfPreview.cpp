@@ -387,14 +387,11 @@ PdfPreview::~PdfPreview() {
     InterlockedDecrement(m_plModuleRef);
 }
 
-EngineBase* PdfPreview::LoadEngine(IStream* stream) {
-    Str data = ReadIStream(stream);
+// data stays owned by the caller: every engine below copies what it needs
+EngineBase* PdfPreview::LoadEngine(const Str& data) {
     if (str::IsNull(data)) {
         return nullptr;
     }
-    defer {
-        str::Free(data);
-    };
     switch (m_type) {
         case PreviewType::Pdf:
             return CreateEngineMupdfFromData(data, "foo.pdf", nullptr);
