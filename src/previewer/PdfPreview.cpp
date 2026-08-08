@@ -28,6 +28,51 @@ EBookUI* GetEBookUI() {
     return nullptr;
 }
 
+// Copy a rendered page into the 32bpp DIB the shell gets, rather than going
+// through GetDIBits(bmp->hbmp): only the mupdf engines render into a DIB
+// section, so for DjVu and the image engines hbmp is null and GetDIBits failed,
+// which is why those never had a thumbnail (issue #1530). Pixmap::data is
+// always there.
+// Rows are written bottom-up (the DIB has a positive biHeight) and anything
+// translucent is composited over white, the same paper the preview window
+// paints behind a page. Alpha ends up opaque, matching WTSAT_RGB:
+// cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
+static void CopyPixmapToThumbnail(const Pixmap* bmp, u8* dst, int dx, int dy) {
+    int srcBpp = PixmapBytesPerPixel(bmp->format);
+    bool isRgb = bmp->format == PixmapFormat::RGBA8;
+    bool hasAlpha = srcBpp == 4;
+    bool premul = bmp->premultiplied;
+    for (int y = 0; y < dy; y++) {
+        const u8* src = bmp->data + ((size_t)y * (size_t)bmp->stride);
+        u8* row = dst + ((size_t)(dy - 1 - y) * (size_t)dx * 4);
+        for (int x = 0; x < dx; x++) {
+            int c0 = src[0], c1 = src[1], c2 = src[2];
+            int b = isRgb ? c2 : c0;
+            int r = isRgb ? c0 : c2;
+            int g = c1;
+            int a = hasAlpha ? src[3] : 255;
+            if (a != 255) {
+                int inv = 255 - a;
+                if (premul) {
+                    b += inv;
+                    g += inv;
+                    r += inv;
+                } else {
+                    b = ((b * a) + (255 * inv)) / 255;
+                    g = ((g * a) + (255 * inv)) / 255;
+                    r = ((r * a) + (255 * inv)) / 255;
+                }
+            }
+            row[0] = (u8)std::min(b, 255);
+            row[1] = (u8)std::min(g, 255);
+            row[2] = (u8)std::min(r, 255);
+            row[3] = 0xFF;
+            src += srcBpp;
+            row += 4;
+        }
+    }
+}
+
 IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
     EngineBase* engine = GetEngine();
     if (!engine) {
@@ -41,10 +86,27 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     float zoom = std::min((float)cx / page.dx, (float)cx / page.dy) - 0.001f;
     Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
+    page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
+    RenderPageArgs args(1, zoom, 0, &page);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp || !bmp->data) {
+        log("PdfPreview::GetThumbnail: RenderPage() failed\n");
+        FreePixmap(bmp);
+        return E_FAIL;
+    }
+    defer {
+        FreePixmap(bmp);
+    };
+
+    // Size the bitmap from what was actually rendered: rounding can put it a
+    // pixel off `thumb`, and copying with the wrong dimensions shears the image.
+    int dx = bmp->width;
+    int dy = bmp->height;
+
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biHeight = thumb.dy;
-    bmi.bmiHeader.biWidth = thumb.dx;
+    bmi.bmiHeader.biHeight = dy;
+    bmi.bmiHeader.biWidth = dx;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -56,32 +118,14 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
         return E_OUTOFMEMORY;
     }
 
-    page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
-    RenderPageArgs args(1, zoom, 0, &page);
-    Pixmap* bmp = engine->RenderPage(args);
+    CopyPixmapToThumbnail(bmp, bmpData, dx, dy);
 
-    HDC hdc = GetDC(nullptr);
-    if (bmp && GetDIBits(hdc, bmp->hbmp, 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-        // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
-        for (int i = 0; i < thumb.dx * thumb.dy; i++) {
-            bmpData[(4 * i) + 3] = 0xFF;
-        }
-
-        *phbmp = hthumb;
-        if (pdwAlpha) {
-            *pdwAlpha = WTSAT_RGB;
-        }
-        log("PdfPreview::GetThumbnail: provided thumbnail\n");
-    } else {
-        DeleteObject(hthumb);
-        hthumb = nullptr;
-        log("PdfPreview::GetThumbnail: GetDIBits() failed\n");
+    *phbmp = hthumb;
+    if (pdwAlpha) {
+        *pdwAlpha = WTSAT_RGB;
     }
-
-    ReleaseDC(nullptr, hdc);
-    FreePixmap(bmp);
-
-    return hthumb ? S_OK : E_NOTIMPL;
+    log("PdfPreview::GetThumbnail: provided thumbnail\n");
+    return S_OK;
 }
 
 class PageRenderer {
