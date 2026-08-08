@@ -47,6 +47,8 @@ void JsonTest() {
         {"\"\\\\\\n\\t\\u01234\"", JsonValue("",
                                              "\\\n\t\xC4\xA3"
                                              "4")},
+        // \u0000 is valid JSON
+        {"\"\\u0000\"", JsonValue("", Str("\0", 1))},
         // numbers
         {"123", JsonValue("", "123", json::Type::Number)},
         {"-99.99", JsonValue("", "-99.99", json::Type::Number)},
@@ -95,8 +97,9 @@ void JsonTest() {
     }
 
     static Str invalidJson[] = {
-        "",  "string", "nada", "\"open", "\"\\xC4\"",   "\"\\u123h\"",   "'string'",       "01", ".1", "12.", "1e",
-        "-", "-01",    "{",    "{,}",    "{\"key\": }", "{\"key: 123 }", "{ 'key': 123 }", "[",  "[,]"};
+        "",    "string",      "nada",          "\"open",         "\"\\xC4\"", "\"\\u123h\"", "'string'", "01",  ".1",
+        "12.", "1e",          "1.e5",          "1.E+2",          "1e+",       "1e-",         "-",        "-01", "{",
+        "{,}", "{\"key\": }", "{\"key: 123 }", "{ 'key': 123 }", "[",         "[,]"};
 
     JsonVerifier verifyError(nullptr, 0);
     {
@@ -135,4 +138,13 @@ void JsonTest() {
 }";
     JsonVerifier sampleVerifier(testData, dimof(testData));
     utassert(json::Parse(jsonSample, &sampleVerifier));
+
+    // U+2028 / U+2029 must be escaped so the result is safe in a JS string literal
+    {
+        const char lineSep[] = {'\xE2', '\x80', '\xA8'};
+        const char paraSep[] = {'\xE2', '\x80', '\xA9'};
+        utassert(str::Eq(json::EscapeStrTemp(Str(lineSep, 3)), "\\u2028"));
+        utassert(str::Eq(json::EscapeStrTemp(Str(paraSep, 3)), "\\u2029"));
+        utassert(str::Eq(json::EscapeStrTemp(StrL("a\"b\\c\n")), "a\\\"b\\\\c\\n"));
+    }
 }

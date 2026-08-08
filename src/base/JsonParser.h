@@ -1,8 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// simple push parser for JSON files (cf. http://www.json.org/ )
-
 namespace json {
 
 enum class Type {
@@ -12,23 +10,12 @@ enum class Type {
     Null
 };
 
-// parsing JSON data will call the ValueVisitor for every
-// primitive data value with a string representation of that
-// value and a path to it
-
-// e.g. the following JSON data will lead to two calls:
-// { "key": [false, { "name": "valu\u0065" }] }
-// 1. "/key[0]", "false", Type::Bool
-// 2. "/key[1]/name", "value", Type::String
-
 struct ValueVisitor {
-    // return false to stop parsing
     virtual bool Visit(Str path, Str value, Type type) = 0;
     virtual ~ValueVisitor() = default;
 };
 
 bool Parse(Str data, ValueVisitor* visitor);
-
 TempStr EscapeStrTemp(Str s);
 
 } // namespace json
