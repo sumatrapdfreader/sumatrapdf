@@ -4205,7 +4205,10 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
     fz_display_list* keptList = nullptr;
     {
         // Hold per-page lock briefly: page bounds + (re-)acquire cached display list.
+        // docLock as well - see the comment in RenderPage: building the list runs
+        // the page's annotations, which a concurrent annotation edit can free.
         ScopedMutex scope(&renderLock);
+        ScopedRecursiveMutex docScope(&docLock);
         pagerect = fz_bound_page(ctx, pageInfo->page);
         keptList = GetOrBuildPageDisplayList(pageInfo, ctx);
     }
@@ -4511,6 +4514,9 @@ void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation
     // the shared content-stream filter state (crash in next_endstream/memcpy).
     ScopedRecursiveMutex pagesScope(&pagesLock);
     ScopedMutex renderScope(&renderLock);
+    // docLock as well: running a page reads its annotations, which a concurrent
+    // annotation edit on the UI thread frees
+    ScopedRecursiveMutex docScope(&docLock);
 
     FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, false, nullptr);
     if (!pageInfo || !pageInfo->page) {
@@ -4646,7 +4652,12 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
     {
         // Hold per-page lock while we touch the page (bounds, optional list build).
+        // docLock too: building the list runs the page *and its annotations*, and
+        // an annotation edit on the UI thread (pdf_create_annot / pdf_update_annot,
+        // which hold docLock) frees the pdf objects we'd be reading -- crash in
+        // pdf_annot_flags on a freed annot dict.
         ScopedMutex cs(&renderLock);
+        ScopedRecursiveMutex docScope(&docLock);
 
         if (pageRect) {
             pRect = ToFzRect(*pageRect);
@@ -5025,6 +5036,10 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
 
 static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
     auto* ctx = e->Ctx();
+    // callers hold pagesLock + renderLock; docLock is needed too because this
+    // runs the whole page, annotations included, and text extraction happens on
+    // a background thread while the UI thread can be editing those annotations
+    ScopedRecursiveMutex docScope(&e->docLock);
     fz_stext_page* stext = nullptr;
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions();

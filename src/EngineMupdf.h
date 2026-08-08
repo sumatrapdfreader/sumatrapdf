@@ -135,9 +135,14 @@ class EngineMupdf : public EngineBase {
     //                         pagesLock inside GetFzPageInfo.
     //   docLock             - serializes document-scope mupdf operations:
     //                         outline, fonts, info, named dests, page-tree
-    //                         access, annotation mutations. Independent of
-    //                         renderLock; never acquire pagesLock while
-    //                         holding docLock.
+    //                         access, annotation mutations. Never acquire
+    //                         pagesLock while holding docLock.
+    //                         Anything that *runs a page* (display list build,
+    //                         stext extraction, image collection) must hold
+    //                         this too, not just renderLock: running a page
+    //                         reads its annotations, and an annotation edit on
+    //                         the UI thread frees those objects underneath it
+    //                         (crash in pdf_annot_flags on a freed annot dict).
     //
     // docLock must NOT alias one of fz_locks[] -- mupdf takes those briefly
     // for its own internal coordination, and reusing one as a long-held outer
