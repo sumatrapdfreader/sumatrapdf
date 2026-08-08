@@ -477,7 +477,7 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
     UpdateToolbarState(win);
 }
 
-static WindowTab* FindTabByController(DocController* ctrl) {
+WindowTab* FindTabByController(DocController* ctrl) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             if (tab->ctrl == ctrl) {
@@ -5994,6 +5994,26 @@ static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
     OpenNextPrevFileInFolder(win, d->forward, d->pathToDelete);
 }
 
+// .md / .html open in a browser view whose "pages" are the sibling files in the
+// folder - the same set next/prev walks. When the target is one of them, going
+// to that page shows it right away; loading it as a document would re-scan the
+// folder and rebuild the whole TOC to arrive at the same place (#5918).
+// PageNoChanged() syncs the tab path and title, and the browser records the
+// move, so Back still returns to the file we came from.
+static bool GoToFileInBrowserView(MainWindow* win, Str path) {
+    MarkdownModel* md = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+    if (!md) {
+        return false;
+    }
+    for (int i = 0; i < len(md->pages); i++) {
+        if (path::IsSame(md->pages[i], path)) {
+            md->GoToPage(i + 1, true);
+            return true;
+        }
+    }
+    return false;
+}
+
 static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     ReportIf(win->IsCurrentTabAbout());
     if (win->IsCurrentTabAbout()) {
@@ -6047,6 +6067,12 @@ again:
         str::Free(gNextPrevDir);
         gNextPrevDir = {}; // trigger re-reading the directory
         goto again;
+    }
+
+    // with pathToDelete the caller wants the old file deleted once the new one
+    // loaded, which only the load path does
+    if (!pathToDelete && GoToFileInBrowserView(win, path)) {
+        return;
     }
 
     if (!MaybeSaveAnnotations(tab)) {

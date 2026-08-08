@@ -143,6 +143,8 @@ bool CanContinueReadAloud(WindowTab* tab);
 bool MaybeSaveAnnotations(WindowTab* tab);
 void DeleteFileFromDiskAndHistory(Str path);
 WindowTab* FindTabByFilePath(Str path);
+// the tab that currently owns this controller, null if it is no longer shown
+WindowTab* FindTabByController(DocController*);
 WindowTab* GetReadAloudSourceTab();
 
 constexpr UINT CmdTtsVoiceDefault = 0x7100;

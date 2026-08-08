@@ -20,6 +20,7 @@
 #include "EngineBase.h"
 #include "GlobalPrefs.h"
 
+#include "SumatraPDF.h"
 #include "MarkdownModel.h"
 #include "MarkdownToc.h"
 
@@ -902,12 +903,14 @@ static TocTree* BuildFullToc(StrVec& pages, Str baseDir, bool isHtml) {
 static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
     AutoDelete<MarkdownTocBuildTask> delTask(task);
     ScopedMutex scope(&task->lock);
-    if (!task->model) {
-        delete task->tocTree;
+    MarkdownModel* mm = task->model;
+    // a model that no longer belongs to a tab is on its way out and its
+    // callback (owned by the window) may be gone already, so drop the result
+    if (!mm || !FindTabByController(mm)) {
         return;
     }
-    task->model->tocBuildTask = nullptr;
-    task->model->SetToc(task->tocTree);
+    mm->tocBuildTask = nullptr;
+    mm->SetToc(task->tocTree);
     task->tocTree = nullptr;
 }
 
