@@ -35,12 +35,10 @@ HRESULT EpubFilter::OnInit() {
 
     CleanUp();
 
-    Str data = ReadIStream(m_pStream);
-    if (str::IsNull(data)) {
+    if (str::IsNull(m_data)) {
         return E_FAIL;
     }
-    m_epubDoc = EpubDoc::CreateFromData(data);
-    str::Free(data);
+    m_epubDoc = EpubDoc::CreateFromData(m_data);
     if (!m_epubDoc) {
         return E_FAIL;
     }

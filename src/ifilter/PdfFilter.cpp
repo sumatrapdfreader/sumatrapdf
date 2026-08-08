@@ -35,12 +35,10 @@ HRESULT PdfFilter::OnInit() {
     logf("PdfFilter::OnInit()\n");
     CleanUp();
 
-    Str data = ReadIStream(m_pStream);
-    if (str::IsNull(data)) {
+    if (str::IsNull(m_data)) {
         return E_FAIL;
     }
-    m_pdfEngine = CreateEngineMupdfFromData(data, "foo.pdf", nullptr);
-    str::Free(data);
+    m_pdfEngine = CreateEngineMupdfFromData(m_data, "foo.pdf", nullptr);
     if (!m_pdfEngine) {
         return E_FAIL;
     }
