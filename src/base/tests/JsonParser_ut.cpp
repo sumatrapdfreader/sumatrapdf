@@ -146,18 +146,171 @@ void JsonTest() {
         utassert(str::Eq(json::EscapeStrTemp(Str(lineSep, 3)), "\\u2028"));
         utassert(str::Eq(json::EscapeStrTemp(Str(paraSep, 3)), "\\u2029"));
         utassert(str::Eq(json::EscapeStrTemp(StrL("a\"b\\c\n")), "a\\\"b\\\\c\\n"));
+        utassert(str::Eq(json::EscapeStrTemp(StrL("\b\f\r\t")), "\\b\\f\\r\\t"));
     }
 
-    // PathMatch / PathBuildTemp
+    // PathMatch / PathBuildTemp / PathSeg helpers
     {
         StrNode* p = json::PathBuildTemp(StrL("/key"), StrL("i0"), StrL("/name"));
         utassert(str::Eq(json::PathFormatTemp(p), "/key[0]/name"));
         utassert(json::PathMatch(p, StrL("/key"), StrL("i0"), StrL("/name")));
         utassert(json::PathMatch(p, StrL("/key"), StrL("*"), StrL("/name")));
+        utassert(json::PathMatch(p, StrL("*"), StrL("*"), StrL("*")));
         utassert(!json::PathMatch(p, StrL("/key"), StrL("i1"), StrL("/name")));
+        utassert(!json::PathMatch(p, StrL("/key"), StrL("i0")));                            // too short
+        utassert(!json::PathMatch(p, StrL("/key"), StrL("i0"), StrL("/name"), StrL("/x"))); // too long
         utassert(json::PathSegIndex(json::PathNth(p, 1)) == 0);
+        utassert(json::PathSegIndex(p) == -1); // key segment
         utassert(str::Eq(json::PathSegKey(p), "key"));
+        utassert(str::Eq(json::PathSegKey(json::PathNth(p, 2)), "name"));
+        utassert(!json::PathSegKey(json::PathNth(p, 1)).s); // index segment
+        utassert(!json::PathNth(p, 3));
         utassert(json::PathMatch(nullptr));
         utassert(!json::PathMatch(nullptr, StrL("/id")));
+
+        // key containing '/' is one segment, not nested keys
+        StrNode* slashKey = json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title"));
+        utassert(str::Eq(json::PathFormatTemp(slashKey), "/ComicBookInfo/1.0/title"));
+        utassert(json::PathMatch(slashKey, StrL("/ComicBookInfo/1.0"), StrL("/title")));
+        utassert(!json::PathMatch(slashKey, StrL("/ComicBookInfo"), StrL("/1.0"), StrL("/title")));
+        utassert(str::Eq(json::PathSegKey(slashKey), "ComicBookInfo/1.0"));
+    }
+
+    // object key with '/' is a single path segment when parsed
+    {
+        struct SlashKeyVisitor : json::ValueVisitor {
+            int n = 0;
+            bool Visit(StrNode* path, Str value, json::Type type) override {
+                n++;
+                utassert(type == json::Type::String);
+                utassert(str::Eq(value, "x"));
+                utassert(str::Eq(json::PathFormatTemp(path), "/a/b/c"));
+                utassert(json::PathMatch(path, StrL("/a/b"), StrL("/c")));
+                utassert(!json::PathMatch(path, StrL("/a"), StrL("/b"), StrL("/c")));
+                utassert(str::Eq(json::PathSegKey(path), "a/b"));
+                utassert(str::Eq(json::PathSegKey(json::PathNth(path, 1)), "c"));
+                return true;
+            }
+        } v;
+        utassert(json::Parse(StrL("{\"a/b\":{\"c\":\"x\"}}"), &v));
+        utassert(v.n == 1);
+    }
+
+    // cancel mid-parse: Visit false => Parse returns true, remaining values skipped
+    {
+        struct CancelVisitor : json::ValueVisitor {
+            int n = 0;
+            bool Visit(StrNode* path, Str value, json::Type type) override {
+                n++;
+                utassert(json::PathMatch(path, StrL("/a")));
+                utassert(type == json::Type::Number);
+                utassert(str::Eq(value, "1"));
+                return false;
+            }
+        } v;
+        utassert(json::Parse(StrL("{\"a\":1,\"b\":2,\"c\":3}"), &v));
+        utassert(v.n == 1);
+    }
+
+    // cancel on first array element still succeeds overall
+    {
+        struct CancelArr : json::ValueVisitor {
+            int n = 0;
+            bool Visit(StrNode* path, Str value, json::Type /*type*/) override {
+                n++;
+                utassert(json::PathSegIndex(path) == 0);
+                utassert(!path->next);
+                utassert(str::Eq(value, "first"));
+                return false;
+            }
+        } v;
+        utassert(json::Parse(StrL("[\"first\",\"second\"]"), &v));
+        utassert(v.n == 1);
+    }
+
+    // nesting depth limit is 128 (depth >= 128 fails)
+    {
+        struct CountVisitor : json::ValueVisitor {
+            int n = 0;
+            bool Visit(StrNode* /*path*/, Str /*value*/, json::Type /*type*/) override {
+                n++;
+                return true;
+            }
+        };
+
+        auto nestArray = [](int depth) -> TempStr {
+            str::Builder b;
+            for (int i = 0; i < depth; i++) {
+                b.AppendChar('[');
+            }
+            b.AppendChar('1');
+            for (int i = 0; i < depth; i++) {
+                b.AppendChar(']');
+            }
+            return ToStrTemp(b);
+        };
+
+        CountVisitor ok;
+        utassert(json::Parse(nestArray(127), &ok));
+        utassert(ok.n == 1);
+
+        CountVisitor deep;
+        utassert(!json::Parse(nestArray(128), &deep));
+        utassert(deep.n == 0);
+
+        auto nestObject = [](int depth) -> TempStr {
+            str::Builder b;
+            for (int i = 0; i < depth; i++) {
+                b.Append("{\"k\":");
+            }
+            b.AppendChar('1');
+            for (int i = 0; i < depth; i++) {
+                b.AppendChar('}');
+            }
+            return ToStrTemp(b);
+        };
+
+        CountVisitor okObj;
+        utassert(json::Parse(nestObject(127), &okObj));
+        utassert(okObj.n == 1);
+
+        CountVisitor deepObj;
+        utassert(!json::Parse(nestObject(128), &deepObj));
+        utassert(deepObj.n == 0);
+    }
+
+    // UTF-8 BOM is skipped
+    {
+        struct BomVisitor : json::ValueVisitor {
+            int n = 0;
+            bool Visit(StrNode* path, Str value, json::Type type) override {
+                n++;
+                utassert(!path);
+                utassert(type == json::Type::Number);
+                utassert(str::Eq(value, "7"));
+                return true;
+            }
+        } v;
+        char bomJson[] = {'\xEF', '\xBB', '\xBF', '7'};
+        utassert(json::Parse(Str(bomJson, 4), &v));
+        utassert(v.n == 1);
+    }
+
+    // multi-element array path indices
+    {
+        struct ArrVisitor : json::ValueVisitor {
+            int n = 0;
+            bool Visit(StrNode* path, Str value, json::Type type) override {
+                utassert(type == json::Type::Number);
+                utassert(path && !path->next);
+                utassert(json::PathSegIndex(path) == n);
+                utassert(str::Eq(json::PathFormatTemp(path), fmt("[%d]", n)));
+                utassert(str::Eq(value, fmt("%d", (n + 1) * 10)));
+                n++;
+                return true;
+            }
+        } v;
+        utassert(json::Parse(StrL("[10,20,30]"), &v));
+        utassert(v.n == 3);
     }
 }
