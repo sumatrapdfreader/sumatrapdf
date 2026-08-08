@@ -45,49 +45,34 @@ static inline int SkipDigits(Str data, int off) {
 class ParseArgs {
   public:
     Arena* arena = nullptr;
-    Vec<StrNode*> segs;
+    // path as outer→inner StrNode list (nodes live on arena)
+    StrNodeList path;
     bool canceled = false;
     VisitFn onValue;
 
     explicit ParseArgs(const VisitFn& onValue) : arena(GetTempArena()), onValue(onValue) {}
-
-    StrNode* Path() const { return len(segs) > 0 ? segs[0] : nullptr; }
-
-    void Push(StrNode* n) {
-        n->next = nullptr;
-        if (len(segs) > 0) {
-            segs[len(segs) - 1]->next = n;
-        }
-        segs.Append(n);
-    }
 
     void PushKey(Str key) {
         char scratch[512]{};
         str::Builder b(Str(scratch, sizeofi(scratch)));
         b.AppendChar(kSegKey);
         b.Append(key);
-        Push(AllocStrNode(arena, ToStr(b)));
+        StrNodeListPush(&path, AllocStrNode(arena, ToStr(b)));
     }
 
     void PushIdx(int idx) {
         // "i" + decimal digits
-        Push(AllocStrNode(arena, fmt("%c%d", kSegIdx, idx)));
+        StrNodeListPush(&path, AllocStrNode(arena, fmt("%c%d", kSegIdx, idx)));
     }
 
-    void Pop() {
-        ReportIf(len(segs) == 0);
-        segs.Pop();
-        if (len(segs) > 0) {
-            segs[len(segs) - 1]->next = nullptr;
-        }
-    }
+    void Pop() { StrNodeListPop(&path); }
 };
 
 static int ParseValue(ParseArgs& args, Str data, int off, int depth);
 
 static void VisitValue(ParseArgs& args, Str value, Type type) {
     Value v;
-    v.path = args.Path();
+    v.path = args.path.head;
     v.value = str::DupTemp(value);
     v.type = type;
     args.onValue.Call(&v);

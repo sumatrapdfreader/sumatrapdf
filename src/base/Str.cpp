@@ -223,6 +223,34 @@ void FreeStrNode(Arena* a, StrNode* head) {
     }
 }
 
+// Append n as the new last node. Clears n->next. List does not free nodes.
+void StrNodeListPush(StrNodeList* list, StrNode* n) {
+    ReportIf(!list || !n);
+    n->next = nullptr;
+    if (list->tail) {
+        list->tail->next = n;
+    } else {
+        list->head = n;
+    }
+    list->tail = n;
+}
+
+// Unlink the last node. Does not free it; list becomes empty if it was the only node.
+void StrNodeListPop(StrNodeList* list) {
+    ReportIf(!list || !list->tail);
+    if (list->head == list->tail) {
+        list->head = nullptr;
+        list->tail = nullptr;
+        return;
+    }
+    StrNode* prev = list->head;
+    while (prev->next != list->tail) {
+        prev = prev->next;
+    }
+    prev->next = nullptr;
+    list->tail = prev;
+}
+
 namespace str {
 
 void Free(Str s) {

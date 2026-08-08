@@ -22,6 +22,14 @@ StrNode* AllocStrNode(Arena* a, Str s);
 StrNode* FindStrNode(StrNode* root, Str s);
 void FreeStrNode(Arena* a, StrNode* head);
 
+// Head/tail list of StrNodes (first→…→last via next). Does not own/free nodes.
+struct StrNodeList {
+    StrNode* head = nullptr;
+    StrNode* tail = nullptr;
+};
+void StrNodeListPush(StrNodeList* list, StrNode* n);
+void StrNodeListPop(StrNodeList* list);
+
 namespace str {
 
 enum class TrimOpt {
