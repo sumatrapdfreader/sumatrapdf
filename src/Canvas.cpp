@@ -1323,10 +1323,168 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
 // Forward declaration
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
+// --- touch text selection (issue #538) --------------------------------------
+// Everything here logs under "touch:" so a session on a real touchscreen can be
+// read back from the log (run with -log -log-to-file <path>).
+
+// How long a finger has to hold still before it counts as a long press. The
+// gesture engine only reports a contact once it has decided it is a pan, and
+// the finger drifts while settling, so this is measured from when it comes to
+// rest rather than from touch-down -- which leaves a lot less time than the
+// second or so Windows' own press-and-hold takes.
+constexpr DWORD kTouchLongPressMs = 300;
+
+// How far from the word the press may land and still count as meaning it.
+constexpr int kTouchLongPressMaxDistDip = 40;
+
+// How long after a finger leaves the glass mouse moves are still assumed to be
+// echoes of that touch rather than someone reaching for the mouse.
+constexpr DWORD kTouchMouseTakeoverMs = 1000;
+
+// Mouse messages Windows synthesizes from a finger or a pen carry this
+// signature in the extra info; a real mouse doesn't.
+static bool IsMouseMessageFromTouch() {
+    constexpr ULONG_PTR kSignatureMask = 0xFFFFFF00;
+    constexpr ULONG_PTR kPenOrTouchSignature = 0xFF515700;
+    auto extra = (ULONG_PTR)GetMessageExtraInfo();
+    return (extra & kSignatureMask) == kPenOrTouchSignature;
+}
+
+static Str TouchSelHandleName(TouchSelHandle h) {
+    switch (h) {
+        case TouchSelHandle::Start:
+            return StrL("start");
+        case TouchSelHandle::End:
+            return StrL("end");
+        default:
+            return StrL("none");
+    }
+}
+
+// Dragging a touch selection handle: the other end stays put and the selection
+// is extended from it to wherever the finger is now.
+static void DragTouchSelHandle(MainWindow* win, int x, int y) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection) {
+        return;
+    }
+    // aim at the text the handle belongs to, not at the fingertip below it
+    int handleDy = DpiScale(win->hwndCanvas, 8);
+    Point pt(x, y - handleDy);
+    int pageNo = dm->GetPageNoByPoint(pt);
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        logf("touch: DragTouchSelHandle at %d,%d: no page there\n", x, y);
+        return;
+    }
+    int fromPage, fromGlyph, toPage, toGlyph;
+    dm->textSelection->GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
+    // anchor on the end that isn't moving
+    if (win->touchSelDragging == TouchSelHandle::Start) {
+        dm->textSelection->StartAt(toPage, toGlyph);
+    } else {
+        dm->textSelection->StartAt(fromPage, fromGlyph);
+    }
+    PointF ptf = dm->CvtFromScreen(pt, pageNo);
+    dm->textSelection->SelectUpTo(pageNo, ptf.x, ptf.y);
+
+    DeleteOldSelectionInfo(win, false);
+    WindowTab* tab = win->CurrentTab();
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+    ScheduleRepaint(win, 0);
+}
+
+// A long press over a word selects it and puts a drag handle under each end.
+// Returns true when it handled the press, i.e. the context menu should not
+// open. x, y are canvas coordinates.
+static bool OnTouchLongPress(MainWindow* win, int x, int y) {
+    DisplayModel* dm = win->AsFixed();
+    logf("touch: long press at %d,%d, dm=%d\n", x, y, (int)(dm != nullptr));
+    if (!dm || !dm->textSelection) {
+        return false;
+    }
+    Point pt(x, y);
+    int pageNo = dm->GetPageNoByPoint(pt);
+    logf("touch: long press overText=%d pageNo=%d\n", (int)dm->IsOverText(pt), pageNo);
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        return false;
+    }
+    // a long press replaces whatever a stray drag may have started
+    if (win->mouseAction != MouseAction::None) {
+        logf("touch: long press cancelling mouseAction=%d\n", (int)win->mouseAction);
+        win->mouseAction = MouseAction::None;
+        win->dragStartPending = false;
+        win->selectingByWord = false;
+        if (GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+        KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+    }
+
+    PointF ptf = dm->CvtFromScreen(pt, pageNo);
+    dm->textSelection->SelectWordAt(pageNo, ptf.x, ptf.y);
+
+    DeleteOldSelectionInfo(win, false);
+    WindowTab* tab = win->CurrentTab();
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    int nRects = tab->selectionOnPage ? len(*tab->selectionOnPage) : 0;
+    logf("touch: long press selected %d rect(s)\n", nRects);
+    if (nRects == 0) {
+        return false;
+    }
+    // SelectWordAt() snaps to the nearest glyph, which is what a fingertip
+    // needs -- it is far bigger than a letter and IsOverText() rejects most
+    // presses that plainly meant a word. The nearest word can be anywhere on
+    // the page though, so it only counts if the press landed near it.
+    Rect wordRc = (*tab->selectionOnPage)[0].GetRect(dm);
+    for (SelectionOnPage& s : *tab->selectionOnPage) {
+        wordRc = wordRc.Union(s.GetRect(dm));
+    }
+    int maxDist = DpiScale(win->hwndCanvas, kTouchLongPressMaxDistDip);
+    Rect nearRc = wordRc;
+    nearRc.Inflate(maxDist, maxDist);
+    if (!nearRc.Contains(pt)) {
+        logf("touch: nearest word at %d,%d %dx%d is too far from %d,%d, ignoring\n", wordRc.x, wordRc.y, wordRc.dx,
+             wordRc.dy, x, y);
+        DeleteOldSelectionInfo(win, true);
+        return false;
+    }
+    win->showSelection = true;
+    win->touchSelHandles = true;
+    win->touchSelDragging = TouchSelHandle::None;
+    ScheduleRepaint(win, 0);
+    return true;
+}
+
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
     DisplayModel* dm = win->AsFixed();
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
     if (!dm) return;
+
+    if (win->touchSelDragging != TouchSelHandle::None) {
+        DragTouchSelHandle(win, x, y);
+        return;
+    }
+    if (win->lastInputWasTouch) {
+        // a finger that wanders isn't holding still, so it isn't a long press
+        int slop = DpiScale(win->hwndCanvas, 10);
+        if (abs(x - win->touchDownPos.x) > slop || abs(y - win->touchDownPos.y) > slop) {
+            KillTimer(win->hwndCanvas, kTouchLongPressTimerID);
+        }
+    }
+    if (win->touchSelHandles && !IsMouseMessageFromTouch()) {
+        // A real mouse takes the handles away -- they're finger furniture --
+        // while leaving the selection alone (issue #538). Windows also
+        // synthesizes moves around a touch, untagged and sometimes carrying a
+        // stale position, so anything arriving while a finger is on the glass
+        // or has only just left doesn't count as the mouse taking over.
+        DWORD sinceTouch = (DWORD)GetTickCount64() - win->touchLastActivityTime;
+        if (win->touchPointerId >= 0 || sinceTouch < kTouchMouseTakeoverMs) {
+            return;
+        }
+        logf("touch: mouse moved to %d,%d (%dms after touch), hiding selection handles\n", x, y, (int)sinceTouch);
+        HideTouchSelHandles(win);
+    }
 
     if (win->InPresentation()) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -1687,6 +1845,30 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     ReportIf(!dm);
     Point pt{x, y};
 
+    // remember how this sequence started: WM_CONTEXTMENU, which a long press
+    // turns into, doesn't say whether a finger or a mouse produced it
+    win->lastInputWasTouch = IsMouseMessageFromTouch();
+    win->touchDownPos = pt;
+    win->touchDownTime = (DWORD)GetMessageTime();
+    if (win->lastInputWasTouch) {
+        logf("touch: down at %d,%d, handles=%d, mouseAction=%d\n", x, y, (int)win->touchSelHandles,
+             (int)win->mouseAction);
+        // when touch arrives as mouse messages rather than gestures, this is
+        // what turns a held finger into a long press (issue #538)
+        SetTimer(win->hwndCanvas, kTouchLongPressTimerID, kTouchLongPressMs, nullptr);
+    }
+
+    // grabbing a touch selection handle drags that end of the selection rather
+    // than starting a new one (issue #538)
+    TouchSelHandle handle = HitTestTouchSelHandle(win, x, y);
+    if (handle != TouchSelHandle::None) {
+        logf("touch: grabbed %s handle at %d,%d\n", TouchSelHandleName(handle), x, y);
+        win->touchSelDragging = handle;
+        win->mouseAction = MouseAction::None;
+        SetCapture(win->hwndCanvas);
+        return;
+    }
+
     WindowTab* tab = win->CurrentTab();
     // PDF form filling: clicking a checkbox / radio-button toggles it; clicking a
     // text or choice field starts in-place editing. Widgets are hit-tested on
@@ -1819,7 +2001,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         }
     }
 
-    if (resizeHandle != ResizeHandle::None || isMoveableAnnot || !canCopy || (isShift || !isOverText) && !isCtrl) {
+    // A finger doesn't rubber-band: dragging pans the page and a long press
+    // selects, so letting touch start a selection here only flashes a
+    // rectangle before the gesture takes over (issue #538).
+    bool startDrag = resizeHandle != ResizeHandle::None || isMoveableAnnot || !canCopy || win->lastInputWasTouch ||
+                     (isShift || !isOverText) && !isCtrl;
+    if (startDrag) {
         StartMouseDrag(win, x, y);
     } else {
         OnSelectionStart(win, x, y, key);
@@ -1829,6 +2016,22 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     ReportIf(!dm);
+
+    if (win->lastInputWasTouch) {
+        DWORD heldMs = (DWORD)GetMessageTime() - win->touchDownTime;
+        logf("touch: up at %d,%d after %dms, dragging=%s, mouseAction=%d\n", x, y, (int)heldMs,
+             TouchSelHandleName(win->touchSelDragging), (int)win->mouseAction);
+    }
+    KillTimer(win->hwndCanvas, kTouchLongPressTimerID);
+    // let go of a touch selection handle; the handles stay up so the selection
+    // can be adjusted again (issue #538)
+    if (win->touchSelDragging != TouchSelHandle::None) {
+        win->touchSelDragging = TouchSelHandle::None;
+        if (GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+        return;
+    }
 
     // click on selected text without dragging: clear selection
     if (win->textDragPending) {
@@ -2124,6 +2327,19 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
 
 static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     ReportIf(!win->AsFixed());
+    logf("touch: right button up at %d,%d, fromTouch=%d, suppressMenu=%d, rightDragging=%d\n", x, y,
+         (int)IsMouseMessageFromTouch(), (int)win->touchSuppressContextMenu, (int)IsRightDragging(win));
+    // A held finger is delivered as a right-click, which would open the context
+    // menu on top of the word the hold just selected (issue #538)
+    if (win->touchSuppressContextMenu) {
+        win->touchSuppressContextMenu = false;
+        logf("touch: swallowing the right-click that followed the long press\n");
+        if (IsRightDragging(win)) {
+            StopMouseDrag(win, x, y, true);
+            win->mouseAction = MouseAction::None;
+        }
+        return;
+    }
     if (!IsRightDragging(win)) {
         return;
     }
@@ -3305,7 +3521,57 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             break;
         }
 
-        case GID_PAN:
+        case GID_PAN: {
+            // A single finger on the glass is a pan as far as Windows is
+            // concerned, whether it moves or not, so a long press and a
+            // selection-handle drag both have to be recognized from this
+            // stream (issue #538).
+            Point cpt = HwndScreenToClient(win->hwndCanvas, Point(gi.ptsLocation.x, gi.ptsLocation.y));
+            if (gi.dwFlags & GF_BEGIN) {
+                touchState.pressRestPos = gi.ptsLocation;
+                touchState.pressRestTime = (DWORD)GetMessageTime();
+                touchState.longPressFired = false;
+                TouchSelHandle h = HitTestTouchSelHandle(win, cpt.x, cpt.y);
+                if (h != TouchSelHandle::None) {
+                    // this finger is here to move the selection, not the page
+                    logf("touch: gesture grabbed %s handle at %d,%d\n", TouchSelHandleName(h), cpt.x, cpt.y);
+                    win->touchSelDragging = h;
+                }
+            }
+            if (win->touchSelDragging != TouchSelHandle::None) {
+                if (!(gi.dwFlags & GF_BEGIN)) {
+                    DragTouchSelHandle(win, cpt.x, cpt.y);
+                }
+                if (gi.dwFlags & GF_END) {
+                    logf("touch: released %s handle\n", TouchSelHandleName(win->touchSelDragging));
+                    win->touchSelDragging = TouchSelHandle::None;
+                }
+                break;
+            }
+            if (!(gi.dwFlags & GF_BEGIN)) {
+                int slop = DpiScale(win->hwndCanvas, 10);
+                int dx = abs((int)gi.ptsLocation.x - (int)touchState.pressRestPos.x);
+                int dy = abs((int)gi.ptsLocation.y - (int)touchState.pressRestPos.y);
+                DWORD now = (DWORD)GetMessageTime();
+                DWORD restMs = now - touchState.pressRestTime;
+                if (dx > slop || dy > slop) {
+                    // still moving: the hold has to start over from here
+                    touchState.pressRestPos = gi.ptsLocation;
+                    touchState.pressRestTime = now;
+                    restMs = 0;
+                }
+                if (gi.dwFlags & GF_END) {
+                }
+                if (!touchState.longPressFired && restMs >= kTouchLongPressMs) {
+                    touchState.longPressFired = true;
+                    logf("touch: finger at rest for %dms at %d,%d -> long press\n", (int)restMs, cpt.x, cpt.y);
+                    if (OnTouchLongPress(win, cpt.x, cpt.y)) {
+                        // the page must not scroll out from under the selection
+                        touchState.panStarted = false;
+                        break;
+                    }
+                }
+            }
             // Flicking left or right changes the page,
             // panning moves the document in the scroll window
             if (gi.dwFlags == GF_BEGIN) {
@@ -3378,6 +3644,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 }
             }
             break;
+        }
 
         case GID_ROTATE:
             // Rotate the PDF 90 degrees in one direction
@@ -3428,6 +3695,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
 #endif
 
 // POINTER_INPUT_TYPE values
+#define SUMATRA_PT_TOUCH 2
 #define SUMATRA_PT_PEN 3
 
 // pointer message flags (in HIWORD of wParam)
@@ -3450,6 +3718,53 @@ static void EnsurePointerApiLoaded() {
     }
 }
 
+// A finger's contact, watched through WM_POINTER* purely to time it. Whether
+// the contact later turns into a pan gesture or into a synthesized click, the
+// hold is recognized here (issue #538).
+static void OnTouchPointer(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    Point pt = HwndScreenToClient(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
+    DWORD now = (DWORD)GetTickCount64();
+    win->touchLastActivityTime = now;
+    if (msg == WM_POINTERDOWN) {
+        win->touchDownPos = pt;
+        win->touchDownTime = now;
+        win->touchPointerId = LOWORD(wp);
+        win->touchLongPressDone = false;
+        logf("touch: pointer down at %d,%d\n", pt.x, pt.y);
+        SetTimer(hwnd, kTouchLongPressTimerID, kTouchLongPressMs, nullptr);
+        return;
+    }
+    if ((int)LOWORD(wp) != win->touchPointerId) {
+        // a second finger: that's a gesture, not a press
+        KillTimer(hwnd, kTouchLongPressTimerID);
+        return;
+    }
+    if (msg == WM_POINTERUPDATE) {
+        if (win->touchLongPressDone) {
+            if (win->touchSelDragging != TouchSelHandle::None) {
+                DragTouchSelHandle(win, pt.x, pt.y);
+            }
+            return;
+        }
+        int slop = DpiScale(hwnd, 10);
+        if (abs(pt.x - win->touchDownPos.x) > slop || abs(pt.y - win->touchDownPos.y) > slop) {
+            // moved: this is a pan, not a press
+            KillTimer(hwnd, kTouchLongPressTimerID);
+        }
+        return;
+    }
+    if (msg == WM_POINTERUP) {
+        logf("touch: pointer up at %d,%d after %dms, longPressDone=%d\n", pt.x, pt.y, (int)(now - win->touchDownTime),
+             (int)win->touchLongPressDone);
+        KillTimer(hwnd, kTouchLongPressTimerID);
+        if (win->touchSelDragging != TouchSelHandle::None) {
+            logf("touch: released %s handle\n", TouchSelHandleName(win->touchSelDragging));
+            win->touchSelDragging = TouchSelHandle::None;
+        }
+        win->touchPointerId = -1;
+    }
+}
+
 // handle WM_POINTER* messages for pen input by translating to mouse handlers
 // pen input on Windows 8+ generates WM_POINTER* instead of WM_LBUTTON*
 // and gesture configuration can prevent automatic promotion to mouse messages
@@ -3462,6 +3777,16 @@ static bool OnPointerMessage(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LP
     UINT32 pointerId = LOWORD(wp);
     DWORD pointerType = 0;
     if (!DynGetPointerType(pointerId, &pointerType)) {
+        return false;
+    }
+    if (pointerType == SUMATRA_PT_TOUCH) {
+        // Watch the raw contact but don't consume it: gestures (panning,
+        // zooming) still have to come out of DefWindowProc. This is the only
+        // place a finger's true timing shows up -- the gesture engine reports a
+        // hold as a pan, and if it doesn't claim the contact at all the mouse
+        // messages arrive as a single down+up pair at lift, both stamped with
+        // the same time (issue #538).
+        OnTouchPointer(win, hwnd, msg, wp, lp);
         return false;
     }
     // only handle pen input; let mouse and touch go through normal paths
@@ -3585,18 +3910,44 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             }
             return DefWindowProc(hwnd, msg, wp, lp);
 
-        case WM_CONTEXTMENU:
-            if (x == -1 || y == -1) {
+        case WM_CONTEXTMENU: {
+            bool fromKeyboard = (x == -1 || y == -1);
+            if (fromKeyboard) {
                 // if invoked with a keyboard (shift-F10) use current mouse position
                 Point pt = HwndGetCursorPos(hwnd);
+                x = pt.x;
+                y = pt.y;
+            } else {
+                // lParam is in screen coordinates for a real context-menu click
+                Point pt = HwndScreenToClient(hwnd, Point(x, y));
                 x = pt.x;
                 y = pt.y;
             }
             // super defensive
             x = std::max(x, 0);
             y = std::max(y, 0);
+            // Windows turns a held finger into a context menu of its own, which
+            // arrives after we've already selected the word. Swallow that one
+            // menu -- and only that one, so a later right-click still opens it
+            // (issue #538).
+            if (!fromKeyboard && win->touchSuppressContextMenu) {
+                win->touchSuppressContextMenu = false;
+                logf("touch: swallowing the context menu that followed the long press\n");
+                return 0;
+            }
+            // A long press with a finger arrives as WM_CONTEXTMENU. Over text
+            // that means "select this word" the way a phone browser does, so
+            // the menu is suppressed there; everywhere else it still opens
+            // (issue #538).
+            // On a device where a hold does arrive as WM_CONTEXTMENU (a pen,
+            // or touch with panning off) treat it as a long press too; the
+            // gesture path above has usually handled it already.
+            if (!fromKeyboard && (win->lastInputWasTouch || IsMouseMessageFromTouch()) && OnTouchLongPress(win, x, y)) {
+                return 0;
+            }
             OnWindowContextMenu(win, x, y);
             return 0;
+        }
 
         case WM_GESTURE:
             return OnGesture(win, msg, wp, lp);
@@ -3829,6 +4180,23 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             // unchanged (very visible with tall comic pages).
             HwndInvalidate(hwnd);
             break;
+
+        case kTouchLongPressTimerID: {
+            KillTimer(hwnd, kTouchLongPressTimerID);
+            Point dp = win->touchDownPos;
+            logf("touch: long press timer fired at %d,%d, mouseAction=%d\n", dp.x, dp.y, (int)win->mouseAction);
+            win->touchLongPressDone = true;
+            if (OnTouchLongPress(win, dp.x, dp.y)) {
+                // The press selects the word and stops there. Carrying straight
+                // on into a drag looks like a good idea but the finger is never
+                // quite still, so the selection creeps into the lines below
+                // before it is even lifted; extending is what the handles are
+                // for (issue #538).
+                // Windows will raise its own press-and-hold menu next
+                win->touchSuppressContextMenu = true;
+            }
+            break;
+        }
 
         case SMOOTHSCROLL_TIMER_ID:
             if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {

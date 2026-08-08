@@ -120,6 +120,26 @@ struct TouchState {
     POINTS panPos{};
     int panScrollOrigX = 0;
     float zoomIntermediate = 0;
+
+    // long-press detection (issue #538). A finger resting on the glass streams
+    // GID_PAN at the same spot -- that, not WM_CONTEXTMENU, is what a hold
+    // looks like to an app that has gestures enabled. The gesture engine
+    // reports a jump of tens of pixels when it first decides the contact is a
+    // pan, so what counts is that the finger has come to rest, not that it
+    // never moved: restPos/restTime are pushed forward on every move and the
+    // press fires once they stop changing for long enough.
+    POINTS pressRestPos{};
+    DWORD pressRestTime = 0;
+    bool longPressFired = false;
+};
+
+// Which end of a touch text selection a finger is dragging (issue #538).
+// A long press over a word selects it and shows a handle under each end;
+// dragging a handle extends the selection from the other end.
+enum class TouchSelHandle {
+    None = 0,
+    Start,
+    End,
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
@@ -312,6 +332,30 @@ struct MainWindow {
     // true while a text selection started by double-clicking a word is being
     // dragged, so the selection extends a word at a time instead of a glyph
     bool selectingByWord = false;
+    // a long press with a finger selected a word and put a drag handle under
+    // each end of the selection; moving the mouse takes them away again and
+    // leaves the selection alone (issue #538)
+    bool touchSelHandles = false;
+    // the handle a finger currently has hold of, if any
+    TouchSelHandle touchSelDragging = TouchSelHandle::None;
+    // whether the input sequence in progress came from a finger. Recorded at
+    // button-down, where GetMessageExtraInfo() is reliable, because
+    // WM_CONTEXTMENU (what a long press turns into) doesn't carry it
+    bool lastInputWasTouch = false;
+    // where and when the finger went down, to tell a long press from a tap
+    Point touchDownPos;
+    DWORD touchDownTime = 0;
+    // the contact being timed, -1 when no finger is down; a second finger
+    // means a gesture, not a press
+    int touchPointerId = -1;
+    // when a finger was last heard from, to tell a real mouse move from the
+    // ones Windows synthesizes around a touch
+    DWORD touchLastActivityTime = 0;
+    // the hold already selected a word, so the rest of this contact adjusts it
+    bool touchLongPressDone = false;
+    // Windows raises its own context menu for a held finger after we've acted
+    // on the hold; this swallows exactly that one
+    bool touchSuppressContextMenu = false;
     // selection rectangle in screen coordinates (only needed while selecting)
     Rect selectionRect;
     // size of the current rectangular selection in document units

@@ -31,3 +31,7 @@ constexpr UINT_PTR kTextSelectCaretTimerID = 12;
 // Debounce for popping up the floating selection toolbar after a selection
 constexpr UINT_PTR kSelectionToolbarShowTimerID = 13;
 constexpr uint kSelectionToolbarShowDelayInMs = 500;
+// A finger held still selects the word under it (issue #538). Touch reaches us
+// either as a gesture stream or as synthesized mouse messages, so the hold is
+// detected both ways; this timer is the mouse-message half.
+constexpr UINT_PTR kTouchLongPressTimerID = 14;

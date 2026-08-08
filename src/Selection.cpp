@@ -5,6 +5,7 @@
 #include "base/Pixmap.h"
 #include <uiautomationcore.h>
 #include "base/Dpi.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -351,6 +352,81 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     }
 }
 
+// Touch selection handles: a dot under each end of the selection, big enough
+// to grab with a fingertip. kTouchSelHandleDip is the dot's diameter; the
+// touchable area around it is padded so a slightly-off tap still lands.
+constexpr int kTouchSelHandleDip = 14;
+constexpr int kTouchSelHandleHitPadDip = 10;
+
+bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut) {
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    if (!dm || !tab || !tab->selectionOnPage) {
+        return false;
+    }
+    Vec<SelectionOnPage>& sel = *tab->selectionOnPage;
+    int n = len(sel);
+    if (n == 0) {
+        return false;
+    }
+    // the selection runs first rect -> last rect, so the handles belong under
+    // the bottom-left of the first and the bottom-right of the last
+    Rect first = sel[0].GetRect(dm);
+    Rect last = sel[n - 1].GetRect(dm);
+    int dxy = DpiScale(win->hwndCanvas, kTouchSelHandleDip);
+    int r = dxy / 2;
+    startOut = Rect(first.x - r, first.y + first.dy, dxy, dxy);
+    endOut = Rect(last.x + last.dx - r, last.y + last.dy, dxy, dxy);
+    return true;
+}
+
+TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y) {
+    if (!win->touchSelHandles) {
+        return TouchSelHandle::None;
+    }
+    Rect start, end;
+    if (!GetTouchSelHandleRects(win, start, end)) {
+        return TouchSelHandle::None;
+    }
+    int pad = DpiScale(win->hwndCanvas, kTouchSelHandleHitPadDip);
+    start.Inflate(pad, pad);
+    end.Inflate(pad, pad);
+    Point pt(x, y);
+    // the end handle wins a tie: it's the one a reader adjusts most
+    if (end.Contains(pt)) {
+        return TouchSelHandle::End;
+    }
+    if (start.Contains(pt)) {
+        return TouchSelHandle::Start;
+    }
+    return TouchSelHandle::None;
+}
+
+void HideTouchSelHandles(MainWindow* win) {
+    if (!win->touchSelHandles) {
+        return;
+    }
+    win->touchSelHandles = false;
+    win->touchSelDragging = TouchSelHandle::None;
+    ScheduleRepaint(win, 0);
+}
+
+static void PaintTouchSelHandles(MainWindow* win, HDC hdc) {
+    Rect start, end;
+    if (!win->touchSelHandles || !GetTouchSelHandleRects(win, start, end)) {
+        return;
+    }
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    COLORREF col = parsedCol->col;
+    AutoDeleteBrush brush(CreateSolidBrush(col));
+    AutoDeletePen pen(CreatePen(PS_SOLID, DpiScale(win->hwndCanvas, 1), col));
+    ScopedSelectObject restoreBrush(hdc, brush);
+    ScopedSelectObject restorePen(hdc, pen);
+    for (const Rect& r : {start, end}) {
+        Ellipse(hdc, r.x, r.y, r.x + r.dx, r.y + r.dy);
+    }
+}
+
 void PaintSelection(MainWindow* win, HDC hdc) {
     ReportIf(!win->AsFixed());
 
@@ -406,6 +482,7 @@ void PaintSelection(MainWindow* win, HDC hdc) {
         alpha = kSelectionDefaultAlpha;
     }
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
+    PaintTouchSelHandles(win, hdc);
 }
 
 void UpdateTextSelection(MainWindow* win, bool select) {

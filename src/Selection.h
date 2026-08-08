@@ -38,6 +38,12 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key);
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted);
 TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut);
 
+// Touch text selection handles (issue #538). Rects are in canvas coordinates.
+// Returns false when there is no text selection to put handles on.
+bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut);
+TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y);
+void HideTouchSelHandles(MainWindow* win);
+
 bool IsRectangularSelection(MainWindow* win);
 Rect GetRectangularSelectionScreenRect(MainWindow* win);
 SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int x, int y);
