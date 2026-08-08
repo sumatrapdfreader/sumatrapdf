@@ -6590,9 +6590,12 @@ static void FrameUpdateUi(MainWindow* win) {
         if (win->presentation || win->isFullScreen) {
             Rect fullscreen = HwndGetFullscreenRect(win->hwndFrame);
             Rect rect = HwndWindowRect(win->hwndFrame);
-            // Windows XP sometimes seems to change the window size on it's own
+            // Windows can alter the frame size on its own (display rotation,
+            // XP-era quirks). MoveWindow is a no-op while WS_MAXIMIZE is set
+            // (EnterFullScreen adds it), so use SetWindowPos (issue #1106).
             if (rect != fullscreen && rect != GetVirtualScreenRect()) {
-                HwndMoveWindow(win->hwndFrame, &fullscreen);
+                uint flags = SWP_NOACTIVATE | SWP_NOZORDER;
+                SetWindowPos(win->hwndFrame, nullptr, fullscreen.x, fullscreen.y, fullscreen.dx, fullscreen.dy, flags);
             }
         }
     }
@@ -7462,6 +7465,46 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     }
 }
 
+// After display geometry changes (tablet rotation, resolution change), keep a
+// fullscreen/presentation window covering the current monitor and refresh the
+// saved restore rect so ExitFullScreen does not restore pre-rotation size.
+// (The old code called EnterFullScreen again, but that early-returns when
+// already in fullscreen — so rotation left a wrongly sized frame; issue #1106.)
+static void ResizeFullScreenToCurrentDisplay(MainWindow* win) {
+    if (!win || (!win->isFullScreen && !win->presentation)) {
+        return;
+    }
+
+    HWND hwnd = win->hwndFrame;
+    Rect fsRect = HwndGetFullscreenRect(hwnd);
+    Rect cur = HwndWindowRect(hwnd);
+    bool wasMaximized = (win->nonFullScreenWindowStyle & WS_MAXIMIZE) != 0;
+    if (win->presentation && win->windowStateBeforePresentation == WIN_STATE_MAXIMIZED) {
+        wasMaximized = true;
+    }
+
+    // Keep the non-fullscreen restore geometry valid for the new orientation.
+    if (wasMaximized) {
+        // ExitFullScreen re-maximizes; store the current work area as a
+        // fallback if something still uses nonFullScreenFrameRect.
+        win->nonFullScreenFrameRect = GetWorkAreaRect(fsRect, nullptr);
+    } else {
+        Rect restore = win->nonFullScreenFrameRect;
+        Size limited = HwndLimitSizeToScreen(hwnd, {restore.dx, restore.dy});
+        restore.dx = limited.dx;
+        restore.dy = limited.dy;
+        win->nonFullScreenFrameRect = ShiftRectToWorkArea(restore, nullptr, true);
+    }
+
+    if (fsRect == cur) {
+        return;
+    }
+
+    uint flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
+    SetWindowPos(hwnd, nullptr, fsRect.x, fsRect.y, fsRect.dx, fsRect.dy, flags);
+    RelayoutFrame(win);
+}
+
 void ExitFullScreen(MainWindow* win) {
     if (!win->isFullScreen && !win->presentation) {
         return;
@@ -7519,11 +7562,36 @@ void ExitFullScreen(MainWindow* win) {
     }
     UpdateWindowFrameBorderColor(win);
 
+    // If we were maximized before fullscreen, re-maximize against the current
+    // work area instead of restoring a stale pre-rotation maximized rect
+    // (issue #1106). Same for presentation mode entered from maximized.
+    bool wasMaximized = (win->nonFullScreenWindowStyle & WS_MAXIMIZE) != 0;
+    if (wasPresentation && win->windowStateBeforePresentation == WIN_STATE_MAXIMIZED) {
+        wasMaximized = true;
+    }
+
     Rect cr = HwndClientRect(win->hwndFrame);
-    SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
+    long style = win->nonFullScreenWindowStyle;
+    if (wasMaximized) {
+        // Clear WS_MAXIMIZE so ShowWindow(SW_MAXIMIZE) applies cleanly.
+        style &= ~WS_MAXIMIZE;
+    }
+    SetWindowLong(win->hwndFrame, GWL_STYLE, style);
     uint flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
-    HwndMoveWindow(win->hwndFrame, &win->nonFullScreenFrameRect);
+
+    if (wasMaximized) {
+        ShowWindow(win->hwndFrame, SW_MAXIMIZE);
+    } else {
+        // Clamp restore geometry to the current work area (display may have
+        // rotated or a monitor may have gone away while we were fullscreen).
+        Rect restore = win->nonFullScreenFrameRect;
+        Size limited = HwndLimitSizeToScreen(win->hwndFrame, {restore.dx, restore.dy});
+        restore.dx = limited.dx;
+        restore.dy = limited.dy;
+        restore = ShiftRectToWorkArea(restore, nullptr, true);
+        HwndMoveWindow(win->hwndFrame, &restore);
+    }
     // We have to relayout here, because it isn't done in the SetWindowPos nor MoveWindow,
     // if the client rectangle hasn't changed.
     if (HwndClientRect(win->hwndFrame) == cr) {
@@ -12969,6 +13037,14 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return DefWindowProc(hwnd, msg, wp, lp);
         }
 
+        case WM_DISPLAYCHANGE:
+            // Screen rotation / resolution change (tablets, display settings).
+            // Keep fullscreen covering the monitor and fix the restore rect.
+            if (win) {
+                ResizeFullScreenToCurrentDisplay(win);
+            }
+            return 0;
+
         case WM_SETTINGCHANGE:
             // Windows switched between light and dark mode: re-resolve the
             // System theme (no-op unless Theme = System)
@@ -12982,13 +13058,9 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             UpdateDeltaPerLine();
 
             if (win) {
-                // in tablets it's possible to rotate the screen. if we're
-                // in full screen, resize our window to match new screen size
-                if (win->presentation) {
-                    EnterFullScreen(win, true);
-                } else if (win->isFullScreen) {
-                    EnterFullScreen(win, false);
-                }
+                // Work area can change without WM_DISPLAYCHANGE (taskbar move,
+                // some tablet rotation paths). Resize fullscreen if needed.
+                ResizeFullScreenToCurrentDisplay(win);
             }
 
             return 0;

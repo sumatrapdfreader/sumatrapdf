@@ -13,6 +13,7 @@ import { buildApp, formatDuration, isSilentArg, runTest } from "./util.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
+import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue1136 } from "./issue-1136.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
@@ -82,6 +83,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["lint-command-ids", lintCommandIds],
   ["lint-mingw-sources", lintMingwSources],
   ["combining-mark-first", combiningMarkFirst],
+  ["issue-1106", issue1106],
   ["issue-1136", issue1136],
   ["issue-1998", issue1998],
   ["issue-2693", issue2693],

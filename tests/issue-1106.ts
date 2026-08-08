@@ -1,0 +1,132 @@
+// Regression test for https://github.com/sumatrapdfreader/sumatrapdf/issues/1106
+//
+// Rotating the display while Sumatra is fullscreen left the restore geometry
+// stale: exiting fullscreen reapplied a pre-rotation maximized rect so the
+// window looked "maximized" but did not cover the work area (title-bar buttons
+// off-screen on Win7 tablets).
+//
+// We cannot rotate the physical display in CI. This checks the two pieces we
+// can: (1) exit fullscreen after a maximized entry re-maximizes correctly, and
+// (2) WM_DISPLAYCHANGE while fullscreen keeps the frame covering the monitor
+// and still re-maximizes on exit.
+//
+// Run:  bun tests/issue-1106.ts [--no-build]
+
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { ROOT, cmdId, tmpPath } from "./util.ts";
+import { launchSumatra, waitForFrame, sendCommand } from "./win-automation.ts";
+import {
+  getWindowRect,
+  isZoomed,
+  postMessage,
+  sendMessage,
+  setProcessDpiAware,
+  sleep,
+  WM_CLOSE,
+  WM_DISPLAYCHANGE,
+} from "./winapi.ts";
+
+const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+
+const SETTINGS = `RestoreSession = false
+CheckForUpdates = false
+WindowState = 2
+WindowPos = 200 100 1000 800
+`;
+
+function rectSize(r: { left: number; top: number; right: number; bottom: number }) {
+  return { w: r.right - r.left, h: r.bottom - r.top };
+}
+
+function nearlySameSize(a: { w: number; h: number }, b: { w: number; h: number }, tol = 8): boolean {
+  return Math.abs(a.w - b.w) <= tol && Math.abs(a.h - b.h) <= tol;
+}
+
+export async function testit(): Promise<void> {
+  setProcessDpiAware();
+
+  const appDataDir = tmpPath("issue-1106-appdata");
+  rmSync(appDataDir, { recursive: true, force: true });
+  mkdirSync(appDataDir, { recursive: true });
+  writeFileSync(join(appDataDir, "SumatraPDF-settings.txt"), SETTINGS);
+
+  const proc = launchSumatra(["-appdata", appDataDir, PDF]);
+  let frame = 0;
+  try {
+    frame = await waitForFrame(proc.pid!);
+    if (!frame) {
+      throw new Error("SumatraPDF frame window not found");
+    }
+    // let maximized startup settle
+    await sleep(1500);
+
+    if (!isZoomed(frame)) {
+      throw new Error("expected window to start maximized (WindowState = 2)");
+    }
+    const maximizedBefore = rectSize(getWindowRect(frame));
+
+    // --- path 1: maximized → fullscreen → exit → re-maximized ---
+    sendCommand(frame, cmdId("CmdToggleFullscreen"));
+    await sleep(800);
+
+    const fsSize = rectSize(getWindowRect(frame));
+    if (fsSize.w < 640 || fsSize.h < 480) {
+      throw new Error(`fullscreen did not expand the frame: ${fsSize.w}x${fsSize.h}`);
+    }
+
+    sendCommand(frame, cmdId("CmdToggleFullscreen"));
+    await sleep(800);
+
+    if (!isZoomed(frame)) {
+      throw new Error("after leaving fullscreen, window should be maximized again");
+    }
+    const afterExit1 = rectSize(getWindowRect(frame));
+    if (!nearlySameSize(afterExit1, maximizedBefore)) {
+      throw new Error(
+        `restored maximize size wrong: got ${afterExit1.w}x${afterExit1.h}, expected ~${maximizedBefore.w}x${maximizedBefore.h}`,
+      );
+    }
+
+    // --- path 2: fullscreen + WM_DISPLAYCHANGE → still FS → exit → maximized ---
+    sendCommand(frame, cmdId("CmdToggleFullscreen"));
+    await sleep(800);
+    const fsBefore = rectSize(getWindowRect(frame));
+
+    // wParam = bits/pixel (unused); lParam packs cx/cy of the new mode
+    sendMessage(frame, WM_DISPLAYCHANGE, 32, (fsBefore.h << 16) | (fsBefore.w & 0xffff));
+    await sleep(400);
+
+    const fsAfter = rectSize(getWindowRect(frame));
+    if (!nearlySameSize(fsAfter, fsBefore, 4)) {
+      throw new Error(
+        `WM_DISPLAYCHANGE changed fullscreen size unexpectedly: ${fsAfter.w}x${fsAfter.h} vs ${fsBefore.w}x${fsBefore.h}`,
+      );
+    }
+
+    sendCommand(frame, cmdId("CmdToggleFullscreen"));
+    await sleep(800);
+
+    if (!isZoomed(frame)) {
+      throw new Error("after display-change + exit fullscreen, window should be maximized");
+    }
+    const afterExit2 = rectSize(getWindowRect(frame));
+    if (!nearlySameSize(afterExit2, maximizedBefore)) {
+      throw new Error(
+        `maximize after display-change wrong: got ${afterExit2.w}x${afterExit2.h}, expected ~${maximizedBefore.w}x${maximizedBefore.h}`,
+      );
+    }
+  } finally {
+    if (frame) {
+      postMessage(frame, WM_CLOSE, 0, 0);
+      await sleep(500);
+    }
+    proc.kill();
+    rmSync(appDataDir, { recursive: true, force: true });
+  }
+}
+
+if (import.meta.main) {
+  const { runStandalone } = await import("./util.ts");
+  await runStandalone(testit, "issue-1106");
+}

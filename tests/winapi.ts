@@ -19,8 +19,18 @@ const user32 = dlopen("user32.dll", {
   GetWindowThreadProcessId: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
   PostMessageW: { args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64], returns: FFIType.bool },
   SendMessageW: { args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64], returns: FFIType.i64 },
-  MoveWindow: { args: [FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.bool], returns: FFIType.bool },
+  MoveWindow: {
+    args: [FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.bool],
+    returns: FFIType.bool,
+  },
+  SetWindowPos: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u32],
+    returns: FFIType.bool,
+  },
+  GetWindowLongW: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
+  SetWindowLongW: { args: [FFIType.ptr, FFIType.i32, FFIType.i32], returns: FFIType.i32 },
   ShowWindow: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.bool },
+  IsZoomed: { args: [FFIType.ptr], returns: FFIType.bool },
   GetClientRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   GetScrollInfo: { args: [FFIType.ptr, FFIType.i32, FFIType.ptr], returns: FFIType.bool },
   SetCursorPos: { args: [FFIType.i32, FFIType.i32], returns: FFIType.bool },
@@ -51,13 +61,32 @@ const gdi32 = dlopen("gdi32.dll", {
   DeleteObject: { args: [FFIType.u64], returns: FFIType.bool },
   DeleteDC: { args: [FFIType.u64], returns: FFIType.bool },
   BitBlt: {
-    args: [FFIType.u64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u64, FFIType.i32, FFIType.i32, FFIType.u32],
+    args: [
+      FFIType.u64,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.u64,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.u32,
+    ],
     returns: FFIType.bool,
   },
   StretchBlt: {
     args: [
-      FFIType.u64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32,
-      FFIType.u64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u32,
+      FFIType.u64,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.u64,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.u32,
     ],
     returns: FFIType.bool,
   },
@@ -78,7 +107,18 @@ const gdiplus = dlopen("gdiplus.dll", {
 
 const kernel32 = dlopen("kernel32.dll", {
   CreateProcessW: {
-    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.bool, FFIType.u32, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr],
+    args: [
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.bool,
+      FFIType.u32,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+      FFIType.ptr,
+    ],
     returns: FFIType.bool,
   },
   CloseHandle: { args: [FFIType.u64], returns: FFIType.bool },
@@ -151,6 +191,7 @@ const CREATE_NEW_PROCESS_GROUP = 0x00000200;
 
 // window messages
 export const WM_CLOSE = 0x0010;
+export const WM_DISPLAYCHANGE = 0x007e;
 export const WM_SETTEXT = 0x000c;
 export const WM_GETTEXT = 0x000d;
 export const WM_GETTEXTLENGTH = 0x000e;
@@ -183,6 +224,7 @@ export const SRCCOPY = 0x00cc0020;
 export const COLORONCOLOR = 3; // StretchBlt mode: no smoothing
 // ShowWindow commands
 export const SW_RESTORE = 9;
+export const SW_MAXIMIZE = 3;
 // GetSystemMetrics indices
 export const SM_CXVSCROLL = 2;
 export const SM_CYHSCROLL = 3;
@@ -425,8 +467,38 @@ export function moveWindow(hwnd: number, x: number, y: number, w: number, h: num
   return user32.symbols.MoveWindow(hwnd, x, y, w, h, repaint);
 }
 
+// SWP_* flags (subset)
+export const SWP_NOZORDER = 0x0004;
+export const SWP_NOACTIVATE = 0x0010;
+export const SWP_FRAMECHANGED = 0x0020;
+export const GWL_STYLE = -16;
+export const WS_MAXIMIZE = 0x01000000;
+
+export function getWindowLong(hwnd: number, index: number): number {
+  return user32.symbols.GetWindowLongW(hwnd, index);
+}
+
+export function setWindowLong(hwnd: number, index: number, value: number): number {
+  return user32.symbols.SetWindowLongW(hwnd, index, value);
+}
+
+export function setWindowPos(
+  hwnd: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  flags = SWP_NOZORDER | SWP_NOACTIVATE,
+): boolean {
+  return user32.symbols.SetWindowPos(hwnd, 0, x, y, w, h, flags);
+}
+
 export function showWindow(hwnd: number, cmd: number): boolean {
   return user32.symbols.ShowWindow(hwnd, cmd);
+}
+
+export function isZoomed(hwnd: number): boolean {
+  return user32.symbols.IsZoomed(hwnd);
 }
 
 export function setCursorPos(x: number, y: number): boolean {
@@ -805,8 +877,7 @@ export function isPeFileSigned(filePath: string): boolean {
 // placed in Bun's job object, so it keeps running after this script exits.
 // Use for launching a long-lived GUI app from a short-lived launcher script.
 export function launchDetached(exePath: string, args: string[] = []): number {
-  const quoted =
-    `"${exePath}"` + (args.length ? " " + args.map((a) => `"${a}"`).join(" ") : "");
+  const quoted = `"${exePath}"` + (args.length ? " " + args.map((a) => `"${a}"`).join(" ") : "");
   const appW = wideZ(exePath);
   const cmdW = wideZ(quoted); // CreateProcessW may modify this buffer in place
 
