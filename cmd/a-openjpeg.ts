@@ -271,7 +271,12 @@ function generateAmalgamation(srcDir: string): { headers: Map<string, string>; s
     headers.set(basename(path), prepareHeader(path, srcDir));
   }
   const includedIncludes = new Set<string>();
-  const chunks = ['#include "openjpeg.h"\n'];
+  // The amalgamation is a single TU mixing non-SIMD code with SIMD sections that
+  // include <immintrin.h>/<mm_malloc.h>. opj_malloc.h poisons malloc/free, and
+  // #pragma GCC poison can't be undone, so the first include poisons them and the
+  // later SIMD headers fail to compile (clang-18's mm_malloc.h uses malloc/free).
+  // Disable the poison for the whole amalgamated TU.
+  const chunks = ['#define OPJ_SKIP_POISON\n', '#include "openjpeg.h"\n'];
   for (const name of sourceFiles) {
     chunks.push(prepareChunk(join(srcDir, name), srcDir, includedIncludes));
   }

@@ -1,3 +1,10 @@
+// The amalgamation is a single translation unit that mixes non-SIMD code with
+// SIMD sections that pull in <immintrin.h>/<mm_malloc.h>. opj_malloc.h poisons
+// malloc/free/etc., and #pragma GCC poison can't be undone, so once the first
+// include poisons them the later SIMD headers fail to compile (clang-18's
+// mm_malloc.h references malloc/free). Disable the poison for this TU.
+#define OPJ_SKIP_POISON
+
 #include "openjpeg.h"
 
 #include "opj_includes.h"
