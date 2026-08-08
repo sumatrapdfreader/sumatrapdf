@@ -3759,10 +3759,19 @@ void StartLoadDocument(LoadArgs* argsIn) {
                 args->targetTab->loadCopyBytesTotal = 0;
             }
             EndDocumentLoad(path);
+            // CreateController can pump messages (WebView2 / COM / password UI)
+            if (!IsLoadTargetValid(args)) {
+                DiscardFailedAsyncLoad(args);
+                args->onFinished.Call(false);
+                delete args;
+                return;
+            }
             if (!args->ctrl) {
                 if (args->targetTab) {
                     SetTabLoadError(args->targetTab, path);
-                    HwndInvalidate(win->hwndCanvas);
+                    if (args->targetTab == win->CurrentTab()) {
+                        HwndInvalidate(win->hwndCanvas);
+                    }
                     LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
                 } else {
                     ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
@@ -3773,6 +3782,18 @@ void StartLoadDocument(LoadArgs* argsIn) {
                 win->ctrl = currTab ? currTab->ctrl : nullptr;
                 args->onFinished.Call(false);
                 delete args;
+                return;
+            }
+            // Multi-file Open (StartLoadDocuments) selects only the first tab as
+            // current. Browser-view loads finish synchronously here; if this tab
+            // is not current, defer attach the same way LoadDocumentAsyncFinish
+            // does — LoadModelIntoTab will call LoadDocumentFinish later.
+            // Without this we ReportIf and drop the controller (crash 8c4d3ae8).
+            if (args->targetTab && args->targetTab != win->CurrentTab()) {
+                WindowTab* tab = args->targetTab;
+                tab->loadState = WindowTab::LoadState::LoadedPending;
+                tab->pendingLoadArgs = args;
+                args->onFinished.Call(true);
                 return;
             }
             args->activateExisting = false;
