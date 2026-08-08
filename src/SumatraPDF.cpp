@@ -7235,10 +7235,19 @@ static void OnMenuGoToPage(MainWindow* win) {
         return;
     }
 
-    // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        FocusPageNoEdit(win->hwndPageEdit);
-        return;
+    // Don't show a dialog if we don't have to - use the Toolbar instead.
+    // In overlay mode the toolbar is only visible while revealed, so reveal it
+    // first; focusing the hidden page box did nothing at all (#5916).
+    if (win->hwndPageEdit && !win->presentation) {
+        if (win->isToolbarOverlay) {
+            RevealOverlayToolbar(win);
+            FocusPageNoEdit(win->hwndPageEdit);
+            return;
+        }
+        if (win->isToolbarVisible) {
+            FocusPageNoEdit(win->hwndPageEdit);
+            return;
+        }
     }
 
     auto* ctrl = win->ctrl;

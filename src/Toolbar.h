@@ -17,6 +17,7 @@ bool ShouldOverlayToolbar(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
 void PositionOverlayToolbar(MainWindow*);
 void UpdateOverlayToolbarForMouse(MainWindow*);
+void RevealOverlayToolbar(MainWindow*);
 void OverlayToolbarHideTimerFired(MainWindow*);
 
 // delay before the overlay toolbar hides after the mouse moves away

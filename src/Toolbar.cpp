@@ -621,6 +621,19 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     return inBand || overToolbar;
 }
 
+// the overlay toolbar must not vanish while it owns the keyboard focus (e.g.
+// the user is typing a page number into the page box after Ctrl+G)
+static bool OverlayToolbarHasFocus(MainWindow* win) {
+    if (!win->hwndReBar) {
+        return false;
+    }
+    HWND focus = GetFocus();
+    if (!focus) {
+        return false;
+    }
+    return focus == win->hwndReBar || focus == win->hwndToolbar || IsChild(win->hwndReBar, focus);
+}
+
 static void CancelOverlayHide(MainWindow* win) {
     if (win->toolbarOverlayHidePending) {
         KillTimer(win->hwndFrame, kHideOverlayToolbarTimerId);
@@ -649,7 +662,7 @@ void UpdateOverlayToolbarForMouse(MainWindow* win) {
     if (!win->isToolbarOverlay || !win->hwndReBar) {
         return;
     }
-    bool show = OverlayToolbarShouldShowForCursor(win);
+    bool show = OverlayToolbarShouldShowForCursor(win) || OverlayToolbarHasFocus(win);
     if (show) {
         CancelOverlayHide(win);
         SetOverlayShown(win, true);
@@ -657,6 +670,18 @@ void UpdateOverlayToolbarForMouse(MainWindow* win) {
         // don't hide immediately; give the user kDelayToolbarHide to come back
         ScheduleOverlayHide(win);
     }
+}
+
+// reveal the overlay toolbar right now, without waiting for the cursor to enter
+// the reveal band. Used by commands that drive the toolbar from the keyboard
+// (Ctrl+G): the toolbar stays up while it has the focus and auto-hides once the
+// focus and the cursor are away from it.
+void RevealOverlayToolbar(MainWindow* win) {
+    if (!win->isToolbarOverlay || !win->hwndReBar) {
+        return;
+    }
+    CancelOverlayHide(win);
+    SetOverlayShown(win, true);
 }
 
 // handle the delayed-hide timer firing (kHideOverlayToolbarTimerId)
@@ -668,7 +693,7 @@ void OverlayToolbarHideTimerFired(MainWindow* win) {
     }
     // if the cursor came back near the top while the timer was pending, keep
     // the toolbar shown; otherwise hide it now
-    if (OverlayToolbarShouldShowForCursor(win)) {
+    if (OverlayToolbarShouldShowForCursor(win) || OverlayToolbarHasFocus(win)) {
         SetOverlayShown(win, true);
     } else {
         SetOverlayShown(win, false);
@@ -914,11 +939,15 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
                     HwndSetFocus(win->hwndFrame);
+                    // the overlay toolbar was kept up by the focus; now that
+                    // it's gone, let it hide again
+                    UpdateOverlayToolbarForMouse(win);
                 }
                 return 1;
             }
             case VK_ESCAPE:
                 HwndSetFocus(win->hwndFrame);
+                UpdateOverlayToolbarForMouse(win);
                 return 1;
 
             case VK_TAB:
