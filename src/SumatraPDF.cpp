@@ -3046,6 +3046,36 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     }
 }
 
+// files that failed to open, so that a broken file doesn't block next/prev
+// file in folder. Not persisted: a file that fails now might open in the next
+// session (it could be locked by another program right now).
+// The nodes come from the perm arena: the list is small, lives for the whole
+// session and is never freed
+static StrNode* gFilesFailedToOpen = nullptr;
+
+static void MarkFileFailedToOpen(Str path) {
+    if (!path || FindStrNode(gFilesFailedToOpen, path)) {
+        return;
+    }
+    StrNode* node = AllocStrNode(GetPermArena(), path);
+    if (node) {
+        ListInsertFront(&gFilesFailedToOpen, node);
+    }
+}
+
+// a file that loads again is no longer broken (e.g. the program holding a lock
+// on it exited), so stop skipping it when navigating the folder
+static void MarkFileOpenedOk(Str path) {
+    if (!path) {
+        return;
+    }
+    StrNode* node = FindStrNode(gFilesFailedToOpen, path);
+    if (node) {
+        // only unlinked; the node's bytes stay in the perm arena
+        ListRemove(&gFilesFailedToOpen, node);
+    }
+}
+
 // Why a document failed to load. "Error loading foo.pdf" on its own leaves the
 // user guessing, and the three cases they can actually do something about -
 // the file is gone, they may not read it, another program has it locked - are
@@ -3078,6 +3108,10 @@ static TempStr FileLoadErrorReasonTemp(Str path) {
 
 // remember why, so the canvas can show it next to "Error loading <file>"
 static void SetTabLoadError(WindowTab* tab, Str path) {
+    // also remember the file itself: next/prev in folder skips files that
+    // failed, so it doesn't stop on the same broken file over and over (#5917).
+    // Loads that never got a tab are marked in LoadDocument()
+    MarkFileFailedToOpen(path);
     if (!tab) {
         return;
     }
@@ -3135,6 +3169,9 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     MainWindow* win = args->win;
     Str fullPath = args->FilePath();
     WindowTab* targetTab = args->targetTab;
+
+    // it loaded, so it's no longer one of the files next/prev skips
+    MarkFileOpenedOk(fullPath);
 
     bool openNewTab = SettingsUseTabs() && !args->forceReuse;
     ReportIf(openNewTab && args->forceReuse);
@@ -3792,10 +3829,6 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
     }
 }
 
-// remember which files failed to open so that a failure to
-// open a file doesn't block next/prev file in
-static StrVec gFilesFailedToOpen;
-
 // reads page count and creates a child element for each page
 MainWindow* LoadDocument(LoadArgs* args) {
     if (gCrashOnOpen) {
@@ -3847,7 +3880,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
                 logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
             } else {
                 logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
-                AppendIfNotExists(&gFilesFailedToOpen, path);
+                MarkFileFailedToOpen(path);
             }
         }
 
@@ -5751,11 +5784,13 @@ static void OpenFile(MainWindow* win) {
 }
 
 static void RemoveFailedFiles(StrVec& files) {
-    for (Str path : gFilesFailedToOpen) {
-        int idx = files.Find(path);
+    StrNode* curr = gFilesFailedToOpen;
+    while (curr) {
+        int idx = files.Find(curr->s);
         if (idx >= 0) {
             files.RemoveAt(idx);
         }
+        curr = curr->next;
     }
 }
 
@@ -5763,34 +5798,36 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     StrVec& files = gNextPrevDirCache;
 
     TempStr dir = path::GetDirTemp(path);
-    if (path::IsSame(dir, gNextPrevDir)) {
-        // failed files could have changed
-        RemoveFailedFiles(files);
-        return files;
-    }
-    files.Reset();
-    str::ReplaceWithCopy(&gNextPrevDir, dir);
-    DirIter di{dir};
-    for (DirIterEntry* de : di) {
-        files.Append(de->filePath);
-    }
-    RemoveFailedFiles(files);
-
-    // remove unsupported files that have never been successfully loaded
-    int nFiles = len(files);
-    // remove unsupported files
-    // traverse from the end so that removing doesn't change iterator
-    for (int i = nFiles - 1; i >= 0; i--) {
-        Str path2 = files[i];
-        // files[] came from DirIter with the default includeDirs = false
-        FileType kind = GuessFileTypeFromName(path2, true);
-        bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
-        bool inHistory = gFileHistory.FindByPath(path2);
-        if (isSupported || inHistory) {
-            continue;
+    if (!path::IsSame(dir, gNextPrevDir)) {
+        files.Reset();
+        str::ReplaceWithCopy(&gNextPrevDir, dir);
+        DirIter di{dir};
+        for (DirIterEntry* de : di) {
+            files.Append(de->filePath);
         }
-        files.RemoveAt(i);
+
+        // remove unsupported files that have never been successfully loaded
+        int nFiles = len(files);
+        // remove unsupported files
+        // traverse from the end so that removing doesn't change iterator
+        for (int i = nFiles - 1; i >= 0; i--) {
+            Str path2 = files[i];
+            // files[] came from DirIter with the default includeDirs = false
+            FileType kind = GuessFileTypeFromName(path2, true);
+            bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+            bool inHistory = gFileHistory.FindByPath(path2);
+            if (isSupported || inHistory) {
+                continue;
+            }
+            files.RemoveAt(i);
+        }
     }
+    // the set of failed files could have changed since the directory was read
+    RemoveFailedFiles(files);
+    // `path` itself is often one of the removed ones: it's the file we're
+    // navigating away from and it may have just failed to load (the error page)
+    // or be an unsupported type opened explicitly. Callers locate it in the list
+    // to know where to continue from, so it has to be there (#5917)
     AppendIfNotExists(&files, path);
     SortNatural(&files);
     return files;
@@ -5944,7 +5981,7 @@ static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
     }
     // remember the failure so CollectNextPrevFilesIfChanged skips this
     // file, then advance to the one after it in the same direction
-    AppendIfNotExists(&gFilesFailedToOpen, d->path);
+    MarkFileFailedToOpen(d->path);
     OpenNextPrevFileInFolder(win, d->forward, d->pathToDelete);
 }
 

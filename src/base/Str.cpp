@@ -198,6 +198,18 @@ StrNode* AllocStrNode(Arena* a, Str s) {
     return node;
 }
 
+// first node whose string equals s (case-sensitive), null if none
+StrNode* FindStrNode(StrNode* root, Str s) {
+    StrNode* curr = root;
+    while (curr) {
+        if (str::Eq(curr->s, s)) {
+            return curr;
+        }
+        curr = curr->next;
+    }
+    return nullptr;
+}
+
 // Malloc path (a==null): free each node. Arena path: no per-node free.
 // Frees the list with free() when a==null (malloc path). Arena path is a no-op.
 void FreeStrNode(Arena* a, StrNode* head) {

@@ -19,6 +19,7 @@ struct StrNode {
     Str s;
 };
 StrNode* AllocStrNode(Arena* a, Str s);
+StrNode* FindStrNode(StrNode* root, Str s);
 void FreeStrNode(Arena* a, StrNode* head);
 
 namespace str {
