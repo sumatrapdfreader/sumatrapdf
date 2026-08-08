@@ -1728,7 +1728,7 @@ EngineBase* CreateEngineImageDirFromFile(Str fileName) {
 
 ///// CbxEngine handles comic book files (either .cbz, .cbr, .cb7 or .cbt) /////
 
-struct ComicInfoParser : json::ValueVisitor {
+struct ComicInfoParser {
     // extracted metadata
     Str propTitle;
     StrVec propAuthors;
@@ -1743,7 +1743,7 @@ struct ComicInfoParser : json::ValueVisitor {
     Vec<int> bookmarkImageIdx;
     StrVec bookmarkTitles;
 
-    ~ComicInfoParser() override {
+    ~ComicInfoParser() {
         str::Free(propTitle);
         str::Free(propDate);
         str::Free(propModDate);
@@ -1752,12 +1752,20 @@ struct ComicInfoParser : json::ValueVisitor {
         str::Free(propAuthorTmp);
     }
 
-    // json::ValueVisitor
-    bool Visit(StrNode* path, Str value, json::Type type) override;
+    // used for ComicBookInfo JSON and ComicInfo.xml field mapping
+    void Visit(json::Value* v);
 
     void Parse(Str xmlData);
     void AddBookmark(int imageIdx, Str title);
 };
+
+static void ComicInfoVisit(ComicInfoParser* cip, StrNode* path, Str value, json::Type type) {
+    json::Value v;
+    v.path = path;
+    v.value = value;
+    v.type = type;
+    cip->Visit(&v);
+}
 
 void ComicInfoParser::AddBookmark(int imageIdx, Str title) {
     if (!title || imageIdx < 0) {
@@ -1781,42 +1789,47 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
             if (GumboTagNameIs(node, "Title")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit(json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title")), v, json::Type::String);
+                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title")), v,
+                                   json::Type::String);
                 }
             } else if (GumboTagNameIs(node, "Year")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit(json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationYear")), v,
-                               json::Type::Number);
+                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationYear")), v,
+                                   json::Type::Number);
                 }
             } else if (GumboTagNameIs(node, "Month")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit(json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth")), v,
-                               json::Type::Number);
+                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth")), v,
+                                   json::Type::Number);
                 }
             } else if (GumboTagNameIs(node, "Summary")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit(json::PathBuildTemp(StrL("/X-summary")), v, json::Type::String);
+                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/X-summary")), v, json::Type::String);
                 }
             } else if (GumboTagNameIs(node, "Writer")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit(
+                    ComicInfoVisit(
+                        cip,
                         json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/person")),
                         v, json::Type::String);
-                    cip->Visit(
+                    ComicInfoVisit(
+                        cip,
                         json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/primary")),
                         "true", json::Type::Bool);
                 }
             } else if (GumboTagNameIs(node, "Penciller")) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    cip->Visit(
+                    ComicInfoVisit(
+                        cip,
                         json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/person")),
                         v, json::Type::String);
-                    cip->Visit(
+                    ComicInfoVisit(
+                        cip,
                         json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/primary")),
                         "true", json::Type::Bool);
                 }
@@ -1866,7 +1879,10 @@ void ComicInfoParser::Parse(Str xmlData) {
 
 // extract ComicBookInfo metadata
 // https://code.google.com/archive/p/comicbookinfo/
-bool ComicInfoParser::Visit(StrNode* path, Str value, json::Type type) {
+void ComicInfoParser::Visit(json::Value* v) {
+    StrNode* path = v->path;
+    Str value = v->value;
+    json::Type type = v->type;
     if (json::Type::String == type && json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/title"))) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
@@ -1894,17 +1910,19 @@ bool ComicInfoParser::Visit(StrNode* path, Str value, json::Type type) {
             str::Free(propAuthorTmp);
             propAuthorTmp = str::Dup(value);
         }
-        return true;
+        return;
     } else if (json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("*"), StrL("/primary"))) {
         if (json::Type::Bool == type && len(propAuthorTmp) > 0 && !propAuthors.Contains(propAuthorTmp)) {
             propAuthors.Append(propAuthorTmp);
         }
-        return true;
+        return;
     }
     // stop parsing once we have all desired information
     Str dateStr = propDate;
     int slash = str::IndexOfChar(dateStr, '/');
-    return len(propTitle) == 0 || len(propAuthors) == 0 || len(propCreator) == 0 || len(propDate) == 0 || slash <= 0;
+    bool cont =
+        len(propTitle) == 0 || len(propAuthors) == 0 || len(propCreator) == 0 || len(propDate) == 0 || slash <= 0;
+    v->stop = !cont;
 }
 
 class EngineCbx : public EngineImages {
@@ -2084,7 +2102,7 @@ bool EngineCbx::FinishLoading() {
 #if 0
     Str comment = cbxArchive->GetComment();
     if (comment) {
-        json::Parse(comment, &cip);
+        json::Parse(comment, MkMethod1<ComicInfoParser, json::Value*, &ComicInfoParser::Visit>(&cip));
     }
 #endif
     int nFiles = len(pageFiles);

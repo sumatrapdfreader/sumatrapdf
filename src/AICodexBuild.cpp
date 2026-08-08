@@ -45,28 +45,27 @@ static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, "gpt-5.5-log.txt"
 static bool gTriedCodexModels = false;
 static StrVec gCodexModels;
 
-struct CodexModelsVisitor : json::ValueVisitor {
+struct CodexModelsState {
     bool isModelListResponse = false;
     StrVec models;
-
-    bool Visit(StrNode* path, Str value, json::Type type) override {
-        if (json::PathMatch(path, StrL("/id")) && type == json::Type::Number && str::Eq(value, StrL("2"))) {
-            isModelListResponse = true;
-        } else if (json::PathMatch(path, StrL("/result"), StrL("/data"), StrL("*"), StrL("/model")) &&
-                   type == json::Type::String) {
-            AIChatAppendModelUnique(models, value);
-        }
-        return true;
-    }
 };
+
+static void CodexModelsOnValue(CodexModelsState* st, json::Value* v) {
+    if (json::PathMatch(v->path, StrL("/id")) && v->type == json::Type::Number && str::Eq(v->value, StrL("2"))) {
+        st->isModelListResponse = true;
+    } else if (json::PathMatch(v->path, StrL("/result"), StrL("/data"), StrL("*"), StrL("/model")) &&
+               v->type == json::Type::String) {
+        AIChatAppendModelUnique(st->models, v->value);
+    }
+}
 
 static bool ParseCodexModelsResponse(Str output, StrVec& models) {
     Str rest = output;
     Str line;
     while (str::NextLine(rest, line, rest)) {
-        CodexModelsVisitor visitor;
-        if (json::Parse(line, &visitor) && visitor.isModelListResponse && len(visitor.models) > 0) {
-            models = visitor.models;
+        CodexModelsState st;
+        if (json::Parse(line, MkFunc1(CodexModelsOnValue, &st)) && st.isModelListResponse && len(st.models) > 0) {
+            models = st.models;
             return true;
         }
     }

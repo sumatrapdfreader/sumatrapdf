@@ -6,10 +6,10 @@
 
 // Simple push parser for JSON (cf. http://www.json.org/).
 //
-// Parse walks the input and calls ValueVisitor::Visit for every primitive
-// (string, number, bool, null) with a path and the value's string form.
-// Return false from Visit to stop early; Parse then returns true (cancel is
-// not an error). Parse returns false only on invalid JSON when not canceled.
+// Parse walks the input and calls onValue (Func1<Value*>) for every primitive
+// (string, number, bool, null). Put state in userData via MkFunc1 / MkMethod1.
+// Set Value::stop to cancel early; Parse then returns true (cancel is not an
+// error). Parse returns false only on invalid JSON when not canceled.
 //
 // Path is a StrNode list (outermost first). Each segment's first char is the
 // kind (kSegKey '/' + key, kSegIdx 'i' + decimal index). Example for
@@ -20,9 +20,9 @@
 // because each segment carries an explicit kind byte.
 //
 // path nodes live on the temp arena for the duration of Parse (and may be
-// mutated after Visit returns when the parser pops a segment). value is a
-// temp-arena copy valid until the temp arena resets. Keep a str::Dup of value
-// if you need it longer; do not store path pointers past Visit.
+// mutated after the callback returns when the parser pops a segment). value is
+// a temp-arena copy valid until the temp arena resets. Keep a str::Dup of
+// value if you need it longer; do not store path pointers past the callback.
 
 namespace json {
 
@@ -47,9 +47,9 @@ class ParseArgs {
     Arena* arena = nullptr;
     Vec<StrNode*> segs;
     bool canceled = false;
-    ValueVisitor* visitor = nullptr;
+    VisitFn onValue;
 
-    explicit ParseArgs(ValueVisitor* visitor) : arena(GetTempArena()), visitor(visitor) {}
+    explicit ParseArgs(const VisitFn& onValue) : arena(GetTempArena()), onValue(onValue) {}
 
     StrNode* Path() const { return len(segs) > 0 ? segs[0] : nullptr; }
 
@@ -86,8 +86,12 @@ class ParseArgs {
 static int ParseValue(ParseArgs& args, Str data, int off, int depth);
 
 static void VisitValue(ParseArgs& args, Str value, Type type) {
-    TempStr valueTemp = str::DupTemp(value);
-    args.canceled = !args.visitor->Visit(args.Path(), valueTemp, type);
+    Value v;
+    v.path = args.Path();
+    v.value = str::DupTemp(value);
+    v.type = type;
+    args.onValue.Call(&v);
+    args.canceled = v.stop;
 }
 
 static int ExtractString(str::Builder& string, Str data, int off) {
@@ -318,10 +322,10 @@ static int ParseValue(ParseArgs& args, Str data, int off, int depth) {
 }
 
 // data must be UTF-8 encoded. Returns false on invalid JSON; returns true on
-// a full successful parse or if the visitor canceled early (even if trailing
+// a full successful parse or if the callback set Value::stop (even if trailing
 // input was not fully validated).
-bool Parse(Str data, ValueVisitor* visitor) {
-    ParseArgs args(visitor);
+bool Parse(Str data, const VisitFn& onValue) {
+    ParseArgs args(onValue);
     int off = 0;
     if (data.len >= 3 && str::StartsWith(data, Str(UTF8_BOM))) {
         off = 3;

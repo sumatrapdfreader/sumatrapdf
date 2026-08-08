@@ -236,17 +236,9 @@ struct BrowserWebviewWnd : WebviewWnd {
 namespace {
 // Pulls the positional arguments out of a bridge notification's params, which
 // arrive as a JSON array. Collect single-segment array paths i0, i1, ...
-struct NotifyArgsVisitor : json::ValueVisitor {
+struct NotifyArgsState {
     static constexpr int kMaxArgs = 4;
     TempStr args[kMaxArgs] = {};
-
-    bool Visit(StrNode* path, Str value, json::Type /*type*/) override {
-        int idx = json::PathSegIndex(path);
-        if (idx >= 0 && idx < kMaxArgs && path && !path->next) {
-            args[idx] = value;
-        }
-        return true;
-    }
 
     int Int(int idx) const {
         Str s = Text(idx);
@@ -264,6 +256,13 @@ struct NotifyArgsVisitor : json::ValueVisitor {
         return args[idx];
     }
 };
+
+static void NotifyArgsOnValue(NotifyArgsState* st, json::Value* v) {
+    int idx = json::PathSegIndex(v->path);
+    if (idx >= 0 && idx < NotifyArgsState::kMaxArgs && v->path && !v->path->next) {
+        st->args[idx] = v->value;
+    }
+}
 } // namespace
 
 void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
@@ -271,14 +270,14 @@ void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
     if (!self) {
         return;
     }
-    NotifyArgsVisitor v;
-    if (!json::Parse(paramsJson, &v)) {
+    NotifyArgsState st;
+    if (!json::Parse(paramsJson, MkFunc1(NotifyArgsOnValue, &st))) {
         logf("BrowserOnJsNotify: bad params for '%s': %s\n", method, paramsJson);
         return;
     }
     if (str::Eq(method, "scroll")) {
-        int x = std::max(0, v.Int(0));
-        int y = std::max(0, v.Int(1));
+        int x = std::max(0, st.Int(0));
+        int y = std::max(0, st.Int(1));
         self->webviewScrollPos = Point(x, y);
         return;
     }
@@ -286,13 +285,13 @@ void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
         return;
     }
     if (str::Eq(method, "findResult")) {
-        self->cb->OnFindResult(v.Int(0), v.Int(1), v.Int(2));
+        self->cb->OnFindResult(st.Int(0), st.Int(1), st.Int(2));
         return;
     }
     if (str::Eq(method, "findAllResult")) {
         // downstream (BrowserFindAllResultReceived) still parses the flat
         // "<gen> <total> <recs>" form, so reassemble it here
-        self->cb->OnFindAllResult(fmt("%d %d %s", v.Int(0), v.Int(1), v.Text(2)));
+        self->cb->OnFindAllResult(fmt("%d %d %s", st.Int(0), st.Int(1), st.Text(2)));
         return;
     }
     logf("BrowserOnJsNotify: unhandled '%s'\n", method);

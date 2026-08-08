@@ -1405,60 +1405,59 @@ static bool IsJsNotifyMessage(Str msg) {
 }
 
 namespace {
-// json::Parse hands value as a temp-arena copy; path is valid only during Visit.
-struct JsCallVisitor : json::ValueVisitor {
+// json::Parse hands value as a temp-arena copy; path is valid only during the callback.
+struct JsCallState {
     TempStr id = nullptr;
     TempStr method = nullptr;
     TempStr params = nullptr;
-
-    bool Visit(StrNode* path, Str value, json::Type type) override {
-        if (type != json::Type::String) {
-            return true;
-        }
-        if (json::PathMatch(path, StrL("/id"))) {
-            id = value;
-        } else if (json::PathMatch(path, StrL("/method"))) {
-            method = value;
-        } else if (json::PathMatch(path, StrL("/params"))) {
-            params = value;
-        }
-        return true;
-    }
 };
+
+static void JsCallOnValue(JsCallState* st, json::Value* v) {
+    if (v->type != json::Type::String) {
+        return;
+    }
+    if (json::PathMatch(v->path, StrL("/id"))) {
+        st->id = v->value;
+    } else if (json::PathMatch(v->path, StrL("/method"))) {
+        st->method = v->value;
+    } else if (json::PathMatch(v->path, StrL("/params"))) {
+        st->params = v->value;
+    }
+}
 } // namespace
 
 void WebviewWnd::OnJsCall(Str msg) {
-    JsCallVisitor visitor;
-    if (!json::Parse(msg, &visitor)) {
+    JsCallState st;
+    if (!json::Parse(msg, MkFunc1(JsCallOnValue, &st))) {
         logf("WebviewWnd::OnJsCall: failed to parse '%s'\n", msg);
         return;
     }
-    if (!visitor.id || !visitor.method) {
+    if (!st.id || !st.method) {
         return;
     }
     if (!events.jsCall) {
         // nothing can answer, so reject instead of leaving the promise pending
-        Resolve(visitor.id, 1, StrL("\"no handler\""));
+        Resolve(st.id, 1, StrL("\"no handler\""));
         return;
     }
-    Str params = visitor.params ? Str(visitor.params) : StrL("[]");
-    events.jsCall(events.ctx, visitor.id, visitor.method, params);
+    Str params = st.params ? Str(st.params) : StrL("[]");
+    events.jsCall(events.ctx, st.id, st.method, params);
 }
 
 void WebviewWnd::OnJsNotify(Str msg) {
     if (!events.jsNotify) {
         return;
     }
-    JsCallVisitor visitor;
-    if (!json::Parse(msg, &visitor)) {
+    JsCallState st;
+    if (!json::Parse(msg, MkFunc1(JsCallOnValue, &st))) {
         logf("WebviewWnd::OnJsNotify: failed to parse '%s'\n", msg);
         return;
     }
-    if (!visitor.method) {
+    if (!st.method) {
         return;
     }
-    Str params = visitor.params ? Str(visitor.params) : StrL("[]");
-    events.jsNotify(events.ctx, visitor.method, params);
+    Str params = st.params ? Str(st.params) : StrL("[]");
+    events.jsNotify(events.ctx, st.method, params);
 }
 
 // status 0 resolves the JS promise, non-0 rejects it. resultJson must be
