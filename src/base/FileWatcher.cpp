@@ -80,6 +80,13 @@ struct WatchedDir {
     bool startMonitoring = true;
     // when removal was queued (GetTickCount64()), for shutdown diagnostics
     u64 removalQueuedAt = 0;
+    // a ReadDirectoryChangesW() is in flight, so its completion routine is
+    // still going to run for this dir
+    bool ioPending = false;
+    // StartMonitoringDirForChangesAPC() calls queued but not run yet
+    int startApcQueued = 0;
+    // StopMonitoringDirAPC() ran: the dir is on its way out
+    bool stopped = false;
     OverlappedEx overlapped;
     char buf[16 * 1024]{};
 };
@@ -210,6 +217,20 @@ static void DeleteWatchedDir(WatchedDir* wd) {
     free(wd);
 }
 
+// A dir queued for removal can only be freed once nothing can still reach it:
+// no ReadDirectoryChangesW() completion is in flight and no re-arm APC is
+// queued. Shutdown waits for gRemovalsPending to drain, so every path that
+// could be the last one out has to come through here.
+// Callers hold gFileWatcherMutex.
+static void CompleteRemovalIfDone(WatchedDir* wd) {
+    if (!wd->stopped || wd->ioPending || wd->startApcQueued > 0) {
+        return;
+    }
+    ListRemove(&gRemovalsPendingDirs, wd);
+    DeleteWatchedDir(wd);
+    AtomicIntDec(&gRemovalsPending);
+}
+
 // clang-format off
 SeqStrings gFileActionNames =
     "FILE_ACTION_ADDED\0" \
@@ -238,11 +259,18 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
     ReportIf(wd != wd->overlapped.data);
 
+    // whatever the outcome, this read is done
+    wd->ioPending = false;
+
     if (errCode == ERROR_OPERATION_ABORTED) {
         // logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
-        ListRemove(&gRemovalsPendingDirs, wd);
-        DeleteWatchedDir(wd);
-        AtomicIntDec(&gRemovalsPending);
+        CompleteRemovalIfDone(wd);
+        return;
+    }
+    if (wd->stopped) {
+        // removed while this completion was already queued: don't re-arm a
+        // handle that StopMonitoringDirAPC() closed
+        CompleteRemovalIfDone(wd);
         return;
     }
 
@@ -287,6 +315,14 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
 static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     WatchedDir* wd = (WatchedDir*)arg;
+    ScopedMutex cs(&gFileWatcherMutex);
+    wd->startApcQueued--;
+    if (wd->stopped) {
+        // removed while this was queued: the handle is closed, and this may be
+        // the last thing that was keeping the dir alive
+        CompleteRemovalIfDone(wd);
+        return;
+    }
     ZeroMemory(&wd->overlapped, sizeof(wd->overlapped));
 
     OVERLAPPED* overlapped = (OVERLAPPED*)&(wd->overlapped);
@@ -299,18 +335,33 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     }
 
     DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
-    ReadDirectoryChangesW(wd->hDir,
-                          wd->buf,                           // read results buffer
-                          sizeof(wd->buf),                   // length of buffer
-                          FALSE,                             // bWatchSubtree
-                          dwNotifyFilter,                    // filter conditions
-                          nullptr,                           // bytes returned
-                          overlapped,                        // overlapped buffer
-                          ReadDirectoryChangesNotification); // completion routine
+    BOOL ok = ReadDirectoryChangesW(wd->hDir,
+                                    wd->buf,                           // read results buffer
+                                    sizeof(wd->buf),                   // length of buffer
+                                    FALSE,                             // bWatchSubtree
+                                    dwNotifyFilter,                    // filter conditions
+                                    nullptr,                           // bytes returned
+                                    overlapped,                        // overlapped buffer
+                                    ReadDirectoryChangesNotification); // completion routine
+    // only a read that actually started will call back, and removal waits for
+    // that callback - so this has to be tracked, not assumed
+    wd->ioPending = (ok != FALSE);
+    if (!ok) {
+        LogLastError();
+        logf("StartMonitoringDirForChangesAPC: ReadDirectoryChangesW() failed for '%s'\n", wd->dirPath);
+    }
 }
 
+// callers hold gFileWatcherMutex
 static void StartMonitoringDirForChanges(WatchedDir* wd) {
-    QueueUserAPC(StartMonitoringDirForChangesAPC, gThreadHandle, (ULONG_PTR)wd);
+    wd->startApcQueued++;
+    if (QueueUserAPC(StartMonitoringDirForChangesAPC, gThreadHandle, (ULONG_PTR)wd)) {
+        return;
+    }
+    LogLastError();
+    logf("StartMonitoringDirForChanges: QueueUserAPC failed for '%s'\n", wd->dirPath);
+    wd->startApcQueued--;
+    CompleteRemovalIfDone(wd);
 }
 
 static DWORD GetTimeoutInMs() {
@@ -432,15 +483,23 @@ static WatchedDir* FindExistingWatchedDir(Str dirPath) {
 
 static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg) {
     WatchedDir* wd = (WatchedDir*)arg;
+    ScopedMutex cs(&gFileWatcherMutex);
     // logf("StopMonitoringDirAPC() wd=0x%p\n", wd);
+    wd->stopped = true;
 
-    // this will cause ReadDirectoryChangesNotification() to be called
-    // with errCode = ERROR_OPERATION_ABORTED
-    BOOL ok = CancelIo(wd->hDir);
-    if (!ok) {
-        LogLastError();
+    // with a read in flight this makes ReadDirectoryChangesNotification() run
+    // with errCode = ERROR_OPERATION_ABORTED, which finishes the removal.
+    // With none in flight (the last read completed and its re-arm APC hasn't
+    // run yet, or the read never started) nothing calls back at all, and
+    // waiting for a callback that isn't coming stalled shutdown for 15s
+    if (wd->hDir) {
+        BOOL ok = CancelIo(wd->hDir);
+        if (!ok) {
+            LogLastError();
+        }
+        SafeCloseHandle(&wd->hDir);
     }
-    SafeCloseHandle(&wd->hDir);
+    CompleteRemovalIfDone(wd);
 }
 
 static WatchedDir* NewWatchedDir(Str dirPath) {
@@ -584,6 +643,12 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
     if (!res) {
         LogLastError();
         logf("RemoveWatchedDirIfNotReferenced: QueueUserAPC failed for '%s'\n", wd->dirPath);
+        // nothing is going to stop it, so retire it here rather than leave
+        // shutdown waiting on a removal that can't finish. Closing the handle
+        // completes any read in flight with ERROR_OPERATION_ABORTED.
+        wd->stopped = true;
+        SafeCloseHandle(&wd->hDir);
+        CompleteRemovalIfDone(wd);
     }
 }
 

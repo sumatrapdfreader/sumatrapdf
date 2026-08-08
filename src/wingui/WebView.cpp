@@ -1055,6 +1055,11 @@ void WebviewWnd::FailInit() {
     initFailed = true;
     FreePendingOps(pendingOps);
     RemovePendingWebview(this);
+    // see the destructor: releasing the controller doesn't shut the browser
+    // instance down, Close() does
+    if (controller) {
+        controller->Close();
+    }
     if (webview) {
         webview->Release();
         webview = nullptr;
@@ -1686,6 +1691,12 @@ static void ComHandlerCbHwnd(void* hwndVoid, ICoreWebView2Controller* ctrl) {
     auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
     if (!self) {
         if (ctrl) {
+            // The window went away while the webview was still being created
+            // (closing a .md/.html document right after opening it). Releasing
+            // only drops our reference, leaving a live browser instance bound
+            // to a destroyed HWND, which hung the app on exit. Close() is what
+            // shuts it down.
+            ctrl->Close();
             ctrl->Release();
         }
         return;
@@ -2005,6 +2016,14 @@ WebviewWnd::~WebviewWnd() {
     }
     boundNames.Reset();
     RevokeForwardingDropTarget();
+    // Close() shuts down the browser instance behind this webview and is not
+    // optional: releasing the controller only drops our reference, so without
+    // it the WebView2 runtime keeps running against the window we're about to
+    // destroy. Closing a document (or the app) while the webview was still
+    // coming up then hung the process on exit or exited it with an error.
+    if (controller) {
+        controller->Close();
+    }
     if (webview) {
         webview->Release();
         webview = nullptr;
