@@ -866,7 +866,7 @@ async function buildTestEngines(
     join(outDir, "lib", "libbrotli.a"),
     join(outDir, "lib", "liblcms2.a"),
     join(outDir, "lib", "liba-openjpeg.a"),
-    join(outDir, "lib", "libjbig2dec.a"),
+    join(outDir, "lib", "liba-jbig2dec.a"),
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),

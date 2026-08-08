@@ -42,7 +42,7 @@ MuPDF          mupdf/COPYING             AGPL https://mupdf.com/
 bzip2          ext/a-bzip2/LICENSE            https://bzip.org/
 libchm         ext/libchm/LICENSE.md     MIT  https://github.com/kjk/libchm
 FreeType       ext/freetype2/FTL.txt          https://www.freetype.org/
-jbig2dec       ext/jbig2dec/COPYING      AGPL https://www.ghostscript.com/jbig2dec.html
+jbig2dec       ext/a-jbig2dec/COPYING    AGPL https://www.ghostscript.com/jbig2dec.html
 libjpeg-turbo  ext/.../README-turbo.txt  BSD  https://libjpeg-turbo.virtualgl.org/
 DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  https://djvu.sourceforge.net/
 OpenJPEG       ext/a-openjpeg/LICENSE    BSD  https://www.openjpeg.org/

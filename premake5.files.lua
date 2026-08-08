@@ -269,28 +269,6 @@ function libarchive_files()
   })
 end
 
-function jbig2dec_files()
-  -- TODO: probably can be
-  -- files { "ext/jbig2dec/jbig2*.c", "ext/jbig2dec/jbig2*.h" }
-  files_in_dir("ext/jbig2dec", {
-    "jbig2.c",
-    "jbig2_arith.c",
-    "jbig2_arith_iaid.c",
-    "jbig2_arith_int.c",
-    "jbig2_generic.c",
-    "jbig2_halftone.c",
-    "jbig2_huffman.c",
-    "jbig2_hufftab.c",
-    "jbig2_image.c",
-    "jbig2_mmr.c",
-    "jbig2_page.c",
-    "jbig2_refinement.c",
-    "jbig2_segment.c",
-    "jbig2_symbol_dict.c",
-    "jbig2_text.c",
-  })
-end
-
 -- x64 only: avx2 NASM SIMD + shared helpers. Not used for 32-bit (HAVE_ASM=0).
 -- SSE/AVX-512 *.asm omitted; x86/*_sumatra.h only wires avx2 symbols.
 function dav1d_x64_files()

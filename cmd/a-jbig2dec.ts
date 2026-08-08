@@ -265,6 +265,21 @@ function versionText(repo: string, rev: string): string {
   );
 }
 
+// jbig2dec is AGPL, so the notices have to ship with the source. This is the
+// only copy in the tree now that ext/jbig2dec is gone, so re-copy them on every
+// regeneration. AUTHORS points at ext/a-jbig2dec/COPYING.
+function writeLicenses(dir: string): void {
+  for (const name of ["COPYING", "LICENSE"]) {
+    const src = join(checkoutDir, name);
+    if (!existsSync(src)) {
+      throw new Error(`missing license file: ${src}`);
+    }
+    const out = join(dir, name);
+    writeFileSync(out, readFileSync(src));
+    console.log(`wrote ${out}`);
+  }
+}
+
 async function validateCompile(header: string, source: string): Promise<void> {
   rmSync(tmpDir, { recursive: true, force: true });
   mkdirSync(tmpDir, { recursive: true });
@@ -323,6 +338,7 @@ async function main() {
   console.log(`wrote ${join(outDir, "jbig2.h")}`);
   console.log(`wrote ${join(outDir, "jbig2dec.c")}`);
   console.log(`wrote ${join(outDir, "version.txt")}`);
+  writeLicenses(outDir);
 }
 
 await main();

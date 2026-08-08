@@ -412,9 +412,6 @@ const mupdfThirdPartySources: LibDef = {
   alwaysOptimize: true,
   defines: [
     "_CRT_SECURE_NO_WARNINGS",
-    // jbig2dec
-    "HAVE_STRING_H=1",
-    "JBIG_NO_MEMENTO",
     // freetype
     "FT2_BUILD_LIBRARY",
     'FT_CONFIG_MODULES_H="slimftmodules.h"',
@@ -431,7 +428,6 @@ const mupdfThirdPartySources: LibDef = {
   ],
   includes: [
     "ext/libjpeg-turbo/src",
-    "ext/jbig2dec",
     "mupdf/scripts/freetype",
     "ext/freetype/include",
     "ext/lcms2/include",
@@ -528,27 +524,6 @@ const mupdfThirdPartySources: LibDef = {
         "jquant1-8.c",
         "jquant2-8.c",
         "jutils-8.c",
-      ],
-    },
-    // ── jbig2dec ──
-    {
-      dir: "ext/jbig2dec",
-      patterns: [
-        "jbig2.c",
-        "jbig2_arith.c",
-        "jbig2_arith_iaid.c",
-        "jbig2_arith_int.c",
-        "jbig2_generic.c",
-        "jbig2_huffman.c",
-        "jbig2_hufftab.c",
-        "jbig2_halftone.c",
-        "jbig2_image.c",
-        "jbig2_mmr.c",
-        "jbig2_page.c",
-        "jbig2_refinement.c",
-        "jbig2_segment.c",
-        "jbig2_symbol_dict.c",
-        "jbig2_text.c",
       ],
     },
     // ── freetype ──
@@ -706,10 +681,10 @@ export const libjpegTurbo = thirdPartyLib({
 });
 
 export const jbig2dec = thirdPartyLib({
-  name: "jbig2dec",
+  name: "a-jbig2dec",
   defines: ["_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO"],
-  includes: ["ext/jbig2dec"],
-  files: sourceFiles(2),
+  includes: ["ext/a-jbig2dec"],
+  files: [{ dir: "ext/a-jbig2dec", patterns: ["jbig2dec.c"] }],
 });
 
 export const openjpeg = thirdPartyLib({
@@ -731,13 +706,13 @@ export const freetype = thirdPartyLib({
     "ext/freetype/include",
     "ext/brotli/c/include",
   ],
-  files: sourceFiles(3, 4),
+  files: sourceFiles(2, 3),
 });
 
 export const lcms2 = thirdPartyLib({
   name: "lcms2",
   includes: ["ext/lcms2/include"],
-  files: sourceFiles(5),
+  files: sourceFiles(4),
 });
 
 const harfbuzzAllocDefines = [
@@ -761,7 +736,7 @@ export const harfbuzz = thirdPartyLib({
     "mupdf/scripts/freetype",
     "ext/freetype/include",
   ],
-  files: sourceFiles(6),
+  files: sourceFiles(5),
   debugExtraDefines: ["HAVE_ATEXIT", ...harfbuzzAllocDefines],
   releaseExtraDefines: harfbuzzAllocDefines,
 });
@@ -784,7 +759,7 @@ export const extract = thirdPartyLib({
 export const brotli = thirdPartyLib({
   name: "brotli",
   includes: ["ext/brotli/c/include"],
-  files: sourceFiles(7, 8, 9),
+  files: sourceFiles(6, 7, 8),
 });
 
 export const cmarkGfm = thirdPartyLib({
@@ -866,7 +841,7 @@ export const mupdf: LibDef = {
     "ext/cmark-gfm/extensions",
     "mupdf/scripts/cmark-gfm",
     "mupdf/generated",
-    "ext/jbig2dec",
+    "ext/a-jbig2dec",
     "ext/libjpeg-turbo/src",
     "ext/a-openjpeg",
     "mupdf/scripts/freetype",

@@ -939,7 +939,7 @@ workspace "SumatraPDF"
     includedirs {
       "mupdf/include",
       "mupdf/generated",
-      "ext/jbig2dec",
+      "ext/a-jbig2dec",
       "ext/libjpeg-turbo/src",
       "ext/a-openjpeg",
       "mupdf/scripts/freetype",

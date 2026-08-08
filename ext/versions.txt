@@ -32,7 +32,7 @@ harfbuzz        13.0.1
 
 jbig2dec        0.20
   https://github.com/ArtifexSoftware/jbig2dec/commits/artifex
-  mupdf thirdparty submodule, commit dc15c39bbbddc90f79c14563d2eb5a794106be8f
+  amalgamated into ext/a-jbig2dec by cmd/a-jbig2dec.ts, see ext/a-jbig2dec/version.txt
 
 libjpeg-turbo   3.1.4.1    2026-03-27
   https://github.com/libjpeg-turbo/libjpeg-turbo/tags
