@@ -81,13 +81,42 @@ void TabsCtrl::LayoutTabs() {
              tabSize.dx, tabSize.dy, nTabs);
     }
 
-    int closeDy = DpiScale(hwnd, 16);
+    // Close glyph grows with tab height (taller UI fonts / tab bar) so it
+    // stays usable on touch; floor 16 DIP, cap 28 DIP (issue #5220).
+    int closeMin = DpiScale(hwnd, 16);
+    int closeMax = DpiScale(hwnd, 28);
+    int closeDy = dy - DpiScale(hwnd, 6);
+    if (closeDy < closeMin) {
+        closeDy = closeMin;
+    } else if (closeDy > closeMax) {
+        closeDy = closeMax;
+    }
+    if (closeDy > dy) {
+        closeDy = dy;
+    }
     int closeDx = closeDy;
     int closeY = (dy - closeDy) / 2;
-    // logfa("  closeDx: %d, closeDy: %d\n", closeDx, closeDy);
+
+    // Padding between circle and tab edge; grow with the button.
+    int closePad = std::max(DpiScale(hwnd, 6), closeDx / 2);
+    // Keep the glyph inside the tab when tabs are very narrow.
+    if (closeDx + closePad > dx && dx > 0) {
+        closeDx = std::min(closeDx, std::max(DpiScale(hwnd, 12), dx - 2));
+        closeDy = closeDx;
+        closeY = (dy - closeDy) / 2;
+        closePad = std::max(1, (dx - closeDx) / 2);
+    }
+
+    // Hit target: at least ~40 DIP wide (touch-friendly), full tab height.
+    // Cap at half the tab so title still has a drag/select zone.
+    int minHitDx = DpiScale(hwnd, 40);
+    int hitDx = std::max(closeDx + (2 * closePad), minHitDx);
+    hitDx = std::min(hitDx, std::max(closeDx + closePad, dx / 2));
+    if (hitDx > dx) {
+        hitDx = dx;
+    }
 
     bool isRtl = IsTabsRtl(hwnd);
-    int closePad = 8; // padding between close circle and tab edge
 
     HFONT hfont = GetFont();
     int x = isRtl ? rect.dx : 0;
@@ -101,12 +130,12 @@ void TabsCtrl::LayoutTabs() {
             xEnd = x - dx;
             ti->r = {xEnd, 0, dx, dy};
             ti->rClose = {xEnd + closePad, closeY, closeDx, closeDy};
-            ti->rCloseHit = {xEnd, 0, closeDx + (2 * closePad), dy};
+            ti->rCloseHit = {xEnd, 0, hitDx, dy};
         } else {
             xEnd = x + dx;
             ti->r = {x, 0, dx, dy};
             ti->rClose = {xEnd - closeDx - closePad, closeY, closeDx, closeDy};
-            ti->rCloseHit = {xEnd - closeDx - (2 * closePad), 0, closeDx + (2 * closePad), dy};
+            ti->rCloseHit = {xEnd - hitDx, 0, hitDx, dy};
         }
         ti->titleSize = HwndMeasureText(hwnd, ti->text, hfont);
         if (IsRunningOnWine() && i == 0) {
@@ -278,18 +307,22 @@ void TabsCtrl::Paint(HDC hdc, const Rect& rc) {
             gfx.FillRectangle(&dbgBr, ToGdipRect(ti->rCloseHit));
         }
 
-        // draw text
+        // draw text — inset from the close glyph (size varies with tab height)
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
         r = ti->rClose;
         rTxt = ToGdipRectF(ti->r);
+        int textPad = DpiScale(hwnd, 8);
+        int textGap = DpiScale(hwnd, 4);
         if (IsTabsRtl(hwnd)) {
-            // RTL: [8px | close | text | 8px]
-            rTxt.X += (Gdiplus::REAL)(8 + r.dx);
+            // RTL: close on the left — text after the close circle
+            int textLeft = r.x + r.dx + textGap;
+            rTxt.X = (Gdiplus::REAL)textLeft;
+            rTxt.Width = (Gdiplus::REAL)std::max(0, (ti->r.x + ti->r.dx - textPad) - textLeft);
         } else {
-            // LTR: [8px | text | close | 8px]
-            rTxt.X += 8;
+            // LTR: close on the right — text before the close circle
+            rTxt.X = (Gdiplus::REAL)(ti->r.x + textPad);
+            rTxt.Width = (Gdiplus::REAL)std::max(0, r.x - textGap - (int)rTxt.X);
         }
-        rTxt.Width -= (Gdiplus::REAL)(8 + r.dx + 8);
         br.SetColor(GdipCol(textColor));
         WCHAR* ws = CWStrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);

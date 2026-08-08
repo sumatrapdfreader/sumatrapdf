@@ -1215,16 +1215,21 @@ void DrawCloseButton(const DrawCloseButtonArgs& args) {
         g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
     }
 
-    // draw 'x'
+    // draw 'x' — pad scales with the control so large tab-close buttons
+    // (taller UI fonts / touch, issue #5220) still look balanced
     c.SetFromCOLORREF(args.isHover ? args.colXHover : args.colX);
     g.TranslateTransform((float)r.x, (float)r.y);
-    Gdiplus::Pen p(c, 2);
+    int pad = std::max(3, r.dx / 4);
+    int padFar = std::max(pad + 1, r.dx - pad - (r.dx > 16 ? 1 : 2));
+    float penW = r.dx >= 22 ? 2.5f : 2.f;
+    Gdiplus::Pen p(c, penW);
     if (isHover) {
-        g.DrawLine(&p, Gdiplus::Point(4, 4), Gdiplus::Point(r.dx - 6, r.dy - 6));
-        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 4), Gdiplus::Point(4, r.dy - 6));
+        g.DrawLine(&p, Gdiplus::Point(pad, pad), Gdiplus::Point(padFar, padFar));
+        g.DrawLine(&p, Gdiplus::Point(padFar, pad), Gdiplus::Point(pad, padFar));
     } else {
-        g.DrawLine(&p, Gdiplus::Point(4, 5), Gdiplus::Point(r.dx - 6, r.dy - 5));
-        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 5), Gdiplus::Point(4, r.dy - 5));
+        int yOff = r.dx >= 20 ? 0 : 1;
+        g.DrawLine(&p, Gdiplus::Point(pad, pad + yOff), Gdiplus::Point(padFar, padFar - yOff));
+        g.DrawLine(&p, Gdiplus::Point(padFar, pad + yOff), Gdiplus::Point(pad, padFar - yOff));
     }
 }
 
