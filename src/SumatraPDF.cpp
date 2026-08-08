@@ -7869,6 +7869,13 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
     if (!ok) {
         return nullptr;
     }
+    // highlight / underline / squiggly / strike out mark up runs of *text*. A
+    // rectangular selection (Ctrl+drag, Select All) isn't one - marking up its
+    // bounding boxes produced bars over whitespace - so do nothing.
+    bool isTextSelection = dm->textSelection && dm->textSelection->result.len > 0;
+    if (!isTextSelection) {
+        return nullptr;
+    }
 
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
     Vec<int> pageNos;
