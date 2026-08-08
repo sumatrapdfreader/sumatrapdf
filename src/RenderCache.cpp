@@ -565,7 +565,10 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
 
     for (int i = 0; i < nRenderThreads; i++) {
         auto* cr = curReqs[i];
-        if (cr && (cr->pageNo == pageNo) && (cr->dm == dm) && (cr->tile == tile)) {
+        // an aborted request will be discarded when the render thread notices, so
+        // it doesn't count as rendering this page - we must queue a new request
+        bool isRenderingTile = cr && !cr->abort && (cr->pageNo == pageNo) && (cr->dm == dm) && (cr->tile == tile);
+        if (isRenderingTile) {
             if ((cr->zoom == zoom) && (cr->rotation == rotation)) {
                 /* we're already rendering exactly the same page */
                 return;
@@ -768,7 +771,10 @@ int RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile)
 
     for (int i = 0; i < nRenderThreads; i++) {
         auto* cr = curReqs[i];
-        if (cr && cr->pageNo == pageNo && cr->dm == dm && cr->tile == tile) {
+        // an aborted request produces no bitmap, so don't report it as a pending
+        // render - the caller would wait for a result that never arrives
+        bool isRenderingTile = cr && !cr->abort && (cr->pageNo == pageNo) && (cr->dm == dm) && (cr->tile == tile);
+        if (isRenderingTile) {
             return (int)(GetTickCount64() - cr->timestamp);
         }
     }
