@@ -384,9 +384,15 @@ static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, 
         }
 
         case WM_PAINT: {
+            // Paint off-screen and blit once. Hovering a button repaints the
+            // whole bar, and drawing straight to the window showed the
+            // background fill wiping it before the buttons came back -- a
+            // flash under the moving mouse.
+            Rect rc = HwndClientRect(hwnd);
+            DoubleBuffer buffer(hwnd, rc);
+            PaintToolbar(tb, buffer.GetDC());
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            PaintToolbar(tb, hdc);
+            buffer.Flush(BeginPaint(hwnd, &ps));
             EndPaint(hwnd, &ps);
             return 0;
         }
