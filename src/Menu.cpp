@@ -102,6 +102,10 @@ static MenuDef menuDefFile[] = {
         CmdSaveAs,
     },
     {
+        _TRN("Convert to PDF..."),
+        CmdConvertToPDF,
+    },
+    {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
     },
@@ -934,8 +938,12 @@ static MenuDef menuDefContextImage[] = {
         CmdResizeImage,
     },
     {
-        _TRN("Convert to &PDF"),
+        _TRN("Convert page to &PDF"),
         CmdConvertImageToPdf,
+    },
+    {
+        _TRN("Convert to PDF..."),
+        CmdConvertToPDF,
     },
     {
         nullptr,
@@ -1014,6 +1022,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         _TRN("Bake PDF"),
         CmdPdfBake,
+    },
+    {
+        _TRN("Convert to PDF..."),
+        CmdConvertToPDF,
     },
     {
         _TRN("Show in &folder"),
@@ -2017,9 +2029,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     EngineBase* engine = dm->GetEngine();
 
     win->contextMenuPt = cursorPos;
-    win->contextMenuPtValid = ReadAloudCanReadFromCursor(dm, cursorPos);
+    bool isImageDoc = engine && (engine->IsImageCollection() || engine->kind == kindEngineImage ||
+                                 engine->kind == kindEngineImageDir || engine->kind == kindEngineComicBooks);
+    win->contextMenuPtValid = !isImageDoc && ReadAloudCanReadFromCursor(dm, cursorPos);
     HMENU readAloudCtxMenu = GetReadAloudContextSubmenu();
-    if (readAloudCtxMenu) {
+    // no text to speak on comics / image folders / single images
+    if (readAloudCtxMenu && !isImageDoc) {
         RebuildReadAloudMenu(win, readAloudCtxMenu, true, win->contextMenuPtValid);
     }
 

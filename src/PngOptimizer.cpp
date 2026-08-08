@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 #include "base/Timer.h"
 
 #include "zopflipng/zopflipng_lib.h"
@@ -153,4 +154,101 @@ void OptimizePngFileAsync(Str path) {
     auto* d = new OptimizePngData();
     d->path = str::Dup(path);
     RunAsync(MkFunc0(OptimizePngThread, d), "OptimizePngThread");
+}
+
+// Pack pixmap pixels as tightly packed RGBA8 for lodepng_encode32.
+static u8* PixmapToRgbaContiguous(const Pixmap* px) {
+    if (!px || !px->data || px->width <= 0 || px->height <= 0) {
+        return nullptr;
+    }
+    int w = px->width;
+    int h = px->height;
+    int n = w * h * 4;
+    u8* rgba = (u8*)malloc((size_t)n);
+    if (!rgba) {
+        return nullptr;
+    }
+    for (int y = 0; y < h; y++) {
+        const u8* src = px->data + y * px->stride;
+        u8* dst = rgba + y * w * 4;
+        if (px->format == PixmapFormat::RGBA8) {
+            memcpy(dst, src, (size_t)w * 4);
+        } else if (px->format == PixmapFormat::BGRA8) {
+            for (int x = 0; x < w; x++) {
+                dst[0] = src[2]; // R
+                dst[1] = src[1]; // G
+                dst[2] = src[0]; // B
+                dst[3] = src[3]; // A
+                src += 4;
+                dst += 4;
+            }
+        } else if (px->format == PixmapFormat::BGR8) {
+            for (int x = 0; x < w; x++) {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                dst[3] = 255;
+                src += 3;
+                dst += 4;
+            }
+        } else {
+            free(rgba);
+            return nullptr;
+        }
+    }
+    return rgba;
+}
+
+// Losslessly recompress PNG bytes with zopfli. Returns owned Str (may be the
+// original duplicated if optimize fails or does not shrink). Caller frees.
+static Str OptimizePngBytesOwned(Str png) {
+    int nOrig = len(png);
+    if (nOrig == 0) {
+        return {};
+    }
+    if (nOrig > kMaxPngSizeToOptimize) {
+        return str::Dup(png);
+    }
+    CZopfliPNGOptions opts;
+    CZopfliPNGSetDefaults(&opts);
+    unsigned char* out = nullptr;
+    size_t outSize = 0;
+    int err = CZopfliPNGOptimize((const unsigned char*)png.s, (size_t)nOrig, &opts, 0, &out, &outSize);
+    if (err != 0 || !out || outSize == 0 || outSize >= (size_t)nOrig) {
+        free(out);
+        return str::Dup(png);
+    }
+    Str res = str::Dup(Str((char*)out, (int)outSize));
+    free(out);
+    return res;
+}
+
+Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
+    if (!px) {
+        return {};
+    }
+    u8* rgba = PixmapToRgbaContiguous(px);
+    if (!rgba) {
+        return {};
+    }
+    unsigned char* pngOut = nullptr;
+    size_t pngSize = 0;
+    unsigned err = lodepng_encode32(&pngOut, &pngSize, rgba, (unsigned)px->width, (unsigned)px->height);
+    free(rgba);
+    if (err != 0 || !pngOut || pngSize == 0) {
+        free(pngOut);
+        logf("EncodeAndOptimizePngFromPixmap: lodepng_encode32 failed, err=%u\n", err);
+        return {};
+    }
+    Str rawPng((char*)pngOut, (int)pngSize);
+    // lodepng allocates with malloc; transfer ownership into Optimize via Dup then free
+    Str owned = str::Dup(rawPng);
+    free(pngOut);
+    Str optimized = OptimizePngBytesOwned(owned);
+    str::Free(owned);
+    if (len(optimized) > 0) {
+        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, (int)pngSize,
+             len(optimized));
+    }
+    return optimized;
 }

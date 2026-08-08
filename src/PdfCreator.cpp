@@ -18,6 +18,9 @@ extern "C" {
 #include "ImageReader.h"
 #include "PdfCreator.h"
 
+// EngineImages.cpp — avoid including EngineAll.h (needs full FileType for defaults)
+Str EngineImagesGetImageData(EngineBase*, int pageNo);
+
 static Str gPdfProducer;
 
 // this name is included in all saved PDF files
@@ -372,6 +375,74 @@ bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
     }
     c->CopyProperties(engine);
     ok = c->SaveToFile(pdfFileName);
+    delete c;
+    return ok;
+}
+
+// Comic book / image folder / multi-page image → multi-page PDF (issue #4118).
+// 1) Embed original bytes when MuPDF can re-wrap them (JPEG, PNG, …).
+// 2) Else optional fallbackToEmbeddable (e.g. decode → optimized PNG).
+// 3) Else render the page at native resolution.
+// Pages that fail every path are skipped.
+bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
+                                          ImageDataFallbackFn fallbackToEmbeddable) {
+    if (!engine || !engine->IsImageCollection() || engine->PageCount() <= 0) {
+        return false;
+    }
+
+    PdfCreator* c = new PdfCreator();
+    if (!c->ctx || !c->doc) {
+        delete c;
+        return false;
+    }
+
+    float dpi = engine->GetFileDPI();
+    if (dpi <= 0) {
+        dpi = 96.0f;
+    }
+
+    int pagesAdded = 0;
+    int nPages = engine->PageCount();
+    for (int i = 1; i <= nPages; i++) {
+        bool pageOk = false;
+
+        Str data = EngineImagesGetImageData(engine, i);
+        if (len(data) > 0) {
+            pageOk = c->AddPageFromImageData(data, dpi);
+            if (!pageOk && fallbackToEmbeddable) {
+                // WebP, JXL, HEIC, AVIF, TGA, … — convert to something PDF can store.
+                Str converted = fallbackToEmbeddable(data);
+                if (len(converted) > 0) {
+                    pageOk = c->AddPageFromImageData(converted, dpi);
+                }
+                str::Free(converted);
+            }
+        }
+
+        if (!pageOk) {
+            // Last resort: render at native resolution (zoom 1.0 relative to file DPI).
+            RenderPageArgs args(i, 1.0f, 0, nullptr, RenderTarget::Export);
+            Pixmap* bmp = engine->RenderPage(args);
+            if (bmp && bmp->hbmp) {
+                pageOk = AddPageFromHBITMAP(c, bmp->hbmp, Size(bmp->width, bmp->height), dpi);
+            }
+            FreePixmap(bmp);
+        }
+
+        if (pageOk) {
+            pagesAdded++;
+        } else {
+            logf("PdfCreator::SaveImageCollectionAsPdf: skipped page %d (embed+convert+render failed)\n", i);
+        }
+    }
+
+    if (pagesAdded == 0) {
+        delete c;
+        return false;
+    }
+
+    c->CopyProperties(engine);
+    bool ok = c->SaveToFile(pdfFileName);
     delete c;
     return ok;
 }

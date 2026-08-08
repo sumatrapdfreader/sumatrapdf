@@ -278,6 +278,7 @@ export const commands = [
     "CmdFixDefaultApp", "Fix Default App For Extension",
     "CmdAIChatWithAntiGravity", "Antigravity chat...",
     "CmdTranslateSelectionWithAntiGravity", "Translate Selection with Antigravity...",
+    "CmdConvertToPDF", "Convert To PDF...",
     "CmdNone", "Do nothing",
 ];
 

@@ -61,6 +61,8 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 [Comics and manga](Comics-and-manga.md)
 
+[Convert to PDF](Convert-to-PDF.md) (comics, image folders, images → multi-page PDF)
+
 [Customize eBook UI](Customize-eBook-UI.md)
 
 [Accessibility](Accessibility.md)
@@ -121,6 +123,10 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 [Extract text from PDF](Tool-x-extract-text-from-pdf.md)
 
 [Convert text file to a PDF](Tool-x-convert-text-to-pdf.md)
+
+[Convert PNG image to a PDF](Tool-x-convert-png-to-pdf.md)
+
+[Convert to PDF (GUI: comics / images)](Convert-to-PDF.md)
 
 [Compress a PDF](Tool-x-compress-pdf.md)
 

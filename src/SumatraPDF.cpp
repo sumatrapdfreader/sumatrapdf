@@ -10342,6 +10342,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowPdfBakeDialog(win);
             break;
 
+        case CmdConvertToPDF:
+            ShowConvertToPdfDialog(win);
+            break;
+
         case CmdPdfCompress:
             ShowPdfCompressDialog(win);
             break;

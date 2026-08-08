@@ -2469,3 +2469,10 @@ bool EngineImagesGetPageFileInfo(EngineBase* engine, int pageNo, TempStr* nameOu
     }
     return true;
 }
+
+Str EngineImagesGetImageData(EngineBase* engine, int pageNo) {
+    if (!IsEngineImages(engine) || pageNo < 1 || pageNo > engine->PageCount()) {
+        return {};
+    }
+    return ((EngineImages*)engine)->GetImageData(pageNo);
+}

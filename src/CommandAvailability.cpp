@@ -452,8 +452,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!IsAIChatAvailable()) {
             return CommandVisibility::Hide;
         }
+        // Hide (not disable) so the "AI chat with document" context submenu is
+        // empty and dropped for unsupported types (images, comics, DjVu, …).
         if (!IsAIChatSupportedForTab(ctx.tab)) {
-            return MapForSurface(CommandVisibility::Disable, surface);
+            return CommandVisibility::Hide;
         }
     }
     if (cmdId == CmdTranslateSelectionWithGrokBuild && !IsGrokBuildInstalled()) {
@@ -635,6 +637,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    if (cmdId == CmdConvertToPDF) {
+        // comic books, image folders, single images (issue #4118)
+        Kind k = ctx.engineKind;
+        bool isImage =
+            k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
+        if (!ctx.isDocLoaded || !isImage) {
+            return CommandVisibility::Hide;
+        }
+    }
+
     if (!ctx.annotationUnderCursor && cmdId == CmdDeleteAnnotation) {
         return CommandVisibility::Disable;
     }
@@ -687,6 +699,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return ctx.hasToc ? CommandVisibility::Show : CommandVisibility::Hide;
     }
 
+    // No extractable text on comics, image folders, or single images.
+    if (cmdId == CmdReadAloud || cmdId == CmdReadAloudFromTopPage || cmdId == CmdReadAloudSelection ||
+        cmdId == CmdPauseReadAloud || cmdId == CmdContinueReadAloud || cmdId == CmdStopReadAloud) {
+        Kind k = ctx.engineKind;
+        bool isImage =
+            k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
+        if (isImage) {
+            return CommandVisibility::Hide;
+        }
+    }
     if (cmdId == CmdPauseReadAloud) {
         return ctx.isSpeaking ? CommandVisibility::Show : CommandVisibility::Hide;
     }

@@ -285,6 +285,7 @@ static SeqStrings gCommandNames =
     "CmdFixDefaultApp\0"
     "CmdAIChatWithAntiGravity\0"
     "CmdTranslateSelectionWithAntiGravity\0"
+    "CmdConvertToPDF\0"
     "CmdNone\0"
     "\0";
 
@@ -558,6 +559,7 @@ static i32 gCommandIds[] = {
     CmdFixDefaultApp,
     CmdAIChatWithAntiGravity,
     CmdTranslateSelectionWithAntiGravity,
+    CmdConvertToPDF,
     CmdNone,
 };
 
@@ -831,6 +833,7 @@ SeqStrings gCommandDescriptions =
     "Fix Default App For Extension\0"
     "Antigravity chat...\0"
     "Translate Selection with Antigravity...\0"
+    "Convert To PDF...\0"
     "Do nothing\0"
     "\0";
 // clang-format on

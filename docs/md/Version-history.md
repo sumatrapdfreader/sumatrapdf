@@ -63,6 +63,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - new zoom mode `Fit by Orientation` (in the View / Zoom menu) that automatically fits width when the view is landscape and fits page when portrait, updating as you resize the window or rotate the screen (fixes #702)
 - new zoom mode `Fit Height` (View / Zoom menu and command palette): scales the page so its height fills the window (width may require horizontal scrolling) — useful for landscape pages on portrait screens and for mixed page widths with a stable vertical size; also accepted as `-zoom fitheight` / advanced setting `fit height` and DDE zoom `-6` (fixes #1714)
 - comics / images: advanced settings `ComicBookUI.LimitToWindowWidth` / `LimitToWindowHeight` and the same under `ImageUI` — when true, absolute zoom never makes a page wider (or taller) than the window; each page is capped independently so double-page spreads stay on screen while single pages can stay large (fixes #2197)
+- **Convert to PDF** (`CmdConvertToPDF`) for comic books (`.cbz`, `.cbr`, …), image folders, and single images: dialog suggests a unique `.pdf` path next to the source; original images are embedded when possible (fixes #4118, #5532). Docs: [Convert to PDF](Convert-to-PDF.md)
 - add `sumatrapdf-tool.exe` command-line tools for PDF manipulation (see [Tools](Tools.md))
 - [command palette](Command-Palette.md) has a new `*` mode that jumps to a table of contents entry of the current document (`Shift + F12`). Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
 - [command palette](Command-Palette.md) has a new `$` mode that jumps to a favorite, listing the current document's favorites first, then favorites of other documents
@@ -172,7 +173,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdStopReadAloud` : "Stop Reading"
 - `CmdReadAloudFromTopPage` : "Start Reading From Top"
 - `CmdReadAloudSelection` : "Start Reading Selection"
-- `CmdConvertImageToPdf` : "Convert Image To PDF"
+- `CmdConvertImageToPdf` : "Convert Page To PDF" — image editor path for one page
+- `CmdConvertToPDF` : "Convert To PDF..." — comic / image folder / image → multi-page PDF (fixes #4118, #5532)
 - `CmdCropImage` : "Crop Image"
 - `CmdDocumentExtractText` : "Extract Text From Document"
 - `CmdDocumentShowOutline` : "Show Document Outline"

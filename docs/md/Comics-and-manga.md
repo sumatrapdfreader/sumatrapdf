@@ -124,6 +124,12 @@ Sizes are in pixels at 100% display scaling and are DPI-scaled.
 
 Press `i` (`CmdTogglePageInfo`) for the page-info tip. For comics and image folders it shows the current image **file name** and size (both pages when two are visible in facing view). For a single open image it can show pixel resolution, file size, and DPI when not the default 96.
 
+## Convert to PDF
+
+**File → Convert to PDF…** / **Document → Convert to PDF…** (`CmdConvertToPDF`) turns a comic, image folder, or single image into a multi-page PDF. Full details: [Convert to PDF](Convert-to-PDF.md).
+
+**Convert page to PDF** on the image context menu (`CmdConvertImageToPdf`) saves only the **current page** via the image editor.
+
 ## Copy image
 
 Right-click a comic or image page and choose **Copy Image** (`CmdCopyImage`) to copy the page image to the clipboard.
@@ -137,8 +143,9 @@ Opening a **folder of images** treats each image as a page (ordered by file name
 These PDF-oriented features do not apply to comic archives, image folders, or plain images:
 
 - In-document text search and text selection (there is no extractable text)
+- **Read Aloud** (menu, context menu, toolbar) — no text to speak
 - Keyboard link following (`Shift + F`)
-- [AI Chat with document](AI-Chat-with-document.md) for comic archives and image folders (single image files can use chat where supported)
+- [AI Chat with document](AI-Chat-with-document.md) (PDF only)
 
 ## Quick settings reference
 
@@ -173,6 +180,8 @@ Full field comments: [Advanced options / settings](Advanced-options-settings.md)
 | Command                                                     | Purpose                                                            |
 | ----------------------------------------------------------- | ------------------------------------------------------------------ |
 | `CmdToggleMangaMode`                                        | Toggle right-to-left facing/book layout                            |
+| `CmdConvertToPDF`                                           | Convert comic / image folder / image to a multi-page PDF           |
+| `CmdConvertImageToPdf`                                      | Convert the current page via the image editor                      |
 | `CmdCopyImage`                                              | Copy current page image                                            |
 | `CmdTogglePageInfo`                                         | Show / hide page info tip (`i`)                                    |
 | `CmdDeleteCachedFiles`                                      | Clear local `cbx-cache` copies from network opens                  |
@@ -181,6 +190,7 @@ Full field comments: [Advanced options / settings](Advanced-options-settings.md)
 
 ## See also
 
+- [Convert to PDF](Convert-to-PDF.md)
 - [Supported document formats](Supported-document-formats.md)
 - [Scrolling and zooming](Scrolling-and-zooming.md)
 - [Advanced options / settings](Advanced-options-settings.md)

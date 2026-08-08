@@ -278,7 +278,8 @@ enum {
     CmdFixDefaultApp = 467,
     CmdAIChatWithAntiGravity = 468,
     CmdTranslateSelectionWithAntiGravity = 469,
-    CmdNone = 470,
+    CmdConvertToPDF = 470,
+    CmdNone = 471,
 
     /* range for file history */
     CmdFileHistoryFirst,

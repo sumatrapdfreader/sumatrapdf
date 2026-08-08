@@ -15,6 +15,10 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "PdfCreator.h"
+#include "ImageReader.h"
+#include "PngOptimizer.h"
+#include "base/Pixmap.h"
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"
 #include "MainWindow.h"
@@ -1903,6 +1907,237 @@ void ShowPdfDecryptDialog(MainWindow* win) {
 
     auto* dlg = new PdfDecryptDialog();
     if (!dlg->Create(win, tab, pwd)) {
+        delete dlg;
+    }
+}
+
+// --- Convert to PDF dialog (comics, image folders, single images; issue #4118) ---
+
+// Default destination: same path with .pdf extension, made unique if the file
+// already exists (e.g. comic.cbz → comic.pdf, or comic.1.pdf if taken).
+static TempStr DefaultPdfDestPathTemp(Str srcPath) {
+    if (!srcPath) {
+        return {};
+    }
+    TempStr noExt = path::GetPathNoExtTemp(srcPath);
+    if (!noExt) {
+        noExt = str::DupTemp(srcPath);
+    }
+    TempStr pdfPath = str::JoinTemp(noExt, StrL(".pdf"));
+    return MakeUniqueFilePathTemp(pdfPath);
+}
+
+struct ConvertToPdfDialog : Wnd {
+    HFONT hFont = nullptr;
+    Str srcPath;
+    MainWindow* win = nullptr;
+
+    ILayout* mainLayout = nullptr;
+    Static* pathLabel = nullptr;
+    Edit* destEdit = nullptr;
+    Button* browseBtn = nullptr;
+    Button* convertBtn = nullptr;
+    Button* cancelBtn = nullptr;
+
+    ~ConvertToPdfDialog() override;
+
+    bool Create(MainWindow* win, WindowTab* tab);
+    void OnBrowse();
+    void DoConvert();
+    void OnCancel();
+    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
+};
+
+ConvertToPdfDialog::~ConvertToPdfDialog() {
+    str::FreePtr(&srcPath);
+    delete mainLayout;
+}
+
+void ConvertToPdfDialog::OnCancel() {
+    Close();
+}
+
+void ConvertToPdfDialog::OnBrowse() {
+    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+}
+
+void ConvertToPdfDialog::DoConvert() {
+    TempStr destPath = destEdit->GetTextTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine || !engine->IsImageCollection()) {
+        MessageBoxWarning(hwnd, _TRA("Failed to save a file"), _TRA("Convert to PDF"));
+        return;
+    }
+
+    logf("ConvertToPdf: converting '%s' to '%s'\n", srcPath, destPath);
+
+    TempStr producer = fmt("SumatraPDF %s", currentVersion);
+    PdfCreator::SetProducerName(producer);
+    // Formats PDF cannot re-wrap (WebP, JXL, HEIC, AVIF, TGA, …): decode via
+    // the same codecs we use for viewing, then PNG + zopfli before embed.
+    auto toOptimizedPng = [](Str data) -> Str {
+        Pixmap* px = PixmapFromData(data);
+        if (!px) {
+            logf("ConvertToPdf: decode-to-pixmap failed (%d bytes)\n", len(data));
+            return {};
+        }
+        Str png = EncodeAndOptimizePngFromPixmap(px);
+        FreePixmap(px);
+        return png;
+    };
+    bool ok = PdfCreator::SaveImageCollectionAsPdf(destPath, engine, toOptimizedPng);
+    if (ok) {
+        logf("ConvertToPdf: converted successfully\n");
+        MainWindow* w = win;
+        TempStr path = str::DupTemp(destPath);
+        Close();
+        LoadArgs args(path, w);
+        StartLoadDocument(&args);
+    } else {
+        logf("ConvertToPdf: SaveImageCollectionAsPdf failed\n");
+        MessageBoxWarning(hwnd, _TRA("Failed to save a file"), _TRA("Convert to PDF"));
+    }
+}
+
+static void ConvertToPdfOnClose(Wnd::CloseEvent* ev) {
+    auto* dlg = (ConvertToPdfDialog*)ev->e->self;
+    delete dlg;
+}
+
+bool ConvertToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
+    win = w;
+    srcPath = str::Dup(tab->filePath);
+    hFont = GetDefaultGuiFont();
+    onClose = MkFunc1Void(ConvertToPdfOnClose);
+
+    CreateCustomArgs cargs;
+    cargs.title = _TRA("Convert to PDF");
+    cargs.font = hFont;
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.visible = false;
+    cargs.icon = GetAppIcon();
+    if (UseDarkModeLib() && DarkMode::isEnabled()) {
+        cargs.bgColor = ThemeWindowControlBackgroundColor();
+    } else {
+        cargs.bgColor = MkGray(0xee);
+    }
+    CreateCustom(cargs);
+    if (!hwnd) {
+        return false;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+
+    bool isRtl = IsUIRtl();
+    auto* vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
+    vbox->AddChild(pathLabel);
+
+    {
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.font = hFont;
+        args.text = DefaultPdfDestPathTemp(srcPath);
+        args.isRtl = isRtl;
+        destEdit = new Edit();
+        destEdit->Create(args);
+        hbox->AddChild(destEdit, 1);
+
+        browseBtn = new Button();
+        browseBtn->onClick = MkMethod0<ConvertToPdfDialog, &ConvertToPdfDialog::OnBrowse>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = "...";
+        bargs.isRtl = isRtl;
+        browseBtn->Create(bargs);
+        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    {
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        convertBtn = new Button();
+        convertBtn->isDefault = true;
+        convertBtn->onClick = MkMethod0<ConvertToPdfDialog, &ConvertToPdfDialog::DoConvert>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = _TRA("Convert to PDF");
+        bargs.isRtl = isRtl;
+        convertBtn->Create(bargs);
+        hbox->AddChild(convertBtn);
+
+        cancelBtn = new Button();
+        cancelBtn->onClick = MkMethod0<ConvertToPdfDialog, &ConvertToPdfDialog::OnCancel>(this);
+        Button::CreateArgs cargs2;
+        cargs2.parent = hwnd;
+        cargs2.font = hFont;
+        cargs2.text = _TRA("Cancel");
+        cargs2.isRtl = isRtl;
+        cancelBtn->Create(cargs2);
+        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
+    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
+
+    int minClientW = DpiScale(hwnd, 480);
+    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
+    Size size = mainLayout->Layout(ExpandHeight(clientW));
+    Rect bounds{0, 0, size.dx, size.dy};
+    mainLayout->SetBounds(bounds);
+    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+
+    HwndCenterDialog(hwnd, w->hwndFrame);
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    SetIsVisible(true);
+    HwndSetFocus(destEdit->hwnd);
+    return true;
+}
+
+void ShowConvertToPdfDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return;
+    }
+    EngineBase* engine = tab->GetEngine();
+    if (!engine || !engine->IsImageCollection()) {
+        return;
+    }
+    if (!engine->AllowsPrinting()) {
+        return;
+    }
+    logf("ShowConvertToPdfDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new ConvertToPdfDialog();
+    if (!dlg->Create(win, tab)) {
         delete dlg;
     }
 }

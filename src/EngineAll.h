@@ -49,6 +49,9 @@ EngineBase* CreateEngineCbxFromData(Str data);
 bool IsEngineImages(EngineBase*);
 void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);
 bool EngineImagesGetPageFileInfo(EngineBase*, int pageNo, TempStr* nameOut, i64* sizeOut);
+// Non-owning raw image bytes for a page (valid until engine is destroyed). Empty if
+// not an image-collection engine or the page has no extractable file data.
+Str EngineImagesGetImageData(EngineBase*, int pageNo);
 
 /* EngineMupdf.cpp */
 

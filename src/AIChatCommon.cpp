@@ -37,14 +37,14 @@ bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {
     if (!filePath) {
         return false;
     }
-    if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir) {
+    // Comics, image folders, single images, and DjVu have no useful text/agent
+    // payload for chat (menu/context hide these via IsAIChatSupportedForTab).
+    if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir || engineKind == kindEngineImage ||
+        engineKind == kindEngineDjVu) {
         return false;
     }
     FileType kind = GuessFileTypeFromName(filePath);
-    if (kind == FileType::PDF) {
-        return true;
-    }
-    return IsEngineImageSupportedFileType(kind);
+    return kind == FileType::PDF;
 }
 
 bool IsAIChatSupportedForTab(WindowTab* tab) {
