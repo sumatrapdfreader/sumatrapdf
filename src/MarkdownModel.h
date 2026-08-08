@@ -5,6 +5,7 @@ class BrowserDocView;
 enum class FileType : u8;
 struct HtmlWindowCallback;
 struct MarkdownCacheEntry;
+struct MarkdownTocBuildTask;
 
 struct MarkdownModel : DocController {
     explicit MarkdownModel(DocControllerCallback* cb);
@@ -79,6 +80,8 @@ struct MarkdownModel : DocController {
     BrowserDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     TocTree* tocTree = nullptr;
+    // set while the full TOC (file headings included) is built in the background
+    MarkdownTocBuildTask* tocBuildTask = nullptr;
     Mutex docAccess;
     float initZoom = kInvalidZoom;
     float zoomVirtual = 100.0f;
@@ -99,6 +102,7 @@ struct MarkdownModel : DocController {
     Arena* poolAlloc = nullptr;
 
     bool Load(Str fileName);
+    void SetToc(TocTree*);
     bool DisplayPage(Str pageUrl);
 
     MarkdownCacheEntry* FindDataForUrl(Str url) const;

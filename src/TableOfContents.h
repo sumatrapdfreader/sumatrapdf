@@ -5,6 +5,8 @@ void CreateToc(MainWindow*);
 void ClearTocBox(MainWindow*);
 void ToggleTocBox(MainWindow*);
 void LoadTocTree(MainWindow*);
+// rebuild the tree view after the controller replaced its TocTree
+void ReloadTocTree(WindowTab*);
 void UpdateTocSelection(MainWindow*, int currPageNo);
 void ExpandTocToCurrentPage(MainWindow*);
 void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);

@@ -48,6 +48,9 @@ struct DocControllerCallback {
     virtual void FindResultReceived(int gen, int current, int total) = 0;
     // all-pages find result from the webview (raw 'mdfindall' payload)
     virtual void FindAllResultReceived(Str payload) = 0;
+    // the controller replaced its TocTree (built in the background): show the
+    // new one. Must not return while anything still points into the old tree.
+    virtual void TocChanged(DocController*) = 0;
 };
 
 struct DocController {

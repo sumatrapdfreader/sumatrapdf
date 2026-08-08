@@ -93,6 +93,23 @@ struct MarkdownTocTraceItem {
     int pageNo = 0;
 };
 
+// State shared with the background TOC builder. Outlives the model: it holds
+// copies of everything the worker needs, and `model` is nulled (under the lock)
+// when the model is destroyed, so a build that finishes too late is harmless.
+struct MarkdownTocBuildTask {
+    Mutex lock;
+    MarkdownModel* model = nullptr;
+    StrVec pages;
+    Str baseDir;
+    bool isHtml = false;
+    TocTree* tocTree = nullptr; // the result, owned until installed
+
+    ~MarkdownTocBuildTask() {
+        str::Free(baseDir);
+        delete tocTree;
+    }
+};
+
 static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
     if (!url) {
         return nullptr;
@@ -139,6 +156,12 @@ MarkdownModel::MarkdownModel(DocControllerCallback* cb) : DocController(cb) {
 }
 
 MarkdownModel::~MarkdownModel() {
+    if (tocBuildTask) {
+        // a build may still be running; tell it there's nobody to deliver to
+        ScopedMutex scope(&tocBuildTask->lock);
+        tocBuildTask->model = nullptr;
+        tocBuildTask = nullptr;
+    }
     docAccess.Lock();
     delete docView;
     delete htmlWindowCb;
@@ -174,7 +197,9 @@ int MarkdownModel::CurrentPageNo() const {
     return currentPageNo;
 }
 
-TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
+// the TOC is also built on a background thread, which has no model to ask, so
+// this takes the two fields it needs instead of being a method
+static TempStr FileToVirtualUrlTemp(Str filePath, Str baseDir, bool isHtml) {
     if (!filePath) {
         return {};
     }
@@ -194,6 +219,10 @@ TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
         relStr.len -= 3;
     }
     return fmt("%s%s.html", Str(kMdVirtualHost, kMdVirtualHostLen), relStr);
+}
+
+TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
+    return ::FileToVirtualUrlTemp(filePath, baseDir, isHtml);
 }
 
 TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
@@ -765,39 +794,79 @@ bool MarkdownModel_UnitTestBrowserNavigationUrl() {
 }
 #endif
 
-bool MarkdownModel::Load(Str fileName) {
-    str::ReplaceWithCopy(&this->fileName, fileName);
-    str::ReplaceWithCopy(&baseDir, path::GetDirTemp(fileName));
-    isHtml = IsHtmlFileType(GuessFileType(fileName, true));
-
-    StrVec mdFiles;
-    CollectMarkdownFiles(baseDir, fileName, isHtml, mdFiles);
-    if (len(mdFiles) == 0) {
-        return false;
+// trace items own their strings: the full TOC is built on a background thread,
+// which must not touch the model's arena (the model can go away under it)
+static void FreeTocTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
+    for (MarkdownTocTraceItem& ti : tocTrace) {
+        str::Free(ti.title);
+        str::Free(ti.url);
     }
+    tocTrace.Reset();
+}
 
-    pages = mdFiles;
+static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
+    TocItem* root = nullptr;
+    TocItem** nextChild = &root;
+    Vec<TocItem*> levels;
+    bool foundRoot = false;
+    int idCounter = 0;
+    for (MarkdownTocTraceItem& ti : tocTrace) {
+        TocItem* item = NewMarkdownTocItem(nullptr, ti.title, ti.pageNo, ti.url);
+        item->id = ++idCounter;
+        if (ti.level <= len(levels)) {
+            levels.RemoveAt(ti.level, len(levels) - ti.level);
+            levels.Last()->AddSiblingAtEnd(item);
+        } else {
+            *nextChild = item;
+            levels.Append(item);
+            foundRoot = true;
+        }
+        nextChild = &item->child;
+    }
+    if (!foundRoot) {
+        return nullptr;
+    }
+    auto* realRoot = AllocTocItem(nullptr, {}, 0);
+    realRoot->child = root;
+    return new TocTree(realRoot);
+}
+
+static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str filePath, Str pageUrl, int pageNo) {
+    MarkdownTocTraceItem fileItem;
+    // first-level items show the full file name, extension included
+    fileItem.title = str::Dup(path::GetBaseNameTemp(filePath));
+    fileItem.url = str::Dup(pageUrl);
+    fileItem.level = 1;
+    fileItem.pageNo = pageNo;
+    tocTrace.Append(fileItem);
+}
+
+// The TOC we can build without reading a single file. Parsing every sibling
+// .html file to find its headings takes minutes in a directory with thousands
+// of them (#5918), so the document opens with this and BuildFullToc() replaces
+// it when it's ready.
+static TocTree* BuildFilesOnlyToc(StrVec& pages, Str baseDir, bool isHtml) {
+    Vec<MarkdownTocTraceItem> tocTrace;
+    for (int i = 0; i < len(pages); i++) {
+        Str filePath = pages[i];
+        AppendFileTocTraceItem(tocTrace, filePath, FileToVirtualUrlTemp(filePath, baseDir, isHtml), i + 1);
+    }
+    TocTree* res = BuildTocTreeFromTrace(tocTrace);
+    FreeTocTrace(tocTrace);
+    return res;
+}
+
+// the real TOC: every file plus the hierarchy of headings inside it
+static TocTree* BuildFullToc(StrVec& pages, Str baseDir, bool isHtml) {
     Vec<MarkdownFileToc> fileTocs;
     ParseMarkdownTocsParallel(pages, isHtml, fileTocs);
 
     Vec<MarkdownTocTraceItem> tocTrace;
-    int idCounter = 0;
-    TocItem* root = nullptr;
-    Vec<TocItem*> levels;
-
     for (int i = 0; i < len(fileTocs); i++) {
         MarkdownFileToc& ft = fileTocs[i];
         int pageNo = i + 1;
-        TempStr pageUrl = FileToVirtualUrlTemp(ft.filePath);
-        // first-level items show the full file name, extension included
-        Str fileTitle = str::Dup(poolAlloc, path::GetBaseNameTemp(ft.filePath));
-
-        MarkdownTocTraceItem fileItem;
-        fileItem.title = fileTitle;
-        fileItem.url = str::Dup(poolAlloc, pageUrl);
-        fileItem.level = 1;
-        fileItem.pageNo = pageNo;
-        tocTrace.Append(fileItem);
+        TempStr pageUrl = FileToVirtualUrlTemp(ft.filePath, baseDir, isHtml);
+        AppendFileTocTraceItem(tocTrace, ft.filePath, pageUrl, pageNo);
 
         for (MarkdownHeadingItem& hi : ft.headings) {
             TempStr destUrl = pageUrl;
@@ -805,8 +874,8 @@ bool MarkdownModel::Load(Str fileName) {
                 destUrl = str::JoinTemp(pageUrl, fmt("#%s", hi.anchor));
             }
             MarkdownTocTraceItem hItem;
-            hItem.title = str::Dup(poolAlloc, hi.title);
-            hItem.url = str::Dup(poolAlloc, destUrl);
+            hItem.title = str::Dup(hi.title);
+            hItem.url = str::Dup(destUrl);
             hItem.level = hi.level + 1;
             hItem.pageNo = pageNo;
             tocTrace.Append(hItem);
@@ -822,28 +891,71 @@ bool MarkdownModel::Load(Str fileName) {
         ft.headings.Reset();
     }
 
-    TocItem** nextChild = &root;
-    bool foundRoot = false;
-    levels.Reset();
-    for (MarkdownTocTraceItem& ti : tocTrace) {
-        TocItem* item = NewMarkdownTocItem(nullptr, ti.title, ti.pageNo, ti.url);
-        item->id = ++idCounter;
-        if (ti.level <= len(levels)) {
-            levels.RemoveAt(ti.level, len(levels) - ti.level);
-            levels.Last()->AddSiblingAtEnd(item);
-        } else {
-            *nextChild = item;
-            levels.Append(item);
-            foundRoot = true;
-        }
-        nextChild = &item->child;
+    TocTree* res = BuildTocTreeFromTrace(tocTrace);
+    FreeTocTrace(tocTrace);
+    return res;
+}
+
+// Runs on the UI thread when the background build finished. The model clears
+// task->model when it goes away, so a document closed mid-build just drops the
+// result on the floor.
+static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
+    AutoDelete<MarkdownTocBuildTask> delTask(task);
+    ScopedMutex scope(&task->lock);
+    if (!task->model) {
+        delete task->tocTree;
+        return;
+    }
+    task->model->tocBuildTask = nullptr;
+    task->model->SetToc(task->tocTree);
+    task->tocTree = nullptr;
+}
+
+static void MarkdownTocBuildThread(MarkdownTocBuildTask* task) {
+    task->tocTree = BuildFullToc(task->pages, task->baseDir, task->isHtml);
+    auto fn = MkFunc0(MarkdownTocBuildFinished, task);
+    uitask::Post(fn, "MarkdownTocBuildFinished");
+}
+
+// take ownership of a newly built TOC and let the UI show it. The old tree is
+// deleted only after the UI dropped its references to it (TocChanged rebuilds
+// the tree view, which holds TocItem pointers).
+void MarkdownModel::SetToc(TocTree* newToc) {
+    if (!newToc) {
+        return;
+    }
+    TocTree* old = tocTree;
+    tocTree = newToc;
+    if (cb) {
+        cb->TocChanged(this);
+    }
+    delete old;
+}
+
+bool MarkdownModel::Load(Str fileName) {
+    str::ReplaceWithCopy(&this->fileName, fileName);
+    str::ReplaceWithCopy(&baseDir, path::GetDirTemp(fileName));
+    isHtml = IsHtmlFileType(GuessFileType(fileName, true));
+
+    StrVec mdFiles;
+    CollectMarkdownFiles(baseDir, fileName, isHtml, mdFiles);
+    if (len(mdFiles) == 0) {
+        return false;
     }
 
-    if (foundRoot) {
-        auto* realRoot = AllocTocItem(nullptr, {}, 0);
-        realRoot->child = root;
-        tocTree = new TocTree(realRoot);
-    }
+    pages = mdFiles;
+    // show the files right away, then fill in the headings in the background
+    tocTree = BuildFilesOnlyToc(pages, baseDir, isHtml);
+
+    auto* task = new MarkdownTocBuildTask;
+    task->model = this;
+    task->pages = pages;
+    task->baseDir = str::Dup(baseDir);
+    task->isHtml = isHtml;
+    tocBuildTask = task;
+    auto fn = MkFunc0(MarkdownTocBuildThread, task);
+    ThreadHandle th = StartThread(fn, "MarkdownTocBuild");
+    SafeCloseThreadHandle(&th);
 
     // Prefer path::IsSame: DirIter paths may differ from the open path in
     // case, separators, or long/short form, so StrVec::Find can miss.

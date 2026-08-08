@@ -1119,6 +1119,69 @@ void LoadTocTree(MainWindow* win) {
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
 
+static TocItem* FindTocItemByTitleAndPage(TocItem* item, Str title, int pageNo) {
+    while (item) {
+        if (item->pageNo == pageNo && str::Eq(item->title, title)) {
+            return item;
+        }
+        if (TocItem* found = FindTocItemByTitleAndPage(item->child, title, pageNo)) {
+            return found;
+        }
+        item = item->next;
+    }
+    return nullptr;
+}
+
+// The controller swapped in a different TocTree (the markdown / html TOC is
+// built in the background, see MarkdownModel). Show the new one, keeping the
+// selection on the same entry when it's still there.
+// Must not return while anything still points into the old tree: the caller
+// deletes it as soon as we're done.
+void ReloadTocTree(WindowTab* tab) {
+    MainWindow* win = tab ? tab->win : nullptr;
+    if (!win) {
+        return;
+    }
+    // the tree view only ever shows the current tab; another tab picks up the
+    // new tree when it's switched to
+    if (win->CurrentTab() != tab || !win->tocLoaded) {
+        tab->currToc = nullptr;
+        return;
+    }
+
+    // the items are about to be freed, so remember the selection the way the
+    // user sees it rather than by pointer
+    TreeView* treeView = win->tocTreeView;
+    TempStr selTitle = nullptr;
+    int selPageNo = 0;
+    if (treeView) {
+        auto* sel = (TocItem*)treeView->GetSelection();
+        if (sel) {
+            selTitle = str::DupTemp(sel->title);
+            selPageNo = sel->pageNo;
+        }
+    }
+    int currPageNo = win->currPageNo;
+
+    ClearTocBox(win);
+    LoadTocTree(win);
+
+    if (!treeView || !tab->currToc) {
+        return;
+    }
+    TocItem* toSelect = nullptr;
+    if (selTitle) {
+        toSelect = FindTocItemByTitleAndPage(tab->currToc->root, selTitle, selPageNo);
+    }
+    if (toSelect) {
+        treeView->SelectItem((TreeItem)toSelect);
+        SetTocMultiHighlight(win, treeView, toSelect);
+        return;
+    }
+    // nothing matched (or nothing was selected): fall back to the current page
+    UpdateTocSelection(win, currPageNo);
+}
+
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
 // to get LOGFONT from existing font and then create a derived font
 static void UpdateFont(HDC hdc, HWND hwnd, int fontFlags) {

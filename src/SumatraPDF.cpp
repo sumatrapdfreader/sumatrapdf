@@ -1062,7 +1062,16 @@ struct ControllerCallbackHandler : DocControllerCallback {
         BrowserFindResultReceived(win, gen, current, total);
     }
     void FindAllResultReceived(Str payload) override { BrowserFindAllResultReceived(win, payload); }
+    void TocChanged(DocController* ctrl) override;
 };
+
+void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
+    WindowTab* tab = FindTabByController(ctrl);
+    if (!tab) {
+        return;
+    }
+    ReloadTocTree(tab);
+}
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
     return new ControllerCallbackHandler(win);
