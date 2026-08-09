@@ -8,6 +8,7 @@ extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
 extern Kind kNotifPageInfo;
 extern Kind kNotifAdHoc;
+extern Kind kNotifLazyLayout;
 
 using NotificationWndRemoved = Func1<NotificationWnd*>;
 

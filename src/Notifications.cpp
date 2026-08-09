@@ -32,6 +32,8 @@ Kind kNotifActionResponse = "responseToAction";
 Kind kNotifPageInfo = "pageInfoHelper";
 // can have multiple of those
 Kind kNotifAdHoc = "notifAdHoc";
+// debug-only: continuous layout re-done because newly visible pages got measured
+Kind kNotifLazyLayout = "notifLazyLayout";
 
 constexpr int kPadding = 6;
 constexpr int kTopLeftMargin = 8;

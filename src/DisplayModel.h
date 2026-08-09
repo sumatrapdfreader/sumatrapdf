@@ -10,11 +10,23 @@ struct Annotation;
 struct PageRenderRequest;
 enum class AnnotationType;
 
+// a media box we haven't measured yet. Measuring a page of an image collection
+// means reading the image's header off disk, which is slow on network drives,
+// so continuous layout estimates the size of un-measured pages instead
+// (see DisplayModel::PageMediaBoxForLayout)
+inline bool IsMediaBoxKnown(const RectF& r) {
+    return r.dx >= 0 && r.dy >= 0;
+}
+
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
-    /* data that is constant for a given page. page size in document units */
-    RectF mediaBox;
+    /* data that is constant for a given page. page size in document units.
+       {-1, -1} size means "not measured yet" (see IsMediaBoxKnown) */
+    RectF mediaBox{0, 0, -1, -1};
     PageInfoState state = PageInfoState::Unknown;
+    /* set by Relayout() when this page was laid out with the estimated media
+       box because its own wasn't measured yet */
+    bool usedEstimatedMediaBox = false;
 
     /* data that is calculated when needed. actual content size within a page (View target) */
     RectF contentBox;
@@ -130,6 +142,10 @@ struct DisplayModel : DocController {
 
     PageInfo* GetPageInfo(int pageNo) const;
     RectF PageMediaBox(int pageNo) const;
+    RectF PageMediaBoxForLayout(int pageNo) const;
+    void UpdateEstimatedMediaBox();
+    bool EnsureMediaBoxesForVisiblePages();
+    void RelayoutKeepingView();
 
     int GetRotation() const;
     float GetZoomReal(int pageNo) const;
@@ -212,6 +228,15 @@ struct DisplayModel : DocController {
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo* pagesInfo = nullptr;
+
+    /* Lazy media boxes: don't measure every page up-front, lay out un-measured
+       pages with estimatedMediaBox and fix them up as they scroll into view.
+       See DisplayModel::PageMediaBoxForLayout / EnsureMediaBoxesForVisiblePages */
+    bool useLazyMediaBoxes = false;
+    RectF estimatedMediaBox;
+    // guards against re-entering EnsureMediaBoxesForVisiblePages() from the
+    // relayout it triggers
+    bool inMediaBoxUpdate = false;
 
     DisplayMode displayMode{DisplayMode::Automatic};
     /* In non-continuous mode is the first page from a file that we're

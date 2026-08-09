@@ -68,6 +68,8 @@
 #include "base/UITask.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
+#include "Notifications.h"
+#include "SumatraConfig.h"
 
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;
@@ -330,7 +332,7 @@ SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
         }
     }
 
-    RectF pageBox = PageMediaBox(pageNo);
+    RectF pageBox = PageMediaBoxForLayout(pageNo);
     RectF box = fitToContent ? pageInfo->contentBox : pageBox;
     return engine->Transform(box, pageNo, 1.0, rotation).Size();
 }
@@ -503,6 +505,16 @@ DisplayModel::~DisplayModel() {
     free(pagesInfo);
 }
 
+// the page size we assume when we don't know the real one: A4 (Letter in
+// countries using the imperial system), in the document's own units
+static RectF DefaultMediaBox(EngineBase* engine) {
+    float fileDPI = engine->GetFileDPI();
+    if (0 == GetMeasurementSystem()) {
+        return RectF(0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI));
+    }
+    return RectF(0, 0, (float)(8.5 * fileDPI), 11 * fileDPI);
+}
+
 RectF DisplayModel::PageMediaBox(int pageNo) const {
     PageInfo* pi = GetPageInfo(pageNo);
     if (!pi) {
@@ -516,17 +528,102 @@ RectF DisplayModel::PageMediaBox(int pageNo) const {
     }
     pi->mediaBox = engine->PageMediabox(pageNo);
     if (pi->mediaBox.IsEmpty()) {
-        float fileDPI = engine->GetFileDPI();
-        if (0 == GetMeasurementSystem()) {
-            pi->mediaBox = RectF(0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI));
-        } else {
-            pi->mediaBox = RectF(0, 0, (float)(8.5 * fileDPI), 11 * fileDPI);
-        }
+        pi->mediaBox = DefaultMediaBox(engine);
         pi->state = PageInfoState::Error;
     } else {
         pi->state = PageInfoState::Known;
     }
     return pi->mediaBox;
+}
+
+// The media box to lay a page out with. For comic books and image directories
+// measuring a page means reading the image off disk (slow on network drives),
+// and continuous mode needs the size of *every* page. So we only measure the
+// pages the user can actually see and lay the rest out with an estimate; they
+// get measured (and the layout redone) once they scroll into view.
+RectF DisplayModel::PageMediaBoxForLayout(int pageNo) const {
+    PageInfo* pi = GetPageInfo(pageNo);
+    if (!pi) {
+        return {};
+    }
+    if (IsMediaBoxKnown(pi->mediaBox)) {
+        // includes PageInfoState::Error, where mediaBox is the default box
+        return pi->mediaBox;
+    }
+    if (!useLazyMediaBoxes) {
+        return PageMediaBox(pageNo);
+    }
+    return estimatedMediaBox;
+}
+
+// Pick the media box to lay out not-yet-measured pages with: the most common
+// size among the visible pages, since comic book pages are usually all the same
+// size. Falls back to the pages measured so far (right after switching to
+// continuous mode nothing is visible yet) and finally to A4.
+void DisplayModel::UpdateEstimatedMediaBox() {
+    if (!useLazyMediaBoxes) {
+        return;
+    }
+    // a box this small is a thumbnail or a spacer image, not representative
+    constexpr float kMinEstimateSize = 100;
+    // distinct page sizes we tally; more than a handful means the pages have no
+    // common size worth finding
+    constexpr int kMaxSizes = 16;
+
+    struct SizeCount {
+        SizeF size;
+        int nVisible;
+        int nTotal;
+    };
+    SizeCount sizes[kMaxSizes];
+    int nSizes = 0;
+
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        PageInfo* pi = GetPageInfo(pageNo);
+        if (!IsMediaBoxKnown(pi->mediaBox)) {
+            continue;
+        }
+        SizeF size = pi->mediaBox.Size();
+        int idx = -1;
+        for (int i = 0; i < nSizes; i++) {
+            if (sizes[i].size == size) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx < 0) {
+            if (nSizes == kMaxSizes) {
+                continue;
+            }
+            idx = nSizes++;
+            sizes[idx] = {size, 0, 0};
+        }
+        sizes[idx].nTotal++;
+        if (pi->visibleRatio > 0) {
+            sizes[idx].nVisible++;
+        }
+    }
+
+    SizeF best;
+    int bestVisible = 0;
+    int bestTotal = 0;
+    for (int i = 0; i < nSizes; i++) {
+        const SizeCount& sc = sizes[i];
+        // most common among the visible pages; only if none of them is measured
+        // does the count over all measured pages decide
+        bool better = (sc.nVisible > bestVisible) || (bestVisible == 0 && sc.nTotal > bestTotal);
+        if (better) {
+            best = sc.size;
+            bestVisible = sc.nVisible;
+            bestTotal = sc.nTotal;
+        }
+    }
+
+    if (bestTotal == 0 || best.dx < kMinEstimateSize || best.dy < kMinEstimateSize) {
+        estimatedMediaBox = DefaultMediaBox(engine);
+        return;
+    }
+    estimatedMediaBox = RectF(0, 0, best.dx, best.dy);
 }
 
 PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
@@ -612,21 +709,33 @@ void DisplayModel::BuildPagesInfo() {
         newStartPage--;
     }
 
+    // measuring a page of a comic book / image directory reads the image off
+    // disk, so measure them lazily (only what's visible) instead of measuring
+    // every page for a continuous layout, which is very slow on network drives
+    useLazyMediaBoxes = engine->IsImageCollection();
+    estimatedMediaBox = DefaultMediaBox(engine);
+
     bool isCont = IsContinuous(displayMode);
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo* pageInfo = &pagesInfo[pageNo - 1];
         pageInfo->visibleRatio = 0.0;
+        // AllocArray() zeroes the memory, so the "not measured yet" size in the
+        // PageInfo declaration doesn't apply - set it here
+        pageInfo->mediaBox = RectF(0, 0, -1, -1);
         bool isShown = isCont || (newStartPage <= pageNo && pageNo < newStartPage + columns);
         pagesInfo[pageNo - 1].isShown = isShown;
     }
 
-    if (isCont) {
-        // in continuous mode, we need page sizes for all pages upfront for layout
-        for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
-            GetPageInfo(pageNo); // triggers lazy load of page mediabox
+    if (isCont && useLazyMediaBoxes) {
+        // no layout yet, so we don't know what will be visible: measure a few
+        // pages from where we start so the estimate for the rest is a real page
+        // size rather than A4
+        constexpr int kSeedPages = 4;
+        for (int pageNo = startPage; pageNo < startPage + kSeedPages && pageNo <= pageCount; pageNo++) {
+            PageMediaBox(pageNo);
         }
     }
-    // in non-continuous mode, GetPageInfo() will lazily load page sizes on demand
+    // otherwise Relayout() measures the shown pages, on demand in non-continuous mode
 }
 
 // TODO: a better name e.g. ShouldShow() to better distinguish between
@@ -857,7 +966,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
                 pageInfo->contentBox = engine->PageContentBox(i);
             }
 
-            RectF mbox = PageMediaBox(i);
+            RectF mbox = PageMediaBoxForLayout(i);
             RectF pageBox = engine->Transform(mbox, i, 1.0, rotation);
             RectF contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
             if (contentBox.IsEmpty()) {
@@ -1094,6 +1203,10 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     bool hideScrollbars = ScrollbarsAreHidden();
     bool useOverlayScrollbar = ScrollbarsUseOverlay();
 
+    // the size to lay out pages we haven't measured yet with; must be picked
+    // before CalcZoomReal(), which already asks for page sizes
+    UpdateEstimatedMediaBox();
+
     DocumentLayout layout;
     for (;;) {
         float currZoomReal = zoomReal;
@@ -1107,11 +1220,16 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
 
         layout.Reset(PageCount());
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            PageInfo* pi = GetPageInfo(pageNo);
+            pi->usedEstimatedMediaBox = false;
             DocumentLayoutPage* layoutPage = layout.GetPage(pageNo);
             if (!layoutPage || !PageShown(pageNo)) {
                 continue;
             }
-            layoutPage->mediaBox = PageMediaBox(pageNo);
+            layoutPage->mediaBox = PageMediaBoxForLayout(pageNo);
+            // remember that this page's position is only a guess, so that
+            // EnsureMediaBoxesForVisiblePages() fixes it up once it's on screen
+            pi->usedEstimatedMediaBox = !IsMediaBoxKnown(pi->mediaBox);
             layoutPage->zoomReal = GetZoomReal(pageNo);
         }
 
@@ -1149,6 +1267,115 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     canvasSize = layout.canvasSize;
     zoomReal = layout.zoomReal;
     CopyDocumentLayoutToPageInfo(this, layout);
+}
+
+// Re-do the layout after page sizes changed, keeping the user looking at the
+// same place: pages before the first visible one may have grown or shrunk, so
+// the scroll position has to move with it.
+void DisplayModel::RelayoutKeepingView() {
+    int anchorPageNo = FirstVisiblePageNo();
+    if (!ValidPageNo(anchorPageNo)) {
+        anchorPageNo = CurrentPageNo();
+    }
+    int dyInPage = 0;
+    if (ValidPageNo(anchorPageNo)) {
+        dyInPage = viewPort.y - GetPageInfo(anchorPageNo)->pos.y;
+    }
+
+    Relayout(zoomVirtual, rotation);
+
+    if (ValidPageNo(anchorPageNo)) {
+        int newY = GetPageInfo(anchorPageNo)->pos.y + dyInPage;
+        viewPort.y = limitValue(newY, 0, std::max(0, canvasSize.dy - viewPort.dy));
+    }
+    RecalcVisibleParts();
+    RenderVisibleParts();
+    cb->UpdateScrollbars(canvasSize);
+    RepaintDisplay();
+}
+
+static void NotifyMediaBoxRelayout(DisplayModel* dm, Str msg) {
+    if (!gIsDebugBuild) {
+        return;
+    }
+    for (MainWindow* win : gWindows) {
+        if (win->AsFixed() != dm) {
+            continue;
+        }
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.groupId = kNotifLazyLayout;
+        args.timeoutMs = kNotif5SecsTimeOut;
+        args.corner = NotifCorner::BottomLeft;
+        args.msg = msg;
+        ShowNotification(args);
+        return;
+    }
+}
+
+// Pages laid out with the estimated media box (see PageMediaBoxForLayout) are
+// only a guess. Once such a page becomes visible we need its real size, so
+// measure the newly visible ones and lay out again with the truth.
+// Keyed off usedEstimatedMediaBox rather than "is it measured", because a page
+// can get measured by something else (e.g. rendering it) without the layout,
+// which is what's stale here, having been redone.
+// Returns true if we re-laid out.
+bool DisplayModel::EnsureMediaBoxesForVisiblePages() {
+    if (!useLazyMediaBoxes || !pagesInfo || inMediaBoxUpdate) {
+        return false;
+    }
+    inMediaBoxUpdate = true;
+    defer {
+        inMediaBoxUpdate = false;
+    };
+
+    int nMeasured = 0;
+    // what we measured, as "12 (1200x1800), 13 (1600x1000)". Only so many fit
+    // in a notification, the rest are counted
+    constexpr int kMaxListed = 4;
+    TempStr measured = StrL("");
+    int nListed = 0;
+
+    // a relayout can scroll further un-measured pages into view; bounded so
+    // that a document of very small pages can't spin here
+    constexpr int kMaxRelayouts = 4;
+    for (int i = 0; i < kMaxRelayouts; i++) {
+        int nInPass = 0;
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            PageInfo* pi = GetPageInfo(pageNo);
+            if (pi->visibleRatio <= 0 || !pi->usedEstimatedMediaBox) {
+                continue;
+            }
+            PageMediaBox(pageNo);
+            nInPass++;
+            if (nListed < kMaxListed) {
+                // pi->mediaBox, not PageMediaBox()'s result: for a page we
+                // failed to measure that returns nothing, while mediaBox holds
+                // the default box we laid it out with
+                SizeF size = pi->mediaBox.Size();
+                Str sep = nListed > 0 ? StrL(", ") : StrL("");
+                measured = fmt("%s%s%d (%dx%d)", measured, sep, pageNo, (int)size.dx, (int)size.dy);
+                nListed++;
+            }
+        }
+        if (nInPass == 0) {
+            break;
+        }
+        nMeasured += nInPass;
+        RelayoutKeepingView();
+    }
+    if (nMeasured == 0) {
+        return false;
+    }
+
+    Str pageWord = nMeasured == 1 ? StrL("page") : StrL("pages");
+    TempStr msg = fmt("re-layout: measured %s %s", pageWord, measured);
+    if (nMeasured > nListed) {
+        msg = fmt("%s and %d more", msg, nMeasured - nListed);
+    }
+    logf("EnsureMediaBoxesForVisiblePages: %s\n", msg);
+    NotifyMediaBoxRelayout(this, msg);
+    return true;
 }
 
 void DisplayModel::ChangeStartPage(int newStartPage) {
@@ -1484,6 +1711,7 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
         }
     } else {
         RecalcVisibleParts();
+        EnsureMediaBoxesForVisiblePages();
         RenderVisibleParts();
         cb->UpdateScrollbars(canvasSize);
     }
@@ -1597,6 +1825,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     viewPort.y = limitValue(viewPort.y, 0, canvasSize.dy - viewPort.dy);
 
     RecalcVisibleParts();
+    EnsureMediaBoxesForVisiblePages();
     RenderVisibleParts();
     cb->UpdateScrollbars(canvasSize);
     cb->PageNoChanged(this, pageNo);
@@ -1623,6 +1852,16 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
         currPageNo++;
     }
     displayMode = newDisplayMode;
+    if (IsContinuous(newDisplayMode) && useLazyMediaBoxes) {
+        // only the pages the user is looking at get measured on the ui thread;
+        // the rest are laid out with an estimate derived from them and measured
+        // as they scroll into view (see EnsureMediaBoxesForVisiblePages)
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            if (pagesInfo[pageNo - 1].visibleRatio > 0) {
+                PageMediaBox(pageNo);
+            }
+        }
+    }
     if (IsContinuous(newDisplayMode)) {
         /* mark all pages as shown but not yet visible. The equivalent code
            for non-continuous mode is in DisplayModel::changeStartPage() called
@@ -1781,6 +2020,7 @@ void DisplayModel::ScrollXTo(int xOff) {
     int currPageNo = CurrentPageNo();
     viewPort.x = xOff;
     RecalcVisibleParts();
+    EnsureMediaBoxesForVisiblePages();
     cb->UpdateScrollbars(canvasSize);
 
     if (CurrentPageNo() != currPageNo) {
@@ -1805,6 +2045,7 @@ void DisplayModel::ScrollYTo(int yOff) {
     int currPageNo = CurrentPageNo();
     viewPort.y = yOff;
     RecalcVisibleParts();
+    EnsureMediaBoxesForVisiblePages();
     RenderVisibleParts();
     // Match ScrollXTo: keep scrollbar thumb (and smart overlay reveal) in sync.
     cb->UpdateScrollbars(canvasSize);
@@ -1868,6 +2109,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
     currPageNo = CurrentPageNo();
     viewPort.y = newYOff;
     RecalcVisibleParts();
+    EnsureMediaBoxesForVisiblePages();
     RenderVisibleParts();
     cb->UpdateScrollbars(canvasSize);
     newPageNo = CurrentPageNo();
