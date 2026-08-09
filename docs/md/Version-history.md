@@ -219,6 +219,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdTranslateSelectionWithOpenAICodex` : "Translate Selection with OpenAI Codex"
 - `CmdZoomFitByOrientation` : "Fit by Orientation"
 - `CmdZoomShrinkToFit` : "Shrink To Fit"
+- `CmdDebugShowFitContentArea` : "Debug: Show Fit Content Area" — Debug menu checkbox; outlines in red the area **Fit Content** zoom would fit to, without changing the zoom
 
 **New command-line arguments:**
 

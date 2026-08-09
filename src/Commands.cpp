@@ -286,6 +286,7 @@ static SeqStrings gCommandNames =
     "CmdAIChatWithAntiGravity\0"
     "CmdTranslateSelectionWithAntiGravity\0"
     "CmdConvertToPDF\0"
+    "CmdDebugShowFitContentArea\0"
     "CmdNone\0"
     "\0";
 
@@ -560,6 +561,7 @@ static i32 gCommandIds[] = {
     CmdAIChatWithAntiGravity,
     CmdTranslateSelectionWithAntiGravity,
     CmdConvertToPDF,
+    CmdDebugShowFitContentArea,
     CmdNone,
 };
 
@@ -834,6 +836,7 @@ SeqStrings gCommandDescriptions =
     "Antigravity chat...\0"
     "Translate Selection with Antigravity...\0"
     "Convert To PDF...\0"
+    "Debug: Show Fit Content Area\0"
     "Do nothing\0"
     "\0";
 // clang-format on

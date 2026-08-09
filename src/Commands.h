@@ -279,7 +279,8 @@ enum {
     CmdAIChatWithAntiGravity = 468,
     CmdTranslateSelectionWithAntiGravity = 469,
     CmdConvertToPDF = 470,
-    CmdNone = 471,
+    CmdDebugShowFitContentArea = 471,
+    CmdNone = 472,
 
     /* range for file history */
     CmdFileHistoryFirst,

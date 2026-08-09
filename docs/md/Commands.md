@@ -353,6 +353,7 @@ CmdDebugTogglePredictiveRender,,Debug: Toggle Predictive Rendering,
 CmdDebugToggleRenderInfo,,Debug: Toggle Render Queue Info,
 CmdDebugToggleCacheInfo,,Debug: Toggle Cache Info,
 CmdDebugToggleRtl,,Debug: Toggle Rtl,
+CmdDebugShowFitContentArea,,Debug: Show Fit Content Area,"outlines in red the area Fit Content zoom would fit to (whole page if no content box was detected), without changing the zoom, ver 3.7+"
 CmdNone,,Do nothing,
 ```
 

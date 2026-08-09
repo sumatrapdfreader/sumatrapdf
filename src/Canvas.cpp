@@ -2481,17 +2481,46 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
         return;
     }
     DebugOutlinePageElements(dm, hdc, false);
+}
 
-    if (false && dm->GetZoomVirtual() == kZoomFitContent) {
-        // also display the content box when fitting content
-        for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
-            PageInfo* pi = dm->GetPageInfo(pageNo);
-            if (!pi->isShown || 0.0 == pi->visibleRatio) {
-                continue;
-            }
+// CmdDebugShowFitContentArea. Like gShowImages, a debug-only visualization that
+// is drawn but never saved to settings
+static bool gShowFitContentArea = false;
 
-            auto cbbox = dm->GetEngine()->PageContentBox(pageNo);
-            Rect rect = dm->CvtToScreen(pageNo, cbbox);
+void ToggleShowFitContentArea() {
+    gShowFitContentArea = !gShowFitContentArea;
+}
+
+bool ShowFitContentArea() {
+    return gShowFitContentArea;
+}
+
+/* debug code to visualize the area "Fit Content" zoom would fit to, without
+   actually switching the zoom. When no content box is detected we outline the
+   whole page, which is the same fallback PageSizeAfterRotation() uses */
+static void DebugShowFitContentArea(DisplayModel* dm, HDC hdc) {
+    if (!gShowFitContentArea) {
+        return;
+    }
+    Rect viewPortRect(Point(), dm->GetViewPort().Size());
+    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 2, RGB(0xff, 0x00, 0x00)), true);
+
+    for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        if (!pi || !pi->isShown || 0.0 == pi->visibleRatio) {
+            continue;
+        }
+        // same cache DisplayModel uses for kZoomFitContent, so we don't
+        // re-analyze the page on every repaint
+        if (pi->contentBox.IsEmpty()) {
+            pi->contentBox = dm->GetEngine()->PageContentBox(pageNo);
+        }
+        RectF box = pi->contentBox;
+        if (box.IsEmpty()) {
+            box = dm->PageMediaBox(pageNo);
+        }
+        Rect rect = dm->CvtToScreen(pageNo, box);
+        if (!viewPortRect.Intersect(rect).IsEmpty()) {
             HdcDrawRect(hdc, rect);
         }
     }
@@ -2853,6 +2882,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     if (!rendering) {
         DebugShowLinks(dm, hdc);
+        DebugShowFitContentArea(dm, hdc);
     }
     return shouldPaint;
 }

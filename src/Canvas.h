@@ -10,6 +10,8 @@ void CancelDrag(MainWindow*);
 void StartAutoScrollAtCursor(MainWindow*);
 bool ShowImageOutlines();
 void ToggleShowImageOutlines();
+bool ShowFitContentArea();
+void ToggleShowFitContentArea();
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
 void InvalidateCanvasKeyboardFocus(MainWindow* win);
 

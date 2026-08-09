@@ -636,6 +636,10 @@ static MenuDef menuDefDebug[] = {
         CmdToggleImages,
     },
     {
+        "Show fit content area",
+        CmdDebugShowFitContentArea,
+    },
+    {
         "Download symbols",
         CmdDebugDownloadSymbols,
     },
@@ -1851,6 +1855,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
 
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
     MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
+    MenuSetChecked(win->menu, CmdDebugShowFitContentArea, ShowFitContentArea());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));
     MenuSetChecked(win->menu, CmdToggleFilePicker,
                    gGlobalPrefs && str::EqI(gGlobalPrefs->filePicker, StrL("sumatrapdf")));

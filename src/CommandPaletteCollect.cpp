@@ -90,6 +90,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !ShowImageOutlines();
         } break;
+        case CmdDebugShowFitContentArea: {
+            isToggle = true;
+            newIsOn = !ShowFitContentArea();
+        } break;
         case CmdToggleShowAnnotations: {
             WindowTab* tab = win->CurrentTab();
             if (tab) {

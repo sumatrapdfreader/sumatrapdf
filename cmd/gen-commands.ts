@@ -279,6 +279,7 @@ export const commands = [
     "CmdAIChatWithAntiGravity", "Antigravity chat...",
     "CmdTranslateSelectionWithAntiGravity", "Translate Selection with Antigravity...",
     "CmdConvertToPDF", "Convert To PDF...",
+    "CmdDebugShowFitContentArea", "Debug: Show Fit Content Area",
     "CmdNone", "Do nothing",
 ];
 
