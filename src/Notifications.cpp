@@ -384,9 +384,9 @@ void NotificationWnd::Layout(Str message) {
         szText.dy = parsedMsg.totalDy;
     } else {
         // plain text: render exactly like before (RTL handling, wrapping). Only
-        // substitute the parsed text when there were (Key/...) shortcuts to
-        // expand, so ordinary messages keep their original whitespace/newlines.
-        if (str::Contains(message, StrL("(Key/"))) {
+        // substitute the parsed text when there were (Key/...) / (Kbd/...) so
+        // ordinary messages keep their original whitespace/newlines.
+        if (str::Contains(message, StrL("(Key/")) || str::Contains(message, StrL("(Kbd/"))) {
             message = TipPlainTextTemp(parsedMsg);
             HwndSetText(hwnd, message);
         }
@@ -534,7 +534,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
         // words were laid out at (0,0); shift the origin to rTxt and draw
         POINT oldOrg;
         SetViewportOrgEx(hdc, rTxt.x, rTxt.y, &oldOrg);
-        DrawTipWords(hdc, parsedMsg, font, colTxt, colLink);
+        DrawTipWords(hdc, parsedMsg, font, colTxt, colLink, colBg);
         SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
     } else {
         TempStr text = HwndGetTextTemp(hwnd);

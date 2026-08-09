@@ -925,6 +925,8 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, Str s) {
 //   [text](Help/Page)   a link that opens a docs page in the browser
 //   [text](https://..)  a link that opens a url in the browser
 //   (Key/Cmd...)        expanded inline to the command's keyboard shortcut
+//   (Kbd/text)          drawn as a key-cap (same look as keyboard help);
+//                       nests, e.g. (Kbd/(Key/CmdOpenNextFileInFolder))
 //   **text**            bold text
 // note: include Base.h before this
 int GetCommandIdByName(Str cmdName) {

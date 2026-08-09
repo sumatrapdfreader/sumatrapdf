@@ -7,6 +7,7 @@
 // is its command table (see TipText.h) and a way to open a url.
 
 #include "base/Base.h"
+#include "base/Dpi.h"
 #include "base/Win.h"
 
 #include "Commands.h"
@@ -102,6 +103,41 @@ static void SetNoSpaceBefore(ParsedTip& tip, int firstWordIdx, bool noSpace) {
     }
 }
 
+// index of the ')' that matches s[0]=='(', or -1
+static int MatchingCloseParen(Str s) {
+    if (len(s) == 0 || s.s[0] != '(') {
+        return -1;
+    }
+    int depth = 0;
+    for (int i = 0; i < s.len; i++) {
+        char c = s.s[i];
+        if (c == '(') {
+            depth++;
+        } else if (c == ')') {
+            depth--;
+            if (depth == 0) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+// true if s starts with "(prefix/" (prefix e.g. "Key" or "Kbd")
+static bool StartsWithParenPrefix(Str s, Str prefix) {
+    // "(" + prefix + "/"
+    if (len(s) < 2 + len(prefix) + 1) {
+        return false;
+    }
+    if (s.s[0] != '(') {
+        return false;
+    }
+    if (!str::StartsWith(Str(s.s + 1, s.len - 1), prefix)) {
+        return false;
+    }
+    return s.s[1 + len(prefix)] == '/';
+}
+
 // resolve (Key/CmdXxx) to keyboard shortcut string
 static TempStr ResolveKeyShortcutTemp(Str cmdName) {
     int cmdId = GetCommandIdByName(cmdName);
@@ -117,6 +153,54 @@ static TempStr ResolveKeyShortcutTemp(Str cmdName) {
         return Str(accel.s + 1);
     }
     return accel;
+}
+
+// emit (Kbd/...) content as one or more key-cap words (", "-separated, like
+// the keyboard help sheet when a command has multiple bindings)
+static void AppendKbdWords(ParsedTip& tip, Str content, bool noSpace) {
+    // trim leading/trailing whitespace on the whole content
+    while (len(content) > 0 && IsTipWhitespace(content.s[0])) {
+        content.s++;
+        content.len--;
+    }
+    while (len(content) > 0 && IsTipWhitespace(content.s[content.len - 1])) {
+        content.len--;
+    }
+    if (len(content) == 0) {
+        return;
+    }
+    StrVec toks;
+    Split(&toks, content, StrL(", "));
+    int n = len(toks);
+    bool any = false;
+    for (int i = 0; i < n; i++) {
+        Str t = toks.At(i);
+        while (len(t) > 0 && IsTipWhitespace(t.s[0])) {
+            t.s++;
+            t.len--;
+        }
+        while (len(t) > 0 && IsTipWhitespace(t.s[t.len - 1])) {
+            t.len--;
+        }
+        if (len(t) == 0) {
+            continue;
+        }
+        TipWord w;
+        str::ReplaceWithCopy(&w.text, t);
+        w.isKbd = true;
+        if (!any) {
+            w.noSpaceBefore = noSpace;
+            any = true;
+        }
+        tip.words.Append(w);
+    }
+    if (!any) {
+        TipWord w;
+        str::ReplaceWithCopy(&w.text, content);
+        w.isKbd = true;
+        w.noSpaceBefore = noSpace;
+        tip.words.Append(w);
+    }
 }
 
 // resolve link command to a URL for StaticLink target
@@ -148,11 +232,12 @@ void ParseTip(ParsedTip& tip, Str s) {
     }
     str::Builder expanded;
     Str sp = s;
-    // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
+    // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands).
+    // Uses balanced parens so nesting works: (Kbd/(Key/CmdFoo)) → (Kbd/Ctrl + …)
     while (len(sp) > 0) {
-        if (sp.s[0] == '(' && sp.len > 5 && str::StartsWith(Str(sp.s + 1, sp.len - 1), StrL("Key/"))) {
-            int end = str::IndexOfChar(sp, ')');
-            if (end >= 0) {
+        if (StartsWithParenPrefix(sp, StrL("Key"))) {
+            int end = MatchingCloseParen(sp);
+            if (end > 5) {
                 Str cmdName(sp.s + 5, end - 5); // skip "(Key/"
                 if (GetCommandIdByName(cmdName) > 0) {
                     TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
@@ -166,7 +251,7 @@ void ParseTip(ParsedTip& tip, Str s) {
         AdvanceTipText(sp);
     }
 
-    // second pass: split into words, detecting [text](link) markdown links
+    // second pass: split into words, detecting [text](link), (Kbd/...), **bold**
     Str p = ToStr(expanded);
     while (len(p) > 0) {
         const char* beforeWs = p.s;
@@ -178,6 +263,17 @@ void ParseTip(ParsedTip& tip, Str s) {
         // ':' right after "**foo**"), so it draws with no space before it
         int firstWordIdx = len(tip.words);
         bool noSpace = (p.s == beforeWs) && firstWordIdx > 0;
+
+        // (Kbd/shortcut text) — key-cap(s); content already has (Key/...) expanded
+        if (StartsWithParenPrefix(p, StrL("Kbd"))) {
+            int end = MatchingCloseParen(p);
+            if (end > 5) {
+                Str content(p.s + 5, end - 5); // skip "(Kbd/"
+                AppendKbdWords(tip, content, noSpace);
+                AdvanceTipText(p, end + 1);
+                continue;
+            }
+        }
 
         // **bold text**
         if (p.len >= 4 && p.s[0] == '*' && p.s[1] == '*') {
@@ -241,12 +337,15 @@ void ParseTip(ParsedTip& tip, Str s) {
             // not a valid [text](link) — fall through (e.g. "[CIW]" in a filename)
         }
 
-        // regular word; '[' is allowed unless it starts a complete [text](link)
+        // regular word; stop at '[', '**', or '(Kbd/' so those stay separate tokens
         int wordStart = 0;
         int i = 0;
         while (i < p.len && !IsTipWhitespace(p.s[i])) {
             if (p.s[i] == '*' && i + 1 < p.len && p.s[i + 1] == '*') {
                 break; // start of **bold**
+            }
+            if (p.s[i] == '(' && StartsWithParenPrefix(Str(p.s + i, p.len - i), StrL("Kbd"))) {
+                break;
             }
             if (p.s[i] == '[') {
                 Str textStart(p.s + i + 1, p.len - i - 1);
@@ -287,14 +386,22 @@ static HFONT CreateBoldFontFrom(HFONT font) {
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     HFONT boldFont = nullptr;
+    int kbdPadX = DpiScale(hdc, 7);
+    int kbdPadY = DpiScale(hdc, 5);
     for (auto& w : tip.words) {
         if (w.isBold && !boldFont) {
             boldFont = CreateBoldFontFrom(font);
         }
         HFONT use = (w.isBold && boldFont) ? boldFont : font;
         Size sz = HdcMeasureText(hdc, w.text, fmt, use);
-        w.dx = sz.dx;
-        w.dy = sz.dy;
+        if (w.isKbd) {
+            // key-cap padding matches KeyboardHelp DrawKeyCaps
+            w.dx = sz.dx + (2 * kbdPadX);
+            w.dy = sz.dy + kbdPadY;
+        } else {
+            w.dx = sz.dx;
+            w.dy = sz.dy;
+        }
     }
     if (boldFont) {
         DeleteObject(boldFont);
@@ -330,11 +437,35 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
     tip.totalDy = (y - startY) + lineHeight;
 }
 
-// draws the words (link words in linkCol, underlined; others in textCol)
-void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol) {
+// draws the words (link words in linkCol, underlined; others in textCol;
+// isKbd words as key-caps like KeyboardHelp)
+void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol, COLORREF bgCol) {
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     HFONT boldFont = nullptr;
+    // key-cap colors: same idea as KeyboardHelp (AccentColor on the tip bg)
+    if (bgCol == kColorUnset) {
+        bgCol = IsLightColor(textCol) ? MkGray(0x22) : MkGray(0xf2);
+    }
+    COLORREF capBg = AccentColor(bgCol, 16);
+    COLORREF capBorder = AccentColor(bgCol, 40);
+    int rad = DpiScale(hdc, 5);
+
     for (auto& w : tip.words) {
+        if (w.isKbd) {
+            HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
+            HBRUSH br = CreateSolidBrush(capBg);
+            HGDIOBJ oldPen = SelectObject(hdc, pen);
+            HGDIOBJ oldBr = SelectObject(hdc, br);
+            RoundRect(hdc, w.x, w.y, w.x + w.dx, w.y + w.dy, rad, rad);
+            SelectObject(hdc, oldPen);
+            SelectObject(hdc, oldBr);
+            DeleteObject(pen);
+            DeleteObject(br);
+            SetTextColor(hdc, textCol);
+            Rect capRc{w.x, w.y, w.dx, w.dy};
+            HdcDrawText(hdc, w.text, capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, font);
+            continue;
+        }
         if (w.isBold && !boldFont) {
             boldFont = CreateBoldFontFrom(font);
         }
@@ -406,7 +537,7 @@ bool TipHasRichContent(ParsedTip& tip) {
         return true;
     }
     for (TipWord& w : tip.words) {
-        if (w.isBold) {
+        if (w.isBold || w.isKbd) {
             return true;
         }
     }

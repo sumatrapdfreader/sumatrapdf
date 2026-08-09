@@ -20,6 +20,8 @@ struct TipWord {
     int y = 0;
     bool isLink = false;
     bool isBold = false;
+    // (Kbd/...) — drawn as a key-cap like the keyboard-shortcuts help sheet
+    bool isKbd = false;
     // no inter-word space before this word: it abutted the previous token in the
     // source with no whitespace, e.g. the ':' in "**foo**:" (issue: bold ran into
     // following punctuation with a stray space)
@@ -64,6 +66,8 @@ void ParseTip(ParsedTip& tip, Str s);
 void AddTipPlainText(ParsedTip& tip, Str text);
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font);
 void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
-void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol);
+// bgCol is the tip background (used for key-cap fill/border); pass the same
+// color the tip is painted on so caps match light/dark themes
+void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol, COLORREF bgCol);
 int HitTestTipLink(ParsedTip& tip, int x, int y);
 void ExecuteTipLink(HWND hwnd, Str cmd);

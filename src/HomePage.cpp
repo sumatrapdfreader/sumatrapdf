@@ -2173,7 +2173,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
         COLORREF textCol = ThemeWindowTextColor();
         COLORREF linkCol = ThemeWindowLinkColor();
-        DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol);
+        DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol, tipBgCol);
     }
 
     // "?" help button in the bottom-right corner, opening the keyboard

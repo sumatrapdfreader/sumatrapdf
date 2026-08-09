@@ -5963,11 +5963,12 @@ void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
         return;
     }
     TempStr name = path::GetBaseNameTemp(nextPath);
-    // [shortcut](Cmd): open file n/m · [navigate](Cmd)
-    // (Key/...) expands to the bound shortcut before link parsing (see ParseTip)
-    TempStr msg = fmt(
-        "[(Key/CmdOpenNextFileInFolder)](CmdOpenNextFileInFolder): %s **%s** · %d/%d · [%s](CmdNavigateFilesInFolder)",
-        _TRA("open"), name, n, m, _TRA("navigate"));
+    // (Kbd/(Key/...)): key-cap of the bound shortcut; filename and "browse" open
+    // the navigate-files dialog (see ParseTip for (Kbd/)/(Key/) markup)
+    TempStr msg =
+        fmt("(Kbd/(Key/CmdOpenNextFileInFolder)) %s [%s](CmdOpenNextFileInFolder) · %d/%d · "
+            "[%s](CmdNavigateFilesInFolder)",
+            _TRA("open"), name, n, m, _TRA("browse"));
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.groupId = kNotifNextFileHint;

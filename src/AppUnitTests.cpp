@@ -69,6 +69,27 @@ static void ParseTip_UnitTests() {
     ParseTipExpectPlainContains("file (Key/foo).pdf", "(Key/foo).pdf");
     ParseTipExpectPlainContains("(Key/CmdCommandPalette)", "Ctrl");
 
+    // (Kbd/...) draws as a key-cap word; nests with (Key/...)
+    {
+        ParsedTip tip;
+        ParseTip(tip, "(Kbd/Cmd+Shift)");
+        utassert(len(tip.words) == 1);
+        utassert(tip.words[0].isKbd);
+        utassert(str::Eq(tip.words[0].text, StrL("Cmd+Shift")));
+        utassert(TipHasRichContent(tip));
+    }
+    {
+        ParsedTip tip;
+        ParseTip(tip, "(Kbd/(Key/CmdCommandPalette)): go");
+        utassert(len(tip.words) >= 2);
+        utassert(tip.words[0].isKbd);
+        // expanded shortcut contains Ctrl (default binding)
+        utassert(str::Contains(tip.words[0].text, StrL("Ctrl")));
+        // ':' abuts the key-cap with no space
+        utassert(tip.words[1].noSpaceBefore);
+        utassert(str::Eq(tip.words[1].text, StrL(":")));
+    }
+
     // whitespace: tab and newline break words
     ParseTipExpectWordsLinks("line1\nline2", 2, 0);
     ParseTipExpectWordsLinks("tab\there", 2, 0);
