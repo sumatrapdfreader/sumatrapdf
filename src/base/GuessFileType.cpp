@@ -103,16 +103,29 @@ static FileType gExtsType[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
 static FileType GetTypeByFileExt(Str path) {
-    TempStr ext = path::GetExtTemp(path);
-    int idx = SeqStrIndexIS(gFileExts, ext);
-    if (idx < 0) {
-        return FileType::Unknown;
-    }
+    // Prefer the longest registered suffix so multi-dot names like
+    // "book.fb2.zip" map to Fb2z rather than Zip (path::GetExtTemp only
+    // returns the last ".zip" component).
     int n = dimofi(gExtsType);
-    if (idx >= n) {
+    int bestIdx = -1;
+    int bestLen = 0;
+    for (int i = 0; i < n; i++) {
+        TempStr ext = SeqStrByIndex(gFileExts, i);
+        if (len(ext) == 0) {
+            continue;
+        }
+        if (!str::EndsWithI(path, ext)) {
+            continue;
+        }
+        if (len(ext) > bestLen) {
+            bestLen = len(ext);
+            bestIdx = i;
+        }
+    }
+    if (bestIdx < 0) {
         return FileType::Unknown;
     }
-    return gExtsType[idx];
+    return gExtsType[bestIdx];
 }
 
 TempStr GetExtForFileTypeTemp(FileType ft) {
@@ -121,17 +134,6 @@ TempStr GetExtForFileTypeTemp(FileType ft) {
         return SeqStrByIndex(gFileExts, idx);
     }
     return {};
-}
-
-// ensure gFileExts and gExtsType match
-static bool gDidVerifyExtsMatch = false;
-static void VerifyExtsMatch() {
-    if (gDidVerifyExtsMatch) {
-        return;
-    }
-    ReportIf(FileType::Epub != GetTypeByFileExt("foo.epub"));
-    ReportIf(FileType::Jp2 != GetTypeByFileExt("foo.JP2"));
-    gDidVerifyExtsMatch = true;
 }
 
 int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
@@ -1266,8 +1268,6 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
 
 // path::IsDirectory() is expensive on network drives so we can pass notDir=true if we know the path is not a directory
 FileType GuessFileTypeFromName(Str path, bool notDir) {
-    VerifyExtsMatch();
-
     if (!path) {
         return FileType::Unknown;
     }

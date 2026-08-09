@@ -4,15 +4,16 @@ import { spawnSync } from "node:child_process";
 const kThumbnailProviderClsid = "{e357fccd-a995-4576-b01f-234630154e96}";
 const kPreviewHandlerClsid = "{8895b1c6-b41f-4c1c-a562-0d564250836f}";
 
+// Must match src/RegistryPreview.h
 const kPreview2Clsids: Record<string, string> = {
-  PDF: "{F0FE6374-D0B4-4751-AE36-C57B96999E87}",
-  XPS: "{B055DBB8-B29D-4E86-8E69-C649CE044B35}",
-  DjVu: "{DB0BCEC8-57CE-4D21-97B8-E1DE9B8510BF}",
-  EPUB: "{C744BA15-7166-483E-9B2F-80F93F62C7FF}",
-  FB2: "{58F5CCAA-36A9-413A-81BC-9F899AD3271B}",
-  MOBI: "{C21FF5DF-9AD7-43D8-A979-608C77CAC4AA}",
-  CBX: "{886AD8B3-550D-4710-81B7-D5D422313B65}",
-  TGA: "{A81391FC-C68F-4292-9ACC-F11F9484E95C}",
+  PDF: "{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}",
+  XPS: "{D427A82C-6545-4FBE-8E87-030EDB3BE46D}",
+  DjVu: "{6689D0D4-1E9C-400A-8BCA-FA6C56B2C3B5}",
+  EPUB: "{80C4E4B1-2B0F-40D5-95AF-BE7B57FEA4F9}",
+  FB2: "{D5878036-E863-403E-A62C-7B9C7453336A}",
+  MOBI: "{42CA907E-BDF5-4A75-994A-E1AEC8A10954}",
+  CBX: "{C29D3E2B-8FF6-4033-A4E8-54221D859D74}",
+  TGA: "{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}",
 };
 
 const previewers = [
@@ -22,7 +23,7 @@ const previewers = [
   { name: "DjVu", clsid: kPreview2Clsids.DjVu, exts: [".djvu"] },
   { name: "XPS", clsid: kPreview2Clsids.XPS, exts: [".xps", ".oxps"] },
   { name: "EPUB", clsid: kPreview2Clsids.EPUB, exts: [".epub"] },
-  { name: "FB2", clsid: kPreview2Clsids.FB2, exts: [".fb2", ".fb2z"] },
+  { name: "FB2", clsid: kPreview2Clsids.FB2, exts: [".fb2", ".fb2z", ".fbz", ".zfb2", ".fb2.zip"] },
   { name: "MOBI", clsid: kPreview2Clsids.MOBI, exts: [".mobi"] },
 ];
 

@@ -991,7 +991,26 @@ static Str loadFromFile(Fb2Doc* doc) {
     return data;
 }
 
+static bool LooksLikeZipOrRar(Str data) {
+    if (len(data) < 4) {
+        return false;
+    }
+    // PK\x03\x04 (zip) or Rar!
+    if (data.s[0] == 'P' && data.s[1] == 'K') {
+        return true;
+    }
+    if (str::StartsWith(data, StrL("Rar!"))) {
+        return true;
+    }
+    return false;
+}
+
 static Str loadFromData(Fb2Doc* doc, Str srcData) {
+    // Only try the archive path for data that looks like a container; plain
+    // FictionBook XML must not go through libarchive (issue #1677).
+    if (!LooksLikeZipOrRar(srcData)) {
+        return str::Dup(srcData);
+    }
     Archive* archive = OpenArchiveFromData(srcData);
     if (!archive) {
         return str::Dup(srcData);

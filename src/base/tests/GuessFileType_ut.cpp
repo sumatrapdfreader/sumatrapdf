@@ -456,11 +456,19 @@ static void nonImageTest() {
 static void extMapTest() {
     utassert(GuessFileTypeFromName(StrL("foo.pdf")) == FileType::PDF);
     utassert(GuessFileTypeFromName(StrL("foo.JP2")) == FileType::Jp2); // case-insensitive
+    utassert(GuessFileTypeFromName(StrL("foo.epub")) == FileType::Epub);
     utassert(GuessFileTypeFromName(StrL("foo.tar")) == FileType::Tar);
     utassert(GuessFileTypeFromName(StrL("foo.unknown-ext")) == FileType::Unknown);
+    // multi-dot / FB2 zip containers: longest registered suffix wins over bare .zip
+    utassert(GuessFileTypeFromName(StrL("book.fb2.zip")) == FileType::Fb2z);
+    utassert(GuessFileTypeFromName(StrL("book.fbz")) == FileType::Fb2z);
+    utassert(GuessFileTypeFromName(StrL("book.fb2")) == FileType::Fb2);
     // the canonical extension is the first one registered for the type
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Jpeg), StrL(".jpg")));
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Mobi), StrL(".mobi")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Epub), StrL(".epub")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2), StrL(".fb2")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2z), StrL(".fb2z")));
     utassert(!GetExtForFileTypeTemp(FileType::Unknown));
 }
 

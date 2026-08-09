@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Archive.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 #include "base/GdiPlusUtil.h"
@@ -431,6 +432,61 @@ PdfPreview::~PdfPreview() {
     InterlockedDecrement(m_plModuleRef);
 }
 
+// If data is a zip (fb2z/fbz/fb2.zip), return owned bytes of the .fb2 member.
+// Otherwise return empty (caller uses original data).
+static Str ExtractFb2FromZipData(Str data) {
+    if (len(data) < 4 || data.s[0] != 'P' || data.s[1] != 'K') {
+        return {};
+    }
+    Archive* archive = OpenArchiveFromData(data);
+    if (!archive) {
+        return {};
+    }
+    AutoDelete delArchive(archive);
+    const auto& files = archive->GetFileInfos();
+    int fb2Id = -1;
+    for (auto* fi : files) {
+        if (str::EndsWithI(fi->name, StrL(".fb2"))) {
+            if (fb2Id >= 0) {
+                return {}; // more than one .fb2
+            }
+            fb2Id = fi->fileId;
+        } else if (!str::EndsWithI(fi->name, StrL(".url"))) {
+            // same restrictiveness as Fb2Doc archive load
+            return {};
+        }
+    }
+    if (fb2Id < 0 && len(files) == 1) {
+        fb2Id = 0;
+    }
+    if (fb2Id < 0) {
+        return {};
+    }
+    auto* fi = archive->GetFileDataById(fb2Id);
+    if (!fi || !fi->data) {
+        return {};
+    }
+    // take ownership of the decompressed bytes
+    Str res = Str(fi->data, fi->fileSizeUncompressed);
+    fi->data = nullptr;
+    return res;
+}
+
+// Prefer mupdf for FB2 (same engine as the main viewer). The legacy
+// CreateEngineFb2FromData path fails on some plain FB2 files that mupdf
+// opens fine (issue #1677 sample set). Zip containers are unwrapped first.
+static EngineBase* CreateFb2PreviewEngine(Str data) {
+    Str extracted = ExtractFb2FromZipData(data);
+    Str plain = extracted ? extracted : data;
+    EngineBase* engine = CreateEngineMupdfFromData(plain, "document.fb2", nullptr);
+    str::Free(extracted);
+    if (engine) {
+        return engine;
+    }
+    // fall back to the old formatter engine
+    return CreateEngineFb2FromData(data);
+}
+
 // data stays owned by the caller: every engine below copies what it needs
 EngineBase* PdfPreview::LoadEngine(const Str& data) {
     if (str::IsNull(data)) {
@@ -446,7 +502,7 @@ EngineBase* PdfPreview::LoadEngine(const Str& data) {
         case PreviewType::Epub:
             return CreateEngineEpubFromData(data);
         case PreviewType::Fb2:
-            return CreateEngineFb2FromData(data);
+            return CreateFb2PreviewEngine(data);
         case PreviewType::Mobi:
             return CreateEngineMobiFromData(data);
         case PreviewType::Cbx:

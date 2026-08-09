@@ -31,7 +31,12 @@ static struct {
     {kDjVuPreviewClsid, ".djvu"},
     {kXpsPreviewClsid, ".xps", ".oxps"},
     {kEpubPreviewClsid, ".epub"},
+    // FictionBook: plain .fb2 and common zip containers (.fb2z, .fbz, .zfb2,
+    // .fb2.zip). Multi-dot .fb2.zip needs its own Classes key so Explorer does
+    // not treat it as a generic .zip (issue #1677).
     {kFb2PreviewClsid, ".fb2", ".fb2z"},
+    {kFb2PreviewClsid, ".fbz", ".zfb2"},
+    {kFb2PreviewClsid, ".fb2.zip"},
     {kMobiPreviewClsid, ".mobi"},
 };
 // clang-format on
