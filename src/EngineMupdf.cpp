@@ -4188,6 +4188,279 @@ static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ct
     return fz_keep_display_list(ctx, pi->displayList);
 }
 
+// Like fz_new_bbox_device(), but bounds what is actually *visible on the page*,
+// which is what "Fit Content" needs. Two differences from the mupdf device:
+//
+//  - every op's bounds are clipped to the page rect before being unioned, so
+//    ink drawn outside the page contributes nothing. Print-ready PDFs draw crop
+//    and registration marks in the bleed area, outside the media box.
+//  - paths are bounded per subpath rather than as one rect. All four corners'
+//    crop marks are typically emitted as a single path, so its overall bounds
+//    span (and overhang) the whole page; clipping *that* to the page reports a
+//    full-page content box and makes Fit Content a no-op (that is what page 2 of
+//    a print-ready book PDF looked like: content 500.6x643.6 of a 501.1x643.7
+//    page, all of it from two crop-mark paths).
+//
+// Clip paths are still bounded as a whole: a clip is a region, not ink, and its
+// bbox is the conservative thing to intersect subsequent ops against.
+#define CONTENT_BBOX_STACK_SIZE 96
+
+typedef struct {
+    fz_device super;
+    fz_rect* result;
+    fz_rect pageRect;
+    int top;
+    fz_rect stack[CONTENT_BBOX_STACK_SIZE];
+    // mask content and tiles are ignored
+    int ignore;
+} fz_content_bbox_device;
+
+static void fz_content_bbox_add_rect(fz_device* dev, fz_rect rect, bool clip) {
+    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
+
+    if (0 < d->top && d->top <= CONTENT_BBOX_STACK_SIZE) {
+        rect = fz_intersect_rect(rect, d->stack[d->top - 1]);
+    }
+    if (!clip && d->top <= CONTENT_BBOX_STACK_SIZE && !d->ignore) {
+        // only the part that lands on the page is content. Disjoint rects
+        // intersect to an invalid one, which fz_union_rect() ignores - so ink
+        // fully outside the page contributes nothing
+        *d->result = fz_union_rect(*d->result, fz_intersect_rect(rect, d->pageRect));
+    }
+    if (clip && ++d->top <= CONTENT_BBOX_STACK_SIZE) {
+        d->stack[d->top - 1] = rect;
+    }
+}
+
+// walks a path and hands each subpath's bounds to the device separately
+struct ContentBBoxPathWalk {
+    fz_context* ctx;
+    fz_device* dev;
+    fz_matrix ctm;
+    const fz_stroke_state* stroke;
+    fz_rect cur;
+    bool haveCur;
+    // a subpath that is only a moveto draws nothing; fz_bound_path() skips
+    // those too ("trailing moves are ignored")
+    bool haveSegment;
+};
+
+static void fz_content_bbox_walk_flush(ContentBBoxPathWalk* w) {
+    bool draws = w->haveCur && w->haveSegment;
+    w->haveCur = false;
+    w->haveSegment = false;
+    if (!draws) {
+        return;
+    }
+    fz_rect r = fz_transform_rect(w->cur, w->ctm);
+    if (w->stroke) {
+        r = fz_adjust_rect_for_stroke(w->ctx, r, w->stroke, w->ctm);
+    }
+    fz_content_bbox_add_rect(w->dev, r, false);
+}
+
+static void fz_content_bbox_walk_point(ContentBBoxPathWalk* w, float x, float y) {
+    if (!w->haveCur) {
+        w->cur = fz_make_rect(x, y, x, y);
+        w->haveCur = true;
+        return;
+    }
+    w->cur.x0 = std::min(w->cur.x0, x);
+    w->cur.y0 = std::min(w->cur.y0, y);
+    w->cur.x1 = std::max(w->cur.x1, x);
+    w->cur.y1 = std::max(w->cur.y1, y);
+}
+
+static void fz_content_bbox_walk_moveto(fz_context*, void* arg, float x, float y) {
+    auto* w = (ContentBBoxPathWalk*)arg;
+    // a moveto starts a new subpath, so the previous one is complete
+    fz_content_bbox_walk_flush(w);
+    fz_content_bbox_walk_point(w, x, y);
+}
+
+static void fz_content_bbox_walk_lineto(fz_context*, void* arg, float x, float y) {
+    auto* w = (ContentBBoxPathWalk*)arg;
+    w->haveSegment = true;
+    fz_content_bbox_walk_point(w, x, y);
+}
+
+// bounding the control points is what fz_bound_path() does too: conservative,
+// but it never reports less than the curve covers
+static void fz_content_bbox_walk_curveto(fz_context*, void* arg, float x1, float y1, float x2, float y2, float x3,
+                                         float y3) {
+    auto* w = (ContentBBoxPathWalk*)arg;
+    w->haveSegment = true;
+    fz_content_bbox_walk_point(w, x1, y1);
+    fz_content_bbox_walk_point(w, x2, y2);
+    fz_content_bbox_walk_point(w, x3, y3);
+}
+
+static void fz_content_bbox_walk_closepath(fz_context*, void*) {
+    // the subpath is closed but not yet finished: it stays current until the
+    // next moveto (or the end of the path)
+}
+
+static void fz_content_bbox_add_path(fz_context* ctx, fz_device* dev, const fz_path* path,
+                                     const fz_stroke_state* stroke, fz_matrix ctm) {
+    static const fz_path_walker walker = {
+        fz_content_bbox_walk_moveto,
+        fz_content_bbox_walk_lineto,
+        fz_content_bbox_walk_curveto,
+        fz_content_bbox_walk_closepath,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+    };
+    ContentBBoxPathWalk w{ctx, dev, ctm, stroke, fz_empty_rect, false, false};
+    fz_walk_path(ctx, path, &walker, &w);
+    fz_content_bbox_walk_flush(&w);
+}
+
+static void fz_content_bbox_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int /*evenOdd*/,
+                                      fz_matrix ctm, fz_colorspace*, const float*, float, fz_color_params) {
+    fz_content_bbox_add_path(ctx, dev, path, nullptr, ctm);
+}
+
+static void fz_content_bbox_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
+                                        const fz_stroke_state* stroke, fz_matrix ctm, fz_colorspace*, const float*,
+                                        float, fz_color_params) {
+    fz_content_bbox_add_path(ctx, dev, path, stroke, ctm);
+}
+
+static void fz_content_bbox_fill_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm,
+                                      fz_colorspace*, const float*, float, fz_color_params) {
+    fz_content_bbox_add_rect(dev, fz_bound_text(ctx, text, nullptr, ctm), false);
+}
+
+static void fz_content_bbox_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text,
+                                        const fz_stroke_state* stroke, fz_matrix ctm, fz_colorspace*, const float*,
+                                        float, fz_color_params) {
+    fz_content_bbox_add_rect(dev, fz_bound_text(ctx, text, stroke, ctm), false);
+}
+
+static void fz_content_bbox_fill_shade(fz_context* ctx, fz_device* dev, fz_shade* shade, fz_matrix ctm, float,
+                                       fz_color_params) {
+    fz_content_bbox_add_rect(dev, fz_bound_shade(ctx, shade, ctm), false);
+}
+
+static void fz_content_bbox_fill_image(fz_context*, fz_device* dev, fz_image*, fz_matrix ctm, float, fz_color_params) {
+    fz_content_bbox_add_rect(dev, fz_transform_rect(fz_unit_rect, ctm), false);
+}
+
+static void fz_content_bbox_fill_image_mask(fz_context*, fz_device* dev, fz_image*, fz_matrix ctm, fz_colorspace*,
+                                            const float*, float, fz_color_params) {
+    fz_content_bbox_add_rect(dev, fz_transform_rect(fz_unit_rect, ctm), false);
+}
+
+static void fz_content_bbox_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int /*evenOdd*/,
+                                      fz_matrix ctm, fz_rect /*scissor*/) {
+    fz_content_bbox_add_rect(dev, fz_bound_path(ctx, path, nullptr, ctm), true);
+}
+
+static void fz_content_bbox_clip_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
+                                             const fz_stroke_state* stroke, fz_matrix ctm, fz_rect /*scissor*/) {
+    fz_content_bbox_add_rect(dev, fz_bound_path(ctx, path, stroke, ctm), true);
+}
+
+static void fz_content_bbox_clip_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm,
+                                      fz_rect /*scissor*/) {
+    fz_content_bbox_add_rect(dev, fz_bound_text(ctx, text, nullptr, ctm), true);
+}
+
+static void fz_content_bbox_clip_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text,
+                                             const fz_stroke_state* stroke, fz_matrix ctm, fz_rect /*scissor*/) {
+    fz_content_bbox_add_rect(dev, fz_bound_text(ctx, text, stroke, ctm), true);
+}
+
+static void fz_content_bbox_clip_image_mask(fz_context*, fz_device* dev, fz_image*, fz_matrix ctm,
+                                            fz_rect /*scissor*/) {
+    fz_content_bbox_add_rect(dev, fz_transform_rect(fz_unit_rect, ctm), true);
+}
+
+static void fz_content_bbox_pop_clip(fz_context*, fz_device* dev) {
+    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
+    if (d->top > 0) {
+        d->top--;
+    }
+}
+
+static void fz_content_bbox_begin_mask(fz_context*, fz_device* dev, fz_rect rect, int /*luminosity*/, fz_colorspace*,
+                                       const float*, fz_color_params) {
+    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
+    fz_content_bbox_add_rect(dev, rect, true);
+    d->ignore++;
+}
+
+static void fz_content_bbox_end_mask(fz_context*, fz_device* dev, fz_function*) {
+    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
+    if (d->ignore > 0) {
+        d->ignore--;
+    }
+}
+
+static void fz_content_bbox_begin_group(fz_context*, fz_device* dev, fz_rect rect, fz_colorspace*, int /*isolated*/,
+                                        int /*knockout*/, int /*blendmode*/, float /*alpha*/) {
+    fz_content_bbox_add_rect(dev, rect, true);
+}
+
+static void fz_content_bbox_end_group(fz_context* ctx, fz_device* dev) {
+    fz_content_bbox_pop_clip(ctx, dev);
+}
+
+static int fz_content_bbox_begin_tile(fz_context*, fz_device* dev, fz_rect area, fz_rect /*view*/, float /*xstep*/,
+                                      float /*ystep*/, fz_matrix ctm, int /*id*/, int /*docId*/) {
+    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
+    fz_content_bbox_add_rect(dev, fz_transform_rect(area, ctm), false);
+    d->ignore++;
+    return 0;
+}
+
+static void fz_content_bbox_end_tile(fz_context*, fz_device* dev) {
+    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
+    if (d->ignore > 0) {
+        d->ignore--;
+    }
+}
+
+static fz_device* FzNewContentBBoxDevice(fz_context* ctx, fz_rect* result, fz_rect pageRect) {
+    fz_content_bbox_device* d = fz_new_derived_device(ctx, fz_content_bbox_device);
+
+    d->super.fill_path = fz_content_bbox_fill_path;
+    d->super.stroke_path = fz_content_bbox_stroke_path;
+    d->super.clip_path = fz_content_bbox_clip_path;
+    d->super.clip_stroke_path = fz_content_bbox_clip_stroke_path;
+
+    d->super.fill_text = fz_content_bbox_fill_text;
+    d->super.stroke_text = fz_content_bbox_stroke_text;
+    d->super.clip_text = fz_content_bbox_clip_text;
+    d->super.clip_stroke_text = fz_content_bbox_clip_stroke_text;
+
+    d->super.fill_shade = fz_content_bbox_fill_shade;
+    d->super.fill_image = fz_content_bbox_fill_image;
+    d->super.fill_image_mask = fz_content_bbox_fill_image_mask;
+    d->super.clip_image_mask = fz_content_bbox_clip_image_mask;
+
+    d->super.pop_clip = fz_content_bbox_pop_clip;
+
+    d->super.begin_mask = fz_content_bbox_begin_mask;
+    d->super.end_mask = fz_content_bbox_end_mask;
+    d->super.begin_group = fz_content_bbox_begin_group;
+    d->super.end_group = fz_content_bbox_end_group;
+
+    d->super.begin_tile = fz_content_bbox_begin_tile;
+    d->super.end_tile = fz_content_bbox_end_tile;
+
+    d->result = result;
+    d->pageRect = pageRect;
+    d->top = 0;
+    d->ignore = 0;
+
+    *result = fz_empty_rect;
+
+    return &d->super;
+}
+
 RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
     auto* ctx = Ctx();
 
@@ -4222,7 +4495,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
     fz_device* dev = nullptr;
     fz_var(dev);
     fz_try(ctx) {
-        dev = fz_new_bbox_device(ctx, &rect);
+        dev = FzNewContentBBoxDevice(ctx, &rect, pagerect);
         fz_run_display_list(ctx, keptList, dev, fz_identity, pagerect, &fzcookie);
         fz_close_device(ctx, dev);
     }

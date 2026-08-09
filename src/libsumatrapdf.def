@@ -810,6 +810,8 @@ EXPORTS
 
 	fz_bound_path
 
+	fz_walk_path
+
 	fz_adjust_rect_for_stroke
 
 	fz_new_stroke_state
