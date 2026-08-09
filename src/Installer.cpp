@@ -19,6 +19,9 @@
 #define HAS_RESTART_MANAGER 0
 #endif
 
+#include <aclapi.h>
+#include <sddl.h>
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
@@ -455,7 +458,69 @@ static void StartWindowsSearchService() {
 // Last MoveFileEx failure for move-aside UI / NotifyFailed wording.
 static DWORD gLastMoveAsideError = 0;
 
+// Log attributes + owner SID/name after ERROR_ACCESS_DENIED (debug reports).
+static void LogFileAttrsAndAclSummary(Str path) {
+    DWORD attrs = file::GetAttributes(path);
+    logf("  file diagnostics for '%s': elevated=%d attrs=0x%x", path, (int)IsProcessRunningElevated(), attrs);
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
+        logf(" (GetAttributes failed)\n");
+        LogLastError();
+        return;
+    }
+    if (attrs & FILE_ATTRIBUTE_READONLY) {
+        logf(" READONLY");
+    }
+    if (attrs & FILE_ATTRIBUTE_HIDDEN) {
+        logf(" HIDDEN");
+    }
+    if (attrs & FILE_ATTRIBUTE_SYSTEM) {
+        logf(" SYSTEM");
+    }
+    if (attrs & FILE_ATTRIBUTE_REPARSE_POINT) {
+        logf(" REPARSE");
+    }
+    if (attrs & FILE_ATTRIBUTE_COMPRESSED) {
+        logf(" COMPRESSED");
+    }
+    if (attrs & FILE_ATTRIBUTE_ENCRYPTED) {
+        logf(" ENCRYPTED");
+    }
+    logf("\n");
+
+    PSID ownerSid = nullptr;
+    PSECURITY_DESCRIPTOR sd = nullptr;
+    DWORD err = GetNamedSecurityInfoW(CWStrTemp(path), SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, &ownerSid, nullptr,
+                                      nullptr, nullptr, &sd);
+    if (err != ERROR_SUCCESS) {
+        logf("  GetNamedSecurityInfo(OWNER) failed err=%u\n", err);
+        return;
+    }
+    if (!ownerSid || !IsValidSid(ownerSid)) {
+        logf("  owner SID missing/invalid\n");
+        LocalFree(sd);
+        return;
+    }
+    LPWSTR sidStr = nullptr;
+    if (ConvertSidToStringSidW(ownerSid, &sidStr) && sidStr) {
+        logf("  owner SID: %s\n", ToUtf8Temp(WStr(sidStr)));
+        LocalFree(sidStr);
+    }
+    WCHAR name[256]{};
+    WCHAR domain[256]{};
+    DWORD nameChars = dimof(name);
+    DWORD domainChars = dimof(domain);
+    SID_NAME_USE use = SidTypeUnknown;
+    if (LookupAccountSidW(nullptr, ownerSid, name, &nameChars, domain, &domainChars, &use)) {
+        logf("  owner account: %s\\%s (use=%u)\n", ToUtf8Temp(WStr(domain)), ToUtf8Temp(WStr(name)), (unsigned)use);
+    } else {
+        logf("  LookupAccountSid failed err=%u\n", GetLastError());
+    }
+    LocalFree(sd);
+}
+
 // One rename attempt: clear RO, delete stale .copy, kill holders, MoveFileEx.
+// ClearReadOnly runs for every file (including libsumatrapdf.dll), same as the
+// legacy libmupdf path — a RO bit alone must not block upgrades.
 static bool TryRenameAsideOnce(Str path, Str copyPath) {
     if (!file::Exists(path)) {
         return true;
@@ -474,6 +539,9 @@ static bool TryRenameAsideOnce(Str path, Str copyPath) {
     gLastMoveAsideError = err;
     logf("TryRenameAsideOnce: MoveFileEx failed for '%s' lastError=%u\n", path, err);
     LogLastError(err);
+    if (err == ERROR_ACCESS_DENIED) {
+        LogFileAttrsAndAclSummary(path);
+    }
     return false;
 }
 
@@ -486,7 +554,7 @@ struct MoveAsideDlgCtx {
     DWORD lastTryTick = 0;
 };
 
-// ACCESS_DENIED with no process holders → permissions/UAC, not "file in use".
+// ACCESS_DENIED with no process holders → permissions/AV/ACL, not "file in use".
 static bool MoveAsideLooksLikeAccessDenied(Str path) {
     if (gLastMoveAsideError != ERROR_ACCESS_DENIED) {
         return false;
@@ -496,6 +564,7 @@ static bool MoveAsideLooksLikeAccessDenied(Str path) {
 }
 
 // Dialog body: prefer live Restart Manager holders; ACCESS_DENIED vs file-in-use.
+// When ACCESS_DENIED and already elevated, do not blame UAC — suggest AV/reboot.
 static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
     TempStr holders = ProcessesHoldingFileTemp(path);
     if (holders) {
@@ -512,12 +581,29 @@ static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
                    fileName, holders, kInstallDocsURL());
     }
     if (gLastMoveAsideError == ERROR_ACCESS_DENIED) {
+        if (IsProcessRunningElevated()) {
+            // Elevated + no holders + ERROR_ACCESS_DENIED: not missing UAC.
+            return fmt(_TRA("Could not update %s (access denied).\n\n"
+                            "No program is listed as using this file, but Windows still denied renaming it. "
+                            "This installer is already running as administrator, so the usual cause is "
+                            "antivirus, Controlled Folder Access, a restrictive file ACL, or a leftover lock "
+                            "that only a reboot clears.\n\n"
+                            "What to try:\n"
+                            "• Temporarily exclude the install folder from antivirus / Controlled Folder Access\n"
+                            "• Reboot, then run the installer again before opening SumatraPDF\n"
+                            "• Or install to a folder your account can write to (Options)\n\n"
+                            "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
+                            "More help: <a href=\"%s\">Installation documentation</a>")
+                           .s,
+                       fileName, kInstallDocsURL());
+        }
         return fmt(_TRA("Could not update %s due to insufficient permissions.\n\n"
                         "The install folder is protected (for example Program Files) or access was denied.\n\n"
                         "What to try:\n"
                         "• Run the installer again and accept the administrator (UAC) prompt\n"
+                        "• Temporarily exclude the install folder from antivirus / Controlled Folder Access\n"
                         "• Or install to a folder your account can write to (Options)\n"
-                        "• Temporarily disable Controlled Folder Access / antivirus blocking\n\n"
+                        "• If it still fails when elevated: reboot, then install before opening SumatraPDF\n\n"
                         "The installer keeps retrying every few seconds. Click Abort to cancel.\n\n"
                         "More help: <a href=\"%s\">Installation documentation</a>")
                        .s,
@@ -540,9 +626,23 @@ static TempStr FormatMoveAsideDialogContentTemp(Str fileName, Str path) {
 
 static void NotifyMoveAsideFailed(Str fileName, Str path, bool userAborted) {
     if (MoveAsideLooksLikeAccessDenied(path)) {
+        bool elevated = IsProcessRunningElevated();
         if (userAborted) {
-            NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (access denied; try running as "
-                                  "administrator).")
+            if (elevated) {
+                NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (access denied; antivirus, "
+                                      "Controlled Folder Access, or file ACL — already running as administrator).")
+                                     .s,
+                                 fileName));
+            } else {
+                NotifyFailed(fmt(_TRA("Installation aborted: could not update %s (access denied; try running as "
+                                      "administrator).")
+                                     .s,
+                                 fileName));
+            }
+        } else if (elevated) {
+            NotifyFailed(fmt(_TRA("Could not update %s: access denied (antivirus, Controlled Folder Access, or "
+                                  "file ACL). Exclude the install folder, reboot and retry, or choose a different "
+                                  "folder. See https://www.sumatrapdfreader.org/docs/Installation")
                                  .s,
                              fileName));
         } else {
