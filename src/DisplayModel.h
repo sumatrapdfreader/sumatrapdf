@@ -238,6 +238,9 @@ struct DisplayModel : DocController {
        except for kZoomFitPage, kZoomFitWidth and kZoomFitContent */
     float zoomReal{kInvalidZoom};
     float zoomVirtual{kInvalidZoom};
+    // set while SetZoomVirtual() applies an explicit Fit Content request, to skip
+    // the zoom-in damping in CalcZoomReal() (see the comment there)
+    bool exactFitContent = false;
     int rotation = 0;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */

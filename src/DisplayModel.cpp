@@ -1011,8 +1011,17 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
         // for a PDF (72 dpi) it capped at 600% on a normal 96 dpi screen and 400%
         // at 150% scaling
         newZoom = std::min(newZoom, 8.0f * dpiFactor);
-        // don't zoom in by just a few pixels (throwing away a prerendered page)
-        if (newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
+        // Zooming in by just a few pixels isn't worth invalidating the render
+        // cache (including the prerendered neighbour pages), so incidental
+        // relayouts - paging through a document whose content boxes differ
+        // slightly - keep the current zoom. An explicit Fit Content request has
+        // to be exact, though: the damping is sticky (the next request compares
+        // against the zoom it just kept), so without exactFitContent the fit was
+        // unreachable - Ctrl+3 left the content a few % short of the window and
+        // pressing it again changed nothing. Only visible in the continuous
+        // modes: GetZoomReal() recomputes the exact per-page zoom for the others,
+        // and Relayout() writes that back over whatever was decided here.
+        if (exactFitContent || newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
             zoomReal < ZoomRealFromVirtualForPage(kZoomFitPage, CurrentPageNo())) {
             zoomReal = newZoom;
         }
@@ -1907,8 +1916,14 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     }
 
     // lf("DisplayModel::SetZoomVirtual() zoomLevel=%.6f", _zoomLevel);
+    // the user asked for this zoom, so make Fit Content land exactly on the
+    // content. Held across SetScrollState() too: in continuous mode GoToPage()
+    // relayouts again for the page it scrolls to, and that is the page whose
+    // content the zoom must fit
+    exactFitContent = (kZoomFitContent == zoomLevel);
     Relayout(zoomLevel, rotation);
     SetScrollState(ss);
+    exactFitContent = false;
 
     if (fixPt) {
         // scroll so that the fix point remains in the same screen location after zooming
