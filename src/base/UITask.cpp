@@ -115,6 +115,14 @@ void Destroy() {
 }
 
 void Post(const Func0& f, Kind kind) {
+    // Without the dispatch window PostMessageW() would get a null hwnd, which
+    // posts a *thread* message: it succeeds, so we'd keep the allocation, but
+    // DispatchMessage() never routes thread messages to a window proc, so the
+    // task would silently never run. Fail loudly instead of leaking it.
+    ReportIf(!gTaskDispatchHwnd);
+    if (!gTaskDispatchHwnd) {
+        return;
+    }
     TaskInfo* ti = AllocTaskInfo();
     ti->f = f;
     ti->kind = kind;

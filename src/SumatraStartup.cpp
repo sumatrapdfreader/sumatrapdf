@@ -2155,6 +2155,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         logf("ASAN_OPTIONS: '%s'\n", asanOpts ? asanOpts : StrL("<not set>"));
     }
 
+    // Before the store-installer return below: everything past this point may
+    // uitask::Post(), and posting before Initialize() neither runs nor frees the
+    // task (see the guard in uitask::Post). Only needs a message queue, so it can
+    // run this early - ahead of Ole/common controls/GDI+/mui.
+    uitask::Initialize();
+
     Flags flags;
     if (ExeHasNameOfStoreInstaller()) {
         InstallSumatraCrashHandler(false);
@@ -2163,7 +2169,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         flags.silent = true;
         flags.storeInstaller = true;
         gCli = &flags;
-        return RunInstaller();
+        int ret = RunInstaller();
+        uitask::Destroy();
+        return ret;
     }
 
     ParseFlags(GetPermArena(), GetCommandLineW(), flags, gToolNames);
@@ -2181,7 +2189,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     InitAllCommonControls();
     ScopedGdiPlus gdiPlus(true);
     mui::Initialize();
-    uitask::Initialize();
 
     // when running a command-line tool (e.g. `info file.pdf`), keep logging off
     // the console so it doesn't contaminate the tool's stdout (issue #5677)
