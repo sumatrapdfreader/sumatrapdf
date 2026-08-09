@@ -1005,8 +1005,12 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
         zoomReal = minZoom;
     } else if (kZoomFitContent == newZoomVirtual) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
-        // limit zooming in to 800% on almost empty pages
-        newZoom = std::min(newZoom, 8.0f);
+        // limit zooming in to 800% on almost empty pages. zoomReal is a percentage
+        // premultiplied by dpiFactor (see the absolute zoom below), so the cap has
+        // to be too. A bare 8.0f was never 800%: dpiFactor is screenDPI/fileDPI, so
+        // for a PDF (72 dpi) it capped at 600% on a normal 96 dpi screen and 400%
+        // at 150% scaling
+        newZoom = std::min(newZoom, 8.0f * dpiFactor);
         // don't zoom in by just a few pixels (throwing away a prerendered page)
         if (newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
             zoomReal < ZoomRealFromVirtualForPage(kZoomFitPage, CurrentPageNo())) {

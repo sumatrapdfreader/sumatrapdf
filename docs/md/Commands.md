@@ -81,12 +81,12 @@ CmdFindPrevSel,Shift + Ctrl + F3,Find Previous Selection,
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
-CmdBookView,Ctrl + 8,Book View,
-CmdFacingView,Ctrl + 7,Facing View,
+CmdBookView,"Ctrl + 8, Ctrl + Numpad 8",Book View,
+CmdFacingView,"Ctrl + 7, Ctrl + Numpad 7",Facing View,
 CmdInvertColors,Shift + I,Invert Colors,was `i` before 3.6
 CmdRotateLeft,"[, Shift + Ctrl + Subtract",Rotate Left,
 CmdRotateRight,"], Shift + Ctrl + Add",Rotate Right,
-CmdSinglePageView,Ctrl + 6,Single Page View,
+CmdSinglePageView,"Ctrl + 6, Ctrl + Numpad 6",Single Page View,
 CmdToggleContinuousView,c,Toggle Continuous View,
 CmdSelectTextViaKeyboard,F7,Select Text With Keyboard,"ver 3.7+, caret browsing: puts a text caret in the page which the arrow keys move; Shift + arrows extend the selection, v toggles visual mode (arrows select without Shift), Home/End go to the line ends, Ctrl + Home/End to the document ends, Ctrl + arrows move by word, Ctrl + C or y copies, Esc or F7 leaves the mode. Not available for documents with no extractable text (fixes #4684, #4116)"
 CmdToggleKeyboardLinkFollowing,Shift + F,Follow Link With Keyboard,"ver 3.7+, numbers the links visible on screen 1..9; pressing a digit follows that link, Esc or Shift + F again leaves the mode. Not available for comic books, image folders and images (fixes #2629)"
@@ -212,13 +212,13 @@ CmdToggleShowAnnotations,,Toggle Showing Annotations,"ver 3.6+, for current docu
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdToggleZoom,z,Toggle Zoom,
-CmdZoomActualSize,Ctrl + 1,Zoom: Actual Size,
+CmdZoomActualSize,"Ctrl + 1, Ctrl + Numpad 1",Zoom: Actual Size,
 CmdZoomCustom,Ctrl + Y,Zoom: Custom...,
-CmdZoomFitContent,Ctrl + 3,Zoom: Fit Content,
+CmdZoomFitContent,"Ctrl + 3, Ctrl + Numpad 3",Zoom: Fit Content,
 CmdZoomShrinkToFit,,Zoom: Shrink To Fit,"Shows at 100% if page is smaller than view area, otherwise fits page"
-CmdZoomFitPage,Ctrl + 0,Zoom: Fit Page,
+CmdZoomFitPage,"Ctrl + 0, Ctrl + Numpad 0",Zoom: Fit Page,
 CmdZoomFitPageAndSinglePage,,Zoom: Fit Page and Single Page,
-CmdZoomFitWidth,Ctrl + 2,Zoom: Fit Width,
+CmdZoomFitWidth,"Ctrl + 2, Ctrl + Numpad 2",Zoom: Fit Width,
 CmdZoomFitHeight,,Zoom: Fit Height,"Scale so the page fills the window height (may scroll horizontally); useful for landscape pages on portrait screens (fixes #1714), ver 3.7+"
 CmdZoomFitByOrientation,,Zoom: Fit Page or Width by Orientation,"Fit width when the view is wider than tall (landscape), fit page otherwise (portrait); re-evaluated as the window/screen is resized or rotated"
 CmdZoomFitWidthAndContinuous,,Zoom: Fit Width And Continuous,

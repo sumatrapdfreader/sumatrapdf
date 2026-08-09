@@ -142,6 +142,12 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     if (params.zoomVirtual == kZoomFitByOrientation) {
         params.zoomVirtual = params.viewPortSize.dx > params.viewPortSize.dy ? kZoomFitWidth : kZoomFitPage;
     }
+    // Fit Content lays out like Fit Page - the layout is built from media boxes
+    // either way, the content fit lives in the per-page zoom - but it must not
+    // take Fit Page's canvas clamp below: it zooms past the page fit and relies
+    // on DisplayModel::GoToPage() scrolling the margins off-screen.
+    // ShrinkToFit never zooms past the page fit, so the clamp is a no-op there.
+    bool isFitContent = (params.zoomVirtual == kZoomFitContent);
     if (params.zoomVirtual == kZoomFitContent || params.zoomVirtual == kZoomShrinkToFit) {
         params.zoomVirtual = kZoomFitPage;
     }
@@ -266,7 +272,12 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         }
     }
 
-    if (params.zoomVirtual == kZoomFitPage && !IsContinuous(params.displayMode)) {
+    // Fit Page never needs to scroll, so pin the canvas to the window and no
+    // scrollbars appear. Not for Fit Content: clamping leaves it no scroll range,
+    // so limitValue() in GoToPage() would drop the scroll to the content start
+    // and the page would show its top/left margin with the content cut off at
+    // the other end (it looked right only in continuous modes).
+    if (params.zoomVirtual == kZoomFitPage && !isFitContent && !IsContinuous(params.displayMode)) {
         canvasDy = std::min(canvasDy, viewPort.dy);
         canvasDx = std::min(canvasDx, viewPort.dx);
     }
