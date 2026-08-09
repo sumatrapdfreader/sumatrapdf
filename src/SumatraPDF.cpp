@@ -10101,9 +10101,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
             } else if (dm) {
                 // manga (R2L): Left advances (issue #3964)
+                // toRight=false → goNext when R2L (same as GoToPageHorizontal)
+                bool goNext = dm->GetDisplayR2L();
                 dm->GoToPageHorizontal(false);
+                // same next-file tip path as Page Up / Up: leave end dismisses
+                OnDocumentVerticalScrollIntent(win, goNext);
             } else {
                 win->ctrl->GoToPrevPage();
+                OnDocumentVerticalScrollIntent(win, false);
             }
             ReadAloudOnUserViewChanged(win);
         } break;
@@ -10120,9 +10125,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
             } else if (dm) {
                 // manga (R2L): Right goes back (issue #3964)
+                // toRight=true → goNext when LTR
+                bool goNext = !dm->GetDisplayR2L();
                 dm->GoToPageHorizontal(true);
+                OnDocumentVerticalScrollIntent(win, goNext);
             } else {
                 win->ctrl->GoToNextPage();
+                OnDocumentVerticalScrollIntent(win, true);
             }
             ReadAloudOnUserViewChanged(win);
         } break;
@@ -10140,6 +10149,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             ctrl->GoToFirstPage();
+            OnDocumentVerticalScrollIntent(win, false);
             ReadAloudOnUserViewChanged(win);
             break;
 
@@ -10154,6 +10164,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!ctrl->GoToLastPage()) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
             }
+            OnDocumentVerticalScrollIntent(win, true);
             ReadAloudOnUserViewChanged(win);
             break;
 

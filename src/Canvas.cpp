@@ -3608,14 +3608,18 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                     // deltaX < 0: finger moved left (content follows) → leftward spatial nav
                     // In manga (R2L) mode, left advances (issue #3964)
                     if (deltaX < 0) {
+                        bool goNext = dm->GetDisplayR2L();
                         dm->GoToPageHorizontal(false);
                         // TODO: scroll to show the right-hand part
                         int x = dm->canvasSize.dx - dm->viewPort.dx;
                         // logf("x: %d\n");
                         dm->ScrollXTo(x);
+                        OnDocumentVerticalScrollIntent(win, goNext);
                     } else if (deltaX > 0) {
+                        bool goNext = !dm->GetDisplayR2L();
                         dm->GoToPageHorizontal(true);
                         dm->ScrollXTo(0);
+                        OnDocumentVerticalScrollIntent(win, goNext);
                     }
                     ReadAloudOnUserViewChanged(win);
                     // When we switch pages prevent further pan movement
