@@ -1150,6 +1150,10 @@ EXPORTS
 
 	pdf_parse_link_dest
 
+	pdf_parse_link_action
+
+	pdf_new_link
+
 	pdf_lookup_dest
 
 	pdf_lookup_name

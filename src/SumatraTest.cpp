@@ -1145,7 +1145,7 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
         }
         nLinks++;
         Str value = PageDestGetValue(dest);
-        out.Append(fmt("kind=%s value=%s\n", Str(dest->GetKind()), value));
+        out.Append(fmt("kind=%s page=%d value=%s\n", Str(dest->GetKind()), PageDestGetPageNo(dest), value));
     }
     if (nLinks == 0) {
         if (exitCodeOut) {

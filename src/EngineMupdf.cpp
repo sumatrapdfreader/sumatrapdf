@@ -2174,6 +2174,78 @@ static fz_link* FixupPageLinks(fz_link* root) {
     return new_root;
 }
 
+// mupdf's own conversion from a PDF action / destination object to a link uri
+// (pdf-link.c). Not in a public header, so declare it here, like the other
+// mupdf internals this file reaches into.
+extern "C" char* pdf_parse_link_action(fz_context* ctx, pdf_document* doc, pdf_obj* action, int pagenum);
+extern "C" char* pdf_parse_link_dest(fz_context* ctx, pdf_document* doc, pdf_obj* dest);
+
+// mupdf only makes links out of /Link annotations (pdf_load_link() rejects
+// every other subtype). A PDF can just as well navigate from a pushbutton form
+// field: a /Widget annotation with a GoTo or URI action, which is how documents
+// produced by Acrobat draw "back to where you came from" arrows. Those are
+// followed by Acrobat and by browsers, and by SumatraPDF up to 3.1.2. Give them
+// the same fz_links a /Link annotation gets, so they hover, click, and follow
+// like any other link (fixes #1914).
+static fz_link* MakePushButtonWidgetLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfpage, int pageNo) {
+    fz_link* head = nullptr;
+    fz_link* tail = nullptr;
+    for (pdf_annot* w = pdf_first_widget(ctx, pdfpage); w; w = pdf_next_widget(ctx, w)) {
+        char* uri = nullptr;
+        fz_rect rect{};
+        fz_var(uri);
+        fz_var(rect);
+        fz_try(ctx) {
+            if (pdf_widget_type(ctx, w) == PDF_WIDGET_TYPE_BUTTON) {
+                // same places pdf_load_link() looks, in the same order
+                pdf_obj* obj = pdf_annot_obj(ctx, w);
+                pdf_obj* dest = pdf_dict_get(ctx, obj, PDF_NAME(Dest));
+                if (dest) {
+                    uri = pdf_parse_link_dest(ctx, doc, dest);
+                } else {
+                    pdf_obj* action = pdf_dict_get(ctx, obj, PDF_NAME(A));
+                    if (!action) {
+                        action = pdf_dict_geta(ctx, pdf_dict_get(ctx, obj, PDF_NAME(AA)), PDF_NAME(U), PDF_NAME(D));
+                    }
+                    // returns null for actions that aren't navigation
+                    // (JavaScript, ResetForm, ...), which stay non-links
+                    uri = pdf_parse_link_action(ctx, doc, action, pageNo - 1);
+                }
+                if (uri) {
+                    rect = pdf_bound_annot(ctx, w);
+                }
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            uri = nullptr;
+        }
+        if (!uri) {
+            continue;
+        }
+
+        fz_link* link = nullptr;
+        fz_try(ctx) {
+            link = pdf_new_link(ctx, pdfpage, rect, uri, pdf_annot_obj(ctx, w));
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            link = nullptr;
+        }
+        fz_free(ctx, uri);
+        if (!link) {
+            continue;
+        }
+        if (!tail) {
+            head = tail = link;
+        } else {
+            tail->next = link;
+            tail = link;
+        }
+    }
+    return head;
+}
+
 static pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
@@ -4107,6 +4179,24 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
 
     fz_link* link = fz_load_links(ctx, page);
     link = FixupPageLinks(link);
+    if (e->pdfdoc) {
+        fz_link* btnLinks = nullptr;
+        fz_try(ctx) {
+            pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
+            btnLinks = MakePushButtonWidgetLinks(ctx, e->pdfdoc, pdfpage, pageNo);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            btnLinks = nullptr;
+        }
+        // appended, not prepended: a real /Link annotation covering the same
+        // spot is still preferred (see FixupPageLinks)
+        fz_link** tail = &link;
+        while (*tail) {
+            tail = &(*tail)->next;
+        }
+        *tail = btnLinks;
+    }
     pageInfo->retainedLinks = link;
     while (link) {
         auto* pel = NewLinkDestination(pageNo, ctx, e->_doc, link, nullptr);
