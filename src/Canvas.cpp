@@ -3171,6 +3171,26 @@ static int WheelScrollPosOrTarget(MainWindow* win) {
     return GetScrollPos(win->hwndCanvas, SB_VERT);
 }
 
+// Fit Content used to turn the mouse wheel into page flipping in every view mode.
+// That is right when a whole page is on screen - there is nothing to scroll to -
+// but in the continuous modes it silently replaced continuous scrolling with
+// discrete page jumps, which is not something the user asked for by picking a
+// zoom level. Flip to true to get the old behavior back for comparison; it is a
+// plain global (not a setting) so it can also be toggled in the debugger.
+bool gFitContentWheelFlipsPageInContinuous = false;
+
+// whether a wheel notch in Fit Content should flip a whole page instead of
+// scrolling. Always in the non-continuous modes; in continuous only if asked for
+static bool FitContentWheelFlipsPage(DisplayModel* dm) {
+    if (!dm || dm->GetZoomVirtual() != kZoomFitContent) {
+        return false;
+    }
+    if (IsContinuous(dm->GetDisplayMode())) {
+        return gFitContentWheelFlipsPageInContinuous;
+    }
+    return true;
+}
+
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->uiState.tocVisible && HwndIsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
@@ -3269,8 +3289,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         scrollIntent.armed = true;
     }
 
-    // fit content: always flip page on wheel, regardless of scrollbar state
-    if (vScroll && dm && dm->GetZoomVirtual() == kZoomFitContent && IsSingle(dm->GetDisplayMode())) {
+    // fit content: flip page on wheel, regardless of scrollbar state
+    if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
         win->wheelAccumDelta += delta;
         if (win->wheelAccumDelta >= WHEEL_DELTA) {
             win->ctrl->GoToPrevPage();
@@ -3315,9 +3335,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     // Handle page-by-page navigation for other non-continuous modes (but not SinglePage mode)
     if (vScroll && !isCont && !isSinglePageMode) {
-        float zoomVirt = win->ctrl->GetZoomVirtual();
         // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
-        bool flipPage = zoomVirt == kZoomFitContent;
+        bool flipPage = FitContentWheelFlipsPage(dm);
         if (dm && !dm->NeedVScroll()) {
             // if page/pages fully fit in window, flip the whole page
             // logf("  flipping page because !dm->NeedVScroll()\n");
