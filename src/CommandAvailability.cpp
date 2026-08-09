@@ -609,7 +609,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
-    if (cmdId == CmdSelectTextViaKeyboard) {
+    bool isTextSelectCmd = cmdId == CmdSelectTextViaKeyboard || cmdId == CmdExtendSelectionCharLeft ||
+                           cmdId == CmdExtendSelectionCharRight || cmdId == CmdExtendSelectionWordLeft ||
+                           cmdId == CmdExtendSelectionWordRight;
+    if (isTextSelectCmd) {
         // needs a fixed-page engine with extractable text: image collections
         // have none and CHM / markdown do their own selection (#4684, #4116)
         Kind k = ctx.engineKind;

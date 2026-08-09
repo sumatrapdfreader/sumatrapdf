@@ -10446,6 +10446,24 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnSelectAll(win);
             break;
 
+        // no default shortcut: Ctrl+Shift+Left / Right and friends are taken, so
+        // these exist for the user to bind in the Shortcuts settings (#5922)
+        case CmdExtendSelectionCharLeft:
+            ExtendTextSelection(win, TextSelectUnit::Glyph, -1);
+            break;
+
+        case CmdExtendSelectionCharRight:
+            ExtendTextSelection(win, TextSelectUnit::Glyph, 1);
+            break;
+
+        case CmdExtendSelectionWordLeft:
+            ExtendTextSelection(win, TextSelectUnit::Word, -1);
+            break;
+
+        case CmdExtendSelectionWordRight:
+            ExtendTextSelection(win, TextSelectUnit::Word, 1);
+            break;
+
         case CmdDebugToggleRtl:
             gForceRtl = !gForceRtl;
             for (auto* w : gWindows) {

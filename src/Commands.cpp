@@ -287,6 +287,10 @@ static SeqStrings gCommandNames =
     "CmdTranslateSelectionWithAntiGravity\0"
     "CmdConvertToPDF\0"
     "CmdDebugShowFitContentArea\0"
+    "CmdExtendSelectionCharLeft\0"
+    "CmdExtendSelectionCharRight\0"
+    "CmdExtendSelectionWordLeft\0"
+    "CmdExtendSelectionWordRight\0"
     "CmdNone\0"
     "\0";
 
@@ -562,6 +566,10 @@ static i32 gCommandIds[] = {
     CmdTranslateSelectionWithAntiGravity,
     CmdConvertToPDF,
     CmdDebugShowFitContentArea,
+    CmdExtendSelectionCharLeft,
+    CmdExtendSelectionCharRight,
+    CmdExtendSelectionWordLeft,
+    CmdExtendSelectionWordRight,
     CmdNone,
 };
 
@@ -837,6 +845,10 @@ SeqStrings gCommandDescriptions =
     "Translate Selection with Antigravity...\0"
     "Convert To PDF...\0"
     "Debug: Show Fit Content Area\0"
+    "Extend Selection One Character Left\0"
+    "Extend Selection One Character Right\0"
+    "Extend Selection One Word Left\0"
+    "Extend Selection One Word Right\0"
     "Do nothing\0"
     "\0";
 // clang-format on

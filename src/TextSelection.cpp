@@ -649,6 +649,46 @@ static bool MoveFreeEndByGlyph(EngineBase* engine, int& page, int& glyph, int di
     return false;
 }
 
+// Move free end (page, glyph) to the previous / next word boundary. dir +1 / -1.
+// Steps off the current position, then over any run of non-word characters, then
+// to the far side of the word it lands in - i.e. what Ctrl+Left / Ctrl+Right do
+// in a text editor. Stops at a page boundary so a single step never skips a page.
+static bool MoveFreeEndByWord(EngineBase* engine, int& page, int& glyph, int dir) {
+    int textLen = 0;
+    Str text = engine->GetTextForPage(page, &textLen);
+    if (textLen <= 0) {
+        return MoveFreeEndByGlyph(engine, page, glyph, dir);
+    }
+    auto charAt = [&](int ix) -> int {
+        if (ix < 0 || ix >= textLen) {
+            return 0;
+        }
+        int byteIdx = Utf8CodepointToByteIndex(text, ix);
+        int next = byteIdx;
+        return Utf8CodepointNext(text, next);
+    };
+
+    int fromPage = page;
+    if (!MoveFreeEndByGlyph(engine, page, glyph, dir)) {
+        return false;
+    }
+    if (page != fromPage) {
+        return true;
+    }
+    // the character we are moving toward decides whether we're still in a word
+    while (glyph > 0 && glyph < textLen && !isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
+        if (!MoveFreeEndByGlyph(engine, page, glyph, dir) || page != fromPage) {
+            break;
+        }
+    }
+    while (glyph > 0 && glyph < textLen && isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
+        if (!MoveFreeEndByGlyph(engine, page, glyph, dir) || page != fromPage) {
+            break;
+        }
+    }
+    return true;
+}
+
 // True if glyph i is a zero-width newline (line break in the page text stream).
 static bool IsLineBreakAt(Str text, Rect* coords, int i, int textLen) {
     if (i < 0 || i >= textLen || !coords) {
@@ -805,6 +845,9 @@ bool TextPosMoveBy(EngineBase* engine, int& page, int& glyph, TextSelectUnit uni
     if (unit == TextSelectUnit::Glyph) {
         return MoveFreeEndByGlyph(engine, page, glyph, d);
     }
+    if (unit == TextSelectUnit::Word) {
+        return MoveFreeEndByWord(engine, page, glyph, d);
+    }
     return MoveFreeEndByLine(engine, page, glyph, d);
 }
 
@@ -825,13 +868,7 @@ bool TextSelection::ExtendBy(TextSelectUnit unit, int delta) {
     int dir = delta > 0 ? 1 : -1;
 
     for (int s = 0; s < steps; s++) {
-        bool moved = false;
-        if (unit == TextSelectUnit::Glyph) {
-            moved = MoveFreeEndByGlyph(engine, page, glyph, dir);
-        } else {
-            moved = MoveFreeEndByLine(engine, page, glyph, dir);
-        }
-        if (!moved) {
+        if (!TextPosMoveBy(engine, page, glyph, unit, dir)) {
             break;
         }
     }

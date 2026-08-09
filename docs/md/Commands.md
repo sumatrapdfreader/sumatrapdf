@@ -54,6 +54,10 @@ CmdOpenEmbeddedPDF,,Open Embedded PDF,
 CmdSaveEmbeddedFile,,Save Embedded File...,
 CmdCreateShortcutToFile,,Create .lnk Shortcut,
 CmdSelectAll,Ctrl + A,Select All,
+CmdExtendSelectionCharLeft,,Extend Selection One Character Left,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
+CmdExtendSelectionCharRight,,Extend Selection One Character Right,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
+CmdExtendSelectionWordLeft,,Extend Selection One Word Left,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
+CmdExtendSelectionWordRight,,Extend Selection One Word Right,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
 CmdCopyComment,,Copy Comment,
 CmdCopyImage,,Copy Image,
 CmdCopyLinkTarget,,Copy Link Target,
@@ -408,6 +412,29 @@ For boolean arguments name is the same as `true` value i.e. `openedit` is the sa
 For default arguments you can skip the name. For example: `color` is a default `CmdCreateAnnotHighlight` argument so `CmdCreateAnnotHighlight #fafafa` is the same as `CmdCreateAnnotHighlight color: #fafafa`
 
 You can combine those rules: `CmdCreateAnnotHighlight #fafafa openedit` is the same as `CmdCreateAnnotHighlight color: #fafafa openedit: true`.
+
+## `CmdExtendSelectionCharLeft` and other `CmdExtendSelection*`
+
+**Ver 3.7+**
+
+`CmdExtendSelectionCharLeft`, `CmdExtendSelectionCharRight`, `CmdExtendSelectionWordLeft` and `CmdExtendSelectionWordRight` move the free end of the current text selection by one character or one word, the way `Shift + Left/Right` and `Ctrl + Shift + Left/Right` do in a text editor. Moving toward the selection's anchor shrinks it, moving away grows it, and the selection continues across page boundaries.
+
+They have no default shortcut because the obvious keys are already taken (`Ctrl + Shift + Left/Right` navigate between files), so assign your own:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdExtendSelectionWordRight
+        Key = Ctrl + Shift + Right
+    ]
+    [
+        Cmd = CmdExtendSelectionWordLeft
+        Key = Ctrl + Shift + Left
+    ]
+]
+```
+
+The selection can come from anywhere: dragging with the mouse, double-clicking a word, `Ctrl + A` or keyboard selection (`F7`). While `F7` keyboard selection is active these commands move the caret, so it stays at the end of the selection. Without a selection they do nothing, and they're not available for documents with no extractable text.
 
 ## `CmdScrollUp`, `CmdScrollDown`
 

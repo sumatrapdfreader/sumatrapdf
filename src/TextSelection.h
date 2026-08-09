@@ -13,6 +13,7 @@ struct TextSel {
 // Callers map input (e.g. Shift+arrow keys) to unit + signed delta.
 enum class TextSelectUnit {
     Glyph, // one glyph / character
+    Word,  // to the previous / next word boundary
     Line,  // one visual line of text
 };
 

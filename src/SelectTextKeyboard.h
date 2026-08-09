@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct MainWindow;
+enum class TextSelectUnit;
 
 extern Kind kNotifTextSelectMode;
 
@@ -11,6 +12,8 @@ bool SelectTextWithKeyboardActive(MainWindow*);
 bool StopSelectTextWithKeyboard(MainWindow*);
 bool SelectTextWithKeyboardOnKeyDown(MainWindow*, WPARAM key);
 bool SelectTextWithKeyboardOnChar(MainWindow*, WPARAM key);
+bool CanExtendTextSelection(MainWindow*);
+bool ExtendTextSelection(MainWindow*, TextSelectUnit, int dir);
 void SelectTextWithKeyboardBlinkCaret(MainWindow*);
 void PaintKeyboardTextCaret(MainWindow*, HDC);
 

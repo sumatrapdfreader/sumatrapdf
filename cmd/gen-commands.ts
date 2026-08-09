@@ -280,6 +280,10 @@ export const commands = [
     "CmdTranslateSelectionWithAntiGravity", "Translate Selection with Antigravity...",
     "CmdConvertToPDF", "Convert To PDF...",
     "CmdDebugShowFitContentArea", "Debug: Show Fit Content Area",
+    "CmdExtendSelectionCharLeft", "Extend Selection One Character Left",
+    "CmdExtendSelectionCharRight", "Extend Selection One Character Right",
+    "CmdExtendSelectionWordLeft", "Extend Selection One Word Left",
+    "CmdExtendSelectionWordRight", "Extend Selection One Word Right",
     "CmdNone", "Do nothing",
 ];
 

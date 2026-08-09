@@ -347,55 +347,6 @@ static bool MoveToLineEdge(MainWindow* win, int dir) {
     return true;
 }
 
-// previous / next word start (Ctrl + Left / Right)
-static bool MoveByWord(MainWindow* win, int dir) {
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm->GetEngine();
-    int page = win->textSelectPage;
-    int glyph = win->textSelectGlyph;
-    int textLen = 0;
-    Str text = engine->GetTextForPage(page, &textLen);
-    if (textLen <= 0) {
-        return false;
-    }
-    auto charAt = [&](int ix) -> int {
-        if (ix < 0 || ix >= textLen) {
-            return 0;
-        }
-        int byteIdx = Utf8CodepointToByteIndex(text, ix);
-        int next = byteIdx;
-        return Utf8CodepointNext(text, next);
-    };
-    int startPage = page;
-    int startGlyph = glyph;
-    // step off the current position, then over any run of non-word characters,
-    // then to the far side of the word we land in
-    if (!TextPosMoveBy(engine, page, glyph, TextSelectUnit::Glyph, dir)) {
-        return false;
-    }
-    if (page != startPage) {
-        win->textSelectPage = page;
-        win->textSelectGlyph = glyph;
-        return true;
-    }
-    while (glyph > 0 && glyph < textLen && !isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
-        if (!TextPosMoveBy(engine, page, glyph, TextSelectUnit::Glyph, dir) || page != startPage) {
-            break;
-        }
-    }
-    while (glyph > 0 && glyph < textLen && isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
-        if (!TextPosMoveBy(engine, page, glyph, TextSelectUnit::Glyph, dir) || page != startPage) {
-            break;
-        }
-    }
-    if (page == startPage && glyph == startGlyph) {
-        return false;
-    }
-    win->textSelectPage = page;
-    win->textSelectGlyph = glyph;
-    return true;
-}
-
 static bool MoveCaret(MainWindow* win, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm->GetEngine();
@@ -407,10 +358,9 @@ static bool MoveCaret(MainWindow* win, WPARAM key) {
         case VK_LEFT:
         case VK_RIGHT: {
             int dir = key == VK_RIGHT ? 1 : -1;
-            if (isCtrl) {
-                return MoveByWord(win, dir);
-            }
-            if (!TextPosMoveBy(engine, page, glyph, TextSelectUnit::Glyph, dir)) {
+            // Ctrl + Left / Right moves by word, like in a text editor
+            TextSelectUnit unit = isCtrl ? TextSelectUnit::Word : TextSelectUnit::Glyph;
+            if (!TextPosMoveBy(engine, page, glyph, unit, dir)) {
                 return false;
             }
             break;
@@ -535,6 +485,52 @@ bool SelectTextWithKeyboardOnChar(MainWindow* win, WPARAM key) {
         return true;
     }
     return false;
+}
+
+// Is there a text selection the CmdExtendSelection* commands can grow?
+bool CanExtendTextSelection(MainWindow* win) {
+    if (!CanSelectTextWithKeyboard(win)) {
+        return false;
+    }
+    if (SelectTextWithKeyboardActive(win)) {
+        // the caret is the selection's free end, there is always one to move
+        return true;
+    }
+    TextSelection* ts = win->AsFixed()->textSelection;
+    return ts && ts->result.len > 0;
+}
+
+// Grow (or shrink) the current selection by one character / word, for the
+// CmdExtendSelection* commands. The point of these is to keep working on a
+// selection started with the mouse (discussion #5922), so the plain case is
+// moving the selection's free end. When keyboard selection mode is on the caret
+// is that free end, so move it instead - otherwise the caret and the selection
+// would drift apart.
+bool ExtendTextSelection(MainWindow* win, TextSelectUnit unit, int dir) {
+    if (!CanExtendTextSelection(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (SelectTextWithKeyboardActive(win)) {
+        int page = win->textSelectPage;
+        int glyph = win->textSelectGlyph;
+        if (!TextPosMoveBy(dm->GetEngine(), page, glyph, unit, dir)) {
+            return false;
+        }
+        win->textSelectPage = page;
+        win->textSelectGlyph = glyph;
+        ApplySelection(win, true);
+        ScrollCaretIntoView(win);
+        RestartCaretBlink(win);
+        ScheduleRepaint(win, 0);
+        return true;
+    }
+    if (!dm->textSelection->ExtendBy(unit, dir)) {
+        return false;
+    }
+    UpdateTextSelection(win, false);
+    ScheduleRepaint(win, 0);
+    return true;
 }
 
 // State dump for -dbg-control tests (tests/issue-4684.ts).
