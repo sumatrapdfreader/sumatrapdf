@@ -708,6 +708,96 @@ static void GetImageLimitToWindowFlags(EngineBase* engine, bool& limitWidth, boo
     }
 }
 
+static bool IsVirtualFitZoom(float zoomVirtual) {
+    return zoomVirtual == kZoomFitWidth || zoomVirtual == kZoomFitHeight || zoomVirtual == kZoomFitPage ||
+           zoomVirtual == kZoomFitContent || zoomVirtual == kZoomShrinkToFit || zoomVirtual == kZoomFitByOrientation;
+}
+
+// Comics / image collections often have pages of different pixel sizes. In facing
+// view a single shared zoom leaves a gap under the shorter page. Match display
+// heights across the row instead (issue #5921), like dedicated comic readers.
+// Returns <= 0 if not applicable / empty page; otherwise per-page zoom for pageNo.
+static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtual, int pageNo) {
+    if (!dm || !dm->GetEngine() || !dm->GetEngine()->IsImageCollection()) {
+        return 0;
+    }
+    DisplayMode mode = dm->GetDisplayMode();
+    if (IsSingle(mode)) {
+        return 0;
+    }
+
+    bool isShrinkToFit = (kZoomShrinkToFit == zoomVirtual);
+    if (kZoomFitByOrientation == zoomVirtual) {
+        Rect vp = dm->GetViewPort();
+        zoomVirtual = (vp.dx > vp.dy) ? kZoomFitWidth : kZoomFitPage;
+    }
+    if (isShrinkToFit) {
+        zoomVirtual = kZoomFitPage;
+    }
+    if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage &&
+        zoomVirtual != kZoomFitContent) {
+        return 0;
+    }
+
+    bool fitToContent = (kZoomFitContent == zoomVirtual);
+    int columns = ColumnsFromDisplayMode(mode);
+    bool book = IsBookView(mode);
+    int first = FirstPageInARowNo(pageNo, columns, book);
+    int last = LastPageInARowNo(pageNo, columns, book, dm->PageCount());
+
+    Rect viewPort = dm->GetViewPort();
+    int areaDx = viewPort.dx - dm->windowMargin.left - dm->windowMargin.right;
+    int areaDy = viewPort.dy - dm->windowMargin.top - dm->windowMargin.bottom;
+    if (areaDx <= 0 || areaDy <= 0) {
+        return 0;
+    }
+
+    // Equal display heights: targetH * (w1/h1 + w2/h2) + spacing = row width.
+    float aspectSum = 0;
+    int nInRow = 0;
+    for (int i = first; i <= last; i++) {
+        SizeF sz = dm->PageSizeAfterRotation(i, fitToContent);
+        if (sz.dx <= 0 || sz.dy <= 0) {
+            continue;
+        }
+        aspectSum += sz.dx / sz.dy;
+        nInRow++;
+    }
+    if (aspectSum <= 0 || nInRow == 0) {
+        return 0;
+    }
+
+    float spacing = (float)dm->pageSpacing.dx * (float)(nInRow - 1);
+    float usableDx = (float)areaDx - spacing;
+    if (usableDx <= 0) {
+        return 0;
+    }
+    float targetHFromWidth = usableDx / aspectSum;
+    float targetHFromHeight = (float)areaDy;
+    float targetH;
+    if (kZoomFitWidth == zoomVirtual) {
+        targetH = targetHFromWidth;
+    } else if (kZoomFitHeight == zoomVirtual) {
+        targetH = targetHFromHeight;
+    } else {
+        // fit page / fit content
+        targetH = std::min(targetHFromWidth, targetHFromHeight);
+    }
+    if (targetH <= 0) {
+        return 0;
+    }
+
+    SizeF mySz = dm->PageSizeAfterRotation(pageNo, fitToContent);
+    if (mySz.dy <= 0) {
+        return 0;
+    }
+    float zoom = targetH / mySz.dy;
+    if (isShrinkToFit) {
+        zoom = std::min(zoom, 1.0f * dm->dpiFactor);
+    }
+    return zoom;
+}
+
 /* Given a zoom level that can include a "virtual" zoom levels like kZoomFitWidth,
    kZoomFitPage or kZoomFitContent, calculate an absolute zoom level */
 float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const {
@@ -872,8 +962,32 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     ReportIf(!IsValidZoom(newZoomVirtual));
     zoomVirtual = newZoomVirtual;
     int nPages = PageCount();
-    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitHeight == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) ||
-        (kZoomShrinkToFit == newZoomVirtual) || (kZoomFitByOrientation == newZoomVirtual)) {
+    bool matchFacingHeights =
+        engine && engine->IsImageCollection() && !IsSingle(GetDisplayMode()) && IsVirtualFitZoom(newZoomVirtual);
+
+    if (matchFacingHeights) {
+        // per-page zoom so facing comic pages share the same display height
+        float minZoom = (float)HUGE_VAL;
+        for (int pageNo = 1; pageNo <= nPages; pageNo++) {
+            PageInfo* pi = GetPageInfo(pageNo);
+            if (!pi->isShown) {
+                continue;
+            }
+            float zoom = ZoomRealMatchFacingHeights(this, newZoomVirtual, pageNo);
+            if (zoom <= 0) {
+                zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
+            }
+            ReportDebugIf(zoom < 0.01f);
+            pi->zoomReal = zoom;
+            if (zoom > 0) {
+                minZoom = std::min(minZoom, zoom);
+            }
+        }
+        ReportIf(minZoom == (float)HUGE_VAL);
+        zoomReal = minZoom;
+    } else if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitHeight == newZoomVirtual) ||
+               (kZoomFitPage == newZoomVirtual) || (kZoomShrinkToFit == newZoomVirtual) ||
+               (kZoomFitByOrientation == newZoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most documents
            all pages are the same size anyway */
@@ -929,6 +1043,14 @@ float DisplayModel::GetZoomReal(int pageNo) const {
     }
     if (IsSingle(mode)) {
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
+    }
+    // facing / book: comics match heights per page (issue #5921); PDFs keep a
+    // uniform zoom so both pages in the row share the same scale
+    if (engine && engine->IsImageCollection() && IsVirtualFitZoom(zoomVirtual)) {
+        float zoom = ZoomRealMatchFacingHeights(this, zoomVirtual, pageNo);
+        if (zoom > 0) {
+            return zoom;
+        }
     }
     pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(mode), IsBookView(mode));
     if (pageNo == PageCount() || pageNo == 1 && IsBookView(mode)) {
