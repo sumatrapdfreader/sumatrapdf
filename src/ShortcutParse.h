@@ -10,6 +10,7 @@ extern Str (*gShortcutLangCode)();
 
 bool IsValidShortcutString(Str shortcut);
 
+#if OS_WIN
 bool ParseShortcutString(Str shortcut, ACCEL& accel);
-
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a);
+#endif

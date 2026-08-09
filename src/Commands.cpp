@@ -4,11 +4,11 @@
 #include "base/Base.h"
 
 #include "Commands.h"
-#include "ShortcutParse.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
 #if !defined(SUMATRA_TEST_UTIL)
+#include "ShortcutParse.h"
 #include "Accelerators.h"
 #include "GlobalPrefs.h"
 #endif
