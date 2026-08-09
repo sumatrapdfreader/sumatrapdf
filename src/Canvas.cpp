@@ -4165,7 +4165,7 @@ void ScheduleRepaint(MainWindow* win, int delayInMs) {
 static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
     Point pt;
 
-    if (!win || !IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
         return;
     }
 

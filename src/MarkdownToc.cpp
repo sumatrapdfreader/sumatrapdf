@@ -785,8 +785,8 @@ bool MarkdownToc_UnitTestHtmlHeadings() {
     } want[] = {
         {StrL("Introduction"), StrL("intro"), 1},
         {StrL("Details & Notes"), StrL("details"), 2}, // &amp; decoded
-        {StrL("No Id Here"), StrL(""), 3},              // no id -> empty anchor
-        {StrL("More emphasis"), StrL("more"), 2},       // nested inline text kept
+        {StrL("No Id Here"), StrL(""), 3},             // no id -> empty anchor
+        {StrL("More emphasis"), StrL("more"), 2},      // nested inline text kept
     };
     bool ok = (len(hs) == (int)dimof(want));
     for (int i = 0; ok && i < len(hs); i++) {

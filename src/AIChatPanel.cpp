@@ -613,7 +613,7 @@ static void OnAIChatUpdate(AIChatUpdateData* data) {
     MainWindow* win = AIChatFindMainWindowByFrame(data->hwndFrame);
     int pid = data->providerId;
     AIChatProvider* p = GetAIChatProvider(pid);
-    if (!win || !IsMainWindowValid(win) || !win->hwndAiChatBox || !p) {
+    if (!IsMainWindowValid(win) || !win->hwndAiChatBox || !p) {
         FreeAIChatUpdateData(data);
         return;
     }
@@ -1102,7 +1102,7 @@ static void DeleteAIChatWebView(MainWindow* win) {
 // replacing the old "wait 600ms and hope" timer.
 static void OnAIChatWebViewNavigated(void* ctx, Str, bool) {
     MainWindow* win = (MainWindow*)ctx;
-    if (!win || !IsMainWindowValid(win) || !win->hwndAiChatBox) {
+    if (!IsMainWindowValid(win) || !win->hwndAiChatBox) {
         return;
     }
     if (win->aiChatWebView) {

@@ -105,14 +105,14 @@ void SafeDeleteCommandPaletteWnd() {
     if (gTabToSelectOnClose) {
         WindowTab* tab = gTabToSelectOnClose;
         gTabToSelectOnClose = nullptr;
-        if (tab->win && IsMainWindowValid(tab->win) && tab->win->GetTabIdx(tab) >= 0) {
+        if (IsMainWindowValid(tab->win) && tab->win->GetTabIdx(tab) >= 0) {
             SelectTabInWindow(tab);
         }
     }
     if (gCmdIdToExecOnClose != 0) {
         i32 cmdId = gCmdIdToExecOnClose;
         gCmdIdToExecOnClose = 0;
-        if (win && IsMainWindowValid(win)) {
+        if (IsMainWindowValid(win)) {
             HwndPostCommand(win->hwndFrame, cmdId);
         }
     }
@@ -121,7 +121,7 @@ void SafeDeleteCommandPaletteWnd() {
         Favorite* fav = gFavToGoToOnClose;
         gFavFsToGoToOnClose = nullptr;
         gFavToGoToOnClose = nullptr;
-        if (win && IsMainWindowValid(win)) {
+        if (IsMainWindowValid(win)) {
             GoToFavorite(win, fs, fav);
         }
     }

@@ -969,7 +969,7 @@ bool IsRightDragging(MainWindow* win) {
 // then go back on main thread to finish things. At that point MainWindow
 // could have been destroyed so we need to check if it's still valid
 bool IsMainWindowValid(MainWindow* win) {
-    return gWindows.Contains(win);
+    return win && gWindows.Contains(win);
 }
 
 MainWindow* FindMainWindowByHwnd(HWND hwnd) {

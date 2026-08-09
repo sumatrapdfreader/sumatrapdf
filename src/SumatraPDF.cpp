@@ -5944,7 +5944,7 @@ void DismissNextFileScrollHint(MainWindow* win) {
 // vertical scroll intent for discoverability of "open next file in folder":
 // scroll-down at document end may show a next-file hint; scroll-up dismisses it
 void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
-    if (!win || !IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
         return;
     }
     if (!down) {
@@ -11230,10 +11230,14 @@ void RelayoutCaption(MainWindow* win) {
         }
 
         DeferWinPosHelper dh;
-        int menuBarX = HwndMapChildXForRtlParent(win->hwndFrame, row1X, menuBarWidth);
-        dh.SetWindowPos(win->hwndMenuReBar, nullptr, menuBarX, row1Y, menuBarWidth, menuBarDy, SWP_NOZORDER);
+        // hwnd may vanish if embed teardown ran under a nested SendMessage
+        HWND hwndMenuReBar = win->hwndMenuReBar;
+        if (hwndMenuReBar && ::IsWindow(hwndMenuReBar)) {
+            int menuBarX = HwndMapChildXForRtlParent(win->hwndFrame, row1X, menuBarWidth);
+            dh.SetWindowPos(hwndMenuReBar, nullptr, menuBarX, row1Y, menuBarWidth, menuBarDy, SWP_NOZORDER);
+        }
 
-        if (hasFileTabs) {
+        if (hasFileTabs && win->tabsCtrl && win->tabsCtrl->hwnd && ::IsWindow(win->tabsCtrl->hwnd)) {
             // Row 2: tabs — keep MainWindow::tabsVisible in sync (issue #5861)
             win->tabsVisible = true;
             win->tabsCtrl->SetIsVisible(true);
@@ -11242,7 +11246,9 @@ void RelayoutCaption(MainWindow* win) {
         } else {
             // no file tabs: hide tab bar, single-row caption
             win->tabsVisible = false;
-            win->tabsCtrl->SetIsVisible(false);
+            if (win->tabsCtrl) {
+                win->tabsCtrl->SetIsVisible(false);
+            }
         }
         dh.End();
     } else {
@@ -12767,24 +12773,42 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
     HwndSendCommand(win->hwndFrame, (int)selected);
 }
 
+// Drop tabs-in-titlebar / menu rebar chrome after an external host reparents
+// our frame as WS_CHILD (e.g. Total Commander lister). Must not run while
+// nested under RelayoutCaption/EndDeferWindowPos paint: destroying the menu
+// rebar mid-paint crashes in comctl32!DrawScrollBar (null +0x10).
+// Posted via uitask::Post so it runs after the current message finishes.
+static void ApplyEmbeddedWindowChrome(MainWindow* win) {
+    if (!IsMainWindowValid(win) || !win->hwndFrame || !::IsWindow(win->hwndFrame)) {
+        return;
+    }
+    logf("ApplyEmbeddedWindowChrome\n");
+    SetTabsInTitlebar(win, false);
+    DestroyMenuBarRebar(win);
+    if (::IsWindow(win->hwndFrame)) {
+        SetMenu(win->hwndFrame, nullptr);
+    }
+    UpdateTabWidth(win);
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+}
+
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     // DbgLogMsg("frame:", hwnd, msg, wp, lp);
     // detect when an external host (e.g. Total Commander's lister) embeds us
-    // by reparenting our window as WS_CHILD
+    // by reparenting our window as WS_CHILD. Only set the flag here and post
+    // chrome teardown: this handler can re-enter under EndDeferWindowPos.
     bool isChildWindow = HwndIsWindowStyleSet(hwnd, WS_CHILD);
     if (win && !gMyWindowWasEmbedded && isChildWindow) {
         logf("Detected window embedded in another window\n");
         gMyWindowWasEmbedded = true;
         str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, "windows");
-        SetTabsInTitlebar(win, false);
-        DestroyMenuBarRebar(win);
-        SetMenu(hwnd, nullptr);
-        UpdateTabWidth(win);
-        ScheduleUiUpdate(win);
+        uitask::Post(MkFunc0(ApplyEmbeddedWindowChrome, win), "ApplyEmbeddedWindowChrome");
     }
-    if (win && win->tabsInTitlebar) {
+    // custom caption is incompatible with WS_CHILD hosts; skip even before
+    // deferred ApplyEmbeddedWindowChrome clears tabsInTitlebar
+    if (win && win->tabsInTitlebar && !gMyWindowWasEmbedded) {
         bool callDefault = true;
         LRESULT res = CustomCaptionFrameProc(hwnd, msg, wp, lp, &callDefault, win);
         if (!callDefault) {

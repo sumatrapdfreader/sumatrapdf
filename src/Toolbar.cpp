@@ -1660,11 +1660,12 @@ static int MenuBarToolbarIdealDy(MainWindow* win) {
 }
 
 int GetMenuBarRebarHeight(MainWindow* win) {
-    if (!win || !win->hwndMenuReBar) {
+    HWND hwnd = win ? win->hwndMenuReBar : nullptr;
+    if (!hwnd || !::IsWindow(hwnd)) {
         return 0;
     }
     // RB_GETBARHEIGHT underreports by 1px without WS_BORDER
-    int dy = (int)SendMessageW(win->hwndMenuReBar, RB_GETBARHEIGHT, 0, 0) + 1;
+    int dy = (int)SendMessageW(hwnd, RB_GETBARHEIGHT, 0, 0) + 1;
     if (dy > 1) {
         if (IsRunningOnWine()) {
             logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d\n", win->hwndMenuReBar, dy);
@@ -1902,13 +1903,20 @@ void RebuildMenuBarButtons(MainWindow* win) {
 }
 
 void CreateMenuBarRebar(MainWindow* win) {
-    if (win->hwndMenuReBar) {
+    if (!win || win->hwndMenuReBar) {
+        return;
+    }
+    // embedded hosts (TC lister) must not get titlebar menu rebar chrome
+    if (gMyWindowWasEmbedded) {
+        return;
+    }
+    HWND hwndParent = win->hwndFrame;
+    if (!hwndParent || !::IsWindow(hwndParent)) {
         return;
     }
 
     bool isRtl = IsUIRtl();
     HINSTANCE hinst = GetModuleHandle(nullptr);
-    HWND hwndParent = win->hwndFrame;
 
     // create hidden; caller shows after the scheduled relayout positions it
     // no WS_BORDER (avoids 1px gap) and no RBS_BANDBORDERS (avoids gray band separators)
@@ -1980,18 +1988,46 @@ void CreateMenuBarRebar(MainWindow* win) {
 }
 
 void ShowMenuBarRebar(MainWindow* win) {
-    if (win->hwndMenuReBar) {
-        ShowWindow(win->hwndMenuReBar, SW_SHOW);
+    HWND hwnd = win ? win->hwndMenuReBar : nullptr;
+    if (hwnd && ::IsWindow(hwnd)) {
+        ShowWindow(hwnd, SW_SHOW);
     }
 }
 
 void DestroyMenuBarRebar(MainWindow* win) {
-    HwndDestroyWindowSafe(&win->hwndMenuToolbar);
-    HwndDestroyWindowSafe(&win->hwndMenuReBar);
+    if (!win) {
+        return;
+    }
+    // clear fields first so re-entrant layout/paint cannot SetWindowPos them
+    HWND hwndTb = win->hwndMenuToolbar;
+    HWND hwndRb = win->hwndMenuReBar;
+    win->hwndMenuToolbar = nullptr;
+    win->hwndMenuReBar = nullptr;
+    // hide before destroy so nested paint is less likely to walk half-torn
+    // rebar/toolbar scroll-arrow state (comctl32!DrawScrollBar AV)
+    if (hwndRb && ::IsWindow(hwndRb)) {
+        ShowWindow(hwndRb, SW_HIDE);
+    }
+    if (hwndTb && ::IsWindow(hwndTb)) {
+        ShowWindow(hwndTb, SW_HIDE);
+        DestroyWindow(hwndTb);
+    }
+    if (hwndRb && ::IsWindow(hwndRb)) {
+        DestroyWindow(hwndRb);
+    }
 }
 
 bool IsShowingMenuBarRebar(MainWindow* win) {
-    if (!win->hwndMenuReBar) {
+    if (!win) {
+        return false;
+    }
+    HWND hwnd = win->hwndMenuReBar;
+    if (!hwnd || !::IsWindow(hwnd)) {
+        return false;
+    }
+    // host reparented us as WS_CHILD: menu rebar is being (or about to be)
+    // torn down; treat as not showing so layout does not SetWindowPos it
+    if (gMyWindowWasEmbedded) {
         return false;
     }
     if (win->presentation) {
