@@ -635,6 +635,79 @@ class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventH
     ULONG m_refCount = 1;
 };
 
+// Used when routeDownloadsToOsBrowser is set: cancel the in-webview download
+// and open external http(s) URLs in the OS default browser. Virtual-host
+// content (markdown/CHM) is not opened externally.
+static bool ShouldOpenWebViewDownloadInOsBrowser(WStr uri, WStr resourceUriPrefix) {
+    if (!uri) {
+        return false;
+    }
+    if (resourceUriPrefix && wstr::StartsWith(uri, resourceUriPrefix)) {
+        return false;
+    }
+    TempStr url = ToUtf8Temp(uri);
+    return str::StartsWithI(url, StrL("http://")) || str::StartsWithI(url, StrL("https://"));
+}
+
+class webview2_download_starting_handler : public ICoreWebView2DownloadStartingEventHandler {
+  public:
+    explicit webview2_download_starting_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2DownloadStartingEventHandler)) {
+            *ppv = static_cast<ICoreWebView2DownloadStartingEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2DownloadStartingEventArgs* args) {
+        if (!args) {
+            return S_OK;
+        }
+        // hide default download dialog and abort in-webview download
+        args->put_Cancel(TRUE);
+        args->put_Handled(TRUE);
+
+        ICoreWebView2DownloadOperation* op = nullptr;
+        if (FAILED(args->get_DownloadOperation(&op)) || !op) {
+            return S_OK;
+        }
+        WCHAR* uri = nullptr;
+        HRESULT hr = op->get_Uri(&uri);
+        op->Release();
+        if (FAILED(hr) || !uri) {
+            return S_OK;
+        }
+        WStr uriW = WStr(uri);
+        WStr prefix = m_wnd ? m_wnd->resourceUriPrefix : WStr{};
+        if (ShouldOpenWebViewDownloadInOsBrowser(uriW, prefix)) {
+            TempStr url = ToUtf8Temp(uriW);
+            logf("WebView2: routing download to OS browser: '%s'\n", url);
+            LaunchBrowser(url);
+        } else {
+            logf("WebView2: cancelled download (not opened externally)\n");
+        }
+        CoTaskMemFree(uri);
+        return S_OK;
+    }
+
+  private:
+    WebviewWnd* m_wnd = nullptr;
+    ULONG m_refCount = 1;
+};
+
 class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler {
   public:
     using env_ready_cb_t = void (*)(HRESULT, ICoreWebView2Environment*);
@@ -1208,6 +1281,20 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
             auto* handler = new webview2_history_changed_handler(this);
             webview->add_HistoryChanged(handler, &token);
             handler->Release();
+        }
+    }
+
+    // optional: open external downloads in the OS browser (issue #5920)
+    if (routeDownloadsToOsBrowser) {
+        ICoreWebView2_4* wv4 = nullptr;
+        if (SUCCEEDED(webview->QueryInterface(IID_PPV_ARGS(&wv4))) && wv4) {
+            auto* handler = new webview2_download_starting_handler(this);
+            ::EventRegistrationToken token = {};
+            if (FAILED(wv4->add_DownloadStarting(handler, &token))) {
+                logf("WebviewWnd: add_DownloadStarting failed\n");
+            }
+            handler->Release();
+            wv4->Release();
         }
     }
 

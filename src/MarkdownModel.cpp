@@ -635,20 +635,25 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     if (cb) {
         cb->FocusFrame(false);
     }
-    if (!newWindow) {
-        return true;
-    }
-    TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
-    if (plainUrl && !IsMarkdownExternalUrl(plainUrl)) {
-        DisplayPage(plainUrl);
+    // external links go to the OS browser / link handler — never navigate the
+    // document webview off-document (issue #5920)
+    if (IsMarkdownExternalUrl(url)) {
+        if (url && cb) {
+            auto* item = NewMarkdownTocItem(nullptr, nullptr, 1, url);
+            cb->GotoLink(item->dest);
+            FreeTocItemRec(nullptr, item);
+        }
         return false;
     }
-    if (url && cb) {
-        auto* item = NewMarkdownTocItem(nullptr, nullptr, 1, url);
-        cb->GotoLink(item->dest);
-        FreeTocItemRec(nullptr, item);
+    // new-window request for an in-document URL: navigate in place
+    if (newWindow) {
+        TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
+        if (plainUrl) {
+            DisplayPage(plainUrl);
+        }
+        return false;
     }
-    return false;
+    return true;
 }
 
 void MarkdownModel::OnDocumentComplete(Str url) {

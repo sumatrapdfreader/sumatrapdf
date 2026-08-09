@@ -166,6 +166,9 @@ struct WebviewWnd : Wnd {
     // when false, WebView2 won't claim external (file) drops, so they fall
     // through to the host window's drop target (e.g. to open the file)
     bool allowExternalDrop = true;
+    // when true, cancel in-webview downloads and open external http(s) URLs in
+    // the OS default browser instead of WebView2's download UI (issue #5920)
+    bool routeDownloadsToOsBrowser = false;
     Vec<PendingWebViewOp> pendingOps;
     Vec<WebViewInitScript> initScripts;
     int nextInitScriptToken = 1;

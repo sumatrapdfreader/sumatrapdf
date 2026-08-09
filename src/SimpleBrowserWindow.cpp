@@ -277,6 +277,10 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView->events.historyChanged = HistoryChanged;
         webView->events.resolveAccelCmd = ResolveAccelCmd;
         webView->forwardAppAccelerators = true;
+        // in-app manual (virtual host): route downloads to the OS browser
+        if (len(args.resourceUriPrefix) > 0) {
+            webView->routeDownloadsToOsBrowser = true;
+        }
 
         CreateWebViewArgs cargs;
         cargs.parent = frameHwnd;

@@ -649,19 +649,19 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
         cb->FocusFrame(false);
     }
 
-    if (!newWindow) {
-        return true;
+    // external links and new-window requests leave the embedded browser
+    // (same as FixedPageUI / SimpleBrowserWindow; issue #5920 for downloads)
+    if (newWindow || IsExternalUrl(url)) {
+        if (url && cb) {
+            // TODO: optimize, create just destination
+            auto* item = NewChmTocItem(nullptr, nullptr, 1, url);
+            cb->GotoLink(item->dest);
+            FreeTocItemRec(nullptr, item);
+        }
+        return false;
     }
 
-    // don't allow new MSIE windows to be opened
-    // instead pass the URL to the system's default browser
-    if (url && cb) {
-        // TODO: optimize, create just destination
-        auto* item = NewChmTocItem(nullptr, nullptr, 1, url);
-        cb->GotoLink(item->dest);
-        FreeTocItemRec(nullptr, item);
-    }
-    return false;
+    return true;
 }
 
 // Load and cache data for a given url inside CHM file.

@@ -445,6 +445,8 @@ bool BrowserDocView::CreateWebView2() {
     // let file drops fall through to the canvas (to open the dropped file)
     // instead of being swallowed by the WebView2 control
     wv->allowExternalDrop = false;
+    // don't host downloads inside the document viewer (issue #5920)
+    wv->routeDownloadsToOsBrowser = true;
 
     Rect rc = HwndClientRect(hwndParent);
     CreateWebViewArgs cargs;
