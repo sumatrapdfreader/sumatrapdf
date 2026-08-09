@@ -509,24 +509,24 @@ RectF DisplayModel::PageMediaBox(int pageNo) const {
         return {};
     }
     if (pi->state == PageInfoState::Known) {
-        return pi->_mediaBox;
+        return pi->mediaBox;
     }
     if (pi->state == PageInfoState::Error) {
         return {};
     }
-    pi->_mediaBox = engine->PageMediabox(pageNo);
-    if (pi->_mediaBox.IsEmpty()) {
+    pi->mediaBox = engine->PageMediabox(pageNo);
+    if (pi->mediaBox.IsEmpty()) {
         float fileDPI = engine->GetFileDPI();
         if (0 == GetMeasurementSystem()) {
-            pi->_mediaBox = RectF(0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI));
+            pi->mediaBox = RectF(0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI));
         } else {
-            pi->_mediaBox = RectF(0, 0, (float)(8.5 * fileDPI), 11 * fileDPI);
+            pi->mediaBox = RectF(0, 0, (float)(8.5 * fileDPI), 11 * fileDPI);
         }
         pi->state = PageInfoState::Error;
     } else {
         pi->state = PageInfoState::Known;
     }
-    return pi->_mediaBox;
+    return pi->mediaBox;
 }
 
 PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
