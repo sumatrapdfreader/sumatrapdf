@@ -2,8 +2,12 @@
 REM VS prebuild helper. Do NOT permanently change the caller's cwd (MSBuild
 REM chains further prebuild lines that assume the project directory).
 setlocal
-set ROOT=%~dp0..
-set ROOT=%ROOT:~0,-1%
+REM %~dp0 ends with a backslash, so strip it before appending "..": chopping the
+REM last character off "<repo>\cmd\.." instead leaves "<repo>\cmd\" and every
+REM path below then points inside cmd\ (MakeLZSA.exe "missing", embedded.dat
+REM never built, and the .rc fails with "file not found: ..\.work\embedded.dat")
+set CMDDIR=%~dp0
+set ROOT=%CMDDIR:~0,-1%\..
 
 if not exist "%ROOT%\.work" mkdir "%ROOT%\.work"
 if not exist "%ROOT%\.work\translations.txt" type nul > "%ROOT%\.work\translations.txt"

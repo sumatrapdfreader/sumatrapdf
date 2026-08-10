@@ -304,6 +304,7 @@ const sumatraFiles: FileGroup[] = [
       "DocumentLayout.*",
       "DisplayMode.*",
       "EditAnnotations.*",
+      "EmbeddedResources.*",
       "EngineDump.cpp",
       "ExternalViewers.*",
       "ImageEditHostSumatra.*",
