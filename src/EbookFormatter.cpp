@@ -14,6 +14,7 @@
 #include "EbookDoc.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
+#include "wingui/PlatformFont.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 

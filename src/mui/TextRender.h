@@ -1,6 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// PlatformFont (wingui/PlatformFont.h) must be included before this header:
+// it is pulled in from inside `namespace mui`, so a forward declaration here
+// would declare mui::PlatformFont instead of the global one
+
 enum class TextRenderMethod {
     Gdiplus,      // uses MeasureTextAccurate, which is slower than MeasureTextQuick
     GdiplusQuick, // uses MeasureTextQuick
@@ -12,7 +16,7 @@ enum class TextRenderMethod {
 
 class ITextRender {
   public:
-    virtual void SetFont(CachedFont* font) = 0;
+    virtual void SetFont(PlatformFont* font) = 0;
     virtual void SetTextColor(Gdiplus::Color col) = 0;
 
     // this is only for the benefit of TextRenderGdi. In GDI+, Draw() uses
@@ -47,7 +51,7 @@ class TextRenderGdi : public ITextRender {
     HDC hdcGfxLocked = nullptr;
     HDC hdcForTextMeasure = nullptr;
     HGDIOBJ hdcForTextMeasurePrevFont = nullptr;
-    CachedFont* currFont = nullptr;
+    PlatformFont* currFont = nullptr;
     Gdiplus::Graphics* gfx = nullptr;
     Gdiplus::Color textColor;
     Gdiplus::Color textBgColor;
@@ -72,7 +76,7 @@ class TextRenderGdi : public ITextRender {
     void CreateHdcForTextMeasure();
     static TextRenderGdi* Create(Gdiplus::Graphics* gfx);
 
-    void SetFont(CachedFont* font) override;
+    void SetFont(PlatformFont* font) override;
     void SetTextColor(Gdiplus::Color col) override;
     void SetTextBgColor(Gdiplus::Color col) override;
 
@@ -99,7 +103,7 @@ class TextRenderGdiplus : public ITextRender {
 
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
-    CachedFont* currFont = nullptr;
+    PlatformFont* currFont = nullptr;
     Gdiplus::Color textColor;
     Gdiplus::Brush* textColorBrush = nullptr;
 
@@ -108,7 +112,7 @@ class TextRenderGdiplus : public ITextRender {
   public:
     static TextRenderGdiplus* Create(Gdiplus::Graphics* gfx, TextMeasureAlgorithm measureAlgo = nullptr);
 
-    void SetFont(CachedFont* font) override;
+    void SetFont(PlatformFont* font) override;
     void SetTextColor(Gdiplus::Color col) override;
     void SetTextBgColor(Gdiplus::Color) override {}
 
@@ -137,7 +141,7 @@ class TextRenderHdc : public ITextRender {
 
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
-    CachedFont* currFont = nullptr;
+    PlatformFont* currFont = nullptr;
     Gdiplus::Color textColor;
     Gdiplus::Color textBgColor;
 
@@ -146,7 +150,7 @@ class TextRenderHdc : public ITextRender {
   public:
     static TextRenderHdc* Create(Gdiplus::Graphics* gfx, int dx, int dy);
 
-    void SetFont(CachedFont* font) override;
+    void SetFont(PlatformFont* font) override;
     void SetTextColor(Gdiplus::Color col) override;
     void SetTextBgColor(Gdiplus::Color col) override;
 

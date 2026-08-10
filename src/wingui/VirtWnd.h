@@ -10,6 +10,9 @@
 // origin; painting and hit-testing carry an origin down the tree, which is what
 // makes VirtWndScroll cheap (shift the origin, don't re-layout the subtree).
 
+// needs wingui/PlatformFont.h (PlatformFont) and wingui/Gfx.h (Gfx)
+// included before it
+
 struct VirtWnd;
 struct VirtWndRoot;
 struct Pixmap;
@@ -33,7 +36,7 @@ enum VirtWndFlags : u32 {
 
 // all rects are in HWND client coords
 struct VirtWndPaintCtx {
-    HDC hdc = nullptr;
+    Gfx* gfx = nullptr;
     Rect bounds;  // the wnd being painted
     Rect content; // bounds deflated by padding
     Rect clip;    // intersection of the clip rects of all ancestors
@@ -92,8 +95,8 @@ struct VirtWnd : LayoutBase {
 
     virtual void Paint(VirtWndPaintCtx&);
     virtual void PaintChildren(VirtWndPaintCtx&);
-    void PaintTree(HDC, Point origin, Rect clip);
-    void PaintStandalone(HDC);
+    void PaintTree(Gfx*, Point origin, Rect clip);
+    void PaintStandalone(Gfx*);
 
     virtual bool HitTest(Point ptLocal);
     // scroll containers return how much their content is scrolled
@@ -165,7 +168,7 @@ struct VirtWndRoot {
     void SetBounds(Rect);
     void LayoutIfNeeded();
     void RequestLayout();
-    void Paint(HDC, Rect clip);
+    void Paint(Gfx*, Rect clip);
 
     // single entry point from the owning WndProc, returns false if not handled
     bool OnMessage(UINT msg, WPARAM, LPARAM, LRESULT& res);
@@ -328,7 +331,7 @@ enum class VirtWndTextAlign {
 
 struct VirtWndText : VirtWnd {
     Str s;
-    HFONT font = nullptr; // not owned
+    PlatformFont* font = nullptr; // not owned, interned
     bool withUnderline = false;
     bool isRtl = false;
     bool ellipsis = false;
@@ -338,9 +341,8 @@ struct VirtWndText : VirtWnd {
     COLORREF textColor = kColorUnset;
 
     Size sz = {0, 0};
-    HWND hwndForMeasure = nullptr;
 
-    VirtWndText(HWND hwnd, Str s, HFONT font = nullptr);
+    VirtWndText(Str s, PlatformFont* font = nullptr);
     ~VirtWndText() override;
 
     int MinIntrinsicHeight(int width) override;
@@ -361,7 +363,7 @@ struct VirtWndLink : VirtWndText {
     VirtWndMouseHandler onClick;
     bool underlineOnHover = false;
 
-    VirtWndLink(HWND hwnd, Str s, HFONT font = nullptr);
+    VirtWndLink(Str s, PlatformFont* font = nullptr);
     ~VirtWndLink() override;
 
     void SetTarget(Str);
@@ -382,7 +384,7 @@ struct VirtWndButton : VirtWndText {
     Insets textPadding{4, 8, 4, 8};
     VirtWndMouseHandler onClick;
 
-    VirtWndButton(HWND hwnd, Str s, HFONT font = nullptr);
+    VirtWndButton(Str s, PlatformFont* font = nullptr);
     ~VirtWndButton() override;
 
     Size GetIdealSize() override;
@@ -395,7 +397,7 @@ struct VirtWndButton : VirtWndText {
 };
 
 struct VirtWndIconButton : VirtWnd {
-    // not owned; on Windows usually from VirtWndIconPixmap()
+    // not owned; on Windows usually from IconPixmapFromImageList()
     Pixmap* pixmap = nullptr;
     bool isSelected = false;
     Str tooltip; // owned
@@ -461,12 +463,3 @@ struct VirtWndSpacer : VirtWnd {
 };
 
 Rect FitSizeInRect(Size src, Rect dst);
-
-//--- HIMAGELIST -> Pixmap (Windows)
-
-// The controls above take Pixmaps so they don't depend on a Windows imaging
-// API, but our icons live in HIMAGELISTs. Converting one on every paint would
-// be wasteful, so an icon is rendered into a DIB-backed Pixmap once and kept
-// until the image list it came from is replaced (theme or DPI change).
-Pixmap* VirtWndIconPixmap(HIMAGELIST, int iconIdx);
-void ClearVirtWndIconCache();

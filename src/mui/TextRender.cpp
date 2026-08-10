@@ -4,6 +4,8 @@
 #include "base/Base.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
+#include "wingui/PlatformFont.h"
+
 #include "Mui.h"
 
 /*
@@ -93,7 +95,7 @@ void TextRenderGdi::RestoreHdcForTextMeasurePrevFont() {
     }
 }
 
-void TextRenderGdi::SetFont(mui::CachedFont* font) {
+void TextRenderGdi::SetFont(PlatformFont* font) {
     // I'm not sure how expensive SelectFont() is so avoid it just in case
     if (currFont == font) {
         return;
@@ -111,7 +113,7 @@ void TextRenderGdi::SetFont(mui::CachedFont* font) {
 
 float TextRenderGdi::GetCurrFontLineSpacing() {
 #if 1
-    return currFont->font->GetHeight(gfx);
+    return currFont->gdiFont->GetHeight(gfx);
 #else
     ReportIf(!currFont);
     TEXTMETRIC tm;
@@ -299,13 +301,13 @@ TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, TextMeasureAlgorithm
     return res;
 }
 
-void TextRenderGdiplus::SetFont(mui::CachedFont* font) {
-    ReportIf(!font->font);
+void TextRenderGdiplus::SetFont(PlatformFont* font) {
+    ReportIf(!font->gdiFont);
     currFont = font;
 }
 
 float TextRenderGdiplus::GetCurrFontLineSpacing() {
-    return currFont->font->GetHeight(gfx);
+    return currFont->gdiFont->GetHeight(gfx);
 }
 
 RectF TextRenderGdiplus::Measure(WStr s) {
@@ -313,7 +315,7 @@ RectF TextRenderGdiplus::Measure(WStr s) {
         ReportIf(true);
         return {};
     }
-    return MeasureText(gfx, currFont->font, s, measureAlgo);
+    return MeasureText(gfx, currFont->gdiFont, s, measureAlgo);
 }
 
 RectF TextRenderGdiplus::Measure(Str s) {
@@ -341,12 +343,12 @@ static Gdiplus::PointF ToGdipPointF(const PointF p) {
 void TextRenderGdiplus::Draw(WStr s, const RectF bb, bool isRtl) {
     Gdiplus::PointF pos = ToGdipPointF(bb.TL());
     if (!isRtl) {
-        gfx->DrawString(s.s, (INT)s.len, currFont->font, pos, nullptr, textColorBrush);
+        gfx->DrawString(s.s, (INT)s.len, currFont->gdiFont, pos, nullptr, textColorBrush);
     } else {
         StringFormat rtl;
         rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
         pos.X += bb.dx;
-        gfx->DrawString(s.s, (INT)s.len, currFont->font, pos, &rtl, textColorBrush);
+        gfx->DrawString(s.s, (INT)s.len, currFont->gdiFont, pos, &rtl, textColorBrush);
     }
 }
 
@@ -400,7 +402,7 @@ TextRenderHdc* TextRenderHdc::Create(Graphics* gfx, int dx, int dy) {
     return res;
 }
 
-void TextRenderHdc::SetFont(CachedFont* font) {
+void TextRenderHdc::SetFont(PlatformFont* font) {
     ReportIf(!hdc);
     // I'm not sure how expensive SelectFont() is so avoid it just in case
     if (currFont == font) {
@@ -429,7 +431,7 @@ void TextRenderHdc::SetTextBgColor(Gdiplus::Color col) {
 }
 
 float TextRenderHdc::GetCurrFontLineSpacing() {
-    return currFont->font->GetHeight(gfx);
+    return currFont->gdiFont->GetHeight(gfx);
 }
 
 RectF TextRenderHdc::Measure(Str s) {

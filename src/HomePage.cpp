@@ -11,6 +11,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/IconPixmap.h"
 #include "wingui/VirtWnd.h"
 
 #include "Settings.h"
@@ -387,14 +390,14 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
         table->SetSize(n, 2);
         for (int i = 0; i < n; i++) {
             AboutRow* el = &gAboutRows[i];
-            VirtWndTableCell& left = table->SetCell(i, 0, new VirtWndText(hwnd, el->leftTxt));
+            VirtWndTableCell& left = table->SetCell(i, 0, new VirtWndText(el->leftTxt));
             // the left column is flush against the divider line
             left.alignH = CrossAxisAlign::CrossEnd;
             left.alignV = CrossAxisAlign::CrossCenter;
 
             VirtWndText* rightTxt;
             if (el->url) {
-                auto* link = new VirtWndLink(hwnd, el->rightTxt);
+                auto* link = new VirtWndLink(el->rightTxt);
                 link->SetTarget(el->url);
                 link->SetTooltip(el->url);
                 link->withUnderline = true;
@@ -403,7 +406,7 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
                 link->onClick = MkFunc1Void(OpenAboutUrl);
                 rightTxt = link;
             } else {
-                rightTxt = new VirtWndText(hwnd, el->rightTxt);
+                rightTxt = new VirtWndText(el->rightTxt);
             }
             VirtWndTableCell& right = table->SetCell(i, 1, rightTxt);
             right.alignV = CrossAxisAlign::CrossCenter;
@@ -418,11 +421,11 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
     for (int i = 0; i < n; i++) {
         AboutRow* el = &gAboutRows[i];
         VirtWndText* left = LeftAt(i);
-        left->font = fontLeftTxt;
+        left->font = GetPlatformFont(fontLeftTxt);
         left->textColor = colText;
 
         VirtWndText* right = RightAt(i);
-        right->font = fontRightTxt;
+        right->font = GetPlatformFont(fontRightTxt);
         bool isLink = canAccessDisk && el->url;
         right->textColor = isLink ? colLink : colText;
         // without disk access the url can't be opened, so it isn't a link
@@ -519,7 +522,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, VirtWndRoot* root) {
 #endif
 
     /* render both text columns */
-    root->Paint(hdc, rc);
+    Gfx gfx = GfxFromHdc(hdc);
+    root->Paint(&gfx, rc);
 
     SelectObject(hdc, penDivideLine);
     Rect divideLine(about->dividerX, rect.y + titleRect.dy + 4, 0, rect.dy - titleRect.dy - 8);
@@ -727,7 +731,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
     bool showLink = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles();
     if (showLink && !about->showFreqRead) {
-        auto* link = new VirtWndLink(hwnd, _TRA("Show frequently read"));
+        auto* link = new VirtWndLink(_TRA("Show frequently read"));
         link->withUnderline = true;
         link->isRtl = IsUIRtl();
         link->userData = (uintptr_t)win;
@@ -738,7 +742,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
     if (about->showFreqRead) {
         VirtWndLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
-        link->font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        link->font = GetPlatformFont(HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16));
         link->textColor = ThemeWindowLinkColor();
         link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
         Size txtSize = link->GetIdealSize(true);
@@ -863,7 +867,7 @@ HomePageLayout::~HomePageLayout() = default;
 
 struct HomeViewIconWnd : VirtWnd {
     MainWindow* win = nullptr;
-    Pixmap* pixmap = nullptr; // not owned, from VirtWndIconPixmap()
+    Pixmap* pixmap = nullptr; // not owned, from IconPixmapFromImageList()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
     Str tooltip;
@@ -877,7 +881,7 @@ struct HomeViewIconWnd : VirtWnd {
 
 struct HomeOpenDocWnd : VirtWnd {
     MainWindow* win = nullptr;
-    Pixmap* pixmap = nullptr;    // not owned, from VirtWndIconPixmap()
+    Pixmap* pixmap = nullptr;    // not owned, from IconPixmapFromImageList()
     VirtWndText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
@@ -1345,14 +1349,14 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     HomeChromeWnd* chrome = EnsureHomeChrome(win);
     VirtWndText* hdr = chrome->hdr;
     hdr->SetText(txt);
-    hdr->font = hdrFont;
+    hdr->font = GetPlatformFont(hdrFont);
     hdr->isRtl = isRtl;
     hdr->SetBounds(c.rcFreqRead);
     l.freqRead = hdr;
 
     VirtWndText* openDoc = chrome->openDoc->text;
     openDoc->SetText(_TRA("Open a document..."));
-    openDoc->font = fontText;
+    openDoc->font = GetPlatformFont(fontText);
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     openDoc->SetBounds(c.rcOpenDoc);
@@ -1457,7 +1461,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     HomeChromeWnd* chrome = EnsureHomeChrome(win);
     VirtWndText* hdr = chrome->hdr;
     hdr->SetText(txt);
-    hdr->font = hdrFont;
+    hdr->font = GetPlatformFont(hdrFont);
     l.freqRead = hdr;
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);
@@ -1487,7 +1491,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     txt = _TRA("Open a document...");
     VirtWndText* openDoc = chrome->openDoc->text;
     openDoc->SetText(txt);
-    openDoc->font = fontText;
+    openDoc->font = GetPlatformFont(fontText);
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     txtSize = openDoc->GetIdealSize(true);
@@ -1953,7 +1957,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 
 void HomeViewIconWnd::Paint(VirtWndPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
-    DrawHomeViewButton(ctx.hdc, pixmap, ctx.bounds, selected);
+    DrawHomeViewButton(GfxHdc(ctx.gfx), pixmap, ctx.bounds, selected);
 }
 
 bool HomeViewIconWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -1985,7 +1989,7 @@ void HomeOpenDocWnd::Paint(VirtWndPaintCtx& ctx) {
         return;
     }
     Rect r = {ctx.bounds.x + rcIconLocal.x, ctx.bounds.y + rcIconLocal.y, pixmap->width, pixmap->height};
-    BlitPixmapAlpha(pixmap, ctx.hdc, r);
+    GfxDrawPixmap(ctx.gfx, pixmap, r);
 }
 
 bool HomeOpenDocWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -2003,7 +2007,7 @@ bool HomeOpenDocWnd::OnSetCursor(Point) {
 }
 
 void HomeHelpBtnWnd::Paint(VirtWndPaintCtx& ctx) {
-    DrawHomeHelpButton(ctx.hdc, ctx.bounds);
+    DrawHomeHelpButton(GfxHdc(ctx.gfx), ctx.bounds);
 }
 
 bool HomeHelpBtnWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -2109,7 +2113,7 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
 }
 
 void HomeCloseBtnWnd::Paint(VirtWndPaintCtx& ctx) {
-    DrawHomeCloseGlyph(ctx.hdc, ctx.bounds, HasFlag(vwfHovered));
+    DrawHomeCloseGlyph(GfxHdc(ctx.gfx), ctx.bounds, HasFlag(vwfHovered));
 }
 
 void HomeCloseBtnWnd::OnMouseEnter() {
@@ -2338,12 +2342,12 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     chrome->listView->tooltip = _TRA("Show as list");
     chrome->AddChild(chrome->listView);
 
-    chrome->hdr = new VirtWndText(hwnd, StrL(""), nullptr);
+    chrome->hdr = new VirtWndText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
     chrome->openDoc = new HomeOpenDocWnd();
     chrome->openDoc->win = win;
-    chrome->openDoc->text = new VirtWndText(hwnd, StrL(""), nullptr);
+    chrome->openDoc->text = new VirtWndText(StrL(""));
     chrome->openDoc->text->withUnderline = true;
     chrome->openDoc->AddChild(chrome->openDoc->text);
     chrome->AddChild(chrome->openDoc);
@@ -2452,9 +2456,9 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     }
     entries->UpdateCloseBtnVisibility();
 
-    chrome->thumbView->pixmap = VirtWndIconPixmap(l.himlOpen, (int)TbIcon::HomeThumbnails);
+    chrome->thumbView->pixmap = IconPixmapFromImageList(l.himlOpen, (int)TbIcon::HomeThumbnails);
     chrome->thumbView->SetBounds(l.rcIconThumbnailView);
-    chrome->listView->pixmap = VirtWndIconPixmap(l.himlOpen, (int)TbIcon::HomeList);
+    chrome->listView->pixmap = IconPixmapFromImageList(l.himlOpen, (int)TbIcon::HomeList);
     chrome->listView->SetBounds(l.rcIconListView);
 
     chrome->hdr->textColor = ThemeWindowTextColor();
@@ -2465,7 +2469,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
     rcOpen.Inflate(10, 10);
     HomeOpenDocWnd* od = chrome->openDoc;
-    od->pixmap = VirtWndIconPixmap(l.himlOpen, (int)TbIcon::Open);
+    od->pixmap = IconPixmapFromImageList(l.himlOpen, (int)TbIcon::Open);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
     od->text->textColor = ThemeWindowLinkColor();
@@ -2631,7 +2635,8 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     // the chrome (header, view buttons, "Open a document...", help button)
     // paints last: none of it overlaps the thumbnails, and the help button has
     // to land on top of the tip band
-    win->homeRoot->Paint(hdc, l.rc);
+    Gfx gfx = GfxFromHdc(hdc);
+    win->homeRoot->Paint(&gfx, l.rc);
 }
 
 void DrawHomePage(MainWindow* win, HDC hdc) {

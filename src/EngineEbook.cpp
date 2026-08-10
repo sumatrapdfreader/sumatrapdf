@@ -21,6 +21,7 @@
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "EbookDoc.h"
+#include "wingui/PlatformFont.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
@@ -678,14 +679,14 @@ TempStr EngineEbook::ExtractFontListTemp() {
             seenFonts.Append(i.font);
 
 #if OS_WIN
-            mui::CachedFont* font = i.font->GetCachedFont();
+            PlatformFont* font = i.font;
             FontFamily family;
-            if (!font || !font->font) {
+            if (!font || !font->gdiFont) {
                 // TODO: handle gdi
                 ReportIf(font && !font->GetHFont());
                 continue;
             }
-            Status ok = font->font->GetFamily(&family);
+            Status ok = font->gdiFont->GetFamily(&family);
             if (ok != Ok) {
                 continue;
             }
@@ -697,8 +698,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
             TempStr fontName = ToUtf8Temp(fontNameW);
             AppendIfNotExists(&fonts, fontName);
 #else
-            TempStr fontName = ToUtf8Temp(i.font->GetName());
-            AppendIfNotExists(&fonts, fontName);
+            AppendIfNotExists(&fonts, i.font->GetName());
 #endif
         }
     }

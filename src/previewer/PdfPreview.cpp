@@ -7,6 +7,7 @@
 #include "base/ScopedWin.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
+#include "wingui/PlatformFont.h"
 #include "mui/Mui.h"
 
 #include "wingui/UIModels.h"

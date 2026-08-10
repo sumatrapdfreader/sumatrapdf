@@ -11,6 +11,7 @@
 #include "GumboHtmlParser.h"
 #include "ImageReader.h"
 
+#include "wingui/PlatformFont.h"
 #include "HtmlFormatter.h"
 
 #if OS_WIN
@@ -161,13 +162,7 @@ void StyleRule::Merge(StyleRule& source) {
     }
 }
 
-static Vec<PlatformFont*> gPlatformFonts;
-
 #if OS_WIN
-static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
-    return (Gdiplus::FontStyle)(int)style;
-}
-
 static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod method) {
     switch (method) {
         case PlatformTextMeasureMethod::Gdiplus:
@@ -184,24 +179,6 @@ static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod met
     return mui::TextRenderMethod::Gdiplus;
 }
 #endif
-
-PlatformFont* GetPlatformFont(WStr name, float sizePt, PlatformFontStyle style) {
-    for (PlatformFont* font : gPlatformFonts) {
-        if (font->sizePt == sizePt && font->style == style && wstr::Eq(font->name, name)) {
-            return font;
-        }
-    }
-
-    PlatformFont* font = new PlatformFont();
-    font->name = wstr::Dup(name);
-    font->sizePt = sizePt;
-    font->style = style;
-#if OS_WIN
-    font->cachedFont = mui::GetCachedFont(name, sizePt, ToGdiPlusFontStyle(style));
-#endif
-    gPlatformFonts.Append(font);
-    return font;
-}
 
 struct StubTextMeasurer : PlatformTextMeasurer {
     PlatformFont* currFont = nullptr;
@@ -254,7 +231,7 @@ struct WinTextMeasurer : PlatformTextMeasurer {
         mui::FreeGraphicsForMeasureText(gfx);
     }
 
-    void SetFont(PlatformFont* font) override { textMeasure->SetFont(font->GetCachedFont()); }
+    void SetFont(PlatformFont* font) override { textMeasure->SetFont(font); }
 
     float GetCurrFontLineSpacing() override { return textMeasure->GetCurrFontLineSpacing(); }
 
@@ -287,7 +264,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     textMeasure = CreatePlatformTextMeasurer(args->textRenderMethod);
-    defaultFontName = wstr::Dup(args->GetFontName());
+    defaultFontName = str::Dup(ToUtf8Temp(args->GetFontName()));
     defaultFontSize = args->fontSize;
 
     // pre-size each font's measured-text cache from the size of the text: text
@@ -323,7 +300,7 @@ HtmlFormatter::~HtmlFormatter() {
     for (int i = 0; i < nMeasureCaches; i++) {
         delete measureCaches[i].keys;
     }
-    wstr::Free(defaultFontName);
+    str::Free(defaultFontName);
 }
 
 // find (or lazily create) the per-font measured-text cache for the current
@@ -379,7 +356,7 @@ void HtmlFormatter::AppendInstr(const DrawInstr& di) {
     }
 }
 
-void HtmlFormatter::SetFont(WStr fontName, PlatformFontStyle fs, float fontSize) {
+void HtmlFormatter::SetFont(Str fontName, PlatformFontStyle fs, float fontSize) {
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
@@ -394,7 +371,7 @@ void HtmlFormatter::SetFont(WStr fontName, PlatformFontStyle fs, float fontSize)
 }
 
 void HtmlFormatter::SetFontBasedOn(PlatformFont* font, PlatformFontStyle fs, float fontSize) {
-    WStr fontName = font->GetName();
+    Str fontName = font->GetName();
     if (len(fontName) == 0) {
         fontName = defaultFontName;
     }
@@ -1073,12 +1050,12 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     }
 
     AttrInfo* attr = t->GetAttrByName(StrL("face"));
-    WStr faceName = CurrFont()->GetName();
+    Str faceName = CurrFont()->GetName();
     if (attr) {
-        TempWStr buf = ToWStrTemp(attr->val);
+        TempStr buf = str::DupTemp(attr->val);
         // multiple font names can be comma separated
-        if (buf && buf.s[0] != L',') {
-            wstr::TransCharsInPlace(buf, WStrL(L","), WStrL(L"\0"));
+        if (buf && buf.s[0] != ',') {
+            str::TransCharsInPlace(buf, StrL(","), StrL("\0"));
             faceName = buf;
         }
     }
@@ -1166,7 +1143,7 @@ void HtmlFormatter::HandleTagList(HtmlToken* t) {
 void HtmlFormatter::HandleTagPre(HtmlToken* t) {
     FlushCurrLine(true);
     if (t->IsStartTag()) {
-        SetFont(WStrL(L"Courier New"), CurrFont()->GetStyle());
+        SetFont(StrL("Courier New"), CurrFont()->GetStyle());
         CurrStyle()->align = AlignAttr::Left;
         preFormatted = true;
     } else if (t->IsEndTag()) {
@@ -1449,7 +1426,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         }
     } else if (Tag_Code == tag || Tag_Tt == tag) {
         if (t->IsStartTag()) {
-            SetFont(WStrL(L"Courier New"), CurrFont()->GetStyle());
+            SetFont(StrL("Courier New"), CurrFont()->GetStyle());
         } else if (t->IsEndTag()) {
             RevertStyleChange();
         }
@@ -1653,7 +1630,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInst
             buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
             textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
-            textDraw->SetFont(i.font->GetCachedFont());
+            textDraw->SetFont(i.font);
         }
         if (abortCookie && *abortCookie) {
             break;

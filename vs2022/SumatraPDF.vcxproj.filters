@@ -483,13 +483,22 @@
     <ClInclude Include="..\src\wingui\FrameRateWnd.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\Gfx.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\HtmlWindow.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\IconPixmap.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\Layout.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\PlatformFont.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\UIModels.h">
@@ -1112,7 +1121,13 @@
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\Gfx_win.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\IconPixmap_win.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp">
@@ -1122,6 +1137,12 @@
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\ListBox.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformFont.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Progress.cpp">

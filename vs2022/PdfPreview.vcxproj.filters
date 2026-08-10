@@ -10,6 +10,9 @@
     <Filter Include="previewer">
       <UniqueIdentifier>{7EF07E97-EA5A-330E-3399-E4B39F421163}</UniqueIdentifier>
     </Filter>
+    <Filter Include="wingui">
+      <UniqueIdentifier>{D80B1F25-C4AD-49FB-AD68-5D4F99A9D04B}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\AvifReader.h" />
@@ -46,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="..\src\previewer\PdfPreview.h">
       <Filter>previewer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\PlatformFont.h">
+      <Filter>wingui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +97,12 @@
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp">
       <Filter>previewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformFont.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp">
+      <Filter>wingui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

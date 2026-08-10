@@ -9,6 +9,8 @@
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
 #include "wingui/VirtWnd.h"
 
 //--- VirtWnd
@@ -65,7 +67,7 @@ void VirtWnd::Paint(VirtWndPaintCtx&) {}
 
 // origin is the window position of our parent's content origin (already
 // adjusted for the parent's scroll offset)
-void VirtWnd::PaintTree(HDC hdc, Point origin, Rect clip) {
+void VirtWnd::PaintTree(Gfx* gfx, Point origin, Rect clip) {
     if (visibility != Visibility::Visible) {
         return;
     }
@@ -79,7 +81,7 @@ void VirtWnd::PaintTree(HDC hdc, Point origin, Rect clip) {
     content.SubLR(padding.left, padding.right);
 
     VirtWndPaintCtx ctx;
-    ctx.hdc = hdc;
+    ctx.gfx = gfx;
     ctx.bounds = b;
     ctx.content = content;
     ctx.clip = clip;
@@ -101,14 +103,14 @@ void VirtWnd::PaintChildren(VirtWndPaintCtx& ctx) {
     Point so = ScrollOffset();
     Point origin{ctx.content.x - so.x, ctx.content.y - so.y};
     for (VirtWnd* c : children) {
-        c->PaintTree(ctx.hdc, origin, ctx.clip);
+        c->PaintTree(ctx.gfx, origin, ctx.clip);
     }
 }
 
 // paints a standalone (parent-less) VirtWnd at the position it was given by
 // SetBounds(). Used for one-off "measure a string and draw it" cases
-void VirtWnd::PaintStandalone(HDC hdc) {
-    PaintTree(hdc, {0, 0}, lastBounds);
+void VirtWnd::PaintStandalone(Gfx* gfx) {
+    PaintTree(gfx, {0, 0}, lastBounds);
 }
 
 bool VirtWnd::HitTest(Point ptLocal) {
@@ -429,7 +431,7 @@ void VirtWndRoot::LayoutIfNeeded() {
     child->SetBounds(bounds);
 }
 
-void VirtWndRoot::Paint(HDC hdc, Rect clip) {
+void VirtWndRoot::Paint(Gfx* gfx, Rect clip) {
     if (!child) {
         return;
     }
@@ -438,7 +440,7 @@ void VirtWndRoot::Paint(HDC hdc, Rect clip) {
     if (c.IsEmpty()) {
         return;
     }
-    child->PaintTree(hdc, bounds.TL(), c);
+    child->PaintTree(gfx, bounds.TL(), c);
 }
 
 VirtWnd* VirtWndRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
@@ -1363,10 +1365,9 @@ bool VirtWndCustom::OnMouseUp(VirtWndMouseEvent& ev) {
 
 static Kind kindVirtWndText = "virtWndText";
 
-VirtWndText::VirtWndText(HWND hwnd, Str str, HFONT f) {
+VirtWndText::VirtWndText(Str str, PlatformFont* f) {
     kind = kindVirtWndText;
     s = str::Dup(str);
-    hwndForMeasure = hwnd;
     font = f;
     flags |= vwfNoHitTest;
 }
@@ -1410,8 +1411,7 @@ Size VirtWndText::GetIdealSize(bool onlyIfEmpty) {
     if (onlyIfEmpty && !sz.IsEmpty()) {
         return sz;
     }
-    HWND hwnd = hwndForMeasure ? hwndForMeasure : GetHwnd();
-    sz = HwndMeasureText(hwnd, s, font);
+    sz = PlatformFontMeasureText(font, s);
     return sz;
 }
 
@@ -1420,43 +1420,28 @@ void VirtWndText::Paint(VirtWndPaintCtx& ctx) {
     if (r.IsEmpty()) {
         return;
     }
-    COLORREF prevCol = kColorUnset;
-    if (textColor != kColorUnset) {
-        prevCol = SetTextColor(ctx.hdc, textColor);
-    }
-    int prevBkMode = SetBkMode(ctx.hdc, TRANSPARENT);
-    uint fmt = DT_NOPREFIX;
+    u32 fmt = 0;
     if (ellipsis) {
-        fmt |= DT_END_ELLIPSIS | DT_SINGLELINE | DT_VCENTER;
-    } else {
-        fmt |= DT_NOCLIP;
+        fmt |= gfxTextEllipsis;
     }
     if (isRtl) {
-        fmt |= DT_RTLREADING;
+        fmt |= gfxTextRtl;
     }
     switch (align) {
         case VirtWndTextAlign::Center:
-            fmt |= DT_CENTER;
+            fmt |= gfxTextCenter;
             break;
         case VirtWndTextAlign::Right:
-            fmt |= DT_RIGHT;
+            fmt |= gfxTextRight;
             break;
         case VirtWndTextAlign::Left:
             break;
     }
-    HdcDrawText(ctx.hdc, s, r, fmt, font);
+    GfxDrawText(ctx.gfx, s, r, fmt, font, textColor);
     if (withUnderline) {
         GetIdealSize(true);
         Rect lineRect = {r.x, r.y + sz.dy + underlineOffsetY, sz.dx, 0};
-        auto col = GetTextColor(ctx.hdc);
-        ScopedSelectObject pen(ctx.hdc, CreatePen(PS_SOLID, 1, col), true);
-        HdcDrawLine(ctx.hdc, lineRect);
-    }
-    if (textColor != kColorUnset) {
-        SetTextColor(ctx.hdc, prevCol);
-    }
-    if (prevBkMode != 0) {
-        SetBkMode(ctx.hdc, prevBkMode);
+        GfxDrawLine(ctx.gfx, lineRect, textColor);
     }
 }
 
@@ -1464,7 +1449,7 @@ void VirtWndText::Paint(VirtWndPaintCtx& ctx) {
 
 static Kind kindVirtWndLink = "virtWndLink";
 
-VirtWndLink::VirtWndLink(HWND hwnd, Str str, HFONT f) : VirtWndText(hwnd, str, f) {
+VirtWndLink::VirtWndLink(Str str, PlatformFont* f) : VirtWndText(str, f) {
     kind = kindVirtWndLink;
     flags &= ~vwfNoHitTest;
 }
@@ -1534,7 +1519,7 @@ TempStr VirtWndLink::GetTooltipTemp(Point) {
 
 static Kind kindVirtWndButton = "virtWndButton";
 
-VirtWndButton::VirtWndButton(HWND hwnd, Str str, HFONT f) : VirtWndText(hwnd, str, f) {
+VirtWndButton::VirtWndButton(Str str, PlatformFont* f) : VirtWndText(str, f) {
     kind = kindVirtWndButton;
     flags &= ~vwfNoHitTest;
     align = VirtWndTextAlign::Center;
@@ -1549,9 +1534,7 @@ Size VirtWndButton::GetIdealSize() {
 
 void VirtWndButton::Paint(VirtWndPaintCtx& ctx) {
     COLORREF bg = HasFlag(vwfHovered) ? bgColorHover : bgColor;
-    if (bg != kColorUnset) {
-        HdcFillRect(ctx.hdc, ctx.bounds, bg);
-    }
+    GfxFillRect(ctx.gfx, ctx.bounds, bg);
     Rect r = ctx.content;
     r.SubTB(textPadding.top, textPadding.bottom);
     r.SubLR(textPadding.left, textPadding.right);
@@ -1617,7 +1600,7 @@ void VirtWndIconButton::Paint(VirtWndPaintCtx& ctx) {
     Rect r = ctx.content;
     int x = r.x + ((r.dx - s2.dx) / 2);
     int y = r.y + ((r.dy - s2.dy) / 2);
-    BlitPixmapAlpha(pixmap, ctx.hdc, {x, y, s2.dx, s2.dy});
+    GfxDrawPixmap(ctx.gfx, pixmap, {x, y, s2.dx, s2.dy});
 }
 
 void VirtWndIconButton::OnMouseEnter() {
@@ -1702,7 +1685,7 @@ void VirtWndImage::Paint(VirtWndPaintCtx& ctx) {
         r.dx = sz2.dx;
         r.dy = sz2.dy;
     }
-    BlitPixmapAlpha(pixmap, ctx.hdc, r);
+    GfxDrawPixmap(ctx.gfx, pixmap, r);
 }
 
 //--- VirtWndFill
@@ -1721,10 +1704,7 @@ Size VirtWndFill::GetIdealSize() {
 }
 
 void VirtWndFill::Paint(VirtWndPaintCtx& ctx) {
-    if (color == kColorUnset) {
-        return;
-    }
-    HdcFillRect(ctx.hdc, ctx.bounds, color);
+    GfxFillRect(ctx.gfx, ctx.bounds, color);
 }
 
 //--- VirtWndLine
@@ -1746,106 +1726,13 @@ Size VirtWndLine::GetIdealSize() {
 }
 
 void VirtWndLine::Paint(VirtWndPaintCtx& ctx) {
-    if (color == kColorUnset) {
-        return;
-    }
     Rect r = ctx.content;
     if (isVertical) {
         r.dx = thickness;
     } else {
         r.dy = thickness;
     }
-    HdcFillRect(ctx.hdc, r, color);
-}
-
-//--- HIMAGELIST -> Pixmap cache
-
-struct IconPixmapCacheEntry {
-    IconPixmapCacheEntry* next;
-    int iconIdx;
-    Pixmap* pixmap; // owned
-};
-
-// gIconCache is the head of a singly-linked list of entries; a handful of icons
-// are ever cached, so a walk is as good as anything and new entries just go in
-// at the front.
-//
-// The cache only ever holds icons of one image list: the app has a single
-// toolbar image list, and it is destroyed and rebuilt whole on a theme or DPI
-// change. Seeing a different HIMAGELIST (or icon size) therefore means the old
-// pixmaps are stale, so the cache is dropped rather than grown.
-static HIMAGELIST gIconCacheHiml = nullptr;
-static Size gIconCacheIconSize;
-static IconPixmapCacheEntry* gIconCache = nullptr;
-
-void ClearVirtWndIconCache() {
-    IconPixmapCacheEntry* e = gIconCache;
-    gIconCache = nullptr;
-    while (e) {
-        IconPixmapCacheEntry* next = e->next;
-        FreePixmap(e->pixmap);
-        delete e;
-        e = next;
-    }
-    gIconCacheHiml = nullptr;
-    gIconCacheIconSize = {};
-}
-
-// draw the icon into a DIB section, so the pixels are premultiplied BGRA that
-// AlphaBlend can use directly. Going through an HICON (rather than
-// ImageList_Draw) is what preserves the alpha channel
-static Pixmap* RenderIconToPixmap(HIMAGELIST himl, int iconIdx, Size sz) {
-    Pixmap* px = AllocPixmapDIB(sz.dx, sz.dy);
-    if (!px) {
-        return nullptr;
-    }
-    memset(px->data, 0, (size_t)px->stride * (size_t)sz.dy);
-    px->premultiplied = true;
-    HICON icon = ImageList_GetIcon(himl, iconIdx, ILD_TRANSPARENT);
-    if (!icon) {
-        return px;
-    }
-    HDC screenDC = GetDC(nullptr);
-    HDC memDC = CreateCompatibleDC(screenDC);
-    ReleaseDC(nullptr, screenDC);
-    if (memDC) {
-        HGDIOBJ prev = SelectObject(memDC, px->hbmp);
-        DrawIconEx(memDC, 0, 0, icon, sz.dx, sz.dy, 0, nullptr, DI_NORMAL);
-        GdiFlush();
-        if (prev) {
-            SelectObject(memDC, prev);
-        }
-        DeleteDC(memDC);
-    }
-    DestroyIcon(icon);
-    return px;
-}
-
-Pixmap* VirtWndIconPixmap(HIMAGELIST himl, int iconIdx) {
-    if (!himl) {
-        return nullptr;
-    }
-    Size sz2;
-    ImageList_GetIconSize(himl, &sz2.dx, &sz2.dy);
-    if (sz2.IsEmpty()) {
-        return nullptr;
-    }
-    if (himl != gIconCacheHiml || sz2 != gIconCacheIconSize) {
-        ClearVirtWndIconCache();
-        gIconCacheHiml = himl;
-        gIconCacheIconSize = sz2;
-    }
-    for (IconPixmapCacheEntry* e = gIconCache; e; e = e->next) {
-        if (e->iconIdx == iconIdx) {
-            return e->pixmap;
-        }
-    }
-    Pixmap* px = RenderIconToPixmap(himl, iconIdx, sz2);
-    if (px) {
-        auto* e = new IconPixmapCacheEntry{gIconCache, iconIdx, px};
-        gIconCache = e;
-    }
-    return px;
+    GfxFillRect(ctx.gfx, r, color);
 }
 
 //--- VirtWndSpacer

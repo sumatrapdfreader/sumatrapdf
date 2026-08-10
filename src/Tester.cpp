@@ -9,6 +9,7 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
+#include "wingui/PlatformFont.h"
 #include "mui/Mui.h"
 #include "base/Win.h"
 #include "base/Zip.h"

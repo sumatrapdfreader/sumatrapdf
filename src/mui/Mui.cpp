@@ -4,6 +4,8 @@
 #include "base/Base.h"
 #include "base/GdiPlusUtil.h"
 
+#include "wingui/PlatformFont.h"
+
 #include "Mui.h"
 
 /*
@@ -68,29 +70,6 @@ class ScopedMuiCritSec {
 
 static Graphics* AllocGraphicsForMeasureTextNoLock();
 static void FreeGraphicsForMeasureTextNoLock(Graphics* gfx);
-
-class FontListItem {
-  public:
-    FontListItem(WStr name, float sizePt, FontStyle style, Font* font, HFONT hFont) : next(nullptr) {
-        cf.name = wstr::Dup(name);
-        cf.sizePt = sizePt;
-        cf.style = style;
-        cf.font = font;
-        cf.hFont = hFont;
-    }
-    ~FontListItem() {
-        wstr::Free(cf.name);
-        delete cf.font;
-        DeleteObject(cf.hFont);
-        delete next;
-    }
-
-    CachedFont cf;
-    FontListItem* next;
-};
-
-// Global, thread-safe font cache. Font objects live forever.
-static FontListItem* gFontsCache = nullptr;
 
 // Graphics objects cannot be used across threads. We have a per-thread
 // cache so that it's easy to grab Graphics object to be used for
@@ -163,69 +142,6 @@ void Destroy() {
     }
     delete gGraphicsCache;
     gGraphicsCache = nullptr;
-    delete gFontsCache;
-    gFontsCache = nullptr;
-}
-
-bool CachedFont::SameAs(WStr otherName, float otherSizePt, FontStyle otherStyle) const {
-    if (sizePt != otherSizePt) {
-        return false;
-    }
-    if (style != otherStyle) {
-        return false;
-    }
-    return wstr::Eq(name, otherName);
-}
-
-HFONT CachedFont::GetHFont() {
-    LOGFONTW lf;
-    EnterMuiLock();
-    if (!hFont) {
-        // TODO: Graphics is probably only used for metrics,
-        // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
-        // but previous code wasn't much better
-        // NoLock variants: we already hold the mui lock and it's not re-entrant
-        // (an SRWLOCK-based Mutex; re-acquiring self-deadlocks)
-        Graphics* gfx = AllocGraphicsForMeasureTextNoLock();
-        Status status = font->GetLogFontW(gfx, &lf);
-        FreeGraphicsForMeasureTextNoLock(gfx);
-        ReportIf(status != Ok);
-        hFont = CreateFontIndirectW(&lf);
-        ReportIf(!hFont);
-    }
-    LeaveMuiLock();
-    return hFont;
-}
-
-// convenience function: given cached style, get a Font object matching the font
-// properties.
-// Caller should not delete the font - it's cached for performance and deleted at exit
-CachedFont* GetCachedFont(WStr name, float sizePt, FontStyle style) {
-    ScopedMuiCritSec muiCs;
-
-    for (FontListItem* item = gFontsCache; item; item = item->next) {
-        if (item->cf.SameAs(name, sizePt, style) && item->cf.font != nullptr) {
-            return &item->cf;
-        }
-    }
-
-    Font* font = new Font(name.s, sizePt, style);
-    if (font->GetLastStatus() != Status::Ok) {
-        delete font;
-        font = new Font(L"Times New Roman", sizePt, style);
-        if (font->GetLastStatus() != Status::Ok) {
-            // if no font is available, return the last successfully created one
-            delete font;
-            if (gFontsCache) {
-                return &gFontsCache->cf;
-            }
-            return nullptr;
-        }
-    }
-
-    FontListItem* item = new FontListItem(name, sizePt, style, font, nullptr);
-    ListInsertFront(&gFontsCache, item);
-    return &item->cf;
 }
 
 // caller must hold the mui lock (gMuiCs is not re-entrant)

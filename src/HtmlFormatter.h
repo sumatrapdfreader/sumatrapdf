@@ -17,33 +17,8 @@ class ITextRender;
 } // namespace mui
 #endif
 
-enum class PlatformFontStyle {
-    Regular = 0,
-    Bold = 1,
-    Italic = 2,
-    Underline = 4,
-    Strikeout = 8,
-};
-
-inline PlatformFontStyle operator|(PlatformFontStyle a, PlatformFontStyle b) {
-    return (PlatformFontStyle)((int)a | (int)b);
-}
-
-struct PlatformFont {
-    WStr name;
-    float sizePt = 0;
-    PlatformFontStyle style = PlatformFontStyle::Regular;
-#if OS_WIN
-    mui::CachedFont* cachedFont = nullptr;
-#endif
-
-    WStr GetName() const { return name; }
-    float GetSize() const { return sizePt; }
-    PlatformFontStyle GetStyle() const { return style; }
-#if OS_WIN
-    mui::CachedFont* GetCachedFont() const { return cachedFont; }
-#endif
-};
+// PlatformFont / PlatformFontStyle live in wingui/PlatformFont.h; include it
+// before this header
 
 enum class PlatformTextMeasureMethod {
     Gdiplus,
@@ -62,7 +37,6 @@ struct PlatformTextMeasurer {
     virtual ~PlatformTextMeasurer() = default;
 };
 
-PlatformFont* GetPlatformFont(WStr name, float sizePt, PlatformFontStyle style);
 PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method);
 
 // Layout information for a given page is a list of
@@ -253,7 +227,7 @@ struct HtmlFormatter {
 
     DrawStyle* CurrStyle() { return &styleStack.Last(); }
     PlatformFont* CurrFont() { return CurrStyle()->font; }
-    void SetFont(WStr fontName, PlatformFontStyle fs, float fontSize = -1);
+    void SetFont(Str fontName, PlatformFontStyle fs, float fontSize = -1);
     void SetFontBasedOn(PlatformFont* origFont, PlatformFontStyle fs, float fontSize = -1);
     void ChangeFontStyle(PlatformFontStyle fs, bool addStyle);
     void SetAlignment(AlignAttr align);
@@ -276,7 +250,7 @@ struct HtmlFormatter {
     float pageDy = 0;
     float lineSpacing = 0;
     float spaceDx = 0;
-    WStr defaultFontName;
+    Str defaultFontName;
     float defaultFontSize = 0;
     Arena* textAllocator = nullptr;
     PlatformTextMeasurer* textMeasure = nullptr;

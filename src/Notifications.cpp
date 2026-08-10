@@ -10,6 +10,8 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
 #include "wingui/VirtWnd.h"
 
 #include "Settings.h"
@@ -662,7 +664,8 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
     SetTextColor(hdc, cols.txt);
     // the controls (message / custom content, close button, progress) paint
     // themselves
-    vroot->Paint(hdc, rc);
+    Gfx gfx = GfxFromHdc(hdc);
+    vroot->Paint(&gfx, rc);
 
     buffer.Flush(hdcIn);
 }
@@ -683,13 +686,14 @@ void NotifTextWnd::Paint(VirtWndPaintCtx& ctx) {
     if (drawRich) {
         // words were laid out at (0,0); shift the origin to our rect and draw
         POINT oldOrg;
-        SetViewportOrgEx(ctx.hdc, r.x, r.y, &oldOrg);
-        DrawTipWords(ctx.hdc, parsedMsg, notif->font, cols.txt, cols.link, cols.bg);
-        SetViewportOrgEx(ctx.hdc, oldOrg.x, oldOrg.y, nullptr);
+        HDC hdc = GfxHdc(ctx.gfx);
+        SetViewportOrgEx(hdc, r.x, r.y, &oldOrg);
+        DrawTipWords(hdc, parsedMsg, notif->font, cols.txt, cols.link, cols.bg);
+        SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
         return;
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);
-    HdcDrawText(ctx.hdc, text, r, txtFmt, notif->font);
+    HdcDrawText(GfxHdc(ctx.gfx), text, r, txtFmt, notif->font);
 }
 
 bool NotifTextWnd::OnMouseUp(VirtWndMouseEvent& ev) {
@@ -724,7 +728,7 @@ Size NotifCloseWnd::GetIdealSize() {
 
 void NotifCloseWnd::Paint(VirtWndPaintCtx& ctx) {
     DrawCloseButtonArgs args;
-    args.hdc = ctx.hdc;
+    args.hdc = GfxHdc(ctx.gfx);
     args.r = ctx.bounds;
     args.isHover = HasFlag(vwfHovered);
     DrawCloseButton(args);
@@ -762,7 +766,7 @@ void NotifProgressWnd::Paint(VirtWndPaintCtx& ctx) {
     int progressWidth = rc.dx;
 
     COLORREF col = ThemeNotificationsProgressColor();
-    Graphics graphics(ctx.hdc);
+    Graphics graphics(GfxHdc(ctx.gfx));
     Pen pen(GdiRgbFromCOLORREF(col));
     auto grc = Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy);
     graphics.DrawRectangle(&pen, grc);

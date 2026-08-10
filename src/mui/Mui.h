@@ -8,29 +8,12 @@ using Gdiplus::Graphics;
 
 namespace mui {
 
-struct CachedFont {
-    WStr name;
-    float sizePt;
-    Gdiplus::FontStyle style;
-
-    Gdiplus::Font* font;
-    // hFont is created out of font
-    HFONT hFont;
-
-    HFONT GetHFont();
-    Gdiplus::FontStyle GetStyle() const { return style; }
-    float GetSize() const { return sizePt; }
-    WStr GetName() const { return name; }
-    bool SameAs(WStr name, float sizePt, FontStyle style) const;
-};
-
 #include "TextRender.h"
 
 void Initialize();
 void Destroy();
 
 void InitGraphicsMode(Graphics* g);
-CachedFont* GetCachedFont(WStr name, float sizePt, FontStyle style);
 
 Graphics* AllocGraphicsForMeasureText();
 void FreeGraphicsForMeasureText(Graphics* gfx);

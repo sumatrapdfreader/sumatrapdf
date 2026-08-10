@@ -1404,6 +1404,8 @@ function pdf_preview_files()
     "MobiDoc.*",
     "mui/Mui.*",
     "mui/TextRender.*",
+    "wingui/PlatformFont.*",
+    "wingui/PlatformFont_win.*",
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",
     "PdfCadDetect.*",

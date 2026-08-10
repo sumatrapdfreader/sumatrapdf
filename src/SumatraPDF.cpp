@@ -29,6 +29,9 @@
 
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/IconPixmap.h"
 #include "wingui/VirtWnd.h"
 
 #include "SimpleBrowserWindow.h"
@@ -2885,7 +2888,7 @@ void DeleteMainWindow(MainWindow* win) {
 void UpdateAfterThemeChange() {
     // the toolbar image list is rebuilt below, so the icons cached from it are
     // the wrong color now
-    ClearVirtWndIconCache();
+    ClearIconPixmapCache();
     for (auto* win : gWindows) {
         DeleteObject(win->brControlBgColor);
         win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
@@ -8958,7 +8961,7 @@ static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
 // content for a notification, built as a VirtWnd tree: a generated Pixmap shown
 // by a VirtWnd, with a caption below it
 static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
-    HFONT font = GetAppBiggerFont(hwnd);
+    PlatformFont* font = GetPlatformFont(GetAppBiggerFont(hwnd));
     auto* box = new VirtWndBox(true);
     box->alignCross = CrossAxisAlign::CrossCenter;
 
@@ -8968,7 +8971,7 @@ static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
     box->AddChild(img);
 
     box->AddChild(new VirtWndSpacer(0, DpiScale(hwnd, 6)));
-    box->AddChild(new VirtWndText(hwnd, StrL("a VirtWnd-drawn Pixmap"), font));
+    box->AddChild(new VirtWndText(StrL("a VirtWnd-drawn Pixmap"), font));
     return box;
 }
 #endif
@@ -13585,7 +13588,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
 void ShutdownCleanup() {
     TtsRelease();
     FreeHomePageTips();
-    ClearVirtWndIconCache();
+    ClearIconPixmapCache();
     DisconnectLastDragDataObject();
 
     gAllowedFileTypes.Reset();

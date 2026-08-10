@@ -12,6 +12,7 @@
 #include "base/File.h"
 #include "base/FileWatcher.h"
 #include "base/GdiPlusUtil.h"
+#include "wingui/PlatformFont.h"
 #include "mui/Mui.h"
 #include "base/UITask.h"
 #include "base/Win.h"

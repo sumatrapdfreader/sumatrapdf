@@ -24,6 +24,7 @@ To write new regression test:
 #include "base/GuessFileType.h"
 #include "base/GdiPlusUtil.h"
 #include "base/HtmlTags.h"
+#include "wingui/PlatformFont.h"
 #include "mui/Mui.h"
 #include "base/Win.h"
 
