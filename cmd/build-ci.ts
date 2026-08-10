@@ -1,21 +1,9 @@
 // ci-build.ts - replaces Go "-ci" flag
 // Called from GitHub Actions CI on push and repository_dispatch events
-import {
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  statSync,
-  rmSync,
-} from "node:fs";
+import { existsSync, readFileSync, writeFileSync, statSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createHmac, createHash } from "node:crypto";
-import {
-  getGitLinearVersion,
-  extractSumatraVersion,
-  runLogged,
-  getGitSha1,
-  detectVisualStudio2026,
-} from "./util";
+import { getGitLinearVersion, extractSumatraVersion, runLogged, getGitSha1, detectVisualStudio2026 } from "./util";
 
 // const { msbuildPath, llvmPdbutilPath } = detectVisualStudio2022();
 // const slnPath = join("vs2022", "SumatraPDF.sln");
@@ -56,9 +44,7 @@ function getSecrets(): void {
     b2Secret = getEnv("BB_SECRET", 8);
     return;
   }
-  console.log(
-    `Failed to read secrets from ${secretsPath}, will try env variables`,
-  );
+  console.log(`Failed to read secrets from ${secretsPath}, will try env variables`);
   r2Access = process.env["R2_ACCESS"] ?? "";
   r2Secret = process.env["R2_SECRET"] ?? "";
   b2Access = process.env["BB_ACCESS"] ?? "";
@@ -96,28 +82,23 @@ async function revertBuildConfig(): Promise<void> {
   await proc.exited;
 }
 
-function ensureManualIsBuilt(): void {
-  const path = join(".work", "manual.dat");
+function ensureEmbeddedIsBuilt(): void {
+  const path = join(".work", "embedded.dat");
   let size = 0;
   try {
     size = statSync(path).size;
   } catch {
     // file doesn't exist
   }
-  if (size < 2 * 2024) {
-    throw new Error(
-      `size of '${path}' is ${size} which indicates we didn't build it`,
-    );
+  // mermaid alone is ~2.6MB; a tiny archive means packing failed or docs missing
+  if (size < 100 * 1024) {
+    throw new Error(`size of '${path}' is ${size} which indicates we didn't build it`);
   }
 }
 
 // === Command Execution ===
 
-async function runCaptureOutput(
-  cmd: string,
-  args: string[],
-  cwd?: string,
-): Promise<Uint8Array> {
+async function runCaptureOutput(cmd: string, args: string[], cwd?: string): Promise<Uint8Array> {
   const short = [cmd.split("\\").pop(), ...args].join(" ");
   console.log(`> ${short}`);
   const proc = Bun.spawn([cmd, ...args], {
@@ -163,15 +144,10 @@ function sha256Hex(data: Buffer | Uint8Array | string): string {
   return createHash("sha256").update(data).digest("hex");
 }
 
-async function s3PutObject(
-  config: S3Config,
-  key: string,
-  body: Uint8Array,
-): Promise<void> {
+async function s3PutObject(config: S3Config, key: string, body: Uint8Array): Promise<void> {
   const now = new Date();
   const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const amzDate =
-    dateStamp + "T" + now.toISOString().slice(11, 19).replace(/:/g, "") + "Z";
+  const amzDate = dateStamp + "T" + now.toISOString().slice(11, 19).replace(/:/g, "") + "Z";
 
   // path-style: host is the endpoint, URI includes bucket
   const host = config.endpoint;
@@ -187,26 +163,12 @@ async function s3PutObject(
 
   const signedHeaderKeys = Object.keys(headers).sort();
   const signedHeaders = signedHeaderKeys.join(";");
-  const canonicalHeaders = signedHeaderKeys
-    .map((k) => `${k}:${headers[k]}\n`)
-    .join("");
+  const canonicalHeaders = signedHeaderKeys.map((k) => `${k}:${headers[k]}\n`).join("");
 
-  const canonicalRequest = [
-    "PUT",
-    canonicalUri,
-    "",
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash,
-  ].join("\n");
+  const canonicalRequest = ["PUT", canonicalUri, "", canonicalHeaders, signedHeaders, payloadHash].join("\n");
 
   const credentialScope = `${dateStamp}/${config.region}/s3/aws4_request`;
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    amzDate,
-    credentialScope,
-    sha256Hex(canonicalRequest),
-  ].join("\n");
+  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
 
   let signingKey: Buffer = hmacSha256("AWS4" + config.secret, dateStamp);
   signingKey = hmacSha256(signingKey, config.region);
@@ -229,9 +191,7 @@ async function s3PutObject(
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(
-      `S3 upload to ${url} failed: ${response.status} ${response.statusText}\n${text}`,
-    );
+    throw new Error(`S3 upload to ${url} failed: ${response.status} ${response.statusText}\n${text}`);
   }
 }
 
@@ -262,23 +222,14 @@ function newBackblazeConfig(): S3Config {
 // === Build Functions ===
 
 function removeReleaseBuilds(): void {
-  const dirs = [
-    join("out", "arm64"),
-    join("out", "rel32"),
-    join("out", "rel64"),
-  ];
+  const dirs = [join("out", "arm64"), join("out", "rel32"), join("out", "rel64")];
   for (const dir of dirs) {
     rmSync(dir, { recursive: true, force: true });
   }
 }
 
-async function buildPreRelease(
-  preRelVer: string,
-  sha1: string,
-  vsplatform: string,
-  outDir: string,
-): Promise<void> {
-  ensureManualIsBuilt();
+async function buildPreRelease(preRelVer: string, sha1: string, vsplatform: string, outDir: string): Promise<void> {
+  ensureEmbeddedIsBuilt();
   console.log(`building pre-release version ${preRelVer}`);
   const buildStart = performance.now();
 
@@ -339,11 +290,7 @@ async function buildSmoke(): Promise<void> {
   // create PDB LZSA
   await runLogged(
     makeLzsa,
-    [
-      "SumatraPDF.pdb.lzsa",
-      "libsumatrapdf.pdb:libsumatrapdf.pdb",
-      "SumatraPDF.pdb:SumatraPDF.pdb",
-    ],
+    ["SumatraPDF.pdb.lzsa", "libsumatrapdf.pdb:libsumatrapdf.pdb", "SumatraPDF.pdb:SumatraPDF.pdb"],
     outDir,
   );
 
@@ -367,12 +314,7 @@ function fileSize(path: string): number {
   }
 }
 
-async function runLlvmPdbutilGzipped(
-  exePath: string,
-  pdbPath: string,
-  outPath: string,
-  ...args: string[]
-) {
+async function runLlvmPdbutilGzipped(exePath: string, pdbPath: string, outPath: string, ...args: string[]) {
   const cmdArgs = ["pretty", ...args, pdbPath];
   const output = await runCaptureOutput(exePath, cmdArgs);
 
@@ -380,15 +322,11 @@ async function runLlvmPdbutilGzipped(
     // @ts-ignore
     const gzipped = Bun.gzipSync(output);
     writeFileSync(outPath, gzipped);
-    console.log(
-      `wrote ${outPath} (${formatSize(output.length)}) (${formatSize(fileSize(outPath))})`,
-    );
+    console.log(`wrote ${outPath} (${formatSize(output.length)}) (${formatSize(fileSize(outPath))})`);
   } else {
     outPath += ".txt";
     writeFileSync(outPath, output);
-    console.log(
-      `wrote ${outPath} (${formatSize(output.length)}) (${formatSize(fileSize(outPath))})`,
-    );
+    console.log(`wrote ${outPath} (${formatSize(output.length)}) (${formatSize(fileSize(outPath))})`);
   }
 }
 
@@ -397,43 +335,23 @@ const classesPath = "SumatraPDF-classes.txt.gz";
 
 async function extractClassesAndGlobalsFromPDB(): Promise<void> {
   if (!llvmPdbutilPath) {
-    console.log(
-      "extractClassesAndGlobalsFromPDB: skipping because llvmPdbutilPath is not set",
-    );
+    console.log("extractClassesAndGlobalsFromPDB: skipping because llvmPdbutilPath is not set");
     return;
   }
 
   const pdbPath = join("out", "rel64", "SumatraPDF-static.pdb");
   if (!existsSync(pdbPath)) {
-    console.log(
-      `uploadPdbBuildArtifacts: '${pdbPath}' doesn't exist, skipping`,
-    );
+    console.log(`uploadPdbBuildArtifacts: '${pdbPath}' doesn't exist, skipping`);
     return;
   }
 
-  await runLlvmPdbutilGzipped(
-    llvmPdbutilPath,
-    pdbPath,
-    globalsPath,
-    "-globals",
-    "-symbol-order=size",
-  );
-  await runLlvmPdbutilGzipped(
-    llvmPdbutilPath,
-    pdbPath,
-    classesPath,
-    "-classes",
-  );
+  await runLlvmPdbutilGzipped(llvmPdbutilPath, pdbPath, globalsPath, "-globals", "-symbol-order=size");
+  await runLlvmPdbutilGzipped(llvmPdbutilPath, pdbPath, classesPath, "-classes");
 }
 
-async function uploadPdbBuildArtifacts(
-  preRelVer: string,
-  sha1: string,
-): Promise<void> {
+async function uploadPdbBuildArtifacts(preRelVer: string, sha1: string): Promise<void> {
   if (!llvmPdbutilPath) {
-    console.log(
-      "uploadPdbBuildArtifacts: skipping because llvmPdbutilPath is not set",
-    );
+    console.log("uploadPdbBuildArtifacts: skipping because llvmPdbutilPath is not set");
     return;
   }
   const shortSha1 = sha1.slice(0, 8);
@@ -455,10 +373,7 @@ async function uploadPdbBuildArtifacts(
     console.log(`uploaded ${s3UrlForPath(config, remoteClasses)}`);
   };
 
-  await Promise.all([
-    uploadToProvider(newR2Config(), "R2"),
-    uploadToProvider(newBackblazeConfig(), "Backblaze"),
-  ]);
+  await Promise.all([uploadToProvider(newR2Config(), "R2"), uploadToProvider(newBackblazeConfig(), "Backblaze")]);
 }
 
 // === Main ===

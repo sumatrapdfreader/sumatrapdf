@@ -13,8 +13,8 @@ struct FileInfo {
     const u8* compressedData;
 };
 
-// Note: good enough for our purposes, can be expanded when needed
-#define MAX_LZMA_ARCHIVE_FILES 128
+// translations + marked + mermaid + in-app manual assets share one LzSA
+#define MAX_LZMA_ARCHIVE_FILES 256
 
 struct SimpleArchive {
     int filesCount;

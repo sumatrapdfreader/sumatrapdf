@@ -89,9 +89,8 @@
 #define IDC_STATIC (-1)
 
 #define IDR_DLL_PAK 1
-#define IDR_TRANSLATIONS 2
-#define IDR_MANUAL_PAK 3
-#define IDR_CLAUDE_MARKED_JS 4
+// translations.txt + marked.min.js + mermaid.min.js + in-app manual (.work/embedded.dat)
+#define IDR_EMBEDDED_PAK 2
 
 // Next default values for new objects
 //

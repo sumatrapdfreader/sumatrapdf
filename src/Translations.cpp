@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "base/LzmaSimpleArchive.h"
+#include "EmbeddedResources.h"
 
 #include "SumatraConfig.h"
 
@@ -195,36 +196,14 @@ void SetCurrentLangByCode(Str langCode) {
         // in debug we want to execute this code to catch errors
         return;
     }
-    LoadedDataResource ldr;
-    bool lok = LockDataResource(IDR_TRANSLATIONS, &ldr);
-    if (!lok) {
-        logf("SetCurrentLangByCode: LockDataResource(IDR_TRANSLATIONS) failed\n");
-        FallbackToEnglish();
-        return;
-    }
-    lzma::SimpleArchive archive;
-    lok = lzma::ParseSimpleArchive(ldr.data, ldr.dataSize, &archive);
-    if (!lok) {
-        logf("SetCurrentLangByCode: ParseSimpleArchive failed\n");
-        FallbackToEnglish();
-        return;
-    }
-    int fileIdx = lzma::GetIdxFromName(&archive, "translations.txt");
-    if (fileIdx < 0) {
-        logf("SetCurrentLangByCode: translations.txt not found in archive\n");
-        FallbackToEnglish();
-        return;
-    }
-    auto* fi = &archive.files[fileIdx];
-    logf("SetCurrentLangByCode: translations.txt compressed=%u uncompressed=%u (archive=%d)\n",
-         (unsigned)fi->compressedSize, (unsigned)fi->uncompressedSize, ldr.dataSize);
-    u8* data = lzma::GetFileDataByIdx(&archive, fileIdx, nullptr);
+    int dataSize = 0;
+    u8* data = GetEmbeddedFileData(StrL("translations.txt"), &dataSize);
     if (!data) {
-        logf("SetCurrentLangByCode: GetFileDataByIdx failed\n");
+        logf("SetCurrentLangByCode: translations.txt not found in embedded.dat\n");
         FallbackToEnglish();
         return;
     }
-    int dataSize = (int)fi->uncompressedSize;
+    logf("SetCurrentLangByCode: translations.txt uncompressed=%d\n", dataSize);
     // empty file is expected when TRANS_UPLOAD_SECRET was missing at build time
     if (dataSize <= 0) {
         logf("SetCurrentLangByCode: translations.txt is empty (no translations available)\n");

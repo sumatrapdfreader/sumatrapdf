@@ -415,11 +415,101 @@ code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospac
 pre { background: var(--code-bg); padding: 16px; overflow: auto; border-radius: 6px; }
 code { background: var(--code-bg); padding: .2em .4em; border-radius: 6px; }
 pre code { background: transparent; padding: 0; }
+pre.mermaid { background: transparent; text-align: center; overflow: visible; }
+pre.mermaid svg { max-width: 100%%; height: auto; }
 blockquote { margin: 0; padding: 0 1em; color: var(--muted); border-left: .25em solid var(--border); }
 table { border-collapse: collapse; }
 table th, table td { border: 1px solid var(--border); padding: 6px 13px; }
 img { max-width: 100%%; }
 )";
+
+// cmark emits <pre><code class="language-mermaid">…</code></pre> for ```mermaid
+// fences. mermaid.js looks for <pre class="mermaid"> (or elements with that class).
+// Returns how many blocks were rewritten.
+static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
+    if (!body) {
+        return 0;
+    }
+    // Match the open tag cmark produces; language name is case-insensitive.
+    Str kOpen = StrL("<pre><code class=\"language-");
+    Str kCloseCodePre = StrL("</code></pre>");
+
+    int nRewritten = 0;
+    Str rest = body;
+    while (rest) {
+        int openAt = str::IndexOf(rest, kOpen);
+        if (openAt < 0) {
+            out.Append(rest);
+            break;
+        }
+        if (openAt > 0) {
+            out.Append(Str(rest.s, openAt));
+        }
+        Str fromOpen = Str(rest.s + openAt, rest.len - openAt);
+        Str afterOpen = Str(fromOpen.s + len(kOpen), fromOpen.len - len(kOpen));
+
+        int gtAt = str::IndexOfChar(afterOpen, '>');
+        if (gtAt < 0 || gtAt > 64) {
+            // malformed / not a fence — copy the open marker and continue
+            out.Append(kOpen);
+            rest = afterOpen;
+            continue;
+        }
+        // language ends at " or space before >
+        int langLen = 0;
+        while (langLen < gtAt) {
+            char c = afterOpen.s[langLen];
+            if (c == '"' || c == ' ') {
+                break;
+            }
+            langLen++;
+        }
+        Str lang(afterOpen.s, langLen);
+        if (!str::EqI(lang, StrL("mermaid"))) {
+            out.Append(Str(fromOpen.s, len(kOpen) + gtAt + 1));
+            rest = Str(afterOpen.s + gtAt + 1, afterOpen.len - gtAt - 1);
+            continue;
+        }
+
+        Str content = Str(afterOpen.s + gtAt + 1, afterOpen.len - gtAt - 1);
+        int closeAt = str::IndexOf(content, kCloseCodePre);
+        if (closeAt < 0) {
+            out.Append(fromOpen);
+            break;
+        }
+        // <pre class="mermaid">…</pre>  (content already HTML-escaped by cmark)
+        out.Append(StrL("<pre class=\"mermaid\">"));
+        out.Append(Str(content.s, closeAt));
+        out.Append(StrL("</pre>"));
+        nRewritten++;
+        rest = Str(content.s + closeAt + len(kCloseCodePre), content.len - closeAt - len(kCloseCodePre));
+    }
+    return nRewritten;
+}
+
+// mermaid.min.js lives in IDR_EMBEDDED_PAK and is served from the markdown
+// virtual host (GetDataForUrl). Must match kMdVirtualHost in MarkdownModel.cpp.
+static const char kMermaidBootstrap[] = R"HTML(
+<script src="https://sumatrapdf.markdown/mermaid.min.js"></script>
+<script>
+(function () {
+  if (typeof mermaid === "undefined") return;
+  var bg = getComputedStyle(document.body).backgroundColor || "";
+  var dark = false;
+  var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (m) {
+    var r = +m[1], g = +m[2], b = +m[3];
+    dark = (0.2126 * r + 0.7152 * g + 0.0722 * b) < 140;
+  }
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    theme: dark ? "dark" : "default"
+  });
+  mermaid.run({ querySelector: "pre.mermaid" }).catch(function () {});
+})();
+</script>
+)HTML";
 
 static TempStr ColorToCssTemp(COLORREF c) {
     return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
@@ -677,6 +767,11 @@ Str MarkdownToHtmlPage(Str markdown) {
         return {};
     }
 
+    str::Builder rewritten;
+    int nMermaid = RewriteMermaidCodeBlocks(rewritten, Str(body));
+    cmark_mem* mem = cmark_get_default_mem_allocator();
+    mem->free(body);
+
     str::Builder html;
     html.Append(
         StrL("<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
@@ -684,10 +779,12 @@ Str MarkdownToHtmlPage(Str markdown) {
              "<style>"));
     html.Append(Str(MarkdownPageCssTemp()));
     html.Append(StrL("</style></head><body>"));
-    html.Append(Str(body));
+    html.Append(ToStr(rewritten));
+    // Mermaid diagrams need JS (WebView2). Fixed-page MuPDF path has no scripts.
+    if (nMermaid > 0) {
+        html.Append(Str(kMermaidBootstrap, (int)(sizeof(kMermaidBootstrap) - 1)));
+    }
     html.Append(StrL("</body></html>"));
-    cmark_mem* mem = cmark_get_default_mem_allocator();
-    mem->free(body);
 
     return html.TakeStr();
 }
@@ -798,5 +895,35 @@ bool MarkdownToc_UnitTestHtmlHeadings() {
         str::Free(h.title);
         str::Free(h.anchor);
     }
+    return ok;
+}
+
+// ```mermaid fences become <pre class="mermaid">; the page path also injects
+// mermaid.min.js when any were rewritten (#5927). Avoid MarkdownToHtmlPage here
+// — it needs a live theme for CSS (not set up in -unit-tests).
+bool MarkdownToc_UnitTestMermaid() {
+    Str md = StrL("before\n\n```mermaid\nflowchart TD\n    A --> B\n```\n\nafter\n");
+    char* body = MarkdownToHtmlBody(md);
+    if (!body) {
+        return false;
+    }
+    str::Builder rewritten;
+    int n = RewriteMermaidCodeBlocks(rewritten, Str(body));
+    cmark_get_default_mem_allocator()->free(body);
+    Str html = ToStr(rewritten);
+    bool ok = (n == 1) && str::Contains(html, StrL("<pre class=\"mermaid\">")) &&
+              str::Contains(html, StrL("flowchart TD")) && !str::Contains(html, StrL("language-mermaid"));
+
+    // other language fences stay as cmark emitted them
+    body = MarkdownToHtmlBody(StrL("```js\nnot mermaid\n```\n"));
+    if (!body) {
+        return false;
+    }
+    str::Builder plainB;
+    int nPlain = RewriteMermaidCodeBlocks(plainB, Str(body));
+    cmark_get_default_mem_allocator()->free(body);
+    Str plain = ToStr(plainB);
+    ok = ok && (nPlain == 0) && str::Contains(plain, StrL("language-js")) &&
+         !str::Contains(plain, StrL("pre class=\"mermaid\""));
     return ok;
 }

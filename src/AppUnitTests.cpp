@@ -15,6 +15,7 @@ bool TableOfContents_UnitTestSnapshotNamedDest();
 bool MarkdownModel_UnitTestBrowserNavigationUrl();
 bool MarkdownToc_UnitTestHtmlLinks();
 bool MarkdownToc_UnitTestHtmlHeadings();
+bool MarkdownToc_UnitTestMermaid();
 bool EbookDoc_UnitTestNormalizeURL();
 #endif
 
@@ -108,6 +109,7 @@ int RunAppUnitTests() {
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
     utassert(MarkdownToc_UnitTestHtmlLinks());
     utassert(MarkdownToc_UnitTestHtmlHeadings());
+    utassert(MarkdownToc_UnitTestMermaid());
     utassert(EbookDoc_UnitTestNormalizeURL());
 #endif
     return utassert_print_results();

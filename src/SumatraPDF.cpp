@@ -46,6 +46,7 @@
 #include "ChmModel.h"
 #include "MarkdownModel.h"
 #include "MarkdownToc.h"
+#include "EmbeddedResources.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
@@ -8929,8 +8930,6 @@ constexpr const char* kManualDefaultDocURI = "/SumatraPDF-documentation";
 constexpr const char* kManualVirtualHost = "https://sumatrapdf.manual/";
 constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
-static LoadedDataResource gManualArchiveData;
-static lzma::SimpleArchive gManualArchive{};
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
 
 static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent* /*ev*/) {
@@ -8977,7 +8976,7 @@ static bool IsManualDocHtmlPage(Str path) {
 
 static TempStr ManualArchiveLookupPathTemp(Str path) {
     TempStr lookupPath = str::DupTemp(path);
-    // manual.dat stores names with backslashes (MakeLZSA convention) but WebView
+    // embedded.dat stores names with backslashes (MakeLZSA convention) but WebView
     // requests use URL-style forward slashes.
     str::TransCharsInPlace(lookupPath, StrL("/"), StrL("\\"));
     return lookupPath;
@@ -9017,30 +9016,28 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
 
 static WebViewResourceProvider ManualResourceProvider() {
     WebViewResourceProvider provider;
-    provider.ctx = &gManualArchive;
+    provider.ctx = GetEmbeddedArchive();
     provider.getResource = ManualGetResource;
     return provider;
 }
 
 static bool EnsureManualArchiveLoaded() {
-    if (gManualArchive.filesCount > 0) {
-        return true;
-    }
-
-    bool ok = LockDataResource(IDR_MANUAL_PAK, &gManualArchiveData);
-    if (!ok) {
-        logf("EnsureManualArchiveLoaded(): LockDataResource() failed\n");
+    // Manual assets live in the same LzSA as translations / JS runtimes.
+    if (!EnsureEmbeddedArchiveLoaded()) {
+        logf("EnsureManualArchiveLoaded(): embedded.dat not loaded\n");
         return false;
     }
-    const auto* data = gManualArchiveData.data;
-    auto size = gManualArchiveData.dataSize;
-    ok = lzma::ParseSimpleArchive(data, size, &gManualArchive);
-    if (!ok) {
-        logf("EnsureManualArchiveLoaded: lzma::ParseSimpleArchive() failed\n");
+    lzma::SimpleArchive* archive = GetEmbeddedArchive();
+    if (!archive || archive->filesCount == 0) {
         return false;
     }
-    logf("EnsureManualArchiveLoaded(): opened manual.dat, %d files\n", gManualArchive.filesCount);
-    return gManualArchive.filesCount > 0;
+    // smoke-check a known manual entry
+    if (lzma::GetIdxFromName(archive, StrL("manual.shell.html")) < 0) {
+        logf("EnsureManualArchiveLoaded: manual.shell.html missing from embedded.dat\n");
+        return false;
+    }
+    logf("EnsureManualArchiveLoaded(): using embedded.dat, %d files\n", archive->filesCount);
+    return true;
 }
 
 static TempStr DocURIToLocalManualUrlTemp(Str docURI) {

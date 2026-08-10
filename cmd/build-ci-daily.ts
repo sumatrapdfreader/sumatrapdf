@@ -54,18 +54,16 @@ async function revertBuildConfig(): Promise<void> {
   await $`git checkout ${buildConfigPath()}`;
 }
 
-function ensureManualIsBuilt(): void {
-  const path = join(".work", "manual.dat");
+function ensureEmbeddedIsBuilt(): void {
+  const path = join(".work", "embedded.dat");
   let size = 0;
   try {
     size = statSync(path).size;
   } catch {
     // file doesn't exist
   }
-  if (size < 2 * 2024) {
-    throw new Error(
-      `size of '${path}' is ${size} which indicates we didn't build it`,
-    );
+  if (size < 100 * 1024) {
+    throw new Error(`size of '${path}' is ${size} which indicates we didn't build it`);
   }
 }
 
@@ -90,7 +88,7 @@ async function main() {
   // generate HTML docs
   const { main: genDocs } = await import("./gen-docs");
   await genDocs();
-  ensureManualIsBuilt();
+  ensureEmbeddedIsBuilt();
 
   setBuildConfigPreRelease(sha1, preRelVer);
 
@@ -98,16 +96,12 @@ async function main() {
   try {
     for (const plat of platforms) {
       const platStart = performance.now();
-      console.log(
-        `buidling pre-release ${plat.vsplatform} version ${preRelVer}`,
-      );
+      console.log(`buidling pre-release ${plat.vsplatform} version ${preRelVer}`);
       const p = `/p:Configuration=Release;Platform=${plat.vsplatform}`;
       const t = `/t:SumatraPDF;SumatraPDF-static`;
       await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
       const platElapsed = ((performance.now() - platStart) / 1000).toFixed(1);
-      console.log(
-        `buidling pre-release ${plat.vsplatform} version ${preRelVer} took ${platElapsed}s`,
-      );
+      console.log(`buidling pre-release ${plat.vsplatform} version ${preRelVer} took ${platElapsed}s`);
     }
   } finally {
     await revertBuildConfig();

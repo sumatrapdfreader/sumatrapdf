@@ -71,11 +71,7 @@ function genCodeBlockHTML(codeInnerHtml: string, codeClass = ""): string {
   );
 }
 
-function renderFenceCodeBlock(
-  content: string,
-  codeInnerHtml: string,
-  codeClass = "",
-): string {
+function renderFenceCodeBlock(content: string, codeInnerHtml: string, codeClass = ""): string {
   if (!isMultiLineCode(content)) {
     return genPlainCodeBlockHTML(codeInnerHtml, codeClass);
   }
@@ -83,10 +79,7 @@ function renderFenceCodeBlock(
 }
 
 function buildTocHTML(currentPage: string): string {
-  const text = readFileSync(
-    join(mdDir, "SumatraPDF-documentation.md"),
-    "utf-8",
-  );
+  const text = readFileSync(join(mdDir, "SumatraPDF-documentation.md"), "utf-8");
   const linkRe = /\[([^\]]+)\]\(([^)]+\.md)\)/g;
   const pageName = currentPage.replace(/^\.\//, "");
   const currentHtml = getHTMLFileName(pageName);
@@ -271,33 +264,22 @@ function mdToHTML(name: string): string {
   md.renderer.rules.fence = (tokens: MarkdownIt.Token[], idx: number) => {
     const t = tokens[idx];
     const lang = t.info.trim().split(/\s+/)[0];
-    if (lang === "commands")
-      return genCsvTableHTML(parseCsv(t.content));
+    if (lang === "commands") return genCsvTableHTML(parseCsv(t.content));
     if (lang === "js" || lang === "javascript") {
       const highlighted = highlightJsCode(t.content);
-      return renderFenceCodeBlock(
-        t.content,
-        highlighted,
-        "hljs language-javascript",
-      );
+      return renderFenceCodeBlock(t.content, highlighted, "hljs language-javascript");
     }
     return renderFenceCodeBlock(t.content, md.utils.escapeHtml(t.content));
   };
 
-  md.renderer.rules.heading_open = (
-    tokens: MarkdownIt.Token[],
-    idx: number,
-  ) => {
+  md.renderer.rules.heading_open = (tokens: MarkdownIt.Token[], idx: number) => {
     const tok = tokens[idx];
     const text = getInlineText(tokens[idx + 1]);
     const id = slugify(text);
     return `<${tok.tag} id="${id}">`;
   };
 
-  md.renderer.rules.heading_close = (
-    tokens: MarkdownIt.Token[],
-    idx: number,
-  ) => {
+  md.renderer.rules.heading_close = (tokens: MarkdownIt.Token[], idx: number) => {
     const tok = tokens[idx];
     const text = getInlineText(tokens[idx - 1]);
     const id = slugify(text);
@@ -305,20 +287,11 @@ function mdToHTML(name: string): string {
   };
 
   // rewrite links: .md → .html, non-internal links open in a new tab
-  md.renderer.rules.link_open = (
-    tokens: MarkdownIt.Token[],
-    idx: number,
-    options: any,
-    _env: any,
-    self: any,
-  ) => {
+  md.renderer.rules.link_open = (tokens: MarkdownIt.Token[], idx: number, options: any, _env: any, self: any) => {
     const tok = tokens[idx];
     let href = tok.attrGet("href") ?? "";
 
-    const isAbsolute =
-      href.startsWith("https://") ||
-      href.startsWith("http://") ||
-      href.startsWith("mailto:");
+    const isAbsolute = href.startsWith("https://") || href.startsWith("http://") || href.startsWith("mailto:");
 
     if (!isAbsolute) {
       const decoded = href.replace(/%20/g, " ");
@@ -330,10 +303,7 @@ function mdToHTML(name: string): string {
       if (ext === ".md") {
         // hosted on the website, not in this repo
         if (fileName === "SumatraPDF-all-docs-for-llm-ai.md") {
-          tok.attrSet(
-            "href",
-            "https://www.sumatrapdfreader.org/docs/SumatraPDF-all-docs-for-llm-ai.md",
-          );
+          tok.attrSet("href", "https://www.sumatrapdfreader.org/docs/SumatraPDF-all-docs-for-llm-ai.md");
         } else {
           if (!existsSync(join(mdDir, fileName))) {
             throw new Error(`linked markdown file '${fileName}' not found`);
@@ -350,9 +320,7 @@ function mdToHTML(name: string): string {
     // ones we just rewrote to a sumatrapdfreader.org URL) in a new tab
     const finalHref = tok.attrGet("href") ?? "";
     const isNonInternal =
-      finalHref.startsWith("https://") ||
-      finalHref.startsWith("http://") ||
-      finalHref.startsWith("mailto:");
+      finalHref.startsWith("https://") || finalHref.startsWith("http://") || finalHref.startsWith("mailto:");
     if (isNonInternal) {
       tok.attrSet("target", "_blank");
       tok.attrSet("rel", "noopener noreferrer");
@@ -361,13 +329,7 @@ function mdToHTML(name: string): string {
   };
 
   // validate image references exist
-  md.renderer.rules.image = (
-    tokens: MarkdownIt.Token[],
-    idx: number,
-    options: any,
-    _env: any,
-    self: any,
-  ) => {
+  md.renderer.rules.image = (tokens: MarkdownIt.Token[], idx: number, options: any, _env: any, self: any) => {
     const tok = tokens[idx];
     const src = tok.attrGet("src") ?? "";
     if (!src.startsWith("https://") && !src.startsWith("http://")) {
@@ -392,9 +354,7 @@ function mdToHTML(name: string): string {
 
   const tocHTML = buildTocHTML(name);
   // use function replacements to avoid $' and $` special patterns in String.replace()
-  let html = tmplManual
-    .replace("{{TocHTML}}", () => tocHTML)
-    .replace("{{InnerHTML}}", () => innerHTML);
+  let html = tmplManual.replace("{{TocHTML}}", () => tocHTML).replace("{{InnerHTML}}", () => innerHTML);
   const title = getHTMLFileName(name).replace(".html", "").replace(/-/g, " ");
   html = html.replace("{{Title}}", () => title);
 
@@ -497,24 +457,16 @@ function writePreviewHtmlFiles(): void {
     const dstPath = join(previewOutDir, name);
     copyFileNormalized(dstPath, srcPath);
   }
-  copyFileNormalized(
-    join(previewOutDir, "markdown-it.min.js"),
-    join("cmd", "markdown-it.min.js"),
-  );
+  copyFileNormalized(join(previewOutDir, "markdown-it.min.js"), join("cmd", "markdown-it.min.js"));
 }
 
 function writeBundledRenderJs(outDir: string): void {
   const template = readFileSync(join(docsDir, "gen_docs.render.js"), "utf-8");
-  const searchHtml = readFileSync(
-    join(docsDir, "gen_docs.search.html"),
-    "utf-8",
-  );
+  const searchHtml = readFileSync(join(docsDir, "gen_docs.search.html"), "utf-8");
   const searchJs = readFileSync(join(docsDir, "gen_docs.search.js"), "utf-8");
   const marker = "/*COMMANDS_SEARCH_BUNDLE*/";
   if (!template.includes(marker)) {
-    throw new Error(
-      `${join(docsDir, "gen_docs.render.js")} missing ${marker}`,
-    );
+    throw new Error(`${join(docsDir, "gen_docs.render.js")} missing ${marker}`);
   }
   const bundle =
     "const kCommandsSearchHtml = " +
@@ -534,13 +486,8 @@ function writeManualPakFiles(): void {
     copyFileNormalized(join(manualOutDir, name), join(mdDir, name));
     manifest[getHTMLFileName(name)] = name;
   }
-  writeFileSync(
-    join(manualOutDir, "manifest.json"),
-    JSON.stringify(manifest, null, 2),
-  );
-  console.log(
-    `wrote manifest.json (${Object.keys(manifest).length} pages)`,
-  );
+  writeFileSync(join(manualOutDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  console.log(`wrote manifest.json (${Object.keys(manifest).length} pages)`);
 
   copyDirRecursive(join(manualOutDir, "img"), join(mdDir, "img"));
   genAllDocsMd(manualOutDir);
@@ -552,14 +499,8 @@ function writeManualPakFiles(): void {
     copyFileNormalized(join(manualOutDir, name), join(docsDir, name));
   }
   writeBundledRenderJs(manualOutDir);
-  copyFileNormalized(
-    join(manualOutDir, "markdown-it.min.js"),
-    join("cmd", "markdown-it.min.js"),
-  );
-  const bundledRender = readFileSync(
-    join(manualOutDir, "gen_docs.render.js"),
-    "utf-8",
-  );
+  copyFileNormalized(join(manualOutDir, "markdown-it.min.js"), join("cmd", "markdown-it.min.js"));
+  const bundledRender = readFileSync(join(manualOutDir, "gen_docs.render.js"), "utf-8");
   if (!bundledRender.includes("cmd_ids") || !bundledRender.includes("driver();")) {
     throw new Error("bundled gen_docs.render.js missing Commands search UI");
   }
@@ -587,9 +528,7 @@ function verifyManualImages(): void {
   }
   const imgDir = join(manualOutDir, "img");
   const packedCount = existsSync(imgDir) ? readdirSync(imgDir).length : 0;
-  console.log(
-    `packed ${packedCount} manual images (${refCount} local image refs in docs)`,
-  );
+  console.log(`packed ${packedCount} manual images (${refCount} local image refs in docs)`);
   if (missing.length > 0) {
     throw new Error(`missing manual images:\n${missing.join("\n")}`);
   }
@@ -603,8 +542,7 @@ function extractCommandsFromMarkdown(): string[] {
     const idx = line.indexOf(",");
     if (idx >= 0) cmds.push(line.slice(0, idx));
   }
-  if (cmds.length < 20)
-    throw new Error(`too few commands in Commands.md: ${cmds.length}`);
+  if (cmds.length < 20) throw new Error(`too few commands in Commands.md: ${cmds.length}`);
   return cmds;
 }
 
@@ -670,30 +608,14 @@ export async function main() {
     writePreviewHtmlFiles();
   }
 
-  // create lzsa archive for the in-app manual
-  const makeLzsa = resolve(join("bin", "MakeLZSA.exe"));
-  if (!existsSync(makeLzsa)) {
-    throw new Error(`'${makeLzsa}' doesn't exist`);
-  }
+  // pack translations + JS runtimes + manual into one LzSA (IDR_EMBEDDED_PAK)
   mkdirSync(".work", { recursive: true });
-  const archive = join(".work", "manual.dat");
-  rmSync(archive, { force: true });
-  const proc = Bun.spawn([makeLzsa, archive, manualOutDir], {
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const exitCode = await proc.exited;
-  if (exitCode !== 0) {
-    throw new Error(`MakeLZSA failed with exit code ${exitCode}`);
-  }
-  const size = statSync(archive).size;
-  console.log(`size of '${archive}': ${formatSize(size)}`);
+  const { packEmbedded } = await import("./pack-embedded");
+  await packEmbedded();
 
   if (previewHtml) {
     const absDir = resolve(previewOutDir);
-    console.log(
-      `To preview pre-rendered HTML, open: file://${join(absDir, "SumatraPDF-documentation.html")}`,
-    );
+    console.log(`To preview pre-rendered HTML, open: file://${join(absDir, "SumatraPDF-documentation.html")}`);
   } else {
     console.log(
       `To preview on-demand rendering, open: file://${resolve(join(manualOutDir, "manual.shell.html"))} (needs a local server or in-app help)`,

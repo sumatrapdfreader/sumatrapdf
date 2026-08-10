@@ -1377,12 +1377,10 @@ workspace "SumatraPDF"
     linkoptions { "/INFERASANLIBS" }
     filter {}
     dependson { "test_util" }
-    -- translations are not checked in; seed an empty .work/translations.txt when
-    -- missing so CI (no APPTRANSLATOR secret) can still pack the RC resource.
+    -- pack translations + marked/mermaid + manual into .work/embedded.dat
+    -- (IDR_EMBEDDED_PAK). Uses cmd so MSBuild need not have bun on PATH.
     prebuildcommands {
-      "if not exist ..\\.work mkdir ..\\.work",
-      "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
-      "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
+      "call ..\\cmd\\pack-embedded-prebuild.cmd",
     }
 
   -- a dll version where most functionality is in libsumatrapdf.dll
@@ -1485,12 +1483,9 @@ workspace "SumatraPDF"
     -- delay-loaded libsumatrapdf.dll which LoadLibsumatrapdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "test_util", "sumatrapdf-tool" }
-    -- translations are not checked in; seed an empty .work/translations.txt when
-    -- missing so CI (no APPTRANSLATOR secret) can still pack the RC resource.
+    -- pack translations + marked/mermaid + manual into .work/embedded.dat
     prebuildcommands {
-      "if not exist ..\\.work mkdir ..\\.work",
-      "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
-      "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
+      "call ..\\cmd\\pack-embedded-prebuild.cmd",
     }
     -- Only pack InstallerData.dat when missing. Signed release builds create it
     -- after signtool (so the archive holds signed DLLs); a rebuild of

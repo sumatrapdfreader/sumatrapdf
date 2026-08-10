@@ -29,7 +29,7 @@
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
-#include "resource.h"
+#include "EmbeddedResources.h"
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
@@ -40,16 +40,15 @@
 constexpr UINT_PTR kTimerAutoSelectSession = 42;
 constexpr UINT_PTR kTimerWebViewSize = 43;
 
-static LoadedDataResource gAIChatMarkedJs;
-
 // The chat page and its marked.min.js are both served to WebView2 from the
 // provider's virtual host (https://<provider>/). NavigateToString/SetHtml does
 // not reliably load in the current WebView2 runtime (the page stays blank),
 // whereas Navigate() to a resource-served URL does - the same mechanism the
-// in-app manual and CHM viewers use.
+// in-app manual and CHM viewers use. marked.min.js comes from IDR_EMBEDDED_PAK.
 struct AIChatWebResources {
-    const LoadedDataResource* marked = nullptr; // marked.min.js bytes (not owned)
-    Str html;                                   // owned; the chat page HTML
+    u8* marked = nullptr; // owned (malloc); from GetEmbeddedFileData
+    int markedLen = 0;
+    Str html; // owned; the chat page HTML
 };
 static AIChatWebResources gAIChatWebResources;
 
@@ -76,12 +75,12 @@ static bool AIChatGetResource(void* ctx, Str path, WebViewResourceResult* res) {
         res->ownsData = false;
         return true;
     }
-    if (r->marked && AIChatPathIs(path, StrL("marked.min.js"))) {
-        res->data = r->marked->data;
-        res->dataLen = (size_t)r->marked->dataSize;
+    if (r->marked && r->markedLen > 0 && AIChatPathIs(path, StrL("marked.min.js"))) {
+        res->data = r->marked;
+        res->dataLen = (size_t)r->markedLen;
         res->contentType = str::Dup(StrL("text/javascript"));
         res->ownsData = false;
-        return res->dataLen > 0;
+        return true;
     }
     return false;
 }
@@ -1134,14 +1133,19 @@ static void EnsureWebViewReady(MainWindow* win) {
     // use unique data dir per process to avoid locking conflicts
     webView->dataDir =
         str::Dup(fmt("%s\\SumatraPDF\\%s_%d", localAppData, p->webViewDataDirPrefix, (int)GetCurrentProcessId()));
-    if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gAIChatMarkedJs)) {
+    int markedLen = 0;
+    u8* markedData = GetEmbeddedFileData(StrL("marked.min.js"), &markedLen);
+    if (!markedData || markedLen <= 0) {
+        free(markedData);
         delete webView;
         return;
     }
     wstr::Free(webView->resourceUriPrefix);
     webView->resourceUriPrefix = wstr::Dup(p->virtualHostW);
     // serve both the chat page and marked.min.js from the virtual host
-    gAIChatWebResources.marked = &gAIChatMarkedJs;
+    free(gAIChatWebResources.marked);
+    gAIChatWebResources.marked = markedData;
+    gAIChatWebResources.markedLen = markedLen;
     str::ReplaceWithCopy(&gAIChatWebResources.html, AIChatFormatChatHtmlTemp(p->virtualHost, BgColorForProvider(p)));
     webView->resourceProvider.ctx = &gAIChatWebResources;
     webView->resourceProvider.getResource = AIChatGetResource;

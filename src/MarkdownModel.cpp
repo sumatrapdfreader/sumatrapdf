@@ -21,6 +21,7 @@
 #include "GlobalPrefs.h"
 
 #include "SumatraPDF.h"
+#include "EmbeddedResources.h"
 #include "MarkdownModel.h"
 #include "MarkdownToc.h"
 
@@ -813,21 +814,31 @@ Str MarkdownModel::GetDataForUrl(Str url) {
         return e->data;
     }
 
-    TempStr filePath = VirtualUrlToFileTemp(plainUrl);
     Str data;
-    // in html mode every resource (the page, images, linked pages) is served raw;
-    // in markdown mode .md/.markdown/.html are rendered to a styled page and other
-    // resources (images) are served raw
-    bool renderMd = !isHtml && filePath &&
-                    (str::EndsWithI(filePath, StrL(".md")) || str::EndsWithI(filePath, StrL(".markdown")) ||
-                     str::EndsWithI(filePath, StrL(".html")));
-    if (renderMd) {
-        Str md = file::ReadFile(filePath);
-        if (md) {
-            data = MarkdownToHtmlPage(md);
+    // mermaid runtime from IDR_EMBEDDED_PAK for ```mermaid fences (see MarkdownToHtmlPage)
+    if (str::EndsWithI(plainUrl, StrL("/mermaid.min.js")) || str::EqI(plainUrl, StrL("mermaid.min.js"))) {
+        int n = 0;
+        u8* js = GetEmbeddedFileData(StrL("mermaid.min.js"), &n);
+        if (js && n > 0) {
+            data = str::Dup(poolAlloc, Str((const char*)js, n));
         }
-    } else if (filePath) {
-        data = file::ReadFile(filePath);
+        free(js);
+    } else {
+        TempStr filePath = VirtualUrlToFileTemp(plainUrl);
+        // in html mode every resource (the page, images, linked pages) is served raw;
+        // in markdown mode .md/.markdown/.html are rendered to a styled page and other
+        // resources (images) are served raw
+        bool renderMd = !isHtml && filePath &&
+                        (str::EndsWithI(filePath, StrL(".md")) || str::EndsWithI(filePath, StrL(".markdown")) ||
+                         str::EndsWithI(filePath, StrL(".html")));
+        if (renderMd) {
+            Str md = file::ReadFile(filePath);
+            if (md) {
+                data = MarkdownToHtmlPage(md);
+            }
+        } else if (filePath) {
+            data = file::ReadFile(filePath);
+        }
     }
 
     if (!data) {

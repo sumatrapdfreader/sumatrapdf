@@ -19,7 +19,7 @@ async function main() {
   const timeStart = performance.now();
   console.log("build-codeql: static 64-bit release build for CodeQL analysis");
 
-  // SumatraPDF.rc embeds .work/manual.dat; generate it first (same as build-ci).
+  // SumatraPDF.rc embeds .work/embedded.dat; generate it first (same as build-ci).
   const { main: genDocs } = await import("./gen-docs");
   await genDocs();
 

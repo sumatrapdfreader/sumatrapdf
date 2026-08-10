@@ -67,11 +67,7 @@ END
 IDR_DLL_PAK             RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
 
-IDR_TRANSLATIONS        RCDATA "..\\.work\\translations.txt.lzsa"
-
-IDR_MANUAL_PAK          RCDATA               "..\\.work\\manual.dat"
-
-IDR_CLAUDE_MARKED_JS    RCDATA               "..\\ext\\marked\\marked.min.js"
+IDR_EMBEDDED_PAK        RCDATA               "..\\.work\\embedded.dat"
 
 /////////////////////////////////////////////////////////////////////////////
 
