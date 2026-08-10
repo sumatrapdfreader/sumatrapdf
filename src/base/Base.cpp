@@ -51,11 +51,11 @@ void* RoundUp(void* d, int rounding) {
 int RoundToPowerOf2(int size) {
     int n = 1;
     while (n < size) {
-        n *= 2;
-        if (n <= 0) {
-            // overflow: no power of 2 fits in an int
+        // Check before doubling so signed overflow is never UB.
+        if (n > (INT_MAX / 2)) {
             return -1;
         }
+        n *= 2;
     }
     return n;
 }

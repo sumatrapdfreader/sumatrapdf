@@ -30,6 +30,7 @@ import {
   spawnCmd,
 } from "./build-deps-common";
 import {
+  aGumbo,
   zlib,
   unrar,
   libwebp,
@@ -497,6 +498,7 @@ const DEP_LIBS_BASE = [
       },
     ],
   },
+  aGumbo,
   zlib,
   makeUnrar,
   makeChmdec,
@@ -523,7 +525,12 @@ const TEST_UTIL_SOURCES = [
   "src/Commands.cpp",
   "src/CrashHandlerNoOp.cpp",
   "src/DisplayMode.cpp",
+  "src/DocProperties.cpp",
   "src/Flags.cpp",
+  "src/PdfDarkModeImageClassifier_ut.cpp",
+  "src/PdfDarkModeImageRules.cpp",
+  "src/PdfDarkModeOklab.cpp",
+  "src/PdfDarkModeOklab_ut.cpp",
   "src/RefHoverDetect.cpp",
   "src/RefHoverTextDetect.cpp",
   "src/SimpleLog_ut.cpp",
@@ -562,6 +569,9 @@ const TEST_ENGINES_SOURCES = [
   "src/GumboHelpers.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
+  "src/PdfCadDetect.cpp",
+  "src/PdfCadEnhanceDevice.cpp",
+  "src/PdfDarkModeNoOp.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];
@@ -779,6 +789,8 @@ async function buildTestUtil(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
+    // Crypto_posix.cpp uses OpenSSL digests on Linux (CommonCrypto on Darwin).
+    "-lcrypto",
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
@@ -850,14 +862,19 @@ async function buildTestEngines(
   await compileAll(units, jobs);
 
   const exePath = join(outDir, "test_engines");
+  // --start-group: harfbuzz's custom allocator symbols live in mupdf's
+  // mupdf_load_system_font.c, which follows harfbuzz in the archive list.
+  // Archive names must match LibDef.name (libmupdf.a, liba-zlib.a, …).
   const linkArgs = [
     tools.cxx,
     "-o",
     exePath,
     ...commonFlags,
     ...units.map((u) => u.obj),
+    "-Wl,--start-group",
     join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libsumatrapdf.a"),
+    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
     join(outDir, "lib", "liba-mujs.a"),
     join(outDir, "lib", "liba-extract.a"),
@@ -870,7 +887,9 @@ async function buildTestEngines(
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "libzlib.a"),
+    join(outDir, "lib", "liba-zlib.a"),
+    "-Wl,--end-group",
+    "-lcrypto",
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {

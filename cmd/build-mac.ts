@@ -524,6 +524,7 @@ const TEST_UTIL_SOURCES = [
   "src/Commands.cpp",
   "src/CrashHandlerNoOp.cpp",
   "src/DisplayMode.cpp",
+  "src/DocProperties.cpp",
   "src/Flags.cpp",
   "src/RefHoverDetect.cpp",
   "src/RefHoverTextDetect.cpp",
@@ -909,7 +910,7 @@ async function buildMacApp(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libsumatrapdf.a"),
+    join(outDir, "lib", "libmupdf.a"),
     join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
     join(outDir, "lib", "liba-mujs.a"),
@@ -923,7 +924,7 @@ async function buildMacApp(
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "libzlib.a"),
+    join(outDir, "lib", "liba-zlib.a"),
     "-framework",
     "Cocoa",
   ];
@@ -1011,7 +1012,7 @@ async function buildTestEngines(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libsumatrapdf.a"),
+    join(outDir, "lib", "libmupdf.a"),
     join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
     join(outDir, "lib", "liba-mujs.a"),
@@ -1025,7 +1026,7 @@ async function buildTestEngines(
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "libzlib.a"),
+    join(outDir, "lib", "liba-zlib.a"),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
