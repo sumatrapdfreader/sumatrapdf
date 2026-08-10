@@ -36,6 +36,9 @@ static void OnPaintAbout(MainWindow* win) {
         DrawHomePage(win, bufDC);
     } else {
         HomePageDestroySearch(win);
+        // the about page has no virtual controls; leaving the home page's
+        // around would keep them hit-testable over it
+        HomePageDestroyChrome(win);
         DrawAboutPage(win, bufDC);
     }
     win->buffer->Flush(hdc);
@@ -69,9 +72,6 @@ static bool IsLink(Str url) {
 }
 
 static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
-    HomePageUpdateCloseButton(win, x, y);
-    // file entries: update active thumbnail and show tip at that entry
-    HomePageOnHover(win, x, y);
     TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
     tme.dwFlags = TME_LEAVE;
     tme.hwndTrack = hwnd;
@@ -79,21 +79,13 @@ static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
 }
 
 static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
-    // a click on the thumbnail's ✕ close button removes the file instead of
-    // opening it
-    if (HomePageOnCloseButtonClick(win, x, y)) {
-        str::FreePtr(&win->urlOnLastButtonDown);
-        return;
-    }
     TempStr url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
     bool clickedURL = url && str::Eq(url, win->urlOnLastButtonDown);
     str::FreePtr(&win->urlOnLastButtonDown);
     if (!clickedURL) {
         return;
     }
-    if (str::Eq(url, kLinkOpenFile)) {
-        HwndSendCommand(win->hwndFrame, CmdOpenFile);
-    } else if (str::Eq(url, kLinkHideList)) {
+    if (str::Eq(url, kLinkHideList)) {
         gGlobalPrefs->showStartPage = false;
         win->RedrawAll(true);
     } else if (str::Eq(url, kLinkShowList)) {
@@ -102,28 +94,6 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key
     } else if (str::Eq(url, kLinkNextTip)) {
         PickAnotherRandomPromotion();
         win->RedrawAll(true);
-    } else if (str::Eq(url, kLinkKeyboardHelp)) {
-        HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
-    } else if (str::Eq(url, kLinkHomeListView)) {
-        SetHomePageListView(true);
-        win->homePageScrollY = 0;
-        SaveSettings();
-        win->RedrawAll(true);
-    } else if (str::Eq(url, kLinkHomeThumbnailView)) {
-        SetHomePageListView(false);
-        win->homePageScrollY = 0;
-        SaveSettings();
-        win->RedrawAll(true);
-    } else if (str::TrimPrefix(url, kLinkHomeRemoveFilePrefix)) {
-        ForgetFileFromFrequentlyRead(win, url);
-    } else if (str::TrimPrefix(url, kLinkHomePinFilePrefix)) {
-        FileState* fs = gFileHistory.FindByPath(url);
-        if (fs) {
-            fs->isPinned = !fs->isPinned;
-            SaveSettings();
-            win->DeleteToolTip();
-            win->RedrawAll(true);
-        }
     } else if (str::StartsWith(url, StrL("Cmd"))) {
         // may include args (e.g. "CmdFixDefaultApp .pdf")
         CustomCommand* custom = CreateCommandFromDefinition(url);
@@ -168,6 +138,10 @@ static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*ke
 }
 
 static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
+    LRESULT res = 0;
+    if (HomePageOnCanvasMessage(win, WM_SETCURSOR, 0, 0, res)) {
+        return TRUE;
+    }
     Point pt = HwndGetCursorPos(hwnd);
     if (!pt.IsEmpty()) {
         StaticLink* link = nullptr;
@@ -196,6 +170,21 @@ static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
 LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int x = GET_X_LPARAM(lp);
     int y = GET_Y_LPARAM(lp);
+    // the home page's virtual controls (header, view buttons, "Open a
+    // document...", help button) handle their own hover / click / cursor
+    switch (msg) {
+        case WM_MOUSEMOVE:
+        case WM_MOUSELEAVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK: {
+            LRESULT res = 0;
+            if (HomePageOnCanvasMessage(win, msg, wp, lp, res)) {
+                return res;
+            }
+            break;
+        }
+    }
     switch (msg) {
         case WM_CTLCOLOREDIT:
             if ((HWND)lp == win->hwndHomeSearch) {
@@ -271,7 +260,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         case WM_MOUSELEAVE:
-            HomePageOnCanvasMouseLeave();
+            HomePageClearActiveEntry(win);
             return 0;
 
         case WM_LBUTTONDOWN:
@@ -312,12 +301,12 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         case WM_VSCROLL:
-            HomePageHideCloseButton();
+            HomePageClearActiveEntry(win);
             HomePageOnVScroll(win, wp);
             return 0;
 
         case WM_MOUSEWHEEL: {
-            HomePageHideCloseButton();
+            HomePageClearActiveEntry(win);
             int delta = GET_WHEEL_DELTA_WPARAM(wp);
             HomePageOnMouseWheel(win, delta);
             return 0;

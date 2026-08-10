@@ -368,6 +368,9 @@ struct MainWindow {
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLink*> staticLinks;
 
+    // virtual controls of the home page (header, view buttons, links, ...)
+    struct VirtWndRoot* homeRoot = nullptr;
+
     // home page thumbnail scrolling
     int homePageScrollY = 0;
     // keyboard-selected home page entry (index into the filtered list),

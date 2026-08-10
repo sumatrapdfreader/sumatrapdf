@@ -39,6 +39,7 @@ const user32 = dlopen("user32.dll", {
   GetWindowRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   IsWindowVisible: { args: [FFIType.ptr], returns: FFIType.bool },
   SetForegroundWindow: { args: [FFIType.ptr], returns: FFIType.bool },
+  GetForegroundWindow: { args: [], returns: FFIType.u64 },
   GetWindowDC: { args: [FFIType.ptr], returns: FFIType.u64 },
   ReleaseDC: { args: [FFIType.ptr, FFIType.u64], returns: FFIType.i32 },
   PrintWindow: { args: [FFIType.ptr, FFIType.u64, FFIType.u32], returns: FFIType.bool },
@@ -571,6 +572,12 @@ export function isWindowVisible(hwnd: number): boolean {
 
 export function setForegroundWindow(hwnd: number): boolean {
   return user32.symbols.SetForegroundWindow(hwnd);
+}
+
+// the window the user is currently working with (across processes). Use it to
+// assert that something didn't steal activation
+export function getForegroundWindow(): number {
+  return Number(user32.symbols.GetForegroundWindow());
 }
 
 export function getSystemMetrics(index: number): number {

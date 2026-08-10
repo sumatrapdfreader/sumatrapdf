@@ -20,15 +20,9 @@ void SetHomePageListView(bool listView);
 TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
 TempStr LinkTooltipTemp(StaticLink* link);
 
-constexpr const char* kLinkOpenFile = "<File,Open>";
 constexpr const char* kLinkShowList = "<View,ShowList>";
 constexpr const char* kLinkHideList = "<View,HideList>";
 constexpr const char* kLinkNextTip = "<NextTip>";
-constexpr const char* kLinkHomeListView = "<HomePage,ListView>";
-constexpr const char* kLinkHomeThumbnailView = "<HomePage,ThumbnailView>";
-constexpr const char* kLinkHomeRemoveFilePrefix = "<HomePage,RemoveFile>";
-constexpr const char* kLinkHomePinFilePrefix = "<HomePage,PinFile>";
-constexpr const char* kLinkKeyboardHelp = "<KeyboardHelp>";
 
 void SetPromoString(Str s);
 void FreeHomePageTips();
@@ -40,6 +34,8 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp);
 void HomePageOnMouseWheel(MainWindow* win, int delta);
 void HomePageFocusSearch(MainWindow* win);
 void HomePageDestroySearch(MainWindow* win);
+void HomePageDestroyChrome(MainWindow* win);
+bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res);
 
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow);
 Str HomePageSelectedFilePathTemp(MainWindow* win);
@@ -47,9 +43,6 @@ void HomePageSelectFirst(MainWindow* win);
 void HomePageOnWindowActivate(MainWindow* win, bool active);
 bool HomePageOnHover(MainWindow* win, int x, int y);
 
-void HomePageUpdateCloseButton(MainWindow* win, int x, int y);
-void HomePageHideCloseButton();
-bool HomePageOnCloseButtonClick(MainWindow* win, int x, int y);
-void HomePageOnCanvasMouseLeave();
+void HomePageClearActiveEntry(MainWindow* win);
 
 TempStr HomeListRowsResultTemp(int* exitCodeOut);

@@ -85,8 +85,6 @@ static bool gTipsParsed = false;
 static bool gSelectedIsPromo = false;
 static int gSelectedTipIdx = -1;
 
-static void ResetHomeCloseBtn();
-
 static int ParseTipsFromString(Str src, Str prefix, ParsedTip* buffer, int bufferCap) {
     StrVec lines;
     Split(&lines, src, "\n");
@@ -154,7 +152,6 @@ void FreeHomePageTips() {
         gTipsParsed = false;
     }
     str::Free(promoFromServer);
-    ResetHomeCloseBtn();
     ClearHomeLayoutCache();
 }
 
@@ -308,7 +305,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
     PositionRB(rc, r);
     MoveXY(r, -innerPadding, -innerPadding);
     w.SetBounds(r);
-    w.Paint(hdc);
+    w.PaintStandalone(hdc);
 
     // make the click target larger
     r.Inflate(innerPadding, innerPadding);
@@ -815,10 +812,127 @@ struct HomePageLayout {
     ~HomePageLayout();
 };
 
-HomePageLayout::~HomePageLayout() {
-    delete freqRead;
-    delete openDoc;
-}
+// freqRead / openDoc are borrowed from the persistent chrome tree (owned by
+// win->homeRoot), not created per layout
+HomePageLayout::~HomePageLayout() = default;
+
+// --- home page chrome as a VirtWnd tree ---
+// The chrome (header, view-mode buttons, "Open a document..." link, help
+// button) lives for as long as the window, so hover / pressed state survives
+// the repaints that scrolling and filtering cause. Geometry still comes from
+// LayoutHomePage(): HomePageSyncChrome() just feeds it into the tree.
+
+struct HomeViewIconWnd : VirtWnd {
+    MainWindow* win = nullptr;
+    HIMAGELIST himl = nullptr;
+    TbIcon icon = TbIcon::HomeList;
+    // true for the "show as list" button, false for "show as thumbnails"
+    bool listView = false;
+    Str tooltip;
+
+    void Paint(VirtWndPaintCtx&) override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+    TempStr GetTooltipTemp(Point) override;
+};
+
+struct HomeOpenDocWnd : VirtWnd {
+    MainWindow* win = nullptr;
+    HIMAGELIST himl = nullptr;
+    VirtWndText* text = nullptr; // child
+    // icon position, relative to our bounds
+    Rect rcIconLocal;
+
+    void Paint(VirtWndPaintCtx&) override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+};
+
+struct HomeHelpBtnWnd : VirtWnd {
+    MainWindow* win = nullptr;
+
+    void Paint(VirtWndPaintCtx&) override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+    TempStr GetTooltipTemp(Point) override;
+};
+
+struct HomeEntryWnd;
+
+// the per-thumbnail ✕ button (issue #283). Only visible while the mouse is on
+// its entry, and painted by the chrome tree, so appearing / disappearing is a
+// plain Invalidate() instead of a hand-rolled blit-back-from-the-buffer dance
+struct HomeCloseBtnWnd : VirtWnd {
+    MainWindow* win = nullptr;
+
+    void Paint(VirtWndPaintCtx&) override;
+    void OnMouseEnter() override;
+    void OnMouseLeave() override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+    TempStr GetTooltipTemp(Point) override;
+};
+
+// the remove / pin icons of a list-view row. They are drawn by DrawHomeListRow,
+// so these are hit targets only
+struct HomeListIconWnd : VirtWnd {
+    MainWindow* win = nullptr;
+    bool isPin = false;
+
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+    TempStr GetTooltipTemp(Point) override;
+};
+
+// one file entry (a thumbnail or a list row). Painting still happens in
+// DrawHomePageLayout(); this owns hit-testing, hover and clicks
+struct HomeEntryWnd : VirtWnd {
+    MainWindow* win = nullptr;
+    Str filePath; // owned
+    int idx = 0;
+    HomeCloseBtnWnd* closeBtn = nullptr;
+    HomeListIconWnd* removeBtn = nullptr;
+    HomeListIconWnd* pinBtn = nullptr;
+
+    ~HomeEntryWnd() override;
+
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+};
+
+struct HomeEntriesWnd : VirtWnd {
+    MainWindow* win = nullptr;
+    // entry the mouse is on, -1 for none. Drives the ✕ button and the keyboard
+    // selection, which follows the mouse
+    int activeIdx = -1;
+    Point lastHoverPt{-1, -1};
+
+    bool OnMouseMove(VirtWndMouseEvent&) override;
+
+    HomeEntryWnd* EntryAt(int idx);
+    HomeEntryWnd* EntryForWnd(VirtWnd*);
+    void SetEntryCount(int n);
+    void SetActiveEntry(int idx);
+    void UpdateCloseBtnVisibility();
+};
+
+struct HomeChromeWnd : VirtWnd {
+    HomeEntriesWnd* entries = nullptr;
+    VirtWndText* hdr = nullptr;
+    HomeViewIconWnd* thumbView = nullptr;
+    HomeViewIconWnd* listView = nullptr;
+    HomeOpenDocWnd* openDoc = nullptr;
+    HomeHelpBtnWnd* helpBtn = nullptr;
+};
+
+static HomeChromeWnd* EnsureHomeChrome(MainWindow* win);
+static void HomePageSyncChrome(HomePageLayout& l);
 
 constexpr int kOpenDocumentYShift = 7;
 constexpr int kThumbsMiddleMargin = 32;
@@ -1029,52 +1143,10 @@ static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
     }
 }
 
-// rebuild hit-test links for currently visible file rows/thumbs (scroll-safe)
-static void HomePageAppendFileStaticLinks(HomePageLayout& l) {
-    MainWindow* win = l.win;
-    bool list = HomePageIsListView();
-    for (ThumbnailLayout& thumb : l.thumbnails) {
-        FileState* fs = thumb.fs;
-        if (!fs || !fs->filePath) {
-            continue;
-        }
-        Str path = fs->filePath;
-        if (list) {
-            Rect slRect = thumb.rcListRow.Intersect(l.rcThumbsArea);
-            if (slRect.IsEmpty()) {
-                continue;
-            }
-            TempStr removeTarget = str::JoinTemp(kLinkHomeRemoveFilePrefix, path);
-            TempStr pinTarget = str::JoinTemp(kLinkHomePinFilePrefix, path);
-            Str pinTip = fs->isPinned ? _TRA("Unpin") : _TRA("Pin");
-            win->staticLinks.Append(new StaticLink(thumb.rcListRemove.Intersect(l.rcThumbsArea), removeTarget,
-                                                   _TRA("Remove from Frequently Read")));
-            win->staticLinks.Append(new StaticLink(thumb.rcListPin.Intersect(l.rcThumbsArea), pinTarget, pinTip));
-            thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
-            win->staticLinks.Append(thumb.sl);
-        } else {
-            Rect slRect = thumb.rcText.Union(thumb.rcPage).Intersect(l.rcThumbsArea);
-            if (slRect.IsEmpty()) {
-                continue;
-            }
-            thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
-            win->staticLinks.Append(thumb.sl);
-        }
-    }
-}
-
+// the header, view-mode buttons and "Open a document..." link are VirtWnds now;
+// only the tip links are still static links
 static void HomePageAppendChromeStaticLinks(HomePageLayout& l) {
     MainWindow* win = l.win;
-    win->staticLinks.Append(new StaticLink(l.rcIconListView, kLinkHomeListView, _TRA("Show as list")));
-    win->staticLinks.Append(new StaticLink(l.rcIconThumbnailView, kLinkHomeThumbnailView, _TRA("Show as thumbnails")));
-
-    Rect rcOpen = l.rcIconOpen;
-    if (l.openDoc) {
-        rcOpen = rcOpen.Union(l.openDoc->lastBounds);
-    }
-    rcOpen.Inflate(10, 10);
-    win->staticLinks.Append(new StaticLink(rcOpen, kLinkOpenFile));
-
     if (l.tip) {
         for (auto& link : l.tip->links) {
             Rect linkRect;
@@ -1207,7 +1279,6 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     auto& c = gHomeLayoutCache;
     auto* win = l.win;
     auto* hdc = l.hdc;
-    auto* hwnd = l.hwnd;
     bool isRtl = IsUIRtl();
 
     // clamp scroll using cached content height
@@ -1248,19 +1319,23 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
+    HomeChromeWnd* chrome = EnsureHomeChrome(win);
+    VirtWndText* hdr = chrome->hdr;
+    hdr->SetText(txt);
+    hdr->font = hdrFont;
     hdr->isRtl = isRtl;
     hdr->SetBounds(c.rcFreqRead);
     l.freqRead = hdr;
 
-    VirtWndText* openDoc = new VirtWndText(hwnd, _TRA("Open a document..."), fontText);
+    VirtWndText* openDoc = chrome->openDoc->text;
+    openDoc->SetText(_TRA("Open a document..."));
+    openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     openDoc->SetBounds(c.rcOpenDoc);
     l.openDoc = openDoc;
 
     HomePageAppendChromeStaticLinks(l);
-    HomePageAppendFileStaticLinks(l);
 }
 
 // after paint, keep lazy fileSize values in the cache for the next frame
@@ -1289,7 +1364,6 @@ static void LayoutHomePage(HomePageLayout& l) {
     } else {
         gFileHistory.GetRecentlyOpenedOrder(allFileStates);
     }
-    auto* hwnd = l.hwnd;
     auto* hdc = l.hdc;
     auto rc = l.rc;
     auto* win = l.win;
@@ -1359,7 +1433,10 @@ static void LayoutHomePage(HomePageLayout& l) {
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
+    HomeChromeWnd* chrome = EnsureHomeChrome(win);
+    VirtWndText* hdr = chrome->hdr;
+    hdr->SetText(txt);
+    hdr->font = hdrFont;
     l.freqRead = hdr;
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);
@@ -1381,15 +1458,15 @@ static void LayoutHomePage(HomePageLayout& l) {
                                  rcIconView.dy};
     }
     hdr->SetBounds(rcHdr);
-    win->staticLinks.Append(new StaticLink(l.rcIconListView, kLinkHomeListView, _TRA("Show as list")));
-    win->staticLinks.Append(new StaticLink(l.rcIconThumbnailView, kLinkHomeThumbnailView, _TRA("Show as thumbnails")));
 
     /* "Open a document" link next to header */
     Rect rcIconOpen(0, 0, 0, 0);
     ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
 
     txt = _TRA("Open a document...");
-    auto* openDoc = new VirtWndText(hwnd, txt, fontText);
+    VirtWndText* openDoc = chrome->openDoc->text;
+    openDoc->SetText(txt);
+    openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     txtSize = openDoc->GetIdealSize(true);
@@ -1410,11 +1487,6 @@ static void LayoutHomePage(HomePageLayout& l) {
     openDoc->SetBounds(rcOpenDoc);
 
     l.openDoc = openDoc;
-
-    rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
-    rcOpenDoc.Inflate(10, 10);
-    auto* sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
-    win->staticLinks.Append(sl);
 
     int headerBottomY = rcHdr.y + rcHdr.dy;
 
@@ -1553,21 +1625,6 @@ static void LayoutHomePage(HomePageLayout& l) {
             if (onScreen && fs->thumbnail) {
                 thumb.szThumb = Size(fs->thumbnail->width, fs->thumbnail->height);
             }
-            if (!onScreen) {
-                continue;
-            }
-            Str path = fs->filePath;
-            Rect slRect = rcRow.Intersect(l.rcThumbsArea);
-            if (!slRect.IsEmpty()) {
-                TempStr removeTarget = str::JoinTemp(kLinkHomeRemoveFilePrefix, path);
-                TempStr pinTarget = str::JoinTemp(kLinkHomePinFilePrefix, path);
-                Str pinTip = fs->isPinned ? _TRA("Unpin") : _TRA("Pin");
-                win->staticLinks.Append(new StaticLink(rcRemove.Intersect(l.rcThumbsArea), removeTarget,
-                                                       _TRA("Remove from Frequently Read")));
-                win->staticLinks.Append(new StaticLink(rcPin.Intersect(l.rcThumbsArea), pinTarget, pinTip));
-                thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
-                win->staticLinks.Append(thumb.sl);
-            }
         }
     } else {
         int thumbPrefetchY = kThumbnailDy + kThumbsSpaceBetweenY;
@@ -1606,15 +1663,6 @@ static void LayoutHomePage(HomePageLayout& l) {
                     rcText.x -= iconSpace;
                 }
                 thumb.rcText = rcText;
-                if (!onScreen) {
-                    continue;
-                }
-                Str path = fs->filePath;
-                Rect slRect = rcText.Union(rcPage).Intersect(l.rcThumbsArea);
-                if (!slRect.IsEmpty()) {
-                    thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
-                    win->staticLinks.Append(thumb.sl);
-                }
             }
         }
     }
@@ -1670,29 +1718,12 @@ static void GetFileStateIcon(FileState* fs) {
 
 // --- Close (✕) button for Frequently Read thumbnails (issue #283, #5745) ---
 //
-// Drawn directly onto the home-page canvas (over the top-right corner of the
-// thumbnail under the mouse) rather than as a separate top-level window. The
-// separate window could be left behind, drawing stray crosses over a document
-// (#5745). Styled like the tab close button (gray X on a white circle; red
-// circle + white X on hover).
-//
-// To keep updates cheap, the glyph is painted/erased in just its own rect: the
-// double-buffer (win->buffer) holds the page without the button, so erasing is
-// a small BitBlt of that area back to the window. A full home-page repaint
-// resets the button (it reappears on the next mouse move).
-
-struct HomeCloseBtn {
-    MainWindow* win = nullptr; // window the button currently belongs to
-    Str filePath;              // file removed when the button is clicked
-    Rect rc;                   // button rect (canvas client coords)
-    Rect thumbRc;              // thumbnail rect (canvas client coords)
-    bool isHover = false;
-    bool visible = false;
-};
-static HomeCloseBtn gHomeCloseBtn;
-// where the glyph is currently painted on the window, so we can erase exactly
-// that area (empty when nothing is painted)
-static Rect gHomeCloseBtnPaintedRc;
+// Drawn onto the home-page canvas (over the top-right corner of the thumbnail
+// under the mouse) rather than as a separate top-level window. The separate
+// window could be left behind, drawing stray crosses over a document (#5745).
+// Styled like the tab close button (gray X on a white circle; red circle +
+// white X on hover). It is a HomeCloseBtnWnd in the chrome tree, shown on the
+// entry the mouse is on.
 
 static void DrawHomeCloseGlyph(HDC hdc, const Rect& rc, bool isHover) {
     Gdiplus::Graphics g(hdc);
@@ -1714,143 +1745,6 @@ static void DrawHomeCloseGlyph(HDC hdc, const Rect& rc, bool isHover) {
     int pad = w / 3;
     g.DrawLine(&pen, rc.x + pad, rc.y + pad, rc.x + w - pad, rc.y + h - pad);
     g.DrawLine(&pen, rc.x + w - pad, rc.y + pad, rc.x + pad, rc.y + h - pad);
-}
-
-// erase whatever glyph is currently on the window by blitting the button-free
-// page back from the double-buffer
-static void EraseHomeCloseGlyph(MainWindow* win) {
-    Rect& pr = gHomeCloseBtnPaintedRc;
-    if (pr.IsEmpty()) {
-        return;
-    }
-    if (win && win->buffer) {
-        HDC hdc = GetDC(win->hwndCanvas);
-        HDC bufDC = win->buffer->GetDC();
-        if (hdc && bufDC) {
-            BitBlt(hdc, pr.x, pr.y, pr.dx, pr.dy, bufDC, pr.x, pr.y, SRCCOPY);
-        }
-        if (hdc) {
-            ReleaseDC(win->hwndCanvas, hdc);
-        }
-    } else {
-        // no buffer to restore from: fall back to invalidating the area
-        if (win) {
-            RECT r = ToRECT(pr);
-            HwndInvalidateRect(win->hwndCanvas, ToRect(r), false);
-        }
-    }
-    pr = {};
-}
-
-// re-paint the button: erase the previous glyph, then draw the current one
-static void RepaintHomeCloseBtn(MainWindow* win) {
-    EraseHomeCloseGlyph(win);
-    HomeCloseBtn& b = gHomeCloseBtn;
-    if (!b.visible || !win) {
-        return;
-    }
-    HDC hdc = GetDC(win->hwndCanvas);
-    if (hdc) {
-        DrawHomeCloseGlyph(hdc, b.rc, b.isHover);
-        ReleaseDC(win->hwndCanvas, hdc);
-        gHomeCloseBtnPaintedRc = b.rc;
-    }
-}
-
-// clear state without touching the window (used by a full home-page repaint,
-// which redraws everything anyway)
-static void ResetHomeCloseBtn() {
-    HomeCloseBtn& b = gHomeCloseBtn;
-    b.visible = false;
-    b.isHover = false;
-    str::Free(b.filePath);
-    b.filePath = {};
-    gHomeCloseBtnPaintedRc = {};
-}
-
-void HomePageHideCloseButton() {
-    HomeCloseBtn& b = gHomeCloseBtn;
-    if (!b.visible && gHomeCloseBtnPaintedRc.IsEmpty()) {
-        return;
-    }
-    MainWindow* win = b.win;
-    EraseHomeCloseGlyph(win);
-    b.visible = false;
-    b.isHover = false;
-    str::Free(b.filePath);
-    b.filePath = {};
-}
-
-// compute the button rect (canvas client coords) for a thumbnail link
-static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
-    int sz = DpiScale(win->hwndCanvas, 18);
-    int margin = DpiScale(win->hwndCanvas, 5);
-    int bx = IsUIRtl() ? (thumb.x + margin) : (thumb.x + thumb.dx - sz - margin);
-    int by = thumb.y + margin;
-    return Rect(bx, by, sz, sz);
-}
-
-// per-thumbnail ✕ close button (issue #283)
-void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
-    if (!win || !CanAccessDisk() || HomePageIsListView()) {
-        HomePageHideCloseButton();
-        return;
-    }
-    HomeCloseBtn& b = gHomeCloseBtn;
-    Point pt(x, y);
-
-    // already showing a button: update hover state as the mouse moves over /
-    // off the glyph, but keep it while the mouse stays on the same thumbnail
-    if (b.visible) {
-        bool overBtn = b.rc.Contains(pt);
-        if (overBtn != b.isHover) {
-            b.isHover = overBtn;
-            RepaintHomeCloseBtn(win);
-        }
-        if (b.thumbRc.Contains(pt)) {
-            return;
-        }
-    }
-
-    StaticLink* link = nullptr;
-    TempStr target = GetStaticLinkAtTemp(win->staticLinks, x, y, &link);
-    // a thumbnail link's target is an absolute file path; everything else (a
-    // "<...>" command, a "Cmd..." tip link, a URL) is not, so it gets no button
-    bool isThumb = len(target) > 0 && link && path::IsAbsolute(target);
-    if (!isThumb) {
-        HomePageHideCloseButton();
-        return;
-    }
-    if (b.visible && b.filePath && str::Eq(b.filePath, target)) {
-        return; // same thumbnail, nothing to do
-    }
-    b.win = win;
-    b.thumbRc = link->rect;
-    b.rc = HomeCloseBtnRectForThumb(win, link->rect);
-    str::ReplaceWithCopy(&b.filePath, target);
-    b.isHover = b.rc.Contains(pt);
-    b.visible = true;
-    RepaintHomeCloseBtn(win);
-}
-
-// called from a left-button click; if the click is on the close button, remove
-// the file and return true so the caller doesn't also open the thumbnail
-bool HomePageOnCloseButtonClick(MainWindow* win, int x, int y) {
-    HomeCloseBtn& b = gHomeCloseBtn;
-    if (!b.visible || !b.rc.Contains(Point(x, y))) {
-        return false;
-    }
-    TempStr path = str::DupTemp(b.filePath);
-    HomePageHideCloseButton();
-    if (win && len(path) > 0) {
-        ForgetFileFromFrequentlyRead(win, path);
-    }
-    return true;
-}
-
-void HomePageOnCanvasMouseLeave() {
-    // the button is part of the canvas now, so leaving the canvas always hides it
-    HomePageHideCloseButton();
 }
 
 static void DrawHomeViewButton(HDC hdc, HIMAGELIST himl, Rect r, TbIcon icon, bool selected) {
@@ -2052,6 +1946,457 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
     return finish(0);
 }
 
+//--- home page chrome VirtWnds
+
+void HomeViewIconWnd::Paint(VirtWndPaintCtx& ctx) {
+    bool selected = (listView == HomePageIsListView());
+    DrawHomeViewButton(ctx.hdc, himl, ctx.bounds, icon, selected);
+}
+
+bool HomeViewIconWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeViewIconWnd::OnMouseUp(VirtWndMouseEvent&) {
+    if (listView == HomePageIsListView()) {
+        return true;
+    }
+    SetHomePageListView(listView);
+    win->homePageScrollY = 0;
+    SaveSettings();
+    win->RedrawAll(true);
+    return true;
+}
+
+bool HomeViewIconWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr HomeViewIconWnd::GetTooltipTemp(Point) {
+    return str::DupTemp(tooltip);
+}
+
+void HomeOpenDocWnd::Paint(VirtWndPaintCtx& ctx) {
+    if (!himl) {
+        return;
+    }
+    int openIconIdx = 0;
+    ImageList_Draw(himl, openIconIdx, ctx.hdc, ctx.bounds.x + rcIconLocal.x, ctx.bounds.y + rcIconLocal.y, ILD_NORMAL);
+}
+
+bool HomeOpenDocWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeOpenDocWnd::OnMouseUp(VirtWndMouseEvent&) {
+    HwndSendCommand(win->hwndFrame, CmdOpenFile);
+    return true;
+}
+
+bool HomeOpenDocWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+void HomeHelpBtnWnd::Paint(VirtWndPaintCtx& ctx) {
+    DrawHomeHelpButton(ctx.hdc, ctx.bounds);
+}
+
+bool HomeHelpBtnWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeHelpBtnWnd::OnMouseUp(VirtWndMouseEvent&) {
+    HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
+    return true;
+}
+
+bool HomeHelpBtnWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr HomeHelpBtnWnd::GetTooltipTemp(Point) {
+    return str::DupTemp(_TRA("Keyboard Shortcuts"));
+}
+
+//--- file entries
+
+static Rect HomeEntryRect(const ThumbnailLayout& t);
+
+// the ✕ sits in the top-right corner of the thumbnail (top-left in RTL)
+static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
+    int sz = DpiScale(win->hwndCanvas, 18);
+    int margin = DpiScale(win->hwndCanvas, 5);
+    int bx = IsUIRtl() ? (thumb.x + margin) : (thumb.x + thumb.dx - sz - margin);
+    int by = thumb.y + margin;
+    return Rect(bx, by, sz, sz);
+}
+
+void HomeCloseBtnWnd::Paint(VirtWndPaintCtx& ctx) {
+    DrawHomeCloseGlyph(ctx.hdc, ctx.bounds, HasFlag(vwfHovered));
+}
+
+void HomeCloseBtnWnd::OnMouseEnter() {
+    Invalidate();
+}
+
+void HomeCloseBtnWnd::OnMouseLeave() {
+    Invalidate();
+}
+
+bool HomeCloseBtnWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeCloseBtnWnd::OnMouseUp(VirtWndMouseEvent&) {
+    auto* entry = (HomeEntryWnd*)parent;
+    TempStr path = str::DupTemp(entry->filePath);
+    if (len(path) > 0) {
+        ForgetFileFromFrequentlyRead(win, path);
+    }
+    return true;
+}
+
+bool HomeCloseBtnWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr HomeCloseBtnWnd::GetTooltipTemp(Point) {
+    return str::DupTemp(_TRA("Remove from Frequently Read"));
+}
+
+bool HomeListIconWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeListIconWnd::OnMouseUp(VirtWndMouseEvent&) {
+    auto* entry = (HomeEntryWnd*)parent;
+    TempStr path = str::DupTemp(entry->filePath);
+    if (len(path) == 0) {
+        return true;
+    }
+    if (!isPin) {
+        ForgetFileFromFrequentlyRead(win, path);
+        return true;
+    }
+    FileState* fs = gFileHistory.FindByPath(path);
+    if (fs) {
+        fs->isPinned = !fs->isPinned;
+        SaveSettings();
+        win->DeleteToolTip();
+        win->RedrawAll(true);
+    }
+    return true;
+}
+
+bool HomeListIconWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr HomeListIconWnd::GetTooltipTemp(Point) {
+    if (!isPin) {
+        return str::DupTemp(_TRA("Remove from Frequently Read"));
+    }
+    auto* entry = (HomeEntryWnd*)parent;
+    FileState* fs = gFileHistory.FindByPath(entry->filePath);
+    bool pinned = fs && fs->isPinned;
+    return str::DupTemp(pinned ? _TRA("Unpin") : _TRA("Pin"));
+}
+
+HomeEntryWnd::~HomeEntryWnd() {
+    str::Free(filePath);
+}
+
+bool HomeEntryWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeEntryWnd::OnMouseUp(VirtWndMouseEvent& ev) {
+    if (len(filePath) == 0) {
+        return true;
+    }
+    LoadArgs args(filePath, win);
+    // ctrl forces always opening
+    args.activateExisting = !ev.isCtrl;
+    args.activateExistingInWindow = true;
+    StartLoadDocument(&args);
+    return true;
+}
+
+bool HomeEntryWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+HomeEntryWnd* HomeEntriesWnd::EntryAt(int idx) {
+    return (HomeEntryWnd*)ChildAt(idx);
+}
+
+// the wnd the mouse is on may be one of an entry's buttons
+HomeEntryWnd* HomeEntriesWnd::EntryForWnd(VirtWnd* w) {
+    while (w && w != this) {
+        if (w->parent == this) {
+            return (HomeEntryWnd*)w;
+        }
+        w = w->parent;
+    }
+    return nullptr;
+}
+
+void HomeEntriesWnd::SetEntryCount(int n) {
+    while (ChildCount() > n) {
+        RemoveChild(children[ChildCount() - 1], true);
+    }
+    while (ChildCount() < n) {
+        auto* e = new HomeEntryWnd();
+        e->win = win;
+        e->idx = ChildCount();
+
+        e->closeBtn = new HomeCloseBtnWnd();
+        e->closeBtn->win = win;
+        e->closeBtn->visibility = Visibility::Collapse;
+        e->AddChild(e->closeBtn);
+
+        e->removeBtn = new HomeListIconWnd();
+        e->removeBtn->win = win;
+        e->removeBtn->visibility = Visibility::Collapse;
+        e->AddChild(e->removeBtn);
+
+        e->pinBtn = new HomeListIconWnd();
+        e->pinBtn->win = win;
+        e->pinBtn->isPin = true;
+        e->pinBtn->visibility = Visibility::Collapse;
+        e->AddChild(e->pinBtn);
+
+        AddChild(e);
+    }
+    if (activeIdx >= n) {
+        activeIdx = -1;
+    }
+}
+
+// the ✕ shows on the entry the mouse is on, and only in thumbnail view
+void HomeEntriesWnd::UpdateCloseBtnVisibility() {
+    bool canShow = CanAccessDisk() && !HomePageIsListView();
+    int n = ChildCount();
+    for (int i = 0; i < n; i++) {
+        HomeEntryWnd* e = EntryAt(i);
+        bool show = canShow && (i == activeIdx);
+        e->closeBtn->visibility = show ? Visibility::Visible : Visibility::Collapse;
+    }
+}
+
+void HomeEntriesWnd::SetActiveEntry(int idx) {
+    if (idx == activeIdx) {
+        return;
+    }
+    activeIdx = idx;
+    UpdateCloseBtnVisibility();
+    if (idx >= 0 && idx != win->homePageSelIdx) {
+        win->homePageSelIdx = idx;
+    }
+    HwndInvalidate(win->hwndCanvas);
+    if (idx >= 0) {
+        // the tip is anchored to the active entry, never to the cursor
+        HomePageShowSelectionTooltip(win);
+    }
+}
+
+// mouse events bubble up to us from the entry (or one of its buttons) that was
+// hit, so this is where the active entry is tracked
+bool HomeEntriesWnd::OnMouseMove(VirtWndMouseEvent& ev) {
+    // keyboard nav invalidates the canvas and Windows may re-send WM_MOUSEMOVE
+    // with the same coordinates: ignore those so the selection doesn't snap
+    // back under a stationary cursor
+    if (ev.ptWindow == lastHoverPt) {
+        return false;
+    }
+    lastHoverPt = ev.ptWindow;
+    HomeEntryWnd* e = EntryForWnd(ev.hit);
+    SetActiveEntry(e ? e->idx : -1);
+    return false;
+}
+
+// created once per window so that hover / pressed state survives the repaints
+// that scrolling and filtering cause
+static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
+    if (win->homeRoot) {
+        return (HomeChromeWnd*)win->homeRoot->child;
+    }
+    HWND hwnd = win->hwndCanvas;
+    win->homeRoot = new VirtWndRoot(hwnd);
+
+    auto* chrome = new HomeChromeWnd();
+    chrome->flags |= vwfNoHitTest;
+
+    // first, so that the rest of the chrome (notably the help button, which can
+    // overlap the thumbnails) hit-tests and paints on top of the entries
+    chrome->entries = new HomeEntriesWnd();
+    chrome->entries->win = win;
+    // hit-testable so that moving into the gaps between thumbnails still
+    // reaches OnMouseMove() and clears the active entry
+    chrome->entries->flags |= vwfClipChildren;
+    chrome->AddChild(chrome->entries);
+
+    chrome->thumbView = new HomeViewIconWnd();
+    chrome->thumbView->win = win;
+    chrome->thumbView->icon = TbIcon::HomeThumbnails;
+    chrome->thumbView->listView = false;
+    chrome->thumbView->tooltip = _TRA("Show as thumbnails");
+    chrome->AddChild(chrome->thumbView);
+
+    chrome->listView = new HomeViewIconWnd();
+    chrome->listView->win = win;
+    chrome->listView->icon = TbIcon::HomeList;
+    chrome->listView->listView = true;
+    chrome->listView->tooltip = _TRA("Show as list");
+    chrome->AddChild(chrome->listView);
+
+    chrome->hdr = new VirtWndText(hwnd, StrL(""), nullptr);
+    chrome->AddChild(chrome->hdr);
+
+    chrome->openDoc = new HomeOpenDocWnd();
+    chrome->openDoc->win = win;
+    chrome->openDoc->text = new VirtWndText(hwnd, StrL(""), nullptr);
+    chrome->openDoc->text->withUnderline = true;
+    chrome->openDoc->AddChild(chrome->openDoc->text);
+    chrome->AddChild(chrome->openDoc);
+
+    chrome->helpBtn = new HomeHelpBtnWnd();
+    chrome->helpBtn->win = win;
+    chrome->AddChild(chrome->helpBtn);
+
+    win->homeRoot->SetChild(chrome);
+    return chrome;
+}
+
+void HomePageDestroyChrome(MainWindow* win) {
+    delete win->homeRoot;
+    win->homeRoot = nullptr;
+}
+
+// gives the home page's virtual controls first shot at the canvas messages.
+// Returns true when the event was consumed and the caller should stop
+bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
+    VirtWndRoot* root = win->homeRoot;
+    if (!root || !root->child) {
+        return false;
+    }
+    // Hover feedback (highlight, ✕ button, tooltips) must stay quiet while
+    // another window is in front. The mouse still moves over the home page when
+    // e.g. the command palette or the theme window is up, and putting a tooltip
+    // over them steals activation: the palette closes on kill-focus and the
+    // theme window ends up behind the main window. Clicks are exempt: clicking
+    // a background window is meant to activate it.
+    bool isHoverMsg = (msg == WM_MOUSEMOVE) || (msg == WM_SETCURSOR);
+    if (isHoverMsg && GetForegroundWindow() != win->hwndFrame) {
+        return false;
+    }
+    if (msg != WM_SETCURSOR) {
+        bool didHandle = root->OnMessage(msg, wp, lp, res);
+        // moving outside the entries band (or off the canvas) drops the active
+        // entry, so the ✕ button goes away
+        if (msg == WM_MOUSEMOVE && !root->hovered) {
+            HomeEntriesWnd* entries = ((HomeChromeWnd*)root->child)->entries;
+            entries->SetActiveEntry(-1);
+        }
+        return didHandle;
+    }
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    Point ptLocal{0, 0};
+    VirtWnd* w = root->WndFromPoint(pt, &ptLocal);
+    if (!w || !w->OnSetCursor(ptLocal)) {
+        return false;
+    }
+    // no tooltip of its own means "leave the tooltip alone", not "hide it": a
+    // file entry's tip is put up by HomePageShowSelectionTooltip() and would
+    // otherwise be torn down by the WM_SETCURSOR that follows the hover
+    TempStr tip = w->GetTooltipTemp(ptLocal);
+    if (tip && *tip.s) {
+        Rect r = w->BoundsInWindow();
+        win->ShowToolTip(tip, r);
+    }
+    res = TRUE;
+    return true;
+}
+
+// feeds the geometry LayoutHomePage() computed into the persistent chrome tree
+static void HomePageSyncChrome(HomePageLayout& l) {
+    MainWindow* win = l.win;
+    HomeChromeWnd* chrome = EnsureHomeChrome(win);
+    VirtWndRoot* root = win->homeRoot;
+    // the chrome positions its children itself, so don't let the root re-layout
+    root->bounds = l.rc;
+    root->needsLayout = false;
+    chrome->SetBounds(l.rc);
+
+    // file entries: clipped to the thumbnails band, like the static links were
+    HomeEntriesWnd* entries = chrome->entries;
+    entries->SetBounds(l.rcThumbsArea);
+    int nEntries = len(l.thumbnails);
+    entries->SetEntryCount(nEntries);
+    bool listView = HomePageIsListView();
+    for (int i = 0; i < nEntries; i++) {
+        ThumbnailLayout& t = l.thumbnails[i];
+        HomeEntryWnd* e = entries->EntryAt(i);
+        e->idx = i;
+        Str path = t.fs ? t.fs->filePath : Str{};
+        if (!str::Eq(e->filePath, path)) {
+            str::ReplaceWithCopy(&e->filePath, path);
+        }
+        Rect rc = HomeEntryRect(t);
+        e->visibility = rc.IsEmpty() ? Visibility::Collapse : Visibility::Visible;
+        e->SetBounds(rc);
+        if (listView) {
+            e->removeBtn->visibility = Visibility::Visible;
+            e->removeBtn->SetBounds(t.rcListRemove);
+            e->pinBtn->visibility = Visibility::Visible;
+            e->pinBtn->SetBounds(t.rcListPin);
+        } else {
+            e->removeBtn->visibility = Visibility::Collapse;
+            e->pinBtn->visibility = Visibility::Collapse;
+            // relative to the on-screen part of the entry, so the ✕ stays
+            // visible on a thumbnail scrolled half-way out of the band
+            e->closeBtn->SetBounds(HomeCloseBtnRectForThumb(win, rc.Intersect(l.rcThumbsArea)));
+        }
+    }
+    entries->UpdateCloseBtnVisibility();
+
+    chrome->thumbView->himl = l.himlOpen;
+    chrome->thumbView->SetBounds(l.rcIconThumbnailView);
+    chrome->listView->himl = l.himlOpen;
+    chrome->listView->SetBounds(l.rcIconListView);
+
+    chrome->hdr->textColor = ThemeWindowTextColor();
+    // re-apply: the bounds were set before the parent was positioned
+    chrome->hdr->SetBounds(l.freqRead->lastBounds);
+
+    // one click target covering the icon and the link text
+    Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
+    rcOpen.Inflate(10, 10);
+    HomeOpenDocWnd* od = chrome->openDoc;
+    od->himl = l.himlOpen;
+    od->SetBounds(rcOpen);
+    od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
+    od->text->textColor = ThemeWindowLinkColor();
+    // re-apply now that the parent moved: bounds are relative to it
+    od->text->SetBounds(l.openDoc->lastBounds);
+
+    // "?" help button in the bottom-right corner, opening the keyboard
+    // shortcuts sheet; sits above the tip band when a tip is showing
+    {
+        int diam = DpiScale(l.hdc, 30);
+        int margin = DpiScale(l.hdc, 16);
+        int bottom = l.tip ? l.rcTip.y : l.rc.dy;
+        Rect btn{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
+        chrome->helpBtn->SetBounds(btn);
+    }
+}
+
 static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto* hdc = l.hdc;
@@ -2101,9 +2446,6 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     color = ThemeWindowTextColor();
     SetTextColor(hdc, color);
 
-    DrawHomeViewButton(hdc, l.himlOpen, l.rcIconThumbnailView, TbIcon::HomeThumbnails, !HomePageIsListView());
-    DrawHomeViewButton(hdc, l.himlOpen, l.rcIconListView, TbIcon::HomeList, HomePageIsListView());
-    l.freqRead->Paint(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     // clip thumbnails to the middle area
@@ -2189,13 +2531,6 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 
-    int x = l.rcIconOpen.x;
-    int y = l.rcIconOpen.y;
-    int openIconIdx = 0;
-    ImageList_Draw(l.himlOpen, openIconIdx, hdc, x, y, ILD_NORMAL);
-
-    l.openDoc->Paint(hdc);
-
     if (false) {
         Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
         auto* sl = new StaticLink(rcFreqRead, kLinkHideList);
@@ -2213,25 +2548,14 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol, tipBgCol);
     }
 
-    // "?" help button in the bottom-right corner, opening the keyboard
-    // shortcuts sheet; sits above the tip band when a tip is showing
-    {
-        int diam = DpiScale(hdc, 30);
-        int margin = DpiScale(hdc, 16);
-        int bottom = l.tip ? l.rcTip.y : l.rc.dy;
-        Rect btn{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
-        DrawHomeHelpButton(hdc, btn);
-        auto* sl = new StaticLink(btn, kLinkKeyboardHelp, _TRA("Keyboard Shortcuts"));
-        l.win->staticLinks.Append(sl);
-    }
+    // the chrome (header, view buttons, "Open a document...", help button)
+    // paints last: none of it overlaps the thumbnails, and the help button has
+    // to land on top of the tip band
+    win->homeRoot->Paint(hdc, l.rc);
 }
 
 void DrawHomePage(MainWindow* win, HDC hdc) {
     HWND hwnd = win->hwndFrame;
-    // any home-page repaint (scroll, resize, filter) invalidates thumbnail
-    // positions and rewrites the buffer, so drop the close button without
-    // touching the window; it reappears on the next hover
-    ResetHomeCloseBtn();
     DeleteVecMembers(win->staticLinks);
 
     HomePageLayout l;
@@ -2262,6 +2586,7 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     // Keep cue "Search N files …" in sync when history changes without recreating the edit.
     UpdateHomeSearchCueBanner(win);
 
+    HomePageSyncChrome(l);
     DrawHomePageLayout(l);
     SyncHomeLayoutCacheFileSizes(l);
 
@@ -2419,6 +2744,12 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
         }
         return;
     }
+    // never put a tip up from a window that isn't in front: track-mode tips are
+    // topmost popups and showing one steals activation, which pulls the frame
+    // over the command palette / Change Theme window
+    if (GetForegroundWindow() != win->hwndFrame) {
+        return;
+    }
     auto& c = gHomeLayoutCache;
     int idx = win->homePageSelIdx;
     if (!c.valid || idx < 0 || idx >= len(c.thumbs)) {
@@ -2491,52 +2822,41 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
     }
 }
 
-// Index of the file entry under (x,y), or -1. Uses layout-cache geometry so
-// it matches the keyboard selection outline.
-static int HomeEntryIndexAt(int x, int y) {
-    auto& c = gHomeLayoutCache;
-    if (!c.valid) {
-        return -1;
+// the entries wnd of the chrome tree, if the home page is showing
+static HomeEntriesWnd* HomeEntries(MainWindow* win) {
+    if (!win || !win->homeRoot || !win->homeRoot->child) {
+        return nullptr;
     }
-    Point pt(x, y);
-    int n = len(c.thumbs);
-    for (int i = 0; i < n; i++) {
-        if (HomeEntryRect(c.thumbs[i]).Contains(pt)) {
-            return i;
-        }
-    }
-    return -1;
+    return ((HomeChromeWnd*)win->homeRoot->child)->entries;
 }
 
-// Last mouse position that drove a selection change. Keyboard nav invalidates
-// the canvas and Windows may re-send WM_MOUSEMOVE / WM_SETCURSOR with the same
-// coordinates — ignore those so selection does not snap back under the cursor.
-static Point gHomeHoverLastPt{-1, -1};
+// mouse left the canvas (or the page scrolled): drop the active entry so the
+// close button goes away
+void HomePageClearActiveEntry(MainWindow* win) {
+    HomeEntriesWnd* entries = HomeEntries(win);
+    if (!entries) {
+        return;
+    }
+    if (win->homeRoot) {
+        win->homeRoot->ClearHover();
+    }
+    entries->SetActiveEntry(-1);
+}
 
-// mouse over a file entry: update homePageSelIdx and show tip at that entry
+// mouse over a file entry: update homePageSelIdx and show the tip at that entry
 // (not at the cursor). Returns true if (x,y) is over a file thumbnail/list row
 bool HomePageOnHover(MainWindow* win, int x, int y) {
-    if (!win) {
+    HomeEntriesWnd* entries = HomeEntries(win);
+    if (!entries) {
         return false;
     }
-    Point pt(x, y);
-    if (pt.x == gHomeHoverLastPt.x && pt.y == gHomeHoverLastPt.y) {
-        // no real mouse movement — leave selection alone
-        return HomeEntryIndexAt(x, y) >= 0;
-    }
-    gHomeHoverLastPt = pt;
-
-    HomeSyncLayoutCacheScroll(win);
-    int idx = HomeEntryIndexAt(x, y);
-    if (idx < 0) {
+    Point ptLocal{0, 0};
+    VirtWnd* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
+    HomeEntryWnd* e = entries->EntryForWnd(w);
+    if (!e) {
         return false;
     }
-    if (idx != win->homePageSelIdx) {
-        win->homePageSelIdx = idx;
-        HwndInvalidate(win->hwndCanvas);
-    }
-    // tip always anchored to the active entry, never the cursor
-    HomePageShowSelectionTooltip(win);
+    entries->SetActiveEntry(e->idx);
     return true;
 }
 

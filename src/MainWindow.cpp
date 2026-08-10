@@ -50,6 +50,7 @@ static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
 }
 #include "Theme.h"
 #include "Canvas.h"
+#include "HomePage.h"
 
 struct LinkHandler : ILinkHandler {
     MainWindow* win = nullptr;
@@ -125,6 +126,7 @@ MainWindow::~MainWindow() {
     str::Free(homeSearchQuery);
 
     UnsubclassToc(this);
+    HomePageDestroyChrome(this);
 
     OverlayScrollbarDestroy(overlayScrollV);
     OverlayScrollbarDestroy(overlayScrollH);
