@@ -22,6 +22,7 @@
 #include "Toolbar.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
+#include "HomePage.h"
 #include "AIChatCommon.h"
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
@@ -135,6 +136,7 @@ enum class ControlCmd : u16 {
     TestAIChat = 41,
     TestAIChatReplay = 42,
     TestMarkdownFollowLink = 43,
+    TestHomeListRows = 44,
 };
 
 enum class ControlArgType : u16 {
@@ -680,6 +682,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestHomeListRows: {
+            int exitCode = 0;
+            Str res = HomeListRowsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

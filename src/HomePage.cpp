@@ -2015,6 +2015,43 @@ static void DrawHomeHelpButton(HDC hdc, Rect r) {
     SetBkMode(hdc, oldBk);
 }
 
+// What the home page list drew for each row: the path, the size text as drawn,
+// and the size column's rect. Reads the layout cache, so it needs a paint to
+// have happened; NOTREADY until then. A test can't sample the size text from
+// the pixels instead: the column's position depends on the window width, the
+// DPI and the theme, so a fixed sample band lands on the path (identical for
+// two renders of the same file) on any other machine. Used by tests/issue-5870.ts.
+TempStr HomeListRowsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    auto& c = gHomeLayoutCache;
+    if (!c.valid) {
+        out.Append("NOTREADY no-layout\n");
+        return finish(2);
+    }
+    if (!c.listView) {
+        out.Append("ERROR not-list-view\n");
+        return finish(1);
+    }
+    out.Append(fmt("OK rows=%d\n", len(c.thumbs)));
+    for (int i = 0; i < len(c.thumbs); i++) {
+        ThumbnailLayout& t = c.thumbs[i];
+        Rect r = t.rcListSize;
+        Str path = t.fs ? t.fs->filePath : Str{};
+        // fileSize is fetched when a row is first drawn, so an off-screen row
+        // still reads kSizeNotFetched and its size text is empty
+        out.Append(fmt("row=%d size='%s' sizeRect=%d,%d,%d,%d path=%s\n", i, FileSizeForHomeListTemp(t.fileSize), r.x,
+                       r.y, r.dx, r.dy, path));
+    }
+    return finish(0);
+}
+
 static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto* hdc = l.hdc;

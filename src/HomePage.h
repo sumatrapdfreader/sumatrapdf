@@ -51,3 +51,5 @@ void HomePageUpdateCloseButton(MainWindow* win, int x, int y);
 void HomePageHideCloseButton();
 bool HomePageOnCloseButtonClick(MainWindow* win, int x, int y);
 void HomePageOnCanvasMouseLeave();
+
+TempStr HomeListRowsResultTemp(int* exitCodeOut);
