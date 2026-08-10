@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
@@ -1323,27 +1324,21 @@ void VirtWndIconButton::SetTooltip(Str s2) {
 }
 
 Size VirtWndIconButton::GetIdealSize() {
-    if (!himl) {
+    if (!pixmap) {
         return {0, 0};
     }
-    int dx = 0, dy = 0;
-    ImageList_GetIconSize(himl, &dx, &dy);
-    return {dx, dy};
+    return {pixmap->width, pixmap->height};
 }
 
 void VirtWndIconButton::Paint(VirtWndPaintCtx& ctx) {
-    if (!himl) {
+    if (!pixmap) {
         return;
     }
     Size s2 = GetIdealSize();
     Rect r = ctx.content;
-    int x = r.x + (r.dx - s2.dx) / 2;
-    int y = r.y + (r.dy - s2.dy) / 2;
-    uint style = ILD_NORMAL;
-    if (isSelected || HasFlag(vwfHovered)) {
-        style = ILD_NORMAL | ILD_FOCUS;
-    }
-    ImageList_Draw(himl, iconIdx, ctx.hdc, x, y, style);
+    int x = r.x + ((r.dx - s2.dx) / 2);
+    int y = r.y + ((r.dy - s2.dy) / 2);
+    BlitPixmapAlpha(pixmap, ctx.hdc, {x, y, s2.dx, s2.dy});
 }
 
 void VirtWndIconButton::OnMouseEnter() {
@@ -1410,21 +1405,25 @@ VirtWndImage::VirtWndImage() {
 VirtWndImage::~VirtWndImage() = default;
 
 Size VirtWndImage::GetIdealSize() {
-    return bmpSize;
+    if (!pixmap) {
+        return {0, 0};
+    }
+    return {pixmap->width, pixmap->height};
 }
 
 void VirtWndImage::Paint(VirtWndPaintCtx& ctx) {
-    if (!bmp) {
+    if (!pixmap) {
         return;
     }
+    Size sz2 = GetIdealSize();
     Rect r = ctx.content;
     if (fitToBounds) {
-        r = FitSizeInRect(bmpSize, r);
+        r = FitSizeInRect(sz2, r);
     } else {
-        r.dx = bmpSize.dx;
-        r.dy = bmpSize.dy;
+        r.dx = sz2.dx;
+        r.dy = sz2.dy;
     }
-    BlitHBITMAP(bmp, ctx.hdc, r);
+    BlitPixmapAlpha(pixmap, ctx.hdc, r);
 }
 
 //--- VirtWndFill
@@ -1478,6 +1477,86 @@ void VirtWndLine::Paint(VirtWndPaintCtx& ctx) {
         r.dy = thickness;
     }
     HdcFillRect(ctx.hdc, r, color);
+}
+
+//--- HIMAGELIST -> Pixmap cache
+
+struct IconPixmapCacheEntry {
+    int iconIdx;
+    Pixmap* pixmap; // owned
+};
+
+// The cache only ever holds icons of one image list: the app has a single
+// toolbar image list, and it is destroyed and rebuilt whole on a theme or DPI
+// change. Seeing a different HIMAGELIST (or icon size) therefore means the old
+// pixmaps are stale, so the cache is dropped rather than grown.
+static HIMAGELIST gIconCacheHiml = nullptr;
+static Size gIconCacheIconSize;
+static Vec<IconPixmapCacheEntry> gIconCache;
+
+void ClearVirtWndIconCache() {
+    for (auto& e : gIconCache) {
+        FreePixmap(e.pixmap);
+    }
+    gIconCache.Reset();
+    gIconCacheHiml = nullptr;
+    gIconCacheIconSize = {};
+}
+
+// draw the icon into a DIB section, so the pixels are premultiplied BGRA that
+// AlphaBlend can use directly. Going through an HICON (rather than
+// ImageList_Draw) is what preserves the alpha channel
+static Pixmap* RenderIconToPixmap(HIMAGELIST himl, int iconIdx, Size sz) {
+    Pixmap* px = AllocPixmapDIB(sz.dx, sz.dy);
+    if (!px) {
+        return nullptr;
+    }
+    memset(px->data, 0, (size_t)px->stride * (size_t)sz.dy);
+    px->premultiplied = true;
+    HICON icon = ImageList_GetIcon(himl, iconIdx, ILD_TRANSPARENT);
+    if (!icon) {
+        return px;
+    }
+    HDC screenDC = GetDC(nullptr);
+    HDC memDC = CreateCompatibleDC(screenDC);
+    ReleaseDC(nullptr, screenDC);
+    if (memDC) {
+        HGDIOBJ prev = SelectObject(memDC, px->hbmp);
+        DrawIconEx(memDC, 0, 0, icon, sz.dx, sz.dy, 0, nullptr, DI_NORMAL);
+        GdiFlush();
+        if (prev) {
+            SelectObject(memDC, prev);
+        }
+        DeleteDC(memDC);
+    }
+    DestroyIcon(icon);
+    return px;
+}
+
+Pixmap* VirtWndIconPixmap(HIMAGELIST himl, int iconIdx) {
+    if (!himl) {
+        return nullptr;
+    }
+    Size sz2;
+    ImageList_GetIconSize(himl, &sz2.dx, &sz2.dy);
+    if (sz2.IsEmpty()) {
+        return nullptr;
+    }
+    if (himl != gIconCacheHiml || sz2 != gIconCacheIconSize) {
+        ClearVirtWndIconCache();
+        gIconCacheHiml = himl;
+        gIconCacheIconSize = sz2;
+    }
+    for (auto& e : gIconCache) {
+        if (e.iconIdx == iconIdx) {
+            return e.pixmap;
+        }
+    }
+    Pixmap* px = RenderIconToPixmap(himl, iconIdx, sz2);
+    if (px) {
+        gIconCache.Append({iconIdx, px});
+    }
+    return px;
 }
 
 //--- VirtWndSpacer

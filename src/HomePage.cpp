@@ -903,8 +903,7 @@ HomePageLayout::~HomePageLayout() = default;
 
 struct HomeViewIconWnd : VirtWnd {
     MainWindow* win = nullptr;
-    HIMAGELIST himl = nullptr;
-    TbIcon icon = TbIcon::HomeList;
+    Pixmap* pixmap = nullptr; // not owned, from VirtWndIconPixmap()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
     Str tooltip;
@@ -918,7 +917,7 @@ struct HomeViewIconWnd : VirtWnd {
 
 struct HomeOpenDocWnd : VirtWnd {
     MainWindow* win = nullptr;
-    HIMAGELIST himl = nullptr;
+    Pixmap* pixmap = nullptr;    // not owned, from VirtWndIconPixmap()
     VirtWndText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
@@ -1789,7 +1788,7 @@ static void DrawHomeCloseGlyph(HDC hdc, const Rect& rc, bool isHover) {
     g.DrawLine(&pen, rc.x + w - pad, rc.y + pad, rc.x + pad, rc.y + h - pad);
 }
 
-static void DrawHomeViewButton(HDC hdc, HIMAGELIST himl, Rect r, TbIcon icon, bool selected) {
+static void DrawHomeViewButton(HDC hdc, Pixmap* icon, Rect r, bool selected) {
     if (selected) {
         HdcFillRect(hdc, r, ThemeControlBackgroundColor());
         HBRUSH br = CreateSolidBrush(AccentColor(ThemeControlBackgroundColor(), 40));
@@ -1797,7 +1796,9 @@ static void DrawHomeViewButton(HDC hdc, HIMAGELIST himl, Rect r, TbIcon icon, bo
         FrameRect(hdc, &rr, br);
         DeleteObject(br);
     }
-    ImageList_Draw(himl, (int)icon, hdc, r.x, r.y, ILD_NORMAL);
+    if (icon) {
+        BlitPixmapAlpha(icon, hdc, {r.x, r.y, icon->width, icon->height});
+    }
 }
 
 static Rect FitRectInRect(Size src, Rect dst) {
@@ -1992,7 +1993,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 
 void HomeViewIconWnd::Paint(VirtWndPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
-    DrawHomeViewButton(ctx.hdc, himl, ctx.bounds, icon, selected);
+    DrawHomeViewButton(ctx.hdc, pixmap, ctx.bounds, selected);
 }
 
 bool HomeViewIconWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -2020,11 +2021,11 @@ TempStr HomeViewIconWnd::GetTooltipTemp(Point) {
 }
 
 void HomeOpenDocWnd::Paint(VirtWndPaintCtx& ctx) {
-    if (!himl) {
+    if (!pixmap) {
         return;
     }
-    int openIconIdx = 0;
-    ImageList_Draw(himl, openIconIdx, ctx.hdc, ctx.bounds.x + rcIconLocal.x, ctx.bounds.y + rcIconLocal.y, ILD_NORMAL);
+    Rect r = {ctx.bounds.x + rcIconLocal.x, ctx.bounds.y + rcIconLocal.y, pixmap->width, pixmap->height};
+    BlitPixmapAlpha(pixmap, ctx.hdc, r);
 }
 
 bool HomeOpenDocWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -2367,14 +2368,12 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
 
     chrome->thumbView = new HomeViewIconWnd();
     chrome->thumbView->win = win;
-    chrome->thumbView->icon = TbIcon::HomeThumbnails;
     chrome->thumbView->listView = false;
     chrome->thumbView->tooltip = _TRA("Show as thumbnails");
     chrome->AddChild(chrome->thumbView);
 
     chrome->listView = new HomeViewIconWnd();
     chrome->listView->win = win;
-    chrome->listView->icon = TbIcon::HomeList;
     chrome->listView->listView = true;
     chrome->listView->tooltip = _TRA("Show as list");
     chrome->AddChild(chrome->listView);
@@ -2493,9 +2492,9 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     }
     entries->UpdateCloseBtnVisibility();
 
-    chrome->thumbView->himl = l.himlOpen;
+    chrome->thumbView->pixmap = VirtWndIconPixmap(l.himlOpen, (int)TbIcon::HomeThumbnails);
     chrome->thumbView->SetBounds(l.rcIconThumbnailView);
-    chrome->listView->himl = l.himlOpen;
+    chrome->listView->pixmap = VirtWndIconPixmap(l.himlOpen, (int)TbIcon::HomeList);
     chrome->listView->SetBounds(l.rcIconListView);
 
     chrome->hdr->textColor = ThemeWindowTextColor();
@@ -2506,7 +2505,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
     rcOpen.Inflate(10, 10);
     HomeOpenDocWnd* od = chrome->openDoc;
-    od->himl = l.himlOpen;
+    od->pixmap = VirtWndIconPixmap(l.himlOpen, (int)TbIcon::Open);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
     od->text->textColor = ThemeWindowLinkColor();

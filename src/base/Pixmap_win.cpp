@@ -182,6 +182,73 @@ bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {
     return BlitPixmapRegion(p, hdc, target, Rect(0, 0, p->width, p->height));
 }
 
+static inline u8 BlendOver(u8 src, u8 dst, u32 srcAlpha, bool premultiplied) {
+    u32 inv = 255 - srcAlpha;
+    u32 s = premultiplied ? src : (((u32)src * srcAlpha) + 127) / 255;
+    return (u8)std::min<u32>(255, s + ((((u32)dst * inv) + 127) / 255));
+}
+
+// Like BlitPixmap(), but honours the source alpha. BlitPixmap() is a straight
+// SRCCOPY, which paints the transparent parts of an icon black; anything drawn
+// over an arbitrary background (toolbar icons on the home page) needs this.
+//
+// The compositing is done by hand rather than with AlphaBlend() or GDI+:
+// msimg32 and GdiPlusUtil are linked into SumatraPDF.exe but not into the other
+// consumers of base (test_util, PdfFilter, ...). Reading the destination back
+// costs a BitBlt, which is nothing at icon sizes.
+//
+// Only 1:1 blits are composited; a scaling blit falls back to the opaque path.
+bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target) {
+    if (!p || !p->data || target.IsEmpty()) {
+        return false;
+    }
+    bool sameSize = (target.dx == p->width) && (target.dy == p->height);
+    if (p->format != PixmapFormat::BGRA8 || !sameSize) {
+        return BlitPixmap(p, hdc, target);
+    }
+    int dx = p->width;
+    int dy = p->height;
+    Pixmap* dst = AllocPixmapDIB(dx, dy);
+    if (!dst) {
+        return false;
+    }
+    bool ok = false;
+    HDC memDC = CreateCompatibleDC(hdc);
+    if (memDC) {
+        HGDIOBJ prev = SelectObject(memDC, dst->hbmp);
+        if (prev) {
+            // read the background, blend the source over it, put it back
+            BitBlt(memDC, 0, 0, dx, dy, hdc, target.x, target.y, SRCCOPY);
+            GdiFlush();
+            for (int y = 0; y < dy; y++) {
+                const u8* s = p->data + ((size_t)y * p->stride);
+                u8* d = dst->data + ((size_t)y * dst->stride);
+                for (int x = 0; x < dx; x++, s += 4, d += 4) {
+                    u32 a = s[3];
+                    if (a == 0) {
+                        continue;
+                    }
+                    if (a == 255) {
+                        d[0] = s[0];
+                        d[1] = s[1];
+                        d[2] = s[2];
+                        continue;
+                    }
+                    d[0] = BlendOver(s[0], d[0], a, p->premultiplied);
+                    d[1] = BlendOver(s[1], d[1], a, p->premultiplied);
+                    d[2] = BlendOver(s[2], d[2], a, p->premultiplied);
+                }
+            }
+            GdiFlush();
+            ok = BitBlt(hdc, target.x, target.y, dx, dy, memDC, 0, 0, SRCCOPY) != 0;
+            SelectObject(memDC, prev);
+        }
+        DeleteDC(memDC);
+    }
+    FreePixmap(dst);
+    return ok;
+}
+
 static bool SkipRecolorPixel(int x, int y, Vec<Rect>* skipRects) {
     if (skipRects) {
         for (Rect& r : *skipRects) {

@@ -56,6 +56,7 @@ struct RenderedBitmap;
 
 Pixmap* AllocPixmapDIB(int w, int h);
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
+bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source);
 Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);

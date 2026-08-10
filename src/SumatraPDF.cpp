@@ -29,6 +29,7 @@
 
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/VirtWnd.h"
 
 #include "SimpleBrowserWindow.h"
 
@@ -2882,6 +2883,9 @@ void DeleteMainWindow(MainWindow* win) {
 }
 
 void UpdateAfterThemeChange() {
+    // the toolbar image list is rebuilt below, so the icons cached from it are
+    // the wrong color now
+    ClearVirtWndIconCache();
     for (auto* win : gWindows) {
         DeleteObject(win->brControlBgColor);
         win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
@@ -13535,6 +13539,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
 void ShutdownCleanup() {
     TtsRelease();
     FreeHomePageTips();
+    ClearVirtWndIconCache();
     DisconnectLastDragDataObject();
 
     gAllowedFileTypes.Reset();

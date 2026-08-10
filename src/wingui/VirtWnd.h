@@ -12,6 +12,7 @@
 
 struct VirtWnd;
 struct VirtWndRoot;
+struct Pixmap;
 
 enum VirtWndFlags : u32 {
     vwfEnabled = 1 << 0,
@@ -337,8 +338,8 @@ struct VirtWndButton : VirtWndText {
 };
 
 struct VirtWndIconButton : VirtWnd {
-    HIMAGELIST himl = nullptr; // not owned
-    int iconIdx = 0;
+    // not owned; on Windows usually from VirtWndIconPixmap()
+    Pixmap* pixmap = nullptr;
     bool isSelected = false;
     Str tooltip; // owned
     VirtWndMouseHandler onClick;
@@ -359,9 +360,8 @@ struct VirtWndIconButton : VirtWnd {
 };
 
 struct VirtWndImage : VirtWnd {
-    HBITMAP bmp = nullptr; // not owned
-    Size bmpSize;
-    // scale the bitmap down to fit, keeping the aspect ratio
+    Pixmap* pixmap = nullptr; // not owned
+    // scale the image down to fit, keeping the aspect ratio
     bool fitToBounds = true;
 
     VirtWndImage();
@@ -404,3 +404,12 @@ struct VirtWndSpacer : VirtWnd {
 };
 
 Rect FitSizeInRect(Size src, Rect dst);
+
+//--- HIMAGELIST -> Pixmap (Windows)
+
+// The controls above take Pixmaps so they don't depend on a Windows imaging
+// API, but our icons live in HIMAGELISTs. Converting one on every paint would
+// be wasteful, so an icon is rendered into a DIB-backed Pixmap once and kept
+// until the image list it came from is replaced (theme or DPI change).
+Pixmap* VirtWndIconPixmap(HIMAGELIST, int iconIdx);
+void ClearVirtWndIconCache();
