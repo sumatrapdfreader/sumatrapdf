@@ -94,12 +94,36 @@ void ChangeThemeWnd::ScheduleDelete() {
     uitask::Post(fn, "SafeDeleteChangeThemeDialog");
 }
 
+// Put the dialog beside the main window instead of on top of it, so the page
+// stays visible while the theme is previewed live. Of the two sides, whichever
+// has room for it wins; if both do, the roomier one. When the main window fills
+// the monitor (maximized or full screen) neither side has room, so the dialog
+// goes against the right edge of the work area.
 static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     Rect rRelative = HwndWindowRect(hwndRelative);
     Rect r = HwndWindowRect(hwnd);
-    int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
-    int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
+    Rect work = GetWorkAreaRect(rRelative, hwndRelative);
+
+    int gap = DpiScale(hwnd, 8);
+    int spaceLeft = rRelative.x - work.x;
+    int spaceRight = work.Right() - rRelative.Right();
+    bool fitsLeft = spaceLeft >= r.dx + gap;
+    bool fitsRight = spaceRight >= r.dx + gap;
+
+    int x;
+    if (fitsRight && (!fitsLeft || spaceRight >= spaceLeft)) {
+        x = rRelative.Right() + gap;
+    } else if (fitsLeft) {
+        x = rRelative.x - gap - r.dx;
+    } else {
+        x = work.Right() - r.dx;
+    }
+    // vertically centered on the main window
+    int y = rRelative.y + ((rRelative.dy - r.dy) / 2);
+
     r = {x, y, r.dx, r.dy};
+    // last word on staying fully on screen, e.g. a main window taller than the
+    // work area, or dragged partly off it
     Rect r2 = ShiftRectToWorkArea(r, hwndRelative, true);
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
