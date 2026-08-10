@@ -184,9 +184,6 @@ constexpr int kInnerPadding = 8;
 static const Str kSumatraTxtFont = StrL("Arial Black");
 constexpr int kSumatraTxtFontSize = 24;
 
-static const Str kVersionTxtFont = StrL("Arial Black");
-constexpr int kVersionTxtFontSize = 12;
-
 #define LAYOUT_LTR 0
 
 static ATOM gAtomAbout;
@@ -203,6 +200,9 @@ struct AboutRow {
 };
 
 static AboutRow gAboutRows[] = {
+    // a null rightTxt means "the app version", filled in by Sync() because it
+    // isn't known until runtime (32/64-bit, debug)
+    {"version", nullptr, nullptr},
     {"build", "Built: " __DATE__ " " __TIME__, nullptr},
     {"website", "SumatraPDF website", kWebsiteURL},
     {"manual", "SumatraPDF manual", kManualURL},
@@ -227,16 +227,20 @@ static AboutRow gAboutRows[] = {
 // the hit-testing, the hand cursor and the tooltip), the rest plain VirtWndText.
 static Kind kindAboutWnd = "aboutWnd";
 
+struct SumatraLogo;
+
 struct AboutWnd : VirtWnd {
     // the two text columns; a container of its own so that rebuilding the rows
     // can't take the sibling showFreqRead link with it
     VirtWndTable* table = nullptr;
     // "Show frequently read", bottom right of the About page (not the window)
     VirtWndLink* showFreqRead = nullptr;
+    // the colored app name on top of the box
+    SumatraLogo* logo = nullptr;
 
     // geometry, computed by UpdateLayout()
     Rect aboutRect;  // the framed box
-    Size headerSize; // the "SumatraPDF <version>" band on top of it
+    Size headerSize; // the "SumatraPDF" band on top of it
     int dividerX = 0;
 
     AboutWnd();
@@ -277,58 +281,45 @@ constexpr COLORREF kCol3 = RGB(93, 160, 40);
 constexpr COLORREF kCol4 = RGB(69, 132, 190);
 constexpr COLORREF kCol5 = RGB(112, 115, 207);
 
-static void DrawSumatraVersion(HDC hdc, Rect rect) {
-    uint fmt = DT_LEFT | DT_NOCLIP;
-    HFONT fontSumatraTxt = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
-    HFONT fontVersionTxt = HdcCreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
+static Kind kindSumatraLogo = "sumatraLogo";
 
-    SetBkMode(hdc, TRANSPARENT);
+// the app name centered in its bounds, each letter in a different color (so it
+// can't be a VirtWndText). The version isn't part of it: it is the first row of
+// the About table
+struct SumatraLogo : VirtWnd {
+    PlatformFont* font = nullptr; // not owned
 
-    Str txt = kAppName;
-    Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
-    Rect mainRect(rect.x + ((rect.dx - txtSize.dx) / 2), rect.y + ((rect.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
+    SumatraLogo();
+    Size GetIdealSize() override;
+    void Paint(VirtWndPaintCtx&) override;
+};
 
-    // draw SumatraPDF in colorful way
-    Point pt = mainRect.TL();
-    // colorful version
-    static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
-    char buf[2] = {};
-    for (int i = 0; i < len(kAppName); i++) {
-        SetTextColor(hdc, cols[i % dimofi(cols)]);
-        buf[0] = kAppName[i];
-        HdcDrawText(hdc, buf, pt, fmt, fontSumatraTxt);
-        txtSize = HdcMeasureText(hdc, buf, fmt, fontSumatraTxt);
-        pt.x += txtSize.dx;
-    }
-
-    SetTextColor(hdc, ThemeWindowTextColor());
-    int x = mainRect.x + mainRect.dx + DpiScale(hdc, kInnerPadding);
-    int y = mainRect.y;
-
-    TempStr ver = GetAppVersionTemp();
-    Point p = {x, y};
-    HdcDrawText(hdc, ver, p, fmt, fontVersionTxt);
-    p.y += DpiScale(hdc, 13);
-    if (gIsPreReleaseBuild) {
-        HdcDrawText(hdc, "Pre-release", p, fmt);
-    }
+SumatraLogo::SumatraLogo() {
+    kind = kindSumatraLogo;
+    flags |= vwfNoHitTest;
 }
 
-static Size CalcSumatraVersionSize(HDC hdc) {
-    HFONT fontSumatraTxt = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
-    HFONT fontVersionTxt = HdcCreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
-
-    /* calculate minimal top box size */
-    Size sz = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
-    sz.dy = sz.dy + DpiScale(hdc, kAboutBoxMarginDy * 2);
-
-    /* consider version and version-sub strings */
-    TempStr ver = GetAppVersionTemp();
-    Size txtSize = HdcMeasureText(hdc, ver, fontVersionTxt);
-    int minWidth = txtSize.dx + DpiScale(hdc, 8);
-    int dx = std::max(txtSize.dx, minWidth);
-    sz.dx += 2 * (dx + DpiScale(hdc, kInnerPadding));
+Size SumatraLogo::GetIdealSize() {
+    Size sz = PlatformFontMeasureText(font, kAppName);
+    HWND hwnd = GetHwnd();
+    sz.dy += DpiScale(hwnd, kAboutBoxMarginDy * 2);
+    sz.dx += 2 * DpiScale(hwnd, kInnerPadding);
     return sz;
+}
+
+void SumatraLogo::Paint(VirtWndPaintCtx& ctx) {
+    static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
+    Size txtSize = PlatformFontMeasureText(font, kAppName);
+    Rect r = ctx.bounds;
+    Point pt{r.x + ((r.dx - txtSize.dx) / 2), r.y + ((r.dy - txtSize.dy) / 2)};
+    char buf[2] = {};
+    for (int i = 0; i < len(kAppName); i++) {
+        buf[0] = kAppName[i];
+        Str letter{buf, 1};
+        Size sz = PlatformFontMeasureText(font, letter);
+        GfxDrawText(ctx.gfx, letter, {pt.x, pt.y, sz.dx, sz.dy}, 0, font, cols[i % dimofi(cols)]);
+        pt.x += sz.dx;
+    }
 }
 
 static TempStr TrimGitTemp(Str s) {
@@ -371,6 +362,8 @@ AboutWnd::AboutWnd() {
     flags |= vwfNoHitTest;
     table = new VirtWndTable();
     AddChild(table);
+    logo = new SumatraLogo();
+    AddChild(logo);
 }
 
 VirtWndText* AboutWnd::LeftAt(int i) {
@@ -413,6 +406,8 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
         }
     }
 
+    logo->font = GetPlatformFont(HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
+
     HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
     HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
     COLORREF colText = ThemeWindowTextColor();
@@ -431,14 +426,14 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
         // without disk access the url can't be opened, so it isn't a link
         right->withUnderline = isLink;
         right->SetFlag(vwfNoHitTest, !isLink);
-        right->SetText(TrimGitTemp(el->rightTxt));
+        right->SetText(el->rightTxt ? TrimGitTemp(el->rightTxt) : Str(GetAppVersionTemp()));
     }
 }
 
 // the About box is the title band above the two-column table. This sizes it from
 // the table, centers it in clientRc and positions the table inside it
 void AboutWnd::UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc) {
-    headerSize = CalcSumatraVersionSize(hdc);
+    headerSize = logo->GetIdealSize();
 
     int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
     int marginDx = DpiScale(hwnd, kAboutMarginDx);
@@ -456,6 +451,8 @@ void AboutWnd::UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc) {
     r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
     r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
     aboutRect = r;
+
+    logo->SetBounds({r.x + ((r.dx - headerSize.dx) / 2), r.y, headerSize.dx, headerSize.dy});
 
     int x = r.x + ABOUT_LINE_OUTER_SIZE + marginDx;
     int y = r.y + headerSize.dy + 4;
@@ -508,9 +505,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, VirtWndRoot* root) {
     HdcDrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
     HdcDrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
-
-    titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
-    DrawSumatraVersion(hdc, titleRect);
 
     /* render attribution box */
     col = ThemeWindowTextColor();
@@ -828,8 +822,6 @@ struct HomePageLayout {
     Rect rc;
     MainWindow* win = nullptr;
 
-    Rect rcAppWithVer; // SumatraPDF colorful text + version
-    Rect rcLine;       // line under bApp
     Rect rcIconOpen;
     Rect rcIconListView;
     Rect rcIconThumbnailView;
@@ -1145,8 +1137,6 @@ struct HomePageLayoutCache {
     Rect rcIconListView;
     Rect rcIconThumbnailView;
     Rect rcTip;
-    Rect rcAppWithVer;
-    Rect rcLine;
     Rect rcFreqRead;
     Rect rcOpenDoc;
     int totalContentDy = 0;
@@ -1290,8 +1280,6 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.rcIconListView = l.rcIconListView;
     c.rcIconThumbnailView = l.rcIconThumbnailView;
     c.rcTip = l.rcTip;
-    c.rcAppWithVer = l.rcAppWithVer;
-    c.rcLine = l.rcLine;
     c.rcFreqRead = l.freqRead ? l.freqRead->lastBounds : Rect{};
     c.rcOpenDoc = l.openDoc ? l.openDoc->lastBounds : Rect{};
     c.totalContentDy = l.totalContentDy;
@@ -1329,8 +1317,6 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.rcIconListView = c.rcIconListView;
     l.rcIconThumbnailView = c.rcIconThumbnailView;
     l.rcTip = c.rcTip;
-    l.rcAppWithVer = c.rcAppWithVer;
-    l.rcLine = c.rcLine;
     l.totalContentDy = c.totalContentDy;
     l.thumbsVisibleDy = c.thumbsVisibleDy;
     l.tip = c.tip;
@@ -1421,16 +1407,6 @@ static void LayoutHomePage(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
     HFONT hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
-
-    Size sz = CalcSumatraVersionSize(hdc);
-    {
-        Rect& r = l.rcAppWithVer;
-        r.x = rc.dx - sz.dx - 3;
-        r.y = 0;
-        r.SetSize(sz);
-    }
-
-    l.rcLine = {0, sz.dy, rc.dx, 0};
 
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
@@ -2515,16 +2491,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         DeleteObject(brBorder);
     }
 
-    if (false) {
-        const Rect& r = l.rcAppWithVer;
-        DrawSumatraVersion(hdc, r);
-    }
-
     auto color = ThemeWindowTextColor();
-    if (false) {
-        ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
-        HdcDrawLine(hdc, l.rcLine);
-    }
     HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
