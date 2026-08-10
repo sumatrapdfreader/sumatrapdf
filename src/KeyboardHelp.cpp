@@ -133,8 +133,6 @@ struct KbSectionTitle : VirtWndText {
     ~KbSectionTitle() override = default;
 
     Size GetIdealSize() override;
-    Size Layout(Constraints bc) override;
-    int MinIntrinsicHeight(int width) override;
     void Paint(VirtWndPaintCtx&) override;
 };
 
@@ -361,16 +359,6 @@ Size KbSectionTitle::GetIdealSize() {
     Size sz2 = VirtWndText::GetIdealSize();
     sz2.dy += topGap;
     return sz2;
-}
-
-// VirtWndText::Layout() returns the measured text size straight from its cache,
-// so the extra height has to be added here too
-Size KbSectionTitle::Layout(Constraints bc) {
-    return bc.Constrain(GetIdealSize());
-}
-
-int KbSectionTitle::MinIntrinsicHeight(int width) {
-    return VirtWndText::MinIntrinsicHeight(width) + topGap;
 }
 
 void KbSectionTitle::Paint(VirtWndPaintCtx& ctx) {

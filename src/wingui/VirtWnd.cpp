@@ -1435,19 +1435,19 @@ void VirtWndText::SetText(Str str) {
     sz = {0, 0};
 }
 
+// all three go through the virtual GetIdealSize(), so a subclass that adds to
+// the text's size (a button's textPadding, a section header's gap) is measured
+// with it rather than as bare text
 Size VirtWndText::Layout(const Constraints bc) {
-    GetIdealSize();
-    return bc.Constrain({sz.dx, sz.dy});
+    return bc.Constrain(GetIdealSize());
 }
 
 int VirtWndText::MinIntrinsicHeight(int) {
-    GetIdealSize(true);
-    return sz.dy;
+    return GetIdealSize().dy;
 }
 
 int VirtWndText::MinIntrinsicWidth(int) {
-    GetIdealSize(true);
-    return sz.dx;
+    return GetIdealSize().dx;
 }
 
 Size VirtWndText::MinIntrinsicSize(int width, int height) {
@@ -1581,7 +1581,7 @@ VirtWndButton::VirtWndButton(Str str, PlatformFont* f) : VirtWndText(str, f) {
 VirtWndButton::~VirtWndButton() = default;
 
 Size VirtWndButton::GetIdealSize() {
-    Size s2 = VirtWndText::GetIdealSize(true);
+    Size s2 = VirtWndText::GetIdealSize();
     return {s2.dx + textPadding.left + textPadding.right, s2.dy + textPadding.top + textPadding.bottom};
 }
 
