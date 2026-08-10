@@ -65,6 +65,28 @@ static Str MarkdownBrowserNavigationUrl(Str url) {
     return url;
 }
 
+// Extensions the embedded browser can display on its own: the pages we render
+// plus the web resources WebView2 renders natively. An extension-less link is a
+// link to another page (VirtualUrlToFileTemp() resolves the name to a .md file).
+static bool IsBrowserViewableExt(Str urlOrPath) {
+    static SeqStrings exts =
+        ".md\0.markdown\0.html\0.htm\0.xhtml\0.txt\0.css\0.js\0.json\0"
+        ".svg\0.png\0.apng\0.jpg\0.jpeg\0.gif\0.bmp\0.webp\0.avif\0.ico\0";
+    TempStr ext = path::GetExtTemp(urlOrPath);
+    return !ext || SeqStrIndexIS(exts, ext) >= 0;
+}
+
+// "...#page=3" -> "page=3", url-decoded
+static TempStr UrlFragmentTemp(Str url) {
+    Str frag = str::SliceFromChar(url, '#');
+    if (len(frag) < 2) {
+        return {};
+    }
+    TempStr res = str::DupTemp(Str(frag.s + 1, frag.len - 1));
+    url::DecodeInPlace(res);
+    return res;
+}
+
 static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
     TempStr normFile = path::NormalizeTemp(filePath);
     TempStr normBase = path::NormalizeTemp(baseDir);
@@ -108,6 +130,20 @@ struct MarkdownTocBuildTask {
     ~MarkdownTocBuildTask() {
         str::Free(baseDir);
         delete tocTree;
+    }
+};
+
+// Opens the document a link points at once we're out of the WebView2 callback
+// (see MaybeLaunchLinkedDoc). `model` is nulled when the model is destroyed, so
+// a document closed before the task runs just drops the request.
+struct MarkdownLaunchTask {
+    MarkdownModel* model = nullptr;
+    Str path; // owned
+    Str dest; // owned
+
+    ~MarkdownLaunchTask() {
+        str::Free(path);
+        str::Free(dest);
     }
 };
 
@@ -162,6 +198,11 @@ MarkdownModel::~MarkdownModel() {
         ScopedMutex scope(&tocBuildTask->lock);
         tocBuildTask->model = nullptr;
         tocBuildTask = nullptr;
+    }
+    if (launchTask) {
+        // a queued open has nobody to ask about the document anymore
+        launchTask->model = nullptr;
+        launchTask = nullptr;
     }
     docAccess.Lock();
     delete docView;
@@ -378,6 +419,73 @@ LRESULT MarkdownModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
     return res;
 }
 
+// The path a link points at when it's a file the browser view can't show itself
+// (a .pdf, .epub, an archive, ...), or {} when the link stays in the view.
+// Unlike VirtualUrlToFileTemp() this doesn't fall back to page lookups, so a
+// link to a file that doesn't exist still resolves (and reports an error).
+TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
+    if (!url || IsMarkdownExternalUrl(url)) {
+        return {};
+    }
+    // WebView2 reports an in-document url with the virtual host already stripped
+    // ("sub/doc.pdf"), a TOC destination carries it; normalize to have it
+    TempStr urlPath = NormalizeMarkdownUrlTemp(url);
+    if (!urlPath || !str::TrimPrefix(urlPath, kMdVirtualHost) || IsBrowserViewableExt(urlPath)) {
+        return {};
+    }
+    TempStr rel = str::ReplaceTemp(urlPath, StrL("/"), StrL("\\"));
+    return path::NormalizeTemp(path::JoinTemp(baseDir, rel));
+}
+
+// Runs on the UI thread, from the message loop.
+static void MarkdownLaunchDoc(MarkdownLaunchTask* task) {
+    AutoDelete<MarkdownLaunchTask> delTask(task);
+    MarkdownModel* mm = task->model;
+    if (!mm) {
+        return;
+    }
+    mm->launchTask = nullptr;
+    // a model that no longer belongs to a tab is on its way out and its callback
+    // (owned by the window) may be gone already
+    if (!FindTabByController(mm) || !mm->cb) {
+        return;
+    }
+    // a fragment is the destination to scroll to in the opened document, the
+    // same way LinkHandler::LaunchURL() treats one on a file:// url
+    auto* dest = new PageDestinationFile(task->path, task->dest);
+    mm->cb->GotoLink(dest);
+    delete dest;
+}
+
+// A relative link can point at a document rather than at a page of this one, e.g.
+// [the manual](./manual.pdf). Let the app open it (in a tab for the formats we
+// support, in the shell otherwise) instead of navigating the document webview to
+// it, which would render the raw bytes as HTML (discussion #5924).
+//
+// Deferred to a uitask: opening the document selects a new tab, which tears this
+// model's webview down, and we may be called from inside one of its callbacks.
+bool MarkdownModel::MaybeLaunchLinkedDoc(Str url) {
+    if (!cb) {
+        return false;
+    }
+    TempStr filePath = LinkedDocPathTemp(url);
+    if (!filePath) {
+        return false;
+    }
+    if (launchTask) {
+        // an open is already queued (link clicked twice): the first one wins
+        return true;
+    }
+    auto* task = new MarkdownLaunchTask;
+    task->model = this;
+    task->path = str::Dup(filePath);
+    task->dest = str::Dup(UrlFragmentTemp(url));
+    launchTask = task;
+    auto fn = MkFunc0(MarkdownLaunchDoc, task);
+    uitask::Post(fn, "MarkdownLaunchDoc");
+    return true;
+}
+
 bool MarkdownModel::DisplayPage(Str pageUrl) {
     if (!pageUrl) {
         return false;
@@ -436,6 +544,9 @@ void MarkdownModel::ScrollTo(int pageNo, RectF rect, float zoom) {
 
 bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
     Str url = PageDestGetName(link);
+    if (MaybeLaunchLinkedDoc(url)) {
+        return true;
+    }
     if (DisplayPage(url)) {
         return true;
     }
@@ -643,6 +754,10 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
+        return false;
+    }
+    // a link to a document (.pdf, .epub, ...) opens in the app, not in the view
+    if (MaybeLaunchLinkedDoc(url)) {
         return false;
     }
     // new-window request for an in-document URL: navigate in place

@@ -134,6 +134,7 @@ enum class ControlCmd : u16 {
     TestSelectTextKeyboard = 40,
     TestAIChat = 41,
     TestAIChatReplay = 42,
+    TestMarkdownFollowLink = 43,
 };
 
 enum class ControlArgType : u16 {
@@ -666,6 +667,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownTocNavigateResultTemp(destNo, minScrollY, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMarkdownFollowLink: {
+            Str href = StringArg(req, 0);
+            i32 follow = 0;
+            if (!IntArg(req, 1, follow)) {
+                AppendError(req, "TestMarkdownFollowLink expects string href, int follow");
+                break;
+            }
+            int exitCode = 0;
+            Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -996,6 +996,60 @@ TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeO
     return finish(fmt("OK scrollX=%d scrollY=%d", pos.x, pos.y), 0);
 }
 
+// Click a link in the currently shown markdown/html document: `href` is the url
+// WebView2 would report for it (relative to the document, or the full virtual
+// host url), and this goes through the same MarkdownModel::OnBeforeNavigate()
+// the browser calls. Reports whether the view would navigate to it, then lists
+// the tabs of every window so a test can see what got opened where.
+// With follow == false nothing is clicked and only the tabs are listed: opening
+// a linked document runs from a uitask, so its result has to be read back in a
+// later request, by which time the current tab may no longer be the markdown one.
+// Used by tests/issue-5924.ts.
+TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+
+    int navigate = -1;
+    if (follow) {
+        MarkdownModel* mm = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+        if (!mm) {
+            return finish(StrL("NOTREADY no-markdown"), 2);
+        }
+        if (!href) {
+            return finish(StrL("ERROR no-href"), 1);
+        }
+        navigate = mm->OnBeforeNavigate(href, false) ? 1 : 0;
+    }
+    out.Append(fmt("OK navigate=%d\n", navigate));
+    for (int i = 0; i < len(gWindows); i++) {
+        MainWindow* w = gWindows[i];
+        for (WindowTab* tab : w->Tabs()) {
+            int isCurrent = tab == w->CurrentTab() ? 1 : 0;
+            int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
+            out.Append(fmt("tab win=%d current=%d pageNo=%d file=%s\n", i, isCurrent, pageNo, tab->filePath));
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Follow the first internal link on page 1 after pinning the viewport to the
 // left; used by tests/issue-5064.ts (issue #5064).
 TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
