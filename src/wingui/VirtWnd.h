@@ -274,6 +274,8 @@ struct VirtWndText : VirtWnd {
     bool withUnderline = false;
     bool isRtl = false;
     bool ellipsis = false;
+    // nudges the underline off the text baseline box
+    int underlineOffsetY = 0;
     VirtWndTextAlign align = VirtWndTextAlign::Left;
     COLORREF textColor = kColorUnset;
 

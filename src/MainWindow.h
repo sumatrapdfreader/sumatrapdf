@@ -143,16 +143,6 @@ enum class TouchSelHandle {
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
-struct StaticLink {
-    Rect rect;
-    Str target;
-    Str tooltip;
-
-    explicit StaticLink(Rect rect, Str target, Str infotip = nullptr);
-    StaticLink() = default;
-    ~StaticLink();
-};
-
 /* Describes information related to one window with (optional) a document
    on the screen */
 struct MainWindow {
@@ -364,9 +354,6 @@ struct MainWindow {
     SelectionDragEdge selectionDragEdge = SelectionDragEdge::None;
     // screen rect when the move/resize started (normalized)
     Rect selectionEditOrig;
-
-    // a list of static links (mainly used for About and Frequently Read pages)
-    Vec<StaticLink*> staticLinks;
 
     // virtual controls of the home page (header, view buttons, links, ...)
     struct VirtWndRoot* homeRoot = nullptr;

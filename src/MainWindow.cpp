@@ -79,17 +79,6 @@ LinkHandler::~LinkHandler() {
 
 Vec<MainWindow*> gWindows;
 
-StaticLink::StaticLink(Rect rect, Str target, Str infotip) {
-    this->rect = rect;
-    this->target = str::Dup(target);
-    this->tooltip = str::Dup(infotip);
-}
-
-StaticLink::~StaticLink() {
-    str::Free(target);
-    str::Free(tooltip);
-}
-
 MainWindow::MainWindow(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
@@ -176,7 +165,6 @@ MainWindow::~MainWindow() {
     delete linkHandler;
     delete buffer;
     delete tabSelectionHistory;
-    DeleteVecMembers(staticLinks);
     ShutdownAIChatForMainWindow(this);
     auto tabs = Tabs();
     DeleteVecMembers(tabs);

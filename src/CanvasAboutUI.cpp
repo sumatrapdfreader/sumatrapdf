@@ -36,9 +36,8 @@ static void OnPaintAbout(MainWindow* win) {
         DrawHomePage(win, bufDC);
     } else {
         HomePageDestroySearch(win);
-        // the about page has no virtual controls; leaving the home page's
-        // around would keep them hit-testable over it
-        HomePageDestroyChrome(win);
+        // DrawAboutPage swaps the canvas root's child from the home page's
+        // chrome to the About page's controls
         DrawAboutPage(win, bufDC);
     }
     win->buffer->Flush(hdc);
@@ -50,77 +49,11 @@ static void OnPaintAbout(MainWindow* win) {
     }
 }
 
-static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
-    // lf("Left button clicked on %d %d", x, y);
-
-    // remember a link under so that on mouse up we only activate
-    // link if mouse up is on the same link as mouse down
-    str::ReplaceWithCopy(&win->urlOnLastButtonDown, GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr));
-}
-
-static bool IsLink(Str url) {
-    if (str::StartsWithI(url, StrL("http:"))) {
-        return true;
-    }
-    if (str::StartsWithI(url, StrL("https:"))) {
-        return true;
-    }
-    if (str::StartsWithI(url, StrL("mailto:"))) {
-        return true;
-    }
-    return false;
-}
-
 static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
     TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
     tme.dwFlags = TME_LEAVE;
     tme.hwndTrack = hwnd;
     TrackMouseEvent(&tme);
-}
-
-static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
-    TempStr url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
-    bool clickedURL = url && str::Eq(url, win->urlOnLastButtonDown);
-    str::FreePtr(&win->urlOnLastButtonDown);
-    if (!clickedURL) {
-        return;
-    }
-    if (str::Eq(url, kLinkHideList)) {
-        gGlobalPrefs->showStartPage = false;
-        win->RedrawAll(true);
-    } else if (str::Eq(url, kLinkShowList)) {
-        gGlobalPrefs->showStartPage = true;
-        win->RedrawAll(true);
-    } else if (str::Eq(url, kLinkNextTip)) {
-        PickAnotherRandomPromotion();
-        win->RedrawAll(true);
-    } else if (str::StartsWith(url, StrL("Cmd"))) {
-        // may include args (e.g. "CmdFixDefaultApp .pdf")
-        CustomCommand* custom = CreateCommandFromDefinition(url);
-        if (custom) {
-            HwndSendCommand(win->hwndFrame, custom->id);
-        } else {
-            int cmdId = GetCommandIdByName(url);
-            if (cmdId > 0) {
-                HwndSendCommand(win->hwndFrame, cmdId);
-            }
-        }
-    } else if (IsLink(url)) {
-        // documentation links open in the embedded manual browser
-        if (!MaybeLaunchDocumentation(url)) {
-            SumatraLaunchBrowser(url);
-        }
-    } else {
-        // assume it's a thumbnail of a document
-        auto path = url;
-        ReportIf(!path);
-        LoadArgs args(path, win);
-        // ctrl forces always opening
-        args.activateExisting = !IsCtrlPressed();
-        args.activateExistingInWindow = true;
-        StartLoadDocument(&args);
-    }
-    // HwndSetFocus(win->hwndFrame);
 }
 
 static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM /*key*/) {
@@ -143,28 +76,15 @@ static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
         return TRUE;
     }
     Point pt = HwndGetCursorPos(hwnd);
-    if (!pt.IsEmpty()) {
-        StaticLink* link = nullptr;
-        if (GetStaticLinkAtTemp(win->staticLinks, pt.x, pt.y, &link)) {
-            SetCursorCached(IDC_HAND);
-            // File entries: selection/tip are driven only by real WM_MOUSEMOVE
-            // (and keyboard). Do not call HomePageOnHover here — after arrow-key
-            // selection the canvas invalidates and WM_SETCURSOR would snap the
-            // active entry back under the stationary cursor.
-            if (link && !path::IsAbsolute(link->target)) {
-                // chrome links (open, tips, …) keep a simple hover tip
-                win->ShowToolTip(LinkTooltipTemp(link), link->rect);
-            }
-        } else {
-            // not on a link — hide tip; keyboard selection outline stays
-            win->DeleteToolTip();
-            SetCursorCached(IDC_ARROW);
-        }
-        return TRUE;
+    if (pt.IsEmpty()) {
+        win->DeleteToolTip();
+        return FALSE;
     }
-
+    // not over any virtual control: plain arrow, and drop the hover tip. The
+    // keyboard selection outline stays
     win->DeleteToolTip();
-    return FALSE;
+    SetCursorCached(IDC_ARROW);
+    return TRUE;
 }
 
 LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -261,18 +181,6 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
 
         case WM_MOUSELEAVE:
             HomePageClearActiveEntry(win);
-            return 0;
-
-        case WM_LBUTTONDOWN:
-            OnMouseLeftButtonDownAbout(win, x, y, wp);
-            return 0;
-
-        case WM_LBUTTONUP:
-            OnMouseLeftButtonUpAbout(win, x, y, wp);
-            return 0;
-
-        case WM_LBUTTONDBLCLK:
-            OnMouseLeftButtonDownAbout(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONDOWN:

@@ -3200,8 +3200,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         targetTab->loadCopyBytesCopied = -1;
         targetTab->loadCopyBytesTotal = 0;
     } else if (win->IsCurrentTabAbout()) {
-        // invalidate the links on the Frequently Read page
-        DeleteVecMembers(win->staticLinks);
+        // drop the About / home page's virtual controls; rebuilt on next paint
+        HomePageDestroyChrome(win);
         // there's no tab to reuse at this point
         args->forceReuse = false;
     } else {

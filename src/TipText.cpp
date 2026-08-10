@@ -203,7 +203,7 @@ static void AppendKbdWords(ParsedTip& tip, Str content, bool noSpace) {
     }
 }
 
-// resolve link command to a URL for StaticLink target
+// resolve a link command to the target a tip link stores
 static TempStr ResolveLinkCmdTemp(Str cmd) {
     if (str::StartsWith(cmd, StrL("https://")) || str::StartsWith(cmd, StrL("http://"))) {
         return str::DupTemp(cmd);

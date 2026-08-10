@@ -1167,7 +1167,7 @@ void VirtWndText::Paint(VirtWndPaintCtx& ctx) {
     HdcDrawText(ctx.hdc, s, r, fmt, font);
     if (withUnderline) {
         GetIdealSize(true);
-        Rect lineRect = {r.x, r.y + sz.dy, sz.dx, 0};
+        Rect lineRect = {r.x, r.y + sz.dy + underlineOffsetY, sz.dx, 0};
         auto col = GetTextColor(ctx.hdc);
         ScopedSelectObject pen(ctx.hdc, CreatePen(PS_SOLID, 1, col), true);
         HdcDrawLine(ctx.hdc, lineRect);

@@ -188,6 +188,7 @@ constexpr int kVersionTxtFontSize = 12;
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
+static VirtWndRoot* gAboutRoot = nullptr;
 static Tooltip* gAboutTooltip = nullptr;
 static Str gClickedURL;
 
@@ -221,7 +222,31 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #endif
     {nullptr, nullptr, nullptr}};
 
-static Vec<StaticLink*> gStaticLinks;
+// The About screen's two text columns as virtual controls. Geometry still comes
+// from UpdateAboutLayoutInfo(); this owns painting the text, hit-testing, the
+// hand cursor and the link tooltips, replacing the old Vec<StaticLink*>. Rows
+// with a url become VirtWndLink, the rest plain VirtWndText.
+static Kind kindAboutWnd = "aboutWnd";
+
+struct AboutWnd : VirtWnd {
+    // the two text columns; a container of its own so that rebuilding the rows
+    // can't take the sibling links with it
+    VirtWnd* rows = nullptr;
+    // "Show frequently read", bottom right of the About page (not the window)
+    VirtWndLink* showFreqRead = nullptr;
+
+    AboutWnd();
+    void Sync(HWND hwnd, HDC hdc);
+    VirtWndText* LeftAt(int i);
+    VirtWndText* RightAt(int i);
+};
+
+static void OpenAboutUrl(VirtWndMouseEvent* ev) {
+    auto* link = (VirtWndLink*)ev->target;
+    if (len(link->target) > 0) {
+        SumatraLaunchBrowser(link->target);
+    }
+}
 
 void SetPromoString(Str s) {
     if (!s) return;
@@ -284,34 +309,6 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
     }
 }
 
-// draw on the bottom right
-static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
-    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
-
-    VirtWndText w(hwnd, txt, fontLeftTxt);
-    w.isRtl = IsUIRtl();
-    w.withUnderline = true;
-    Size txtSize = w.GetIdealSize(true);
-
-    auto col = ThemeWindowLinkColor();
-    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, col), true);
-
-    SetTextColor(hdc, col);
-    SetBkMode(hdc, TRANSPARENT);
-    Rect rc = HwndClientRect(hwnd);
-
-    int innerPadding = DpiScale(hwnd, kInnerPadding);
-    Rect r = {0, 0, txtSize.dx, txtSize.dy};
-    PositionRB(rc, r);
-    MoveXY(r, -innerPadding, -innerPadding);
-    w.SetBounds(r);
-    w.PaintStandalone(hdc);
-
-    // make the click target larger
-    r.Inflate(innerPadding, innerPadding);
-    return r;
-}
-
 static Size CalcSumatraVersionSize(HDC hdc) {
     HFONT fontSumatraTxt = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = HdcCreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
@@ -338,10 +335,103 @@ static TempStr TrimGitTemp(Str s) {
     return s;
 }
 
-/* Draws the about screen and remembers some state for hyperlinking.
-   It transcribes the design I did in graphics software - hopeless
-   to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLinks) {
+// the About screen's virtual controls for one HWND. Positions come from
+// UpdateAboutLayoutInfo(), so the root must not run a layout of its own
+static AboutWnd* EnsureAboutWnd(VirtWndRoot** rootPtr, HWND hwnd, Rect clientRc) {
+    VirtWndRoot* root = *rootPtr;
+    if (!root) {
+        root = new VirtWndRoot(hwnd);
+        *rootPtr = root;
+    }
+    if (!IsVirtWndOfKind(root->child, kindAboutWnd)) {
+        root->SetChild(new AboutWnd());
+    }
+    root->bounds = clientRc;
+    root->needsLayout = false;
+    auto* about = (AboutWnd*)root->child;
+    about->SetBounds(clientRc);
+    about->rows->SetBounds(clientRc);
+    return about;
+}
+
+static int AboutRowCount() {
+    int n = 0;
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+        n++;
+    }
+    return n;
+}
+
+AboutWnd::AboutWnd() {
+    kind = kindAboutWnd;
+    flags |= vwfNoHitTest;
+    rows = new VirtWnd();
+    rows->flags |= vwfNoHitTest;
+    AddChild(rows);
+}
+
+// row children are [left0, right0, left1, right1, ...]
+VirtWndText* AboutWnd::LeftAt(int i) {
+    return (VirtWndText*)rows->ChildAt(i * 2);
+}
+
+VirtWndText* AboutWnd::RightAt(int i) {
+    return (VirtWndText*)rows->ChildAt((i * 2) + 1);
+}
+
+// build the rows once, then keep text, colors and bounds in step with what
+// UpdateAboutLayoutInfo() computed for this paint
+void AboutWnd::Sync(HWND hwnd, HDC hdc) {
+    int n = AboutRowCount();
+    bool canAccessDisk = CanAccessDisk();
+    if (rows->ChildCount() != n * 2) {
+        rows->RemoveAllChildren(true);
+        for (int i = 0; i < n; i++) {
+            AboutLayoutInfoEl* el = &gAboutLayoutInfo[i];
+            rows->AddChild(new VirtWndText(hwnd, el->leftTxt));
+            if (el->url) {
+                auto* link = new VirtWndLink(hwnd, el->rightTxt);
+                link->SetTarget(el->url);
+                link->SetTooltip(el->url);
+                link->withUnderline = true;
+                // the underline sat 3px above the bottom of the text box
+                link->underlineOffsetY = -3;
+                link->onClick = MkFunc1Void(OpenAboutUrl);
+                rows->AddChild(link);
+            } else {
+                rows->AddChild(new VirtWndText(hwnd, el->rightTxt));
+            }
+        }
+    }
+
+    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
+    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
+    COLORREF colText = ThemeWindowTextColor();
+    COLORREF colLink = ThemeWindowLinkColor();
+
+    for (int i = 0; i < n; i++) {
+        AboutLayoutInfoEl* el = &gAboutLayoutInfo[i];
+        VirtWndText* left = LeftAt(i);
+        left->font = fontLeftTxt;
+        left->textColor = colText;
+        left->SetBounds(el->leftPos);
+
+        VirtWndText* right = RightAt(i);
+        right->font = fontRightTxt;
+        bool isLink = canAccessDisk && el->url;
+        right->textColor = isLink ? colLink : colText;
+        // without disk access the url can't be opened, so it isn't a link
+        right->withUnderline = isLink;
+        right->SetFlag(vwfNoHitTest, !isLink);
+        right->SetText(TrimGitTemp(el->rightTxt));
+        right->SetBounds(el->rightPos);
+    }
+}
+
+/* Draws the about screen. The text columns are painted by the AboutWnd tree;
+   this draws the frame around them. It transcribes the design I did in graphics
+   software - hopeless to understand without seeing the design. */
+static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, VirtWndRoot* root) {
     auto col = ThemeWindowTextColor();
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
@@ -386,37 +476,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
     Rectangle(hdc, rect.x, rect.y + titleRect.dy, rect.x + rect.dx, rect.y + rect.dy);
 #endif
 
-    /* render text on the left*/
-    SelectObject(hdc, fontLeftTxt);
-    uint fmt = DT_LEFT | DT_NOCLIP;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        auto& pos = el->leftPos;
-        HdcDrawText(hdc, el->leftTxt, pos, fmt);
-    }
-
-    /* render text on the right */
-    SelectObject(hdc, fontRightTxt);
-    SelectObject(hdc, penLinkLine);
-    DeleteVecMembers(staticLinks);
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        bool hasUrl = CanAccessDisk() && el->url;
-        if (hasUrl) {
-            col = ThemeWindowLinkColor();
-        } else {
-            col = ThemeWindowTextColor();
-        }
-        SetTextColor(hdc, col);
-        TempStr s = TrimGitTemp(el->rightTxt);
-        auto& pos = el->rightPos;
-        HdcDrawText(hdc, s, pos, fmt);
-
-        if (hasUrl) {
-            int underlineY = pos.y + pos.dy - 3;
-            HdcDrawLine(hdc, Rect(pos.x, underlineY, pos.dx, 0));
-            auto* sl = new StaticLink(pos, el->url, el->url);
-            staticLinks.Append(sl);
-        }
-    }
+    /* render both text columns */
+    ((AboutWnd*)root->child)->Sync(hwnd, hdc);
+    root->Paint(hdc, rc);
 
     SelectObject(hdc, penDivideLine);
     Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, kAboutLeftRightSpaceDx), rect.y + titleRect.dy + 4,
@@ -506,7 +568,8 @@ static void OnPaintAbout(HWND hwnd) {
     HDC hdc = BeginPaint(hwnd, &ps);
     SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    DrawAbout(hwnd, hdc, rc, gStaticLinks);
+    EnsureAboutWnd(&gAboutRoot, hwnd, HwndClientRect(hwnd));
+    DrawAbout(hwnd, hdc, rc, gAboutRoot);
     EndPaint(hwnd, &ps);
 }
 
@@ -533,26 +596,7 @@ static void CopyAboutInfoToClipboard() {
     CopyTextToClipboard(ToStr(info));
 }
 
-TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info) {
-    if (!CanAccessDisk()) {
-        return {};
-    }
-
-    Point pt(x, y);
-    for (int i = 0; i < len(linkInfo); i++) {
-        if (linkInfo[i]->rect.Contains(pt)) {
-            auto* link = linkInfo[i];
-            if (info) {
-                *info = link;
-            }
-            return str::DupTemp(link->target);
-        }
-    }
-
-    return {};
-}
-
-static void CreateInfotipForLink(StaticLink* linkInfo) {
+static void CreateInfotipForLink(Str tooltip, const Rect& rc) {
     if (gAboutTooltip != nullptr) {
         return;
     }
@@ -564,7 +608,7 @@ static void CreateInfotipForLink(StaticLink* linkInfo) {
 
     gAboutTooltip = new Tooltip();
     gAboutTooltip->Create(args);
-    gAboutTooltip->SetSingle(linkInfo->tooltip, linkInfo->rect, false);
+    gAboutTooltip->SetSingle(tooltip, rc, false);
 }
 
 static void DeleteInfotip() {
@@ -577,11 +621,39 @@ static void DeleteInfotip() {
 }
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    TempStr url;
     Point pt;
 
-    int x = GET_X_LPARAM(lp);
-    int y = GET_Y_LPARAM(lp);
+    // the links are VirtWndLinks: let the tree hit-test, click and set the
+    // cursor. Its GetTooltipTemp() drives this window's own Tooltip
+    if (gAboutRoot && gAboutRoot->child) {
+        LRESULT res = 0;
+        switch (msg) {
+            case WM_MOUSEMOVE:
+            case WM_MOUSELEAVE:
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+                if (gAboutRoot->OnMessage(msg, wp, lp, res)) {
+                    return res;
+                }
+                break;
+            case WM_SETCURSOR: {
+                pt = HwndGetCursorPos(hwnd);
+                Point ptLocal{0, 0};
+                VirtWnd* w = gAboutRoot->WndFromPoint(pt, &ptLocal);
+                if (w && w->OnSetCursor(ptLocal)) {
+                    TempStr tip = w->GetTooltipTemp(ptLocal);
+                    if (tip && *tip.s) {
+                        Rect r = w->BoundsInWindow();
+                        CreateInfotipForLink(tip, r);
+                    }
+                    return TRUE;
+                }
+                DeleteInfotip();
+                return DefWindowProc(hwnd, msg, wp, lp);
+            }
+        }
+    }
+
     switch (msg) {
         case WM_CREATE:
             ReportIf(gHwndAbout);
@@ -599,29 +671,8 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             break;
 
         case WM_SETCURSOR:
-            pt = HwndGetCursorPos(hwnd);
-            if (!pt.IsEmpty()) {
-                StaticLink* linkInfo;
-                if (GetStaticLinkAtTemp(gStaticLinks, pt.x, pt.y, &linkInfo)) {
-                    CreateInfotipForLink(linkInfo);
-                    SetCursorCached(IDC_HAND);
-                    return TRUE;
-                }
-            }
             DeleteInfotip();
             return DefWindowProc(hwnd, msg, wp, lp);
-
-        case WM_LBUTTONDOWN: {
-            url = GetStaticLinkAtTemp(gStaticLinks, x, y, nullptr);
-            str::ReplaceWithCopy(&gClickedURL, url);
-        } break;
-
-        case WM_LBUTTONUP:
-            url = GetStaticLinkAtTemp(gStaticLinks, x, y, nullptr);
-            if (url && str::Eq(url, gClickedURL)) {
-                SumatraLaunchBrowser(url);
-            }
-            break;
 
         case WM_CHAR:
             if (VK_ESCAPE == wp) {
@@ -637,6 +688,8 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_DESTROY:
             DeleteInfotip();
+            delete gAboutRoot;
+            gAboutRoot = nullptr;
             ReportIf(!gHwndAbout);
             gHwndAbout = nullptr;
             break;
@@ -699,15 +752,42 @@ void ShowAboutWindow(MainWindow* win) {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
+static void ShowFrequentlyRead(VirtWndMouseEvent* ev) {
+    auto* win = (MainWindow*)ev->target->userData;
+    gGlobalPrefs->showStartPage = true;
+    win->RedrawAll(true);
+}
+
 void DrawAboutPage(MainWindow* win, HDC hdc) {
-    Rect rc = HwndClientRect(win->hwndCanvas);
-    UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
-    DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
-    if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles()) {
-        Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Show frequently read"));
-        auto* sl = new StaticLink(rect, kLinkShowList);
-        win->staticLinks.Append(sl);
+    HWND hwnd = win->hwndCanvas;
+    Rect clientRc = HwndClientRect(hwnd);
+    Rect rc = clientRc;
+    UpdateAboutLayoutInfo(hwnd, hdc, &rc);
+    AboutWnd* about = EnsureAboutWnd(&win->homeRoot, hwnd, clientRc);
+
+    bool showLink = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles();
+    if (showLink && !about->showFreqRead) {
+        auto* link = new VirtWndLink(hwnd, _TRA("Show frequently read"));
+        link->withUnderline = true;
+        link->isRtl = IsUIRtl();
+        link->userData = (uintptr_t)win;
+        link->onClick = MkFunc1Void(ShowFrequentlyRead);
+        about->showFreqRead = link;
+        about->AddChild(link);
     }
+    if (about->showFreqRead) {
+        VirtWndLink* link = about->showFreqRead;
+        link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
+        link->font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        link->textColor = ThemeWindowLinkColor();
+        link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
+        Size txtSize = link->GetIdealSize(true);
+        Rect r = {0, 0, txtSize.dx, txtSize.dy};
+        PositionRB(clientRc, r);
+        MoveXY(r, -DpiScale(hwnd, kInnerPadding), -DpiScale(hwnd, kInnerPadding));
+        link->SetBounds(r);
+    }
+    DrawAbout(hwnd, hdc, rc, win->homeRoot);
 }
 
 /* alternate static page to display when no document is loaded */
@@ -743,7 +823,6 @@ struct ThumbnailLayout {
     Rect rcListRemove;
     Rect rcListPin;
     FileState* fs = nullptr; // info needed to draw the thumbnail
-    StaticLink* sl = nullptr;
     // Cached file::GetSize() so we don't hit the disk on every paint.
     // AppendBlanks zero-fills, so set to kSizeNotFetched after AppendBlanks.
     i64 fileSize = kSizeNotFetched;
@@ -922,7 +1001,33 @@ struct HomeEntriesWnd : VirtWnd {
     void UpdateCloseBtnVisibility();
 };
 
+// A word-run of a tip that is a link. The tip text itself is drawn by
+// DrawTipWords(), so this is a hit target only
+struct HomeTipLinkWnd : VirtWnd {
+    MainWindow* win = nullptr;
+    Str cmd; // owned
+
+    ~HomeTipLinkWnd() override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point) override;
+    TempStr GetTooltipTemp(Point) override;
+};
+
+// the tip band at the bottom. Clicking it anywhere but on a link picks another
+// tip; its children are the links
+struct HomeTipWnd : VirtWnd {
+    MainWindow* win = nullptr;
+
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Sync(ParsedTip* tip, const Rect& rcTip);
+};
+
+static Kind kindHomeChromeWnd = "homeChromeWnd";
+
 struct HomeChromeWnd : VirtWnd {
+    HomeTipWnd* tip = nullptr;
     HomeEntriesWnd* entries = nullptr;
     VirtWndText* hdr = nullptr;
     HomeViewIconWnd* thumbView = nullptr;
@@ -932,6 +1037,7 @@ struct HomeChromeWnd : VirtWnd {
 };
 
 static HomeChromeWnd* EnsureHomeChrome(MainWindow* win);
+static HomeEntriesWnd* HomeEntries(MainWindow* win);
 static void HomePageSyncChrome(HomePageLayout& l);
 
 constexpr int kOpenDocumentYShift = 7;
@@ -1056,23 +1162,6 @@ static TempStr HomeThumbTooltipTemp(Str path) {
     return str::DupTemp(path);
 }
 
-// A thumbnail / list-row tooltip is the file path, then two spaces and a
-// human-readable size. Looking the size up on hover (rather than when the link
-// is created) keeps it off the layout/scroll path, where file::GetSize() on a
-// network drive is slow enough to be felt. Links whose target isn't a file
-// (urls, commands) keep their plain tooltip.
-TempStr LinkTooltipTemp(StaticLink* link) {
-    Str tip = link->tooltip;
-    if (!tip || !link->target) {
-        return str::DupTemp(tip);
-    }
-    i64 size = file::GetSize(link->target);
-    if (size < 0) {
-        return str::DupTemp(tip);
-    }
-    return fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
-}
-
 // --- scroll-friendly layout cache: full LayoutHomePage only when content/size/
 // filter changes; pure scrollY changes just offset stored thumb rects ---
 struct HomePageLayoutCache {
@@ -1140,28 +1229,6 @@ static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
         t.rcListSize.y += dy;
         t.rcListRemove.y += dy;
         t.rcListPin.y += dy;
-    }
-}
-
-// the header, view-mode buttons and "Open a document..." link are VirtWnds now;
-// only the tip links are still static links
-static void HomePageAppendChromeStaticLinks(HomePageLayout& l) {
-    MainWindow* win = l.win;
-    if (l.tip) {
-        for (auto& link : l.tip->links) {
-            Rect linkRect;
-            for (int i = link.firstWord; i <= link.lastWord; i++) {
-                auto& w = l.tip->words[i];
-                Rect wr = {w.x, w.y, w.dx, w.dy};
-                if (i == link.firstWord) {
-                    linkRect = wr;
-                } else {
-                    linkRect = linkRect.Union(wr);
-                }
-            }
-            win->staticLinks.Append(new StaticLink(linkRect, link.cmd, link.cmd));
-        }
-        win->staticLinks.Append(new StaticLink(l.rcTip, kLinkNextTip));
     }
 }
 
@@ -1268,9 +1335,6 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.thumbsVisibleDy = l.thumbsVisibleDy;
     c.tip = l.tip;
     c.thumbs = l.thumbnails;
-    for (ThumbnailLayout& t : c.thumbs) {
-        t.sl = nullptr; // links are owned by win->staticLinks, recreated each paint
-    }
     c.filterWords = l.filterWords;
 }
 
@@ -1334,8 +1398,6 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     openDoc->withUnderline = true;
     openDoc->SetBounds(c.rcOpenDoc);
     l.openDoc = openDoc;
-
-    HomePageAppendChromeStaticLinks(l);
 }
 
 // after paint, keep lazy fileSize values in the cache for the next frame
@@ -1681,26 +1743,6 @@ static void LayoutHomePage(HomePageLayout& l) {
         int tipStartX = thumbsStartX;
         int tipStartY = tipY + tipPadding;
         LayoutTip(*tip, thumbsContentWidth, tipStartX, tipStartY);
-
-        // register tip links; per-link rects first so they take priority in hit testing
-        for (auto& link : tip->links) {
-            // compute bounding rect of all words in this link
-            Rect linkRect;
-            for (int i = link.firstWord; i <= link.lastWord; i++) {
-                auto& w = tip->words[i];
-                Rect wr = {w.x, w.y, w.dx, w.dy};
-                if (i == link.firstWord) {
-                    linkRect = wr;
-                } else {
-                    linkRect = linkRect.Union(wr);
-                }
-            }
-            auto* slTip = new StaticLink(linkRect, link.cmd, link.cmd);
-            win->staticLinks.Append(slTip);
-        }
-        // tip background: clicking outside of links picks another tip
-        auto* slBg = new StaticLink(l.rcTip, kLinkNextTip);
-        win->staticLinks.Append(slBg);
     }
 }
 
@@ -2021,6 +2063,77 @@ TempStr HomeHelpBtnWnd::GetTooltipTemp(Point) {
     return str::DupTemp(_TRA("Keyboard Shortcuts"));
 }
 
+//--- tip links
+
+HomeTipLinkWnd::~HomeTipLinkWnd() {
+    str::Free(cmd);
+}
+
+bool HomeTipLinkWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool HomeTipLinkWnd::OnMouseUp(VirtWndMouseEvent&) {
+    ExecuteTipLink(win->hwndFrame, cmd);
+    return true;
+}
+
+bool HomeTipLinkWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr HomeTipLinkWnd::GetTooltipTemp(Point) {
+    return str::DupTemp(cmd);
+}
+
+bool HomeTipWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+// clicking the band outside of any link shows another tip
+bool HomeTipWnd::OnMouseUp(VirtWndMouseEvent&) {
+    PickAnotherRandomPromotion();
+    win->RedrawAll(true);
+    return true;
+}
+
+// the word positions come from LayoutTip(), so the link rects are just the
+// bounding box of each link's run of words
+void HomeTipWnd::Sync(ParsedTip* tip, const Rect& rcTip) {
+    if (!tip || rcTip.IsEmpty()) {
+        visibility = Visibility::Collapse;
+        RemoveAllChildren(true);
+        return;
+    }
+    visibility = Visibility::Visible;
+    SetBounds(rcTip);
+
+    int n = len(tip->links);
+    if (ChildCount() != n) {
+        RemoveAllChildren(true);
+        for (int i = 0; i < n; i++) {
+            auto* w = new HomeTipLinkWnd();
+            w->win = win;
+            AddChild(w);
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        TipLink& link = tip->links[i];
+        Rect linkRect;
+        for (int j = link.firstWord; j <= link.lastWord; j++) {
+            auto& word = tip->words[j];
+            Rect wr = {word.x, word.y, word.dx, word.dy};
+            linkRect = (j == link.firstWord) ? wr : linkRect.Union(wr);
+        }
+        auto* w = (HomeTipLinkWnd*)ChildAt(i);
+        if (!str::Eq(w->cmd, link.cmd)) {
+            str::ReplaceWithCopy(&w->cmd, link.cmd);
+        }
+        w->SetBounds(linkRect);
+    }
+}
+
 //--- file entries
 
 static Rect HomeEntryRect(const ThumbnailLayout& t);
@@ -2224,17 +2337,27 @@ bool HomeEntriesWnd::OnMouseMove(VirtWndMouseEvent& ev) {
 // created once per window so that hover / pressed state survives the repaints
 // that scrolling and filtering cause
 static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
-    if (win->homeRoot) {
+    // the canvas root holds either the home page's chrome or the About page's
+    // controls, depending on which one is showing
+    if (win->homeRoot && IsVirtWndOfKind(win->homeRoot->child, kindHomeChromeWnd)) {
         return (HomeChromeWnd*)win->homeRoot->child;
     }
     HWND hwnd = win->hwndCanvas;
-    win->homeRoot = new VirtWndRoot(hwnd);
+    if (!win->homeRoot) {
+        win->homeRoot = new VirtWndRoot(hwnd);
+    }
 
     auto* chrome = new HomeChromeWnd();
+    chrome->kind = kindHomeChromeWnd;
     chrome->flags |= vwfNoHitTest;
 
     // first, so that the rest of the chrome (notably the help button, which can
     // overlap the thumbnails) hit-tests and paints on top of the entries
+    // below everything else: the tip band sits at the bottom of the page
+    chrome->tip = new HomeTipWnd();
+    chrome->tip->win = win;
+    chrome->AddChild(chrome->tip);
+
     chrome->entries = new HomeEntriesWnd();
     chrome->entries->win = win;
     // hit-testable so that moving into the gaps between thumbnails still
@@ -2301,8 +2424,10 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
         // moving outside the entries band (or off the canvas) drops the active
         // entry, so the ✕ button goes away
         if (msg == WM_MOUSEMOVE && !root->hovered) {
-            HomeEntriesWnd* entries = ((HomeChromeWnd*)root->child)->entries;
-            entries->SetActiveEntry(-1);
+            HomeEntriesWnd* entries = HomeEntries(win);
+            if (entries) {
+                entries->SetActiveEntry(-1);
+            }
         }
         return didHandle;
     }
@@ -2333,6 +2458,8 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     root->bounds = l.rc;
     root->needsLayout = false;
     chrome->SetBounds(l.rc);
+
+    chrome->tip->Sync(l.tip, l.rcTip);
 
     // file entries: clipped to the thumbnails band, like the static links were
     HomeEntriesWnd* entries = chrome->entries;
@@ -2531,12 +2658,6 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 
-    if (false) {
-        Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
-        auto* sl = new StaticLink(rcFreqRead, kLinkHideList);
-        win->staticLinks.Append(sl);
-    }
-
     // draw tip at the bottom
     if (l.tip) {
         COLORREF tipBgCol = ThemeControlBackgroundColor();
@@ -2556,7 +2677,6 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
 void DrawHomePage(MainWindow* win, HDC hdc) {
     HWND hwnd = win->hwndFrame;
-    DeleteVecMembers(win->staticLinks);
 
     HomePageLayout l;
     l.rc = HwndClientRect(win->hwndCanvas);
@@ -2824,8 +2944,11 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
 
 // the entries wnd of the chrome tree, if the home page is showing
 static HomeEntriesWnd* HomeEntries(MainWindow* win) {
-    if (!win || !win->homeRoot || !win->homeRoot->child) {
+    if (!win || !win->homeRoot) {
         return nullptr;
+    }
+    if (!IsVirtWndOfKind(win->homeRoot->child, kindHomeChromeWnd)) {
+        return nullptr; // the About page is showing, not the home page
     }
     return ((HomeChromeWnd*)win->homeRoot->child)->entries;
 }
@@ -2845,6 +2968,22 @@ void HomePageClearActiveEntry(MainWindow* win) {
 
 // mouse over a file entry: update homePageSelIdx and show the tip at that entry
 // (not at the cursor). Returns true if (x,y) is over a file thumbnail/list row
+// file of the entry at (x,y), empty if there is no entry there. Replaces the
+// old "look the click up in win->staticLinks" - entries are VirtWnds now
+Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
+    HomeEntriesWnd* entries = HomeEntries(win);
+    if (!entries) {
+        return {};
+    }
+    Point ptLocal{0, 0};
+    VirtWnd* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
+    HomeEntryWnd* e = entries->EntryForWnd(w);
+    if (!e) {
+        return {};
+    }
+    return str::DupTemp(e->filePath);
+}
+
 bool HomePageOnHover(MainWindow* win, int x, int y) {
     HomeEntriesWnd* entries = HomeEntries(win);
     if (!entries) {

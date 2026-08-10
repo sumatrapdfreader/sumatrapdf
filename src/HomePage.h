@@ -17,13 +17,6 @@ void DrawAboutPage(MainWindow* win, HDC hdc);
 bool HomePageIsListView();
 void SetHomePageListView(bool listView);
 
-TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
-TempStr LinkTooltipTemp(StaticLink* link);
-
-constexpr const char* kLinkShowList = "<View,ShowList>";
-constexpr const char* kLinkHideList = "<View,HideList>";
-constexpr const char* kLinkNextTip = "<NextTip>";
-
 void SetPromoString(Str s);
 void FreeHomePageTips();
 void HomePageInvalidateLayoutCache();
@@ -42,6 +35,7 @@ Str HomePageSelectedFilePathTemp(MainWindow* win);
 void HomePageSelectFirst(MainWindow* win);
 void HomePageOnWindowActivate(MainWindow* win, bool active);
 bool HomePageOnHover(MainWindow* win, int x, int y);
+Str HomePageFilePathAtTemp(MainWindow* win, int x, int y);
 
 void HomePageClearActiveEntry(MainWindow* win);
 

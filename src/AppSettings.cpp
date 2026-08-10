@@ -794,7 +794,7 @@ static void ReloadSettings() {
     if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
         MainWindow* win = gWindows[0];
         win->DeleteToolTip();
-        DeleteVecMembers(win->staticLinks);
+        HomePageDestroyChrome(win);
         win->RedrawAll(true);
     }
 

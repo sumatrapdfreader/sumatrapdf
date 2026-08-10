@@ -1869,7 +1869,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
 
     // Prefer the file under the click; keyboard/context-menu key falls back to
     // the keyboard-selected home entry.
-    TempStr path = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
+    TempStr path = HomePageFilePathAtTemp(win, x, y);
     bool fromClick = path && path::IsAbsolute(path);
     if (!fromClick) {
         path = str::DupTemp(HomePageSelectedFilePathTemp(win));
