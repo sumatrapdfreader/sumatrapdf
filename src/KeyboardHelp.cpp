@@ -9,6 +9,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -27,6 +30,10 @@
 // come straight from the command table and the live accelerator list, so a user
 // override or a rebind shows through here without any extra bookkeeping. A
 // command with no binding is simply skipped, so the sheet self-adjusts.
+//
+// The sheet is a VirtWnd tree: an HBox of two columns, each column a
+// VirtWndTable of (key-caps, description) rows with the section headers as
+// full-width spanning cells.
 
 // which commands go in which section; each list is 0-terminated. Kept in enum
 // order within a section only for readability - display order follows this.
@@ -84,55 +91,81 @@ static KbSectionDef gKbSectionDefs[] = {
 };
 // clang-format on
 
-struct KbRow {
-    Str keys;       // owned, shortcut(s) e.g. "↑, K"
-    Str desc;       // owned, command name
-    int keysDx = 0; // measured width of the key-caps
-    int descDx = 0; // measured width of the description text
+// a row while the sheet is being assembled; the strings live in the temp arena
+// until the controls copy them
+struct KbRowDef {
+    Str keys; // shortcut(s), e.g. "↑, K"
+    Str desc; // command name
 };
 
-struct KbSection {
-    Str title; // owned, translated
-    Vec<KbRow> rows;
+struct KbSectionData {
+    Str title;
+    Vec<KbRowDef> rows;
+    int height = 0; // estimated, only used to balance the two columns
     int col = 0;    // 0 (left) or 1 (right)
-    int y = 0;      // top of the section, relative to content area
-    int height = 0; // section title + rows
+};
+
+static Kind kindKbKeyCaps = "kbKeyCaps";
+static Kind kindKbSectionTitle = "kbSectionTitle";
+
+// the shortcut(s) of one row, drawn as rounded key-caps
+struct KbKeyCaps : VirtWnd {
+    StrVec toks; // one per cap, at most 4
+    PlatformFont* font = nullptr;
+    int capPadX = 0;
+    int capGap = 0;
+    int capDy = 0;
+    int radius = 0;
+
+    KbKeyCaps();
+    ~KbKeyCaps() override = default;
+
+    Size GetIdealSize() override;
+    void Paint(VirtWndPaintCtx&) override;
+};
+
+// a section header. It carries the gap that separates it from the section above,
+// because a column is a single table and its rowGap is uniform
+struct KbSectionTitle : VirtWndText {
+    int topGap = 0;
+
+    KbSectionTitle(Str s, PlatformFont* f);
+    ~KbSectionTitle() override = default;
+
+    Size GetIdealSize() override;
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    void Paint(VirtWndPaintCtx&) override;
 };
 
 struct KeyboardHelpWnd : Wnd {
     MainWindow* win = nullptr;
 
-    HFONT fontTitle = nullptr; // window title
-    HFONT fontHdr = nullptr;   // section headers
-    HFONT fontRow = nullptr;   // rows (app font, not owned)
-    bool ownTitle = false;
-    bool ownHdr = false;
+    PlatformFont* fontTitle = nullptr; // window title
+    PlatformFont* fontHdr = nullptr;   // section headers
+    PlatformFont* fontRow = nullptr;   // rows
 
-    Vec<KbSection> sections;
+    // the sheet as a VirtWnd tree. `container` positions its children itself,
+    // so the root never re-layouts them
+    VirtWndRoot* vroot = nullptr;
+    VirtWnd* container = nullptr;
+    VirtWndText* title = nullptr;
+    VirtWndLink* closeBtn = nullptr;
+    VirtWndLine* separator = nullptr;
+    VirtWndBox* columns = nullptr;
+    VirtWndText* footer = nullptr;
+    // section headers and row descriptions, so SyncColors() can reach them
+    Vec<VirtWndText*> texts;
 
     // metrics, in client pixels, computed in BuildContent
     int pad = 0;
     int contentTop = 0;
-    int colGap = 0;
-    int secGap = 0;
-    int rowH = 0;
-    int rowTextH = 0;
-    int secTitleH = 0;
-    int keysDescGap = 0;
-    int capPadX = 0;
-    int capGap = 0;
     int footerH = 0;
-    // per-column geometry (each column is sized to just fit its own content, so
-    // the inter-column gap and right margin stay exactly what we set them to)
-    int colX[2] = {0, 0};
-    int colKeysW[2] = {0, 0};
-    int colDescW[2] = {0, 0};
-    int colW[2] = {0, 0};
-    Rect closeRc; // the 'x' hit rect, updated on paint
 
     ~KeyboardHelpWnd() override;
     bool Create(MainWindow* win);
-    void BuildContent(HDC hdc);
+    void BuildContent();
+    void SyncColors();
     void PaintContent(HDC hdc, const Rect& client);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     bool PreTranslateMessage(MSG& msg) override;
@@ -140,10 +173,6 @@ struct KeyboardHelpWnd : Wnd {
 
 static KeyboardHelpWnd* gKeyboardHelpWnd = nullptr;
 static HWND gHwndToActivateOnClose = nullptr;
-
-// draw red marks over the left margin, inter-column gap and right margin, for
-// eyeballing the spacing while tweaking the layout
-static bool gShowGuideLines = false;
 
 static void SafeDeleteKeyboardHelpWnd() {
     if (!gKeyboardHelpWnd) {
@@ -184,6 +213,33 @@ static HFONT CreateBoldFontFrom(HFONT font) {
     return CreateFontIndirectW(&lf);
 }
 
+struct BoldFontCacheEntry {
+    BoldFontCacheEntry* next;
+    HFONT src;
+    PlatformFont* bold;
+};
+
+// A PlatformFont adopts an HFONT and keeps it for the life of the process, so
+// the bold variants can't be created and destroyed with the window. There are
+// only ever a handful (one per app font per DPI), so they are cached here and
+// live as long as the fonts they derive from.
+static BoldFontCacheEntry* gBoldFonts = nullptr;
+
+static PlatformFont* GetBoldFont(HFONT src) {
+    for (BoldFontCacheEntry* e = gBoldFonts; e; e = e->next) {
+        if (e->src == src) {
+            return e->bold;
+        }
+    }
+    HFONT bold = CreateBoldFontFrom(src);
+    PlatformFont* font = GetPlatformFont(bold ? bold : src);
+    auto* e = New<BoldFontCacheEntry>(GetPermArena());
+    e->src = src;
+    e->bold = font;
+    ListInsertFront(&gBoldFonts, e);
+    return font;
+}
+
 // id -> its (translated) menu description; empty if not found
 static TempStr CmdDescTemp(int cmdId) {
     int off = 0;
@@ -201,19 +257,7 @@ static TempStr CmdDescTemp(int cmdId) {
 }
 
 KeyboardHelpWnd::~KeyboardHelpWnd() {
-    for (auto& s : sections) {
-        str::Free(s.title);
-        for (auto& r : s.rows) {
-            str::Free(r.keys);
-            str::Free(r.desc);
-        }
-    }
-    if (ownTitle && fontTitle) {
-        DeleteObject(fontTitle);
-    }
-    if (ownHdr && fontHdr) {
-        DeleteObject(fontHdr);
-    }
+    delete vroot;
 }
 
 // Park the window beside the main window on whichever side has more room, so it
@@ -255,47 +299,100 @@ static Rect PositionHelpWindow(MainWindow* win, int winDx, int winDy) {
     return Rect{x, y, winDx, winDy};
 }
 
-static int MeasureKeyCapsWidth(KeyboardHelpWnd* w, HDC hdc, Str keys);
+//--- the controls
 
-void KeyboardHelpWnd::BuildContent(HDC hdc) {
-    fontRow = GetAppFont(hwnd);
-    HFONT baseTitle = GetAppBiggerFont(hwnd);
-    HFONT b = CreateBoldFontFrom(baseTitle);
-    if (b) {
-        fontTitle = b;
-        ownTitle = true;
-    } else {
-        fontTitle = baseTitle;
+KbKeyCaps::KbKeyCaps() {
+    kind = kindKbKeyCaps;
+    flags |= vwfNoHitTest;
+}
+
+Size KbKeyCaps::GetIdealSize() {
+    int n = toks.size;
+    if (n <= 0) {
+        return {0, capDy};
     }
-    HFONT h = CreateBoldFontFrom(fontRow);
-    if (h) {
-        fontHdr = h;
-        ownHdr = true;
-    } else {
-        fontHdr = fontRow;
+    int dx = 0;
+    for (int i = 0; i < n; i++) {
+        Size sz = PlatformFontMeasureText(font, toks.At(i));
+        dx += sz.dx + (2 * capPadX);
     }
+    dx += capGap * (n - 1);
+    return {dx, capDy};
+}
 
-    Size szRow = HdcMeasureText(hdc, "Ag", fontRow);
-    Size szHdr = HdcMeasureText(hdc, "Ag", fontHdr);
-    Size szTitle = HdcMeasureText(hdc, "Ag", fontTitle);
-    rowTextH = szRow.dy;
+void KbKeyCaps::Paint(VirtWndPaintCtx& ctx) {
+    int n = toks.size;
+    if (n <= 0) {
+        return;
+    }
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    COLORREF capBg = AccentColor(bg, 16);
+    COLORREF capBorder = ThemeEdgeColor();
+    COLORREF txt = ThemeWindowTextColor();
 
-    int rem = DpiScale(hwnd, 16); // 1rem == 16px at 96 DPI
-    pad = DpiScale(hwnd, 20);
-    int titleGap = DpiScale(hwnd, 16);
-    rowH = rowTextH + DpiScale(hwnd, 8);
-    secTitleH = szHdr.dy + DpiScale(hwnd, 8);
-    secGap = DpiScale(hwnd, 14);
-    colGap = rem; // gap between the two columns
-    capPadX = DpiScale(hwnd, 7);
-    capGap = DpiScale(hwnd, 5);
-    keysDescGap = DpiScale(hwnd, 12);
-    contentTop = pad + szTitle.dy + titleGap;
-    footerH = szRow.dy + DpiScale(hwnd, 6);
+    Rect r = ctx.bounds;
+    int x = r.x;
+    int y = r.y + ((r.dy - capDy) / 2);
 
+    HDC hdc = GfxHdc(ctx.gfx);
+    HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
+    HBRUSH br = CreateSolidBrush(capBg);
+    HGDIOBJ oldPen = SelectObject(hdc, pen);
+    HGDIOBJ oldBr = SelectObject(hdc, br);
+    for (int i = 0; i < n; i++) {
+        Str tok = toks.At(i);
+        int dx = PlatformFontMeasureText(font, tok).dx + (2 * capPadX);
+        RoundRect(hdc, x, y, x + dx, y + capDy, radius, radius);
+        Rect capRc{x, y, dx, capDy};
+        GfxDrawText(ctx.gfx, tok, capRc, gfxTextCenter | gfxTextEllipsis, font, txt);
+        x += dx + capGap;
+    }
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBr);
+    DeleteObject(pen);
+    DeleteObject(br);
+}
+
+KbSectionTitle::KbSectionTitle(Str s, PlatformFont* f) : VirtWndText(s, f) {
+    kind = kindKbSectionTitle;
+}
+
+Size KbSectionTitle::GetIdealSize() {
+    Size sz2 = VirtWndText::GetIdealSize();
+    sz2.dy += topGap;
+    return sz2;
+}
+
+// VirtWndText::Layout() returns the measured text size straight from its cache,
+// so the extra height has to be added here too
+Size KbSectionTitle::Layout(Constraints bc) {
+    return bc.Constrain(GetIdealSize());
+}
+
+int KbSectionTitle::MinIntrinsicHeight(int width) {
+    return VirtWndText::MinIntrinsicHeight(width) + topGap;
+}
+
+void KbSectionTitle::Paint(VirtWndPaintCtx& ctx) {
+    // the gap belongs above the text
+    VirtWndPaintCtx c2 = ctx;
+    c2.content.y += topGap;
+    c2.content.dy -= topGap;
+    VirtWndText::Paint(c2);
+}
+
+//--- building the sheet
+
+static void OnCloseClicked(VirtWndMouseEvent*) {
+    ScheduleCloseKeyboardHelp();
+}
+
+// collects the sections that have at least one bound shortcut and assigns each
+// to a column, splitting where the two columns end up closest in height
+static void CollectSections(Vec<KbSectionData>& out, int secTitleH, int rowH, int secGap) {
     for (auto& def : gKbSectionDefs) {
-        KbSection s;
-        s.title = str::Dup(trans::GetTranslation(Str(def.title)));
+        KbSectionData s;
+        s.title = trans::GetTranslation(Str(def.title));
         for (const int* c = def.cmds; *c; c++) {
             TempStr keys = ShortcutsForCmdTemp(*c, 2);
             if (keys.len == 0) {
@@ -305,72 +402,149 @@ void KeyboardHelpWnd::BuildContent(HDC hdc) {
             if (desc.len == 0) {
                 continue;
             }
-            KbRow r;
-            r.keys = str::Dup(keys);
-            r.desc = str::Dup(desc);
-            r.keysDx = MeasureKeyCapsWidth(this, hdc, keys);
-            r.descDx = HdcMeasureText(hdc, desc, fontRow).dx;
-            s.rows.Append(r);
+            s.rows.Append({keys, desc});
         }
         if (len(s.rows) == 0) {
-            str::Free(s.title);
             continue;
         }
         s.height = secTitleH + (len(s.rows) * rowH);
-        sections.Append(s);
+        out.Append(s);
     }
 
-    // split the sections into two columns at the point that evens out their
-    // heights best. The left column gets a prefix of the sections, so they stay
-    // in reading order (Navigation top-left) while the two columns end up about
-    // as tall as each other.
-    int n = len(sections);
+    // the left column gets a prefix of the sections, so they stay in reading
+    // order (Navigation top-left) while the columns end up about as tall
+    int n = len(out);
     int total = 0;
-    for (auto& s : sections) {
+    for (auto& s : out) {
         total += s.height + secGap;
     }
-    int bestSplit = n; // sections [0, bestSplit) go left, rest go right
+    int bestSplit = n;
     int bestBalance = total;
     int prefix = 0;
     for (int k = 1; k < n; k++) {
-        prefix += sections[k - 1].height + secGap;
-        int leftH = prefix;
-        int rightH = total - prefix;
-        int bal = std::max(leftH, rightH);
+        prefix += out[k - 1].height + secGap;
+        int bal = std::max(prefix, total - prefix);
         if (bal < bestBalance) {
             bestBalance = bal;
             bestSplit = k;
         }
     }
-    int colY[2] = {0, 0};
     for (int i = 0; i < n; i++) {
-        int col = (i < bestSplit) ? 0 : 1;
-        sections[i].col = col;
-        sections[i].y = colY[col];
-        colY[col] += sections[i].height + secGap;
+        out[i].col = (i < bestSplit) ? 0 : 1;
     }
-    int maxColH = std::max(colY[0], colY[1]) - secGap;
-    if (maxColH < 0) {
-        maxColH = 0;
-    }
+}
 
-    // size each column to just fit its own widest key-caps and description, so
-    // there's no dead space padding out a fixed column width
+void KeyboardHelpWnd::BuildContent() {
+    HFONT hfontRow = GetAppFont(hwnd);
+    fontRow = GetPlatformFont(hfontRow);
+    fontHdr = GetBoldFont(hfontRow);
+    fontTitle = GetBoldFont(GetAppBiggerFont(hwnd));
+
+    Size szRow = PlatformFontMeasureText(fontRow, "Ag");
+    Size szHdr = PlatformFontMeasureText(fontHdr, "Ag");
+    Size szTitle = PlatformFontMeasureText(fontTitle, "Ag");
+
+    int rem = DpiScale(hwnd, 16); // 1rem == 16px at 96 DPI
+    pad = DpiScale(hwnd, 20);
+    int titleGap = DpiScale(hwnd, 16);
+    int rowGap = DpiScale(hwnd, 8);
+    int secTitleH = szHdr.dy + DpiScale(hwnd, 8);
+    int secGap = DpiScale(hwnd, 14);
+    int colGap = rem; // gap between the two columns
+    int capPadX = DpiScale(hwnd, 7);
+    int capGap = DpiScale(hwnd, 5);
+    int keysDescGap = DpiScale(hwnd, 12);
+    contentTop = pad + szTitle.dy + titleGap;
+    footerH = szRow.dy + DpiScale(hwnd, 6);
+
+    Vec<KbSectionData> sections;
+    CollectSections(sections, secTitleH, szRow.dy + rowGap, secGap);
+
+    vroot = new VirtWndRoot(hwnd);
+    container = new VirtWnd();
+    container->name = StrL("keyboardHelp");
+    container->flags |= vwfNoHitTest;
+
+    title = new VirtWndText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
+    container->AddChild(title);
+
+    // U+2715 MULTIPLICATION X
+    closeBtn = new VirtWndLink("\xE2\x9C\x95", fontTitle);
+    closeBtn->align = VirtWndTextAlign::Center;
+    closeBtn->onClick = MkFunc1Void(OnCloseClicked);
+    container->AddChild(closeBtn);
+
+    separator = new VirtWndLine();
+    separator->thickness = DpiScale(hwnd, 1);
+    container->AddChild(separator);
+
+    columns = new VirtWndBox(false);
+    columns->alignCross = CrossAxisAlign::CrossStart;
+    VirtWndTable* tables[2] = {new VirtWndTable(), new VirtWndTable()};
+    for (VirtWndTable* t : tables) {
+        t->colGap = keysDescGap;
+        t->rowGap = rowGap;
+    }
+    columns->AddChild(tables[0]);
+    columns->AddChild(new VirtWndSpacer(colGap, 0));
+    columns->AddChild(tables[1]);
+    container->AddChild(columns);
+
+    footer = new VirtWndText(trans::GetTranslation("Press ? to close"), fontRow);
+    container->AddChild(footer);
+
+    // one table per column: a section header spans both table columns, each row
+    // is (key-caps, description)
+    int nRows[2] = {0, 0};
     for (auto& s : sections) {
-        int c = s.col;
+        nRows[s.col] += 1 + len(s.rows);
+    }
+    tables[0]->SetSize(nRows[0], 2);
+    tables[1]->SetSize(nRows[1], 2);
+
+    int capDy = szRow.dy + DpiScale(hwnd, 5);
+    int radius = DpiScale(hwnd, 5);
+    int rowAt[2] = {0, 0};
+    for (auto& s : sections) {
+        VirtWndTable* t = tables[s.col];
+        int& row = rowAt[s.col];
+
+        auto* hdr = new KbSectionTitle(s.title, fontHdr);
+        hdr->topGap = (row == 0) ? 0 : secGap;
+        texts.Append(hdr);
+        VirtWndTableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
+        hdrCell.alignV = CrossAxisAlign::CrossEnd;
+        row++;
+
         for (auto& r : s.rows) {
-            colKeysW[c] = std::max(colKeysW[c], r.keysDx);
-            colDescW[c] = std::max(colDescW[c], r.descDx);
+            auto* caps = new KbKeyCaps();
+            caps->font = fontRow;
+            caps->capPadX = capPadX;
+            caps->capGap = capGap;
+            caps->capDy = capDy;
+            caps->radius = radius;
+            // at most 4 caps per row, like the sheet has always shown
+            Split(&caps->toks, r.keys, ", ", false, 4);
+            // the caps sit against the description, like a gutter
+            VirtWndTableCell& capsCell = t->SetCell(row, 0, caps);
+            capsCell.alignH = CrossAxisAlign::CrossEnd;
+            capsCell.alignV = CrossAxisAlign::CrossCenter;
+
+            auto* desc = new VirtWndText(r.desc, fontRow);
+            desc->ellipsis = true;
+            texts.Append(desc);
+            VirtWndTableCell& descCell = t->SetCell(row, 1, desc);
+            descCell.alignV = CrossAxisAlign::CrossCenter;
+            row++;
         }
     }
-    colW[0] = colKeysW[0] + keysDescGap + colDescW[0];
-    colW[1] = colKeysW[1] + keysDescGap + colDescW[1];
-    colX[0] = pad;
-    colX[1] = pad + colW[0] + colGap;
 
+    vroot->SetChild(container);
+
+    Size colsSize = columns->Layout(ExpandInf());
     int rightPad = rem / 2; // 0.5rem right margin
-    int clientDx = colX[1] + colW[1] + rightPad;
-    int clientDy = contentTop + maxColH + DpiScale(hwnd, 12) + footerH + DpiScale(hwnd, 6);
+    int clientDx = pad + colsSize.dx + rightPad;
+    int clientDy = contentTop + colsSize.dy + DpiScale(hwnd, 12) + footerH + DpiScale(hwnd, 6);
 
     RECT wr = {0, 0, clientDx, clientDy};
     DWORD style = (DWORD)GetWindowLongPtrW(hwnd, GWL_STYLE);
@@ -381,142 +555,47 @@ void KeyboardHelpWnd::BuildContent(HDC hdc) {
 
     Rect r = PositionHelpWindow(win, winDx, winDy);
     SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER);
+
+    // place the pieces; the container positions its children itself, so the root
+    // must not re-layout them
+    vroot->bounds = {0, 0, clientDx, clientDy};
+    vroot->needsLayout = false;
+    container->SetBounds(vroot->bounds);
+
+    Size szClose = closeBtn->GetIdealSize();
+    int closeGrow = DpiScale(hwnd, 6);
+    title->SetBounds({pad, pad, clientDx - (2 * pad) - szClose.dx, szTitle.dy});
+    closeBtn->SetBounds({clientDx - pad - szClose.dx - closeGrow, pad - closeGrow, szClose.dx + (2 * closeGrow),
+                         szClose.dy + (2 * closeGrow)});
+    int sepY = contentTop - DpiScale(hwnd, 10);
+    separator->SetBounds({pad, sepY, clientDx - (2 * pad), separator->thickness});
+    columns->SetBounds({pad, contentTop, colsSize.dx, colsSize.dy});
+    footer->SetBounds({pad, clientDy - footerH - (pad / 2), clientDx - (2 * pad), footerH});
 }
 
-// total width of the key-caps for `keys` (used to size the columns and to
-// right-align the caps within the gutter)
-static int MeasureKeyCapsWidth(KeyboardHelpWnd* w, HDC hdc, Str keys) {
-    StrVec toks;
-    Str sep = ", ";
-    Split(&toks, keys, sep);
-    int n = std::min(toks.size, 4);
-    if (n <= 0) {
-        return 0;
+// colors are read from the theme on every paint, so a theme change shows
+// through without rebuilding the tree
+void KeyboardHelpWnd::SyncColors() {
+    COLORREF txt = ThemeWindowTextColor();
+    COLORREF dim = AccentColor(txt, 90);
+    title->textColor = txt;
+    closeBtn->textColor = dim;
+    separator->color = ThemeEdgeColor();
+    footer->textColor = dim;
+    for (VirtWndText* t : texts) {
+        t->textColor = txt;
     }
-    int totalW = 0;
-    for (int i = 0; i < n; i++) {
-        Size sz = HdcMeasureText(hdc, toks.At(i), w->fontRow);
-        totalW += sz.dx + (2 * w->capPadX);
-    }
-    totalW += w->capGap * (n - 1);
-    return totalW;
-}
-
-// draw the shortcut(s) as key-caps, right-aligned within the gutter
-static void DrawKeyCaps(KeyboardHelpWnd* w, HDC hdc, const Rect& gutter, Str keys, COLORREF capBg, COLORREF capBorder,
-                        COLORREF txt) {
-    StrVec toks;
-    Str sep = ", ";
-    Split(&toks, keys, sep);
-    int n = std::min(toks.size, 4);
-    if (n <= 0) {
-        return;
-    }
-    int capH = w->rowTextH + DpiScale(w->hwnd, 5);
-
-    int widths[4];
-    int totalW = 0;
-    for (int i = 0; i < n; i++) {
-        Size sz = HdcMeasureText(hdc, toks.At(i), w->fontRow);
-        widths[i] = sz.dx + (2 * w->capPadX);
-        totalW += widths[i];
-    }
-    totalW += w->capGap * (n - 1);
-
-    int x = gutter.x + gutter.dx - totalW;
-    int y = gutter.y + ((gutter.dy - capH) / 2);
-    int rad = DpiScale(w->hwnd, 5);
-
-    HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
-    HBRUSH br = CreateSolidBrush(capBg);
-    HGDIOBJ oldPen = SelectObject(hdc, pen);
-    HGDIOBJ oldBr = SelectObject(hdc, br);
-    for (int i = 0; i < n; i++) {
-        RoundRect(hdc, x, y, x + widths[i], y + capH, rad, rad);
-        Rect capRc{x, y, widths[i], capH};
-        SetTextColor(hdc, txt);
-        HdcDrawText(hdc, toks.At(i), capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, w->fontRow);
-        x += widths[i] + w->capGap;
-    }
-    SelectObject(hdc, oldPen);
-    SelectObject(hdc, oldBr);
-    DeleteObject(pen);
-    DeleteObject(br);
 }
 
 void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
     COLORREF bg = ThemeWindowControlBackgroundColor();
-    COLORREF txt = ThemeWindowTextColor();
-    COLORREF dim = AccentColor(txt, 90);
-    COLORREF capBg = AccentColor(bg, 16);
-    COLORREF capBorder = ThemeEdgeColor();
-
     SetBkColor(hdc, bg);
     HdcFillRectWithBkColor(hdc, client);
     SetBkMode(hdc, TRANSPARENT);
 
-    // title
-    SetTextColor(hdc, txt);
-    Rect titleRc{pad, pad, client.dx - (2 * pad), (rowTextH * 2)};
-    HdcDrawText(hdc, trans::GetTranslation("Keyboard Shortcuts"), titleRc,
-                DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX, fontTitle);
-
-    // close 'x' at the top-right
-    Str xStr = "\xE2\x9C\x95"; // U+2715 MULTIPLICATION X
-    Size xsz = HdcMeasureText(hdc, xStr, fontTitle);
-    closeRc = Rect{client.dx - pad - xsz.dx, pad, xsz.dx, xsz.dy};
-    SetTextColor(hdc, dim);
-    HdcDrawText(hdc, xStr, closeRc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX, fontTitle);
-
-    // separator under the title
-    int sepY = contentTop - DpiScale(hwnd, 10);
-    Rect sepRc{pad, sepY, client.dx - (2 * pad), DpiScale(hwnd, 1)};
-    SetBkColor(hdc, capBorder);
-    HdcFillRectWithBkColor(hdc, sepRc);
-    SetBkColor(hdc, bg);
-
-    for (auto& s : sections) {
-        int c = s.col;
-        int cx = colX[c];
-        int y = contentTop + s.y;
-        Rect hdrRc{cx, y, colW[c], secTitleH};
-        SetTextColor(hdc, txt);
-        HdcDrawText(hdc, s.title, hdrRc, DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_NOPREFIX, fontHdr);
-        y += secTitleH;
-        for (auto& r : s.rows) {
-            Rect gutter{cx, y, colKeysW[c], rowH};
-            DrawKeyCaps(this, hdc, gutter, r.keys, capBg, capBorder, txt);
-            Rect descRc{cx + colKeysW[c] + keysDescGap, y, colDescW[c], rowH};
-            SetTextColor(hdc, txt);
-            HdcDrawText(hdc, r.desc, descRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS,
-                        fontRow);
-            y += rowH;
-        }
-    }
-
-    // spacing guides: thin horizontal marks showing the inter-column gap and the
-    // left / right margins, so the spacing is easy to eyeball
-    if (gShowGuideLines) {
-        COLORREF guide = RGB(0xff, 0x30, 0x30);
-        int gy = contentTop + ((client.dy - contentTop) / 2);
-        int contentRight = colX[1] + colW[1];
-        Rect guides[] = {
-            {0, gy, pad, DpiScale(hwnd, 2)},                                 // left margin
-            {colX[0] + colW[0], gy, colGap, DpiScale(hwnd, 2)},              // gap between columns
-            {contentRight, gy, client.dx - contentRight, DpiScale(hwnd, 2)}, // right margin
-        };
-        SetBkColor(hdc, guide);
-        for (Rect& g : guides) {
-            HdcFillRectWithBkColor(hdc, g);
-        }
-        SetBkColor(hdc, bg);
-    }
-
-    // footer hint
-    Rect footRc{pad, client.dy - footerH - (pad / 2), client.dx - (2 * pad), footerH};
-    SetTextColor(hdc, dim);
-    HdcDrawText(hdc, trans::GetTranslation("Press ? to close"), footRc,
-                DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, fontRow);
+    SyncColors();
+    Gfx gfx = GfxFromHdc(hdc);
+    vroot->Paint(&gfx, client);
 }
 
 LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -539,29 +618,36 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_MOUSEMOVE:
+        case WM_MOUSELEAVE:
+        case WM_LBUTTONUP: {
+            LRESULT res = 0;
+            if (vroot && vroot->OnMessage(msg, wp, lp, res)) {
+                return res;
+            }
+            break;
+        }
         case WM_SETCURSOR: {
-            POINT pt;
-            GetCursorPos(&pt);
-            ScreenToClient(hwnd, &pt);
-            int grow = DpiScale(hwnd, 6);
-            Rect closeHit{closeRc.x - grow, closeRc.y - grow, closeRc.dx + (2 * grow), closeRc.dy + (2 * grow)};
-            if (pt.y < contentTop && !closeHit.Contains(Point(pt.x, pt.y))) {
+            Point pt = HwndGetCursorPos(hwnd);
+            Point ptLocal{0, 0};
+            VirtWnd* w = vroot ? vroot->WndFromPoint(pt, &ptLocal) : nullptr;
+            if (w && w->OnSetCursor(ptLocal)) {
+                return TRUE;
+            }
+            if (pt.y < contentTop) {
                 SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
                 return TRUE;
             }
             break;
         }
         case WM_LBUTTONDOWN: {
-            int x = (short)LOWORD(lp);
-            int y = (short)HIWORD(lp);
-            int grow = DpiScale(hwnd, 6);
-            Rect hit{closeRc.x - grow, closeRc.y - grow, closeRc.dx + (2 * grow), closeRc.dy + (2 * grow)};
-            if (hit.Contains(Point(x, y))) {
-                ScheduleCloseKeyboardHelp();
-                return 0;
+            LRESULT res = 0;
+            if (vroot && vroot->OnMessage(msg, wp, lp, res)) {
+                return res;
             }
             // dragging the title band moves the window (it has no title bar of
             // its own); hand off to the standard move loop
+            int y = (short)HIWORD(lp);
             if (y < contentTop) {
                 ReleaseCapture();
                 SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
@@ -599,9 +685,7 @@ bool KeyboardHelpWnd::Create(MainWindow* win) {
     if (!hwnd) {
         return false;
     }
-    HDC hdc = GetDC(hwnd);
-    BuildContent(hdc);
-    ReleaseDC(hwnd, hdc);
+    BuildContent();
     SetIsVisible(true);
     HwndSetFocus(hwnd);
     return true;
