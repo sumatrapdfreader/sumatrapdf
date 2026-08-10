@@ -192,18 +192,14 @@ static VirtWndRoot* gAboutRoot = nullptr;
 static Tooltip* gAboutTooltip = nullptr;
 static Str gClickedURL;
 
-struct AboutLayoutInfoEl {
-    /* static data, must be provided */
+// one row of the About screen's two-column table
+struct AboutRow {
     Str leftTxt;
     Str rightTxt;
     Str url;
-
-    /* data calculated by the layout */
-    Rect leftPos;
-    Rect rightPos;
 };
 
-static AboutLayoutInfoEl gAboutLayoutInfo[] = {
+static AboutRow gAboutRows[] = {
     {"build", "Built: " __DATE__ " " __TIME__, nullptr},
     {"website", "SumatraPDF website", kWebsiteURL},
     {"manual", "SumatraPDF manual", kManualURL},
@@ -222,21 +218,27 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #endif
     {nullptr, nullptr, nullptr}};
 
-// The About screen's two text columns as virtual controls. Geometry still comes
-// from UpdateAboutLayoutInfo(); this owns painting the text, hit-testing, the
-// hand cursor and the link tooltips, replacing the old Vec<StaticLink*>. Rows
-// with a url become VirtWndLink, the rest plain VirtWndText.
+// The About screen's two text columns as virtual controls: a VirtWndTable whose
+// left column is right-aligned and right column left-aligned, which is what the
+// hand-rolled geometry used to do. Rows with a url become VirtWndLink (owning
+// the hit-testing, the hand cursor and the tooltip), the rest plain VirtWndText.
 static Kind kindAboutWnd = "aboutWnd";
 
 struct AboutWnd : VirtWnd {
     // the two text columns; a container of its own so that rebuilding the rows
-    // can't take the sibling links with it
-    VirtWnd* rows = nullptr;
+    // can't take the sibling showFreqRead link with it
+    VirtWndTable* table = nullptr;
     // "Show frequently read", bottom right of the About page (not the window)
     VirtWndLink* showFreqRead = nullptr;
 
+    // geometry, computed by UpdateLayout()
+    Rect aboutRect;  // the framed box
+    Size headerSize; // the "SumatraPDF <version>" band on top of it
+    int dividerX = 0;
+
     AboutWnd();
     void Sync(HWND hwnd, HDC hdc);
+    void UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc);
     VirtWndText* LeftAt(int i);
     VirtWndText* RightAt(int i);
 };
@@ -336,7 +338,7 @@ static TempStr TrimGitTemp(Str s) {
 }
 
 // the About screen's virtual controls for one HWND. Positions come from
-// UpdateAboutLayoutInfo(), so the root must not run a layout of its own
+// AboutWnd::UpdateLayout(), so the root must not run a layout of its own
 static AboutWnd* EnsureAboutWnd(VirtWndRoot** rootPtr, HWND hwnd, Rect clientRc) {
     VirtWndRoot* root = *rootPtr;
     if (!root) {
@@ -350,13 +352,12 @@ static AboutWnd* EnsureAboutWnd(VirtWndRoot** rootPtr, HWND hwnd, Rect clientRc)
     root->needsLayout = false;
     auto* about = (AboutWnd*)root->child;
     about->SetBounds(clientRc);
-    about->rows->SetBounds(clientRc);
     return about;
 }
 
 static int AboutRowCount() {
     int n = 0;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutRow* el = gAboutRows; el->leftTxt; el++) {
         n++;
     }
     return n;
@@ -365,30 +366,33 @@ static int AboutRowCount() {
 AboutWnd::AboutWnd() {
     kind = kindAboutWnd;
     flags |= vwfNoHitTest;
-    rows = new VirtWnd();
-    rows->flags |= vwfNoHitTest;
-    AddChild(rows);
+    table = new VirtWndTable();
+    AddChild(table);
 }
 
-// row children are [left0, right0, left1, right1, ...]
 VirtWndText* AboutWnd::LeftAt(int i) {
-    return (VirtWndText*)rows->ChildAt(i * 2);
+    return (VirtWndText*)table->GetCell(i, 0);
 }
 
 VirtWndText* AboutWnd::RightAt(int i) {
-    return (VirtWndText*)rows->ChildAt((i * 2) + 1);
+    return (VirtWndText*)table->GetCell(i, 1);
 }
 
-// build the rows once, then keep text, colors and bounds in step with what
-// UpdateAboutLayoutInfo() computed for this paint
+// build the table once, then keep text, fonts and colors in step with the theme
+// and the DPI. Sizing happens in UpdateLayout(), which measures what we set here
 void AboutWnd::Sync(HWND hwnd, HDC hdc) {
     int n = AboutRowCount();
     bool canAccessDisk = CanAccessDisk();
-    if (rows->ChildCount() != n * 2) {
-        rows->RemoveAllChildren(true);
+    if (table->rows != n) {
+        table->SetSize(n, 2);
         for (int i = 0; i < n; i++) {
-            AboutLayoutInfoEl* el = &gAboutLayoutInfo[i];
-            rows->AddChild(new VirtWndText(hwnd, el->leftTxt));
+            AboutRow* el = &gAboutRows[i];
+            VirtWndTableCell& left = table->SetCell(i, 0, new VirtWndText(hwnd, el->leftTxt));
+            // the left column is flush against the divider line
+            left.alignH = CrossAxisAlign::CrossEnd;
+            left.alignV = CrossAxisAlign::CrossCenter;
+
+            VirtWndText* rightTxt;
             if (el->url) {
                 auto* link = new VirtWndLink(hwnd, el->rightTxt);
                 link->SetTarget(el->url);
@@ -397,10 +401,12 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
                 // the underline sat 3px above the bottom of the text box
                 link->underlineOffsetY = -3;
                 link->onClick = MkFunc1Void(OpenAboutUrl);
-                rows->AddChild(link);
+                rightTxt = link;
             } else {
-                rows->AddChild(new VirtWndText(hwnd, el->rightTxt));
+                rightTxt = new VirtWndText(hwnd, el->rightTxt);
             }
+            VirtWndTableCell& right = table->SetCell(i, 1, rightTxt);
+            right.alignV = CrossAxisAlign::CrossCenter;
         }
     }
 
@@ -410,11 +416,10 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
     COLORREF colLink = ThemeWindowLinkColor();
 
     for (int i = 0; i < n; i++) {
-        AboutLayoutInfoEl* el = &gAboutLayoutInfo[i];
+        AboutRow* el = &gAboutRows[i];
         VirtWndText* left = LeftAt(i);
         left->font = fontLeftTxt;
         left->textColor = colText;
-        left->SetBounds(el->leftPos);
 
         VirtWndText* right = RightAt(i);
         right->font = fontRightTxt;
@@ -424,14 +429,51 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
         right->withUnderline = isLink;
         right->SetFlag(vwfNoHitTest, !isLink);
         right->SetText(TrimGitTemp(el->rightTxt));
-        right->SetBounds(el->rightPos);
     }
+}
+
+// the About box is the title band above the two-column table. This sizes it from
+// the table, centers it in clientRc and positions the table inside it
+void AboutWnd::UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc) {
+    headerSize = CalcSumatraVersionSize(hdc);
+
+    int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
+    int marginDx = DpiScale(hwnd, kAboutMarginDx);
+    int aboutTxtDy = DpiScale(hwnd, kAboutTxtDy);
+
+    table->colGap = 2 * leftRightSpaceDx;
+    table->rowGap = aboutTxtDy;
+    Size tableSize = table->Layout(ExpandInf());
+
+    Rect r;
+    // the divider line is drawn inside the gap between the two columns
+    r.dx = std::max(tableSize.dx + ABOUT_LINE_SEP_SIZE, headerSize.dx) + (2 * ABOUT_LINE_OUTER_SIZE) + (2 * marginDx);
+    // one extra row gap so the last row isn't flush against the frame
+    r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * ABOUT_LINE_OUTER_SIZE) + 4;
+    r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
+    r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
+    aboutRect = r;
+
+    int x = r.x + ABOUT_LINE_OUTER_SIZE + marginDx;
+    int y = r.y + headerSize.dy + 4;
+    table->SetBounds({x, y, tableSize.dx, tableSize.dy});
+    dividerX = table->CellRect(0, 1).x - leftRightSpaceDx;
+}
+
+// prepares the About tree for hwnd and computes its geometry
+static AboutWnd* UpdateAboutLayout(VirtWndRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
+    AboutWnd* about = EnsureAboutWnd(rootPtr, hwnd, clientRc);
+    about->Sync(hwnd, hdc);
+    about->UpdateLayout(hwnd, hdc, clientRc);
+    return about;
 }
 
 /* Draws the about screen. The text columns are painted by the AboutWnd tree;
    this draws the frame around them. It transcribes the design I did in graphics
    software - hopeless to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, VirtWndRoot* root) {
+static void DrawAbout(HWND hwnd, HDC hdc, VirtWndRoot* root) {
+    auto* about = (AboutWnd*)root->child;
+    Rect rect = about->aboutRect;
     auto col = ThemeWindowTextColor();
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
@@ -449,7 +491,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, VirtWndRoot* root) {
     HdcFillRect(hdc, rc, brushAboutBg);
 
     /* render title */
-    Rect titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
+    Rect titleRect(rect.TL(), about->headerSize);
 
     ScopedSelectObject brush(hdc, CreateSolidBrush(col), true);
     ScopedSelectObject pen(hdc, penBorder);
@@ -477,99 +519,19 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, VirtWndRoot* root) {
 #endif
 
     /* render both text columns */
-    ((AboutWnd*)root->child)->Sync(hwnd, hdc);
     root->Paint(hdc, rc);
 
     SelectObject(hdc, penDivideLine);
-    Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, kAboutLeftRightSpaceDx), rect.y + titleRect.dy + 4,
-                    0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
+    Rect divideLine(about->dividerX, rect.y + titleRect.dy + 4, 0, rect.dy - titleRect.dy - 8);
     HdcDrawLine(hdc, divideLine);
-}
-
-static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
-    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
-
-    /* calculate minimal top box size */
-    Size headerSize = CalcSumatraVersionSize(hdc);
-
-    /* calculate left text dimensions */
-    int leftLargestDx = 0;
-    int leftDy = 0;
-    uint fmt = DT_LEFT;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        Size txtSize = HdcMeasureText(hdc, el->leftTxt, fmt, fontLeftTxt);
-        el->leftPos.dx = txtSize.dx;
-        el->leftPos.dy = txtSize.dy;
-
-        if (el == &gAboutLayoutInfo[0]) {
-            leftDy = el->leftPos.dy;
-        } else {
-            ReportIf(leftDy != el->leftPos.dy);
-        }
-        leftLargestDx = std::max(leftLargestDx, el->leftPos.dx);
-    }
-
-    /* calculate right text dimensions */
-    int rightLargestDx = 0;
-    int rightDy = 0;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        TempStr s = TrimGitTemp(el->rightTxt);
-        Size txtSize = HdcMeasureText(hdc, s, fmt, fontRightTxt);
-        el->rightPos.dx = txtSize.dx;
-        el->rightPos.dy = txtSize.dy;
-
-        if (el == &gAboutLayoutInfo[0]) {
-            rightDy = el->rightPos.dy;
-        } else {
-            ReportIf(rightDy != el->rightPos.dy);
-        }
-        rightLargestDx = std::max(rightLargestDx, el->rightPos.dx);
-    }
-
-    int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
-    int marginDx = DpiScale(hwnd, kAboutMarginDx);
-    int aboutTxtDy = DpiScale(hwnd, kAboutTxtDy);
-    /* calculate total dimension and position */
-    Rect minRect;
-    minRect.dx = leftRightSpaceDx + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + leftRightSpaceDx;
-    minRect.dx = std::max(minRect.dx, headerSize.dx);
-    minRect.dx += (2 * ABOUT_LINE_OUTER_SIZE) + (2 * marginDx);
-
-    minRect.dy = headerSize.dy;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        minRect.dy += rightDy + aboutTxtDy;
-    }
-    minRect.dy += (2 * ABOUT_LINE_OUTER_SIZE) + 4;
-
-    Rect rc = HwndClientRect(hwnd);
-    minRect.x = (rc.dx - minRect.dx) / 2;
-    minRect.y = (rc.dy - minRect.dy) / 2;
-
-    if (rect) {
-        *rect = minRect;
-    }
-
-    /* calculate text positions */
-    int linePosX = ABOUT_LINE_OUTER_SIZE + marginDx + leftLargestDx + leftRightSpaceDx;
-    int currY = minRect.y + headerSize.dy + 4;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        el->leftPos.x = minRect.x + linePosX - leftRightSpaceDx - el->leftPos.dx;
-        el->leftPos.y = currY + ((rightDy - leftDy) / 2);
-        el->rightPos.x = minRect.x + linePosX + leftRightSpaceDx;
-        el->rightPos.y = currY;
-        currY += rightDy + aboutTxtDy;
-    }
 }
 
 static void OnPaintAbout(HWND hwnd) {
     PAINTSTRUCT ps;
-    Rect rc;
     HDC hdc = BeginPaint(hwnd, &ps);
     SetLayout(hdc, LAYOUT_LTR);
-    UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    EnsureAboutWnd(&gAboutRoot, hwnd, HwndClientRect(hwnd));
-    DrawAbout(hwnd, hdc, rc, gAboutRoot);
+    UpdateAboutLayout(&gAboutRoot, hwnd, hdc, HwndClientRect(hwnd));
+    DrawAbout(hwnd, hdc, gAboutRoot);
     EndPaint(hwnd, &ps);
 }
 
@@ -584,10 +546,10 @@ static void CopyAboutInfoToClipboard() {
     // concatenate all the information into a single string
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
     int maxLen = 0;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutRow* el = gAboutRows; el->leftTxt; el++) {
         maxLen = std::max(maxLen, len(el->leftTxt));
     }
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutRow* el = gAboutRows; el->leftTxt; el++) {
         for (int i = maxLen - len(el->leftTxt); i > 0; i--) {
             info.AppendChar(' ');
         }
@@ -732,11 +694,11 @@ void ShowAboutWindow(MainWindow* win) {
     HwndSetRtl(gHwndAbout, IsUIRtl());
 
     // get the dimensions required for the about box's content
-    Rect rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(gHwndAbout, &ps);
     SetLayout(hdc, LAYOUT_LTR);
-    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
+    AboutWnd* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, hdc, HwndClientRect(gHwndAbout));
+    Rect rc = about->aboutRect;
     EndPaint(gHwndAbout, &ps);
     int rectPadding = DpiScale(gHwndAbout, kAboutRectPadding);
     rc.Inflate(rectPadding, rectPadding);
@@ -761,9 +723,7 @@ static void ShowFrequentlyRead(VirtWndMouseEvent* ev) {
 void DrawAboutPage(MainWindow* win, HDC hdc) {
     HWND hwnd = win->hwndCanvas;
     Rect clientRc = HwndClientRect(hwnd);
-    Rect rc = clientRc;
-    UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    AboutWnd* about = EnsureAboutWnd(&win->homeRoot, hwnd, clientRc);
+    AboutWnd* about = UpdateAboutLayout(&win->homeRoot, hwnd, hdc, clientRc);
 
     bool showLink = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles();
     if (showLink && !about->showFreqRead) {
@@ -787,7 +747,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
         MoveXY(r, -DpiScale(hwnd, kInnerPadding), -DpiScale(hwnd, kInnerPadding));
         link->SetBounds(r);
     }
-    DrawAbout(hwnd, hdc, rc, win->homeRoot);
+    DrawAbout(hwnd, hdc, win->homeRoot);
 }
 
 /* alternate static page to display when no document is loaded */

@@ -890,6 +890,285 @@ void VirtWndBox::SetBounds(Rect r) {
     Box()->SetBounds(content);
 }
 
+//--- VirtWndTable
+
+static Kind kindVirtWndTable = "virtWndTable";
+
+VirtWndTable::VirtWndTable() {
+    kind = kindVirtWndTable;
+    // a grid is decorative, only its cells' children are hit targets
+    flags |= vwfNoHitTest;
+}
+
+// the cells' children are owned by VirtWnd::children, which ~VirtWnd frees
+VirtWndTable::~VirtWndTable() = default;
+
+int VirtWndTable::CellIdx(int row, int col) const {
+    ReportIf(row < 0 || row >= rows);
+    ReportIf(col < 0 || col >= cols);
+    return (row * cols) + col;
+}
+
+void VirtWndTable::SetSize(int nRows, int nCols) {
+    ReportIf(nRows < 0 || nCols < 0);
+    if (nRows == rows && nCols == cols) {
+        return;
+    }
+    RemoveAllChildren(true);
+    rows = nRows;
+    cols = nCols;
+    cells.Clear();
+    VirtWndTableCell empty;
+    for (int i = 0; i < rows * cols; i++) {
+        cells.Append(empty);
+    }
+    colWidths.Clear();
+    rowHeights.Clear();
+}
+
+void VirtWndTable::MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered) {
+    for (int r = row; r < row + rowSpan; r++) {
+        for (int c = col; c < col + colSpan; c++) {
+            if (r == row && c == col) {
+                continue;
+            }
+            VirtWndTableCell& cell = cells[CellIdx(r, c)];
+            // a spanned-over cell can't hold a child of its own
+            ReportIf(covered && cell.child);
+            cell.covered = covered;
+        }
+    }
+}
+
+// (row, col) is the cell's top-left; a spanning cell covers the ones to its
+// right / below, which must stay empty
+VirtWndTableCell& VirtWndTable::SetCell(int row, int col, VirtWnd* child, int rowSpan, int colSpan) {
+    ReportIf(rowSpan < 1 || colSpan < 1);
+    ReportIf(row + rowSpan > rows || col + colSpan > cols);
+    VirtWndTableCell& cell = cells[CellIdx(row, col)];
+    ReportIf(cell.covered);
+    MarkCovered(row, col, cell.rowSpan, cell.colSpan, false);
+    if (cell.child) {
+        RemoveChild(cell.child, true);
+    }
+    cell.child = child;
+    cell.rowSpan = rowSpan;
+    cell.colSpan = colSpan;
+    if (child) {
+        AddChild(child);
+    }
+    MarkCovered(row, col, rowSpan, colSpan, true);
+    return cell;
+}
+
+VirtWndTableCell* VirtWndTable::CellAt(int row, int col) {
+    if (row < 0 || row >= rows || col < 0 || col >= cols) {
+        return nullptr;
+    }
+    return &cells[CellIdx(row, col)];
+}
+
+VirtWnd* VirtWndTable::GetCell(int row, int col) {
+    VirtWndTableCell* cell = CellAt(row, col);
+    return cell ? cell->child : nullptr;
+}
+
+void VirtWndTable::RemoveAllCells() {
+    RemoveAllChildren(true);
+    VirtWndTableCell empty;
+    for (int i = 0; i < len(cells); i++) {
+        cells[i] = empty;
+    }
+}
+
+// a cell spanning several tracks needs those tracks (plus the gaps between
+// them) to be at least as big as the cell; grow them evenly if they aren't
+static void GrowTracks(Vec<int>& tracks, int start, int span, int gap, int needed) {
+    int have = gap * (span - 1);
+    for (int i = start; i < start + span; i++) {
+        have += tracks[i];
+    }
+    int missing = needed - have;
+    if (missing <= 0) {
+        return;
+    }
+    for (int i = 0; i < span; i++) {
+        // the last track gets what rounding left over
+        int add = missing / (span - i);
+        tracks[start + i] += add;
+        missing -= add;
+    }
+}
+
+static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
+    if (span < 1) {
+        return 0;
+    }
+    int size = gap * (span - 1);
+    for (int i = start; i < start + span; i++) {
+        size += tracks[i];
+    }
+    return size;
+}
+
+// where track idx starts, relative to the first track
+static int TracksStart(Vec<int>& tracks, int idx, int gap) {
+    int pos = 0;
+    for (int i = 0; i < idx; i++) {
+        pos += tracks[i] + gap;
+    }
+    return pos;
+}
+
+// a column is as wide as its widest cell, a row as tall as its tallest. Cells
+// that span several tracks are applied afterwards, so they only stretch the
+// tracks they span when what those already give them isn't enough
+void VirtWndTable::Measure() {
+    colWidths.Clear();
+    colWidths.AppendBlanks(cols);
+    rowHeights.Clear();
+    rowHeights.AppendBlanks(rows);
+
+    Constraints loose = ExpandInf();
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            VirtWndTableCell& cell = cells[CellIdx(row, col)];
+            cell.childSize = {0, 0};
+            if (!cell.child || IsCollapsed(cell.child)) {
+                continue;
+            }
+            cell.childSize = cell.child->Layout(loose);
+            if (cell.colSpan == 1) {
+                colWidths[col] = std::max(colWidths[col], cell.childSize.dx);
+            }
+            if (cell.rowSpan == 1) {
+                rowHeights[row] = std::max(rowHeights[row], cell.childSize.dy);
+            }
+        }
+    }
+
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            VirtWndTableCell& cell = cells[CellIdx(row, col)];
+            if (!cell.child || IsCollapsed(cell.child)) {
+                continue;
+            }
+            if (cell.colSpan > 1) {
+                GrowTracks(colWidths, col, cell.colSpan, colGap, cell.childSize.dx);
+            }
+            if (cell.rowSpan > 1) {
+                GrowTracks(rowHeights, row, cell.rowSpan, rowGap, cell.childSize.dy);
+            }
+        }
+    }
+}
+
+Size VirtWndTable::TotalSize() {
+    int dx = padding.left + padding.right + TracksSize(colWidths, 0, cols, colGap);
+    int dy = padding.top + padding.bottom + TracksSize(rowHeights, 0, rows, rowGap);
+    return {dx, dy};
+}
+
+int VirtWndTable::MinIntrinsicHeight(int) {
+    Measure();
+    return TotalSize().dy;
+}
+
+int VirtWndTable::MinIntrinsicWidth(int) {
+    Measure();
+    return TotalSize().dx;
+}
+
+Size VirtWndTable::Layout(Constraints bc) {
+    Measure();
+    return bc.Constrain(TotalSize());
+}
+
+int VirtWndTable::ColWidth(int col) {
+    if (col < 0 || col >= len(colWidths)) {
+        return 0;
+    }
+    return colWidths[col];
+}
+
+int VirtWndTable::RowHeight(int row) {
+    if (row < 0 || row >= len(rowHeights)) {
+        return 0;
+    }
+    return rowHeights[row];
+}
+
+Rect VirtWndTable::ContentRect() {
+    Rect r = lastBounds;
+    r.SubTB(padding.top, padding.bottom);
+    r.SubLR(padding.left, padding.right);
+    return r;
+}
+
+// in the same coords SetBounds() was given
+Rect VirtWndTable::CellRect(int row, int col) {
+    VirtWndTableCell* cell = CellAt(row, col);
+    if (!cell || len(colWidths) != cols || len(rowHeights) != rows) {
+        return {};
+    }
+    Rect content = ContentRect();
+    int x = content.x + TracksStart(colWidths, col, colGap);
+    int y = content.y + TracksStart(rowHeights, row, rowGap);
+    int dx = TracksSize(colWidths, col, cell->colSpan, colGap);
+    int dy = TracksSize(rowHeights, row, cell->rowSpan, rowGap);
+    return {x, y, dx, dy};
+}
+
+// where a child of size sz sits inside its cell
+static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossAxisAlign alignV) {
+    Rect r{cell.x, cell.y, sz.dx, sz.dy};
+    switch (alignH) {
+        case CrossAxisAlign::Stretch:
+            r.dx = cell.dx;
+            break;
+        case CrossAxisAlign::CrossCenter:
+            r.x += (cell.dx - sz.dx) / 2;
+            break;
+        case CrossAxisAlign::CrossEnd:
+            r.x += cell.dx - sz.dx;
+            break;
+        case CrossAxisAlign::CrossStart:
+            break;
+    }
+    switch (alignV) {
+        case CrossAxisAlign::Stretch:
+            r.dy = cell.dy;
+            break;
+        case CrossAxisAlign::CrossCenter:
+            r.y += (cell.dy - sz.dy) / 2;
+            break;
+        case CrossAxisAlign::CrossEnd:
+            r.y += cell.dy - sz.dy;
+            break;
+        case CrossAxisAlign::CrossStart:
+            break;
+    }
+    return r;
+}
+
+void VirtWndTable::SetBounds(Rect r) {
+    VirtWnd::SetBounds(r);
+    if (len(colWidths) != cols || len(rowHeights) != rows) {
+        // SetBounds() without a preceding Layout()
+        Measure();
+    }
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            VirtWndTableCell& cell = cells[CellIdx(row, col)];
+            if (!cell.child || IsCollapsed(cell.child)) {
+                continue;
+            }
+            Rect cellRc = CellRect(row, col);
+            cell.child->SetBounds(AlignInCell(cellRc, cell.childSize, cell.alignH, cell.alignV));
+        }
+    }
+}
+
 //--- VirtWndScroll
 
 static Kind kindVirtWndScroll = "virtWndScroll";
@@ -1584,3 +1863,132 @@ VirtWndSpacer::~VirtWndSpacer() = default;
 Size VirtWndSpacer::GetIdealSize() {
     return idealSize;
 }
+
+#if defined(DEBUG)
+// must be last: UtAssert.h over-writes assert()
+#include "base/UtAssert.h"
+
+// Unit tests for VirtWndTable. VirtWndSpacer is the leaf: a fixed ideal size
+// and no HWND, so a whole table can be laid out and its geometry asserted.
+
+static bool VirtWndRectEq(const Rect& r, int x, int y, int dx, int dy) {
+    return r.x == x && r.y == y && r.dx == dx && r.dy == dy;
+}
+
+static void VirtWndTable_TestGrid() {
+    auto* t = new VirtWndTable();
+    t->SetSize(2, 2);
+    t->colGap = 10;
+    t->rowGap = 4;
+    auto* a = new VirtWndSpacer(20, 10);
+    auto* b = new VirtWndSpacer(40, 30);
+    auto* c = new VirtWndSpacer(30, 20);
+    t->SetCell(0, 0, a);
+    t->SetCell(0, 1, b);
+    t->SetCell(1, 0, c);
+    Size sz = t->Layout(ExpandInf());
+    // a column is as wide as its widest cell, a row as tall as its tallest
+    utassert(t->ColWidth(0) == 30 && t->ColWidth(1) == 40);
+    utassert(t->RowHeight(0) == 30 && t->RowHeight(1) == 20);
+    utassert(sz.dx == 30 + 10 + 40 && sz.dy == 30 + 4 + 20);
+    t->SetBounds(Rect{0, 0, sz.dx, sz.dy});
+    utassert(VirtWndRectEq(a->lastBounds, 0, 0, 20, 10));
+    utassert(VirtWndRectEq(b->lastBounds, 40, 0, 40, 30));
+    utassert(VirtWndRectEq(c->lastBounds, 0, 34, 30, 20));
+    // an empty cell doesn't disturb the tracks
+    utassert(t->GetCell(1, 1) == nullptr);
+    delete t;
+}
+
+static void VirtWndTable_TestAlign() {
+    auto* t = new VirtWndTable();
+    t->SetSize(3, 2);
+    // sets col 0 to 100 wide and row 0 to 40 tall, so the other cells have
+    // room to be aligned in
+    auto* big = new VirtWndSpacer(100, 40);
+    auto* bottom = new VirtWndSpacer(20, 10);
+    auto* center = new VirtWndSpacer(20, 10);
+    auto* stretch = new VirtWndSpacer(20, 10);
+    t->SetCell(0, 0, big);
+    t->SetCell(0, 1, bottom).alignV = CrossAxisAlign::CrossEnd;
+    t->SetCell(1, 0, center).alignH = CrossAxisAlign::CrossCenter;
+    t->SetCell(2, 0, stretch).alignH = CrossAxisAlign::Stretch;
+    Size sz = t->Layout(ExpandInf());
+    t->SetBounds(Rect{0, 0, sz.dx, sz.dy});
+    // 20 wide centered in the 100-wide column -> x = 40
+    utassert(VirtWndRectEq(center->lastBounds, 40, 40, 20, 10));
+    // 10 tall pushed to the bottom of the 40-tall row
+    utassert(VirtWndRectEq(bottom->lastBounds, 100, 30, 20, 10));
+    // stretched to the full column width
+    utassert(VirtWndRectEq(stretch->lastBounds, 0, 50, 100, 10));
+    delete t;
+}
+
+static void VirtWndTable_TestSpan() {
+    auto* t = new VirtWndTable();
+    t->SetSize(2, 2);
+    t->colGap = 10;
+    auto* wide = new VirtWndSpacer(100, 10);
+    auto* a = new VirtWndSpacer(20, 10);
+    auto* b = new VirtWndSpacer(30, 10);
+    t->SetCell(0, 0, wide, 1, 2);
+    t->SetCell(1, 0, a);
+    t->SetCell(1, 1, b);
+    utassert(t->CellAt(0, 1)->covered);
+    Size sz = t->Layout(ExpandInf());
+    // the columns give the spanning cell only 20 + 10 + 30, so both grow by 20
+    utassert(t->ColWidth(0) == 40 && t->ColWidth(1) == 50);
+    utassert(sz.dx == 100);
+    t->SetBounds(Rect{0, 0, sz.dx, sz.dy});
+    utassert(VirtWndRectEq(wide->lastBounds, 0, 0, 100, 10));
+    utassert(b->lastBounds.x == 50);
+    delete t;
+
+    // the same for rows
+    auto* t2 = new VirtWndTable();
+    t2->SetSize(2, 2);
+    t2->rowGap = 6;
+    auto* tall = new VirtWndSpacer(10, 100);
+    t2->SetCell(0, 0, tall, 2, 1);
+    t2->SetCell(0, 1, new VirtWndSpacer(10, 20));
+    t2->SetCell(1, 1, new VirtWndSpacer(10, 30));
+    Size sz2 = t2->Layout(ExpandInf());
+    // rows of 20 and 30 (+ the 6 gap) leave 44 missing, split evenly
+    utassert(t2->RowHeight(0) == 42 && t2->RowHeight(1) == 52);
+    utassert(sz2.dy == 100);
+    t2->SetBounds(Rect{0, 0, sz2.dx, sz2.dy});
+    utassert(VirtWndRectEq(tall->lastBounds, 0, 0, 10, 100));
+    delete t2;
+}
+
+// the cells' children must be reachable through the table's own bounds, or the
+// links of a table-laid-out screen (About) stop being clickable
+static void VirtWndTable_TestHitTest() {
+    auto* t = new VirtWndTable();
+    t->SetSize(1, 2);
+    t->colGap = 10;
+    auto* a = new VirtWndSpacer(20, 10);
+    auto* b = new VirtWndSpacer(30, 10);
+    // a spacer is decorative by default; make these hit targets
+    a->SetFlag(vwfNoHitTest, false);
+    b->SetFlag(vwfNoHitTest, false);
+    t->SetCell(0, 0, a);
+    t->SetCell(0, 1, b);
+    Size sz = t->Layout(ExpandInf());
+    t->SetBounds(Rect{5, 7, sz.dx, sz.dy});
+    Point local{0, 0};
+    utassert(t->WndFromPoint({6, 8}, &local) == a);
+    utassert(t->WndFromPoint({40, 8}, &local) == b);
+    utassert(local.x == 5 && local.y == 1);
+    // the table itself is never a target, so the gap between the columns is a miss
+    utassert(t->WndFromPoint({30, 8}, &local) == nullptr);
+    delete t;
+}
+
+void VirtWnd_UnitTests() {
+    VirtWndTable_TestGrid();
+    VirtWndTable_TestAlign();
+    VirtWndTable_TestSpan();
+    VirtWndTable_TestHitTest();
+}
+#endif

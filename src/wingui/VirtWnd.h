@@ -6,7 +6,7 @@
 // drives layout, painting and message dispatch (hover / capture / focus).
 //
 // A VirtWnd is an ILayout (Layout.h), so it composes with VBox / HBox /
-// Padding / TableLayout. Its `bounds` are relative to the parent's content
+// Padding / VirtWndTable. Its `bounds` are relative to the parent's content
 // origin; painting and hit-testing carry an origin down the tree, which is what
 // makes VirtWndScroll cheap (shift the origin, don't re-layout the subtree).
 
@@ -206,6 +206,63 @@ struct VirtWndBox : VirtWnd {
 
     void RebuildBox();
     ILayout* Box();
+};
+
+// one cell of a VirtWndTable. alignH / alignV say where the child sits when the
+// cell is bigger than the child; CrossAxisAlign::Stretch makes the child fill
+// the cell in that direction
+struct VirtWndTableCell {
+    // owned, as one of the table's VirtWnd children
+    VirtWnd* child = nullptr;
+    int rowSpan = 1;
+    int colSpan = 1;
+    CrossAxisAlign alignH = CrossAxisAlign::CrossStart;
+    CrossAxisAlign alignV = CrossAxisAlign::CrossStart;
+    // covered by a cell that spans into it, so it can't hold a child of its own
+    bool covered = false;
+    // the child's size, measured by Layout()
+    Size childSize;
+};
+
+// a grid of rows x cols cells, each holding a VirtWnd. A column is as wide as
+// its widest cell and a row as tall as its tallest; a cell can span several
+// rows and / or columns
+struct VirtWndTable : VirtWnd {
+    int rows = 0;
+    int cols = 0;
+    // space between adjacent columns / rows
+    int colGap = 0;
+    int rowGap = 0;
+
+    VirtWndTable();
+    ~VirtWndTable() override;
+
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(Constraints bc) override;
+    void SetBounds(Rect) override;
+
+    void SetSize(int rows, int cols);
+    VirtWndTableCell& SetCell(int row, int col, VirtWnd* child, int rowSpan = 1, int colSpan = 1);
+    VirtWndTableCell* CellAt(int row, int col);
+    VirtWnd* GetCell(int row, int col);
+    void RemoveAllCells();
+
+    // valid after a Layout() / SetBounds() pass
+    int ColWidth(int col);
+    int RowHeight(int row);
+    Rect CellRect(int row, int col);
+
+  private:
+    Vec<VirtWndTableCell> cells; // rows * cols, row-major
+    Vec<int> colWidths;
+    Vec<int> rowHeights;
+
+    int CellIdx(int row, int col) const;
+    void MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered);
+    void Measure();
+    Size TotalSize();
+    Rect ContentRect();
 };
 
 // tells the owner which part of the content is visible so it can create

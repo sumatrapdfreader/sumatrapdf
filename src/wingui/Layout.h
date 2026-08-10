@@ -244,37 +244,7 @@ struct Spacer : LayoutBase {
     void SetBounds(Rect) override;
 };
 
-// TODO: support global padding. Could use Inset but it's inefficient
-// for large tables to allocate additional object for each cell
-// TODO: support border width / height
-struct TableLayout : LayoutBase {
-    int cols = 0;
-    int rows = 0;
-
-    struct Cell {
-        ILayout* child;
-        // TODO: per-cell layout data
-        Size elSize;
-    };
-
-    Cell* cells = nullptr; // cols * rows
-    int* maxColWidths = nullptr;
-
-    explicit TableLayout();
-    ~TableLayout() override;
-
-    Size Layout(Constraints bc) override;
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    void SetBounds(Rect) override;
-
-    void SetSize(int rows, int cols);
-    void SetCell(int row, int col, ILayout* el);
-    ILayout* GetCell(int row, int col);
-
-    // private
-    int CellIdx(int row, int col);
-};
+// for a grid layout see VirtWndTable (VirtWnd.h)
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, Size size);
