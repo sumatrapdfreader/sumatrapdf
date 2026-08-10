@@ -923,26 +923,11 @@ struct HomeHelpBtnWnd : VirtWnd {
 
 struct HomeEntryWnd;
 
-// the per-thumbnail ✕ button (issue #283). Only visible while the mouse is on
-// its entry, and painted by the chrome tree, so appearing / disappearing is a
-// plain Invalidate() instead of a hand-rolled blit-back-from-the-buffer dance
-struct HomeCloseBtnWnd : VirtWnd {
-    MainWindow* win = nullptr;
-
-    void Paint(VirtWndPaintCtx&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
-    bool OnSetCursor(Point) override;
-    TempStr GetTooltipTemp(Point) override;
-};
-
-// the remove / pin icons of a list-view row. They are drawn by DrawHomeListRow,
-// so these are hit targets only
+// the pin icon of a list-view row. It is drawn by DrawHomeListRow, so this is a
+// hit target only (the row's ✕ is a VirtWndCloseButton, which draws itself)
 struct HomeListIconWnd : VirtWnd {
     MainWindow* win = nullptr;
-    bool isPin = false;
+    bool isPin = true;
 
     bool OnMouseDown(VirtWndMouseEvent&) override;
     bool OnMouseUp(VirtWndMouseEvent&) override;
@@ -956,8 +941,8 @@ struct HomeEntryWnd : VirtWnd {
     MainWindow* win = nullptr;
     Str filePath; // owned
     int idx = 0;
-    HomeCloseBtnWnd* closeBtn = nullptr;
-    HomeListIconWnd* removeBtn = nullptr;
+    VirtWndCloseButton* closeBtn = nullptr;
+    VirtWndCloseButton* removeBtn = nullptr;
     HomeListIconWnd* pinBtn = nullptr;
 
     ~HomeEntryWnd() override;
@@ -1720,28 +1705,6 @@ static void GetFileStateIcon(FileState* fs) {
 // white X on hover). It is a HomeCloseBtnWnd in the chrome tree, shown on the
 // entry the mouse is on.
 
-static void DrawHomeCloseGlyph(HDC hdc, const Rect& rc, bool isHover) {
-    Gdiplus::Graphics g(hdc);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    u8 a = isHover ? 255 : 215;
-    int w = rc.dx;
-    int h = rc.dy;
-    if (isHover) {
-        COLORREF bg = kColCloseXHoverBg; // runtime var so GetXValue() isn't a constant cast
-        Gdiplus::SolidBrush br(Gdiplus::Color(a, GetRValue(bg), GetGValue(bg), GetBValue(bg)));
-        g.FillEllipse(&br, rc.x, rc.y, w - 1, h - 1);
-    } else {
-        // white circle so the gray X stays visible on any thumbnail background
-        Gdiplus::SolidBrush br(Gdiplus::Color(a, 255, 255, 255));
-        g.FillEllipse(&br, rc.x, rc.y, w - 1, h - 1);
-    }
-    COLORREF xcol = isHover ? kColCloseXHover : kColCloseX;
-    Gdiplus::Pen pen(Gdiplus::Color(a, GetRValue(xcol), GetGValue(xcol), GetBValue(xcol)), 2.0f);
-    int pad = w / 3;
-    g.DrawLine(&pen, rc.x + pad, rc.y + pad, rc.x + w - pad, rc.y + h - pad);
-    g.DrawLine(&pen, rc.x + w - pad, rc.y + pad, rc.x + pad, rc.y + h - pad);
-}
-
 static void DrawHomeViewButton(HDC hdc, Pixmap* icon, Rect r, bool selected) {
     if (selected) {
         HdcFillRect(hdc, r, ThemeControlBackgroundColor());
@@ -1883,7 +1846,6 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     Rect sizeRect = thumb.rcListSize;
     HdcDrawText(hdc, fileSize, sizeRect, sizeFmt);
 
-    ImageList_Draw(l.himlOpen, (int)TbIcon::Close, hdc, thumb.rcListRemove.x, thumb.rcListRemove.y, ILD_NORMAL);
     if (fs->isPinned) {
         HdcFillRect(hdc, thumb.rcListPin, ThemeControlBackgroundColor());
     }
@@ -2082,38 +2044,13 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
     return Rect(bx, by, sz, sz);
 }
 
-void HomeCloseBtnWnd::Paint(VirtWndPaintCtx& ctx) {
-    DrawHomeCloseGlyph(GfxHdc(ctx.gfx), ctx.bounds, HasFlag(vwfHovered));
-}
-
-void HomeCloseBtnWnd::OnMouseEnter() {
-    Invalidate();
-}
-
-void HomeCloseBtnWnd::OnMouseLeave() {
-    Invalidate();
-}
-
-bool HomeCloseBtnWnd::OnMouseDown(VirtWndMouseEvent&) {
-    return true;
-}
-
-bool HomeCloseBtnWnd::OnMouseUp(VirtWndMouseEvent&) {
-    auto* entry = (HomeEntryWnd*)parent;
+// the ✕ of a thumbnail / list row: forget the file it belongs to
+static void HomeForgetEntryClicked(MainWindow* win, VirtWndMouseEvent* ev) {
+    auto* entry = (HomeEntryWnd*)ev->target->parent;
     TempStr path = str::DupTemp(entry->filePath);
     if (len(path) > 0) {
         ForgetFileFromFrequentlyRead(win, path);
     }
-    return true;
-}
-
-bool HomeCloseBtnWnd::OnSetCursor(Point) {
-    SetCursorCached(IDC_HAND);
-    return true;
-}
-
-TempStr HomeCloseBtnWnd::GetTooltipTemp(Point) {
-    return str::DupTemp(_TRA("Remove from Frequently Read"));
 }
 
 bool HomeListIconWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -2124,10 +2061,6 @@ bool HomeListIconWnd::OnMouseUp(VirtWndMouseEvent&) {
     auto* entry = (HomeEntryWnd*)parent;
     TempStr path = str::DupTemp(entry->filePath);
     if (len(path) == 0) {
-        return true;
-    }
-    if (!isPin) {
-        ForgetFileFromFrequentlyRead(win, path);
         return true;
     }
     FileState* fs = gFileHistory.FindByPath(path);
@@ -2146,9 +2079,6 @@ bool HomeListIconWnd::OnSetCursor(Point) {
 }
 
 TempStr HomeListIconWnd::GetTooltipTemp(Point) {
-    if (!isPin) {
-        return str::DupTemp(_TRA("Remove from Frequently Read"));
-    }
     auto* entry = (HomeEntryWnd*)parent;
     FileState* fs = gFileHistory.FindByPath(entry->filePath);
     bool pinned = fs && fs->isPinned;
@@ -2204,19 +2134,22 @@ void HomeEntriesWnd::SetEntryCount(int n) {
         e->win = win;
         e->idx = ChildCount();
 
-        e->closeBtn = new HomeCloseBtnWnd();
-        e->closeBtn->win = win;
+        e->closeBtn = new VirtWndCloseButton();
+        // it sits on the thumbnail, so it needs the circle behind it
+        e->closeBtn->withCircle = true;
+        e->closeBtn->SetTooltip(_TRA("Remove from Frequently Read"));
+        e->closeBtn->onClick = MkFunc1(HomeForgetEntryClicked, win);
         e->closeBtn->visibility = Visibility::Collapse;
         e->AddChild(e->closeBtn);
 
-        e->removeBtn = new HomeListIconWnd();
-        e->removeBtn->win = win;
+        e->removeBtn = new VirtWndCloseButton();
+        e->removeBtn->SetTooltip(_TRA("Remove from Frequently Read"));
+        e->removeBtn->onClick = MkFunc1(HomeForgetEntryClicked, win);
         e->removeBtn->visibility = Visibility::Collapse;
         e->AddChild(e->removeBtn);
 
         e->pinBtn = new HomeListIconWnd();
         e->pinBtn->win = win;
-        e->pinBtn->isPin = true;
         e->pinBtn->visibility = Visibility::Collapse;
         e->AddChild(e->pinBtn);
 

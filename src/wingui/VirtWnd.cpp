@@ -1704,6 +1704,97 @@ TempStr VirtWndIconButton::GetTooltipTemp(Point) {
     return str::DupTemp(tooltip);
 }
 
+//--- VirtWndCloseButton
+
+static Kind kindVirtWndCloseButton = "virtWndCloseButton";
+
+VirtWndCloseButton::VirtWndCloseButton() {
+    kind = kindVirtWndCloseButton;
+}
+
+VirtWndCloseButton::~VirtWndCloseButton() {
+    str::Free(tooltip);
+}
+
+void VirtWndCloseButton::SetTooltip(Str s) {
+    str::Free(tooltip);
+    tooltip = str::Dup(s);
+}
+
+Size VirtWndCloseButton::GetIdealSize() {
+    return idealSize;
+}
+
+void VirtWndCloseButton::Paint(VirtWndPaintCtx& ctx) {
+    bool isHover = HasFlag(vwfHovered);
+    Rect r = ctx.bounds;
+    Gdiplus::Graphics g(GfxHdc(ctx.gfx));
+    g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    g.SetPageUnit(Gdiplus::UnitPixel);
+    // gdiplus doesn't pick up the window's orientation from the device context,
+    // so mirroring has to be explicit
+    HWND hwnd = GetHwnd();
+    if (HwndIsRtl(hwnd)) {
+        g.ScaleTransform(-1, 1);
+        g.TranslateTransform((float)HwndClientRect(hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
+    }
+
+    // slightly translucent when it sits on content it doesn't own
+    u8 a = (withCircle && !isHover) ? 215 : 255;
+    COLORREF circle = isHover ? circleColorHover : circleColor;
+    if (isHover && circle == kColorUnset) {
+        circle = kColCloseXHoverBg;
+    } else if (!isHover && circle == kColorUnset) {
+        circle = MkGray(0xff);
+    }
+    if (isHover || withCircle) {
+        Gdiplus::SolidBrush br(Gdiplus::Color(a, GetRValue(circle), GetGValue(circle), GetBValue(circle)));
+        g.FillEllipse(&br, r.x, r.y, r.dx - 1, r.dy - 1);
+    }
+
+    COLORREF xcol = isHover ? xColorHover : xColor;
+    if (xcol == kColorUnset) {
+        xcol = isHover ? kColCloseXHover : kColCloseX;
+    }
+    Gdiplus::Pen pen(Gdiplus::Color(a, GetRValue(xcol), GetGValue(xcol), GetBValue(xcol)), 2.0f);
+    int pad = r.dx / 3;
+    g.DrawLine(&pen, r.x + pad, r.y + pad, r.x + r.dx - pad, r.y + r.dy - pad);
+    g.DrawLine(&pen, r.x + r.dx - pad, r.y + pad, r.x + pad, r.y + r.dy - pad);
+}
+
+void VirtWndCloseButton::OnMouseEnter() {
+    Invalidate();
+}
+
+void VirtWndCloseButton::OnMouseLeave() {
+    Invalidate();
+}
+
+bool VirtWndCloseButton::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool VirtWndCloseButton::OnMouseUp(VirtWndMouseEvent& ev) {
+    if (onClick.IsEmpty()) {
+        return false;
+    }
+    onClick.Call(&ev);
+    return true;
+}
+
+bool VirtWndCloseButton::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr VirtWndCloseButton::GetTooltipTemp(Point) {
+    if (!tooltip) {
+        return nullptr;
+    }
+    return str::DupTemp(tooltip);
+}
+
 //--- VirtWndImage
 
 static Kind kindVirtWndImage = "virtWndImage";

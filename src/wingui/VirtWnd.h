@@ -440,6 +440,36 @@ struct VirtWndIconButton : VirtWnd {
     TempStr GetTooltipTemp(Point ptLocal) override;
 };
 
+// The ✕ that closes or removes something, styled like the tab close button: a
+// gray ✕ that turns white on a red circle when hovered. `withCircle` also fills
+// the circle when not hovered, which is what keeps it readable on top of
+// arbitrary content (a thumbnail).
+// Colors left at kColorUnset use the tab close button's.
+struct VirtWndCloseButton : VirtWnd {
+    bool withCircle = false;
+    COLORREF xColor = kColorUnset;
+    COLORREF xColorHover = kColorUnset;
+    COLORREF circleColor = kColorUnset;
+    COLORREF circleColorHover = kColorUnset;
+    Size idealSize;
+    Str tooltip; // owned
+    VirtWndMouseHandler onClick;
+
+    VirtWndCloseButton();
+    ~VirtWndCloseButton() override;
+
+    void SetTooltip(Str);
+
+    Size GetIdealSize() override;
+    void Paint(VirtWndPaintCtx&) override;
+    void OnMouseEnter() override;
+    void OnMouseLeave() override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point ptLocal) override;
+    TempStr GetTooltipTemp(Point ptLocal) override;
+};
+
 struct VirtWndImage : VirtWnd {
     Pixmap* pixmap = nullptr; // not owned
     // scale the image down to fit, keeping the aspect ratio

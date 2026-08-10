@@ -39,7 +39,6 @@ Kind kNotifAdHoc = "notifAdHoc";
 Kind kNotifLazyLayout = "notifLazyLayout";
 
 static Kind kindNotifText = "notifText";
-static Kind kindNotifClose = "notifClose";
 static Kind kindNotifProgress = "notifProgress";
 
 constexpr int kPadding = 6;
@@ -72,23 +71,6 @@ struct NotifTextWnd : VirtWnd {
 
     Size GetIdealSize() override;
     void Paint(VirtWndPaintCtx&) override;
-};
-
-// the ✕ that dismisses the notification
-struct NotifCloseWnd : VirtWnd {
-    NotificationWnd* notif = nullptr;
-    Size idealSize;
-
-    NotifCloseWnd();
-    ~NotifCloseWnd() override = default;
-
-    Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
 };
 
 // the progress bar below the message (only when progressPerc >= 0)
@@ -154,9 +136,13 @@ struct NotificationWnd : Wnd {
     // either the built-in text or a caller-supplied tree, never both
     NotifTextWnd* txtWnd = nullptr;
     VirtWnd* contentWnd = nullptr;
-    NotifCloseWnd* closeWnd = nullptr;
+    VirtWndCloseButton* closeWnd = nullptr;
     NotifProgressWnd* progressWnd = nullptr;
 };
+
+static void NotifCloseClicked(NotificationWnd* wnd, VirtWndMouseEvent*) {
+    wnd->ScheduleRemove();
+}
 
 // the wnd showing the message (built-in) or the caller's custom tree
 static VirtWnd* NotifBody(NotificationWnd* wnd) {
@@ -384,8 +370,8 @@ void NotificationWnd::BuildTree(VirtWnd* customContent) {
 
     if (!noClose) {
         // last, so it hit-tests on top of the body
-        closeWnd = new NotifCloseWnd();
-        closeWnd->notif = this;
+        closeWnd = new VirtWndCloseButton();
+        closeWnd->onClick = MkFunc1(NotifCloseClicked, this);
         container->AddChild(closeWnd);
     }
     vroot->SetChild(container);
@@ -696,44 +682,6 @@ void NotifTextWnd::Paint(VirtWndPaintCtx& ctx) {
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);
     HdcDrawText(GfxHdc(ctx.gfx), text, ctx.content, txtFmt, notif->font);
-}
-
-NotifCloseWnd::NotifCloseWnd() {
-    kind = kindNotifClose;
-}
-
-Size NotifCloseWnd::GetIdealSize() {
-    return idealSize;
-}
-
-void NotifCloseWnd::Paint(VirtWndPaintCtx& ctx) {
-    DrawCloseButtonArgs args;
-    args.hdc = GfxHdc(ctx.gfx);
-    args.r = ctx.bounds;
-    args.isHover = HasFlag(vwfHovered);
-    DrawCloseButton(args);
-}
-
-void NotifCloseWnd::OnMouseEnter() {
-    Invalidate();
-}
-
-void NotifCloseWnd::OnMouseLeave() {
-    Invalidate();
-}
-
-bool NotifCloseWnd::OnMouseDown(VirtWndMouseEvent&) {
-    return true;
-}
-
-bool NotifCloseWnd::OnMouseUp(VirtWndMouseEvent&) {
-    notif->ScheduleRemove();
-    return true;
-}
-
-bool NotifCloseWnd::OnSetCursor(Point) {
-    SetCursorCached(IDC_HAND);
-    return true;
 }
 
 NotifProgressWnd::NotifProgressWnd() {
