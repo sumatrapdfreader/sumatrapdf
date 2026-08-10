@@ -1169,9 +1169,9 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     // bold text in the list means
     {
         Str hints[] = {
-            _TRA("Enger or double-click to edit"),
-            _TRA("Value bold? different from default"),
-            _TRA("Name bold? value changed and unsaved"),
+            _TRA("Enter or double-click to edit"),
+            _TRA("Value bold? Value is different from default"),
+            _TRA("Name bold? Value was changed but unsaved"),
         };
         for (const Str& hint : hints) {
             auto* hbox = new HBox();
