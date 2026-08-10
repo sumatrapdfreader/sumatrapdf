@@ -753,6 +753,11 @@ using Gdiplus::PathData;
 
 struct TabsCtrl;
 struct TabInfo;
+struct TabWnd;
+struct VirtWndRoot;
+struct VirtWndBox;
+struct VirtWndCloseButton;
+struct VirtWndMouseEvent;
 
 #define kTabDefaultBgCol ((COLORREF)(-1))
 
@@ -767,13 +772,6 @@ struct TabInfo {
 
     TabInfo() = default;
     ~TabInfo();
-
-    // for internal use
-    Rect r;
-    Rect rClose;    // visual close button
-    Rect rCloseHit; // expanded hit test area for close
-    Size titleSize;
-    Point titlePos;
 };
 
 struct TabsCtrl : Wnd {
@@ -838,6 +836,13 @@ struct TabsCtrl : Wnd {
     int tabDefaultDx = 300;
 
     Vec<TabInfo*> tabs;
+    // the bar as virtual controls: one TabWnd per TabInfo, laid out by `bar`
+    VirtWndRoot* vroot = nullptr;
+    VirtWndBox* bar = nullptr;
+    // in tab order (the box's children are reversed when the UI is RTL)
+    Vec<TabWnd*> tabWnds;
+    struct Tooltip* tooltip = nullptr;
+    int selectedIdx = -1;
 
     // tracking state of which tab is highlighted etc.
     int tabHighlighted = -1;
@@ -886,7 +891,6 @@ struct TabsCtrl : Wnd {
     HWND Create(TabsCtrl::CreateArgs&);
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
 
     Size GetIdealSize() override;
 
@@ -921,6 +925,12 @@ struct TabsCtrl : Wnd {
     TabsCtrl::MouseState TabStateFromMousePosition(const Point& p);
     void Paint(HDC hdc, const Rect& rc);
     HBITMAP RenderForDragging(int idx);
+
+    TabWnd* TabWndAt(int idx);
+    void RebuildTabWnds();
+    void UpdateHover(int tabUnderMouse);
+    void OnTabMouseDown(TabWnd*, VirtWndMouseEvent&);
+    void CloseTab(int idx);
 };
 
 template <typename T>

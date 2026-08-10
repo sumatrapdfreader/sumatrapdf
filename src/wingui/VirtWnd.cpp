@@ -1727,7 +1727,9 @@ Size VirtWndCloseButton::GetIdealSize() {
 
 void VirtWndCloseButton::Paint(VirtWndPaintCtx& ctx) {
     bool isHover = HasFlag(vwfHovered);
-    Rect r = ctx.bounds;
+    // the glyph goes in the content rect, so padding makes the hit area bigger
+    // than the ✕ itself (the tab bar's close gutter)
+    Rect r = ctx.content;
     Gdiplus::Graphics g(GfxHdc(ctx.gfx));
     g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
     g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
