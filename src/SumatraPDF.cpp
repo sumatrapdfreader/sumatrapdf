@@ -8928,6 +8928,49 @@ static void DebugCorruptMemory() {
     free(s);
 }
 #endif
+
+// a VirtWndImage doesn't own the Pixmap it shows, so a notification that
+// generates one needs a wnd that frees it when the tree goes away
+struct OwnedPixmapWnd : VirtWndImage {
+    ~OwnedPixmapWnd() override { FreePixmap(pixmap); }
+};
+
+// a gradient, so that there is something recognizable to look at
+static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
+    Pixmap* px = AllocPixmapDIB(dx, dy);
+    if (!px) {
+        return nullptr;
+    }
+    px->premultiplied = true;
+    for (int y = 0; y < dy; y++) {
+        u8* row = px->data + ((size_t)y * (size_t)px->stride);
+        for (int x = 0; x < dx; x++) {
+            u8* p = row + (x * 4);
+            p[0] = (u8)(255 * x / dx);       // B
+            p[1] = (u8)(255 * y / dy);       // G
+            p[2] = (u8)(255 - 255 * x / dx); // R
+            p[3] = 255;                      // A
+        }
+    }
+    return px;
+}
+
+// content for a notification, built as a VirtWnd tree: a generated Pixmap shown
+// by a VirtWnd, with a caption below it
+static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
+    HFONT font = GetAppBiggerFont(hwnd);
+    auto* box = new VirtWndBox(true);
+    box->alignCross = CrossAxisAlign::CrossCenter;
+
+    auto* img = new OwnedPixmapWnd();
+    img->pixmap = MakeDebugGradientPixmap(DpiScale(hwnd, 120), DpiScale(hwnd, 40));
+    img->fitToBounds = false;
+    box->AddChild(img);
+
+    box->AddChild(new VirtWndSpacer(0, DpiScale(hwnd, 6)));
+    box->AddChild(new VirtWndText(hwnd, StrL("a VirtWnd-drawn Pixmap"), font));
+    return box;
+}
 #endif
 
 constexpr const char* kManualDefaultDocURI = "/SumatraPDF-documentation";
@@ -10612,6 +10655,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 auto wnd = ShowNotification(args);
                 UpdateNotificationProgress(wnd, "Progress", 50);
             }
+
+            // a notification whose content is a VirtWnd tree we build here
+            ShowCustomNotification(win->hwndCanvas, MakeDebugPixmapNotifContent(win->hwndCanvas));
         } break;
 
         case CmdDebugCrashMe:

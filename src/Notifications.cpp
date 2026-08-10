@@ -10,6 +10,7 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -35,11 +36,72 @@ Kind kNotifAdHoc = "notifAdHoc";
 // debug-only: continuous layout re-done because newly visible pages got measured
 Kind kNotifLazyLayout = "notifLazyLayout";
 
+static Kind kindNotifText = "notifText";
+static Kind kindNotifClose = "notifClose";
+static Kind kindNotifProgress = "notifProgress";
+
 constexpr int kPadding = 6;
 constexpr int kTopLeftMargin = 8;
 
 constexpr UINT_PTR kNotifTimerTimeoutId = 1;
 constexpr UINT_PTR kNotifTimerDelayId = 2;
+
+struct NotificationWnd;
+
+// the colors a notification paints with; they depend on `highlight`
+struct NotifColors {
+    COLORREF bg;
+    COLORREF txt;
+    COLORREF link;
+};
+
+// the message text. Two draw paths, as before: a single DrawText for plain
+// messages and per-word drawing (with clickable links) for rich ones
+struct NotifTextWnd : VirtWnd {
+    NotificationWnd* notif = nullptr;
+    // message parsed for the extended tip syntax (links, Key/ shortcuts);
+    // drawRich is true when it has links or bold runs (per-word draw)
+    ParsedTip parsedMsg;
+    bool drawRich = false;
+    // DT_* format for drawing the message, set in NotificationWnd::Layout()
+    uint txtFmt = DT_SINGLELINE | DT_NOPREFIX;
+    Size idealSize;
+
+    NotifTextWnd();
+    ~NotifTextWnd() override = default;
+
+    Size GetIdealSize() override;
+    void Paint(VirtWndPaintCtx&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point ptLocal) override;
+};
+
+// the ✕ that dismisses the notification
+struct NotifCloseWnd : VirtWnd {
+    NotificationWnd* notif = nullptr;
+    Size idealSize;
+
+    NotifCloseWnd();
+    ~NotifCloseWnd() override = default;
+
+    Size GetIdealSize() override;
+    void Paint(VirtWndPaintCtx&) override;
+    void OnMouseEnter() override;
+    void OnMouseLeave() override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point ptLocal) override;
+};
+
+// the progress bar below the message (only when progressPerc >= 0)
+struct NotifProgressWnd : VirtWnd {
+    NotificationWnd* notif = nullptr;
+
+    NotifProgressWnd();
+    ~NotifProgressWnd() override = default;
+
+    void Paint(VirtWndPaintCtx&) override;
+};
 
 struct NotificationWnd : Wnd {
     NotificationWnd() = default;
@@ -55,6 +117,9 @@ struct NotificationWnd : Wnd {
 
     bool HasProgress() const { return progressPerc >= 0; }
     void Layout(Str message);
+    void BuildTree(VirtWnd* customContent);
+    NotifColors Colors() const;
+    void ScheduleRemove();
 
     int timeoutMs = kNotifDefaultTimeOut; // 0 means no timeout
 
@@ -83,17 +148,22 @@ struct NotificationWnd : Wnd {
     int delayInMs = 0;
     UINT_PTR delayTimerId = 0;
 
-    // message parsed for the extended tip syntax (links, Key/ shortcuts);
-    // drawRich is true when it has links or bold runs (per-word draw)
-    ParsedTip parsedMsg;
-    bool drawRich = false;
-
-    Rect rTxt;
-    Rect rClose;
-    Rect rProgress;
-    // DT_* format for drawing the message, set in Layout()
-    uint txtFmt = DT_SINGLELINE | DT_NOPREFIX;
+    // the content is a VirtWnd tree hosted in our HWND. `container` positions
+    // its children itself (Layout() computes the rects), so the root never
+    // re-layouts on its own
+    VirtWndRoot* vroot = nullptr;
+    VirtWnd* container = nullptr;
+    // either the built-in text or a caller-supplied tree, never both
+    NotifTextWnd* txtWnd = nullptr;
+    VirtWnd* contentWnd = nullptr;
+    NotifCloseWnd* closeWnd = nullptr;
+    NotifProgressWnd* progressWnd = nullptr;
 };
+
+// the wnd showing the message (built-in) or the caller's custom tree
+static VirtWnd* NotifBody(NotificationWnd* wnd) {
+    return wnd->contentWnd ? wnd->contentWnd : (VirtWnd*)wnd->txtWnd;
+}
 
 constexpr int kMaxNotifs = 128;
 static NotificationWnd* gNotifs[kMaxNotifs];
@@ -273,6 +343,54 @@ NotificationWnd::~NotificationWnd() {
         KillTimer(hwnd, delayTimerId);
         delayTimerId = 0;
     }
+    // owns the whole VirtWnd tree, including a caller-supplied contentWnd
+    delete vroot;
+}
+
+NotifColors NotificationWnd::Colors() const {
+    NotifColors c;
+    if (highlight) {
+        c.bg = ThemeNotificationsHighlightColor();
+        c.txt = ThemeNotificationsHighlightTextColor();
+        c.link = ThemeNotificationsHighlightLinkColor();
+    } else {
+        c.bg = ThemeNotificationsBackgroundColor();
+        c.txt = ThemeNotificationsTextColor();
+        c.link = ThemeWindowLinkColor();
+    }
+    return c;
+}
+
+// builds the tree hosted in our HWND: the body (message text or a caller
+// supplied tree), the close button and the progress bar
+void NotificationWnd::BuildTree(VirtWnd* customContent) {
+    vroot = new VirtWndRoot(hwnd);
+    container = new VirtWnd();
+    container->name = StrL("notification");
+    // decorative: clicks in the padding around the controls do nothing
+    container->flags |= vwfNoHitTest;
+
+    if (customContent) {
+        contentWnd = customContent;
+        container->AddChild(contentWnd);
+    } else {
+        txtWnd = new NotifTextWnd();
+        txtWnd->notif = this;
+        container->AddChild(txtWnd);
+    }
+
+    progressWnd = new NotifProgressWnd();
+    progressWnd->notif = this;
+    progressWnd->visibility = Visibility::Collapse;
+    container->AddChild(progressWnd);
+
+    if (!noClose) {
+        // last, so it hit-tests on top of the body
+        closeWnd = new NotifCloseWnd();
+        closeWnd->notif = this;
+        container->AddChild(closeWnd);
+    }
+    vroot->SetChild(container);
 }
 
 HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
@@ -310,9 +428,12 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
 
     CreateCustom(cargs);
     if (!hwnd) {
+        // we took ownership of the content, so it dies with us
+        delete args.content;
         return nullptr;
     }
 
+    BuildTree(args.content);
     Layout(args.msg);
     delayInMs = args.delayInMs;
     if (delayInMs > 0) {
@@ -341,11 +462,6 @@ int CalcPerc(int current, int total) {
 constexpr int kCloseLeftMargin = 16;
 constexpr int kProgressDy = 5;
 
-static bool NotificationCloseHitTest(HWND hwnd, const Rect& rClose, Point pt) {
-    UnmirrorRtl(hwnd, pt);
-    return rClose.Contains(pt);
-}
-
 void NotificationWnd::Layout(Str message) {
     if (!message) {
         message = StrL("");
@@ -366,48 +482,60 @@ void NotificationWnd::Layout(Str message) {
 
     bool isRtl = IsUIRtl();
 
-    // parse the message for the extended tip syntax (links, Key/ shortcuts)
-    parsedMsg.Reset();
-    ParseTip(parsedMsg, message);
-    // rich path also for bold-only messages (e.g. the F7 help), not just links
-    drawRich = TipHasRichContent(parsedMsg);
-
     Size szText;
-    if (drawRich) {
-        // rich text: lay out words (links). Note: no RTL word reordering, same
-        // as the home page tips.
-        txtFmt = DT_LEFT | DT_NOPREFIX;
-        HDC hdc = GetDC(hwnd);
-        MeasureTipWords(parsedMsg, hdc, font);
-        int areaWidth = (maxTextDx > 0) ? maxTextDx : (1 << 20);
-        LayoutTip(parsedMsg, areaWidth, 0, 0);
-        ReleaseDC(hwnd, hdc);
-        szText.dx = parsedMsg.totalDx;
-        szText.dy = parsedMsg.totalDy;
+    if (contentWnd) {
+        // caller-supplied tree: it decides its own size, we only cap the width
+        Constraints bc = Loose({maxTextDx > 0 ? maxTextDx : Inf, Inf});
+        szText = contentWnd->Layout(bc);
     } else {
-        // plain text: render exactly like before (RTL handling, wrapping). Only
-        // substitute the parsed text when there were (Key/...) / (Kbd/...) so
-        // ordinary messages keep their original whitespace/newlines.
-        if (str::Contains(message, StrL("(Key/")) || str::Contains(message, StrL("(Kbd/"))) {
-            message = TipPlainTextTemp(parsedMsg);
-            HwndSetText(hwnd, message);
+        // parse the message for the extended tip syntax (links, Key/ shortcuts)
+        ParsedTip& parsedMsg = txtWnd->parsedMsg;
+        parsedMsg.Reset();
+        ParseTip(parsedMsg, message);
+        // rich path also for bold-only messages (e.g. the F7 help), not just links
+        txtWnd->drawRich = TipHasRichContent(parsedMsg);
+
+        if (txtWnd->drawRich) {
+            // rich text: lay out words (links). Note: no RTL word reordering, same
+            // as the home page tips.
+            txtWnd->txtFmt = DT_LEFT | DT_NOPREFIX;
+            HDC hdc = GetDC(hwnd);
+            MeasureTipWords(parsedMsg, hdc, font);
+            int areaWidth = (maxTextDx > 0) ? maxTextDx : (1 << 20);
+            LayoutTip(parsedMsg, areaWidth, 0, 0);
+            ReleaseDC(hwnd, hdc);
+            szText.dx = parsedMsg.totalDx;
+            szText.dy = parsedMsg.totalDy;
+        } else {
+            // plain text: render exactly like before (RTL handling, wrapping). Only
+            // substitute the parsed text when there were (Key/...) / (Kbd/...) so
+            // ordinary messages keep their original whitespace/newlines.
+            if (str::Contains(message, StrL("(Key/")) || str::Contains(message, StrL("(Kbd/"))) {
+                message = TipPlainTextTemp(parsedMsg);
+                HwndSetText(hwnd, message);
+            }
+            uint fmt = DT_SINGLELINE | DT_NOPREFIX;
+            if (isRtl) {
+                fmt |= DT_RIGHT | DT_RTLREADING;
+            }
+            HDC hdc = GetDC(hwnd);
+            szText = HdcMeasureText(hdc, message, fmt, font);
+            if (maxTextDx > 0 && szText.dx > maxTextDx) {
+                // too wide: word-wrap the message; DT_WORD_ELLIPSIS truncates
+                // words too long to wrap (e.g. long file paths)
+                fmt = DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX;
+                szText = HdcMeasureText(hdc, message, maxTextDx, fmt, font);
+                szText.dx = std::min(szText.dx, maxTextDx);
+            }
+            ReleaseDC(hwnd, hdc);
+            txtWnd->txtFmt = fmt;
         }
-        txtFmt = DT_SINGLELINE | DT_NOPREFIX;
-        if (isRtl) {
-            txtFmt |= DT_RIGHT | DT_RTLREADING;
-        }
-        HDC hdc = GetDC(hwnd);
-        szText = HdcMeasureText(hdc, message, txtFmt, font);
-        if (maxTextDx > 0 && szText.dx > maxTextDx) {
-            // too wide: word-wrap the message; DT_WORD_ELLIPSIS truncates
-            // words too long to wrap (e.g. long file paths)
-            txtFmt = DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX;
-            szText = HdcMeasureText(hdc, message, maxTextDx, txtFmt, font);
-            szText.dx = std::min(szText.dx, maxTextDx);
-        }
-        ReleaseDC(hwnd, hdc);
+        txtWnd->idealSize = szText;
     }
 
+    Rect rTxt;
+    Rect rClose;
+    Rect rProgress;
     int dx = padX + szText.dx + padX;
     int dy = padY + szText.dy + padY;
     int closeBlockDx = closeLeftMargin + closeDx + padX;
@@ -486,6 +614,19 @@ void NotificationWnd::Layout(Str message) {
         rClose.y = ((dy - rClose.dx) / 2) + 1;
     }
 
+    // hand the computed geometry to the VirtWnd tree. The container positions
+    // its children itself, so the root must not re-layout them
+    vroot->bounds = {0, 0, dx, dy};
+    vroot->needsLayout = false;
+    container->SetBounds({0, 0, dx, dy});
+    NotifBody(this)->SetBounds(rTxt);
+    if (closeWnd) {
+        closeWnd->idealSize = {rClose.dx, rClose.dy};
+        closeWnd->SetBounds(rClose);
+    }
+    progressWnd->visibility = HasProgress() ? Visibility::Visible : Visibility::Collapse;
+    progressWnd->SetBounds(rProgress);
+
     if (dx == rCurr.dx && dy == rCurr.dy) {
         return;
     }
@@ -514,72 +655,126 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
 
     ScopedSelectObject fontPrev(hdc, font);
 
-    COLORREF colBg = ThemeNotificationsBackgroundColor();
-    COLORREF colTxt = ThemeNotificationsTextColor();
-    COLORREF colLink = ThemeWindowLinkColor();
-    if (highlight) {
-        colBg = ThemeNotificationsHighlightColor();
-        colTxt = ThemeNotificationsHighlightTextColor();
-        colLink = ThemeNotificationsHighlightLinkColor();
-    }
-    // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
-    // COLORREF colBg = MkGray(0xff);
-
-    Graphics graphics(hdc);
-    SolidBrush br(GdiRgbFromCOLORREF(colBg));
-    auto grc = Gdiplus::Rect(0, 0, rc.dx, rc.dy);
-    graphics.FillRectangle(&br, grc);
+    NotifColors cols = Colors();
+    HdcFillRect(hdc, rc, cols.bg);
 
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, colTxt);
-    if (drawRich) {
-        // words were laid out at (0,0); shift the origin to rTxt and draw
-        POINT oldOrg;
-        SetViewportOrgEx(hdc, rTxt.x, rTxt.y, &oldOrg);
-        DrawTipWords(hdc, parsedMsg, font, colTxt, colLink, colBg);
-        SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
-    } else {
-        TempStr text = HwndGetTextTemp(hwnd);
-        HdcDrawText(hdc, text, rTxt, txtFmt);
-    }
-
-    if (!noClose) {
-        Point curPos = HwndGetCursorPos(hwnd);
-        DrawCloseButtonArgs args;
-        args.hdc = hdc;
-        args.r = rClose;
-        args.isHover = NotificationCloseHitTest(hwnd, rClose, curPos);
-        DrawCloseButton(args);
-    }
-#if 0
-    DrawCloseButtonArgs args;
-    args.hdc = hdc;
-    args.r = rClose;
-    args.r.Inflate(-5, -5);
-    args.isHover = isHover;
-    DrawCloseButton2(args);
-#endif
-
-    if (HasProgress()) {
-        rc = rProgress;
-        int progressWidth = rc.dx;
-
-        COLORREF col = ThemeNotificationsProgressColor();
-        Pen pen(GdiRgbFromCOLORREF(col));
-        grc = {rc.x, rc.y, rc.dx, rc.dy};
-        graphics.DrawRectangle(&pen, grc);
-
-        rc.x += 2;
-        rc.dx = (progressWidth - 3) * progressPerc / 100;
-        rc.y += 2;
-        rc.dy -= 3;
-
-        br.SetColor(GdiRgbFromCOLORREF(col));
-        grc = {rc.x, rc.y, rc.dx, rc.dy};
-        graphics.FillRectangle(&br, grc);
-    }
+    SetTextColor(hdc, cols.txt);
+    // the controls (message / custom content, close button, progress) paint
+    // themselves
+    vroot->Paint(hdc, rc);
 
     buffer.Flush(hdcIn);
+}
+
+//--- the VirtWnd controls making up a notification
+
+NotifTextWnd::NotifTextWnd() {
+    kind = kindNotifText;
+}
+
+Size NotifTextWnd::GetIdealSize() {
+    return idealSize;
+}
+
+void NotifTextWnd::Paint(VirtWndPaintCtx& ctx) {
+    NotifColors cols = notif->Colors();
+    Rect r = ctx.content;
+    if (drawRich) {
+        // words were laid out at (0,0); shift the origin to our rect and draw
+        POINT oldOrg;
+        SetViewportOrgEx(ctx.hdc, r.x, r.y, &oldOrg);
+        DrawTipWords(ctx.hdc, parsedMsg, notif->font, cols.txt, cols.link, cols.bg);
+        SetViewportOrgEx(ctx.hdc, oldOrg.x, oldOrg.y, nullptr);
+        return;
+    }
+    TempStr text = HwndGetTextTemp(notif->hwnd);
+    HdcDrawText(ctx.hdc, text, r, txtFmt, notif->font);
+}
+
+bool NotifTextWnd::OnMouseUp(VirtWndMouseEvent& ev) {
+    if (!drawRich) {
+        return false;
+    }
+    int linkIdx = HitTestTipLink(parsedMsg, ev.pt.x, ev.pt.y);
+    if (linkIdx < 0) {
+        return false;
+    }
+    // send commands to the top-level window (the main frame)
+    HWND root = GetAncestor(notif->hwnd, GA_ROOT);
+    ExecuteTipLink(root, parsedMsg.links[linkIdx].cmd);
+    return true;
+}
+
+bool NotifTextWnd::OnSetCursor(Point ptLocal) {
+    if (!drawRich || HitTestTipLink(parsedMsg, ptLocal.x, ptLocal.y) < 0) {
+        return false;
+    }
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+NotifCloseWnd::NotifCloseWnd() {
+    kind = kindNotifClose;
+}
+
+Size NotifCloseWnd::GetIdealSize() {
+    return idealSize;
+}
+
+void NotifCloseWnd::Paint(VirtWndPaintCtx& ctx) {
+    DrawCloseButtonArgs args;
+    args.hdc = ctx.hdc;
+    args.r = ctx.bounds;
+    args.isHover = HasFlag(vwfHovered);
+    DrawCloseButton(args);
+}
+
+void NotifCloseWnd::OnMouseEnter() {
+    Invalidate();
+}
+
+void NotifCloseWnd::OnMouseLeave() {
+    Invalidate();
+}
+
+bool NotifCloseWnd::OnMouseDown(VirtWndMouseEvent&) {
+    return true;
+}
+
+bool NotifCloseWnd::OnMouseUp(VirtWndMouseEvent&) {
+    notif->ScheduleRemove();
+    return true;
+}
+
+bool NotifCloseWnd::OnSetCursor(Point) {
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+NotifProgressWnd::NotifProgressWnd() {
+    kind = kindNotifProgress;
+    flags |= vwfNoHitTest;
+}
+
+void NotifProgressWnd::Paint(VirtWndPaintCtx& ctx) {
+    Rect rc = ctx.bounds;
+    int progressWidth = rc.dx;
+
+    COLORREF col = ThemeNotificationsProgressColor();
+    Graphics graphics(ctx.hdc);
+    Pen pen(GdiRgbFromCOLORREF(col));
+    auto grc = Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy);
+    graphics.DrawRectangle(&pen, grc);
+
+    rc.x += 2;
+    rc.dx = (progressWidth - 3) * notif->progressPerc / 100;
+    rc.y += 2;
+    rc.dy -= 3;
+
+    SolidBrush br(GdiRgbFromCOLORREF(col));
+    grc = {rc.x, rc.y, rc.dx, rc.dy};
+    graphics.FillRectangle(&br, grc);
 }
 
 void NotificationWnd::UpdateMessage(Str msg, int timeoutMs, bool highlight) {
@@ -612,6 +807,18 @@ static void NotifDelete(NotificationWnd* wnd) {
     delete wnd;
 }
 
+// Delete off the stack of the message being dispatched (uitask runs after
+// dispatch), so the wnd survives until the handler returns.
+void NotificationWnd::ScheduleRemove() {
+    if (wndRemovedCb.IsValid()) {
+        auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
+        uitask::Post(fn, "TaskNotifRemove");
+    } else {
+        auto fn = MkFunc0<NotificationWnd>(NotifDelete, this);
+        uitask::Post(fn, "TaskNotifDelete");
+    }
+}
+
 void NotificationWnd::OnTimer(UINT_PTR timerId) {
     if (timerId == kNotifTimerDelayId) {
         // delay elapsed, now show the notification
@@ -626,84 +833,61 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
         return;
     }
     ReportIf(kNotifTimerTimeoutId != timerId);
-    // Delete off the stack of this WM_TIMER (uitask runs after dispatch).
-    if (wndRemovedCb.IsValid()) {
-        auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
-        uitask::Post(fn, "TaskNotifOnTimerRemove");
-    } else {
-        auto fn = MkFunc0<NotificationWnd>(NotifDelete, this);
-        uitask::Post(fn, "TaskNotifOnTimerDelete");
+    ScheduleRemove();
+}
+
+static bool IsNotifMouseMsg(UINT msg) {
+    switch (msg) {
+        case WM_MOUSEMOVE:
+        case WM_MOUSELEAVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+            return true;
     }
+    return false;
+}
+
+// the tree lays out left-to-right; when the HWND has an RTL layout GDI mirrors
+// the drawing for us but mouse coordinates arrive mirrored, so undo that before
+// hit-testing
+static LPARAM UnmirrorRtlLparam(HWND hwnd, LPARAM lp) {
+    if (!HwndIsRtl(hwnd)) {
+        return lp;
+    }
+    Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+    UnmirrorRtl(hwnd, pt);
+    return MAKELPARAM(pt.x, pt.y);
 }
 
 LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_SETCURSOR == msg && !noClose) {
-        Point pt = HwndGetCursorPos(hwnd);
-        if (!pt.IsEmpty() && NotificationCloseHitTest(hwnd, rClose, pt)) {
-            SetCursorCached(IDC_HAND);
-            return TRUE;
-        }
-    }
-
-    if (drawRich) {
-        if (WM_SETCURSOR == msg) {
-            Point pt = HwndGetCursorPos(hwnd);
-            if (!pt.IsEmpty() && HitTestTipLink(parsedMsg, pt.x - rTxt.x, pt.y - rTxt.y) >= 0) {
-                SetCursorCached(IDC_HAND);
-                return TRUE;
-            }
-        }
-        if (WM_LBUTTONUP == msg) {
-            int x = GET_X_LPARAM(lp);
-            int y = GET_Y_LPARAM(lp);
-            int linkIdx = HitTestTipLink(parsedMsg, x - rTxt.x, y - rTxt.y);
-            if (linkIdx >= 0) {
-                // send commands to the top-level window (the main frame)
-                HWND root = GetAncestor(hwnd, GA_ROOT);
-                ExecuteTipLink(root, parsedMsg.links[linkIdx].cmd);
-                return 0;
-            }
-        }
-    }
-
     if (WM_ERASEBKGND == msg) {
         // avoid flicker by telling we took care of erasing background
         return TRUE;
     }
 
-    if (WM_MOUSEMOVE == msg) {
-        HwndScheduleRepaint(hwnd);
-
-        if (!noClose) {
-            Point pt = HwndGetCursorPos(hwnd);
-            if (NotificationCloseHitTest(hwnd, rClose, pt)) {
-                TrackMouseLeave(hwnd);
+    if (WM_SETCURSOR == msg) {
+        Point pt = HwndGetCursorPos(hwnd);
+        UnmirrorRtl(hwnd, pt);
+        Point ptLocal{0, 0};
+        VirtWnd* w = vroot->WndFromPoint(pt, &ptLocal);
+        while (w) {
+            Rect b = w->BoundsInWindow();
+            if (w->OnSetCursor({pt.x - b.x, pt.y - b.y})) {
+                return TRUE;
             }
+            w = w->parent;
         }
-        goto DoDefault;
-    }
-
-    if (WM_MOUSELEAVE == msg) {
-        HwndScheduleRepaint(hwnd);
-        return 0;
-    }
-
-    if (WM_LBUTTONUP == msg) {
-        Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-        if (!noClose && NotificationCloseHitTest(hwnd, rClose, pt)) {
-            // Delete off the stack of this message (uitask runs after dispatch).
-            if (wndRemovedCb.IsValid()) {
-                auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
-                uitask::Post(fn, "TaskNotifWndProcRemove");
-            } else {
-                auto fn = MkFunc0<NotificationWnd>(NotifDelete, this);
-                uitask::Post(fn, "TaskNotifWndProcDelete");
-            }
-            return 0;
+    } else if (IsNotifMouseMsg(msg)) {
+        LRESULT res = 0;
+        LPARAM lp2 = UnmirrorRtlLparam(hwnd, lp);
+        if (vroot->OnMessage(msg, wp, lp2, res)) {
+            return res;
         }
     }
 
-DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
@@ -801,6 +985,19 @@ NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs) {
     NotificationCreateArgs args;
     args.hwndParent = hwnd;
     args.msg = msg;
+    args.timeoutMs = timeoutMs;
+    return ShowNotification(args);
+}
+
+// show a notification whose content is an arbitrary VirtWnd tree. Ownership of
+// `content` passes to the notification (it is freed with it, also on failure).
+// The tree is measured with whatever HWND / HFONT its controls were built with,
+// so build it against the parent window
+NotificationWnd* ShowCustomNotification(HWND hwndParent, VirtWnd* content, int timeoutMs) {
+    NotificationCreateArgs args;
+    args.hwndParent = hwndParent;
+    args.groupId = kNotifAdHoc;
+    args.content = content;
     args.timeoutMs = timeoutMs;
     return ShowNotification(args);
 }
