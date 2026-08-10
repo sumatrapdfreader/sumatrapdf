@@ -86,10 +86,29 @@ static i64 GetSyncFileTimestamp(Str path) {
     return (i64)uli.QuadPart;
 }
 
+// Modification time of whichever of the two files the index can be built from is
+// newer. SyncTex::RebuildIndexIfNeeded() reads either <base>.synctex or, when only the
+// compressed form exists, <base>.synctex.gz -- but Create() stores the .synctex
+// path either way (synctex_parser.c insists on it). Stat'ing only the stored
+// path meant that with a gzipped synctex -- what -synctex=1 produces, the
+// MiKTeX/TeX Live default -- the timestamp was always 0 for a file that never
+// exists, so "has it changed?" was never true and a recompile's new synctex was
+// never picked up: forward search kept answering from the first compile's
+// mapping for the rest of the session (issue #5040). Only a reload of the PDF
+// itself, which builds a new Synchronizer, escaped it.
+i64 Synchronizer::SyncFileTimestamp() const {
+    i64 stamp = GetSyncFileTimestamp(syncFilePath);
+    if (str::EndsWithI(syncFilePath, StrL(".synctex"))) {
+        i64 gzStamp = GetSyncFileTimestamp(str::JoinTemp(syncFilePath, StrL(".gz")));
+        stamp = std::max(stamp, gzStamp);
+    }
+    return stamp;
+}
+
 Synchronizer::Synchronizer(Str syncFilePathIn, Str pdffilename) {
     syncFilePath = str::Dup(syncFilePathIn);
     pdfPath = str::Dup(pdffilename);
-    syncfileTimestamp = GetSyncFileTimestamp(syncFilePath);
+    syncfileTimestamp = SyncFileTimestamp();
 }
 
 Synchronizer::~Synchronizer() {
@@ -103,9 +122,11 @@ bool Synchronizer::NeedsToRebuildIndex() {
         return true;
     }
 
-    // has the synchronization file been changed on disk?
-    i64 newstamp = GetSyncFileTimestamp(syncFilePath);
-    if (newstamp > syncfileTimestamp) {
+    // has the synchronization file been changed on disk? != rather than >: a
+    // rewrite can also move the timestamp backwards (a toolchain restoring an
+    // older file, a copy that preserves mtime), and that's a change too
+    i64 newstamp = SyncFileTimestamp();
+    if (newstamp != syncfileTimestamp) {
         // update time stamp
         syncfileTimestamp = newstamp;
         return true; // the file has changed!
@@ -116,7 +137,7 @@ bool Synchronizer::NeedsToRebuildIndex() {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    syncfileTimestamp = GetSyncFileTimestamp(syncFilePath);
+    syncfileTimestamp = SyncFileTimestamp();
     return PDFSYNCERR_SUCCESS;
 }
 

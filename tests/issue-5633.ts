@@ -30,7 +30,7 @@ const TEX_FILE = "test.tex";
 // line 4 of issue-5633-data/test.tex is a body paragraph that synctex maps to a position
 const TARGET_LINE = 4;
 
-function findLatexEngine(engine: "pdflatex" | "lualatex"): string | null {
+export function findLatexEngine(engine: "pdflatex" | "lualatex"): string | null {
   const exe = `${engine}.exe`;
   const localAppData = process.env.LOCALAPPDATA ?? "";
   const candidates = [
