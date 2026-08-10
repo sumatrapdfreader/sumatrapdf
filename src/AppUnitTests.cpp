@@ -26,8 +26,8 @@ bool EbookDoc_UnitTestNormalizeURL();
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
     ParsedTip tip;
     ParseTip(tip, input);
-    utassert(len(tip.words) == expWords);
-    utassert(len(tip.links) == expLinks);
+    utassert(TipWordCount(tip) == expWords);
+    utassert(TipLinkCount(tip) == expLinks);
 }
 
 static void ParseTipExpectPlainContains(Str input, Str needle) {
@@ -40,8 +40,8 @@ static void ParseTipExpectPlainContains(Str input, Str needle) {
 static void ParseTipExpectLinkCmd(Str input, Str expCmd) {
     ParsedTip tip;
     ParseTip(tip, input);
-    utassert(len(tip.links) == 1);
-    utassert(str::Eq(tip.links[0].cmd, expCmd));
+    utassert(TipLinkCount(tip) == 1);
+    utassert(str::Eq(tip.links.next->cmd, expCmd));
 }
 
 static void ParseTip_UnitTests() {
@@ -75,21 +75,23 @@ static void ParseTip_UnitTests() {
     {
         ParsedTip tip;
         ParseTip(tip, "(Kbd/Cmd+Shift)");
-        utassert(len(tip.words) == 1);
-        utassert(tip.words[0].isKbd);
-        utassert(str::Eq(tip.words[0].text, StrL("Cmd+Shift")));
+        utassert(TipWordCount(tip) == 1);
+        utassert(tip.words.next->isKbd);
+        utassert(str::Eq(tip.words.next->text, StrL("Cmd+Shift")));
         utassert(TipHasRichContent(tip));
     }
     {
         ParsedTip tip;
         ParseTip(tip, "(Kbd/(Key/CmdCommandPalette)): go");
-        utassert(len(tip.words) >= 2);
-        utassert(tip.words[0].isKbd);
+        utassert(TipWordCount(tip) >= 2);
+        TipWord* w0 = tip.words.next;
+        TipWord* w1 = w0->next;
+        utassert(w0->isKbd);
         // expanded shortcut contains Ctrl (default binding)
-        utassert(str::Contains(tip.words[0].text, StrL("Ctrl")));
+        utassert(str::Contains(w0->text, StrL("Ctrl")));
         // ':' abuts the key-cap with no space
-        utassert(tip.words[1].noSpaceBefore);
-        utassert(str::Eq(tip.words[1].text, StrL(":")));
+        utassert(w1->noSpaceBefore);
+        utassert(str::Eq(w1->text, StrL(":")));
     }
 
     // whitespace: tab and newline break words

@@ -11,8 +11,12 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr str, int cmdId); // NOLINT(readab
 // how the app opens a url link; without it, url links do nothing
 extern void (*gTipOpenUrl)(Str url);
 
-// a word in a parsed tip; can be part of a link
+struct TipLink;
+
+// a word in a parsed tip; can be part of a link. Node of the intrusive list
+// rooted at ParsedTip::words
 struct TipWord {
+    TipWord* next = nullptr;
     Str text; // owned
     int dx = 0;
     int dy = 0;
@@ -26,37 +30,37 @@ struct TipWord {
     // source with no whitespace, e.g. the ':' in "**foo**:" (issue: bold ran into
     // following punctuation with a stray space)
     bool noSpaceBefore = false;
-    int linkIdx = -1; // index into ParsedTip::links
+    TipLink* link = nullptr; // the link this word belongs to, if any
 };
 
+// node of the intrusive list rooted at ParsedTip::links
 struct TipLink {
+    TipLink* next = nullptr;
     Str cmd; // owned, resolved target (url or "Cmd...")
-    int firstWord = 0;
-    int lastWord = 0; // inclusive
+    TipWord* firstWord = nullptr;
+    TipWord* lastWord = nullptr; // inclusive
 };
 
+// `words` and `links` are root nodes of intrusive lists: the parsed content
+// starts at words.next / links.next, the roots themselves hold nothing. The
+// nodes are owned and freed by Reset()
 struct ParsedTip {
-    Vec<TipWord> words;
-    Vec<TipLink> links;
+    TipWord words;
+    TipLink links;
     int totalDx = 0; // computed by LayoutTip
     int totalDy = 0; // computed by LayoutTip
 
-    void Reset() {
-        for (auto& w : words) {
-            str::Free(w.text);
-        }
-        for (auto& l : links) {
-            str::Free(l.cmd);
-        }
-        words.Reset();
-        links.Reset();
-        totalDx = 0;
-        totalDy = 0;
-    }
+    // where to append next, so parsing doesn't walk the list for every word
+    TipWord* lastWord = nullptr;
+    TipLink* lastLink = nullptr;
+
+    void Reset();
 
     ~ParsedTip() { Reset(); }
 };
 
+int TipWordCount(ParsedTip& tip);
+int TipLinkCount(ParsedTip& tip);
 TempStr TipPlainTextTemp(ParsedTip& tip);
 // true if the tip needs the per-word rich draw path: it has links or any bold
 // run (a plain message can take the cheaper single DrawText path)
@@ -69,5 +73,5 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
 // bgCol is the tip background (used for key-cap fill/border); pass the same
 // color the tip is painted on so caps match light/dark themes
 void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol, COLORREF bgCol);
-int HitTestTipLink(ParsedTip& tip, int x, int y);
+TipLink* HitTestTipLink(ParsedTip& tip, int x, int y);
 void ExecuteTipLink(HWND hwnd, Str cmd);

@@ -2050,7 +2050,7 @@ void HomeTipWnd::Sync(ParsedTip* tip, const Rect& rcTip) {
     visibility = Visibility::Visible;
     SetBounds(rcTip);
 
-    int n = len(tip->links);
+    int n = TipLinkCount(*tip);
     if (ChildCount() != n) {
         RemoveAllChildren(true);
         for (int i = 0; i < n; i++) {
@@ -2059,17 +2059,19 @@ void HomeTipWnd::Sync(ParsedTip* tip, const Rect& rcTip) {
             AddChild(w);
         }
     }
-    for (int i = 0; i < n; i++) {
-        TipLink& link = tip->links[i];
+    int i = 0;
+    for (TipLink* link = tip->links.next; link; link = link->next, i++) {
         Rect linkRect;
-        for (int j = link.firstWord; j <= link.lastWord; j++) {
-            auto& word = tip->words[j];
-            Rect wr = {word.x, word.y, word.dx, word.dy};
-            linkRect = (j == link.firstWord) ? wr : linkRect.Union(wr);
+        for (TipWord* word = link->firstWord; word; word = word->next) {
+            Rect wr = {word->x, word->y, word->dx, word->dy};
+            linkRect = (word == link->firstWord) ? wr : linkRect.Union(wr);
+            if (word == link->lastWord) {
+                break;
+            }
         }
         auto* w = (HomeTipLinkWnd*)ChildAt(i);
-        if (!str::Eq(w->cmd, link.cmd)) {
-            str::ReplaceWithCopy(&w->cmd, link.cmd);
+        if (!str::Eq(w->cmd, link->cmd)) {
+            str::ReplaceWithCopy(&w->cmd, link->cmd);
         }
         w->SetBounds(linkRect);
     }

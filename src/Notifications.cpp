@@ -700,18 +700,18 @@ bool NotifTextWnd::OnMouseUp(VirtWndMouseEvent& ev) {
     if (!drawRich) {
         return false;
     }
-    int linkIdx = HitTestTipLink(parsedMsg, ev.pt.x, ev.pt.y);
-    if (linkIdx < 0) {
+    TipLink* link = HitTestTipLink(parsedMsg, ev.pt.x, ev.pt.y);
+    if (!link) {
         return false;
     }
     // send commands to the top-level window (the main frame)
     HWND root = GetAncestor(notif->hwnd, GA_ROOT);
-    ExecuteTipLink(root, parsedMsg.links[linkIdx].cmd);
+    ExecuteTipLink(root, link->cmd);
     return true;
 }
 
 bool NotifTextWnd::OnSetCursor(Point ptLocal) {
-    if (!drawRich || HitTestTipLink(parsedMsg, ptLocal.x, ptLocal.y) < 0) {
+    if (!drawRich || !HitTestTipLink(parsedMsg, ptLocal.x, ptLocal.y)) {
         return false;
     }
     SetCursorCached(IDC_HAND);

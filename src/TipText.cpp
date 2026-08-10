@@ -15,6 +15,91 @@
 
 void (*gTipOpenUrl)(Str url) = nullptr;
 
+void ParsedTip::Reset() {
+    TipWord* w = words.next;
+    while (w) {
+        TipWord* next = w->next;
+        str::Free(w->text);
+        delete w;
+        w = next;
+    }
+    TipLink* l = links.next;
+    while (l) {
+        TipLink* next = l->next;
+        str::Free(l->cmd);
+        delete l;
+        l = next;
+    }
+    words.next = nullptr;
+    links.next = nullptr;
+    lastWord = nullptr;
+    lastLink = nullptr;
+    totalDx = 0;
+    totalDy = 0;
+}
+
+int TipWordCount(ParsedTip& tip) {
+    int n = 0;
+    for (TipWord* w = tip.words.next; w; w = w->next) {
+        n++;
+    }
+    return n;
+}
+
+int TipLinkCount(ParsedTip& tip) {
+    int n = 0;
+    for (TipLink* l = tip.links.next; l; l = l->next) {
+        n++;
+    }
+    return n;
+}
+
+// appends at the end, so words and links stay in source order
+static TipWord* AppendTipWord(ParsedTip& tip, Str text) {
+    auto* w = new TipWord();
+    str::ReplaceWithCopy(&w->text, text);
+    if (tip.lastWord) {
+        tip.lastWord->next = w;
+    } else {
+        tip.words.next = w;
+    }
+    tip.lastWord = w;
+    return w;
+}
+
+static TipLink* AppendTipLink(ParsedTip& tip, Str cmd) {
+    auto* l = new TipLink();
+    str::ReplaceWithCopy(&l->cmd, cmd);
+    if (tip.lastLink) {
+        tip.lastLink->next = l;
+    } else {
+        tip.links.next = l;
+    }
+    tip.lastLink = l;
+    return l;
+}
+
+// drops the link appended last; the parser adds it before it knows whether the
+// link text produced any words
+static void RemoveLastTipLink(ParsedTip& tip) {
+    TipLink* link = tip.lastLink;
+    if (!link) {
+        return;
+    }
+    TipLink* prev = nullptr;
+    for (TipLink* l = tip.links.next; l && l != link; l = l->next) {
+        prev = l;
+    }
+    if (prev) {
+        prev->next = nullptr;
+    } else {
+        tip.links.next = nullptr;
+    }
+    tip.lastLink = prev;
+    str::Free(link->cmd);
+    delete link;
+}
+
 static bool IsTipWhitespace(char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -73,7 +158,7 @@ static Str FindMarkdownLinkCmdEnd(Str cmdStart) {
     return str::SliceFromChar(cmdStart, ')');
 }
 
-static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int linkIdx, bool isBold = false) {
+static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, TipLink* link, bool isBold = false) {
     int i = 0;
     while (i < text.len) {
         while (i < text.len && IsTipWhitespace(text.s[i])) {
@@ -86,20 +171,25 @@ static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int li
         while (i < text.len && !IsTipWhitespace(text.s[i])) {
             i++;
         }
-        TipWord w;
-        str::ReplaceWithCopy(&w.text, Str(text.s + wordStart, i - wordStart));
-        w.isLink = isLink;
-        w.isBold = isBold;
-        w.linkIdx = linkIdx;
-        tip.words.Append(w);
+        TipWord* w = AppendTipWord(tip, Str(text.s + wordStart, i - wordStart));
+        w->isLink = isLink;
+        w->isBold = isBold;
+        w->link = link;
     }
+}
+
+// the first word emitted after `prev` (the list tail before the token was
+// parsed), or null when the token emitted nothing
+static TipWord* FirstWordAfter(ParsedTip& tip, TipWord* prev) {
+    return prev ? prev->next : tip.words.next;
 }
 
 // mark the first word emitted for a token as having no space before it, so the
 // layout draws it flush against the preceding word (e.g. "**foo**:" -> "foo:")
-static void SetNoSpaceBefore(ParsedTip& tip, int firstWordIdx, bool noSpace) {
-    if (noSpace && firstWordIdx >= 0 && firstWordIdx < len(tip.words)) {
-        tip.words[firstWordIdx].noSpaceBefore = true;
+static void SetNoSpaceBefore(ParsedTip& tip, TipWord* prev, bool noSpace) {
+    TipWord* first = FirstWordAfter(tip, prev);
+    if (noSpace && first) {
+        first->noSpaceBefore = true;
     }
 }
 
@@ -185,21 +275,17 @@ static void AppendKbdWords(ParsedTip& tip, Str content, bool noSpace) {
         if (len(t) == 0) {
             continue;
         }
-        TipWord w;
-        str::ReplaceWithCopy(&w.text, t);
-        w.isKbd = true;
+        TipWord* w = AppendTipWord(tip, t);
+        w->isKbd = true;
         if (!any) {
-            w.noSpaceBefore = noSpace;
+            w->noSpaceBefore = noSpace;
             any = true;
         }
-        tip.words.Append(w);
     }
     if (!any) {
-        TipWord w;
-        str::ReplaceWithCopy(&w.text, content);
-        w.isKbd = true;
-        w.noSpaceBefore = noSpace;
-        tip.words.Append(w);
+        TipWord* w = AppendTipWord(tip, content);
+        w->isKbd = true;
+        w->noSpaceBefore = noSpace;
     }
 }
 
@@ -223,7 +309,7 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
 // interpreted.
 // adds text with no markup interpreted, for strings from outside the app
 void AddTipPlainText(ParsedTip& tip, Str text) {
-    AppendTipWordsFromText(tip, text, false, -1);
+    AppendTipWordsFromText(tip, text, false, nullptr);
 }
 
 void ParseTip(ParsedTip& tip, Str s) {
@@ -261,8 +347,8 @@ void ParseTip(ParsedTip& tip, Str s) {
         }
         // this token abuts the previous with no whitespace between them (e.g. the
         // ':' right after "**foo**"), so it draws with no space before it
-        int firstWordIdx = len(tip.words);
-        bool noSpace = (p.s == beforeWs) && firstWordIdx > 0;
+        TipWord* prevWord = tip.lastWord;
+        bool noSpace = (p.s == beforeWs) && (prevWord != nullptr);
 
         // (Kbd/shortcut text) — key-cap(s); content already has (Key/...) expanded
         if (StartsWithParenPrefix(p, StrL("Kbd"))) {
@@ -281,8 +367,8 @@ void ParseTip(ParsedTip& tip, Str s) {
             int end = str::IndexOf(after, StrL("**"));
             if (end >= 0) {
                 Str boldText(after.s, end);
-                AppendTipWordsFromText(tip, boldText, false, -1, true);
-                SetNoSpaceBefore(tip, firstWordIdx, noSpace);
+                AppendTipWordsFromText(tip, boldText, false, nullptr, true);
+                SetNoSpaceBefore(tip, prevWord, noSpace);
                 AdvanceTipText(p, 2 + end + 2);
                 continue;
             }
@@ -291,10 +377,8 @@ void ParseTip(ParsedTip& tip, Str s) {
         // a standalone '*' (not the '**' that starts bold) is a bullet used to
         // separate items visually; render it as a middle dot
         if (p.s[0] == '*' && (p.len == 1 || IsTipWhitespace(p.s[1]))) {
-            TipWord w;
-            str::ReplaceWithCopy(&w.text, StrL("\xc2\xb7")); // U+00B7 MIDDLE DOT
-            w.noSpaceBefore = noSpace;
-            tip.words.Append(w);
+            TipWord* w = AppendTipWord(tip, StrL("\xc2\xb7")); // U+00B7 MIDDLE DOT
+            w->noSpaceBefore = noSpace;
             AdvanceTipText(p, 1);
             continue;
         }
@@ -310,25 +394,22 @@ void ParseTip(ParsedTip& tip, Str s) {
                         Str linkCmd(cmdStart.s, (int)(cmdEnd.s - cmdStart.s));
                         Str linkText(textStart.s, (int)(textEnd.s - textStart.s));
 
-                        TipLink link;
-                        str::ReplaceWithCopy(&link.cmd, ResolveLinkCmdTemp(linkCmd));
-                        link.firstWord = len(tip.words);
-                        AppendTipWordsFromText(tip, linkText, true, len(tip.links));
+                        TipLink* link = AppendTipLink(tip, ResolveLinkCmdTemp(linkCmd));
+                        AppendTipWordsFromText(tip, linkText, true, link);
+                        link->firstWord = FirstWordAfter(tip, prevWord);
+                        link->lastWord = tip.lastWord;
 
-                        if (link.firstWord < len(tip.words)) {
-                            link.lastWord = len(tip.words) - 1;
-                            tip.links.Append(link);
-                            SetNoSpaceBefore(tip, firstWordIdx, noSpace);
+                        if (link->firstWord) {
+                            SetNoSpaceBefore(tip, prevWord, noSpace);
                             AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                             continue;
                         }
-                        str::Free(link.cmd);
+                        // the link text was empty, so it produced no words
+                        RemoveLastTipLink(tip);
                     } else {
                         // empty [text]: treat the whole markup as literal text
-                        TipWord w;
-                        str::ReplaceWithCopy(&w.text, Str(p.s, (int)(cmdEnd.s - p.s) + 1));
-                        w.noSpaceBefore = noSpace;
-                        tip.words.Append(w);
+                        TipWord* w = AppendTipWord(tip, Str(p.s, (int)(cmdEnd.s - p.s) + 1));
+                        w->noSpaceBefore = noSpace;
                         AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                         continue;
                     }
@@ -358,10 +439,8 @@ void ParseTip(ParsedTip& tip, Str s) {
             i++;
         }
         if (i > wordStart) {
-            TipWord w;
-            str::ReplaceWithCopy(&w.text, Str(p.s + wordStart, i - wordStart));
-            w.noSpaceBefore = noSpace;
-            tip.words.Append(w);
+            TipWord* w = AppendTipWord(tip, Str(p.s + wordStart, i - wordStart));
+            w->noSpaceBefore = noSpace;
         }
         if (i < p.len) {
             AdvanceTipText(p, i);
@@ -388,19 +467,19 @@ void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
     HFONT boldFont = nullptr;
     int kbdPadX = DpiScale(hdc, 7);
     int kbdPadY = DpiScale(hdc, 5);
-    for (auto& w : tip.words) {
-        if (w.isBold && !boldFont) {
+    for (TipWord* w = tip.words.next; w; w = w->next) {
+        if (w->isBold && !boldFont) {
             boldFont = CreateBoldFontFrom(font);
         }
-        HFONT use = (w.isBold && boldFont) ? boldFont : font;
-        Size sz = HdcMeasureText(hdc, w.text, fmt, use);
-        if (w.isKbd) {
+        HFONT use = (w->isBold && boldFont) ? boldFont : font;
+        Size sz = HdcMeasureText(hdc, w->text, fmt, use);
+        if (w->isKbd) {
             // key-cap padding matches KeyboardHelp DrawKeyCaps
-            w.dx = sz.dx + (2 * kbdPadX);
-            w.dy = sz.dy + kbdPadY;
+            w->dx = sz.dx + (2 * kbdPadX);
+            w->dy = sz.dy + kbdPadY;
         } else {
-            w.dx = sz.dx;
-            w.dy = sz.dy;
+            w->dx = sz.dx;
+            w->dy = sz.dy;
         }
     }
     if (boldFont) {
@@ -415,11 +494,11 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
     int lineHeight = 0;
     int spaceWidth = 4; // approximate space between words
     int maxX = startX;
-    for (auto& w : tip.words) {
+    for (TipWord* w = tip.words.next; w; w = w->next) {
         // space goes before the word, so words abutting the previous token
-        // (w.noSpaceBefore, e.g. the ':' in "**foo**:") draw flush against it
-        int space = (x > startX && !w.noSpaceBefore) ? spaceWidth : 0;
-        if (x > startX && x + space + w.dx > startX + areaWidth) {
+        // (noSpaceBefore, e.g. the ':' in "**foo**:") draw flush against it
+        int space = (x > startX && !w->noSpaceBefore) ? spaceWidth : 0;
+        if (x > startX && x + space + w->dx > startX + areaWidth) {
             // wrap to next line
             x = startX;
             y += lineHeight + 2;
@@ -427,11 +506,11 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
             space = 0;
         }
         x += space;
-        w.x = x;
-        w.y = y;
-        x += w.dx;
+        w->x = x;
+        w->y = y;
+        x += w->dx;
         maxX = std::max(x, maxX);
-        lineHeight = std::max(w.dy, lineHeight);
+        lineHeight = std::max(w->dy, lineHeight);
     }
     tip.totalDx = maxX - startX;
     tip.totalDy = (y - startY) + lineHeight;
@@ -450,39 +529,42 @@ void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORRE
     COLORREF capBorder = AccentColor(bgCol, 40);
     int rad = DpiScale(hdc, 5);
 
-    for (auto& w : tip.words) {
-        if (w.isKbd) {
+    for (TipWord* w = tip.words.next; w; w = w->next) {
+        if (w->isKbd) {
             HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
             HBRUSH br = CreateSolidBrush(capBg);
             HGDIOBJ oldPen = SelectObject(hdc, pen);
             HGDIOBJ oldBr = SelectObject(hdc, br);
-            RoundRect(hdc, w.x, w.y, w.x + w.dx, w.y + w.dy, rad, rad);
+            RoundRect(hdc, w->x, w->y, w->x + w->dx, w->y + w->dy, rad, rad);
             SelectObject(hdc, oldPen);
             SelectObject(hdc, oldBr);
             DeleteObject(pen);
             DeleteObject(br);
             SetTextColor(hdc, textCol);
-            Rect capRc{w.x, w.y, w.dx, w.dy};
-            HdcDrawText(hdc, w.text, capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, font);
+            Rect capRc{w->x, w->y, w->dx, w->dy};
+            HdcDrawText(hdc, w->text, capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, font);
             continue;
         }
-        if (w.isBold && !boldFont) {
+        if (w->isBold && !boldFont) {
             boldFont = CreateBoldFontFrom(font);
         }
-        Point pt = {w.x, w.y};
-        SetTextColor(hdc, w.isLink ? linkCol : textCol);
-        HFONT use = (w.isBold && boldFont) ? boldFont : font;
-        HdcDrawText(hdc, w.text, pt, fmt, use);
+        Point pt = {w->x, w->y};
+        SetTextColor(hdc, w->isLink ? linkCol : textCol);
+        HFONT use = (w->isBold && boldFont) ? boldFont : font;
+        HdcDrawText(hdc, w->text, pt, fmt, use);
     }
     // underline each link
     HPEN pen = CreatePen(PS_SOLID, 1, linkCol);
     HGDIOBJ prevPen = SelectObject(hdc, pen);
-    for (auto& link : tip.links) {
-        auto& first = tip.words[link.firstWord];
-        auto& last = tip.words[link.lastWord];
-        int underlineY = first.y + first.dy - 3;
-        int x1 = first.x;
-        int x2 = last.x + last.dx;
+    for (TipLink* link = tip.links.next; link; link = link->next) {
+        TipWord* first = link->firstWord;
+        TipWord* last = link->lastWord;
+        if (!first || !last) {
+            continue;
+        }
+        int underlineY = first->y + first->dy - 3;
+        int x1 = first->x;
+        int x2 = last->x + last->dx;
         HdcDrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
     }
     SelectObject(hdc, prevPen);
@@ -492,18 +574,18 @@ void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORRE
     DeleteObject(pen);
 }
 
-// returns index into tip.links of the link at (x, y) in layout coords, or -1
-int HitTestTipLink(ParsedTip& tip, int x, int y) {
-    for (auto& w : tip.words) {
-        if (!w.isLink) {
+// the link at (x, y) in layout coords, or null
+TipLink* HitTestTipLink(ParsedTip& tip, int x, int y) {
+    for (TipWord* w = tip.words.next; w; w = w->next) {
+        if (!w->isLink) {
             continue;
         }
-        Rect wr = {w.x, w.y, w.dx, w.dy};
+        Rect wr = {w->x, w->y, w->dx, w->dy};
         if (wr.Contains(Point(x, y))) {
-            return w.linkIdx;
+            return w->link;
         }
     }
-    return -1;
+    return nullptr;
 }
 
 // runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl.
@@ -533,11 +615,11 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
 }
 
 bool TipHasRichContent(ParsedTip& tip) {
-    if (len(tip.links) > 0) {
+    if (tip.links.next) {
         return true;
     }
-    for (TipWord& w : tip.words) {
-        if (w.isBold || w.isKbd) {
+    for (TipWord* w = tip.words.next; w; w = w->next) {
+        if (w->isBold || w->isKbd) {
             return true;
         }
     }
@@ -547,11 +629,11 @@ bool TipHasRichContent(ParsedTip& tip) {
 // reconstructs the plain (link markup removed, Key/ expanded) text from a parse
 TempStr TipPlainTextTemp(ParsedTip& tip) {
     str::Builder sb;
-    for (int i = 0; i < len(tip.words); i++) {
-        if (i > 0) {
+    for (TipWord* w = tip.words.next; w; w = w->next) {
+        if (w != tip.words.next) {
             sb.AppendChar(' ');
         }
-        sb.Append(tip.words[i].text);
+        sb.Append(w->text);
     }
     return ToStrTemp(sb);
 }
