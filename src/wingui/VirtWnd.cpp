@@ -1482,23 +1482,32 @@ void VirtWndLine::Paint(VirtWndPaintCtx& ctx) {
 //--- HIMAGELIST -> Pixmap cache
 
 struct IconPixmapCacheEntry {
+    IconPixmapCacheEntry* next;
     int iconIdx;
     Pixmap* pixmap; // owned
 };
 
+// gIconCache is the head of a singly-linked list of entries; a handful of icons
+// are ever cached, so a walk is as good as anything and new entries just go in
+// at the front.
+//
 // The cache only ever holds icons of one image list: the app has a single
 // toolbar image list, and it is destroyed and rebuilt whole on a theme or DPI
 // change. Seeing a different HIMAGELIST (or icon size) therefore means the old
 // pixmaps are stale, so the cache is dropped rather than grown.
 static HIMAGELIST gIconCacheHiml = nullptr;
 static Size gIconCacheIconSize;
-static Vec<IconPixmapCacheEntry> gIconCache;
+static IconPixmapCacheEntry* gIconCache = nullptr;
 
 void ClearVirtWndIconCache() {
-    for (auto& e : gIconCache) {
-        FreePixmap(e.pixmap);
+    IconPixmapCacheEntry* e = gIconCache;
+    gIconCache = nullptr;
+    while (e) {
+        IconPixmapCacheEntry* next = e->next;
+        FreePixmap(e->pixmap);
+        delete e;
+        e = next;
     }
-    gIconCache.Reset();
     gIconCacheHiml = nullptr;
     gIconCacheIconSize = {};
 }
@@ -1547,14 +1556,15 @@ Pixmap* VirtWndIconPixmap(HIMAGELIST himl, int iconIdx) {
         gIconCacheHiml = himl;
         gIconCacheIconSize = sz2;
     }
-    for (auto& e : gIconCache) {
-        if (e.iconIdx == iconIdx) {
-            return e.pixmap;
+    for (IconPixmapCacheEntry* e = gIconCache; e; e = e->next) {
+        if (e->iconIdx == iconIdx) {
+            return e->pixmap;
         }
     }
     Pixmap* px = RenderIconToPixmap(himl, iconIdx, sz2);
     if (px) {
-        gIconCache.Append({iconIdx, px});
+        auto* e = new IconPixmapCacheEntry{gIconCache, iconIdx, px};
+        gIconCache = e;
     }
     return px;
 }
