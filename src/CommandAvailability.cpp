@@ -275,6 +275,11 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenAttachment,
     CmdCreateShortcutToFile,
     CmdSetDocumentColorsFollowTheme,
+    // needs the name of the setting to toggle, e.g.
+    // [CmdToggleBoolSetting Fullscreen.ShowMenubar]; picking the bare command out
+    // of the palette can only warn that the argument is missing. A custom command
+    // that supplies one has its own id and name and still shows up
+    CmdToggleBoolSetting,
     0,
 };
 
