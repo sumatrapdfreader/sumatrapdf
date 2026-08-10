@@ -12885,7 +12885,14 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             goto InitMouseWheelInfo;
 
         case WM_SIZE:
-            if (win && SIZE_MINIMIZED != wp) {
+            if (win && SIZE_MINIMIZED == wp) {
+                // Track-mode canvas tips (home file path, page links) are
+                // topmost popups and must be dismissed on minimize or they
+                // stick on the desktop (issue #5928).
+                win->DeleteToolTip();
+                break;
+            }
+            if (win) {
                 RememberDefaultWindowPosition(win);
                 // UIState.layout.rc remembers the last laid-out client size;
                 // the scheduled update relayouts only when the size actually

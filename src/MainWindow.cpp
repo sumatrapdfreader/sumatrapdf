@@ -445,7 +445,9 @@ void MainWindow::MoveDocBy(int dx, int dy) const {
 }
 
 void MainWindow::ShowToolTip(Str text, Rect& rc, bool multiline) const {
-    if (len(text) == 0) {
+    if (len(text) == 0 || IsIconic(hwndFrame)) {
+        // Track-mode tips are WS_EX_TOPMOST popups; never show while minimized
+        // or they stick on the desktop (often at 0,0) — issue #5928.
         DeleteToolTip();
         return;
     }
@@ -455,7 +457,7 @@ void MainWindow::ShowToolTip(Str text, Rect& rc, bool multiline) const {
 // Track-mode tip at a fixed screen position (keyboard home-page selection).
 // maxRightScreen > 0 clamps the bubble so it does not extend past that x.
 void MainWindow::ShowToolTipAt(Str text, const Rect& rc, Point screenPos, bool multiline, int maxRightScreen) const {
-    if (len(text) == 0) {
+    if (len(text) == 0 || IsIconic(hwndFrame)) {
         DeleteToolTip();
         return;
     }
