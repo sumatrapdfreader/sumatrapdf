@@ -5,6 +5,11 @@
 
 #if defined(DEBUG)
 
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 #include "TipText.h"
 #include "Commands.h"
 
@@ -24,24 +29,24 @@ bool EbookDoc_UnitTestNormalizeURL();
 #include "base/UtAssert.h"
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
-    ParsedTip tip;
-    ParseTip(tip, input);
+    VirtRichText* tip = ParseTip(input);
     utassert(TipWordCount(tip) == expWords);
     utassert(TipLinkCount(tip) == expLinks);
+    delete tip;
 }
 
 static void ParseTipExpectPlainContains(Str input, Str needle) {
-    ParsedTip tip;
-    ParseTip(tip, input);
-    TempStr plain = TipPlainTextTemp(tip);
+    VirtRichText* tip = ParseTip(input);
+    TempStr plain = tip->PlainTextTemp();
     utassert(plain && str::Contains(plain, needle));
+    delete tip;
 }
 
 static void ParseTipExpectLinkCmd(Str input, Str expCmd) {
-    ParsedTip tip;
-    ParseTip(tip, input);
+    VirtRichText* tip = ParseTip(input);
     utassert(TipLinkCount(tip) == 1);
-    utassert(str::Eq(tip.links.next->cmd, expCmd));
+    utassert(str::Eq(tip->links.next->cmd, expCmd));
+    delete tip;
 }
 
 static void ParseTip_UnitTests() {
@@ -73,18 +78,17 @@ static void ParseTip_UnitTests() {
 
     // (Kbd/...) draws as a key-cap word; nests with (Key/...)
     {
-        ParsedTip tip;
-        ParseTip(tip, "(Kbd/Cmd+Shift)");
+        VirtRichText* tip = ParseTip("(Kbd/Cmd+Shift)");
         utassert(TipWordCount(tip) == 1);
-        utassert(tip.words.next->isKbd);
-        utassert(str::Eq(tip.words.next->text, StrL("Cmd+Shift")));
-        utassert(TipHasRichContent(tip));
+        utassert(tip->words.next->isKbd);
+        utassert(str::Eq(tip->words.next->text, StrL("Cmd+Shift")));
+        utassert(tip->HasRichContent());
+        delete tip;
     }
     {
-        ParsedTip tip;
-        ParseTip(tip, "(Kbd/(Key/CmdCommandPalette)): go");
+        VirtRichText* tip = ParseTip("(Kbd/(Key/CmdCommandPalette)): go");
         utassert(TipWordCount(tip) >= 2);
-        TipWord* w0 = tip.words.next;
+        TipWord* w0 = tip->words.next;
         TipWord* w1 = w0->next;
         utassert(w0->isKbd);
         // expanded shortcut contains Ctrl (default binding)
@@ -92,6 +96,7 @@ static void ParseTip_UnitTests() {
         // ':' abuts the key-cap with no space
         utassert(w1->noSpaceBefore);
         utassert(str::Eq(w1->text, StrL(":")));
+        delete tip;
     }
 
     // whitespace: tab and newline break words

@@ -57,15 +57,13 @@ struct NotifColors {
     COLORREF link;
 };
 
-// the message text. Two draw paths, as before: a single DrawText for plain
-// messages and per-word drawing (with clickable links) for rich ones
+// the message text. A plain message is a single DrawText; one with links, bold
+// runs or key-caps becomes a VirtRichText child, which draws and runs its own
+// links
 struct NotifTextWnd : VirtWnd {
     NotificationWnd* notif = nullptr;
-    // message parsed for the extended tip syntax (links, Key/ shortcuts);
-    // drawRich is true when it has links or bold runs (per-word draw)
-    ParsedTip parsedMsg;
-    bool drawRich = false;
-    // DT_* format for drawing the message, set in NotificationWnd::Layout()
+    VirtRichText* rich = nullptr; // owned, as our only child
+    // DT_* format for drawing a plain message, set in NotificationWnd::Layout()
     uint txtFmt = DT_SINGLELINE | DT_NOPREFIX;
     Size idealSize;
 
@@ -74,8 +72,6 @@ struct NotifTextWnd : VirtWnd {
 
     Size GetIdealSize() override;
     void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
 };
 
 // the ✕ that dismisses the notification
@@ -491,29 +487,33 @@ void NotificationWnd::Layout(Str message) {
         szText = contentWnd->Layout(bc);
     } else {
         // parse the message for the extended tip syntax (links, Key/ shortcuts)
-        ParsedTip& parsedMsg = txtWnd->parsedMsg;
-        parsedMsg.Reset();
-        ParseTip(parsedMsg, message);
+        VirtRichText* parsed = ParseTip(message);
         // rich path also for bold-only messages (e.g. the F7 help), not just links
-        txtWnd->drawRich = TipHasRichContent(parsedMsg);
+        bool drawRich = parsed->HasRichContent();
+        if (txtWnd->rich) {
+            txtWnd->RemoveChild(txtWnd->rich, true);
+            txtWnd->rich = nullptr;
+        }
 
-        if (txtWnd->drawRich) {
-            // rich text: lay out words (links). Note: no RTL word reordering, same
-            // as the home page tips.
+        if (drawRich) {
+            // rich text: the words lay themselves out (links included). Note: no
+            // RTL word reordering, same as the home page tips.
             txtWnd->txtFmt = DT_LEFT | DT_NOPREFIX;
-            HDC hdc = GetDC(hwnd);
-            MeasureTipWords(parsedMsg, hdc, font);
+            parsed->font = GetPlatformFont(font);
+            // link commands go to the top-level window (the main frame)
+            parsed->hwndForCmds = GetAncestor(hwnd, GA_ROOT);
+            txtWnd->rich = parsed;
+            txtWnd->AddChild(parsed);
             int areaWidth = (maxTextDx > 0) ? maxTextDx : (1 << 20);
-            LayoutTip(parsedMsg, areaWidth, 0, 0);
-            ReleaseDC(hwnd, hdc);
-            szText.dx = parsedMsg.totalDx;
-            szText.dy = parsedMsg.totalDy;
+            parsed->LayoutText(areaWidth);
+            szText.dx = parsed->totalDx;
+            szText.dy = parsed->totalDy;
         } else {
             // plain text: render exactly like before (RTL handling, wrapping). Only
             // substitute the parsed text when there were (Key/...) / (Kbd/...) so
             // ordinary messages keep their original whitespace/newlines.
             if (str::Contains(message, StrL("(Key/")) || str::Contains(message, StrL("(Kbd/"))) {
-                message = TipPlainTextTemp(parsedMsg);
+                message = parsed->PlainTextTemp();
                 HwndSetText(hwnd, message);
             }
             uint fmt = DT_SINGLELINE | DT_NOPREFIX;
@@ -531,6 +531,7 @@ void NotificationWnd::Layout(Str message) {
             }
             ReleaseDC(hwnd, hdc);
             txtWnd->txtFmt = fmt;
+            delete parsed;
         }
         txtWnd->idealSize = szText;
     }
@@ -621,7 +622,11 @@ void NotificationWnd::Layout(Str message) {
     vroot->bounds = {0, 0, dx, dy};
     vroot->needsLayout = false;
     container->SetBounds({0, 0, dx, dy});
-    NotifBody(this)->SetBounds(rTxt);
+    VirtWnd* body = NotifBody(this);
+    body->SetBounds(rTxt);
+    if (txtWnd && txtWnd->rich) {
+        txtWnd->rich->SetBounds(rTxt);
+    }
     if (closeWnd) {
         closeWnd->idealSize = {rClose.dx, rClose.dy};
         closeWnd->SetBounds(rClose);
@@ -681,41 +686,16 @@ Size NotifTextWnd::GetIdealSize() {
 }
 
 void NotifTextWnd::Paint(VirtWndPaintCtx& ctx) {
-    NotifColors cols = notif->Colors();
-    Rect r = ctx.content;
-    if (drawRich) {
-        // words were laid out at (0,0); shift the origin to our rect and draw
-        POINT oldOrg;
-        HDC hdc = GfxHdc(ctx.gfx);
-        SetViewportOrgEx(hdc, r.x, r.y, &oldOrg);
-        DrawTipWords(hdc, parsedMsg, notif->font, cols.txt, cols.link, cols.bg);
-        SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
+    if (rich) {
+        // the child paints itself; keep its colors in step with the theme
+        NotifColors cols = notif->Colors();
+        rich->textColor = cols.txt;
+        rich->linkColor = cols.link;
+        rich->bgColor = cols.bg;
         return;
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);
-    HdcDrawText(GfxHdc(ctx.gfx), text, r, txtFmt, notif->font);
-}
-
-bool NotifTextWnd::OnMouseUp(VirtWndMouseEvent& ev) {
-    if (!drawRich) {
-        return false;
-    }
-    TipLink* link = HitTestTipLink(parsedMsg, ev.pt.x, ev.pt.y);
-    if (!link) {
-        return false;
-    }
-    // send commands to the top-level window (the main frame)
-    HWND root = GetAncestor(notif->hwnd, GA_ROOT);
-    ExecuteTipLink(root, link->cmd);
-    return true;
-}
-
-bool NotifTextWnd::OnSetCursor(Point ptLocal) {
-    if (!drawRich || !HitTestTipLink(parsedMsg, ptLocal.x, ptLocal.y)) {
-        return false;
-    }
-    SetCursorCached(IDC_HAND);
-    return true;
+    HdcDrawText(GfxHdc(ctx.gfx), text, ctx.content, txtFmt, notif->font);
 }
 
 NotifCloseWnd::NotifCloseWnd() {

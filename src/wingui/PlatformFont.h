@@ -38,6 +38,8 @@ struct PlatformFont {
     // for gdiFont, created lazily by GetHFont(); set upfront when adopted
     HFONT hfont = nullptr;
 #endif
+    // memoized by GetBoldPlatformFont()
+    PlatformFont* boldVariant = nullptr;
 
     Str GetName() const { return name; }
     float GetSize() const { return sizePt; }
@@ -50,6 +52,9 @@ struct PlatformFont {
 };
 
 PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style);
+// the bold variant of a font (the font itself if it is already bold). Like all
+// PlatformFonts it is interned and lives for the whole run
+PlatformFont* GetBoldPlatformFont(PlatformFont*);
 // fills in the platform font object; implemented per platform. Returns false if
 // no font could be created at all
 bool PlatformFontCreateNative(PlatformFont*);

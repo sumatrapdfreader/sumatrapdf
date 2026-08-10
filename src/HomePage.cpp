@@ -46,10 +46,50 @@ static void OpenTipUrl(Str url) {
     }
 }
 
-struct TipUrlHookInstaller {
-    TipUrlHookInstaller() { gTipOpenUrl = OpenTipUrl; }
+// what the shared tip code (TipText.cpp) knows about our commands: it names
+// them in (Key/Cmd...) and in link targets, but knows nothing about the command
+// table itself
+struct SumatraCommandsContext : CommandsContext {
+    TempStr GetCommandShortcutTemp(Str cmdName) override {
+        int cmdId = GetCommandIdByName(cmdName);
+        if (cmdId <= 0) {
+            return {}; // not a command: the markup stays literal text
+        }
+        TempStr accel = AppendAccelKeyToMenuStringTemp("", cmdId);
+        if (!accel || !*accel.s) {
+            return str::DupTemp(cmdName); // a command, but unbound
+        }
+        // AppendAccelKeyToMenuStringTemp prepends 	, skip it
+        if (accel.s[0] == '	') {
+            return Str(accel.s + 1);
+        }
+        return accel;
+    }
+
+    // `cmd` can carry arguments (e.g. "CmdFixDefaultApp .pdf"); those go through
+    // CreateCommandFromDefinition so FrameOnCommand sees a CustomCommand with args
+    void ExecuteCommand(HWND hwnd, Str cmd) override {
+        CustomCommand* custom = CreateCommandFromDefinition(cmd);
+        if (custom) {
+            HwndSendCommand(hwnd, custom->id);
+            return;
+        }
+        int cmdId = GetCommandIdByName(cmd);
+        if (cmdId > 0) {
+            HwndSendCommand(hwnd, cmdId);
+        }
+    }
 };
-static TipUrlHookInstaller gTipUrlHookInstaller;
+
+static SumatraCommandsContext gSumatraCommandsContext;
+
+struct TipHookInstaller {
+    TipHookInstaller() {
+        gTipOpenUrl = OpenTipUrl;
+        gCommandsContext = &gSumatraCommandsContext;
+    }
+};
+static TipHookInstaller gTipHookInstaller;
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2
@@ -76,57 +116,49 @@ Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 
 static Str promoFromServer;
 
-// must fit all non-empty lines in sumatraTips / sumatraPromos
-constexpr int kMaxHomeTips = 16;
-constexpr int kMaxHomePromos = 8;
-
-static ParsedTip gParsedTipsStorage[kMaxHomeTips];
-static int gParsedTipCount = 0;
-static ParsedTip gParsedPromosStorage[kMaxHomePromos];
-static int gParsedPromoCount = 0;
+// the tip markup, one line each; the selected one is parsed by the tip band
+static StrVec gTipLines;
+static StrVec gPromoLines;
 static bool gTipsParsed = false;
 static bool gSelectedIsPromo = false;
 static int gSelectedTipIdx = -1;
 
-static int ParseTipsFromString(Str src, Str prefix, ParsedTip* buffer, int bufferCap) {
+static void CollectTipsFromString(Str src, Str prefix, StrVec* out) {
     StrVec lines;
     Split(&lines, src, "\n");
-    int n = 0;
-    for (int i = 0; i < len(lines); i++) {
-        Str line = lines[i];
-        if (!str::IsEmptyOrWhiteSpace(line)) {
-            n++;
-        }
-    }
-    if (n == 0) {
-        return 0;
-    }
-    ReportIf(n > bufferCap);
-    int count = 0;
     for (int i = 0; i < len(lines); i++) {
         Str line = lines[i];
         if (str::IsEmptyOrWhiteSpace(line)) {
             continue;
         }
         if (prefix) {
-            TempStr prefixed = str::JoinTemp(prefix, line);
-            ParseTip(buffer[count], prefixed);
+            out->Append(str::JoinTemp(prefix, line));
         } else {
-            ParseTip(buffer[count], line);
+            out->Append(line);
         }
-        count++;
     }
-    return count;
+}
+
+// the markup of the tip currently on show, {} when there is none
+static Str SelectedTipLine() {
+    if (!gGlobalPrefs->showTips || gSelectedTipIdx < 0) {
+        return {};
+    }
+    StrVec& v = gSelectedIsPromo ? gPromoLines : gTipLines;
+    if (gSelectedTipIdx >= len(v)) {
+        return {};
+    }
+    return v[gSelectedTipIdx];
 }
 
 static void PickRandomTipOrPromo() {
-    bool pickPromo = (gParsedPromoCount > 0) && (rand() % 100 < 30);
+    bool pickPromo = (len(gPromoLines) > 0) && (rand() % 100 < 30);
     if (pickPromo) {
         gSelectedIsPromo = true;
-        gSelectedTipIdx = rand() % gParsedPromoCount;
-    } else if (gParsedTipCount > 0) {
+        gSelectedTipIdx = rand() % len(gPromoLines);
+    } else if (len(gTipLines) > 0) {
         gSelectedIsPromo = false;
-        gSelectedTipIdx = rand() % gParsedTipCount;
+        gSelectedTipIdx = rand() % len(gTipLines);
     }
 }
 
@@ -134,8 +166,8 @@ static void EnsureTipsParsed() {
     if (gTipsParsed) {
         return;
     }
-    gParsedTipCount = ParseTipsFromString(sumatraTips, "Tip: ", gParsedTipsStorage, kMaxHomeTips);
-    gParsedPromoCount = ParseTipsFromString(sumatraPromos, {}, gParsedPromosStorage, kMaxHomePromos);
+    CollectTipsFromString(sumatraTips, "Tip: ", &gTipLines);
+    CollectTipsFromString(sumatraPromos, {}, &gPromoLines);
     gTipsParsed = true;
     PickRandomTipOrPromo();
 }
@@ -144,14 +176,8 @@ static void ClearHomeLayoutCache();
 
 void FreeHomePageTips() {
     if (gTipsParsed) {
-        for (int i = 0; i < gParsedTipCount; i++) {
-            gParsedTipsStorage[i].Reset();
-        }
-        for (int i = 0; i < gParsedPromoCount; i++) {
-            gParsedPromosStorage[i].Reset();
-        }
-        gParsedTipCount = 0;
-        gParsedPromoCount = 0;
+        gTipLines.Reset();
+        gPromoLines.Reset();
         gTipsParsed = false;
     }
     str::Free(promoFromServer);
@@ -841,8 +867,9 @@ struct HomePageLayout {
     Rect rcSearchBorder; // border rect drawn around the edit control
 
     // tip layout
-    Rect rcTip;               // background rect for tip area
-    ParsedTip* tip = nullptr; // points into gParsedTipsStorage or gParsedPromosStorage, not owned
+    Rect rcTip;     // background rect for tip area
+    Rect rcTipText; // where the markup goes inside the band
+    bool hasTip = false;
 
     ~HomePageLayout();
 };
@@ -956,27 +983,19 @@ struct HomeEntriesWnd : VirtWnd {
     void UpdateCloseBtnVisibility();
 };
 
-// A word-run of a tip that is a link. The tip text itself is drawn by
-// DrawTipWords(), so this is a hit target only
-struct HomeTipLinkWnd : VirtWnd {
-    MainWindow* win = nullptr;
-    Str cmd; // owned
-
-    ~HomeTipLinkWnd() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
-    bool OnSetCursor(Point) override;
-    TempStr GetTooltipTemp(Point) override;
-};
-
-// the tip band at the bottom. Clicking it anywhere but on a link picks another
-// tip; its children are the links
+// the tip band at the bottom. The markup is its VirtRichText child, which draws
+// itself and runs its own links; clicking the band anywhere else picks another
+// tip
 struct HomeTipWnd : VirtWnd {
     MainWindow* win = nullptr;
+    VirtRichText* rich = nullptr; // owned, as our only child
+    Str richFor;                  // owned, the markup `rich` was parsed from
 
+    ~HomeTipWnd() override;
     bool OnMouseDown(VirtWndMouseEvent&) override;
     bool OnMouseUp(VirtWndMouseEvent&) override;
-    void Sync(ParsedTip* tip, const Rect& rcTip);
+    void SetTipLine(Str line, PlatformFont* font);
+    void Sync(const Rect& rcTip, const Rect& rcText);
 };
 
 static Kind kindHomeChromeWnd = "homeChromeWnd";
@@ -1141,7 +1160,8 @@ struct HomePageLayoutCache {
     Rect rcOpenDoc;
     int totalContentDy = 0;
     int thumbsVisibleDy = 0;
-    ParsedTip* tip = nullptr;
+    Rect rcTipText;
+    bool hasTip = false;
     Vec<ThumbnailLayout> thumbs;
     StrVec filterWords;
 };
@@ -1154,7 +1174,7 @@ static void ClearHomeLayoutCache() {
     gHomeLayoutCache.filterText = {};
     gHomeLayoutCache.thumbs.Reset();
     gHomeLayoutCache.filterWords.Reset();
-    gHomeLayoutCache.tip = nullptr;
+    gHomeLayoutCache.hasTip = false;
     gHomeLayoutCache.nFiles = 0;
     gHomeLayoutCache.scrollY = 0;
 }
@@ -1284,7 +1304,8 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.rcOpenDoc = l.openDoc ? l.openDoc->lastBounds : Rect{};
     c.totalContentDy = l.totalContentDy;
     c.thumbsVisibleDy = l.thumbsVisibleDy;
-    c.tip = l.tip;
+    c.rcTipText = l.rcTipText;
+    c.hasTip = l.hasTip;
     c.thumbs = l.thumbnails;
     c.filterWords = l.filterWords;
 }
@@ -1319,7 +1340,8 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.rcTip = c.rcTip;
     l.totalContentDy = c.totalContentDy;
     l.thumbsVisibleDy = c.thumbsVisibleDy;
-    l.tip = c.tip;
+    l.rcTipText = c.rcTipText;
+    l.hasTip = c.hasTip;
     l.thumbnails = c.thumbs;
     l.filterWords = c.filterWords;
 
@@ -1521,20 +1543,12 @@ static void LayoutHomePage(HomePageLayout& l) {
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
     HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
-    ParsedTip* tip = nullptr;
-    if (gGlobalPrefs->showTips && gSelectedTipIdx >= 0) {
-        if (gSelectedIsPromo && gSelectedTipIdx < gParsedPromoCount) {
-            tip = &gParsedPromosStorage[gSelectedTipIdx];
-        } else if (!gSelectedIsPromo && gSelectedTipIdx < gParsedTipCount) {
-            tip = &gParsedTipsStorage[gSelectedTipIdx];
-        }
-    }
+    HomeTipWnd* tipWnd = EnsureHomeChrome(l.win)->tip;
+    tipWnd->SetTipLine(SelectedTipLine(), GetPlatformFont(fontTip));
+    VirtRichText* tip = tipWnd->rich;
     if (tip) {
-        MeasureTipWords(*tip, hdc, fontTip);
         int tipPadding = DpiScale(hdc, 8);
-        // do a preliminary layout to get the height (use thumbnails content width)
-        LayoutTip(*tip, thumbsContentWidth, 0, 0);
-        tipHeight = tip->totalDy + (2 * tipPadding);
+        tipHeight = tip->MinIntrinsicHeight(thumbsContentWidth) + (2 * tipPadding);
     }
 
     // --- Step 3: middle area for thumbnails/list ---
@@ -1676,12 +1690,12 @@ static void LayoutHomePage(HomePageLayout& l) {
         int tipY = rcClient.dy - tipHeight;
         // background spans full window width
         l.rcTip = {0, tipY, rcClient.dx, tipHeight};
-        l.tip = tip;
+        l.hasTip = true;
 
         // text area aligned with thumbnails
         int tipStartX = thumbsStartX;
         int tipStartY = tipY + tipPadding;
-        LayoutTip(*tip, thumbsContentWidth, tipStartX, tipStartY);
+        l.rcTipText = {tipStartX, tipStartY, thumbsContentWidth, tip->MinIntrinsicHeight(thumbsContentWidth)};
     }
 }
 
@@ -2006,26 +2020,28 @@ TempStr HomeHelpBtnWnd::GetTooltipTemp(Point) {
 
 //--- tip links
 
-HomeTipLinkWnd::~HomeTipLinkWnd() {
-    str::Free(cmd);
+HomeTipWnd::~HomeTipWnd() {
+    str::Free(richFor);
 }
 
-bool HomeTipLinkWnd::OnMouseDown(VirtWndMouseEvent&) {
-    return true;
-}
-
-bool HomeTipLinkWnd::OnMouseUp(VirtWndMouseEvent&) {
-    ExecuteTipLink(win->hwndFrame, cmd);
-    return true;
-}
-
-bool HomeTipLinkWnd::OnSetCursor(Point) {
-    SetCursorCached(IDC_HAND);
-    return true;
-}
-
-TempStr HomeTipLinkWnd::GetTooltipTemp(Point) {
-    return str::DupTemp(cmd);
+// re-parses when the markup changes; the parse is what the band draws
+void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
+    if (rich && str::Eq(richFor, line)) {
+        rich->font = font;
+        return;
+    }
+    if (rich) {
+        RemoveChild(rich, true);
+        rich = nullptr;
+    }
+    str::ReplaceWithCopy(&richFor, line);
+    if (!line) {
+        return;
+    }
+    rich = ParseTip(line);
+    rich->font = font;
+    rich->hwndForCmds = win->hwndFrame;
+    AddChild(rich);
 }
 
 bool HomeTipWnd::OnMouseDown(VirtWndMouseEvent&) {
@@ -2039,42 +2055,18 @@ bool HomeTipWnd::OnMouseUp(VirtWndMouseEvent&) {
     return true;
 }
 
-// the word positions come from LayoutTip(), so the link rects are just the
-// bounding box of each link's run of words
-void HomeTipWnd::Sync(ParsedTip* tip, const Rect& rcTip) {
-    if (!tip || rcTip.IsEmpty()) {
+// rcTip is the whole band (its background), rcText where the markup goes
+void HomeTipWnd::Sync(const Rect& rcTip, const Rect& rcText) {
+    if (!rich || rcTip.IsEmpty()) {
         visibility = Visibility::Collapse;
-        RemoveAllChildren(true);
         return;
     }
     visibility = Visibility::Visible;
     SetBounds(rcTip);
-
-    int n = TipLinkCount(*tip);
-    if (ChildCount() != n) {
-        RemoveAllChildren(true);
-        for (int i = 0; i < n; i++) {
-            auto* w = new HomeTipLinkWnd();
-            w->win = win;
-            AddChild(w);
-        }
-    }
-    int i = 0;
-    for (TipLink* link = tip->links.next; link; link = link->next, i++) {
-        Rect linkRect;
-        for (TipWord* word = link->firstWord; word; word = word->next) {
-            Rect wr = {word->x, word->y, word->dx, word->dy};
-            linkRect = (word == link->firstWord) ? wr : linkRect.Union(wr);
-            if (word == link->lastWord) {
-                break;
-            }
-        }
-        auto* w = (HomeTipLinkWnd*)ChildAt(i);
-        if (!str::Eq(w->cmd, link->cmd)) {
-            str::ReplaceWithCopy(&w->cmd, link->cmd);
-        }
-        w->SetBounds(linkRect);
-    }
+    rich->textColor = ThemeWindowTextColor();
+    rich->linkColor = ThemeWindowLinkColor();
+    rich->bgColor = ThemeControlBackgroundColor();
+    rich->SetBounds(rcText);
 }
 
 //--- file entries
@@ -2400,7 +2392,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     root->needsLayout = false;
     chrome->SetBounds(l.rc);
 
-    chrome->tip->Sync(l.tip, l.rcTip);
+    chrome->tip->Sync(l.rcTip, l.rcTipText);
 
     // file entries: clipped to the thumbnails band, like the static links were
     HomeEntriesWnd* entries = chrome->entries;
@@ -2459,7 +2451,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     {
         int diam = DpiScale(l.hdc, 30);
         int margin = DpiScale(l.hdc, 16);
-        int bottom = l.tip ? l.rcTip.y : l.rc.dy;
+        int bottom = l.hasTip ? l.rcTip.y : l.rc.dy;
         Rect btn{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
         chrome->helpBtn->SetBounds(btn);
     }
@@ -2590,15 +2582,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 
-    // draw tip at the bottom
-    if (l.tip) {
-        COLORREF tipBgCol = ThemeControlBackgroundColor();
-        HdcFillRect(hdc, l.rcTip, tipBgCol);
-
-        HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
-        COLORREF textCol = ThemeWindowTextColor();
-        COLORREF linkCol = ThemeWindowLinkColor();
-        DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol, tipBgCol);
+    // the tip band's background; the markup itself is part of the chrome tree
+    if (l.hasTip) {
+        HdcFillRect(hdc, l.rcTip, ThemeControlBackgroundColor());
     }
 
     // the chrome (header, view buttons, "Open a document...", help button)

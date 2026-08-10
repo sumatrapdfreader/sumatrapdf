@@ -1,21 +1,38 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Parsing, laying out and drawing "tip" text: a small markup with links,
-// keyboard shortcuts and bold runs. Shared by SumatraPDF's home page and
-// notifications, and by other apps in the family. What it needs from the app
-// is its command table (see TipText.h) and a way to open a url.
+// A small markup with links, keyboard shortcuts and bold runs, parsed into a
+// VirtRichText: a virtual control that wraps, paints and hit-tests itself.
+// Shared by SumatraPDF's home page and notifications, and by other apps in the
+// family. What it needs from the app is a CommandsContext (see TipText.h) and a
+// way to open a url.
 
 #include "base/Base.h"
 #include "base/Dpi.h"
 #include "base/Win.h"
 
-#include "Commands.h"
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
+
 #include "TipText.h"
 
 void (*gTipOpenUrl)(Str url) = nullptr;
+CommandsContext* gCommandsContext = nullptr;
 
-void ParsedTip::Reset() {
+static Kind kindVirtRichText = "virtRichText";
+
+VirtRichText::VirtRichText() {
+    kind = kindVirtRichText;
+}
+
+VirtRichText::~VirtRichText() {
+    Reset();
+}
+
+void VirtRichText::Reset() {
     TipWord* w = words.next;
     while (w) {
         TipWord* next = w->next;
@@ -36,26 +53,27 @@ void ParsedTip::Reset() {
     lastLink = nullptr;
     totalDx = 0;
     totalDy = 0;
+    layoutDx = -1;
 }
 
-int TipWordCount(ParsedTip& tip) {
+int TipWordCount(VirtRichText* tip) {
     int n = 0;
-    for (TipWord* w = tip.words.next; w; w = w->next) {
+    for (TipWord* w = tip->words.next; w; w = w->next) {
         n++;
     }
     return n;
 }
 
-int TipLinkCount(ParsedTip& tip) {
+int TipLinkCount(VirtRichText* tip) {
     int n = 0;
-    for (TipLink* l = tip.links.next; l; l = l->next) {
+    for (TipLink* l = tip->links.next; l; l = l->next) {
         n++;
     }
     return n;
 }
 
 // appends at the end, so words and links stay in source order
-static TipWord* AppendTipWord(ParsedTip& tip, Str text) {
+static TipWord* AppendTipWord(VirtRichText& tip, Str text) {
     auto* w = new TipWord();
     str::ReplaceWithCopy(&w->text, text);
     if (tip.lastWord) {
@@ -67,7 +85,7 @@ static TipWord* AppendTipWord(ParsedTip& tip, Str text) {
     return w;
 }
 
-static TipLink* AppendTipLink(ParsedTip& tip, Str cmd) {
+static TipLink* AppendTipLink(VirtRichText& tip, Str cmd) {
     auto* l = new TipLink();
     str::ReplaceWithCopy(&l->cmd, cmd);
     if (tip.lastLink) {
@@ -81,7 +99,7 @@ static TipLink* AppendTipLink(ParsedTip& tip, Str cmd) {
 
 // drops the link appended last; the parser adds it before it knows whether the
 // link text produced any words
-static void RemoveLastTipLink(ParsedTip& tip) {
+static void RemoveLastTipLink(VirtRichText& tip) {
     TipLink* link = tip.lastLink;
     if (!link) {
         return;
@@ -158,7 +176,7 @@ static Str FindMarkdownLinkCmdEnd(Str cmdStart) {
     return str::SliceFromChar(cmdStart, ')');
 }
 
-static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, TipLink* link, bool isBold = false) {
+static void AppendTipWordsFromText(VirtRichText& tip, Str text, bool isLink, TipLink* link, bool isBold = false) {
     int i = 0;
     while (i < text.len) {
         while (i < text.len && IsTipWhitespace(text.s[i])) {
@@ -180,13 +198,13 @@ static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, TipLin
 
 // the first word emitted after `prev` (the list tail before the token was
 // parsed), or null when the token emitted nothing
-static TipWord* FirstWordAfter(ParsedTip& tip, TipWord* prev) {
+static TipWord* FirstWordAfter(VirtRichText& tip, TipWord* prev) {
     return prev ? prev->next : tip.words.next;
 }
 
 // mark the first word emitted for a token as having no space before it, so the
 // layout draws it flush against the preceding word (e.g. "**foo**:" -> "foo:")
-static void SetNoSpaceBefore(ParsedTip& tip, TipWord* prev, bool noSpace) {
+static void SetNoSpaceBefore(VirtRichText& tip, TipWord* prev, bool noSpace) {
     TipWord* first = FirstWordAfter(tip, prev);
     if (noSpace && first) {
         first->noSpaceBefore = true;
@@ -228,26 +246,9 @@ static bool StartsWithParenPrefix(Str s, Str prefix) {
     return s.s[1 + len(prefix)] == '/';
 }
 
-// resolve (Key/CmdXxx) to keyboard shortcut string
-static TempStr ResolveKeyShortcutTemp(Str cmdName) {
-    int cmdId = GetCommandIdByName(cmdName);
-    if (cmdId <= 0) {
-        return str::DupTemp(cmdName);
-    }
-    TempStr accel = AppendAccelKeyToMenuStringTemp("", cmdId);
-    if (!accel || !*accel.s) {
-        return str::DupTemp(cmdName);
-    }
-    // AppendAccelKeyToMenuStringTemp prepends \t, skip it
-    if (accel.s[0] == '\t') {
-        return Str(accel.s + 1);
-    }
-    return accel;
-}
-
 // emit (Kbd/...) content as one or more key-cap words (", "-separated, like
 // the keyboard help sheet when a command has multiple bindings)
-static void AppendKbdWords(ParsedTip& tip, Str content, bool noSpace) {
+static void AppendKbdWords(VirtRichText& tip, Str content, bool noSpace) {
     // trim leading/trailing whitespace on the whole content
     while (len(content) > 0 && IsTipWhitespace(content.s[0])) {
         content.s++;
@@ -308,11 +309,21 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
 // anything the markup uses, so this adds it as plain words with nothing
 // interpreted.
 // adds text with no markup interpreted, for strings from outside the app
-void AddTipPlainText(ParsedTip& tip, Str text) {
-    AppendTipWordsFromText(tip, text, false, nullptr);
+void VirtRichText::AddPlainText(Str text) {
+    AppendTipWordsFromText(*this, text, false, nullptr);
+    layoutDx = -1;
 }
 
-void ParseTip(ParsedTip& tip, Str s) {
+// The app decides what a command name means; without a context (Key/...) is
+// left as literal text and command links do nothing.
+static TempStr CommandShortcutTemp(Str cmdName) {
+    if (!gCommandsContext) {
+        return {};
+    }
+    return gCommandsContext->GetCommandShortcutTemp(cmdName);
+}
+
+static void ParseTipInto(VirtRichText& tip, Str s) {
     if (!s) {
         return;
     }
@@ -325,8 +336,8 @@ void ParseTip(ParsedTip& tip, Str s) {
             int end = MatchingCloseParen(sp);
             if (end > 5) {
                 Str cmdName(sp.s + 5, end - 5); // skip "(Key/"
-                if (GetCommandIdByName(cmdName) > 0) {
-                    TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
+                TempStr shortcut = CommandShortcutTemp(cmdName);
+                if (shortcut.s) {
                     expanded.Append(shortcut);
                     AdvanceTipText(sp, end + 1);
                     continue;
@@ -450,31 +461,25 @@ void ParseTip(ParsedTip& tip, Str s) {
     }
 }
 
-static HFONT CreateBoldFontFrom(HFONT font) {
-    if (!font) {
-        return nullptr;
+// measures every word and wraps them into areaWidth. Positions are relative to
+// the control's content origin, so they survive the control being moved
+void VirtRichText::LayoutText(int areaWidth) {
+    if (areaWidth == layoutDx) {
+        return;
     }
-    LOGFONTW lf{};
-    if (GetObjectW(font, sizeof(lf), &lf) == 0) {
-        return nullptr;
-    }
-    lf.lfWeight = FW_BOLD;
-    return CreateFontIndirectW(&lf);
-}
-
-void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
-    uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
-    HFONT boldFont = nullptr;
-    int kbdPadX = DpiScale(hdc, 7);
-    int kbdPadY = DpiScale(hdc, 5);
-    for (TipWord* w = tip.words.next; w; w = w->next) {
+    layoutDx = areaWidth;
+    HWND hwnd = GetHwnd();
+    PlatformFont* boldFont = nullptr;
+    int kbdPadX = DpiScale(hwnd, 7);
+    int kbdPadY = DpiScale(hwnd, 5);
+    for (TipWord* w = words.next; w; w = w->next) {
         if (w->isBold && !boldFont) {
-            boldFont = CreateBoldFontFrom(font);
+            boldFont = GetBoldPlatformFont(font);
         }
-        HFONT use = (w->isBold && boldFont) ? boldFont : font;
-        Size sz = HdcMeasureText(hdc, w->text, fmt, use);
+        PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
+        Size sz = PlatformFontMeasureText(use, w->text);
         if (w->isKbd) {
-            // key-cap padding matches KeyboardHelp DrawKeyCaps
+            // key-cap padding matches KeyboardHelp's key caps
             w->dx = sz.dx + (2 * kbdPadX);
             w->dy = sz.dy + kbdPadY;
         } else {
@@ -482,19 +487,15 @@ void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
             w->dy = sz.dy;
         }
     }
-    if (boldFont) {
-        DeleteObject(boldFont);
-    }
-}
 
-// lays out words within areaWidth (wrapping); sets per-word x/y and tip.totalDx/totalDy
-void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
+    int startX = 0;
+    int startY = 0;
     int x = startX;
     int y = startY;
     int lineHeight = 0;
     int spaceWidth = 4; // approximate space between words
     int maxX = startX;
-    for (TipWord* w = tip.words.next; w; w = w->next) {
+    for (TipWord* w = words.next; w; w = w->next) {
         // space goes before the word, so words abutting the previous token
         // (noSpaceBefore, e.g. the ':' in "**foo**:") draw flush against it
         int space = (x > startX && !w->noSpaceBefore) ? spaceWidth : 0;
@@ -512,71 +513,107 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
         maxX = std::max(x, maxX);
         lineHeight = std::max(w->dy, lineHeight);
     }
-    tip.totalDx = maxX - startX;
-    tip.totalDy = (y - startY) + lineHeight;
+    totalDx = maxX - startX;
+    totalDy = (y - startY) + lineHeight;
 }
 
-// draws the words (link words in linkCol, underlined; others in textCol;
-// isKbd words as key-caps like KeyboardHelp)
-void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol, COLORREF bgCol) {
+int VirtRichText::MinIntrinsicWidth(int) {
+    LayoutText(1 << 20);
+    return totalDx;
+}
+
+int VirtRichText::MinIntrinsicHeight(int width) {
+    LayoutText(width > 0 ? width : (1 << 20));
+    return totalDy;
+}
+
+Size VirtRichText::GetIdealSize() {
+    LayoutText(layoutDx > 0 ? layoutDx : (1 << 20));
+    return {totalDx, totalDy};
+}
+
+Size VirtRichText::Layout(Constraints bc) {
+    int dx = (bc.max.dx == Inf) ? (1 << 20) : bc.max.dx;
+    LayoutText(dx);
+    return bc.Constrain({totalDx, totalDy});
+}
+
+void VirtRichText::SetBounds(Rect r) {
+    VirtWnd::SetBounds(r);
+    Rect content = r;
+    content.SubTB(padding.top, padding.bottom);
+    content.SubLR(padding.left, padding.right);
+    LayoutText(content.dx);
+}
+
+// draws the words (link words in linkColor, underlined; others in textColor;
+// isKbd words as key-caps like the keyboard help sheet)
+void VirtRichText::Paint(VirtWndPaintCtx& ctx) {
+    HDC hdc = GfxHdc(ctx.gfx);
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
-    HFONT boldFont = nullptr;
-    // key-cap colors: same idea as KeyboardHelp (AccentColor on the tip bg)
+    PlatformFont* boldFont = nullptr;
+    COLORREF textCol = textColor;
+    COLORREF linkCol = (linkColor == kColorUnset) ? textCol : linkColor;
+    COLORREF bgCol = bgColor;
+    // key-cap colors: AccentColor on the background the text sits on
     if (bgCol == kColorUnset) {
         bgCol = IsLightColor(textCol) ? MkGray(0x22) : MkGray(0xf2);
     }
     COLORREF capBg = AccentColor(bgCol, 16);
     COLORREF capBorder = AccentColor(bgCol, 40);
-    int rad = DpiScale(hdc, 5);
+    int rad = DpiScale(GetHwnd(), 5);
+    // words are laid out at (0, 0); shift them to where we are
+    int offX = ctx.content.x;
+    int offY = ctx.content.y;
 
-    for (TipWord* w = tip.words.next; w; w = w->next) {
+    for (TipWord* w = words.next; w; w = w->next) {
         if (w->isKbd) {
             HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
             HBRUSH br = CreateSolidBrush(capBg);
             HGDIOBJ oldPen = SelectObject(hdc, pen);
             HGDIOBJ oldBr = SelectObject(hdc, br);
-            RoundRect(hdc, w->x, w->y, w->x + w->dx, w->y + w->dy, rad, rad);
+            RoundRect(hdc, offX + w->x, offY + w->y, offX + w->x + w->dx, offY + w->y + w->dy, rad, rad);
             SelectObject(hdc, oldPen);
             SelectObject(hdc, oldBr);
             DeleteObject(pen);
             DeleteObject(br);
             SetTextColor(hdc, textCol);
-            Rect capRc{w->x, w->y, w->dx, w->dy};
-            HdcDrawText(hdc, w->text, capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, font);
+            Rect capRc{offX + w->x, offY + w->y, w->dx, w->dy};
+            HdcDrawText(hdc, w->text, capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
+                        font ? font->GetHFont() : nullptr);
             continue;
         }
         if (w->isBold && !boldFont) {
-            boldFont = CreateBoldFontFrom(font);
+            boldFont = GetBoldPlatformFont(font);
         }
-        Point pt = {w->x, w->y};
+        Point pt = {offX + w->x, offY + w->y};
         SetTextColor(hdc, w->isLink ? linkCol : textCol);
-        HFONT use = (w->isBold && boldFont) ? boldFont : font;
-        HdcDrawText(hdc, w->text, pt, fmt, use);
+        PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
+        HdcDrawText(hdc, w->text, pt, fmt, use ? use->GetHFont() : nullptr);
     }
     // underline each link
     HPEN pen = CreatePen(PS_SOLID, 1, linkCol);
     HGDIOBJ prevPen = SelectObject(hdc, pen);
-    for (TipLink* link = tip.links.next; link; link = link->next) {
+    for (TipLink* link = links.next; link; link = link->next) {
         TipWord* first = link->firstWord;
         TipWord* last = link->lastWord;
         if (!first || !last) {
             continue;
         }
-        int underlineY = first->y + first->dy - 3;
-        int x1 = first->x;
-        int x2 = last->x + last->dx;
+        int underlineY = offY + first->y + first->dy - 3;
+        int x1 = offX + first->x;
+        int x2 = offX + last->x + last->dx;
         HdcDrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
     }
     SelectObject(hdc, prevPen);
-    if (boldFont) {
-        DeleteObject(boldFont);
-    }
     DeleteObject(pen);
 }
 
-// the link at (x, y) in layout coords, or null
-TipLink* HitTestTipLink(ParsedTip& tip, int x, int y) {
-    for (TipWord* w = tip.words.next; w; w = w->next) {
+// the link under a point in our own coordinates, or null
+TipLink* VirtRichText::LinkAt(Point ptLocal) {
+    int x = ptLocal.x - padding.left;
+    int y = ptLocal.y - padding.top;
+    for (TipWord* w = words.next; w; w = w->next) {
         if (!w->isLink) {
             continue;
         }
@@ -588,6 +625,37 @@ TipLink* HitTestTipLink(ParsedTip& tip, int x, int y) {
     return nullptr;
 }
 
+// a click on a link runs it; anything else bubbles up to whoever hosts us
+bool VirtRichText::OnMouseDown(VirtWndMouseEvent& ev) {
+    return LinkAt(ev.pt) != nullptr;
+}
+
+bool VirtRichText::OnMouseUp(VirtWndMouseEvent& ev) {
+    TipLink* link = LinkAt(ev.pt);
+    if (!link) {
+        return false;
+    }
+    HWND hwnd = hwndForCmds ? hwndForCmds : GetHwnd();
+    ExecuteTipLink(hwnd, link->cmd);
+    return true;
+}
+
+bool VirtRichText::OnSetCursor(Point ptLocal) {
+    if (!LinkAt(ptLocal)) {
+        return false;
+    }
+    SetCursorCached(IDC_HAND);
+    return true;
+}
+
+TempStr VirtRichText::GetTooltipTemp(Point ptLocal) {
+    TipLink* link = LinkAt(ptLocal);
+    if (!link) {
+        return nullptr;
+    }
+    return str::DupTemp(link->cmd);
+}
+
 // runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl.
 // Cmd targets may include arguments (e.g. "CmdFixDefaultApp .pdf"); those go through
 // CreateCommandFromDefinition so FrameOnCommand sees a CustomCommand with args.
@@ -596,14 +664,8 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
         return;
     }
     if (str::StartsWith(cmd, StrL("Cmd"))) {
-        CustomCommand* custom = CreateCommandFromDefinition(cmd);
-        if (custom) {
-            HwndSendCommand(hwnd, custom->id);
-            return;
-        }
-        int cmdId = GetCommandIdByName(cmd);
-        if (cmdId > 0) {
-            HwndSendCommand(hwnd, cmdId);
+        if (gCommandsContext) {
+            gCommandsContext->ExecuteCommand(hwnd, cmd);
         }
         return;
     }
@@ -614,11 +676,11 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
     }
 }
 
-bool TipHasRichContent(ParsedTip& tip) {
-    if (tip.links.next) {
+bool VirtRichText::HasRichContent() {
+    if (links.next) {
         return true;
     }
-    for (TipWord* w = tip.words.next; w; w = w->next) {
+    for (TipWord* w = words.next; w; w = w->next) {
         if (w->isBold || w->isKbd) {
             return true;
         }
@@ -626,14 +688,20 @@ bool TipHasRichContent(ParsedTip& tip) {
     return false;
 }
 
-// reconstructs the plain (link markup removed, Key/ expanded) text from a parse
-TempStr TipPlainTextTemp(ParsedTip& tip) {
+// reconstructs the plain (link markup removed, Key/ expanded) text
+TempStr VirtRichText::PlainTextTemp() {
     str::Builder sb;
-    for (TipWord* w = tip.words.next; w; w = w->next) {
-        if (w != tip.words.next) {
+    for (TipWord* w = words.next; w; w = w->next) {
+        if (w != words.next) {
             sb.AppendChar(' ');
         }
         sb.Append(w->text);
     }
     return ToStrTemp(sb);
+}
+
+VirtRichText* ParseTip(Str s) {
+    auto* tip = new VirtRichText();
+    ParseTipInto(*tip, s);
+    return tip;
 }

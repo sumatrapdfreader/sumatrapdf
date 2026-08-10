@@ -94,6 +94,41 @@ PlatformFont* GetPlatformFont(HFONT hfont) {
     return font;
 }
 
+// derived from the font's own HFONT rather than from (name, size, Bold): an
+// adopted UI font's point size is reconstructed from its LOGFONT, so going
+// through gdiplus again could land on slightly different metrics
+PlatformFont* GetBoldPlatformFont(PlatformFont* f) {
+    if (!f) {
+        return nullptr;
+    }
+    if (f->boldVariant) {
+        return f->boldVariant;
+    }
+    if ((int)f->style & (int)PlatformFontStyle::Bold) {
+        f->boldVariant = f;
+        return f;
+    }
+    f->boldVariant = f; // fall back to the font itself if anything below fails
+    HFONT hf = f->GetHFont();
+    if (!hf) {
+        return f;
+    }
+    LOGFONTW lf{};
+    if (GetObjectW(hf, sizeof(lf), &lf) == 0) {
+        return f;
+    }
+    lf.lfWeight = FW_BOLD;
+    HFONT bold = CreateFontIndirectW(&lf);
+    if (!bold) {
+        return f;
+    }
+    PlatformFont* res = GetPlatformFont(bold);
+    if (res) {
+        f->boldVariant = res;
+    }
+    return f->boldVariant;
+}
+
 Size PlatformFontMeasureText(PlatformFont* font, Str s, int maxDx) {
     if (len(s) == 0) {
         return {};

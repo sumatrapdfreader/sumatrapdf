@@ -1,25 +1,40 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Supplied by the app: its command table and the key each command is bound to.
-// Both SumatraPDF and other apps have their own, with these signatures.
-// (also declared in Commands.h / Accelerators.h; repeated here so TipText.cpp
-// doesn't depend on SumatraPDF's headers)
-int GetCommandIdByName(Str cmdName);                            // NOLINT(readability-redundant-declaration)
-TempStr AppendAccelKeyToMenuStringTemp(TempStr str, int cmdId); // NOLINT(readability-redundant-declaration)
+// needs wingui/PlatformFont.h, wingui/Gfx.h and wingui/VirtWnd.h included first
+
+struct TipLink;
+
+// What the markup needs to know about the app's commands. The app implements it
+// and installs it as gCommandsContext, which is what keeps this code free of
+// SumatraPDF's command table.
+struct CommandsContext {
+    virtual ~CommandsContext() = default;
+
+    // Keyboard shortcut for a command name like "CmdOpenFile", used by
+    // (Key/CmdOpenFile). Returns {} when there is no such command (the markup is
+    // then left as literal text), and the command name itself when the command
+    // exists but has no binding.
+    virtual TempStr GetCommandShortcutTemp(Str cmdName) = 0;
+
+    // Runs a link target that names a command. `cmd` may carry arguments, e.g.
+    // "CmdFixDefaultApp .pdf".
+    virtual void ExecuteCommand(HWND hwnd, Str cmd) = 0;
+};
+
+extern CommandsContext* gCommandsContext;
 
 // how the app opens a url link; without it, url links do nothing
 extern void (*gTipOpenUrl)(Str url);
 
-struct TipLink;
-
-// a word in a parsed tip; can be part of a link. Node of the intrusive list
-// rooted at ParsedTip::words
+// a word in the text; can be part of a link. Node of the intrusive list rooted
+// at VirtRichText::words
 struct TipWord {
     TipWord* next = nullptr;
     Str text; // owned
     int dx = 0;
     int dy = 0;
+    // relative to the control's content origin, set by LayoutText()
     int x = 0;
     int y = 0;
     bool isLink = false;
@@ -33,7 +48,7 @@ struct TipWord {
     TipLink* link = nullptr; // the link this word belongs to, if any
 };
 
-// node of the intrusive list rooted at ParsedTip::links
+// node of the intrusive list rooted at VirtRichText::links
 struct TipLink {
     TipLink* next = nullptr;
     Str cmd; // owned, resolved target (url or "Cmd...")
@@ -41,37 +56,54 @@ struct TipLink {
     TipWord* lastWord = nullptr; // inclusive
 };
 
-// `words` and `links` are root nodes of intrusive lists: the parsed content
-// starts at words.next / links.next, the roots themselves hold nothing. The
-// nodes are owned and freed by Reset()
-struct ParsedTip {
+// A run of text with links, keyboard shortcuts and bold runs, as a virtual
+// control: it wraps itself to the width it is given, paints itself, and handles
+// clicks on its links. `words` and `links` are root nodes of intrusive lists;
+// the content starts at words.next / links.next.
+struct VirtRichText : VirtWnd {
     TipWord words;
     TipLink links;
-    int totalDx = 0; // computed by LayoutTip
-    int totalDy = 0; // computed by LayoutTip
-
     // where to append next, so parsing doesn't walk the list for every word
     TipWord* lastWord = nullptr;
     TipLink* lastLink = nullptr;
 
-    void Reset();
+    // size of the laid-out text, computed by LayoutText()
+    int totalDx = 0;
+    int totalDy = 0;
+    // the width the words were last laid out for
+    int layoutDx = -1;
 
-    ~ParsedTip() { Reset(); }
+    PlatformFont* font = nullptr; // not owned
+    COLORREF textColor = kColorUnset;
+    COLORREF linkColor = kColorUnset;
+    // the color the text is painted on; used for the key-cap fill and border
+    COLORREF bgColor = kColorUnset;
+    // link commands are sent to this window
+    HWND hwndForCmds = nullptr;
+
+    VirtRichText();
+    ~VirtRichText() override;
+
+    void Reset();
+    void AddPlainText(Str);
+    void LayoutText(int areaWidth);
+    bool HasRichContent();
+    TempStr PlainTextTemp();
+    TipLink* LinkAt(Point ptLocal);
+
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(Constraints bc) override;
+    Size GetIdealSize() override;
+    void SetBounds(Rect) override;
+    void Paint(VirtWndPaintCtx&) override;
+    bool OnMouseDown(VirtWndMouseEvent&) override;
+    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnSetCursor(Point ptLocal) override;
+    TempStr GetTooltipTemp(Point ptLocal) override;
 };
 
-int TipWordCount(ParsedTip& tip);
-int TipLinkCount(ParsedTip& tip);
-TempStr TipPlainTextTemp(ParsedTip& tip);
-// true if the tip needs the per-word rich draw path: it has links or any bold
-// run (a plain message can take the cheaper single DrawText path)
-bool TipHasRichContent(ParsedTip& tip);
-
-void ParseTip(ParsedTip& tip, Str s);
-void AddTipPlainText(ParsedTip& tip, Str text);
-void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font);
-void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
-// bgCol is the tip background (used for key-cap fill/border); pass the same
-// color the tip is painted on so caps match light/dark themes
-void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol, COLORREF bgCol);
-TipLink* HitTestTipLink(ParsedTip& tip, int x, int y);
+VirtRichText* ParseTip(Str s);
+int TipWordCount(VirtRichText*);
+int TipLinkCount(VirtRichText*);
 void ExecuteTipLink(HWND hwnd, Str cmd);
