@@ -16,6 +16,7 @@
 struct VirtWnd;
 struct VirtWndRoot;
 struct Pixmap;
+struct Wnd;
 
 enum VirtWndFlags : u32 {
     vwfEnabled = 1 << 0,
@@ -321,6 +322,24 @@ struct VirtWndCustom : VirtWnd {
     bool OnMouseUp(VirtWndMouseEvent&) override;
 };
 
+// Hosts a real HWND control (an edit, a native list, ...) inside a VirtWnd
+// tree, so the two can be laid out together. The control is a window of its
+// own: Windows paints it and delivers its input, so the wrapper only forwards
+// layout and visibility and is never a paint or hit-test target.
+struct VirtWndWrapper : VirtWnd {
+    Wnd* wnd = nullptr; // owned unless ownsWnd is false
+    bool ownsWnd = true;
+
+    explicit VirtWndWrapper(Wnd*, bool ownsWnd = true);
+    ~VirtWndWrapper() override;
+
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(Constraints bc) override;
+    void SetBounds(Rect) override;
+    Size GetIdealSize() override;
+};
+
 //--- controls
 
 enum class VirtWndTextAlign {
@@ -381,6 +400,9 @@ struct VirtWndLink : VirtWndText {
 struct VirtWndButton : VirtWndText {
     COLORREF bgColor = kColorUnset;
     COLORREF bgColorHover = kColorUnset;
+    COLORREF borderColor = kColorUnset;
+    // when the button is disabled (vwfEnabled cleared)
+    COLORREF textColorDisabled = kColorUnset;
     Insets textPadding{4, 8, 4, 8};
     VirtWndMouseHandler onClick;
 

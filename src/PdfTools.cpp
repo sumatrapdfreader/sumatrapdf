@@ -9,6 +9,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -986,37 +989,46 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 // --- Delete Pages From PDF dialog ---
 
+// The dialog's content is a VirtWnd tree: the labels and buttons are virtual
+// controls, while the two text fields stay real HWND edits, hosted in the tree
+// by a VirtWndWrapper so they take part in the same layout.
 struct PdfDeletePageDialog : Wnd {
     HFONT hFont = nullptr;
+    PlatformFont* font = nullptr;
     Str srcPath;
     bool isExtract = false;
     MainWindow* win = nullptr;
     int pageCount = 0;
 
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
+    VirtWndRoot* vroot = nullptr;
+    VirtWndBox* mainBox = nullptr;
+    VirtWndText* pathLabel = nullptr;
     Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Static* pagesLabel = nullptr;
+    VirtWndButton* browseBtn = nullptr;
+    VirtWndText* pagesLabel = nullptr;
     Edit* pagesEdit = nullptr;
-    Static* totalLabel = nullptr;
-    Static* syntaxLabel = nullptr;
-    Button* actionBtn = nullptr; // "Delete Pages" or "Extract Pages"
-    Button* cancelBtn = nullptr;
+    VirtWndText* totalLabel = nullptr;
+    VirtWndText* syntaxLabel = nullptr;
+    VirtWndButton* actionBtn = nullptr; // "Delete Pages" or "Extract Pages"
+    VirtWndButton* cancelBtn = nullptr;
 
     ~PdfDeletePageDialog() override;
 
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
+    VirtWndButton* NewButton(Str text, bool isDefault);
     void OnBrowse();
     void DoIt();
     void OnCancel();
     void UpdateButton();
-    bool PreTranslateMessage(MSG& msg) override { return PdfToolPreTranslateEsc(msg, this); }
+    void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    bool PreTranslateMessage(MSG& msg) override;
 };
 
 PdfDeletePageDialog::~PdfDeletePageDialog() {
     str::FreePtr(&srcPath);
-    delete mainLayout;
+    // owns the whole tree, including the wrapped edit controls
+    delete vroot;
 }
 
 void PdfDeletePageDialog::OnCancel() {
@@ -1172,7 +1184,11 @@ void PdfDeletePageDialog::UpdateButton() {
     if (valid && !isExtract && len(parsedPages) >= pageCount) {
         valid = false;
     }
-    actionBtn->SetIsEnabled(valid);
+    if (valid == actionBtn->HasFlag(vwfEnabled)) {
+        return;
+    }
+    actionBtn->SetFlag(vwfEnabled, valid);
+    actionBtn->Invalidate();
 }
 
 void PdfDeletePageDialog::OnBrowse() {
@@ -1235,6 +1251,33 @@ void PdfDeletePageDialog::DoIt() {
     }
 }
 
+static void PdfDeletePageOnBrowse(PdfDeletePageDialog* dlg, VirtWndMouseEvent*) {
+    dlg->OnBrowse();
+}
+
+static void PdfDeletePageOnAction(PdfDeletePageDialog* dlg, VirtWndMouseEvent*) {
+    dlg->DoIt();
+}
+
+static void PdfDeletePageOnCancel(PdfDeletePageDialog* dlg, VirtWndMouseEvent*) {
+    dlg->OnCancel();
+}
+
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover
+VirtWndButton* PdfDeletePageDialog::NewButton(Str text, bool isDefault) {
+    auto* b = new VirtWndButton(text, font);
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    b->textColor = ThemeWindowTextColor();
+    b->textColorDisabled = ThemeWindowTextDisabledColor();
+    // the default button is a shade stronger, like a native default button
+    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
+    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
+    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    return b;
+}
+
 static void PdfDeletePageOnClose(Wnd::CloseEvent* ev) {
     auto* dlg = (PdfDeletePageDialog*)ev->e->self;
     delete dlg;
@@ -1266,19 +1309,25 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     bool isRtl = IsUIRtl();
-    auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
+    font = GetPlatformFont(hFont);
+    vroot = new VirtWndRoot(hwnd);
+    mainBox = new VirtWndBox(true);
+    mainBox->alignCross = CrossAxisAlign::Stretch;
+    mainBox->padding = DpiScaledInsets(hwnd, 10);
+    int rowGap = DpiScale(hwnd, 6);
+    int gap = DpiScale(hwnd, 8);
 
     // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
+    pathLabel = new VirtWndText(srcPath, font);
+    pathLabel->ellipsis = true;
+    pathLabel->isRtl = isRtl;
+    mainBox->AddChild(pathLabel);
 
     // row 2: dest edit (flex) + browse button
     {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto* row = new VirtWndBox(false);
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->padding.top = rowGap;
 
         Edit::CreateArgs args;
         args.parent = hwnd;
@@ -1288,35 +1337,26 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         args.isRtl = isRtl;
         destEdit = new Edit();
         destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
+        row->AddChild(new VirtWndWrapper(destEdit), 1);
 
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+        browseBtn = NewButton("...", false);
+        browseBtn->onClick = MkFunc1(PdfDeletePageOnBrowse, this);
+        row->AddChild(new VirtWndSpacer(gap, 0));
+        row->AddChild(browseBtn);
 
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+        mainBox->AddChild(row);
     }
 
     // row 3: pages label + pages edit (flex) + total pages label
     {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto* row = new VirtWndBox(false);
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->padding.top = rowGap;
 
-        Static::CreateArgs largs;
-        largs.parent = hwnd;
-        largs.font = hFont;
-        largs.text = isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:");
-        largs.isRtl = isRtl;
-        pagesLabel = new Static();
-        pagesLabel->Create(largs);
-        hbox->AddChild(new Padding(pagesLabel, DpiScaledInsets(hwnd, 0, 8, 0, 0)));
+        pagesLabel = new VirtWndText(isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:"), font);
+        pagesLabel->isRtl = isRtl;
+        row->AddChild(pagesLabel);
+        row->AddChild(new VirtWndSpacer(DpiScale(hwnd, 8), 0));
 
         int currentPage = w->ctrl ? w->ctrl->CurrentPageNo() : 1;
         Edit::CreateArgs eargs;
@@ -1327,73 +1367,53 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         eargs.isRtl = isRtl;
         pagesEdit = new Edit();
         pagesEdit->Create(eargs);
-        hbox->AddChild(pagesEdit, 1);
+        row->AddChild(new VirtWndWrapper(pagesEdit), 1);
 
-        Static::CreateArgs targs;
-        targs.parent = hwnd;
-        targs.font = hFont;
-        targs.text = fmt("of %d", pageCount);
-        targs.isRtl = isRtl;
-        totalLabel = new Static();
-        totalLabel->Create(targs);
-        hbox->AddChild(new Padding(totalLabel, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+        totalLabel = new VirtWndText(fmt("of %d", pageCount), font);
+        totalLabel->isRtl = isRtl;
+        row->AddChild(new VirtWndSpacer(gap, 0));
+        row->AddChild(totalLabel);
 
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+        mainBox->AddChild(row);
     }
 
     // row 4: syntax hint (left) + action + Cancel buttons (right)
     {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto* row = new VirtWndBox(false);
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->padding.top = rowGap;
 
-        Static::CreateArgs sargs;
-        sargs.parent = hwnd;
-        sargs.font = hFont;
-        sargs.text = "Syntax: 2,5-7,13-";
-        sargs.isRtl = isRtl;
-        syntaxLabel = new Static();
-        syntaxLabel->Create(sargs);
-        hbox->AddChild(syntaxLabel);
+        syntaxLabel = new VirtWndText("Syntax: 2,5-7,13-", font);
+        syntaxLabel->isRtl = isRtl;
+        row->AddChild(syntaxLabel);
 
         // flexible spacer pushes the buttons to the right
-        hbox->AddChild(new Spacer(0, 0), 1);
+        row->AddChild(new VirtWndSpacer(0, 0), 1);
 
-        actionBtn = new Button();
-        actionBtn->isDefault = true;
-        actionBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::DoIt>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
-        bargs.isRtl = isRtl;
-        actionBtn->Create(bargs);
-        hbox->AddChild(actionBtn);
+        actionBtn = NewButton(isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages"), true);
+        actionBtn->onClick = MkFunc1(PdfDeletePageOnAction, this);
+        row->AddChild(actionBtn);
 
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+        cancelBtn = NewButton(_TRA("Cancel"), false);
+        cancelBtn->onClick = MkFunc1(PdfDeletePageOnCancel, this);
+        row->AddChild(new VirtWndSpacer(gap, 0));
+        row->AddChild(cancelBtn);
 
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+        mainBox->AddChild(row);
     }
 
     // align the source path label's text with the destination edit's text,
     // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
+    pathLabel->padding.left = destEdit->GetLeftTextMargin();
+
+    vroot->SetChild(mainBox);
 
     int minClientW = DpiScale(hwnd, 480);
     int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
+    Size size = mainBox->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+    vroot->SetBounds({0, 0, size.dx, size.dy});
+    vroot->LayoutIfNeeded();
 
     // attach the change handler only now that actionBtn exists, then set the
     // initial validation state (Edit::Create fires onTextChanged on initial text)
@@ -1408,6 +1428,60 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     SetIsVisible(true);
     HwndSetFocus(pagesEdit->hwnd);
     return true;
+}
+
+void PdfDeletePageDialog::OnPaint(HDC hdc, PAINTSTRUCT*) {
+    Rect rc = HwndClientRect(hwnd);
+    DoubleBuffer buffer(hwnd, rc);
+    HDC memDC = buffer.GetDC();
+    HdcFillRect(memDC, rc, ThemeWindowControlBackgroundColor());
+    SetBkMode(memDC, TRANSPARENT);
+    Gfx gfx = GfxFromHdc(memDC);
+    vroot->Paint(&gfx, rc);
+    buffer.Flush(hdc);
+}
+
+LRESULT PdfDeletePageDialog::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area
+    }
+    if (vroot) {
+        LRESULT res = 0;
+        switch (msg) {
+            case WM_MOUSEMOVE:
+            case WM_MOUSELEAVE:
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+                if (vroot->OnMessage(msg, wp, lp, res)) {
+                    return res;
+                }
+                break;
+            case WM_SETCURSOR: {
+                Point pt = HwndGetCursorPos(hwnd);
+                Point ptLocal{0, 0};
+                VirtWnd* w = vroot->WndFromPoint(pt, &ptLocal);
+                if (w && w->OnSetCursor(ptLocal)) {
+                    return TRUE;
+                }
+                break;
+            }
+        }
+    }
+    return WndProcDefault(hwnd, msg, wp, lp);
+}
+
+bool PdfDeletePageDialog::PreTranslateMessage(MSG& msg) {
+    if (PdfToolPreTranslateEsc(msg, this)) {
+        return true;
+    }
+    // the action button is a virtual control, so Enter has to reach it by hand
+    if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
+        if (actionBtn->HasFlag(vwfEnabled)) {
+            DoIt();
+        }
+        return true;
+    }
+    return false;
 }
 
 static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {

@@ -9,6 +9,8 @@
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
 #include "wingui/VirtWnd.h"
@@ -1361,6 +1363,57 @@ bool VirtWndCustom::OnMouseUp(VirtWndMouseEvent& ev) {
     return true;
 }
 
+//--- VirtWndWrapper
+
+static Kind kindVirtWndWrapper = "virtWndWrapper";
+
+VirtWndWrapper::VirtWndWrapper(Wnd* w, bool owns) {
+    kind = kindVirtWndWrapper;
+    wnd = w;
+    ownsWnd = owns;
+    // the HWND is on top of whatever the tree paints, and gets its own mouse
+    // and keyboard messages
+    flags |= vwfNoHitTest;
+}
+
+VirtWndWrapper::~VirtWndWrapper() {
+    if (ownsWnd) {
+        delete wnd;
+    }
+}
+
+int VirtWndWrapper::MinIntrinsicHeight(int width) {
+    return wnd ? wnd->MinIntrinsicHeight(width) : 0;
+}
+
+int VirtWndWrapper::MinIntrinsicWidth(int height) {
+    return wnd ? wnd->MinIntrinsicWidth(height) : 0;
+}
+
+Size VirtWndWrapper::Layout(Constraints bc) {
+    if (!wnd) {
+        return bc.Constrain({0, 0});
+    }
+    return wnd->Layout(bc);
+}
+
+Size VirtWndWrapper::GetIdealSize() {
+    return wnd ? wnd->GetIdealSize() : Size{};
+}
+
+// the tree lays out in the root HWND's client coords, which is also what the
+// child HWND is positioned in
+void VirtWndWrapper::SetBounds(Rect r) {
+    VirtWnd::SetBounds(r);
+    if (!wnd) {
+        return;
+    }
+    wnd->SetVisibility(visibility);
+    if (visibility != Visibility::Collapse) {
+        wnd->SetBounds(r);
+    }
+}
+
 //--- VirtWndText
 
 static Kind kindVirtWndText = "virtWndText";
@@ -1533,14 +1586,27 @@ Size VirtWndButton::GetIdealSize() {
 }
 
 void VirtWndButton::Paint(VirtWndPaintCtx& ctx) {
-    COLORREF bg = HasFlag(vwfHovered) ? bgColorHover : bgColor;
+    bool isEnabled = HasFlag(vwfEnabled);
+    COLORREF bg = (isEnabled && HasFlag(vwfHovered)) ? bgColorHover : bgColor;
     GfxFillRect(ctx.gfx, ctx.bounds, bg);
+    if (borderColor != kColorUnset) {
+        Rect b = ctx.bounds;
+        GfxFillRect(ctx.gfx, {b.x, b.y, b.dx, 1}, borderColor);
+        GfxFillRect(ctx.gfx, {b.x, b.Bottom() - 1, b.dx, 1}, borderColor);
+        GfxFillRect(ctx.gfx, {b.x, b.y, 1, b.dy}, borderColor);
+        GfxFillRect(ctx.gfx, {b.Right() - 1, b.y, 1, b.dy}, borderColor);
+    }
     Rect r = ctx.content;
     r.SubTB(textPadding.top, textPadding.bottom);
     r.SubLR(textPadding.left, textPadding.right);
     VirtWndPaintCtx c2 = ctx;
     c2.content = r;
+    COLORREF prevCol = textColor;
+    if (!isEnabled && textColorDisabled != kColorUnset) {
+        textColor = textColorDisabled;
+    }
     VirtWndText::Paint(c2);
+    textColor = prevCol;
 }
 
 void VirtWndButton::OnMouseEnter() {
@@ -1564,6 +1630,9 @@ bool VirtWndButton::OnMouseUp(VirtWndMouseEvent& ev) {
 }
 
 bool VirtWndButton::OnSetCursor(Point) {
+    if (!HasFlag(vwfEnabled)) {
+        return false;
+    }
     SetCursorCached(IDC_HAND);
     return true;
 }
