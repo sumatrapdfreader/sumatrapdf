@@ -185,8 +185,7 @@ Str PageDestinationMupdf::GetValue2() {
 
     Str uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
-        value = str::Dup(uri.s);
-        url::DecodeInPlace(value);
+        value = str::Dup(url::DecodeTemp(uri));
     }
     return value;
 }

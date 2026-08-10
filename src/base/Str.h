@@ -193,7 +193,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
 namespace url {
 
-void DecodeInPlace(Str url);
+TempStr DecodeTemp(Str url);
 bool IsAbsolute(Str url);
 TempStr GetFullPathTemp(Str url);
 TempStr GetFileNameTemp(Str url);

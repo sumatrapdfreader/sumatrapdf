@@ -16,8 +16,7 @@ export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 // Newlines in the harness are encoded as '_' (0x5f); those become real '\n'.
 // Throws if no "text on page" line appears (missing DEBUG build, bad path, …).
 export function extractPageText(file: string, pageNo: number = -1): string {
-  const psCmd =
-    `& '${EXE}' -for-testing -extract-text ${pageNo} '${file}' 2>&1 | Out-String -Width 100000`;
+  const psCmd = `& '${EXE}' -for-testing -extract-text ${pageNo} '${file}' 2>&1 | Out-String -Width 100000`;
   const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
   const raw = p.stdout.toString() + p.stderr.toString();
   let all = "";
@@ -63,6 +62,35 @@ export function cmdId(name: string): number {
   return id;
 }
 
+// A valid one-page PDF with no content, for tests that only need a document the
+// app can open (a link target, a tab to switch to, ...). The xref offsets are
+// computed, so mupdf loads it without running its repair pass. For a PDF with
+// actual text on the page see makeTextPdf in tests/issue-5922.ts.
+export function makeMinimalPdf(title: string): Buffer {
+  const enc = (s: string) => Buffer.from(s, "latin1");
+  const objs = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>",
+    `<< /Title (${title}) >>`,
+  ];
+  const parts: Buffer[] = [enc("%PDF-1.7\n")];
+  const offsets: number[] = [];
+  let pos = parts[0]!.length;
+  objs.forEach((body, i) => {
+    offsets.push(pos);
+    const obj = enc(`${i + 1} 0 obj\n${body}\nendobj\n`);
+    parts.push(obj);
+    pos += obj.length;
+  });
+  let xref = `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+  for (const off of offsets) {
+    xref += `${String(off).padStart(10, "0")} 00000 n \n`;
+  }
+  parts.push(enc(`${xref}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info 4 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
+  return Buffer.concat(parts);
+}
+
 // directory for temporary / scratch files produced by tests. It's gitignored
 // (tests/tmp/), so tests must write their runtime output here, never directly
 // into tests/. Use tmpPath() to get a path inside it (dir created on demand).
@@ -103,11 +131,7 @@ function muteConsole(): () => void {
 }
 
 // run one test and print pass/fail timing
-export async function runTest(
-  name: string,
-  fn: () => void | Promise<void>,
-  opts?: RunTestOptions,
-): Promise<void> {
+export async function runTest(name: string, fn: () => void | Promise<void>, opts?: RunTestOptions): Promise<void> {
   const silent = opts?.silent ?? false;
   const t0 = performance.now();
   const unmute = silent ? muteConsole() : () => {};
@@ -136,7 +160,12 @@ export function buildApp(opts?: { silent?: boolean }): void {
   if (!opts?.silent) {
     console.log("• building SumatraPDF.exe (cmd/build.ts) ...");
   }
-  const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
+  const p = Bun.spawnSync({
+    cmd: ["bun", join(ROOT, "cmd", "build.ts")],
+    cwd: ROOT,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
   if (p.exitCode !== 0) {
     throw new Error("build failed");
   }
@@ -146,13 +175,7 @@ export function buildApp(opts?: { silent?: boolean }): void {
 //   bun tests/issue-<n>.ts [--no-build]
 // builds (unless --no-build), runs testit(), exits 0 on pass / 1 on failure.
 export async function runStandalone(testit: () => void | Promise<void>, name?: string): Promise<void> {
-  const label =
-    name ??
-    (process.argv[1] ?? "test")
-      .replace(/\\/g, "/")
-      .split("/")
-      .pop()!
-      .replace(/\.ts$/, "");
+  const label = name ?? (process.argv[1] ?? "test").replace(/\\/g, "/").split("/").pop()!.replace(/\.ts$/, "");
   try {
     if (!process.argv.includes("--no-build")) {
       buildApp();

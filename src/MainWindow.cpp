@@ -635,8 +635,7 @@ static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
         pathStr = Str(pathStr.s, (int)(frag.s - pathStr.s));
         frag = Str(frag.s + 1, frag.len - 1);
     }
-    path = str::DupTemp(pathStr);
-    url::DecodeInPlace(path);
+    path = url::DecodeTemp(pathStr);
     str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
     *pathOut = path;
     if (fragmentOut) {
@@ -660,7 +659,7 @@ void LinkHandler::LaunchURL(Str uri) {
             path.len = hash;
         }
         str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
-        url::DecodeInPlace(path);
+        path = url::DecodeTemp(path);
         // LaunchFile will reject unsupported file types
         this->LaunchFile(path, nullptr);
         return;

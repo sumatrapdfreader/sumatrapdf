@@ -74,8 +74,7 @@ struct PageDestinationDjvuDec : IPageDestination {
         if (!DjvuDecCouldBeURL(link)) {
             return {};
         }
-        value = str::Dup(link);
-        url::DecodeInPlace(value);
+        value = str::Dup(url::DecodeTemp(link));
         return value;
     }
 };

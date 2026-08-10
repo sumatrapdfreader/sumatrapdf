@@ -82,9 +82,7 @@ static TempStr UrlFragmentTemp(Str url) {
     if (len(frag) < 2) {
         return {};
     }
-    TempStr res = str::DupTemp(Str(frag.s + 1, frag.len - 1));
-    url::DecodeInPlace(res);
-    return res;
+    return url::DecodeTemp(Str(frag.s + 1, frag.len - 1));
 }
 
 static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {

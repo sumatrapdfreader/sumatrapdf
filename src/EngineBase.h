@@ -178,8 +178,7 @@ struct PageDestinationURL : IPageDestination {
             return {};
         }
         if (!displayUrl) {
-            displayUrl = str::Dup(url);
-            url::DecodeInPlace(displayUrl.s);
+            displayUrl = str::Dup(url::DecodeTemp(url));
         }
         return displayUrl;
     }

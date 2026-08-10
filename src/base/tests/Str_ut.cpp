@@ -157,13 +157,29 @@ static void StrUrlExtractTest() {
     utassert(str::Eq(fileName, StrL("na/me.ext")));
     fileName = url::GetFileNameTemp("http://example.net/%E2%82%AC");
     utassert(str::Eq(fileName, StrL("\xE2\x82\xaC")));
-    char wikiUrl[] =
+    TempStr wiki = url::DecodeTemp(
         "https://ru.wikipedia.org/wiki/"
-        "%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD";
-    url::DecodeInPlace(wikiUrl);
-    utassert(str::Eq(wikiUrl, StrL("https://ru.wikipedia.org/wiki/"
-                                   "\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_"
-                                   "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD")));
+        "%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD");
+    utassert(str::Eq(wiki, StrL("https://ru.wikipedia.org/wiki/"
+                                "\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_"
+                                "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD")));
+    utassert(!url::DecodeTemp({}));
+    utassert(str::Eq(url::DecodeTemp("nothing to decode"), StrL("nothing to decode")));
+    // a stray or truncated escape is left alone
+    utassert(str::Eq(url::DecodeTemp("100%"), StrL("100%")));
+    utassert(str::Eq(url::DecodeTemp("%zz%41"), StrL("%zzA")));
+
+    // decoding shrinks the string, so the result's len must match its bytes, or
+    // the bytes past the NUL travel with it into anything that copies by len
+    // (issue #5926). str::Eq stops at the NUL and can't see that, so compare
+    // the lengths directly.
+    TempStr decoded = url::DecodeTemp("umlaut_test_%C3%A4.html");
+    utassert(len(decoded) == LenL("umlaut_test_\xC3\xA4.html"));
+    TempStr joined = str::JoinTemp(StrL("dir\\"), decoded);
+    utassert(str::Eq(joined, StrL("dir\\umlaut_test_\xC3\xA4.html")));
+    utassert(len(joined) == LenL("dir\\umlaut_test_\xC3\xA4.html"));
+    utassert(len(url::GetFullPathTemp("na%2Fme.ext?q=1")) == LenL("na/me.ext"));
+    utassert(len(url::GetFileNameTemp("http://example.net/na%2Fme.ext")) == LenL("na/me.ext"));
 }
 
 // Run fn once with no external buf, once with a stack buf of random size 1..128.

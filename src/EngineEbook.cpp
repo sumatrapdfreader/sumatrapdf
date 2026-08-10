@@ -755,8 +755,7 @@ void EbookTocBuilder::Visit(Str name, Str url, int level) {
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::ContainsChar(url, '%')) {
-            TempStr decodedUrl = str::DupTemp(url);
-            url::DecodeInPlace(decodedUrl.s);
+            TempStr decodedUrl = url::DecodeTemp(url);
             dest = engine->GetNamedDest(decodedUrl);
         }
     }
@@ -1384,8 +1383,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName(StrL("src"));
     if (attr) {
-        Str src = str::DupTemp(attr->val);
-        url::DecodeInPlace(src);
+        TempStr src = url::DecodeTemp(attr->val);
         Str img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
@@ -1431,8 +1429,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = str::DupTemp(attr->val);
-    url::DecodeInPlace(src);
+    TempStr src = url::DecodeTemp(attr->val);
     TempStr data = chmDoc->GetFileData(src, pagePath);
     if ((u8*)data.s) {
         ParseStyleSheet(data);

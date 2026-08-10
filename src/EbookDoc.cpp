@@ -420,7 +420,7 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
         if (GumboTagNameIsNS(node, StrL("CipherReference"), EPUB_ENC_NS())) {
             TempStr uri = GumboAttributeValueTemp(node, "URI");
             if (uri) {
-                url::DecodeInPlace(uri);
+                uri = url::DecodeTemp(uri);
                 encList.Append(uri);
             }
         }
@@ -458,7 +458,7 @@ bool EpubDoc::Load() {
     if (!contentPath) {
         return false;
     }
-    url::DecodeInPlace(contentPath);
+    contentPath = url::DecodeTemp(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
     StrVec encList;
@@ -507,7 +507,7 @@ bool EpubDoc::Load() {
             if (!imgPath) {
                 continue;
             }
-            url::DecodeInPlace(imgPath);
+            imgPath = url::DecodeTemp(imgPath);
             imgPath = str::JoinTemp(contentPath, imgPath);
             if (encList.Contains(imgPath)) {
                 continue;
@@ -522,7 +522,7 @@ bool EpubDoc::Load() {
             if (!htmlPath) {
                 continue;
             }
-            url::DecodeInPlace(htmlPath);
+            htmlPath = url::DecodeTemp(htmlPath);
             TempStr htmlId = GumboAttributeValueTemp(node, "id");
             // EPUB 3 ToC
             TempStr properties = GumboAttributeValueTemp(node, "properties");
@@ -1187,9 +1187,7 @@ void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     TempStr id;
     AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), FB2_MAIN_NS());
     if (attrInfo) {
-        id = str::DupTemp(attrInfo->val);
-        url::DecodeInPlace(id);
-        id = Str(id.s); // DecodeInPlace shortens the buffer in place; re-read its length
+        id = url::DecodeTemp(attrInfo->val);
     }
 
     tok = parser->Next();

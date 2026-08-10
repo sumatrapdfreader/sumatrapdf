@@ -14,37 +14,11 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "../cmd/control";
-import { EXE, runStandalone, tmpPath } from "./util";
+import { EXE, makeMinimalPdf, runStandalone, tmpPath } from "./util";
 import { FRAME_CLASS } from "./win-automation";
 import { sleep, waitForTopWindow } from "./winapi";
 
 const HOST = "https://sumatrapdf.markdown/";
-
-// smallest thing mupdf accepts as a one-page document, with a correct xref
-function makePdf(title: string): Buffer {
-  const enc = (s: string) => Buffer.from(s, "latin1");
-  const objs = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>",
-    `<< /Title (${title}) >>`,
-  ];
-  const parts: Buffer[] = [enc("%PDF-1.7\n")];
-  const offsets: number[] = [];
-  let pos = parts[0]!.length;
-  objs.forEach((body, i) => {
-    offsets.push(pos);
-    const obj = enc(`${i + 1} 0 obj\n${body}\nendobj\n`);
-    parts.push(obj);
-    pos += obj.length;
-  });
-  let xref = `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    xref += `${String(off).padStart(10, "0")} 00000 n \n`;
-  }
-  parts.push(enc(`${xref}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info 4 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
-  return Buffer.concat(parts);
-}
 
 // 1x1 transparent png
 const PNG = Buffer.from(
@@ -70,8 +44,8 @@ function makeFolder(): string {
     ].join("\n"),
   );
   writeFileSync(join(dir, "other.md"), "# Other\n\ntext\n");
-  writeFileSync(join(dir, "doc.pdf"), makePdf("doc"));
-  writeFileSync(join(dir, "sub", "deep.pdf"), makePdf("deep"));
+  writeFileSync(join(dir, "doc.pdf"), makeMinimalPdf("doc"));
+  writeFileSync(join(dir, "sub", "deep.pdf"), makeMinimalPdf("deep"));
   writeFileSync(join(dir, "pic.png"), PNG);
   return dir;
 }

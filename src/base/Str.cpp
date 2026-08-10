@@ -1245,23 +1245,32 @@ bool SkipChar(Str& s, char toSkip) {
 
 namespace url {
 
-void DecodeInPlace(Str url) {
+// Percent-decodes url into the temp arena ("%20" -> ' ', "%C3%A4" -> the two
+// UTF-8 bytes of 'ä'); an escape that isn't two hex digits is left as is.
+// Returns a new (NUL-terminated) string rather than decoding in place because
+// decoding shrinks the string: the in-place version this replaces could only
+// shorten its caller's buffer, and a caller left holding the encoded length
+// carried the bytes past the NUL along (a markdown file named "a ä.md" looked
+// up "a ä.md\0.md" and was reported as missing; #5926).
+TempStr DecodeTemp(Str url) {
     if (str::IsNull(url)) {
-        return;
+        return {};
     }
+    TempStr res = str::DupTemp(url);
+    int n = res.len;
     int dst = 0;
-    for (int src = 0; src < url.len; src++) {
+    for (int src = 0; src < n; src++) {
         int val;
-        if (url.s[src] == '%' && src + 2 < url.len &&
-            !str::IsNull(str::Parse(Str(url.s + src, url.len - src), "%%%2x", &val))) {
-            url.s[dst++] = (char)val;
+        if (res.s[src] == '%' && src + 2 < n && !str::IsNull(str::Parse(Str(res.s + src, n - src), "%%%2x", &val))) {
+            res.s[dst++] = (char)val;
             src += 2;
         } else {
-            url.s[dst++] = url.s[src];
+            res.s[dst++] = res.s[src];
         }
     }
-    url.s[dst] = '\0';
-    url.len = dst;
+    res.s[dst] = '\0';
+    res.len = dst;
+    return res;
 }
 } // namespace url
 
@@ -2413,8 +2422,7 @@ TempStr GetFullPathTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
     path.len = len(path.s);
-    DecodeInPlace(path);
-    return path;
+    return DecodeTemp(path);
 }
 
 TempStr GetFileNameTemp(Str url) {
@@ -2431,9 +2439,7 @@ TempStr GetFileNameTemp(Str url) {
     if (len(baseStr) == 0) {
         return {};
     }
-    TempStr res = str::DupTemp(baseStr);
-    DecodeInPlace(res);
-    return res;
+    return DecodeTemp(baseStr);
 }
 
 } // namespace url
