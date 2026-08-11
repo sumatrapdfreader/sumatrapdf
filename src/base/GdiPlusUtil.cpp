@@ -19,6 +19,13 @@ using Gdiplus::Status;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsMeasureTrailingSpaces;
 
+void InitGraphicsMode(Graphics* g) {
+    g->SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+    g->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(Gdiplus::UnitPixel);
+}
+
 Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
     return Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height);
 }

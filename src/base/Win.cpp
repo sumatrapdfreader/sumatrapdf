@@ -4129,13 +4129,6 @@ void RestoreDCState(SavedDCState* state) {
     ReleaseDC(state->hwnd, state->hdc);
 }
 
-void InitGraphicsMode(Gdiplus::Graphics* g) {
-    g->SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
-    g->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
-    g->SetPageUnit(Gdiplus::UnitPixel);
-}
-
 Size HdcGetTextExtentPoint32(HDC hdc, WStr str) {
     SIZE size{};
     GetTextExtentPoint32W(hdc, str.s, str.len, &size);
