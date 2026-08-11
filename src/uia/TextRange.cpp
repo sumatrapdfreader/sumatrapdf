@@ -369,8 +369,18 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
         return S_OK;
     }
 
-    // Character: already done. Format: what is a "format" anyway?
+    // Format: what is a "format" anyway?
     if (textUnit == TextUnit_Character || textUnit == TextUnit_Format) {
+        // a degenerate range must come back holding one character, or a screen
+        // reader walking the document character by character reads nothing
+        if (textUnit == TextUnit_Character && IsEmptyRange()) {
+            if (endGlyph < GetPageGlyphCount(endPage)) {
+                endGlyph++;
+            } else if (endPage < GetPageCount()) {
+                endPage++;
+                endGlyph = std::min(1, GetPageGlyphCount(endPage));
+            }
+        }
         return S_OK;
     } else if (textUnit == TextUnit_Word) {
         // select current word at start endpoint
@@ -551,7 +561,14 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit,
 
     // Just move the endpoints using other methods
     *moved = 0;
-    this->ExpandToEnclosingUnit(unit);
+    // A degenerate range is grown to a whole unit first. An already expanded
+    // one must not be re-expanded: after a move its start endpoint sits at the
+    // end of the previous unit, and expanding from there snaps the range back
+    // onto that unit, so repeated Move() calls -- how a screen reader walks a
+    // document -- never got past the first line / word (#321)
+    if (IsEmptyRange()) {
+        this->ExpandToEnclosingUnit(unit);
+    }
 
     if (count > 0) {
         for (int i = 0; i < count; ++i) {
@@ -662,21 +679,26 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
             return true;
         }
 
-        // do the moving
+        // do the moving. NextPage() / PreviousPage() only hop to the adjacent
+        // page when the endpoint sits at a page boundary; they return false at
+        // the very start / end of the document. The endpoint itself is then
+        // moved by NextEndpoint() / PrevEndpoint() -- both must run for each
+        // step (`||` between them short-circuited the actual move away, so
+        // Move() reported success while the range never advanced, #321)
         int Move(int count, SumatraUIAutomationTextRange* target, int* target_page, int* target_glyph) {
             this->target = target;
             this->target_page = target_page;
             this->target_glyph = target_glyph;
 
             int retVal = 0;
-            if (count > 0) {
-                for (int i = 0; i < count && (NextPage() || NextEndpoint()); ++i) {
-                    ++retVal;
+            for (int i = 0; i < abs(count); ++i) {
+                bool ok = count > 0 ? (NextPage() && NextEndpoint()) : (PreviousPage() && PrevEndpoint());
+                if (!ok) {
+                    break;
                 }
-            } else {
-                for (int i = 0; i < -count && (PreviousPage() || PrevEndpoint()); ++i) {
-                    ++retVal;
-                }
+                // never leave an endpoint outside its page
+                *target_glyph = limitValue(*target_glyph, 0, target->GetPageGlyphCount(*target_page));
+                ++retVal;
             }
 
             return retVal;
@@ -726,31 +748,35 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
         LineEndPointMover mover;
         *moved = mover.Move(count, this, target_page, target_glyph);
     } else if (unit == TextUnit_Page) {
+        // a page further is the start of that page for the start endpoint and
+        // its end for the end endpoint - moving both to the start would
+        // collapse a page-sized range to nothing
+        bool isEnd = endpoint == TextPatternRangeEndpoint_End;
+        int lastPage = GetPageCount();
         *moved = 0;
-        *target_glyph = 0;
-
-        if (count > 0) {
-            // GetPageCount()+1 => allow overflow momentarily
-            for (int i = 0; i < count && *target_page != GetPageCount() + 1; ++i) {
-                (*target_page)++;
+        for (int i = 0; i < abs(count); ++i) {
+            bool canChangePage = count > 0 ? (*target_page < lastPage) : (*target_page > 1);
+            if (canChangePage) {
+                *target_page += count > 0 ? 1 : -1;
+                *target_glyph = isEnd ? GetPageGlyphCount(*target_page) : 0;
+                (*moved)++;
+                continue;
+            }
+            // on the first / last page one more step seeks to the start / end
+            // of the document; past that there is nowhere left to go and we
+            // must report it, or a screen reader reading page by page never
+            // reaches the end of the document
+            int edgeGlyph = count > 0 ? GetPageGlyphCount(lastPage) : 0;
+            if (*target_glyph != edgeGlyph) {
+                *target_glyph = edgeGlyph;
                 (*moved)++;
             }
-
-            // fix overflow, allow seeking to the end this way
-            if (*target_page == GetPageCount() + 1) {
-                *target_page = GetPageCount();
-                *target_glyph = GetPageGlyphCount(*target_page);
-            }
-        } else {
-            for (int i = 0; i < -count && *target_page != 1; ++i) {
-                (*target_page)--;
-                (*moved)++;
-            }
+            break;
         }
     } else if (unit == TextUnit_Document) {
         if (count > 0) {
             int end_page = GetPageCount();
-            int end_glyph = GetPageGlyphCount(*target_page);
+            int end_glyph = GetPageGlyphCount(end_page);
 
             if (*target_page != end_page || *target_glyph != end_glyph) {
                 *target_page = end_page;
@@ -760,7 +786,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
                 *moved = 0;
             }
         } else {
-            const int beg_page = 0;
+            // pages are 1-based; page 0 is not a valid endpoint
+            const int beg_page = 1;
             const int beg_glyph = 0;
 
             if (*target_page != beg_page || *target_glyph != beg_glyph) {

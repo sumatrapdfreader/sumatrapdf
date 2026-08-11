@@ -247,8 +247,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
     } else if (isTrueBoolProp) {
+        // must be VARIANT_TRUE (-1), not TRUE (1): UI Automation compares
+        // against VARIANT_TRUE, so a 1 here reads as false and kept the
+        // document (the element that has the text) out of the control and
+        // content views that screen readers navigate (#321)
         pRetVal->vt = VT_BOOL;
-        pRetVal->boolVal = TRUE;
+        pRetVal->boolVal = VARIANT_TRUE;
         return S_OK;
     } else if (propertyId == UIA_ControlTypePropertyId) {
         pRetVal->vt = VT_I4;

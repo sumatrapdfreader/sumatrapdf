@@ -190,8 +190,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPropertyValue(PROP
         pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
     } else if (propertyId == UIA_IsValuePatternAvailablePropertyId) {
+        // VARIANT_TRUE (-1), not TRUE (1) - see DocumentProvider::GetPropertyValue
         pRetVal->vt = VT_BOOL;
-        pRetVal->boolVal = TRUE;
+        pRetVal->boolVal = VARIANT_TRUE;
         return S_OK;
     }
 
