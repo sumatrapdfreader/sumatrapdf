@@ -90,6 +90,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !ShowImageOutlines();
         } break;
+        case CmdToggleLaserPointer: {
+            isToggle = true;
+            newIsOn = !IsLaserPointerActive();
+        } break;
         case CmdDebugShowFitContentArea: {
             isToggle = true;
             newIsOn = !ShowFitContentArea();

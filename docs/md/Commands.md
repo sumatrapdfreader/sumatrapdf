@@ -176,6 +176,7 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdTogglePresentationMode,"Ctrl + L, Shift + F11, F5",View: Presentation Mode,
 CmdPresentationBlackBackground,.,Presentation Black Background,
 CmdPresentationWhiteBackground,w,Presentation White Background,
+CmdToggleLaserPointer,,Toggle Laser Pointer,"ver 3.7+, replaces the mouse cursor over the document with a glowing red laser dot for pointing things out. No default shortcut, assign your own. Stays visible in presentation mode (the cursor doesn't auto-hide while it's on)"
 ```
 
 ## Annotations

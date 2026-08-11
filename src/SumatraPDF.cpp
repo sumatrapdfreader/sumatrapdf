@@ -10793,6 +10793,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleKeyboardLinkFollowing(win);
             break;
 
+        case CmdToggleLaserPointer:
+            // the cursor itself is the feedback, so no notification
+            ToggleLaserPointer(win);
+            break;
+
         case CmdSelectTextViaKeyboard:
             ToggleSelectTextWithKeyboard(win);
             break;

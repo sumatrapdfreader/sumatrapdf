@@ -46,6 +46,23 @@ const user32 = dlopen("user32.dll", {
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
   GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
+  GetCursorInfo: { args: [FFIType.ptr], returns: FFIType.bool },
+  GetIconInfo: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
+  DrawIconEx: {
+    args: [
+      FFIType.u64,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.u64,
+      FFIType.i32,
+      FFIType.i32,
+      FFIType.u32,
+      FFIType.u64,
+      FFIType.u32,
+    ],
+    returns: FFIType.bool,
+  },
+  FillRect: { args: [FFIType.u64, FFIType.ptr, FFIType.u64], returns: FFIType.i32 },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -93,6 +110,8 @@ const gdi32 = dlopen("gdi32.dll", {
   },
   SetStretchBltMode: { args: [FFIType.u64, FFIType.i32], returns: FFIType.i32 },
   GetPixel: { args: [FFIType.u64, FFIType.i32, FFIType.i32], returns: FFIType.u32 },
+  CreateSolidBrush: { args: [FFIType.u32], returns: FFIType.u64 },
+  GetObjectW: { args: [FFIType.u64, FFIType.i32, FFIType.ptr], returns: FFIType.i32 },
 });
 
 const shell32 = dlopen("shell32.dll", {
@@ -772,6 +791,96 @@ export function captureWindowDCRegionToPng(
   gdi32.symbols.DeleteObject(bmp);
   gdi32.symbols.DeleteDC(memDC);
   user32.symbols.ReleaseDC(hwnd, winDC);
+  return status === 0;
+}
+
+// The cursor shape currently displayed on the desktop, as an HCURSOR (0 when
+// the cursor is hidden). It is a per-desktop global, so this sees the shape the
+// app under test asked for with SetCursor() even from another process.
+export function getCurrentCursor(): bigint {
+  // CURSORINFO { DWORD cbSize; DWORD flags; HCURSOR hCursor; POINT ptScreenPos; }
+  const ci = new BigUint64Array(4);
+  new Uint32Array(ci.buffer)[0] = 8 + 8 + 8; // cbSize (with padding after flags)
+  if (!user32.symbols.GetCursorInfo(ptr(ci))) {
+    return 0n;
+  }
+  return ci[1];
+}
+
+// Size in pixels of a cursor's image, from its color (or mask) bitmap.
+export function getCursorSize(hcursor: bigint): { dx: number; dy: number } {
+  // ICONINFO { BOOL fIcon; DWORD xHotspot; DWORD yHotspot; HBITMAP hbmMask; HBITMAP hbmColor; }
+  const ii = new BigUint64Array(4);
+  if (!user32.symbols.GetIconInfo(hcursor, ptr(ii))) {
+    return { dx: 0, dy: 0 };
+  }
+  const hbmMask = ii[2];
+  const hbmColor = ii[3];
+  // BITMAP { LONG bmType; LONG bmWidth; LONG bmHeight; ... }
+  const bm = new Int32Array(12);
+  const hbm = hbmColor !== 0n ? hbmColor : hbmMask;
+  gdi32.symbols.GetObjectW(hbm, 4 * 12, ptr(bm));
+  const dx = bm[1];
+  // a monochrome cursor's mask holds the AND and XOR halves stacked
+  const dy = hbmColor !== 0n ? bm[2] : bm[2] / 2;
+  if (hbmMask !== 0n) {
+    gdi32.symbols.DeleteObject(hbmMask);
+  }
+  if (hbmColor !== 0n) {
+    gdi32.symbols.DeleteObject(hbmColor);
+  }
+  return { dx, dy };
+}
+
+// Draw a cursor onto white and black squares side by side and save it as a PNG,
+// magnified `zoom` times. Two backgrounds because a cursor with a soft alpha
+// edge (e.g. the laser pointer dot) looks different over light and dark pages.
+export function captureCursorToPng(hcursor: bigint, outPath: string, zoom = 4): boolean {
+  ensureGdiplus();
+  const { dx, dy } = getCursorSize(hcursor);
+  if (dx <= 0 || dy <= 0) {
+    return false;
+  }
+  const w = dx * 2;
+  const h = dy;
+  const screenDC = user32.symbols.GetWindowDC(0);
+  const memDC = gdi32.symbols.CreateCompatibleDC(screenDC);
+  const bmp = gdi32.symbols.CreateCompatibleBitmap(screenDC, w, h);
+  const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
+
+  const fill = (x0: number, x1: number, color: number) => {
+    const rc = new Int32Array([x0, 0, x1, h]);
+    const brush = gdi32.symbols.CreateSolidBrush(color);
+    user32.symbols.FillRect(memDC, ptr(rc), brush);
+    gdi32.symbols.DeleteObject(brush);
+  };
+  fill(0, dx, 0x00ffffff); // white
+  fill(dx, w, 0x00000000); // black
+
+  const DI_NORMAL = 3;
+  user32.symbols.DrawIconEx(memDC, 0, 0, hcursor, 0, 0, 0, 0n, DI_NORMAL);
+  user32.symbols.DrawIconEx(memDC, dx, 0, hcursor, 0, 0, 0, 0n, DI_NORMAL);
+  gdi32.symbols.SelectObject(memDC, oldObj);
+
+  const zoomDC = gdi32.symbols.CreateCompatibleDC(screenDC);
+  const zoomBmp = gdi32.symbols.CreateCompatibleBitmap(screenDC, w * zoom, h * zoom);
+  const oldZoom = gdi32.symbols.SelectObject(zoomDC, zoomBmp);
+  gdi32.symbols.SetStretchBltMode(zoomDC, COLORONCOLOR);
+  gdi32.symbols.SelectObject(memDC, bmp);
+  gdi32.symbols.StretchBlt(zoomDC, 0, 0, w * zoom, h * zoom, memDC, 0, 0, w, h, SRCCOPY);
+  gdi32.symbols.SelectObject(memDC, oldObj);
+  gdi32.symbols.SelectObject(zoomDC, oldZoom);
+
+  const gpBmp = new BigUint64Array(1);
+  gdiplus.symbols.GdipCreateBitmapFromHBITMAP(zoomBmp, 0n, ptr(gpBmp));
+  const status = gdiplus.symbols.GdipSaveImageToFile(gpBmp[0], ptr(wideZ(outPath)), ptr(PNG_ENCODER_CLSID), 0);
+  gdiplus.symbols.GdipDisposeImage(gpBmp[0]);
+
+  gdi32.symbols.DeleteObject(zoomBmp);
+  gdi32.symbols.DeleteDC(zoomDC);
+  gdi32.symbols.DeleteObject(bmp);
+  gdi32.symbols.DeleteDC(memDC);
+  user32.symbols.ReleaseDC(0, screenDC);
   return status === 0;
 }
 

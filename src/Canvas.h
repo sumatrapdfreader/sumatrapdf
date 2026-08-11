@@ -12,6 +12,9 @@ bool ShowImageOutlines();
 void ToggleShowImageOutlines();
 bool ShowFitContentArea();
 void ToggleShowFitContentArea();
+bool IsLaserPointerActive();
+void ToggleLaserPointer(MainWindow*);
+void DeleteLaserPointerCursor();
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
 void InvalidateCanvasKeyboardFocus(MainWindow* win);
 

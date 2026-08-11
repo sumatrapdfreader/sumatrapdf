@@ -71,6 +71,161 @@ Kind kNotifAnnotation = "notifAnnotation";
 
 constexpr int kRenderDelayShowNotif = 500;
 
+//--- laser pointer (CmdToggleLaserPointer)
+
+// A laser pointer is a session mode, not a setting: it's turned on to point
+// things out during a presentation and off again afterwards, and an app that
+// started up with the mouse cursor replaced by a red dot would look broken.
+static bool gLaserPointer = false;
+
+// logical size of the cursor bitmap. The dot itself is a small part of it,
+// the rest is the glow fading out to fully transparent
+constexpr int kLaserPointerCursorSize = 32;
+
+static HCURSOR gCursorLaserPointer = nullptr;
+static int gCursorLaserPointerSize = 0;
+
+// A laser dot: a white-hot center inside a saturated red core, surrounded by a
+// glow that fades to transparent so the dot is visible on light and dark pages
+// alike. The hotspot is the center of the dot, unlike an arrow's tip.
+static HCURSOR CreateLaserPointerCursor(int size) {
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = size;
+    bmi.bmiHeader.biHeight = -size; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    void* bits = nullptr;
+    HBITMAP hbmpColor = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!hbmpColor || !bits) {
+        DeleteObject(hbmpColor);
+        return nullptr;
+    }
+
+    float center = (float)size / 2.f;
+    float glowR = center;
+    float coreR = (float)size * 0.16f;
+    float hotR = (float)size * 0.07f;
+    DWORD* pixels = (DWORD*)bits;
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            float dx = ((float)x + 0.5f) - center;
+            float dy = ((float)y + 0.5f) - center;
+            float d = sqrtf((dx * dx) + (dy * dy));
+
+            // the glow, densest where it meets the core and quadratically
+            // fading out; it also fills the core, so that anti-aliasing the
+            // core's edge blends it into the glow rather than into a gap
+            float t = limitValue((d - coreR) / (glowR - coreR), 0.f, 1.f);
+            float glowA = (d < glowR) ? 0.45f * (1.f - t) * (1.f - t) : 0.f;
+            // the dot itself, white-hot in the middle, saturated red at the edge
+            float coreA = limitValue(coreR + 0.5f - d, 0.f, 1.f);
+            float hot = limitValue(d / hotR, 0.f, 1.f);
+            float coreG = 255.f - (200.f * hot);
+
+            // core over glow, written out premultiplied (as 32bpp cursors want)
+            float glowW = glowA * (1.f - coreA);
+            float alpha = coreA + glowW;
+            if (alpha <= 0.f) {
+                pixels[(y * size) + x] = 0;
+                continue;
+            }
+            u8 a = (u8)(alpha * 255.f);
+            u8 r = (u8)((255.f * coreA) + (255.f * glowW));
+            u8 g = (u8)((coreG * coreA) + (16.f * glowW));
+            u8 b = g;
+            pixels[(y * size) + x] = ((DWORD)a << 24) | ((DWORD)r << 16) | ((DWORD)g << 8) | b;
+        }
+    }
+
+    // 32bpp cursors carry their own alpha, but CreateIconIndirect still wants a
+    // mask bitmap; an all-zero AND mask leaves the color bitmap in charge
+    int maskBytesPerRow = ((size + 15) / 16) * 2;
+    u8* maskBits = AllocArray<u8>(maskBytesPerRow * size);
+    HBITMAP hbmpMask = CreateBitmap(size, size, 1, 1, maskBits);
+    HCURSOR res = nullptr;
+    if (hbmpMask) {
+        ICONINFO ii{};
+        ii.fIcon = FALSE;
+        ii.xHotspot = (DWORD)(size / 2);
+        ii.yHotspot = (DWORD)(size / 2);
+        ii.hbmMask = hbmpMask;
+        ii.hbmColor = hbmpColor;
+        res = (HCURSOR)CreateIconIndirect(&ii);
+        DeleteObject(hbmpMask);
+    }
+    DeleteObject(hbmpColor);
+    free(maskBits);
+    return res;
+}
+
+// the cursor is sized for the DPI of the window it's shown in, so it's
+// re-created when the canvas moves to a monitor with a different scaling
+static HCURSOR GetLaserPointerCursor(HWND hwnd) {
+    int size = DpiScale(hwnd, kLaserPointerCursorSize);
+    if (gCursorLaserPointer && (gCursorLaserPointerSize == size)) {
+        return gCursorLaserPointer;
+    }
+    HCURSOR cur = CreateLaserPointerCursor(size);
+    if (!cur) {
+        // a cursor of the wrong size beats no cursor at all
+        return gCursorLaserPointer;
+    }
+    if (gCursorLaserPointer) {
+        DestroyCursor(gCursorLaserPointer);
+    }
+    gCursorLaserPointer = cur;
+    gCursorLaserPointerSize = size;
+    return cur;
+}
+
+void DeleteLaserPointerCursor() {
+    if (gCursorLaserPointer) {
+        DestroyCursor(gCursorLaserPointer);
+        gCursorLaserPointer = nullptr;
+        gCursorLaserPointerSize = 0;
+    }
+}
+
+bool IsLaserPointerActive() {
+    return gLaserPointer;
+}
+
+// while on, the canvas cursor is the laser dot no matter what is under it:
+// links, text and annotations still work, they just don't change the cursor
+static bool SetLaserPointerCursor(MainWindow* win) {
+    if (!gLaserPointer) {
+        return false;
+    }
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        // the presenter blanked the screen on purpose, don't put a dot on it
+        return false;
+    }
+    HCURSOR cur = GetLaserPointerCursor(win->hwndCanvas);
+    if (!cur) {
+        return false;
+    }
+    SetCursor(cur);
+    return true;
+}
+
+// canvas code sets its cursor through this instead of SetCursorCached() so
+// that the laser pointer can take over
+static void SetCanvasCursor(MainWindow* win, LPWSTR cursorId) {
+    if (SetLaserPointerCursor(win)) {
+        return;
+    }
+    SetCursorCached(cursorId);
+}
+
+void ToggleLaserPointer(MainWindow* win) {
+    gLaserPointer = !gLaserPointer;
+    // change the cursor now rather than on the next mouse move
+    SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+}
+
 // OLE drag-drop support for dragging selected text out of the window
 class TextDropSource : public IDropSource {
     AtomicInt refCount = 1;
@@ -1173,7 +1328,7 @@ static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
     win->mouseAction = MouseAction::Dragging;
     win->dragRightClick = right;
     win->dragPrevPos = Point(x, y);
-    if (GetCursor()) {
+    if (GetCursor() && !SetLaserPointerCursor(win)) {
         SetCursor(gCursorDrag);
     }
 }
@@ -1281,7 +1436,7 @@ static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
     }
 
     if (GetCursor()) {
-        SetCursorCached(IDC_ARROW);
+        SetCanvasCursor(win, IDC_ARROW);
     }
     ReleaseCapture();
 
@@ -1305,7 +1460,7 @@ void CancelDrag(MainWindow* win) {
     win->linkOnLastButtonDown = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
-    SetCursorCached(IDC_ARROW);
+    SetCanvasCursor(win, IDC_ARROW);
 }
 
 bool IsDragDistance(int x1, int x2, int y1, int y2) {
@@ -1503,7 +1658,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
             if (!showingCursor) {
                 // logf("OnMouseMove: temporary showing cursor\n");
                 if (win->mouseAction == MouseAction::None) {
-                    SetCursorCached(IDC_ARROW);
+                    SetCanvasCursor(win, IDC_ARROW);
                 } else {
                     SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
                 }
@@ -1766,7 +1921,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     if (GetCapture() == win->hwndCanvas) {
         ReleaseCapture();
     }
-    SetCursorCached(IDC_ARROW);
+    SetCanvasCursor(win, IDC_ARROW);
 
     if (aborted || !annot) {
         return true;
@@ -2071,7 +2226,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         win->xScrollAccum = 0;
         win->yScrollAccum = 0;
         KillTimer(win->hwndCanvas, kAutoScrollTimerID);
-        SetCursorCached(IDC_ARROW);
+        SetCanvasCursor(win, IDC_ARROW);
         return;
     }
 
@@ -2138,7 +2293,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
             win->showSelection = tab->selectionOnPage != nullptr;
             ScheduleRepaint(win, 0);
         }
-        SetCursorCached(IDC_ARROW);
+        SetCanvasCursor(win, IDC_ARROW);
 
         // Ctrl+click on internal link: open in new tab and navigate there
         bool isInternal = (kindDestinationLaunchURL != kind && kindDestinationLaunchFile != kind);
@@ -2271,7 +2426,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*
         // record current mouse position, the farther the mouse is moved
         // from this position, the faster we scroll the document
         win->dragStart = Point(x, y);
-        SetCursorCached(IDC_SIZEALL);
+        SetCanvasCursor(win, IDC_SIZEALL);
     } else if (win->mouseAction == MouseAction::Scrolling) {
         win->mouseAction = MouseAction::None;
     }
@@ -2304,7 +2459,7 @@ static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM /*key*/) {
     // latched on, which is what dragStartPending still being set means
     if (win->mouseAction == MouseAction::Scrolling && !win->dragStartPending) {
         win->mouseAction = MouseAction::None;
-        SetCursorCached(IDC_ARROW);
+        SetCanvasCursor(win, IDC_ARROW);
     }
 }
 
@@ -3042,6 +3197,13 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     ReportIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();
+    }
+
+    // the laser dot replaces every other cursor, and while pointing at the page
+    // during a talk a link tooltip popping up is just in the way
+    if (SetLaserPointerCursor(win)) {
+        win->DeleteToolTip();
+        return TRUE;
     }
 
     switch (win->mouseAction) {
@@ -4291,7 +4453,9 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kHideCursorTimerID:
             // logf("got kHideCursorTimerID\n");
             KillTimer(hwnd, kHideCursorTimerID);
-            if (win->InPresentation()) {
+            // a laser pointer that disappears when you stop moving it would be
+            // useless, so it opts out of the presentation-mode cursor hiding
+            if (win->InPresentation() && !IsLaserPointerActive()) {
                 // logf("hiding cursor because win->presentations\n");
                 SetCursor((HCURSOR) nullptr);
             }
