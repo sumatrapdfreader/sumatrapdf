@@ -88,6 +88,9 @@ ControlBase::ControlBase() {
 
 ControlBase::~ControlBase() {
     Destroy();
+    // the tree first: a virtual control tells its root it's going away
+    delete layout;
+    delete vroot;
     DeleteBrushSafe(&bgBrush);
 }
 
@@ -341,8 +344,16 @@ int ControlBase::MinIntrinsicWidth(int /*height*/) {
 #endif
 }
 
+void ControlBase::DoLayout(Size size) {
+    LayoutTreeToSize(hwnd, layout, size, &vroot);
+}
+
 void ControlBase::SetPos(Rect* r) {
     HwndMoveWindow(hwnd, r);
+}
+
+ControlBase* ControlBase::AsControl() {
+    return this;
 }
 
 void ControlBase::SetBounds(Rect bounds) {
@@ -879,97 +890,3 @@ void SizeToIdealSize(ControlBase* c) {
     c->SetBounds(r);
 }
 
-//--- VirtHost
-
-static Kind kindVirtHost = "virtHost";
-
-VirtHost::VirtHost() {
-    kind = kindVirtHost;
-}
-
-VirtHost::~VirtHost() {
-    delete vroot;
-}
-
-HWND VirtHost::Create(HWND parent, VirtWnd* child) {
-    CreateCustomArgs cargs;
-    cargs.parent = parent;
-    cargs.style = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE;
-    cargs.visible = true;
-    HWND hwnd = CreateCustom(cargs);
-    if (!hwnd) {
-        delete child;
-        return nullptr;
-    }
-    vroot = new VirtRoot(hwnd);
-    vroot->SetChild(child);
-    return hwnd;
-}
-
-VirtWnd* VirtHost::Child() const {
-    return vroot ? vroot->child : nullptr;
-}
-
-Size VirtHost::GetIdealSize() {
-    VirtWnd* c = Child();
-    if (!c) {
-        return {};
-    }
-    // containers (VirtBox etc.) compute their size from their children in
-    // MinIntrinsic*, not in GetIdealSize()
-    return {c->MinIntrinsicWidth(0), c->MinIntrinsicHeight(0)};
-}
-
-void VirtHost::SetBounds(Rect rc) {
-    ControlBase::SetBounds(rc);
-    if (!vroot) {
-        return;
-    }
-    // the tree lives in our client area, which starts at 0,0
-    vroot->bounds = {0, 0, rc.dx, rc.dy};
-    vroot->needsLayout = true;
-}
-
-void VirtHost::OnPaint(HDC hdc, PAINTSTRUCT*) {
-    Rect rc = HwndClientRect(hwnd);
-    DoubleBuffer buffer(hwnd, rc);
-    HDC memDC = buffer.GetDC();
-    // wingui doesn't know about the app's theme, so callers that care set bgColor
-    COLORREF bg = (bgColor == kColorUnset) ? GetSysColor(COLOR_WINDOW) : bgColor;
-    HdcFillRect(memDC, rc, bg);
-    SetBkMode(memDC, TRANSPARENT);
-    Gfx gfx = GfxFromHdc(memDC);
-    if (vroot) {
-        vroot->Paint(&gfx, rc);
-    }
-    buffer.Flush(hdc);
-}
-
-LRESULT VirtHost::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area
-    }
-    if (vroot) {
-        LRESULT res = 0;
-        switch (msg) {
-            case WM_MOUSEMOVE:
-            case WM_MOUSELEAVE:
-            case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
-                if (vroot->OnMessage(msg, wp, lp, res)) {
-                    return res;
-                }
-                break;
-            case WM_SETCURSOR: {
-                Point pt = HwndGetCursorPos(hwnd);
-                Point ptLocal{0, 0};
-                VirtWnd* w = vroot->WndFromPoint(pt, &ptLocal);
-                if (w && w->OnSetCursor(ptLocal)) {
-                    return TRUE;
-                }
-                break;
-            }
-        }
-    }
-    return WndProcDefault(hwnd, msg, wp, lp);
-}

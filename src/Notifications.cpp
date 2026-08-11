@@ -96,7 +96,7 @@ struct NotificationWnd : WindowBase {
 
     bool HasProgress() const { return progressPerc >= 0; }
     void Layout(Str message);
-    void BuildTree(VirtWnd* customContent);
+    void BuildTree(ILayout* customContent);
     NotifColors Colors() const;
     void ScheduleRemove();
 
@@ -127,14 +127,12 @@ struct NotificationWnd : WindowBase {
     int delayInMs = 0;
     UINT_PTR delayTimerId = 0;
 
-    // the content is a VirtWnd tree hosted in our HWND. `container` positions
-    // its children itself (Layout() computes the rects), so the root never
-    // re-layouts on its own
-    VirtRoot* vroot = nullptr;
-    VirtWnd* container = nullptr;
+    // the controls hosted in our HWND. `container` only owns them - this window
+    // positions them itself
+    VBox* container = nullptr;
     // either the built-in text or a caller-supplied tree, never both
     NotifTextWnd* txtWnd = nullptr;
-    VirtWnd* contentWnd = nullptr;
+    ILayout* contentWnd = nullptr;
     VirtCloseButton* closeWnd = nullptr;
     NotifProgressWnd* progressWnd = nullptr;
 };
@@ -143,9 +141,9 @@ static void NotifCloseClicked(NotificationWnd* wnd, VirtMouseEvent*) {
     wnd->ScheduleRemove();
 }
 
-// the wnd showing the message (built-in) or the caller's custom tree
-static VirtWnd* NotifBody(NotificationWnd* wnd) {
-    return wnd->contentWnd ? wnd->contentWnd : (VirtWnd*)wnd->txtWnd;
+// the control showing the message (built-in) or the caller's custom tree
+static ILayout* NotifBody(NotificationWnd* wnd) {
+    return wnd->contentWnd ? wnd->contentWnd : (ILayout*)wnd->txtWnd;
 }
 
 constexpr int kMaxNotifs = 128;
@@ -326,8 +324,8 @@ NotificationWnd::~NotificationWnd() {
         KillTimer(hwnd, delayTimerId);
         delayTimerId = 0;
     }
-    // owns the whole VirtWnd tree, including a caller-supplied contentWnd
-    delete vroot;
+    // ~WindowBase deletes vroot and `layout`, which owns the controls -
+    // a caller-supplied contentWnd included
 }
 
 NotifColors NotificationWnd::Colors() const {
@@ -346,12 +344,8 @@ NotifColors NotificationWnd::Colors() const {
 
 // builds the tree hosted in our HWND: the body (message text or a caller
 // supplied tree), the close button and the progress bar
-void NotificationWnd::BuildTree(VirtWnd* customContent) {
-    vroot = new VirtRoot(hwnd);
-    container = new VirtWnd();
-    container->name = StrL("notification");
-    // decorative: clicks in the padding around the controls do nothing
-    container->flags |= vwfNoHitTest;
+void NotificationWnd::BuildTree(ILayout* customContent) {
+    container = new VBox();
 
     if (customContent) {
         contentWnd = customContent;
@@ -373,7 +367,7 @@ void NotificationWnd::BuildTree(VirtWnd* customContent) {
         closeWnd->onClick = MkFunc1(NotifCloseClicked, this);
         container->AddChild(closeWnd);
     }
-    vroot->SetChild(container);
+    layout = container;
 }
 
 HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
@@ -602,12 +596,10 @@ void NotificationWnd::Layout(Str message) {
         rClose.y = ((dy - rClose.dx) / 2) + 1;
     }
 
-    // hand the computed geometry to the VirtWnd tree. The container positions
-    // its children itself, so the root must not re-layout them
-    vroot->bounds = {0, 0, dx, dy};
-    vroot->needsLayout = false;
-    container->SetBounds({0, 0, dx, dy});
-    VirtWnd* body = NotifBody(this);
+    // hand the computed geometry to the controls; this window positions them
+    // itself, so the tree is only collected, not laid out
+    RefreshVirtTops(hwnd, layout, Rect{0, 0, dx, dy}, &vroot);
+    ILayout* body = NotifBody(this);
     body->SetBounds(rTxt);
     if (txtWnd && txtWnd->rich) {
         txtWnd->rich->SetBounds(rTxt);
@@ -655,7 +647,9 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
     // the controls (message / custom content, close button, progress) paint
     // themselves
     Gfx gfx = GfxFromHdc(hdc);
-    vroot->Paint(&gfx, rc);
+    if (vroot) {
+        vroot->Paint(&gfx, rc);
+    }
 
     buffer.Flush(hdcIn);
 }
@@ -767,58 +761,12 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
     ScheduleRemove();
 }
 
-static bool IsNotifMouseMsg(UINT msg) {
-    switch (msg) {
-        case WM_MOUSEMOVE:
-        case WM_MOUSELEAVE:
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-            return true;
-    }
-    return false;
-}
-
-// the tree lays out left-to-right; when the HWND has an RTL layout GDI mirrors
-// the drawing for us but mouse coordinates arrive mirrored, so undo that before
-// hit-testing
-static LPARAM UnmirrorRtlLparam(HWND hwnd, LPARAM lp) {
-    if (!HwndIsRtl(hwnd)) {
-        return lp;
-    }
-    Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-    UnmirrorRtl(hwnd, pt);
-    return MAKELPARAM(pt.x, pt.y);
-}
-
 LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_ERASEBKGND == msg) {
         // avoid flicker by telling we took care of erasing background
         return TRUE;
     }
-
-    if (WM_SETCURSOR == msg) {
-        Point pt = HwndGetCursorPos(hwnd);
-        UnmirrorRtl(hwnd, pt);
-        Point ptLocal{0, 0};
-        VirtWnd* w = vroot->WndFromPoint(pt, &ptLocal);
-        while (w) {
-            Rect b = w->BoundsInWindow();
-            if (w->OnSetCursor({pt.x - b.x, pt.y - b.y})) {
-                return TRUE;
-            }
-            w = w->parent;
-        }
-    } else if (IsNotifMouseMsg(msg)) {
-        LRESULT res = 0;
-        LPARAM lp2 = UnmirrorRtlLparam(hwnd, lp);
-        if (vroot->OnMessage(msg, wp, lp2, res)) {
-            return res;
-        }
-    }
-
+    // WindowBase::WndProcDefault sends the controls their input, RTL included
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
@@ -924,7 +872,7 @@ NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs) {
 // `content` passes to the notification (it is freed with it, also on failure).
 // The tree is measured with whatever HWND / HFONT its controls were built with,
 // so build it against the parent window
-NotificationWnd* ShowCustomNotification(HWND hwndParent, VirtWnd* content, int timeoutMs) {
+NotificationWnd* ShowCustomNotification(HWND hwndParent, ILayout* content, int timeoutMs) {
     NotificationCreateArgs args;
     args.hwndParent = hwndParent;
     args.groupId = kNotifAdHoc;

@@ -110,7 +110,9 @@ WindowBase::WindowBase() {
 
 WindowBase::~WindowBase() {
     Destroy();
+    // the tree first: a virtual control tells its root it's going away
     delete layout;
+    delete vroot;
     DeleteBrushSafe(&bgBrush);
 }
 
@@ -251,10 +253,86 @@ LRESULT WindowBase::OnNotify(int /*controlId*/, NMHDR* /*nmh*/) {
 }
 
 void WindowBase::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
+    if (vroot) {
+        PaintVirtTree(vroot, hdc, ToRect(ps->rcPaint), bgColor);
+        return;
+    }
     auto* br = BackgroundBrush();
     if (br != nullptr) {
         HdcFillRect(hdc, ToRect(ps->rcPaint), br);
     }
+}
+
+void WindowBase::DoLayout(Size size) {
+    LayoutTreeToSize(hwnd, layout, size, &vroot);
+}
+
+void WindowBase::DoLayout() {
+    Rect rc = HwndClientRect(hwnd);
+    DoLayout(rc.Size());
+}
+
+void WindowBase::SetFocusTo(ControlBase* c) {
+    if (!c || !c->hwnd) {
+        return;
+    }
+    // the win32 focus moving away from us clears the virtual focus (WM_KILLFOCUS)
+    ::SetFocus(c->hwnd);
+}
+
+void WindowBase::SetFocusTo(VirtWnd* w) {
+    if (!vroot || !w) {
+        return;
+    }
+    // a virtual control has no HWND: we hold the focus on its behalf and route
+    // the keys to it
+    if (::GetFocus() != hwnd) {
+        ::SetFocus(hwnd);
+    }
+    vroot->SetFocus(w);
+}
+
+bool WindowBase::TabNavigate(bool backwards) {
+    if (!layout) {
+        return false;
+    }
+    Vec<TabStop> stops;
+    CollectTabStops(layout, stops);
+    int n = len(stops);
+    if (n == 0) {
+        return false;
+    }
+    // where we are now: a virtual control if one has the focus, otherwise the
+    // control that owns the win32 focus
+    int idx = -1;
+    VirtWnd* focusedVirt = vroot ? vroot->focused : nullptr;
+    HWND focusedHwnd = ::GetFocus();
+    for (int i = 0; i < n; i++) {
+        TabStop& ts = stops[i];
+        if (focusedVirt && ts.vwnd == focusedVirt) {
+            idx = i;
+            break;
+        }
+        if (!focusedVirt && ts.ctrl && ts.ctrl->hwnd == focusedHwnd) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx < 0) {
+        idx = backwards ? n - 1 : 0;
+    } else {
+        idx = (idx + (backwards ? -1 : 1) + n) % n;
+    }
+    TabStop& ts = stops[idx];
+    if (ts.vwnd) {
+        SetFocusTo(ts.vwnd);
+    } else {
+        if (vroot) {
+            vroot->SetFocus(nullptr);
+        }
+        SetFocusTo(ts.ctrl);
+    }
+    return true;
 }
 
 void WindowBase::OnSize(UINT msg, UINT type, Size size) {}
@@ -424,6 +502,13 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     LRESULT result = 0;
 
+    if (vroot) {
+        LRESULT res = 0;
+        if (VirtTreeOnMessage(hwnd, vroot, msg, wparam, lparam, res)) {
+            return res;
+        }
+    }
+
     WmEvent e{hwnd, msg, wparam, lparam, this->userData, this};
 
     if (msg == WM_CLOSE) {
@@ -501,6 +586,14 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 
         case WM_SETFOCUS: {
             OnFocus();
+            break;
+        }
+
+        case WM_KILLFOCUS: {
+            // we were holding the focus for a virtual control; it's gone now
+            if (vroot) {
+                vroot->SetFocus(nullptr);
+            }
             break;
         }
 
@@ -614,6 +707,10 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 
         case WM_SIZE: {
             Size size = {LOWORD(lparam), HIWORD(lparam)};
+            if (autoLayout && (size.dx > 0) && (size.dy > 0)) {
+                DoLayout(size);
+                HwndInvalidate(hwnd);
+            }
             OnSize(msg, static_cast<UINT>(wparam), size);
             break;
         }
@@ -648,8 +745,20 @@ LRESULT WindowBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 }
 
-bool WindowBase::PreTranslateMessage(MSG& /*msg*/) {
-    return false;
+bool WindowBase::PreTranslateMessage(MSG& msg) {
+    if (msg.message != WM_KEYDOWN || msg.wParam != VK_TAB || !layout) {
+        return false;
+    }
+    if (IsCtrlPressed() || IsAltPressed()) {
+        return false;
+    }
+    // a window of only HWND controls keeps the native dialog navigation
+    // (IsDialogMessage() in the message loop); we take Tab over only when there
+    // are virtual controls in the ring as well, as those it can't see
+    if (!vroot) {
+        return false;
+    }
+    return TabNavigate(IsShiftPressed());
 }
 
 void WindowBase::Attach(HWND hwnd) {

@@ -9048,9 +9048,9 @@ static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
 
 // content for a notification, built as a VirtWnd tree: a generated Pixmap shown
 // by a VirtWnd, with a caption below it
-static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
+static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
     PlatformFont* font = GetPlatformFont(GetAppBiggerFont(hwnd));
-    auto* box = new VirtBox(true);
+    auto* box = new VBox();
     box->alignCross = CrossAxisAlign::CrossCenter;
 
     auto* img = new OwnedPixmapWnd();
@@ -9058,7 +9058,7 @@ static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
     img->fitToBounds = false;
     box->AddChild(img);
 
-    box->AddChild(new VirtSpacer(0, DpiScale(hwnd, 6)));
+    box->AddChild(new Spacer(0, DpiScale(hwnd, 6)));
     box->AddChild(new VirtText(StrL("a VirtWnd-drawn Pixmap"), font));
     return box;
 }

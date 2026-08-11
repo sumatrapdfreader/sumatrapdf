@@ -17,6 +17,7 @@ enum WindowBorderStyle {
 };
 
 struct WindowBase;
+struct VirtRoot;
 
 WindowBase* WindowBaseFromHwnd(HWND);
 void MarkHWNDDestroyed(HWND);
@@ -150,6 +151,17 @@ struct WindowBase {
 
     HBRUSH BackgroundBrush();
 
+    // lays `layout` out at `size` and refreshes the virtual controls
+    void DoLayout(Size);
+    void DoLayout();
+
+    // Tab ring over `layout`, across HWND and virtual controls alike. A virtual
+    // control holding the focus means this window holds the win32 focus and
+    // `vroot->focused` says which one it is
+    bool TabNavigate(bool backwards);
+    void SetFocusTo(ControlBase*);
+    void SetFocusTo(VirtWnd*);
+
     Kind kind = nullptr;
     uintptr_t userData = 0;
 
@@ -164,8 +176,14 @@ struct WindowBase {
     HBRUSH bgBrush = nullptr;
     COLORREF textColor = kColorUnset;
 
-    // the layout of our children, if we have one
+    // the layout of our children, if we have one. It can hold HWND controls
+    // (ControlBase) and virtual ones (VirtWnd) side by side
     ILayout* layout = nullptr;
+    // the virtual controls of `layout`, if it has any. Created on demand by
+    // DoLayout(), owned here, but it doesn't own the controls - `layout` does
+    VirtRoot* vroot = nullptr;
+    // relayout on WM_SIZE. Off by default: most windows do it themselves
+    bool autoLayout = false;
 
     CloseHandler onClose;
     DestroyHandler onDestroy;
@@ -174,7 +192,7 @@ struct WindowBase {
 bool PreTranslateMessage(MSG& msg);
 
 // Base of the controls that a layout positions: the win32 controls (Static,
-// Button, Edit, ...) and the custom-drawn ones (Splitter, TabsCtrl, VirtHost).
+// Button, Edit, ...) and the custom-drawn ones (Splitter, TabsCtrl).
 // It is an ILayout, and it has no window-only machinery (no WM_CLOSE handler,
 // no min/max info, no drop files, no taskbar callback)
 struct ControlBase : ILayout {
@@ -200,6 +218,7 @@ struct ControlBase : ILayout {
     int MinIntrinsicWidth(int height) override;
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
+    ControlBase* AsControl() override;
 
     void SetInsetsPt(int uniform);
     void SetInsetsPt(int topBottom, int leftRight);
@@ -268,6 +287,12 @@ struct ControlBase : ILayout {
     HBRUSH bgBrush = nullptr;
     COLORREF textColor = kColorUnset;
 
+    // a control can host a layout tree of its own, real and virtual mixed
+    ILayout* layout = nullptr;
+    VirtRoot* vroot = nullptr;
+
+    void DoLayout(Size);
+
     ContextMenuHandler onContextMenu;
     DestroyHandler onDestroy;
 };
@@ -279,25 +304,6 @@ void SizeToIdealSize(ControlBase* c);
 
 struct VirtRoot;
 struct VirtWnd;
-
-// The inverse of VirtWrapper: a child window that hosts a VirtWnd tree, so a
-// virtual control can sit in a layout of real (HWND) controls. Owns the tree
-struct VirtHost : ControlBase {
-    VirtRoot* vroot = nullptr;
-    COLORREF bgColor = kColorUnset;
-
-    VirtHost();
-    ~VirtHost() override;
-
-    // takes ownership of `child`
-    HWND Create(HWND parent, VirtWnd* child);
-    VirtWnd* Child() const;
-
-    Size GetIdealSize() override;
-    void SetBounds(Rect) override;
-    void OnPaint(HDC, PAINTSTRUCT*) override;
-    LRESULT WndProc(HWND, UINT, WPARAM, LPARAM) override;
-};
 
 struct Static : ControlBase {
     struct CreateArgs {
@@ -862,7 +868,6 @@ struct TabsCtrl;
 struct TabInfo;
 struct TabWnd;
 struct VirtRoot;
-struct VirtBox;
 struct VirtCloseButton;
 struct VirtMouseEvent;
 
@@ -943,9 +948,8 @@ struct TabsCtrl : ControlBase {
     int tabDefaultDx = 300;
 
     Vec<TabInfo*> tabs;
-    // the bar as virtual controls: one TabWnd per TabInfo, laid out by `bar`
-    VirtRoot* vroot = nullptr;
-    VirtBox* bar = nullptr;
+    // the bar: one TabWnd per TabInfo, laid out by `bar` (which is `layout`)
+    HBox* bar = nullptr;
     // in tab order (the box's children are reversed when the UI is RTL)
     Vec<TabWnd*> tabWnds;
     struct Tooltip* tooltip = nullptr;
@@ -1030,7 +1034,6 @@ struct TabsCtrl : ControlBase {
     void LayoutTabs();
     void ScheduleRepaint();
     TabsCtrl::MouseState TabStateFromMousePosition(const Point& p);
-    void Paint(HDC hdc, const Rect& rc);
     HBITMAP RenderForDragging(int idx);
 
     TabWnd* TabWndAt(int idx);

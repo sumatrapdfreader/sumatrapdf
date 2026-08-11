@@ -94,10 +94,10 @@ static bool PdfToolPreTranslateEsc(MSG& msg, WindowBase* dlg) {
 
 // Every dialog here has the same shape: the source path, a destination edit
 // with a browse button, sometimes one more labelled field, and an action +
-// Cancel row. PdfToolDialog builds that as a VirtWnd tree - the labels and
-// buttons are virtual controls, the text fields stay native edits hosted by a
-// VirtWrapper so they take part in the same layout - and each dialog only
-// adds its rows and implements DoIt().
+// Cancel row. PdfToolDialog builds that as one layout tree: the labels and
+// buttons are virtual controls, the text fields are native edits, and they sit
+// in the same VBox/HBox side by side. Each dialog only adds its rows and
+// implements DoIt().
 struct PdfToolDialog : WindowBase {
     HFONT hFont = nullptr;
     PlatformFont* font = nullptr;
@@ -107,22 +107,21 @@ struct PdfToolDialog : WindowBase {
     WStr browseFilter;
     WStr browseDefExt;
 
-    VirtRoot* vroot = nullptr;
-    VirtBox* mainBox = nullptr;
+    VBox* mainBox = nullptr;
     VirtText* pathLabel = nullptr;
     Edit* destEdit = nullptr;
     VirtButton* browseBtn = nullptr;
     VirtButton* actionBtn = nullptr;
     VirtButton* cancelBtn = nullptr;
     // the row AddRow() built last, so a dialog can put more in it
-    VirtBox* lastRow = nullptr;
+    HBox* lastRow = nullptr;
     int rowGap = 0;
     int gap = 0;
 
     ~PdfToolDialog() override;
 
     bool CreateToolDialog(MainWindow*, WindowTab*, Str title);
-    VirtBox* AddRow();
+    HBox* AddRow();
     void AddPathRow();
     void AddDestRow(Str destPath, WStr filter, WStr defExt);
     Edit* AddLabeledEdit(Str label, Str text, bool isPassword = false);
@@ -135,15 +134,14 @@ struct PdfToolDialog : WindowBase {
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt() {}
 
-    void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     bool PreTranslateMessage(MSG& msg) override;
 };
 
 PdfToolDialog::~PdfToolDialog() {
     str::FreePtr(&srcPath);
-    // owns the whole tree, including the wrapped edit controls
-    delete vroot;
+    // ~WindowBase deletes `layout`, which owns the whole tree - the virtual
+    // controls and the edits alike
 }
 
 static void PdfToolDialogOnClose(WindowBase::CloseEvent* ev) {
@@ -213,22 +211,21 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     font = GetPlatformFont(hFont);
     rowGap = DpiScale(hwnd, 6);
     gap = DpiScale(hwnd, 8);
-    vroot = new VirtRoot(hwnd);
-    mainBox = new VirtBox(true);
+    mainBox = new VBox();
     mainBox->alignCross = CrossAxisAlign::Stretch;
-    mainBox->padding = DpiScaledInsets(hwnd, 10);
-    vroot->SetChild(mainBox);
+    layout = new Padding(mainBox, DpiScaledInsets(hwnd, 10));
     return true;
 }
 
 // a row of the dialog, with the gap that separates it from the row above
-VirtBox* PdfToolDialog::AddRow() {
-    auto* row = new VirtBox(false);
+HBox* PdfToolDialog::AddRow() {
+    auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
-    if (mainBox->ChildCount() > 0) {
-        row->padding.top = rowGap;
+    if (mainBox->ChildrenCount() > 0) {
+        mainBox->AddChild(new Padding(row, Insets{rowGap, 0, 0, 0}));
+    } else {
+        mainBox->AddChild(row);
     }
-    mainBox->AddChild(row);
     lastRow = row;
     return row;
 }
@@ -242,7 +239,7 @@ void PdfToolDialog::AddPathRow() {
 void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
     browseFilter = filter;
     browseDefExt = defExt;
-    VirtBox* row = AddRow();
+    HBox* row = AddRow();
 
     Edit::CreateArgs args;
     args.parent = hwnd;
@@ -252,11 +249,11 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
     args.isRtl = IsUIRtl();
     destEdit = new Edit();
     destEdit->Create(args);
-    row->AddChild(new VirtWrapper(destEdit), 1);
+    row->AddChild(destEdit, 1);
 
     browseBtn = NewButton("...", false);
     browseBtn->onClick = MkFunc1(PdfToolBrowseClicked, this);
-    row->AddChild(new VirtSpacer(gap, 0));
+    row->AddChild(new Spacer(gap, 0));
     row->AddChild(browseBtn);
 
     // align the source path label's text with the destination edit's text,
@@ -267,10 +264,10 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
 }
 
 Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
-    VirtBox* row = AddRow();
+    HBox* row = AddRow();
 
     row->AddChild(NewVirtText({.s = label, .font = font, .isRtl = IsUIRtl()}));
-    row->AddChild(new VirtSpacer(gap, 0));
+    row->AddChild(new Spacer(gap, 0));
 
     Edit::CreateArgs eargs;
     eargs.parent = hwnd;
@@ -283,17 +280,17 @@ Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
     if (isPassword) {
         HwndSetWindowStyle(e->hwnd, ES_PASSWORD, true);
     }
-    row->AddChild(new VirtWrapper(e), 1);
+    row->AddChild(e, 1);
     return e;
 }
 
 void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
-    VirtBox* row = AddRow();
+    HBox* row = AddRow();
     if (hint) {
         row->AddChild(NewVirtText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
     }
     // a flexible spacer pushes the buttons to the right
-    row->AddChild(new VirtSpacer(0, 0), 1);
+    row->AddChild(new Spacer(0, 0), 1);
 
     actionBtn = NewButton(actionText, true);
     actionBtn->onClick = MkFunc1(PdfToolActionClicked, this);
@@ -301,7 +298,7 @@ void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
 
     cancelBtn = NewButton(_TRA("Cancel"), false);
     cancelBtn->onClick = MkFunc1(PdfToolCancelClicked, this);
-    row->AddChild(new VirtSpacer(gap, 0));
+    row->AddChild(new Spacer(gap, 0));
     row->AddChild(cancelBtn);
 }
 
@@ -310,10 +307,10 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     // compute the height
     int minClientW = DpiScale(hwnd, 480);
     int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainBox->Layout(ExpandHeight(clientW));
+    Size size = layout->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-    vroot->SetBounds({0, 0, size.dx, size.dy});
-    vroot->LayoutIfNeeded();
+    // positions everything and picks up the virtual controls to paint
+    DoLayout(size);
 
     HwndCenterDialog(hwnd, win->hwndFrame);
     if (UseDarkModeLib()) {
@@ -326,43 +323,11 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     }
 }
 
-void PdfToolDialog::OnPaint(HDC hdc, PAINTSTRUCT*) {
-    Rect rc = HwndClientRect(hwnd);
-    DoubleBuffer buffer(hwnd, rc);
-    HDC memDC = buffer.GetDC();
-    HdcFillRect(memDC, rc, ThemeWindowControlBackgroundColor());
-    SetBkMode(memDC, TRANSPARENT);
-    Gfx gfx = GfxFromHdc(memDC);
-    vroot->Paint(&gfx, rc);
-    buffer.Flush(hdc);
-}
-
 LRESULT PdfToolDialog::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_ERASEBKGND) {
         return TRUE; // OnPaint covers the whole client area
     }
-    if (vroot) {
-        LRESULT res = 0;
-        switch (msg) {
-            case WM_MOUSEMOVE:
-            case WM_MOUSELEAVE:
-            case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
-                if (vroot->OnMessage(msg, wp, lp, res)) {
-                    return res;
-                }
-                break;
-            case WM_SETCURSOR: {
-                Point pt = HwndGetCursorPos(hwnd);
-                Point ptLocal{0, 0};
-                VirtWnd* w = vroot->WndFromPoint(pt, &ptLocal);
-                if (w && w->OnSetCursor(ptLocal)) {
-                    return TRUE;
-                }
-                break;
-            }
-        }
-    }
+    // WindowBase::WndProcDefault sends the virtual controls their input
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
@@ -370,14 +335,20 @@ bool PdfToolDialog::PreTranslateMessage(MSG& msg) {
     if (PdfToolPreTranslateEsc(msg, this)) {
         return true;
     }
-    // the action button is a virtual control, so Enter has to reach it by hand
     if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
+        // Enter presses the focused button, if it's one; otherwise it's the
+        // dialog's default action
+        LRESULT res = 0;
+        if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, msg.message, msg.wParam, msg.lParam, res)) {
+            return true;
+        }
         if (actionBtn && actionBtn->HasFlag(vwfEnabled)) {
             DoIt();
         }
         return true;
     }
-    return false;
+    // Tab moves between the Edits and the buttons
+    return WindowBase::PreTranslateMessage(msg);
 }
 
 struct PdfBakeDialog : PdfToolDialog {
@@ -687,7 +658,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 // The dialog's content is a VirtWnd tree: the labels and buttons are virtual
 // controls, while the two text fields stay real HWND edits, hosted in the tree
-// by a VirtWrapper so they take part in the same layout.
+// so they take part in the same layout.
 struct PdfDeletePageDialog : PdfToolDialog {
     bool isExtract = false;
     int pageCount = 0;
@@ -927,7 +898,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     Str pagesLabel = isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:");
     pagesEdit = AddLabeledEdit(pagesLabel, fmt("%d", currentPage));
     // "of N" after the edit
-    lastRow->AddChild(new VirtSpacer(gap, 0));
+    lastRow->AddChild(new Spacer(gap, 0));
     lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
 
     Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");

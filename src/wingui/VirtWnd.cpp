@@ -31,6 +31,34 @@ VirtWnd::~VirtWnd() {
     RemoveAllChildren(true);
 }
 
+int VirtWnd::LayoutChildCount() {
+    return len(children);
+}
+
+ILayout* VirtWnd::LayoutChildAt(int idx) {
+    return children[idx];
+}
+
+VirtWnd* VirtWnd::AsVirtWnd() {
+    return this;
+}
+
+void CollectVirtWnds(ILayout* root, Vec<VirtWnd*>& out) {
+    if (!root) {
+        return;
+    }
+    VirtWnd* w = root->AsVirtWnd();
+    if (w) {
+        // its children come with it: it paints and hit-tests them itself
+        out.Append(w);
+        return;
+    }
+    int n = root->LayoutChildCount();
+    for (int i = 0; i < n; i++) {
+        CollectVirtWnds(root->LayoutChildAt(i), out);
+    }
+}
+
 bool IsVirtWndOfKind(VirtWnd* w, Kind k) {
     return w && w->kind == k;
 }
@@ -391,24 +419,49 @@ VirtRoot::VirtRoot(HWND hwnd) {
 }
 
 VirtRoot::~VirtRoot() {
-    delete child;
+    // `tops` belong to the layout tree and can outlive us; make sure they don't
+    // report their destruction to a root that is gone
+    for (VirtWnd* w : tops) {
+        w->SetRoot(nullptr);
+    }
+    delete owned;
 }
 
 void VirtRoot::SetChild(VirtWnd* c) {
-    if (child == c) {
+    if (owned == c) {
         return;
     }
-    delete child;
-    child = c;
+    delete owned;
+    owned = c;
+    tops.Reset();
     hovered = nullptr;
     captured = nullptr;
     focused = nullptr;
     pressed = nullptr;
-    if (child) {
-        child->parent = nullptr;
-        child->SetRoot(this);
+    if (c) {
+        c->parent = nullptr;
+        c->SetRoot(this);
+        tops.Append(c);
     }
+    // the whole window is this one tree, so it can be laid out lazily, from
+    // Paint(). A tree that also holds HWND controls can't: laying out would
+    // move child windows in the middle of WM_PAINT
+    layoutInPaint = true;
     needsLayout = true;
+}
+
+void VirtRoot::SetTops(const Vec<VirtWnd*>& newTops) {
+    ReportIf(owned);
+    tops.Reset();
+    hovered = nullptr;
+    captured = nullptr;
+    focused = nullptr;
+    pressed = nullptr;
+    for (VirtWnd* w : newTops) {
+        w->SetRoot(this);
+        tops.Append(w);
+    }
+    layoutInPaint = false;
 }
 
 void VirtRoot::SetBounds(Rect r) {
@@ -425,33 +478,47 @@ void VirtRoot::RequestLayout() {
 }
 
 void VirtRoot::LayoutIfNeeded() {
-    if (!needsLayout || !child) {
+    if (!needsLayout || !owned) {
         return;
     }
     needsLayout = false;
     Constraints bc = Tight({bounds.dx, bounds.dy});
-    child->Layout(bc);
-    child->SetBounds(bounds);
+    owned->Layout(bc);
+    owned->SetBounds(bounds);
 }
 
 void VirtRoot::Paint(Gfx* gfx, Rect clip) {
-    if (!child) {
+    if (len(tops) == 0) {
         return;
     }
-    LayoutIfNeeded();
+    if (layoutInPaint) {
+        LayoutIfNeeded();
+    }
     Rect c = clip.Intersect(bounds);
     if (c.IsEmpty()) {
         return;
     }
-    child->PaintTree(gfx, bounds.TL(), c);
+    // painted in layout order, so a later one draws over an earlier one
+    for (VirtWnd* w : tops) {
+        w->PaintTree(gfx, bounds.TL(), c);
+    }
 }
 
 VirtWnd* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
-    if (!child || !bounds.Contains(ptWindow)) {
+    if (len(tops) == 0 || !bounds.Contains(ptWindow)) {
         return nullptr;
     }
-    LayoutIfNeeded();
-    return child->WndFromPoint(ptWindow, ptLocalOut);
+    if (layoutInPaint) {
+        LayoutIfNeeded();
+    }
+    // reverse of the paint order: whatever is drawn last is on top
+    for (int i = len(tops) - 1; i >= 0; i--) {
+        VirtWnd* w = tops[i]->WndFromPoint(ptWindow, ptLocalOut);
+        if (w) {
+            return w;
+        }
+    }
+    return nullptr;
 }
 
 void VirtRoot::Invalidate(Rect rWindow) {
@@ -494,9 +561,49 @@ static void CollectFocusable(VirtWnd* w, Vec<VirtWnd*>& out) {
     }
 }
 
+// a win32 control is in the ring if it says so (WS_TABSTOP) and can take focus
+static bool IsCtrlTabStop(ControlBase* c) {
+    HWND hwnd = c->hwnd;
+    if (!hwnd || !::IsWindowVisible(hwnd) || !::IsWindowEnabled(hwnd)) {
+        return false;
+    }
+    DWORD style = (DWORD)GetWindowLong(hwnd, GWL_STYLE);
+    return (style & WS_TABSTOP) != 0;
+}
+
+void CollectTabStops(ILayout* root, Vec<TabStop>& out) {
+    if (!root || IsCollapsed(root)) {
+        return;
+    }
+    ControlBase* c = root->AsControl();
+    if (c) {
+        if (IsCtrlTabStop(c)) {
+            out.Append(TabStop{c, nullptr});
+        }
+        return;
+    }
+    VirtWnd* w = root->AsVirtWnd();
+    if (w) {
+        // a virtual control can hold more than one stop: its children are part
+        // of the same tree
+        Vec<VirtWnd*> focusable;
+        CollectFocusable(w, focusable);
+        for (VirtWnd* f : focusable) {
+            out.Append(TabStop{nullptr, f});
+        }
+        return;
+    }
+    int n = root->LayoutChildCount();
+    for (int i = 0; i < n; i++) {
+        CollectTabStops(root->LayoutChildAt(i), out);
+    }
+}
+
 bool VirtRoot::TabNavigate(bool backwards) {
     Vec<VirtWnd*> all;
-    CollectFocusable(child, all);
+    for (VirtWnd* w : tops) {
+        CollectFocusable(w, all);
+    }
     int n = len(all);
     if (n == 0) {
         return false;
@@ -575,6 +682,12 @@ void VirtRoot::OnWndDestroyed(VirtWnd* w) {
     if (pressed == w) {
         pressed = nullptr;
     }
+    // it can be one of the tops (the tree is rebuilt by deleting nodes and
+    // laying out again), and those we must not paint or hit-test any more
+    int idx = tops.Find(w);
+    if (idx >= 0) {
+        tops.RemoveAt(idx);
+    }
 }
 
 static void FillMouseEvent(VirtMouseEvent& ev, VirtWnd* target, Point ptWindow, Point ptLocal, bool captured) {
@@ -615,7 +728,7 @@ void VirtRoot::TrackMouseLeaveIfNeeded() {
 }
 
 bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
-    if (!child) {
+    if (len(tops) == 0) {
         return false;
     }
     res = 0;
@@ -808,92 +921,6 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     return false;
 }
 
-//--- VirtBox
-
-static Kind kindVirtWndBox = "virtWndBox";
-
-VirtBox::VirtBox(bool isVert) {
-    kind = kindVirtWndBox;
-    isVertical = isVert;
-}
-
-// the internal VBox / HBox deletes its children in its destructor, but the
-// children are owned by VirtWnd::children, so unhook them first
-static void FreeBox(VBox*& vbox, HBox*& hbox) {
-    if (vbox) {
-        vbox->children.Clear();
-        delete vbox;
-        vbox = nullptr;
-    }
-    if (hbox) {
-        hbox->children.Clear();
-        delete hbox;
-        hbox = nullptr;
-    }
-}
-
-VirtBox::~VirtBox() {
-    FreeBox(vbox, hbox);
-}
-
-void VirtBox::AddChild(VirtWnd* c, int flexVal) {
-    VirtWnd::AddChild(c);
-    flexes.Append(flexVal);
-    FreeBox(vbox, hbox);
-}
-
-void VirtBox::RebuildBox() {
-    FreeBox(vbox, hbox);
-    int n = ChildCount();
-    if (isVertical) {
-        vbox = new VBox();
-        vbox->alignMain = alignMain;
-        vbox->alignCross = alignCross;
-        for (int i = 0; i < n; i++) {
-            int flexVal = (i < len(flexes)) ? flexes[i] : 0;
-            vbox->AddChild(children[i], flexVal);
-        }
-        return;
-    }
-    hbox = new HBox();
-    hbox->alignMain = alignMain;
-    hbox->alignCross = alignCross;
-    for (int i = 0; i < n; i++) {
-        int flexVal = (i < len(flexes)) ? flexes[i] : 0;
-        hbox->AddChild(children[i], flexVal);
-    }
-}
-
-ILayout* VirtBox::Box() {
-    if (!vbox && !hbox) {
-        RebuildBox();
-    }
-    return isVertical ? (ILayout*)vbox : (ILayout*)hbox;
-}
-
-int VirtBox::MinIntrinsicHeight(int width) {
-    return Box()->MinIntrinsicHeight(width);
-}
-
-int VirtBox::MinIntrinsicWidth(int height) {
-    return Box()->MinIntrinsicWidth(height);
-}
-
-Size VirtBox::Layout(Constraints bc) {
-    Constraints inner = bc.Inset(padding.left + padding.right, padding.top + padding.bottom);
-    Size sz = Box()->Layout(inner);
-    sz.dx += padding.left + padding.right;
-    sz.dy += padding.top + padding.bottom;
-    return sz;
-}
-
-void VirtBox::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
-    Rect content = r;
-    content.SubTB(padding.top, padding.bottom);
-    content.SubLR(padding.left, padding.right);
-    Box()->SetBounds(content);
-}
 
 //--- VirtTable
 
@@ -1364,56 +1391,6 @@ bool VirtCustom::OnMouseUp(VirtMouseEvent& ev) {
     return true;
 }
 
-//--- VirtWrapper
-
-static Kind kindVirtWndWrapper = "virtWndWrapper";
-
-VirtWrapper::VirtWrapper(ControlBase* w, bool owns) {
-    kind = kindVirtWndWrapper;
-    wnd = w;
-    ownsWnd = owns;
-    // the HWND is on top of whatever the tree paints, and gets its own mouse
-    // and keyboard messages
-    flags |= vwfNoHitTest;
-}
-
-VirtWrapper::~VirtWrapper() {
-    if (ownsWnd) {
-        delete wnd;
-    }
-}
-
-int VirtWrapper::MinIntrinsicHeight(int width) {
-    return wnd ? wnd->MinIntrinsicHeight(width) : 0;
-}
-
-int VirtWrapper::MinIntrinsicWidth(int height) {
-    return wnd ? wnd->MinIntrinsicWidth(height) : 0;
-}
-
-Size VirtWrapper::Layout(Constraints bc) {
-    if (!wnd) {
-        return bc.Constrain({0, 0});
-    }
-    return wnd->Layout(bc);
-}
-
-Size VirtWrapper::GetIdealSize() {
-    return wnd ? wnd->GetIdealSize() : Size{};
-}
-
-// the tree lays out in the root HWND's client coords, which is also what the
-// child HWND is positioned in
-void VirtWrapper::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
-    if (!wnd) {
-        return;
-    }
-    wnd->SetVisibility(visibility);
-    if (visibility != Visibility::Collapse) {
-        wnd->SetBounds(r);
-    }
-}
 
 //--- VirtText
 
@@ -1593,6 +1570,7 @@ static Kind kindVirtWndButton = "virtWndButton";
 VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     kind = kindVirtWndButton;
     flags &= ~vwfNoHitTest;
+    flags |= vwfFocusable;
     align = VirtTextAlign::Center;
 }
 
@@ -1625,6 +1603,35 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
     }
     VirtText::Paint(c2);
     textColor = prevCol;
+
+    if (HasFlag(vwfFocused)) {
+        // focus ring, just inside the border
+        Rect b = ctx.bounds;
+        b.SubTB(2, 2);
+        b.SubLR(2, 2);
+        COLORREF col = (textColor != kColorUnset) ? textColor : borderColor;
+        if (col != kColorUnset && !b.IsEmpty()) {
+            GfxFillRect(ctx.gfx, {b.x, b.y, b.dx, 1}, col);
+            GfxFillRect(ctx.gfx, {b.x, b.Bottom() - 1, b.dx, 1}, col);
+            GfxFillRect(ctx.gfx, {b.x, b.y, 1, b.dy}, col);
+            GfxFillRect(ctx.gfx, {b.Right() - 1, b.y, 1, b.dy}, col);
+        }
+    }
+}
+
+// Enter / Space press the button, like a win32 one
+bool VirtButton::OnKeyDown(VirtKeyEvent& ev) {
+    bool isPress = (ev.vkey == VK_RETURN) || (ev.vkey == VK_SPACE);
+    if (!isPress || !HasFlag(vwfEnabled) || onClick.IsEmpty()) {
+        return false;
+    }
+    VirtMouseEvent me;
+    me.target = this;
+    me.hit = this;
+    me.pt = {bounds.dx / 2, bounds.dy / 2};
+    me.ptWindow = {bounds.x + me.pt.x, bounds.y + me.pt.y};
+    onClick.Call(&me);
+    return true;
 }
 
 void VirtButton::OnMouseEnter() {
@@ -2052,13 +2059,184 @@ static void VirtTable_TestHitTest() {
     delete t;
 }
 
+// a layout tree mixing plain layouts and virtual controls yields the virtual
+// ones, in layout order, without descending into their own children
+static void CollectVirtWnds_Test() {
+    Vec<VirtWnd*> out;
+    CollectVirtWnds(nullptr, out);
+    utassert(len(out) == 0);
+
+    // a tree of no virtual controls yields none
+    auto* plain = new VBox();
+    plain->AddChild(new Spacer(10, 10));
+    CollectVirtWnds(plain, out);
+    utassert(len(out) == 0);
+    delete plain;
+
+    auto* box = new VBox();
+    auto* first = new VirtSpacer(10, 10);
+    auto* nested = new VirtSpacer(10, 10);
+    auto* inner = new VirtSpacer(10, 10);
+    // a child of a virtual control is not top-level: `nested` paints it
+    nested->AddChild(inner);
+    box->AddChild(new Spacer(5, 5));
+    box->AddChild(first);
+    box->AddChild(new Padding(nested, DefaultInsets()));
+    CollectVirtWnds(box, out);
+    utassert(len(out) == 2);
+    utassert(out[0] == first);
+    utassert(out[1] == nested);
+    delete box;
+}
+
+static void CollectTabStops_Test() {
+    Vec<TabStop> out;
+    CollectTabStops(nullptr, out);
+    utassert(len(out) == 0);
+
+    // only what can take focus is a stop, in layout order
+    auto* box = new VBox();
+    auto* b1 = new VirtButton(StrL("one"));
+    auto* b2 = new VirtButton(StrL("two"));
+    box->AddChild(new Spacer(5, 5));
+    box->AddChild(new VirtSpacer(10, 10));
+    box->AddChild(b1);
+    box->AddChild(new Padding(b2, DefaultInsets()));
+    CollectTabStops(box, out);
+    utassert(len(out) == 2);
+    utassert(out[0].vwnd == b1 && !out[0].ctrl);
+    utassert(out[1].vwnd == b2);
+
+    // a collapsed subtree is out of the ring
+    out.Reset();
+    b1->SetVisibility(Visibility::Collapse);
+    CollectTabStops(box, out);
+    utassert(len(out) == 1);
+    utassert(out[0].vwnd == b2);
+    delete box;
+}
+
 void VirtWnd_UnitTests() {
     VirtTable_TestGrid();
     VirtTable_TestAlign();
     VirtTable_TestSpan();
     VirtTable_TestHitTest();
+    CollectVirtWnds_Test();
+    CollectTabStops_Test();
 }
 #endif
+
+//--- hosting virtual controls in a window
+
+void RefreshVirtTops(HWND hwnd, ILayout* layout, Rect bounds, VirtRoot** rootInOut) {
+    if (!layout) {
+        return;
+    }
+    Vec<VirtWnd*> tops;
+    CollectVirtWnds(layout, tops);
+    VirtRoot* root = *rootInOut;
+    if (len(tops) == 0) {
+        // nothing virtual in this window: nothing to paint or dispatch
+        delete root;
+        *rootInOut = nullptr;
+        return;
+    }
+    if (!root) {
+        root = new VirtRoot(hwnd);
+        *rootInOut = root;
+    }
+    root->bounds = bounds;
+    root->SetTops(tops);
+    root->needsLayout = false;
+}
+
+void LayoutTreeToSize(HWND hwnd, ILayout* layout, Size size, VirtRoot** rootInOut) {
+    if (!layout) {
+        return;
+    }
+    LayoutToSize(layout, size);
+    RefreshVirtTops(hwnd, layout, Rect{0, 0, size.dx, size.dy}, rootInOut);
+}
+
+void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, COLORREF bg) {
+    if (!root || len(root->tops) == 0) {
+        return;
+    }
+    HWND hwnd = root->hwnd;
+    Rect rc = HwndClientRect(hwnd);
+    DoubleBuffer buffer(hwnd, rc);
+    HDC memDC = buffer.GetDC();
+    if (bg != kColorUnset) {
+        HdcFillRect(memDC, rc, bg);
+    }
+    SetBkMode(memDC, TRANSPARENT);
+    Gfx gfx = GfxFromHdc(memDC);
+    root->Paint(&gfx, clip);
+    buffer.Flush(hdc);
+}
+
+// the tree lays out left-to-right; when the HWND has an RTL layout GDI mirrors
+// the drawing for us but mouse coordinates arrive mirrored, so undo that before
+// hit-testing
+static LPARAM UnmirrorRtlLparam(HWND hwnd, LPARAM lp) {
+    if (!HwndIsRtl(hwnd)) {
+        return lp;
+    }
+    Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+    UnmirrorRtl(hwnd, pt);
+    return MAKELPARAM(pt.x, pt.y);
+}
+
+static bool IsVirtMouseMsg(UINT msg) {
+    switch (msg) {
+        case WM_MOUSEMOVE:
+        case WM_MOUSELEAVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MOUSEWHEEL:
+        case WM_CONTEXTMENU:
+            return true;
+    }
+    return false;
+}
+
+bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
+    if (!root || len(root->tops) == 0) {
+        return false;
+    }
+    if (msg == WM_SETCURSOR) {
+        Point pt = HwndGetCursorPos(hwnd);
+        UnmirrorRtl(hwnd, pt);
+        Point ptLocal{0, 0};
+        VirtWnd* w = root->WndFromPoint(pt, &ptLocal);
+        // the cursor belongs to whichever ancestor claims it first
+        while (w) {
+            Rect b = w->BoundsInWindow();
+            if (w->OnSetCursor({pt.x - b.x, pt.y - b.y})) {
+                res = TRUE;
+                return true;
+            }
+            w = w->parent;
+        }
+        return false;
+    }
+    if (IsVirtMouseMsg(msg)) {
+        // WM_CONTEXTMENU and the wheel come in screen coordinates, which
+        // VirtRoot::OnMessage converts itself
+        bool inClientCoords = (msg != WM_CONTEXTMENU) && (msg != WM_MOUSEWHEEL);
+        LPARAM lp2 = inClientCoords ? UnmirrorRtlLparam(hwnd, lp) : lp;
+        return root->OnMessage(msg, wp, lp2, res);
+    }
+    if (msg == WM_KEYDOWN || msg == WM_CHAR) {
+        return root->OnMessage(msg, wp, lp, res);
+    }
+    return false;
+}
 
 //--- VirtRichText
 

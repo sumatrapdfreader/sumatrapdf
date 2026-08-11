@@ -56,6 +56,9 @@ enum class Visibility {
     Collapse,
 };
 
+struct VirtWnd;
+struct ControlBase;
+
 struct ILayout {
     virtual ~ILayout() = default;
     virtual Kind GetKind() = 0;
@@ -65,6 +68,24 @@ struct ILayout {
     virtual int MinIntrinsicWidth(int height) = 0;
     virtual Size Layout(Constraints bc) = 0;
     virtual void SetBounds(Rect) = 0;
+
+    // walking a layout tree: containers return their children, leaves nothing.
+    // Lets code find things in a tree it didn't build (see CollectVirtWnds())
+    virtual int LayoutChildCount() {
+        return 0;
+    }
+    virtual ILayout* LayoutChildAt(int) {
+        return nullptr;
+    }
+    // non-null for the virtual controls, which have no HWND of their own: the
+    // window they end up in paints them and sends them their input
+    virtual VirtWnd* AsVirtWnd() {
+        return nullptr;
+    }
+    // non-null for the controls that do have an HWND of their own
+    virtual ControlBase* AsControl() {
+        return nullptr;
+    }
 };
 
 bool IsCollapsed(ILayout*);
@@ -114,6 +135,9 @@ struct Padding : LayoutBase {
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
+
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
 };
 
 bool IsPadding(Kind);
@@ -172,6 +196,9 @@ struct VBox : LayoutBase {
 
     void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) const;
 
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
     int ChildrenCount() const;
@@ -187,6 +214,7 @@ struct HBox : LayoutBase {
     int totalWidth = 0;
     int totalFlex = 0;
 
+    HBox();
     ~HBox() override;
 
     // ILayout
@@ -196,6 +224,10 @@ struct HBox : LayoutBase {
     void SetBounds(Rect bounds) override;
 
     void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2) const;
+
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
     int ChildrenCount() const;
@@ -226,6 +258,9 @@ struct Align : LayoutBase {
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
+
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
 };
 
 // spacer is to be used to take space

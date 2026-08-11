@@ -130,14 +130,13 @@ struct KeyboardHelpWnd : WindowBase {
     PlatformFont* fontHdr = nullptr;   // section headers
     PlatformFont* fontRow = nullptr;   // rows
 
-    // the sheet as a VirtWnd tree. `container` positions its children itself,
+    // the sheet's controls. `container` only owns them - this window positions
     // so the root never re-layouts them
-    VirtRoot* vroot = nullptr;
-    VirtWnd* container = nullptr;
+    VBox* container = nullptr;
     VirtText* title = nullptr;
     VirtLink* closeBtn = nullptr;
     VirtLine* separator = nullptr;
-    VirtBox* columns = nullptr;
+    HBox* columns = nullptr;
     VirtText* footer = nullptr;
     // section headers and row descriptions, so SyncColors() can reach them
     Vec<VirtText*> texts;
@@ -242,7 +241,6 @@ static TempStr CmdDescTemp(int cmdId) {
 }
 
 KeyboardHelpWnd::~KeyboardHelpWnd() {
-    delete vroot;
 }
 
 // Park the window beside the main window on whichever side has more room, so it
@@ -417,10 +415,7 @@ void KeyboardHelpWnd::BuildContent() {
     Vec<KbSectionData> sections;
     CollectSections(sections, secTitleH, szRow.dy + rowGap, secGap);
 
-    vroot = new VirtRoot(hwnd);
-    container = new VirtWnd();
-    container->name = StrL("keyboardHelp");
-    container->flags |= vwfNoHitTest;
+    container = new VBox();
 
     title = new VirtText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
     container->AddChild(title);
@@ -435,7 +430,7 @@ void KeyboardHelpWnd::BuildContent() {
     separator->thickness = DpiScale(hwnd, 1);
     container->AddChild(separator);
 
-    columns = new VirtBox(false);
+    columns = new HBox();
     columns->alignCross = CrossAxisAlign::CrossStart;
     VirtTable* tables[2] = {new VirtTable(), new VirtTable()};
     for (VirtTable* t : tables) {
@@ -443,7 +438,7 @@ void KeyboardHelpWnd::BuildContent() {
         t->rowGap = rowGap;
     }
     columns->AddChild(tables[0]);
-    columns->AddChild(new VirtSpacer(colGap, 0));
+    columns->AddChild(new Spacer(colGap, 0));
     columns->AddChild(tables[1]);
     container->AddChild(columns);
 
@@ -497,7 +492,7 @@ void KeyboardHelpWnd::BuildContent() {
         }
     }
 
-    vroot->SetChild(container);
+    layout = container;
 
     Size colsSize = columns->Layout(ExpandInf());
     int rightPad = rem / 2; // 0.5rem right margin
@@ -514,11 +509,9 @@ void KeyboardHelpWnd::BuildContent() {
     Rect r = PositionHelpWindow(win, winDx, winDy);
     SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER);
 
-    // place the pieces; the container positions its children itself, so the root
-    // must not re-layout them
-    vroot->bounds = {0, 0, clientDx, clientDy};
-    vroot->needsLayout = false;
-    container->SetBounds(vroot->bounds);
+    // this window places the pieces itself, so the tree is only collected, not
+    // laid out
+    RefreshVirtTops(hwnd, layout, Rect{0, 0, clientDx, clientDy}, &vroot);
 
     Size szClose = closeBtn->GetIdealSize();
     int closeGrow = DpiScale(hwnd, 6);
@@ -553,7 +546,9 @@ void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
 
     SyncColors();
     Gfx gfx = GfxFromHdc(hdc);
-    vroot->Paint(&gfx, client);
+    if (vroot) {
+        vroot->Paint(&gfx, client);
+    }
 }
 
 LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -576,22 +571,12 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             EndPaint(hwnd, &ps);
             return 0;
         }
-        case WM_MOUSEMOVE:
-        case WM_MOUSELEAVE:
-        case WM_LBUTTONUP: {
+        case WM_SETCURSOR: {
             LRESULT res = 0;
-            if (vroot && vroot->OnMessage(msg, wp, lp, res)) {
+            if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
                 return res;
             }
-            break;
-        }
-        case WM_SETCURSOR: {
             Point pt = HwndGetCursorPos(hwnd);
-            Point ptLocal{0, 0};
-            VirtWnd* w = vroot ? vroot->WndFromPoint(pt, &ptLocal) : nullptr;
-            if (w && w->OnSetCursor(ptLocal)) {
-                return TRUE;
-            }
             if (pt.y < contentTop) {
                 SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
                 return TRUE;
@@ -600,7 +585,7 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
         case WM_LBUTTONDOWN: {
             LRESULT res = 0;
-            if (vroot && vroot->OnMessage(msg, wp, lp, res)) {
+            if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
                 return res;
             }
             // dragging the title band moves the window (it has no title bar of

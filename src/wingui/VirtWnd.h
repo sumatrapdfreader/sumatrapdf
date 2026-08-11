@@ -92,6 +92,9 @@ struct VirtWnd : LayoutBase {
     int MinIntrinsicWidth(int height) override;
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+    VirtWnd* AsVirtWnd() override;
 
     virtual Size GetIdealSize();
 
@@ -149,9 +152,51 @@ struct VirtWnd : LayoutBase {
 
 bool IsVirtWndOfKind(VirtWnd*, Kind);
 
+// The virtual controls at the top of a layout tree: nodes whose ancestors are
+// all plain layouts. Doesn't descend into a VirtWnd's own children - it paints
+// and hit-tests those itself. A tree of only HWND controls yields none
+void CollectVirtWnds(ILayout* root, Vec<VirtWnd*>& out);
+
+// One stop in a window's Tab ring: exactly one of the two is set. The ring is
+// the layout order, so an Edit and a virtual button sitting in the same VBox
+// are reached one after the other
+struct TabStop {
+    ControlBase* ctrl = nullptr;
+    VirtWnd* vwnd = nullptr;
+};
+
+// the tab stops of a layout tree, in layout order: HWND controls that have
+// WS_TABSTOP and are visible + enabled, and virtual controls that are
+// vwfFocusable and not vwfSkipTabStop
+void CollectTabStops(ILayout* root, Vec<TabStop>& out);
+
+//--- hosting virtual controls in a window
+//
+// A window (or a control) that has a layout tree drives its virtual controls
+// through these three: lay out, paint, dispatch input. `*rootInOut` is created
+// on demand and stays null while the tree has no virtual controls at all - the
+// common case of a window made only of HWND controls costs nothing
+
+// runs the layout, then refreshes the root with the tree's top-level virtual
+// controls. Never lays out from a paint: it would move child HWNDs mid-paint
+void LayoutTreeToSize(HWND, ILayout* layout, Size, VirtRoot** rootInOut);
+// same, for a host that positions the tree itself: only refreshes the root
+void RefreshVirtTops(HWND, ILayout* layout, Rect bounds, VirtRoot** rootInOut);
+// double-buffered; fills bg first. Does nothing if there's nothing virtual
+void PaintVirtTree(VirtRoot*, HDC, Rect clip, COLORREF bg);
+// the single entry point for input: mouse, cursor, tooltips and keyboard, with
+// RTL mouse coordinates unmirrored
+bool VirtTreeOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&);
+
+// The virtual controls of one HWND: the window paints them and hands them its
+// input. They are the top-level virtual nodes of the window's layout tree, so
+// there can be any number of them - a VBox of an Edit and two VirtTexts leaves
+// two - and they are not owned here; the layout tree owns them
 struct VirtRoot {
     HWND hwnd = nullptr;
-    VirtWnd* child = nullptr; // owned
+    Vec<VirtWnd*> tops;
+    // set only by SetChild(), which owns what it is given
+    VirtWnd* owned = nullptr;
     // part of hwnd occupied by the tree
     Rect bounds;
 
@@ -161,12 +206,17 @@ struct VirtRoot {
     VirtWnd* pressed = nullptr;
 
     bool needsLayout = true;
+    // legacy single-tree hosts lay out lazily from Paint(); see SetChild()
+    bool layoutInPaint = false;
     bool trackingMouseLeave = false;
 
     explicit VirtRoot(HWND);
     ~VirtRoot();
 
+    // takes ownership; for a window whose whole content is one virtual tree
     void SetChild(VirtWnd*);
+    // the tops found in a layout tree; not owned
+    void SetTops(const Vec<VirtWnd*>&);
     void SetBounds(Rect);
     void LayoutIfNeeded();
     void RequestLayout();
@@ -188,30 +238,6 @@ struct VirtRoot {
 };
 
 //--- containers
-
-struct VirtBox : VirtWnd {
-    bool isVertical = true;
-    MainAxisAlign alignMain = MainAxisAlign::MainStart;
-    CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
-
-    explicit VirtBox(bool isVertical = true);
-    ~VirtBox() override;
-
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    Size Layout(Constraints bc) override;
-    void SetBounds(Rect) override;
-
-    void AddChild(VirtWnd*, int flex = 0);
-
-  private:
-    VBox* vbox = nullptr;
-    HBox* hbox = nullptr;
-    Vec<int> flexes;
-
-    void RebuildBox();
-    ILayout* Box();
-};
 
 // one cell of a VirtTable. alignH / alignV say where the child sits when the
 // cell is bigger than the child; CrossAxisAlign::Stretch makes the child fill
@@ -323,24 +349,6 @@ struct VirtCustom : VirtWnd {
     bool OnMouseUp(VirtMouseEvent&) override;
 };
 
-// Hosts a real HWND control (an edit, a native list, ...) inside a VirtWnd
-// tree, so the two can be laid out together. The control is a window of its
-// own: Windows paints it and delivers its input, so the wrapper only forwards
-// layout and visibility and is never a paint or hit-test target.
-struct VirtWrapper : VirtWnd {
-    ControlBase* wnd = nullptr; // owned unless ownsWnd is false
-    bool ownsWnd = true;
-
-    explicit VirtWrapper(ControlBase*, bool ownsWnd = true);
-    ~VirtWrapper() override;
-
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    Size Layout(Constraints bc) override;
-    void SetBounds(Rect) override;
-    Size GetIdealSize() override;
-};
-
 //--- controls
 
 enum class VirtTextAlign {
@@ -435,6 +443,7 @@ struct VirtButton : VirtText {
     void OnMouseLeave() override;
     bool OnMouseDown(VirtMouseEvent&) override;
     bool OnMouseUp(VirtMouseEvent&) override;
+    bool OnKeyDown(VirtKeyEvent&) override;
     bool OnSetCursor(Point ptLocal) override;
 };
 

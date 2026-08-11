@@ -4,6 +4,7 @@
 struct NotificationWnd;
 struct WindowTab;
 struct VirtWnd;
+struct ILayout;
 
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
@@ -49,7 +50,7 @@ struct NotificationCreateArgs {
     Str msg;
     // when set, the notification shows this VirtWnd tree instead of `msg`.
     // ownership passes to the notification
-    VirtWnd* content = nullptr;
+    ILayout* content = nullptr;
     // if set, the notification is only shown while this tab is the active tab
     // (hidden when switching to another tab in the same window)
     WindowTab* tab = nullptr;
@@ -69,7 +70,7 @@ void RemoveNotificationsForTab(WindowTab* tab);
 
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs = kNotifDefaultTimeOut);
-NotificationWnd* ShowCustomNotification(HWND hwndParent, VirtWnd* content, int timeoutMs = kNotifNoTimeout);
+NotificationWnd* ShowCustomNotification(HWND hwndParent, ILayout* content, int timeoutMs = kNotifNoTimeout);
 NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs);
 
 void MaybeDelayedWarningNotification(Str msg);

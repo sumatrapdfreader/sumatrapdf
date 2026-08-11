@@ -21,7 +21,7 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 //--- Tabs
 //
-// Each tab is a TabWnd in a VirtBox that lays them out along the bar, with
+// Each tab is a TabWnd in an HBox that lays them out along the bar, with
 // the tab's ✕ as a child of the tab. The control keeps the HWND (it owns the
 // drag loop, which needs capture and screen coordinates) and the tab list;
 // everything on screen belongs to the tree.
@@ -301,7 +301,7 @@ TabsCtrl::TabsCtrl() {
 }
 
 TabsCtrl::~TabsCtrl() {
-    delete vroot;
+    // ~ControlBase deletes vroot and layout (which owns the TabWnds)
     delete tooltip;
 }
 
@@ -327,10 +327,14 @@ TabWnd* TabsCtrl::TabWndAt(int idx) {
 // the tab wnds are rebuilt whenever the tab list changes: there are few of them
 // and it keeps the tree and the list impossible to get out of step
 void TabsCtrl::RebuildTabWnds() {
-    if (!vroot) {
+    if (!bar) {
         return;
     }
-    bar->RemoveAllChildren(true);
+    // the box owns the tabs, so free them before dropping both lists
+    for (auto& c : bar->children) {
+        delete c.layout;
+    }
+    bar->children.Reset();
     tabWnds.Reset();
     int n = TabCount();
     for (int i = 0; i < n; i++) {
@@ -374,10 +378,11 @@ void TabsCtrl::LayoutTabs() {
     for (int i = 0; i < nTabs; i++) {
         tabWnds[i]->idealSize = tabSize;
     }
-    vroot->bounds = rect;
-    vroot->needsLayout = false;
     bar->Layout(Tight({rect.dx, rect.dy}));
     bar->SetBounds(rect);
+    // the tabs are virtual controls: this is what paints them and sends them
+    // their input
+    DoLayout(rect.Size());
 
     if (withToolTips && tooltip) {
         TooltipInfo* tools = AllocArrayTemp<TooltipInfo>(nTabs);
@@ -439,15 +444,6 @@ void TabsCtrl::UpdateHover(int tabUnderMouse) {
     if (changed) {
         HwndScheduleRepaint(hwnd);
     }
-}
-
-void TabsCtrl::Paint(HDC hdc, const Rect& rc) {
-    HdcFillRect(hdc, rc, ThemeControlBackgroundColor());
-    if (!vroot) {
-        return;
-    }
-    Gfx gfx = GfxFromHdc(hdc);
-    vroot->Paint(&gfx, rc);
 }
 
 HBITMAP TabsCtrl::RenderForDragging(int idx) {
@@ -839,13 +835,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_SETCURSOR: {
-            if (vroot) {
-                Point pt = HwndGetCursorPos(hwnd);
-                Point ptLocal{0, 0};
-                VirtWnd* w = vroot->WndFromPoint(pt, &ptLocal);
-                if (w && w->OnSetCursor(ptLocal)) {
-                    return TRUE;
-                }
+            LRESULT res = 0;
+            if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
+                return res;
             }
             break;
         }
@@ -872,9 +864,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return 0;
             }
             HDC hdc = GetDC(hwnd);
-            DoubleBuffer buffer(hwnd, clientRc);
-            Paint(buffer.GetDC(), clientRc);
-            buffer.Flush(hdc);
+            COLORREF bgCol = ThemeControlBackgroundColor();
+            if (vroot) {
+                PaintVirtTree(vroot, hdc, clientRc, bgCol);
+            } else {
+                // no tabs: nothing but the background
+                HdcFillRect(hdc, clientRc, bgCol);
+            }
             ReleaseDC(hwnd, hdc);
             return 0;
         }
@@ -898,10 +894,9 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
         return nullptr;
     }
 
-    vroot = new VirtRoot(hwnd);
-    bar = new VirtBox(false);
+    bar = new HBox();
     bar->alignCross = CrossAxisAlign::Stretch;
-    vroot->SetChild(bar);
+    layout = bar;
 
     if (withToolTips) {
         Tooltip::CreateArgs targs;

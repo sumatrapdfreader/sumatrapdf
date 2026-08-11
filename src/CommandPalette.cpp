@@ -182,6 +182,9 @@ void CommandPaletteWnd::SwitchToFavorites() {
 }
 
 LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // we paint the whole client area, double-buffered
+    }
     switch (msg) {
         case WM_ACTIVATE:
             if (wp == WA_INACTIVE) {
@@ -523,16 +526,12 @@ static VirtRichText* NewHelpText(const HelpStyle& st, Str markup) {
     return t;
 }
 
-// a row of help items lives in a window of its own, so virtual controls can sit
-// in the palette's layout of real ones
-static VirtHost* NewHelpRow(const HelpStyle& st, VirtBox* box) {
+// a row of help items: virtual controls sitting in the palette's layout next
+// to the real edit and list
+static HBox* NewHelpRow(HBox* box) {
     box->alignMain = MainAxisAlign::MainCenter;
     box->alignCross = CrossAxisAlign::CrossCenter;
-    auto* host = new VirtHost();
-    host->bgColor = st.colBg;
-    HWND ok = host->Create(st.hwnd, box);
-    ReportIf(!ok);
-    return host;
+    return box;
 }
 
 bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
@@ -580,7 +579,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     if (!smartTabMode) {
-        auto* box = new VirtBox(false);
+        auto* box = new HBox();
         HelpStyle st{hwnd, GetPlatformFont(font), colTxt, colBg};
         // in "# File History" and friends the first character is what you type
         // to get there, so it becomes a key-cap
@@ -603,7 +602,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         if (len(favorites) > 0) {
             addSwitch(_TRA("$ Favorites"), kPalettePrefixFavorites);
         }
-        vbox->AddChild(NewHelpRow(st, box));
+        vbox->AddChild(NewHelpRow(box));
     }
 
     {
@@ -643,14 +642,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             strings[nHelp++] = _TRA("Del to remove item");
             strings[nHelp++] = _TRA("Esc to close");
         }
-        auto* box = new VirtBox(false);
+        auto* box = new HBox();
         // the hints are secondary information, so they use the regular (smaller)
         // app font, not the bigger font of the query / list
         HelpStyle st{hwnd, GetPlatformFont(GetAppFont(hwnd)), colTxt, colBg};
         for (int i = 0; i < nHelp; i++) {
             box->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
         }
-        vbox->AddChild(NewHelpRow(st, box));
+        vbox->AddChild(NewHelpRow(box));
     }
 
     if (smartTabMode) {
@@ -694,6 +693,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         dy = 0;
     }
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
+    // the help rows are virtual controls: pick them up so we paint them and
+    // they get their input
+    DoLayout(HwndClientRect(hwnd).Size());
     PositionCommandPalette(hwnd, win->hwndFrame);
 
     editQuery->SetCursorPositionAtEnd();

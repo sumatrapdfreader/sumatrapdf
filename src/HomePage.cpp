@@ -364,12 +364,12 @@ static AboutWnd* EnsureAboutWnd(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
         root = new VirtRoot(hwnd);
         *rootPtr = root;
     }
-    if (!IsVirtWndOfKind(root->child, kindAboutWnd)) {
+    if (!IsVirtWndOfKind(root->owned, kindAboutWnd)) {
         root->SetChild(new AboutWnd());
     }
     root->bounds = clientRc;
     root->needsLayout = false;
-    auto* about = (AboutWnd*)root->child;
+    auto* about = (AboutWnd*)root->owned;
     about->SetBounds(clientRc);
     return about;
 }
@@ -497,7 +497,7 @@ static AboutWnd* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect 
    this draws the frame around them. It transcribes the design I did in graphics
    software - hopeless to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, VirtRoot* root) {
-    auto* about = (AboutWnd*)root->child;
+    auto* about = (AboutWnd*)root->owned;
     Rect rect = about->aboutRect;
     auto col = ThemeWindowTextColor();
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
@@ -610,7 +610,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
     // the links are VirtLinks: let the tree hit-test, click and set the
     // cursor. Its GetTooltipTemp() drives this window's own Tooltip
-    if (gAboutRoot && gAboutRoot->child) {
+    if (gAboutRoot && gAboutRoot->owned) {
         LRESULT res = 0;
         switch (msg) {
             case WM_MOUSEMOVE:
@@ -2206,8 +2206,8 @@ bool HomeEntriesWnd::OnMouseMove(VirtMouseEvent& ev) {
 static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     // the canvas root holds either the home page's chrome or the About page's
     // controls, depending on which one is showing
-    if (win->homeRoot && IsVirtWndOfKind(win->homeRoot->child, kindHomeChromeWnd)) {
-        return (HomeChromeWnd*)win->homeRoot->child;
+    if (win->homeRoot && IsVirtWndOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
+        return (HomeChromeWnd*)win->homeRoot->owned;
     }
     HWND hwnd = win->hwndCanvas;
     if (!win->homeRoot) {
@@ -2271,7 +2271,7 @@ void HomePageDestroyChrome(MainWindow* win) {
 // Returns true when the event was consumed and the caller should stop
 bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     VirtRoot* root = win->homeRoot;
-    if (!root || !root->child) {
+    if (!root || !root->owned) {
         return false;
     }
     // Hover feedback (highlight, ✕ button, tooltips) must stay quiet while
@@ -2798,10 +2798,10 @@ static HomeEntriesWnd* HomeEntries(MainWindow* win) {
     if (!win || !win->homeRoot) {
         return nullptr;
     }
-    if (!IsVirtWndOfKind(win->homeRoot->child, kindHomeChromeWnd)) {
+    if (!IsVirtWndOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
         return nullptr; // the About page is showing, not the home page
     }
-    return ((HomeChromeWnd*)win->homeRoot->child)->entries;
+    return ((HomeChromeWnd*)win->homeRoot->owned)->entries;
 }
 
 // mouse left the canvas (or the page scrolled): drop the active entry so the

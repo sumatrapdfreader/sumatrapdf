@@ -292,6 +292,14 @@ bool IsPadding(ILayout* l) {
     return IsLayoutOfKind(l, paddingKind);
 }
 
+int Padding::LayoutChildCount() {
+    return child ? 1 : 0;
+}
+
+ILayout* Padding::LayoutChildAt(int) {
+    return child;
+}
+
 Padding::Padding(ILayout* childIn, const Insets& insetsIn) : insets(insetsIn) {
     kind = paddingKind;
     child = childIn;
@@ -349,6 +357,14 @@ VBox::~VBox() {
     for (auto& c : children) {
         delete c.layout;
     }
+}
+
+int VBox::LayoutChildCount() {
+    return len(children);
+}
+
+ILayout* VBox::LayoutChildAt(int idx) {
+    return children[idx].layout;
 }
 
 int VBox::ChildrenCount() const {
@@ -694,7 +710,19 @@ boxElementInfo& VBox::AddChild(ILayout* child) {
 }
 
 // hbox.go
-__unused static Kind kindHBox = "hbox";
+static Kind kindHBox = "hbox";
+
+HBox::HBox() {
+    kind = kindHBox;
+}
+
+int HBox::LayoutChildCount() {
+    return len(children);
+}
+
+ILayout* HBox::LayoutChildAt(int idx) {
+    return children[idx].layout;
+}
 
 HBox::~HBox() {
     for (auto& c : children) {
@@ -968,6 +996,11 @@ void HBox::SetBounds(Rect bounds) {
     ILayout* previous = nullptr;
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
+        // Layout() skipped it, so v.size is stale: position it and posX would
+        // both be wrong (VBox::SetBounds has always done this)
+        if (IsCollapsed(v.layout)) {
+            continue;
+        }
         if (IsPacked(alignMain)) {
             if (i > 0) {
                 posX += CalculateHGap(previous, v.layout);
@@ -1031,6 +1064,14 @@ static Kind kindAlign = "align";
 Align::Align(ILayout* c) {
     Child = c;
     kind = kindAlign;
+}
+
+int Align::LayoutChildCount() {
+    return Child ? 1 : 0;
+}
+
+ILayout* Align::LayoutChildAt(int) {
+    return Child;
 }
 
 Align::~Align() {
