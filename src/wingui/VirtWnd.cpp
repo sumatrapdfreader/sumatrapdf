@@ -1588,9 +1588,12 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     int last = (scrollY + items.dy - 1) / dy;
     last = std::min(last, n - 1);
 
+    bool isFocused = HasFlag(vwfFocused);
     COLORREF colSel = selectionColor;
     if (colSel == kColorUnset && colBg != kColorUnset) {
-        colSel = AccentColor(colBg, 30);
+        // the selection stands out more while the list has the keyboard focus,
+        // like a win32 listbox's
+        colSel = AccentColor(colBg, isFocused ? 45 : 25);
     }
 
     HDC hdc = GfxHdc(ctx.gfx);
@@ -1608,14 +1611,20 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
             ev.itemIndex = i;
             ev.selected = isSel;
             onDrawItem.Call(&ev);
-            continue;
+        } else {
+            if (isSel) {
+                GfxFillRect(ctx.gfx, r, colSel);
+            }
+            Rect rt = r;
+            rt.SubLR(DpiScale(HwndForDpi(), 4), 0);
+            GfxDrawText(ctx.gfx, model->Item(i), rt, gfxTextEllipsis, font, textColor);
         }
-        if (isSel) {
-            GfxFillRect(ctx.gfx, r, colSel);
-        }
-        Rect rt = r;
-        rt.SubLR(DpiScale(HwndForDpi(), 4), 0);
-        GfxDrawText(ctx.gfx, model->Item(i), rt, gfxTextEllipsis, font, textColor);
+    }
+    // the dotted ring around the list says the keys go here, the same way a
+    // win32 listbox does it
+    if (isFocused) {
+        RECT rr = ToRECT(items);
+        DrawFocusRect(hdc, &rr);
     }
     RestoreDC(hdc, savedDC);
 

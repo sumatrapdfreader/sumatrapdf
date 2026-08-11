@@ -591,6 +591,10 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
     {
         auto* c = new VirtListBox();
+        // the query edit owns the keyboard here (the palette turns the arrow
+        // keys into selection changes itself), so the list doesn't take the
+        // focus and doesn't show a focus ring
+        c->SetFlag(vwfFocusable, false);
         c->hwndForDpi = hwnd;
         c->font = GetPlatformFont(font);
         c->textColor = colTxt;
